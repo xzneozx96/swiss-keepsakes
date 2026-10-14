@@ -92,6 +92,20 @@ button {
  * a translucent mid-grey tint with a backdrop blur and a light hairline edge; content is
  * white. Mid-grey (not white) keeps white text readable on bright photos too.
  */
+/*
+ * Bottom-sheet heights that follow the visible area. HeroUI sizes the drawer wrapper to
+ * --visual-viewport-height, which shrinks when the mobile keyboard opens, while dvh does not
+ * on Android Chrome. A dvh-sized sheet then overflows the top of the screen and its first
+ * fields cannot be scrolled back into view (engraving field, 14.10.2026).
+ */
+@utility sheet-max {
+  max-height: calc(var(--visual-viewport-height, 100dvh) * 0.92);
+}
+
+@utility sheet-tall {
+  height: calc(var(--visual-viewport-height, 100dvh) * 0.94);
+}
+
 @utility glass {
   background-color: rgb(110 110 110 / 0.3);
   border: 1px solid rgb(255 255 255 / 0.35);

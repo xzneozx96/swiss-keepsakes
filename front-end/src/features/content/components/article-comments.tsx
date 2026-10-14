@@ -169,7 +169,7 @@ export function ArticleComments({
         <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
           <Drawer.Dialog
             aria-label={t("article.comments")}
-            className="flex h-[94dvh] flex-col"
+            className="flex sheet-tall flex-col"
           >
             <Drawer.Handle />
             <Drawer.Header className="flex items-center justify-start">
@@ -218,7 +218,7 @@ export function CommentSheet({
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
-        <Drawer.Dialog className="flex max-h-[92dvh] flex-col">
+        <Drawer.Dialog className="flex sheet-max flex-col">
           <Drawer.Handle />
           <Drawer.Header className="flex flex-row items-center justify-between gap-2">
             <Drawer.Heading className="font-serif text-title">

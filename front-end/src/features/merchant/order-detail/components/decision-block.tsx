@@ -243,7 +243,7 @@ export function SheetFrame({
       onOpenChange={(open) => !open && onClose()}
     >
       <Drawer.Content className="mx-auto max-w-[560px]" placement="bottom">
-        <Drawer.Dialog className="flex max-h-[92dvh] flex-col">
+        <Drawer.Dialog className="flex sheet-max flex-col">
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-between">
             <Drawer.Heading className="text-title">{title}</Drawer.Heading>
