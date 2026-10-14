@@ -1,4 +1,3 @@
-import { buttonVariants } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 
 import { AssistantIcon } from "@/components/icons";
@@ -11,7 +10,8 @@ const offset = {
 } as const;
 
 /**
- * Floating "Trip advice" entry, bottom-right on C01, C09 and C20 (spec §3.1, D1). Ink rather
+ * Floating entry to the AI trip assistant, bottom-right on C01, C09 and C20 (spec §3.1, D1,
+ * R19): the assistant's icon alone, named for screen readers, with a slow ripple. Ink rather
  * than Swiss red: the screen's one red action stays the banner or the booking bar.
  */
 export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
@@ -25,11 +25,24 @@ export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
         className={`pointer-events-none fixed inset-x-0 z-20 mx-auto flex max-w-[430px] justify-end px-4 ${offset[above]}`}
       >
         <Link
-          className={`${buttonVariants({ size: "lg" })} pointer-events-auto rounded-full bg-foreground text-background shadow-overlay transition-transform hover:bg-foreground/90 active:scale-[0.97]`}
+          aria-label={t("advice.fab")}
+          className="group pointer-events-auto relative flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-overlay outline-none transition-transform focus-visible:focus-ring active:scale-95"
           to="/plan"
         >
-          <AssistantIcon size={20} />
-          {t("advice.fab")}
+          {/* Two slow ripples, half a cycle apart, so one is always moving (owner, 14.10.2026). */}
+          {[0, 1200].map((delay) => (
+            <span
+              key={delay}
+              aria-hidden
+              className="absolute inset-0 hidden rounded-full bg-foreground/55 motion-safe:block motion-safe:animate-ping motion-safe:[animation-duration:2.4s]"
+              style={{ animationDelay: `${delay}ms` }}
+            />
+          ))}
+          <AssistantIcon
+            aria-hidden
+            className="relative transition-transform group-hover:rotate-12"
+            size={26}
+          />
         </Link>
       </div>
     </>
