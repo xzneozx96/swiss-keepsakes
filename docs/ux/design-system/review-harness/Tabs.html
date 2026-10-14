@@ -1,0 +1,41 @@
+<!doctype html><html data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tabs</title><link rel="stylesheet" href="tokens.css"></head><body><!-- @dsCard group="Selection and navigation" height=360 -->
+<div class="ds-stage">
+  <style>
+    .tb-t{display:flex;align-items:center;height:32px;padding:0 16px;border-radius:var(--radius-3xl);font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-muted);white-space:nowrap;flex-shrink:0}
+    .tb-sel{background:var(--color-surface);box-shadow:var(--shadow-surface);color:var(--color-foreground);font-weight:var(--font-weight-semibold)}
+    .tb-sep{width:1px;height:16px;align-self:center;background:var(--color-separator);flex-shrink:0}
+  </style>
+  <div class="ds-item">
+    <div style="display:flex;padding:4px;border-radius:20px;background:var(--color-default);width:fit-content">
+      <div class="tb-t tb-sel">Offen</div>
+      <div class="tb-t">Bestätigt</div><div class="tb-sep"></div>
+      <div class="tb-t" style="box-shadow:0 0 0 2px var(--color-background),0 0 0 4px var(--color-focus)">Bereit</div><div class="tb-sep"></div>
+      <div class="tb-t">Abgeschlossen</div><div class="tb-sep"></div>
+      <div class="tb-t" style="opacity:var(--opacity-disabled)">Archiv</div>
+    </div>
+    <span class="ds-note">primary · selected = white indicator + weight 600 · focus-visible (Bereit) · disabled (Archiv)</span>
+  </div>
+  <div class="ds-item">
+    <div style="position:relative;width:343px;overflow:hidden;border-radius:20px;background:var(--color-default)">
+      <div style="display:flex;padding:4px">
+        <div class="tb-t tb-sel">Offen</div>
+        <div class="tb-t">Bestätigt</div><div class="tb-sep"></div>
+        <div class="tb-t">Bereit</div><div class="tb-sep"></div>
+        <div class="tb-t">Abgeschlossen</div>
+      </div>
+      <div style="position:absolute;right:0;top:0;width:64px;height:40px;background:linear-gradient(90deg,transparent,var(--color-default) 60%);display:flex;align-items:center;justify-content:flex-end;padding-right:8px"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="var(--color-foreground)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <span class="ds-note">at 343px four German tabs need ~378px: the list scrolls, with a 64px fade and a chevron</span>
+  </div>
+  <div class="ds-item">
+    <div style="display:flex;align-items:flex-end;gap:var(--spacing-4)">
+      <div style="display:flex;border-bottom:1px solid var(--color-border)">
+        <div style="display:flex;flex-direction:column;align-items:center"><div style="display:flex;align-items:center;height:32px;padding:0 16px;font-size:var(--text-sm);font-weight:var(--font-weight-semibold);color:var(--color-foreground)">English</div><div style="height:2px;width:100%;background:var(--color-accent)"></div></div>
+        <div style="display:flex;align-items:center;height:34px;padding:0 16px;font-size:var(--text-sm);font-weight:var(--font-weight-medium);color:var(--color-muted)">Deutsch</div>
+      </div>
+      <div style="display:flex;align-items:center;height:36px;padding:0 12px;border-radius:var(--radius-3xl);background:var(--color-default);font-size:var(--text-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Vorschau</div>
+    </div>
+    <span class="ds-note">secondary · EN/DE panels · "Vorschau" is a tertiary Button outside the tab list</span>
+  </div>
+</div>
+</body></html>

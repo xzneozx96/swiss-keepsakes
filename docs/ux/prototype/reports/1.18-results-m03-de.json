@@ -1,0 +1,308 @@
+[
+ {
+  "id": "M03 seed: Balance owed tab is empty with one action",
+  "lang": "de",
+  "pass": true,
+  "detail": "Geschenkbestellungen Wartet auf Bestätigung 3 Wartet auf Zahlung 1 In Vorbereitung 1 Abholbereit 1 Restbetrag offen 0 Abgeschlossen 2 Storniert 2 Zurzeit keine Bestellungen in «Restbetrag offen». Zurü"
+ },
+ {
+  "id": "m03-empty: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-empty: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "m03-empty: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M03 empty action → M02",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store"
+ },
+ {
+  "id": "M03 ?status=awaiting-confirmation selects its tab",
+  "lang": "de",
+  "pass": true,
+  "detail": "Wartet auf Bestätigung\n4"
+ },
+ {
+  "id": "M03 awaiting-confirmation count = 4 (from order data)",
+  "lang": "de",
+  "pass": true,
+  "detail": "4"
+ },
+ {
+  "id": "M03 awaiting-confirmation lists 4 order cards",
+  "lang": "de",
+  "pass": true,
+  "detail": "4"
+ },
+ {
+  "id": "m03-awaiting-confirmation: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-awaiting-confirmation: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "m03-awaiting-confirmation: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-awaiting-confirmation@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-awaiting-confirmation@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "m03-awaiting-confirmation@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M03 ?status=awaiting-payment selects its tab",
+  "lang": "de",
+  "pass": true,
+  "detail": "Wartet auf Zahlung\n4"
+ },
+ {
+  "id": "M03 awaiting-payment count = 4 (from order data)",
+  "lang": "de",
+  "pass": true,
+  "detail": "4"
+ },
+ {
+  "id": "M03 awaiting-payment lists 4 order cards",
+  "lang": "de",
+  "pass": true,
+  "detail": "4"
+ },
+ {
+  "id": "M03 ?status=preparing selects its tab",
+  "lang": "de",
+  "pass": true,
+  "detail": "In Vorbereitung\n2"
+ },
+ {
+  "id": "M03 preparing count = 2 (from order data)",
+  "lang": "de",
+  "pass": true,
+  "detail": "2"
+ },
+ {
+  "id": "M03 preparing lists 2 order cards",
+  "lang": "de",
+  "pass": true,
+  "detail": "2"
+ },
+ {
+  "id": "M03 ?status=ready selects its tab",
+  "lang": "de",
+  "pass": true,
+  "detail": "Abholbereit\n2"
+ },
+ {
+  "id": "M03 ready count = 2 (from order data)",
+  "lang": "de",
+  "pass": true,
+  "detail": "2"
+ },
+ {
+  "id": "M03 ready lists 2 order cards",
+  "lang": "de",
+  "pass": true,
+  "detail": "2"
+ },
+ {
+  "id": "M03 ?status=owing selects its tab",
+  "lang": "de",
+  "pass": true,
+  "detail": "Restbetrag offen\n1"
+ },
+ {
+  "id": "M03 owing count = 1 (from order data)",
+  "lang": "de",
+  "pass": true,
+  "detail": "1"
+ },
+ {
+  "id": "M03 owing lists 1 order cards",
+  "lang": "de",
+  "pass": true,
+  "detail": "1"
+ },
+ {
+  "id": "m03-owing: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-owing: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "m03-owing: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-owing@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-owing@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "m03-owing@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M03 ?status=completed selects its tab",
+  "lang": "de",
+  "pass": true,
+  "detail": "Abgeschlossen\n2"
+ },
+ {
+  "id": "M03 completed count = 2 (from order data)",
+  "lang": "de",
+  "pass": true,
+  "detail": "2"
+ },
+ {
+  "id": "M03 completed lists 2 order cards",
+  "lang": "de",
+  "pass": true,
+  "detail": "2"
+ },
+ {
+  "id": "M03 ?status=cancelled selects its tab",
+  "lang": "de",
+  "pass": true,
+  "detail": "Storniert\n3"
+ },
+ {
+  "id": "M03 cancelled count = 3 (from order data)",
+  "lang": "de",
+  "pass": true,
+  "detail": "3"
+ },
+ {
+  "id": "M03 cancelled lists 3 order cards",
+  "lang": "de",
+  "pass": true,
+  "detail": "3"
+ },
+ {
+  "id": "m03-cancelled: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-cancelled: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "m03-cancelled: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-cancelled@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "m03-cancelled@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "m03-cancelled@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M03 card opens its M04",
+  "lang": "de",
+  "pass": true,
+  "detail": "#/store/orders/sk-1021 → http://localhost:5194/#/store/orders/sk-1021"
+ },
+ {
+  "id": "M04 header shows the order",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M02 Ready card → M03 ?status=ready",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store/orders?status=ready"
+ },
+ {
+  "id": "M03 ArrowRight moves to Awaiting payment and updates ?status",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store/orders?status=awaiting-payment"
+ },
+ {
+  "id": "M03 Tab reaches the first card",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M03 Enter on a card opens M04",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store/orders/sk-1049"
+ },
+ {
+  "id": "no console or page errors",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ }
+]

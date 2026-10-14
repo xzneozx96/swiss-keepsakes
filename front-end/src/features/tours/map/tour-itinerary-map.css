@@ -1,0 +1,84 @@
+/* Most of a phone screen, so the map and the stop card read together without scrolling. */
+.tour-map-frame {
+  height: min(72svh, 640px);
+  min-height: 460px;
+}
+.tour-map-canvas {
+  position: absolute;
+  inset: 0;
+}
+.tour-map-frame.maplibregl-pseudo-fullscreen {
+  min-height: 0;
+  border-radius: 0;
+}
+.tour-map-card {
+  bottom: 36px;
+}
+.maplibregl-pseudo-fullscreen .tour-map-card {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 36px);
+}
+/* One compact line of attribution stays readable below the stop card. */
+.tour-itinerary .maplibregl-ctrl-attrib {
+  font-size: 10px;
+  line-height: 16px;
+}
+.tour-itinerary .maplibregl-ctrl-group {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgb(39 34 27 / 12%);
+}
+.tour-itinerary .maplibregl-ctrl-group button {
+  width: 44px;
+  height: 44px;
+}
+.tour-itinerary .maplibregl-ctrl-group button:focus-visible,
+.tour-map-marker:focus-visible {
+  outline: 3px solid #d52b1e;
+  outline-offset: 3px;
+}
+.tour-map-marker {
+  width: 44px;
+  height: 44px;
+  border: 3px solid #fffaf4;
+  border-radius: 50%;
+  background: #fffaf4;
+  color: #332b25;
+  box-shadow: 0 4px 16px rgb(31 24 17 / 22%);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 180ms,
+    color 180ms;
+}
+@media (hover: hover) {
+  .tour-map-marker:hover {
+    background: #fae2dd;
+    color: #852017;
+  }
+}
+.tour-map-marker[aria-pressed="true"] {
+  z-index: 2;
+  background: #d52b1e;
+  color: white;
+}
+.tour-stop-number {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--surface-secondary);
+  color: var(--foreground);
+  font-weight: 700;
+}
+.tour-stop-number.is-active {
+  background: #d52b1e;
+  color: white;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-map-marker {
+    transition: none;
+  }
+}

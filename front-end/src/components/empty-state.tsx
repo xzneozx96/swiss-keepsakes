@@ -1,0 +1,39 @@
+import type { IconComponent } from "@/components/icons";
+import type { LinkProps } from "@tanstack/react-router";
+
+import { EmptyState as HeroEmptyState, buttonVariants } from "@heroui/react";
+import { Link } from "@tanstack/react-router";
+
+interface EmptyStateProps {
+  icon: IconComponent;
+  message: string;
+  /** At most one next action (UX spec §5.5), shown as a secondary small button. */
+  action?: { label: string; to: LinkProps["to"] };
+}
+
+/**
+ * Design-system EmptyState card: centred, 24px x 16px padding, a 56px icon slot on
+ * surface-secondary (placeholder until the 3D travel icon set is sourced), one sentence,
+ * one secondary sm action.
+ */
+export function EmptyState({ icon: Icon, message, action }: EmptyStateProps) {
+  return (
+    <HeroEmptyState className="flex flex-col items-center gap-3 px-4 py-6 text-center">
+      <span
+        aria-hidden
+        className="flex size-14 items-center justify-center rounded-2xl bg-surface-secondary text-muted"
+      >
+        <Icon size={28} />
+      </span>
+      <p className="max-w-xs text-sm text-muted">{message}</p>
+      {action && (
+        <Link
+          className={buttonVariants({ variant: "secondary", size: "sm" })}
+          to={action.to}
+        >
+          {action.label}
+        </Link>
+      )}
+    </HeroEmptyState>
+  );
+}

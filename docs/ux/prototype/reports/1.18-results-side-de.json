@@ -1,0 +1,692 @@
+[
+ {
+  "id": "setup: three orders sent",
+  "lang": "de",
+  "pass": true,
+  "detail": "SK-1043,SK-1044,SK-1045"
+ },
+ {
+  "id": "pay-later: accept sheet says no payment requested now",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1045 annehmen? Sie bestätigen, dass Sie 1 Artikel für die Abholung am 20.10.2026 (Abholstelle Bahnhof) vorbereiten können. Jetzt wird keine Zahlung verlangt. Der Gast bezahlt CHF 24.00 nach der Abholung, bis 22.10.2026. Der Bestand für diese Bestellung wird ab jetzt reserviert. Bestell"
+ },
+ {
+  "id": "side-paylater-accept-sheet: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-paylater-accept-sheet: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-paylater-accept-sheet: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "pay-later: 'Confirmed, being prepared · Pay later · CHF 24.00, due …'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Geschenkbestellungen Bestellung SK-1045 Anna Keller · angefragt am 13.10.2026, 10:00 Bestätigt, in Vorbereitung Später bezahlen · CHF 24.00, fällig am 22.10.2026 Nächster Schritt Wenn das Geschenk bei Abholstelle Bahnhof bereit ist, markieren Sie es als abholbereit. Der Gast erhält eine E-Mail. Als "
+ },
+ {
+  "id": "pay-later: N05 sent, no payment created",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-paylater-m04: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-paylater-m04: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-paylater-m04: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-decline-sheet: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-decline-sheet: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-decline-sheet: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: shared confirm dialog asks first",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: focus starts on 'Keep request'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Anfrage behalten"
+ },
+ {
+  "id": "side-decline-confirm: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-decline-confirm: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-decline-confirm: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: knife declined, N06",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: gift box still requested",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: guest sees 'Declined by seller' with the reason",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1043 Kapellbrücke Taschenmesser Vom Verkäufer abgelehnt Nichts bezahlt Der Verkäufer hat diese Anfrage abgelehnt Grund: Wir können es zum gewünschten Datum nicht vorbereiten Es wurde nichts belastet. Angefragte Abholung 21.10.2026 Laden Altstadt Kornmarkt 9, 6004 Luzern Mo–Sa 10:00–18:"
+ },
+ {
+  "id": "side-decline-c15: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-decline-c15: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-decline-c15: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "pay-later: stock still reserved after accept (C03 availability -1)",
+  "lang": "de",
+  "pass": true,
+  "detail": "10 → 9"
+ },
+ {
+  "id": "overdue: 'Cancelled · payment overdue'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1044 Luzerner Geschenkbox Storniert · Zahlung überfällig Nichts bezahlt Storniert, weil die Zahlung überfällig war Die erste Zahlung ist bis 13.10.2026, 10:00 nicht eingegangen. Es wurde nichts belastet. Möchten Sie die Geschenke trotzdem, fragen Sie sie erneut an; der Verkäufer bestät"
+ },
+ {
+  "id": "overdue: N23 to guest and staff",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: Pay button gone",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: chocolate order unchanged",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-overdue-c15: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-overdue-c15: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-overdue-c15: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: stock released (C03 availability +1)",
+  "lang": "de",
+  "pass": true,
+  "detail": "3 → 4"
+ },
+ {
+  "id": "overdue: Request again opens C04 with the gift box, nothing sent",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart"
+ },
+ {
+  "id": "side-request-again-c04: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-request-again-c04: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-request-again-c04: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: re-added line is not ticked by default (1.5d)",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: Continue (signed in) → C06",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart/review"
+ },
+ {
+  "id": "overdue: new request created through C06/C07",
+  "lang": "de",
+  "pass": true,
+  "detail": "SK-1046"
+ },
+ {
+  "id": "guest cancel: confirm says free, nothing to refund",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1046 stornieren? Es wurde nichts bezahlt, die Stornierung ist also kostenlos und es gibt nichts zu erstatten. Der Laden gibt die reservierten Geschenke frei. Bestellung behalten Bestellung stornieren"
+ },
+ {
+  "id": "side-guest-cancel-confirm: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-guest-cancel-confirm: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-guest-cancel-confirm: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "guest cancel: Esc keeps the order",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "guest cancel: 'Cancelled by you · Nothing paid'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1046 Luzerner Geschenkbox Von Ihnen storniert Nichts bezahlt Sie haben diese Bestellung storniert Es wurde nichts bezahlt, also gibt es nichts zu erstatten. Erneut anfragen Legt die Gesc"
+ },
+ {
+  "id": "side-guest-cancelled: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-guest-cancelled: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-guest-cancelled: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "guest cancel: stock released (C03 availability +1)",
+  "lang": "de",
+  "pass": true,
+  "detail": "3 → 4"
+ },
+ {
+  "id": "fail: 'Payment declined' + Try again focused, N08",
+  "lang": "de",
+  "pass": true,
+  "detail": "Erneut versuchen"
+ },
+ {
+  "id": "side-payment-failed: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-payment-failed: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-payment-failed: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "processing: C15 'Payment processing', no Pay, no Cancel",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1047 Kapellbrücke Taschenmesser Angenommen, Zahlung fällig Zahlung in Bearbeitung Zahlung in Bearbeitung Der Zahlungsanbieter hat Ihre Zahlung noch nicht bestätigt. Bitte nicht noch einmal bezahlen. Diese Seite wird danach aktualisiert. Bestätigte Abholung 22.10.2026 Laden Altstadt Kor"
+ },
+ {
+  "id": "side-payment-processing: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-payment-processing: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-payment-processing: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "late result: stays cancelled, 'Received after cancellation · awaiting reconciliation'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1047 Kapellbrücke Taschenmesser Storniert · Zahlung überfällig Nach Stornierung eingegangen · Abgleich ausstehend Storniert, weil die Zahlung überfällig war Die erste Zahlung ist bis 13.10.2026, 10:01 nicht eingegangen. Es wurde nichts belastet. Möchten Sie die Geschenke trotzdem, frag"
+ },
+ {
+  "id": "late result: no N07/N21 for it",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-late-result: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-late-result: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-late-result: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "race: SK-1032 accepted",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "race: SK-1033 shows the short line",
+  "lang": "de",
+  "pass": true,
+  "detail": "Geschenkbestellungen Bestellung SK-1033 Sofia Rossi · angefragt am 12.10.2026, 14:00 Wartet auf Bestätigung Noch nichts zu bezahlen Über diese Anfrage entscheiden Es wurde noch nichts bezahlt. Der Gast bezahlt erst, wenn Sie annehmen. Gewünschte Abholung 17.10.2026 · Abholstelle Bahnhof Lagerbestand"
+ },
+ {
+  "id": "race: Accept names the short item, stays awaiting, no mail",
+  "lang": "de",
+  "pass": true,
+  "detail": "PROTOTYPE Merchant · Store Manager 21 EN DE Swiss Keepsakes Luzern Lukas · Store Manager Geschenkbestellungen Bestellung SK-1033 Sofia Rossi · angefragt am 12.10.2026, 14:00 Wartet auf Bestätigung Noch nichts zu bezahlen Über diese Anfrage entscheiden Es wurde noch nichts bezahlt. Der Gast bezahlt e"
+ },
+ {
+  "id": "side-race-m04: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-race-m04: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-race-m04: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-race-m04@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-race-m04@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-race-m04@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "combined: knife paid online and preparing",
+  "lang": "de",
+  "pass": true,
+  "detail": "preparing"
+ },
+ {
+  "id": "combined: only 'Handed over and complete'",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-combined: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-combined: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-combined: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "combined: completed in one step",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M08: above balance blocked",
+  "lang": "de",
+  "pass": true,
+  "detail": "Zahlung erfassen · SK-1021 Noch offen: CHF 62.30 Erhaltener Betrag Mehr als die offenen CHF 62.30 Wie wurde bezahlt? Bar Banküberweisung Andere Erhalten um ⁦ 10 : 02 ⁩ Heute, 13.10.2026. Ändern Sie die Zeit, wenn das Geld früher kam. Notiz (optional) Erscheint im Zahlungsverlauf. CHF 70.00 bar erfas"
+ },
+ {
+  "id": "side-m08-above-balance: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-m08-above-balance: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-m08-above-balance: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M08: same amount within 10 min shows duplicate warning",
+  "lang": "de",
+  "pass": true,
+  "detail": "Zahlung erfassen · SK-1021 Noch offen: CHF 42.30 Erhaltener Betrag Höchstens der offene Betrag. Möglicherweise doppelt CHF 20.00 wurde bereits am 13.10.2026, 10:02 erfasst. Nochmals erfassen? Wie wurde bezahlt? Bar Banküberweisung Andere Erhalten um ⁦ 10 : 02 ⁩ Heute, 13.10.2026. Ändern Sie die Zeit"
+ },
+ {
+  "id": "side-m08-duplicate: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-m08-duplicate: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-m08-duplicate: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M08: Esc returns focus to Record payment",
+  "lang": "de",
+  "pass": true,
+  "detail": "Zahlung erfassen"
+ },
+ {
+  "id": "stock changed: error names the item and keeps the cart",
+  "lang": "de",
+  "pass": true,
+  "detail": "Ihre Anfrage wurde nicht gesendet Luzerner Geschenkbox: ausverkauft Der Bestand hat sich geändert, während Sie geprüft haben. Ihr Warenkorb ist unverändert: Entfernen Sie das Geschenk oder verringern Sie die Anzahl und senden Sie dann erneut. Warenkorb bearbeiten"
+ },
+ {
+  "id": "side-stock-changed: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-stock-changed: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-stock-changed: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "C04 nothing ticked: reason shown, focus on Select all, no navigation",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart"
+ },
+ {
+  "id": "side-cart-none-ticked: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-cart-none-ticked: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-cart-none-ticked: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "C04 invalid date: reason + earliest date offered",
+  "lang": "de",
+  "pass": true,
+  "detail": "Warenkorb Abholdaten sind Anfragen Geschenke mit unterschiedlichem Abholdatum, Abholort oder unterschiedlichen Zahlungsregeln werden zu separaten Bestellungen. Der Laden bestätigt jede Bestellung, bevor Sie bezahlen, und jede Bestellung wird einzeln bezahlt. Luzerner Geschenkbox Swiss Keepsakes Luze"
+ },
+ {
+  "id": "C04 invalid date: Continue focuses the fix button",
+  "lang": "de",
+  "pass": true,
+  "detail": "Stattdessen Do., 15. Okt. anfragen"
+ },
+ {
+  "id": "side-cart-invalid-date: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-cart-invalid-date: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-cart-invalid-date: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "print in DE: English text with language notice, UI stays German",
+  "lang": "de",
+  "pass": true,
+  "detail": "1 1 1 / 2 Limited-edition print: Water Tower at dawn Drucke · 30 × 40 cm Ausverkauft Zurzeit 4.5 von 5 Sternen 4.5 8 Bewertungen Swiss Keepsakes Luzern Verkäufer · Laden in der Altstadt Abholen in Luzern Laden Altstadt oder Abholstelle Bahnhof. Braucht 2 Arbeitstage zur Vorbereitung. Jetzt nichts be"
+ },
+ {
+  "id": "side-print: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-print: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-print: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "sign-in: 999999 expired",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-signin-expired: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-signin-expired: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-signin-expired: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "sign-in: locked after 5 wrong codes",
+  "lang": "de",
+  "pass": true,
+  "detail": "E-Mail prüfen Wir haben einen 6-stelligen Code an anna.keller@example.com gesendet. Code aus der E-Mail Geben Sie die 6 Ziffern ein. Der Code ist 10 Minuten gültig. Zu viele falsche Codes. Fordern Sie einen neuen Code an. Neuen Code senden Andere E-Mail verwenden"
+ },
+ {
+  "id": "side-signin-locked: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-signin-locked: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-signin-locked: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "stub #/tours: 'later phase' placeholder",
+  "lang": "de",
+  "pass": true,
+  "detail": "PROTOTYPE Guest 30 EN DE Dieser Bereich folgt in einer späteren Phase des Prototyps. Zurück zu Entdecken Entdecken Geschenke Touren Konto"
+ },
+ {
+  "id": "stub #/store/bookings: 'later phase' placeholder",
+  "lang": "de",
+  "pass": true,
+  "detail": "PROTOTYPE Guest 30 EN DE Swiss Keepsakes Luzern Chị Ngọc · Inhaber:in Dieser Bereich folgt in einer späteren Phase des Prototyps. Zurück zu Heute Heute Bestellungen Buchungen Mehr"
+ },
+ {
+  "id": "no console or page errors",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ }
+]

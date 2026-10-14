@@ -1,0 +1,50 @@
+[
+ {
+  "id": "1.4b: fly-to-cart animation runs on add",
+  "lang": "de",
+  "pass": true,
+  "detail": "3"
+ },
+ {
+  "id": "1.4b: toast 'Added to cart' with item and View cart",
+  "lang": "de",
+  "pass": true,
+  "detail": "In den Warenkorb gelegt Schokoladenset · 12 Stück × 1 Zum Warenkorb"
+ },
+ {
+  "id": "1.4b: cart badge label counts 1 item",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "owner-1.4b-toast: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "owner-1.4b-toast: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "owner-1.4b-toast: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "1.4b: View cart opens #/cart",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart"
+ },
+ {
+  "id": "no console or page errors",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ }
+]

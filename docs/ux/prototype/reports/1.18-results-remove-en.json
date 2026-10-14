@@ -1,0 +1,44 @@
+[
+ {
+  "id": "C04 remove opens the shared confirm dialog",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "C04 remove dialog: focus starts on Cancel",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "c04-remove-confirm: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "c04-remove-confirm: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "C04 remove: Escape keeps the line",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "C04 remove: confirming empties the cart and shows the empty state",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "no console or page errors",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ }
+]

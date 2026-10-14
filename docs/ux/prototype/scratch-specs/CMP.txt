@@ -1,0 +1,13 @@
+Phase 2 round 2: visual comparison review. You are a strict design reviewer. Edit NO source code.
+
+Context: the owner rejected most Phase 2 tour screens in round 1 ("the overall design is not good at all") and asked that they reuse the approved gift-shopping flow's UI style. That means visual style only: card surfaces, radius, typography, spacing, chips, buttons, rows, sheets, banners, tiles. The booking UX and flow stay as they are. Three workers have just restyled the screens. Read docs/ux/prototype/worker-brief-phase2.md, the section "Round 2: UI restyle", and the reports docs/ux/prototype/reports/2.4-r2.md, 2.5-r2.md, 2.7-r2.md, 2.8-r2.md, 2.9-r2.md, 2.10-r2.md ... 2.14-r2.md.
+
+Task: compare every gift-vs-tour screenshot pair in docs/ux/prototype/screens/2.N-r2/ (files named *-gift-* next to *-tour-*, plus any side-by-side images). Look at each image yourself. For each tour screen, list the concrete visual differences from its gift reference that a reviewer would call inconsistent. Be specific: element, gift value, tour value, for example "section titles: gift serif 20px, tour sans 17px semibold"; "card: gift no border, tour 1px border"; "chip tone"; "spacing between cards: gift 16px, tour 24px"; "button size/variant"; "icon rows"; "empty headings". Where a screenshot can't settle it, open the source to confirm the actual classes: gift files under front-end/src/features/{checkout,transactions,merchant,account,catalog}, tour files under front-end/src/features/tours. Do not flag differences that exist only because the booking has different content or steps. Those are UX, and UX is out of scope. Also list each "left for the owner" item from the worker reports, marked visual (fixable now) or UX (owner decision).
+
+Output: write docs/ux/prototype/reports/phase2-r2-comparison.md. It must contain:
+1. A pairing table: tour screen | gift reference screen | pair image paths | verdict (consistent / minor gaps / inconsistent).
+2. Per screen, a numbered fix list. Each fix names the tour file to change and the gift file/classes to copy. Severity: high = visibly inconsistent at a glance, medium, low.
+3. A cross-cutting section for patterns that repeat across screens (for example, every tour page header differs from gift page headers).
+Order fixes so the owning worker can apply them directly: R1 owns C10/C11/C13, R2 owns C14/C16 and the expiry states, R3 owns M02/M05/M06/M07/M08/P02 tour parts.
+
+Then send worker_done with --report-path set to that file.

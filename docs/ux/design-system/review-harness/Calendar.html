@@ -1,0 +1,31 @@
+<!doctype html><html data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Calendar</title><link rel="stylesheet" href="tokens.css"></head><body><!-- @dsCard group="Date and data" height=470 -->
+<div class="ds-stage">
+  <style>
+    .sk-cal{display:flex;flex-direction:column;width:252px}
+    .sk-cal .row{display:flex}
+    .sk-cal .wd{width:36px;text-align:center;font-size:var(--text-xs);line-height:var(--leading-xs);font-weight:var(--font-weight-medium);color:var(--color-muted)}
+    .sk-cal .d{position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:var(--text-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground);border-radius:var(--radius-3xl)}
+    .sk-cal .out{color:var(--color-muted);opacity:var(--opacity-disabled)}
+    .sk-cal .dis{opacity:var(--opacity-disabled);text-decoration:line-through}
+    .sk-cal .una{opacity:var(--opacity-disabled)}
+    .sk-cal .today{background:var(--color-accent-soft);color:var(--color-accent-soft-foreground);font-weight:var(--font-weight-semibold)}
+    .sk-cal .today::after{content:"";position:absolute;bottom:4px;left:50%;width:3px;height:3px;margin-left:-1.5px;border-radius:2px;background:currentColor}
+    .sk-cal .sel{background:var(--color-accent);color:var(--color-accent-foreground)}
+    .sk-cal .hov{background:var(--color-default)}
+    .sk-cal .foc{box-shadow:0 0 0 2px var(--color-background),0 0 0 4px var(--color-focus)}
+  </style>
+  <div class="ds-item">
+    <div class="sk-cal">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 2px 16px"><span style="font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Oktober 2026</span><div style="display:flex;gap:var(--spacing-1)"><div style="width:24px;height:24px;border-radius:var(--radius-xl);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4l-4 4 4 4" stroke="var(--color-foreground)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div style="width:24px;height:24px;border-radius:var(--radius-xl);display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="var(--color-foreground)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div>
+      <div class="row" style="padding-bottom:8px"><span class="wd">Mo</span><span class="wd">Di</span><span class="wd">Mi</span><span class="wd">Do</span><span class="wd">Fr</span><span class="wd">Sa</span><span class="wd">So</span></div>
+      <div class="row" style="padding-top:4px"><div class="d out">28</div><div class="d out">29</div><div class="d out">30</div><div class="d dis">1</div><div class="d dis">2</div><div class="d dis">3</div><div class="d dis">4</div></div>
+      <div class="row"><div class="d dis">5</div><div class="d dis">6</div><div class="d dis">7</div><div class="d dis">8</div><div class="d dis">9</div><div class="d dis">10</div><div class="d dis">11</div></div>
+      <div class="row"><div class="d dis">12</div><div class="d today">13</div><div class="d una">14</div><div class="d sel">15</div><div class="d hov">16</div><div class="d foc">17</div><div class="d una">18</div></div>
+      <div class="row"><div class="d">19</div><div class="d">20</div><div class="d">21</div><div class="d">22</div><div class="d">23</div><div class="d">24</div><div class="d una">25</div></div>
+      <div class="row"><div class="d">26</div><div class="d">27</div><div class="d">28</div><div class="d">29</div><div class="d">30</div><div class="d">31</div><div class="d out">1</div></div>
+      <span style="padding-top:8px;font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--color-muted)">Blasse Tage: Shop geschlossen</span>
+    </div>
+    <span class="ds-note">today 13 = tint + 600 + dot · selected 15 = solid accent · hover 16 · focus-visible 17 · past struck · 14, 18, 25 unavailable + legend</span>
+  </div>
+</div>
+</body></html>

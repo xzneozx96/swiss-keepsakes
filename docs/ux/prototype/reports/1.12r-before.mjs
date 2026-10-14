@@ -1,0 +1,36 @@
+// 1.12r: capture the Account tab before the redesign (375px, EN and DE).
+import { chromium } from "playwright-core";
+import { readdirSync } from "node:fs";
+const home = process.env.HOME + "/.cache/ms-playwright/";
+const dir = readdirSync(home).filter((d) => d.startsWith("chromium_headless_shell-")).sort().pop();
+const exe = `${home}${dir}/chrome-headless-shell-linux64/chrome-headless-shell`;
+const OUT = process.argv[2];
+const BASE = "http://localhost:5216/";
+const browser = await chromium.launch({ executablePath: exe });
+const page = await browser.newPage({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 2 });
+const full = async (name) => {
+  await page.waitForTimeout(600);
+  const h = await page.evaluate(() => document.documentElement.scrollHeight);
+  await page.setViewportSize({ width: 375, height: Math.max(812, h) });
+  await page.waitForTimeout(200);
+  await page.screenshot({ path: `${OUT}/${name}.png` });
+  await page.setViewportSize({ width: 375, height: 812 });
+};
+const setLang = (id) => page.getByRole("group", { name: "Language" }).getByRole("button", { name: id }).click();
+await page.goto(BASE);
+await page.evaluate(() => localStorage.clear());
+await page.goto(BASE + "#/account");
+await full("signed-out-en");
+await setLang("DE"); await full("signed-out-de"); await setLang("EN");
+await page.getByRole("button", { name: "Sign in", exact: true }).click();
+await page.getByRole("button", { name: /Continue with Google/ }).click();
+await page.waitForTimeout(900);
+await page.screenshot({ path: `${OUT}/skeleton-en.png` });
+await full("list-en");
+await setLang("DE"); await full("list-de"); await setLang("EN");
+await page.getByRole("region", { name: "Prototype controls" }).getByRole("button").first().click();
+await page.getByRole("dialog").waitFor();
+await page.getByRole("button", { name: "Remove my orders" }).click();
+await full("empty-en");
+await setLang("DE"); await full("empty-de");
+await browser.close();

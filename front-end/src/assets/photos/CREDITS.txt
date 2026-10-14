@@ -1,0 +1,78 @@
+Kapellbrücke and the Water Tower with Mount Pilatus, Lucerne.
+Photo by Juliet van Ree, CC0 1.0 (public domain dedication), Wikimedia Commons:
+https://commons.wikimedia.org/wiki/File:Kapellbr%C3%BCcke_Luzern_1_by_Juliet_van_Ree.jpg
+Resized to 1200 px wide from docs/ux/design-system/project/assets/Photos/lucerne-kapellbruecke.jpg.
+
+---- Prototype photo set (each resized to 1000x750 JPEG) ----
+
+pocket-knife.jpg
+"A Stainless Knife on a Wooden Log" by Markus Spiske, Pexels License (page labelled "Free", links to the Pexels License).
+https://www.pexels.com/photo/a-stainless-knife-on-a-wooden-log-4378650/
+
+engraving.jpg
+"Person Inscribing Drawings onto a Metal Belt" by Ahmet Ciftci, Pexels License (page labelled "Free", links to the Pexels License).
+https://www.pexels.com/photo/person-inscribing-drawings-onto-a-metal-belt-27152183/
+
+gift-box.jpg
+"A gift box with a red ribbon" by Patrick Perkins (@patrickperkins), Unsplash License.
+https://unsplash.com/photos/zAniegSoQnA
+
+pralines.jpg
+"Chocolate Pralines and a Wooden Mortar on a Wooden Board" by Evoking Ephemerality, Pexels License (page labelled "Free", links to the Pexels License).
+https://www.pexels.com/photo/chocolate-pralines-and-a-wooden-mortar-on-a-wooden-board-18354706/
+
+chocolate-bar.jpg
+"Chocolate pieces on black wooden background" by Elena Leya (@foodistika), Unsplash License.
+https://unsplash.com/photos/kNw0fPSsRvc
+
+art-print.jpg
+"Abstract landscape painting with vibrant colors and brushstrokes" (Hope, 1988) by Fons Heijnsbroek, Unsplash License.
+https://unsplash.com/photos/3I7TGYL8dsY
+
+keyring.jpg
+"Octopus Infinity Keychain with Keys on Wooden Box" by COPPERTIST WU, Pexels License (page labelled "Free", links to the Pexels License).
+https://www.pexels.com/photo/octopus-infinity-keychain-with-keys-on-wooden-box-15679989/
+
+postcards.jpg
+"Envelopes and a Vase of White Roses on a Wooden Table" by Cup of Couple, Pexels License (page labelled "Free", links to the Pexels License).
+https://www.pexels.com/photo/envelopes-and-a-vase-of-white-roses-on-a-wooden-table-8015640/
+
+candle.jpg
+"Cozy Autumn Still Life with Candle and Leaves" by Ylanite Koppens, Pexels License (page labelled "Free", links to the Pexels License).
+https://www.pexels.com/photo/cozy-autumn-still-life-with-candle-and-leaves-29196581/
+
+artisan-workshop.jpg
+"Faceless artisan planing wood with manual tool" by Ono Kosuki, Pexels License (page labelled "Free", links to the Pexels License).
+https://www.pexels.com/photo/faceless-artisan-planing-wood-with-manual-tool-5974248/
+
+lucerne-old-town.jpg
+"Hirschenplatz 1 & Roessligasse 1 in Luzern (2019)" by JoachimKohler-HB, CC BY-SA 4.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:Hirschenplatz_1_%26_R%C3%B6ssligasse_1_in_Luzern_(2019).jpg
+
+lake-steamboat.jpg
+"Dampfschiff Stadt Luzern 2013" by Sputniktilt, CC BY-SA 3.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:Dampfschiff_Stadt_Luzern_2013.jpg
+
+pilatus.jpg
+"Pilatus railway train" by Maria Feofilova, CC BY-SA 4.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:Pilatus_railway_train.jpg
+
+lion-monument.jpg
+"Loewendenkmal Luzern" by Leiju, CC BY 3.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:L%C3%B6wendenkmal_Luzern.jpg
+
+musegg-wall.jpg
+"Luzern - Museggmauer mit Zeitturm und Wachturm" by JoachimKohler-HB, CC BY-SA 4.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:Luzern_-_Museggmauer_mit_Zeitturm_und_Wachturm.jpg
+
+lucerne-night.jpg
+"Kappelbruecke Am Abend" by David Lienhard, CC BY 3.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:Kappelbr%C3%BCcke_Am_Abend_(193102485).jpeg
+
+stay.jpg
+"A mountain hut overlooks a spectacular valley in the Swiss alps" (Grindelwald, BE) by James Wong, Pexels License (page labelled "Free", links to the Pexels License).
+https://www.pexels.com/photo/a-mountain-hut-overlooks-a-spectacular-valley-in-the-swiss-alps-27971523/
+
+lucerne-water-tower.jpg
+"Luzern-1170926" (Kapellbruecke and Water Tower, Lucerne) by ermell, CC BY-SA 3.0, Wikimedia Commons. Resized to 1200x1600 JPEG.
+https://commons.wikimedia.org/wiki/File:Luzern-1170926.jpg

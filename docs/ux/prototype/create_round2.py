@@ -1,0 +1,15 @@
+import json, subprocess
+root="/home/ross-geller/Projects/minastik/swiss-keepsakes"; out=f"{root}/docs/ux/prototype/screens/phase1-review"
+common=(f"Swiss Keepsakes prototype, review round 2 capture. Repo root {root} (no git). FIRST read docs/ux/prototype/worker-brief.md. Change NO product code. "
+ "Items: docs/ux/prototype/screens/phase1-review/items.json (round 2: the 8 screens the owner rejected in round 1, each with its follow-up reports). Read the follow-up reports named in each title. "
+ "Capture the CURRENT final state, from Reset, through the real flow (prototype controls only where a report names them). PNG, full page where the screen scrolls; EN for every state, plus DE for one state per screen. "
+ f"Save to {out}/img/ as <item>-<nn>-<screen>-<state>-<lang>-<width>.png. Write the manifest {{m}} as an array of {{{{item, file:'img/…', caption, lang, width, issue?}}}} in review order (schema checked by build-review.mjs). "
+ "Open every image you saved; mark broken ones with issue. Kill your dev server at the end.\n")
+T=[("2a","Round 2 capture: guest screens",5222,f"{out}/manifest-guest.json",
+ "Items 1.6, 1.12, 1.8, 1.13 at 375px (1.6 sign-in also at 1024 and 1440 for the two columns). 1.6: sign-in screen options, email code, wrong code, lock state, return to C06 after cart Continue. 1.12: hub with the default avatar, each sub-screen (orders, bookings, payments with due now + history, profile and language, notifications, edit profile), avatar change crop, remove confirm, oversize error, signed out. 1.8: C07 after sending two orders, trip profile answered and skipped. 1.13: C15 header and each tab, key states (payment due, preparing, handed over with balance, completed with review, declined, cancelled overdue, processing)."),
+ ("2b","Round 2 capture: merchant and partner screens",5223,f"{out}/manifest-merchant.json",
+ "Items 1.9, 1.11, 1.15, 1.17 at 375px AND 1024px. First send Anna's two requests as the guest (C04 Select all, C06 Send) so M02/M04 have them. 1.9: Overview Today cards, Analytics 7d/30d/month, all-time earnings widget, chart tooltip, table view, empty state. 1.11: M04 requested order: header, action panel, accept sheet, change place sheet, decline + confirm, stock-short race, tabs at 375, two columns at 1024. 1.15: fulfilment states (ready, handed over with Complete locked, combined button, completed) and M08 sheet with duplicate warning and above-balance block. 1.17: P02 as Partner Hotel am See: all-time commission widget, KPI cards, charts, day/week/month, empty period. Check that all charts use the red-based theme (no blue); note any blue as an issue.")]
+for key,title,port,man,body in T:
+    spec=common.format(m=man)+body+f" Dev server port {port}. Report: docs/ux/prototype/reports/review-round2-{key}.md."
+    r=subprocess.run(["orca","orchestration","task-create","--spec",spec,"--task-title",title,"--display-name",title,"--deps",json.dumps(["task_5cfa42a5d912"]),"--json"],capture_output=True,text=True)
+    t=json.loads(r.stdout)["result"]; t=t.get("task",t); print(key,t["id"])

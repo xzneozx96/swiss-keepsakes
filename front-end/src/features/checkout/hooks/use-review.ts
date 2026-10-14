@@ -1,0 +1,224 @@
+import type { ReviewViewProps } from "../components/review-view";
+import type { SendBlock } from "../lib/create-orders";
+import type { LocalizedText } from "@/features/catalog/types";
+
+import { useState } from "react";
+
+import {
+  buildOrderDrafts,
+  createOrdersFromCart,
+  sendBlock,
+} from "../lib/create-orders";
+
+import { useLocale } from "@/contexts/locale-context";
+import { zurichDate } from "@/features/catalog/lib/pickup";
+import { shop } from "@/features/catalog/seed";
+import { useDemo, useDemoNow } from "@/features/demo";
+import { demoNow } from "@/features/demo/clock";
+import {
+  dueDatesAtAcceptance,
+  firstPaymentAmount,
+  lineTotal,
+  orderTotal,
+} from "@/features/orders/lib/selectors";
+import { formatMoney, formatShortDate } from "@/lib/format";
+import { pickText } from "@/lib/localized";
+
+/**
+ * C06 Review and send (AC25, AC28): the orders the request creates, each with its items,
+ * requested pickup, total, the amount due once the seller confirms, the deadline rule and the
+ * cancellation policy. Amounts come from T0's selectors on the very drafts that are stored on
+ * send. `send` returns the new order ids, or null when it is blocked (the error is shown and
+ * the cart stays as it was). Null view when no cart line is ticked.
+ */
+export function useReview(): {
+  view: Omit<ReviewViewProps, "onBack" | "onSend" | "onEditCart"> | null;
+  send: () => string[] | null;
+} {
+  const { t, language, intlLocale } = useLocale();
+  const { state, update } = useDemo();
+  const now = useDemoNow();
+  const [error, setError] = useState<SendBlock | null>(null);
+
+  const drafts = buildOrderDrafts(state, { now, language });
+  const today = zurichDate(now);
+  const short = (iso: string) => formatShortDate(iso, today, intlLocale);
+  const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
+  const plural = (count: number) =>
+    new Intl.PluralRules(intlLocale).select(count) === "one" ? "one" : "other";
+  const pick = (text: LocalizedText) => pickText(text, language);
+
+  const send = () => {
+    const block = sendBlock(state, now);
+
+    setError(block);
+    if (block) return null;
+
+    update((s) =>
+      createOrdersFromCart(s, {
+        now: demoNow(s.clockStartedAt),
+        language,
+        staffLanguage: language,
+      }),
+    );
+
+    return drafts.map((o) => o.id);
+  };
+
+  if (drafts.length === 0) return { view: null, send };
+
+  const itemName = (
+    name: LocalizedText,
+    variant: LocalizedText,
+    hasOptions: boolean,
+  ) =>
+    [pick(name).text, hasOptions ? pick(variant).text : undefined]
+      .filter(Boolean)
+      .join(" · ");
+
+  const errorView = (): ReviewViewProps["error"] => {
+    if (!error || error.code === "empty" || error.code === "signed-out")
+      return undefined;
+
+    if (error.code === "invalid-date")
+      return {
+        title: t("checkout.error.date.title"),
+        lines: [],
+        message: t(`checkout.error.date.message.${plural(error.count)}`, {
+          count: error.count,
+        }),
+        actionLabel: t("checkout.error.action"),
+      };
+
+    return {
+      title: t("checkout.error.stock.title"),
+      lines: error.lines.map((l) => {
+        const item = itemName(l.productName, l.variantLabel, l.hasOptions);
+
+        return l.available === 0
+          ? t("checkout.error.stock.soldOut", { item })
+          : t("checkout.error.stock.fewer", {
+              item,
+              available: l.available,
+              requested: l.requested,
+            });
+      }),
+      message: t("checkout.error.stock.message"),
+      actionLabel: t("checkout.error.action"),
+    };
+  };
+
+  const reference = drafts.reduce((sum, o) => sum + orderTotal(o), 0);
+  const onlyIn = new Set<string>();
+
+  const orders = drafts.map((order, index) => {
+    const place = state.data.pickupPlaces.find(
+      (p) => p.id === order.pickupPlaceId,
+    );
+    const total = orderTotal(order);
+    const due = firstPaymentAmount(order);
+    const policy = order.paymentPolicy;
+    const cancellation = pick(order.cancellationPolicy);
+
+    if (cancellation.isFallback) onlyIn.add(cancellation.language);
+
+    const rule =
+      policy.kind === "full"
+        ? t("checkout.rule.full", { hours: policy.firstDueHours })
+        : policy.kind === "deposit"
+          ? t("checkout.rule.deposit", {
+              percent: policy.depositPercent,
+              hours: policy.firstDueHours,
+              balance: money(total - due),
+              date: short(
+                dueDatesAtAcceptance(order, now).balanceDueDate ??
+                  order.pickupDate,
+              ),
+            })
+          : t("checkout.rule.later", {
+              amount: money(total),
+              date: short(
+                dueDatesAtAcceptance(order, now).balanceDueDate ??
+                  order.pickupDate,
+              ),
+            });
+
+    return {
+      key: order.id,
+      title: t("cart.order.title", { n: index + 1 }),
+      policy:
+        policy.kind === "deposit"
+          ? t("cart.policy.deposit", { percent: policy.depositPercent })
+          : t(`cart.policy.${policy.kind}`),
+      items: order.lines.map((line) => {
+        const product = state.data.products.find(
+          (p) => p.id === line.productId,
+        );
+        const name = pick(line.productName);
+
+        if (name.isFallback) onlyIn.add(name.language);
+
+        return {
+          id: line.id,
+          name: name.text,
+          photo: product?.photo,
+          store: shop.name,
+          // One-variant gifts carry a "Standard" label; it says nothing, so it is left out.
+          option:
+            (product?.variants.length ?? 0) > 1
+              ? pick(line.variantLabel).text
+              : undefined,
+          engraving: line.engraving
+            ? t("cart.line.engraving", { text: line.engraving })
+            : undefined,
+          quantity: t("checkout.item.quantity", {
+            quantity: line.quantity,
+            price: money(line.unitPrice),
+          }),
+          total: money(lineTotal(line)),
+        };
+      }),
+      requestDate: t("cart.line.requestDate", {
+        date: short(order.pickupDate),
+      }),
+      place: place ? pick(place.name).text : "",
+      totalLabel: t("checkout.order.total"),
+      total: money(total),
+      dueLabel: t("checkout.order.due"),
+      due: money(due),
+      rule,
+      cancellationTitle: t("checkout.order.cancellation"),
+      cancellation: cancellation.text,
+    };
+  });
+
+  return {
+    send,
+    view: {
+      title: t("checkout.title"),
+      backLabel: t("checkout.back"),
+      intro: t("checkout.intro"),
+      languageNotice:
+        onlyIn.size > 0
+          ? t(
+              onlyIn.has("en")
+                ? "checkout.onlyInEnglish"
+                : "checkout.onlyInGerman",
+            )
+          : undefined,
+      orders,
+      bar: {
+        totalLabel: t("checkout.bar.total"),
+        total: money(reference),
+        chip: t("cart.bar.nothingNow"),
+        detailsLabel: t("cart.bar.details"),
+        sendLabel: t("checkout.bar.send"),
+      },
+      breakdown: {
+        title: t("cart.sheet.title"),
+        closeLabel: t("cart.sheet.close"),
+      },
+      error: errorView(),
+    },
+  };
+}

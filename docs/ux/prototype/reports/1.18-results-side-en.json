@@ -1,0 +1,554 @@
+[
+ {
+  "id": "setup: three orders sent",
+  "lang": "en",
+  "pass": true,
+  "detail": "SK-1043,SK-1044,SK-1045"
+ },
+ {
+  "id": "pay-later: accept sheet says no payment requested now",
+  "lang": "en",
+  "pass": true,
+  "detail": "Accept order SK-1045? You confirm you can prepare 1 item for pickup on 20.10.2026 at Pickup point Bahnhof. No payment is requested now. The guest pays CHF 24.00 after pickup, by 22.10.2026. The stock for this order is held from now on. Accept order Go back"
+ },
+ {
+  "id": "side-paylater-accept-sheet: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-paylater-accept-sheet: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "pay-later: 'Confirmed, being prepared · Pay later · CHF 24.00, due …'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Gift orders Order SK-1045 Anna Keller · requested 13.10.2026, 10:00 Confirmed, being prepared Pay later · CHF 24.00, due 22.10.2026 Next step When the gift is ready at Pickup point Bahnhof, mark it ready. The guest gets an email. Mark as ready Record payment Gifts Chocolate set 12 pieces · 1 × CHF 2"
+ },
+ {
+  "id": "pay-later: N05 sent, no payment created",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-paylater-m04: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-paylater-m04: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-decline-sheet: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-decline-sheet: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: shared confirm dialog asks first",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: focus starts on 'Keep request'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Keep request"
+ },
+ {
+  "id": "side-decline-confirm: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-decline-confirm: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: knife declined, N06",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: gift box still requested",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "decline: guest sees 'Declined by seller' with the reason",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1043 Kapellbrücke pocket knife Declined by seller Nothing paid The seller declined this request Reason: We can’t prepare it for the requested date Nothing was charged. Requested pickup 21.10.2026 Shop Altstadt Kornmarkt 9, 6004 Luzern Mon–Sat 10:00–18:30 Show your order reference at the cou"
+ },
+ {
+  "id": "side-decline-c15: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-decline-c15: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "pay-later: stock still reserved after accept (C03 availability -1)",
+  "lang": "en",
+  "pass": true,
+  "detail": "10 → 9"
+ },
+ {
+  "id": "overdue: 'Cancelled · payment overdue'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1044 Lucerne gift box Cancelled · payment overdue Nothing paid Cancelled because the payment was overdue The first payment wasn’t made by 13.10.2026, 10:00. Nothing was charged. To still get these gifts, request them again and the seller confirms a new pickup date. Request again Puts the gi"
+ },
+ {
+  "id": "overdue: N23 to guest and staff",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: Pay button gone",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: chocolate order unchanged",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-overdue-c15: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-overdue-c15: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: stock released (C03 availability +1)",
+  "lang": "en",
+  "pass": true,
+  "detail": "3 → 4"
+ },
+ {
+  "id": "overdue: Request again opens C04 with the gift box, nothing sent",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart"
+ },
+ {
+  "id": "side-request-again-c04: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-request-again-c04: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: re-added line is not ticked by default (1.5d)",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "overdue: Continue (signed in) → C06",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart/review"
+ },
+ {
+  "id": "overdue: new request created through C06/C07",
+  "lang": "en",
+  "pass": true,
+  "detail": "SK-1046"
+ },
+ {
+  "id": "guest cancel: confirm says free, nothing to refund",
+  "lang": "en",
+  "pass": true,
+  "detail": "Cancel order SK-1046? Nothing has been paid, so cancelling is free and there is nothing to refund. The shop releases the gifts it set aside. Keep order Cancel order"
+ },
+ {
+  "id": "side-guest-cancel-confirm: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-guest-cancel-confirm: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "guest cancel: Esc keeps the order",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "guest cancel: 'Cancelled by you · Nothing paid'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1046 Lucerne gift box Cancelled by you Nothing paid You cancelled this order Nothing was paid, so there is nothing to refund. Request again Puts the gifts back in your cart. You choose a date"
+ },
+ {
+  "id": "side-guest-cancelled: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-guest-cancelled: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "guest cancel: stock released (C03 availability +1)",
+  "lang": "en",
+  "pass": true,
+  "detail": "3 → 4"
+ },
+ {
+  "id": "fail: 'Payment declined' + Try again focused, N08",
+  "lang": "en",
+  "pass": true,
+  "detail": "Try again"
+ },
+ {
+  "id": "side-payment-failed: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-payment-failed: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "processing: C15 'Payment processing', no Pay, no Cancel",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1047 Kapellbrücke pocket knife Accepted, payment due Payment processing Payment processing The payment provider hasn’t confirmed your payment yet. Please don’t pay again. This page updates when they do. Confirmed pickup 22.10.2026 Shop Altstadt Kornmarkt 9, 6004 Luzern Mon–Sat 10:00–18:30 S"
+ },
+ {
+  "id": "side-payment-processing: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-payment-processing: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "late result: stays cancelled, 'Received after cancellation · awaiting reconciliation'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1047 Kapellbrücke pocket knife Cancelled · payment overdue Received after cancellation · awaiting reconciliation Cancelled because the payment was overdue The first payment wasn’t made by 13.10.2026, 10:01. Nothing was charged. To still get these gifts, request them again and the seller con"
+ },
+ {
+  "id": "late result: no N07/N21 for it",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-late-result: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-late-result: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "race: SK-1032 accepted",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "race: SK-1033 shows the short line",
+  "lang": "en",
+  "pass": true,
+  "detail": "Gift orders Order SK-1033 Sofia Rossi · requested 12.10.2026, 14:00 Awaiting seller confirmation Nothing to pay yet Decide on this request Nothing has been paid yet. The guest pays only after you accept. Requested pickup 17.10.2026 · Pickup point Bahnhof Stock Limited-edition print: Water Tower at d"
+ },
+ {
+  "id": "race: Accept names the short item, stays awaiting, no mail",
+  "lang": "en",
+  "pass": true,
+  "detail": "PROTOTYPE Merchant · Store Manager 21 EN DE Swiss Keepsakes Luzern Lukas · Store Manager Gift orders Order SK-1033 Sofia Rossi · requested 12.10.2026, 14:00 Awaiting seller confirmation Nothing to pay yet Decide on this request Nothing has been paid yet. The guest pays only after you accept. Request"
+ },
+ {
+  "id": "side-race-m04: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-race-m04: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-race-m04@1024: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-race-m04@1024: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "combined: knife paid online and preparing",
+  "lang": "en",
+  "pass": true,
+  "detail": "preparing"
+ },
+ {
+  "id": "combined: only 'Handed over and complete'",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-combined: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-combined: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "combined: completed in one step",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M08: above balance blocked",
+  "lang": "en",
+  "pass": true,
+  "detail": "Record payment · SK-1021 Still owed: CHF 62.30 Amount received More than the CHF 62.30 still owed How was it paid? Cash Bank transfer Other Received at ⁦ 10 : 02 ⁩ Today, 13.10.2026. Change the time if the money came earlier. Note (optional) Shown in the payment history. Record CHF 70.00 cash. Balan"
+ },
+ {
+  "id": "side-m08-above-balance: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-m08-above-balance: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M08: same amount within 10 min shows duplicate warning",
+  "lang": "en",
+  "pass": true,
+  "detail": "Record payment · SK-1021 Still owed: CHF 42.30 Amount received Up to the amount still owed. Possible duplicate CHF 20.00 was already recorded at 13.10.2026, 10:02. Record it again? How was it paid? Cash Bank transfer Other Received at ⁦ 10 : 02 ⁩ Today, 13.10.2026. Change the time if the money came "
+ },
+ {
+  "id": "side-m08-duplicate: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-m08-duplicate: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "M08: Esc returns focus to Record payment",
+  "lang": "en",
+  "pass": true,
+  "detail": "Record payment"
+ },
+ {
+  "id": "stock changed: error names the item and keeps the cart",
+  "lang": "en",
+  "pass": true,
+  "detail": "Your request wasn’t sent Lucerne gift box: sold out Stock changed while you were reviewing. Your cart is unchanged: remove the gift or lower the quantity, then send again. Edit cart"
+ },
+ {
+  "id": "side-stock-changed: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-stock-changed: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "C04 nothing ticked: reason shown, focus on Select all, no navigation",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart"
+ },
+ {
+  "id": "side-cart-none-ticked: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-cart-none-ticked: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "C04 invalid date: reason + earliest date offered",
+  "lang": "en",
+  "pass": true,
+  "detail": "Cart Pickup dates are requests Gifts with different pickup dates, places or payment rules become separate orders. The seller confirms each order before you pay, and you pay each one on its own. Lucerne gift box Swiss Keepsakes Luzern Request to receive on Wed 14 Oct Shop Altstadt 30% deposit after c"
+ },
+ {
+  "id": "C04 invalid date: Continue focuses the fix button",
+  "lang": "en",
+  "pass": true,
+  "detail": "Request Thu 15 Oct instead"
+ },
+ {
+  "id": "side-cart-invalid-date: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-cart-invalid-date: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "print in EN: no language notice",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-print: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-print: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "sign-in: 999999 expired",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "side-signin-expired: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-signin-expired: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "sign-in: locked after 5 wrong codes",
+  "lang": "en",
+  "pass": true,
+  "detail": "Check your email We sent a 6-digit code to anna.keller@example.com. Code from the email Enter the 6 digits. The code works for 10 minutes. Too many wrong codes. Send a new code to try again. Send a new code Use a different email"
+ },
+ {
+  "id": "side-signin-locked: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "side-signin-locked: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "stub #/tours: 'later phase' placeholder",
+  "lang": "en",
+  "pass": true,
+  "detail": "PROTOTYPE Guest 30 EN DE This section comes in a later phase of the prototype. Back to Explore Explore Gifts Tours Account"
+ },
+ {
+  "id": "stub #/store/bookings: 'later phase' placeholder",
+  "lang": "en",
+  "pass": true,
+  "detail": "PROTOTYPE Guest 30 EN DE Swiss Keepsakes Luzern Chị Ngọc · Owner This section comes in a later phase of the prototype. Back to Today Today Orders Bookings More"
+ },
+ {
+  "id": "no console or page errors",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ }
+]

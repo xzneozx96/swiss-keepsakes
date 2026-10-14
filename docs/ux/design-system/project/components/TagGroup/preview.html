@@ -1,0 +1,39 @@
+<!-- @dsCard group="Selection and navigation" height=380 -->
+<div class="ds-stage">
+  <style>
+    .tg-tag{display:flex;align-items:center;gap:var(--spacing-1);height:32px;padding:0 10px;border-radius:var(--radius-2xl);background:var(--color-default);border:1px solid transparent;font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-default-foreground);white-space:nowrap;flex-shrink:0}
+    .tg-sel{background:var(--color-accent-soft);color:var(--color-accent-soft-foreground);border-color:var(--color-selected-border)}
+  </style>
+  <div class="ds-item">
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;height:20px;padding:0 8px;border-radius:var(--radius-xl);background:var(--color-default);font-size:var(--text-xs);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Klein</div>
+      <div style="display:flex;align-items:center;height:24px;padding:0 8px;border-radius:var(--radius-xl);background:var(--color-default);font-size:var(--text-xs);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Mittel</div>
+      <div class="tg-tag">Gross</div>
+    </div>
+    <span class="ds-note">sm 20 · md 24 · lg 32 (use lg on phones)</span>
+  </div>
+  <div class="ds-item">
+    <span style="font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Kategorien</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <div class="tg-tag tg-sel"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Taschenmesser</div>
+      <div class="tg-tag tg-sel"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Uhren</div>
+      <div class="tg-tag">Schokolade</div>
+      <div class="tg-tag" style="box-shadow:0 0 0 2px var(--color-background),0 0 0 4px var(--color-focus)">Textilien</div>
+      <div class="tg-tag">Bis CHF 50.00<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    </div>
+    <span class="ds-note">multiple · selected = soft red + check + outline · focus-visible (Textilien) · removable (24px target)</span>
+  </div>
+  <div class="ds-item">
+    <div style="position:relative;width:343px;overflow:hidden">
+      <div style="display:flex;gap:6px">
+        <div class="tg-tag tg-sel"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Alle</div>
+        <div class="tg-tag">Geschenke</div>
+        <div class="tg-tag">Touren</div>
+        <div class="tg-tag">Geschichten</div>
+        <div class="tg-tag">Beratung</div>
+      </div>
+      <div style="position:absolute;right:0;top:0;width:40px;height:32px;background:linear-gradient(90deg,transparent,var(--color-background))"></div>
+    </div>
+    <span class="ds-note">C01/C02 filter rail at 343px · single selection · scrolls sideways (ScrollShadow 40px fade)</span>
+  </div>
+</div>

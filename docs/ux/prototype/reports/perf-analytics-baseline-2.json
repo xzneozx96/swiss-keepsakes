@@ -1,0 +1,2542 @@
+{
+ "M02 useMerchantToday": {
+  "date": "Tue 13 Oct",
+  "tiles": [
+   {
+    "id": "awaiting-confirmation",
+    "tab": "awaiting-confirmation",
+    "title": "Awaiting confirmation",
+    "hint": "",
+    "count": 3,
+    "label": "Awaiting confirmation, 3 orders"
+   },
+   {
+    "id": "awaiting-payment",
+    "tab": "awaiting-payment",
+    "title": "Awaiting payment",
+    "hint": "",
+    "count": 1,
+    "label": "Awaiting payment, 1 order"
+   },
+   {
+    "id": "to-prepare",
+    "tab": "preparing",
+    "title": "To prepare",
+    "hint": "",
+    "count": 1,
+    "label": "To prepare, 1 order"
+   },
+   {
+    "id": "ready",
+    "tab": "ready",
+    "title": "Ready for pickup",
+    "hint": "",
+    "count": 1,
+    "label": "Ready for pickup, 1 order"
+   },
+   {
+    "id": "overdue",
+    "tab": null,
+    "title": "Payment overdue",
+    "hint": "The payment deadline has passed",
+    "count": 0,
+    "label": "Payment overdue, 0 orders"
+   },
+   {
+    "id": "owing",
+    "tab": null,
+    "title": "Handed over, balance owed",
+    "hint": "Picked up, money still to collect",
+    "count": 0,
+    "label": "Handed over, balance owed, 0 orders"
+   }
+  ],
+  "collect": {
+   "title": "Still to collect",
+   "total": "CHF 174.30",
+   "hint": "Owed on accepted orders",
+   "none": "Nothing owed right now.",
+   "parts": [
+    {
+     "id": "accepted",
+     "label": "Awaiting payment",
+     "amount": "CHF 64.00",
+     "orders": "1 order",
+     "share": 0.36718301778542745
+    },
+    {
+     "id": "preparing",
+     "label": "Preparing",
+     "amount": "CHF 48.00",
+     "orders": "1 order",
+     "share": 0.27538726333907054
+    },
+    {
+     "id": "ready",
+     "label": "Ready",
+     "amount": "CHF 62.30",
+     "orders": "1 order",
+     "share": 0.357429718875502
+    }
+   ]
+  },
+  "pickups": {
+   "title": "Next pickups",
+   "allLabel": "All orders",
+   "empty": "No gifts are being prepared or waiting for pickup.",
+   "rows": [
+    {
+     "id": "sk-1021",
+     "reference": "SK-1021",
+     "guestName": "Lars Jensen",
+     "gift": "1 × Lucerne gift box",
+     "isToday": true,
+     "day": {
+      "weekday": "Today",
+      "day": "13",
+      "month": "Oct"
+     },
+     "status": {
+      "text": "Ready for pickup",
+      "tone": "success"
+     }
+    },
+    {
+     "id": "sk-1025",
+     "reference": "SK-1025",
+     "guestName": "Elena Novak",
+     "gift": "2 × Chocolate set",
+     "isToday": false,
+     "day": {
+      "weekday": "Wed",
+      "day": "14",
+      "month": "Oct"
+     },
+     "status": {
+      "text": "Confirmed, being prepared",
+      "tone": "info"
+     }
+    }
+   ]
+  }
+ },
+ "M02 useOverviewAnalytics": {
+  "heading": "Analytics",
+  "allTime": {
+   "id": "overview-alltime",
+   "title": "All-time earnings",
+   "description": "Collected since the first order on 11 August 2026",
+   "value": "CHF 8’970.70",
+   "delta": {
+    "text": "+54%",
+    "tone": "good",
+    "direction": "up",
+    "label": "+54% compared with 15 Aug – 13 Sept"
+   },
+   "sentence": "CHF 5’397.70 collected in the last 30 days, compared with CHF 3’502.00 in the 30 days before.",
+   "chart": {
+    "title": "Collected per week",
+    "bars": [
+     {
+      "id": "2026-08-31",
+      "tick": "31.08",
+      "label": "Week of 31 Aug",
+      "value": 762,
+      "valueText": "CHF 762.00",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-09-07",
+      "tick": "07.09",
+      "label": "Week of 7 Sept",
+      "value": 1647,
+      "valueText": "CHF 1’647.00",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-09-14",
+      "tick": "14.09",
+      "label": "Week of 14 Sept",
+      "value": 1230,
+      "valueText": "CHF 1’230.00",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-09-21",
+      "tick": "21.09",
+      "label": "Week of 21 Sept",
+      "value": 1323,
+      "valueText": "CHF 1’323.00",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-09-28",
+      "tick": "28.09",
+      "label": "Week of 28 Sept",
+      "value": 734,
+      "valueText": "CHF 734.00",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-10-05",
+      "tick": "05.10",
+      "label": "Week of 5 Oct",
+      "value": 1700.7,
+      "valueText": "CHF 1’700.70",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-10-12",
+      "tick": "12.10",
+      "label": "This week, so far",
+      "value": 410,
+      "valueText": "CHF 410.00",
+      "isCurrent": true
+     }
+    ],
+    "tableLabels": {
+     "item": "Week",
+     "value": "Collected"
+    }
+   },
+   "metricsLabel": "All-time figures",
+   "metrics": [
+    {
+     "id": "accepted",
+     "icon": {
+      "type": {
+       "render": "[fn TickCircle]"
+      },
+      "compare": null
+     },
+     "label": "Revenue accepted",
+     "value": "CHF 9’145.00",
+     "caption": "75% of CHF 12’134.00 requested",
+     "share": 0.7536673809131367
+    },
+    {
+     "id": "commission",
+     "icon": {
+      "type": {
+       "render": "[fn Handshake]"
+      },
+      "compare": null
+     },
+     "label": "Commission recorded",
+     "value": "CHF 416.70",
+     "caption": "91% of CHF 459.20, with open orders",
+     "share": 0.9074477351916377
+    },
+    {
+     "id": "completed",
+     "icon": {
+      "type": {
+       "render": "[fn Receipt]"
+      },
+      "compare": null
+     },
+     "label": "Orders completed",
+     "value": "135",
+     "caption": "77% of 175 orders",
+     "share": 0.7714285714285715
+    }
+   ]
+  },
+  "period": "7d",
+  "onPeriodChange": "[fn bound dispatchAction]",
+  "periods": [
+   {
+    "id": "7d",
+    "label": "7 days"
+   },
+   {
+    "id": "30d",
+    "label": "30 days"
+   },
+   {
+    "id": "month",
+    "label": "This month"
+   }
+  ],
+  "periodsLabel": "Period",
+  "comparison": "7–13 Oct, compared with 30 Sept – 6 Oct",
+  "demoNote": "Prototype: the analytics include sample orders from before 13 Oct, so the charts have a past.",
+  "isEmpty": false,
+  "empty": "No orders yet. Figures and charts fill in as orders come in.",
+  "kpisLabel": "Key figures",
+  "kpis": [
+   {
+    "id": "accepted",
+    "label": "Revenue accepted",
+    "value": "CHF 1’295.00",
+    "delta": "−2%",
+    "deltaTone": "bad",
+    "direction": "down",
+    "deltaLabel": "−2% compared with 30 Sept – 6 Oct",
+    "trend": [
+     24000,
+     33100,
+     34800,
+     4200,
+     0,
+     27000,
+     6400
+    ]
+   },
+   {
+    "id": "requested",
+    "label": "Revenue requested",
+    "value": "CHF 1’897.00",
+    "delta": "+5%",
+    "deltaTone": "good",
+    "direction": "up",
+    "deltaLabel": "+5% compared with 30 Sept – 6 Oct",
+    "trend": [
+     24000,
+     33100,
+     43700,
+     16100,
+     4800,
+     63100,
+     4900
+    ]
+   },
+   {
+    "id": "collected",
+    "label": "Collected",
+    "value": "CHF 1’422.70",
+    "delta": "+16%",
+    "deltaTone": "good",
+    "direction": "up",
+    "deltaLabel": "+16% compared with 30 Sept – 6 Oct",
+    "trend": [
+     14000,
+     0,
+     31170,
+     27400,
+     28700,
+     10300,
+     30700
+    ]
+   },
+   {
+    "id": "toCollect",
+    "label": "Still to collect",
+    "value": "CHF 174.30",
+    "delta": "−42%",
+    "deltaTone": "good",
+    "direction": "down",
+    "deltaLabel": "−42% compared with 30 Sept – 6 Oct",
+    "trend": [
+     40200,
+     73300,
+     76930,
+     62630,
+     25030,
+     50630,
+     17430
+    ]
+   },
+   {
+    "id": "commission",
+    "label": "Commission recorded",
+    "value": "CHF 60.85",
+    "delta": "+58%",
+    "deltaTone": "neutral",
+    "direction": "up",
+    "deltaLabel": "+58% compared with 30 Sept – 6 Oct",
+    "trend": [
+     0,
+     270,
+     970,
+     360,
+     2970,
+     540,
+     975
+    ]
+   },
+   {
+    "id": "orders",
+    "label": "Orders",
+    "value": "27",
+    "delta": "+8%",
+    "deltaTone": "good",
+    "direction": "up",
+    "deltaLabel": "+8% compared with 30 Sept – 6 Oct",
+    "trend": [
+     4,
+     3,
+     6,
+     4,
+     1,
+     8,
+     1
+    ]
+   },
+   {
+    "id": "average",
+    "label": "Average order",
+    "value": "CHF 70.26",
+    "delta": "−3%",
+    "deltaTone": "bad",
+    "direction": "down",
+    "deltaLabel": "−3% compared with 30 Sept – 6 Oct",
+    "trend": [
+     6000,
+     11033,
+     7283,
+     4025,
+     4800,
+     7888,
+     4900
+    ]
+   }
+  ],
+  "trend": {
+   "title": "Payments and orders",
+   "description": "Collected CHF and new orders per day",
+   "collectedLabel": "Collected (CHF)",
+   "ordersLabel": "Orders",
+   "dayLabel": "Day",
+   "showTable": "Show table",
+   "showChart": "Show chart",
+   "summary": "7–13 Oct: CHF 1’422.70 collected, 27 orders.",
+   "days": [
+    {
+     "day": "2026-10-07",
+     "tick": "7",
+     "label": "Wed 7 Oct",
+     "orders": 4,
+     "collected": 140,
+     "collectedText": "CHF 140.00",
+     "isToday": false
+    },
+    {
+     "day": "2026-10-08",
+     "tick": "8",
+     "label": "Thu 8 Oct",
+     "orders": 3,
+     "collected": 0,
+     "collectedText": "CHF 0.00",
+     "isToday": false
+    },
+    {
+     "day": "2026-10-09",
+     "tick": "9",
+     "label": "Fri 9 Oct",
+     "orders": 6,
+     "collected": 311.7,
+     "collectedText": "CHF 311.70",
+     "isToday": false
+    },
+    {
+     "day": "2026-10-10",
+     "tick": "10",
+     "label": "Sat 10 Oct",
+     "orders": 4,
+     "collected": 274,
+     "collectedText": "CHF 274.00",
+     "isToday": false
+    },
+    {
+     "day": "2026-10-11",
+     "tick": "11",
+     "label": "Sun 11 Oct",
+     "orders": 1,
+     "collected": 287,
+     "collectedText": "CHF 287.00",
+     "isToday": false
+    },
+    {
+     "day": "2026-10-12",
+     "tick": "12",
+     "label": "Mon 12 Oct",
+     "orders": 8,
+     "collected": 103,
+     "collectedText": "CHF 103.00",
+     "isToday": false
+    },
+    {
+     "day": "2026-10-13",
+     "tick": "Today",
+     "label": "Today, Tue 13 Oct (so far)",
+     "orders": 1,
+     "collected": 307,
+     "collectedText": "CHF 307.00",
+     "isToday": true
+    }
+   ]
+  },
+  "funnel": {
+   "title": "Order status",
+   "description": "Orders requested in the period, by how far they got",
+   "lostLabel": "Not going ahead",
+   "steps": [
+    {
+     "id": "requested",
+     "label": "Requested",
+     "value": 27,
+     "valueText": "27",
+     "share": "100%",
+     "isLost": false
+    },
+    {
+     "id": "accepted",
+     "label": "Accepted",
+     "value": 22,
+     "valueText": "22",
+     "share": "81%",
+     "isLost": false
+    },
+    {
+     "id": "paid",
+     "label": "Paid",
+     "value": 18,
+     "valueText": "18",
+     "share": "67%",
+     "isLost": false
+    },
+    {
+     "id": "completed",
+     "label": "Completed",
+     "value": 17,
+     "valueText": "17",
+     "share": "63%",
+     "isLost": false
+    },
+    {
+     "id": "declined",
+     "label": "Declined",
+     "value": 2,
+     "valueText": "2",
+     "share": "7%",
+     "isLost": true
+    },
+    {
+     "id": "cancelled",
+     "label": "Cancelled",
+     "value": 2,
+     "valueText": "2",
+     "share": "7%",
+     "isLost": true
+    }
+   ]
+  },
+  "groups": {
+   "title": "Revenue by product group",
+   "description": "Orders in the period, without declined or cancelled",
+   "total": "CHF 1’582.00",
+   "rows": [
+    {
+     "id": "prints",
+     "label": "Prints",
+     "value": 753,
+     "valueText": "CHF 753.00",
+     "share": "48%",
+     "detail": ""
+    },
+    {
+     "id": "gift-boxes",
+     "label": "Gift boxes",
+     "value": 346,
+     "valueText": "CHF 346.00",
+     "share": "22%",
+     "detail": ""
+    },
+    {
+     "id": "pocket-knives",
+     "label": "Pocket knives",
+     "value": 315,
+     "valueText": "CHF 315.00",
+     "share": "20%",
+     "detail": ""
+    },
+    {
+     "id": "chocolate",
+     "label": "Chocolate",
+     "value": 132,
+     "valueText": "CHF 132.00",
+     "share": "8%",
+     "detail": ""
+    },
+    {
+     "id": "small-gifts",
+     "label": "Small gifts",
+     "value": 36,
+     "valueText": "CHF 36.00",
+     "share": "2%",
+     "detail": ""
+    }
+   ]
+  },
+  "methods": {
+   "title": "Payment methods",
+   "description": "Payments received in the period",
+   "total": "CHF 1’422.70",
+   "rows": [
+    {
+     "id": "cash",
+     "label": "Cash",
+     "value": 662,
+     "valueText": "CHF 662.00",
+     "share": "47%",
+     "detail": "10 payments"
+    },
+    {
+     "id": "bank-transfer",
+     "label": "Bank transfer",
+     "value": 407,
+     "valueText": "CHF 407.00",
+     "share": "29%",
+     "detail": "4 payments"
+    },
+    {
+     "id": "online",
+     "label": "Online",
+     "value": 353.7,
+     "valueText": "CHF 353.70",
+     "share": "25%",
+     "detail": "9 payments"
+    }
+   ]
+  },
+  "places": {
+   "title": "Top pickup places",
+   "description": "Orders in the period, without declined or cancelled",
+   "total": "CHF 1’582.00",
+   "rows": [
+    {
+     "id": "altstadt",
+     "label": "Shop Altstadt",
+     "value": 1153,
+     "valueText": "CHF 1’153.00",
+     "share": "73%",
+     "detail": "17 orders"
+    },
+    {
+     "id": "bahnhof",
+     "label": "Pickup point Bahnhof",
+     "value": 429,
+     "valueText": "CHF 429.00",
+     "share": "27%",
+     "detail": "6 orders"
+    }
+   ]
+  },
+  "tableLabels": {
+   "item": "Item",
+   "value": "Value",
+   "share": "Share"
+  },
+  "none": "Nothing in this period."
+ },
+ "P02 usePartnerReport(month)": {
+  "allTime": {
+   "id": "report-alltime",
+   "title": "All-time commission",
+   "description": "Since the first order on 11 August 2026",
+   "value": "CHF 224.80",
+   "delta": {
+    "text": "+43%",
+    "tone": "good",
+    "direction": "up",
+    "label": "+43% compared with Sat 15 Aug – Sun 13 Sept"
+   },
+   "sentence": "CHF 128.30 earned on orders from the last 30 days, compared with CHF 89.45 in the 30 days before.",
+   "chart": {
+    "title": "Earned per month",
+    "bars": [
+     {
+      "id": "2026-04-01",
+      "tick": "Apr",
+      "label": "April 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-05-01",
+      "tick": "May",
+      "label": "May 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-06-01",
+      "tick": "Jun",
+      "label": "June 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-07-01",
+      "tick": "Jul",
+      "label": "July 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-08-01",
+      "tick": "Aug",
+      "label": "August 2026",
+      "value": 49.4,
+      "valueText": "CHF 49.40",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-09-01",
+      "tick": "Sept",
+      "label": "September 2026",
+      "value": 150.8,
+      "valueText": "CHF 150.80",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-10-01",
+      "tick": "Oct",
+      "label": "This month, so far",
+      "value": 24.6,
+      "valueText": "CHF 24.60",
+      "isCurrent": true
+     }
+    ],
+    "tableLabels": {
+     "item": "Month",
+     "value": "Earned"
+    }
+   },
+   "metricsLabel": "All-time figures",
+   "metrics": [
+    {
+     "id": "earned",
+     "icon": {
+      "type": {
+       "render": "[fn Handshake]"
+      },
+      "compare": null
+     },
+     "label": "Earned",
+     "value": "CHF 224.80",
+     "caption": "74% of CHF 304.10, with open orders",
+     "share": 0.7392305162775403
+    },
+    {
+     "id": "paid",
+     "icon": {
+      "type": {
+       "render": "[fn Wallet]"
+      },
+      "compare": null
+     },
+     "label": "Paid out",
+     "value": "CHF 200.20",
+     "caption": "89% of earned",
+     "share": 0.8905693950177936
+    },
+    {
+     "id": "to-pay",
+     "icon": {
+      "type": {
+       "render": "[fn Clock]"
+      },
+      "compare": null
+     },
+     "label": "Still to pay",
+     "value": "CHF 0.00",
+     "caption": "CHF 11.10 still to offset",
+     "share": 0
+    }
+   ]
+  },
+  "demoNote": "Prototype: the figures include sample orders from before 13 Oct.",
+  "periods": [
+   {
+    "id": "day",
+    "label": "Day"
+   },
+   {
+    "id": "week",
+    "label": "Week"
+   },
+   {
+    "id": "month",
+    "label": "Month"
+   }
+  ],
+  "rangeLabel": "October 2026",
+  "previous": "2026-09-01",
+  "next": null,
+  "isCurrent": true,
+  "kpis": [
+   {
+    "id": "earned",
+    "label": "Commission after adjustments",
+    "value": "CHF 0.00",
+    "hint": "CHF 24.60 recorded − CHF 35.70 refund"
+   },
+   {
+    "id": "paid",
+    "label": "Actually paid",
+    "value": "CHF 150.80",
+    "hint": "1 payment in this period"
+   },
+   {
+    "id": "to-pay",
+    "label": "Still to pay",
+    "value": "CHF 0.00",
+    "hint": "CHF 11.10 still to offset"
+   },
+   {
+    "id": "orders",
+    "label": "Orders",
+    "value": "8",
+    "hint": "3 completed · 4 open · 1 cancelled"
+   }
+  ],
+  "chart": {
+   "title": "Commission by week",
+   "label": "Commission by week, October 2026",
+   "unit": "In CHF, by order date",
+   "legend": {
+    "recorded": "Recorded",
+    "estimated": "Estimated"
+   },
+   "ticks": [
+    {
+     "share": 0,
+     "label": "0"
+    },
+    {
+     "share": 0.25,
+     "label": "20"
+    },
+    {
+     "share": 0.5,
+     "label": "40"
+    },
+    {
+     "share": 0.75,
+     "label": "60"
+    },
+    {
+     "share": 1,
+     "label": "80"
+    }
+   ],
+   "columns": [
+    {
+     "id": "2026-10-01-",
+     "axisLabel": "1–4",
+     "label": "1–4 Oct",
+     "ariaLabel": "1–4 Oct: CHF 13.35 recorded, CHF 0.00 estimated, 2 orders",
+     "readout": "CHF 13.35 recorded · CHF 0.00 estimated",
+     "orders": "2 orders",
+     "cap": "13.35",
+     "recordedShare": 0.166875,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-05-",
+     "axisLabel": "5–11",
+     "label": "5–11 Oct",
+     "ariaLabel": "5–11 Oct: CHF 11.25 recorded, CHF 68.00 estimated, 4 orders",
+     "readout": "CHF 11.25 recorded · CHF 68.00 estimated",
+     "orders": "4 orders",
+     "cap": "79.25",
+     "recordedShare": 0.140625,
+     "estimatedShare": 0.85,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-12-",
+     "axisLabel": "12–18",
+     "label": "12–18 Oct",
+     "ariaLabel": "12–18 Oct: CHF 0.00 recorded, CHF 11.30 estimated, 2 orders",
+     "readout": "CHF 0.00 recorded · CHF 11.30 estimated",
+     "orders": "2 orders",
+     "cap": "11.30",
+     "recordedShare": 0,
+     "estimatedShare": 0.14125,
+     "isFuture": false,
+     "isCurrent": true
+    },
+    {
+     "id": "2026-10-19-",
+     "axisLabel": "19–25",
+     "label": "19–25 Oct",
+     "ariaLabel": "19–25 Oct: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-26-",
+     "axisLabel": "26–31",
+     "label": "26–31 Oct",
+     "ariaLabel": "26–31 Oct: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    }
+   ],
+   "initialIndex": 2
+  },
+  "groups": [
+   {
+    "id": "tours",
+    "name": "Tours",
+    "summary": "2 orders · CHF 680.00",
+    "commission": "CHF 0.00",
+    "estimated": "+CHF 68.00 estimated",
+    "recordedShare": 0,
+    "estimatedShare": 1
+   },
+   {
+    "id": "pocket-knives",
+    "name": "Pocket knives",
+    "summary": "3 orders · CHF 167.00",
+    "commission": "CHF 5.40",
+    "estimated": "+CHF 11.30 estimated",
+    "recordedShare": 0.07941176470588235,
+    "estimatedShare": 0.1661764705882353
+   },
+   {
+    "id": "gift-boxes",
+    "name": "Gift boxes",
+    "summary": "1 order · CHF 89.00",
+    "commission": "CHF 13.35",
+    "estimated": null,
+    "recordedShare": 0.1963235294117647,
+    "estimatedShare": 0
+   },
+   {
+    "id": "prints",
+    "name": "Prints",
+    "summary": "1 order · CHF 39.00",
+    "commission": "CHF 5.85",
+    "estimated": null,
+    "recordedShare": 0.08602941176470588,
+    "estimatedShare": 0
+   }
+  ],
+  "rows": [
+   {
+    "id": "sk-1031",
+    "reference": "SK-1031",
+    "date": "13.10.2026",
+    "guestName": "Tom Becker",
+    "gifts": "1 × Kapellbrücke pocket knife",
+    "value": "CHF 49.00",
+    "status": {
+     "text": "Awaiting seller confirmation",
+     "tone": "info"
+    },
+    "commission": {
+     "amount": "CHF 4.90",
+     "label": {
+      "text": "Estimated, not recorded",
+      "tone": "neutral"
+     }
+    }
+   },
+   {
+    "id": "sk-1028",
+    "reference": "SK-1028",
+    "date": "12.10.2026",
+    "guestName": "Daniel Meier",
+    "gifts": "1 × Kapellbrücke pocket knife",
+    "value": "CHF 64.00",
+    "status": {
+     "text": "Accepted, payment due",
+     "tone": "warning"
+    },
+    "commission": {
+     "amount": "CHF 6.40",
+     "label": {
+      "text": "Estimated, not recorded",
+      "tone": "neutral"
+     }
+    }
+   },
+   {
+    "id": "tour-lars",
+    "reference": "SK-T1049",
+    "date": "11.10.2026",
+    "guestName": "Lars Jensen",
+    "gifts": "5 × Lucerne old-town walk",
+    "value": "CHF 357.00",
+    "status": {
+     "text": "Confirmed",
+     "tone": "success"
+    },
+    "commission": {
+     "amount": "CHF 35.70",
+     "label": {
+      "text": "Estimated, not recorded",
+      "tone": "neutral"
+     }
+    }
+   },
+   {
+    "id": "sk-h154",
+    "reference": "SK-H154",
+    "date": "09.10.2026",
+    "guestName": "Sofia Rossi",
+    "gifts": "1 × Old town façades print",
+    "value": "CHF 39.00",
+    "status": {
+     "text": "Completed",
+     "tone": "success"
+    },
+    "commission": {
+     "amount": "CHF 5.85",
+     "label": {
+      "text": "Recorded",
+      "tone": "success"
+     }
+    }
+   },
+   {
+    "id": "sk-1017",
+    "reference": "SK-1017",
+    "date": "05.10.2026",
+    "guestName": "Marie Dubois",
+    "gifts": "1 × Kapellbrücke pocket knife",
+    "value": "CHF 54.00",
+    "status": {
+     "text": "Completed",
+     "tone": "success"
+    },
+    "commission": {
+     "amount": "CHF 5.40",
+     "label": {
+      "text": "Recorded",
+      "tone": "success"
+     }
+    }
+   },
+   {
+    "id": "tc-anna-done",
+    "reference": "SK-T2004",
+    "date": "05.10.2026",
+    "guestName": "Anna Keller",
+    "gifts": "3 × Across Lake Lucerne",
+    "value": "CHF 323.00",
+    "status": {
+     "text": "Tour service delivered",
+     "tone": "info"
+    },
+    "commission": {
+     "amount": "CHF 32.30",
+     "label": {
+      "text": "Estimated, not recorded",
+      "tone": "neutral"
+     }
+    }
+   },
+   {
+    "id": "sk-h130",
+    "reference": "SK-H130",
+    "date": "02.10.2026",
+    "guestName": "Sofia Rossi",
+    "gifts": "1 × Chocolate set",
+    "value": "CHF 24.00",
+    "status": {
+     "text": "Declined by seller",
+     "tone": "danger"
+    },
+    "commission": {
+     "amount": null,
+     "label": {
+      "text": "No commission",
+      "tone": "neutral"
+     }
+    }
+   },
+   {
+    "id": "sk-h128",
+    "reference": "SK-H128",
+    "date": "01.10.2026",
+    "guestName": "Tom Becker",
+    "gifts": "1 × Lucerne gift box",
+    "value": "CHF 89.00",
+    "status": {
+     "text": "Completed",
+     "tone": "success"
+    },
+    "commission": {
+     "amount": "CHF 13.35",
+     "label": {
+      "text": "Recorded",
+      "tone": "success"
+     }
+    }
+   }
+  ],
+  "payments": {
+   "heading": "Payments and adjustments",
+   "carriedIn": null,
+   "rows": [
+    {
+     "id": "p0",
+     "text": "Paid to you",
+     "date": "05.10.2026",
+     "amount": "CHF 150.80",
+     "tone": "success"
+    },
+    {
+     "id": "a1",
+     "text": "Refund on SK-H094: commission reduced",
+     "date": "07.10.2026",
+     "amount": "−CHF 35.70",
+     "tone": "warning"
+    },
+    {
+     "id": "o2",
+     "text": "Offset against SK-1017",
+     "date": "12.10.2026",
+     "amount": "CHF 5.40",
+     "tone": "neutral"
+    },
+    {
+     "id": "o3",
+     "text": "Offset against SK-H154",
+     "date": "13.10.2026",
+     "amount": "CHF 5.85",
+     "tone": "neutral"
+    }
+   ],
+   "totals": [
+    {
+     "label": "Offset in this period",
+     "value": "CHF 11.25"
+    },
+    {
+     "label": "Still to offset",
+     "value": "CHF 11.10"
+    }
+   ]
+  }
+ },
+ "P02 usePartnerReport(week)": {
+  "allTime": {
+   "id": "report-alltime",
+   "title": "All-time commission",
+   "description": "Since the first order on 11 August 2026",
+   "value": "CHF 224.80",
+   "delta": {
+    "text": "+43%",
+    "tone": "good",
+    "direction": "up",
+    "label": "+43% compared with Sat 15 Aug – Sun 13 Sept"
+   },
+   "sentence": "CHF 128.30 earned on orders from the last 30 days, compared with CHF 89.45 in the 30 days before.",
+   "chart": {
+    "title": "Earned per month",
+    "bars": [
+     {
+      "id": "2026-04-01",
+      "tick": "Apr",
+      "label": "April 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-05-01",
+      "tick": "May",
+      "label": "May 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-06-01",
+      "tick": "Jun",
+      "label": "June 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-07-01",
+      "tick": "Jul",
+      "label": "July 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-08-01",
+      "tick": "Aug",
+      "label": "August 2026",
+      "value": 49.4,
+      "valueText": "CHF 49.40",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-09-01",
+      "tick": "Sept",
+      "label": "September 2026",
+      "value": 150.8,
+      "valueText": "CHF 150.80",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-10-01",
+      "tick": "Oct",
+      "label": "This month, so far",
+      "value": 24.6,
+      "valueText": "CHF 24.60",
+      "isCurrent": true
+     }
+    ],
+    "tableLabels": {
+     "item": "Month",
+     "value": "Earned"
+    }
+   },
+   "metricsLabel": "All-time figures",
+   "metrics": [
+    {
+     "id": "earned",
+     "icon": {
+      "type": {
+       "render": "[fn Handshake]"
+      },
+      "compare": null
+     },
+     "label": "Earned",
+     "value": "CHF 224.80",
+     "caption": "74% of CHF 304.10, with open orders",
+     "share": 0.7392305162775403
+    },
+    {
+     "id": "paid",
+     "icon": {
+      "type": {
+       "render": "[fn Wallet]"
+      },
+      "compare": null
+     },
+     "label": "Paid out",
+     "value": "CHF 200.20",
+     "caption": "89% of earned",
+     "share": 0.8905693950177936
+    },
+    {
+     "id": "to-pay",
+     "icon": {
+      "type": {
+       "render": "[fn Clock]"
+      },
+      "compare": null
+     },
+     "label": "Still to pay",
+     "value": "CHF 0.00",
+     "caption": "CHF 11.10 still to offset",
+     "share": 0
+    }
+   ]
+  },
+  "demoNote": "Prototype: the figures include sample orders from before 13 Oct.",
+  "periods": [
+   {
+    "id": "day",
+    "label": "Day"
+   },
+   {
+    "id": "week",
+    "label": "Week"
+   },
+   {
+    "id": "month",
+    "label": "Month"
+   }
+  ],
+  "rangeLabel": "Mon 12 Oct – Sun 18 Oct",
+  "previous": "2026-10-05",
+  "next": null,
+  "isCurrent": true,
+  "kpis": [
+   {
+    "id": "earned",
+    "label": "Commission after adjustments",
+    "value": "CHF 0.00",
+    "hint": "+CHF 11.30 estimated on open orders"
+   },
+   {
+    "id": "paid",
+    "label": "Actually paid",
+    "value": "CHF 0.00",
+    "hint": "No payment in this period"
+   },
+   {
+    "id": "to-pay",
+    "label": "Still to pay",
+    "value": "CHF 0.00",
+    "hint": "CHF 11.10 still to offset"
+   },
+   {
+    "id": "orders",
+    "label": "Orders",
+    "value": "2",
+    "hint": "0 completed · 2 open"
+   }
+  ],
+  "chart": {
+   "title": "Commission by day",
+   "label": "Commission by day, Mon 12 Oct – Sun 18 Oct",
+   "unit": "In CHF, by order date",
+   "legend": {
+    "recorded": "Recorded",
+    "estimated": "Estimated"
+   },
+   "ticks": [
+    {
+     "share": 0,
+     "label": "0"
+    },
+    {
+     "share": 0.25,
+     "label": "2"
+    },
+    {
+     "share": 0.5,
+     "label": "4"
+    },
+    {
+     "share": 0.75,
+     "label": "6"
+    },
+    {
+     "share": 1,
+     "label": "8"
+    }
+   ],
+   "columns": [
+    {
+     "id": "2026-10-12-",
+     "axisLabel": "Mon",
+     "label": "Mon 12 Oct",
+     "ariaLabel": "Mon 12 Oct: CHF 0.00 recorded, CHF 6.40 estimated, 1 order",
+     "readout": "CHF 0.00 recorded · CHF 6.40 estimated",
+     "orders": "1 order",
+     "cap": "6.40",
+     "recordedShare": 0,
+     "estimatedShare": 0.8,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-",
+     "axisLabel": "Today",
+     "label": "Tue 13 Oct",
+     "ariaLabel": "Tue 13 Oct: CHF 0.00 recorded, CHF 4.90 estimated, 1 order",
+     "readout": "CHF 0.00 recorded · CHF 4.90 estimated",
+     "orders": "1 order",
+     "cap": "4.90",
+     "recordedShare": 0,
+     "estimatedShare": 0.6125,
+     "isFuture": false,
+     "isCurrent": true
+    },
+    {
+     "id": "2026-10-14-",
+     "axisLabel": "Wed",
+     "label": "Wed 14 Oct",
+     "ariaLabel": "Wed 14 Oct: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-15-",
+     "axisLabel": "Thu",
+     "label": "Thu 15 Oct",
+     "ariaLabel": "Thu 15 Oct: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-16-",
+     "axisLabel": "Fri",
+     "label": "Fri 16 Oct",
+     "ariaLabel": "Fri 16 Oct: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-17-",
+     "axisLabel": "Sat",
+     "label": "Sat 17 Oct",
+     "ariaLabel": "Sat 17 Oct: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-18-",
+     "axisLabel": "Sun",
+     "label": "Sun 18 Oct",
+     "ariaLabel": "Sun 18 Oct: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    }
+   ],
+   "initialIndex": 1
+  },
+  "groups": [
+   {
+    "id": "pocket-knives",
+    "name": "Pocket knives",
+    "summary": "2 orders · CHF 113.00",
+    "commission": "CHF 0.00",
+    "estimated": "+CHF 11.30 estimated",
+    "recordedShare": 0,
+    "estimatedShare": 1
+   }
+  ],
+  "rows": [
+   {
+    "id": "sk-1031",
+    "reference": "SK-1031",
+    "date": "13.10.2026",
+    "guestName": "Tom Becker",
+    "gifts": "1 × Kapellbrücke pocket knife",
+    "value": "CHF 49.00",
+    "status": {
+     "text": "Awaiting seller confirmation",
+     "tone": "info"
+    },
+    "commission": {
+     "amount": "CHF 4.90",
+     "label": {
+      "text": "Estimated, not recorded",
+      "tone": "neutral"
+     }
+    }
+   },
+   {
+    "id": "sk-1028",
+    "reference": "SK-1028",
+    "date": "12.10.2026",
+    "guestName": "Daniel Meier",
+    "gifts": "1 × Kapellbrücke pocket knife",
+    "value": "CHF 64.00",
+    "status": {
+     "text": "Accepted, payment due",
+     "tone": "warning"
+    },
+    "commission": {
+     "amount": "CHF 6.40",
+     "label": {
+      "text": "Estimated, not recorded",
+      "tone": "neutral"
+     }
+    }
+   }
+  ],
+  "payments": {
+   "heading": "Payments and adjustments",
+   "carriedIn": "CHF 22.35 still to offset, carried from before 12.10.2026",
+   "rows": [
+    {
+     "id": "o0",
+     "text": "Offset against SK-1017",
+     "date": "12.10.2026",
+     "amount": "CHF 5.40",
+     "tone": "neutral"
+    },
+    {
+     "id": "o1",
+     "text": "Offset against SK-H154",
+     "date": "13.10.2026",
+     "amount": "CHF 5.85",
+     "tone": "neutral"
+    }
+   ],
+   "totals": [
+    {
+     "label": "Offset in this period",
+     "value": "CHF 11.25"
+    },
+    {
+     "label": "Still to offset",
+     "value": "CHF 11.10"
+    }
+   ]
+  }
+ },
+ "P02 usePartnerReport(day)": {
+  "allTime": {
+   "id": "report-alltime",
+   "title": "All-time commission",
+   "description": "Since the first order on 11 August 2026",
+   "value": "CHF 224.80",
+   "delta": {
+    "text": "+43%",
+    "tone": "good",
+    "direction": "up",
+    "label": "+43% compared with Sat 15 Aug – Sun 13 Sept"
+   },
+   "sentence": "CHF 128.30 earned on orders from the last 30 days, compared with CHF 89.45 in the 30 days before.",
+   "chart": {
+    "title": "Earned per month",
+    "bars": [
+     {
+      "id": "2026-04-01",
+      "tick": "Apr",
+      "label": "April 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-05-01",
+      "tick": "May",
+      "label": "May 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-06-01",
+      "tick": "Jun",
+      "label": "June 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-07-01",
+      "tick": "Jul",
+      "label": "July 2026",
+      "value": null,
+      "valueText": "Before the first order",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-08-01",
+      "tick": "Aug",
+      "label": "August 2026",
+      "value": 49.4,
+      "valueText": "CHF 49.40",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-09-01",
+      "tick": "Sept",
+      "label": "September 2026",
+      "value": 150.8,
+      "valueText": "CHF 150.80",
+      "isCurrent": false
+     },
+     {
+      "id": "2026-10-01",
+      "tick": "Oct",
+      "label": "This month, so far",
+      "value": 24.6,
+      "valueText": "CHF 24.60",
+      "isCurrent": true
+     }
+    ],
+    "tableLabels": {
+     "item": "Month",
+     "value": "Earned"
+    }
+   },
+   "metricsLabel": "All-time figures",
+   "metrics": [
+    {
+     "id": "earned",
+     "icon": {
+      "type": {
+       "render": "[fn Handshake]"
+      },
+      "compare": null
+     },
+     "label": "Earned",
+     "value": "CHF 224.80",
+     "caption": "74% of CHF 304.10, with open orders",
+     "share": 0.7392305162775403
+    },
+    {
+     "id": "paid",
+     "icon": {
+      "type": {
+       "render": "[fn Wallet]"
+      },
+      "compare": null
+     },
+     "label": "Paid out",
+     "value": "CHF 200.20",
+     "caption": "89% of earned",
+     "share": 0.8905693950177936
+    },
+    {
+     "id": "to-pay",
+     "icon": {
+      "type": {
+       "render": "[fn Clock]"
+      },
+      "compare": null
+     },
+     "label": "Still to pay",
+     "value": "CHF 0.00",
+     "caption": "CHF 11.10 still to offset",
+     "share": 0
+    }
+   ]
+  },
+  "demoNote": "Prototype: the figures include sample orders from before 13 Oct.",
+  "periods": [
+   {
+    "id": "day",
+    "label": "Day"
+   },
+   {
+    "id": "week",
+    "label": "Week"
+   },
+   {
+    "id": "month",
+    "label": "Month"
+   }
+  ],
+  "rangeLabel": "Tue 13 Oct",
+  "previous": "2026-10-12",
+  "next": null,
+  "isCurrent": true,
+  "kpis": [
+   {
+    "id": "earned",
+    "label": "Commission after adjustments",
+    "value": "CHF 0.00",
+    "hint": "+CHF 4.90 estimated on open orders"
+   },
+   {
+    "id": "paid",
+    "label": "Actually paid",
+    "value": "CHF 0.00",
+    "hint": "No payment in this period"
+   },
+   {
+    "id": "to-pay",
+    "label": "Still to pay",
+    "value": "CHF 0.00",
+    "hint": "CHF 11.10 still to offset"
+   },
+   {
+    "id": "orders",
+    "label": "Orders",
+    "value": "1",
+    "hint": "0 completed · 1 open"
+   }
+  ],
+  "chart": {
+   "title": "Commission by hour",
+   "label": "Commission by hour, Tue 13 Oct",
+   "unit": "In CHF, by order date",
+   "legend": {
+    "recorded": "Recorded",
+    "estimated": "Estimated"
+   },
+   "ticks": [
+    {
+     "share": 0,
+     "label": "0"
+    },
+    {
+     "share": 0.3333333333333333,
+     "label": "2"
+    },
+    {
+     "share": 0.6666666666666666,
+     "label": "4"
+    },
+    {
+     "share": 1,
+     "label": "6"
+    }
+   ],
+   "columns": [
+    {
+     "id": "2026-10-13-0",
+     "axisLabel": "00:00",
+     "label": "00:00–01:00",
+     "ariaLabel": "00:00–01:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-1",
+     "axisLabel": null,
+     "label": "01:00–02:00",
+     "ariaLabel": "01:00–02:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-2",
+     "axisLabel": null,
+     "label": "02:00–03:00",
+     "ariaLabel": "02:00–03:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-3",
+     "axisLabel": null,
+     "label": "03:00–04:00",
+     "ariaLabel": "03:00–04:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-4",
+     "axisLabel": null,
+     "label": "04:00–05:00",
+     "ariaLabel": "04:00–05:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-5",
+     "axisLabel": null,
+     "label": "05:00–06:00",
+     "ariaLabel": "05:00–06:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-6",
+     "axisLabel": "06:00",
+     "label": "06:00–07:00",
+     "ariaLabel": "06:00–07:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-7",
+     "axisLabel": null,
+     "label": "07:00–08:00",
+     "ariaLabel": "07:00–08:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-8",
+     "axisLabel": null,
+     "label": "08:00–09:00",
+     "ariaLabel": "08:00–09:00: CHF 0.00 recorded, CHF 4.90 estimated, 1 order",
+     "readout": "CHF 0.00 recorded · CHF 4.90 estimated",
+     "orders": "1 order",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0.8166666666666667,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-9",
+     "axisLabel": null,
+     "label": "09:00–10:00",
+     "ariaLabel": "09:00–10:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-10",
+     "axisLabel": null,
+     "label": "10:00–11:00",
+     "ariaLabel": "10:00–11:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": false,
+     "isCurrent": true
+    },
+    {
+     "id": "2026-10-13-11",
+     "axisLabel": null,
+     "label": "11:00–12:00",
+     "ariaLabel": "11:00–12:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-12",
+     "axisLabel": "12:00",
+     "label": "12:00–13:00",
+     "ariaLabel": "12:00–13:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-13",
+     "axisLabel": null,
+     "label": "13:00–14:00",
+     "ariaLabel": "13:00–14:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-14",
+     "axisLabel": null,
+     "label": "14:00–15:00",
+     "ariaLabel": "14:00–15:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-15",
+     "axisLabel": null,
+     "label": "15:00–16:00",
+     "ariaLabel": "15:00–16:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-16",
+     "axisLabel": null,
+     "label": "16:00–17:00",
+     "ariaLabel": "16:00–17:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-17",
+     "axisLabel": null,
+     "label": "17:00–18:00",
+     "ariaLabel": "17:00–18:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-18",
+     "axisLabel": "18:00",
+     "label": "18:00–19:00",
+     "ariaLabel": "18:00–19:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-19",
+     "axisLabel": null,
+     "label": "19:00–20:00",
+     "ariaLabel": "19:00–20:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-20",
+     "axisLabel": null,
+     "label": "20:00–21:00",
+     "ariaLabel": "20:00–21:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-21",
+     "axisLabel": null,
+     "label": "21:00–22:00",
+     "ariaLabel": "21:00–22:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-22",
+     "axisLabel": null,
+     "label": "22:00–23:00",
+     "ariaLabel": "22:00–23:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    },
+    {
+     "id": "2026-10-13-23",
+     "axisLabel": null,
+     "label": "23:00–00:00",
+     "ariaLabel": "23:00–00:00: CHF 0.00 recorded, CHF 0.00 estimated, 0 orders",
+     "readout": "CHF 0.00 recorded · CHF 0.00 estimated",
+     "orders": "0 orders",
+     "cap": null,
+     "recordedShare": 0,
+     "estimatedShare": 0,
+     "isFuture": true,
+     "isCurrent": false
+    }
+   ],
+   "initialIndex": 8
+  },
+  "groups": [
+   {
+    "id": "pocket-knives",
+    "name": "Pocket knives",
+    "summary": "1 order · CHF 49.00",
+    "commission": "CHF 0.00",
+    "estimated": "+CHF 4.90 estimated",
+    "recordedShare": 0,
+    "estimatedShare": 1
+   }
+  ],
+  "rows": [
+   {
+    "id": "sk-1031",
+    "reference": "SK-1031",
+    "date": "13.10.2026",
+    "guestName": "Tom Becker",
+    "gifts": "1 × Kapellbrücke pocket knife",
+    "value": "CHF 49.00",
+    "status": {
+     "text": "Awaiting seller confirmation",
+     "tone": "info"
+    },
+    "commission": {
+     "amount": "CHF 4.90",
+     "label": {
+      "text": "Estimated, not recorded",
+      "tone": "neutral"
+     }
+    }
+   }
+  ],
+  "payments": {
+   "heading": "Payments and adjustments",
+   "carriedIn": "CHF 16.95 still to offset, carried from before 13.10.2026",
+   "rows": [
+    {
+     "id": "o0",
+     "text": "Offset against SK-H154",
+     "date": "13.10.2026",
+     "amount": "CHF 5.85",
+     "tone": "neutral"
+    }
+   ],
+   "totals": [
+    {
+     "label": "Offset in this period",
+     "value": "CHF 5.85"
+    },
+    {
+     "label": "Still to offset",
+     "value": "CHF 11.10"
+    }
+   ]
+  }
+ },
+ "M15 usePartnerAnalytics": {
+  "period": "30d",
+  "onPeriodChange": "[fn bound dispatchAction]",
+  "periods": [
+   {
+    "id": "7d",
+    "label": "7 days"
+   },
+   {
+    "id": "30d",
+    "label": "30 days"
+   },
+   {
+    "id": "month",
+    "label": "This month"
+   }
+  ],
+  "periodsLabel": "Period",
+  "comparison": "14 Sept – 13 Oct, compared with 15 Aug – 13 Sept",
+  "kpisLabel": "Partner figures",
+  "kpis": [
+   {
+    "id": "opens",
+    "label": "Link opens",
+    "value": "306",
+    "delta": "−9%",
+    "deltaTone": "bad",
+    "direction": "down",
+    "deltaLabel": "−9% compared with 15 Aug – 13 Sept",
+    "trend": [
+     14,
+     5,
+     11,
+     12,
+     7,
+     13,
+     9,
+     8,
+     8,
+     10,
+     13,
+     9,
+     9,
+     18,
+     10,
+     8,
+     12,
+     10,
+     8,
+     10,
+     11,
+     14,
+     13,
+     9,
+     9,
+     12,
+     9,
+     11,
+     10,
+     4
+    ]
+   },
+   {
+    "id": "transactions",
+    "label": "Partner transactions",
+    "value": "45",
+    "delta": "+45%",
+    "deltaTone": "good",
+    "direction": "up",
+    "deltaLabel": "+45% compared with 15 Aug – 13 Sept",
+    "trend": [
+     1,
+     1,
+     2,
+     3,
+     2,
+     3,
+     0,
+     2,
+     1,
+     2,
+     0,
+     3,
+     0,
+     0,
+     2,
+     3,
+     0,
+     1,
+     1,
+     3,
+     0,
+     5,
+     0,
+     1,
+     1,
+     2,
+     2,
+     1,
+     2,
+     1
+    ]
+   },
+   {
+    "id": "conversion",
+    "label": "Conversion",
+    "value": "14.7%",
+    "delta": "+59%",
+    "deltaTone": "good",
+    "direction": "up",
+    "deltaLabel": "+59% compared with 15 Aug – 13 Sept",
+    "trend": [
+     0.07142857142857142,
+     0.2,
+     0.18181818181818182,
+     0.25,
+     0.2857142857142857,
+     0.23076923076923078,
+     0,
+     0.25,
+     0.125,
+     0.2,
+     0,
+     0.3333333333333333,
+     0,
+     0,
+     0.2,
+     0.375,
+     0,
+     0.1,
+     0.125,
+     0.3,
+     0,
+     0.35714285714285715,
+     0,
+     0.1111111111111111,
+     0.1111111111111111,
+     0.16666666666666666,
+     0.2222222222222222,
+     0.09090909090909091,
+     0.2,
+     0.25
+    ]
+   },
+   {
+    "id": "commission",
+    "label": "Commission earned",
+    "value": "CHF 215.30",
+    "delta": "+35%",
+    "deltaTone": "good",
+    "direction": "up",
+    "deltaLabel": "+35% compared with 15 Aug – 13 Sept",
+    "trend": [
+     0,
+     0,
+     1920,
+     270,
+     1380,
+     0,
+     2205,
+     140,
+     940,
+     510,
+     1455,
+     3570,
+     1975,
+     0,
+     810,
+     0,
+     690,
+     720,
+     0,
+     0,
+     510,
+     0,
+     1920,
+     0,
+     270,
+     970,
+     360,
+     2970,
+     540,
+     975
+    ]
+   }
+  ],
+  "daily": {
+   "title": "Link opens per day",
+   "description": "QR codes and links opened, by partner",
+   "series": [
+    {
+     "id": "hotel-am-see",
+     "name": "Hotel am See",
+     "colour": "var(--chart-1)"
+    },
+    {
+     "id": "guide-marco",
+     "name": "Guide Marco",
+     "colour": "var(--chart-2)"
+    },
+    {
+     "id": "guide-sophie",
+     "name": "Guide Sophie",
+     "colour": "var(--chart-3)"
+    }
+   ],
+   "days": [
+    {
+     "day": "2026-09-14",
+     "tick": "14",
+     "hotel-am-see": 9,
+     "guide-marco": 4,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-09-15",
+     "tick": "15",
+     "hotel-am-see": 0,
+     "guide-marco": 4,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-09-16",
+     "tick": "16",
+     "hotel-am-see": 4,
+     "guide-marco": 6,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-09-17",
+     "tick": "17",
+     "hotel-am-see": 5,
+     "guide-marco": 6,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-09-18",
+     "tick": "18",
+     "hotel-am-see": 3,
+     "guide-marco": 2,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-09-19",
+     "tick": "19",
+     "hotel-am-see": 5,
+     "guide-marco": 7,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-09-20",
+     "tick": "20",
+     "hotel-am-see": 6,
+     "guide-marco": 2,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-09-21",
+     "tick": "21",
+     "hotel-am-see": 4,
+     "guide-marco": 2,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-09-22",
+     "tick": "22",
+     "hotel-am-see": 3,
+     "guide-marco": 4,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-09-23",
+     "tick": "23",
+     "hotel-am-see": 4,
+     "guide-marco": 4,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-09-24",
+     "tick": "24",
+     "hotel-am-see": 7,
+     "guide-marco": 6,
+     "guide-sophie": 0
+    },
+    {
+     "day": "2026-09-25",
+     "tick": "25",
+     "hotel-am-see": 2,
+     "guide-marco": 4,
+     "guide-sophie": 3
+    },
+    {
+     "day": "2026-09-26",
+     "tick": "26",
+     "hotel-am-see": 3,
+     "guide-marco": 4,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-09-27",
+     "tick": "27",
+     "hotel-am-see": 8,
+     "guide-marco": 8,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-09-28",
+     "tick": "28",
+     "hotel-am-see": 6,
+     "guide-marco": 3,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-09-29",
+     "tick": "29",
+     "hotel-am-see": 3,
+     "guide-marco": 3,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-09-30",
+     "tick": "30",
+     "hotel-am-see": 9,
+     "guide-marco": 3,
+     "guide-sophie": 0
+    },
+    {
+     "day": "2026-10-01",
+     "tick": "1",
+     "hotel-am-see": 2,
+     "guide-marco": 6,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-10-02",
+     "tick": "2",
+     "hotel-am-see": 3,
+     "guide-marco": 3,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-10-03",
+     "tick": "3",
+     "hotel-am-see": 4,
+     "guide-marco": 3,
+     "guide-sophie": 3
+    },
+    {
+     "day": "2026-10-04",
+     "tick": "4",
+     "hotel-am-see": 7,
+     "guide-marco": 4,
+     "guide-sophie": 0
+    },
+    {
+     "day": "2026-10-05",
+     "tick": "5",
+     "hotel-am-see": 5,
+     "guide-marco": 6,
+     "guide-sophie": 3
+    },
+    {
+     "day": "2026-10-06",
+     "tick": "6",
+     "hotel-am-see": 7,
+     "guide-marco": 5,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-10-07",
+     "tick": "7",
+     "hotel-am-see": 5,
+     "guide-marco": 4,
+     "guide-sophie": 0
+    },
+    {
+     "day": "2026-10-08",
+     "tick": "8",
+     "hotel-am-see": 3,
+     "guide-marco": 4,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-10-09",
+     "tick": "9",
+     "hotel-am-see": 6,
+     "guide-marco": 4,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-10-10",
+     "tick": "10",
+     "hotel-am-see": 5,
+     "guide-marco": 3,
+     "guide-sophie": 1
+    },
+    {
+     "day": "2026-10-11",
+     "tick": "11",
+     "hotel-am-see": 5,
+     "guide-marco": 4,
+     "guide-sophie": 2
+    },
+    {
+     "day": "2026-10-12",
+     "tick": "12",
+     "hotel-am-see": 5,
+     "guide-marco": 5,
+     "guide-sophie": 0
+    },
+    {
+     "day": "2026-10-13",
+     "tick": "Today",
+     "hotel-am-see": 1,
+     "guide-marco": 2,
+     "guide-sophie": 1
+    }
+   ]
+  },
+  "compare": {
+   "title": "Partners compared",
+   "description": "For the selected period",
+   "columns": {
+    "partner": "Partner",
+    "opens": "Opens",
+    "transactions": "Transactions",
+    "conversion": "Conversion",
+    "commission": "Commission"
+   },
+   "archived": "Archived",
+   "rows": [
+    {
+     "id": "hotel-am-see",
+     "name": "Hotel am See",
+     "isArchived": false,
+     "opens": "139",
+     "opensValue": 139,
+     "transactionsValue": 20,
+     "transactions": "20",
+     "conversion": "14.4%",
+     "commission": "CHF 101.15"
+    },
+    {
+     "id": "guide-marco",
+     "name": "Guide Marco",
+     "isArchived": false,
+     "opens": "125",
+     "opensValue": 125,
+     "transactionsValue": 23,
+     "transactions": "23",
+     "conversion": "18.4%",
+     "commission": "CHF 96.45"
+    },
+    {
+     "id": "guide-sophie",
+     "name": "Guide Sophie",
+     "isArchived": false,
+     "opens": "42",
+     "opensValue": 42,
+     "transactionsValue": 2,
+     "transactions": "2",
+     "conversion": "4.8%",
+     "commission": "CHF 17.70"
+    }
+   ]
+  },
+  "isEmpty": false,
+  "empty": "No link opens or partner transactions in this period.",
+  "note": "Link opens count QR scans and shared links alike. Commission earned is recorded commission after refunds. Opens before 13 October are demo data."
+ }
+}

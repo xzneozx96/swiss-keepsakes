@@ -1,0 +1,169 @@
+/*
+ * Swiss Keepsakes theme for HeroUI v3.
+ * Source of truth: docs/ux/design-system/project/tokens.json (approved 13.10.2026).
+ * Only HeroUI's own variables are overridden, following the "Create your own theme"
+ * pattern in HeroUI's Theming docs. Calculated colours that HeroUI would otherwise
+ * derive with color-mix are set to the approved values so they cannot drift.
+ * One light theme only; there is no dark theme.
+ */
+@layer base {
+  :root,
+  [data-theme="swiss-keepsakes"] {
+    color-scheme: light;
+
+    /* Fields carry a visible 1px border (decision: border #8F8F8B). */
+    --field-border-width: 1px;
+
+    /* Base */
+    --background: #f7f7f5;
+    /* Ink: warm charcoal, softer than near-black #1a1a1a for a calmer page (owner
+       request 13.10.2026). 12.1:1 on the page ground, 13:1 on white (AAA). */
+    --foreground: #33312e;
+
+    --surface: #ffffff;
+    --surface-foreground: var(--foreground);
+    --surface-secondary: #f2f2ef;
+    --surface-secondary-foreground: var(--foreground);
+    --surface-tertiary: #efefec;
+    --surface-tertiary-foreground: var(--foreground);
+
+    --overlay: #ffffff;
+    --overlay-foreground: var(--foreground);
+
+    --muted: #5e5e5a;
+
+    --default: #efefec;
+    --default-hover: #e6e6e3;
+    --default-foreground: var(--foreground);
+
+    --border: #dcdcd7;
+    --separator: #dcdcd7;
+
+    /* Fields */
+    --field-background: #ffffff;
+    --field-foreground: var(--foreground);
+    --field-placeholder: #5e5e5a;
+    --field-border: #8f8f8b;
+    --field-border-hover: #6e6e6a;
+    --field-border-focus: var(--focus);
+
+    /* Accent: Swiss red, for actions and selection only */
+    --accent: #d52b1e;
+    --accent-hover: #c12d20;
+    --accent-foreground: #ffffff;
+    --accent-soft: #fce9e7;
+    --accent-soft-foreground: #a3241a;
+
+    /* Focus: ink ring, distinct from the brick invalid state */
+    --focus: var(--foreground);
+
+    /* Status */
+    --success: #17663a;
+    --success-foreground: #ffffff;
+    --success-soft: #e3f1e8;
+    --success-soft-foreground: #17663a;
+
+    --warning: #854d0e;
+    --warning-foreground: #ffffff;
+    --warning-soft: #fef3c7;
+    --warning-soft-foreground: #854d0e;
+
+    /* Danger: brick, for overdue and errors; never a solid button fill */
+    --danger: #9a3412;
+    --danger-foreground: #ffffff;
+    --danger-soft: #fdece5;
+    --danger-soft-foreground: #9a3412;
+
+    --backdrop: rgba(0, 0, 0, 0.5);
+
+    --surface-shadow:
+      0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 0 1px 0 rgba(0, 0, 0, 0.06);
+    --overlay-shadow:
+      0 2px 8px 0 rgba(0, 0, 0, 0.06), 0 -6px 12px 0 rgba(0, 0, 0, 0.03),
+      0 14px 28px 0 rgba(0, 0, 0, 0.08);
+
+    /* Swiss Keepsakes colours that HeroUI does not define */
+    --info: #1f5fa8;
+    --info-foreground: #ffffff;
+    --info-soft: #e6eef8;
+    --info-soft-foreground: var(--info);
+
+    /* Destructive actions are ink, not brick (decision 13.10.2026) */
+    --destructive: var(--foreground);
+    /* Same formula HeroUI uses for its other *-hover colours */
+    --destructive-hover: color-mix(
+      in oklab,
+      var(--destructive) 90%,
+      var(--destructive-foreground) 10%
+    );
+    --destructive-foreground: #ffffff;
+
+    --charcoal: #4a4a48;
+    --hero-sky: #cfe4f5;
+    --hero-cream: #fbf6e8;
+
+    /*
+     * Dashboard charts (owner review 1.9t): one red-based theme for M02 and P02. Primary
+     * series Swiss red, second series ink, a third category warm grey; ordinal steps are
+     * tints of the red (dark → light), checked with the dataviz palette validator on white.
+     * Status keeps its own colours: overdue brick, success green.
+     */
+    --chart-1: #d52b1e;
+    --chart-2: var(--foreground);
+    --chart-3: #9a9893;
+    --chart-1-dark: #b32418;
+    --chart-1-mid: #e26b62;
+    --chart-1-light: #ec9790;
+    --chart-track: #fce9e7;
+
+    /*
+     * HeroUI's light-theme values for every variable its dark block redefines.
+     * Pinned here so the page stays light when a host (e.g. the Artifact viewer)
+     * sets data-theme="dark" on the root element. Values copied from
+     * @heroui/styles 3.2.6 themes/default/variables.css (light block).
+     */
+    --link: var(--foreground);
+    --segment: #ffffff;
+    --segment-foreground: var(--foreground);
+
+    --background-secondary: color-mix(in oklab, var(--background) 96%, var(--foreground) 4%);
+    --background-tertiary: color-mix(in oklab, var(--background) 92%, var(--foreground) 8%);
+    --background-inverse: var(--foreground);
+
+    --surface-hover: color-mix(in oklab, var(--surface) 92%, var(--surface-foreground) 8%);
+    --success-hover: color-mix(in oklab, var(--success) 90%, var(--success-foreground) 10%);
+    --warning-hover: color-mix(in oklab, var(--warning) 90%, var(--warning-foreground) 10%);
+    --danger-hover: color-mix(in oklab, var(--danger) 90%, var(--danger-foreground) 10%);
+
+    --field-hover: color-mix(
+      in oklab,
+      var(--field-background, var(--default)) 90%,
+      var(--field-foreground, var(--foreground)) 2%
+    );
+    --field-focus: var(--field-background, var(--default));
+    --field-shadow:
+      0 2px 4px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.06),
+      0 0 1px 0 rgba(0, 0, 0, 0.06);
+
+    --default-soft: color-mix(in oklab, var(--default) 50%, transparent);
+    --default-soft-foreground: var(--default-foreground);
+    --default-soft-hover: color-mix(in oklab, var(--default) 60%, transparent);
+    --accent-soft-hover: color-mix(in oklab, var(--accent) 20%, transparent);
+    --danger-soft-hover: color-mix(in oklab, var(--danger) 20%, transparent);
+    --warning-soft-hover: color-mix(in oklab, var(--warning) 20%, transparent);
+    --success-soft-hover: color-mix(in oklab, var(--success) 20%, transparent);
+
+    --separator-secondary: color-mix(in oklab, var(--surface) 85%, var(--surface-foreground) 15%);
+    --separator-tertiary: color-mix(in oklab, var(--surface) 81%, var(--surface-foreground) 19%);
+    --border-secondary: color-mix(in oklab, var(--surface) 78%, var(--surface-foreground) 22%);
+    --border-tertiary: color-mix(in oklab, var(--surface) 66%, var(--surface-foreground) 34%);
+
+    --scrollbar-thumb: color-mix(in oklch, var(--foreground) 15%, transparent);
+    --scrollbar-track: transparent;
+    --scrollbar-gutter: auto;
+    --scrollbar-width: thin;
+    --scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    --scrollbar: var(--scrollbar-thumb);
+  }
+}

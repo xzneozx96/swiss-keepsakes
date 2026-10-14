@@ -1,0 +1,173 @@
+export const tourDiscoveryEn = {
+  "tourDiscovery.title": "Tours around Lucerne",
+  "tourDiscovery.intro": "A little time here. A story to take home.",
+  "tourDiscovery.from": "From",
+  "tourDiscovery.duration": "{hours} hours",
+  "tourDiscovery.next": "Next departure · {date}",
+  "tourDiscovery.comingSoon": "Coming soon",
+  "tourDiscovery.noDates": "No departures available",
+  "tourDiscovery.soldOutBody":
+    "Every upcoming departure of this tour is fully booked. Explore our other tours, or ask the organiser about new dates.",
+  "tourDiscovery.noDatesBody":
+    "This tour has no upcoming departures yet. Explore our other tours, or ask the organiser about new dates.",
+  "tourDiscovery.empty":
+    "New tours are on their way. Come back soon to discover Lucerne with us.",
+  "tourDiscovery.notFound":
+    "This tour is unavailable. Choose another tour to continue.",
+  "tourDiscovery.browse": "Explore other tours",
+  "tourDiscovery.back": "Back",
+  "tourDiscovery.gallery": "Photos of {name}",
+  "tourDiscovery.photo": "Photo {n} of {count}",
+  "tourDiscovery.previous": "Previous photo",
+  "tourDiscovery.nextPhoto": "Next photo",
+  "tourDiscovery.close": "Close",
+  "tourDiscovery.smallGroup": "Small group",
+  "tourDiscovery.durationLabel": "Duration",
+  "tourDiscovery.startingPrice": "Adult price",
+  "tourDiscovery.about": "About this experience",
+  "tourDiscovery.itinerary": "Your route through Lucerne",
+  "tourDiscovery.included": "What is included",
+  "tourDiscovery.excluded": "Not included",
+  "tourDiscovery.meeting": "Where we meet",
+  "tourDiscovery.conditions": "Before you go",
+  "tourDiscovery.prices": "Prices for your group",
+  "tourDiscovery.payment": "Payment",
+  "tourDiscovery.cancellation": "Cancellation",
+  "tourDiscovery.reviews": "Guest reviews",
+  "tourDiscovery.noReviews":
+    "No guest reviews yet. Reviews open after a completed tour.",
+  "tourDiscovery.choose": "Choose a departure",
+  "tourDiscovery.chooseHint": "Pick a date and your group",
+  "tourDiscovery.selectTitle": "When are you joining us?",
+  "tourDiscovery.selectIntro":
+    "Choose your departure and the people coming along.",
+  "tourDiscovery.departures": "Departure",
+  "tourDiscovery.available.one": "1 seat available",
+  "tourDiscovery.available.other": "{count} seats available",
+  "tourDiscovery.soldOut": "Sold out",
+  "tourDiscovery.group": "Your group",
+  "tourDiscovery.adults": "Adults",
+  "tourDiscovery.children": "Children",
+  "tourDiscovery.infants": "Infants",
+  "tourDiscovery.ages.from": "Ages {from}+",
+  "tourDiscovery.ages.range": "Ages {from}–{to}",
+  "tourDiscovery.each": "{price} each",
+  "tourDiscovery.free": "free",
+  "tourDiscovery.noSeat": "no seat needed",
+  "tourDiscovery.seatNote":
+    "Adults and children need a seat. Infants do not. At least one adult must join the group.",
+  "tourDiscovery.seatSummary.one": "Your group uses 1 seat",
+  "tourDiscovery.seatSummary.other": "Your group uses {count} seats",
+  "tourDiscovery.capacityError":
+    "Your group needs more seats than this departure has. Reduce your group or choose another departure.",
+  "tourDiscovery.noHold":
+    "Choosing a departure does not reserve seats. Availability is checked again when you book.",
+  "tourDiscovery.total": "Group total",
+  "tourDiscovery.dueToday": "Due today",
+  "tourDiscovery.balance": "Remaining balance",
+  "tourDiscovery.balanceDue": "Due by {date}",
+  "tourDiscovery.review": "Review booking",
+  "tourDiscovery.policy.full": "Pay in full to confirm your booking.",
+  "tourDiscovery.policy.deposit":
+    "Pay a 30% deposit to confirm. The balance is due before departure.",
+  "tourDiscovery.policy.later": "Book now, pay later. No card is needed today.",
+  "tourDiscovery.policy.varies": "Payment depends on the departure you choose:",
+  "tourDiscovery.policy.variesShort":
+    "Depends on the departure · shown before you book",
+  "tourDiscovery.policyShort.full": "Pay in full when booking",
+  "tourDiscovery.policyShort.deposit": "30% deposit when booking",
+  "tourDiscovery.policyShort.later": "Pay later · no card needed",
+  "tourDiscovery.onlyInEnglish":
+    "This tour’s details are only available in English.",
+  "tourDiscovery.onlyInGerman":
+    "This tour’s details are only available in German.",
+  "tourDiscovery.sample": "Sample tour policies · awaiting merchant approval",
+};
+
+export const tourDiscoveryDe: Record<keyof typeof tourDiscoveryEn, string> = {
+  "tourDiscovery.title": "Touren rund um Luzern",
+  "tourDiscovery.intro": "Ein wenig Zeit hier. Eine Geschichte für zu Hause.",
+  "tourDiscovery.from": "Ab",
+  "tourDiscovery.duration": "{hours} Stunden",
+  "tourDiscovery.next": "Nächster Termin · {date}",
+  "tourDiscovery.comingSoon": "Demnächst",
+  "tourDiscovery.noDates": "Keine Termine verfügbar",
+  "tourDiscovery.soldOutBody":
+    "Alle kommenden Termine dieser Tour sind ausgebucht. Entdecken Sie unsere anderen Touren oder fragen Sie den Veranstalter nach neuen Terminen.",
+  "tourDiscovery.noDatesBody":
+    "Für diese Tour gibt es noch keine kommenden Termine. Entdecken Sie unsere anderen Touren oder fragen Sie den Veranstalter nach neuen Terminen.",
+  "tourDiscovery.empty":
+    "Neue Touren folgen bald. Entdecken Sie Luzern bald wieder mit uns.",
+  "tourDiscovery.notFound":
+    "Diese Tour ist nicht verfügbar. Wählen Sie eine andere Tour, um fortzufahren.",
+  "tourDiscovery.browse": "Weitere Touren entdecken",
+  "tourDiscovery.back": "Zurück",
+  "tourDiscovery.gallery": "Fotos von {name}",
+  "tourDiscovery.photo": "Foto {n} von {count}",
+  "tourDiscovery.previous": "Vorheriges Foto",
+  "tourDiscovery.nextPhoto": "Nächstes Foto",
+  "tourDiscovery.close": "Schliessen",
+  "tourDiscovery.smallGroup": "Kleine Gruppe",
+  "tourDiscovery.durationLabel": "Dauer",
+  "tourDiscovery.startingPrice": "Preis Erwachsene",
+  "tourDiscovery.about": "Über dieses Erlebnis",
+  "tourDiscovery.itinerary": "Ihr Weg durch Luzern",
+  "tourDiscovery.included": "Das ist inklusive",
+  "tourDiscovery.excluded": "Nicht inklusive",
+  "tourDiscovery.meeting": "Hier treffen wir uns",
+  "tourDiscovery.conditions": "Gut zu wissen",
+  "tourDiscovery.prices": "Preise für Ihre Gruppe",
+  "tourDiscovery.payment": "Zahlung",
+  "tourDiscovery.cancellation": "Stornierung",
+  "tourDiscovery.reviews": "Bewertungen der Gäste",
+  "tourDiscovery.noReviews":
+    "Noch keine Bewertungen. Gäste können nach einer abgeschlossenen Tour bewerten.",
+  "tourDiscovery.choose": "Termin wählen",
+  "tourDiscovery.chooseHint": "Datum und Gruppe wählen",
+  "tourDiscovery.selectTitle": "Wann sind Sie dabei?",
+  "tourDiscovery.selectIntro":
+    "Wählen Sie Ihren Termin und die Personen, die mitkommen.",
+  "tourDiscovery.departures": "Termin",
+  "tourDiscovery.available.one": "1 Platz verfügbar",
+  "tourDiscovery.available.other": "{count} Plätze verfügbar",
+  "tourDiscovery.soldOut": "Ausgebucht",
+  "tourDiscovery.group": "Ihre Gruppe",
+  "tourDiscovery.adults": "Erwachsene",
+  "tourDiscovery.children": "Kinder",
+  "tourDiscovery.infants": "Kleinkinder",
+  "tourDiscovery.ages.from": "Ab {from} Jahren",
+  "tourDiscovery.ages.range": "{from}–{to} Jahre",
+  "tourDiscovery.each": "je {price}",
+  "tourDiscovery.free": "gratis",
+  "tourDiscovery.noSeat": "kein Platz nötig",
+  "tourDiscovery.seatNote":
+    "Erwachsene und Kinder brauchen einen Platz. Kleinkinder nicht. Mindestens eine erwachsene Person muss mitkommen.",
+  "tourDiscovery.seatSummary.one": "Ihre Gruppe braucht 1 Platz",
+  "tourDiscovery.seatSummary.other": "Ihre Gruppe braucht {count} Plätze",
+  "tourDiscovery.capacityError":
+    "Für Ihre Gruppe sind zu wenige Plätze frei. Verkleinern Sie Ihre Gruppe oder wählen Sie einen anderen Termin.",
+  "tourDiscovery.noHold":
+    "Die Terminauswahl reserviert noch keine Plätze. Die Verfügbarkeit wird bei der Buchung erneut geprüft.",
+  "tourDiscovery.total": "Gesamtpreis",
+  "tourDiscovery.dueToday": "Heute fällig",
+  "tourDiscovery.balance": "Restbetrag",
+  "tourDiscovery.balanceDue": "Fällig bis {date}",
+  "tourDiscovery.review": "Buchung prüfen",
+  "tourDiscovery.policy.full":
+    "Bezahlen Sie den Gesamtpreis, um Ihre Buchung zu bestätigen.",
+  "tourDiscovery.policy.deposit":
+    "Bestätigen Sie mit 30% Anzahlung. Der Restbetrag ist vor dem Termin fällig.",
+  "tourDiscovery.policy.later":
+    "Jetzt buchen, später bezahlen. Heute ist keine Karte nötig.",
+  "tourDiscovery.policy.varies": "Die Zahlung hängt vom gewählten Termin ab:",
+  "tourDiscovery.policy.variesShort":
+    "Je nach Termin · vor der Buchung angezeigt",
+  "tourDiscovery.policyShort.full": "Vollständige Zahlung bei Buchung",
+  "tourDiscovery.policyShort.deposit": "30% Anzahlung bei Buchung",
+  "tourDiscovery.policyShort.later": "Später bezahlen · keine Karte nötig",
+  "tourDiscovery.onlyInEnglish":
+    "Die Angaben zu dieser Tour gibt es nur auf Englisch.",
+  "tourDiscovery.onlyInGerman":
+    "Die Angaben zu dieser Tour gibt es nur auf Deutsch.",
+  "tourDiscovery.sample": "Beispielregeln · Zustimmung des Händlers ausstehend",
+};

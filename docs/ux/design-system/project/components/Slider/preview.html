@@ -1,0 +1,21 @@
+<!-- @dsCard group="Forms" height=190 -->
+<div class="ds-stage">
+  <style>
+    .lbl{font-family:var(--font-sans);font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)}
+    .trk{position:relative;height:20px;border-radius:var(--radius-xl);background:var(--color-default);box-shadow:inset 0 0 0 1px var(--color-control-border)}
+    .fill{position:absolute;left:0;top:0;height:20px;border-radius:12px 0 0 12px;background:var(--color-accent)}
+    .thumb{position:absolute;top:0;width:28px;height:20px;border-radius:var(--radius-xl);background:var(--color-accent);display:flex;align-items:center;justify-content:center}
+    .knob{width:24px;height:16px;border-radius:var(--radius-lg);background:var(--color-accent-foreground);box-shadow:var(--shadow-surface)}
+    .mm{display:flex;justify-content:space-between;font-family:var(--font-sans);font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--color-muted)}
+  </style>
+  <div class="ds-item" style="width:343px">
+    <div style="display:flex;flex-direction:column;gap:4px;width:100%">
+      <div style="display:flex;justify-content:space-between"><span class="lbl">Preis bis</span><span class="lbl num">CHF 120.00</span></div>
+      <div style="padding:12px 0">
+        <div class="trk"><span class="fill" style="width:60%"></span><span class="thumb" style="left:calc(60% - 14px);box-shadow:0 0 0 2px var(--color-background),0 0 0 4px var(--color-focus)"><span class="knob"></span></span></div>
+      </div>
+      <div class="mm num"><span>CHF 0.00</span><span>CHF 200.00</span></div>
+    </div>
+    <span class="ds-note">focused thumb · unfilled track outlined (ours, 3:1) · min and max as text · 44px tall hit area</span>
+  </div>
+</div>

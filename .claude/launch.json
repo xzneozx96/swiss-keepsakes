@@ -1,0 +1,53 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "front-end",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "front-end",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
+      "port": 5199
+    },
+    {
+      "name": "front-end-nohmr",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--prefix",
+        "front-end",
+        "vite",
+        "--config",
+        "docs/ux/prototype/reports/1.6-vite.nohmr.mjs",
+        "--port",
+        "5232",
+        "--strictPort"
+      ],
+      "port": 5232
+    },
+    {
+      "name": "front-end-check",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /home/ross-geller/Projects/minastik/swiss-keepsakes/front-end && npx vite --config /home/ross-geller/Projects/minastik/swiss-keepsakes/.check/vite.check.mjs --port 5243 --strictPort"
+      ],
+      "port": 5243
+    },
+    {
+      "name": "front-end-isolated",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "cd /home/ross-geller/Projects/minastik/swiss-keepsakes/.check/fe-iso && npx vite --config vite.iso.mjs --port 5241 --strictPort"
+      ],
+      "port": 5241
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap");
+:root{--color-background:#f7f7f5;--color-foreground:#1a1a1a;--color-surface:#ffffff;--color-surface-secondary:#f2f2ef;--color-surface-tertiary:#efefec;--color-overlay:#ffffff;--color-muted:#5e5e5a;--color-charcoal:#4a4a48;--color-default:#efefec;--color-default-hover:#e6e6e3;--color-default-foreground:#1a1a1a;--color-border:#dcdcd7;--color-separator:#dcdcd7;--color-field:#ffffff;--color-field-border:#8f8f8b;--color-field-border-hover:#6e6e6a;--color-field-border-focus:var(--color-focus);--color-field-placeholder:#5e5e5a;--color-control-border:var(--color-field-border);--color-accent:#d52b1e;--color-accent-hover:#c12d20;--color-accent-foreground:#ffffff;--color-accent-soft:#fce9e7;--color-accent-soft-foreground:#a3241a;--color-selected-border:var(--color-field-border);--color-focus:#1a1a1a;--color-success:#17663a;--color-success-foreground:#ffffff;--color-success-soft:#e3f1e8;--color-success-soft-foreground:#17663a;--color-warning:#854d0e;--color-warning-foreground:#ffffff;--color-warning-soft:#fef3c7;--color-warning-soft-foreground:#854d0e;--color-danger:#9a3412;--color-danger-foreground:#ffffff;--color-danger-soft:#fdece5;--color-danger-soft-foreground:#9a3412;--color-destructive:var(--color-foreground);--color-destructive-foreground:#ffffff;--color-info:#1f5fa8;--color-info-soft:#e6eef8;--color-info-soft-foreground:var(--color-info);--color-backdrop:rgba(0,0,0,0.5);--color-hero-sky:#cfe4f5;--color-hero-cream:#fbf6e8;--font-serif:"Source Serif 4", Georgia, serif;--font-sans:Inter, system-ui, sans-serif;--spacing-0_5:2px;--spacing-1:4px;--spacing-2:8px;--spacing-3:12px;--spacing-4:16px;--spacing-5:20px;--spacing-6:24px;--spacing-8:32px;--spacing-10:40px;--spacing-12:48px;--spacing-16:64px;--radius-xs:2px;--radius-sm:4px;--radius-md:6px;--radius-lg:8px;--radius-xl:12px;--radius-2xl:16px;--radius-3xl:24px;--radius-4xl:32px;--radius-full:9999px;--shadow-surface:0 2px 4px 0 rgba(0,0,0,0.04), 0 1px 2px 0 rgba(0,0,0,0.06), 0 0 1px 0 rgba(0,0,0,0.06);--shadow-overlay:0 2px 8px 0 rgba(0,0,0,0.06), 0 -6px 12px 0 rgba(0,0,0,0.03), 0 14px 28px 0 rgba(0,0,0,0.08);--text-xs:12px;--text-label:13px;--text-sm:14px;--text-body:15px;--text-base:16px;--text-heading:18px;--text-card-title:20px;--text-title:24px;--text-display:34px;--leading-xs:16px;--leading-sm:20px;--leading-body:22px;--leading-base:24px;--leading-title:29px;--leading-display:39px;--tracking-tight:-0.01em;--tracking-normal:0em;--font-weight-normal:400;--font-weight-medium:500;--font-weight-semibold:600;--opacity-disabled:0.5;--breakpoint-sm:640px;--breakpoint-md:768px;--breakpoint-lg:1024px;--border-width-field:1px;}
+
+/* Swiss Keepsakes: shared base for previews. Every value comes from tokens.css. */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.num { font-variant-numeric: tabular-nums; }
+
+/* Card stage: every preview's root. One ground for all cards. */
+.ds-stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  padding: var(--spacing-6);
+  background: var(--color-background);
+  font-family: var(--font-sans);
+}
+.ds-row { display: flex; flex-wrap: wrap; gap: var(--spacing-6); align-items: flex-start; }
+.ds-item { display: flex; flex-direction: column; gap: var(--spacing-2); align-items: flex-start; }
+
+/* Annotation: state names and measurements. Not part of any component. */
+.ds-note {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.01em;
+  color: var(--color-muted);
+}

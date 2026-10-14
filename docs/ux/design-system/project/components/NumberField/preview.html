@@ -1,0 +1,36 @@
+<!-- @dsCard group="Forms" height=200 -->
+<div class="ds-stage">
+  <style>
+    .lb{font-family:var(--font-sans);font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)}
+    .nf{display:flex;align-items:stretch;height:40px;width:168px;border-radius:var(--radius-xl);background:var(--color-field);border:var(--border-width-field) solid var(--color-field-border);box-shadow:var(--shadow-surface);overflow:hidden}
+    .st{width:40px;display:flex;align-items:center;justify-content:center;color:var(--color-foreground)}
+    .v{flex:1;display:flex;align-items:center;padding:0 12px;font-family:var(--font-sans);font-size:var(--text-base);color:var(--color-foreground)}
+  </style>
+  <div class="ds-row">
+    <div class="ds-item">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span class="lb">Erwachsene</span>
+        <div class="nf">
+          <span class="st" style="border-right:var(--border-width-field) solid var(--color-field-border)" aria-label="Weniger"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+          <span class="v num">2</span>
+          <span class="st" style="border-left:var(--border-width-field) solid var(--color-field-border)" aria-label="Mehr"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v8M4 8h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </div>
+        <span style="font-family:var(--font-sans);font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--color-muted)">CHF 49.00 pro Person · 6 Plätze frei</span>
+      </div>
+      <span class="ds-note">rest · value start-aligned · stepper dividers in field-border</span>
+    </div>
+    <div class="ds-item">
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span class="lb">Kinder</span>
+        <div class="nf">
+          <span class="st" style="border-right:var(--border-width-field) solid var(--color-field-border);opacity:var(--opacity-disabled)" aria-label="Weniger"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 8h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+          <span class="v num">0</span>
+          <span class="st" style="border-left:var(--border-width-field) solid var(--color-field-border);background:var(--color-default)" aria-label="Mehr"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v8M4 8h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        </div>
+        <span style="font-family:var(--font-sans);font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--color-muted)">Unter 12 Jahren, CHF 25.00</span>
+      </div>
+      <span class="ds-note">at minimum · minus disabled · plus pressed</span>
+    </div>
+  </div>
+  <span class="ds-note">40px on phones (approved; HeroUI fixes 36px)</span>
+</div>

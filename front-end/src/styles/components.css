@@ -1,0 +1,258 @@
+/*
+ * The agreed departures from HeroUI component styles ("Our changes" on the
+ * design-system cards). Everything else is HeroUI as shipped.
+ * Imported into the components layer, after HeroUI's own component styles.
+ */
+
+/* Destructive buttons are ink with white text; brick is never a solid fill. */
+.button--danger {
+  --button-bg: var(--destructive);
+  --button-bg-hover: var(--destructive-hover);
+  --button-bg-pressed: var(--destructive-hover);
+  --button-fg: var(--destructive-foreground);
+}
+
+/*
+ * Fields are 40px on phones and 36px from md (approved 13.10.2026).
+ * Single-line inputs: 7px padding + 24px line + 2px border = 40px.
+ */
+.input {
+  @apply min-h-10 py-[7px] md:min-h-9;
+}
+
+.select__trigger,
+.autocomplete__trigger,
+.input-group {
+  @apply min-h-10 md:min-h-9;
+}
+
+.date-input-group,
+.number-field__group,
+.search-field__group,
+.color-input-group {
+  @apply h-10 md:h-9;
+}
+
+/*
+ * Selected tags (TagGroup card, owner decisions): soft red plus a 12px check icon, so
+ * selection never depends on hue alone. No outline (removed by the owner, 13.10.2026).
+ */
+.tag:is([data-selected="true"], [aria-selected="true"])::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/*
+ * Field focus, light (owner decision 13.10.2026): a 1px ink border plus a soft 3px halo
+ * instead of HeroUI's 2px ring. Ink keeps focus distinct from the brick invalid state.
+ * Overrides the ring HeroUI's status-focused-field draws on each field shell.
+ */
+.input:is(:focus, [data-focused="true"]),
+.textarea:is(:focus, [data-focused="true"]),
+.search-field__group:is(:focus-within, [data-focus-within="true"]),
+.number-field__group:is(:focus-within, [data-focus-within="true"]),
+.color-input-group:is(:focus-within, [data-focus-within="true"]),
+.date-input-group:is(:focus-within, [data-focus-within="true"]),
+.input-group:has([data-slot="input-group-input"]:focus, [data-slot="input-group-textarea"]:focus),
+.combo-box [data-slot="input"]:is(:focus, [data-focus]),
+.input-otp__slot[data-active="true"] {
+  --tw-ring-shadow: 0 0 0 3px color-mix(in oklab, var(--focus) 10%, transparent);
+  border-color: var(--focus);
+}
+
+/*
+ * Calendar card. Today is the demo-clock day (React Aria's data-today follows the real
+ * clock, which differs during a demo): soft accent, weight 600 and a 3px dot.
+ * Nav chevrons are ink; red stays for selection.
+ */
+.calendar__cell[data-today="true"]:not([data-selected="true"]) {
+  background-color: transparent;
+  color: var(--foreground);
+}
+
+.calendar__cell.calendar__cell--demo-today:not([data-selected="true"]) {
+  background-color: var(--accent-soft);
+  color: var(--accent-soft-foreground);
+}
+
+.calendar__cell.calendar__cell--demo-today {
+  font-weight: 600;
+}
+
+.calendar__cell.calendar__cell--demo-today::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.calendar__nav-button {
+  color: var(--foreground);
+}
+
+/* RadioGroup card: rows at least 44px tall on phones. */
+.radio {
+  @apply min-h-11 justify-center;
+}
+
+/*
+ * NumberField card: one divider on the inner side of each stepper. HeroUI gives the
+ * steppers a border on all four sides, which doubles the group's own 1px border.
+ */
+.number-field__increment-button,
+.number-field__decrement-button {
+  border-width: 0;
+  border-color: var(--field-border);
+}
+
+.number-field__decrement-button {
+  border-inline-end-width: 1px;
+}
+
+.number-field__increment-button {
+  border-inline-start-width: 1px;
+}
+
+/*
+ * TextField card: the required marker is muted; brick is for errors only.
+ * Same selectors as HeroUI's label.css so this later rule wins.
+ */
+.label--required::after,
+[data-required="true"]:not([role="group"]):not([role="radiogroup"]):not(
+    [role="checkboxgroup"]
+  )
+  > .label::after,
+[data-required="true"]:not([data-slot="radio"]):not([data-slot="checkbox"])
+  > .label::after {
+  color: var(--muted);
+}
+
+/* TextField card: FieldError is 13/18 weight 500 with a 16px warning icon (icon + words). */
+.field-error[data-visible] {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+}
+
+.field-error[data-visible]::before {
+  content: "";
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z'/%3E%3Cpath d='M12 9v4M12 17h.01'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/*
+ * Full-width calendar (owner request 13.10.2026, C03 pickup sheet): HeroUI caps the
+ * calendar at 252px; the fluid modifier fills the container and the 7-column grid
+ * grows the day cells with it (still square and round).
+ */
+.calendar.calendar--fluid {
+  width: 100%;
+  max-width: none;
+}
+
+.calendar.calendar--fluid .calendar__cell {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  max-height: 48px;
+  max-width: 48px;
+  justify-self: center;
+}
+
+/*
+ * Accordion dividers as real borders (owner report 13.10.2026: some looked doubled).
+ * HeroUI draws them as a 1px ::after strip; below content with fractional heights (e.g.
+ * a 4:3.4 photo) the strip lands between device pixels and smears over two, so some
+ * lines look thicker. Borders are snapped to whole pixels. Surface variant unchanged.
+ */
+.accordion:not(.accordion--surface) .accordion__item::after {
+  content: none;
+}
+
+.accordion:not(.accordion--surface)
+  .accordion__item:not(:last-child):not([data-hide-separator="true"]) {
+  border-bottom: 1px solid var(--separator);
+}
+
+/*
+ * Quantity stepper (Airbnb guest row): pressing − or + moves focus into the field, which
+ * drew the field-focus halo around the steppers on every tap (owner report 13.10.2026).
+ * Show the halo only for keyboard focus (React Aria's data-focus-visible).
+ */
+.quantity-stepper .number-field__group:not([data-focus-visible="true"]) {
+  /* Clear the ring variable, not box-shadow: utilities rebuild box-shadow from it. */
+  --tw-ring-shadow: 0 0 #0000;
+}
+
+/*
+ * Toast close button (Toast card, "Our changes"): 24px and always visible on the front
+ * toast; HeroUI shows a 20px close on hover only, which touch users never trigger.
+ */
+.toast[data-frontmost="true"] .toast__close-button {
+  @apply pointer-events-auto size-6 rounded-xl bg-default opacity-100;
+}
+
+/*
+ * Tinted Alert (owner decision 13.10.2026, C04 note): status tint background, a soft
+ * border in the status colour, no shadow; icon and title in the status colour, body muted.
+ * Add `alert--soft` to an Alert with status warning / danger / success / accent, or
+ * `alert--soft alert--info` (HeroUI has no info status; pass the info icon yourself).
+ */
+.alert.alert--soft {
+  --alert-tone: var(--foreground);
+  background-color: color-mix(in oklab, var(--alert-tone) 6%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--alert-tone) 25%, transparent);
+  box-shadow: none;
+}
+
+.alert.alert--soft.alert--info {
+  --alert-tone: var(--info);
+  background-color: var(--info-soft);
+}
+
+.alert.alert--soft.alert--warning {
+  --alert-tone: var(--warning);
+  background-color: var(--warning-soft);
+}
+
+.alert.alert--soft.alert--danger {
+  --alert-tone: var(--danger);
+  background-color: var(--danger-soft);
+}
+
+.alert.alert--soft.alert--success {
+  --alert-tone: var(--success);
+  background-color: var(--success-soft);
+}
+
+.alert.alert--soft.alert--accent {
+  --alert-tone: var(--accent);
+  background-color: var(--accent-soft);
+}
+
+.alert.alert--soft .alert__indicator,
+.alert.alert--soft .alert__title {
+  color: var(--alert-tone);
+}
+
+.alert.alert--soft .alert__description {
+  color: var(--muted);
+}

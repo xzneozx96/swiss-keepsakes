@@ -1,0 +1,18 @@
+<!-- @dsCard group="Forms" height=330 -->
+<div class="ds-stage">
+  <style>
+    .row{display:flex;align-items:center;gap:12px}
+    .lbl{font-family:var(--font-sans);font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)}
+    .r{width:16px;height:16px;flex-shrink:0;border-radius:8px;background:var(--color-field);border:var(--border-width-field) solid var(--color-control-border);box-shadow:var(--shadow-surface);display:flex;align-items:center;justify-content:center}
+    .r-on{background:var(--color-accent);border-color:var(--color-accent)}
+    .dot{width:7px;height:7px;border-radius:4px;background:var(--color-accent-foreground)}
+    .d{padding-left:28px;font-family:var(--font-sans);font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--color-muted)}
+    .it{display:flex;align-items:flex-start;gap:16px}
+    .it > .ds-note{width:200px;padding-top:2px}
+  </style>
+  <span class="lbl">Zahlungsart</span>
+  <div class="it"><div style="display:flex;flex-direction:column;gap:4px;width:280px"><div class="row"><span class="r r-on"><span class="dot"></span></span><span class="lbl">Anzahlung 30 %</span></div><span class="d">Heute CHF 16.20, Rest bis 12.10.</span></div><span class="ds-note">selected</span></div>
+  <div class="it"><div style="display:flex;flex-direction:column;gap:4px;width:280px"><div class="row"><span class="r"></span><span class="lbl">Vollständig bezahlen</span></div><span class="d">Heute CHF 54.00</span></div><span class="ds-note">unselected · control-border 3:1</span></div>
+  <div class="it"><div style="display:flex;flex-direction:column;gap:4px;width:280px"><div class="row"><span class="r" style="border-color:var(--color-field-border-hover);box-shadow:0 0 0 2px var(--color-background),0 0 0 4px var(--color-focus)"></span><span class="lbl">Rechnung</span></div><span class="d">Zahlbar innert 10 Tagen</span></div><span class="ds-note">hover + focus-visible</span></div>
+  <div class="it"><div style="display:flex;flex-direction:column;gap:4px;width:280px"><div class="row" style="opacity:var(--opacity-disabled)"><span class="r"></span><span class="lbl">Vor Ort bezahlen</span></div><span class="d">Bei diesem Shop nicht verfügbar</span></div><span class="ds-note">disabled · reason stays at full muted</span></div>
+</div>

@@ -1,0 +1,9 @@
+Phase 2 round 2, worker R3: merchant screens. Read docs/ux/prototype/worker-brief-phase2.md in full first, especially the final section "Round 2: UI restyle", and follow it. This is a visual restyle only: keep every screen, section, state and flow as it is. Before moving any gift component to shared code, use your ask command to tell the coordinator which component and where, because another worker may need the same one. Wait for the OK. Use the evon-ui-ux skill (merchant back-office) and skip its gates.
+Restyle, at 375px and 1024px:
+- 2.10 M05 departure schedule and the tour work on M02 Overview: match the M03 pickup-ticket cards (1.10b, 1.10c) and the M02 Overview widget cards (1.9r, 1.9s, 1.9t: each KPI or tile as its own card, round up-right arrow buttons).
+- 2.11 M06 departure guest list: match the M03 list card look.
+- 2.12 M07 merchant booking detail and the tour M08 payment sheet: match M04 order detail (1.11r, 1.11s: key facts as standalone cards, no vertical dividers) and the M08 Record payment sheet (1.15r).
+- 2.13 attendance/completion actions, commission, and tour data on P02: match M04 fulfilment (1.15r) and the P02 widgets (1.17r, 1.9t).
+- 2.14 overdue states on merchant screens: match the M04 decision block style.
+Owned: features/tours/merchant/** and routes src/routes/store/bookings/**. Changes to the M02 Overview and P02 report files are anchored edits to tour parts only.
+Port 5233. Drivers to re-run: reports/2.10-drive.mjs through 2.14-drive.mjs (they import 2.10-lib.mjs, BASE localhost:5233). Reports: reports/2.10-r2.md through 2.14-r2.md.

@@ -1,0 +1,120 @@
+@layer theme, base, components, utilities;
+
+@import "tailwindcss";
+@import "@heroui/styles";
+
+@import "./theme.css" layer(theme);
+@import "./components.css" layer(components);
+
+/* Make the Swiss Keepsakes colours available to Tailwind (HeroUI "Adding Custom Colors") */
+@theme inline {
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-info-soft-foreground: var(--info-soft-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-charcoal: var(--charcoal);
+  --color-hero-sky: var(--hero-sky);
+  --color-hero-cream: var(--hero-cream);
+}
+
+/*
+ * Type: Inter for all UI, Source Serif 4 for places, products and stories.
+ * Display styles from the design system's type scale; ui = text-sm, caption = text-xs.
+ */
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+
+  --text-display: 34px;
+  --text-display--line-height: 39px;
+  --text-display--letter-spacing: -0.01em;
+  --text-display--font-weight: 500;
+
+  --text-title: 24px;
+  --text-title--line-height: 29px;
+  --text-title--letter-spacing: -0.01em;
+  --text-title--font-weight: 500;
+
+  /* 18/24 on mobile (owner decision 13.10.2026; design system had 20/26). */
+  --text-card-title: 18px;
+  --text-card-title--line-height: 24px;
+  --text-card-title--font-weight: 500;
+
+  --text-heading: 18px;
+  --text-heading--line-height: 24px;
+  --text-heading--font-weight: 600;
+
+  --text-body: 15px;
+  --text-body--line-height: 22px;
+
+  --text-label: 13px;
+  --text-label--line-height: 18px;
+  --text-label--font-weight: 500;
+}
+
+@layer base {
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+}
+
+/*
+ * Unlayered on purpose: a host page (the claude.ai Artifact skeleton) may ship its own
+ * unlayered body reset with a system font, which would beat every @layer rule above.
+ */
+body {
+  font: inherit;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/*
+ * Native-app feel for the guest app (owner request 13.10.2026): no tap flash, no
+ * page-level rubber-band scroll, no double-tap zoom delay. Text stays selectable.
+ */
+html {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+a,
+button {
+  touch-action: manipulation;
+}
+
+/*
+ * Frosted glass for controls and labels on top of photos (owner request 13.10.2026):
+ * a translucent mid-grey tint with a backdrop blur and a light hairline edge; content is
+ * white. Mid-grey (not white) keeps white text readable on bright photos too.
+ */
+@utility glass {
+  background-color: rgb(110 110 110 / 0.3);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+}
+
+/*
+ * Pill for labels and buttons on product photos (owner choice 13.10.2026), measured on
+ * airbnb.com's "Guest favorite" badge: white at 80% over a 32px backdrop blur, a 0.8px
+ * white hairline at 50%, Airbnb's three-layer soft shadow; ink text (our charcoal).
+ * Readable on busy photos, unlike the earlier grey glass.
+ */
+@utility pill {
+  background-color: rgb(255 255 255 / 0.8);
+  border: 0.8px solid rgb(255 255 255 / 0.5);
+  color: var(--foreground);
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.02),
+    0 2px 6px rgb(0 0 0 / 0.04),
+    0 4px 8px rgb(0 0 0 / 0.1);
+  -webkit-backdrop-filter: blur(32px);
+  backdrop-filter: blur(32px);
+}

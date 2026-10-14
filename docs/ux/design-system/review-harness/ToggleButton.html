@@ -1,0 +1,34 @@
+<!doctype html><html data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ToggleButton</title><link rel="stylesheet" href="tokens.css"></head><body><!-- @dsCard group="Actions" height=330 -->
+<div class="ds-stage">
+  <style>
+    .t{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 16px;font-family:var(--font-sans);font-size:var(--text-sm);font-weight:var(--font-weight-medium);white-space:nowrap;background:var(--color-default);color:var(--color-foreground);border-radius:var(--radius-3xl)}
+    .t-on{background:var(--color-accent-soft);color:var(--color-accent-soft-foreground);box-shadow:inset 0 0 0 1px var(--color-selected-border)}
+    .t-sep{position:absolute;left:0;top:25%;width:1px;height:50%;border-radius:var(--radius-sm);background:currentColor;opacity:0.15}
+    .tg{display:inline-flex;width:fit-content}
+    .tg .t{border-radius:0}
+    .tg .t:first-child{border-radius:24px 0 0 24px}
+    .tg .t:last-child{border-radius:0 24px 24px 0}
+  </style>
+  <div class="ds-row">
+    <div class="ds-item"><span class="t"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 17s-6-3.8-6-8.2A3.4 3.4 0 0110 6.6a3.4 3.4 0 016 2.2C16 13.2 10 17 10 17z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Merken</span><span class="ds-note">off</span></div>
+    <div class="ds-item"><span class="t t-on"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 17s-6-3.8-6-8.2A3.4 3.4 0 0110 6.6a3.4 3.4 0 016 2.2C16 13.2 10 17 10 17z" fill="currentColor"/></svg>Gemerkt</span><span class="ds-note">selected · icon and label change too</span></div>
+    <div class="ds-item"><span class="t" style="box-shadow:0 0 0 2px var(--color-background),0 0 0 4px var(--color-focus)">Merken</span><span class="ds-note">focus-visible</span></div>
+  </div>
+  <div class="ds-item">
+    <div class="tg">
+      <span class="t t-on"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.3L9.5 3.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Tag</span>
+      <span class="t">Woche</span>
+      <span class="t"><span class="t-sep"></span>Monat</span>
+    </div>
+    <span class="ds-note">ToggleButtonGroup · single selection · selected = accent-soft + check + 1px selected-border · focus ring inset in groups · no separator next to the selected item</span>
+  </div>
+  <div class="ds-item">
+    <div class="tg">
+      <span class="t t-on"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.3L9.5 3.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Bar</span>
+      <span class="t">Karte</span>
+      <span class="t"><span class="t-sep"></span>TWINT</span>
+    </div>
+    <span class="ds-note">max 3 German segments at 375px · longer category lists use TagGroup in ScrollShadow</span>
+  </div>
+</div>
+</body></html>

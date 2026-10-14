@@ -1,0 +1,41 @@
+export const toursCommonEn = {
+  "tours.reviews.attended": "Attended on {date}",
+  "tours.status.pending_payment": "Seats held for payment",
+  "tours.status.confirmed": "Confirmed",
+  "tours.status.expired": "Reservation expired",
+  "tours.status.delivered": "Tour service delivered",
+  "tours.status.completed": "Completed",
+  "tours.status.no_show": "No-show",
+  "tours.status.cancelled": "Cancelled",
+  "tours.payment.processing": "Payment processing",
+  "tours.payment.overdue": "Balance overdue",
+  "tours.payment.paid": "Paid in full",
+  "tours.payment.deposit": "Deposit paid · balance due",
+  "tours.payment.unpaid": "Payment due",
+  "tours.payment.exception":
+    "Payment received after expiry · reconciliation needed",
+  "tours.payment.sessionClosed": "Payment session closed · awaiting provider",
+  "tours.payment.none": "No payment taken",
+  "tours.payment.closed": "Paid · nothing more owed",
+} as const;
+export const toursCommonDe: Record<keyof typeof toursCommonEn, string> = {
+  "tours.reviews.attended": "Teilgenommen am {date}",
+  "tours.status.pending_payment": "Plätze für Zahlung reserviert",
+  "tours.status.confirmed": "Bestätigt",
+  "tours.status.expired": "Reservierung abgelaufen",
+  "tours.status.delivered": "Tourleistung erbracht",
+  "tours.status.completed": "Abgeschlossen",
+  "tours.status.no_show": "Nicht erschienen",
+  "tours.status.cancelled": "Storniert",
+  "tours.payment.processing": "Zahlung wird verarbeitet",
+  "tours.payment.overdue": "Restbetrag überfällig",
+  "tours.payment.paid": "Vollständig bezahlt",
+  "tours.payment.deposit": "Anzahlung bezahlt · Restbetrag offen",
+  "tours.payment.unpaid": "Zahlung fällig",
+  "tours.payment.exception":
+    "Zahlung nach Ablauf erhalten · Abklärung erforderlich",
+  "tours.payment.sessionClosed":
+    "Zahlungssitzung geschlossen · Antwort des Anbieters ausstehend",
+  "tours.payment.none": "Keine Zahlung erfolgt",
+  "tours.payment.closed": "Bezahlt · nichts mehr offen",
+};

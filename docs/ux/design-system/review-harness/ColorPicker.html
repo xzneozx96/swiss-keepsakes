@@ -1,0 +1,32 @@
+<!doctype html><html data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ColorPicker</title><link rel="stylesheet" href="tokens.css"></head><body><!-- @dsCard group="Date and data" height=330 -->
+<div class="ds-stage">
+  <div class="ds-item">
+    <div style="display:flex;gap:var(--spacing-2);align-items:center">
+      <div style="width:32px;height:32px;border-radius:var(--radius-2xl);background:#D52B1E;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1)"></div>
+      <div style="width:32px;height:32px;border-radius:var(--radius-2xl);border:2px solid #1F5FA8;box-shadow:var(--shadow-surface);display:flex;align-items:center;justify-content:center"><div style="width:22px;height:22px;border-radius:11px;background:#1F5FA8"></div></div>
+      <div style="width:32px;height:32px;border-radius:var(--radius-2xl);background:#17663A;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1)"></div>
+      <div style="width:32px;height:32px;border-radius:var(--radius-2xl);background:#854D0E;box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1)"></div>
+      <span style="font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--color-foreground)">Griffschale: Blau</span>
+    </div>
+    <span class="ds-note">ColorSwatchPicker · md 32 · second selected · selected name shown in text</span>
+  </div>
+  <div class="ds-row">
+    <div class="ds-item">
+      <div style="position:relative;width:96px;height:96px;border-radius:var(--radius-2xl);background:linear-gradient(0deg,#000,rgba(0,0,0,0)),linear-gradient(90deg,#fff,#D52B1E);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1)"><div style="position:absolute;left:66px;top:10px;width:16px;height:16px;border-radius:var(--radius-full);background:#D52B1E;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.1)"></div></div>
+      <span class="ds-note">ColorArea · thumb 16</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--spacing-4);width:280px">
+      <div class="ds-item" style="width:100%">
+        <div style="display:flex;flex-direction:column;gap:var(--spacing-1);width:100%"><div style="display:flex;justify-content:space-between"><span style="font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Farbton</span><span class="num" style="font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)">4°</span></div>
+          <div style="position:relative;display:flex;height:20px"><div style="width:10px;border-radius:10px 0 0 10px;background:#f00"></div><div style="flex:1;background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)"></div><div style="width:10px;border-radius:0 10px 10px 0;background:#f00"></div><div style="position:absolute;left:4px;top:2px;width:16px;height:16px;border-radius:var(--radius-full);border:3px solid #fff;box-shadow:var(--shadow-overlay)"></div></div>
+        </div>
+        <span class="ds-note">ColorSlider · track 20, square track with 10px rounded caps</span>
+      </div>
+      <div class="ds-item" style="width:100%">
+        <div style="display:flex;align-items:center;gap:var(--spacing-2);width:100%;height:40px;padding:0 12px;border-radius:var(--radius-xl);background:var(--color-field);border:var(--border-width-field) solid var(--color-field-border);box-shadow:var(--shadow-surface)"><div style="width:16px;height:16px;border-radius:var(--radius-full);background:#D52B1E"></div><span style="font-size:var(--text-base);color:var(--color-foreground)">#D52B1E</span></div>
+        <span class="ds-note">ColorField · ColorPicker trigger = swatch + label</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,32 @@
+<!doctype html><html data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dropdown</title><link rel="stylesheet" href="tokens.css"></head><body><!-- @dsCard group="Actions" height=430 -->
+<div class="ds-stage">
+  <style>
+    .mi{display:flex;align-items:center;gap:12px;min-height:36px;padding:6px 10px;border-radius:var(--radius-2xl);font-family:var(--font-sans)}
+    .mi-l{font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)}
+    .mi-d{font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--color-muted)}
+    .pop{display:flex;flex-direction:column;gap:2px;padding:6px;border-radius:var(--radius-3xl);background:var(--color-overlay);box-shadow:var(--shadow-overlay)}
+  </style>
+  <div class="ds-row" style="align-items:flex-start;gap:48px">
+    <div class="ds-item" style="gap:8px">
+      <span style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px 0 16px;border-radius:var(--radius-3xl);background:var(--color-default);font-family:var(--font-sans);font-size:var(--text-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Aktionen<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="transform:rotate(180deg)"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <div class="pop" style="width:240px">
+        <span style="padding:6px 8px 4px;font-family:var(--font-sans);font-size:var(--text-xs);line-height:var(--leading-xs);font-weight:var(--font-weight-medium);color:var(--color-muted)">Bestellung</span>
+        <div class="mi" style="background:var(--color-default)"><span class="mi-l">Zahlung erfassen</span></div>
+        <div class="mi" style="flex-direction:column;align-items:flex-start;gap:0"><span class="mi-l">Abholdatum ändern</span><span class="mi-d">Die Kundschaft wird informiert</span></div>
+        <div class="mi" style="box-shadow:0 0 0 2px var(--color-background),0 0 0 4px var(--color-focus)"><span class="mi-l">Beleg drucken</span></div>
+        <div style="height:1px;margin:0 3%;background:var(--color-separator)"></div>
+        <div class="mi"><span class="mi-l" style="color:var(--color-danger)">Stornieren und erstatten</span></div>
+      </div>
+      <span class="ds-note">desktop · trigger tertiary · popover radius 24, pad 6 · item 36 · hover default · focus ink · destructive item in brick text</span>
+    </div>
+    <div class="ds-item" style="gap:8px;width:343px">
+      <div class="pop" style="width:343px;gap:0">
+        <div class="mi" style="min-height:48px"><span class="mi-l">Zahlung erfassen</span></div>
+        <div class="mi" style="min-height:48px"><span class="mi-l">Abholdatum ändern</span></div>
+        <div class="mi" style="min-height:48px"><span class="mi-l" style="color:var(--color-danger)">Stornieren und erstatten</span></div>
+      </div>
+      <span class="ds-note">phone · same actions as a Drawer action sheet, full-width 48px rows (the popover caps at 48svw)</span>
+    </div>
+  </div>
+</div>
+</body></html>

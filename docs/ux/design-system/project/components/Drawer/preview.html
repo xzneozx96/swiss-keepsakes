@@ -1,0 +1,36 @@
+<!-- @dsCard group="Overlays" height=908 subtitle="Bottom sheet at 375px: record a payment (M08); stacked footer below 360px" width=960 -->
+<div class="ds-stage">
+  <div class="ds-row">
+    <div class="ds-item">
+      <div style="position:relative;width:375px;height:640px;border-radius:var(--radius-4xl);overflow:hidden;background:var(--color-background);border:1px solid var(--color-border)">
+        <div style="position:absolute;left:0;top:0;width:375px;height:640px;background:var(--color-backdrop)"></div>
+        <div style="position:absolute;left:0;bottom:0;width:375px;display:flex;flex-direction:column;padding:24px 24px 0;border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;background:var(--color-overlay);box-shadow:var(--shadow-overlay)">
+          <div style="display:flex;justify-content:center;padding-bottom:8px;margin-top:-12px"><div style="width:36px;height:4px;border-radius:var(--radius-xs);background:var(--color-separator)"></div></div>
+          <span style="font-size:var(--text-base);line-height:var(--leading-base);font-weight:500;color:var(--color-foreground)">Zahlung erfassen</span>
+          <div style="display:flex;flex-direction:column;gap:16px;padding-top:8px">
+            <span class="num" style="font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--color-muted)">#1042 · noch offen CHF 37.80</span>
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:var(--text-sm);font-weight:500;color:var(--color-foreground)">Betrag</span><div style="display:flex;align-items:center;height:40px;border-radius:var(--radius-xl);background:var(--color-field);border:var(--border-width-field) solid var(--color-field-border)"><span style="padding:0 12px;font-size:var(--text-sm);font-weight:500;color:var(--color-field-placeholder)">CHF</span><span class="num" style="font-size:var(--text-base);color:var(--color-foreground)">37.80</span></div></div>
+            <div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:var(--text-sm);font-weight:500;color:var(--color-foreground)">Zahlungsart</span>
+              <div role="radiogroup" style="display:flex">
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:40px;border-radius:var(--radius-3xl) 0 0 var(--radius-3xl);background:var(--color-accent-soft);box-shadow:inset 0 0 0 1px var(--color-selected-border);font-size:var(--text-sm);font-weight:500;color:var(--color-accent-soft-foreground)"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="var(--color-accent-soft-foreground)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Bar</div>
+                <div style="flex:1;display:flex;align-items:center;justify-content:center;height:40px;background:var(--color-default);font-size:var(--text-sm);font-weight:500;color:var(--color-foreground)">Karte</div>
+                <div style="position:relative;flex:1;display:flex;align-items:center;justify-content:center;height:40px;border-radius:0 var(--radius-3xl) var(--radius-3xl) 0;background:var(--color-default);font-size:var(--text-sm);font-weight:500;color:var(--color-foreground)"><span style="position:absolute;left:-0.5px;top:10px;width:1px;height:20px;border-radius:var(--radius-sm);background:currentColor;opacity:0.15"></span>TWINT</div>
+              </div>
+            </div>
+            <span style="font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--color-muted)">Danach ist die Bestellung vollständig bezahlt. Diese Zahlung erscheint im Verlauf.</span>
+          </div>
+          <div style="display:flex;gap:8px;padding-top:20px"><div style="display:flex;align-items:center;justify-content:center;height:40px;padding:0 16px;border-radius:var(--radius-3xl);background:var(--color-default);font-size:var(--text-sm);font-weight:500;color:var(--color-foreground)">Abbrechen</div><div class="num" style="flex:1;display:flex;align-items:center;justify-content:center;height:40px;border-radius:var(--radius-3xl);background:var(--color-accent);font-size:var(--text-sm);font-weight:500;color:var(--color-accent-foreground)">CHF 37.80 erfassen</div></div>
+          <div style="height:34px"></div>
+        </div>
+      </div>
+      <span class="ds-note">375 · pad 24 · top radius 16 · handle 36×4 separator · 34px safe-area spacer (ours)</span>
+    </div>
+    <div class="ds-item">
+      <div style="width:320px;display:flex;flex-direction:column;gap:8px;padding:20px 24px 24px;border-radius:var(--radius-2xl) var(--radius-2xl) 0 0;background:var(--color-overlay);box-shadow:var(--shadow-overlay)">
+        <div class="num" style="display:flex;align-items:center;justify-content:center;height:40px;border-radius:var(--radius-3xl);background:var(--color-accent);font-size:var(--text-sm);font-weight:500;color:var(--color-accent-foreground)">CHF 1’249.00 erfassen</div>
+        <div style="display:flex;align-items:center;justify-content:center;height:40px;border-radius:var(--radius-3xl);background:var(--color-default);font-size:var(--text-sm);font-weight:500;color:var(--color-foreground)">Abbrechen</div>
+      </div>
+      <span class="ds-note">below 360 · footer stacks full width, primary on top</span>
+    </div>
+  </div>
+</div>

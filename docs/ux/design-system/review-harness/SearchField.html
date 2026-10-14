@@ -1,0 +1,24 @@
+<!doctype html><html data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SearchField</title><link rel="stylesheet" href="tokens.css"></head><body><!-- @dsCard group="Forms" height=220 -->
+<div class="ds-stage">
+  <style>
+    .lb{font-family:var(--font-sans);font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)}
+    .sf{display:flex;align-items:center;gap:8px;height:40px;width:343px;padding:0 4px 0 12px;border-radius:var(--radius-xl);background:var(--color-field);border:var(--border-width-field) solid var(--color-field-border);box-shadow:var(--shadow-surface);font-family:var(--font-sans);font-size:var(--text-base)}
+    .clr{width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .clr span{width:24px;height:24px;border-radius:12px;background:var(--color-default);color:var(--color-muted);display:flex;align-items:center;justify-content:center}
+  </style>
+  <div class="ds-row">
+    <div class="ds-item">
+      <div style="display:flex;flex-direction:column;gap:4px"><span class="lb">Geschenke suchen</span>
+        <div class="sf"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><circle cx="7" cy="7" r="4.5" stroke="var(--color-field-placeholder)" stroke-width="1.5"/><path d="M10.5 10.5L13 13" stroke="var(--color-field-placeholder)" stroke-width="1.5" stroke-linecap="round"/></svg><span style="flex:1;color:var(--color-field-placeholder)">z. B. Taschenmesser</span></div>
+      </div>
+      <span class="ds-note">rest · visible label</span>
+    </div>
+    <div class="ds-item">
+      <div style="display:flex;flex-direction:column;gap:4px"><span class="lb">Geschenke suchen</span>
+        <div class="sf" style="border-color:var(--color-focus);box-shadow:0 0 0 1px var(--color-focus)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><circle cx="7" cy="7" r="4.5" stroke="var(--color-field-placeholder)" stroke-width="1.5"/><path d="M10.5 10.5L13 13" stroke="var(--color-field-placeholder)" stroke-width="1.5" stroke-linecap="round"/></svg><span style="flex:1;color:var(--color-foreground)">Taschenmesser</span><span class="clr" aria-label="Suche löschen"><span><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span></span></div>
+      </div>
+      <span class="ds-note">focused + filled · clear 24px visible, 32px target · Esc clears</span>
+    </div>
+  </div>
+</div>
+</body></html>

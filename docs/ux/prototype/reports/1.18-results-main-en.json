@@ -1,0 +1,878 @@
+[
+ {
+  "id": "1 entry: both QR visits recorded, Hotel am See last",
+  "lang": "en",
+  "pass": true,
+  "detail": "guide-marco,hotel-am-see"
+ },
+ {
+  "id": "1 C01 at #/",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/"
+ },
+ {
+  "id": "1 C01 says nothing about 'referred by'",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-01-c01: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-01-c01: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "1 C02 filtered to Pocket knives",
+  "lang": "en",
+  "pass": true,
+  "detail": "Pocket knives Pocket knives Folding knives, engraved by hand in the old town 2 gifts All Pocket knives Gift boxes Chocolate Prints Small gifts Engraving from CHF 49.00 Kapellbrücke pocket knife 4.8 (5"
+ },
+ {
+  "id": "main-01-c02-knives: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-01-c02-knives: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "2 C03 knife opened",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/gifts/kapellbruecke-pocket-knife"
+ },
+ {
+  "id": "2 engraving counter shows 4 of 12",
+  "lang": "en",
+  "pass": true,
+  "detail": "Your gift Option Small CHF 49.00 Medium CHF 54.00 Large CHF 64.00 Quantity 4 available Engraving (optional) 4/12 Free. Up to 12 characters, engraved by hand. 4 of 12 characters Pickup date Earliest Fri 16 Oct October 2026 October 2026 Mon Tue Wed Thu Fri Sat Sun 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 1"
+ },
+ {
+  "id": "2 pale-day reason 'Needs 3 working days to engrave'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Your gift Option Small CHF 49.00 Medium CHF 54.00 Large CHF 64.00 Quantity 4 available Engraving (optional) 4/12 Free. Up to 12 characters, engraved by hand. 4 of 12 characters Pickup date Earliest Fri 16 Oct October 2026 October 2026 Mon Tue Wed Thu Fri Sat Sun 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 1"
+ },
+ {
+  "id": "2 fixed request line shown",
+  "lang": "en",
+  "pass": true,
+  "detail": "Your gift Option Small CHF 49.00 Medium CHF 54.00 Large CHF 64.00 Quantity 4 available Engraving (optional) 4/12 Free. Up to 12 characters, engraved by hand. 4 of 12 characters Pickup date Earliest Fri 16 Oct October 2026 October 2026 Mon Tue Wed Thu Fri Sat Sun 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 1"
+ },
+ {
+  "id": "main-02-c03-knife-sheet: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-02-c03-knife-sheet: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "3 gift box uses its own rule: 'Needs 2 days to prepare' (calendar days, not working days)",
+  "lang": "en",
+  "pass": true,
+  "detail": "Your gift Quantity 4 available Pickup date Earliest Thu 15 Oct October 2026 October 2026 Mon Tue Wed Thu Fri Sat Sun 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 1 Pale days Needs 2 days to prepare Closed on Sundays Pickup place Shop Altstadt Kornmarkt"
+ },
+ {
+  "id": "main-03-c03-giftbox-sheet: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-03-c03-giftbox-sheet: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "4 C04 each line shows its payment rule (full / 30% deposit)",
+  "lang": "en",
+  "pass": true,
+  "detail": "Cart Pickup dates are requests Gifts with different pickup dates, places or payment rules become separate orders. The seller confirms each order before you pay, and you pay each one on its own. Kapellbrücke pocket knife Swiss Keepsakes Luzern Medium Engraving “Anna” Request to receive on Wed 21 Oct "
+ },
+ {
+  "id": "4 C04 each line shows its requested date (21 / 20 Oct)",
+  "lang": "en",
+  "pass": true,
+  "detail": "Cart Pickup dates are requests Gifts with different pickup dates, places or payment rules become separate orders. The seller confirms each order before you pay, and you pay each one on its own. Kapellbrücke pocket knife Swiss Keepsakes Luzern Medium Engraving “Anna” Request to receive on Wed 21 Oct "
+ },
+ {
+  "id": "4 C04 Select all: total for reference CHF 143.00, 2 of 2 selected",
+  "lang": "en",
+  "pass": true,
+  "detail": " and you pay each one on its own. Kapellbrücke pocket knife Swiss Keepsakes Luzern Medium Engraving “Anna” Request to receive on Wed 21 Oct Shop Altstadt Full payment after confirmation CHF 54.00 each Lucerne gift box Swiss Keepsakes Luzern Request to receive on Tue 20 Oct Shop Altstadt 30% deposit "
+ },
+ {
+  "id": "main-04-c04-cart: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-04-c04-cart: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "4 C04 price details sheet lists both gifts and CHF 143.00",
+  "lang": "en",
+  "pass": true,
+  "detail": "Price details 1 × Kapellbrücke pocket knife · Medium Wed 21 Oct CHF 54.00 1 × Lucerne gift box Tue 20 Oct CHF 89.00 Subtotal CHF 143.00 Total for reference CHF 143.00 Nothing to pay now"
+ },
+ {
+  "id": "main-04-c04-price-sheet: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-04-c04-price-sheet: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-05-c05-start: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-05-c05-start: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "5 000000 shows the wrong-code error",
+  "lang": "en",
+  "pass": true,
+  "detail": "Check your email We sent a 6-digit code to anna.keller@example.com. Code from the email Enter the 6 digits. The code works for 10 minutes. That code isn’t right. Check the email and try again. 4 tries left for this code. Continue No email? Resend in 0:29 Use a different email"
+ },
+ {
+  "id": "5 resend locked with countdown",
+  "lang": "en",
+  "pass": true,
+  "detail": "Check your email We sent a 6-digit code to anna.keller@example.com. Code from the email Enter the 6 digits. The code works for 10 minutes. That code isn’t right. Check the email and try again. 4 tries left for this code. Continue No email? Resend in 0:29 Use a different email"
+ },
+ {
+  "id": "main-05-c05-wrong-code: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-05-c05-wrong-code: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "5 N01 sent to guest",
+  "lang": "en",
+  "pass": true,
+  "detail": "N01>guest"
+ },
+ {
+  "id": "5 lands on C06 after sign-in",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart/review"
+ },
+ {
+  "id": "5 cart unchanged by sign-in",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "6 C06 shows Order 1 and Order 2 (AC28)",
+  "lang": "en",
+  "pass": true,
+  "detail": "Review and send Nothing is charged now. The seller confirms each order first, then you pay what is due for that order. Order 1 Request to receive on Wed 21 Oct Shop Altstadt Full payment after confirmation Kapellbrücke pocket knife Swiss Keepsakes Luzern Medium Engraving “Anna” 1 × CHF 54.00 CHF 54."
+ },
+ {
+  "id": "6 C06 due after confirm 54.00 / 26.70",
+  "lang": "en",
+  "pass": true,
+  "detail": "Review and send Nothing is charged now. The seller confirms each order first, then you pay what is due for that order. Order 1 Request to receive on Wed 21 Oct Shop Altstadt Full payment after confirmation Kapellbrücke pocket knife Swiss Keepsakes Luzern Medium Engraving “Anna” 1 × CHF 54.00 CHF 54."
+ },
+ {
+  "id": "6 C06 rest 62.30 named",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "6 C06 combined total for reference",
+  "lang": "en",
+  "pass": true,
+  "detail": "lled automatically. The rest (CHF 62.30) is due by Sat 24 Oct. Cancellation policy Free cancellation until you pay. After payment, cancellation is possible until preparation starts; the amount paid is refunded. Combined total, for reference CHF 143.00 Nothing to pay now Send request · no payment yet"
+ },
+ {
+  "id": "main-06-c06-review: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-06-c06-review: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "6 send opens C07",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart/sent?orders=sk-1043%2Csk-1044"
+ },
+ {
+  "id": "7 C07 lists both orders awaiting seller confirmation",
+  "lang": "en",
+  "pass": true,
+  "detail": "Request sent Your request went to the seller as 2 separate orders. Nothing has been charged. Your orders Kapellbrücke pocket knife CHF 54.00 SK-1043 Requested pickup: Wed 21 Oct · Shop Altstadt Awaiting seller confirmation Nothing to pay yet Pay within 24 hours of the seller confirming. If it isn’t "
+ },
+ {
+  "id": "7 C07 no response-time promise",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "7 trip profile shown",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-07-c07-sent: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-07-c07-sent: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "7 N02 x2 to guest, N03 x2 to staff",
+  "lang": "en",
+  "pass": true,
+  "detail": "N01>guest,N02>guest(SK-1043),N03>staff(SK-1043),N02>guest(SK-1044),N03>staff(SK-1044)"
+ },
+ {
+  "id": "7 orders created with source Hotel am See and order language",
+  "lang": "en",
+  "pass": true,
+  "detail": "SK-1043:hotel-am-see:en SK-1044:hotel-am-see:en"
+ },
+ {
+  "id": "8 Manager lands on M02 #/store",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store"
+ },
+ {
+  "id": "8 M02 awaiting confirmation = 5 (outline says 2; 3 seeded + Anna's 2)",
+  "lang": "en",
+  "pass": true,
+  "detail": "Today Tue 13 Oct To do Awaiting confirmation Accept or decline each request 5 Awaiting payment Accepted, waiting for the guest to pay 1 To prepare Get these gifts ready for pickup 1 Ready for pickup Waiting at the pickup place 1 At a glance Still to collect CHF 174.30 Owed on accepted orders Commiss"
+ },
+ {
+  "id": "main-08-m02-today: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-08-m02-today: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-08-m02-today@1024: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-08-m02-today@1024: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "8 N03 in staff mail",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "8 card opens M03 awaiting-confirmation tab",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store/orders?status=awaiting-confirmation"
+ },
+ {
+  "id": "8 M03 lists Anna's two requests",
+  "lang": "en",
+  "pass": true,
+  "detail": "Gift orders Awaiting confirmation 5 Awaiting payment 1 Preparing 1 Ready 1 Balance owed 0 Completed 2 Cancelled 2 FRI 16 Oct Yuki Tanaka SK-1032 · Shop Altstadt Limited-edition print: Water Tower at dawn ×1 Awaiting seller confirmation Order total CHF 119.00 Payment Nothing to pay yet SAT 17 Oct Sof"
+ },
+ {
+  "id": "main-08-m03-orders: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-08-m03-orders: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-08-m03-orders@1024: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-08-m03-orders@1024: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "8 M03 row opens M04 of the gift box",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store/orders/sk-1044"
+ },
+ {
+  "id": "9 M04 shows source Hotel am See (AC11)",
+  "lang": "en",
+  "pass": true,
+  "detail": "Gift orders Order SK-1044 Anna Keller · requested 13.10.2026, 10:00 Awaiting seller confirmation Nothing to pay yet Decide on this request Nothing has been paid yet. The guest pays only after you accept. Requested pickup 20.10.2026 · Shop Altstadt Stock Lucerne gift box (Standard) 4 available · 1 ne"
+ },
+ {
+  "id": "main-09-m04-requested: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-09-m04-requested: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-09-m04-requested@1024: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-09-m04-requested@1024: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "9 change without a note is blocked",
+  "lang": "en",
+  "pass": true,
+  "detail": "Change date or place Use this when you have agreed a new date or place with the guest by email. The order stays a request, so you accept it afterwards. Pickup date October 2026 October 2026 Mon Tue Wed Thu Fri Sat Sun 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 2"
+ },
+ {
+  "id": "9 log: place changed Altstadt → Bahnhof · note · Lukas · time",
+  "lang": "en",
+  "pass": true,
+  "detail": "Gift orders Order SK-1044 Anna Keller · requested 13.10.2026, 10:00 Awaiting seller confirmation Nothing to pay yet Decide on this request Nothing has been paid yet. The guest pays only after you accept. Requested pickup 20.10.2026 · Pickup point Bahnhof Stock Lucerne gift box (Standard) 4 available"
+ },
+ {
+  "id": "9 accept sentence (prepare 1 item, 20.10.2026, Bahnhof)",
+  "lang": "en",
+  "pass": true,
+  "detail": "Accept order SK-1044? You confirm you can prepare 1 item for pickup on 20.10.2026 at Pickup point Bahnhof. The guest will be asked to pay CHF 26.70 within 24 hours, by 14.10.2026, 10:30. The stock for this order is held from now on. Accept and request CHF 26.70 Go back"
+ },
+ {
+  "id": "9 accept sentence (pay CHF 26.70 within 24 hours, by 14.10.2026, 10:3x)",
+  "lang": "en",
+  "pass": true,
+  "detail": "Accept order SK-1044? You confirm you can prepare 1 item for pickup on 20.10.2026 at Pickup point Bahnhof. The guest will be asked to pay CHF 26.70 within 24 hours, by 14.10.2026, 10:30. The stock for this order is held from now on. Accept and request CHF 26.70 Go back"
+ },
+ {
+  "id": "9 stock shown per line before accept",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-09-m04-accept-sheet: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-09-m04-accept-sheet: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "9 gift box accepted, payment due CHF 26.70",
+  "lang": "en",
+  "pass": true,
+  "detail": "Gift orders Order SK-1044 Anna Keller · requested 13.10.2026, 10:00 Accepted, payment due Payment due · CHF 26.70 by 14.10.2026, 10:30 Next step Waiting for the guest’s first payment. If the guest pays at the shop, record it here. Record payment Gifts Lucerne gift box Standard · 1 × CHF 89.00 CHF 89"
+ },
+ {
+  "id": "main-09-m04-accepted: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-09-m04-accepted: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "10 knife accepted; N04 x2 to guest",
+  "lang": "en",
+  "pass": true,
+  "detail": "N01>guest,N02>guest(SK-1043),N03>staff(SK-1043),N02>guest(SK-1044),N03>staff(SK-1044),N04>guest(SK-1044),N04>guest(SK-1043)"
+ },
+ {
+  "id": "main-10-m04-knife-accepted: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-10-m04-knife-accepted: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "11 C14 shows both new orders",
+  "lang": "en",
+  "pass": true,
+  "detail": "Account A Anna Keller anna.keller@example.com Sign out My transactions Kapellbrücke pocket knife CHF 54.00 SK-1043 · Pickup 21.10.2026 Accepted, payment due Payment due · CHF 54.00 by 14.10.2026, 10:35 Lucerne gift box CHF 89.00 SK-1044 · Pickup 20.10.2026 Accepted, payment due Payment due · CHF 26."
+ },
+ {
+  "id": "11 C14 gift box shows the R04 free-cancel note",
+  "lang": "en",
+  "pass": true,
+  "detail": "Account A Anna Keller anna.keller@example.com Sign out My transactions Kapellbrücke pocket knife CHF 54.00 SK-1043 · Pickup 21.10.2026 Accepted, payment due Payment due · CHF 54.00 by 14.10.2026, 10:35 Lucerne gift box CHF 89.00 SK-1044 · Pickup 20.10.2026 Accepted, payment due Payment due · CHF 26."
+ },
+ {
+  "id": "main-11-c14: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-11-c14: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "11 C15 knife: 'Pay CHF 54.00 by 14.10.2026, 10:35'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1043 Kapellbrücke pocket knife Accepted, payment due Payment due · CHF 54.00 by 14.10.2026, 10:35 Pay CHF 54.00 by 14.10.2026, 10:35 If it isn’t paid by then, the order is cancelled automatically. Pay CHF 54.00 Cancel order Confirmed pickup 21.10.2026 Shop Altstadt Kornmarkt 9, 6004 Luzern "
+ },
+ {
+  "id": "11 C15 knife: auto-cancel warning",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-11-c15-knife-due: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-11-c15-knife-due: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "11 Pay opens C12",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/account/orders/sk-1043/pay"
+ },
+ {
+  "id": "11 C12 labelled simulated provider, seller and ref",
+  "lang": "en",
+  "pass": true,
+  "detail": "SIMULATED PAYMENT PROVIDER · PROTOTYPE · NO REAL MONEY MOVES Payment Pay to Swiss Keepsakes Luzern Seller Order reference SK-1043 Amount CHF 54.00 SIMULATE THE PROVIDER’S ANSWER Pay CHF 54.00 The payment succeeds Fail The payment is declined Processing The provider hasn’t answered yet Back to your o"
+ },
+ {
+  "id": "main-11-c12-provider: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-11-c12-provider: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "11 back on C15: Confirmed, being prepared · Paid in full",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1043 Kapellbrücke pocket knife Confirmed, being prepared Paid in full · CHF 54.00 The shop is preparing your order We’ll let you know when it’s ready for pickup on 21.10.2026. Confirmed pickup 21.10.2026 Shop Altstadt Kornmarkt 9, 6004 Luzern Mon–Sat 10:00–18:30 Show your order reference at"
+ },
+ {
+  "id": "11 N07 to guest, N21 to staff",
+  "lang": "en",
+  "pass": true,
+  "detail": "N01>guest,N02>guest(SK-1043),N03>staff(SK-1043),N02>guest(SK-1044),N03>staff(SK-1044),N04>guest(SK-1044),N04>guest(SK-1043),N07>guest(SK-1043),N21>staff(SK-1043)"
+ },
+ {
+  "id": "main-11-c15-knife-paid: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-11-c15-knife-paid: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "12 C15 gift box shows the new place and free-cancel note",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1044 Lucerne gift box Accepted, payment due Payment due · CHF 26.70 by 14.10.2026, 10:30 Pay CHF 26.70 by 14.10.2026, 10:30 If it isn’t paid by then, the order is cancelled automatically. The shop moved your pickup from Shop Altstadt to Pickup point Bahnhof If the new pickup doesn’t suit yo"
+ },
+ {
+  "id": "main-12-c15-giftbox-changed: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-12-c15-giftbox-changed: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "12 'Deposit paid · CHF 26.70 · CHF 62.30 left, due 24.10.2026'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1044 Lucerne gift box Confirmed, being prepared Deposit paid · CHF 26.70 · CHF 62.30 left, due 24.10.2026 The shop is preparing your order We’ll let you know when it’s ready for pickup on 20.10.2026. Pay CHF 62.30 Confirmed pickup 20.10.2026 Pickup point Bahnhof Zentralstrasse 1, 6003 Luzer"
+ },
+ {
+  "id": "main-12-c15-giftbox-deposit: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-12-c15-giftbox-deposit: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "13 N12 sent",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "13 Complete locked with 'CHF 62.30 still owed'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Gift orders Order SK-1044 Anna Keller · requested 13.10.2026, 10:00 Handed over Deposit paid · CHF 26.70 · CHF 62.30 left, due 24.10.2026 Next step The guest has the gift. Record the CHF 62.30 still owed, then complete the order. Record payment Complete order Complete is locked: CHF 62.30 still owed"
+ },
+ {
+  "id": "main-13-m04-locked: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-13-m04-locked: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-13-m04-locked@1024: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-13-m04-locked@1024: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 M08 button 'Record CHF 62.30 cash. Balance will be CHF 0.00.'",
+  "lang": "en",
+  "pass": true,
+  "detail": "Record payment · SK-1044 Still owed: CHF 62.30 Amount received Up to the amount still owed. How was it paid? Cash Bank transfer Other Received at ⁦ 10 : 35 ⁩ Today, 13.10.2026. Change the time if the money came earlier. Note (optional) Shown in the payment history. Record CHF 62.30 cash. Balance wil"
+ },
+ {
+  "id": "main-14-m08: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-14-m08: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m08@1024: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-14-m08@1024: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 Record payment hidden at balance 0 (duplicate path not reachable here, see report)",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 commission Estimated before complete",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 completed, by Lukas, commission Recorded",
+  "lang": "en",
+  "pass": true,
+  "detail": "Gift orders Order SK-1044 Anna Keller · requested 13.10.2026, 10:00 Completed Paid in full · CHF 89.00 Order completed Completed by Lukas · 13.10.2026, 10:35 Gifts Lucerne gift box Standard · 1 × CHF 89.00 CHF 89.00 Pickup 20.10.2026 · Pickup point Bahnhof Zentralstrasse 1, 6003 Luzern · Mon–Fri 08:"
+ },
+ {
+  "id": "14 N15 review invite",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 commissionRecordedAt set once = completedAt",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m04-completed: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-14-m04-completed: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m04-completed@1024: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-14-m04-completed@1024: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "15 knife (not completed) has no review button",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "15 empty review shows both errors",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-15-c18-sheet: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-15-c18-sheet: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "15 review posted, shown on C15",
+  "lang": "en",
+  "pass": true,
+  "detail": "Order SK-1044 Lucerne gift box Completed Paid in full · CHF 89.00 Picked up and paid. Thank you! Your review of Lucerne gift box A Anna K. Purchased on Tue 13 Oct · today Lovely box, easy pickup at the station. See it on the gift page Confirmed pickup 20.10.2026 Pickup point Bahnhof Zentralstrasse 1"
+ },
+ {
+  "id": "main-15-c15-reviewed: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-15-c15-reviewed: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "15 review appears on C03 with 'Purchased on' (decision 103 replaced 'Verified purchase')",
+  "lang": "en",
+  "pass": true,
+  "detail": "1 / 3 Lucerne gift box Gift boxes · Standard Thu 15 Oct Earliest pickup 4.4 out of 5 stars 4.4 7 Reviews Swiss Keepsakes Luzern Seller · shop in the old town Pick up in Lucerne Shop Altstadt or Pickup point Bahnhof. Needs 2 days to prepare. Nothing to pay now You pay a 30% deposit once the seller co"
+ },
+ {
+  "id": "main-15-c03-review: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-15-c03-review: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "16 Partner lands on #/partner",
+  "lang": "en",
+  "pass": true,
+  "detail": "http://localhost:5194/#/partner"
+ },
+ {
+  "id": "16 P02 shows Anna's two orders",
+  "lang": "en",
+  "pass": true,
+  "detail": "Day Week Month October 2026 Your commission Commission after adjustments CHF 18.75 Recorded when an order is completed. Open orders add CHF 16.70, estimated. Actually paid CHF 0.00 Paid out to you by the shop Still to pay CHF 18.75 Commission after adjustments, less what was paid By product group Po"
+ },
+ {
+  "id": "16 P02 shows none of Guide Marco's orders",
+  "lang": "en",
+  "pass": true,
+  "detail": "SK-1033,SK-1021"
+ },
+ {
+  "id": "16 P02 shows no email, phone, engraving or pickup",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "16 P02 gift box commission Recorded, knife Estimated",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-16-p02: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-16-p02: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-16-p02@1024: no horizontal overflow",
+  "lang": "en",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-16-p02@1024: no raw i18n keys or {params}",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "mail: no literal {param} in guest mail",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "mail: no literal {param} in staff mail",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "mail: main path sent N01 N02 N03 N04 N07 N12 N15 N21",
+  "lang": "en",
+  "pass": true,
+  "detail": "N01,N02,N03,N04,N07,N12,N15,N21"
+ },
+ {
+  "id": "mail: guest emails in order language (en)",
+  "lang": "en",
+  "pass": true,
+  "detail": "en,en,en,en,en,en,en,en,en"
+ },
+ {
+  "id": "no console or page errors",
+  "lang": "en",
+  "pass": true,
+  "detail": ""
+ }
+]

@@ -1,0 +1,7 @@
+Audio in this folder (sample recordings for the prototype; not recorded in Lucerne)
+
+tower-clock.mp3
+  "Bell 5 O'clock" by Joseph SARDIN & Axeline T., BigSoundBank
+  Bell tower of the church of La Loupe (Eure-et-Loir, France), 12.8 s
+  Source: https://bigsoundbank.com/bell-5-o-clock-s3445.html
+  Licence: CC0 1.0 (public domain), downloaded 14.10.2026

@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+dist/
+dist-ssr/
+*.local
+front-end/.tanstack/
+# Emitted by tsc from vite.config.ts
+*.tsbuildinfo
+front-end/vite.config.js
+front-end/vite.config.d.ts
+
+# Session scratch (browser-check tooling, Playwright MCP captures, Vite caches)
+.check/
+.playwright-mcp/
+.vite/
+
+# Images removed from the moodboard
+docs/ux/moodboard/.trash/
+
+# Logs and OS files
+*.log
+.DS_Store
+
+# Local only: screenshots, review galleries, moodboard and test-run logs
+docs/ux/prototype/screens/
+docs/ux/moodboard/
+docs/ux/prototype/reports/*-logs/
+docs/ux/prototype/reports/*.out
+.impeccable/review/

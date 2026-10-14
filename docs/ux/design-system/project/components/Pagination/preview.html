@@ -1,0 +1,31 @@
+<!-- @dsCard group="Selection and navigation" height=230 width=960 -->
+<div class="ds-stage">
+  <style>
+    .pg-l{width:36px;height:36px;border-radius:var(--radius-3xl);display:flex;align-items:center;justify-content:center;font-size:var(--text-sm);font-weight:var(--font-weight-medium);color:var(--color-default-foreground);flex-shrink:0}
+    .pg-cur{background:var(--color-default);box-shadow:inset 0 0 0 1px var(--color-foreground);font-weight:var(--font-weight-semibold)}
+    .pg-nav{display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:var(--radius-3xl);font-size:var(--text-sm);font-weight:var(--font-weight-medium);color:var(--color-default-foreground)}
+  </style>
+  <div class="ds-item">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--spacing-4);width:640px;max-width:100%">
+      <span class="num" style="font-size:var(--text-sm);color:var(--color-muted)">21–40 von 128</span>
+      <div style="display:flex;align-items:center;gap:var(--spacing-1)">
+        <div class="pg-nav"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Zurück</div>
+        <div class="pg-l">1</div>
+        <div class="pg-l pg-cur">2</div>
+        <div class="pg-l" style="box-shadow:0 0 0 2px var(--color-background),0 0 0 4px var(--color-focus)">3</div>
+        <div class="pg-l" style="color:var(--color-muted)">…</div>
+        <div class="pg-l">7</div>
+        <div class="pg-nav">Weiter<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+    </div>
+    <span class="ds-note">desktop · current page = default fill + 1px ink outline + 600 · focus-visible (3)</span>
+  </div>
+  <div class="ds-item">
+    <div style="display:flex;align-items:center;gap:var(--spacing-1)">
+      <div class="pg-l"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4l-4 4 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="pg-l">1</div><div class="pg-l pg-cur">2</div><div class="pg-l">3</div><div class="pg-l" style="color:var(--color-muted)">…</div><div class="pg-l">7</div>
+      <div class="pg-l"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <span class="ds-note">below 640px · icon-only Zurück/Weiter (aria-label), 276px</span>
+  </div>
+</div>

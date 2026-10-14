@@ -1,0 +1,31 @@
+<!-- @dsCard group="Date and data" height=220 -->
+<div class="ds-stage">
+  <style>
+    .av{display:flex;align-items:center;justify-content:center;border-radius:var(--radius-full);font-weight:var(--font-weight-medium);flex-shrink:0}
+  </style>
+  <div class="ds-row" style="align-items:center">
+    <div class="ds-item" style="align-items:center">
+      <div style="display:flex;gap:var(--spacing-4);align-items:center">
+        <div class="av" style="width:32px;height:32px;background:var(--color-default);font-size:var(--text-xs);color:var(--color-default-foreground)">AM</div>
+        <div class="av" style="width:40px;height:40px;background:var(--color-info-soft);font-size:var(--text-sm);color:var(--color-info)">NT</div>
+        <div class="av" style="width:48px;height:48px;background:var(--color-success-soft);font-size:var(--text-base);color:var(--color-success-soft-foreground)">BU</div>
+      </div>
+      <span class="ds-note">sm 32 · md 40 · lg 48 · initials fallback</span>
+    </div>
+    <div class="ds-item">
+      <div style="display:flex;gap:var(--spacing-3);align-items:center">
+        <div style="position:relative;width:40px;height:40px"><div class="av" style="width:40px;height:40px;background:var(--color-default);font-size:var(--text-sm);color:var(--color-default-foreground)">MA</div><div style="position:absolute;top:0;right:0;width:16px;height:16px;transform:translate(25%,-25%);border-radius:var(--radius-xl);background:var(--color-info);border:1px solid var(--color-background)"></div></div>
+        <span style="font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--color-foreground)">Messerschmiede Altstadt · <span class="num">3</span> neue Bestellungen</span>
+      </div>
+      <span class="ds-note">Badge sm dot (16) + count as text next to it</span>
+    </div>
+    <div class="ds-item">
+      <div style="display:flex;align-items:center">
+        <div class="av" style="width:32px;height:32px;background:var(--color-default);box-shadow:0 0 0 2px var(--color-background);font-size:var(--text-xs);color:var(--color-default-foreground)">AM</div>
+        <div class="av" style="width:32px;height:32px;margin-left:-8px;background:var(--color-info-soft);box-shadow:0 0 0 2px var(--color-background);font-size:var(--text-xs);color:var(--color-info)">JK</div>
+        <div class="av" style="width:32px;height:32px;margin-left:-8px;background:var(--color-default);box-shadow:0 0 0 2px var(--color-background);font-size:var(--text-xs);color:var(--color-muted)">+3</div>
+      </div>
+      <span class="ds-note">AvatarGroup · 8px overlap · ring in color-background</span>
+    </div>
+  </div>
+</div>

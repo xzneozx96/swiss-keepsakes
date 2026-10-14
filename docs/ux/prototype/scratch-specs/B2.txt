@@ -1,0 +1,18 @@
+Phase 2 step 2.15: complete-flow check and regressions. Read docs/ux/prototype/worker-brief-phase2.md again; the same rules apply, with port 5232. All other Phase 2 workers have finished. You may now make small fixes in any tours file. Name every fix in your report.
+
+Do exactly what the 2.15 line in docs/ux/prototype/todo-phase2.md says:
+- Run every row of the "Verify the important booking cases" table end to end, at 375px in EN and DE.
+- Check keyboard use, focus, validation, empty states, loading states, long German labels, refresh, and Reset.
+- Run the frontend typecheck (npx tsc --noEmit -p tsconfig.json) and full lint without fixing: `npx eslint src`, not `npm run lint`.
+- For this step only, the coordinator authorises one production build: `npx vite build`. Report its result.
+- Recheck the gift flow wherever shared sign-in, payment, quantities, statuses, reviews, reports or navigation changed.
+
+Reuse the per-step drivers in docs/ux/prototype/reports/2.*-drive.mjs where they help, but this step is about the joined-up flow: discovery → C09 (new in-map stop card + sheet) → C10 → C11 → C12 → C13 → C16, and merchant M02 → M05 → M06 → M07/M08 → completion → P02 → C18 review.
+
+Coordinator changes since the step reports, to verify explicitly:
+(1) Every person avatar is now a sample image, never initials: reviews (gift and tour), account hub, edit profile after removing the photo, merchant gift order guest card. Copy 'account.edit.remove.body' now says a default avatar shows.
+(2) components/booking-status.tsx: a cancelled booking shows a neutral 'Paid · nothing more owed' or 'No payment taken' chip (check SK-T2001 on M07 and guest C16, after the overdue cancel).
+(3) The tour review card uses plural-aware group text (no '1 children').
+Known caveats to state rather than fix: the overdue check runs only while a merchant screen is open; browsers with old demo data need Reset.
+
+Record actual evidence in docs/ux/prototype/reports/2.15.md: case table with PASS/FAIL and evidence lines, the regression list, the command outputs, the fixes you made, and open issues. Save screenshots to screens/2.15/. Kill your dev server, then send worker_done with --report-path.

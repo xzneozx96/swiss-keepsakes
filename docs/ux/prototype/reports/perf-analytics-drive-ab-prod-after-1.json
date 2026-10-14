@@ -1,0 +1,116 @@
+{
+ "label": "ab-prod-after-1",
+ "screens": {
+  "M02 Overview (#/store)": {
+   "cold": {
+    "wall": 616.3999999985099,
+    "task": 322.298,
+    "script": 187.36
+   },
+   "open": {
+    "wall": 494.19999999925494,
+    "task": 173.7410000000002,
+    "script": 118.23099999999988
+   },
+   "tab": {
+    "wall": 293.40000000037253,
+    "task": 384.59900000000016,
+    "script": 171.1590000000001
+   },
+   "values": [
+    "CHF 9’145.00",
+    "75% of CHF 12’134.00 requested",
+    "CHF 416.70",
+    "91% of CHF 459.20, with open orders",
+    "135",
+    "77% of 175 orders",
+    "CHF 1’295.00−2%−2% compared with 30 Sept – 6 Oct",
+    "",
+    "CHF 1’897.00+5%+5% compared with 30 Sept – 6 Oct",
+    "",
+    "CHF 1’422.70+16%+16% compared with 30 Sept – 6 Oct",
+    "",
+    "CHF 174.30−42%−42% compared with 30 Sept – 6 Oct",
+    "",
+    "CHF 60.85+58%+58% compared with 30 Sept – 6 Oct",
+    "",
+    "27+8%+8% compared with 30 Sept – 6 Oct",
+    "",
+    "CHF 70.26−3%−3% compared with 30 Sept – 6 Oct",
+    ""
+   ]
+  },
+  "P02 Partner report (#/partner/r7Kq2mVx)": {
+   "cold": {
+    "wall": 138.2999999988824,
+    "task": 142.44799999999995,
+    "script": 64.75900000000001
+   },
+   "open": {
+    "wall": 70.70000000111759,
+    "task": 124.86900000000003,
+    "script": 38.057000000000016
+   },
+   "tab": {
+    "wall": 231.19999999925494,
+    "task": 224.48699999999985,
+    "script": 116.22500000000002
+   },
+   "values": [
+    "CHF 224.80",
+    "74% of CHF 304.10, with open orders",
+    "CHF 0.00",
+    "0% of earned",
+    "CHF 224.80",
+    "100% of earned",
+    "CHF 24.60",
+    "+CHF 79.30 estimated on open orders",
+    "CHF 0.00",
+    "Paid out to you by the shop",
+    "CHF 24.60",
+    "Earned, less what was paid",
+    "8",
+    "3 completed · 4 open · 1 cancelled"
+   ]
+  },
+  "M15 Analytics tab (#/store/partners?view=analytics)": {
+   "cold": {
+    "wall": 252.69999999925494,
+    "task": 268.48199999999997,
+    "script": 193.16099999999997
+   },
+   "open": {
+    "wall": 100,
+    "task": 111.394,
+    "script": 81.05599999999998
+   },
+   "tab": {
+    "wall": 144.7999999988824,
+    "task": 147.86400000000003,
+    "script": 55.819999999999936
+   },
+   "values": [
+    "306−9%−9% compared with 15 Aug – 13 Sept",
+    "",
+    "45+45%+45% compared with 15 Aug – 13 Sept",
+    "",
+    "14.7%+59%+59% compared with 15 Aug – 13 Sept",
+    "",
+    "CHF 215.30+35%+35% compared with 15 Aug – 13 Sept",
+    "",
+    "139",
+    "20",
+    "14.4%",
+    "CHF 101.15",
+    "125",
+    "23",
+    "18.4%",
+    "CHF 96.45",
+    "42",
+    "2",
+    "4.8%",
+    "CHF 17.70"
+   ]
+  }
+ }
+}

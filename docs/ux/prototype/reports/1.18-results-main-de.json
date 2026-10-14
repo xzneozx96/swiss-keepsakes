@@ -1,0 +1,1094 @@
+[
+ {
+  "id": "1 entry: both QR visits recorded, Hotel am See last",
+  "lang": "de",
+  "pass": true,
+  "detail": "guide-marco,hotel-am-see"
+ },
+ {
+  "id": "1 C01 at #/",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/"
+ },
+ {
+  "id": "1 C01 says nothing about 'referred by'",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-01-c01: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-01-c01: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-01-c01: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "1 C02 filtered to Pocket knives",
+  "lang": "de",
+  "pass": true,
+  "detail": "Taschenmesser Taschenmesser Klappmesser, von Hand graviert in der Altstadt 2 Geschenke Alle Taschenmesser Geschenkboxen Schokolade Drucke Kleine Geschenke Gravur ab CHF 49.00 Kapellbrücke Taschenmesse"
+ },
+ {
+  "id": "main-01-c02-knives: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-01-c02-knives: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-01-c02-knives: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "2 C03 knife opened",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/gifts/kapellbruecke-pocket-knife"
+ },
+ {
+  "id": "2 engraving counter shows 4 of 12",
+  "lang": "de",
+  "pass": true,
+  "detail": "Ihr Geschenk Ausführung Klein CHF 49.00 Mittel CHF 54.00 Gross CHF 64.00 Anzahl 4 verfügbar Gravur (optional) 4/12 Kostenlos. Bis zu 12 Zeichen, von Hand graviert. 4 von 12 Zeichen Abholdatum Frühestens Fr., 16. Okt. Oktober 2026 Oktober 2026 Mo Di Mi Do Fr Sa So 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 "
+ },
+ {
+  "id": "2 pale-day reason 'Needs 3 working days to engrave'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Ihr Geschenk Ausführung Klein CHF 49.00 Mittel CHF 54.00 Gross CHF 64.00 Anzahl 4 verfügbar Gravur (optional) 4/12 Kostenlos. Bis zu 12 Zeichen, von Hand graviert. 4 von 12 Zeichen Abholdatum Frühestens Fr., 16. Okt. Oktober 2026 Oktober 2026 Mo Di Mi Do Fr Sa So 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 "
+ },
+ {
+  "id": "2 fixed request line shown",
+  "lang": "de",
+  "pass": true,
+  "detail": "Ihr Geschenk Ausführung Klein CHF 49.00 Mittel CHF 54.00 Gross CHF 64.00 Anzahl 4 verfügbar Gravur (optional) 4/12 Kostenlos. Bis zu 12 Zeichen, von Hand graviert. 4 von 12 Zeichen Abholdatum Frühestens Fr., 16. Okt. Oktober 2026 Oktober 2026 Mo Di Mi Do Fr Sa So 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 "
+ },
+ {
+  "id": "main-02-c03-knife-sheet: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-02-c03-knife-sheet: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-02-c03-knife-sheet: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "3 gift box uses its own rule: 'Needs 2 days to prepare' (calendar days, not working days)",
+  "lang": "de",
+  "pass": true,
+  "detail": "Ihr Geschenk Anzahl 4 verfügbar Abholdatum Frühestens Do., 15. Okt. Oktober 2026 Oktober 2026 Mo Di Mi Do Fr Sa So 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 1 Blasse Tage Braucht 2 Tage zur Vorbereitung Sonntags geschlossen Abholort Laden Altstadt K"
+ },
+ {
+  "id": "main-03-c03-giftbox-sheet: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-03-c03-giftbox-sheet: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-03-c03-giftbox-sheet: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "4 C04 each line shows its payment rule (full / 30% deposit)",
+  "lang": "de",
+  "pass": true,
+  "detail": "Warenkorb Abholdaten sind Anfragen Geschenke mit unterschiedlichem Abholdatum, Abholort oder unterschiedlichen Zahlungsregeln werden zu separaten Bestellungen. Der Laden bestätigt jede Bestellung, bevor Sie bezahlen, und jede Bestellung wird einzeln bezahlt. Kapellbrücke Taschenmesser Swiss Keepsake"
+ },
+ {
+  "id": "4 C04 each line shows its requested date (21 / 20 Oct)",
+  "lang": "de",
+  "pass": true,
+  "detail": "Warenkorb Abholdaten sind Anfragen Geschenke mit unterschiedlichem Abholdatum, Abholort oder unterschiedlichen Zahlungsregeln werden zu separaten Bestellungen. Der Laden bestätigt jede Bestellung, bevor Sie bezahlen, und jede Bestellung wird einzeln bezahlt. Kapellbrücke Taschenmesser Swiss Keepsake"
+ },
+ {
+  "id": "4 C04 Select all: total for reference CHF 143.00, 2 of 2 selected",
+  "lang": "de",
+  "pass": true,
+  "detail": "ellbrücke Taschenmesser Swiss Keepsakes Luzern Mittel Gravur «Anna» Abholung angefragt für Mi., 21. Okt. Laden Altstadt Volle Zahlung nach der Bestätigung CHF 54.00 pro Stück Luzerner Geschenkbox Swiss Keepsakes Luzern Abholung angefragt für Di., 20. Okt. Laden Altstadt 30 % Anzahlung nach der Bestä"
+ },
+ {
+  "id": "main-04-c04-cart: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-04-c04-cart: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-04-c04-cart: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "4 C04 price details sheet lists both gifts and CHF 143.00",
+  "lang": "de",
+  "pass": true,
+  "detail": "Preisdetails 1 × Kapellbrücke Taschenmesser · Mittel Mi., 21. Okt. CHF 54.00 1 × Luzerner Geschenkbox Di., 20. Okt. CHF 89.00 Zwischensumme CHF 143.00 Total zur Information CHF 143.00 Jetzt nichts bezahlen"
+ },
+ {
+  "id": "main-04-c04-price-sheet: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-04-c04-price-sheet: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-04-c04-price-sheet: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-05-c05-start: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-05-c05-start: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-05-c05-start: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "5 000000 shows the wrong-code error",
+  "lang": "de",
+  "pass": true,
+  "detail": "E-Mail prüfen Wir haben einen 6-stelligen Code an anna.keller@example.com gesendet. Code aus der E-Mail Geben Sie die 6 Ziffern ein. Der Code ist 10 Minuten gültig. Dieser Code stimmt nicht. Prüfen Sie die E-Mail und versuchen Sie es erneut. Noch 4 Versuche für diesen Code. Weiter Keine E-Mail? Erne"
+ },
+ {
+  "id": "5 resend locked with countdown",
+  "lang": "de",
+  "pass": true,
+  "detail": "E-Mail prüfen Wir haben einen 6-stelligen Code an anna.keller@example.com gesendet. Code aus der E-Mail Geben Sie die 6 Ziffern ein. Der Code ist 10 Minuten gültig. Dieser Code stimmt nicht. Prüfen Sie die E-Mail und versuchen Sie es erneut. Noch 4 Versuche für diesen Code. Weiter Keine E-Mail? Erne"
+ },
+ {
+  "id": "main-05-c05-wrong-code: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-05-c05-wrong-code: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-05-c05-wrong-code: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "5 N01 sent to guest",
+  "lang": "de",
+  "pass": true,
+  "detail": "N01>guest"
+ },
+ {
+  "id": "5 lands on C06 after sign-in",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart/review"
+ },
+ {
+  "id": "5 cart unchanged by sign-in",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "6 C06 shows Order 1 and Order 2 (AC28)",
+  "lang": "de",
+  "pass": true,
+  "detail": "Prüfen und senden Jetzt wird nichts belastet. Der Laden bestätigt zuerst jede Bestellung, danach bezahlen Sie, was für diese Bestellung fällig ist. Bestellung 1 Abholung angefragt für Mi., 21. Okt. Laden Altstadt Volle Zahlung nach der Bestätigung Kapellbrücke Taschenmesser Swiss Keepsakes Luzern Mi"
+ },
+ {
+  "id": "6 C06 due after confirm 54.00 / 26.70",
+  "lang": "de",
+  "pass": true,
+  "detail": "Prüfen und senden Jetzt wird nichts belastet. Der Laden bestätigt zuerst jede Bestellung, danach bezahlen Sie, was für diese Bestellung fällig ist. Bestellung 1 Abholung angefragt für Mi., 21. Okt. Laden Altstadt Volle Zahlung nach der Bestätigung Kapellbrücke Taschenmesser Swiss Keepsakes Luzern Mi"
+ },
+ {
+  "id": "6 C06 rest 62.30 named",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "6 C06 combined total for reference",
+  "lang": "de",
+  "pass": true,
+  "detail": " Sa., 24. Okt. fällig. Stornierungsbedingungen Kostenlos stornierbar, bis Sie bezahlen. Nach der Zahlung ist eine Stornierung bis zum Beginn der Vorbereitung möglich; der bezahlte Betrag wird erstattet. Gesamttotal, zur Information CHF 143.00 Jetzt nichts bezahlen Anfrage senden · noch keine Zahlung"
+ },
+ {
+  "id": "main-06-c06-review: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-06-c06-review: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-06-c06-review: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "6 send opens C07",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/cart/sent?orders=sk-1043%2Csk-1044"
+ },
+ {
+  "id": "7 C07 lists both orders awaiting seller confirmation",
+  "lang": "de",
+  "pass": true,
+  "detail": "Anfrage gesendet Ihre Anfrage ging als 2 separate Bestellungen an den Verkäufer. Es wurde nichts belastet. Ihre Bestellungen Kapellbrücke Taschenmesser CHF 54.00 SK-1043 Gewünschte Abholung: Mi., 21. Okt. · Laden Altstadt Wartet auf Bestätigung Noch nichts zu bezahlen Zahlung innerhalb von 24 Stunde"
+ },
+ {
+  "id": "7 C07 no response-time promise",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "7 trip profile shown",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-07-c07-sent: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-07-c07-sent: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-07-c07-sent: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "7 N02 x2 to guest, N03 x2 to staff",
+  "lang": "de",
+  "pass": true,
+  "detail": "N01>guest,N02>guest(SK-1043),N03>staff(SK-1043),N02>guest(SK-1044),N03>staff(SK-1044)"
+ },
+ {
+  "id": "7 orders created with source Hotel am See and order language",
+  "lang": "de",
+  "pass": true,
+  "detail": "SK-1043:hotel-am-see:de SK-1044:hotel-am-see:de"
+ },
+ {
+  "id": "8 Manager lands on M02 #/store",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store"
+ },
+ {
+  "id": "8 M02 awaiting confirmation = 5 (outline says 2; 3 seeded + Anna's 2)",
+  "lang": "de",
+  "pass": true,
+  "detail": "Heute Di., 13. Okt. Zu erledigen Wartet auf Bestätigung Jede Anfrage annehmen oder ablehnen 5 Wartet auf Zahlung Angenommen, der Gast hat noch nicht bezahlt 1 Vorzubereiten Diese Geschenke für die Abholung bereitstellen 1 Abholbereit Liegt am Abholort bereit 1 Auf einen Blick Noch einzuziehen CHF 17"
+ },
+ {
+  "id": "main-08-m02-today: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-08-m02-today: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-08-m02-today: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-08-m02-today@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-08-m02-today@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-08-m02-today@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "8 N03 in staff mail",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "8 card opens M03 awaiting-confirmation tab",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store/orders?status=awaiting-confirmation"
+ },
+ {
+  "id": "8 M03 lists Anna's two requests",
+  "lang": "de",
+  "pass": true,
+  "detail": "Geschenkbestellungen Wartet auf Bestätigung 5 Wartet auf Zahlung 1 In Vorbereitung 1 Abholbereit 1 Restbetrag offen 0 Abgeschlossen 2 Storniert 2 FR 16 Okt Yuki Tanaka SK-1032 · Laden Altstadt Limited-edition print: Water Tower at dawn ×1 Wartet auf Bestätigung Gesamt CHF 119.00 Zahlung Noch nichts "
+ },
+ {
+  "id": "main-08-m03-orders: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-08-m03-orders: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-08-m03-orders: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-08-m03-orders@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-08-m03-orders@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-08-m03-orders@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "8 M03 row opens M04 of the gift box",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store/orders/sk-1044"
+ },
+ {
+  "id": "9 M04 shows source Hotel am See (AC11)",
+  "lang": "de",
+  "pass": true,
+  "detail": "Geschenkbestellungen Bestellung SK-1044 Anna Keller · angefragt am 13.10.2026, 10:00 Wartet auf Bestätigung Noch nichts zu bezahlen Über diese Anfrage entscheiden Es wurde noch nichts bezahlt. Der Gast bezahlt erst, wenn Sie annehmen. Gewünschte Abholung 20.10.2026 · Laden Altstadt Lagerbestand Luze"
+ },
+ {
+  "id": "main-09-m04-requested: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-09-m04-requested: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-09-m04-requested: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-09-m04-requested@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-09-m04-requested@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-09-m04-requested@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "9 change without a note is blocked",
+  "lang": "de",
+  "pass": true,
+  "detail": "Datum oder Ort ändern Verwenden Sie dies, wenn Sie mit dem Gast per E-Mail ein neues Datum oder einen neuen Ort vereinbart haben. Die Bestellung bleibt eine Anfrage, Sie nehmen sie danach an. Abholdatum Oktober 2026 Oktober 2026 Mo Di Mi Do Fr Sa So 28 29 30 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"
+ },
+ {
+  "id": "9 log: place changed Altstadt → Bahnhof · note · Lukas · time",
+  "lang": "de",
+  "pass": true,
+  "detail": "Geschenkbestellungen Bestellung SK-1044 Anna Keller · angefragt am 13.10.2026, 10:00 Wartet auf Bestätigung Noch nichts zu bezahlen Über diese Anfrage entscheiden Es wurde noch nichts bezahlt. Der Gast bezahlt erst, wenn Sie annehmen. Gewünschte Abholung 20.10.2026 · Abholstelle Bahnhof Lagerbestand"
+ },
+ {
+  "id": "9 accept sentence (prepare 1 item, 20.10.2026, Bahnhof)",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1044 annehmen? Sie bestätigen, dass Sie 1 Artikel für die Abholung am 20.10.2026 (Abholstelle Bahnhof) vorbereiten können. Der Gast wird gebeten, CHF 26.70 innerhalb von 24 Stunden zu bezahlen, bis 14.10.2026, 10:30. Der Bestand für diese Bestellung wird ab jetzt reserviert. Annehmen u"
+ },
+ {
+  "id": "9 accept sentence (pay CHF 26.70 within 24 hours, by 14.10.2026, 10:3x)",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1044 annehmen? Sie bestätigen, dass Sie 1 Artikel für die Abholung am 20.10.2026 (Abholstelle Bahnhof) vorbereiten können. Der Gast wird gebeten, CHF 26.70 innerhalb von 24 Stunden zu bezahlen, bis 14.10.2026, 10:30. Der Bestand für diese Bestellung wird ab jetzt reserviert. Annehmen u"
+ },
+ {
+  "id": "9 stock shown per line before accept",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-09-m04-accept-sheet: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-09-m04-accept-sheet: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-09-m04-accept-sheet: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "9 gift box accepted, payment due CHF 26.70",
+  "lang": "de",
+  "pass": true,
+  "detail": "Geschenkbestellungen Bestellung SK-1044 Anna Keller · angefragt am 13.10.2026, 10:00 Angenommen, Zahlung fällig Zahlung fällig · CHF 26.70 bis 14.10.2026, 10:30 Nächster Schritt Wartet auf die erste Zahlung des Gasts. Zahlt der Gast im Laden, erfassen Sie es hier. Zahlung erfassen Geschenke Luzerner"
+ },
+ {
+  "id": "main-09-m04-accepted: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-09-m04-accepted: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-09-m04-accepted: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "10 knife accepted; N04 x2 to guest",
+  "lang": "de",
+  "pass": true,
+  "detail": "N01>guest,N02>guest(SK-1043),N03>staff(SK-1043),N02>guest(SK-1044),N03>staff(SK-1044),N04>guest(SK-1044),N04>guest(SK-1043)"
+ },
+ {
+  "id": "main-10-m04-knife-accepted: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-10-m04-knife-accepted: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-10-m04-knife-accepted: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "11 C14 shows both new orders",
+  "lang": "de",
+  "pass": true,
+  "detail": "Konto A Anna Keller anna.keller@example.com Abmelden Meine Transaktionen Kapellbrücke Taschenmesser CHF 54.00 SK-1043 · Abholung 21.10.2026 Angenommen, Zahlung fällig Zahlung fällig · CHF 54.00 bis 14.10.2026, 10:35 Luzerner Geschenkbox CHF 89.00 SK-1044 · Abholung 20.10.2026 Angenommen, Zahlung fäl"
+ },
+ {
+  "id": "11 C14 gift box shows the R04 free-cancel note",
+  "lang": "de",
+  "pass": true,
+  "detail": "Konto A Anna Keller anna.keller@example.com Abmelden Meine Transaktionen Kapellbrücke Taschenmesser CHF 54.00 SK-1043 · Abholung 21.10.2026 Angenommen, Zahlung fällig Zahlung fällig · CHF 54.00 bis 14.10.2026, 10:35 Luzerner Geschenkbox CHF 89.00 SK-1044 · Abholung 20.10.2026 Angenommen, Zahlung fäl"
+ },
+ {
+  "id": "main-11-c14: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-11-c14: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-11-c14: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "11 C15 knife: 'Pay CHF 54.00 by 14.10.2026, 10:35'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1043 Kapellbrücke Taschenmesser Angenommen, Zahlung fällig Zahlung fällig · CHF 54.00 bis 14.10.2026, 10:35 CHF 54.00 bis 14.10.2026, 10:35 bezahlen Wird bis dahin nicht bezahlt, wird die Bestellung automatisch storniert. CHF 54.00 bezahlen Bestellung stornieren Bestätigte Abholung 21."
+ },
+ {
+  "id": "11 C15 knife: auto-cancel warning",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-11-c15-knife-due: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-11-c15-knife-due: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-11-c15-knife-due: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "11 Pay opens C12",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/account/orders/sk-1043/pay"
+ },
+ {
+  "id": "11 C12 labelled simulated provider, seller and ref",
+  "lang": "de",
+  "pass": true,
+  "detail": "SIMULIERTER ZAHLUNGSANBIETER · PROTOTYP · ES FLIESST KEIN ECHTES GELD Zahlung Zahlung an Swiss Keepsakes Luzern Verkäufer Bestellnummer SK-1043 Betrag CHF 54.00 ANTWORT DES ANBIETERS SIMULIEREN CHF 54.00 bezahlen Die Zahlung gelingt Fehlschlag Die Zahlung wird abgelehnt In Bearbeitung Der Anbieter h"
+ },
+ {
+  "id": "main-11-c12-provider: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-11-c12-provider: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-11-c12-provider: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "11 back on C15: Confirmed, being prepared · Paid in full",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1043 Kapellbrücke Taschenmesser Bestätigt, in Vorbereitung Vollständig bezahlt · CHF 54.00 Der Laden bereitet Ihre Bestellung vor Wir melden uns, sobald sie zur Abholung am 21.10.2026 bereit ist. Bestätigte Abholung 21.10.2026 Laden Altstadt Kornmarkt 9, 6004 Luzern Mo–Sa 10:00–18:30 Z"
+ },
+ {
+  "id": "11 N07 to guest, N21 to staff",
+  "lang": "de",
+  "pass": true,
+  "detail": "N01>guest,N02>guest(SK-1043),N03>staff(SK-1043),N02>guest(SK-1044),N03>staff(SK-1044),N04>guest(SK-1044),N04>guest(SK-1043),N07>guest(SK-1043),N21>staff(SK-1043)"
+ },
+ {
+  "id": "main-11-c15-knife-paid: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-11-c15-knife-paid: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-11-c15-knife-paid: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "12 C15 gift box shows the new place and free-cancel note",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1044 Luzerner Geschenkbox Angenommen, Zahlung fällig Zahlung fällig · CHF 26.70 bis 14.10.2026, 10:30 CHF 26.70 bis 14.10.2026, 10:30 bezahlen Wird bis dahin nicht bezahlt, wird die Bestellung automatisch storniert. Der Laden hat Ihre Abholung von Laden Altstadt nach Abholstelle Bahnho"
+ },
+ {
+  "id": "main-12-c15-giftbox-changed: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-12-c15-giftbox-changed: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-12-c15-giftbox-changed: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "12 'Deposit paid · CHF 26.70 · CHF 62.30 left, due 24.10.2026'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1044 Luzerner Geschenkbox Bestätigt, in Vorbereitung Anzahlung bezahlt · CHF 26.70 · noch CHF 62.30, fällig am 24.10.2026 Der Laden bereitet Ihre Bestellung vor Wir melden uns, sobald sie zur Abholung am 20.10.2026 bereit ist. CHF 62.30 bezahlen Bestätigte Abholung 20.10.2026 Abholstel"
+ },
+ {
+  "id": "main-12-c15-giftbox-deposit: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-12-c15-giftbox-deposit: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-12-c15-giftbox-deposit: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "13 N12 sent",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "13 Complete locked with 'CHF 62.30 still owed'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Geschenkbestellungen Bestellung SK-1044 Anna Keller · angefragt am 13.10.2026, 10:00 Übergeben Anzahlung bezahlt · CHF 26.70 · noch CHF 62.30, fällig am 24.10.2026 Nächster Schritt Der Gast hat das Geschenk. Erfassen Sie die offenen CHF 62.30 und schliessen Sie dann die Bestellung ab. Zahlung erfass"
+ },
+ {
+  "id": "main-13-m04-locked: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-13-m04-locked: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-13-m04-locked: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-13-m04-locked@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-13-m04-locked@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-13-m04-locked@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 M08 button 'Record CHF 62.30 cash. Balance will be CHF 0.00.'",
+  "lang": "de",
+  "pass": true,
+  "detail": "Zahlung erfassen · SK-1044 Noch offen: CHF 62.30 Erhaltener Betrag Höchstens der offene Betrag. Wie wurde bezahlt? Bar Banküberweisung Andere Erhalten um ⁦ 10 : 35 ⁩ Heute, 13.10.2026. Ändern Sie die Zeit, wenn das Geld früher kam. Notiz (optional) Erscheint im Zahlungsverlauf. CHF 62.30 bar erfasse"
+ },
+ {
+  "id": "main-14-m08: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m08: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-14-m08: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m08@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m08@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-14-m08@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 Record payment hidden at balance 0 (duplicate path not reachable here, see report)",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 commission Estimated before complete",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 completed, by Lukas, commission Recorded",
+  "lang": "de",
+  "pass": true,
+  "detail": "Geschenkbestellungen Bestellung SK-1044 Anna Keller · angefragt am 13.10.2026, 10:00 Abgeschlossen Vollständig bezahlt · CHF 89.00 Bestellung abgeschlossen Abgeschlossen von Lukas · 13.10.2026, 10:35 Geschenke Luzerner Geschenkbox Standard · 1 × CHF 89.00 CHF 89.00 Abholung 20.10.2026 · Abholstelle "
+ },
+ {
+  "id": "14 N15 review invite",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "14 commissionRecordedAt set once = completedAt",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m04-completed: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m04-completed: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-14-m04-completed: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m04-completed@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-14-m04-completed@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-14-m04-completed@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "15 knife (not completed) has no review button",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "15 empty review shows both errors",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-15-c18-sheet: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-15-c18-sheet: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-15-c18-sheet: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "15 review posted, shown on C15",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bestellung SK-1044 Luzerner Geschenkbox Abgeschlossen Vollständig bezahlt · CHF 89.00 Abgeholt und bezahlt. Vielen Dank! Ihre Bewertung von Luzerner Geschenkbox A Anna K. Gekauft am Di., 13. Okt. · heute Schöne Box, einfache Abholung am Bahnhof. Auf der Geschenkseite ansehen Bestätigte Abholung 20.1"
+ },
+ {
+  "id": "main-15-c15-reviewed: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-15-c15-reviewed: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-15-c15-reviewed: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "15 review appears on C03 with 'Purchased on' (decision 103 replaced 'Verified purchase')",
+  "lang": "de",
+  "pass": true,
+  "detail": "1 / 3 Luzerner Geschenkbox Geschenkboxen · Standard Do., 15. Okt. Frühestens abholbar 4.4 von 5 Sternen 4.4 7 Bewertungen Swiss Keepsakes Luzern Verkäufer · Laden in der Altstadt Abholen in Luzern Laden Altstadt oder Abholstelle Bahnhof. Braucht 2 Tage zur Vorbereitung. Jetzt nichts bezahlen Sie lei"
+ },
+ {
+  "id": "main-15-c03-review: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-15-c03-review: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-15-c03-review: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "16 Partner lands on #/partner",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/partner"
+ },
+ {
+  "id": "16 P02 shows Anna's two orders",
+  "lang": "de",
+  "pass": true,
+  "detail": "Tag Woche Monat Oktober 2026 Ihre Provision Provision nach Anpassungen CHF 18.75 Wird verbucht, wenn eine Bestellung abgeschlossen ist. Offene Bestellungen ergeben geschätzt CHF 16.70. Tatsächlich ausbezahlt CHF 0.00 Vom Geschäft an Sie ausbezahlt Noch auszuzahlen CHF 18.75 Provision nach Anpassunge"
+ },
+ {
+  "id": "16 P02 shows none of Guide Marco's orders",
+  "lang": "de",
+  "pass": true,
+  "detail": "SK-1033,SK-1021"
+ },
+ {
+  "id": "16 P02 shows no email, phone, engraving or pickup",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "16 P02 gift box commission Recorded, knife Estimated",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-16-p02: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-16-p02: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-16-p02: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-16-p02@1024: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "main-16-p02@1024: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "main-16-p02@1024: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "mail: no literal {param} in guest mail",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "mail: no literal {param} in staff mail",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "mail: main path sent N01 N02 N03 N04 N07 N12 N15 N21",
+  "lang": "de",
+  "pass": true,
+  "detail": "N01,N02,N03,N04,N07,N12,N15,N21"
+ },
+ {
+  "id": "mail: guest emails in order language (de)",
+  "lang": "de",
+  "pass": true,
+  "detail": "de,de,de,de,de,de,de,de,de"
+ },
+ {
+  "id": "no console or page errors",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ }
+]

@@ -1,0 +1,430 @@
+// Review round 2 (2b): merchant and partner screens the owner rejected in round 1 (1.9, 1.11, 1.15, 1.17).
+// Based on 1.19b-capture.mjs. Drives the real flow from the prototype bar's Reset; no storage writes.
+// Run: node review-round2-2b-capture.mjs (Vite on 5223). ONLY=<step> stops after that step.
+import { chromium } from "playwright-core";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+
+const ROOT = "/home/ross-geller/Projects/minastik/swiss-keepsakes/";
+const OUT = ROOT + "docs/ux/prototype/screens/phase1-review/";
+const ERR_DIR = process.env.ERR_DIR ?? "/tmp/review-round2-2b-err/";
+const BASE = "http://localhost:5223/";
+const ONLY = process.env.ONLY;
+mkdirSync(ERR_DIR, { recursive: true });
+
+function parseDict(file) {
+  const text = readFileSync(ROOT + "front-end/src/i18n/" + file, "utf8");
+  const out = {};
+  const re = /"([A-Za-z0-9_.]+)":\s*("(?:\\.|[^"\\])*")/g;
+  let m;
+  while ((m = re.exec(text))) out[m[1]] = JSON.parse(m[2]);
+  return out;
+}
+const DICT = { en: parseDict("en.ts"), de: parseDict("de.ts") };
+const ITEM_ORDER = ["1.9", "1.11", "1.15"]; // 1.17 approved by the owner in round 2: no longer captured
+
+const home = process.env.HOME + "/.cache/ms-playwright/";
+const dir = readdirSync(home).filter((d) => d.startsWith("chromium_headless_shell-")).sort().pop();
+const browser = await chromium.launch({ executablePath: `${home}${dir}/chrome-headless-shell-linux64/chrome-headless-shell` });
+const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 2 });
+const page = await ctx.newPage();
+const errors = [];
+page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
+page.on("console", (m) => m.type() === "error" && errors.push("console: " + m.text()));
+
+let lang = "en";
+const norm = (s) => s.replace(/[\u00a0\u202f]/g, " ").replace(/\s+/g, " ");
+const T = (key, vars = {}) => {
+  let s = DICT[lang][key];
+  if (s == null) throw new Error("no key " + key);
+  for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(v);
+  return norm(s);
+};
+const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const wait = (ms) => page.waitForTimeout(ms);
+const sheet = () => page.getByRole("dialog").last();
+const bar = page.getByRole("region", { name: "Prototype controls" });
+const demo = () => page.evaluate(() => JSON.parse(localStorage.getItem("sk.demo")));
+const ord = async (ref) => (await demo()).data.orders.find((o) => o.ref === ref);
+const log = (...a) => console.log(...a);
+
+const setLang = async (l) => {
+  if (l === lang) return;
+  lang = l;
+  await page.getByRole("group", { name: "Language" }).getByRole("button", { name: l.toUpperCase(), exact: true }).click();
+  await wait(400);
+};
+const openBar = async () => { await bar.getByRole("button").first().click(); await page.getByRole("dialog").waitFor(); await wait(400); };
+const role = async (label) => { await openBar(); await page.getByRole("radio", { name: label }).click({ force: true }); await wait(1000); };
+const go = async (hash, ms = 1300) => { await page.goto(BASE + hash); await wait(ms); };
+const closeToasts = async () => {
+  for (const b of await page.locator(".toast__close-button").all()) await b.click({ force: true }).catch(() => {});
+  await wait(250);
+};
+const escapeAll = async () => {
+  for (let i = 0; i < 3 && (await page.getByRole("dialog").count() + await page.getByRole("alertdialog").count()); i++) {
+    await page.keyboard.press("Escape"); await wait(450);
+  }
+};
+const viewport = async (w) => {
+  const cur = page.viewportSize();
+  if (cur.width !== w || cur.height !== (w === 375 ? 812 : 768)) { await page.setViewportSize({ width: w, height: w === 375 ? 812 : 768 }); await wait(600); }
+};
+
+// Overflow / raw keys / hardcoded English / blue chart colours → the manifest entry's "issue".
+const EN_ONLY = [...new Set(Object.entries(DICT.en).filter(([k, v]) => DICT.de[k] !== undefined && DICT.de[k] !== v)
+  .flatMap(([, v]) => v.split(/\{[^}]+\}/)).map((f) => norm(f).trim()).filter((f) => f.length >= 12))]
+  .filter((f) => !Object.values(DICT.de).some((d) => d.includes(f)));
+const blueLog = [];
+const problems = async () => {
+  const r = await page.evaluate(() => {
+    const parse = (c) => { const m = c && c.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/); return m && (m[4] === undefined || +m[4] > 0) ? [+m[1], +m[2], +m[3]] : null; };
+    const hsl = ([r, g, b]) => {
+      r /= 255; g /= 255; b /= 255;
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+      if (!d) return [0, 0, l];
+      const s = d / (1 - Math.abs(2 * l - 1));
+      let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      return [(h * 60 + 360) % 360, s, l];
+    };
+    const hex = (c) => "#" + c.map((v) => Math.round(v).toString(16).padStart(2, "0")).join("");
+    const OLD = ["#2a78d6", "#1baf7a", "#6250d6"];
+    const hits = [];
+    const main = document.querySelector("main") ?? document.body;
+    // Chart roots: Recharts wrappers, sections that hold a chart (all-time widgets, P02 chart/groups, M02 widgets).
+    const charts = [...main.querySelectorAll(".recharts-wrapper, section")].filter((s) => s.matches(".recharts-wrapper") || s.querySelector(".recharts-wrapper, [style*='--chart'], [class*='chart']"));
+    const seen = new Set();
+    for (const root of charts) for (const el of [root, ...root.querySelectorAll("*")]) {
+      if (seen.has(el)) continue; seen.add(el);
+      const cs = getComputedStyle(el);
+      const props = el instanceof SVGElement ? ["fill", "stroke", "stop-color"] : ["background-color", "border-top-color"];
+      for (const p of props) {
+        const c = parse(cs.getPropertyValue(p));
+        if (!c) continue;
+        const [h, s, l] = hsl(c);
+        const hx = hex(c);
+        if (OLD.includes(hx) || (h >= 170 && h <= 280 && s > 0.2 && l > 0.08 && l < 0.95)) {
+          const inChip = el.closest("[class*='chip'], [data-slot='chip']");
+          hits.push(`${el.tagName.toLowerCase()}${inChip ? "(chip)" : ""} ${p} ${hx} in "${(root.querySelector("h2,h3")?.textContent ?? root.className).toString().slice(0, 40)}"`);
+        }
+      }
+    }
+    return {
+      overflow: document.documentElement.scrollWidth - window.innerWidth,
+      body: document.body.innerText.replace(document.querySelector('[aria-label="Prototype controls"]')?.innerText ?? "", ""),
+      blue: [...new Set(hits)],
+    };
+  });
+  const out = [];
+  if (/Something went wrong/.test(r.body)) out.push("M02 crashes: missing tourMerchant.* keys from the tours work in progress (" + norm(r.body).trim().slice(0, 90) + ")");
+  if (r.overflow > 0) out.push(`horizontal overflow ${r.overflow}px`);
+  const raw = (r.body.match(/\b[a-z][a-zA-Z]+\.[a-z][a-zA-Z]+(\.[a-zA-Z]+)*\b/g) || []).filter((k) => DICT.en[k] !== undefined);
+  const braces = r.body.match(/\{[a-zA-Z]+\}/g) || [];
+  if (raw.length || braces.length) out.push("raw i18n key or {param} visible: " + [...raw, ...braces].join(", "));
+  if (lang === "de") {
+    const hits = EN_ONLY.filter((f) => norm(r.body).includes(f));
+    if (hits.length) out.push("English text in DE: " + hits.slice(0, 3).join(" | "));
+  }
+  const chartBlue = r.blue.filter((h) => !h.includes("(chip)"));
+  if (r.blue.length) blueLog.push(...r.blue);
+  if (chartBlue.length) out.push("blue in a chart: " + chartBlue.slice(0, 3).join(" | "));
+  return out;
+};
+
+const manifest = [];
+const counters = {};
+// One state = one nn, captured per width (and DE if de:true). `open` re-creates the state per variant
+// (sheets, tabs; M04 remounts its layout across 1024px). `el` = element shot; `hover` = keep the pointer (tooltip).
+async function shot(item, screen, state, caption, { widths = [375, 1024], full = false, de = false, open, close, el, hover } = {}) {
+  counters[item] = (counters[item] ?? 0) + 1;
+  const nn = String(counters[item]).padStart(2, "0");
+  for (const l of de ? ["en", "de"] : ["en"]) {
+    for (const w of widths) {
+      if (open) await escapeAll();
+      await setLang(l);
+      await viewport(w);
+      await closeToasts();
+      if (el) {
+        // Element shots: grow the viewport to the page height first, so the fixed header and bottom tabs
+        // do not paint over an element taller than the screen.
+        const h = await page.evaluate(() => document.documentElement.scrollHeight);
+        await page.setViewportSize({ width: w, height: Math.max(h, w === 375 ? 812 : 768) }); await wait(500);
+      }
+      if (!hover) { await page.mouse.move(2, 2); await wait(200); }
+      if (open) await open(w);
+      if (hover) await hover(w); else await page.mouse.move(2, 2); // park the pointer on the prototype label: no hover tint
+      await wait(500);
+      const issues = await problems();
+      const file = `img/${item}-${nn}-${screen}-${state}-${l}-${w}.png`;
+      if (el) {
+        await el().screenshot({ path: OUT + file });
+        await page.setViewportSize({ width: w, height: w === 375 ? 812 : 768 }); await wait(300);
+      } else if (full) {
+        // Grow the viewport to the page height so fixed bars (bottom tabs) sit at the real bottom, not mid-image.
+        const h = await page.evaluate(() => document.documentElement.scrollHeight);
+        await page.setViewportSize({ width: w, height: Math.max(h, w === 375 ? 812 : 768) }); await wait(500);
+        const h2 = await page.evaluate(() => document.documentElement.scrollHeight);
+        if (h2 > h) { await page.setViewportSize({ width: w, height: h2 }); await wait(400); }
+        await page.screenshot({ path: OUT + file });
+        await page.setViewportSize({ width: w, height: w === 375 ? 812 : 768 }); await wait(300);
+      } else await page.screenshot({ path: OUT + file });
+      const entry = { item, file, caption, lang: l, width: w };
+      if (issues.length) entry.issue = issues.join("; ");
+      manifest.push({ ...entry, _nn: nn });
+      log("shot", file, issues.length ? "ISSUE " + entry.issue : "");
+      if (open) { if (close) await close(); else await escapeAll(); }
+    }
+  }
+  await setLang("en");
+  await viewport(375);
+}
+
+const step = async (name, fn) => {
+  log("== " + name);
+  try { await fn(); } catch (e) {
+    log("STEP FAILED", name, e.message.split("\n")[0]);
+    errors.push(`step ${name}: ${e.message.split("\n")[0]}`);
+    await page.screenshot({ path: `${ERR_DIR}err-${name.replace(/\W+/g, "_")}.png` }).catch(() => {});
+  }
+  if (ONLY === name) await finish();
+};
+
+const M = "Merchant · Store Manager";
+const m04 = async (ref) => { await go(`#/store/orders/${ref.toLowerCase()}`); await closeToasts(); };
+const c15 = async (ref) => { await go(`#/account/orders/${ref.toLowerCase()}`); await closeToasts(); };
+const click = async (name, exact = true) => { await page.getByRole("button", { name, exact }).first().click(); await wait(900); };
+const tab = async (key) => { await page.getByRole("tab", { name: T(key), exact: true }).click(); await wait(700); };
+const m04Tab = (key) => async (w) => { if (w < 1024) await tab(key); };
+const openRecord = async (amount) => {
+  await page.getByRole("button", { name: T("fulfilment.action.record") }).first().click();
+  await sheet().waitFor(); await wait(500);
+  if (amount != null) {
+    const a = sheet().getByRole("textbox", { name: T("recordPayment.amount") });
+    await a.fill(String(amount)); await a.press("Tab"); await wait(400);
+  }
+};
+const submitRecord = async () => { await sheet().getByRole("button", { name: /CHF/ }).last().click(); await wait(1000); await closeToasts(); };
+
+async function finish() {
+  const order = (e) => [ITEM_ORDER.indexOf(e.item), e._nn, e.lang === "en" ? 0 : 1, e.width];
+  manifest.sort((a, b) => { const x = order(a), y = order(b); for (let i = 0; i < 4; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return 0; });
+  if (!ONLY) writeFileSync(OUT + "manifest-merchant.json", JSON.stringify(manifest.map(({ _nn, ...e }) => e), null, 1) + "\n");
+  log("manifest entries:", manifest.length);
+  log("blue colours seen inside chart sections (chips included):", JSON.stringify([...new Set(blueLog)], null, 1));
+  log("errors:", JSON.stringify(errors, null, 1));
+  await browser.close();
+  process.exit(0);
+}
+
+// ---------- Guest: Anna sends two requests (outline §1), C04 Select all, C06 Send. No shots.
+let knifeRef, boxRef;
+await step("guest", async () => {
+  await go("");
+  await openBar();
+  await page.getByRole("button", { name: "Reset demo" }).click();
+  await wait(1200);
+  await openBar(); await page.getByRole("button", { name: "Via Hotel am See QR" }).click(); await wait(900);
+  await go("#/gifts/kapellbruecke-pocket-knife");
+  await page.getByRole("button", { name: T("detail.bar.add"), exact: true }).last().click();
+  await sheet().waitFor();
+  await sheet().getByRole("row", { name: /Medium/ }).click();
+  await sheet().getByLabel(new RegExp(T("detail.engraving.label").replace(/[()]/g, "."))).first().fill("Anna");
+  await sheet().getByRole("gridcell").filter({ hasText: /^21$/ }).first().click();
+  await sheet().getByRole("radio", { name: /Altstadt/ }).check({ force: true });
+  await sheet().getByRole("button", { name: new RegExp("^" + T("detail.bar.add")) }).last().click();
+  await wait(900);
+  await go("#/gifts/lucerne-gift-box");
+  await page.getByRole("button", { name: T("detail.bar.add"), exact: true }).last().click();
+  await sheet().waitFor();
+  await sheet().getByRole("gridcell").filter({ hasText: /^20$/ }).first().click();
+  await sheet().getByRole("radio", { name: /Altstadt/ }).check({ force: true });
+  await sheet().getByRole("button", { name: new RegExp("^" + T("detail.bar.add")) }).last().click();
+  await wait(900);
+  await go("#/cart"); await closeToasts();
+  const box = page.locator("[data-select-all]").first();
+  if (!(await box.locator("input").isChecked())) { await box.locator("label").first().click(); await wait(400); }
+  await page.getByRole("button", { name: T("cart.bar.continue"), exact: true }).last().click();
+  await wait(900);
+  // C05 (sign-in) may open as a sheet or a page since 1.6r.
+  await page.getByRole("button", { name: T("auth.email.send") }).last().click(); await wait(600);
+  await page.locator("#sign-in-code").focus(); await page.keyboard.type("123456"); await wait(1600);
+  await closeToasts();
+  await page.getByRole("button", { name: T("checkout.bar.send") }).last().click(); await wait(1500);
+  await page.getByRole("button", { name: T("tripProfile.skip") }).click({ timeout: 3000 }).catch(() => {}); await wait(500);
+  const d = await demo();
+  const mine = d.data.orders.filter((o) => o.guestId === "g-anna" && o.status === "requested");
+  knifeRef = mine.find((o) => o.lines[0].productId === "p-knife")?.ref;
+  boxRef = mine.find((o) => o.lines[0].productId === "p-giftbox")?.ref;
+  log("Anna's requests:", knifeRef, boxRef);
+  if (!knifeRef || !boxRef) throw new Error("requests not created");
+});
+
+// ---------- 1.9 M02 Overview: Today cards, Analytics periods, all-time, tooltip, table
+const trend = () => page.locator('section[aria-labelledby="overview-trend"]');
+await step("m02", async () => {
+  await role(M);
+  await go("#/store");
+  const period = (k) => async () => { await tab(`overview.period.${k}`); };
+  if (await page.getByText("Something went wrong").count()) {
+    // M02 crashed (missing tourMerchant.* keys from the tours work in progress): capture the page as it is.
+    await shot("1.9", "m02", "today-7d", "M02 Overview (#/store) as it renders now: the route error page instead of Today and Analytics (no DE: the prototype bar with the language switch does not render on the error page)", { full: true });
+    return;
+  }
+  await shot("1.9", "m02", "today-7d", "M02 Overview, full page: Today cards (Awaiting confirmation incl. Anna's two requests), All-time earnings, Analytics 7 days (KPI cards, charts)", { full: true, de: true, open: period("7d") });
+  await shot("1.9", "m02", "analytics-30d", "M02 Overview, full page: Analytics period 30 days", { full: true, open: period("30d") });
+  await shot("1.9", "m02", "analytics-month", "M02 Overview, full page: Analytics period This month (1–13 Oct vs 1–13 Sept)", { full: true, open: period("month") });
+  const allTime = () => page.locator("section").filter({ has: page.locator("h3", { hasText: T("overview.allTime.title") }) }).last();
+  await shot("1.9", "m02", "alltime-earnings", "M02 All-time earnings widget: headline, delta chip, 7 weekly bars in red (running week darker), 3 sub-figures with meters", { open: period("7d"), el: allTime });
+  // Tooltip: no pointer parking, no viewport resize.
+  const hoverTrend = async () => {
+    await trend().scrollIntoViewIfNeeded(); await wait(300);
+    const s = trend().locator(".recharts-surface").first();
+    await s.scrollIntoViewIfNeeded();
+    const b = await s.boundingBox();
+    await page.mouse.move(b.x + b.width * 0.6, b.y + b.height * 0.5); await wait(500);
+    const tip = await trend().locator(".recharts-tooltip-wrapper").first().innerText().catch(() => "");
+    if (!/CHF/.test(tip)) throw new Error("tooltip not shown: " + tip);
+  };
+  await shot("1.9", "m02", "chart-tooltip", "M02 Payments and orders chart (7 days): hover tooltip with the day, Collected CHF and Orders", { open: period("7d"), hover: hoverTrend, el: trend });
+  const showTable = async () => {
+    await tab("overview.period.7d");
+    await trend().getByRole("button", { name: T("overview.table.show") }).click(); await wait(500);
+  };
+  const hideTable = async () => { await trend().getByRole("button", { name: T("overview.table.hide") }).click(); await wait(300); };
+  await shot("1.9", "m02", "table-view", "M02 Payments and orders: Show table, one row per day (7 days)", { open: showTable, close: hideTable, el: trend });
+});
+
+// ---------- 1.11 M04 requested order on the gift box
+await step("m04-decision", async () => {
+  await m04(boxRef);
+  await shot("1.11", "m04", "requested", `M04 ${boxRef} requested, full page: header (h1 + both chips), key-facts strip, action panel (pickup, stock, Accept / Change / Decline); 375 Details tab, 1024 two columns`, { full: true, de: true, open: m04Tab("merchantOrder.tabs.details") });
+  await shot("1.11", "m04", "tab-payments", `M04 ${boxRef} at 375: Payments tab (payments, partner commission, policy)`, { widths: [375], full: true, open: m04Tab("merchantOrder.tabs.money") });
+  await shot("1.11", "m04", "tab-activity", `M04 ${boxRef} at 375: Activity tab (order log timeline)`, { widths: [375], full: true, open: m04Tab("merchantOrder.tabs.activity") });
+  const openChange = async (note) => {
+    await page.getByRole("button", { name: T("merchantOrder.action.change") }).click();
+    await sheet().waitFor(); await wait(400);
+    await sheet().getByRole("radio", { name: /Bahnhof/ }).check({ force: true });
+    if (note) await sheet().getByRole("textbox", { name: new RegExp("^" + T("merchantOrder.change.note")) }).fill(note);
+    else { await sheet().getByRole("button", { name: T("merchantOrder.change.save") }).click(); await wait(400); }
+  };
+  const openChangeTop = async () => {
+    await page.getByRole("button", { name: T("merchantOrder.action.change") }).click();
+    await sheet().waitFor(); await wait(600);
+  };
+  await shot("1.11", "m04", "change-sheet", "M04 Change date or place sheet as it opens: current pickup on top, then the calendar", { open: openChangeTop });
+  await shot("1.11", "m04", "change-sheet-note-required", "M04 Change date or place sheet, scrolled to the end: Pickup point Bahnhof picked, save without a note blocked ('Add a note')", { open: () => openChange(null) });
+  const note = () => (lang === "en" ? "Guest asked by email, hotel is near the station" : "Gast hat per E-Mail gefragt, Hotel liegt beim Bahnhof");
+  await shot("1.11", "m04", "change-sheet-with-note", "M04 Change date or place sheet, scrolled to the end: Pickup point Bahnhof with the required note", { open: () => openChange(note()) });
+  await openChange(note());
+  await sheet().getByRole("button", { name: T("merchantOrder.change.save") }).click(); await wait(900);
+  await closeToasts();
+  await shot("1.11", "m04", "after-change-activity", `M04 ${boxRef} after the place change, full page: 375 Activity tab with "place changed" and the note; 1024 two columns`, { full: true, open: m04Tab("merchantOrder.tabs.activity") });
+  const openAccept = async () => { await page.getByRole("button", { name: T("merchantOrder.action.accept"), exact: true }).click(); await sheet().waitFor(); await wait(400); };
+  await shot("1.11", "m04", "accept-sheet", "M04 Accept sheet: summary card (amount, due by, pickup, items), the confirmation sentence and the consequence button", { open: openAccept });
+  await openAccept();
+  await sheet().getByRole("button", { name: /26\.70/ }).click(); await wait(1000); await closeToasts();
+  await shot("1.11", "m04", "accepted", `M04 ${boxRef} accepted, full page: next-step panel "Wait for the first payment", payment requested CHF 26.70`, { full: true });
+});
+
+// ---------- 1.11 decline sheet + shared confirm on seeded SK-1031 (Keep request, so it stays open)
+await step("decline", async () => {
+  await m04("SK-1031");
+  const openDecline = async () => {
+    await page.getByRole("button", { name: T("merchantOrder.action.decline"), exact: true }).click();
+    await sheet().waitFor(); await wait(400);
+    await sheet().getByRole("radio", { name: T("merchantOrder.decline.reason.date") }).check({ force: true });
+    await wait(300);
+  };
+  await shot("1.11", "m04", "decline-sheet", "M04 Decline sheet on SK-1031: reason chosen as a choice card (can't prepare for the requested date), optional message empty", { open: openDecline });
+  const openConfirm = async () => {
+    await openDecline();
+    await sheet().getByRole("button", { name: T("merchantOrder.decline.submit") }).click(); await wait(700);
+  };
+  const keep = async () => { await page.getByRole("alertdialog").getByRole("button", { name: T("merchantOrder.decline.keep") }).click(); await wait(500); await escapeAll(); };
+  await shot("1.11", "m04", "decline-confirm", "M04 Decline: shared confirmation dialog 'Decline order SK-1031?' (Keep request pressed after the shot)", { open: openConfirm, close: keep });
+});
+
+// ---------- accept knife; guest pays knife in full and gift box deposit
+await step("accept-knife-and-pay", async () => {
+  await m04(knifeRef);
+  await page.getByRole("button", { name: T("merchantOrder.action.accept"), exact: true }).click();
+  await sheet().waitFor(); await wait(400);
+  await sheet().getByRole("button", { name: /54\.00/ }).click(); await wait(1000);
+  await role("Guest");
+  for (const [ref, amt] of [[knifeRef, /54\.00/], [boxRef, /26\.70/]]) {
+    await c15(ref);
+    await page.getByRole("link", { name: amt }).or(page.getByRole("button", { name: amt })).first().click(); await wait(1300);
+    await page.getByRole("button", { name: amt }).first().click(); await wait(1600);
+    log(ref, (await ord(ref)).status);
+  }
+  await role(M);
+});
+
+// ---------- 1.15 fulfilment on the gift box (CHF 62.30 owed)
+await step("fulfilment", async () => {
+  await m04(boxRef);
+  await click(T("fulfilment.action.ready")); await closeToasts();
+  await shot("1.15", "m04", "ready-owed", `M04 ${boxRef} Ready for pickup, full page: step bar 3 of 5, still owed CHF 62.30, Mark as handed over, Record payment, Complete locked "Not handed over yet"`, { full: true });
+  await click(T("fulfilment.action.handOver")); await closeToasts();
+  await shot("1.15", "m04", "handed-over-complete-locked", `M04 ${boxRef} Handed over, full page: "Collect the balance", Record payment primary, Complete locked in a dashed frame "CHF 62.30 still owed"`, { full: true, de: true });
+  await shot("1.15", "m08", "record-payment", "M08 Record payment sheet: summary row (still owed CHF 62.30, total, paid), amount, method choice cards, received at, note, consequence button", { open: () => openRecord(null), de: true });
+  await openRecord(null); await submitRecord();
+  await shot("1.15", "m04", "handed-over-paid", `M04 ${boxRef} Handed over and paid in full, full page: "Close the order", Complete order with its consequence line`, { full: true });
+  await click(T("fulfilment.action.complete")); await closeToasts();
+  await shot("1.15", "m04", "completed", `M04 ${boxRef} completed, full page: "Completed by Lukas", payments CHF 89.00 paid, commission Recorded`, { full: true });
+  await m04(knifeRef);
+  await click(T("fulfilment.action.ready")); await closeToasts();
+  await shot("1.15", "m04", "ready-paid-combined", `M04 ${knifeRef} Ready and paid in full, full page: one button "Handed over and complete"`, { full: true });
+  await m04("SK-1021");
+  await shot("1.15", "m08", "above-balance", "M08 Record payment on SK-1021: CHF 70 entered, more than the CHF 62.30 still owed, button disabled", { open: () => openRecord(70) });
+  await openRecord(20); await submitRecord();
+  await shot("1.15", "m08", "duplicate-warning", "M08 Record payment on SK-1021: CHF 20 again within 10 minutes, 'Possible duplicate' warning and 'Record … again' button", { open: () => openRecord(20) });
+});
+
+// ---------- 1.11 last-item race on the print (SK-1032 and SK-1033 both want the one print)
+await step("race", async () => {
+  await m04("SK-1032");
+  await page.getByRole("button", { name: T("merchantOrder.action.accept"), exact: true }).click();
+  await sheet().waitFor(); await wait(400);
+  await sheet().getByRole("button", { name: new RegExp(`^(${esc(T("merchantOrder.accept.confirmPayLater"))}|${esc(T("merchantOrder.accept.confirm", { amount: "X" }).split(" ")[0])} )`) }).click();
+  await wait(1000);
+  log("SK-1032", (await ord("SK-1032")).status);
+  await m04("SK-1033");
+  await shot("1.11", "m04", "stock-short", "M04 SK-1033 after SK-1032 took the last print, full page: stock pill 'Not enough: 0 available · 1 needed' in the action panel", { full: true });
+  const pressAccept = async () => { await page.getByRole("button", { name: T("merchantOrder.action.accept"), exact: true }).click(); await wait(800); };
+  await shot("1.11", "m04", "stock-short-accept-alert", "M04 SK-1033: Accept pressed while stock is short, danger Alert names the print, order stays awaiting confirmation", { full: true, open: pressAccept, close: async () => {} });
+});
+
+// ---------- 1.9 M02 Today empty: close every open order through the merchant UI (last, destructive)
+await step("m02-empty", async () => {
+  const OPEN = ["requested", "accepted", "preparing", "ready", "handed_over"];
+  const open = async () => (await demo()).data.orders.filter((o) => OPEN.includes(o.status)).map((o) => o.ref);
+  for (const ref of await open()) {
+    for (let i = 0; i < 8; i++) {
+      const o = await ord(ref);
+      if (!OPEN.includes(o.status)) break;
+      await m04(ref);
+      const has = async (k) => (await page.getByRole("button", { name: T(k), exact: true }).count()) > 0 && (await page.getByRole("button", { name: T(k), exact: true }).first().isEnabled());
+      if (o.status === "requested") {
+        await page.getByRole("button", { name: T("merchantOrder.action.decline"), exact: true }).click();
+        await sheet().waitFor(); await wait(300);
+        await sheet().getByRole("radio", { name: T("merchantOrder.decline.reason.date") }).check({ force: true });
+        await sheet().getByRole("button", { name: T("merchantOrder.decline.submit") }).click(); await wait(600);
+        await page.getByRole("alertdialog").getByRole("button", { name: T("merchantOrder.decline.confirm") }).click(); await wait(900);
+      } else if (await has("fulfilment.action.handOverAndComplete")) await click(T("fulfilment.action.handOverAndComplete"));
+      else if (await has("fulfilment.action.complete")) await click(T("fulfilment.action.complete"));
+      else if (await has("fulfilment.action.record")) { await openRecord(null); await submitRecord(); }
+      else if (await has("fulfilment.action.ready")) await click(T("fulfilment.action.ready"));
+      else if (await has("fulfilment.action.handOver")) await click(T("fulfilment.action.handOver"));
+      else throw new Error(`no action for ${ref} in ${o.status}`);
+      await closeToasts();
+    }
+    log("closed", ref, (await ord(ref)).status);
+  }
+  const left = await open();
+  if (left.length) throw new Error("still open: " + left.join(","));
+  await go("#/store");
+  const crashed = (await page.getByText("Something went wrong").count()) > 0;
+  await shot("1.9", "m02", "today-empty", crashed ? "M02 Overview after every open order was closed through M04 (Today empty expected); the route error page renders instead" : "M02 Overview, Today empty state (every open order closed through M04); Analytics keeps its figures", { full: true });
+});
+
+await finish();

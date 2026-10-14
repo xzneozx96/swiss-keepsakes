@@ -1,0 +1,49 @@
+<!doctype html><html data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Table</title><link rel="stylesheet" href="tokens.css"></head><body><!-- @dsCard group="Date and data" height=640 width=1312 -->
+<div class="ds-stage">
+  <style>
+    .sk-t .h{padding:10px 16px;font-size:var(--text-xs);line-height:var(--leading-xs);font-weight:var(--font-weight-medium);color:var(--color-muted)}
+    .sk-t .c{padding:12px 16px;font-size:var(--text-sm);line-height:var(--leading-sm);color:var(--color-foreground)}
+    .sk-t .amt{text-align:right;font-weight:var(--font-weight-medium)}
+    .sk-t .r{display:flex;align-items:center;border-bottom:1px solid var(--color-separator)}
+    .st{display:inline-flex;align-items:center;gap:var(--spacing-1);height:28px;padding:0 12px 0 10px;border-radius:var(--radius-2xl);font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);white-space:nowrap}
+    .st-ok{background:var(--color-success-soft);color:var(--color-success-soft-foreground)}
+    .st-warn{background:var(--color-warning-soft);color:var(--color-warning-soft-foreground)}
+    .st-over{background:var(--color-danger-soft);color:var(--color-danger-soft-foreground)}
+    .st-info{background:var(--color-info-soft);color:var(--color-info)}
+  </style>
+  <div class="ds-item" style="width:100%">
+    <div class="sk-t" style="display:flex;flex-direction:column;width:100%;padding:0 4px 4px;border-radius:20px;background:var(--color-surface-secondary)">
+      <div style="display:flex">
+        <span class="h" style="width:140px">Datum</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex:1;padding:10px 16px"><span style="font-size:var(--text-xs);line-height:var(--leading-xs);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Bestellung</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 7.5L6 4.5l3 3" stroke="var(--color-foreground)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <span class="h" style="width:200px">Art</span>
+        <span class="h" style="width:270px">Status</span>
+        <span class="h" style="width:160px;text-align:right">Betrag</span>
+      </div>
+      <div style="display:flex;flex-direction:column;border-radius:var(--radius-2xl);background:var(--color-surface);overflow:hidden">
+        <div class="r"><span class="c num" style="width:140px">12.10.2026</span><span class="c" style="flex:1">#1045 · Taschenuhr mit Gravur</span><span class="c" style="width:200px">Vollzahlung online</span><div style="width:270px;padding:8px 16px;display:flex"><span class="st st-ok"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Erhalten</span></div><span class="c num amt" style="width:160px">CHF 1’249.00</span></div>
+        <div class="r" style="background:color-mix(in srgb,var(--color-surface) 40%,var(--color-surface-secondary))"><span class="c num" style="width:140px">14.10.2026</span><span class="c" style="flex:1">#1042 · Restbetrag</span><span class="c" style="width:200px">Bar im Laden</span><div style="width:270px;padding:8px 16px;display:flex"><span class="st st-warn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.75V8l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Fällig heute</span></div><span class="c num amt" style="width:160px">CHF 37.80</span></div>
+        <div class="r"><span class="c num" style="width:140px">18.10.2026</span><span class="c" style="flex:1">#1038 · Hidden Lucerne, 2 Pers.</span><span class="c" style="width:200px">Restzahlung</span><div style="width:270px;padding:8px 16px;display:flex"><span class="st st-over"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2.25l6.25 11h-12.5L8 2.25z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.5v.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Überfällig seit 18.10.</span></div><span class="c num amt" style="width:160px">CHF 62.30</span></div>
+        <div class="r" style="border-bottom:0"><span class="c num" style="width:140px">20.10.2026</span><span class="c" style="flex:1">#1031 · Rückerstattung teilweise</span><span class="c" style="width:200px">Online, 1 von 2 Posten</span><div style="width:270px;padding:8px 16px;display:flex"><span class="st st-info"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v4.25M8 4.75v.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>In Bearbeitung</span></div><span class="c num amt" style="width:160px">– CHF 25.00</span></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 16px"><span style="font-size:var(--text-sm);color:var(--color-muted)">Noch offen</span><span class="num" style="font-size:var(--text-sm);font-weight:var(--font-weight-semibold);color:var(--color-foreground)">CHF 100.10</span></div>
+    </div>
+    <span class="ds-note">desktop · primary variant · row 2 hovered · sorted by Bestellung · status = lg label (28, 14px icon) · footer total</span>
+  </div>
+  <div class="ds-item">
+    <div style="display:flex;flex-direction:column;width:343px;border-radius:var(--radius-3xl);background:var(--color-surface);box-shadow:var(--shadow-surface)">
+      <div style="display:flex;flex-direction:column;gap:var(--spacing-2);padding:16px;border-bottom:1px solid var(--color-separator)">
+        <div style="display:flex;justify-content:space-between;gap:var(--spacing-3);align-items:baseline"><span style="font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Kapellbrücke Taschenmesser</span><span class="num" style="font-size:var(--text-sm);font-weight:var(--font-weight-semibold);color:var(--color-foreground)">CHF 54.00</span></div>
+        <span class="num" style="font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--color-muted)">#1042 · Abholung Do, 15.10.2026</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="st st-info"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.75V8l2 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Wartet auf Bestätigung</span><span class="st st-warn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.75v4M8 11v.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Noch nicht fällig</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:var(--spacing-2);padding:16px">
+        <div style="display:flex;justify-content:space-between;gap:var(--spacing-3);align-items:baseline"><span style="font-size:var(--text-sm);line-height:var(--leading-sm);font-weight:var(--font-weight-medium);color:var(--color-foreground)">Hidden Lucerne, 2 Pers.</span><span class="num" style="font-size:var(--text-sm);font-weight:var(--font-weight-semibold);color:var(--color-foreground)">CHF 98.00</span></div>
+        <span class="num" style="font-size:var(--text-xs);line-height:var(--leading-xs);color:var(--color-muted)">#1038 · Tour Sa, 17.10.2026, 09:45</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="st st-ok"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Bestätigt</span><span class="st st-over"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2.25l6.25 11h-12.5L8 2.25z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.5v.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Überfällig: CHF 62.30</span></div>
+      </div>
+    </div>
+    <span class="ds-note">phone (C14) · stacked order rows at 343px · progress label + payment label · amount right, tabular</span>
+  </div>
+</div>
+</body></html>

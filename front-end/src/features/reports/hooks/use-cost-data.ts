@@ -1,0 +1,190 @@
+import type { CostRecord, CostType, CostValue } from "../types";
+import type { StatusTone } from "@/components/status-chip";
+import type { TransactionRef } from "@/features/partners/types";
+
+import { COST_TYPES } from "../types";
+
+import { useLocale } from "@/contexts/locale-context";
+import { zurichDayOf } from "@/features/catalog/lib/pickup";
+import { useDemo, useDemoNow } from "@/features/demo";
+import { mondayOf } from "@/features/merchant/today/lib/analytics";
+import { formatOrderDate } from "@/features/orders/lib/format";
+import { orderTotal } from "@/features/orders/lib/selectors";
+import { allOrders, transactionKey } from "@/features/partners/lib/ledger";
+import { formatMoney } from "@/lib/format";
+import { pickText } from "@/lib/localized";
+
+export const COST_FILTERS = ["missing", "complete", "all"] as const;
+export type CostFilter = (typeof COST_FILTERS)[number];
+
+/** Weeks in the completeness chart, ending with the running week. */
+const CHART_WEEKS = 8;
+
+export interface CostRow {
+  key: string;
+  transaction: TransactionRef;
+  ref: string;
+  /** Opens M04 or M07. */
+  href: string;
+  /** The product (first line) or the tour: name and photo, as on the M03 cards. */
+  title: string;
+  /** "+1 more" when an order has more lines; "" otherwise. */
+  more: string;
+  photo?: string;
+  guest: string;
+  /** Completion day, "12.10.2026". */
+  date: string;
+  /** Monday of the completion week, YYYY-MM-DD. */
+  week: string;
+  /** "Kapellbrücke pocket knife · 12.10.2026", the cost sheet's header. */
+  meta: string;
+  value: string;
+  missing: CostType[];
+  state: { text: string; tone: StatusTone };
+  costs: Partial<Record<CostType, CostValue>>;
+}
+
+export interface CostWeek {
+  /** Monday, YYYY-MM-DD. */
+  week: string;
+  /** "5 Oct" */
+  label: string;
+  complete: number;
+  missing: number;
+}
+
+/** A transaction's cost data is complete when every cost type is an amount or confirmed 0 (R14). */
+export const missingCosts = (record?: CostRecord): CostType[] =>
+  COST_TYPES.filter((type) => !record?.costs[type]);
+
+const addDays = (iso: string, days: number) => {
+  const d = new Date(`${iso}T12:00:00Z`);
+
+  d.setUTCDate(d.getUTCDate() + days);
+
+  return d.toISOString().slice(0, 10);
+};
+
+/**
+ * M24 Cost data (spec §4.13, R14): every completed order and tour booking with the actual
+ * costs entered for it. An empty cost is missing, never 0; "does not apply" is entered as
+ * such. Newest first. `week` (a Monday) narrows the list to one bar of the chart.
+ */
+export function useCostData(filter: CostFilter, week: string | null) {
+  const { t, language, intlLocale } = useLocale();
+  const { state } = useDemo();
+  const now = useDemoNow();
+  const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
+  const records = new Map(
+    state.data.costs.map((r) => [transactionKey(r.transaction), r]),
+  );
+  const products = new Map(state.data.products.map((p) => [p.id, p]));
+  const tours = new Map((state.data.tours?.tours ?? []).map((x) => [x.id, x]));
+  const guestName = (id: string) =>
+    state.data.guests.find((g) => g.id === id)?.name ?? "";
+
+  const orders = allOrders(state.data)
+    .filter((o) => o.status === "completed" && o.completedAt)
+    .map((o) => ({
+      transaction: { kind: "order" as const, id: o.id },
+      ref: o.ref,
+      href: `#/store/orders/${o.id}`,
+      at: o.completedAt as string,
+      title: pickText(o.lines[0].productName, language).text,
+      more:
+        o.lines.length > 1
+          ? t("costData.more", { count: o.lines.length - 1 })
+          : "",
+      photo: products.get(o.lines[0].productId)?.photo,
+      guest: guestName(o.guestId),
+      total: orderTotal(o),
+    }));
+  const bookings = (state.data.tours?.bookings ?? [])
+    .filter((b) => b.status === "completed")
+    .map((b) => ({
+      transaction: { kind: "booking" as const, id: b.id },
+      ref: b.ref,
+      href: `#/store/bookings/${b.id}`,
+      at: b.endsAt,
+      title: pickText(b.tourName, language).text,
+      more: "",
+      photo: tours.get(b.tourId)?.photos[0],
+      guest: guestName(b.guestId) || b.contactName,
+      total: b.total,
+    }));
+
+  const all: CostRow[] = [...orders, ...bookings]
+    .filter((x) => Date.parse(x.at) <= now.getTime() + 60_000)
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
+    .map((x) => {
+      const key = transactionKey(x.transaction);
+      const record = records.get(key);
+      const missing = missingCosts(record);
+      const day = zurichDayOf(x.at);
+      const date = formatOrderDate(day, intlLocale);
+
+      return {
+        key,
+        transaction: x.transaction,
+        ref: x.ref,
+        href: x.href,
+        title: x.title,
+        more: x.more,
+        photo: x.photo,
+        guest: x.guest,
+        date,
+        week: mondayOf(day),
+        meta: `${x.title} · ${date}`,
+        value: money(x.total),
+        missing,
+        state: missing.length
+          ? {
+              text: t(
+                missing.length === 1
+                  ? "costData.state.missingOne"
+                  : "costData.state.missingOther",
+                { count: missing.length },
+              ),
+              tone: "warning",
+            }
+          : { text: t("costData.state.complete"), tone: "success" },
+        costs: record?.costs ?? {},
+      };
+    });
+
+  const thisWeek = mondayOf(zurichDayOf(now.toISOString()));
+  const weekLabel = (monday: string) =>
+    new Intl.DateTimeFormat(intlLocale, {
+      day: "numeric",
+      month: "short",
+      timeZone: "UTC",
+    }).format(new Date(`${monday}T12:00:00Z`));
+  const weeks: CostWeek[] = Array.from({ length: CHART_WEEKS }, (_, i) => {
+    const monday = addDays(thisWeek, -7 * (CHART_WEEKS - 1 - i));
+    const inWeek = all.filter((row) => row.week === monday);
+
+    return {
+      week: monday,
+      label: weekLabel(monday),
+      complete: inWeek.filter((row) => row.missing.length === 0).length,
+      missing: inWeek.filter((row) => row.missing.length > 0).length,
+    };
+  });
+
+  const scoped = week ? all.filter((row) => row.week === week) : all;
+  const inFilter = (row: CostRow, f: CostFilter) =>
+    f === "all" || (f === "missing") === row.missing.length > 0;
+
+  return {
+    rows: scoped.filter((row) => inFilter(row, filter)),
+    filters: COST_FILTERS.map((id) => ({
+      id,
+      label: t(`costData.filter.${id}`),
+      count: scoped.filter((row) => inFilter(row, id)).length,
+    })),
+    weeks,
+    weekLabel: week ? weekLabel(week) : null,
+    complete: all.filter((row) => row.missing.length === 0).length,
+    total: all.length,
+  };
+}

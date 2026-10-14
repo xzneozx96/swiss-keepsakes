@@ -1,0 +1,7 @@
+Phase 2 round 2, worker R1: guest booking screens. Read docs/ux/prototype/worker-brief-phase2.md in full first, especially the final section "Round 2: UI restyle", and follow it. This is a visual restyle only: keep every screen, section, state and flow as it is. Before moving any gift component to shared code, use your ask command to tell the coordinator which component and where, because another worker may need the same one. Wait for the OK.
+Restyle:
+- 2.4 C10 departure + participants: match the look of C03 gift detail's option/date picker sheets and the QuantityBox (reports 1.4, 1.5d/e).
+- 2.5 C11 review booking: match the look of C06 Review and send (1.7b) and the C05 sign-in screen (1.6r).
+- 2.8 C13 booking confirmed: match the look of C07 Request sent (1.8r).
+Owned: features/tours/discovery/tour-selection-page.tsx, features/tours/booking/{tour-review-page,tour-confirmed-page,booking-summary}.tsx and their messages. Shared tour components: anchored edits only.
+Port 5231. Drivers to re-run: reports/2.4-drive.mjs, 2.5-drive.mjs, 2.8-drive.mjs. Reports: reports/2.4-r2.md, 2.5-r2.md, 2.8-r2.md.

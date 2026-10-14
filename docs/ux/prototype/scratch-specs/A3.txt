@@ -1,0 +1,12 @@
+Phase 2 step 2.16: build the Phase 2 review gallery. Read docs/ux/prototype/worker-brief-phase2.md again; the same rules apply. Steps 2.1–2.15 are built and verified, each with a report in docs/ux/prototype/reports/ and screenshots in docs/ux/prototype/screens/2.N/ (plus screens/2.3-map/ for the new in-map stop card and screens/2.15/).
+
+Follow the Phase 1 gallery approach exactly: docs/ux/prototype/screens/phase1-review/ (index.html, build-review.mjs, items.json, the manifests, and how the owner records approval or a revision comment and exports the JSON). Reuse its builder and page; don't design a new one.
+
+Build docs/ux/prototype/screens/phase2-review/index.html:
+- One item per step 2.1–2.15, plus the C09 map redesign (2.3-map), each linking to its report.
+- Inside each item, pick the screenshots that show the built screens and the critical exception states: hold timer, failed/processing payment, expiry and rebooking, late-payment reconciliation, deposit/pay-later confirmation, balance payment, overdue cancel vs grace, delivered with debt, no-show with retained payment, merchant-cancelled tour, completion + commission, the C18 review, and the EN/DE pairs.
+- Let the owner mark approve or add a revision comment per item, the same way as Phase 1.
+- Copy images into phase2-review/img (resized as Phase 1 does) so the page works on its own.
+- Open the page headlessly at 375px and desktop width. Check that every image loads, every report link resolves, and approve/comment state persists across reload.
+
+Write docs/ux/prototype/reports/2.16.md with the item list, the checks with their output, and screenshots of the gallery. Don't publish an Artifact. Kill any server you start, then send worker_done with --report-path.

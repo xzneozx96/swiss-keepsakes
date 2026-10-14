@@ -1,0 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap");
+
+/* Swiss Keepsakes: shared base for previews. Every value comes from tokens.css. */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+.num { font-variant-numeric: tabular-nums; }
+
+/* Card stage: every preview's root. One ground for all cards. */
+.ds-stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  padding: var(--spacing-6);
+  background: var(--color-background);
+  font-family: var(--font-sans);
+}
+.ds-row { display: flex; flex-wrap: wrap; gap: var(--spacing-6); align-items: flex-start; }
+.ds-item { display: flex; flex-direction: column; gap: var(--spacing-2); align-items: flex-start; }
+
+/* Annotation: state names and measurements. Not part of any component. */
+.ds-note {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.01em;
+  color: var(--color-muted);
+}

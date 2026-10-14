@@ -1,0 +1,152 @@
+[
+ {
+  "id": "kbd C14: Tab reaches an order row",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd C14: Enter opens C15",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/account/orders/sk-1044"
+ },
+ {
+  "id": "kbd C15: Tab reaches Pay",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd-c15-pay-focus: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd-c15-pay-focus: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "kbd-c15-pay-focus: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd C15: Enter opens C12",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/account/orders/sk-1044/pay"
+ },
+ {
+  "id": "kbd C12: Tab reaches Pay",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd C12: Enter pays and returns to C15",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd C15: Tab reaches Write a review",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd C18: Tab reaches star radio",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd C18: arrows choose 3 stars",
+  "lang": "de",
+  "pass": true,
+  "detail": "3 von 5 Sternen"
+ },
+ {
+  "id": "kbd C18: Escape closes and returns focus to Write a review",
+  "lang": "de",
+  "pass": true,
+  "detail": "Bewertung schreiben"
+ },
+ {
+  "id": "kbd M04: Tab reaches Accept",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd M04: Enter opens accept sheet",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd-m04-accept-sheet: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd-m04-accept-sheet: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "kbd-m04-accept-sheet: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd M04: Escape returns focus to Accept",
+  "lang": "de",
+  "pass": true,
+  "detail": "Annehmen"
+ },
+ {
+  "id": "kbd M02: Tab reaches a task card",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd-m02-focus: no hardcoded English in DE",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd-m02-focus: no horizontal overflow",
+  "lang": "de",
+  "pass": true,
+  "detail": "overflow 0"
+ },
+ {
+  "id": "kbd-m02-focus: no raw i18n keys or {params}",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ },
+ {
+  "id": "kbd M02: Enter opens M03 tab",
+  "lang": "de",
+  "pass": true,
+  "detail": "http://localhost:5194/#/store/orders?status=awaiting-confirmation"
+ },
+ {
+  "id": "no console or page errors",
+  "lang": "de",
+  "pass": true,
+  "detail": ""
+ }
+]
