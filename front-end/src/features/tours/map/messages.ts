@@ -1,5 +1,5 @@
 export const tourMapEn = {
-  "tourMap.title": "Your route through Lucerne",
+  "tourMap.title": "Your route",
   "tourMap.subtitle": "Tap a numbered pin to explore each stop.",
   "tourMap.overview": "Whole route",
   "tourMap.view3d": "3D view",
@@ -7,7 +7,7 @@ export const tourMapEn = {
   "tourMap.mapLabel": "Interactive tour itinerary map",
   "tourMap.sample":
     "Sample itinerary · the line connects stops, not walking directions.",
-  "tourMap.loading": "Opening Lucerne…",
+  "tourMap.loading": "Opening the map…",
   "tourMap.unavailable":
     "The map could not load. You can still step through every stop below.",
   "tourMap.retry": "Reload map",
@@ -34,7 +34,7 @@ export const tourMapEn = {
 };
 
 export const tourMapDe: Record<keyof typeof tourMapEn, string> = {
-  "tourMap.title": "Ihre Route durch Luzern",
+  "tourMap.title": "Ihre Route",
   "tourMap.subtitle":
     "Tippen Sie auf eine nummerierte Markierung, um jede Station zu entdecken.",
   "tourMap.overview": "Ganze Route",
@@ -43,7 +43,7 @@ export const tourMapDe: Record<keyof typeof tourMapEn, string> = {
   "tourMap.mapLabel": "Interaktive Karte des Tourverlaufs",
   "tourMap.sample":
     "Beispielroute · die Linie verbindet Stationen, keine Wegbeschreibung.",
-  "tourMap.loading": "Luzern wird geöffnet…",
+  "tourMap.loading": "Karte wird geöffnet…",
   "tourMap.unavailable":
     "Die Karte konnte nicht geladen werden. Die Stationen können Sie trotzdem unten Schritt für Schritt ansehen.",
   "tourMap.retry": "Karte neu laden",

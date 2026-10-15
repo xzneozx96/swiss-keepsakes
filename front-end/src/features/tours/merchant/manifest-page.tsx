@@ -1,7 +1,8 @@
 import type { TourBooking } from "../types";
+import type { DataTableColumn } from "@/components/data-table";
 import type { StatusTone } from "@/components/status-chip";
 
-import { Alert, Table } from "@heroui/react";
+import { Alert } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -34,7 +35,10 @@ import {
 } from "./shared";
 import { useOverdueCheck } from "./use-overdue-check";
 
+import { DataTable } from "@/components/data-table";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { EmptyState } from "@/components/empty-state";
+import { MerchantBackBar } from "@/components/layout/merchant-back-bar";
 import {
   AccountIcon,
   BackIcon,
@@ -148,6 +152,8 @@ export function TourManifestPage({ departureId }: { departureId: string }) {
   const { t, language } = useLocale();
   const { date, time, money } = useTourFormatting();
 
+  const isLoading = useSimulatedLoading();
+
   useOverdueCheck();
   const departure = departures.find((item) => item.id === departureId);
   const tour = tours.find((item) => item.id === departure?.tourId);
@@ -164,12 +170,67 @@ export function TourManifestPage({ departureId }: { departureId: string }) {
   const phase = departurePhase(departure, tour, now);
   const seats = departureSeats(data, departureId, now);
   const work = tourWork(rows, now);
+  const empty = { icon: AccountIcon, message: t("tourMerchant.empty") };
+
+  const columns: DataTableColumn<TourBooking>[] = [
+    {
+      id: "guest",
+      header: t("tourMerchant.guest"),
+      isRowHeader: true,
+      skeleton: "two-line",
+      render: (booking) => (
+        <>
+          <Link
+            className="font-semibold whitespace-nowrap underline underline-offset-4"
+            params={{ bookingId: booking.id }}
+            to="/store/bookings/$bookingId"
+          >
+            {booking.contactName}
+          </Link>
+          <p className="mt-1 text-label whitespace-nowrap text-muted">
+            {booking.ref}
+          </p>
+          <span className="text-sm">
+            <Phone booking={booking} />
+          </span>
+        </>
+      ),
+    },
+    {
+      id: "group",
+      header: t("tourMerchant.group"),
+      skeleton: "two-line",
+      render: (booking) => (
+        <>
+          <GroupText group={booking} />
+          <div className="mt-2">
+            <BookingStatusLabels booking={booking} />
+          </div>
+        </>
+      ),
+    },
+    {
+      id: "money",
+      header: t("tourMerchant.money"),
+      render: (booking) => <Money inTable booking={booking} />,
+    },
+    {
+      id: "actions",
+      header: t("tourMerchant.actions"),
+      render: (booking) => <AttendanceActions booking={booking} />,
+    },
+  ];
 
   return (
     <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
       <header className="flex flex-col gap-3">
+        <MerchantBackBar
+          label={t("tourMerchant.back")}
+          title={t("tourMerchant.manifest")}
+          to="/store/bookings"
+        />
         <Link
-          className="flex w-fit items-center gap-1.5 rounded-lg text-sm text-muted outline-none hover:text-foreground focus-visible:focus-ring"
+          className="hidden w-fit items-center gap-1.5 rounded-lg text-sm text-muted outline-none hover:text-foreground focus-visible:focus-ring lg:flex"
           to="/store/bookings"
         >
           <BackIcon aria-hidden size={16} />
@@ -177,7 +238,9 @@ export function TourManifestPage({ departureId }: { departureId: string }) {
         </Link>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex min-w-0 flex-col gap-1">
-            <h1 className="text-title">{t("tourMerchant.manifest")}</h1>
+            <h1 className="text-title max-lg:sr-only">
+              {t("tourMerchant.manifest")}
+            </h1>
             <p className="font-medium">{pickText(tour.name, language).text}</p>
             <p className="text-sm text-muted tabular-nums">
               {date(departure.startsAt)}
@@ -236,96 +299,55 @@ export function TourManifestPage({ departureId }: { departureId: string }) {
           })}
         </p>
       )}
-      {rows.length === 0 ? (
-        <EmptyState icon={AccountIcon} message={t("tourMerchant.empty")} />
-      ) : (
-        <>
-          {/* Phones: one ticket per booking in the M03 look; it holds buttons and links, so
-              it is a card, not one link. */}
-          <ul className="flex flex-col gap-5 lg:hidden">
-            {rows.map((booking) => (
-              <li key={booking.id}>
-                <article
-                  aria-labelledby={`guest-${booking.id}`}
-                  className={ticketSurface}
-                >
-                  <div className="flex flex-col gap-1 p-4">
-                    <h3
-                      className="text-lg leading-tight font-semibold"
-                      id={`guest-${booking.id}`}
-                    >
-                      {booking.contactName}
-                    </h3>
-                    {/* The M03 sub-line (small, muted, "·"); both stay links, so underlined. */}
-                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-muted">
-                      <BookingLink booking={booking} />
-                      <span aria-hidden className="text-border">
-                        ·
-                      </span>
-                      <Phone booking={booking} />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2 px-4 pb-4">
-                    <BookingStatus booking={booking} />
-                    <GroupText group={booking} />
-                  </div>
-                  <div className="flex flex-col gap-3 border-t border-dashed border-separator px-4 py-3.5">
-                    <Money booking={booking} />
-                    <AttendanceActions booking={booking} />
-                  </div>
-                </article>
-              </li>
-            ))}
-          </ul>
-          <Table className="hidden lg:block">
-            <Table.ScrollContainer>
-              <Table.Content aria-label={t("tourMerchant.manifest")}>
-                <Table.Header>
-                  <Table.Column isRowHeader>
-                    {t("tourMerchant.guest")}
-                  </Table.Column>
-                  <Table.Column>{t("tourMerchant.group")}</Table.Column>
-                  <Table.Column>{t("tourMerchant.money")}</Table.Column>
-                  <Table.Column>{t("tourMerchant.actions")}</Table.Column>
-                </Table.Header>
-                <Table.Body>
-                  {rows.map((booking) => (
-                    <Table.Row key={booking.id}>
-                      <Table.Cell>
-                        <Link
-                          className="font-semibold whitespace-nowrap underline underline-offset-4"
-                          params={{ bookingId: booking.id }}
-                          to="/store/bookings/$bookingId"
-                        >
-                          {booking.contactName}
-                        </Link>
-                        <p className="mt-1 text-label whitespace-nowrap text-muted">
-                          {booking.ref}
-                        </p>
-                        <span className="text-sm">
-                          <Phone booking={booking} />
+      <DataTable
+        cards={(page) => (
+          <>
+            {/* Phones: one ticket per booking in the M03 look; it holds buttons and links, so
+          it is a card, not one link. */}
+            <ul className="flex flex-col gap-5 lg:hidden">
+              {page.map((booking) => (
+                <li key={booking.id}>
+                  <article
+                    aria-labelledby={`guest-${booking.id}`}
+                    className={ticketSurface}
+                  >
+                    <div className="flex flex-col gap-1 p-4">
+                      <h3
+                        className="text-lg leading-tight font-semibold"
+                        id={`guest-${booking.id}`}
+                      >
+                        {booking.contactName}
+                      </h3>
+                      {/* The M03 sub-line (small, muted, "·"); both stay links, so underlined. */}
+                      <div className="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-muted">
+                        <BookingLink booking={booking} />
+                        <span aria-hidden className="text-border">
+                          ·
                         </span>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <GroupText group={booking} />
-                        <div className="mt-2">
-                          <BookingStatusLabels booking={booking} />
-                        </div>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <Money inTable booking={booking} />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <AttendanceActions booking={booking} />
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table.Content>
-            </Table.ScrollContainer>
-          </Table>
-        </>
-      )}
+                        <Phone booking={booking} />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 px-4 pb-4">
+                      <BookingStatus booking={booking} />
+                      <GroupText group={booking} />
+                    </div>
+                    <div className="flex flex-col gap-3 border-t border-dashed border-separator px-4 py-3.5">
+                      <Money booking={booking} />
+                      <AttendanceActions booking={booking} />
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        columns={columns}
+        empty={empty}
+        getRowId={(booking) => booking.id}
+        isLoading={isLoading}
+        label={t("tourMerchant.manifest")}
+        rows={rows}
+      />
     </div>
   );
 }

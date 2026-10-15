@@ -9,8 +9,8 @@ import type {
  * Merchant-operation fixtures (steps 2.10–2.14), relative to the demo start 13.10.2026 10:00.
  * Sample policies, not approved merchant settings:
  * - walk-14: cancel-and-release after the balance deadline (today 18:00); tour tomorrow (N13).
- * - lake-15: pay later with a 48-hour grace period, already overdue, then the merchant decides.
- * - lake-11: ended; a fully paid, delivered Hotel am See booking for Anna to complete (review, P02).
+ * - history-15: pay later with a 48-hour grace period, already overdue, then the merchant decides.
+ * - history-11: ended; a fully paid, delivered Hotel am See booking for Anna to complete (review, P02).
  * - walk-19: cancelled by the merchant (seeded state; cancellation operations are Phase 3).
  * - walk-16 (seeded by step 2.1): an expired hold whose payment arrived late (reconciliation).
  */
@@ -24,7 +24,7 @@ export function operationsFixtures(
   const departures: Departure[] = [
     {
       id: "walk-14",
-      tourId: "old-town",
+      tourId: "lucerne-90",
       startsAt: "2026-10-14T10:00:00+02:00",
       capacity: 12,
       policy: "deposit",
@@ -33,8 +33,8 @@ export function operationsFixtures(
       overduePolicy: { action: "cancel" },
     },
     {
-      id: "lake-15",
-      tourId: "lake",
+      id: "history-15",
+      tourId: "time-history-loyalty",
       startsAt: "2026-10-15T10:00:00+02:00",
       capacity: 16,
       policy: "later",
@@ -43,8 +43,8 @@ export function operationsFixtures(
       overduePolicy: { action: "grace", graceHours: 48 },
     },
     {
-      id: "lake-11",
-      tourId: "lake",
+      id: "history-11",
+      tourId: "time-history-loyalty",
       startsAt: "2026-10-11T10:00:00+02:00",
       capacity: 16,
       policy: "full",
@@ -53,7 +53,7 @@ export function operationsFixtures(
     },
     {
       id: "walk-19",
-      tourId: "old-town",
+      tourId: "lucerne-90",
       startsAt: "2026-10-19T10:00:00+02:00",
       capacity: 12,
       policy: "full",
@@ -192,7 +192,7 @@ export function operationsFixtures(
       },
     ),
     booking(
-      "lake-15",
+      "history-15",
       {
         id: "tc-daniel-grace",
         ref: "SK-T2003",
@@ -210,7 +210,7 @@ export function operationsFixtures(
       },
     ),
     booking(
-      "lake-11",
+      "history-11",
       {
         id: "tc-anna-done",
         ref: "SK-T2004",

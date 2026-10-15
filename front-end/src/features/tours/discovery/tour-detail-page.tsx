@@ -41,6 +41,7 @@ import { useBack } from "@/hooks/use-back";
 import { useScrolledPast } from "@/hooks/use-scrolled-past";
 import { formatMoney, formatShortDate } from "@/lib/format";
 import { pickText } from "@/lib/localized";
+import { firstPhoto, openingText, pickDoc } from "@/lib/rich-text";
 
 export function TourDetailPage({
   slug,
@@ -91,15 +92,14 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
   const name = pickText(tour.name, language);
   const text = (value: Tour["name"]) => pickText(value, language).text;
   const [storyOpen, setStoryOpen] = useState(false);
-  const longStory = tour.longStory && {
-    label: t("detail.story.label"),
-    title: text(tour.longStory.title),
-    chapters: tour.longStory.chapters.map((c) => ({
-      title: text(c.title),
-      body: text(c.body),
-      photo: c.photo,
-    })),
-  };
+  // The page's one language notice (below) covers the story too.
+  const storyBody = tour.longStory && pickDoc(tour.longStory.body, language);
+  const longStory = tour.longStory &&
+    storyBody && {
+      label: t("detail.story.label"),
+      title: text(tour.longStory.title),
+      body: storyBody.doc,
+    };
   const upcoming = upcomingDepartures(data, tour.id, now);
   const bookable = upcoming.filter((d) => availableSeats(data, d.id, now) > 0);
   const next = bookable[0];
@@ -162,12 +162,9 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
     tour.name,
     tour.summary,
     tour.description,
-    ...(tour.longStory
-      ? [
-          tour.longStory.title,
-          ...tour.longStory.chapters.flatMap((c) => [c.title, c.body]),
-        ]
-      : []),
+    ...(tour.longStory ? [tour.longStory.title] : []),
+    // The body counts as text in the language it is written in (rich text, not a string).
+    ...(storyBody ? [{ [storyBody.language]: "story" }] : []),
     tour.meetingPoint,
     tour.conditions,
     tour.excluded,
@@ -315,7 +312,7 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
                 <Media
                   alt=""
                   className="aspect-[16/9] w-full rounded-3xl"
-                  photo={longStory.chapters[0]?.photo}
+                  photo={firstPhoto(longStory.body)}
                 />
                 <span className="text-label tracking-wide text-muted uppercase">
                   {longStory.label}
@@ -324,7 +321,7 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
                   {longStory.title}
                 </span>
                 <span className="line-clamp-3 text-body text-muted">
-                  {longStory.chapters[0]?.body}
+                  {openingText(longStory.body)}
                 </span>
               </button>
               <Button
@@ -369,9 +366,12 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
             empty: t("tourDiscovery.noReviews"),
           }}
         />
-        <section className="flex flex-col gap-4 border-t border-separator py-7">
-          <TourItineraryMap key={tour.id} tour={tour} />
-        </section>
+        {/* A tour added in M13 has no stops yet (no map positions): no itinerary section. */}
+        {tour.itinerary.length > 0 && (
+          <section className="flex flex-col gap-4 border-t border-separator py-7">
+            <TourItineraryMap key={tour.id} tour={tour} />
+          </section>
+        )}
         <section className="flex flex-col gap-3 border-t border-separator py-7">
           <h2 className="font-serif text-title">
             {t("tourDiscovery.included")}
