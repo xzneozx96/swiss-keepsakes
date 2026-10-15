@@ -19,6 +19,7 @@ import {
 import { BackButton } from "@/components/layout/cart-button";
 import { Media } from "@/components/media";
 import { QuantityBox } from "@/components/quantity-stepper";
+import { useSheetExit } from "@/components/sheet-exit";
 
 export interface CartLineView {
   id: string;
@@ -255,10 +256,13 @@ function BreakdownSheet({
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const exitRef = useSheetExit();
+
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
         <Drawer.Dialog>
+          <span ref={exitRef} hidden />
           <Drawer.Handle />
           <Drawer.CloseTrigger aria-label={breakdown.closeLabel} />
           <Drawer.Header>

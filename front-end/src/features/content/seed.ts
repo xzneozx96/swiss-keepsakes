@@ -99,7 +99,7 @@ export const articleSeed: Article[] = [
     photo: "musegg-wall",
     readMinutes: 4,
     links: [
-      { kind: "tour", id: "old-town" },
+      { kind: "tour", id: "time-history-loyalty" },
       { kind: "gift", id: "p-postcards" },
     ],
     related: ["water-tower", "lion-monument"],
@@ -193,7 +193,7 @@ export const articleSeed: Article[] = [
     photo: "musegg-wall",
     readMinutes: 4,
     links: [
-      { kind: "tour", id: "old-town" },
+      { kind: "tour", id: "time-history-loyalty" },
       { kind: "gift", id: "p-postcards" },
     ],
     related: ["luzern-bei-nacht", "lion-monument"],
@@ -252,8 +252,7 @@ export const articleSeed: Article[] = [
     ],
     photo: "lion-monument",
     readMinutes: 6,
-    // The night walk is German only (its texts have no EN, R02).
-    links: [{ kind: "tour", id: "night" }],
+    links: [{ kind: "tour", id: "time-history-loyalty" }],
     related: ["musegg-morning"],
     publication: {
       status: "published",
@@ -311,7 +310,7 @@ export const articleSeed: Article[] = [
     ],
     photo: "lion-monument",
     readMinutes: 6,
-    links: [{ kind: "tour", id: "night" }],
+    links: [{ kind: "tour", id: "time-history-loyalty" }],
     related: ["luzern-bei-nacht", "musegg-morning"],
     publication: {
       status: "published",
@@ -379,10 +378,7 @@ export const articleSeed: Article[] = [
     ],
     photo: "lake-steamboat",
     readMinutes: 5,
-    links: [
-      { kind: "tour", id: "lake" },
-      { kind: "gift", id: "p-candle-box" },
-    ],
+    links: [{ kind: "gift", id: "p-candle-box" }],
     related: [],
     publication: {
       status: "published",
@@ -450,10 +446,7 @@ export const articleSeed: Article[] = [
     ],
     photo: "lake-steamboat",
     readMinutes: 5,
-    links: [
-      { kind: "tour", id: "lake" },
-      { kind: "gift", id: "p-candle-box" },
-    ],
+    links: [{ kind: "gift", id: "p-candle-box" }],
     related: [],
     publication: {
       status: "published",
@@ -518,7 +511,7 @@ export const articleSeed: Article[] = [
     photo: "lucerne-water-tower",
     readMinutes: 3,
     links: [
-      { kind: "tour", id: "old-town" },
+      { kind: "tour", id: "lucerne-90" },
       { kind: "gift", id: "p-print" },
       { kind: "gift", id: "p-knife" },
     ],
@@ -586,7 +579,7 @@ export const articleSeed: Article[] = [
     ],
     photo: "lucerne-night",
     readMinutes: 3,
-    links: [{ kind: "tour", id: "night" }],
+    links: [],
     related: [],
     publication: {
       status: "published",

@@ -2,7 +2,6 @@ import type { PickupDateFieldProps } from "./pickup-date-field";
 import type { ListingReviewsProps } from "@/components/listings/listing-reviews";
 import type { SellerRowProps } from "./seller-row";
 import type { StoryView } from "./story-sheet";
-import type { CategoryId } from "../types";
 import type { IconComponent } from "@/components/icons";
 import type { PhotoGalleryLabels } from "@/components/photo-gallery";
 import type { Key } from "@heroui/react";
@@ -54,6 +53,7 @@ import { QuantityStepper } from "@/components/quantity-stepper";
 import { StatusChip } from "@/components/status-chip";
 import { useScrolledPast } from "@/hooks/use-scrolled-past";
 import { photoUrl } from "@/lib/photos";
+import { firstPhoto, openingText } from "@/lib/rich-text";
 
 type Stat = { value: string; label: string };
 
@@ -88,7 +88,7 @@ export interface GiftDetailProps {
     label: string;
     message: string;
     actionLabel: string;
-    category?: CategoryId;
+    subcategory?: string;
   };
   sheet: { title: string; closeLabel: string; addLabel: string };
   variant: {
@@ -285,7 +285,7 @@ export function GiftDetail(props: GiftDetailProps) {
                 <Media
                   alt=""
                   className="aspect-[16/9] w-full rounded-3xl"
-                  photo={longStory.chapters[0]?.photo}
+                  photo={firstPhoto(longStory.body)}
                 />
                 <span className="text-label tracking-wide text-muted uppercase">
                   {longStory.label}
@@ -294,7 +294,7 @@ export function GiftDetail(props: GiftDetailProps) {
                   {longStory.title}
                 </span>
                 <span className="line-clamp-3 text-body text-muted">
-                  {longStory.chapters[0]?.body}
+                  {openingText(longStory.body)}
                 </span>
               </button>
               <Button
@@ -422,7 +422,9 @@ export function GiftDetail(props: GiftDetailProps) {
             </div>
             <Link
               className={buttonVariants({ size: "lg", variant: "secondary" })}
-              search={soldOut.category ? { category: soldOut.category } : {}}
+              search={
+                soldOut.subcategory ? { subcategory: soldOut.subcategory } : {}
+              }
               to="/gifts"
             >
               {soldOut.actionLabel}

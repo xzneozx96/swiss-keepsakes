@@ -75,6 +75,8 @@ export const CloseIcon = stable(Reicon.Xmark, "CloseIcon");
 
 // Option tiles: the chosen tile's corner check (C03, C10; use weight="Filled")
 export const SelectedIcon = stable(Reicon.TickCircle, "SelectedIcon");
+export const CopyIcon = stable(Reicon.Copy, "CopyIcon");
+export const CopiedIcon = stable(Reicon.CopySuccess, "CopiedIcon");
 
 // Detail highlights
 export const EngraveIcon = stable(Reicon.PenNib, "EngraveIcon");
@@ -116,8 +118,26 @@ export const CardIcon = stable(Reicon.Card, "CardIcon");
 export const CashIcon = stable(Reicon.Money, "CashIcon");
 export const BankIcon = stable(Reicon.Bank, "BankIcon");
 export const NotificationIcon = stable(Reicon.Notification, "NotificationIcon");
-export const LogoutIcon = stable(Reicon.Logout, "LogoutIcon");
+export const LogoutIcon = stable(Reicon.Logout4, "LogoutIcon");
 export const ProfileEditIcon = stable(Reicon.UserEdit, "ProfileEditIcon");
 export const SendIcon = stable(Reicon.Send, "SendIcon");
 /** The C21 trip assistant (R19). */
 export const AssistantIcon = stable(Reicon.MagicStar, "AssistantIcon");
+
+// Rich-text toolbar for the long story (M12, M13; owner 15.10.2026)
+export const HeadingIcon = stable(Reicon.Text, "HeadingIcon");
+export const BoldIcon = stable(Reicon.TextBold, "BoldIcon");
+export const ItalicIcon = stable(Reicon.TextItalic, "ItalicIcon");
+export const BulletListIcon = stable(Reicon.UnorderedList, "BulletListIcon");
+export const NumberedListIcon = stable(Reicon.OrderedList, "NumberedListIcon");
+export const QuoteIcon = stable(Reicon.QuoteUp, "QuoteIcon");
+export const LinkIcon = stable(Reicon.Link, "LinkIcon");
+export const PhotoAddIcon = stable(Reicon.GalleryAdd, "PhotoAddIcon");
+export const UploadIcon = stable(Reicon.ImageUp, "UploadIcon");
+export const UndoIcon = stable(Reicon.Undo, "UndoIcon");
+export const RedoIcon = stable(Reicon.Redo, "RedoIcon");
+/** The long story card (M12, M13). */
+export const StoryIcon = stable(Reicon.Book, "StoryIcon");
+/** Product row menu (M11): edit, archive and restore. */
+export const EditIcon = stable(Reicon.Edit2, "EditIcon");
+export const RestoreIcon = stable(Reicon.ArchiveUp, "RestoreIcon");

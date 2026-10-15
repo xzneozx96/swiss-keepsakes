@@ -1,6 +1,5 @@
 import type {
-  Category,
-  CategoryId,
+  Subcategory,
   LocalizedText,
   PickupPlace,
   Product,
@@ -9,6 +8,7 @@ import type {
 } from "./types";
 
 import { demoAt } from "@/features/demo/clock";
+import { storyFromChapters } from "@/lib/rich-text";
 
 /** Sample data for the prototype. Names, addresses and texts are invented. */
 
@@ -20,9 +20,11 @@ export const shop: Shop = {
   phone: "+41 41 000 12 34",
 };
 
-export const categories: Category[] = [
+/** The pilot store's five keepsake sub-categories; the merchant edits them on M26 (PRD §7.0). */
+export const subcategories: Subcategory[] = [
   {
     id: "pocket-knives",
+    categoryId: "keepsakes",
     name: { en: "Pocket knives", de: "Taschenmesser" },
     photo: "pocket-knife",
     tagline: {
@@ -32,6 +34,7 @@ export const categories: Category[] = [
   },
   {
     id: "gift-boxes",
+    categoryId: "keepsakes",
     name: { en: "Gift boxes", de: "Geschenkboxen" },
     photo: "gift-box",
     tagline: {
@@ -41,6 +44,7 @@ export const categories: Category[] = [
   },
   {
     id: "chocolate",
+    categoryId: "keepsakes",
     name: { en: "Chocolate", de: "Schokolade" },
     photo: "pralines",
     tagline: {
@@ -50,6 +54,7 @@ export const categories: Category[] = [
   },
   {
     id: "prints",
+    categoryId: "keepsakes",
     name: { en: "Prints", de: "Drucke" },
     photo: "art-print",
     tagline: {
@@ -59,17 +64,13 @@ export const categories: Category[] = [
   },
   {
     id: "small-gifts",
+    categoryId: "keepsakes",
     name: { en: "Small gifts", de: "Kleine Geschenke" },
     photo: "keyring",
     tagline: {
       en: "Keyrings, postcards and things that fit in a pocket",
       de: "Schlüsselanhänger, Postkarten und Dinge für die Tasche",
     },
-  },
-  {
-    id: "tours",
-    name: { en: "Tours", de: "Touren" },
-    photo: "lucerne-old-town",
   },
 ];
 
@@ -86,7 +87,7 @@ export const products: Product[] = [
     // Demo story (owner request 13.10.2026): the business plan lists a Chapel Bridge
     // knife design and sells "a keepsake with a story". Facts are the widely published
     // history of the bridge; the shop should check the wording before launch.
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "The bridge on the handle",
         de: "Die Brücke auf dem Griff",
@@ -137,9 +138,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "kapellbruecke-pocket-knife",
-    categoryId: "pocket-knives",
+    subcategoryId: "pocket-knives",
     name: { en: "Kapellbrücke pocket knife", de: "Kapellbrücke Taschenmesser" },
     story: {
       en: "A stainless steel pocket knife with the Chapel Bridge etched on the handle. Add a name and the shop engraves it by hand in the old town.",
@@ -161,7 +162,7 @@ export const products: Product[] = [
     id: "p-giftbox",
     photo: "gift-box",
     photos: ["candle", "postcards"],
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "A market stall in a box",
         de: "Ein Marktstand in der Schachtel",
@@ -201,9 +202,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "lucerne-gift-box",
-    categoryId: "gift-boxes",
+    subcategoryId: "gift-boxes",
     name: { en: "Lucerne gift box", de: "Luzerner Geschenkbox" },
     story: {
       en: "Three small things from Lucerne makers in one box: a candle, a postcard set and almond biscuits from the lake.",
@@ -232,7 +233,7 @@ export const products: Product[] = [
     id: "p-chocolate",
     photo: "pralines",
     photos: ["chocolate-bar"],
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "Why Swiss chocolate melts",
         de: "Warum Schweizer Schokolade schmilzt",
@@ -272,9 +273,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "chocolate-set",
-    categoryId: "chocolate",
+    subcategoryId: "chocolate",
     name: { en: "Chocolate set", de: "Schokoladenset" },
     story: {
       en: "Twelve pralines from a Lucerne chocolatier, packed the day before you pick them up.",
@@ -298,7 +299,7 @@ export const products: Product[] = [
     id: "p-print",
     photo: "art-print",
     photos: ["lucerne-kapellbruecke-1200"],
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "The tower that stayed standing",
       },
@@ -331,9 +332,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "limited-edition-print",
-    categoryId: "prints",
+    subcategoryId: "prints",
     // English only on purpose: shows the missing-translation notice (AC30, R02).
     name: { en: "Limited-edition print: Water Tower at dawn" },
     story: {
@@ -353,7 +354,7 @@ export const products: Product[] = [
   {
     id: "p-keyring",
     photo: "keyring",
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "The mountain with a dragon in its name",
         de: "Der Berg mit dem Drachen im Namen",
@@ -393,9 +394,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "pilatus-keyring",
-    categoryId: "small-gifts",
+    subcategoryId: "small-gifts",
     name: { en: "Pilatus keyring", de: "Pilatus Schlüsselanhänger" },
     story: {
       en: "A brass keyring shaped like Mount Pilatus.",
@@ -419,7 +420,7 @@ export const products: Product[] = [
     id: "p-name-knife",
     photo: "engraving",
     photos: ["pocket-knife", "artisan-workshop"],
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "A name on the blade",
         de: "Ein Name auf der Klinge",
@@ -459,9 +460,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "personal-name-knife",
-    categoryId: "pocket-knives",
+    subcategoryId: "pocket-knives",
     name: { en: "Personal name knife", de: "Namensmesser" },
     story: {
       en: "A slim folding knife with an oak handle and room for up to 12 characters, engraved by hand.",
@@ -489,7 +490,7 @@ export const products: Product[] = [
     id: "p-candle-box",
     photo: "candle",
     photos: ["postcards"],
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "An evening by the lake",
         de: "Ein Abend am See",
@@ -529,9 +530,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "lakeside-candle-box",
-    categoryId: "gift-boxes",
+    subcategoryId: "gift-boxes",
     name: { en: "Lakeside candle box", de: "Kerzenbox Seeufer" },
     story: {
       en: "A beeswax candle from a Lucerne chandler with two postcards of the lake, packed in a kraft box.",
@@ -554,7 +555,7 @@ export const products: Product[] = [
   {
     id: "p-chocolate-bars",
     photo: "chocolate-bar",
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "Three bars, three moods",
         de: "Drei Tafeln, drei Stimmungen",
@@ -594,9 +595,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "dark-chocolate-trio",
-    categoryId: "chocolate",
+    subcategoryId: "chocolate",
     name: { en: "Dark chocolate trio", de: "Dunkles Schokoladentrio" },
     story: {
       en: "Three bars from a small Lucerne maker: 70% dark, dark with hazelnut, dark with sea salt.",
@@ -619,7 +620,7 @@ export const products: Product[] = [
   {
     id: "p-old-town-print",
     photo: "lucerne-old-town",
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "The houses that tell stories",
         de: "Die Häuser, die Geschichten erzählen",
@@ -659,9 +660,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "old-town-facades-print",
-    categoryId: "prints",
+    subcategoryId: "prints",
     name: { en: "Old town façades print", de: "Druck Altstadtfassaden" },
     story: {
       en: "The painted façades of the Weinmarkt as a 21 × 30 cm print on cotton paper.",
@@ -684,7 +685,7 @@ export const products: Product[] = [
   {
     id: "p-postcards",
     photo: "postcards",
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "Eight small windows onto Lucerne",
         de: "Acht kleine Fenster auf Luzern",
@@ -724,9 +725,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "lucerne-postcard-set",
-    categoryId: "small-gifts",
+    subcategoryId: "small-gifts",
     name: { en: "Lucerne postcard set", de: "Luzerner Postkartenset" },
     story: {
       en: "Eight postcards drawn by a local illustrator, from the Musegg towers to the lake.",
@@ -750,7 +751,7 @@ export const products: Product[] = [
     id: "p-swiss-chocolate-box",
     photo: "pralines",
     photos: ["chocolate-bar"],
-    longStory: {
+    longStory: storyFromChapters({
       title: {
         en: "A box worth keeping",
         de: "Eine Box zum Aufbewahren",
@@ -790,9 +791,9 @@ export const products: Product[] = [
           },
         },
       ],
-    },
+    }),
     slug: "praline-gift-box",
-    categoryId: "gift-boxes",
+    subcategoryId: "gift-boxes",
     name: { en: "Praline gift box", de: "Pralinen-Geschenkbox" },
     story: {
       en: "Twenty-four pralines in a wooden box with the Chapel Bridge burned into the lid.",
@@ -940,7 +941,7 @@ const featuredReviews: Review[] = [
  */
 type PoolEntry = { rating: Review["rating"]; text: LocalizedText };
 
-const reviewPools: Record<Exclude<CategoryId, "tours">, PoolEntry[]> = {
+const reviewPools: Record<string, PoolEntry[]> = {
   "pocket-knives": [
     {
       rating: 5,
@@ -1230,7 +1231,7 @@ const reviewPools: Record<Exclude<CategoryId, "tours">, PoolEntry[]> = {
   ],
 };
 
-const reviewPhotos: Record<Exclude<CategoryId, "tours">, string[][]> = {
+const reviewPhotos: Record<string, string[][]> = {
   "pocket-knives": [["engraving", "pocket-knife"], ["pocket-knife"]],
   "gift-boxes": [["gift-box", "candle"], ["postcards"]],
   chocolate: [["pralines"], ["chocolate-bar", "pralines"]],
@@ -1260,9 +1261,10 @@ const reviewerNames = [
 ];
 
 const sampleReviews: Review[] = products.flatMap((product, productIndex) => {
-  if (product.categoryId === "tours") return [];
-  const pool = reviewPools[product.categoryId];
-  const photoSets = reviewPhotos[product.categoryId];
+  const pool = reviewPools[product.subcategoryId];
+  const photoSets = reviewPhotos[product.subcategoryId];
+  // A sub-category the merchant added after the seed has no sample reviews.
+  if (!pool || !photoSets) return [];
   const existing = featuredReviews.filter(
     (r) => r.productId === product.id,
   ).length;

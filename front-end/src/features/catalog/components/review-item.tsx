@@ -20,6 +20,38 @@ export interface ReviewView {
   languageNote?: string;
   /** Guest photos: thumbnails that open the fullscreen viewer. */
   photos?: { slugs: string[]; labels: PhotoGalleryLabels };
+  /** The shop's public reply (M23), in the language it was written in. */
+  reply?: {
+    /** "Reply from Ngọc". */
+    title: string;
+    date: string;
+    text: string;
+    lang: string;
+    /** "Text in German" when the reply is not in the guest's language (AC30). */
+    languageNote?: string;
+  };
+}
+
+/** The shop's reply under a review, indented like a reply on C20; clamped on the swipe card. */
+function ShopReply({
+  reply,
+  clamp = false,
+}: {
+  reply: NonNullable<ReviewView["reply"]>;
+  clamp?: boolean;
+}) {
+  return (
+    <div className="flex flex-col gap-1 border-s border-separator ps-4">
+      <span className="text-sm font-semibold">{reply.title}</span>
+      <span className="text-xs text-muted">
+        {reply.date}
+        {reply.languageNote && ` · ${reply.languageNote}`}
+      </span>
+      <p className={`text-sm ${clamp ? "line-clamp-3" : ""}`} lang={reply.lang}>
+        {reply.text}
+      </p>
+    </div>
+  );
 }
 
 /** Guest photos under a review: square thumbnails, tap to view fullscreen. */
@@ -117,6 +149,7 @@ export function ReviewItem({
         )}
         <p className="text-body">{review.text}</p>
         {review.photos && <ReviewPhotos photos={review.photos} />}
+        {review.reply && <ShopReply reply={review.reply} />}
       </article>
     );
   }
@@ -128,6 +161,7 @@ export function ReviewItem({
         <span className="text-xs text-muted">{review.languageNote}</span>
       )}
       <p className="line-clamp-4 text-body">{review.text}</p>
+      {review.reply && <ShopReply clamp reply={review.reply} />}
       {showMore}
       {review.photos && <ReviewPhotos photos={review.photos} />}
       <div className="mt-auto pt-2">

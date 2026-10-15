@@ -27,3 +27,9 @@ docs/ux/moodboard/
 docs/ux/prototype/reports/*-logs/
 docs/ux/prototype/reports/*.out
 .impeccable/review/
+
+# Large local-only material: the proposal deck build and the raw photo downloads the Lucerne
+# photos were made from (docs/content/lucerne-tours/build_photos.sh needs them to re-run)
+docs/proposal-deck/
+docs/content/lucerne-tours/images/
+docs/content/lucerne-tours/images-commons/

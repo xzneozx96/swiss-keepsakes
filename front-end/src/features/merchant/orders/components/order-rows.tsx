@@ -1,8 +1,14 @@
+import type { DataTableColumn } from "@/components/data-table";
+import type { EmptyStateProps } from "@/components/empty-state";
 import type { ShownLabel } from "@/features/orders/hooks/use-orders";
 
-import { Table } from "@heroui/react";
-
-import { ChevronRightIcon, PickupIcon } from "@/components/icons";
+import { DataTable } from "@/components/data-table";
+import { RowActions } from "@/components/row-actions";
+import {
+  ArrowUpRightIcon,
+  ChevronRightIcon,
+  PickupIcon,
+} from "@/components/icons";
 import { Media } from "@/components/media";
 import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
@@ -41,6 +47,11 @@ interface OrderRowsProps {
   /** Accessible name of the list or table, e.g. the selected tab. */
   label: string;
   columns: { order: string; gifts: string; status: string; pickup: string };
+  /** Shown inside the table (a card on phones) when `rows` is empty. */
+  empty?: EmptyStateProps;
+  /** Back to page 1 when this changes. */
+  resetKey?: string;
+  isLoading?: boolean;
 }
 
 const progressText = {
@@ -73,7 +84,7 @@ function StackedRows({ rows, label }: OrderRowsProps) {
       {rows.map((row) => (
         <li key={row.id}>
           <a
-            className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface outline-none hover:bg-surface-secondary focus-visible:focus-ring"
+            className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface outline-none card-hover focus-visible:focus-ring"
             href={row.href}
           >
             <div className="flex items-center gap-4 p-4">
@@ -177,65 +188,76 @@ function StackedRows({ rows, label }: OrderRowsProps) {
 }
 
 /** From 1024px: a Table, four columns so both labels fit beside the sidebar. */
-function OrderTable({ rows, label, columns }: OrderRowsProps) {
-  return (
-    <Table className="hidden lg:block">
-      <Table.ScrollContainer>
-        <Table.Content aria-label={label}>
-          <Table.Header>
-            <Table.Column isRowHeader>{columns.order}</Table.Column>
-            <Table.Column>{columns.gifts}</Table.Column>
-            <Table.Column>{columns.status}</Table.Column>
-            <Table.Column>{columns.pickup}</Table.Column>
-          </Table.Header>
-          <Table.Body>
-            {rows.map((row) => (
-              <Table.Row
-                key={row.id}
-                className="cursor-pointer"
-                href={row.href}
-              >
-                <Table.Cell className="whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <span className="font-semibold">{row.guestName}</span>
-                    <span className="text-label text-muted">
-                      {row.reference}
-                    </span>
-                  </div>
-                </Table.Cell>
-                <Table.Cell>{row.gifts}</Table.Cell>
-                <Table.Cell className="py-2">
-                  <div className="flex flex-col items-start gap-1.5 [&_svg]:shrink-0">
-                    <StatusChip tone={row.progress.tone}>
-                      {row.progress.text}
-                    </StatusChip>
-                    <StatusChip tone={row.payment.tone}>
-                      {row.payment.text}
-                    </StatusChip>
-                  </div>
-                </Table.Cell>
-                <Table.Cell className="whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <span>{row.pickupDate}</span>
-                    <span className="text-label text-muted">
-                      {row.pickupPlace}
-                    </span>
-                  </div>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Content>
-      </Table.ScrollContainer>
-    </Table>
-  );
-}
-
 export function OrderRows(props: OrderRowsProps) {
+  const { t } = useLocale();
+  const { columns: names } = props;
+  const columns: DataTableColumn<OrderRowProps>[] = [
+    {
+      id: "order",
+      header: names.order,
+      isRowHeader: true,
+      skeleton: "two-line",
+      cellClassName: "whitespace-nowrap",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="font-semibold">{row.guestName}</span>
+          <span className="text-label text-muted">{row.reference}</span>
+        </div>
+      ),
+    },
+    { id: "gifts", header: names.gifts, render: (row) => row.gifts },
+    {
+      id: "status",
+      header: names.status,
+      skeleton: "chip",
+      cellClassName: "py-2",
+      render: (row) => (
+        <div className="flex flex-col items-start gap-1.5 [&_svg]:shrink-0">
+          <StatusChip tone={row.progress.tone}>{row.progress.text}</StatusChip>
+          <StatusChip tone={row.payment.tone}>{row.payment.text}</StatusChip>
+        </div>
+      ),
+    },
+    {
+      id: "pickup",
+      header: names.pickup,
+      skeleton: "two-line",
+      cellClassName: "whitespace-nowrap",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span>{row.pickupDate}</span>
+          <span className="text-label text-muted">{row.pickupPlace}</span>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <>
-      <StackedRows {...props} />
-      <OrderTable {...props} />
-    </>
+    <DataTable
+      cards={(page) => <StackedRows {...props} rows={page} />}
+      columns={columns}
+      empty={props.empty}
+      getRowHref={(row) => row.href}
+      getRowId={(row) => row.id}
+      isLoading={props.isLoading}
+      label={props.label}
+      resetKey={props.resetKey}
+      rowActions={{
+        render: (row) => (
+          <RowActions
+            actions={[
+              {
+                id: "open",
+                label: t("rowAction.openOrder"),
+                icon: ArrowUpRightIcon,
+                href: row.href,
+              },
+            ]}
+            label={t("table.rowActions", { name: row.guestName })}
+          />
+        ),
+      }}
+      rows={props.rows}
+    />
   );
 }

@@ -4,7 +4,7 @@ import type { LinkProps } from "@tanstack/react-router";
 import { EmptyState as HeroEmptyState, buttonVariants } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 
-interface EmptyStateProps {
+export interface EmptyStateProps {
   icon: IconComponent;
   message: string;
   /** At most one next action (UX spec §5.5), shown as a secondary small button. */
@@ -26,6 +26,31 @@ export function EmptyState({ icon: Icon, message, action }: EmptyStateProps) {
         <Icon size={28} />
       </span>
       <p className="max-w-xs text-sm text-muted">{message}</p>
+      {action && (
+        <Link
+          className={buttonVariants({ variant: "secondary", size: "sm" })}
+          to={action.to}
+        >
+          {action.label}
+        </Link>
+      )}
+    </HeroEmptyState>
+  );
+}
+
+/**
+ * Table.Body `renderEmptyState` content, in the HeroUI Table docs pattern: the table keeps its
+ * column headers and the empty state sits inside it. Same message and action as the card above.
+ */
+export function TableEmptyState({
+  icon: Icon,
+  message,
+  action,
+}: EmptyStateProps) {
+  return (
+    <HeroEmptyState className="flex h-full w-full flex-col items-center justify-center gap-4 py-8 text-center">
+      <Icon className="text-muted" size={24} />
+      <span className="text-sm text-muted">{message}</span>
       {action && (
         <Link
           className={buttonVariants({ variant: "secondary", size: "sm" })}

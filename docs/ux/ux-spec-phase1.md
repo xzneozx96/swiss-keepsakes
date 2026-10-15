@@ -159,7 +159,7 @@ Khi khách gửi yêu cầu, giỏ được tách thành nhóm theo merchant, ch
 
 ```
 /{lang}/                         C01 Trang khám phá chung
-├── /gifts                       C02 Quà lưu niệm (lọc theo danh mục)
+├── /gifts                       C02 Keepsakes / Andenken (lọc theo danh mục con của cửa hàng)
 │   └── /gifts/{slug}            C03 Chi tiết quà
 ├── /tours                       C08 Tour
 │   ├── /tours/{slug}            C09 Chi tiết tour; ?book=true mở C10 Chọn lịch và số người (sheet trên C09)
@@ -176,7 +176,7 @@ Khi khách gửi yêu cầu, giỏ được tách thành nhóm theo merchant, ch
 /r/{partnerCode}                 Link giới thiệu: ghi nguồn rồi chuyển tới trang đích
 ```
 
-Thanh điều hướng dưới trên điện thoại có bốn mục: Khám phá, Quà, Tour, Tài khoản. Giỏ nằm ở góc trên, có số lượng. Nút "Tư vấn chuyến đi" nổi ở góc dưới bên phải trên C01, C09 và C20.
+Thanh điều hướng dưới trên điện thoại có bốn mục: Khám phá, Keepsakes (DE: Andenken), Tour, Tài khoản. Nhãn "Gifts/Geschenke" đã bỏ từ 15/10/2026 (R20); đường dẫn `/gifts` giữ nguyên. Giỏ nằm ở góc trên, có số lượng. Nút "Tư vấn chuyến đi" nổi ở góc dưới bên phải trên C01, C09 và C20.
 
 ### 3.2 Dashboard merchant (Owner và Manager)
 
@@ -188,8 +188,9 @@ Thanh điều hướng dưới trên điện thoại có bốn mục: Khám phá
 ├── Booking              M05 Lịch khởi hành sắp tới
 │   ├── {departure}      M06 Danh sách khách của một lịch khởi hành
 │   └── {booking}        M07 Chi tiết booking
-├── Sản phẩm             M11 Danh sách quà và tour
-│   ├── {product}        M12 Sửa quà (EN/DE, biến thể, khắc, chuẩn bị, chính sách, hoa hồng)
+├── Sản phẩm             M11 Danh sách sản phẩm (tab: Keepsakes, Tours, Stays (Soon), Experiences (Soon), Pickup points)
+│   ├── categories       M26 Danh mục (/store/products/categories): danh mục con của Keepsakes, mở từ liên kết "Manage categories" ở M11
+│   ├── {product}        M12 Sửa keepsake (EN/DE, danh mục con, biến thể, khắc, chuẩn bị, chính sách, hoa hồng)
 │   └── {tour}           M13 Sửa tour và lịch khởi hành
 ├── Đối tác              M15 Đối tác giới thiệu
 │   └── {partner}        M16 Chi tiết đối tác, QR, link báo cáo, sổ hoa hồng
@@ -361,8 +362,8 @@ Mỗi màn hình có trạng thái trống, đang tải và lỗi theo mẫu chu
 
 | Mã | Màn hình | Nội dung chính | Trạng thái riêng |
 | --- | --- | --- | --- |
-| C01 | Trang khám phá chung | Hero "Lucerne, a place you always want to return to", khối theo thời gian ở địa phương, quà nổi bật, tour, câu chuyện, tư vấn | Có nguồn đối tác hoặc không (không hiển thị khác biệt) |
-| C02 | Quà lưu niệm | Lưới sản phẩm, lọc danh mục, giá từ, "Nhận sớm nhất: thứ Năm" | Danh mục trống |
+| C01 | Trang khám phá chung | Hero "Lucerne, a place you always want to return to", khối theo thời gian ở địa phương, rail bốn danh mục (Keepsakes, Tours, Stays, Experiences; Stays và Experiences gắn "Soon", không mở được), quà nổi bật, tour, câu chuyện, tư vấn | Có nguồn đối tác hoặc không (không hiển thị khác biệt) |
+| C02 | Keepsakes / Andenken | Lưới sản phẩm, lọc theo danh mục con của cửa hàng (chỉ hiện danh mục con có ít nhất một keepsake đã xuất bản), giá từ, "Nhận sớm nhất: thứ Năm". Tìm kiếm "Browse" hiện các danh mục con này cùng Tours | Danh mục con trống |
 | C03 | Chi tiết quà | Ảnh, câu chuyện, biến thể, khắc tên (đếm ký tự), số lượng, ngày nhận, nơi nhận, chính sách thanh toán và hủy, đánh giá | Hết hàng; biến thể không bán; ngày không hợp lệ |
 | C04 | Giỏ quà | Nhóm theo đơn, ngày và nơi nhận từng nhóm, tạm tính | Giỏ trống; dòng có ngày không hợp lệ |
 | C05 | Đăng nhập (sheet) | Google, email, nhập mã 6 số | Mã sai; mã hết hạn; gửi lại sau 30 giây |
@@ -398,8 +399,8 @@ Mỗi màn hình có trạng thái trống, đang tải và lỗi theo mẫu chu
 | M08 | Ghi nhận khoản thu (sheet) | Số tiền, cách thu, thời điểm, ghi chú, xác nhận | Không |
 | M09 | Điều chỉnh khoản thu (sheet) | Khoản gốc, số tiền mới hoặc hủy, lý do | Chỉ Owner |
 | M10 | Hủy và hoàn tiền (sheet) | Lý do, dòng sản phẩm/tour, số tiền hoàn từng dòng, đã hoàn và còn có thể hoàn, hoàn toàn bộ/một phần, online hoặc bên ngoài; xác nhận trước khi thực hiện, lưu người/thời điểm/kết quả | Owner và Manager đều được hoàn tiền; không sửa khoản thu gốc |
-| M11 | Sản phẩm | Danh sách quà và tour, trạng thái xuất bản, đủ EN/DE chưa | Không |
-| M12 | Sửa quà | Tab EN và DE, biến thể và tồn, khắc tên, ngày chuẩn bị và chế độ ngày, nơi nhận áp dụng, chính sách thanh toán gồm hạn trả khoản đầu theo sản phẩm, chính sách hủy, tỷ lệ hoa hồng | Không |
+| M11 | Sản phẩm | Tab Keepsakes, Tours, Stays (Soon), Experiences (Soon), Pickup points; trạng thái xuất bản, đủ EN/DE chưa. Tab Keepsakes có hai bộ lọc chọn nhiều dạng dropdown (Status: Active/Archived; Sub-category) hiện thành chip bỏ được, và liên kết "Manage categories" tới M26. Stays/Experiences: trống, không sản phẩm, không trình soạn thảo | Không |
+| M12 | Sửa keepsake | Tab EN và DE, Category (chỉ đọc "Keepsakes") và Sub-category (select, bắt buộc để xuất bản; nháp lưu được khi chưa chọn; thay cho danh sách danh mục phẳng cũ; nếu cửa hàng chưa có danh mục con thì có liên kết sang M26), biến thể và tồn, khắc tên, ngày chuẩn bị và chế độ ngày, nơi nhận áp dụng, chính sách thanh toán gồm hạn trả khoản đầu theo sản phẩm, chính sách hủy, tỷ lệ hoa hồng | Không |
 | M13 | Sửa tour | Tab EN và DE cho mô tả, lịch trình, dịch vụ bao gồm/không bao gồm, điểm gặp; nhóm tuổi, lịch khởi hành và số chỗ, giá theo lịch, chính sách, hoa hồng | Không |
 | M14 | Điểm nhận | Tên, địa chỉ, giờ mở cửa, hướng dẫn EN và DE | Không |
 | M15 | Đối tác | Danh sách, loại, lượt mở 30 ngày, giao dịch, còn phải trả | Không |
@@ -412,6 +413,7 @@ Mỗi màn hình có trạng thái trống, đang tải và lỗi theo mẫu chu
 | M24 | Dữ liệu chi phí thực tế cho báo cáo | Nhập hoặc đối chiếu giá vốn, đóng gói, phí thanh toán, giao nhận và chi phí biến đổi khác theo giao dịch; đánh dấu còn thiếu, xác nhận khoản không phát sinh bằng 0; không dùng ước tính để tính lãi | Không |
 | M22 | Cài đặt | Thông tin cửa hàng, thành viên và lời mời, tài khoản nhận tiền, chính sách mặc định | Manager chỉ thấy thông tin cửa hàng |
 | M23 | Đánh giá | Danh sách, phản hồi; không có nút xóa | Không |
+| M26 | Danh mục (Categories) | Đường dẫn `/store/products/categories`; thanh quay lại Products; tiêu đề có hành động "Add sub-category". Bốn thẻ danh mục cố định theo thứ tự Keepsakes, Tours, Stays (Soon), Experiences (Soon). Thẻ Keepsakes là danh sách danh mục con chỉnh được: mỗi dòng có tên, số sản phẩm, tên ở ngôn ngữ còn lại và menu ⋯ (Rename, Move up, Move down, Delete). Thêm/đổi tên trong sheet dưới (tên EN, tên DE). Thẻ Tours có liên kết tới tab Tours; thẻ Stays/Experiences ghi chưa mở. Mở từ liên kết "Manage categories" ở M11 và từ M12 khi cửa hàng chưa có danh mục con | Lỗi nếu cả hai tên trống; lỗi nếu tên trùng danh mục con khác; danh mục con còn sản phẩm: Delete bị chặn, hiện số sản phẩm; chưa có danh mục con: trạng thái trống |
 
 ### 5.3 Đối tác
 
@@ -495,6 +497,7 @@ R02 (sản phẩm/tour và blog; widget còn mở), R03 (không hiển thị th�
 | R17 — Đã chốt 14/10/2026 | Trình bày bài viết và nội dung đa phương tiện | C20 là trang blog: ảnh bìa lớn kèm tiêu đề; tác giả là nhân sự cửa hàng (tên, vai trò, ảnh); ngày đăng và thời gian đọc; đoạn mở đầu; thanh mục lục dính theo đề mục từng phần, đánh dấu phần đang đọc và tiến độ đọc. Mỗi phần có đề mục và khối nội dung: đoạn văn, ảnh kèm chú thích, video YouTube (chỉ tải trình phát từ youtube-nocookie.com khi khách bấm phát) và audio thu sẵn do cửa hàng tải lên. Không tạo audio bằng AI. M17 soạn các khối này riêng cho từng phiên bản ngôn ngữ | PRD 11, O12 |
 | R18 — Đã chốt 14/10/2026 | Liên kết giữa các bài viết | Cuối C20, sau phần quà/tour liên kết, có phần "Khám phá thêm" gồm tối đa 3 bài khác. M17 cho merchant chọn và sắp xếp các bài này cho từng phiên bản ngôn ngữ; chỉ bài đã xuất bản cùng ngôn ngữ được hiện. Chưa chọn thì hiện các bài mới nhất cùng ngôn ngữ, trừ chính bài đang đọc. Bình luận trên C20 hiện 3 chuỗi có hoạt động gần nhất, nút "Xem tất cả" mở toàn bộ trong sheet như phần đánh giá | PRD 11 |
 | R19 — Đã chốt 14/10/2026 | Trợ lý AI tư vấn chuyến đi | C21 là giao diện trò chuyện với trợ lý AI: tin nhắn câu hỏi theo thứ tự cố định của cửa hàng, lựa chọn hiện trong cuộc trò chuyện, các ô nhập khác ở khung soạn cuối màn hình, câu trả lời hiện như tin nhắn của khách. Giai đoạn hiện tại chỉ hỏi bộ câu hỏi đã cấu hình ở M19, không trả lời câu hỏi tự do, không tạo kế hoạch. Thẻ tóm tắt cuối với Gửi và Sửa; sau khi gửi trợ lý cảm ơn và cho biết đội ngũ sẽ liên hệ qua email, không hứa thời hạn. Yêu cầu lưu như AC18. Tác tử AI thật thuộc giai đoạn sau (O19) | PRD 12, O12, O19 |
+| R20 — Đã chốt 15/10/2026 (chủ sản phẩm) | Danh mục, danh mục con và nhãn Keepsakes | Bốn Category cố định, merchant không sửa: Keepsakes, Tours, Stays (Soon), Experiences (Soon). Sub-category là danh sách theo từng cửa hàng, merchant chỉnh ở M26 (thêm, đổi tên EN/DE ít nhất một ngôn ngữ, sắp xếp, xóa); hiện chỉ Keepsakes có. Mỗi keepsake thuộc đúng một danh mục con, M12 bắt buộc chọn để xuất bản (nháp được lưu khi chưa chọn). Danh mục con còn sản phẩm chỉ được đổi tên, không xóa (M26 hiện số sản phẩm và chặn xóa). Khách: rail C01 hiện bốn danh mục; C02 lọc theo danh mục con có keepsake đã xuất bản; "Browse" tìm kiếm hiện các danh mục con và Tours. M11 đổi tab và thêm bộ lọc Status/Sub-category. Nhãn "Gifts/Geschenke" thành Keepsakes/Andenken toàn ứng dụng, chỉ nhãn (mã và URL như `/gifts` giữ nguyên). Dữ liệu demo cũ nâng cấp tại chỗ: id danh mục cũ thành danh mục con của Keepsakes. Giới hạn: danh mục con do merchant tạo chưa có trình soạn ảnh/tagline (ô khách dùng ảnh keepsake trung tính); danh mục con của Tours/Stays/Experiences chưa quản lý | PRD 7.0 |
 
 ---
 
@@ -573,6 +576,7 @@ Kịch bản kiểm thử:
 | Hoàn tiền | M10, C15, C16 | Chọn dòng và số tiền, giới hạn còn có thể hoàn; phân biệt đang xử lý, thất bại, đã hoàn một phần và toàn bộ. Giữ lịch sử thực hiện, thu và hoàn |
 | Đối tác và hoa hồng | M16, P02, M21 | Chi tiết giao dịch và tên khách; không có liên hệ hoặc yêu cầu tùy chỉnh. Hiện cơ sở tính, hoa hồng điều chỉnh, tiền thực tế đã chi, bù trừ và khoản chuyển kỳ sau |
 | Chi phí và lãi đóng góp | M21, M24 | Chỉ tính khi đủ chi phí thực tế. Nêu khoản thiếu và mức đầy đủ dữ liệu; không dùng ước tính hoặc coi ô trống là 0 |
+| Danh mục và danh mục con (R20) | M26, M11, M12, C01, C02 | M26 mới: bốn danh mục cố định, danh mục con của Keepsakes chỉnh được, chặn xóa khi còn sản phẩm. M11: tab Keepsakes/Tours/Stays (Soon)/Experiences (Soon)/Pickup points, bộ lọc Status và Sub-category, liên kết "Manage categories". M12: Category chỉ đọc, Sub-category bắt buộc để xuất bản. C01: rail bốn danh mục, Stays/Experiences "Soon". C02: lọc theo danh mục con có keepsake đã xuất bản. Nhãn Keepsakes/Andenken thay Gifts/Geschenke |
 | Nội dung và tư vấn | M11–M13, M17, C03, C09, C15, C16, C20, C21 | Sản phẩm/tour xuất bản bằng một ngôn ngữ được phép; thiếu bản dịch hiện bản có sẵn và thông báo. Widget không cần đăng nhập, email bắt buộc. Hồ sơ chuyến đi tùy chọn sau yêu cầu/booking, gắn với từng giao dịch và sửa trên C15/C16 Bài viết theo R16/R17: quà và tour liên kết do merchant chọn (tối đa 6), mục lục theo phần, ảnh, video và audio thu sẵn |
 
 ### 10.2 Thứ tự thiết kế và kiểm tra

@@ -30,7 +30,8 @@ export function prng(seed: number) {
   };
 }
 
-const gifts = products.filter((p) => p.categoryId !== "tours");
+// Every product in the catalogue is a keepsake; tours are separate data.
+const gifts = products;
 
 function pick<T>(rand: () => number, weighted: [T, number][]): T {
   let r = rand() * weighted.reduce((sum, [, w]) => sum + w, 0);

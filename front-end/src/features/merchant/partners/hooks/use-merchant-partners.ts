@@ -9,16 +9,15 @@ import { formatMoney } from "@/lib/format";
 
 const WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
-export const PARTNER_FILTERS = ["all", "toPay", "revoked", "archived"] as const;
+export const PARTNER_FILTERS = ["toPay", "revoked", "archived"] as const;
 export type PartnerFilter = (typeof PARTNER_FILTERS)[number];
 
 const inFilter = (row: PartnerRowProps, filter: PartnerFilter) => {
   if (filter === "archived") return row.isArchived;
   if (row.isArchived) return false;
   if (filter === "toPay") return row.toPayAmount > 0;
-  if (filter === "revoked") return row.linkRevoked;
 
-  return true;
+  return row.linkRevoked;
 };
 
 /**
@@ -26,7 +25,7 @@ const inFilter = (row: PartnerRowProps, filter: PartnerFilter) => {
  * and what is still to pay after offsets (spec §5.2). Most still to pay first, so payouts
  * come first. Archived partners only show under their own filter (D17).
  */
-export function useMerchantPartners(filter: PartnerFilter, query: string) {
+export function useMerchantPartners(filter: PartnerFilter[], query: string) {
   const { t, intlLocale } = useLocale();
   const { state } = useDemo();
   const now = useDemoNow();
@@ -85,12 +84,19 @@ export function useMerchantPartners(filter: PartnerFilter, query: string) {
     );
 
   return {
-    rows: all.filter((row) => inFilter(row, filter) && matches(row)),
+    // Several filters add up; none ticked is every active partner.
+    rows: all.filter(
+      (row) =>
+        (filter.length
+          ? filter.some((id) => inFilter(row, id))
+          : !row.isArchived) && matches(row),
+    ),
     filters: PARTNER_FILTERS.map((id) => ({
       id,
       label: t(`merchantPartners.filter.${id}`),
       count: all.filter((row) => inFilter(row, id)).length,
     })),
+    activeCount: all.filter((row) => !row.isArchived).length,
     existingCodes: state.data.partners.map((p) => p.code),
     total: all.length,
   };

@@ -1,3 +1,5 @@
+import type { MessageKey } from "./en";
+
 import { tourDetailDe } from "@/features/tours/detail/messages";
 import { tourReviewsDe } from "@/features/tours/reviews/messages";
 import { toursCommonDe } from "@/features/tours/messages";
@@ -6,9 +8,12 @@ import { tourBookingDe } from "@/features/tours/booking/messages";
 import { tourMerchantDe } from "@/features/tours/merchant/messages";
 import { tourMapDe } from "@/features/tours/map/messages";
 import { contentDe } from "@/features/content/messages";
+import { contentMerchantDe } from "@/features/content/merchant/messages";
 import { requestsDe } from "@/features/requests/messages";
-
-import type { MessageKey } from "./en";
+import { partnerDashboardDe } from "@/features/partners/report/messages";
+import { productsDe } from "@/features/merchant/products/messages";
+import { salesOverviewDe } from "@/features/merchant/sales/messages";
+import { reportPagesDe } from "@/features/reports/pages-messages";
 
 /** German copy as used in Switzerland: "ss", never "ß". A missing key fails type-checking. */
 export const de: Record<MessageKey, string> = {
@@ -20,7 +25,12 @@ export const de: Record<MessageKey, string> = {
   ...tourDetailDe,
   ...tourReviewsDe,
   ...contentDe,
+  ...contentMerchantDe,
   ...requestsDe,
+  ...partnerDashboardDe,
+  ...productsDe,
+  ...salesOverviewDe,
+  ...reportPagesDe,
 
   "app.name": "Swiss Keepsakes",
   "app.prototypeBadge": "Prototyp · Beispieldaten",
@@ -28,7 +38,7 @@ export const de: Record<MessageKey, string> = {
 
   "nav.guest.label": "Hauptnavigation",
   "nav.explore": "Entdecken",
-  "nav.gifts": "Geschenke",
+  "nav.gifts": "Andenken",
   "nav.tours": "Touren",
   "nav.account": "Konto",
   "nav.cart": "Warenkorb",
@@ -64,7 +74,7 @@ export const de: Record<MessageKey, string> = {
 
   "home.hello": "Grüezi!",
   "home.heroTitle": "Finden Sie Ihr Andenken aus Luzern",
-  "home.searchPrompt": "Geschenke, Touren, Geschichten",
+  "home.searchPrompt": "Andenken, Touren, Geschichten",
   "home.title": "Luzern, ein Ort, an den man immer zurückkehren möchte",
   "home.intro":
     "Andenken von Luzerner Herstellern zum Abholen in der Stadt, bald auch Touren. Datum wählen, der Laden bestätigt, dann bezahlen Sie.",
@@ -77,7 +87,7 @@ export const de: Record<MessageKey, string> = {
   "home.earliestPickup": "Abholung frühestens {date}",
   "home.engravingBadge": "Gravur",
   "home.quick.title": "Zwei Stunden in Luzern?",
-  "home.quick.subtitle": "Geschenke mit den frühesten Abholterminen",
+  "home.quick.subtitle": "Andenken mit den frühesten Abholterminen",
   "home.tours.title": "Ein paar Tage hier?",
   "home.tours.subtitle": "Spaziergänge und Tagesausflüge mit lokalen Guides",
   "home.engraved.title": "Mit Namen graviert",
@@ -95,19 +105,19 @@ export const de: Record<MessageKey, string> = {
   "home.storyRow": "Geschichte · {minutes} Min. Lesezeit",
   "advice.fab": "Reiseassistent",
   "credits.title": "Fotonachweis",
-  "gifts.title": "Geschenke",
+  "gifts.title": "Andenken",
   "search.open": "Suchen",
   "search.label": "Swiss Keepsakes durchsuchen",
-  "search.placeholder": "Geschenke, Touren, Geschichten",
+  "search.placeholder": "Andenken, Touren, Geschichten",
   "search.back": "Zurück",
   "search.browse": "Nach Kategorie stöbern",
-  "search.group.gifts": "Geschenke",
+  "search.group.gifts": "Andenken",
   "search.group.tours": "Touren",
   "search.group.stories": "Geschichten",
   "search.noResults":
     "Nichts gefunden für «{query}». Versuchen Sie ein kürzeres Wort.",
   "search.inCategory": "In {category} suchen",
-  "search.inGifts": "Geschenke suchen",
+  "search.inGifts": "Andenken suchen",
   "gifts.tagline":
     "Andenken von Luzerner Herstellern, zum Abholen in der Stadt",
   "card.save": "{name} merken",
@@ -116,23 +126,23 @@ export const de: Record<MessageKey, string> = {
     "Bewertet mit {rating} von 5, aus {count} verifizierten Bewertung",
   "card.ratingLabel.other":
     "Bewertet mit {rating} von 5, aus {count} verifizierten Bewertungen",
-  "gifts.count.one": "{count} Geschenk",
-  "gifts.count.other": "{count} Geschenke",
+  "gifts.count.one": "{count} Andenken",
+  "gifts.count.other": "{count} Andenken",
   "gifts.filterLabel": "Kategorie",
   "gifts.all": "Alle",
   "gifts.soldOut": "Ausverkauft",
   "gifts.textInEnglish": "Text auf Englisch",
   "gifts.textInGerman": "Text auf Deutsch",
-  "gifts.emptyCategory": "In dieser Kategorie gibt es zurzeit keine Geschenke.",
-  "gifts.noResults": "Keine Geschenke passen zu «{query}».",
-  "gifts.showAll": "Alle Geschenke zeigen",
+  "gifts.emptyCategory": "In dieser Kategorie gibt es zurzeit keine Andenken.",
+  "gifts.noResults": "Keine Andenken passen zu «{query}».",
+  "gifts.showAll": "Alle Andenken zeigen",
   "detail.back": "Zurück",
   "detail.notFound":
-    "Dieses Geschenk haben wir nicht gefunden. Vielleicht wird es nicht mehr verkauft.",
+    "Dieses Andenken haben wir nicht gefunden. Vielleicht wird es nicht mehr verkauft.",
   "detail.onlyInEnglish":
-    "Die Beschreibung dieses Geschenks gibt es nur auf Englisch.",
+    "Die Beschreibung dieses Andenkens gibt es nur auf Englisch.",
   "detail.onlyInGerman":
-    "Die Beschreibung dieses Geschenks gibt es nur auf Deutsch.",
+    "Die Beschreibung dieses Andenkens gibt es nur auf Deutsch.",
   "detail.reviewsCount.one": "{count} Bewertung",
   "detail.reviewsCount.other": "{count} Bewertungen",
   "detail.variant.label": "Ausführung",
@@ -190,8 +200,8 @@ export const de: Record<MessageKey, string> = {
   "detail.bar.add": "In den Warenkorb",
   "detail.bar.added": "Im Warenkorb",
   "detail.bar.viewCart": "Zum Warenkorb",
-  "detail.soldOut.message": "Dieses Geschenk ist zurzeit ausverkauft.",
-  "detail.soldOut.action": "Andere Geschenke ansehen",
+  "detail.soldOut.message": "Dieses Andenken ist zurzeit ausverkauft.",
+  "detail.soldOut.action": "Andere Andenken ansehen",
   "detail.stats.new": "Neu",
   "detail.stats.pickup": "Frühestens abholbar",
   "detail.stats.now": "Zurzeit",
@@ -216,11 +226,11 @@ export const de: Record<MessageKey, string> = {
   "detail.highlight.pay.deposit":
     "Sie leisten eine Anzahlung von {percent} %, sobald der Laden Ihr Datum bestätigt.",
   "detail.highlight.pay.later": "Sie bezahlen nach der Abholung.",
-  "detail.about.title": "Über dieses Geschenk",
+  "detail.about.title": "Über dieses Andenken",
   "detail.story.label": "Die Geschichte dahinter",
   "detail.story.read": "Geschichte lesen",
   "detail.places.title": "Hier holen Sie es ab",
-  "detail.sheet.title": "Ihr Geschenk",
+  "detail.sheet.title": "Ihr Andenken",
   "detail.sheet.close": "Schliessen",
   "detail.sheet.add": "In den Warenkorb · {total}",
   "detail.bar.choose": "Datum und Ort wählen",
@@ -236,12 +246,12 @@ export const de: Record<MessageKey, string> = {
 
   "cart.title": "Warenkorb",
   "cart.back": "Zurück",
-  "cart.summary.gifts.one": "{count} Geschenk",
-  "cart.summary.gifts.other": "{count} Geschenke",
+  "cart.summary.gifts.one": "{count} Andenken",
+  "cart.summary.gifts.other": "{count} Andenken",
   "cart.summary.orders.one": "{count} Bestellung",
   "cart.summary.orders.other": "{count} Bestellungen",
   "cart.note":
-    "Geschenke mit unterschiedlichem Abholdatum, Abholort oder unterschiedlichen Zahlungsregeln werden zu separaten Bestellungen. Der Laden bestätigt jede Bestellung, bevor Sie bezahlen, und jede Bestellung wird einzeln bezahlt.",
+    "Andenken mit unterschiedlichem Abholdatum, Abholort oder unterschiedlichen Zahlungsregeln werden zu separaten Bestellungen. Der Laden bestätigt jede Bestellung, bevor Sie bezahlen, und jede Bestellung wird einzeln bezahlt.",
   "cart.order.title": "Bestellung {n}",
   "cart.order.pickup": "Gewünschte Abholung",
   "cart.order.subtotal": "Zwischensumme",
@@ -258,15 +268,15 @@ export const de: Record<MessageKey, string> = {
   "cart.bar.total": "Total zur Information",
   "cart.bar.nothingNow": "Jetzt nichts bezahlen",
   "cart.bar.continue": "Weiter",
-  "cart.bar.blocked.one": "Wählen Sie zuerst ein neues Datum für {count} Geschenk.",
+  "cart.bar.blocked.one":
+    "Wählen Sie zuerst ein neues Datum für {count} Andenken.",
   "cart.bar.blocked.other":
-    "Wählen Sie zuerst ein neues Datum für {count} Geschenke.",
+    "Wählen Sie zuerst ein neues Datum für {count} Andenken.",
   "cart.empty.message": "Ihr Warenkorb ist leer.",
-  "cart.empty.action": "Geschenke ansehen",
+  "cart.empty.action": "Andenken ansehen",
 
   "auth.title": "Anmelden und weiter",
-  "auth.intro":
-    "Kein Passwort nötig. Ihr Warenkorb bleibt, wie er ist.",
+  "auth.intro": "Kein Passwort nötig. Ihr Warenkorb bleibt, wie er ist.",
   "auth.close": "Schliessen",
   "auth.google": "Weiter mit Google",
   "auth.or": "oder",
@@ -304,8 +314,10 @@ export const de: Record<MessageKey, string> = {
   "mail.greeting": "Grüezi",
   "mail.N19.subject": "Ihr Code für den Provisionsbericht von {shop}: {code}",
   "mail.N19.greeting": "Guten Tag {partner}",
-  "mail.N19.code": "Ihr Code für den Provisionsbericht von {shop} lautet {code}.",
-  "mail.N19.ignore": "Wenn Sie den Berichtslink nicht geöffnet haben, können Sie diese E-Mail ignorieren. Ohne diesen Code kann niemand Ihren Bericht öffnen.",
+  "mail.N19.code":
+    "Ihr Code für den Provisionsbericht von {shop} lautet {code}.",
+  "mail.N19.ignore":
+    "Wenn Sie den Berichtslink nicht geöffnet haben, können Sie diese E-Mail ignorieren. Ohne diesen Code kann niemand Ihren Bericht öffnen.",
   "mail.N01.subject": "Ihr Anmeldecode für {shop}: {code}",
   "mail.N01.code": "Ihr Anmeldecode lautet {code}.",
   "mail.N01.expiry":
@@ -319,8 +331,9 @@ export const de: Record<MessageKey, string> = {
   "mail.N02.noPayment": "Es wurde nichts belastet.",
   "mail.N02.status":
     "Status: Wartet auf Bestätigung des Ladens. Wir schreiben Ihnen, sobald der Laden antwortet.",
-  "mail.N03.subject": "Neue Geschenkanfrage {orderRef}",
-  "mail.N03.new": "Ein Gast hat eine neue Geschenkanfrage gesendet: {orderRef}.",
+  "mail.N03.subject": "Neue Andenken-Anfrage {orderRef}",
+  "mail.N03.new":
+    "Ein Gast hat eine neue Andenken-Anfrage gesendet: {orderRef}.",
   "mail.N03.action":
     "Öffnen Sie sie unter Bestellungen, um sie anzunehmen, Datum oder Ort zu ändern oder abzulehnen.",
   "mail.N04.subject":
@@ -353,7 +366,7 @@ export const de: Record<MessageKey, string> = {
     "Ihre Bestellung {orderRef} ist bereit. Abholung in {place}, {placeAddress}.",
   "mail.N12.hours": "Öffnungszeiten: {placeHours}",
   "mail.N12.instructions": "{placeInstructions}",
-  "mail.N15.subject": "Wie gefällt Ihr Geschenk? Bewerten Sie {orderRef}",
+  "mail.N15.subject": "Wie gefällt Ihr Andenken? Bewerten Sie {orderRef}",
   "mail.N15.thanks": "Ihre Bestellung {orderRef} ist abgeschlossen. Danke!",
   "mail.N15.review":
     "Erzählen Sie anderen Reisenden davon: Schreiben Sie eine Bewertung in der Bestellung unter Konto.",
@@ -425,7 +438,7 @@ export const de: Record<MessageKey, string> = {
   "transactions.row.changedNote":
     "Der Laden hat Ihre Abholung geändert. Sie können kostenlos stornieren.",
   "transactions.proposal.freeCancel": "R04 kostenlos stornieren",
-  "transactions.empty.message": "Noch keine Geschenkbestellungen.",
+  "transactions.empty.message": "Noch keine Andenken-Bestellungen.",
   "transactions.empty.action": "Zu Entdecken",
   "merchantPartners.title": "Partner",
   "merchantPartners.kind.hotel": "Hotel",
@@ -446,7 +459,8 @@ export const de: Record<MessageKey, string> = {
   "merchantPartners.empty": "Noch keine Partner.",
   "merchantPartners.back": "Zurück zu den Partnern",
   "reports.title": "Berichte",
-  "reports.intro": "Verkäufe, Geld, Partner und Marge im Zeitraum. Waren und Touren werden getrennt gezählt.",
+  "reports.intro":
+    "Verkäufe, Geld, Partner und Marge im Zeitraum. Andenken und Touren werden getrennt gezählt.",
   "reports.tabs.label": "Berichtsansichten",
   "reports.tabs.money": "Geld",
   "reports.tabs.funnel": "Trichter",
@@ -460,13 +474,13 @@ export const de: Record<MessageKey, string> = {
   "reports.filter.clear": "Filter zurücksetzen",
   "reports.filter.remove": "Filter {filter} entfernen",
   "reports.filter.source": "Quelle",
-  "reports.filter.type": "Waren oder Touren",
+  "reports.filter.type": "Andenken oder Touren",
   "reports.filter.group": "Gästegruppe",
   "reports.filter.item": "Produkt oder Tour",
   "reports.filter.source.all": "Alle Quellen",
   "reports.filter.source.direct": "Direkt (ohne Partner)",
-  "reports.filter.type.all": "Waren und Touren",
-  "reports.filter.type.goods": "Nur Waren",
+  "reports.filter.type.all": "Andenken und Touren",
+  "reports.filter.type.goods": "Nur Andenken",
   "reports.filter.type.tours": "Nur Touren",
   "reports.filter.item.all": "Alle Produkte und Touren",
   "reports.group.all": "Alle Gästegruppen",
@@ -476,91 +490,112 @@ export const de: Record<MessageKey, string> = {
   "reports.group.independent-day": "Individuell, Tagesbesuch",
   "reports.group.unknown": "Nicht bestimmt",
   "reports.money.label": "Geld im Zeitraum",
-  "reports.money.goods": "Waren {amount}",
+  "reports.money.goods": "Andenken {amount}",
   "reports.money.tours": "Touren {amount}",
   "reports.money.value": "Wert der Bestellungen und Buchungen",
-  "reports.money.value.hint": "Im Zeitraum aufgegeben, ohne abgelehnte oder stornierte.",
+  "reports.money.value.hint":
+    "Im Zeitraum aufgegeben, ohne abgelehnte oder stornierte.",
   "reports.money.collected": "Eingenommen",
-  "reports.money.collected.hint": "Im Zeitraum erhaltene Zahlungen, online oder erfasst.",
+  "reports.money.collected.hint":
+    "Im Zeitraum erhaltene Zahlungen, online oder erfasst.",
   "reports.money.outstanding": "Offen",
-  "reports.money.outstanding.hint": "Heute noch geschuldet auf Verkäufe aus dem Zeitraum.",
+  "reports.money.outstanding.hint":
+    "Heute noch geschuldet auf Verkäufe aus dem Zeitraum.",
   "reports.money.refunds": "Rückerstattungen",
   "reports.money.refunds.hint": "Im Zeitraum an Gäste zurückerstattet.",
   "reports.money.commission": "Provision",
-  "reports.money.commission.hint": "Im Zeitraum für Partner erfasst, nach Rückerstattungen.",
-  "reports.money.note": "Diese Zahlen bleiben getrennt und werden nie zu einem Umsatz addiert. Der Verlauf vor dem 13. Oktober sind Demodaten.",
+  "reports.money.commission.hint":
+    "Im Zeitraum für Partner erfasst, nach Rückerstattungen.",
+  "reports.money.note":
+    "Diese Zahlen bleiben getrennt und werden nie zu einem Umsatz addiert. Der Verlauf vor dem 13. Oktober sind Demodaten.",
   "reports.funnel.title": "Vom Besuch zum abgeschlossenen Verkauf",
-  "reports.funnel.description": "Partnerlinks und direkte Besuche, dann was die Gäste taten",
-  "reports.funnel.businessOnly": "Besuche und Aufrufe haben noch keine Gästegruppe und keinen Warenkorb; mit diesen Filtern beginnt der Trichter bei der Anfrage.",
+  "reports.funnel.description":
+    "Partnerlinks und direkte Besuche, dann was die Gäste taten",
+  "reports.funnel.businessOnly":
+    "Besuche und Aufrufe haben noch keine Gästegruppe und keinen Warenkorb; mit diesen Filtern beginnt der Trichter bei der Anfrage.",
   "reports.funnel.visits": "Besuche (QR, Links, direkt)",
-  "reports.funnel.viewed": "Geschenk oder Tour angesehen",
+  "reports.funnel.viewed": "Andenken oder Tour angesehen",
   "reports.funnel.started": "Bestellung oder Buchung begonnen",
   "reports.funnel.sent": "Anfrage oder Buchung gesendet",
   "reports.funnel.paid": "Bezahlt",
   "reports.funnel.completed": "Abgeschlossen",
   "reports.funnel.drop": "{share} abgesprungen",
-  "reports.funnel.coverage": "Nur {share} der Besuche in diesem Zeitraum wurden gemessen: Einige Besucher blockierten das Tracking. Besuche, Aufrufe und Starts sind daher zu tief; die Verkäufe sind vollständig.",
+  "reports.funnel.coverage":
+    "Nur {share} der Besuche in diesem Zeitraum wurden gemessen: Einige Besucher blockierten das Tracking. Besuche, Aufrufe und Starts sind daher zu tief; die Verkäufe sind vollständig.",
   "reports.groups.title": "Gästegruppen",
-  "reports.groups.description": "Verkaufswert nach den Reiseangaben jeder Bestellung oder Buchung",
+  "reports.groups.description":
+    "Verkaufswert nach den Reiseangaben jeder Bestellung oder Buchung",
   "reports.groups.count": "{count} Verkäufe",
   "reports.sources.title": "Quellen",
-  "reports.sources.description": "QR-Code und Link jedes Partners sowie direkte Besuche",
+  "reports.sources.description":
+    "QR-Code und Link jedes Partners sowie direkte Besuche",
   "reports.sources.visits": "Besuche",
   "reports.sources.sent": "Verkäufe",
   "reports.sources.completed": "Abgeschlossen",
   "reports.sources.conversion": "Konversion",
-  "reports.products.goods": "Meistverkaufte Geschenke",
+  "reports.products.goods": "Meistverkaufte Andenken",
   "reports.products.tours": "Meistverkaufte Touren",
   "reports.products.description": "Nach Verkaufswert im Zeitraum",
   "reports.products.units": "{count} verkauft",
   "reports.products.guests": "{count} Gäste",
   "reports.products.none": "Keine Verkäufe im Zeitraum.",
-  "reports.products.note": "Die Verkaufszahlen folgen den Filtern. Bestand und Plätze zeigen den Shop heute. Artikelaufrufe, Klicks und Widget-Öffnungen werden im Browser gemessen; vor dem 13. Oktober sind es Demodaten.",
+  "reports.products.note":
+    "Die Verkaufszahlen folgen den Filtern. Bestand und Plätze zeigen den Shop heute. Artikelaufrufe, Klicks und Widget-Öffnungen werden im Browser gemessen; vor dem 13. Oktober sind es Demodaten.",
   "reports.outcome.title": "Wie Verkäufe endeten",
   "reports.outcome.description": "Im Zeitraum aufgegebene Verkäufe",
-  "reports.outcome.goodsCompleted": "Geschenkbestellungen abgeschlossen",
-  "reports.outcome.goodsLost": "Geschenkbestellungen abgelehnt oder storniert",
+  "reports.outcome.goodsCompleted": "Andenken-Bestellungen abgeschlossen",
+  "reports.outcome.goodsLost": "Andenken-Bestellungen abgelehnt oder storniert",
   "reports.outcome.toursCompleted": "Tourbuchungen abgeschlossen",
   "reports.outcome.toursNoShow": "Tour nicht erschienen",
   "reports.outcome.toursLost": "Tourbuchungen storniert",
   "reports.capacity.title": "Bestand und Plätze",
   "reports.capacity.description": "Was knapp werden kann",
   "reports.capacity.stock": "Wenig Bestand",
-  "reports.capacity.stockOk": "Jedes Geschenk hat mehr als 2 an Lager.",
+  "reports.capacity.stockOk": "Jedes Andenken hat mehr als 2 an Lager.",
   "reports.capacity.left": "{count} übrig",
   "reports.capacity.seats": "Abfahrten in den nächsten 14 Tagen",
   "reports.capacity.taken": "{taken} von {capacity} Plätzen",
   "reports.capacity.noDepartures": "Keine Abfahrten in den nächsten 14 Tagen.",
   "reports.content.title": "Artikel",
-  "reports.content.description": "Lesungen und Klicks auf die verlinkten Geschenke und Touren",
+  "reports.content.description":
+    "Lesungen und Klicks auf die verlinkten Andenken und Touren",
   "reports.content.line": "{views} Lesungen · {clicks} Klicks · {rate}",
   "reports.content.none": "Noch keine veröffentlichten Artikel.",
   "reports.widget.title": "Reiseberatung",
-  "reports.widget.description": "Der Beratungsfragebogen vom Öffnen bis zum Senden",
+  "reports.widget.description":
+    "Der Beratungsfragebogen vom Öffnen bis zum Senden",
   "reports.widget.opened": "Geöffnet",
   "reports.widget.started": "Begonnen",
   "reports.widget.sent": "Anfragen gesendet",
-  "reports.margin.goods": "Marge auf Geschenke",
+  "reports.margin.goods": "Marge auf Andenken",
   "reports.margin.tours": "Marge auf Touren",
-  "reports.margin.empty": "Keine abgeschlossenen Verkäufe in diesem Zeitraum mit diesen Filtern.",
-  "reports.margin.allComplete": "Marge für alle {sales} abgeschlossenen Verkäufe: Alle Kosten sind erfasst.",
-  "reports.margin.partial": "Marge für {complete} von {sales} abgeschlossenen Verkäufen. {missing} fehlen noch Kosten und sind nicht enthalten.",
-  "reports.margin.rule": "Marge ist eingenommenes Geld minus Rückerstattungen und tatsächliche Kosten, vor Steuern. Nur Verkäufe mit allen Kosten zählen; nichts wird geschätzt (Demo-Annahme, bis die Umsatzformel feststeht).",
+  "reports.margin.empty":
+    "Keine abgeschlossenen Verkäufe in diesem Zeitraum mit diesen Filtern.",
+  "reports.margin.allComplete":
+    "Marge für alle {sales} abgeschlossenen Verkäufe: Alle Kosten sind erfasst.",
+  "reports.margin.partial":
+    "Marge für {complete} von {sales} abgeschlossenen Verkäufen. {missing} fehlen noch Kosten und sind nicht enthalten.",
+  "reports.margin.rule":
+    "Marge ist eingenommenes Geld minus Rückerstattungen und tatsächliche Kosten, vor Steuern. Nur Verkäufe mit allen Kosten zählen; nichts wird geschätzt (Demo-Annahme, bis die Umsatzformel feststeht).",
   "reports.margin.noData": "Zu wenig Daten",
   "reports.margin.rate": "{rate} des Umsatzes",
   "reports.margin.breakdown": "{revenue} Umsatz − {costs} Kosten",
-  "reports.margin.coverage": "{complete} von {sales} Verkäufen mit vollständigen Kosten",
+  "reports.margin.coverage":
+    "{complete} von {sales} Verkäufen mit vollständigen Kosten",
   "reports.margin.missingTitle": "Verkäufe ohne Kosten",
-  "reports.margin.missingDescription": "{count} abgeschlossene Verkäufe fehlen in der Marge, bis ihre Kosten erfasst sind",
+  "reports.margin.missingDescription":
+    "{count} abgeschlossene Verkäufe fehlen in der Marge, bis ihre Kosten erfasst sind",
   "reports.margin.enterCosts": "Kosten erfassen",
   "costData.title": "Kostendaten",
-  "costData.intro": "Tatsächliche Kosten pro abgeschlossener Bestellung und Tourbuchung. Die Marge wird nur berechnet, wenn alle Kosten erfasst sind; ein leeres Feld gilt als fehlend, nie als 0.",
+  "costData.intro":
+    "Tatsächliche Kosten pro abgeschlossener Bestellung und Tourbuchung. Die Marge wird nur berechnet, wenn alle Kosten erfasst sind; ein leeres Feld gilt als fehlend, nie als 0.",
   "costData.meter": "{complete} von {total} Transaktionen vollständig",
   "costData.more": "+{count} weitere",
   "costData.chart.title": "Kostendaten pro Woche",
   "costData.chart.complete": "Alle Kosten erfasst",
   "costData.chart.missing": "Kosten fehlen",
-  "costData.chart.hint": "Tippen Sie auf eine Woche, um nur ihre Verkäufe zu sehen.",
+  "costData.chart.hint":
+    "Tippen Sie auf eine Woche, um nur ihre Verkäufe zu sehen.",
   "costData.weekOf": "Woche ab {week}",
   "costData.clearWeek": "Alle Wochen zeigen",
   "costData.filtersLabel": "Transaktionen filtern",
@@ -574,17 +609,21 @@ export const de: Record<MessageKey, string> = {
   "costData.enter": "Kosten erfassen",
   "costData.edit": "Kosten bearbeiten",
   "costData.empty": "Noch keine abgeschlossenen Transaktionen.",
-  "costData.emptyMissing": "Alle abgeschlossenen Transaktionen haben ihre Kosten.",
+  "costData.emptyMissing":
+    "Alle abgeschlossenen Transaktionen haben ihre Kosten.",
   "costData.sheet.title": "Kosten · {ref}",
   "costData.sheet.missingOne": "{count} fehlt noch",
   "costData.sheet.missingOther": "{count} fehlen noch",
   "costData.sheet.complete": "Vollständig",
-  "costData.sheet.empty": "Fehlt: Betrag eingeben oder ankreuzen, dass er nicht anfällt.",
+  "costData.sheet.empty":
+    "Fehlt: Betrag eingeben oder ankreuzen, dass er nicht anfällt.",
   "costData.notApplicable": "Fällt nicht an (0)",
   "costData.save": "Kosten speichern",
   "costData.saved.complete": "Kosten für {ref} gespeichert und vollständig",
-  "costData.saved.missingOne": "Kosten für {ref} gespeichert, {count} fehlt noch",
-  "costData.saved.missingOther": "Kosten für {ref} gespeichert, {count} fehlen noch",
+  "costData.saved.missingOne":
+    "Kosten für {ref} gespeichert, {count} fehlt noch",
+  "costData.saved.missingOther":
+    "Kosten für {ref} gespeichert, {count} fehlen noch",
   "costData.type.goods": "Warenkosten",
   "costData.type.packaging": "Verpackung",
   "costData.type.payment-fee": "Zahlungsgebühr",
@@ -596,20 +635,26 @@ export const de: Record<MessageKey, string> = {
   "costData.help.delivery": "Kurier oder Porto, falls nötig.",
   "costData.help.other": "Bei Touren zum Beispiel Guide oder Tickets.",
   "partnerAccess.invalid.title": "Dieser Link funktioniert nicht mehr",
-  "partnerAccess.invalid.body": "Der Berichtslink wurde ersetzt oder abgeschaltet. Fragen Sie {shop} nach Ihrem aktuellen Link.",
+  "partnerAccess.invalid.body":
+    "Der Berichtslink wurde ersetzt oder abgeschaltet. Fragen Sie {shop} nach Ihrem aktuellen Link.",
   "partnerAccess.start.title": "Provisionsbericht öffnen",
-  "partnerAccess.start.body": "{shop} sendet einen 6-stelligen Code an {email}.",
+  "partnerAccess.start.body":
+    "{shop} sendet einen 6-stelligen Code an {email}.",
   "partnerAccess.start.send": "Code senden",
   "partnerAccess.code.title": "Code eingeben",
-  "partnerAccess.code.sent": "Wir haben einen 6-stelligen Code an {email} gesendet. Er gilt 10 Minuten.",
-  "partnerAccess.privacy": "Der Bericht zeigt nur Bestellungen und Buchungen über Ihren Link, mit dem Namen der Gäste und ohne Kontaktdaten.",
+  "partnerAccess.code.sent":
+    "Wir haben einen 6-stelligen Code an {email} gesendet. Er gilt 10 Minuten.",
+  "partnerAccess.privacy":
+    "Der Bericht zeigt nur Bestellungen und Buchungen über Ihren Link, mit dem Namen der Gäste und ohne Kontaktdaten.",
   "partnerDetail.subtitle": "{kind} · Code {code}",
-  "partnerDetail.notFound": "Diesen Partner gibt es nicht oder er wurde gelöscht.",
+  "partnerDetail.notFound":
+    "Diesen Partner gibt es nicht oder er wurde gelöscht.",
   "partnerDetail.facts.label": "Wichtigste Zahlen des Partners",
   "partnerDetail.facts.toOffset": "{amount} noch zu verrechnen",
   "partnerDetail.facts.afterOffsets": "Nach Verrechnung",
   "partnerDetail.facts.earned": "Verdient nach Rückerstattungen",
-  "partnerDetail.facts.estimated": "+{amount} geschätzt aus offenen Transaktionen",
+  "partnerDetail.facts.estimated":
+    "+{amount} geschätzt aus offenen Transaktionen",
   "partnerDetail.facts.paid": "Bezahlt",
   "partnerDetail.facts.payouts.one": "{count} Auszahlung",
   "partnerDetail.facts.payouts.other": "{count} Auszahlungen",
@@ -617,14 +662,18 @@ export const de: Record<MessageKey, string> = {
   "partnerDetail.next.pay": "{amount} bezahlen",
   "partnerDetail.next.offset": "Nichts zu zahlen: {amount} noch zu verrechnen",
   "partnerDetail.next.settled": "Alle Provisionen bezahlt",
-  "partnerDetail.next.payBody": "Bezahlen Sie den Partner ausserhalb der App und erfassen Sie es hier. Der Betrag ist, was nach Verrechnung noch geschuldet ist.",
-  "partnerDetail.next.offsetBody": "Eine Rückerstattung hat bereits bezahlte Provision gesenkt. Die nächsten erfassten Provisionen werden zuerst verrechnet, danach wird wieder ausgezahlt.",
-  "partnerDetail.next.settledBody": "Jede erfasste Provision ist bezahlt. Offene Transaktionen werden zahlbar, sobald sie abgeschlossen sind.",
+  "partnerDetail.next.payBody":
+    "Bezahlen Sie den Partner ausserhalb der App und erfassen Sie es hier. Der Betrag ist, was nach Verrechnung noch geschuldet ist.",
+  "partnerDetail.next.offsetBody":
+    "Eine Rückerstattung hat bereits bezahlte Provision gesenkt. Die nächsten erfassten Provisionen werden zuerst verrechnet, danach wird wieder ausgezahlt.",
+  "partnerDetail.next.settledBody":
+    "Jede erfasste Provision ist bezahlt. Offene Transaktionen werden zahlbar, sobald sie abgeschlossen sind.",
   "partnerDetail.next.payButton": "Als bezahlt erfassen",
   "partnerDetail.ledger.title": "Provisionskonto",
   "partnerDetail.ledger.empty": "Noch keine Provision erfasst.",
   "partnerDetail.ledger.recorded": "{amount} Provision erfasst · {ref}",
-  "partnerDetail.ledger.adjustment": "−{amount} Provision nach {refunded} Rückerstattung · {ref}",
+  "partnerDetail.ledger.adjustment":
+    "−{amount} Provision nach {refunded} Rückerstattung · {ref}",
   "partnerDetail.ledger.payout": "{amount} bezahlt · {method}",
   "partnerDetail.ledger.offset": "{amount} verrechnet mit {ref}",
   "partnerDetail.ledger.balancePay": "Danach {amount} zu zahlen",
@@ -636,17 +685,22 @@ export const de: Record<MessageKey, string> = {
   "partnerDetail.state.paid": "Bezahlt",
   "partnerDetail.state.partlyPaid": "Teilweise bezahlt",
   "partnerDetail.transactions.title": "Transaktionen ({count})",
-  "partnerDetail.transactions.empty": "Noch keine Bestellungen oder Buchungen über diesen Partner.",
+  "partnerDetail.transactions.empty":
+    "Noch keine Bestellungen oder Buchungen über diesen Partner.",
   "partnerDetail.links.title": "QR-Code und Links",
   "partnerDetail.links.qr": "QR-Code anzeigen",
   "partnerDetail.links.referral": "Empfehlungslink",
   "partnerDetail.links.report": "Privater Berichtslink",
-  "partnerDetail.links.reportRevoked": "Der Berichtslink ist widerrufen. Der Partner kann seinen Bericht erst wieder öffnen, wenn die Inhaberin einen neuen Link ausstellt.",
-  "partnerDetail.links.ownerOnly": "Nur die Inhaberin kann den Berichtslink widerrufen oder neu ausstellen.",
-  "partnerDetail.links.emailHelp": "An diese E-Mail erhält der Partner den Berichtscode.",
+  "partnerDetail.links.reportRevoked":
+    "Der Berichtslink ist widerrufen. Der Partner kann seinen Bericht erst wieder öffnen, wenn die Inhaberin einen neuen Link ausstellt.",
+  "partnerDetail.links.ownerOnly":
+    "Nur die Inhaberin kann den Berichtslink widerrufen oder neu ausstellen.",
+  "partnerDetail.links.emailHelp":
+    "An diese E-Mail erhält der Partner den Berichtscode.",
   "partnerDetail.revoke.button": "Berichtslink widerrufen",
   "partnerDetail.revoke.title": "Berichtslink von {name} widerrufen?",
-  "partnerDetail.revoke.body": "Der aktuelle Link funktioniert sofort nicht mehr, auch auf Geräten, auf denen der Partner den Code schon eingegeben hat. Danach können Sie einen neuen Link ausstellen.",
+  "partnerDetail.revoke.body":
+    "Der aktuelle Link funktioniert sofort nicht mehr, auch auf Geräten, auf denen der Partner den Code schon eingegeben hat. Danach können Sie einen neuen Link ausstellen.",
   "partnerDetail.revoke.confirm": "Link widerrufen",
   "partnerDetail.revoke.done": "Berichtslink widerrufen",
   "partnerDetail.issue.button": "Neuen Berichtslink ausstellen",
@@ -657,11 +711,13 @@ export const de: Record<MessageKey, string> = {
   "partnerDetail.tabs.links": "Links",
   "payout.title": "Zahlung an {name} erfassen",
   "payout.owed": "Noch zu zahlen",
-  "payout.owedHint": "Nach Verrechnung. Verrechnungen werden nie als Zahlung erfasst.",
+  "payout.owedHint":
+    "Nach Verrechnung. Verrechnungen werden nie als Zahlung erfasst.",
   "payout.amount": "Bezahlter Betrag",
   "payout.amountError": "Geben Sie einen Betrag über CHF 0 ein.",
   "payout.above.title": "Mehr als geschuldet",
-  "payout.above": "Damit zahlen Sie {amount} im Voraus. Notieren Sie den Grund.",
+  "payout.above":
+    "Damit zahlen Sie {amount} im Voraus. Notieren Sie den Grund.",
   "payout.noteRequired": "Notiz nötig: Der Betrag ist höher als geschuldet.",
   "payout.method": "Zahlungsart",
   "payout.date": "Bezahlt am",
@@ -674,7 +730,8 @@ export const de: Record<MessageKey, string> = {
   "merchantPartners.kind.other": "Andere",
   "merchantPartners.conversion": "Konversion, 30 Tage",
   "merchantPartners.archived": "Archiviert",
-  "merchantPartners.archivedHint": "Der QR-Link schreibt neue Besuche nicht mehr gut.",
+  "merchantPartners.archivedHint":
+    "Der QR-Link schreibt neue Besuche nicht mehr gut.",
   "merchantPartners.action.qr": "QR-Code",
   "merchantPartners.action.qrFor": "QR-Code für {name}",
   "merchantPartners.action.more": "Weitere Aktionen für {name}",
@@ -684,11 +741,13 @@ export const de: Record<MessageKey, string> = {
   "merchantPartners.column.actions": "Aktionen",
   "merchantPartners.qr.title": "QR-Code · {name}",
   "merchantPartners.qr.label": "QR-Code für den Empfehlungslink von {name}",
-  "merchantPartners.qr.help": "Wer ihn scannt oder den Link öffnet, landet auf der Startseite des Shops. Bestellungen in den nächsten 30 Tagen zählen für diesen Partner (Code {code}).",
+  "merchantPartners.qr.help":
+    "Wer ihn scannt oder den Link öffnet, landet auf der Startseite des Shops. Bestellungen in den nächsten 30 Tagen zählen für diesen Partner (Code {code}).",
   "merchantPartners.qr.download": "PNG herunterladen",
   "merchantPartners.qr.copy": "Link kopieren",
   "merchantPartners.qr.copied": "Link kopiert",
-  "merchantPartners.qr.copyFailed": "Der Link konnte nicht kopiert werden. Markieren und kopieren Sie ihn von Hand.",
+  "merchantPartners.qr.copyFailed":
+    "Der Link konnte nicht kopiert werden. Markieren und kopieren Sie ihn von Hand.",
   "merchantPartners.add.button": "Partner hinzufügen",
   "merchantPartners.add.title": "Partner hinzufügen",
   "merchantPartners.add.name": "Name",
@@ -696,21 +755,28 @@ export const de: Record<MessageKey, string> = {
   "merchantPartners.add.nameError": "Geben Sie den Namen des Partners ein.",
   "merchantPartners.add.kind": "Art",
   "merchantPartners.add.email": "E-Mail",
-  "merchantPartners.add.emailHelp": "Hierhin erhält der Partner den Code für seinen Provisionsbericht.",
-  "merchantPartners.add.emailError": "Geben Sie eine gültige E-Mail-Adresse ein.",
+  "merchantPartners.add.emailHelp":
+    "Hierhin erhält der Partner den Code für seinen Provisionsbericht.",
+  "merchantPartners.add.emailError":
+    "Geben Sie eine gültige E-Mail-Adresse ein.",
   "merchantPartners.add.code": "Empfehlungscode",
-  "merchantPartners.add.codeHelp": "Steht im QR-Link: …/r/{code}. Nur Buchstaben und Ziffern.",
-  "merchantPartners.add.codeError": "Verwenden Sie 3 bis 12 Buchstaben oder Ziffern.",
-  "merchantPartners.add.codeTaken": "Ein anderer Partner verwendet diesen Code bereits.",
+  "merchantPartners.add.codeHelp":
+    "Steht im QR-Link: …/r/{code}. Nur Buchstaben und Ziffern.",
+  "merchantPartners.add.codeError":
+    "Verwenden Sie 3 bis 12 Buchstaben oder Ziffern.",
+  "merchantPartners.add.codeTaken":
+    "Ein anderer Partner verwendet diesen Code bereits.",
   "merchantPartners.add.save": "Partner hinzufügen",
   "merchantPartners.added": "{name} hinzugefügt. Der QR-Code ist bereit.",
   "merchantPartners.restored": "{name} wiederhergestellt",
   "merchantPartners.deleted": "{name} gelöscht",
   "merchantPartners.archivedToast": "{name} archiviert",
   "merchantPartners.delete.title": "{name} löschen?",
-  "merchantPartners.delete.body": "Dieser Partner hat keine Link-Aufrufe und keine Transaktionen, sonst ändert sich nichts.",
+  "merchantPartners.delete.body":
+    "Dieser Partner hat keine Link-Aufrufe und keine Transaktionen, sonst ändert sich nichts.",
   "merchantPartners.archive.title": "{name} archivieren?",
-  "merchantPartners.archive.body": "Der QR-Link schreibt neue Besuche nicht mehr gut und der Berichtslink funktioniert nicht mehr. Die Provisionsgeschichte bleibt, und {toPay} noch zu zahlen kann weiterhin bezahlt werden.",
+  "merchantPartners.archive.body":
+    "Der QR-Link schreibt neue Besuche nicht mehr gut und der Berichtslink funktioniert nicht mehr. Die Provisionsgeschichte bleibt, und {toPay} noch zu zahlen kann weiterhin bezahlt werden.",
   "merchantPartners.viewsLabel": "Partneransicht",
   "merchantPartners.view.partners": "Partner",
   "merchantPartners.view.analytics": "Analysen",
@@ -728,14 +794,19 @@ export const de: Record<MessageKey, string> = {
   "partnerAnalytics.kpi.conversion": "Konversion",
   "partnerAnalytics.kpi.commission": "Verdiente Provision",
   "partnerAnalytics.daily.title": "Link-Aufrufe pro Tag",
-  "partnerAnalytics.daily.description": "Geöffnete QR-Codes und Links, nach Partner",
+  "partnerAnalytics.daily.description":
+    "Geöffnete QR-Codes und Links, nach Partner",
   "partnerAnalytics.compare.title": "Partner im Vergleich",
   "partnerAnalytics.compare.description": "Für den gewählten Zeitraum",
   "partnerAnalytics.compare.opens": "Aufrufe",
   "partnerAnalytics.compare.commission": "Provision",
-  "partnerAnalytics.empty": "Keine Link-Aufrufe oder Partner-Transaktionen in diesem Zeitraum.",
-  "partnerAnalytics.note": "Link-Aufrufe zählen QR-Scans und geteilte Links gleich. Verdiente Provision ist erfasste Provision nach Rückerstattungen. Aufrufe vor dem 13. Oktober sind Demodaten.",
-  "merchantOrders.title": "Geschenkbestellungen",
+  "partnerAnalytics.empty":
+    "Keine Link-Aufrufe oder Partner-Transaktionen in diesem Zeitraum.",
+  "partnerAnalytics.note":
+    "Link-Aufrufe zählen QR-Scans und geteilte Links gleich. Verdiente Provision ist erfasste Provision nach Rückerstattungen. Aufrufe vor dem 13. Oktober sind Demodaten.",
+  "merchantOrders.title": "Andenken-Bestellungen",
+  "merchantOrders.intro":
+    "Andenken-Anfragen von Gästen, von der ersten Anfrage bis zur Abholung.",
   "merchantOrders.tabsLabel": "Bestellstatus",
   "merchantOrders.tab.awaitingConfirmation": "Wartet auf Bestätigung",
   "merchantOrders.tab.awaitingPayment": "Wartet auf Zahlung",
@@ -745,7 +816,7 @@ export const de: Record<MessageKey, string> = {
   "merchantOrders.tab.completed": "Abgeschlossen",
   "merchantOrders.tab.cancelled": "Storniert",
   "merchantOrders.column.order": "Bestellung",
-  "merchantOrders.column.gifts": "Geschenke",
+  "merchantOrders.column.gifts": "Andenken",
   "merchantOrders.column.status": "Status",
   "merchantOrders.column.pickup": "Abholung",
   "merchantOrders.gifts": "{quantity} × {product}",
@@ -783,34 +854,51 @@ export const de: Record<MessageKey, string> = {
   "cart.remove.confirm": "Aus dem Warenkorb entfernen",
   "guestOrder.back": "Zurück",
   "guestOrder.title": "Bestellung {ref}",
-  "guestOrder.notFound.message": "Diese Bestellung haben wir in Ihrem Konto nicht gefunden.",
+  "guestOrder.notFound.message":
+    "Diese Bestellung haben wir in Ihrem Konto nicht gefunden.",
   "guestOrder.notFound.action": "Zu meinen Transaktionen",
   "guestOrder.notice.requested.title": "Ihre Anfrage liegt beim Verkäufer",
-  "guestOrder.notice.requested.body": "Abholdatum und -ort sind eine Anfrage, bis der Verkäufer annimmt. Bis dahin bezahlen Sie nichts.",
+  "guestOrder.notice.requested.body":
+    "Abholdatum und -ort sind eine Anfrage, bis der Verkäufer annimmt. Bis dahin bezahlen Sie nichts.",
   "guestOrder.notice.processing.title": "Bitte nicht noch einmal bezahlen",
-  "guestOrder.notice.processing.body": "Der Zahlungsanbieter hat Ihre Zahlung noch nicht bestätigt. Diese Seite wird danach aktualisiert.",
-  "guestOrder.notice.payDue.title": "Bezahlen, damit die Bestellung bestehen bleibt",
-  "guestOrder.notice.payDue.body": "Ohne rechtzeitige Zahlung wird die Bestellung automatisch storniert.",
-  "guestOrder.notice.changed.place": "Der Laden hat Ihre Abholung von {from} nach {to} verlegt",
-  "guestOrder.notice.changed.date": "Der Laden hat Ihre Abholung vom {from} auf den {to} verschoben",
-  "guestOrder.notice.changed.body": "Passt Ihnen die neue Abholung nicht, können Sie vor dem Bezahlen kostenlos stornieren.",
-  "guestOrder.notice.preparing.title": "Der Laden bereitet Ihre Geschenke vor",
-  "guestOrder.notice.preparing.body": "Wir melden uns, sobald sie zur Abholung am {date} bereit ist.",
+  "guestOrder.notice.processing.body":
+    "Der Zahlungsanbieter hat Ihre Zahlung noch nicht bestätigt. Diese Seite wird danach aktualisiert.",
+  "guestOrder.notice.payDue.title":
+    "Bezahlen, damit die Bestellung bestehen bleibt",
+  "guestOrder.notice.payDue.body":
+    "Ohne rechtzeitige Zahlung wird die Bestellung automatisch storniert.",
+  "guestOrder.notice.changed.place":
+    "Der Laden hat Ihre Abholung von {from} nach {to} verlegt",
+  "guestOrder.notice.changed.date":
+    "Der Laden hat Ihre Abholung vom {from} auf den {to} verschoben",
+  "guestOrder.notice.changed.body":
+    "Passt Ihnen die neue Abholung nicht, können Sie vor dem Bezahlen kostenlos stornieren.",
+  "guestOrder.notice.preparing.title": "Der Laden bereitet Ihre Andenken vor",
+  "guestOrder.notice.preparing.body":
+    "Wir melden uns, sobald sie zur Abholung am {date} bereit ist.",
   "guestOrder.notice.ready.title": "Abholbereit in {place}",
   "guestOrder.notice.balance.title": "Den Rest online oder im Laden bezahlen",
-  "guestOrder.notice.balance.body": "Die Bestellung ist abgeschlossen, sobald sie vollständig bezahlt ist.",
+  "guestOrder.notice.balance.body":
+    "Die Bestellung ist abgeschlossen, sobald sie vollständig bezahlt ist.",
   "guestOrder.notice.completed.title": "Abgeholt und bezahlt. Vielen Dank!",
   "guestOrder.notice.declined.title": "Es wurde nichts belastet",
   "guestOrder.notice.declined.body": "Grund des Verkäufers: {reason}",
   "guestOrder.notice.overdue.title": "Die Zahlungsfrist ist abgelaufen",
-  "guestOrder.notice.overdue.body": "Die erste Zahlung ist bis {due} nicht eingegangen. Es wurde nichts belastet. Möchten Sie die Geschenke trotzdem, fragen Sie sie erneut an; der Verkäufer bestätigt dann ein neues Abholdatum.",
+  "guestOrder.notice.overdue.body":
+    "Die erste Zahlung ist bis {due} nicht eingegangen. Es wurde nichts belastet. Möchten Sie die Andenken trotzdem, fragen Sie sie erneut an; der Verkäufer bestätigt dann ein neues Abholdatum.",
   "guestOrder.notice.cancelledByYou.title": "Nichts zu erstatten",
-  "guestOrder.notice.cancelledByYou.body": "Für diese Bestellung wurde nichts bezahlt. Möchten Sie die Geschenke trotzdem, fragen Sie sie erneut an.",
-  "guestOrder.notice.cancelledByShop.title": "Der Laden hat diese Bestellung storniert",
-  "guestOrder.notice.processingAfterCancel.title": "Eine Zahlung ist noch in Bearbeitung",
-  "guestOrder.notice.processingAfterCancel.body": "Die Bestellung bleibt storniert. Bestätigt der Anbieter die Zahlung, klärt der Laden sie mit Ihnen.",
-  "guestOrder.notice.lateResult.title": "{amount} nach der Stornierung eingegangen",
-  "guestOrder.notice.lateResult.body": "Die Bestellung bleibt storniert. Der Laden prüft die Zahlung und meldet sich bei Ihnen.",
+  "guestOrder.notice.cancelledByYou.body":
+    "Für diese Bestellung wurde nichts bezahlt. Möchten Sie die Andenken trotzdem, fragen Sie sie erneut an.",
+  "guestOrder.notice.cancelledByShop.title":
+    "Der Laden hat diese Bestellung storniert",
+  "guestOrder.notice.processingAfterCancel.title":
+    "Eine Zahlung ist noch in Bearbeitung",
+  "guestOrder.notice.processingAfterCancel.body":
+    "Die Bestellung bleibt storniert. Bestätigt der Anbieter die Zahlung, klärt der Laden sie mit Ihnen.",
+  "guestOrder.notice.lateResult.title":
+    "{amount} nach der Stornierung eingegangen",
+  "guestOrder.notice.lateResult.body":
+    "Die Bestellung bleibt storniert. Der Laden prüft die Zahlung und meldet sich bei Ihnen.",
   "guestOrder.method.online": "Online",
   "guestOrder.method.cash": "Bar",
   "guestOrder.method.bankTransfer": "Banküberweisung",
@@ -818,21 +906,24 @@ export const de: Record<MessageKey, string> = {
   "guestOrder.paymentStatus.succeeded": "Eingegangen",
   "guestOrder.paymentStatus.processing": "In Bearbeitung",
   "guestOrder.paymentStatus.failed": "Fehlgeschlagen",
-  "guestOrder.paymentStatus.late": "Nach Stornierung eingegangen · Abgleich ausstehend",
+  "guestOrder.paymentStatus.late":
+    "Nach Stornierung eingegangen · Abgleich ausstehend",
   "guestOrder.action.pay": "{amount} bezahlen",
   "guestOrder.action.cancel": "Bestellung stornieren",
   "guestOrder.action.requestAgain": "Erneut anfragen",
-  "guestOrder.action.requestAgainNote": "Legt die Geschenke zurück in Ihren Warenkorb. Sie wählen ein Datum und senden eine neue Anfrage; nichts wird automatisch gesendet.",
+  "guestOrder.action.requestAgainNote":
+    "Legt die Andenken zurück in Ihren Warenkorb. Sie wählen ein Datum und senden eine neue Anfrage; nichts wird automatisch gesendet.",
   "guestOrder.action.review": "Bewertung schreiben",
   "guestOrder.action.reviewSoon": "Folgt in einem späteren Schritt.",
   "guestOrder.cancel.title": "Bestellung {ref} stornieren?",
-  "guestOrder.cancel.body": "Es wurde nichts bezahlt, die Stornierung ist also kostenlos und es gibt nichts zu erstatten. Der Laden gibt die reservierten Geschenke frei.",
+  "guestOrder.cancel.body":
+    "Es wurde nichts bezahlt, die Stornierung ist also kostenlos und es gibt nichts zu erstatten. Der Laden gibt die reservierten Andenken frei.",
   "guestOrder.cancel.confirm": "Bestellung stornieren",
   "guestOrder.cancel.keep": "Bestellung behalten",
   "guestOrder.pickup.requested": "Angefragte Abholung",
   "guestOrder.pickup.confirmed": "Bestätigte Abholung",
   "guestOrder.pickup.cancelled": "Abholung (storniert)",
-  "guestOrder.items.title": "Geschenke",
+  "guestOrder.items.title": "Andenken",
   "guestOrder.items.quantity": "{quantity} × {price}",
   "guestOrder.items.engraving": "Gravur «{text}»",
   "guestOrder.amounts.total": "Total",
@@ -843,8 +934,10 @@ export const de: Record<MessageKey, string> = {
   "guestOrder.timeline.title": "Verlauf",
   "guestOrder.timeline.upcoming": "Als Nächstes",
   "guestOrder.timeline.requested": "Anfrage gesendet",
-  "guestOrder.timeline.placeChanged": "Laden hat den Abholort auf {place} geändert",
-  "guestOrder.timeline.dateChanged": "Laden hat das Abholdatum auf den {date} geändert",
+  "guestOrder.timeline.placeChanged":
+    "Laden hat den Abholort auf {place} geändert",
+  "guestOrder.timeline.dateChanged":
+    "Laden hat das Abholdatum auf den {date} geändert",
   "guestOrder.timeline.accepted": "Vom Verkäufer angenommen, Zahlung fällig",
   "guestOrder.timeline.acceptedPayLater": "Vom Verkäufer angenommen",
   "guestOrder.timeline.declined": "Vom Verkäufer abgelehnt",
@@ -859,20 +952,27 @@ export const de: Record<MessageKey, string> = {
   "guestOrder.timeline.cancelledByYou": "Von Ihnen storniert",
   "guestOrder.timeline.cancelledByShop": "Vom Laden storniert",
   "guestOrder.timeline.next.confirm": "Verkäufer bestätigt",
-  "guestOrder.timeline.next.pay": "Sie bezahlen, dann bereitet der Laden Ihre Geschenke vor",
+  "guestOrder.timeline.next.pay":
+    "Sie bezahlen, dann bereitet der Laden Ihre Andenken vor",
   "guestOrder.timeline.next.ready": "Abholbereit",
   "guestOrder.timeline.next.done": "Abgeholt und bezahlt",
   "guestOrder.policy.title": "Bedingungen zum Zeitpunkt der Bestellung",
-  "guestOrder.policy.intro": "Diese Bedingungen galten, als Sie die Anfrage gesendet haben. Spätere Änderungen des Ladens betreffen diese Bestellung nicht.",
-  "guestOrder.policy.full": "Volle Zahlung von {amount}, fällig innerhalb von {hours} Stunden nach der Bestätigung.",
-  "guestOrder.policy.deposit": "Eine Anzahlung von {percent} % ({deposit}) ist innerhalb von {hours} Stunden nach der Bestätigung fällig. Der Rest ({balance}) ist {days} Tage nach der Abholung fällig.",
-  "guestOrder.policy.later": "Keine Vorauszahlung. Sie bezahlen {amount} innerhalb von {days} Tagen nach der Abholung.",
+  "guestOrder.policy.intro":
+    "Diese Bedingungen galten, als Sie die Anfrage gesendet haben. Spätere Änderungen des Ladens betreffen diese Bestellung nicht.",
+  "guestOrder.policy.full":
+    "Volle Zahlung von {amount}, fällig innerhalb von {hours} Stunden nach der Bestätigung.",
+  "guestOrder.policy.deposit":
+    "Eine Anzahlung von {percent} % ({deposit}) ist innerhalb von {hours} Stunden nach der Bestätigung fällig. Der Rest ({balance}) ist {days} Tage nach der Abholung fällig.",
+  "guestOrder.policy.later":
+    "Keine Vorauszahlung. Sie bezahlen {amount} innerhalb von {days} Tagen nach der Abholung.",
   "guestOrder.contact.title": "Fragen zu dieser Bestellung?",
-  "guestOrder.contact.body": "Kontaktieren Sie den Laden und nennen Sie Ihre Bestellnummer.",
+  "guestOrder.contact.body":
+    "Kontaktieren Sie den Laden und nennen Sie Ihre Bestellnummer.",
   "guestOrder.contact.ref": "Bestellnummer",
   "guestOrder.contact.copy": "Kopieren",
   "guestOrder.contact.copied": "Kopiert",
-  "guestOrder.contact.copyFailed": "Kopieren nicht möglich. Markieren Sie die Nummer.",
+  "guestOrder.contact.copyFailed":
+    "Kopieren nicht möglich. Markieren Sie die Nummer.",
   "guestOrder.contact.email": "E-Mail",
   "guestOrder.contact.call": "Anrufen",
   "guestOrder.contact.subject": "Frage zur Bestellung {ref}",
@@ -884,18 +984,22 @@ export const de: Record<MessageKey, string> = {
   "guestOrder.overview.date": "Datum",
   "guestOrder.overview.place": "Ort",
   "guestOrder.overview.hours": "Öffnungszeiten",
-  "merchantOrder.back": "Geschenkbestellungen",
+  "merchantOrder.back": "Andenken-Bestellungen",
   "merchantOrder.title": "Bestellung {ref}",
   "merchantOrder.requestedAt": "{guest} · angefragt am {at}",
-  "merchantOrder.notFound.message": "Diese Bestellung gibt es nicht, oder die Demo wurde zurückgesetzt.",
-  "merchantOrder.notFound.action": "Zu den Geschenkbestellungen",
+  "merchantOrder.notFound.message":
+    "Diese Bestellung gibt es nicht, oder die Demo wurde zurückgesetzt.",
+  "merchantOrder.notFound.action": "Zu den Andenken-Bestellungen",
   "merchantOrder.decision.title": "Über diese Anfrage entscheiden",
-  "merchantOrder.decision.body": "Es wurde noch nichts bezahlt. Der Gast bezahlt erst, wenn Sie annehmen.",
+  "merchantOrder.decision.body":
+    "Es wurde noch nichts bezahlt. Der Gast bezahlt erst, wenn Sie annehmen.",
   "merchantOrder.decision.requestedPickup": "Gewünschte Abholung",
   "merchantOrder.stock.title": "Lagerbestand",
   "merchantOrder.stock.enough": "{available} verfügbar · {needed} benötigt",
-  "merchantOrder.stock.short": "Nicht genug: {available} verfügbar · {needed} benötigt",
-  "merchantOrder.stock.note": "Der Bestand wird erst reserviert, wenn Sie annehmen.",
+  "merchantOrder.stock.short":
+    "Nicht genug: {available} verfügbar · {needed} benötigt",
+  "merchantOrder.stock.note":
+    "Der Bestand wird erst reserviert, wenn Sie annehmen.",
   "merchantOrder.action.accept": "Annehmen",
   "merchantOrder.action.change": "Datum oder Ort ändern",
   "merchantOrder.action.decline": "Ablehnen",
@@ -904,38 +1008,51 @@ export const de: Record<MessageKey, string> = {
   "merchantOrder.accept.title": "Bestellung {ref} annehmen?",
   "merchantOrder.accept.item": "1 Artikel",
   "merchantOrder.accept.items": "{count} Artikel",
-  "merchantOrder.accept.prepare": "Sie bestätigen, dass Sie {items} für die Abholung am {date} ({place}) vorbereiten können.",
-  "merchantOrder.accept.pay": "Der Gast wird gebeten, {amount} innerhalb von {hours} Stunden zu bezahlen, bis {due}.",
-  "merchantOrder.accept.payLater": "Jetzt wird keine Zahlung verlangt. Der Gast bezahlt {amount} nach der Abholung, bis {due}.",
-  "merchantOrder.accept.hold": "Der Bestand für diese Bestellung wird ab jetzt reserviert.",
+  "merchantOrder.accept.prepare":
+    "Sie bestätigen, dass Sie {items} für die Abholung am {date} ({place}) vorbereiten können.",
+  "merchantOrder.accept.pay":
+    "Der Gast wird gebeten, {amount} innerhalb von {hours} Stunden zu bezahlen, bis {due}.",
+  "merchantOrder.accept.payLater":
+    "Jetzt wird keine Zahlung verlangt. Der Gast bezahlt {amount} nach der Abholung, bis {due}.",
+  "merchantOrder.accept.hold":
+    "Der Bestand für diese Bestellung wird ab jetzt reserviert.",
   "merchantOrder.accept.confirm": "Annehmen und {amount} anfordern",
   "merchantOrder.accept.confirmPayLater": "Bestellung annehmen",
   "merchantOrder.accept.failed": "Nicht angenommen",
-  "merchantOrder.accept.failedBody": "Die Bestellung wartet weiter auf Bestätigung, und es wurde keine Zahlung angefordert.",
+  "merchantOrder.accept.failedBody":
+    "Die Bestellung wartet weiter auf Bestätigung, und es wurde keine Zahlung angefordert.",
   "merchantOrder.change.title": "Datum oder Ort ändern",
-  "merchantOrder.change.body": "Verwenden Sie dies, wenn Sie mit dem Gast per E-Mail ein neues Datum oder einen neuen Ort vereinbart haben. Die Bestellung bleibt eine Anfrage, Sie nehmen sie danach an.",
+  "merchantOrder.change.body":
+    "Verwenden Sie dies, wenn Sie mit dem Gast per E-Mail ein neues Datum oder einen neuen Ort vereinbart haben. Die Bestellung bleibt eine Anfrage, Sie nehmen sie danach an.",
   "merchantOrder.change.date": "Abholdatum",
-  "merchantOrder.change.closed": "Sonntage sind nicht möglich: Beide Abholorte sind geschlossen.",
+  "merchantOrder.change.closed":
+    "Sonntage sind nicht möglich: Beide Abholorte sind geschlossen.",
   "merchantOrder.change.place": "Abholort",
   "merchantOrder.change.note": "Notiz",
-  "merchantOrder.change.noteHelp": "Warum es sich ändert, z. B. was Sie per E-Mail vereinbart haben. Wird im Bestellverlauf gespeichert.",
-  "merchantOrder.change.nothing": "Wählen Sie zuerst ein neues Datum oder einen neuen Ort.",
+  "merchantOrder.change.noteHelp":
+    "Warum es sich ändert, z. B. was Sie per E-Mail vereinbart haben. Wird im Bestellverlauf gespeichert.",
+  "merchantOrder.change.nothing":
+    "Wählen Sie zuerst ein neues Datum oder einen neuen Ort.",
   "merchantOrder.change.save": "Änderung speichern",
   "merchantOrder.decline.title": "Bestellung {ref} ablehnen",
   "merchantOrder.decline.reason": "Grund",
-  "merchantOrder.decline.reason.outOfStock": "Das Geschenk ist nicht mehr an Lager",
-  "merchantOrder.decline.reason.date": "Wir können es zum gewünschten Datum nicht vorbereiten",
+  "merchantOrder.decline.reason.outOfStock":
+    "Das Andenken ist nicht mehr an Lager",
+  "merchantOrder.decline.reason.date":
+    "Wir können es zum gewünschten Datum nicht vorbereiten",
   "merchantOrder.decline.reason.other": "Anderer Grund",
   "merchantOrder.decline.note": "Nachricht an den Gast",
   "merchantOrder.decline.noteOptional": "Nachricht an den Gast (optional)",
-  "merchantOrder.decline.noteHelp": "Der Gast erhält den Grund und diese Nachricht per E-Mail.",
+  "merchantOrder.decline.noteHelp":
+    "Der Gast erhält den Grund und diese Nachricht per E-Mail.",
   "merchantOrder.decline.noteRequired": "Schreiben Sie den Grund für den Gast.",
   "merchantOrder.decline.submit": "Bestellung ablehnen",
   "merchantOrder.decline.confirmTitle": "Bestellung {ref} ablehnen?",
-  "merchantOrder.decline.confirmBody": "{guest} erhält eine E-Mail mit Ihrem Grund. Andere Bestellungen sind nicht betroffen. Das lässt sich nicht rückgängig machen.",
+  "merchantOrder.decline.confirmBody":
+    "{guest} erhält eine E-Mail mit Ihrem Grund. Andere Bestellungen sind nicht betroffen. Das lässt sich nicht rückgängig machen.",
   "merchantOrder.decline.confirm": "Bestellung ablehnen",
   "merchantOrder.decline.keep": "Anfrage behalten",
-  "merchantOrder.items.title": "Geschenke",
+  "merchantOrder.items.title": "Andenken",
   "merchantOrder.items.quantity": "{quantity} × {price}",
   "merchantOrder.items.engraving": "Gravur",
   "merchantOrder.pickup.requested": "Gewünschte Abholung",
@@ -945,6 +1062,9 @@ export const de: Record<MessageKey, string> = {
   "merchantOrder.guest.write": "Dem Gast schreiben",
   "merchantOrder.guest.subject": "Ihre Bestellung {ref}",
   "merchantOrder.copy": "Kopieren",
+  "copyText.copy": "{label} kopieren",
+  "copyText.copied": "{label} kopiert",
+  "copyText.failed": "Kopieren nicht möglich. Bitte den Text markieren.",
   "merchantOrder.copied": "Kopiert",
   "merchantOrder.copyFailed": "Kopieren nicht möglich. Markieren Sie den Text.",
   "merchantOrder.payments.title": "Zahlungen",
@@ -961,12 +1081,15 @@ export const de: Record<MessageKey, string> = {
   "merchantOrder.paymentStatus.failed": "Fehlgeschlagen",
   "merchantOrder.source.title": "Quelle",
   "merchantOrder.source.direct": "Direkt",
-  "merchantOrder.source.partnerNote": "Der letzte Partnerlink, den der Gast innerhalb von 30 Tagen geöffnet hat. Beim Senden der Anfrage festgelegt.",
-  "merchantOrder.source.directNote": "Kein Partnerlink in den 30 Tagen vor der Anfrage.",
+  "merchantOrder.source.partnerNote":
+    "Der letzte Partnerlink, den der Gast innerhalb von 30 Tagen geöffnet hat. Beim Senden der Anfrage festgelegt.",
+  "merchantOrder.source.directNote":
+    "Kein Partnerlink in den 30 Tagen vor der Anfrage.",
   "merchantOrder.commission.title": "Partnerprovision",
   "merchantOrder.commission.basis": "{basis} × {rate}",
   "merchantOrder.commission.total": "Provision",
-  "merchantOrder.commission.note": "Basis ist der Geschenkpreis. Es gilt der Satz, der bei der Bestellung gespeichert wurde. Die Provision wird einmal erfasst, wenn die Bestellung abgeschlossen ist.",
+  "merchantOrder.commission.note":
+    "Basis ist der Andenken-Preis. Es gilt der Satz, der bei der Bestellung gespeichert wurde. Die Provision wird einmal erfasst, wenn die Bestellung abgeschlossen ist.",
   "merchantOrder.log.title": "Bestellverlauf",
   "merchantOrder.log.requested": "Anfrage erhalten",
   "merchantOrder.log.dateChanged": "Abholdatum von {from} auf {to} geändert",
@@ -977,20 +1100,27 @@ export const de: Record<MessageKey, string> = {
   "merchantOrder.log.paymentStarted": "Onlinezahlung über {amount} gestartet",
   "merchantOrder.log.paymentRecorded": "{amount} erfasst ({method})",
   "merchantOrder.log.paymentSucceeded": "Onlinezahlung über {amount} erhalten",
-  "merchantOrder.log.paymentFailed": "Onlinezahlung über {amount} fehlgeschlagen",
+  "merchantOrder.log.paymentFailed":
+    "Onlinezahlung über {amount} fehlgeschlagen",
   "merchantOrder.log.ready": "Als abholbereit markiert",
   "merchantOrder.log.handedOver": "Übergeben",
   "merchantOrder.log.completed": "Abgeschlossen",
-  "merchantOrder.log.cancelledOverdue": "Automatisch storniert: erste Zahlung überfällig",
+  "merchantOrder.log.cancelledOverdue":
+    "Automatisch storniert: erste Zahlung überfällig",
   "merchantOrder.log.cancelledByGuest": "Vom Gast storniert",
   "merchantOrder.log.cancelledByShop": "Vom Geschäft storniert",
   "merchantOrder.actor.system": "System",
   "merchantOrder.policy.title": "Bedingungen zum Zeitpunkt der Bestellung",
-  "merchantOrder.policy.intro": "Diese Bedingungen galten, als die Anfrage gesendet wurde. Spätere Änderungen am Produkt betreffen diese Bestellung nicht.",
-  "merchantOrder.policy.full": "Volle Zahlung von {amount}, fällig innerhalb von {hours} Stunden nach der Annahme. Ohne Zahlung bis dahin wird die Bestellung automatisch storniert.",
-  "merchantOrder.policy.deposit": "Eine Anzahlung von {percent} ({deposit}) ist innerhalb von {hours} Stunden nach der Annahme fällig, der Rest ({balance}) {days} Tage nach der Abholung. Ohne Anzahlung bis dahin wird die Bestellung automatisch storniert.",
-  "merchantOrder.policy.later": "Keine Vorauszahlung. Der Gast bezahlt {amount} innerhalb von {days} Tagen nach der Abholung.",
-  "payment.banner": "Simulierter Zahlungsanbieter · Prototyp · es fliesst kein echtes Geld",
+  "merchantOrder.policy.intro":
+    "Diese Bedingungen galten, als die Anfrage gesendet wurde. Spätere Änderungen am Produkt betreffen diese Bestellung nicht.",
+  "merchantOrder.policy.full":
+    "Volle Zahlung von {amount}, fällig innerhalb von {hours} Stunden nach der Annahme. Ohne Zahlung bis dahin wird die Bestellung automatisch storniert.",
+  "merchantOrder.policy.deposit":
+    "Eine Anzahlung von {percent} ({deposit}) ist innerhalb von {hours} Stunden nach der Annahme fällig, der Rest ({balance}) {days} Tage nach der Abholung. Ohne Anzahlung bis dahin wird die Bestellung automatisch storniert.",
+  "merchantOrder.policy.later":
+    "Keine Vorauszahlung. Der Gast bezahlt {amount} innerhalb von {days} Tagen nach der Abholung.",
+  "payment.banner":
+    "Simulierter Zahlungsanbieter · Prototyp · es fliesst kein echtes Geld",
   "payment.title": "Zahlung",
   "payment.payTo": "Zahlung an",
   "payment.sellerNote": "Verkäufer",
@@ -1004,34 +1134,46 @@ export const de: Record<MessageKey, string> = {
   "payment.choose.processing": "In Bearbeitung",
   "payment.choose.processingHint": "Der Anbieter hat noch nicht geantwortet",
   "payment.failed.title": "Zahlung abgelehnt",
-  "payment.failed.body": "Es wurde kein Geld abgebucht. Sie können es erneut versuchen.",
+  "payment.failed.body":
+    "Es wurde kein Geld abgebucht. Sie können es erneut versuchen.",
   "payment.failed.retry": "Erneut versuchen",
   "payment.processing.title": "Diese Zahlung ist in Bearbeitung",
-  "payment.processing.body": "Der Anbieter hat noch nicht geantwortet. Bitte nicht erneut bezahlen: Ihre Bestellseite aktualisiert sich, sobald er antwortet.",
+  "payment.processing.body":
+    "Der Anbieter hat noch nicht geantwortet. Bitte nicht erneut bezahlen: Ihre Bestellseite aktualisiert sich, sobald er antwortet.",
   "payment.blocked.title": "Hier ist nichts zu bezahlen",
   "payment.back": "Zurück zur Bestellung",
   "payment.loading": "Verbindung zum Zahlungsanbieter …",
   "checkout.title": "Prüfen und senden",
   "checkout.back": "Zurück zum Warenkorb",
-  "checkout.intro": "Jetzt wird nichts belastet. Der Laden bestätigt zuerst jede Bestellung, danach bezahlen Sie, was für diese Bestellung fällig ist.",
-  "checkout.onlyInEnglish": "Einige Angaben zu den Geschenken gibt es nur auf Englisch.",
-  "checkout.onlyInGerman": "Einige Angaben zu den Geschenken gibt es nur auf Deutsch.",
+  "checkout.intro":
+    "Jetzt wird nichts belastet. Der Laden bestätigt zuerst jede Bestellung, danach bezahlen Sie, was für diese Bestellung fällig ist.",
+  "checkout.onlyInEnglish":
+    "Einige Angaben zu den Andenken gibt es nur auf Englisch.",
+  "checkout.onlyInGerman":
+    "Einige Angaben zu den Andenken gibt es nur auf Deutsch.",
   "checkout.item.quantity": "{quantity} × {price}",
   "checkout.order.total": "Total der Bestellung",
   "checkout.order.due": "Fällig nach der Bestätigung",
   "checkout.order.cancellation": "Stornierungsbedingungen",
-  "checkout.rule.full": "Zahlung innerhalb von {hours} Stunden nach der Bestätigung. Ohne Zahlung in dieser Frist wird die Bestellung automatisch storniert.",
-  "checkout.rule.deposit": "Die Anzahlung von {percent} % ist innerhalb von {hours} Stunden nach der Bestätigung fällig. Ohne Zahlung in dieser Frist wird die Bestellung automatisch storniert. Der Rest ({balance}) ist bis {date} fällig.",
-  "checkout.rule.later": "Bei der Bestätigung ist nichts fällig. Sie bezahlen {amount} bis {date}, nach der Abholung.",
+  "checkout.rule.full":
+    "Zahlung innerhalb von {hours} Stunden nach der Bestätigung. Ohne Zahlung in dieser Frist wird die Bestellung automatisch storniert.",
+  "checkout.rule.deposit":
+    "Die Anzahlung von {percent} % ist innerhalb von {hours} Stunden nach der Bestätigung fällig. Ohne Zahlung in dieser Frist wird die Bestellung automatisch storniert. Der Rest ({balance}) ist bis {date} fällig.",
+  "checkout.rule.later":
+    "Bei der Bestätigung ist nichts fällig. Sie bezahlen {amount} bis {date}, nach der Abholung.",
   "checkout.bar.total": "Gesamttotal, zur Information",
   "checkout.bar.send": "Anfrage senden · noch keine Zahlung",
   "checkout.error.stock.title": "Ihre Anfrage wurde nicht gesendet",
   "checkout.error.stock.soldOut": "{item}: ausverkauft",
-  "checkout.error.stock.fewer": "{item}: nur noch {available} verfügbar, Sie möchten {requested}",
-  "checkout.error.stock.message": "Der Bestand hat sich geändert, während Sie geprüft haben. Ihr Warenkorb ist unverändert: Entfernen Sie das Geschenk oder verringern Sie die Anzahl und senden Sie dann erneut.",
+  "checkout.error.stock.fewer":
+    "{item}: nur noch {available} verfügbar, Sie möchten {requested}",
+  "checkout.error.stock.message":
+    "Der Bestand hat sich geändert, während Sie geprüft haben. Ihr Warenkorb ist unverändert: Entfernen Sie das Andenken oder verringern Sie die Anzahl und senden Sie dann erneut.",
   "checkout.error.date.title": "Ihre Anfrage wurde nicht gesendet",
-  "checkout.error.date.message.one": "Für {count} Geschenk kann das Abholdatum nicht mehr angefragt werden. Wählen Sie im Warenkorb ein neues Datum und senden Sie dann erneut.",
-  "checkout.error.date.message.other": "Für {count} Geschenke kann das Abholdatum nicht mehr angefragt werden. Wählen Sie im Warenkorb ein neues Datum und senden Sie dann erneut.",
+  "checkout.error.date.message.one":
+    "Für {count} Andenken kann das Abholdatum nicht mehr angefragt werden. Wählen Sie im Warenkorb ein neues Datum und senden Sie dann erneut.",
+  "checkout.error.date.message.other":
+    "Für {count} Andenken kann das Abholdatum nicht mehr angefragt werden. Wählen Sie im Warenkorb ein neues Datum und senden Sie dann erneut.",
   "checkout.error.action": "Warenkorb bearbeiten",
   "review.write": "Bewertung schreiben",
   "review.writeFor": "Bewertung schreiben: {name}",
@@ -1041,22 +1183,28 @@ export const de: Record<MessageKey, string> = {
   "review.rating.option": "{rating} von 5 Sternen",
   "review.rating.error": "Wählen Sie 1 bis 5 Sterne.",
   "review.text.label": "Ihr Text",
-  "review.text.help": "Wie gefällt Ihnen das Geschenk, und wie war die Abholung?",
-  "review.text.error": "Schreiben Sie ein paar Worte zum Geschenk.",
+  "review.text.help":
+    "Wie gefällt Ihnen das Andenken, und wie war die Abholung?",
+  "review.text.error": "Schreiben Sie ein paar Worte zum Andenken.",
   "review.submit": "Bewertung veröffentlichen",
-  "review.verifiedNote": "Ihre Bewertung erscheint auf der Geschenkseite mit Ihrem Kaufdatum.",
+  "review.verifiedNote":
+    "Ihre Bewertung erscheint auf der Andenken-Seite mit Ihrem Kaufdatum.",
   "review.posted": "Bewertung veröffentlicht. Vielen Dank.",
   "review.failed": "Diese Bestellung kann nicht mehr bewertet werden.",
   "review.yours": "Ihre Bewertung von {name}",
-  "review.viewOnGift": "Auf der Geschenkseite ansehen",
+  "review.viewOnGift": "Auf der Andenken-Seite ansehen",
   "requestSent.title": "Anfrage gesendet",
-  "requestSent.intro.one": "Ihre Anfrage ging als {count} Bestellung an den Verkäufer. Es wurde nichts belastet.",
-  "requestSent.intro.other": "Ihre Anfrage ging als {count} separate Bestellungen an den Verkäufer. Es wurde nichts belastet.",
+  "requestSent.intro.one":
+    "Ihre Anfrage ging als {count} Bestellung an den Verkäufer. Es wurde nichts belastet.",
+  "requestSent.intro.other":
+    "Ihre Anfrage ging als {count} separate Bestellungen an den Verkäufer. Es wurde nichts belastet.",
   "requestSent.orders.title": "Ihre Bestellungen",
   "requestSent.transactions": "Alle unter Meine Transaktionen ansehen",
   "requestSent.next.title": "So geht es weiter",
-  "requestSent.next.confirm": "Bis dahin sind Abholdatum und -ort eine Anfrage. Wir schreiben Ihnen eine E-Mail, sobald der Verkäufer antwortet.",
-  "requestSent.next.pay": "Ist eine Bestellung bestätigt, bezahlen Sie, was dafür fällig ist, wie oben angegeben. Ohne Zahlung in der Frist wird sie automatisch storniert.",
+  "requestSent.next.confirm":
+    "Bis dahin sind Abholdatum und -ort eine Anfrage. Wir schreiben Ihnen eine E-Mail, sobald der Verkäufer antwortet.",
+  "requestSent.next.pay":
+    "Ist eine Bestellung bestätigt, bezahlen Sie, was dafür fällig ist, wie oben angegeben. Ohne Zahlung in der Frist wird sie automatisch storniert.",
   "requestSent.next.pickup": "Jede Bestellung am bestätigten Datum und Ort.",
   "requestSent.explore": "Zurück zu Entdecken",
   "requestSent.empty": "Hier gibt es keine neue Anfrage anzuzeigen.",
@@ -1065,9 +1213,10 @@ export const de: Record<MessageKey, string> = {
   "requestSent.next.now": "Jetzt",
   "requestSent.next.confirm.title": "Der Verkäufer bestätigt jede Bestellung",
   "requestSent.next.pay.title": "Sie bezahlen pro Bestellung",
-  "requestSent.next.pickup.title": "Sie holen Ihre Geschenke ab",
+  "requestSent.next.pickup.title": "Sie holen Ihre Andenken ab",
   "tripProfile.title": "Helfen Sie uns, Ihre Reise zu verstehen",
-  "tripProfile.intro": "Freiwillig: 3 kurze Fragen. Ihre Antworten ändern nichts an Ihren Abholdaten.",
+  "tripProfile.intro":
+    "Freiwillig: 3 kurze Fragen. Ihre Antworten ändern nichts an Ihren Abholdaten.",
   "tripProfile.style.question": "Reisen Sie mit einer Gruppe oder individuell?",
   "tripProfile.style.label": "Reiseart",
   "tripProfile.style.group": "Mit einer Reisegruppe",
@@ -1089,10 +1238,13 @@ export const de: Record<MessageKey, string> = {
   "tripProfile.edit": "Antworten ändern",
   "tripProfile.arrive.short": "Ankunft",
   "tripProfile.leave.short": "Abreise",
-  "tripProfile.introTour": "Freiwillig: 3 kurze Fragen. Ihre Antworten ändern nichts an Ihrem Tourdatum.",
+  "tripProfile.introTour":
+    "Freiwillig: 3 kurze Fragen. Ihre Antworten ändern nichts an Ihrem Tourdatum.",
   "tripCard.title": "Ihre Reise",
-  "tripCard.open.gift": "Noch nicht beantwortet. Ihre Antworten ändern nichts am Abholdatum.",
-  "tripCard.open.tour": "Noch nicht beantwortet. Ihre Antworten ändern nichts am Tourdatum.",
+  "tripCard.open.gift":
+    "Noch nicht beantwortet. Ihre Antworten ändern nichts am Abholdatum.",
+  "tripCard.open.tour":
+    "Noch nicht beantwortet. Ihre Antworten ändern nichts am Tourdatum.",
   "tripCard.note.gift": "Ihre Antworten ändern nichts am Abholdatum.",
   "tripCard.note.tour": "Ihre Antworten ändern nichts am Tourdatum.",
   // Step 1.15: M04 next step (ready, handed over, complete) and M08 Record payment
@@ -1100,15 +1252,15 @@ export const de: Record<MessageKey, string> = {
   "fulfilment.hint.accepted":
     "Wartet auf die erste Zahlung des Gasts. Zahlt der Gast im Laden, erfassen Sie es hier.",
   "fulfilment.hint.preparing":
-    "Wenn das Geschenk bei {place} bereit ist, markieren Sie es als abholbereit. Der Gast erhält eine E-Mail.",
+    "Wenn das Andenken bei {place} bereit ist, markieren Sie es als abholbereit. Der Gast erhält eine E-Mail.",
   "fulfilment.hint.readyOwed":
-    "Wenn der Gast das Geschenk abholt, markieren Sie es als übergeben. Noch {amount} offen.",
+    "Wenn der Gast das Andenken abholt, markieren Sie es als übergeben. Noch {amount} offen.",
   "fulfilment.hint.readyPaid":
-    "Vollständig bezahlt. Wenn der Gast das Geschenk abholt, übergeben und schliessen Sie die Bestellung in einem Schritt ab.",
+    "Vollständig bezahlt. Wenn der Gast das Andenken abholt, übergeben und schliessen Sie die Bestellung in einem Schritt ab.",
   "fulfilment.hint.handedOverOwed":
-    "Der Gast hat das Geschenk. Erfassen Sie die offenen {amount} und schliessen Sie dann die Bestellung ab.",
+    "Der Gast hat das Andenken. Erfassen Sie die offenen {amount} und schliessen Sie dann die Bestellung ab.",
   "fulfilment.hint.handedOverPaid":
-    "Der Gast hat das Geschenk und alles bezahlt. Schliessen Sie die Bestellung ab.",
+    "Der Gast hat das Andenken und alles bezahlt. Schliessen Sie die Bestellung ab.",
   "fulfilment.action.ready": "Als abholbereit markieren",
   "fulfilment.action.handOver": "Als übergeben markieren",
   "fulfilment.action.complete": "Bestellung abschliessen",
@@ -1132,7 +1284,8 @@ export const de: Record<MessageKey, string> = {
   "recordPayment.timeFuture": "Die Zeit darf nicht später als jetzt sein.",
   "recordPayment.note": "Notiz (optional)",
   "recordPayment.noteHelp": "Erscheint im Zahlungsverlauf.",
-  "recordPayment.confirm.cash": "{amount} bar erfassen. Danach offen: {balance}.",
+  "recordPayment.confirm.cash":
+    "{amount} bar erfassen. Danach offen: {balance}.",
   "recordPayment.confirm.bankTransfer":
     "{amount} per Banküberweisung erfassen. Danach offen: {balance}.",
   "recordPayment.confirm.other":
@@ -1145,6 +1298,7 @@ export const de: Record<MessageKey, string> = {
     "{amount} (andere Zahlungsart) nochmals erfassen. Danach offen: {balance}.",
   "recordPayment.recorded": "{amount} erfasst. Offen: {balance}.",
   "merchantToday.title": "Übersicht",
+  "merchantToday.intro": "Was heute zu tun ist und wie die Verkäufe laufen.",
   "merchantToday.tasksHeading": "Zu erledigen",
   "merchantToday.attention": "Braucht Aufmerksamkeit",
   "merchantToday.task.awaitingConfirmation": "Wartet auf Bestätigung",
@@ -1166,7 +1320,7 @@ export const de: Record<MessageKey, string> = {
   "merchantToday.pickups.all": "Alle Bestellungen",
   "merchantToday.pickups.today": "Heute",
   "merchantToday.pickups.empty":
-    "Keine Geschenke in Vorbereitung oder abholbereit.",
+    "Keine Andenken in Vorbereitung oder abholbereit.",
   "merchantToday.empty": "Keine Aufgaben. Neue Anfragen erscheinen hier.",
   "merchantToday.empty.action": "Alle Bestellungen ansehen",
   "partnerReport.period.label": "Zeitraum",
@@ -1181,16 +1335,19 @@ export const de: Record<MessageKey, string> = {
   "partnerReport.number.earned.hintEstimated":
     "+{amount} geschätzt aus offenen Bestellungen",
   "partnerReport.number.paid": "Tatsächlich ausbezahlt",
-  "partnerReport.number.earned.hintRefund": "{recorded} erfasst − {refund} Rückerstattung",
+  "partnerReport.number.earned.hintRefund":
+    "{recorded} erfasst − {refund} Rückerstattung",
   "partnerReport.number.paid.hintOne": "{count} Zahlung in diesem Zeitraum",
   "partnerReport.number.paid.hintOther": "{count} Zahlungen in diesem Zeitraum",
   "partnerReport.number.paid.hintNone": "Keine Zahlung in diesem Zeitraum",
   "partnerReport.number.toPay.hintOffset": "{amount} noch zu verrechnen",
   "partnerReport.number.toPay.hintAfter": "Nach Verrechnung",
   "partnerReport.payments.heading": "Zahlungen und Anpassungen",
-  "partnerReport.payments.carried": "{amount} noch zu verrechnen, übertragen von vor dem {date}",
+  "partnerReport.payments.carried":
+    "{amount} noch zu verrechnen, übertragen von vor dem {date}",
   "partnerReport.payments.payout": "An Sie bezahlt",
-  "partnerReport.payments.adjustment": "Rückerstattung bei {ref}: Provision gesenkt",
+  "partnerReport.payments.adjustment":
+    "Rückerstattung bei {ref}: Provision gesenkt",
   "partnerReport.payments.offset": "Verrechnet mit {ref}",
   "partnerReport.payments.offsetTotal": "Verrechnet in diesem Zeitraum",
   "partnerReport.payments.stillToOffset": "Noch zu verrechnen",
@@ -1250,9 +1407,12 @@ export const de: Record<MessageKey, string> = {
   "cart.noteTitle": "Abholdaten sind Anfragen",
   "cart.selectAll": "Alle auswählen",
   "cart.line.select": "{item} auswählen",
-  "cart.bar.selected.one": "Total für {count} ausgewähltes Geschenk, zur Information",
-  "cart.bar.selected.other": "Total für {count} ausgewählte Geschenke, zur Information",
-  "cart.bar.noneSelected": "Wählen Sie zuerst die Geschenke aus, die Sie anfragen möchten.",
+  "cart.bar.selected.one":
+    "Total für {count} ausgewähltes Andenken, zur Information",
+  "cart.bar.selected.other":
+    "Total für {count} ausgewählte Andenken, zur Information",
+  "cart.bar.noneSelected":
+    "Wählen Sie zuerst die Andenken aus, die Sie anfragen möchten.",
   "cart.line.requestDate": "Abholung angefragt für {date}",
   "cart.bar.selectedCount": "{selected} von {total} ausgewählt",
   "cart.bar.details": "Preisdetails anzeigen",
@@ -1261,8 +1421,8 @@ export const de: Record<MessageKey, string> = {
   "cart.line.each": "pro Stück",
   // 1.11r M04 redesign
   "merchantOrder.facts.label": "Wichtigste Angaben",
-  "merchantOrder.facts.gift": "1 Geschenk",
-  "merchantOrder.facts.gifts": "{count} Geschenke",
+  "merchantOrder.facts.gift": "1 Andenken",
+  "merchantOrder.facts.gifts": "{count} Andenken",
   "merchantOrder.facts.paid": "Bezahlt {amount}",
   "merchantOrder.facts.partner": "Partner",
   "merchantOrder.facts.direct": "Ohne Partner",
@@ -1284,7 +1444,7 @@ export const de: Record<MessageKey, string> = {
   "fulfilment.step.completed": "Abgeschlossen",
   "fulfilment.step.count": "Schritt {n} von {total} · {step}",
   "fulfilment.heading.accepted": "Auf die erste Zahlung warten",
-  "fulfilment.heading.preparing": "Geschenke vorbereiten",
+  "fulfilment.heading.preparing": "Andenken vorbereiten",
   "fulfilment.heading.ready": "Übergabe: {place}",
   "fulfilment.heading.handedOverOwed": "Restbetrag einziehen",
   "fulfilment.heading.handedOverPaid": "Bestellung schliessen",
@@ -1303,9 +1463,11 @@ export const de: Record<MessageKey, string> = {
   "account.profile.language.title": "Sprache",
   "account.profile.language.en": "English",
   "account.profile.language.de": "Deutsch",
-  "account.profile.language.hint": "E-Mails zu einer Bestellung bleiben in der Sprache, in der Sie bestellt haben.",
+  "account.profile.language.hint":
+    "E-Mails zu einer Bestellung bleiben in der Sprache, in der Sie bestellt haben.",
   "account.profile.mail.title": "Gesendete E-Mails",
-  "account.profile.mail.hint": "Updates zu Bestellungen gehen an Ihre E-Mail-Adresse.",
+  "account.profile.mail.hint":
+    "Updates zu Bestellungen gehen an Ihre E-Mail-Adresse.",
   "account.profile.mail.none": "Noch keine E-Mails.",
   "account.profile.sheet.nameRequired": "Geben Sie Ihren Namen ein.",
   "account.editProfile": "Profil bearbeiten",
@@ -1318,7 +1480,7 @@ export const de: Record<MessageKey, string> = {
   "account.section.notifications": "E-Mails und Mitteilungen",
   "account.hub.orders.next": "Nächste Abholung {date} · {name}",
   "account.hub.orders.noneOpen": "Gerade nichts abzuholen",
-  "account.hub.orders.none": "Noch keine Geschenkbestellungen",
+  "account.hub.orders.none": "Noch keine Andenken-Bestellungen",
   "account.hub.bookings.next": "Nächste Tour {date}",
   "account.hub.bookings.noneUpcoming": "Keine anstehenden Touren",
   "account.hub.bookings.none": "Noch keine Tourbuchungen",
@@ -1331,21 +1493,28 @@ export const de: Record<MessageKey, string> = {
   "account.payments.due.amount": "Jetzt zu bezahlen",
   "account.payments.methods.title": "Zahlungsmittel",
   "account.payments.methods.later": "Gespeicherte Karten folgen später",
-  "account.payments.methods.body": "In Ihrem Konto wird nichts gespeichert. Sie bezahlen jede Bestellung auf der Seite des Zahlungsanbieters.",
+  "account.payments.methods.body":
+    "In Ihrem Konto wird nichts gespeichert. Sie bezahlen jede Bestellung auf der Seite des Zahlungsanbieters.",
   "account.mail.where": "Hierhin schreiben wir Ihnen",
   "account.edit.photo.change": "Foto ändern",
   "account.edit.photo.remove": "Foto entfernen",
   "account.edit.photo.hint": "JPG, PNG oder WebP, bis {max}.",
-  "account.edit.photo.errorType": "Diese Datei ist kein Foto. Wählen Sie ein JPG-, PNG- oder WebP-Bild.",
-  "account.edit.photo.errorSize": "Dieses Foto ist {size} gross. Wählen Sie eines bis 2 MB.",
-  "account.edit.photo.errorDecode": "Dieses Foto lässt sich hier nicht öffnen. Versuchen Sie ein JPG oder PNG.",
+  "account.edit.photo.errorType":
+    "Diese Datei ist kein Foto. Wählen Sie ein JPG-, PNG- oder WebP-Bild.",
+  "account.edit.photo.errorSize":
+    "Dieses Foto ist {size} gross. Wählen Sie eines bis 2 MB.",
+  "account.edit.photo.errorDecode":
+    "Dieses Foto lässt sich hier nicht öffnen. Versuchen Sie ein JPG oder PNG.",
   "account.edit.remove.title": "Profilfoto entfernen?",
-  "account.edit.remove.body": "Stattdessen erscheint ein Standardbild. Sie können jederzeit wieder ein Foto hinzufügen.",
+  "account.edit.remove.body":
+    "Stattdessen erscheint ein Standardbild. Sie können jederzeit wieder ein Foto hinzufügen.",
   "account.edit.remove.confirm": "Foto entfernen",
   "account.edit.save": "Speichern",
   "account.edit.crop.title": "Foto ausrichten",
-  "account.edit.crop.frame": "Fotoposition. Ziehen oder mit den Pfeiltasten verschieben.",
-  "account.edit.crop.hint": "Zum Verschieben ziehen. Der Kreis ist das, was andere sehen.",
+  "account.edit.crop.frame":
+    "Fotoposition. Ziehen oder mit den Pfeiltasten verschieben.",
+  "account.edit.crop.hint":
+    "Zum Verschieben ziehen. Der Kreis ist das, was andere sehen.",
   "account.edit.crop.zoom": "Zoom",
   "account.edit.crop.save": "Foto speichern",
   "account.edit.crop.cancel": "Abbrechen",
@@ -1427,4 +1596,23 @@ export const de: Record<MessageKey, string> = {
     "{share} von {total}, mit offenen Bestellungen",
   "overview.allTime.completed": "Abgeschlossene Bestellungen",
   "overview.allTime.completed.caption": "{share} von {total} Bestellungen",
+  "pagination.label": "Seiten",
+  "pagination.summary": "{from}–{to} von {total}",
+  "pagination.summaryOne": "{item} von {total}",
+  "pagination.previous": "Zurück",
+  "pagination.next": "Weiter",
+  "pagination.prevText": "Zurück",
+  "pagination.nextText": "Weiter",
+  "pagination.page": "Seite {page}",
+  "table.actions": "Aktionen",
+  "filter.title": "Filter",
+  "costData.column.sale": "Verkauf",
+  "costData.column.guest": "Gast und Datum",
+  "costData.column.state": "Kostendaten",
+  "costData.column.value": "Verkaufswert",
+  "table.rowActions": "Aktionen für {name}",
+  "rowAction.openOrder": "Bestellung öffnen",
+  "rowAction.editArticle": "Artikel bearbeiten",
+  "rowAction.openRequest": "Anfrage öffnen",
+  "rowAction.openDeparture": "Gästeliste öffnen",
 };

@@ -1,4 +1,5 @@
 import type { Language } from "@/contexts/locale-context";
+import type { LocalizedRich } from "@/lib/rich-text";
 
 /** Text written by the merchant. A language may be missing (R02: publish in one language). */
 export type LocalizedText = Partial<Record<Language, string>>;
@@ -6,22 +7,29 @@ export type LocalizedText = Partial<Record<Language, string>>;
 /** Money in Rappen (1 CHF = 100) so sums never drift. */
 export type Rappen = number;
 
-export type CategoryId =
-  | "pocket-knives"
-  | "gift-boxes"
-  | "chocolate"
-  | "prints"
-  | "small-gifts"
-  | "tours";
+/** The four product categories (PRD §7.0). Fixed: a merchant cannot add, rename or remove them. */
+export type CategoryId = "keepsakes" | "stays" | "experiences" | "tours";
 
 export interface Category {
   id: CategoryId;
   name: LocalizedText;
-  /** Tours are sold from Phase 2; the tile shows "coming soon" until then. */
-  comingSoon?: boolean;
-  /** Photo slug for the category tile and the gifts-list banner. */
+  photo: string;
+  /** Stays and experiences are a later stage: the tile says "soon" and opens nothing yet. */
+  live: boolean;
+}
+
+/**
+ * A store's own grouping inside one category (PRD §7.0), edited by the merchant on M26.
+ * Keepsakes carry the pilot store's five: pocket knives, gift boxes, chocolate, prints and
+ * small gifts. Tours, stays and experiences have none yet.
+ */
+export interface Subcategory {
+  id: string;
+  categoryId: CategoryId;
+  name: LocalizedText;
+  /** Photo slug for the guest tile and the list banner; absent = a neutral keepsake photo. */
   photo?: string;
-  /** One line under the category name in the banner. */
+  /** One line under the sub-category name in the guest banner. */
   tagline?: LocalizedText;
 }
 
@@ -51,26 +59,21 @@ export interface Variant {
   notForSale?: boolean;
 }
 
-/** One chapter of a product's long story (C03 "About this gift"). */
-export interface StoryChapter {
-  title: LocalizedText;
-  body: LocalizedText;
-  /** Photo slug shown above the chapter. */
-  photo?: string;
-}
-
 /**
  * The story behind a gift or tour (business plan: "a keepsake with a story"). Optional.
+ * The body is rich text per language (Tiptap JSON), edited in M12/M13 since 15.10.2026;
+ * stored stories in the older chapter shape are converted on load (demo/upgrade.ts).
  */
 export interface ProductStory {
   title: LocalizedText;
-  chapters: StoryChapter[];
+  body: LocalizedRich;
 }
 
 export interface Product {
   id: string;
   slug: string;
-  categoryId: CategoryId;
+  /** Its category is the sub-category's `categoryId`; a keepsake always has one. */
+  subcategoryId: string;
   name: LocalizedText;
   story: LocalizedText;
   cancellationPolicy: LocalizedText;
@@ -88,6 +91,10 @@ export interface Product {
   longStory?: ProductStory;
   /** Missing counts as published, so stored products from before Phase 4 stay visible. */
   published?: boolean;
+  /** Set when archived in M11: hidden from guests and from M11's active list; restoring makes it a draft. */
+  archivedAt?: string;
+  /** Pickup places that offer this gift (M12); missing means every place (step 4.9). */
+  pickupPlaceIds?: string[];
 }
 
 export interface PickupPlace {

@@ -435,19 +435,13 @@ export function AdviceChat({ onLeave }: { onLeave: () => void }) {
             {question && (
               <>
                 {!isChoice(question) && answerInput(question)}
-                {!question.required &&
-                !isAnswered(advice.values[question.id]) ? (
-                  <Button
-                    fullWidth
-                    size="lg"
-                    variant="secondary"
-                    onPress={() => answer(question, true)}
-                  >
-                    {t("advice.skip")}
-                  </Button>
-                ) : (
-                  // A single choice answers on tap; every other input sends here.
-                  question.type !== "single" && (
+                {/* A single choice answers on tap; every other input sends here. A count
+                    always shows a value, so an optional one (M19, 4.14) can be sent as shown
+                    or skipped. */}
+                {question.type !== "single" &&
+                  (question.required ||
+                    question.type === "number" ||
+                    isAnswered(advice.values[question.id])) && (
                     <Button
                       fullWidth
                       size="lg"
@@ -456,8 +450,18 @@ export function AdviceChat({ onLeave }: { onLeave: () => void }) {
                       <SendIcon aria-hidden size={18} />
                       {t("advice.send")}
                     </Button>
-                  )
-                )}
+                  )}
+                {!question.required &&
+                  !isAnswered(advice.values[question.id]) && (
+                    <Button
+                      fullWidth
+                      size="lg"
+                      variant="secondary"
+                      onPress={() => answer(question, true)}
+                    >
+                      {t("advice.skip")}
+                    </Button>
+                  )}
               </>
             )}
 

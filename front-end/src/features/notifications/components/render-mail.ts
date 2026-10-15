@@ -1,6 +1,7 @@
 import type { Mail } from "../types";
 import type { Language } from "@/contexts/locale-context";
 import type { PickupPlace } from "@/features/catalog/types";
+import type { Role } from "@/features/demo/types";
 import type { MessageKey } from "@/i18n/en";
 
 import { shop } from "@/features/catalog/seed";
@@ -11,6 +12,7 @@ import {
 import { de } from "@/i18n/de";
 import { en } from "@/i18n/en";
 import { renderTourMail } from "@/features/tours/merchant/lib/render-mail";
+import { renderRequestMail } from "@/features/requests/lib/render-request-mail";
 import { formatMoney } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
@@ -20,6 +22,8 @@ export interface RenderedMail {
   subject: string;
   /** Paragraphs of the email body. */
   body: string[];
+  /** The mail's button (N16, N17): a hash link into the shop, opened as `role`. */
+  link?: { label: string; href: string; role: Role };
 }
 
 type Template = { subject: MessageKey; body: MessageKey[] };
@@ -182,6 +186,8 @@ function formatParams(
  */
 export function renderMail(mail: Mail, places: PickupPlace[]): RenderedMail {
   if (mail.bookingId) return renderTourMail(mail);
+  if (mail.template === "N16" || mail.template === "N17")
+    return renderRequestMail(mail);
   const copy = messages[mail.language];
   const template = (
     mail.to === "staff"

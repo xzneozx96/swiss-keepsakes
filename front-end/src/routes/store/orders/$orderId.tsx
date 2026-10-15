@@ -1,9 +1,9 @@
 import type { Order } from "@/features/orders/types";
 
-import { Skeleton } from "@heroui/react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/empty-state";
+import { DetailSkeleton } from "@/components/layout/detail-skeletons";
 import { OrdersIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { MerchantOrderDetail } from "@/features/merchant/order-detail/components/merchant-order-detail";
@@ -23,18 +23,7 @@ function OrderDetailPage() {
   const order = useOrder(orderId);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col gap-5 lg:gap-6">
-        <Skeleton className="h-4 w-24 rounded-lg" />
-        <Skeleton className="h-8 w-1/2 rounded-lg" />
-        <Skeleton className="h-7 w-2/3 rounded-full" />
-        <Skeleton className="h-52 rounded-3xl sm:h-28" />
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <Skeleton className="h-96 rounded-3xl" />
-          <Skeleton className="hidden h-64 rounded-3xl lg:block" />
-        </div>
-      </div>
-    );
+    return <DetailSkeleton chips={2} facts={3} side={3} />;
   }
 
   if (!order) {

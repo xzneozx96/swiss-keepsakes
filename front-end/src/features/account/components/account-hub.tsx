@@ -117,7 +117,7 @@ export function AccountHub({
             type="button"
             onClick={onSignOut}
           >
-            <RowIcon icon={LogoutIcon} />
+            <RowIcon icon={LogoutIcon} tone="danger" />
             <span className="flex-1 font-medium">{t("account.signOut")}</span>
           </button>
         </li>

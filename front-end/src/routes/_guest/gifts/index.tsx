@@ -1,5 +1,3 @@
-import type { CategoryId } from "@/features/catalog/types";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { useLocale } from "@/contexts/locale-context";
@@ -8,28 +6,30 @@ import {
   GiftList,
 } from "@/features/catalog/components/gift-list";
 import { useProductCard } from "@/features/catalog/hooks/use-product-card";
-import { categories } from "@/features/catalog/seed";
+import { isPublished } from "@/features/catalog/lib/publish";
 import { useDemo } from "@/features/demo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { pickText } from "@/lib/localized";
 
 interface GiftsSearch {
-  /** Category from the discovery home or the filter rail; absent = all gifts. */
-  category?: CategoryId;
+  /** Sub-category from the discovery home or the filter rail; absent = all keepsakes. */
+  subcategory?: string;
   /** Free-text search from the home search pill or the search field. */
   q?: string;
 }
 
-const giftCategories = categories.filter((c) => !c.comingSoon);
-
 // C02 Gifts: list, category filter and search.
 export const Route = createFileRoute("/_guest/gifts/")({
   validateSearch: (search: Record<string, unknown>): GiftsSearch => {
-    const category = giftCategories.find((c) => c.id === search.category)?.id;
+    // The store's own sub-categories are in demo state, so the page checks the id.
+    const subcategory =
+      typeof search.subcategory === "string" && search.subcategory
+        ? search.subcategory
+        : undefined;
     const q =
       typeof search.q === "string" && search.q.trim() ? search.q : undefined;
 
-    return { ...(category && { category }), ...(q && { q }) };
+    return { ...(subcategory && { subcategory }), ...(q && { q }) };
   },
   component: GiftsPage,
 });
@@ -37,15 +37,24 @@ export const Route = createFileRoute("/_guest/gifts/")({
 function GiftsPage() {
   const { t, language, intlLocale } = useLocale();
   const { state } = useDemo();
-  const { category, q = "" } = Route.useSearch();
+  const { subcategory, q = "" } = Route.useSearch();
   const navigate = useNavigate({ from: "/gifts/" });
   const toCard = useProductCard();
   const isLoading = useSimulatedLoading();
 
-  const selected = giftCategories.find((c) => c.id === category);
+  // Only sub-categories a guest can buy from: at least one published keepsake in them.
+  const giftCategories = state.data.subcategories.filter(
+    (c) =>
+      c.categoryId === "keepsakes" &&
+      state.data.products.some(
+        (p) => p.subcategoryId === c.id && isPublished(p),
+      ),
+  );
+  const selected = giftCategories.find((c) => c.id === subcategory);
   const query = q.trim().toLocaleLowerCase(intlLocale);
   const cards = state.data.products
-    .filter((p) => !category || p.categoryId === category)
+    // A draft from M12 is hidden from guests (4.9).
+    .filter((p) => isPublished(p) && (!selected || p.subcategoryId === selected.id))
     .map(toCard)
     .filter(
       (c) => !query || c.name.toLocaleLowerCase(intlLocale).includes(query),
@@ -105,12 +114,12 @@ function GiftsPage() {
             photo: c.photo,
           })),
         ],
-        selected: category ?? ALL_CATEGORIES,
+        selected: selected?.id ?? ALL_CATEGORIES,
         onChange: (id) =>
           void navigate({
             search: (prev) => ({
               ...prev,
-              category: id === ALL_CATEGORIES ? undefined : (id as CategoryId),
+              subcategory: id === ALL_CATEGORIES ? undefined : id,
             }),
             replace: true,
           }),

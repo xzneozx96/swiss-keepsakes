@@ -1,6 +1,7 @@
 import type { CostFilter, CostRow, CostWeek } from "../hooks/use-cost-data";
+import type { DataTableColumn } from "@/components/data-table";
 
-import { Button, Skeleton, Tag, TagGroup } from "@heroui/react";
+import { Button, Tag, TagGroup } from "@heroui/react";
 import { useState } from "react";
 import {
   Bar,
@@ -17,9 +18,11 @@ import { useCostData } from "../hooks/use-cost-data";
 
 import { CostSheet } from "./cost-sheet";
 
-import { EmptyState } from "@/components/empty-state";
-import { CloseIcon, ReportsIcon } from "@/components/icons";
+import { DataTable } from "@/components/data-table";
+import { MerchantPageHeader } from "@/components/layout/merchant-page-header";
+import { CloseIcon, EditIcon, ReportsIcon } from "@/components/icons";
 import { Media } from "@/components/media";
+import { RowActions } from "@/components/row-actions";
 import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
 import {
@@ -232,6 +235,132 @@ function CostItem({ row, onOpen }: { row: CostRow; onOpen: () => void }) {
   );
 }
 
+/** From 1024px: the sales as a table, the card list of phones under it. */
+function CostRows({
+  rows,
+  label,
+  resetKey,
+  empty,
+  isLoading,
+  onOpen,
+}: {
+  rows: CostRow[];
+  label: string;
+  resetKey: string;
+  empty: { message: string };
+  isLoading: boolean;
+  onOpen: (row: CostRow) => void;
+}) {
+  const { t } = useLocale();
+  const columns: DataTableColumn<CostRow>[] = [
+    {
+      id: "sale",
+      header: t("costData.column.sale"),
+      isRowHeader: true,
+      skeleton: "lead",
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <Media
+            alt=""
+            className="size-10 shrink-0 rounded-lg"
+            photo={row.photo}
+          />
+          <div className="flex min-w-0 flex-col">
+            <span className="font-semibold">
+              {row.title}
+              {row.more && (
+                <span className="ms-1 font-normal text-muted">{row.more}</span>
+              )}
+            </span>
+            <a
+              className="w-fit rounded text-label text-muted underline-offset-4 outline-none hover:underline focus-visible:focus-ring"
+              href={row.href}
+            >
+              {row.ref}
+            </a>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "guest",
+      header: t("costData.column.guest"),
+      skeleton: "two-line",
+      render: (row) => (
+        <div className="flex flex-col">
+          <span>{row.guest || "–"}</span>
+          <span className="text-label text-muted">{row.date}</span>
+        </div>
+      ),
+    },
+    {
+      id: "state",
+      header: t("costData.column.state"),
+      skeleton: "chip",
+      cellClassName: "py-2",
+      render: (row) => (
+        <div className="flex flex-col items-start gap-1.5 [&_svg]:shrink-0">
+          <StatusChip tone={row.state.tone}>{row.state.text}</StatusChip>
+          {row.missing.length > 0 && (
+            <span className="text-label text-muted">
+              {t("costData.missingList", {
+                items: row.missing
+                  .map((type) => t(`costData.type.${type}`))
+                  .join(", "),
+              })}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      id: "value",
+      header: t("costData.column.value"),
+      cellClassName: "whitespace-nowrap tabular-nums",
+      render: (row) => row.value,
+    },
+  ];
+
+  return (
+    <DataTable
+      cards={(page) => (
+        <ul
+          aria-label={label}
+          className="flex flex-col divide-y divide-separator rounded-3xl bg-surface px-4 shadow-surface"
+        >
+          {page.map((row) => (
+            <CostItem key={row.key} row={row} onOpen={() => onOpen(row)} />
+          ))}
+        </ul>
+      )}
+      columns={columns}
+      empty={{ icon: ReportsIcon, message: empty.message }}
+      getRowId={(row) => row.key}
+      isLoading={isLoading}
+      label={label}
+      resetKey={resetKey}
+      rowActions={{
+        render: (row) => (
+          <RowActions
+            actions={[
+              {
+                id: "cost",
+                label: t(
+                  row.missing.length ? "costData.enter" : "costData.edit",
+                ),
+                icon: EditIcon,
+              },
+            ]}
+            label={t("table.rowActions", { name: row.ref })}
+            onAction={() => onOpen(row)}
+          />
+        ),
+      }}
+      rows={rows}
+    />
+  );
+}
+
 /**
  * M24 Cost data (spec §4.13, R14, step 5.8): why it exists in one sentence, the weekly
  * completeness chart, the filter chips, then completed sales as M03-style rows; each opens
@@ -258,10 +387,11 @@ export function CostDataPage({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-title">{t("costData.title")}</h1>
-        <p className="text-sm text-pretty text-muted">{t("costData.intro")}</p>
-      </div>
+      <MerchantPageHeader
+        back={{ label: t("reports.title"), to: "/store/reports/margin" }}
+        description={t("costData.intro")}
+        title={t("costData.title")}
+      />
 
       <WeeksChart
         labels={{
@@ -308,29 +438,18 @@ export function CostDataPage({
         )}
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-col gap-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-3xl" />
-          ))}
-        </div>
-      ) : rows.length ? (
-        <ul
-          aria-label={t("costData.title")}
-          className="flex flex-col divide-y divide-separator rounded-3xl bg-surface px-4 shadow-surface"
-        >
-          {rows.map((row) => (
-            <CostItem key={row.key} row={row} onOpen={() => setOpen(row)} />
-          ))}
-        </ul>
-      ) : (
-        <EmptyState
-          icon={ReportsIcon}
-          message={t(
+      <CostRows
+        empty={{
+          message: t(
             filter === "missing" ? "costData.emptyMissing" : "costData.empty",
-          )}
-        />
-      )}
+          ),
+        }}
+        isLoading={isLoading}
+        label={t("costData.title")}
+        resetKey={`${filter}|${week ?? ""}`}
+        rows={rows}
+        onOpen={setOpen}
+      />
 
       {open && <CostSheet row={open} onClose={() => setOpen(null)} />}
     </div>

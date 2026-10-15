@@ -1,7 +1,7 @@
-import { Skeleton } from "@heroui/react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/empty-state";
+import { DetailSkeleton } from "@/components/layout/detail-skeletons";
 import { PartnersIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { PartnerDetail } from "@/features/merchant/partners/components/partner-detail";
@@ -20,14 +20,7 @@ function PartnerDetailPage() {
   const view = usePartnerDetail(partnerId);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col gap-5 lg:gap-6">
-        <Skeleton className="h-4 w-24 rounded-lg" />
-        <Skeleton className="h-8 w-1/2 rounded-lg" />
-        <Skeleton className="h-52 rounded-3xl sm:h-28" />
-        <Skeleton className="h-96 rounded-3xl" />
-      </div>
-    );
+    return <DetailSkeleton chips={1} facts={3} side={0} />;
   }
 
   if (!view) {

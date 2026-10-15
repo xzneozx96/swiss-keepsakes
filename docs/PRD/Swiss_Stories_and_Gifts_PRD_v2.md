@@ -70,7 +70,7 @@ Hồ sơ chuyến đi có lựa chọn **đi theo đoàn hoặc tự túc**, **n
 | Năng lực | Phase 1 | Giai đoạn mở rộng |
 | --- | --- | --- |
 | Cửa hàng và nhân sự | Một merchant mở bán là Chị Ngọc; Owner và Store Manager; một trang khám phá chung phục vụ cả bốn nhóm khách và trang cửa hàng | Super Admin mời merchant độc lập; dữ liệu, nhân sự và tài khoản nhận tiền riêng; landing page theo chiến dịch khi cần |
-| Danh mục giao dịch | Hàng hóa và tour có lịch cố định; tour riêng nhận yêu cầu báo giá theo nhóm | Lưu trú theo loại phòng hoặc nguyên căn; trải nghiệm có lịch cố định |
+| Danh mục giao dịch | Hàng hóa và tour có lịch cố định; tour riêng nhận yêu cầu báo giá theo nhóm. Lưu trú và Trải nghiệm hiển thị là danh mục "Soon" (trống, chưa có sản phẩm, không bán) trên trang khám phá và trong tab Sản phẩm của merchant (mục 7.0) | Lưu trú theo loại phòng hoặc nguyên căn; trải nghiệm có lịch cố định |
 | Khách và giao dịch | Google hoặc mã xác nhận email; giỏ hàng hóa, checkout tour riêng, xem giao dịch và trả dư nợ | Giỏ hàng hóa nhiều merchant; checkout chung khi điều kiện tương thích, tạo đơn riêng từng merchant |
 | Vận hành và tiền | Chính sách trả toàn bộ, đặt cọc hoặc không trả trước; cập nhật thực hiện; thu số dư online hoặc ghi nhận thu bên ngoài; hủy và hoàn tiền | Cùng quy tắc nền cho loại dịch vụ và merchant mới |
 | Giới thiệu và hoa hồng | QR, link, last-click, tỷ lệ từng sản phẩm, báo cáo riêng cho đối tác, ghi nhận chi trả ngoài hệ thống | Mở rộng mạng lưới và giải quyết attribution giữa nhiều merchant |
@@ -131,6 +131,8 @@ Mỗi đối tác có QR hoặc link riêng. Khách có thể vào trực tiếp
 
 ### 6.2 Khách mua quà
 
+*Ghi chú nhãn (15/10/2026): trên giao diện, nhóm hàng hóa này mang nhãn **Keepsakes** (EN) và **Andenken** (DE); nhãn cũ "Gifts/Geschenke" không còn dùng. Xem mục 7.0.*
+
 1. Khách xem thông tin sản phẩm, chọn thuộc tính, số lượng và nội dung cá nhân hóa nếu có.
 2. Khách nhập ngày mong muốn nhận hàng và chọn một điểm hoặc cách nhận trong danh sách merchant cấu hình. Hệ thống đối chiếu tồn và thời gian chuẩn bị của sản phẩm.
 3. Khách đăng nhập, xem lại lựa chọn, tổng tiền và chính sách, rồi gửi yêu cầu đặt hàng **chưa thanh toán**. Đơn ở trạng thái **Chờ người bán xác nhận**.
@@ -176,7 +178,43 @@ Khách mở widget, trả lời lần lượt bộ câu hỏi của cửa hàng 
 
 Merchant đăng nhiều sản phẩm, mỗi sản phẩm có cấu hình riêng. Cần phân biệt loại nghiệp vụ như hàng hóa, tour, lưu trú, trải nghiệm với danh mục như dao hoặc moto tour, và thuộc tính như kích thước hoặc thiết kế. Thuộc tính không bị giới hạn ở kích thước.
 
+### 7.0 Danh mục và danh mục con
+
+**Đã chốt ngày 15/10/2026 (chủ sản phẩm).** Từ mục này trở đi dùng hai thuật ngữ thống nhất: **Category (danh mục)** và **Sub-category (danh mục con)**; không dùng song song "loại" và "danh mục" như đoạn mở đầu mục 7 ở trên.
+
+**Bốn danh mục cố định.** Chỉ có bốn danh mục, do hệ thống định nghĩa, merchant không thêm, sửa hay xóa được:
+
+| Danh mục | Trạng thái Phase 1 | Danh mục con |
+| --- | --- | --- |
+| Keepsakes (Andenken) | Đang bán (hàng hóa, mục 7.2) | Có, merchant quản lý |
+| Tours | Đang bán (mục 7.3) | Chưa có |
+| Stays | "Soon": hiển thị, trống, không có sản phẩm, không có trình soạn thảo (mục 7.4) | Chưa có |
+| Experiences | "Soon": hiển thị, trống, không có sản phẩm, không có trình soạn thảo (mục 7.5) | Chưa có |
+
+**Danh mục con theo từng cửa hàng.** Mỗi cửa hàng có danh sách danh mục con riêng, **merchant tự chỉnh**: thêm, đổi tên bằng EN/DE (ít nhất một ngôn ngữ), sắp xếp thứ tự và xóa. Mỗi danh mục con thuộc đúng một danh mục. Hiện chỉ Keepsakes có danh mục con; Tours, Stays và Experiences chưa có. Cửa hàng thử nghiệm của Chị Ngọc dùng năm danh mục con dưới Keepsakes (mục 7.1).
+
+**Quy tắc sản phẩm và danh mục con**
+- Một keepsake (sản phẩm) thuộc đúng một danh mục con; danh mục của sản phẩm suy ra từ danh mục con đó.
+- Trình soạn thảo yêu cầu chọn danh mục con mới cho xuất bản; bản nháp được lưu khi chưa chọn.
+- Danh mục con còn sản phẩm được đổi tên nhưng **không được xóa**. Màn hình quản lý hiện số sản phẩm và chặn nút xóa, nên không có sản phẩm nào bị mất danh mục. Muốn xóa, merchant chuyển hết sản phẩm sang danh mục con khác trước.
+- Không trùng tên giữa các danh mục con của cùng cửa hàng; tên không được để trống ở cả hai ngôn ngữ.
+
+**Hành vi với khách**
+- Trang khám phá hiện bốn danh mục; Stays và Experiences gắn nhãn "Soon".
+- Danh sách Keepsakes lọc theo danh mục con của cửa hàng. Khách chỉ thấy danh mục con có ít nhất một keepsake đã xuất bản.
+- "Browse" trong tìm kiếm hiện các danh mục con đó cùng Tours.
+
+**Hành vi với merchant.** Tab Sản phẩm gồm Keepsakes, Tours, Stays (Soon), Experiences (Soon) và Pickup points. Tab Keepsakes có bộ lọc Status (Active/Archived) và Sub-category, cùng liên kết "Manage categories" tới màn hình quản lý danh mục (M26 trong đặc tả UX).
+
+**Nhãn.** Nhãn giao diện "Gifts/Geschenke" được thay bằng **Keepsakes** (EN) và **Andenken** (DE) trên toàn ứng dụng, cho cả khách và merchant. Chỉ đổi nhãn hiển thị; tên mã và đường dẫn (ví dụ `/gifts`, `GiftEditor`) giữ nguyên. Văn xuôi tiếng Việt trong tài liệu này vẫn dùng "quà" để chỉ khái niệm.
+
+**Dữ liệu.** Category là tập cố định {keepsakes, stays, experiences, tours}; Subcategory gồm id, categoryId, tên EN/DE, ảnh và tagline (tùy chọn), lưu theo cửa hàng; sản phẩm giữ `subcategoryId`. Dữ liệu demo lưu trước thay đổi này được nâng cấp tại chỗ: id danh mục cũ trở thành danh mục con của Keepsakes.
+
+**Chưa làm / giới hạn:** danh mục con do merchant tạo chưa có trình soạn ảnh và tagline (ô của khách dùng ảnh keepsake trung tính); danh mục con của Tours, Stays, Experiences chưa được quản lý.
+
 ### 7.1 Danh mục thử nghiệm của khách hàng
+
+*Cập nhật 15/10/2026: năm nhóm dưới đây là **danh mục con của cửa hàng thử nghiệm (Chị Ngọc) thuộc Keepsakes**: Pocket knives (Taschenmesser), Gift boxes (Geschenkboxen), Chocolate (Schokolade), Prints (Drucke), Small gifts (Kleine Geschenke). Bảng ngay dưới là kỳ vọng danh mục và giá trong kế hoạch kinh doanh, không phải danh sách danh mục con đã cấu hình.*
 
 | Danh mục | Nội dung | Giá minh họa trong kế hoạch kinh doanh |
 | --- | --- | --- |
@@ -214,6 +252,8 @@ Trang tour cần thể hiện mô tả, ảnh, thời lượng, lịch trình, p
 
 ### 7.4 Lưu trú ở giai đoạn sau
 
+*Từ 15/10/2026, Stays đã hiện là danh mục "Soon" (trống, không sản phẩm, không trình soạn thảo) trên trang khám phá và trong tab Sản phẩm của merchant; chưa bán và chưa có danh mục con (mục 7.0).*
+
 Merchant có thể bán theo loại phòng hoặc cho thuê nguyên căn, chỗ ở riêng biệt. Merchant cấu hình nội dung, giá và lịch trống theo đêm. Khách chọn ngày check-in, check-out, số khách, phòng hoặc căn và gói giá. Booking xác nhận tự động khi đủ khả dụng cho toàn bộ kỳ ở và đáp ứng chính sách thanh toán.
 
 **Đề xuất:** hiển thị sức chứa, tiện nghi, địa chỉ, giờ nhận và trả phòng, nội quy, ảnh, thuế và phí, chính sách trẻ em và hủy. Đặt theo loại phòng trừ số phòng khả dụng; đặt nguyên căn giữ đơn vị được đặt. Đêm check-out không tính thêm một đêm ở. Giá và chính sách của booking được giữ theo thời điểm đặt.
@@ -221,6 +261,8 @@ Merchant có thể bán theo loại phòng hoặc cho thuê nguyên căn, chỗ 
 **Còn mở:** giá theo đêm hoặc theo người, phụ thu và thuế địa phương, số đêm tối thiểu, cấp phòng cụ thể, hạn thu số dư, no-show và đồng bộ lịch bên ngoài. Không mặc định có tích hợp Booking.com hay channel manager OTA.
 
 ### 7.5 Trải nghiệm ở giai đoạn sau
+
+*Từ 15/10/2026, Experiences đã hiện là danh mục "Soon" (trống, không sản phẩm, không trình soạn thảo) trên trang khám phá và trong tab Sản phẩm của merchant; chưa bán và chưa có danh mục con (mục 7.0).*
 
 Trải nghiệm chỉ có lịch cố định. Merchant cấu hình ngày, khung giờ, giá, số chỗ và nội dung. Ví dụ gồm workshop, một ngày làm nông dân hoặc một ngày làm thợ đồng hồ. Không có luồng khách đề xuất ngày tùy ý rồi chờ báo giá trong phạm vi hiện tại.
 

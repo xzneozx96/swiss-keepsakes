@@ -5,6 +5,11 @@ export const Route = createFileRoute("/lab/")({ component: LabIndex });
 
 const experiments = [
   {
+    to: "/lab/private-tour" as const,
+    title: "Private-tour call to action",
+    note: "Five options for the block under the tour list, after the home Polaroid stack (15.10.2026).",
+  },
+  {
     to: "/lab/cards" as const,
     title: "Gift card options",
     note: "Five layouts for the shared gift card. D chosen on 13.10.2026.",

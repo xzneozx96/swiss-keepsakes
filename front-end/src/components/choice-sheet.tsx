@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 
 import { Button, Drawer } from "@heroui/react";
 
+import { useSheetExit } from "@/components/sheet-exit";
+
 /**
  * The bottom sheet where a guest makes a listing's choices and commits them with one full-width
  * button: C03 "Your gift" (Add to cart · CHF) and C10 departure and group (Review booking · CHF).
@@ -26,10 +28,13 @@ export function ChoiceSheet({
   onOpenChange: (open: boolean) => void;
   children: ReactNode;
 }) {
+  const exitRef = useSheetExit();
+
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
         <Drawer.Dialog className="flex sheet-max flex-col">
+          <span ref={exitRef} hidden />
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-between">
             <Drawer.Heading className="font-serif text-title">

@@ -1,6 +1,12 @@
-import type { AdviceDraft, AdviceQuestion, AdviceValue } from "../types";
+import type {
+  AdviceDraft,
+  AdviceQuestion,
+  AdviceRequest,
+  AdviceValue,
+} from "../types";
 
 import { displayAnswer, isAnswered, looksLikeEmail } from "../lib/answers";
+import { mailAdviceRequest } from "../lib/request-mail";
 
 import { useLocale } from "@/contexts/locale-context";
 import { useDemo } from "@/features/demo";
@@ -88,34 +94,38 @@ export function useAdvice() {
       const requestId = `adv-${Date.now().toString(36)}`;
 
       update((s) => {
-        return {
-          ...s,
-          data: {
-            ...s.data,
-            adviceDraft: undefined,
-            adviceRequests: [
-              ...s.data.adviceRequests,
-              {
-                id: requestId,
-                sentAt: demoNow(s.clockStartedAt).toISOString(),
-                language,
-                email,
-                answers: questions
-                  .filter((q) => isAnswered(draft.values[q.id]))
-                  .map((q) => {
-                    const shown = questionText(q);
+        const request: AdviceRequest = {
+          id: requestId,
+          sentAt: demoNow(s.clockStartedAt).toISOString(),
+          language,
+          email,
+          answers: questions
+            .filter((q) => isAnswered(draft.values[q.id]))
+            .map((q) => {
+              const shown = questionText(q);
 
-                    return {
-                      questionId: q.id,
-                      question: shown.text,
-                      questionLanguage: shown.language,
-                      answer: answerText(q),
-                    };
-                  }),
-              },
-            ],
-          },
+              return {
+                questionId: q.id,
+                question: shown.text,
+                questionLanguage: shown.language,
+                answer: answerText(q),
+              };
+            }),
         };
+
+        // N16 goes to the shop's current request address, even for a draft begun earlier.
+        return mailAdviceRequest(
+          {
+            ...s,
+            data: {
+              ...s.data,
+              adviceDraft: undefined,
+              adviceRequests: [...s.data.adviceRequests, request],
+            },
+          },
+          request,
+          s.data.adviceQuestions.recipientEmail,
+        );
       });
 
       return { ok: true, requestId };

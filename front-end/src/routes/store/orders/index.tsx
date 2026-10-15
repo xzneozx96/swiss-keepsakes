@@ -44,6 +44,7 @@ function OrdersPage() {
         message: t("merchantOrders.empty", { tab: selectedLabel }),
         actionLabel: t("merchantOrders.empty.action"),
       }}
+      intro={t("merchantOrders.intro")}
       isLoading={isLoading}
       rows={rows}
       selected={status}

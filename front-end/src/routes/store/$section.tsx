@@ -6,15 +6,9 @@ import { EmptyState } from "@/components/empty-state";
 import { MoreIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 
-const sections: MerchantSection[] = [
-  "bookings",
-  "products",
-  "content",
-  "requests",
-  "settings",
-];
+const sections: MerchantSection[] = ["settings"];
 
-// Dashboard sections from later phases (bookings, products, content, requests, settings).
+// Dashboard sections from later phases: only Settings (Phase 6) is still a placeholder.
 export const Route = createFileRoute("/store/$section")({
   beforeLoad: ({ params }) => {
     if (!sections.includes(params.section as MerchantSection)) throw notFound();

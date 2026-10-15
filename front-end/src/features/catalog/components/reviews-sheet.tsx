@@ -6,6 +6,8 @@ import { Drawer } from "@heroui/react";
 import { ReviewItem } from "./review-item";
 import { ReviewSummary } from "./review-summary";
 
+import { useSheetExit } from "@/components/sheet-exit";
+
 export interface ReviewsSheetProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,10 +35,13 @@ export function ReviewsSheet({
   overall,
   items,
 }: ReviewsSheetProps) {
+  const exitRef = useSheetExit();
+
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
         <Drawer.Dialog aria-label={title} className="flex h-[94dvh] flex-col">
+          <span ref={exitRef} hidden />
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-start">
             <Drawer.CloseTrigger aria-label={closeLabel} />

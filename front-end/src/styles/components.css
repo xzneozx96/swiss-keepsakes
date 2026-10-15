@@ -256,3 +256,28 @@
 .alert.alert--soft .alert__description {
   color: var(--muted);
 }
+
+/* Table rows hover lighter than HeroUI's see-through surface (owner, 15.10.2026). */
+@media (hover: hover) {
+  .table__row:hover .table__cell,
+  .table__row[data-hovered="true"] .table__cell {
+    background-color: color-mix(in oklab, var(--surface-secondary) 45%, var(--surface));
+  }
+}
+
+/*
+ * Tables inside a card (DataTable variant "secondary") use the plain header of the report
+ * tables (owner, 15.10.2026): muted labels with no strip and no column separators, and no
+ * line under the last row.
+ */
+.table-root--secondary .table__column {
+  background-color: transparent;
+}
+
+.table-root--secondary .table__column::after {
+  content: none;
+}
+
+.table-root--secondary .table__row:last-child .table__cell {
+  border-bottom-width: 0;
+}

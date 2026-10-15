@@ -46,5 +46,10 @@ export interface Mail {
   orderId?: string;
   /** Tour booking mail (flow 2); rendered by the tour templates. */
   bookingId?: string;
+  /**
+   * Staff mail to one address or person rather than the whole staff (step 4.17): the
+   * M19 request address for N16, or the Owner or the Manager for N17. Shown as the To line.
+   */
+  recipient?: string;
   params: MailParams;
 }

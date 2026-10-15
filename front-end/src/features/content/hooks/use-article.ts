@@ -88,8 +88,13 @@ export function useArticle(slug: string): ArticleView | null {
     };
   };
 
-  const visible = state.data.comments
-    .filter((c) => c.articleId === article.id && !c.hidden)
+  const shown = state.data.comments.filter(
+    (c) => c.articleId === article.id && !c.hidden,
+  );
+  const shownIds = new Set(shown.map((c) => c.id));
+  // A reply hides with its comment (M18 hides a whole thread), so it is not counted either.
+  const visible = shown
+    .filter((c) => !c.parentId || shownIds.has(c.parentId))
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   // Threads by latest activity, so a new comment or reply shows in the first three (C20).
   const lastActivity = (c: ArticleComment) =>

@@ -1,37 +1,41 @@
-import type { ReportPeriod } from "@/features/partners/report/lib/report";
+import type { SalesPeriodId } from "@/features/merchant/sales/lib/periods";
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { PartnerShell } from "@/components/layout/partner-shell";
-import { useLocale } from "@/contexts/locale-context";
 import { PartnerAccessScreen } from "@/features/partners/access/partner-access-screen";
 import { usePartnerAccess } from "@/features/partners/hooks/use-partner-access";
-import { PartnerReport } from "@/features/partners/report/components/partner-report";
-import { usePartnerReport } from "@/features/partners/report/hooks/use-partner-report";
-import {
-  DEFAULT_REPORT_PERIOD,
-  isReportPeriod,
-} from "@/features/partners/report/lib/report";
+import { PartnerDashboard } from "@/features/partners/report/components/partner-dashboard";
+import { usePartnerOverview } from "@/features/partners/report/hooks/use-partner-overview";
+import { SALES_PERIODS } from "@/features/merchant/sales/lib/periods";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 
 interface PartnerSearch {
-  /** Absent = month. */
-  period?: ReportPeriod;
-  /** Any Zurich day in the period, YYYY-MM-DD. Absent = today. */
-  date?: string;
+  /** Absent = the last 4 weeks. */
+  period?: SalesPeriodId;
+  /** The custom range, YYYY-MM-DD; only with period "custom". */
+  from?: string;
+  to?: string;
 }
+
+const DEFAULT_PERIOD: SalesPeriodId = "28d";
 
 const isIsoDate = (value: unknown): value is string =>
   typeof value === "string" &&
   /^\d{4}-\d{2}-\d{2}$/.test(value) &&
   !Number.isNaN(Date.parse(value));
 
+const isPeriod = (value: unknown): value is SalesPeriodId =>
+  SALES_PERIODS.includes(value as SalesPeriodId);
+
 // P01 then P02 (step 5.6): the private report link opens the report only after the emailed
-// code, then for 30 days on this browser (R10). /partner redirects here.
+// code, then for 30 days on this browser (R10). /partner redirects here. Links from before
+// the period dropdown (?period=month&date=…) fall back to the default period.
 export const Route = createFileRoute("/partner/$token")({
   validateSearch: (search: Record<string, unknown>): PartnerSearch => ({
-    period: isReportPeriod(search.period) ? search.period : undefined,
-    date: isIsoDate(search.date) ? search.date : undefined,
+    period: isPeriod(search.period) ? search.period : undefined,
+    from: isIsoDate(search.from) ? search.from : undefined,
+    to: isIsoDate(search.to) ? search.to : undefined,
   }),
   component: PartnerPage,
 });
@@ -65,16 +69,21 @@ function ReportPage({
   partnerId: string;
   partnerName: string;
 }) {
-  const { t } = useLocale();
-  const { period = DEFAULT_REPORT_PERIOD, date } = Route.useSearch();
+  const { period = DEFAULT_PERIOD, from, to } = Route.useSearch();
   const navigate = useNavigate({ from: "/partner/$token" });
-  const report = usePartnerReport(partnerId, period, date);
+  const custom = from && to ? { start: from, end: to } : null;
+  const view = usePartnerOverview(
+    partnerId,
+    period,
+    period === "custom" ? custom : null,
+  );
   const isLoading = useSimulatedLoading();
   const go = (next: PartnerSearch) =>
     void navigate({
       search: {
-        period: next.period === DEFAULT_REPORT_PERIOD ? undefined : next.period,
-        date: next.date,
+        period: next.period === DEFAULT_PERIOD ? undefined : next.period,
+        from: next.period === "custom" ? next.from : undefined,
+        to: next.period === "custom" ? next.to : undefined,
       },
       replace: true,
       // A period switch keeps the reader where they are (default would scroll to the top).
@@ -82,40 +91,40 @@ function ReportPage({
     });
 
   return (
-    <PartnerShell partnerName={partnerName}>
-      <PartnerReport
-        allTime={report.allTime}
-        canGoNext={report.next !== null}
-        chart={report.chart}
-        copy={{
-          periodsLabel: t("partnerReport.period.label"),
-          previous: t("partnerReport.period.previous"),
-          next: t("partnerReport.period.next"),
-          numbersHeading: t("partnerReport.numbersHeading"),
-          groupsHeading: t("partnerReport.groupsHeading"),
-          transactionsHeading: t("partnerReport.transactionsHeading"),
-          columns: {
-            order: t("partnerReport.column.order"),
-            value: t("partnerReport.column.value"),
-            status: t("partnerReport.column.status"),
-            commission: t("partnerReport.column.commission"),
-          },
-          empty: t("partnerReport.empty"),
-          emptyAction: t("partnerReport.empty.action"),
-        }}
-        demoNote={report.demoNote}
-        groups={report.groups}
-        isCurrent={report.isCurrent}
+    <PartnerShell isWide partnerName={partnerName}>
+      <PartnerDashboard
+        custom={custom}
         isLoading={isLoading}
-        kpis={report.kpis}
-        payments={report.payments}
         period={period}
-        periods={report.periods}
-        rangeLabel={report.rangeLabel}
-        rows={report.rows}
-        onNext={() => report.next && go({ period, date: report.next })}
-        onPeriodChange={(id) => go({ period: id, date })}
-        onPrevious={() => go({ period, date: report.previous })}
+        view={view}
+        onCustomChange={(range) =>
+          go({ period: "custom", from: range.start, to: range.end })
+        }
+        onMonthSelect={(start) => {
+          // A month opens as its days, up to today for the running month.
+          const last = new Date(`${start.slice(0, 8)}01T12:00:00Z`);
+
+          last.setUTCMonth(last.getUTCMonth() + 1, 0);
+          const end = last.toISOString().slice(0, 10);
+
+          go({
+            period: "custom",
+            from: start,
+            to: end < view.sales.today ? end : view.sales.today,
+          });
+        }}
+        onPeriodChange={(id) =>
+          go({
+            period: id,
+            // Picking "Custom range" starts from the range on screen.
+            ...(id === "custom"
+              ? {
+                  from: custom?.start ?? view.sales.current.start,
+                  to: custom?.end ?? view.sales.current.end,
+                }
+              : {}),
+          })
+        }
       />
     </PartnerShell>
   );

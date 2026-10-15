@@ -4,12 +4,10 @@ import type { StatusTone } from "@/components/status-chip";
 import type { OrderTabId } from "@/features/merchant/orders/lib/order-tabs";
 import type { ReactNode } from "react";
 
-import { Skeleton } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 
 import { Widget } from "./overview-analytics";
 
-import { EmptyState } from "@/components/empty-state";
 import {
   ChevronRightIcon,
   ClockIcon,
@@ -18,7 +16,6 @@ import {
   PickupIcon,
   RequestsIcon,
   StatusDangerIcon,
-  TodayIcon,
 } from "@/components/icons";
 import { StatCard } from "@/components/stat-card";
 import { StatusChip } from "@/components/status-chip";
@@ -92,8 +89,6 @@ const taskIcon: Record<TodayTaskId, IconComponent> = {
   owing: PayLaterIcon,
 };
 
-const ALERTS: TodayTaskId[] = ["overdue", "owing"];
-
 /** The tab each slice of "still to collect" opens. */
 const collectTab: Record<CollectStatus, OrderTabId> = {
   accepted: "awaiting-payment",
@@ -102,19 +97,19 @@ const collectTab: Record<CollectStatus, OrderTabId> = {
   handed_over: "owing",
 };
 
-/** One series in the red chart ramp (owner review 1.9t), light to dark along the stages. */
+/** Each stage in the colour of its status chip (owner 15.10.2026), not shades of one red. */
 const collectShade: Record<CollectStatus, string> = {
-  accepted: "bg-(--chart-1-light)",
-  preparing: "bg-(--chart-1-mid)",
-  ready: "bg-(--chart-1)",
-  handed_over: "bg-(--chart-1-dark)",
+  accepted: "bg-(--status-warning-fill)",
+  preparing: "bg-(--status-info-fill)",
+  ready: "bg-(--status-success-fill)",
+  handed_over: "bg-(--status-warning-fill)",
 };
 
 const cellLink =
-  "outline-none hover:bg-surface-secondary focus-visible:focus-ring focus-visible:ring-inset";
+  "outline-none hover:bg-surface-secondary/50 focus-visible:focus-ring focus-visible:ring-inset";
 
 /** A "To do" tile: a stat card with icon, name and count. Opens M03 on its tab; a tile at 0 is plain text. */
-function Tile({ id, tab, title, count, label }: TaskTile) {
+export function Tile({ id, tab, title, count, label }: TaskTile) {
   return (
     <StatCard
       isLarge
@@ -148,7 +143,7 @@ function Tile({ id, tab, title, count, label }: TaskTile) {
 }
 
 /** Overdue and owing: shown above the tiles only when there is something to chase. */
-function AlertRow({ id, tab, title, hint, count, label }: TaskTile) {
+export function AlertRow({ id, tab, title, hint, count, label }: TaskTile) {
   const Icon = taskIcon[id];
   const danger = id === "overdue";
 
@@ -189,7 +184,7 @@ function AlertRow({ id, tab, title, hint, count, label }: TaskTile) {
 }
 
 /** Still to collect: the total, one stacked bar by stage, and a legend that links to M03. */
-function CollectWidget({
+export function CollectWidget({
   title,
   total,
   hint,
@@ -250,7 +245,7 @@ function CollectWidget({
 }
 
 /** Next pickups: ready and preparing orders by pickup date; each row opens M04. */
-function PickupsWidget({
+export function PickupsWidget({
   title,
   allLabel,
   empty,
@@ -261,10 +256,11 @@ function PickupsWidget({
       actions={
         rows.length > 0 && (
           <Link
-            className="inline-flex h-8 shrink-0 items-center text-sm font-medium text-muted underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:focus-ring"
+            className="inline-flex h-8 shrink-0 items-center gap-0.5 rounded-md text-xs font-medium text-muted outline-none hover:text-foreground focus-visible:focus-ring active:opacity-60"
             to="/store/orders"
           >
             {allLabel}
+            <ChevronRightIcon aria-hidden size={14} />
           </Link>
         )
       }
@@ -327,105 +323,5 @@ function PickupsWidget({
         <p className="text-sm text-muted">{empty}</p>
       )}
     </Widget>
-  );
-}
-
-/**
- * M02 Overview (owner review 1.9s): a Today part with what needs action now (alerts, the
- * four "To do" tiles, next pickups, still to collect), then the analytics section. The
- * Today part comes first in the DOM, so Tab reaches the tiles before the period switch.
- * Phones stack; from 1024px the widgets sit in a grid in the same DOM order.
- */
-export function MerchantToday({
-  title,
-  date,
-  todayHeading,
-  tasksHeading,
-  attentionHeading,
-  tiles,
-  collect,
-  pickups,
-  empty,
-  isLoading,
-  analytics,
-  tours,
-}: MerchantTodayProps) {
-  const alerts = tiles.filter((t) => ALERTS.includes(t.id) && t.count > 0);
-  const strip = tiles.filter((t) => !ALERTS.includes(t.id));
-  const hasTasks = tiles.some((t) => t.count > 0);
-
-  return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-0.5">
-        <h1 className="text-title">{title}</h1>
-        <span className="text-sm text-muted">{date}</span>
-      </div>
-      {isLoading ? (
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-60 rounded-3xl lg:h-36" />
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Skeleton className="h-64 rounded-3xl lg:col-span-2" />
-            <Skeleton className="h-64 rounded-3xl" />
-          </div>
-          <Skeleton className="h-72 rounded-3xl" />
-        </div>
-      ) : (
-        <>
-          <section
-            aria-labelledby="overview-today"
-            className="flex flex-col gap-4"
-          >
-            <h2 className="text-heading" id="overview-today">
-              {todayHeading}
-            </h2>
-            {alerts.length > 0 && (
-              <section
-                aria-labelledby="today-attention"
-                className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface"
-              >
-                <h3 className="sr-only" id="today-attention">
-                  {attentionHeading}
-                </h3>
-                <ul className="flex flex-col divide-y divide-separator">
-                  {alerts.map((a) => (
-                    <li key={a.id}>
-                      <AlertRow {...a} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-            <section aria-labelledby="today-tasks" className="flex flex-col">
-              <h3 className="sr-only" id="today-tasks">
-                {tasksHeading}
-              </h3>
-              {hasTasks ? (
-                <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-                  {strip.map((tile) => (
-                    <li key={tile.id} className="min-w-0">
-                      <Tile {...tile} />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="rounded-3xl bg-surface shadow-surface">
-                  <EmptyState
-                    action={{ label: empty.actionLabel, to: "/store/orders" }}
-                    icon={TodayIcon}
-                    message={empty.message}
-                  />
-                </div>
-              )}
-            </section>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-5 lg:items-start">
-              <PickupsWidget {...pickups} />
-              <CollectWidget {...collect} />
-            </div>
-            {tours}
-          </section>
-          {analytics}
-        </>
-      )}
-    </div>
   );
 }

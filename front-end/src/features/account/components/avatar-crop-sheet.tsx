@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { clampCrop, cropLimits, renderAvatar } from "../lib/avatar";
 
 import { useLocale } from "@/contexts/locale-context";
+import { useSheetExit } from "@/components/sheet-exit";
 
 const VIEW = 248;
 const KEY_STEP = 0.04;
@@ -24,6 +25,7 @@ export function AvatarCropSheet({
   onCancel: () => void;
   onSave: (dataUrl: string) => void;
 }) {
+  const exitRef = useSheetExit();
   const { t } = useLocale();
   const [crop, setCrop] = useState<AvatarCrop>({ zoom: 1, x: 0, y: 0 });
   const drag = useRef<{ px: number; py: number; x: number; y: number } | null>(
@@ -36,6 +38,7 @@ export function AvatarCropSheet({
     <Drawer.Backdrop isOpen onOpenChange={(open) => !open && onCancel()}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
         <Drawer.Dialog className="flex max-h-[92dvh] flex-col">
+          <span ref={exitRef} hidden />
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-between">
             <Drawer.Heading className="text-title">

@@ -1,56 +1,52 @@
 import type { PartnerFilter } from "@/features/merchant/partners/hooks/use-merchant-partners";
-import type { PartnersView } from "@/features/merchant/partners/components/merchant-partners";
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
+import { SectionFrame } from "@/components/layout/section-frame";
+import { useLocale } from "@/contexts/locale-context";
 import { MerchantPartners } from "@/features/merchant/partners/components/merchant-partners";
 import { PARTNER_FILTERS } from "@/features/merchant/partners/hooks/use-merchant-partners";
 
 interface PartnersSearch {
-  /** Absent = the Partners tab. */
-  view?: "analytics";
-  /** Absent = all active partners. */
-  filter?: Exclude<PartnerFilter, "all">;
+  /** Absent = all active partners; several add up. */
+  filter?: PartnerFilter[];
 }
 
-// M15 Partners (step 5.2). M16 partner detail is /store/partners/$partnerId.
+// M15 Partners › All partners (step 5.2). Analytics is /store/partners/analytics, M16
+// partner detail /store/partners/$partnerId.
 export const Route = createFileRoute("/store/partners/")({
   validateSearch: (search: Record<string, unknown>): PartnersSearch => ({
-    view: search.view === "analytics" ? "analytics" : undefined,
-    filter:
-      PARTNER_FILTERS.includes(search.filter as PartnerFilter) &&
-      search.filter !== "all"
-        ? (search.filter as Exclude<PartnerFilter, "all">)
-        : undefined,
+    filter: Array.isArray(search.filter)
+      ? PARTNER_FILTERS.filter((id) =>
+          (search.filter as unknown[]).includes(id),
+        )
+      : undefined,
   }),
   component: PartnersPage,
 });
 
 function PartnersPage() {
-  const { view, filter = "all" } = Route.useSearch();
+  const { t } = useLocale();
+  const { filter = [] } = Route.useSearch();
   const navigate = useNavigate({ from: "/store/partners/" });
 
   return (
-    <MerchantPartners
-      filter={filter}
-      view={view ?? "partners"}
-      onFilterChange={(next) =>
-        void navigate({
-          search: (s) => ({ ...s, filter: next === "all" ? undefined : next }),
-          replace: true,
-          resetScroll: false,
-        })
-      }
-      onViewChange={(next: PartnersView) =>
-        void navigate({
-          search: (s) => ({
-            ...s,
-            view: next === "analytics" ? "analytics" : undefined,
-          }),
-          replace: true,
-          resetScroll: false,
-        })
-      }
-    />
+    <SectionFrame
+      hasOwnTitle
+      page="partners"
+      section="partners"
+      title={t("nav.partners")}
+    >
+      <MerchantPartners
+        filter={filter}
+        onFilterChange={(next) =>
+          void navigate({
+            search: (s) => ({ ...s, filter: next.length ? next : undefined }),
+            replace: true,
+            resetScroll: false,
+          })
+        }
+      />
+    </SectionFrame>
   );
 }

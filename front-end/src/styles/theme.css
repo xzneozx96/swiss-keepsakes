@@ -15,7 +15,8 @@
     --field-border-width: 1px;
 
     /* Base */
-    --background: #f7f7f5;
+    /* Page ground: a lighter grey, so the #f2f2ef widget shells stand out (owner review 15.10.2026). */
+    --background: #fbfbfa;
     /* Ink: warm charcoal, softer than near-black #1a1a1a for a calmer page (owner
        request 13.10.2026). 12.1:1 on the page ground, 13:1 on white (AAA). */
     --foreground: #33312e;
@@ -116,6 +117,21 @@
     --chart-1-mid: #e26b62;
     --chart-1-light: #ec9790;
     --chart-track: #fce9e7;
+    /* Second category beside the red (gifts | tours, owner 15.10.2026): a muted teal,
+       opposite the red on the wheel and as quiet as the warm greys; 4.9:1 on white. */
+    --chart-4: #3a7d7c;
+    --chart-4-track: #e2eeed;
+    /* Status as a chart fill (money by status, owner 15.10.2026): the status chips' hues,
+       lighter than their text colours so a bar reads as colour, not as text. */
+    --status-info-fill: #4a7fc1;
+    --status-success-fill: #3a8a5c;
+    --status-warning-fill: #d4a017;
+    --status-danger-fill: #c2410c;
+    /* Categories that are neither gifts/tours nor statuses (payment methods): slate, plum,
+       ochre, then the warm grey. */
+    --chart-5: #5a6f96;
+    --chart-6: #8a5f8f;
+    --chart-7: #b58a3e;
 
     /*
      * HeroUI's light-theme values for every variable its dark block redefines.

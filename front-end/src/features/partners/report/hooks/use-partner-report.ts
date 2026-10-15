@@ -1,4 +1,9 @@
-import type { ReportBucket, ReportPeriod, ReportRow } from "../lib/report";
+import type {
+  DateRange,
+  ReportBucket,
+  ReportPeriod,
+  ReportRow,
+} from "../lib/report";
 import type {
   ReportChartView,
   ReportGroupView,
@@ -24,7 +29,6 @@ import { periodMoney } from "../lib/payouts";
 import { ClockIcon, PartnersIcon, PayLaterIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
-import { categories } from "@/features/catalog/seed";
 import { useDemo, useDemoNow } from "@/features/demo";
 import { deltaOf } from "@/features/merchant/today/lib/analytics";
 import { DEMO_HISTORY } from "@/features/merchant/today/lib/demo-history";
@@ -81,6 +85,8 @@ export function usePartnerReport(
   partnerId: string,
   period: ReportPeriod,
   anchor?: string,
+  /** Any range of days instead of the period around `anchor`. */
+  range?: DateRange,
 ) {
   const { t, language, intlLocale } = useLocale();
   const { state } = useDemo();
@@ -90,7 +96,7 @@ export function usePartnerReport(
   const partner =
     state.data.partners.find((p) => p.id === partnerId) ??
     state.data.partners[0];
-  const { orders, guests, products, tours } = state.data;
+  const { orders, guests, products, subcategories, tours } = state.data;
   const tourBookings = state.data.tours?.bookings;
   // The 1.9s demo history counts here too (owner review 1.9t), so the all-time card and the
   // period report agree; only while the demo has orders, as on M02.
@@ -102,13 +108,26 @@ export function usePartnerReport(
   const report = useMemo(
     () =>
       partnerReport(
-        { orders: withHistory, guests, products, tours },
+        { orders: withHistory, guests, products, subcategories, tours },
         partner.id,
         period,
         day,
         new Date(nowMs),
+        range && { start: range.start, end: range.end },
       ),
-    [withHistory, guests, products, tours, partner.id, period, day, nowMs],
+    [
+      withHistory,
+      guests,
+      products,
+      subcategories,
+      tours,
+      partner.id,
+      period,
+      day,
+      nowMs,
+      range?.start,
+      range?.end,
+    ],
   );
   const allTimeData = useMemo(
     () => partnerAllTime(withHistory, partner.id, today, tourBookings),
@@ -131,6 +150,47 @@ export function usePartnerReport(
       partnerPayouts,
       partner.id,
       report.range,
+      nowMs,
+    ],
+  );
+  // The period before, for the dashboard's comparisons (deltas, previous-period markers).
+  const previousDay = shiftPeriod(period, day, -1);
+  const previousReport = useMemo(
+    () =>
+      partnerReport(
+        { orders: withHistory, guests, products, subcategories, tours },
+        partner.id,
+        period,
+        previousDay,
+        new Date(nowMs),
+      ),
+    [
+      withHistory,
+      guests,
+      products,
+      subcategories,
+      tours,
+      partner.id,
+      period,
+      previousDay,
+      nowMs,
+    ],
+  );
+  const previousMoney = useMemo(
+    () =>
+      periodMoney(
+        { orders, tours, commissionAdjustments, partnerPayouts },
+        partner.id,
+        previousReport.range,
+        new Date(nowMs),
+      ),
+    [
+      orders,
+      tours,
+      commissionAdjustments,
+      partnerPayouts,
+      partner.id,
+      previousReport.range,
       nowMs,
     ],
   );
@@ -207,10 +267,10 @@ export function usePartnerReport(
   const groups: ReportGroupView[] = [...report.groups]
     .sort((a, b) => b.recorded + b.estimated - (a.recorded + a.estimated))
     .map((g) => {
-      const category = categories.find((c) => c.id === g.categoryId);
+      const category = subcategories.find((c) => c.id === g.subcategoryId);
 
       return {
-        id: g.categoryId,
+        id: g.subcategoryId,
         name: category
           ? pickText(category.name, language).text
           : t("tourMerchant.reportGroup"),
@@ -505,6 +565,7 @@ export function usePartnerReport(
             e.type === "payout"
               ? {
                   id: `p${i}`,
+                  kind: "payout" as const,
                   text: t("partnerReport.payments.payout"),
                   date: entryDate(e.at),
                   amount: money(e.payout.amount),
@@ -513,6 +574,7 @@ export function usePartnerReport(
               : e.type === "adjustment"
                 ? {
                     id: `a${i}`,
+                    kind: "adjustment" as const,
                     text: t("partnerReport.payments.adjustment", {
                       ref: refOf(e.adjustment.transaction.id),
                     }),
@@ -522,6 +584,7 @@ export function usePartnerReport(
                   }
                 : {
                     id: `o${i}`,
+                    kind: "offset" as const,
                     text: t("partnerReport.payments.offset", {
                       ref: e.item.ref,
                     }),
@@ -552,6 +615,17 @@ export function usePartnerReport(
       : null;
 
   return {
+    /** The unformatted figures behind the views, for the dashboard (use-partner-dashboard). */
+    raw: {
+      report,
+      moneyIn,
+      allTimeData,
+      previousReport,
+      previousMoney,
+      today,
+      /** The commission chart's top gridline, in Rappen. */
+      chartTop: top,
+    },
     allTime,
     demoNote: withHistory.length ? t("partnerReport.demoNote") : null,
     periods: REPORT_PERIODS.map((id) => ({
@@ -559,7 +633,7 @@ export function usePartnerReport(
       label: t(periodLabels[id]),
     })),
     rangeLabel,
-    previous: shiftPeriod(period, day, -1),
+    previous: previousDay,
     // No paging into the future: the next period must have started by today.
     next:
       periodRange(period, shiftPeriod(period, day, 1)).start <= today

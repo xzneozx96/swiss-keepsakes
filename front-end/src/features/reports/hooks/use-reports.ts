@@ -88,7 +88,12 @@ export interface MoneyCardView {
  * M21 Reports (spec §4.13, steps 5.9–5.12): the Overview's periods and the report filters
  * over one shared set of transactions (D14). Step 5.9: the money summary.
  */
-export function useReports(period: PeriodId, filters: ReportFilters) {
+export function useReports(
+  period: PeriodId,
+  filters: ReportFilters,
+  /** Exact ranges instead of `period` (the lab Reports' period dropdown). */
+  override?: { current: DayRange; previous: DayRange },
+) {
   const { t, language, intlLocale } = useLocale();
   const { state } = useDemo();
   const now = useDemoNow();
@@ -103,7 +108,18 @@ export function useReports(period: PeriodId, filters: ReportFilters) {
     () => all.filter((tx) => matchesFilters(tx, filters)),
     [all, filters],
   );
-  const ranges = useMemo(() => periodRanges(period, today), [period, today]);
+  const ranges = useMemo(
+    () => override ?? periodRanges(period, today),
+    // The override is compared by its days, so a new object with the same days keeps the memo.
+    [
+      period,
+      today,
+      override?.current.start,
+      override?.current.end,
+      override?.previous.start,
+      override?.previous.end,
+    ],
+  );
   const { current, previous } = ranges;
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
   const range = (r: DayRange) =>
@@ -366,6 +382,9 @@ export function useReports(period: PeriodId, filters: ReportFilters) {
       }),
       share: m.sales ? m.complete / m.sales : 0,
       sales: m.sales,
+      complete: m.complete,
+      /** Rappen, for charts. */
+      amounts: { margin: m.margin, revenue: m.revenue, costs: m.costs },
     };
   };
   const allSales = marginData.goods.sales + marginData.tours.sales;
@@ -428,6 +447,8 @@ export function useReports(period: PeriodId, filters: ReportFilters) {
         completed: count(x.steps.completed),
         conversion: x.steps.visits ? pct(x.steps.sent, x.steps.visits) : "–",
         value: money(x.value),
+        /** Rappen, for charts. */
+        amount: x.value,
       })),
       groups,
       groupsTotal: money(periodValue),
@@ -496,7 +517,8 @@ export function useReports(period: PeriodId, filters: ReportFilters) {
                 missing: allSales - allComplete,
               }),
       share: allSales ? allComplete / allSales : 0,
-      missing: marginData.missing.slice(0, 5).map(({ tx, types }) => ({
+      // Every sale still missing costs; the Margin tab shows the first five.
+      missingAll: marginData.missing.map(({ tx, types }) => ({
         id: tx.key,
         ref: tx.ref,
         name: productName(tx.lines[0]?.itemId ?? ""),

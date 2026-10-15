@@ -58,7 +58,8 @@ const overview = page.getByRole("button", { name: T("tourMap.overview") });
 for (let i = 0; i < 20 && !(await overview.isEnabled()); i++) await wait(250);
 check("C09 pin follows the card, Whole route now offered", (await page.locator('.tour-map-marker[aria-pressed="true"]').count()) === 1 && (await overview.isEnabled()));
 await shot("g03-c09-map-card", { full: false });
-await page.getByRole("button", { name: T("tourMap.viewMore") }).first().click();
+// Scoped to the map card: in DE a review card's "Show more" (4.16 replies) has the same name.
+await card.getByRole("button", { name: T("tourMap.viewMore") }).click();
 await wait(700);
 const sheet = page.getByRole("dialog");
 check("C09 View more opens the stop sheet for the same stop", (await sheet.count()) === 1 && (await sheet.innerText()).includes(second));

@@ -12,7 +12,7 @@ import {
   zurichDate,
 } from "../lib/pickup";
 import { availableUnits, fromPrice, isSoldOut } from "../lib/stock";
-import { categories, shop } from "../seed";
+import { shop } from "../seed";
 
 import { useFavourites } from "./use-favourites";
 import { useProductReviews } from "./use-product-reviews";
@@ -22,6 +22,7 @@ import { useCart } from "@/features/cart/hooks/use-cart";
 import { useDemo, useDemoNow } from "@/features/demo";
 import { formatMoney, formatShortDate } from "@/lib/format";
 import { pickText } from "@/lib/localized";
+import { pickDoc } from "@/lib/rich-text";
 
 type Field = "variant" | "date" | "place";
 
@@ -70,6 +71,10 @@ export function useGiftDetail(
     pickText(text, language).text;
 
   const name = pickText(product.name, language);
+  // The long story (rich text): the guest's language, or the other with a notice (R02).
+  const storyBody = product.longStory
+    ? pickDoc(product.longStory.body, language)
+    : undefined;
   const story = pickText(product.story, language);
   const cancellation = pickText(product.cancellationPolicy, language);
   const soldOut = isSoldOut(product, orders);
@@ -136,12 +141,22 @@ export function useGiftDetail(
       : undefined;
 
   const saved = isFavourite(product.id);
-  const category = categories.find((c) => c.id === product.categoryId);
+  const category = state.data.subcategories.find(
+    (c) => c.id === product.subcategoryId,
+  );
+  // The places M12 set for this gift; none set (or none left) means every place (4.9).
+  const giftPlaces = pickupPlaces.filter((p) =>
+    product.pickupPlaceIds?.includes(p.id),
+  );
+  const offeredPlaces = giftPlaces.length ? giftPlaces : pickupPlaces;
   // Two pickup places in the seed; a list format is not needed yet.
-  const placeNames = t("detail.highlight.pickup.places", {
-    first: pick(pickupPlaces[0].name),
-    second: pick(pickupPlaces[1].name),
-  });
+  const placeNames =
+    offeredPlaces.length === 1
+      ? pick(offeredPlaces[0].name)
+      : t("detail.highlight.pickup.places", {
+          first: pick(offeredPlaces[0].name),
+          second: pick(offeredPlaces[1].name),
+        });
 
   /** Adds the line when every choice is made; otherwise shows the errors. */
   const add = (): boolean => {
@@ -226,19 +241,23 @@ export function useGiftDetail(
       .filter((part): part is string => Boolean(part))
       .join(" · "),
     story: story.text,
-    longStory: product.longStory
-      ? {
-          label: t("detail.story.label"),
-          title: pick(product.longStory.title),
-          chapters: product.longStory.chapters.map((c) => ({
-            title: pick(c.title),
-            body: pick(c.body),
-            photo: c.photo,
-          })),
-          readLabel: t("detail.story.read"),
-          closeLabel: t("detail.sheet.close"),
-        }
-      : undefined,
+    longStory:
+      product.longStory && storyBody
+        ? {
+            label: t("detail.story.label"),
+            title: pick(product.longStory.title),
+            body: storyBody.doc,
+            languageNote: storyBody.isFallback
+              ? t(
+                  storyBody.language === "en"
+                    ? "gifts.textInEnglish"
+                    : "gifts.textInGerman",
+                )
+              : undefined,
+            readLabel: t("detail.story.read"),
+            closeLabel: t("detail.sheet.close"),
+          }
+        : undefined,
     languageNotice: name.isFallback
       ? t(
           name.language === "en"
@@ -328,7 +347,7 @@ export function useGiftDetail(
           label: t("gifts.soldOut"),
           message: t("detail.soldOut.message"),
           actionLabel: t("detail.soldOut.action"),
-          category: category?.id,
+          subcategory: category?.id,
         }
       : undefined,
     sheet: {
@@ -422,7 +441,7 @@ export function useGiftDetail(
     note: t("detail.date.note"),
     place: {
       label: t("detail.place.label"),
-      options: pickupPlaces.map((p) => ({
+      options: offeredPlaces.map((p) => ({
         id: p.id,
         name: pick(p.name),
         address: p.address,

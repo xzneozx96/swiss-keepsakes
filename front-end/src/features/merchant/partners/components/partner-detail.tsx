@@ -8,6 +8,7 @@ import { useState } from "react";
 import { PartnerQrSheet, referralUrl } from "./partner-qr-sheet";
 import { PayoutSheet } from "./payout-sheet";
 
+import { STICKY_TABS_BELOW_BAR } from "@/components/layout/sticky-tabs";
 import { useConfirm } from "@/components/confirm-dialog";
 import {
   BackIcon,
@@ -20,6 +21,7 @@ import {
   ReportsIcon,
   StatusSuccessIcon,
 } from "@/components/icons";
+import { MerchantBackBar } from "@/components/layout/merchant-back-bar";
 import { StatCard } from "@/components/stat-card";
 import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
@@ -27,7 +29,7 @@ import {
   ActionPanel,
   DetailCard,
 } from "@/features/merchant/order-detail/components/detail-card";
-import { CopyText } from "@/features/merchant/order-detail/components/order-sections";
+import { CopyText } from "@/components/copy-text";
 import { useIsWide } from "@/features/merchant/order-detail/hooks/use-is-wide";
 import { usePartnerActions } from "@/features/partners/hooks/use-partner-actions";
 
@@ -55,8 +57,13 @@ function Header({ view }: { view: PartnerDetailView }) {
 
   return (
     <header className="flex flex-col gap-3">
+      <MerchantBackBar
+        label={t("merchantPartners.back")}
+        title={partner.name}
+        to="/store/partners"
+      />
       <Link
-        className="flex w-fit items-center gap-1.5 rounded-lg text-sm text-muted outline-none hover:text-foreground focus-visible:focus-ring"
+        className="hidden w-fit items-center gap-1.5 rounded-lg text-sm text-muted outline-none hover:text-foreground focus-visible:focus-ring lg:flex"
         to="/store/partners"
       >
         <BackIcon aria-hidden size={16} />
@@ -64,7 +71,7 @@ function Header({ view }: { view: PartnerDetailView }) {
       </Link>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-title">{partner.name}</h1>
+          <h1 className="text-title max-lg:sr-only">{partner.name}</h1>
           <p className="text-sm text-muted">
             {t("partnerDetail.subtitle", {
               kind: view.kind,
@@ -435,23 +442,25 @@ export function PartnerDetail({ view }: { view: PartnerDetailView }) {
               selectedKey={tab}
               onSelectionChange={(key) => setTab(key as TabId)}
             >
-              <Tabs.ListContainer>
-                <Tabs.List aria-label={t("partnerDetail.tabs.label")}>
-                  {(
-                    [
-                      ["ledger", t("partnerDetail.tabs.ledger")],
-                      ["transactions", t("partnerDetail.tabs.transactions")],
-                      ["links", t("partnerDetail.tabs.links")],
-                    ] as const
-                  ).map(([id, label], index) => (
-                    <Tabs.Tab key={id} className="whitespace-nowrap" id={id}>
-                      {index > 0 && <Tabs.Separator />}
-                      {label}
-                      <Tabs.Indicator />
-                    </Tabs.Tab>
-                  ))}
-                </Tabs.List>
-              </Tabs.ListContainer>
+              <div className={`max-lg:py-2 ${STICKY_TABS_BELOW_BAR}`}>
+                <Tabs.ListContainer>
+                  <Tabs.List aria-label={t("partnerDetail.tabs.label")}>
+                    {(
+                      [
+                        ["ledger", t("partnerDetail.tabs.ledger")],
+                        ["transactions", t("partnerDetail.tabs.transactions")],
+                        ["links", t("partnerDetail.tabs.links")],
+                      ] as const
+                    ).map(([id, label], index) => (
+                      <Tabs.Tab key={id} className="whitespace-nowrap" id={id}>
+                        {index > 0 && <Tabs.Separator />}
+                        {label}
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                    ))}
+                  </Tabs.List>
+                </Tabs.ListContainer>
+              </div>
               <Tabs.Panel className="flex flex-col gap-5 px-0 pb-0" id="ledger">
                 <LedgerCard view={view} />
               </Tabs.Panel>
