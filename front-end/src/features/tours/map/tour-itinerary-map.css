@@ -64,19 +64,6 @@
   background: #d52b1e;
   color: white;
 }
-.tour-stop-number {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--surface-secondary);
-  color: var(--foreground);
-  font-weight: 700;
-}
-.tour-stop-number.is-active {
-  background: #d52b1e;
-  color: white;
-}
 @media (prefers-reduced-motion: reduce) {
   .tour-map-marker {
     transition: none;

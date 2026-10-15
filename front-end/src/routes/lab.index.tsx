@@ -5,6 +5,16 @@ export const Route = createFileRoute("/lab/")({ component: LabIndex });
 
 const experiments = [
   {
+    to: "/lab/map-loading" as const,
+    title: "Map loading indicator",
+    note: "Five ways to show that the tour map is loading the next stop (15.10.2026).",
+  },
+  {
+    to: "/lab/map" as const,
+    title: "3D map look",
+    note: "Three basemaps for the tour itinerary map: current, aerial photo with terrain, and current with terrain.",
+  },
+  {
     to: "/lab/private-tour" as const,
     title: "Private-tour call to action",
     note: "Five options for the block under the tour list, after the home Polaroid stack (15.10.2026).",

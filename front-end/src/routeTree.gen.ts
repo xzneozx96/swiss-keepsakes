@@ -26,6 +26,8 @@ import { Route as LabAdviceRouteImport } from './routes/lab.advice'
 import { Route as LabCardsRouteImport } from './routes/lab.cards'
 import { Route as LabCartLineRouteImport } from './routes/lab.cart-line'
 import { Route as LabHeroRouteImport } from './routes/lab.hero'
+import { Route as LabMapRouteImport } from './routes/lab.map'
+import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
 import { Route as LabOrderCardsRouteImport } from './routes/lab.order-cards'
 import { Route as LabPrivateTourRouteImport } from './routes/lab.private-tour'
 import { Route as LabQuantityRouteImport } from './routes/lab.quantity'
@@ -173,6 +175,16 @@ const LabCartLineRoute = LabCartLineRouteImport.update({
 const LabHeroRoute = LabHeroRouteImport.update({
   id: '/lab/hero',
   path: '/lab/hero',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabMapRoute = LabMapRouteImport.update({
+  id: '/lab/map',
+  path: '/lab/map',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabMapLoadingRoute = LabMapLoadingRouteImport.update({
+  id: '/lab/map-loading',
+  path: '/lab/map-loading',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabOrderCardsRoute = LabOrderCardsRouteImport.update({
@@ -526,6 +538,8 @@ export interface FileRoutesByFullPath {
   '/lab/cards': typeof LabCardsRoute
   '/lab/cart-line': typeof LabCartLineRoute
   '/lab/hero': typeof LabHeroRoute
+  '/lab/map': typeof LabMapRoute
+  '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
@@ -604,6 +618,8 @@ export interface FileRoutesByTo {
   '/lab/cards': typeof LabCardsRoute
   '/lab/cart-line': typeof LabCartLineRoute
   '/lab/hero': typeof LabHeroRoute
+  '/lab/map': typeof LabMapRoute
+  '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
@@ -687,6 +703,8 @@ export interface FileRoutesById {
   '/lab/cards': typeof LabCardsRoute
   '/lab/cart-line': typeof LabCartLineRoute
   '/lab/hero': typeof LabHeroRoute
+  '/lab/map': typeof LabMapRoute
+  '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
@@ -772,6 +790,8 @@ export interface FileRouteTypes {
     | '/lab/cards'
     | '/lab/cart-line'
     | '/lab/hero'
+    | '/lab/map'
+    | '/lab/map-loading'
     | '/lab/order-cards'
     | '/lab/private-tour'
     | '/lab/quantity'
@@ -850,6 +870,8 @@ export interface FileRouteTypes {
     | '/lab/cards'
     | '/lab/cart-line'
     | '/lab/hero'
+    | '/lab/map'
+    | '/lab/map-loading'
     | '/lab/order-cards'
     | '/lab/private-tour'
     | '/lab/quantity'
@@ -932,6 +954,8 @@ export interface FileRouteTypes {
     | '/lab/cards'
     | '/lab/cart-line'
     | '/lab/hero'
+    | '/lab/map'
+    | '/lab/map-loading'
     | '/lab/order-cards'
     | '/lab/private-tour'
     | '/lab/quantity'
@@ -1007,6 +1031,8 @@ export interface RootRouteChildren {
   LabCardsRoute: typeof LabCardsRoute
   LabCartLineRoute: typeof LabCartLineRoute
   LabHeroRoute: typeof LabHeroRoute
+  LabMapRoute: typeof LabMapRoute
+  LabMapLoadingRoute: typeof LabMapLoadingRoute
   LabOrderCardsRoute: typeof LabOrderCardsRoute
   LabPrivateTourRoute: typeof LabPrivateTourRoute
   LabQuantityRoute: typeof LabQuantityRoute
@@ -1137,6 +1163,20 @@ declare module '@tanstack/react-router' {
       path: '/lab/hero'
       fullPath: '/lab/hero'
       preLoaderRoute: typeof LabHeroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/map': {
+      id: '/lab/map'
+      path: '/lab/map'
+      fullPath: '/lab/map'
+      preLoaderRoute: typeof LabMapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/map-loading': {
+      id: '/lab/map-loading'
+      path: '/lab/map-loading'
+      fullPath: '/lab/map-loading'
+      preLoaderRoute: typeof LabMapLoadingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/order-cards': {
@@ -1775,6 +1815,8 @@ const rootRouteChildren: RootRouteChildren = {
   LabCardsRoute: LabCardsRoute,
   LabCartLineRoute: LabCartLineRoute,
   LabHeroRoute: LabHeroRoute,
+  LabMapRoute: LabMapRoute,
+  LabMapLoadingRoute: LabMapLoadingRoute,
   LabOrderCardsRoute: LabOrderCardsRoute,
   LabPrivateTourRoute: LabPrivateTourRoute,
   LabQuantityRoute: LabQuantityRoute,

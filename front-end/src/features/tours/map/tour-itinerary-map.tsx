@@ -1,9 +1,11 @@
 import type { Map as MapLibreMap, Marker } from "maplibre-gl";
 import type { Tour } from "../types";
 
-import { Button, Skeleton, ToggleButton } from "@heroui/react";
+import { Button, Skeleton, Spinner, ToggleButton } from "@heroui/react";
 import { useEffect, useRef, useState } from "react";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+
+import { loadAerialStyle, warmAerialTiles } from "./aerial-style";
 
 import {
   ChevronLeftIcon,
@@ -52,6 +54,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [threeD, setThreeD] = useState(true);
   const [mapState, setMapState] = useState<MapState>("loading");
+  const [tilesLoading, setTilesLoading] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const index = stops.findIndex((stop) => stop.id === selectedId);
   const active = index >= 0 ? stops[index] : undefined;
@@ -99,9 +102,12 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
         setWorkerUrl(workerUrl);
         const copy = translationsRef.current.t;
 
+        const style = await loadAerialStyle();
+
+        if (disposed) return;
         map = new Map({
           container,
-          style: "https://tiles.openfreemap.org/styles/liberty",
+          style,
           center: first.coordinates,
           zoom: 16.2,
           pitch: 55,
@@ -141,14 +147,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
         map.on("load", () => {
           if (disposed || !map) return;
           clearTimeout(timeout);
-          const buildingLayer = map.getLayer("building-3d");
-
-          if (buildingLayer)
-            map.setPaintProperty(
-              "building-3d",
-              "fill-extrusion-color",
-              "#d6ccba",
-            );
+          map.setTerrain({ source: "dem", exaggeration: 1.3 });
           map.addSource("tour-route", {
             type: "geojson",
             data: {
@@ -257,20 +256,37 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
       duration: reducedMotion() ? 0 : 950,
     };
 
+    let cancelled = false;
+    let veilTimer: ReturnType<typeof setTimeout> | undefined;
+
     if (map && mapState === "ready") {
       if (active) {
         // An offset, not flyTo padding: MapLibre keeps flyTo padding on the map and adds it
         // to fitBounds padding, which zoomed "Whole route" out to the whole country.
         const { top, right, bottom, left } = padding();
 
-        map.flyTo({
-          ...camera,
-          center: active.coordinates,
-          zoom: 16.2,
-          offset: [(left - right) / 2, (top - bottom) / 2],
+        // Load the stop's tiles first and only then fly, so the map never lands on a blank
+        // area; the pill shows only if that takes noticeable time.
+        veilTimer = setTimeout(() => setTilesLoading(true), 250);
+        void warmAerialTiles(active.coordinates, 5000).then(() => {
+          clearTimeout(veilTimer);
+          if (cancelled) return;
+          setTilesLoading(false);
+          map.flyTo({
+            ...camera,
+            center: active.coordinates,
+            zoom: 16.2,
+            offset: [(left - right) / 2, (top - bottom) / 2],
+          });
         });
       } else map.easeTo(camera);
     }
+
+    return () => {
+      cancelled = true;
+      clearTimeout(veilTimer);
+      setTilesLoading(false);
+    };
   }, [active, language, t, threeD, mapState, fullscreen, tour.itinerary]);
 
   // MapLibre writes its own (creation-time) labels when fullscreen toggles; put ours back.
@@ -463,6 +479,24 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
                 </span>
               </div>
             )}
+            {mapState === "ready" && tilesLoading && position && (
+              <div
+                className="pointer-events-none absolute inset-x-0 top-[28%] z-[5] flex justify-center px-6"
+                role="status"
+              >
+                <span className="flex min-h-11 items-center gap-2.5 rounded-full bg-surface py-1.5 ps-2 pe-4 text-sm shadow-sm">
+                  <span className="flex size-8 items-center justify-center">
+                    <Spinner size="sm" />
+                  </span>
+                  <span className="flex flex-col leading-tight">
+                    <span className="text-xs text-muted">
+                      {t("tourMap.heading")}
+                    </span>
+                    <span className="font-medium">{position.name}</span>
+                  </span>
+                </span>
+              </div>
+            )}
             {mapState === "error" && (
               <div
                 className="absolute inset-0 z-[5] flex flex-col items-center justify-center gap-4 bg-surface-secondary p-8 pb-48 text-center"
@@ -498,13 +532,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
                 <div className="flex flex-col gap-2 rounded-2xl bg-surface p-3 shadow-overlay">
                   <div className="flex gap-3">
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <p className="flex items-center gap-2 text-xs text-muted">
-                        <span
-                          aria-hidden
-                          className="tour-stop-number is-active size-6 text-xs"
-                        >
-                          {position.number}
-                        </span>
+                      <p className="text-xs text-muted">
                         {t("tourMap.stop", position)} ·{" "}
                         {when(active.minutesFromStart)}
                       </p>

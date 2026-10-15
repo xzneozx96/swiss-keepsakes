@@ -8,6 +8,7 @@ export const tourMapEn = {
   "tourMap.sample":
     "Sample itinerary · the line connects stops, not walking directions.",
   "tourMap.loading": "Opening the map…",
+  "tourMap.heading": "Heading to",
   "tourMap.unavailable":
     "The map could not load. You can still step through every stop below.",
   "tourMap.retry": "Reload map",
@@ -44,6 +45,7 @@ export const tourMapDe: Record<keyof typeof tourMapEn, string> = {
   "tourMap.sample":
     "Beispielroute · die Linie verbindet Stationen, keine Wegbeschreibung.",
   "tourMap.loading": "Karte wird geöffnet…",
+  "tourMap.heading": "Unterwegs zu",
   "tourMap.unavailable":
     "Die Karte konnte nicht geladen werden. Die Stationen können Sie trotzdem unten Schritt für Schritt ansehen.",
   "tourMap.retry": "Karte neu laden",
