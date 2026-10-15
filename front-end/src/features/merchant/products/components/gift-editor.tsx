@@ -604,33 +604,21 @@ export function CommissionCard({
       <NumberField
         aria-label={t("products.commission.rate")}
         className="items-center gap-2"
-        formatOptions={{ style: "percent", maximumFractionDigits: 1 }}
+        formatOptions={{ maximumFractionDigits: 0, useGrouping: false }}
         isInvalid={error !== undefined}
-        maxValue={0.5}
+        maxValue={50}
         minValue={0}
-        step={0.01}
-        value={value}
-        onChange={onChange}
+        step={1}
+        value={Math.round(value * 100)}
+        onChange={(points) => {
+          if (!Number.isNaN(points)) onChange(points / 100);
+        }}
       >
-        <NumberField.Group
-          className="flex h-auto items-center gap-4 overflow-visible border-0 bg-transparent shadow-none"
-          onPasteCapture={(event) => {
-            // react-aria commits a paste over the whole input even when it is readOnly.
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-        >
+        <NumberField.Group className="flex h-auto items-center gap-4 overflow-visible border-0 bg-transparent shadow-none">
           <NumberField.DecrementButton className={step} />
-          {/* The rate is only stepped (buttons, arrows, Home/End, hold): the DOM readOnly keeps the "%" and a number always in the box, which react-aria's own isReadOnly would not (it disables stepping too). */}
           <NumberField.Input
-            readOnly
-            aria-readonly="false"
-            aria-valuemax={50}
-            aria-valuemin={0}
-            aria-valuenow={Math.round(value * 100)}
-            aria-valuetext={`${Math.round(value * 1000) / 10}%`}
             className="w-28 bg-transparent p-0 text-center text-5xl leading-none font-semibold tabular-nums shadow-none"
-            role="spinbutton"
+            inputMode="numeric"
           />
           <NumberField.IncrementButton className={step} />
         </NumberField.Group>
