@@ -21,16 +21,16 @@ The prototype bar switches roles. Each step names the acceptance criterion or sc
 4. **Other language only (C20, D6).** The guest opens the EN-only article and switches to DE. The article stays in EN with a language notice, and the interface, dates and buttons turn German (R02, AC30).
 5. **Trip advice (C21, step 4.5).** The floating button opens C21, a chat with the shop's AI assistant (R19). The assistant greets the guest and asks the shop's questions one at a time as messages; choices are offered in the conversation under the question (in the C03 gift option style), while a counter, a date button (calendar sheet) or a text box sits in the composer; the assistant types briefly before each new message, and only the conversation scrolls. Each answer appears as the guest's message. Optional questions offer "Skip". In DE, the question that has no German text shows the English wording with a language notice (D7). For now the assistant asks only these questions: it answers nothing typed freely and generates no plan. It then asks for the email, required, with no sign-in (AC18, R08), and shows a summary card with "Send" and "Change an answer". After sending it says: "Thank you. Our team has received your details and will contact you by email to continue the conversation." No reply time. Email N16 arrives in the shop's request mailbox (step 4.17).
 6. **Private tour (C22, step 4.6).** On the Tours tab, a "Private tour" entry below the list opens `/tours/private-tour`. The guest gives group size, preferred dates, interests and email, then sees the sent state from C07. Email N17 goes to Owner and Manager.
-7. **Trip profile (C23, step 4.7).** In Account, a new "Trip profile" row opens the sub-screen. Without answers, the guest sees the empty state with "Add trip details". They add travel style and dates, then edit one. The next C07 or C13 shows these answers instead of asking again (R09).
+7. **Trip profile (C23, step 4.7). Dropped 14.10.2026 (2.17):** trip answers live on each order and booking (C07, C13, C15, C16), so there is no account trip profile. Original plan: In Account, a new "Trip profile" row opens the sub-screen. Without answers, the guest sees the empty state with "Add trip details". They add travel style and dates, then edit one. The next C07 or C13 shows these answers instead of asking again (R09).
 
 **Merchant** (switch to **Merchant · Owner**; Manager has the same access, D12)
 
 8. **Products (M11, step 4.8).** Products has tabs for Gifts, Tours and Pickup points (D3). Each gift and tour card shows a publish chip ("Published" or "Draft") and EN/DE completeness, for example "DE missing". The limited-edition print shows "DE missing" but stays published (R02).
 9. **Edit gift (M12, step 4.9).** The Owner opens the pocket knife. The EN/DE tabs hold the name, story and cancellation policy. The page also covers variants and stock, engraving (12 characters), preparation days and date mode, pickup places, payment policy with the first-payment deadline (24 hours), and commission rate. After saving, C03 shows the change. Unpublishing a gift removes it from C02 and C01.
-10. **Edit tour (M13, step 4.10).** The Owner opens the Lucerne old-town walk. The EN/DE tabs hold the description, itinerary, inclusions, exclusions and meeting point. The page also covers age groups, departures with seats and price, policies and commission. A new departure appears on M05 and C10 with the same seat count. Seats can't be reduced below the seats already booked (A4).
+10. **Edit tour (M13, step 4.10).** The Owner opens the Lucerne old-town walk. The EN/DE tabs hold the description, itinerary, inclusions, exclusions and meeting point. The page also covers age groups, departures with seats, prices (one set per tour, shown on every departure; 4.10), policies and commission. A new departure appears on M05 and C10 with the same seat count. Seats can't be reduced below the seats already booked (A4).
 11. **Pickup points (M14, step 4.11).** On the Pickup points tab, the Owner edits Pickup point Bahnhof's opening hours and DE instructions. C03 and the matching C15 order show the new text.
 12. **Articles (M17, step 4.12).** Content has tabs for Articles, Comments and Reviews. Articles are listed by language with a Draft or Published chip. The Owner opens the seeded DE draft, adds a photo block, links a gift and a tour and puts the tour first (R16), and publishes it. The article appears on C19 in DE only, with the links in that order on C20 (AC31). Unpublishing the linked gift in M12 removes it from the article.
-13. **Comments (M18, step 4.13).** The guest's comment from step 3 is listed with its article. The Owner replies, hides another comment, and deletes a spam comment through the shared confirmation dialog. C20 shows the reply and no longer shows the hidden or deleted comments (AC16).
+13. **Comments (M18, step 4.13).** The guest's comment from step 3 is listed with its article. The Owner replies, hides another comment, and deletes a spam comment through the shared confirmation dialog. C20 shows the reply and no longer shows the hidden or deleted comments (AC16). Hiding a comment hides its replies; deleting one deletes them (4.13).
 14. **Reviews (M23, step 4.16).** The Reviews tab lists gift and tour reviews. The Owner replies to one review of each. The replies show on C03 and C09. There is no delete button.
 15. **Advice requests and questions (M19, step 4.14).** Requests has tabs for Advice, Private tours and Questions. The request from step 5 shows its language, email, and each question with the wording as sent. In Questions, the Owner adds the missing DE text, which clears the warning. They also reorder two questions, mark one optional and change the recipient email. A seeded older request still shows its old wording. The next C21 request uses the new set (AC18).
 16. **Private tour requests (M20, step 4.15).** The request from step 6 is new. The Owner replies by email outside the app, then marks the request "Answered" (D9).
@@ -44,7 +44,7 @@ The prototype bar switches roles. Each step names the acceptance criterion or sc
 | Questions change mid-request | In one tab: the guest answers two C21 questions, the prototype bar switches to Owner, who edits the set in M19, then switches back to Guest. The open request keeps the set it started with, and the next request uses the new one. (Demo state does not sync between browser tabs.) | AC18 |
 | Hidden comment | A seeded hidden comment is visible in M18 with a "Hidden" chip, and C20 doesn't show it. | AC16 |
 | Review without reply | Seeded reviews with and without replies show side by side on C03. | §4.11 |
-| Private-tour validation | A group size of 0, no dates or an invalid email each show an inline error, and the entered data is kept. | §5.5 |
+| Private-tour validation | No first date, no email or an invalid email each show an inline error, and the entered data is kept. The group counter starts at 2 and cannot go below 1 or above 50, so a size of 0 cannot be entered (4.6). Leaving "To" empty requests a single day. | §5.5 |
 | Trip profile empty | A new guest sees the C23 empty state. | §5.1 |
 | Refresh | Refreshing C21 mid-flow keeps the answers. Refreshing an editor keeps the saved data and drops unsaved edits. | §5.5 |
 
@@ -76,13 +76,13 @@ The prototype bar switches roles. Each step names the acceptance criterion or sc
 | `#/stories/{slug}` | C20 | Both language versions of an article share one slug. The route shows the current language, or the other with a notice (D6). |
 | `#/plan` | C21 | Replaces the placeholder. The step and answers live in demo state, so refresh keeps them. |
 | `#/tours/private-tour` | C22 | A static segment, which takes priority over `/tours/$slug`. No tour may use the slug `private-tour`. |
-| `#/account?tab=trip` | C23 | A new `trip` value in `accountSections` (D2). |
-| `#/store/products` | M11, M14 | Tabs: Gifts, Tours, Pickup points (D3). |
+| ~~`#/account?tab=trip`~~ | ~~C23~~ | Dropped with C23 (2.17). |
+| `#/store/products` | M11, M14 | Tabs: Gifts, Tours, Pickup points (D3), kept in `?tab=`. |
 | `#/store/products/gifts/{id}` | M12 | |
 | `#/store/products/tours/{id}` | M13 | |
-| `#/store/content` | M17, M18, M23 | Tabs: Articles, Comments, Reviews (spec §3.2). |
-| `#/store/content/articles/{id}` | M17 editor | `new` creates a draft. |
-| `#/store/requests` | M19, M20 | Tabs: Advice, Private tours, Questions. |
+| `#/store/content` | M17, M18, M23 | Tabs: Articles, Comments, Reviews (spec §3.2), kept in `?tab=comments\|reviews`; the article language filter in `?lang=en\|de`. |
+| `#/store/content/articles/{id}` | M17 editor | `new` creates a draft; `new?lang=de` starts it in German. |
+| `#/store/requests` | M19, M20 | Tabs: Advice, Private tours, Questions, kept in `?tab=`. M20 has no detail route. |
 | `#/store/requests/advice/{id}` | M19 request | |
 
 `products`, `content` and `requests` leave the `$section` list. The other placeholders (partners, reports, settings) stay. The folder layout follows `store/orders/` and `store/bookings/`.
@@ -95,7 +95,7 @@ Step 4.1 adds the seeds. Model changes come first, so later steps edit real reco
 | --- | --- | --- |
 | Pickup places | Move from the static `pickupPlaces` export in `catalog/seed` into demo data, then delete the export. It is the only source, imported by 15 files: C03 (`use-gift-detail`), C04, C06, C07, C09 (`tour-detail-page`), C14 rows, C15 (`use-order-detail`), M02 analytics, M03, M04 and its decision block, the mail renderer, and three lab routes. | M14 edits must show on C03 and C15 (D4) |
 | Reviews | Add an optional `reply` (text, language, by, at). Gift and tour reviews already live in demo data. | M23 replies must show on C03 and C09 (D4) |
-| Products | Add `published` to gifts (tours already have it). A missing value counts as published, so stored products from before Phase 4 stay visible. EN/DE completeness is computed from the required text fields, not stored. | M11 publish state, R02 |
+| Products | Add `published` to gifts (tours already have it). A missing value counts as published, so stored products from before Phase 4 stay visible. EN/DE completeness is computed from the required text fields, not stored. Optional `pickupPlaceIds` limits a gift's pickup places (missing = all places, 4.9). | M11 publish state, R02 |
 | Articles (new) | `slug`, `language`, title, excerpt, author, intro, sections of blocks (paragraph, image, video, audio), cover photo, read minutes, up to 6 ordered gift and tour links, `draft` or `published`, dates | C19, C20, M17 (R16, R17) |
 | Comments (new) | Article slug and language, guest or merchant author, text, time, `hidden`, optional parent comment (one level of replies) | C20, M18 |
 | Advice question set (new) | Recipient email, ordered questions: id, EN/DE text, answer type (number, single choice, multiple choice, date, short text), options, required | C21, M19 |
@@ -121,7 +121,7 @@ Step 4.17 adds two templates to the existing Mail panel. Both types already exis
 | Mail | Recipient | Content | Language |
 | --- | --- | --- | --- |
 | N16 New advice request | The M19 recipient email | Every question as sent, with its answer, the guest's email and language | The shop's default language, EN (D10) |
-| N17 New private-tour request | Owner and Manager | Group size, preferred dates, interests, guest email | Each recipient's interface language |
+| N17 New private-tour request | Owner and Manager | Group size, preferred dates, interests, guest email and language | Each recipient's interface language; the prototype assumes the Owner reads EN and the Manager DE, since staff have no stored language (4.17) |
 
 Each mail links to its request in M19 or M20. The guest gets no confirmation email for either request; the sent screen is the confirmation (A2).
 
@@ -140,7 +140,7 @@ Each mail links to its request in M19 or M20. The guest gets no confirmation ema
 | # | Decision | Chosen |
 | --- | --- | --- |
 | D1 | Trip-advice entry (Q2) | Keep the Polaroid banner (layout J, chosen 13.10.2026) and add the floating button on C01, C09 and C20. Both open C21. |
-| D2 | C23 route | `/account?tab=trip`, a 1.12s sub-screen |
+| D2 | C23 route | Dropped with C23 (2.17, 14.10.2026) |
 | D3 | M14 placement | A Pickup points tab under Products, until Settings arrives in Phase 6 |
 | D4 | Editable shared data | Pickup places move into demo data. Reviews, already in demo data, get a `reply`. |
 | D5 | Stored demo state | Fill missing collections from the seed on load; no version bump |

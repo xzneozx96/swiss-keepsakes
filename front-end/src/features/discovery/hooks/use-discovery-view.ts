@@ -5,9 +5,10 @@ import type {
 import type { Article } from "@/features/content/types";
 import type { CategoryRailItem } from "../components/category-rail";
 
-import { businessTypes, timeBlockStories } from "../seed";
+import { timeBlockStories } from "../seed";
 
 import { useLocale } from "@/contexts/locale-context";
+import { categories } from "@/features/catalog/categories";
 import { useProductCard } from "@/features/catalog/hooks/use-product-card";
 import { isPublished } from "@/features/catalog/lib/publish";
 import { zurichDate } from "@/features/catalog/lib/pickup";
@@ -68,7 +69,7 @@ export function useDiscoveryView(): DiscoveryHomeView {
     (tour) => tour.published,
   );
 
-  const categoryItems: CategoryRailItem[] = businessTypes.map((type) => ({
+  const categoryItems: CategoryRailItem[] = categories.map((type) => ({
     id: type.id,
     name: pickText(type.name, language).text,
     photo: type.photo,

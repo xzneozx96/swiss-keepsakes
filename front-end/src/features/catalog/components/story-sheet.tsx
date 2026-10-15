@@ -1,19 +1,24 @@
+import type { RichNode } from "@/lib/rich-text";
+
 import { Drawer } from "@heroui/react";
 
-import { Media } from "@/components/media";
+import { RichText } from "@/components/rich-text";
+import { useSheetExit } from "@/components/sheet-exit";
 
 export interface StoryView {
   /** Small label above the title, e.g. "The story behind it". */
   label: string;
   title: string;
-  chapters: { title: string; body: string; photo?: string }[];
+  /** The rich body in the guest's language, or the other one with `languageNote`. */
+  body: RichNode;
   /** Shown when the story is only in the other language (R02). */
   languageNote?: string;
 }
 
 /**
  * The full story behind a gift, read in a tall bottom sheet (Airbnb "Show more" on
- * About): a title, then illustrated chapters. Shared by gifts and tours.
+ * About): a title, then the rich body the shop wrote in M12/M13 (photos, headings,
+ * paragraphs, lists, quotes). Shared by gifts and tours.
  */
 export function StorySheet({
   story,
@@ -26,6 +31,8 @@ export function StorySheet({
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const exitRef = useSheetExit();
+
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
@@ -33,6 +40,7 @@ export function StorySheet({
           aria-label={story.title}
           className="flex h-[94dvh] flex-col"
         >
+          <span ref={exitRef} hidden />
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-start">
             <Drawer.CloseTrigger aria-label={closeLabel} />
@@ -49,24 +57,7 @@ export function StorySheet({
                 <span className="text-xs text-muted">{story.languageNote}</span>
               )}
             </header>
-            {story.chapters.map((chapter, i) => (
-              <section key={chapter.title} className="flex flex-col gap-3">
-                {chapter.photo && (
-                  <Media
-                    alt=""
-                    className="aspect-[4/3] rounded-3xl"
-                    photo={chapter.photo}
-                  />
-                )}
-                <span className="text-label text-muted tabular-nums">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <h3 className="font-serif text-title text-balance">
-                  {chapter.title}
-                </h3>
-                <p className="text-body leading-7">{chapter.body}</p>
-              </section>
-            ))}
+            <RichText doc={story.body} />
           </Drawer.Body>
         </Drawer.Dialog>
       </Drawer.Content>

@@ -1,0 +1,104 @@
+import type { RequestsTab } from "../hooks/use-merchant-requests";
+import type { MessageKey } from "@/i18n/en";
+
+import { Skeleton, toast } from "@heroui/react";
+
+import { useMerchantRequests } from "../hooks/use-merchant-requests";
+
+import { AdviceRows } from "./advice-rows";
+import { PrivateTourRows } from "./private-tour-rows";
+import { QuestionSetEditor } from "./question-set-editor";
+
+import { MerchantPageHeader } from "@/components/layout/merchant-page-header";
+import { RequestsIcon } from "@/components/icons";
+import { useLocale } from "@/contexts/locale-context";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+
+/** The question set: a card per question with its text lines and a switch. */
+function QuestionsSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-4">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="flex items-center gap-4 rounded-3xl bg-surface p-4 shadow-surface"
+        >
+          <div className="flex flex-1 flex-col gap-2">
+            <Skeleton className="h-5 w-2/3 rounded-lg" />
+            <Skeleton className="h-3.5 w-1/2 rounded-lg" />
+          </div>
+          <Skeleton className="h-6 w-11 shrink-0 rounded-full" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Requests (spec §3.2: M19 advice, M20 private tours; outline steps 15 and 16) in the M03
+ * page shape: the title, then the page of its tab. Advice, Private tours and Questions are
+ * pages under Inquiries (/store/requests, /private, /questions). Advice and private tours
+ * are inboxes, phone cards and a table from 1024px; Questions holds the trip assistant's
+ * question set (M19).
+ */
+export function MerchantRequests({ tab }: { tab: RequestsTab }) {
+  const { t } = useLocale();
+  const { tabs, adviceRows, privateRows, markAnswered, undoAnswered } =
+    useMerchantRequests();
+  const isLoading = useSimulatedLoading();
+
+  const onMarkAnswered = (id: string) => {
+    markAnswered(id);
+    const toastId = toast.success(t("merchantRequests.private.marked"), {
+      actionProps: {
+        children: t("merchantRequests.private.undo"),
+        size: "sm",
+        variant: "tertiary",
+        onPress: () => {
+          toast.close(toastId);
+          undoAnswered(id);
+        },
+      },
+      timeout: 6000,
+    });
+  };
+
+  const emptyState = (message: MessageKey) => ({
+    action: {
+      label: t("merchantRequests.empty.action"),
+      to: "/store" as const,
+    },
+    icon: RequestsIcon,
+    message: t(message),
+  });
+
+  const label = (id: RequestsTab) => tabs.find((x) => x.id === id)?.label ?? "";
+
+  return (
+    <div className="flex flex-col gap-4">
+      <MerchantPageHeader
+        description={t("merchantRequests.intro")}
+        title={t(`merchantRequests.tab.${tab}`)}
+      />
+      {tab === "advice" && (
+        <AdviceRows
+          empty={emptyState("merchantRequests.advice.empty")}
+          isLoading={isLoading}
+          label={label("advice")}
+          rows={adviceRows}
+        />
+      )}
+      {tab === "private" && (
+        <PrivateTourRows
+          empty={emptyState("merchantRequests.private.empty")}
+          isLoading={isLoading}
+          label={label("private")}
+          rows={privateRows}
+          onMarkAnswered={onMarkAnswered}
+        />
+      )}
+      {tab === "questions" &&
+        (isLoading ? <QuestionsSkeleton /> : <QuestionSetEditor />)}
+    </div>
+  );
+}

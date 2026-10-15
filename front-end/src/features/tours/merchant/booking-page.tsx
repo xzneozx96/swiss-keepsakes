@@ -30,6 +30,7 @@ import {
 import { useOverdueCheck } from "./use-overdue-check";
 
 import { EmptyState } from "@/components/empty-state";
+import { MerchantBackBar } from "@/components/layout/merchant-back-bar";
 import {
   AccountIcon,
   BackIcon,
@@ -591,8 +592,14 @@ export function MerchantTourBookingPage({ bookingId }: { bookingId: string }) {
   return (
     <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
       <header className="flex flex-col gap-3">
+        <MerchantBackBar
+          label={t("tourMerchant.manifest")}
+          params={{ departureId: booking.departureId }}
+          title={booking.ref}
+          to="/store/bookings/departures/$departureId"
+        />
         <Link
-          className="flex w-fit items-center gap-1.5 rounded-lg text-sm text-muted outline-none hover:text-foreground focus-visible:focus-ring"
+          className="hidden w-fit items-center gap-1.5 rounded-lg text-sm text-muted outline-none hover:text-foreground focus-visible:focus-ring lg:flex"
           params={{ departureId: booking.departureId }}
           to="/store/bookings/departures/$departureId"
         >
@@ -601,7 +608,7 @@ export function MerchantTourBookingPage({ bookingId }: { bookingId: string }) {
         </Link>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex min-w-0 flex-col gap-1">
-            <h1 className="text-title">{booking.ref}</h1>
+            <h1 className="text-title max-lg:sr-only">{booking.ref}</h1>
             <p className="font-medium">
               {pickText(booking.tourName, language).text}
             </p>

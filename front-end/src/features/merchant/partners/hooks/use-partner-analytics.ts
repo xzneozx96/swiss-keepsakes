@@ -57,13 +57,16 @@ export interface PartnerKpiView {
  * the Overview's periods, opens per day by partner, and a comparison of partners. Reads the
  * same transactions as M02 and P02 (D14); archived partners keep their history here.
  */
-export function usePartnerAnalytics() {
+export function usePartnerAnalytics(
+  /** Exact ranges instead of the period tabs (the lab Partners' period dropdown). */
+  override?: { current: DayRange; previous: DayRange },
+) {
   const { t, intlLocale } = useLocale();
   const { state } = useDemo();
   const now = useDemoNow();
   const [period, setPeriod] = useState<PeriodId>("30d");
   const today = zurichDate(now);
-  const { current, previous } = periodRanges(period, today);
+  const { current, previous } = override ?? periodRanges(period, today);
   const nowMs = now.getTime();
 
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
@@ -215,6 +218,8 @@ export function usePartnerAnalytics() {
         transactions: count(tx),
         conversion: o ? percent(tx, o) : "–",
         commission: money(commission),
+        /** Rappen, for charts. */
+        commissionValue: commission,
       };
     })
     .filter((row) => row.opensValue > 0 || row.transactionsValue > 0)

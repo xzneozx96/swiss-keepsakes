@@ -4,12 +4,13 @@ import type {
 } from "../hooks/use-merchant-order-detail";
 import type { IconComponent } from "@/components/icons";
 
-import { Button, buttonVariants } from "@heroui/react";
+import { buttonVariants } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
 
 import { DetailCard } from "./detail-card";
 
+import { CopyText } from "@/components/copy-text";
+import { MerchantBackBar } from "@/components/layout/merchant-back-bar";
 import { avatarUrl } from "@/lib/avatars";
 import {
   AccountIcon,
@@ -39,8 +40,13 @@ export function OrderHeader({ view }: { view: MerchantOrderView }) {
 
   return (
     <header className="flex flex-col gap-3">
+      <MerchantBackBar
+        label={t("merchantOrder.back")}
+        title={t("merchantOrder.title", { ref: view.ref })}
+        to="/store/orders"
+      />
       <Link
-        className="flex w-fit items-center gap-1.5 rounded-lg text-sm text-muted outline-none hover:text-foreground focus-visible:focus-ring"
+        className="hidden w-fit items-center gap-1.5 rounded-lg text-sm text-muted outline-none hover:text-foreground focus-visible:focus-ring lg:flex"
         to="/store/orders"
       >
         <BackIcon aria-hidden size={16} />
@@ -48,7 +54,7 @@ export function OrderHeader({ view }: { view: MerchantOrderView }) {
       </Link>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-title">
+          <h1 className="text-title max-lg:sr-only">
             {t("merchantOrder.title", { ref: view.ref })}
           </h1>
           <p className="text-sm text-muted tabular-nums">
@@ -441,52 +447,5 @@ export function ActivityCard({ view }: { view: MerchantOrderView }) {
         })}
       </ol>
     </DetailCard>
-  );
-}
-
-/** Text the staff member can select or copy, e.g. the guest's email (outline §2 row 1.11). */
-export function CopyText({ label, value }: { label: string; value: string }) {
-  const { t } = useLocale();
-  const [copied, setCopied] = useState<boolean | null>(null);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface-secondary px-4 py-3">
-      <div className="flex min-w-0 flex-col">
-        <span className="text-xs text-muted">{label}</span>
-        <span className="font-medium select-all [overflow-wrap:anywhere]">
-          {/* Break after "@" first, so a long address wraps between name and domain. */}
-          {value.includes("@") ? (
-            <>
-              {value.slice(0, value.lastIndexOf("@") + 1)}
-              <wbr />
-              {value.slice(value.lastIndexOf("@") + 1)}
-            </>
-          ) : (
-            value
-          )}
-        </span>
-      </div>
-      <div className="flex shrink-0 flex-col items-end gap-1">
-        <Button size="sm" variant="tertiary" onPress={() => void copy()}>
-          {t("merchantOrder.copy")}
-        </Button>
-        <span aria-live="polite" className="text-xs text-muted">
-          {copied === true
-            ? t("merchantOrder.copied")
-            : copied === false
-              ? t("merchantOrder.copyFailed")
-              : ""}
-        </span>
-      </div>
-    </div>
   );
 }

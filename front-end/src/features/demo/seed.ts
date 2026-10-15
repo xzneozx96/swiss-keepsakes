@@ -1,6 +1,11 @@
 import type { DemoState } from "./types";
 
-import { pickupPlaceSeed, products, reviews } from "@/features/catalog/seed";
+import {
+  pickupPlaceSeed,
+  products,
+  reviews,
+  subcategories,
+} from "@/features/catalog/seed";
 import { articleSeed, commentSeed } from "@/features/content/seed";
 import { demoGuest, otherGuests, seedOrders } from "@/features/orders/seed";
 import {
@@ -18,7 +23,7 @@ import { sampleTourReviews } from "@/features/tours/reviews/seed";
 import { createTourSeed } from "@/features/tours/seed";
 
 /** Bump when the stored shape changes, so old browser data is replaced by the seed. */
-export const DEMO_VERSION = 12;
+export const DEMO_VERSION = 13;
 
 export function createSeedState(realNow: number = Date.now()): DemoState {
   const orders = seedOrders();
@@ -32,6 +37,7 @@ export function createSeedState(realNow: number = Date.now()): DemoState {
     data: {
       // Deep copies so the module-level seed is never mutated.
       products: structuredClone(products),
+      subcategories: structuredClone(subcategories),
       orders,
       guests: [demoGuest, ...otherGuests],
       reviews: structuredClone([...reviews, ...sampleTourReviews]),

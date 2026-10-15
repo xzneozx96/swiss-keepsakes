@@ -53,7 +53,7 @@ export function RowIcon({
   tone = "default",
 }: {
   icon: IconComponent;
-  tone?: "default" | "accent";
+  tone?: "default" | "accent" | "danger";
 }) {
   return (
     <span
@@ -61,7 +61,9 @@ export function RowIcon({
       className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
         tone === "accent"
           ? "bg-accent-soft text-accent-soft-foreground"
-          : "bg-default text-foreground"
+          : tone === "danger"
+            ? "bg-danger-soft text-danger-soft-foreground"
+            : "bg-default text-foreground"
       }`}
     >
       <Icon size={20} />

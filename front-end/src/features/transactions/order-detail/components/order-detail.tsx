@@ -3,8 +3,9 @@ import type { OrderDetailView, OrderNotice } from "../hooks/use-order-detail";
 
 import { Alert, Button, buttonVariants } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
+import { CopyText } from "@/components/copy-text";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DateTile } from "@/components/date-tile";
 import { DetailTabs } from "@/components/detail-tabs";
@@ -422,7 +423,12 @@ function PolicyPanel({ view }: { view: OrderDetailView }) {
 
       <Panel title={t("guestOrder.contact.title")}>
         <p className="text-sm text-muted">{t("guestOrder.contact.body")}</p>
-        <CopyReference reference={view.ref} />
+        <CopyText
+          isMono
+          className={surface}
+          label={t("guestOrder.contact.ref")}
+          value={view.ref}
+        />
         <div className="flex gap-2">
           <a
             className={`${buttonVariants({ variant: "tertiary" })} flex-1`}
@@ -440,48 +446,6 @@ function PolicyPanel({ view }: { view: OrderDetailView }) {
           </a>
         </div>
       </Panel>
-    </div>
-  );
-}
-
-/** The order reference as selectable text with a copy button (spec: contact with the reference). */
-function CopyReference({ reference }: { reference: string }) {
-  const { t } = useLocale();
-  const [copied, setCopied] = useState<boolean | null>(null);
-
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(reference);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  };
-
-  return (
-    <div
-      className={`${surface} flex items-center justify-between gap-3 px-4 py-3`}
-    >
-      <div className="flex flex-col">
-        <span className="text-xs text-muted">
-          {t("guestOrder.contact.ref")}
-        </span>
-        <span className="font-mono text-lg font-medium select-all">
-          {reference}
-        </span>
-      </div>
-      <div className="flex flex-col items-end gap-1">
-        <Button size="sm" variant="secondary" onPress={() => void copy()}>
-          {t("guestOrder.contact.copy")}
-        </Button>
-        <span aria-live="polite" className="text-xs text-muted">
-          {copied === true
-            ? t("guestOrder.contact.copied")
-            : copied === false
-              ? t("guestOrder.contact.copyFailed")
-              : ""}
-        </span>
-      </div>
     </div>
   );
 }

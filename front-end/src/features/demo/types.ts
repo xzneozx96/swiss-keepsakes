@@ -1,7 +1,12 @@
 import type { CartLine } from "@/features/cart/types";
 import type { Guest, Order } from "@/features/orders/types";
 import type { Mail } from "@/features/notifications/types";
-import type { PickupPlace, Product, Review } from "@/features/catalog/types";
+import type {
+  PickupPlace,
+  Product,
+  Review,
+  Subcategory,
+} from "@/features/catalog/types";
 import type { Article, ArticleComment } from "@/features/content/types";
 import type {
   CommissionAdjustment,
@@ -25,6 +30,8 @@ export type Role = "guest" | "owner" | "manager" | "partner";
 /** Everything the prototype remembers between reloads. Reset restores the seed. */
 export interface DemoData {
   products: Product[];
+  /** The store's own sub-categories, edited on M26; each product points at one (PRD §7.0). */
+  subcategories: Subcategory[];
   orders: Order[];
   guests: Guest[];
   reviews: Review[];

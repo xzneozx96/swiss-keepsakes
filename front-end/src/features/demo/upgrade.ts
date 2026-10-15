@@ -1,13 +1,24 @@
 import type { DemoData } from "./types";
+import type { Product } from "@/features/catalog/types";
 
 import { createSeedState } from "./seed";
 
 import { sampleTourReviews } from "@/features/tours/reviews/seed";
 import { createTourSeed } from "@/features/tours/seed";
 import { upgradeTourData } from "@/features/tours/lib/upgrade";
+import { isChapterStory, storyFromChapters } from "@/lib/rich-text";
+
+/**
+ * Long stories stored before 15.10.2026 have illustrated chapters; they become one rich
+ * body per language, with the same photos, titles and text (owner, rich long story).
+ */
+function currentStory<T>(story: T): T {
+  return isChapterStory(story) ? (storyFromChapters(story) as T) : story;
+}
 
 /** Collections added in Phases 4 and 5; demo data saved before then has none of them. */
 type AddedKey =
+  | "subcategories"
   | "pickupPlaces"
   | "articles"
   | "comments"
@@ -25,8 +36,15 @@ type AddedKey =
  * trip answers were kept once per guest in `tripProfiles`; they now live on each order and
  * booking, so the old map is dropped.
  */
-export type StoredDemoData = Omit<DemoData, AddedKey> &
-  Partial<Pick<DemoData, AddedKey>> & { tripProfiles?: unknown };
+export type StoredDemoData = Omit<DemoData, AddedKey | "products"> &
+  Partial<Pick<DemoData, AddedKey>> & {
+    tripProfiles?: unknown;
+    /** Before the four fixed categories, a product held one of the five keepsake `categoryId`s. */
+    products: (Omit<Product, "subcategoryId"> & {
+      subcategoryId?: string;
+      categoryId?: string;
+    })[];
+  };
 
 /**
  * Fills what an earlier build did not store, from the seed (outline D5), so nobody's demo
@@ -52,15 +70,30 @@ export function upgradeDemoData({
     );
   const commentIds = new Set(stored.comments?.map((c) => c.id));
 
+  const tours = upgradeTourData(stored.tours ?? createTourSeed());
+
   return {
     ...stored,
     // Products saved before their long story was written get it from the seed (a saved
-    // story wins).
-    products: stored.products.map((product) => ({
-      longStory: seed.products.find((p) => p.id === product.id)?.longStory,
-      ...product,
-    })),
-    tours: upgradeTourData(stored.tours ?? createTourSeed()),
+    // story wins); a saved story in the chapter shape is converted.
+    subcategories: stored.subcategories ?? seed.subcategories,
+    products: stored.products.map(({ categoryId, ...product }) => {
+      const merged = {
+        longStory: seed.products.find((p) => p.id === product.id)?.longStory,
+        ...product,
+        // The old five categories are now the sub-categories of Keepsakes, with the same ids.
+        subcategoryId: product.subcategoryId ?? categoryId ?? "small-gifts",
+      };
+
+      return { ...merged, longStory: currentStory(merged.longStory) };
+    }),
+    tours: {
+      ...tours,
+      tours: tours.tours.map((tour) => ({
+        ...tour,
+        longStory: currentStory(tour.longStory),
+      })),
+    },
     reviews: [
       ...stored.reviews,
       ...structuredClone(

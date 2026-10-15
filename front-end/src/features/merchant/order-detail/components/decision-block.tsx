@@ -28,6 +28,7 @@ import { declineReasons } from "../hooks/use-merchant-order-detail";
 import { ActionPanel } from "./detail-card";
 
 import { useConfirm } from "@/components/confirm-dialog";
+import { useSheetExit } from "@/components/sheet-exit";
 import {
   GiftIcon,
   InfoIcon,
@@ -236,6 +237,7 @@ export function SheetFrame({
   footer: React.ReactNode;
 }) {
   const { t } = useLocale();
+  const markerRef = useSheetExit();
 
   return (
     <Drawer.Backdrop
@@ -244,6 +246,7 @@ export function SheetFrame({
     >
       <Drawer.Content className="mx-auto max-w-[560px]" placement="bottom">
         <Drawer.Dialog className="flex sheet-max flex-col">
+          <span ref={markerRef} hidden />
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-between">
             <Drawer.Heading className="text-title">{title}</Drawer.Heading>

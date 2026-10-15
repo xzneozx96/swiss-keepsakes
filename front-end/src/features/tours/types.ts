@@ -38,7 +38,14 @@ export interface Tour {
   excluded: LocalizedText;
   conditions: LocalizedText;
   cancellationPolicy: LocalizedText;
+  /** Set when archived in M11: unpublished, off C08 and M11's active list until restored as a draft. */
+  archivedAt?: string;
   published: boolean;
+  /**
+   * Created in M13 and never published yet: hidden from C08 until its first publish. A
+   * draft without it (the seeded Pilatus) shows on C08 as "Coming soon".
+   */
+  unannounced?: boolean;
   commissionRate: number;
   itinerary: TourStop[];
   ageBands: TourAgeBands;

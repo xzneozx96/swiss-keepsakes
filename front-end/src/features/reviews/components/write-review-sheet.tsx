@@ -18,6 +18,7 @@ import { useState } from "react";
 import { RatingIcon } from "@/components/icons";
 import { Media } from "@/components/media";
 import { useLocale } from "@/contexts/locale-context";
+import { useSheetExit } from "@/components/sheet-exit";
 
 const RATINGS = [1, 2, 3, 4, 5] as const;
 const MAX_TEXT = 1000;
@@ -39,12 +40,14 @@ export function WriteReviewSheet({
   onOpenChange: (open: boolean) => void;
   onSubmit: (rating: Review["rating"], text: string) => void;
 }) {
+  const exitRef = useSheetExit();
   const { t } = useLocale();
 
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
         <Drawer.Dialog className="flex sheet-max flex-col">
+          <span ref={exitRef} hidden />
           <Drawer.Handle />
           <Drawer.Header className="flex flex-row items-center justify-between gap-2">
             <Drawer.Heading className="font-serif text-title">

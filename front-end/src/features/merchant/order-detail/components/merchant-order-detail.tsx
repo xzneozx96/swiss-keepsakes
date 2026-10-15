@@ -22,6 +22,7 @@ import {
   PolicyCard,
 } from "./order-sections";
 
+import { STICKY_TABS_BELOW_BAR } from "@/components/layout/sticky-tabs";
 import { useLocale } from "@/contexts/locale-context";
 
 type TabId = "details" | "money" | "activity";
@@ -85,23 +86,25 @@ export function MerchantOrderDetail({
               selectedKey={tab}
               onSelectionChange={(key) => setTab(key as TabId)}
             >
-              <Tabs.ListContainer>
-                <Tabs.List aria-label={t("merchantOrder.tabs.label")}>
-                  {(
-                    [
-                      ["details", t("merchantOrder.tabs.details")],
-                      ["money", t("merchantOrder.tabs.money")],
-                      ["activity", t("merchantOrder.tabs.activity")],
-                    ] as const
-                  ).map(([id, label], index) => (
-                    <Tabs.Tab key={id} className="whitespace-nowrap" id={id}>
-                      {index > 0 && <Tabs.Separator />}
-                      {label}
-                      <Tabs.Indicator />
-                    </Tabs.Tab>
-                  ))}
-                </Tabs.List>
-              </Tabs.ListContainer>
+              <div className={`max-lg:py-2 ${STICKY_TABS_BELOW_BAR}`}>
+                <Tabs.ListContainer>
+                  <Tabs.List aria-label={t("merchantOrder.tabs.label")}>
+                    {(
+                      [
+                        ["details", t("merchantOrder.tabs.details")],
+                        ["money", t("merchantOrder.tabs.money")],
+                        ["activity", t("merchantOrder.tabs.activity")],
+                      ] as const
+                    ).map(([id, label], index) => (
+                      <Tabs.Tab key={id} className="whitespace-nowrap" id={id}>
+                        {index > 0 && <Tabs.Separator />}
+                        {label}
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                    ))}
+                  </Tabs.List>
+                </Tabs.ListContainer>
+              </div>
               <Tabs.Panel
                 className="flex flex-col gap-5 px-0 pb-0"
                 id="details"

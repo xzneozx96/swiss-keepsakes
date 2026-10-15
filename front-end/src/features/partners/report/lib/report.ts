@@ -1,15 +1,10 @@
-import type {
-  CategoryId,
-  LocalizedText,
-  Rappen,
-} from "@/features/catalog/types";
+import type { LocalizedText, Rappen } from "@/features/catalog/types";
 import type { DemoData } from "@/features/demo/types";
 import type { CommissionState } from "@/features/orders/lib/selectors";
 import type { OrderLabel } from "@/features/orders/lib/labels";
 import type { TourBooking } from "@/features/tours/types";
 
 import { zurichDate } from "@/features/catalog/lib/pickup";
-import { categories } from "@/features/catalog/seed";
 import { zurichWeek } from "@/features/merchant/today/lib/today";
 import { commissionLabel, progressLabel } from "@/features/orders/lib/labels";
 import {
@@ -86,8 +81,8 @@ export interface ReportRow {
 }
 
 export interface ReportGroup {
-  /** A catalog category, or "tours" for tour bookings (step 2.13). */
-  categoryId: CategoryId | "tours";
+  /** A store sub-category, or "tours" for tour bookings (step 2.13). */
+  subcategoryId: string;
   /** Orders with at least one line in this group. */
   orders: number;
   value: Rappen;
@@ -141,7 +136,7 @@ const zurichHourFormat = new Intl.DateTimeFormat("en-GB", {
   hourCycle: "h23",
 });
 
-function zurichHour(at: Date): number {
+export function zurichHour(at: Date): number {
   return Number(zurichHourFormat.format(at));
 }
 
@@ -193,13 +188,18 @@ function emptyBuckets(
  * add nothing to the numbers or the groups, so the groups sum to the headline numbers.
  */
 export function partnerReport(
-  data: Pick<DemoData, "orders" | "guests" | "products" | "tours">,
+  data: Pick<
+    DemoData,
+    "orders" | "guests" | "products" | "subcategories" | "tours"
+  >,
   partnerId: string,
   period: ReportPeriod,
   anchor: string,
   now: Date = new Date(),
+  /** Any range of days instead of the period around `anchor` (the dashboard's period picker). */
+  rangeOverride?: DateRange,
 ): PartnerReport {
-  const range = periodRange(period, anchor);
+  const range = rangeOverride ?? periodRange(period, anchor);
   const buckets = emptyBuckets(period, range, now);
   const counts: Record<CommissionState, number> = {
     recorded: 0,
@@ -216,7 +216,7 @@ export function partnerReport(
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
-  const groups = new Map<CategoryId, ReportGroup>();
+  const groups = new Map<string, ReportGroup>();
   let earned = 0;
   let estimated = 0;
 
@@ -243,16 +243,16 @@ export function partnerReport(
         estimated += fees.total;
         bucket.estimated += fees.total;
       }
-      const seen = new Set<CategoryId>();
+      const seen = new Set<string>();
 
       order.lines.forEach((line, i) => {
-        const categoryId = data.products.find(
+        const subcategoryId = data.products.find(
           (p) => p.id === line.productId,
-        )?.categoryId;
+        )?.subcategoryId;
 
-        if (!categoryId) return;
-        const group = groups.get(categoryId) ?? {
-          categoryId,
+        if (!subcategoryId) return;
+        const group = groups.get(subcategoryId) ?? {
+          subcategoryId,
           orders: 0,
           value: 0,
           recorded: 0,
@@ -260,12 +260,12 @@ export function partnerReport(
         };
         const amount = fees.lines[i].amount;
 
-        if (!seen.has(categoryId)) group.orders += 1;
-        seen.add(categoryId);
+        if (!seen.has(subcategoryId)) group.orders += 1;
+        seen.add(subcategoryId);
         group.value += lineTotal(line);
         if (fees.state === "recorded") group.recorded += amount;
         else group.estimated += amount;
-        groups.set(categoryId, group);
+        groups.set(subcategoryId, group);
       });
     }
 
@@ -291,7 +291,7 @@ export function partnerReport(
   // Tour bookings (step 2.13): same rules by booking date, in one "Tours" group, so the
   // groups still add up to the headline numbers. Commission is recorded once at completion.
   const tours: ReportGroup = {
-    categoryId: "tours",
+    subcategoryId: "tours",
     orders: 0,
     value: 0,
     recorded: 0,
@@ -345,7 +345,7 @@ export function partnerReport(
     toPay: earned - paid,
     estimated,
     groups: [
-      ...categories.flatMap((c) => groups.get(c.id) ?? []),
+      ...data.subcategories.flatMap((c) => groups.get(c.id) ?? []),
       ...(tours.orders ? [tours] : []),
     ],
     counts,

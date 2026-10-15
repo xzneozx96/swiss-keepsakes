@@ -8,7 +8,8 @@ import {
 
 import { useLocale } from "@/contexts/locale-context";
 import { useProductCard } from "@/features/catalog/hooks/use-product-card";
-import { categories } from "@/features/catalog/seed";
+import { isPublished } from "@/features/catalog/lib/publish";
+import { categories } from "@/features/catalog/categories";
 import { publishedArticles } from "@/features/content/lib/articles";
 import { useDemo } from "@/features/demo";
 import { GlobalSearch } from "@/features/search/components/global-search";
@@ -38,11 +39,13 @@ function SearchPage() {
 
   if (query) {
     const gifts = state.data.products
-      .filter((p) =>
-        matches(
-          pickText(p.name, language).text,
-          pickText(p.story, language).text,
-        ),
+      .filter(
+        (p) =>
+          isPublished(p) &&
+          matches(
+            pickText(p.name, language).text,
+            pickText(p.story, language).text,
+          ),
       )
       .map(toCard);
     const tours = (state.data.tours?.tours ?? []).filter(
@@ -97,14 +100,31 @@ function SearchPage() {
       backLabel={t("search.back")}
       browse={{
         title: t("search.browse"),
-        items: categories.map((c) => ({
-          id: c.id,
-          name: pickText(c.name, language).text,
-          photo: c.photo,
-          link: c.comingSoon
-            ? { to: "/tours" }
-            : { to: "/gifts", search: { category: c.id } },
-        })),
+        // The store's keepsake sub-categories that have something to buy, then tours.
+        items: [
+          ...state.data.subcategories
+            .filter(
+              (c) =>
+                c.categoryId === "keepsakes" &&
+                state.data.products.some(
+                  (p) => p.subcategoryId === c.id && isPublished(p),
+                ),
+            )
+            .map((c) => ({
+              id: c.id,
+              name: pickText(c.name, language).text,
+              photo: c.photo ?? "gift-box",
+              link: { to: "/gifts" as const, search: { subcategory: c.id } },
+            })),
+          ...categories
+            .filter((c) => c.id === "tours")
+            .map((c) => ({
+              id: c.id,
+              name: pickText(c.name, language).text,
+              photo: c.photo,
+              link: { to: "/tours" as const },
+            })),
+        ],
       }}
       groups={groups}
       label={t("search.label")}

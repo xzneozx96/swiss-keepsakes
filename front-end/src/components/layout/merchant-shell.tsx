@@ -1,13 +1,16 @@
 import type { IconComponent } from "@/components/icons";
 import type { MessageKey } from "@/i18n/en";
+import type { LinkProps } from "@tanstack/react-router";
 
-import { Drawer } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { Button, Drawer } from "@heroui/react";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import {
   BookingsIcon,
+  ChevronDownIcon,
   ContentIcon,
+  LogoutIcon,
   MoreIcon,
   OrdersIcon,
   PartnersIcon,
@@ -17,9 +20,13 @@ import {
   SettingsIcon,
   TodayIcon,
 } from "@/components/icons";
+import brandMark from "@/assets/brand/swiss-keepsakes-mark.png";
+import { MerchantBarSlot } from "@/components/layout/merchant-back-bar";
 import { useLocale } from "@/contexts/locale-context";
 import { shop } from "@/features/catalog/seed";
+import { SECTION_PAGES } from "@/components/layout/section-pages";
 import { useDemo } from "@/features/demo";
+import { avatarUrl } from "@/lib/avatars";
 
 export type MerchantSection =
   | "bookings"
@@ -88,8 +95,28 @@ const allItems: NavItem[] = [
   },
 ];
 
+const sectionRoutes = {
+  bookings: "/store/bookings",
+  products: "/store/products",
+  partners: "/store/partners",
+  content: "/store/content",
+  requests: "/store/requests",
+  reports: "/store/reports",
+} as const;
+
 const phonePrimary = allItems.slice(0, 3);
 const phoneMore = allItems.slice(3);
+
+/** Whether the open page belongs to a section of the More sheet (so the tab can say so). */
+const isInMoreSection = (pathname: string) =>
+  phoneMore.some((item) => {
+    const base =
+      item.kind === "section" && item.section !== "settings"
+        ? sectionRoutes[item.section]
+        : "/store/settings";
+
+    return pathname === base || pathname.startsWith(`${base}/`);
+  });
 
 function NavLink({
   item,
@@ -102,11 +129,15 @@ function NavLink({
   children: React.ReactNode;
   onClick?: () => void;
 }) {
+  const { pathname } = useLocation();
+
   if (item.kind === "today") {
     return (
       <Link
+        // Overview stays active on both its pages, Today (/store) and Sales.
         activeOptions={{ exact: true }}
         className={className}
+        data-status={isOverviewPath(pathname) ? "active" : undefined}
         to="/store"
         onClick={onClick}
       >
@@ -121,18 +152,15 @@ function NavLink({
       </Link>
     );
   }
-  // M15 has its own route since step 5.2; the $section placeholder would resolve to it anyway.
-  if (item.section === "partners") {
+  // Sections with their own screens (bookings, products, partners, content, requests, reports);
+  // reports stays active on M24 (/store/reports/costs). Settings is still a placeholder.
+  if (item.section !== "settings") {
     return (
-      <Link className={className} to="/store/partners" onClick={onClick}>
-        {children}
-      </Link>
-    );
-  }
-  // M21 since step 5.9; also active on M24 (/store/reports/costs).
-  if (item.section === "reports") {
-    return (
-      <Link className={className} to="/store/reports" onClick={onClick}>
+      <Link
+        className={className}
+        to={sectionRoutes[item.section]}
+        onClick={onClick}
+      >
         {children}
       </Link>
     );
@@ -153,8 +181,30 @@ function NavLink({
 const sideLink =
   "flex h-10 items-center gap-3 rounded-2xl px-3 text-sm text-muted outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-foreground";
 
+/** A parent row: no active fill of its own, the open page below carries it. */
+const parentLink =
+  "flex h-10 items-center gap-3 rounded-2xl px-3 text-sm text-foreground outline-none hover:bg-default focus-visible:focus-ring";
+
+const subLink =
+  "flex h-9 items-center rounded-xl ps-11 pe-3 text-sm text-muted outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-foreground";
+
+/** A page listed under its section in the sidebar; the label is already in the UI language. */
+export interface MerchantSubPage {
+  label: string;
+  to: LinkProps["to"];
+}
+
+/** M02 Overview's pages, listed under Overview in the sidebar (owner review 15.10.2026). */
+const overviewPages = [
+  { label: "overviewPages.today", to: "/store" },
+  { label: "overviewPages.sales", to: "/store/sales" },
+] as const satisfies readonly { label: MessageKey; to: LinkProps["to"] }[];
+
+const isOverviewPath = (pathname: string) =>
+  overviewPages.some((page) => page.to === pathname);
+
 const tabLink =
-  "group relative flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-foreground";
+  "group relative flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent";
 
 /**
  * Merchant dashboard frame (UX spec §3.2). Phones: bottom navigation with Today,
@@ -162,48 +212,165 @@ const tabLink =
  */
 export function MerchantShell({ children }: { children: React.ReactNode }) {
   const { t } = useLocale();
-  const { state } = useDemo();
+  const { state, setRole } = useDemo();
   const staffName = state.role === "manager" ? "Lukas" : shop.ownerName;
   const staffRole =
     state.role === "manager" ? t("staff.manager") : t("staff.owner");
   const [moreOpen, setMoreOpen] = useState(false);
+  // Sections with pages start unfolded; the set holds the ones the user folded.
+  const [folded, setFolded] = useState<Set<string>>(new Set());
+  const [barSlot, setBarSlot] = useState<HTMLElement | null>(null);
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const pagesOf = (item: NavItem): MerchantSubPage[] =>
+    item.kind === "today"
+      ? overviewPages.map((page) => ({ label: t(page.label), to: page.to }))
+      : item.kind === "section" && item.section in SECTION_PAGES
+        ? SECTION_PAGES[item.section as keyof typeof SECTION_PAGES].map(
+            (page) => ({ label: t(page.label), to: page.to }),
+          )
+        : [];
+  const labelOf = (item: NavItem) => t(item.label);
 
   return (
     <div className="flex flex-1">
       {/* The aside stretches with the page; its contents stay pinned while the page scrolls. */}
-      <aside className="hidden w-64 shrink-0 border-e border-separator bg-surface lg:block">
-        <div className="sticky top-0 flex flex-col gap-6 p-4">
-          <div className="flex flex-col gap-0.5 px-3 pt-2">
-            <span className="text-heading">{shop.name}</span>
-            <span className="text-label text-muted">
-              {staffName} · {staffRole}
+      {/* Standard dashboard sidebar (owner, 15.10.2026): the shop's mark and name on top,
+          the signed-in person pinned to the bottom. */}
+      <aside className="hidden w-64 shrink-0 flex-col border-e border-separator bg-surface lg:flex">
+        {/* The menu scrolls on its own when it is taller than the screen, so every section
+            stays reachable above the pinned profile (the extra bottom padding clears the
+            prototype bar's height before the page scrolls). */}
+        <div className="sticky top-0 flex max-h-[calc(100dvh-4.5rem)] flex-col gap-6 overflow-y-auto p-4 pb-14">
+          <Link
+            className="flex items-center gap-3 rounded-xl px-2 pt-2 outline-none focus-visible:focus-ring"
+            to="/store"
+          >
+            <svg
+              aria-hidden
+              className="h-9 w-auto shrink-0"
+              height={883}
+              viewBox="79 173 1053 883"
+              width={1053}
+            >
+              <image height={1254} href={brandMark} width={1254} />
+            </svg>
+            <span className="min-w-0 text-sm leading-snug font-semibold">
+              {shop.name}
             </span>
-          </div>
+          </Link>
           <nav aria-label={t("nav.merchant.label")}>
             <ul className="flex flex-col gap-1">
-              {allItems.map((item) => (
-                <li key={item.label}>
-                  <NavLink className={sideLink} item={item}>
-                    <item.icon size={20} />
-                    {t(item.label)}
-                  </NavLink>
-                </li>
-              ))}
+              {allItems.map((item) => {
+                const pages = pagesOf(item);
+                const id = `nav-pages-${item.label.replace(".", "-")}`;
+                // Inside the section: one of its pages, or a detail screen under it.
+                const inside =
+                  pages.some((page) => page.to === pathname) ||
+                  (item.kind === "section" &&
+                    pathname.startsWith(
+                      `${sectionRoutes[item.section as keyof typeof sectionRoutes] ?? "/none"}/`,
+                    ));
+                const isOpen = !folded.has(item.label);
+
+                return (
+                  <li key={item.label}>
+                    {pages.length ? (
+                      // A parent with pages. Inside its section the row folds or unfolds them;
+                      // from another section it unfolds them and opens the first page. Folded
+                      // while one of its pages is open, it shows where you are.
+                      <button
+                        aria-controls={id}
+                        aria-expanded={isOpen}
+                        className={`${parentLink} w-full text-start ${
+                          !isOpen && inside ? "bg-default font-semibold" : ""
+                        }`}
+                        type="button"
+                        onClick={() => {
+                          const next = new Set(folded);
+
+                          if (isOpen && inside) next.add(item.label);
+                          else {
+                            next.delete(item.label);
+                            void navigate({ to: pages[0].to });
+                          }
+                          setFolded(next);
+                        }}
+                      >
+                        <item.icon size={20} />
+                        <span className="flex-1">{labelOf(item)}</span>
+                        <ChevronDownIcon
+                          aria-hidden
+                          className={`text-muted transition-transform ${isOpen ? "" : "-rotate-90"}`}
+                          size={16}
+                        />
+                      </button>
+                    ) : (
+                      <NavLink className={sideLink} item={item}>
+                        <item.icon size={20} />
+                        {labelOf(item)}
+                      </NavLink>
+                    )}
+                    {pages.length > 0 && isOpen && (
+                      <ul className="mt-1 flex flex-col gap-0.5" id={id}>
+                        {pages.map((page) => (
+                          <li key={page.label}>
+                            <Link
+                              activeOptions={{ exact: true }}
+                              className={subLink}
+                              to={page.to}
+                            >
+                              {page.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </nav>
+        </div>
+        <div className="sticky bottom-0 mt-auto flex items-center justify-between gap-3 border-t border-separator bg-surface py-4 ps-6 pe-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <img
+              alt=""
+              className="size-9 shrink-0 rounded-full bg-default object-cover"
+              src={avatarUrl(staffName)}
+            />
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate text-sm font-medium">{staffName}</span>
+              <span className="truncate text-xs text-muted">{staffRole}</span>
+            </span>
+          </div>
+          {/* The prototype has no merchant login: signing out leaves the shop for the guest
+              side, as the prototype bar's guest role does. */}
+          <Button
+            isIconOnly
+            aria-label={t("account.signOut")}
+            className="text-danger"
+            size="sm"
+            variant="ghost"
+            onPress={() => {
+              setRole("guest");
+              void navigate({ to: "/" });
+            }}
+          >
+            <LogoutIcon aria-hidden size={18} />
+          </Button>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 flex-col justify-center border-b border-separator bg-background/95 px-4 backdrop-blur lg:hidden">
-          <span className="truncate text-heading">{shop.name}</span>
-          <span className="truncate text-label text-muted">
-            {staffName} · {staffRole}
-          </span>
-        </header>
+        {/* Phones: no shop header. Detail screens dock their ← title bar here (guest pattern). */}
+        <div
+          ref={setBarSlot}
+          className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl empty:hidden lg:hidden"
+        />
 
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8">
-          {children}
+          <MerchantBarSlot value={barSlot}>{children}</MerchantBarSlot>
         </main>
 
         <nav
@@ -214,18 +381,26 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
             {phonePrimary.map((item) => (
               <li key={item.label}>
                 <NavLink className={tabLink} item={item}>
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-6 top-0 h-0.5 rounded-full bg-transparent group-data-[status=active]:bg-accent"
+                  {/* The guest tab pattern: the active tab fills its icon and takes the accent tint. */}
+                  <item.icon
+                    className="group-data-[status=active]:hidden"
+                    size={24}
                   />
-                  <item.icon size={24} />
-                  {t(item.label)}
+                  <item.icon
+                    className="hidden group-data-[status=active]:block"
+                    size={24}
+                    weight="Filled"
+                  />
+                  {labelOf(item)}
                 </NavLink>
               </li>
             ))}
             <li>
               <Drawer isOpen={moreOpen} onOpenChange={setMoreOpen}>
-                <Drawer.Trigger className="flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring">
+                <Drawer.Trigger
+                  className="flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent"
+                  data-status={isInMoreSection(pathname) ? "active" : undefined}
+                >
                   <MoreIcon size={24} />
                   {t("nav.more")}
                 </Drawer.Trigger>
@@ -235,18 +410,29 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
                       <Drawer.Handle />
                       <Drawer.Header>
                         <Drawer.Heading>{t("nav.moreTitle")}</Drawer.Heading>
+                        <p className="text-label text-muted">
+                          {shop.name} · {staffName} · {staffRole}
+                        </p>
                       </Drawer.Header>
                       <Drawer.Body>
                         <ul className="flex flex-col gap-1 pb-4">
                           {phoneMore.map((item) => (
                             <li key={item.label}>
                               <NavLink
-                                className="flex h-12 items-center gap-3 rounded-2xl px-3 text-base outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold"
+                                className="group flex h-12 items-center gap-3 rounded-2xl px-3 text-base outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-accent"
                                 item={item}
                                 onClick={() => setMoreOpen(false)}
                               >
-                                <item.icon size={20} />
-                                {t(item.label)}
+                                <item.icon
+                                  className="group-data-[status=active]:hidden"
+                                  size={20}
+                                />
+                                <item.icon
+                                  className="hidden group-data-[status=active]:block"
+                                  size={20}
+                                  weight="Filled"
+                                />
+                                {labelOf(item)}
                               </NavLink>
                             </li>
                           ))}

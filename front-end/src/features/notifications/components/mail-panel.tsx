@@ -1,6 +1,6 @@
 import type { Mail } from "../types";
 
-import { Button, Drawer, Tabs } from "@heroui/react";
+import { Button, Drawer, Tabs, buttonVariants } from "@heroui/react";
 import { useState } from "react";
 
 import { renderMail } from "./render-mail";
@@ -71,7 +71,10 @@ export function MailPanel() {
                   <MailList items={guestMail} />
                 </Tabs.Panel>
                 <Tabs.Panel className="pt-3" id="staff">
-                  <MailList items={staffMail} />
+                  <MailList
+                    items={staffMail}
+                    onOpenLink={() => setOpen(false)}
+                  />
                 </Tabs.Panel>
                 <Tabs.Panel className="pt-3" id="partner">
                   <MailList items={partnerMail} />
@@ -85,8 +88,15 @@ export function MailPanel() {
   );
 }
 
-function MailList({ items }: { items: Mail[] }) {
-  const { state } = useDemo();
+function MailList({
+  items,
+  onOpenLink,
+}: {
+  items: Mail[];
+  /** A mail's link was followed (N16, N17): close the panel. */
+  onOpenLink?: () => void;
+}) {
+  const { state, setRole } = useDemo();
 
   if (items.length === 0) {
     return (
@@ -97,13 +107,17 @@ function MailList({ items }: { items: Mail[] }) {
   return (
     <ul className="flex flex-col gap-2">
       {items.map((mail, i) => {
-        const { subject, body } = renderMail(mail, state.data.pickupPlaces);
+        const { subject, body, link } = renderMail(
+          mail,
+          state.data.pickupPlaces,
+        );
         const guest = state.data.guests.find((g) => g.id === mail.guestId);
         const partner = state.data.partners.find(
           (p) => p.id === mail.partnerId,
         );
-        const to =
-          mail.to === "staff"
+        const to = mail.recipient
+          ? mail.recipient
+          : mail.to === "staff"
             ? "Shop staff (Chị Ngọc, Lukas)"
             : partner
               ? `${partner.name} <${partner.email}>`
@@ -131,6 +145,20 @@ function MailList({ items }: { items: Mail[] }) {
                 {body.map((paragraph, n) => (
                   <p key={n}>{paragraph}</p>
                 ))}
+                {link && (
+                  // Opens the shop as the recipient when the presenter is not a merchant yet.
+                  <a
+                    className={`${buttonVariants({ variant: "secondary", size: "sm" })} w-fit`}
+                    href={link.href}
+                    onClick={() => {
+                      if (state.role !== "owner" && state.role !== "manager")
+                        setRole(link.role);
+                      onOpenLink?.();
+                    }}
+                  >
+                    {link.label}
+                  </a>
+                )}
               </div>
             </details>
           </li>

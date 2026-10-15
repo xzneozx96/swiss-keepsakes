@@ -132,6 +132,23 @@ export function useProductReviews(
               },
             }
           : undefined,
+        // The shop's reply from M23, in the language it was written in (AC30 note otherwise).
+        reply: r.reply
+          ? {
+              title: t("reviewReply.from", { name: r.reply.by }),
+              date: reviewDate(new Date(r.reply.at), now, intlLocale),
+              text: r.reply.text,
+              lang: r.reply.language,
+              languageNote:
+                r.reply.language === language
+                  ? undefined
+                  : t(
+                      r.reply.language === "en"
+                        ? "gifts.textInEnglish"
+                        : "gifts.textInGerman",
+                    ),
+            }
+          : undefined,
       };
     }),
   };

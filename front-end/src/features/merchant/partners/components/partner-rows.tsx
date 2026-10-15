@@ -1,12 +1,17 @@
-import { Button, Dropdown, Label, Table } from "@heroui/react";
+import type { DataTableColumn } from "@/components/data-table";
+import type { EmptyStateProps } from "@/components/empty-state";
+import type { RowAction } from "@/components/row-actions";
+
+import { Button } from "@heroui/react";
 
 import {
   ArchiveIcon,
   ChevronRightIcon,
-  MoreIcon,
   QrIcon,
   TrashIcon,
 } from "@/components/icons";
+import { DataTable } from "@/components/data-table";
+import { RowActions } from "@/components/row-actions";
 import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
 
@@ -42,6 +47,11 @@ interface PartnerRowsProps {
   rows: PartnerRowProps[];
   label: string;
   onAction: (row: PartnerRowProps, action: PartnerAction) => void;
+  /** Shown inside the table (a card on phones) when `rows` is empty. */
+  empty?: EmptyStateProps;
+  /** Back to page 1 when this changes. */
+  resetKey?: string;
+  isLoading?: boolean;
 }
 
 /** Archive, restore or delete, in a menu so a tap on the card never removes anything. */
@@ -53,53 +63,34 @@ function MoreMenu({
   onAction: PartnerRowsProps["onAction"];
 }) {
   const { t } = useLocale();
-  const items: { id: PartnerAction; label: string; icon: typeof TrashIcon }[] =
-    row.isArchived
-      ? [
-          {
-            id: "restore",
-            label: t("merchantPartners.action.restore"),
-            icon: ArchiveIcon,
-          },
-        ]
-      : [
-          row.canDelete
-            ? {
-                id: "delete",
-                label: t("merchantPartners.action.delete"),
-                icon: TrashIcon,
-              }
-            : {
-                id: "archive",
-                label: t("merchantPartners.action.archive"),
-                icon: ArchiveIcon,
-              },
-        ];
+  const actions: RowAction<PartnerAction>[] = row.isArchived
+    ? [
+        {
+          id: "restore",
+          label: t("merchantPartners.action.restore"),
+          icon: ArchiveIcon,
+        },
+      ]
+    : [
+        row.canDelete
+          ? {
+              id: "delete",
+              label: t("merchantPartners.action.delete"),
+              icon: TrashIcon,
+            }
+          : {
+              id: "archive",
+              label: t("merchantPartners.action.archive"),
+              icon: ArchiveIcon,
+            },
+      ];
 
   return (
-    <Dropdown>
-      <Button
-        isIconOnly
-        aria-label={t("merchantPartners.action.more", { name: row.name })}
-        size="sm"
-        variant="tertiary"
-      >
-        <MoreIcon size={18} />
-      </Button>
-      <Dropdown.Popover placement="bottom end">
-        <Dropdown.Menu
-          aria-label={t("merchantPartners.action.more", { name: row.name })}
-          onAction={(key) => onAction(row, key as PartnerAction)}
-        >
-          {items.map((item) => (
-            <Dropdown.Item key={item.id} id={item.id} textValue={item.label}>
-              <item.icon aria-hidden size={16} />
-              <Label>{item.label}</Label>
-            </Dropdown.Item>
-          ))}
-        </Dropdown.Menu>
-      </Dropdown.Popover>
-    </Dropdown>
+    <RowActions
+      actions={actions}
+      label={t("merchantPartners.action.more", { name: row.name })}
+      onAction={(id) => onAction(row, id)}
+    />
   );
 }
 
@@ -116,7 +107,7 @@ function StackedRows({ rows, label, onAction }: PartnerRowsProps) {
     <ul aria-label={label} className="flex flex-col gap-5 lg:hidden">
       {rows.map((row) => (
         <li key={row.id}>
-          <article className="relative flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface hover:bg-surface-secondary">
+          <article className="relative flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface card-hover">
             <div className="flex items-center gap-4 p-4">
               <div className="flex w-24 shrink-0 flex-col items-center border-e border-separator pe-4 text-center">
                 <span className="text-[11px] leading-tight font-medium uppercase">
@@ -226,109 +217,107 @@ function StackedRows({ rows, label, onAction }: PartnerRowsProps) {
 }
 
 /** From 1024px: a Table with the same facts and actions, as M03. */
-function PartnerTable({ rows, label, onAction }: PartnerRowsProps) {
-  const { t } = useLocale();
-
-  return (
-    <Table className="hidden lg:block">
-      <Table.ScrollContainer>
-        <Table.Content aria-label={label}>
-          <Table.Header>
-            <Table.Column isRowHeader>
-              {t("merchantPartners.column.partner")}
-            </Table.Column>
-            <Table.Column>{t("merchantPartners.column.opens")}</Table.Column>
-            <Table.Column>{t("merchantPartners.conversion")}</Table.Column>
-            <Table.Column>
-              {t("merchantPartners.column.transactions")}
-            </Table.Column>
-            <Table.Column>{t("merchantPartners.toPay")}</Table.Column>
-            <Table.Column>
-              <span className="sr-only">
-                {t("merchantPartners.column.actions")}
-              </span>
-            </Table.Column>
-          </Table.Header>
-          <Table.Body>
-            {rows.map((row) => (
-              <Table.Row key={row.id}>
-                <Table.Cell className="whitespace-nowrap">
-                  <div className="flex flex-col">
-                    <a
-                      className="font-semibold underline-offset-4 outline-none hover:underline focus-visible:focus-ring"
-                      href={row.href}
-                    >
-                      {row.name}
-                    </a>
-                    <span className="text-label text-muted">
-                      {row.kind} · {row.code}
-                    </span>
-                  </div>
-                </Table.Cell>
-                <Table.Cell className="tabular-nums">{row.opens}</Table.Cell>
-                <Table.Cell className="whitespace-nowrap tabular-nums">
-                  {row.conversion ?? "–"}
-                </Table.Cell>
-                <Table.Cell className="tabular-nums">
-                  {row.transactions}
-                </Table.Cell>
-                <Table.Cell className="py-2">
-                  <div className="flex flex-col items-start gap-1.5 [&_svg]:shrink-0">
-                    <span className="font-semibold tabular-nums">
-                      {row.toPay}
-                    </span>
-                    {row.toOffset && (
-                      <StatusChip tone="neutral">
-                        {t("merchantPartners.toOffset.chip", {
-                          amount: row.toOffset,
-                        })}
-                      </StatusChip>
-                    )}
-                    {row.isArchived ? (
-                      <StatusChip tone="neutral">
-                        {t("merchantPartners.archived")}
-                      </StatusChip>
-                    ) : (
-                      row.linkRevoked && (
-                        <StatusChip tone="neutral">
-                          {t("merchantPartners.reportLink.revokedChip")}
-                        </StatusChip>
-                      )
-                    )}
-                  </div>
-                </Table.Cell>
-                <Table.Cell>
-                  <div className="flex items-center justify-end gap-1">
-                    {!row.isArchived && (
-                      <Button
-                        isIconOnly
-                        aria-label={t("merchantPartners.action.qrFor", {
-                          name: row.name,
-                        })}
-                        size="sm"
-                        variant="tertiary"
-                        onPress={() => onAction(row, "qr")}
-                      >
-                        <QrIcon size={18} />
-                      </Button>
-                    )}
-                    <MoreMenu row={row} onAction={onAction} />
-                  </div>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Content>
-      </Table.ScrollContainer>
-    </Table>
-  );
-}
-
 export function PartnerRows(props: PartnerRowsProps) {
+  const { t } = useLocale();
+  const { onAction } = props;
+  const columns: DataTableColumn<PartnerRowProps>[] = [
+    {
+      id: "partner",
+      header: t("merchantPartners.column.partner"),
+      isRowHeader: true,
+      skeleton: "two-line",
+      cellClassName: "whitespace-nowrap",
+      render: (row) => (
+        <div className="flex flex-col">
+          <a
+            className="font-semibold underline-offset-4 outline-none hover:underline focus-visible:focus-ring"
+            href={row.href}
+          >
+            {row.name}
+          </a>
+          <span className="text-label text-muted">
+            {row.kind} · {row.code}
+          </span>
+        </div>
+      ),
+    },
+    {
+      id: "opens",
+      header: t("merchantPartners.column.opens"),
+      cellClassName: "tabular-nums",
+      render: (row) => row.opens,
+    },
+    {
+      id: "conversion",
+      header: t("merchantPartners.conversion"),
+      cellClassName: "whitespace-nowrap tabular-nums",
+      render: (row) => row.conversion ?? "–",
+    },
+    {
+      id: "transactions",
+      header: t("merchantPartners.column.transactions"),
+      cellClassName: "tabular-nums",
+      render: (row) => row.transactions,
+    },
+    {
+      id: "toPay",
+      header: t("merchantPartners.toPay"),
+      skeleton: "two-line",
+      cellClassName: "py-2",
+      render: (row) => (
+        <div className="flex flex-col items-start gap-1.5 [&_svg]:shrink-0">
+          <span className="font-semibold tabular-nums">{row.toPay}</span>
+          {row.toOffset && (
+            <StatusChip tone="neutral">
+              {t("merchantPartners.toOffset.chip", { amount: row.toOffset })}
+            </StatusChip>
+          )}
+          {row.isArchived ? (
+            <StatusChip tone="neutral">
+              {t("merchantPartners.archived")}
+            </StatusChip>
+          ) : (
+            row.linkRevoked && (
+              <StatusChip tone="neutral">
+                {t("merchantPartners.reportLink.revokedChip")}
+              </StatusChip>
+            )
+          )}
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <>
-      <StackedRows {...props} />
-      <PartnerTable {...props} />
-    </>
+    <DataTable
+      cards={(page) => <StackedRows {...props} rows={page} />}
+      columns={columns}
+      empty={props.empty}
+      getRowId={(row) => row.id}
+      isLoading={props.isLoading}
+      label={props.label}
+      resetKey={props.resetKey}
+      rowActions={{
+        render: (row) => (
+          <div className="flex items-center justify-end gap-1">
+            {!row.isArchived && (
+              <Button
+                isIconOnly
+                aria-label={t("merchantPartners.action.qrFor", {
+                  name: row.name,
+                })}
+                size="sm"
+                variant="tertiary"
+                onPress={() => onAction(row, "qr")}
+              >
+                <QrIcon size={18} />
+              </Button>
+            )}
+            <MoreMenu row={row} onAction={onAction} />
+          </div>
+        ),
+      }}
+      rows={props.rows}
+    />
   );
 }

@@ -1,4 +1,4 @@
-import type { BusinessTypeId } from "../seed";
+import type { CategoryId } from "@/features/catalog/types";
 
 import { Link } from "@tanstack/react-router";
 
@@ -8,7 +8,7 @@ import {
 } from "@/features/catalog/components/category-thumb";
 
 export interface CategoryRailItem {
-  id: BusinessTypeId;
+  id: CategoryId;
   name: string;
   photo?: string;
   /** Small note on the photo for types not open yet, e.g. "Soon". */
@@ -16,17 +16,17 @@ export interface CategoryRailItem {
 }
 
 const destinations: Record<
-  BusinessTypeId,
+  CategoryId,
   "/gifts" | "/tours" | "/stays" | "/experiences"
 > = {
-  gifts: "/gifts",
+  keepsakes: "/gifts",
   tours: "/tours",
   stays: "/stays",
   experiences: "/experiences",
 };
 
 /**
- * Discovery rail of business types (PRD §7: gifts, tours, stays, experiences) using the
+ * Discovery rail of the four categories (PRD §7.0: keepsakes, tours, stays, experiences) using the
  * shared CategoryThumb as links. Each opens its own screen; types not open yet carry a
  * "Soon" note and open a later-phase page.
  */

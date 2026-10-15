@@ -1,14 +1,17 @@
 import type { PaymentsView } from "./payments-widget";
 import type { ReportPeriod } from "../lib/report";
 import type { IconComponent } from "@/components/icons";
+import type { DataTableColumn } from "@/components/data-table";
 import type { AllTimeCardProps } from "@/components/stat-card";
 import type { ShownLabel } from "@/features/orders/hooks/use-orders";
 
-import { Button, Skeleton, Table, Tabs } from "@heroui/react";
+import { Button, Skeleton, Tabs } from "@heroui/react";
 import { useState } from "react";
 
 import { PaymentsWidget } from "./payments-widget";
 
+import { STICKY_TABS } from "@/components/layout/sticky-tabs";
+import { DataTable } from "@/components/data-table";
 import { EmptyState } from "@/components/empty-state";
 import {
   ChevronLeftIcon,
@@ -21,6 +24,8 @@ import {
 } from "@/components/icons";
 import { AllTimeCard, StatCard } from "@/components/stat-card";
 import { StatusChip } from "@/components/status-chip";
+import { Widget } from "@/features/merchant/today/components/overview-analytics";
+import { WidgetSkeleton } from "@/features/merchant/today/components/overview-pages";
 
 export interface ReportKpi {
   id: "earned" | "paid" | "to-pay" | "orders";
@@ -171,7 +176,7 @@ function KpiBlock({ kpis, heading }: { kpis: ReportKpi[]; heading: string }) {
 
 function Legend({ legend }: { legend: ReportChartView["legend"] }) {
   return (
-    <ul className="flex shrink-0 items-center gap-3 text-xs text-muted">
+    <ul className="flex items-center gap-3 text-xs text-muted">
       {(
         [
           [recordedFill, legend.recorded],
@@ -192,7 +197,13 @@ function Legend({ legend }: { legend: ReportChartView["legend"] }) {
  * focus a column to show its numbers in the readout above the plot; there is no floating
  * tooltip. Future columns are left empty, not drawn as 0.
  */
-function CommissionChart({ chart }: { chart: ReportChartView }) {
+function CommissionChart({
+  chart,
+  className,
+}: {
+  chart: ReportChartView;
+  className: string;
+}) {
   const [active, setActive] = useState<number | null>(null);
   const shown =
     (active !== null && !chart.columns[active]?.isFuture
@@ -202,19 +213,16 @@ function CommissionChart({ chart }: { chart: ReportChartView }) {
   const gap = narrow ? "gap-0.5" : "gap-2";
 
   return (
-    <section aria-labelledby="report-chart" className={widget}>
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <div className="flex flex-col">
-          <h2 className="font-semibold" id="report-chart">
-            {chart.title}
-          </h2>
-          <span className="text-xs text-muted">{chart.unit}</span>
-        </div>
-        <Legend legend={chart.legend} />
-      </div>
+    <Widget
+      className={className}
+      description={chart.unit}
+      id="report-chart"
+      title={chart.title}
+    >
+      <Legend legend={chart.legend} />
       <p
         aria-live="polite"
-        className="mt-4 flex min-h-10 flex-col rounded-xl bg-surface-secondary px-3 py-2 text-sm"
+        className="mt-3 flex min-h-10 flex-col rounded-xl bg-surface-secondary px-3 py-2 text-sm"
       >
         <span className="font-semibold">
           {shown.label}
@@ -311,7 +319,7 @@ function CommissionChart({ chart }: { chart: ReportChartView }) {
           ))}
         </div>
       </div>
-    </section>
+    </Widget>
   );
 }
 
@@ -320,19 +328,16 @@ function GroupsWidget({
   groups,
   heading,
   legend,
+  className,
 }: {
   groups: ReportGroupView[];
   heading: string;
   legend: ReportChartView["legend"];
+  className: string;
 }) {
   return (
-    <section aria-labelledby="report-groups" className={widget}>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <h2 className="font-semibold" id="report-groups">
-          {heading}
-        </h2>
-        <Legend legend={legend} />
-      </div>
+    <Widget className={className} id="report-groups" title={heading}>
+      <Legend legend={legend} />
       <ul className="mt-4 flex flex-col gap-4">
         {groups.map((g) => (
           <li key={g.id} className="flex flex-col">
@@ -368,7 +373,7 @@ function GroupsWidget({
           </li>
         ))}
       </ul>
-    </section>
+    </Widget>
   );
 }
 
@@ -385,10 +390,13 @@ function StackedRows({
   return (
     <ul
       aria-label={label}
-      className="mt-2 flex flex-col divide-y divide-separator lg:hidden"
+      className="flex flex-col divide-y divide-separator lg:hidden"
     >
       {rows.map((row) => (
-        <li key={row.id} className="flex flex-col gap-2.5 py-4 last:pb-0">
+        <li
+          key={row.id}
+          className="flex flex-col gap-2.5 py-4 first:pt-0 last:pb-0"
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col">
               <span className="font-semibold">{row.guestName}</span>
@@ -424,83 +432,176 @@ function StackedRows({
 
 /**
  * From 1024px: a Table of three columns. The status chip sits in the order cell, so no column
- * wraps inside the 768px partner frame.
+ * wraps in the three-fifths column of the bento.
  */
 function RowsTable({
   rows,
   label,
   columns,
+  resetKey,
 }: {
   rows: ReportRowView[];
   label: string;
   columns: PartnerReportProps["copy"]["columns"];
+  resetKey: string;
 }) {
+  const tableColumns: DataTableColumn<ReportRowView>[] = [
+    {
+      id: "order",
+      header: columns.order,
+      isRowHeader: true,
+      cellClassName: "py-3",
+      render: (row) => (
+        <div className="flex flex-col items-start whitespace-nowrap [&_svg]:shrink-0">
+          <span className="font-semibold">{row.guestName}</span>
+          <span className="text-label text-muted">
+            {row.reference} · {row.date}
+          </span>
+          <span className="text-sm text-muted">{row.gifts}</span>
+          <span className="mt-2">
+            <span className="sr-only">{columns.status}: </span>
+            <StatusChip tone={row.status.tone}>{row.status.text}</StatusChip>
+          </span>
+        </div>
+      ),
+    },
+    {
+      id: "value",
+      header: columns.value,
+      headerClassName: "text-end",
+      cellClassName: "text-end align-top whitespace-nowrap tabular-nums",
+      render: (row) => row.value,
+    },
+    {
+      id: "commission",
+      header: columns.commission,
+      cellClassName: "align-top whitespace-nowrap",
+      render: (row) => (
+        <div className="flex flex-col items-start gap-1.5 [&_svg]:shrink-0">
+          {row.commission.amount && (
+            <span className="tabular-nums">{row.commission.amount}</span>
+          )}
+          <StatusChip tone={row.commission.label.tone}>
+            {row.commission.label.text}
+          </StatusChip>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <Table className="mt-3 hidden lg:block">
-      <Table.ScrollContainer>
-        <Table.Content aria-label={label}>
-          <Table.Header>
-            <Table.Column isRowHeader>{columns.order}</Table.Column>
-            <Table.Column className="text-end">{columns.value}</Table.Column>
-            <Table.Column>{columns.commission}</Table.Column>
-          </Table.Header>
-          <Table.Body>
-            {rows.map((row) => (
-              <Table.Row key={row.id}>
-                <Table.Cell className="py-3">
-                  <div className="flex flex-col items-start whitespace-nowrap [&_svg]:shrink-0">
-                    <span className="font-semibold">{row.guestName}</span>
-                    <span className="text-label text-muted">
-                      {row.reference} · {row.date}
-                    </span>
-                    <span className="text-sm text-muted">{row.gifts}</span>
-                    <span className="mt-2">
-                      <span className="sr-only">{columns.status}: </span>
-                      <StatusChip tone={row.status.tone}>
-                        {row.status.text}
-                      </StatusChip>
-                    </span>
-                  </div>
-                </Table.Cell>
-                <Table.Cell className="text-end align-top whitespace-nowrap tabular-nums">
-                  {row.value}
-                </Table.Cell>
-                <Table.Cell className="align-top whitespace-nowrap">
-                  <div className="flex flex-col items-start gap-1.5 [&_svg]:shrink-0">
-                    {row.commission.amount && (
-                      <span className="tabular-nums">
-                        {row.commission.amount}
-                      </span>
-                    )}
-                    <StatusChip tone={row.commission.label.tone}>
-                      {row.commission.label.text}
-                    </StatusChip>
-                  </div>
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Content>
-      </Table.ScrollContainer>
-    </Table>
+    <DataTable
+      cards={(page) => (
+        <StackedRows columns={columns} label={label} rows={page} />
+      )}
+      columns={tableColumns}
+      getRowId={(row) => row.id}
+      label={label}
+      resetKey={resetKey}
+      rows={rows}
+      variant="card"
+    />
   );
 }
 
-function ReportSkeleton() {
+const barHeights = [
+  "h-1/3",
+  "h-2/3",
+  "h-1/2",
+  "h-full",
+  "h-3/5",
+  "h-2/5",
+  "h-4/5",
+];
+
+/** Bars of varying height on a baseline, as the commission chart. */
+function ChartBarsSkeleton({ className }: { className: string }) {
+  return (
+    <div aria-hidden className={`flex items-end gap-2 ${className}`}>
+      {barHeights.map((height, i) => (
+        <Skeleton key={i} className={`flex-1 rounded-lg ${height}`} />
+      ))}
+    </div>
+  );
+}
+
+/** The all-time card: title, the big number with its line, and the chart beside them. */
+function AllTimeSkeleton() {
+  return (
+    <section aria-hidden className={`${widget} gap-5`}>
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-5 w-40 rounded-lg" />
+        <Skeleton className="h-3 w-64 max-w-full rounded-lg" />
+      </div>
+      <div className="grid gap-5 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:items-end">
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-12 w-48 rounded-lg" />
+          <Skeleton className="h-4 w-4/5 rounded-lg" />
+        </div>
+        <ChartBarsSkeleton className="h-40" />
+      </div>
+    </section>
+  );
+}
+
+/** Rows of a list while loading: a name line, a detail line and an amount. */
+function RowsSkeleton({ count }: { count: number }) {
   return (
     <div className="flex flex-col gap-4">
-      <Skeleton className="h-60 rounded-3xl sm:h-40" />
-      <Skeleton className="h-96 rounded-3xl" />
-      <Skeleton className="h-32 rounded-3xl" />
-      <Skeleton className="h-72 rounded-3xl" />
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="flex items-center gap-4">
+          <div className="flex flex-1 flex-col gap-2">
+            <Skeleton className="h-4 w-1/2 rounded-lg" />
+            <Skeleton className="h-3 w-1/3 rounded-lg" />
+          </div>
+          <Skeleton className="h-4 w-16 rounded-lg" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** The four numbers and the bento: chart and groups, then payments and transactions. */
+function ReportSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="flex flex-col gap-3 rounded-3xl bg-surface p-4 shadow-surface"
+          >
+            <Skeleton className="size-9 rounded-xl" />
+            <Skeleton className="h-3 w-3/5 rounded-lg" />
+            <Skeleton className="h-7 w-2/3 rounded-lg" />
+            <Skeleton className="h-3 w-4/5 rounded-lg" />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <WidgetSkeleton className="lg:col-span-3">
+          <Skeleton className="h-10 w-full rounded-xl" />
+          <ChartBarsSkeleton className="mt-6 h-44" />
+        </WidgetSkeleton>
+        <WidgetSkeleton className="lg:col-span-2">
+          <RowsSkeleton count={4} />
+        </WidgetSkeleton>
+        <WidgetSkeleton className="lg:col-span-5 xl:col-span-2 xl:self-start">
+          <RowsSkeleton count={3} />
+        </WidgetSkeleton>
+        <WidgetSkeleton className="lg:col-span-5 xl:col-span-3">
+          <RowsSkeleton count={5} />
+        </WidgetSkeleton>
+      </div>
     </div>
   );
 }
 
 /**
- * P02 Partner report (spec §4.8, R15) as an analytics view: period, four numbers, the
- * commission chart, product groups and the transactions of this partner only. Read-only;
- * nothing here opens an order.
+ * P02 Partner report (spec §4.8, R15) as a dashboard after M02 Overview: period, four
+ * numbers, then a bento of widgets (chart beside product groups, payments beside the
+ * transactions of this partner only). A missing widget lets its neighbour take the row.
+ * Read-only; nothing here opens an order.
  */
 export function PartnerReport({
   copy,
@@ -526,37 +627,49 @@ export function PartnerReport({
   ) : rows.length ? (
     <div className="flex flex-col gap-4">
       <KpiBlock heading={copy.numbersHeading} kpis={kpis} />
-      {/* Keyed by period so a hovered column never carries over to the next period. */}
-      <CommissionChart key={chart.label} chart={chart} />
-      {payments && <PaymentsWidget view={payments} />}
-      {groups.length > 0 && (
-        <GroupsWidget
-          groups={groups}
-          heading={copy.groupsHeading}
-          legend={chart.legend}
+      {/* Phones read chart, payments, groups, transactions. From 1024px groups sit beside
+          the chart; from 1280px payments sit beside the transactions, whose three columns
+          clip in three fifths of a narrower frame. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        {/* Keyed by period so a hovered column never carries over to the next period. */}
+        <CommissionChart
+          key={chart.label}
+          chart={chart}
+          className={`lg:order-1 ${groups.length ? "lg:col-span-3" : "lg:col-span-5"}`}
         />
-      )}
-      <section
-        aria-labelledby="report-transactions"
-        className={`${widget} lg:px-3 lg:pb-3`}
-      >
-        <h2 className="font-semibold lg:px-2" id="report-transactions">
-          {copy.transactionsHeading}
-          <span className="ms-2 font-normal text-muted tabular-nums">
-            {rows.length}
-          </span>
-        </h2>
-        <StackedRows
-          columns={copy.columns}
-          label={copy.transactionsHeading}
-          rows={rows}
-        />
-        <RowsTable
-          columns={copy.columns}
-          label={copy.transactionsHeading}
-          rows={rows}
-        />
-      </section>
+        {payments && (
+          <PaymentsWidget
+            className="lg:order-3 lg:col-span-5 xl:col-span-2 xl:self-start"
+            view={payments}
+          />
+        )}
+        {groups.length > 0 && (
+          <GroupsWidget
+            className="lg:order-2 lg:col-span-2"
+            groups={groups}
+            heading={copy.groupsHeading}
+            legend={chart.legend}
+          />
+        )}
+        <Widget
+          actions={
+            <span className="mt-0.5 rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted tabular-nums">
+              {rows.length}
+            </span>
+          }
+          className={`lg:order-4 lg:col-span-5 ${payments ? "xl:col-span-3" : ""}`}
+          id="report-transactions"
+          title={copy.transactionsHeading}
+        >
+          {/* A new period (or a shorter list) starts again on page 1. */}
+          <RowsTable
+            columns={copy.columns}
+            label={copy.transactionsHeading}
+            resetKey={`${period}|${rows.length}`}
+            rows={rows}
+          />
+        </Widget>
+      </div>
     </div>
   ) : (
     <div className={widget}>
@@ -573,7 +686,7 @@ export function PartnerReport({
   return (
     <div className="flex flex-col gap-6">
       {isLoading ? (
-        <Skeleton className="h-96 rounded-3xl" />
+        <AllTimeSkeleton />
       ) : (
         allTime && <AllTimeCard {...allTime} />
       )}
@@ -582,7 +695,9 @@ export function PartnerReport({
         selectedKey={period}
         onSelectionChange={(key) => onPeriodChange(key as ReportPeriod)}
       >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className={`flex flex-col gap-3 max-lg:py-2 sm:flex-row-reverse sm:items-center sm:justify-between ${STICKY_TABS}`}
+        >
           <Tabs.ListContainer className="sm:w-80">
             <Tabs.List aria-label={copy.periodsLabel}>
               {periods.map((p, index) => (
@@ -594,7 +709,7 @@ export function PartnerReport({
               ))}
             </Tabs.List>
           </Tabs.ListContainer>
-          <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center justify-between gap-1 sm:justify-start">
             <Button
               isIconOnly
               aria-label={copy.previous}
@@ -606,7 +721,7 @@ export function PartnerReport({
             </Button>
             <span
               aria-live="polite"
-              className="min-w-0 px-1 text-center font-semibold sm:min-w-44"
+              className="min-w-0 px-1 text-center text-heading sm:order-first sm:pe-2 sm:text-start"
             >
               {rangeLabel}
             </span>

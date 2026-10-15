@@ -26,6 +26,7 @@ import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { useDemoNow } from "@/features/demo";
 import { formatShortDate } from "@/lib/format";
+import { useSheetExit } from "@/components/sheet-exit";
 
 export interface TripProfileProps {
   /** Gift intro says the answers don't change the pickup date; tour intro, the tour date. */
@@ -335,9 +336,13 @@ export function TripFields({
 
       {sheet && (
         <DateSheet
-          field={sheet}
           max={sheet === "arriveOn" ? answers.leaveOn : undefined}
           min={sheet === "leaveOn" ? answers.arriveOn : undefined}
+          title={t(
+            sheet === "arriveOn"
+              ? "tripProfile.arrive.label"
+              : "tripProfile.leave.label",
+          )}
           value={answers[sheet]}
           onClose={() => setSheet(undefined)}
           onDone={(iso) => {
@@ -350,16 +355,19 @@ export function TripFields({
   );
 }
 
-/** One date in a bottom sheet (Airbnb date sheet, decision 66). Past days allowed: guests are often already here. */
-function DateSheet({
-  field,
+/**
+ * One date in a bottom sheet (Airbnb date sheet, decision 66). Past days allowed unless `min`
+ * says otherwise: guests are often already here. Also used by C22 (4.6).
+ */
+export function DateSheet({
+  title,
   value,
   min,
   max,
   onDone,
   onClose,
 }: {
-  field: DateField;
+  title: string;
   value?: string;
   /** Departure cannot be before arrival, and the other way round. */
   min?: string;
@@ -367,27 +375,26 @@ function DateSheet({
   onDone: (iso: string | undefined) => void;
   onClose: () => void;
 }) {
+  const exitRef = useSheetExit();
   const { t } = useLocale();
   const today = parseDate(zurichDate(useDemoNow()));
   const [date, setDate] = useState<CalendarDate | null>(
     value ? parseDate(value) : null,
   );
-  const prefix = field === "arriveOn" ? "arrive" : "leave";
 
   return (
     <Drawer.Backdrop isOpen onOpenChange={(open) => !open && onClose()}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
         <Drawer.Dialog className="flex max-h-[92dvh] flex-col">
+          <span ref={exitRef} hidden />
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-between">
-            <Drawer.Heading className="text-title">
-              {t(`tripProfile.${prefix}.label`)}
-            </Drawer.Heading>
+            <Drawer.Heading className="text-title">{title}</Drawer.Heading>
             <Drawer.CloseTrigger aria-label={t("tripProfile.date.close")} />
           </Drawer.Header>
           <Drawer.Body className="flex flex-col gap-3 overflow-y-auto">
             <Calendar
-              aria-label={t(`tripProfile.${prefix}.label`)}
+              aria-label={title}
               className="calendar--fluid"
               defaultFocusedValue={date ?? (min ? parseDate(min) : today)}
               maxValue={max ? parseDate(max) : undefined}

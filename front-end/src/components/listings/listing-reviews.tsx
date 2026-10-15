@@ -27,6 +27,7 @@ export interface ListingReviewsProps {
 }
 
 const SHOW_MORE_FROM = 140;
+const REPLY_SHOW_MORE_FROM = 100;
 
 export function ListingReviews({
   reviews,
@@ -75,8 +76,10 @@ export function ListingReviews({
                     layout="card"
                     review={r}
                     showMore={
-                      // Only when four lines are likely to cut the text off.
-                      r.text.length > SHOW_MORE_FROM && (
+                      // Only when four lines are likely to cut the text off, or three
+                      // lines the shop's reply (M23).
+                      (r.text.length > SHOW_MORE_FROM ||
+                        (r.reply?.text.length ?? 0) > REPLY_SHOW_MORE_FROM) && (
                         <button
                           className="w-fit rounded text-start font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring"
                           type="button"

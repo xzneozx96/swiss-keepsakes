@@ -2,8 +2,9 @@ import type { DeparturePhase, TourWork } from "./lib/work";
 import type { Departure, Tour } from "../types";
 import type { StatusTone } from "@/components/status-chip";
 import type { MessageKey } from "@/i18n/en";
+import type { DataTableColumn } from "@/components/data-table";
+import type { EmptyStateProps } from "@/components/empty-state";
 
-import { Table } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 
 import { useTours } from "../hooks/use-tours";
@@ -18,10 +19,17 @@ import {
 } from "./shared";
 import { useOverdueCheck } from "./use-overdue-check";
 
+import { DataTable } from "@/components/data-table";
+import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 import { DateTile } from "@/components/date-tile";
-import { EmptyState } from "@/components/empty-state";
-import { BookingsIcon, ChevronRightIcon } from "@/components/icons";
+import { MerchantPageHeader } from "@/components/layout/merchant-page-header";
+import {
+  ArrowUpRightIcon,
+  BookingsIcon,
+  ChevronRightIcon,
+} from "@/components/icons";
 import { Media } from "@/components/media";
+import { RowActions } from "@/components/row-actions";
 import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
 import { pickText } from "@/lib/localized";
@@ -189,76 +197,115 @@ function DepartureCards({ rows }: { rows: Row[] }) {
   );
 }
 
-function DepartureTable({ rows, label }: { rows: Row[]; label: string }) {
+function DepartureTable({
+  rows,
+  label,
+  empty,
+  isLoading,
+}: {
+  rows: Row[];
+  label: string;
+  isLoading?: boolean;
+  /** Shown inside the table (a card on phones) when `rows` is empty. */
+  empty?: EmptyStateProps;
+}) {
   const { t, language } = useLocale();
   const { date, money } = useTourFormatting();
+  // Fixed shares, so the Upcoming and Ended tables line up column by column.
+  const columns: DataTableColumn<Row>[] = [
+    {
+      id: "departure",
+      header: t("tourMerchant.departure"),
+      headerClassName: "w-[28%]",
+      isRowHeader: true,
+      skeleton: "two-line",
+      render: ({ departure, tour, phase }) => (
+        <>
+          <span className="block font-semibold">
+            {tour && pickText(tour.name, language).text}
+          </span>
+          <span className="flex flex-wrap items-center gap-2 text-label text-muted tabular-nums">
+            {date(departure.startsAt)}
+            {phase !== "open" && (
+              <StatusChip tone={phaseChip[phase].tone}>
+                {t(phaseChip[phase].key)}
+              </StatusChip>
+            )}
+          </span>
+        </>
+      ),
+    },
+    {
+      // Booked, holds and free share one column, so the row keeps room for its chips.
+      id: "seats",
+      header: t("tourMerchant.seats"),
+      headerClassName: "w-[20%]",
+      cellClassName: "tabular-nums",
+      render: ({ phase, seats }) => (
+        <>
+          <span className="block whitespace-nowrap">
+            {t("tourMerchant.seatsBooked", {
+              count: seats.confirmed,
+              capacity: seats.capacity,
+            })}
+          </span>
+          <span className="block text-label whitespace-nowrap text-muted">
+            {t("tourMerchant.seatsDetail", {
+              held: seats.held,
+              free: bookable(phase) ? seats.available : "—",
+            })}
+          </span>
+        </>
+      ),
+    },
+    {
+      id: "toCollect",
+      header: t("tourMerchant.toCollect"),
+      headerClassName: "w-[16%]",
+      cellClassName: "whitespace-nowrap tabular-nums",
+      render: ({ work }) => money(work.toCollect),
+    },
+    {
+      id: "attention",
+      header: t("tourMerchant.needsAttention"),
+      headerClassName: "w-[28%]",
+      skeleton: "chip",
+      render: ({ work }) => <Attention work={work} />,
+    },
+  ];
 
   return (
-    <Table className="hidden lg:block">
-      <Table.ScrollContainer>
-        <Table.Content aria-label={label} className="table-fixed">
-          <Table.Header>
-            {/* Fixed shares, so the Upcoming and Ended tables line up column by column. */}
-            <Table.Column isRowHeader className="w-[34%]">
-              {t("tourMerchant.departure")}
-            </Table.Column>
-            <Table.Column className="w-[20%]">
-              {t("tourMerchant.seats")}
-            </Table.Column>
-            <Table.Column className="w-[16%]">
-              {t("tourMerchant.toCollect")}
-            </Table.Column>
-            <Table.Column className="w-[30%]">
-              {t("tourMerchant.needsAttention")}
-            </Table.Column>
-          </Table.Header>
-          <Table.Body>
-            {rows.map(({ departure, tour, phase, seats, work }) => (
-              <Table.Row
-                key={departure.id}
-                className="cursor-pointer"
-                href={`#/store/bookings/departures/${departure.id}`}
-              >
-                <Table.Cell>
-                  <span className="block font-semibold">
-                    {tour && pickText(tour.name, language).text}
-                  </span>
-                  <span className="flex flex-wrap items-center gap-2 text-label text-muted tabular-nums">
-                    {date(departure.startsAt)}
-                    {phase !== "open" && (
-                      <StatusChip tone={phaseChip[phase].tone}>
-                        {t(phaseChip[phase].key)}
-                      </StatusChip>
-                    )}
-                  </span>
-                </Table.Cell>
-                {/* Booked, holds and free share one column, so the row keeps room for its chips. */}
-                <Table.Cell className="tabular-nums">
-                  <span className="block whitespace-nowrap">
-                    {t("tourMerchant.seatsBooked", {
-                      count: seats.confirmed,
-                      capacity: seats.capacity,
-                    })}
-                  </span>
-                  <span className="block text-label whitespace-nowrap text-muted">
-                    {t("tourMerchant.seatsDetail", {
-                      held: seats.held,
-                      free: bookable(phase) ? seats.available : "—",
-                    })}
-                  </span>
-                </Table.Cell>
-                <Table.Cell className="whitespace-nowrap tabular-nums">
-                  {money(work.toCollect)}
-                </Table.Cell>
-                <Table.Cell>
-                  <Attention work={work} />
-                </Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table.Content>
-      </Table.ScrollContainer>
-    </Table>
+    <DataTable
+      cards={(page) => <DepartureCards rows={page} />}
+      columns={columns}
+      contentClassName="table-fixed"
+      empty={empty}
+      getRowHref={({ departure }) =>
+        `#/store/bookings/departures/${departure.id}`
+      }
+      getRowId={({ departure }) => departure.id}
+      isLoading={isLoading}
+      label={label}
+      rowActions={{
+        render: ({ departure, tour }) => (
+          <RowActions
+            actions={[
+              {
+                id: "open",
+                label: t("rowAction.openDeparture"),
+                icon: ArrowUpRightIcon,
+                href: `#/store/bookings/departures/${departure.id}`,
+              },
+            ]}
+            label={t("table.rowActions", {
+              name: tour ? pickText(tour.name, language).text : departure.id,
+            })}
+          />
+        ),
+        headerClassName: "w-[8%]",
+      }}
+      rows={rows}
+    />
   );
 }
 
@@ -269,6 +316,8 @@ function DepartureTable({ rows, label }: { rows: Row[]; label: string }) {
 export function TourDeparturesPage() {
   const { data, departures, tours, now } = useTours();
   const { t } = useLocale();
+
+  const isLoading = useSimulatedLoading();
 
   useOverdueCheck();
   const rows: Row[] = departures.map((departure) => {
@@ -289,18 +338,23 @@ export function TourDeparturesPage() {
     .filter((r) => r.phase === "ended")
     .sort((a, b) => byStart(b, a));
 
+  const noDepartures = {
+    icon: BookingsIcon,
+    message: t("tourMerchant.noDepartures"),
+  };
+
   return (
     <div className="flex min-w-0 flex-col gap-6">
-      <div>
-        <h1 className="text-title">{t("tourMerchant.departures")}</h1>
-        <p className="mt-2 text-sm text-muted">
-          {t("tourMerchant.departuresIntro")}
-        </p>
-      </div>
+      <MerchantPageHeader
+        description={t("tourMerchant.departuresIntro")}
+        title={t("tourMerchant.departures")}
+      />
       {rows.length === 0 && (
-        <EmptyState
-          icon={BookingsIcon}
-          message={t("tourMerchant.noDepartures")}
+        <DepartureTable
+          empty={noDepartures}
+          isLoading={isLoading}
+          label={t("tourMerchant.departures")}
+          rows={[]}
         />
       )}
       {[
@@ -317,8 +371,11 @@ export function TourDeparturesPage() {
             <h2 className="text-heading" id={`departures-${group.id}`}>
               {group.title}
             </h2>
-            <DepartureCards rows={group.rows} />
-            <DepartureTable label={group.title} rows={group.rows} />
+            <DepartureTable
+              isLoading={isLoading}
+              label={group.title}
+              rows={group.rows}
+            />
           </section>
         ))}
     </div>
