@@ -1,4 +1,10 @@
+import {
+  calendarDe,
+  calendarEn,
+} from "@/features/merchant/calendar/calendar-messages";
+
 export const tourMerchantEn = {
+  ...calendarEn,
   "tourMerchant.eventCreated": "Booking created",
   "tourMerchant.eventExpired": "Payment hold expired",
   "tourMerchant.eventDelivered": "Service delivered",
@@ -253,6 +259,7 @@ export const tourMerchantEn = {
 } as const;
 
 export const tourMerchantDe: Record<keyof typeof tourMerchantEn, string> = {
+  ...calendarDe,
   "tourMerchant.eventCreated": "Buchung erstellt",
   "tourMerchant.eventExpired": "Zahlungsreservierung abgelaufen",
   "tourMerchant.eventDelivered": "Leistung erbracht",

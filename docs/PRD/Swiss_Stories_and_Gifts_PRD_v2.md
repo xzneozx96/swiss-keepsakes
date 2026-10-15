@@ -426,6 +426,20 @@ Merchant cần dashboard về nguồn bán, giao dịch, giá trị, hoa hồng 
 
 Kế hoạch kinh doanh yêu cầu theo dõi "QR scans". **Đề xuất đo:** phân biệt lượt mở URL có nguồn QR với lượt mở link thông thường khi có marker. Một lượt tải URL không đủ chứng minh một lần quét QR vật lý.
 
+### 13.1a Lịch vận hành merchant — cập nhật ngày 15/10/2026
+
+**Đã chốt bởi chủ sản phẩm:** bổ sung Calendar quản lý booking tour và đơn quà, dùng **FullCalendar React** với ô ngày, sự kiện và điều khiển tùy biến theo design system. Phạm vi hiện tại chỉ là UI/UX và lab, dữ liệu mẫu, chưa tác động giao dịch thật.
+
+**Phản hồi mới nhất:** chủ sản phẩm đã **từ chối toàn bộ A/B/C** vì các khối phụ làm rối và đẩy lịch ra khỏi màn hình. Hướng thay thế: **chỉ có lịch trên màn hình**, chọn ngày cụ thể, lùi/tiến kỳ lịch và chuyển **Day / Week / Month** để nắm lịch nhanh. Ưu tiên cảm giác mobile-native, đồng thời responsive trên desktop; tham chiếu hành vi quen thuộc của Google Calendar. Bản thay thế chờ duyệt giao diện, chưa coi là đã được chấp nhận.
+
+- Lịch chiếm không gian chính từ màn hình đầu. Chỉ giữ toolbar điều hướng và chuyển chế độ; bỏ dashboard, giới thiệu phương án, bộ đếm, bộ lọc, tìm kiếm và danh sách công việc thường trực trong hướng này.
+- Chọn tháng ở toolbar mở bộ chọn ngày. Chạm ngày trong Month mở Day; chạm sự kiện mở sheet chi tiết. Mobile đặt chuyển chế độ trong tầm ngón tay; desktop đặt cùng toolbar.
+- Tour nằm đúng giờ khởi hành; quà dùng ngày nhận, không tự tạo giờ hẹn. Hàng nhận quà riêng phía trên trục giờ. Đơn chờ xác nhận ghi ngày yêu cầu trong chi tiết. Trạng thái vận hành, tiền và ghi chú vẫn là thông tin riêng.
+- Week phải giữ đúng chế độ tuần trên mobile. Khi thiếu bề rộng, cuộn ngang trong lịch để đọc đủ bảy ngày; không tự chuyển sang Day.
+- Giờ theo `Europe/Zurich`. Lab cố định Today ở 15/10/2026; dữ liệu mẫu được giải thích trong bộ chọn ngày và chi tiết. Lịch không lưu chỉnh sửa hoặc thực hiện đổi lịch, hủy, thu/hoàn tiền, ghi nhận tham dự hay hoàn tất.
+
+**Còn mở trước triển khai:** chọn và duyệt hình thức UI cuối; gom booking theo lịch khởi hành hay giữ từng booking; ghi chú có lưu; API và trạng thái tải/lỗi; quyền phía server, đồng bộ và đối soát dữ liệu thật. `/lab/calendar` là nơi duyệt; `/store/calendar` chưa tích hợp. Xem UX spec §3.2a.
+
 ### 13.2 KPI kinh doanh và tài chính
 
 Kỳ vọng khách hàng là đặt mục tiêu thử nghiệm theo từng kênh, theo dõi riêng doanh thu tour và hàng hóa, đánh giá lãi đóng góp sau giá vốn, đóng gói, hoa hồng, phí thanh toán và giao nhận, rồi mới trừ chi phí cố định. Tỷ lệ chuyển đổi chưa có dữ liệu thực tế và không được trình bày như kết quả đã đạt.

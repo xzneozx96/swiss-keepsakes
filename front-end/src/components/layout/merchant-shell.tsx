@@ -14,6 +14,7 @@ import {
   MoreIcon,
   OrdersIcon,
   PartnersIcon,
+  PickupDateIcon,
   ProductsIcon,
   ReportsIcon,
   RequestsIcon,
@@ -37,86 +38,167 @@ export type MerchantSection =
   | "reports"
   | "settings";
 
-type NavItem =
-  | { kind: "today"; label: MessageKey; icon: IconComponent }
-  | { kind: "orders"; label: MessageKey; icon: IconComponent }
-  | {
-      kind: "section";
-      section: MerchantSection;
-      label: MessageKey;
-      icon: IconComponent;
-    };
+/** A page listed under its group in the sidebar. `exact: false` keeps it active on its tabs and detail screens. */
+interface NavPage {
+  label: MessageKey;
+  to: LinkProps["to"];
+  exact?: boolean;
+}
 
-/** Dashboard sections in the order of UX spec §3.2. */
-const allItems: NavItem[] = [
-  { kind: "today", label: "nav.today", icon: TodayIcon },
-  { kind: "orders", label: "nav.orders", icon: OrdersIcon },
+interface NavItem {
+  label: MessageKey;
+  icon: IconComponent;
+  /** Where the item lives; "/store" itself matches only the exact path. */
+  paths: string[];
+  /** A single page. Items with `pages` are groups that fold open in the sidebar. */
+  to?: LinkProps["to"];
+  exact?: boolean;
+  pages?: NavPage[];
+  settings?: true;
+}
+
+const pagesOf = (section: keyof typeof SECTION_PAGES): NavPage[] =>
+  SECTION_PAGES[section].map(({ label, to }) => ({ label, to }));
+
+const contentPages = pagesOf("content");
+
+/**
+ * The sidebar (owner review 15.10.2026): six items, four of them folding groups. Dashboard holds
+ * Today and every analytics page of the shop; Operations the work on orders and departures;
+ * Marketing the articles, guest voices and inquiries. Partners keeps its own analytics page.
+ */
+const sidebarItems: NavItem[] = [
   {
-    kind: "section",
-    section: "bookings",
-    label: "nav.bookings",
-    icon: BookingsIcon,
+    label: "nav.today",
+    icon: TodayIcon,
+    paths: ["/store", "/store/sales", "/store/reports"],
+    pages: [
+      { label: "overviewPages.today", to: "/store" },
+      { label: "overviewPages.sales", to: "/store/sales" },
+      { label: "sectionPages.sales", to: "/store/reports/sales" },
+      { label: "sectionPages.money", to: "/store/reports" },
+      { label: "sectionPages.guests", to: "/store/reports/guests" },
+      { label: "sectionPages.margin", to: "/store/reports/margin" },
+    ],
   },
   {
-    kind: "section",
-    section: "products",
+    label: "nav.operations",
+    icon: OrdersIcon,
+    paths: ["/store/orders", "/store/bookings", "/store/calendar"],
+    pages: [
+      { label: "nav.orders", to: "/store/orders", exact: false },
+      { label: "nav.bookings", to: "/store/bookings", exact: false },
+      { label: "nav.calendar", to: "/store/calendar", exact: false },
+    ],
+  },
+  {
     label: "nav.products",
     icon: ProductsIcon,
+    paths: ["/store/products"],
+    to: "/store/products",
   },
   {
-    kind: "section",
-    section: "partners",
     label: "nav.partners",
     icon: PartnersIcon,
+    paths: ["/store/partners"],
+    pages: pagesOf("partners"),
   },
   {
-    kind: "section",
-    section: "content",
     label: "nav.content",
     icon: ContentIcon,
+    paths: ["/store/content", "/store/requests"],
+    pages: [
+      ...contentPages.filter((page) => page.to !== "/store/content/analytics"),
+      { label: "nav.requests", to: "/store/requests", exact: false },
+      ...contentPages.filter((page) => page.to === "/store/content/analytics"),
+    ],
   },
   {
-    kind: "section",
-    section: "requests",
-    label: "nav.requests",
-    icon: RequestsIcon,
-  },
-  {
-    kind: "section",
-    section: "reports",
-    label: "nav.reports",
-    icon: ReportsIcon,
-  },
-  {
-    kind: "section",
-    section: "settings",
     label: "nav.settings",
     icon: SettingsIcon,
+    paths: ["/store/settings"],
+    settings: true,
   },
 ];
 
-const sectionRoutes = {
-  bookings: "/store/bookings",
-  products: "/store/products",
-  partners: "/store/partners",
-  content: "/store/content",
-  requests: "/store/requests",
-  reports: "/store/reports",
-} as const;
+/**
+ * Phones keep the bottom bar they had: Today, Orders and Bookings, plus Calendar, with the other sections in
+ * the More sheet. Dashboard's analytics pages are the Sales tab here and Analytics in More.
+ */
+const phoneItems: NavItem[] = [
+  {
+    label: "nav.today",
+    icon: TodayIcon,
+    paths: ["/store", "/store/sales"],
+    to: "/store",
+    exact: true,
+  },
+  {
+    label: "nav.orders",
+    icon: OrdersIcon,
+    paths: ["/store/orders"],
+    to: "/store/orders",
+  },
+  {
+    label: "nav.bookings",
+    icon: BookingsIcon,
+    paths: ["/store/bookings"],
+    to: "/store/bookings",
+  },
+  {
+    label: "nav.calendar",
+    icon: PickupDateIcon,
+    paths: ["/store/calendar"],
+    to: "/store/calendar",
+  },
+  {
+    label: "nav.products",
+    icon: ProductsIcon,
+    paths: ["/store/products"],
+    to: "/store/products",
+  },
+  {
+    label: "nav.partners",
+    icon: PartnersIcon,
+    paths: ["/store/partners"],
+    to: "/store/partners",
+  },
+  {
+    label: "nav.content",
+    icon: ContentIcon,
+    paths: ["/store/content"],
+    to: "/store/content",
+  },
+  {
+    label: "nav.requests",
+    icon: RequestsIcon,
+    paths: ["/store/requests"],
+    to: "/store/requests",
+  },
+  {
+    label: "nav.reports",
+    icon: ReportsIcon,
+    paths: ["/store/reports"],
+    to: "/store/reports",
+  },
+  {
+    label: "nav.settings",
+    icon: SettingsIcon,
+    paths: ["/store/settings"],
+    settings: true,
+  },
+];
 
-const phonePrimary = allItems.slice(0, 3);
-const phoneMore = allItems.slice(3);
+const phonePrimary = phoneItems.slice(0, 4);
+const phoneMore = phoneItems.slice(4);
 
-/** Whether the open page belongs to a section of the More sheet (so the tab can say so). */
-const isInMoreSection = (pathname: string) =>
-  phoneMore.some((item) => {
-    const base =
-      item.kind === "section" && item.section !== "settings"
-        ? sectionRoutes[item.section]
-        : "/store/settings";
+const isUnder = (pathname: string, base: string) =>
+  base === "/store"
+    ? pathname === base
+    : pathname === base || pathname.startsWith(`${base}/`);
 
-    return pathname === base || pathname.startsWith(`${base}/`);
-  });
+const isInside = (pathname: string, item: NavItem) =>
+  item.paths.some((base) => isUnder(pathname, base));
 
 function NavLink({
   item,
@@ -130,35 +212,17 @@ function NavLink({
   onClick?: () => void;
 }) {
   const { pathname } = useLocation();
+  // The item is active anywhere inside its paths (Today also on Sales, Analytics on its costs
+  // screen); Settings is still a placeholder.
+  const status = isInside(pathname, item) ? "active" : undefined;
 
-  if (item.kind === "today") {
-    return (
-      <Link
-        // Overview stays active on both its pages, Today (/store) and Sales.
-        activeOptions={{ exact: true }}
-        className={className}
-        data-status={isOverviewPath(pathname) ? "active" : undefined}
-        to="/store"
-        onClick={onClick}
-      >
-        {children}
-      </Link>
-    );
-  }
-  if (item.kind === "orders") {
-    return (
-      <Link className={className} to="/store/orders" onClick={onClick}>
-        {children}
-      </Link>
-    );
-  }
-  // Sections with their own screens (bookings, products, partners, content, requests, reports);
-  // reports stays active on M24 (/store/reports/costs). Settings is still a placeholder.
-  if (item.section !== "settings") {
+  if (item.settings) {
     return (
       <Link
         className={className}
-        to={sectionRoutes[item.section]}
+        data-status={status}
+        params={{ section: "settings" }}
+        to="/store/$section"
         onClick={onClick}
       >
         {children}
@@ -168,9 +232,10 @@ function NavLink({
 
   return (
     <Link
+      activeOptions={{ exact: item.exact }}
       className={className}
-      params={{ section: item.section }}
-      to="/store/$section"
+      data-status={status}
+      to={item.to}
       onClick={onClick}
     >
       {children}
@@ -188,21 +253,6 @@ const parentLink =
 const subLink =
   "flex h-9 items-center rounded-xl ps-11 pe-3 text-sm text-muted outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-foreground";
 
-/** A page listed under its section in the sidebar; the label is already in the UI language. */
-export interface MerchantSubPage {
-  label: string;
-  to: LinkProps["to"];
-}
-
-/** M02 Overview's pages, listed under Overview in the sidebar (owner review 15.10.2026). */
-const overviewPages = [
-  { label: "overviewPages.today", to: "/store" },
-  { label: "overviewPages.sales", to: "/store/sales" },
-] as const satisfies readonly { label: MessageKey; to: LinkProps["to"] }[];
-
-const isOverviewPath = (pathname: string) =>
-  overviewPages.some((page) => page.to === pathname);
-
 const tabLink =
   "group relative flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent";
 
@@ -217,19 +267,11 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
   const staffRole =
     state.role === "manager" ? t("staff.manager") : t("staff.owner");
   const [moreOpen, setMoreOpen] = useState(false);
-  // Sections with pages start unfolded; the set holds the ones the user folded.
+  // Groups start unfolded; the set holds the ones the user folded.
   const [folded, setFolded] = useState<Set<string>>(new Set());
   const [barSlot, setBarSlot] = useState<HTMLElement | null>(null);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const pagesOf = (item: NavItem): MerchantSubPage[] =>
-    item.kind === "today"
-      ? overviewPages.map((page) => ({ label: t(page.label), to: page.to }))
-      : item.kind === "section" && item.section in SECTION_PAGES
-        ? SECTION_PAGES[item.section as keyof typeof SECTION_PAGES].map(
-            (page) => ({ label: t(page.label), to: page.to }),
-          )
-        : [];
   const labelOf = (item: NavItem) => t(item.label);
 
   return (
@@ -261,24 +303,18 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
           </Link>
           <nav aria-label={t("nav.merchant.label")}>
             <ul className="flex flex-col gap-1">
-              {allItems.map((item) => {
-                const pages = pagesOf(item);
+              {sidebarItems.map((item) => {
+                const pages = item.pages ?? [];
                 const id = `nav-pages-${item.label.replace(".", "-")}`;
-                // Inside the section: one of its pages, or a detail screen under it.
-                const inside =
-                  pages.some((page) => page.to === pathname) ||
-                  (item.kind === "section" &&
-                    pathname.startsWith(
-                      `${sectionRoutes[item.section as keyof typeof sectionRoutes] ?? "/none"}/`,
-                    ));
+                const inside = isInside(pathname, item);
                 const isOpen = !folded.has(item.label);
 
                 return (
                   <li key={item.label}>
                     {pages.length ? (
-                      // A parent with pages. Inside its section the row folds or unfolds them;
-                      // from another section it unfolds them and opens the first page. Folded
-                      // while one of its pages is open, it shows where you are.
+                      // A group. Inside it the row folds or unfolds its pages; from another
+                      // group it unfolds them and opens the first page. Folded while one of its
+                      // pages is open, it shows where you are.
                       <button
                         aria-controls={id}
                         aria-expanded={isOpen}
@@ -316,11 +352,11 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
                         {pages.map((page) => (
                           <li key={page.label}>
                             <Link
-                              activeOptions={{ exact: true }}
+                              activeOptions={{ exact: page.exact ?? true }}
                               className={subLink}
                               to={page.to}
                             >
-                              {page.label}
+                              {t(page.label)}
                             </Link>
                           </li>
                         ))}
@@ -369,7 +405,14 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
           className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl empty:hidden lg:hidden"
         />
 
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8">
+        {/* The calendar fills the content area edge to edge (owner, 15.10.2026). */}
+        <main
+          className={
+            pathname === "/store/calendar"
+              ? "flex w-full flex-1 flex-col"
+              : "mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8"
+          }
+        >
           <MerchantBarSlot value={barSlot}>{children}</MerchantBarSlot>
         </main>
 
@@ -377,7 +420,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
           aria-label={t("nav.merchant.label")}
           className="fixed inset-x-0 bottom-0 z-20 border-t border-separator bg-surface pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
         >
-          <ul className="grid grid-cols-4">
+          <ul className="grid grid-cols-5">
             {phonePrimary.map((item) => (
               <li key={item.label}>
                 <NavLink className={tabLink} item={item}>
@@ -399,7 +442,11 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
               <Drawer isOpen={moreOpen} onOpenChange={setMoreOpen}>
                 <Drawer.Trigger
                   className="flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent"
-                  data-status={isInMoreSection(pathname) ? "active" : undefined}
+                  data-status={
+                    phoneMore.some((item) => isInside(pathname, item))
+                      ? "active"
+                      : undefined
+                  }
                 >
                   <MoreIcon size={24} />
                   {t("nav.more")}

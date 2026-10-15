@@ -12,6 +12,7 @@
     "build:artifact": "npm run build && node scripts/artifact-page.mjs"
   },
   "dependencies": {
+    "@fullcalendar/react": "^7.1.2",
     "@heroui/react": "3.2.6",
     "@heroui/styles": "3.2.6",
     "@internationalized/date": "3.12.4",
@@ -26,7 +27,8 @@
     "react-dom": "^19.0.0",
     "react-is": "19.3.0",
     "recharts": "3.10.1",
-    "reicon-react": "1.2.6"
+    "reicon-react": "1.2.6",
+    "temporal-polyfill": "^1.0.6"
   },
   "devDependencies": {
     "@eslint/compat": "1.4.1",

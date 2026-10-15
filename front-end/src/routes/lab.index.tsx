@@ -5,6 +5,11 @@ export const Route = createFileRoute("/lab/")({ component: LabIndex });
 
 const experiments = [
   {
+    to: "/lab/calendar" as const,
+    title: "Merchant calendar",
+    note: "Calendar-only direction: mobile-first day, week and month views, date navigation and event details on tap.",
+  },
+  {
     to: "/lab/map-loading" as const,
     title: "Map loading indicator",
     note: "Five ways to show that the tour map is loading the next stop (15.10.2026).",

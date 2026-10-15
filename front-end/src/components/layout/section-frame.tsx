@@ -10,6 +10,9 @@ import { useLocale } from "@/contexts/locale-context";
 
 type Section = keyof typeof SECTION_PAGES;
 
+/** Inquiries is one sidebar entry, so its pages stay tabs from 1024px as well. */
+const TABS_ON_DESKTOP: readonly Section[] = ["requests"];
+
 /**
  * A section page with sub-pages (owner review 15.10.2026): on phones the section's pages as
  * underline tabs (from 1024px the sidebar lists them), then the page. A page without its own
@@ -54,7 +57,9 @@ export function SectionFrame({
           })
         }
       >
-        <Tabs.ListContainer className={`lg:hidden ${STICKY_TABS}`}>
+        <Tabs.ListContainer
+          className={`${TABS_ON_DESKTOP.includes(section) ? "" : "lg:hidden"} ${STICKY_TABS}`}
+        >
           <Tabs.List
             aria-label={t("sectionPages.label", { section: title })}
             className="w-full"

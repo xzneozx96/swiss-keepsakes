@@ -23,6 +23,7 @@ import { Route as GuestStaysRouteImport } from './routes/_guest/stays'
 import { Route as GuestToursRouteImport } from './routes/_guest/tours'
 import { Route as LabIndexRouteImport } from './routes/lab.index'
 import { Route as LabAdviceRouteImport } from './routes/lab.advice'
+import { Route as LabCalendarRouteImport } from './routes/lab.calendar'
 import { Route as LabCardsRouteImport } from './routes/lab.cards'
 import { Route as LabCartLineRouteImport } from './routes/lab.cart-line'
 import { Route as LabHeroRouteImport } from './routes/lab.hero'
@@ -39,6 +40,7 @@ import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as StoreIndexRouteImport } from './routes/store/index'
 import { Route as StoreSectionRouteImport } from './routes/store/$section'
 import { Route as StoreBookingsRouteImport } from './routes/store/bookings'
+import { Route as StoreCalendarRouteImport } from './routes/store/calendar'
 import { Route as StoreReportsRouteRouteImport } from './routes/store/reports/route'
 import { Route as StoreSalesRouteImport } from './routes/store/sales'
 import { Route as GuestCartReviewRouteImport } from './routes/_guest/cart_.review'
@@ -162,6 +164,11 @@ const LabAdviceRoute = LabAdviceRouteImport.update({
   path: '/lab/advice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LabCalendarRoute = LabCalendarRouteImport.update({
+  id: '/lab/calendar',
+  path: '/lab/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LabCardsRoute = LabCardsRouteImport.update({
   id: '/lab/cards',
   path: '/lab/cards',
@@ -240,6 +247,11 @@ const StoreSectionRoute = StoreSectionRouteImport.update({
 const StoreBookingsRoute = StoreBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
+  getParentRoute: () => StoreRoute,
+} as any)
+const StoreCalendarRoute = StoreCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
   getParentRoute: () => StoreRoute,
 } as any)
 const StoreReportsRouteRoute = StoreReportsRouteRouteImport.update({
@@ -535,6 +547,7 @@ export interface FileRoutesByFullPath {
   '/stays': typeof GuestStaysRoute
   '/tours': typeof GuestToursRouteWithChildren
   '/lab/advice': typeof LabAdviceRoute
+  '/lab/calendar': typeof LabCalendarRoute
   '/lab/cards': typeof LabCardsRoute
   '/lab/cart-line': typeof LabCartLineRoute
   '/lab/hero': typeof LabHeroRoute
@@ -549,6 +562,7 @@ export interface FileRoutesByFullPath {
   '/r/$code': typeof RCodeRoute
   '/store/$section': typeof StoreSectionRoute
   '/store/bookings': typeof StoreBookingsRouteWithChildren
+  '/store/calendar': typeof StoreCalendarRoute
   '/store/sales': typeof StoreSalesRoute
   '/lab/': typeof LabIndexRoute
   '/partner/': typeof PartnerIndexRoute
@@ -615,6 +629,7 @@ export interface FileRoutesByTo {
   '/search': typeof GuestSearchRoute
   '/stays': typeof GuestStaysRoute
   '/lab/advice': typeof LabAdviceRoute
+  '/lab/calendar': typeof LabCalendarRoute
   '/lab/cards': typeof LabCardsRoute
   '/lab/cart-line': typeof LabCartLineRoute
   '/lab/hero': typeof LabHeroRoute
@@ -628,6 +643,7 @@ export interface FileRoutesByTo {
   '/partner/$token': typeof PartnerTokenRoute
   '/r/$code': typeof RCodeRoute
   '/store/$section': typeof StoreSectionRoute
+  '/store/calendar': typeof StoreCalendarRoute
   '/store/sales': typeof StoreSalesRoute
   '/': typeof GuestIndexRoute
   '/lab': typeof LabIndexRoute
@@ -700,6 +716,7 @@ export interface FileRoutesById {
   '/_guest/stays': typeof GuestStaysRoute
   '/_guest/tours': typeof GuestToursRouteWithChildren
   '/lab/advice': typeof LabAdviceRoute
+  '/lab/calendar': typeof LabCalendarRoute
   '/lab/cards': typeof LabCardsRoute
   '/lab/cart-line': typeof LabCartLineRoute
   '/lab/hero': typeof LabHeroRoute
@@ -714,6 +731,7 @@ export interface FileRoutesById {
   '/r/$code': typeof RCodeRoute
   '/store/$section': typeof StoreSectionRoute
   '/store/bookings': typeof StoreBookingsRouteWithChildren
+  '/store/calendar': typeof StoreCalendarRoute
   '/store/sales': typeof StoreSalesRoute
   '/_guest/': typeof GuestIndexRoute
   '/lab/': typeof LabIndexRoute
@@ -787,6 +805,7 @@ export interface FileRouteTypes {
     | '/stays'
     | '/tours'
     | '/lab/advice'
+    | '/lab/calendar'
     | '/lab/cards'
     | '/lab/cart-line'
     | '/lab/hero'
@@ -801,6 +820,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/store/$section'
     | '/store/bookings'
+    | '/store/calendar'
     | '/store/sales'
     | '/lab/'
     | '/partner/'
@@ -867,6 +887,7 @@ export interface FileRouteTypes {
     | '/search'
     | '/stays'
     | '/lab/advice'
+    | '/lab/calendar'
     | '/lab/cards'
     | '/lab/cart-line'
     | '/lab/hero'
@@ -880,6 +901,7 @@ export interface FileRouteTypes {
     | '/partner/$token'
     | '/r/$code'
     | '/store/$section'
+    | '/store/calendar'
     | '/store/sales'
     | '/'
     | '/lab'
@@ -951,6 +973,7 @@ export interface FileRouteTypes {
     | '/_guest/stays'
     | '/_guest/tours'
     | '/lab/advice'
+    | '/lab/calendar'
     | '/lab/cards'
     | '/lab/cart-line'
     | '/lab/hero'
@@ -965,6 +988,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/store/$section'
     | '/store/bookings'
+    | '/store/calendar'
     | '/store/sales'
     | '/_guest/'
     | '/lab/'
@@ -1028,6 +1052,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   StoreRoute: typeof StoreRouteWithChildren
   LabAdviceRoute: typeof LabAdviceRoute
+  LabCalendarRoute: typeof LabCalendarRoute
   LabCardsRoute: typeof LabCardsRoute
   LabCartLineRoute: typeof LabCartLineRoute
   LabHeroRoute: typeof LabHeroRoute
@@ -1144,6 +1169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LabAdviceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lab/calendar': {
+      id: '/lab/calendar'
+      path: '/lab/calendar'
+      fullPath: '/lab/calendar'
+      preLoaderRoute: typeof LabCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lab/cards': {
       id: '/lab/cards'
       path: '/lab/cards'
@@ -1254,6 +1286,13 @@ declare module '@tanstack/react-router' {
       path: '/bookings'
       fullPath: '/store/bookings'
       preLoaderRoute: typeof StoreBookingsRouteImport
+      parentRoute: typeof StoreRoute
+    }
+    '/store/calendar': {
+      id: '/store/calendar'
+      path: '/calendar'
+      fullPath: '/store/calendar'
+      preLoaderRoute: typeof StoreCalendarRouteImport
       parentRoute: typeof StoreRoute
     }
     '/store/reports': {
@@ -1743,6 +1782,7 @@ interface StoreRouteChildren {
   StoreReportsRouteRoute: typeof StoreReportsRouteRouteWithChildren
   StoreSectionRoute: typeof StoreSectionRoute
   StoreBookingsRoute: typeof StoreBookingsRouteWithChildren
+  StoreCalendarRoute: typeof StoreCalendarRoute
   StoreSalesRoute: typeof StoreSalesRoute
   StoreIndexRoute: typeof StoreIndexRoute
   StoreContentAnalyticsRoute: typeof StoreContentAnalyticsRoute
@@ -1776,6 +1816,7 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreReportsRouteRoute: StoreReportsRouteRouteWithChildren,
   StoreSectionRoute: StoreSectionRoute,
   StoreBookingsRoute: StoreBookingsRouteWithChildren,
+  StoreCalendarRoute: StoreCalendarRoute,
   StoreSalesRoute: StoreSalesRoute,
   StoreIndexRoute: StoreIndexRoute,
   StoreContentAnalyticsRoute: StoreContentAnalyticsRoute,
@@ -1812,6 +1853,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   StoreRoute: StoreRouteWithChildren,
   LabAdviceRoute: LabAdviceRoute,
+  LabCalendarRoute: LabCalendarRoute,
   LabCardsRoute: LabCardsRoute,
   LabCartLineRoute: LabCartLineRoute,
   LabHeroRoute: LabHeroRoute,

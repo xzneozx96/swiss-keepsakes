@@ -1,6 +1,6 @@
 /** M02 Overview › Sales and the Today / Sales pages (owner review 15.10.2026). */
 export const salesOverviewEn = {
-  "overviewPages.label": "Overview pages",
+  "overviewPages.label": "Dashboard pages",
   "overviewPages.today": "Today",
   "overviewPages.sales": "Sales",
 
@@ -88,7 +88,7 @@ export const salesOverviewEn = {
 } as const;
 
 export const salesOverviewDe: Record<keyof typeof salesOverviewEn, string> = {
-  "overviewPages.label": "Seiten der Übersicht",
+  "overviewPages.label": "Seiten des Dashboards",
   "overviewPages.today": "Heute",
   "overviewPages.sales": "Verkäufe",
 

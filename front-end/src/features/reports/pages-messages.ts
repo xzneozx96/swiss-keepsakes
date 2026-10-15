@@ -9,7 +9,7 @@ export const reportPagesEn = {
   "sectionPages.articles": "Articles",
   "sectionPages.inbox": "Inbox",
   "sectionPages.money": "Money",
-  "sectionPages.sales": "Sales",
+  "sectionPages.sales": "Conversion",
   "sectionPages.guests": "Guests",
   "sectionPages.margin": "Margin",
 
@@ -131,7 +131,7 @@ export const reportPagesDe: Record<keyof typeof reportPagesEn, string> = {
   "sectionPages.articles": "Artikel",
   "sectionPages.inbox": "Posteingang",
   "sectionPages.money": "Geld",
-  "sectionPages.sales": "Verkäufe",
+  "sectionPages.sales": "Konversion",
   "sectionPages.guests": "Gäste",
   "sectionPages.margin": "Marge",
 

@@ -185,6 +185,7 @@ Thanh điều hướng dưới trên điện thoại có bốn mục: Khám phá
 ├── Hôm nay              M02 Việc cần làm, tiền cần thu, hoa hồng cần trả
 ├── Đơn hàng             M03 Danh sách đơn quà (tab: Chờ xác nhận, Chờ thanh toán, Đang chuẩn bị, Sẵn sàng, Còn nợ, Hoàn tất, Đã hủy)
 │   └── {id}             M04 Chi tiết đơn quà
+├── Lịch                 M27 Calendar tổng hợp booking và đơn quà (đề xuất route /store/calendar; hiện chỉ lab)
 ├── Booking              M05 Lịch khởi hành sắp tới
 │   ├── {departure}      M06 Danh sách khách của một lịch khởi hành
 │   └── {booking}        M07 Chi tiết booking
@@ -204,6 +205,30 @@ Thanh điều hướng dưới trên điện thoại có bốn mục: Khám phá
 Thao tác tiền mở dạng bảng trượt từ dưới lên (sheet) để giữ ngữ cảnh: M08 Ghi nhận khoản thu, M09 Điều chỉnh khoản thu, M10 Hủy và hoàn tiền.
 
 Manager không thấy: M22 phần thành viên và tài khoản nhận tiền; nút điều chỉnh hoặc hủy khoản thu trong M04 và M07 (AC29). Owner và Manager đều được thực hiện hoàn tiền qua M10 (R11a) và ghi nhận hoa hồng đã chi qua M16 (R11b), có lịch sử thao tác.
+
+### 3.2a M27 — Merchant Calendar: hướng chỉ có lịch, 15/10/2026
+
+**Trạng thái:** A · Month overview, B · Week planner và C · Day workspace đã bị chủ sản phẩm từ chối. Lý do: quá nhiều phần ngoài lịch, không có cảm giác mobile-native. Đặc tả bên dưới thay thế các phương án đó. Hướng mới thực hiện đúng yêu cầu chủ sản phẩm; giao diện mới vẫn chờ duyệt.
+
+**Bố cục:** `/lab/calendar` mở trực tiếp lịch toàn màn hình. Không có hero, thẻ lựa chọn phương án, bộ đếm, search/filter, danh sách bên cạnh hay prototype bar. Toolbar chỉ có tháng/năm bấm để chọn ngày, Today, Previous và Next. Day / Week / Month là ba chế độ của cùng một lịch. Mobile đặt bộ chuyển ở đáy trong vùng an toàn; desktop đặt phía phải toolbar. Dữ liệu và lựa chọn ngày được giữ khi chuyển chế độ.
+
+| Chế độ | Hiển thị và tương tác |
+| --- | --- |
+| Month | Lưới tháng chiếm phần màn hình còn lại. Ô ngày và thẻ sự kiện dùng nội dung React riêng. Mobile dùng tên ngắn và giờ; `+N more` mở ngày đó trong Day, không giấu giao dịch. Chạm ngày mở Day. |
+| Week | Bảy ngày theo trục giờ, ngày nhận quà ở hàng riêng trên cùng. Mobile cuộn ngang bên trong lịch, giữ Week; giờ cuộn dọc. Header ngày có thể mở Day. |
+| Day | Một ngày theo trục giờ, hiện đầy đủ đơn nhận trong ngày ở hàng trên. Sự kiện có giờ, tên và khách khi đủ chỗ. Ngày trống vẫn là lưới giờ trống có ngày được ghi rõ. |
+
+**Điều hướng:** Previous/Next dịch một ngày, tuần hoặc tháng theo chế độ hiện tại. Today về ngày mẫu 15/10/2026. Tiêu đề tháng mở sheet chọn ngày với lùi/tiến tháng; chọn ngày đóng sheet và chuyển lịch chính tới ngày đó, giữ chế độ. Month/Day hỗ trợ vuốt ngang trên khoảng trống để đổi kỳ; Week dùng cuộn ngang tự nhiên. Nút bấm luôn có sẵn thay cho gesture.
+
+**Chi tiết theo yêu cầu:** chạm sự kiện mở sheet dùng Drawer của hệ thống, có đóng/Escape, focus và nền phủ. Hiện tên, ngày/giờ, khách, địa điểm, trạng thái vận hành, tiền và ghi chú mẫu. Không có thao tác ghi giao dịch. Quà chờ merchant xác nhận ghi Requested pickup date. Booking hủy không nằm trong lịch mẫu đang vận hành.
+
+**Thiết kế và kỹ thuật:** FullCalendar React 7.1.2 cung cấp tính ngày, lưới và điều hướng. Toolbar, nội dung ô ngày, header và thẻ sự kiện được tùy biến; dùng các hook `dayCellTopContent`, `dayHeaderContent`, `eventContent`, `navLinkDayClick` để giữ điều hướng bàn phím. Token kế thừa theme dự án; nền sáng, Inter, ngày hôm nay màu nhấn Swiss red, tour và quà có màu riêng. Không thêm dark mode. Hàng quà gọn, ưu tiên không gian lịch theo giờ.
+
+**Giới hạn lab:** cố định October 2026, múi giờ Europe/Zurich. Chỉ các nhãn điều khiển có EN/DE; nội dung nghiệp vụ mẫu còn tiếng Anh. Chú thích dữ liệu mẫu nằm trong date picker/detail, không chiếm lịch chính. Không backend, lưu dữ liệu, kéo thả đổi lịch, thao tác tiền hoặc kiểm quyền phía server. M03–M07 giữ vai trò nghiệp vụ; M27 chưa được tích hợp vào menu merchant.
+
+**Kiểm tra trước duyệt:** full-screen ở 375/390px và desktop; Day/Week/Month; chọn ngày, Today, lùi/tiến qua tháng/năm; Month mở Day; toàn bộ việc trong ngày bận; ngày trống; mở/đóng sheet; bàn phím và Escape; vuốt đổi kỳ và cuộn trong Week; không cuộn ngang toàn trang. Bằng chứng mới nằm ở `docs/ux/prototype/reports/calendar/v2/`; báo cáo A/B/C là lịch sử bị từ chối.
+
+**Tham chiếu:** [Google Calendar — Day, Week, Month](https://support.google.com/calendar/answer/6110849?hl=en), [Google Calendar Android](https://support.google.com/calendar/answer/6110849?co=GENIE.Platform%3DAndroid&hl=en), [FullCalendar React](https://fullcalendar.io/docs/react). Tham khảo hành vi và sự tập trung vào lịch, giữ design system dự án.
 
 ### 3.3 Báo cáo đối tác
 

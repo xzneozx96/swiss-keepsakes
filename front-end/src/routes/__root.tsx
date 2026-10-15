@@ -1,4 +1,8 @@
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import {
+  Outlet,
+  createRootRoute,
+  useRouterState,
+} from "@tanstack/react-router";
 
 import { AppToasts } from "@/components/app-toasts";
 import { EmptyState } from "@/components/empty-state";
@@ -12,10 +16,14 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
+  const isCalendarLab = useRouterState({
+    select: (state) => state.location.pathname === "/lab/calendar",
+  });
+
   return (
     // The prototype bar takes its own height; each shell fills the rest of the screen.
     <div className="flex min-h-dvh flex-col">
-      <PrototypeBar />
+      {!isCalendarLab && <PrototypeBar />}
       <Outlet />
       <AppToasts />
     </div>

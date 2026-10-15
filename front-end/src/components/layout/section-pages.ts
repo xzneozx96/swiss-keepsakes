@@ -10,7 +10,8 @@ export interface SectionPage {
 
 /**
  * The sections with sub-pages (owner review 15.10.2026): a list page and Analytics, or the
- * four Reports pages. The sidebar lists them under the section; phones show them as tabs.
+ * four Reports pages. Phones show them as tabs; the sidebar groups them (merchant-shell.tsx),
+ * and Inquiries keeps them as tabs on desktop too.
  */
 export const SECTION_PAGES = {
   partners: [

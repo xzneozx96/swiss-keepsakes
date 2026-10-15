@@ -1,0 +1,751 @@
+.merchant-calendar,
+.mc-sheet-content {
+  --fc-monarch-primary: var(--accent);
+  --fc-monarch-primary-foreground: var(--accent-foreground);
+  --fc-monarch-primary-over: var(--accent-hover);
+  --fc-monarch-primary-down: var(--accent-hover);
+  --fc-monarch-secondary: var(--default);
+  --fc-monarch-secondary-foreground: var(--foreground);
+  --fc-monarch-secondary-over: var(--default-hover);
+  --fc-monarch-secondary-down: var(--default-hover);
+  --fc-monarch-background: var(--surface);
+  --fc-monarch-foreground: var(--foreground);
+  --fc-monarch-faint-foreground: var(--muted);
+  --fc-monarch-muted-foreground: var(--muted);
+  --fc-monarch-border: var(--separator);
+  --fc-monarch-strong-border: var(--border);
+  --fc-monarch-faint: var(--background);
+  --fc-monarch-muted: var(--default);
+  --fc-monarch-highlight: transparent;
+  --fc-monarch-now: var(--accent);
+  --fc-monarch-event: var(--info-soft);
+  --fc-monarch-event-contrast: var(--info);
+  --fc-monarch-popover: var(--surface);
+  --fc-monarch-popover-foreground: var(--foreground);
+  --fc-monarch-outline: var(--focus);
+  --fc-monarch-selected: var(--accent);
+  --fc-monarch-selected-foreground: var(--accent-foreground);
+  font-family: var(--font-sans);
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+.merchant-calendar {
+  /* Fills the shell's content area: only the prototype bar (2.5rem) sits above it. */
+  --mc-chrome: 2.5rem;
+  display: grid;
+  grid-template:
+    "title controls views" 76px "calendar calendar calendar" minmax(0, 1fr)
+    / minmax(0, 1fr) auto minmax(0, 1fr);
+  /* One screen tall (the shell's sidebar can make the page a little taller): it stays put when
+     the page scrolls, so no row of the calendar ever sits below the fold. */
+  position: sticky;
+  top: 0;
+  flex: none;
+  height: calc(100dvh - var(--mc-chrome));
+  min-height: 0;
+  width: 100%;
+  background: var(--surface);
+  overflow: hidden;
+}
+.merchant-calendar button,
+.mc-sheet-content button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.merchant-calendar button:focus-visible,
+.mc-sheet-content button:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -3px;
+}
+.merchant-calendar button:active,
+.mc-sheet-content button:active {
+  opacity: 0.7;
+}
+.mc-date-trigger {
+  grid-area: title;
+  align-self: center;
+  justify-self: start;
+  margin-inline-start: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.mc-date-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+.mc-date-title span {
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.mc-chevron-down {
+  width: 16px;
+  height: 16px;
+  transform: rotate(90deg);
+  color: var(--muted);
+}
+.mc-period-controls {
+  grid-area: controls;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mc-icon-button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mc-icon-button svg {
+  width: 20px;
+  height: 20px;
+}
+.mc-today {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-soft-foreground);
+  font-size: 14px;
+  font-weight: 600;
+}
+.mc-today:hover {
+  background: var(--accent-soft-hover, var(--accent-soft));
+}
+.mc-icon-button:hover,
+.mc-date-trigger:hover {
+  background: var(--default);
+}
+/* The toolbar arrows: soft round buttons like the editor step bar's, no outline. */
+.mc-period-controls .mc-icon-button {
+  width: 40px;
+  height: 40px;
+  background: var(--default);
+}
+.mc-period-controls .mc-icon-button:hover {
+  background: var(--default-hover);
+}
+.mc-view-nav {
+  grid-area: views;
+  align-self: center;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+}
+.mc-view-switch {
+  display: flex;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--surface-secondary);
+}
+.mc-view-switch button {
+  min-width: 72px;
+  min-height: 36px;
+  border-radius: 10px;
+  padding: 6px 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.mc-view-switch button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: var(--surface-shadow);
+  font-weight: 600;
+}
+.mc-calendar-viewport {
+  grid-area: calendar;
+  border-top: 1px solid var(--separator);
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+.mc-calendar-surface {
+  height: 100%;
+  width: 100%;
+  transform: translateX(var(--calendar-drag, 0px));
+  touch-action: pan-y;
+}
+.mc-view-week .mc-calendar-surface {
+  touch-action: auto;
+}
+.mc-table,
+.mc-view {
+  border-radius: 0 !important;
+}
+.mc-table {
+  border: 0 !important;
+}
+.mc-day-header {
+  padding: 10px 0 !important;
+  border-color: var(--separator) !important;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.mc-day-header-inner {
+  padding: 0 !important;
+}
+.mc-view-month .mc-day-header {
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.mc-day-cell {
+  background: var(--surface) !important;
+  border-color: var(--separator) !important;
+}
+.mc-day-top {
+  display: flex !important;
+  justify-content: center !important;
+  padding: 8px 0 5px !important;
+}
+.mc-day-top-inner {
+  padding: 0 !important;
+}
+.mc-date-number {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 14px;
+  color: var(--foreground);
+}
+.mc-date-number:hover {
+  background: var(--default);
+}
+.mc-date-number.mc-is-today {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.mc-other-month .mc-date-number {
+  color: var(--muted);
+  opacity: 0.6;
+}
+.mc-other-month {
+  background: var(--background) !important;
+}
+.mc-day-events {
+  padding: 0 6px !important;
+}
+.mc-day-bottom {
+  padding: 1px 6px 6px !important;
+}
+.mc-event-shell {
+  background: transparent !important;
+  color: var(--foreground) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 6px !important;
+  margin: 2px 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+.mc-event-inner {
+  padding: 0 !important;
+  height: 100%;
+  min-width: 0;
+}
+.mc-event {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: baseline;
+  column-gap: 6px;
+  height: 100%;
+  min-width: 0;
+  padding: 6px 9px;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+.mc-event-tour {
+  color: var(--info);
+  background: var(--info-soft);
+}
+.mc-event-pickup {
+  color: var(--success);
+  background: var(--success-soft);
+}
+.mc-event strong {
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mc-event-time {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.mc-event-person {
+  width: 100%;
+  font-size: 12px;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mc-view-month .mc-event {
+  flex-wrap: nowrap;
+  padding: 5px 7px;
+}
+.mc-view-month .mc-event strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.mc-more {
+  font-size: 12px !important;
+  color: var(--muted) !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 2px 6px !important;
+  min-height: 24px;
+}
+.mc-column-date {
+  min-width: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 0;
+  width: 100%;
+}
+.mc-column-date > span {
+  font-size: 12px;
+  font-weight: 500;
+}
+.mc-column-date > strong {
+  font-size: 23px;
+  font-weight: 500;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+.mc-column-date.mc-is-today {
+  color: var(--accent);
+}
+.mc-column-date.mc-is-today > strong {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.mc-time-label {
+  font-size: 11px;
+  color: var(--muted);
+  padding-inline: 8px !important;
+}
+.mc-time-line,
+.mc-day-lane {
+  border-color: var(--separator) !important;
+}
+.mc-view-day .mc-event,
+.mc-view-week .mc-event {
+  padding: 8px 10px;
+}
+.mc-view-day .mc-event strong {
+  font-size: 14px;
+}
+.mc-view-day .mc-day-header {
+  text-align: left !important;
+}
+.mc-view-day .mc-column-date {
+  flex-direction: row;
+  gap: 12px;
+  justify-content: flex-start;
+  padding-left: 16px;
+}
+.mc-view-day .mc-column-date > span {
+  order: 1;
+  font-size: 14px;
+}
+.merchant-calendar ::selection,
+.mc-sheet-content ::selection {
+  color: var(--accent-soft-foreground);
+  background: var(--accent-soft);
+}
+.merchant-calendar * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.mc-sheet-content {
+  width: 100% !important;
+  max-width: 480px !important;
+  margin-inline: auto !important;
+}
+.mc-sheet {
+  max-height: calc(100dvh - 36px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mc-sheet-header {
+  padding: 12px 24px 8px !important;
+}
+.mc-sheet-header h2 {
+  font-size: 16px;
+  font-weight: 500;
+}
+.mc-sheet-body {
+  padding: 8px 24px 28px !important;
+  overflow-y: auto;
+}
+.mc-picker-toolbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.mc-picker-toolbar h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-right: auto;
+}
+.mc-picker {
+  width: 100%;
+}
+.mc-picker-weekday {
+  border: 0 !important;
+  padding: 8px !important;
+  font-size: 12px;
+  color: var(--muted);
+}
+.mc-picker-cell {
+  border: 0 !important;
+  background: transparent !important;
+}
+.mc-picker-top {
+  padding: 0 !important;
+  justify-content: center !important;
+}
+.mc-picker-top-inner {
+  padding: 0 !important;
+}
+.mc-picker-day {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 14px;
+  display: grid;
+  place-items: center;
+  margin: 3px auto;
+}
+.mc-picker-day:hover {
+  background: var(--default);
+}
+.mc-picker-day.mc-picked {
+  color: var(--accent-foreground);
+  background: var(--accent);
+}
+.mc-picker-day.mc-outside {
+  color: var(--muted);
+  opacity: 0.55;
+}
+.mc-picker [role="grid"] {
+  border: 0 !important;
+}
+.mc-preview-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 24px;
+}
+.mc-event-detail h2 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 8px 0 24px;
+  text-wrap: pretty;
+}
+.mc-detail-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin: 20px 0;
+}
+.mc-detail-row > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.mc-detail-row p {
+  font-size: 15px;
+  line-height: 1.5;
+}
+.mc-detail-row span {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 3px;
+}
+.mc-detail-status {
+  display: grid;
+  gap: 14px;
+  border-block: 1px solid var(--separator);
+  padding-block: 20px;
+  margin-top: 24px;
+}
+.mc-detail-status > div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 16px;
+}
+.mc-detail-status dt {
+  font-size: 13px;
+  color: var(--muted);
+}
+.mc-detail-status dd {
+  font-size: 13px;
+}
+.mc-detail-note {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 20px;
+}
+@media (max-width: 1023.98px) {
+  /* Phone chrome of the shell: the page bleeds to the edges, the tab bar (4rem + safe area)
+     sits below, and the Day/Week/Month switch is the last row, so it ends above the tab bar. */
+  .merchant-calendar {
+    grid-template:
+      "title controls" minmax(66px, auto) "calendar calendar" minmax(0, 1fr)
+      "views views" auto / minmax(0, 1fr) auto;
+    position: static;
+    height: calc(
+      100dvh - var(--mc-chrome) - env(safe-area-inset-top, 0px) - 4rem - 1px -
+        env(safe-area-inset-bottom, 0px)
+    );
+  }
+  /* Title left, then previous, Today, next on the right: centred they would run into a long
+     month name such as "September" or "Dezember" at 360-390px. */
+  .mc-date-trigger {
+    gap: 6px;
+    margin-inline-start: 12px;
+    padding: 0 2px;
+  }
+  .mc-period-controls {
+    margin-inline-end: 12px;
+    align-self: center;
+  }
+  .mc-date-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    font-size: 20px;
+    line-height: 1.15;
+  }
+  .mc-date-title span {
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  .mc-chevron-down {
+    width: 14px;
+    height: 14px;
+  }
+  .mc-period-controls {
+    gap: 6px;
+  }
+  .mc-today {
+    padding: 0 14px;
+  }
+  .mc-view-nav {
+    justify-self: stretch;
+    border-top: 1px solid var(--separator);
+    padding: 10px 16px;
+    background: var(--surface);
+  }
+  .mc-view-switch {
+    width: 100%;
+    padding: 3px;
+    border-radius: 14px;
+  }
+  .mc-view-switch button {
+    flex: 1;
+    min-height: 38px;
+    font-size: 13px;
+  }
+  .mc-view-month .mc-day-header {
+    padding: 10px 0 !important;
+    font-size: 11px;
+  }
+  .mc-day-top {
+    padding: 5px 0 3px !important;
+  }
+  .mc-date-number {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+  .mc-day-events {
+    padding: 0 2px !important;
+  }
+  .mc-day-bottom {
+    padding: 0 1px 2px !important;
+  }
+  .mc-view-month .mc-event {
+    display: block;
+    padding: 3px 3px;
+    border-radius: 4px;
+    line-height: 1.25;
+  }
+  .mc-view-month .mc-event-time {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .mc-view-month .mc-event strong {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .mc-view-month .mc-event-pickup .mc-event-time {
+    display: none;
+  }
+  .mc-more {
+    font-size: 10px !important;
+    min-height: 22px;
+    padding: 0 2px !important;
+  }
+  .mc-view-week .mc-event {
+    padding: 6px;
+  }
+  .mc-view-week .mc-event strong {
+    font-size: 12px;
+    white-space: normal;
+  }
+  .mc-view-week .mc-event-person {
+    white-space: normal;
+    font-size: 11px;
+  }
+  .mc-sheet-header {
+    padding-inline: 20px !important;
+  }
+  .mc-sheet-body {
+    padding-inline: 20px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-calendar-surface {
+    transform: none;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .mc-view-week .mc-calendar-viewport {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+  .mc-view-week .mc-calendar-surface {
+    min-width: 760px;
+  }
+  .mc-view-month .mc-event strong {
+    white-space: normal;
+    overflow-wrap: normal;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  .mc-view-month .mc-event-time {
+    font-size: 11px;
+  }
+}
+
+.mc-day-top-inner {
+  width: auto !important;
+  height: auto !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  background: transparent !important;
+}
+.mc-date-number {
+  min-width: 36px;
+  flex-shrink: 0;
+}
+.mc-picker-top-inner {
+  width: auto !important;
+  height: auto !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  background: transparent !important;
+}
+.mc-picker-day {
+  min-width: 44px;
+  flex-shrink: 0;
+}
+.mc-picker-row,
+.mc-picker-table {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+.mc-sheet {
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+}
+.mc-no-marker {
+  display: none !important;
+}
+.mc-view-day .mc-all-day-event,
+.mc-view-week .mc-all-day-event {
+  padding: 5px 8px;
+}
+.mc-all-day-event .mc-event-time {
+  display: none;
+}
+.mc-all-day-event .mc-event-person {
+  display: none;
+}
+.mc-view-day .mc-all-day-event strong,
+.mc-view-week .mc-all-day-event strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.mc-day-top-inner:focus-visible,
+.mc-day-header-inner:focus-visible,
+.mc-picker-top-inner:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+@media (max-width: 1023.98px) {
+  .mc-view-week .mc-all-day-event strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mc-view-week div:has(> .mc-time-label),
+  .mc-view-week [role="rowheader"] {
+    transform: translateX(var(--week-scroll, 0px));
+    position: relative;
+    z-index: 5;
+    background: var(--surface);
+  }
+}
+
+/* Real titles are longer than the lab's samples: two lines at most in a phone month cell. */
+@media (max-width: 1023.98px) {
+  .mc-view-month .mc-event strong {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+}
