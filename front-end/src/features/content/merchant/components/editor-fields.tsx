@@ -132,12 +132,15 @@ export function IconAction({
   icon: Icon,
   isDisabled,
   className,
+  buttonProps,
   onPress,
 }: {
   label: string;
   icon: IconComponent;
   isDisabled?: boolean;
   className?: string;
+  /** Extra class (a tone, a taller hit area) and data attribute for the button itself. */
+  buttonProps?: { className?: string; "data-move"?: "up" | "down" };
   onPress: () => void;
 }) {
   return (
@@ -148,6 +151,7 @@ export function IconAction({
       size="sm"
       variant="tertiary"
       onPress={onPress}
+      {...buttonProps}
     >
       <Icon aria-hidden className={className} size={18} />
     </Button>

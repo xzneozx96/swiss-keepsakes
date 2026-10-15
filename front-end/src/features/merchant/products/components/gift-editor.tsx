@@ -596,11 +596,14 @@ export function CommissionCard({
   error?: string;
 }) {
   const { t } = useLocale();
+  const step =
+    "size-12 shrink-0 rounded-full border-0 bg-surface-secondary text-foreground disabled:opacity-30 data-[pressed=true]:scale-95";
 
   return (
     <DetailCard icon={PartnersIcon} title={t("products.commission.title")}>
       <NumberField
-        fullWidth
+        aria-label={t("products.commission.rate")}
+        className="items-center gap-2"
         formatOptions={{ style: "percent", maximumFractionDigits: 1 }}
         isInvalid={error !== undefined}
         maxValue={0.5}
@@ -609,11 +612,31 @@ export function CommissionCard({
         value={value}
         onChange={onChange}
       >
-        <Label>{t("products.commission.rate")}</Label>
-        <NumberField.Group>
-          <NumberField.Input className="tabular-nums" />
+        <NumberField.Group
+          className="flex h-auto items-center gap-4 overflow-visible border-0 bg-transparent shadow-none"
+          onPasteCapture={(event) => {
+            // react-aria commits a paste over the whole input even when it is readOnly.
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+        >
+          <NumberField.DecrementButton className={step} />
+          {/* The rate is only stepped (buttons, arrows, Home/End, hold): the DOM readOnly keeps the "%" and a number always in the box, which react-aria's own isReadOnly would not (it disables stepping too). */}
+          <NumberField.Input
+            readOnly
+            aria-readonly="false"
+            aria-valuemax={50}
+            aria-valuemin={0}
+            aria-valuenow={Math.round(value * 100)}
+            aria-valuetext={`${Math.round(value * 1000) / 10}%`}
+            className="w-28 bg-transparent p-0 text-center text-5xl leading-none font-semibold tabular-nums shadow-none"
+            role="spinbutton"
+          />
+          <NumberField.IncrementButton className={step} />
         </NumberField.Group>
-        <Description>{t("products.commission.help")}</Description>
+        <Description className="text-center">
+          {t("products.commission.help")}
+        </Description>
         <FieldError>{error}</FieldError>
       </NumberField>
     </DetailCard>

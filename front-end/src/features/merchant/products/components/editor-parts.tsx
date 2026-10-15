@@ -15,7 +15,6 @@ import {
   Input,
   Label,
   Tabs,
-  TextArea,
   TextField,
 } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
@@ -25,6 +24,7 @@ import { LANGUAGES, hasText, languageStatus } from "../lib/completeness";
 
 import { LanguageChip, PublishChip } from "./status-chips";
 
+import { AutoTextArea } from "@/components/auto-textarea";
 import { EditorFormSkeleton } from "@/components/layout/detail-skeletons";
 import { MerchantBackBar } from "@/components/layout/merchant-back-bar";
 import { StatusChip } from "@/components/status-chip";
@@ -280,7 +280,7 @@ export function LocalizedField({
   value: LocalizedText;
   language: Language;
   onChange: (text: LocalizedText) => void;
-  /** A TextArea with this many rows; a one-line Input without. */
+  /** An auto-growing text area, at least this many rows tall; a one-line Input without. */
   rows?: number;
   isInvalid?: boolean;
   /** Replaces "Needed for the English version." (e.g. a draft's missing name). */
@@ -305,7 +305,7 @@ export function LocalizedField({
       onChange={(text) => onChange({ ...value, [language]: text })}
     >
       <Label>{label}</Label>
-      {rows ? <TextArea rows={rows} /> : <Input />}
+      {rows ? <AutoTextArea rows={rows} /> : <Input />}
       {hint && <Description className="line-clamp-2">{hint}</Description>}
       <FieldError>
         {error ?? errorText ?? t(`products.text.needed.${language}`)}

@@ -1,6 +1,11 @@
 import type { Language } from "@/contexts/locale-context";
 import type { LocalizedText } from "@/features/catalog/types";
-import type { Departure, Tour, TourData } from "@/features/tours/types";
+import type {
+  Departure,
+  Tour,
+  TourData,
+  TourStop,
+} from "@/features/tours/types";
 import type { LocalizedRich, RichNode } from "@/lib/rich-text";
 import type { TextFieldId } from "../lib/completeness";
 import type { Issue, Level, StepStatus, TextErrors } from "../lib/validation";
@@ -37,8 +42,8 @@ export interface TourEdit {
   summary: LocalizedText;
   description: LocalizedText;
   meetingPoint: LocalizedText;
-  /** Text of the existing stops only: a new stop would have no map position or photo. */
-  itinerary: { id: string; name: LocalizedText; description: LocalizedText }[];
+  /** The stops in guest order (the guest map numbers them by position); the whole stop is edited. */
+  itinerary: TourStop[];
   /** `key` keeps React rows stable while items are added. */
   included: { key: string; text: LocalizedText }[];
   excluded: LocalizedText;
@@ -95,9 +100,11 @@ function toEdit(tour: Tour): TourEdit {
     description: { ...tour.description },
     meetingPoint: { ...tour.meetingPoint },
     itinerary: tour.itinerary.map((stop) => ({
-      id: stop.id,
+      ...stop,
       name: { ...stop.name },
       description: { ...stop.description },
+      coordinates: [stop.coordinates[0], stop.coordinates[1]],
+      note: stop.note && { ...stop.note },
     })),
     included: tour.included.map((text, index) => ({
       key: `item-${index}`,
@@ -132,8 +139,7 @@ const rappen = (chf: number) =>
   Math.round((Number.isFinite(chf) ? chf : 0) * 100);
 
 /**
- * The saved tour: id, slug, the gallery after the main photo and stop positions never
- * change. A tour stays off C08 (`unannounced`) until it is first published.
+ * The saved tour: id, slug and the gallery after the main photo never change. A tour stays off C08 (`unannounced`) until it is first published.
  */
 function toTour(edit: TourEdit, base: Tour): Tour {
   const text = textOf(edit);
@@ -144,16 +150,15 @@ function toTour(edit: TourEdit, base: Tour): Tour {
     summary: cleanText(edit.summary),
     description: cleanText(edit.description),
     meetingPoint: cleanText(edit.meetingPoint),
-    itinerary: base.itinerary.map((stop) => {
-      const edited = edit.itinerary.find((s) => s.id === stop.id);
+    itinerary: edit.itinerary.map((stop) => {
+      const note = stop.note && cleanText(stop.note);
 
-      return edited
-        ? {
-            ...stop,
-            name: cleanText(edited.name),
-            description: cleanText(edited.description),
-          }
-        : stop;
+      return {
+        ...stop,
+        name: cleanText(stop.name),
+        description: cleanText(stop.description),
+        note: note && hasAnyText(note) ? note : undefined,
+      };
     }),
     included: text.included.map(cleanText),
     excluded: cleanText(edit.excluded),
@@ -314,6 +319,8 @@ export function useTourEditor(
     return created;
   });
   const [storageFull, setStorageFull] = useState(false);
+  /** The itinerary's selected stop, kept here so a language switch (which remounts the step) keeps it. */
+  const [stopId, setStopId] = useState<string | null>(null);
   const isNew = !tour;
   const archived = !!tour?.archivedAt;
   const live = !!tour && tour.published && !tour.archivedAt;
@@ -642,6 +649,8 @@ export function useTourEditor(
       if (tour) archive.restore("tour", tour.id);
       setEdit((e) => ({ ...e, published: false }));
     },
+    stopId,
+    selectStop: setStopId,
     isDirty: JSON.stringify(edit) !== JSON.stringify(saved),
     hasErrors: !!shown && hasIssues(shown),
     storageFull,

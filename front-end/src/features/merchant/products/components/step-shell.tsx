@@ -3,7 +3,7 @@ import type { Issue, StepStatus } from "../lib/validation";
 import type { Language } from "@/contexts/locale-context";
 
 import { Alert, Button, ProgressBar } from "@heroui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { LANGUAGES } from "../lib/completeness";
 
@@ -15,7 +15,9 @@ import {
   EditIcon,
   RestoreIcon,
   StatusDangerIcon,
+  StatusNeutralIcon,
   StatusSuccessIcon,
+  StatusWarningIcon,
 } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
@@ -36,7 +38,56 @@ const statusKey = {
   todo: "products.steps.status.todo",
 } as const;
 
-/** The numbered circle: current in ink, done with a tick, an error in red, a warning dot. */
+type MarkState = StepStatus | "current";
+
+/** The mark's state: the step being edited reads "current", unless it has errors to fix. */
+const markState = (status: StepStatus, isCurrent: boolean): MarkState =>
+  isCurrent && status !== "error" ? "current" : status;
+
+/** Per state: the number circle, the corner icon, the status text and the timeline segment below. */
+const markStyle = {
+  current: {
+    circle: "bg-foreground text-background",
+    icon: "text-foreground",
+    text: "text-foreground",
+    line: "bg-separator",
+    Icon: ArrowRightIcon,
+  },
+  done: {
+    circle: "bg-success-soft text-success-soft-foreground",
+    icon: "text-success",
+    text: "text-success",
+    line: "bg-success",
+    Icon: StatusSuccessIcon,
+  },
+  warning: {
+    circle: "bg-warning-soft text-warning-soft-foreground",
+    icon: "text-warning",
+    text: "text-warning",
+    line: "bg-warning",
+    Icon: StatusWarningIcon,
+  },
+  error: {
+    circle: "bg-danger-soft text-danger-soft-foreground",
+    icon: "text-danger",
+    text: "text-danger",
+    line: "bg-danger",
+    Icon: StatusDangerIcon,
+  },
+  todo: {
+    circle: "bg-default text-muted",
+    icon: "text-muted",
+    text: "text-muted",
+    line: "bg-separator",
+    Icon: StatusNeutralIcon,
+  },
+} as const satisfies Record<MarkState, object>;
+
+/**
+ * The numbered circle: the number always shows; a corner icon and the colour carry the state
+ * (done green tick, needs attention amber clock, errors brick alert, current ink arrow, to do
+ * grey dash).
+ */
 function StepMark({
   index,
   status,
@@ -46,33 +97,54 @@ function StepMark({
   status: StepStatus;
   isCurrent: boolean;
 }) {
-  const base =
-    "relative grid size-8 shrink-0 place-items-center rounded-full text-sm font-semibold tabular-nums";
+  const style = markStyle[markState(status, isCurrent)];
 
   return (
     <span
       aria-hidden
-      className={`${base} ${
-        status === "error"
-          ? "bg-danger-soft text-danger-soft-foreground"
-          : isCurrent
-            ? "bg-foreground text-background"
-            : status === "done" || status === "warning"
-              ? "border border-foreground text-foreground"
-              : "border border-separator text-muted"
-      }`}
+      className={`relative grid size-8 shrink-0 place-items-center rounded-full text-sm font-semibold tabular-nums ${style.circle}`}
     >
-      {status === "error" ? (
-        <StatusDangerIcon size={16} />
-      ) : status === "done" && !isCurrent ? (
-        <StatusSuccessIcon size={16} />
-      ) : (
-        index + 1
-      )}
-      {status === "warning" && (
-        <span className="absolute -end-0.5 -top-0.5 size-2.5 rounded-full border-2 border-background bg-warning" />
-      )}
+      {index + 1}
+      <span className="absolute -end-1 -bottom-1 grid rounded-full bg-surface p-px">
+        <style.Icon className={style.icon} size={14} />
+      </span>
     </span>
+  );
+}
+
+/** The step's status in words, in its colour (never colour alone). */
+function StepStatusText({
+  status,
+  isCurrent,
+}: {
+  status: StepStatus;
+  isCurrent: boolean;
+}) {
+  const { t } = useLocale();
+  const state = markState(status, isCurrent);
+
+  return (
+    <span className={`text-xs ${markStyle[state].text}`}>
+      {t(`products.steps.status.${state}`)}
+    </span>
+  );
+}
+
+/** The timeline segment from under one step's circle to the next, coloured by the step above. */
+function StepLine({
+  status,
+  isCurrent,
+  className,
+}: {
+  status: StepStatus;
+  isCurrent: boolean;
+  className: string;
+}) {
+  return (
+    <span
+      aria-hidden
+      className={`absolute w-0.5 rounded-full ${markStyle[markState(status, isCurrent)].line} ${className}`}
+    />
   );
 }
 
@@ -116,9 +188,10 @@ export function StepLayout({
               <li key={s.id} className="relative pb-2 last:pb-0">
                 {/* The connector runs from under this number to the next one. */}
                 {i < steps.length - 1 && (
-                  <span
-                    aria-hidden
-                    className="absolute start-[1.375rem] top-[2.625rem] -bottom-0.5 w-px bg-separator"
+                  <StepLine
+                    className="start-[1.3125rem] top-[2.625rem] -bottom-1"
+                    isCurrent={isCurrent}
+                    status={s.status}
                   />
                 )}
                 <button
@@ -136,13 +209,7 @@ export function StepLayout({
                     >
                       {s.label}
                     </span>
-                    {s.status !== "todo" && (
-                      <span
-                        className={`text-xs ${s.status === "error" ? "text-danger" : s.status === "warning" ? "text-warning" : "text-muted"}`}
-                      >
-                        {t(statusKey[s.status])}
-                      </span>
-                    )}
+                    <StepStatusText isCurrent={isCurrent} status={s.status} />
                   </span>
                 </button>
               </li>
@@ -150,7 +217,7 @@ export function StepLayout({
           })}
         </ol>
       </nav>
-      <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
+      <div className="flex min-w-0 flex-col gap-5 pb-20 lg:gap-6 lg:pb-0">
         {sheetOpen && (
           <SheetFrame
             isOpen
@@ -166,15 +233,22 @@ export function StepLayout({
             title={t("products.steps.title")}
             onClose={() => setSheetOpen(false)}
           >
-            <ol className="flex flex-col gap-1">
+            <ol className="flex flex-col">
               {steps.map((s, i) => {
                 const isCurrent = s.id === current;
 
                 return (
-                  <li key={s.id}>
+                  <li key={s.id} className="relative">
+                    {i < steps.length - 1 && (
+                      <StepLine
+                        className="start-[1.4375rem] top-[2.75rem] -bottom-1.5"
+                        isCurrent={isCurrent}
+                        status={s.status}
+                      />
+                    )}
                     <button
                       aria-current={isCurrent ? "step" : undefined}
-                      className="flex min-h-12 w-full items-center gap-3 rounded-2xl px-2 text-start outline-none enabled:hover:bg-surface-secondary focus-visible:focus-ring disabled:opacity-60"
+                      className="flex min-h-12 w-full items-start gap-3 rounded-2xl p-2 text-start outline-none enabled:hover:bg-surface-secondary focus-visible:focus-ring disabled:opacity-60"
                       disabled={!canGo(s.id)}
                       type="button"
                       onClick={() => {
@@ -187,17 +261,14 @@ export function StepLayout({
                         isCurrent={isCurrent}
                         status={s.status}
                       />
-                      <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="flex min-w-0 flex-1 flex-col pt-1">
                         <span className={isCurrent ? "font-semibold" : ""}>
                           {s.label}
                         </span>
-                        {s.status !== "todo" && (
-                          <span
-                            className={`text-xs ${s.status === "error" ? "text-danger" : s.status === "warning" ? "text-warning" : "text-muted"}`}
-                          >
-                            {t(statusKey[s.status])}
-                          </span>
-                        )}
+                        <StepStatusText
+                          isCurrent={isCurrent}
+                          status={s.status}
+                        />
                       </span>
                     </button>
                   </li>
@@ -380,9 +451,47 @@ export interface BarAction {
 }
 
 /**
- * The stepper's bar, sticky above the phone tab bar: the status line, then Back (and, when
- * editing, Next) as icons, a secondary action, and the screen's one red action (Next while
- * creating, Save changes while editing, Publish on the last step).
+ * True while a text field has focus and the on-screen keyboard has shrunk the visible area.
+ * Browsers that resize the layout for the keyboard would lift a fixed bar over the focused
+ * field, so the phone bar steps aside until the field loses focus.
+ */
+function useKeyboardOpen() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const isField = (el: Element | null) =>
+      el instanceof HTMLElement &&
+      (el.isContentEditable || /^(input|textarea|select)$/i.test(el.tagName));
+    let tall = viewport?.height ?? window.innerHeight;
+    const sync = () => {
+      const height = viewport?.height ?? window.innerHeight;
+      const focused = isField(document.activeElement);
+
+      if (!focused) tall = Math.max(tall, height);
+      setOpen(focused && height < tall * 0.85);
+    };
+
+    viewport?.addEventListener("resize", sync);
+    window.addEventListener("resize", sync);
+    document.addEventListener("focusin", sync);
+    document.addEventListener("focusout", sync);
+
+    return () => {
+      viewport?.removeEventListener("resize", sync);
+      window.removeEventListener("resize", sync);
+      document.removeEventListener("focusin", sync);
+      document.removeEventListener("focusout", sync);
+    };
+  }, []);
+
+  return open;
+}
+
+/**
+ * The stepper's bar. Phones: fixed above the tab bar as one row, the status text then Back,
+ * Next, a secondary action and the screen's one red action (Next while creating, Save
+ * changes while editing, Publish on the last step). From 1024px: sticky under the step.
  */
 export function StepBar({
   status,
@@ -400,30 +509,31 @@ export function StepBar({
   primary: BarAction;
 }) {
   const { t } = useLocale();
+  const keyboardOpen = useKeyboardOpen();
 
   return (
-    <div className="sticky bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] z-10 lg:bottom-6">
-      {/* Two rows below 1280px: the status with Back/Next, then the actions; one row from 1280px. */}
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-3xl bg-surface px-3 py-3 shadow-overlay sm:px-4 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
+    <div
+      className={`fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] z-10 sm:inset-x-4 lg:sticky lg:inset-x-auto lg:bottom-6 ${keyboardOpen ? "max-lg:hidden" : ""}`}
+    >
+      <div className="flex items-center gap-2 rounded-3xl bg-surface px-3 py-2 shadow-overlay lg:px-4 lg:py-3">
         <span
           aria-live="polite"
-          className={`flex min-h-5 min-w-0 items-start gap-1.5 text-sm ${tone === "danger" ? "text-danger" : tone === "success" ? "text-success" : "text-muted"}`}
+          className={`flex min-w-0 flex-1 items-center gap-1.5 text-xs leading-snug lg:text-sm ${tone === "danger" ? "text-danger" : tone === "success" ? "text-success" : "text-muted"}`}
           role="status"
         >
           {tone === "success" && (
-            <StatusSuccessIcon
-              aria-hidden
-              className="mt-0.5 shrink-0"
-              size={16}
-            />
+            <StatusSuccessIcon aria-hidden className="shrink-0" size={16} />
           )}
-          {status}
+          <span className="truncate lg:line-clamp-2 lg:whitespace-normal">
+            {status}
+          </span>
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 lg:gap-2">
           {onBack && (
             <Button
               isIconOnly
               aria-label={t("products.steps.back")}
+              size="sm"
               variant="tertiary"
               onPress={onBack}
             >
@@ -434,20 +544,21 @@ export function StepBar({
             <Button
               isIconOnly
               aria-label={t("products.steps.next")}
+              size="sm"
               variant="tertiary"
               onPress={onForward}
             >
               <ArrowRightIcon aria-hidden size={18} />
             </Button>
           )}
-        </div>
-        <div className="col-span-2 flex items-center justify-end gap-2 xl:col-span-1">
           {secondary && (
-            <Button variant="tertiary" onPress={secondary.onPress}>
+            <Button size="sm" variant="tertiary" onPress={secondary.onPress}>
               {secondary.label}
             </Button>
           )}
-          <Button onPress={primary.onPress}>{primary.label}</Button>
+          <Button size="sm" onPress={primary.onPress}>
+            {primary.label}
+          </Button>
         </div>
       </div>
     </div>

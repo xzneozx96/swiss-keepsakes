@@ -1,3 +1,5 @@
+import { itineraryDe, itineraryEn } from "./itinerary-messages";
+
 /** M11 Products, M12 Edit gift, M13 Edit tour and M14 Pickup points (steps 4.8–4.11). */
 export const productsEn = {
   "products.title": "Products",
@@ -62,8 +64,8 @@ export const productsEn = {
   "products.notFound.tour": "This tour is not in the shop.",
   "products.save": "Save changes",
   "products.saved": "Saved. Guests see the change now.",
-  "products.unsaved": "Unsaved changes",
-  "products.noChanges": "No unsaved changes",
+  "products.unsaved": "Unsaved",
+  "products.noChanges": "No changes",
   "products.fixErrors": "Check the marked fields.",
   "products.range": "Enter a number from {min} to {max}.",
   "products.and": "and",
@@ -169,7 +171,7 @@ export const productsEn = {
   "products.payment.depositPercent": "Deposit (%)",
   "products.payment.balanceDays": "Rest due (days after pickup)",
   "products.payment.laterDays": "Due (days after pickup)",
-  "products.commission.title": "Partner commission",
+  "products.commission.title": "Partner's commission rate (%)",
   "products.commission.rate": "Commission rate",
   "products.commission.help":
     "Paid to referral partners on completed sales. Each order or booking keeps the rate it was made with.",
@@ -180,7 +182,7 @@ export const productsEn = {
   "products.prices.infants": "Infants",
   "products.prices.price": "Price",
   "products.prices.fromAge": "From age",
-  "products.prices.infantAges": "Ages 0–{to}",
+  "products.prices.ageRange": "Ages {range}",
   "products.prices.help":
     "Every departure uses these prices. Bookings keep the prices they were made with.",
   "products.prices.adultAgeError":
@@ -382,6 +384,7 @@ export const productsEn = {
   "products.steps.status.error": "Has errors",
   "products.steps.status.warning": "Needs attention",
   "products.steps.status.todo": "Not started",
+  "products.steps.status.current": "Current step",
   "products.review.edit": "Edit {step}",
   "products.review.none": "Not set",
   "products.review.option": "{price} · {stock} in stock",
@@ -401,6 +404,7 @@ export const productsEn = {
     "Archived: guests don't see this keepsake. Restore it as a draft to publish it again.",
   "products.review.archived.tour":
     "Archived: guests don't see this tour. Restore it as a draft to publish it again.",
+  ...itineraryEn,
 } as const;
 
 export const productsDe: Record<keyof typeof productsEn, string> = {
@@ -464,10 +468,10 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   "products.kind.tour": "Tour",
   "products.notFound.gift": "Dieses Andenken gibt es im Shop nicht.",
   "products.notFound.tour": "Diese Tour gibt es im Shop nicht.",
-  "products.save": "Änderungen speichern",
+  "products.save": "Speichern",
   "products.saved": "Gespeichert. Gäste sehen die Änderung sofort.",
-  "products.unsaved": "Ungespeicherte Änderungen",
-  "products.noChanges": "Keine ungespeicherten Änderungen",
+  "products.unsaved": "Nicht gespeichert",
+  "products.noChanges": "Keine Änderungen",
   "products.fixErrors": "Prüfen Sie die markierten Felder.",
   "products.range": "Geben Sie eine Zahl von {min} bis {max} ein.",
   "products.and": "und",
@@ -576,7 +580,7 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   "products.payment.depositPercent": "Anzahlung (%)",
   "products.payment.balanceDays": "Rest fällig (Tage nach Abholung)",
   "products.payment.laterDays": "Fällig (Tage nach Abholung)",
-  "products.commission.title": "Partnerprovision",
+  "products.commission.title": "Provisionssatz für Partner (%)",
   "products.commission.rate": "Provisionssatz",
   "products.commission.help":
     "Geht an vermittelnde Partner bei abgeschlossenen Verkäufen. Jede Bestellung oder Buchung behält den Satz von damals.",
@@ -587,7 +591,7 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   "products.prices.infants": "Kleinkinder",
   "products.prices.price": "Preis",
   "products.prices.fromAge": "Ab Alter",
-  "products.prices.infantAges": "0–{to} Jahre",
+  "products.prices.ageRange": "{range} Jahre",
   "products.prices.help":
     "Alle Termine nutzen diese Preise. Buchungen behalten die Preise von damals.",
   "products.prices.adultAgeError":
@@ -792,6 +796,7 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
   "products.steps.status.error": "Hat Fehler",
   "products.steps.status.warning": "Braucht Aufmerksamkeit",
   "products.steps.status.todo": "Noch offen",
+  "products.steps.status.current": "Aktueller Schritt",
   "products.review.edit": "{step} bearbeiten",
   "products.review.none": "Nicht festgelegt",
   "products.review.option": "{price} · {stock} am Lager",
@@ -813,4 +818,5 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
     "Archiviert: Gäste sehen dieses Andenken nicht. Stellen Sie es als Entwurf wieder her, um es erneut zu veröffentlichen.",
   "products.review.archived.tour":
     "Archiviert: Gäste sehen diese Tour nicht. Stellen Sie sie als Entwurf wieder her, um sie erneut zu veröffentlichen.",
+  ...itineraryDe,
 };

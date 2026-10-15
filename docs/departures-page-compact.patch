@@ -1,0 +1,306 @@
+diff --git a/front-end/src/features/tours/merchant/departures-page.tsx b/front-end/src/features/tours/merchant/departures-page.tsx
+index 9f97422..830d53d 100644
+--- a/front-end/src/features/tours/merchant/departures-page.tsx
++++ b/front-end/src/features/tours/merchant/departures-page.tsx
+@@ -5,6 +5,7 @@ import type { MessageKey } from "@/i18n/en";
+ import type { DataTableColumn } from "@/components/data-table";
+ import type { EmptyStateProps } from "@/components/empty-state";
+ 
++import { Skeleton } from "@heroui/react";
+ import { Link } from "@tanstack/react-router";
+ 
+ import { useTours } from "../hooks/use-tours";
+@@ -28,7 +29,6 @@ import {
+   BookingsIcon,
+   ChevronRightIcon,
+ } from "@/components/icons";
+-import { Media } from "@/components/media";
+ import { RowActions } from "@/components/row-actions";
+ import { StatusChip } from "@/components/status-chip";
+ import { useLocale } from "@/contexts/locale-context";
+@@ -92,103 +92,105 @@ const bookable = (phase: DeparturePhase) =>
+   phase === "open" || phase === "closed";
+ 
+ /**
+- * Phones: one ticket per departure, in the M03 pickup-ticket look (1.10b, 1.10c). Date tile,
+- * tour and start; the tour photo, beside it the phase and what needs the merchant as coloured
+- * dots and words; seats and money in the dashed footer, one fact per row. The whole ticket
+- * opens M06.
++ * Phones: one compact row per departure in the C14 list-row look. Date tile on the left; tour,
++ * start and phase, seats with a slim bar, and what needs the merchant on four short lines. The
++ * whole row opens M06.
+  */
+ function DepartureCards({ rows }: { rows: Row[] }) {
+   const { t, language } = useLocale();
+-  const { date, money, weekday, day, month } = useTourFormatting();
++  const { time, weekday, day, month } = useTourFormatting();
+ 
+   return (
+-    <ul className="flex flex-col gap-5 lg:hidden">
++    <ul className="flex flex-col gap-3 lg:hidden">
+       {rows.map(({ departure, tour, phase, seats, work }) => {
+         const items = attention.filter((a) => a.count(work) > 0);
++        const filled = seats.capacity
++          ? Math.min(100, (seats.confirmed / seats.capacity) * 100)
++          : 0;
+ 
+         return (
+           <li key={departure.id}>
+             <Link
+-              className={`${ticketSurface} outline-none hover:bg-surface-secondary focus-visible:focus-ring`}
++              className={`${ticketSurface} min-h-11 flex-row items-center gap-3 p-3.5 outline-none hover:bg-surface-secondary focus-visible:focus-ring`}
+               params={{ departureId: departure.id }}
+               to="/store/bookings/departures/$departureId"
+             >
+-              <div className="flex items-center gap-4 p-4">
+-                <DateTile
+-                  date={{
+-                    weekday: weekday(departure.startsAt),
+-                    day: day(departure.startsAt),
+-                    month: month(departure.startsAt),
+-                  }}
+-                  muted={phase === "cancelled"}
+-                  // Coordinator D1: the lg tile carries M03's 30px day number.
+-                  size="lg"
+-                />
+-                <div className="min-w-0 flex-1">
+-                  <h3 className="text-lg leading-tight font-semibold">
+-                    {tour && pickText(tour.name, language).text}
+-                  </h3>
+-                  <p className="mt-2 text-xs text-muted tabular-nums">
+-                    {date(departure.startsAt)}
+-                  </p>
+-                </div>
+-                <ChevronRightIcon
+-                  aria-hidden
+-                  className="shrink-0 text-muted"
+-                  size={18}
+-                />
+-              </div>
+-              {/* The tour photo where M03 shows the product photo, same size and radius. */}
+-              <div className="flex items-center gap-3 p-4">
+-                <Media
+-                  alt=""
+-                  className="size-14 shrink-0 rounded-lg"
+-                  photo={tour?.photos[0]}
+-                />
+-                <div className="flex min-w-0 flex-1 flex-col gap-2">
++              <DateTile
++                date={{
++                  weekday: weekday(departure.startsAt),
++                  day: day(departure.startsAt),
++                  month: month(departure.startsAt),
++                }}
++                muted={phase === "cancelled"}
++              />
++              <div className="flex min-w-0 flex-1 flex-col gap-1">
++                <h3 className="truncate text-base leading-tight font-semibold">
++                  {tour && pickText(tour.name, language).text}
++                </h3>
++                <div className="flex items-center gap-2 text-sm">
++                  <span className="text-muted tabular-nums">
++                    {time(departure.startsAt)}
++                  </span>
+                   <ToneLine tone={phaseChip[phase].tone}>
+                     {t(phaseChip[phase].key)}
+                   </ToneLine>
++                </div>
++                <div className="flex items-baseline justify-between gap-2 text-xs tabular-nums">
++                  <span className="font-semibold whitespace-nowrap">
++                    {t("tourMerchant.seatsBooked", {
++                      count: seats.confirmed,
++                      capacity: seats.capacity,
++                    })}
++                  </span>
++                  <span className="truncate text-muted">
++                    {t("tourMerchant.seatsDetail", {
++                      held: seats.held,
++                      free: bookable(phase) ? seats.available : "—",
++                    })}
++                  </span>
++                </div>
++                <div
++                  aria-hidden
++                  className="h-1 overflow-hidden rounded-full bg-default"
++                >
++                  <div
++                    className="h-full rounded-full bg-foreground"
++                    style={{ width: `${filled}%` }}
++                  />
++                </div>
++                <p className="flex min-w-0 items-center gap-1.5 text-xs">
+                   {items.length ? (
+-                    items.map((a) => (
+-                      <ToneLine key={a.key} tone={a.tone}>
+-                        {t(a.key, { count: a.count(work) })}
+-                      </ToneLine>
++                    items.slice(0, 1).map((a) => (
++                      <span
++                        key={a.key}
++                        className={`flex min-w-0 items-center gap-1 ${a.tone === "danger" ? "text-danger" : "text-warning"}`}
++                      >
++                        <span
++                          aria-hidden
++                          className="size-1.5 shrink-0 rounded-full bg-current"
++                        />
++                        <span className="truncate">
++                          {t(a.key, { count: a.count(work) })}
++                        </span>
++                      </span>
+                     ))
+                   ) : (
+-                    <ToneLine tone="neutral">{t("tourMerchant.none")}</ToneLine>
++                    <span className="truncate text-muted">
++                      {t("tourMerchant.none")}
++                    </span>
+                   )}
+-                </div>
++                  {items.length > 1 && (
++                    <span className="shrink-0 text-muted tabular-nums">
++                      +{items.length - 1}
++                    </span>
++                  )}
++                </p>
+               </div>
+-              <dl className="flex flex-col gap-2 border-t border-dashed border-separator px-4 py-3.5 text-sm">
+-                {[
+-                  [
+-                    t("tourMerchant.booked"),
+-                    t("tourMerchant.seatsOf", {
+-                      count: seats.confirmed,
+-                      capacity: seats.capacity,
+-                    }),
+-                  ],
+-                  [t("tourMerchant.holds"), seats.held],
+-                  [
+-                    t("tourMerchant.available"),
+-                    bookable(phase) ? seats.available : "—",
+-                  ],
+-                  [t("tourMerchant.toCollect"), money(work.toCollect)],
+-                ].map(([label, value], index) => (
+-                  <div
+-                    key={label}
+-                    className="flex items-baseline justify-between gap-4"
+-                  >
+-                    <dt className="shrink-0 text-muted">{label}</dt>
+-                    <dd
+-                      className={`text-end tabular-nums ${index === 0 ? "font-semibold" : "text-muted"}`}
+-                    >
+-                      {value}
+-                    </dd>
+-                  </div>
+-                ))}
+-              </dl>
++              <ChevronRightIcon
++                aria-hidden
++                className="shrink-0 text-muted"
++                size={18}
++              />
+             </Link>
+           </li>
+         );
+@@ -197,6 +199,30 @@ function DepartureCards({ rows }: { rows: Row[] }) {
+   );
+ }
+ 
++/** Loading rows in the shape of `DepartureCards`. */
++function DepartureCardSkeletons({ count = 3 }: { count?: number }) {
++  return (
++    <ul aria-hidden className="flex flex-col gap-3 lg:hidden">
++      {Array.from({ length: count }, (_, i) => (
++        <li
++          key={i}
++          className={`${ticketSurface} min-h-11 flex-row items-center gap-3 p-3.5`}
++        >
++          <Skeleton className="h-16 w-12 shrink-0 rounded-lg" />
++          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
++            <Skeleton className="h-4 w-3/5 rounded-lg" />
++            <Skeleton className="h-3.5 w-2/5 rounded-lg" />
++            <Skeleton className="h-3 w-4/5 rounded-lg" />
++            <Skeleton className="h-1 w-full rounded-full" />
++            <Skeleton className="h-3 w-1/2 rounded-lg" />
++          </div>
++          <Skeleton className="size-4 shrink-0 rounded-full" />
++        </li>
++      ))}
++    </ul>
++  );
++}
++
+ function DepartureTable({
+   rows,
+   label,
+@@ -275,37 +301,42 @@ function DepartureTable({
+   ];
+ 
+   return (
+-    <DataTable
+-      cards={(page) => <DepartureCards rows={page} />}
+-      columns={columns}
+-      contentClassName="table-fixed"
+-      empty={empty}
+-      getRowHref={({ departure }) =>
+-        `#/store/bookings/departures/${departure.id}`
+-      }
+-      getRowId={({ departure }) => departure.id}
+-      isLoading={isLoading}
+-      label={label}
+-      rowActions={{
+-        render: ({ departure, tour }) => (
+-          <RowActions
+-            actions={[
+-              {
+-                id: "open",
+-                label: t("rowAction.openDeparture"),
+-                icon: ArrowUpRightIcon,
+-                href: `#/store/bookings/departures/${departure.id}`,
+-              },
+-            ]}
+-            label={t("table.rowActions", {
+-              name: tour ? pickText(tour.name, language).text : departure.id,
+-            })}
+-          />
+-        ),
+-        headerClassName: "w-[8%]",
+-      }}
+-      rows={rows}
+-    />
++    <>
++      {isLoading && <DepartureCardSkeletons />}
++      <DataTable
++        // While loading, the table is the only DataTable skeleton; the phone rows have their own.
++        cards={isLoading ? undefined : (page) => <DepartureCards rows={page} />}
++        className={isLoading ? "hidden lg:block" : undefined}
++        columns={columns}
++        contentClassName="table-fixed"
++        empty={empty}
++        getRowHref={({ departure }) =>
++          `#/store/bookings/departures/${departure.id}`
++        }
++        getRowId={({ departure }) => departure.id}
++        isLoading={isLoading}
++        label={label}
++        rowActions={{
++          render: ({ departure, tour }) => (
++            <RowActions
++              actions={[
++                {
++                  id: "open",
++                  label: t("rowAction.openDeparture"),
++                  icon: ArrowUpRightIcon,
++                  href: `#/store/bookings/departures/${departure.id}`,
++                },
++              ]}
++              label={t("table.rowActions", {
++                name: tour ? pickText(tour.name, language).text : departure.id,
++              })}
++            />
++          ),
++          headerClassName: "w-[8%]",
++        }}
++        rows={rows}
++      />
++    </>
+   );
+ }
+ 

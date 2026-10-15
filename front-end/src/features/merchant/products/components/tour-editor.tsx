@@ -6,7 +6,7 @@ import type { Departure, Tour } from "@/features/tours/types";
 
 import { Button, FieldError, Label, NumberField } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import { TOUR_STEPS, useTourEditor } from "../hooks/use-tour-editor";
 import { hasText, languageStatus, storyText } from "../lib/completeness";
@@ -18,6 +18,7 @@ import {
   useFocusFirstInvalid,
 } from "./editor-parts";
 import { CommissionCard } from "./gift-editor";
+import { ItineraryCard } from "./itinerary/itinerary-editor";
 import { PhotoField } from "./photo-field";
 import {
   ArchivedNotice,
@@ -143,9 +144,8 @@ function BasicsTextCard({
 }
 
 /**
- * Step 2, in the step's language: the stops' text (a new stop would need a map position and
- * a photo), what is included (one item each; "Add item"), what is not, the meeting point and
- * the conditions.
+ * Step 2, in the step's language: the itinerary (map and stops), what is included (one item
+ * each; "Add item"), what is not, the meeting point and the conditions.
  */
 function DetailsCards({
   editor,
@@ -172,41 +172,7 @@ function DetailsCards({
           name="meetingPoint"
         />
       </DetailCard>
-      {edit.itinerary.length > 0 && (
-        <DetailCard icon={BookingsIcon} title={t("products.field.itinerary")}>
-          {edit.itinerary.map((stop, index) => (
-            <div key={stop.id} className="flex flex-col gap-3">
-              <LocalizedField
-                error={itemError("itinerary", stop.name)}
-                label={t("products.field.stopName", { n: index + 1 })}
-                language={language}
-                value={stop.name}
-                onChange={(name) =>
-                  change({
-                    itinerary: edit.itinerary.map((s) =>
-                      s.id === stop.id ? { ...s, name } : s,
-                    ),
-                  })
-                }
-              />
-              <LocalizedField
-                error={itemError("itinerary", stop.description)}
-                label={t("products.field.stopText", { n: index + 1 })}
-                language={language}
-                rows={2}
-                value={stop.description}
-                onChange={(description) =>
-                  change({
-                    itinerary: edit.itinerary.map((s) =>
-                      s.id === stop.id ? { ...s, description } : s,
-                    ),
-                  })
-                }
-              />
-            </div>
-          ))}
-        </DetailCard>
-      )}
+      <ItineraryCard editor={editor} language={language} />
       <DetailCard icon={ContentIcon} title={t("products.field.included")}>
         <p className="text-xs text-muted">{t("products.included.hint")}</p>
         {edit.included.map((item, index) => (
@@ -325,11 +291,36 @@ function AgeField({
 function PricesCard({ editor }: { editor: Editor }) {
   const { t } = useLocale();
   const { edit, change, errors } = editor;
-  const group = (title: string, children: React.ReactNode) => (
-    <fieldset className="flex flex-col gap-3">
-      <legend className="mb-3 text-sm font-semibold">{title}</legend>
+  const uid = useId();
+
+  const ok = (age: number) => Number.isFinite(age);
+  const range = (from: number, to?: number) => {
+    if (!ok(from) || (to !== undefined && (!ok(to) || to < from))) return "–";
+
+    return to === undefined ? `${from}+` : `${from}–${to}`;
+  };
+
+  const group = (
+    id: string,
+    title: string,
+    ages: string,
+    children: React.ReactNode,
+  ) => (
+    <div
+      aria-labelledby={id}
+      className="flex flex-col gap-3 rounded-2xl bg-surface-secondary p-4"
+      role="group"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-base font-semibold" id={id}>
+          {title}
+        </h3>
+        <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-sm font-medium tabular-nums">
+          {ages === "–" ? ages : t("products.prices.ageRange", { range: ages })}
+        </span>
+      </div>
       <div className="grid grid-cols-2 items-start gap-3">{children}</div>
-    </fieldset>
+    </div>
   );
 
   return (
@@ -338,7 +329,9 @@ function PricesCard({ editor }: { editor: Editor }) {
         {t("products.prices.help")}
       </p>
       {group(
+        `${uid}-adults`,
         t("products.prices.adults"),
+        range(edit.adultFrom),
         <>
           <PriceField
             error={errors.adultPrice}
@@ -355,7 +348,9 @@ function PricesCard({ editor }: { editor: Editor }) {
         </>,
       )}
       {group(
+        `${uid}-children`,
         t("products.prices.children"),
+        range(edit.childFrom, edit.adultFrom - 1),
         <>
           <PriceField
             error={errors.childPrice}
@@ -372,7 +367,9 @@ function PricesCard({ editor }: { editor: Editor }) {
         </>,
       )}
       {group(
+        `${uid}-infants`,
         t("products.prices.infants"),
+        range(0, edit.childFrom - 1),
         <>
           <PriceField
             error={errors.infantPrice}
@@ -380,11 +377,6 @@ function PricesCard({ editor }: { editor: Editor }) {
             value={edit.infantPrice}
             onChange={(infantPrice) => change({ infantPrice })}
           />
-          <p className="pt-8 text-sm text-muted tabular-nums">
-            {t("products.prices.infantAges", {
-              to: Math.max(0, (edit.childFrom || 1) - 1),
-            })}
-          </p>
         </>,
       )}
     </DetailCard>
@@ -468,15 +460,23 @@ function DeparturesCard({ tour, error }: { tour: Tour; error?: string }) {
       <p className="text-sm text-pretty text-muted">
         {t("products.departures.note")}
       </p>
+      <p className="text-sm text-muted tabular-nums">
+        {t("products.departure.prices", {
+          prices: t("products.departures.price", {
+            adult: money(tour.adultPrice),
+            child: money(tour.childPrice),
+          }),
+        })}
+      </p>
       {upcoming.length ? (
         <ul className="flex flex-col divide-y divide-separator">
           {upcoming.map(({ departure, phase, seats }) => (
-            <li key={departure.id} className="py-1 first:pt-0 last:pb-0">
+            <li key={departure.id} className="py-0.5 first:pt-0 last:pb-0">
               <button
                 aria-label={t("products.departures.edit", {
                   date: date(departure.startsAt),
                 })}
-                className="flex w-full items-center gap-4 rounded-2xl py-3 text-start outline-none hover:bg-surface-secondary focus-visible:focus-ring"
+                className="flex min-h-11 w-full items-center gap-3 rounded-2xl py-2 text-start outline-none hover:bg-surface-secondary focus-visible:focus-ring"
                 type="button"
                 onClick={() => setSeatsFor(departure.id)}
               >
@@ -487,35 +487,42 @@ function DeparturesCard({ tour, error }: { tour: Tour; error?: string }) {
                     month: month(departure.startsAt),
                   }}
                 />
-                <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <span className="font-medium tabular-nums">
-                    {time(departure.startsAt)}
+                <span className="flex min-w-0 flex-1 flex-col gap-1">
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium tabular-nums">
+                      {time(departure.startsAt)}
+                    </span>
+                    <ToneLine tone={phaseChip[phase].tone}>
+                      {t(phaseChip[phase].key)}
+                    </ToneLine>
                   </span>
-                  <ToneLine tone={phaseChip[phase].tone}>
-                    {t(phaseChip[phase].key)}
-                  </ToneLine>
-                  <span className="flex flex-col text-sm tabular-nums">
-                    <span className="font-semibold">
+                  <span className="flex items-baseline justify-between gap-2 text-sm tabular-nums">
+                    <span className="font-semibold whitespace-nowrap">
                       {t("tourMerchant.seatsBooked", {
                         count: seats.confirmed,
                         capacity: seats.capacity,
                       })}
                     </span>
-                    <span className="text-muted">
+                    <span className="truncate text-xs text-muted">
                       {t("tourMerchant.seatsDetail", {
                         held: seats.held,
                         free: seats.available,
                       })}
                     </span>
                   </span>
-                  <span className="flex flex-col text-xs text-muted tabular-nums">
-                    <span>{policyLine(departure)}</span>
-                    <span>
-                      {t("products.departures.price", {
-                        adult: money(tour.adultPrice),
-                        child: money(tour.childPrice),
-                      })}
-                    </span>
+                  <span
+                    aria-hidden
+                    className="h-1 overflow-hidden rounded-full bg-default"
+                  >
+                    <span
+                      className="block h-full rounded-full bg-foreground"
+                      style={{
+                        width: `${seats.capacity ? Math.min(100, (seats.confirmed / seats.capacity) * 100) : 0}%`,
+                      }}
+                    />
+                  </span>
+                  <span className="truncate text-xs text-muted tabular-nums">
+                    {policyLine(departure)}
                   </span>
                 </span>
                 <ChevronRightIcon

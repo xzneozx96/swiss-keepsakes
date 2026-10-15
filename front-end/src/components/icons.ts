@@ -6,9 +6,9 @@
  * render, which makes React re-apply the markup each time. Wrapping every icon in
  * React.memo means re-renders with unchanged props skip the SVG entirely.
  */
-import type { IconComponent } from "reicon-react";
+import type { IconComponent, IconProps } from "reicon-react";
 
-import { memo } from "react";
+import { createElement, forwardRef, memo } from "react";
 import * as Reicon from "reicon-react";
 
 export type { IconComponent };
@@ -92,7 +92,36 @@ export const DirectionsIcon = stable(Reicon.Routing, "DirectionsIcon");
 export const ShopIcon = stable(Reicon.Shop, "ShopIcon");
 
 // Cart line
-export const TrashIcon = stable(Reicon.Trash, "TrashIcon");
+export const TrashIcon = stable(Reicon.Trash4, "TrashIcon");
+/** Drag handle: six dots in two columns; reicon-react has none (its bar icons read as a menu). */
+export const GripIcon = forwardRef<SVGSVGElement, IconProps>(function GripIcon(
+  {
+    size = 24,
+    color,
+    secondaryColor: _secondary,
+    weight: _weight,
+    strokeWidth: _stroke,
+    ...props
+  },
+  ref,
+) {
+  return createElement(
+    "svg",
+    {
+      ref,
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: color ?? "currentColor",
+      ...props,
+    },
+    [9, 15].flatMap((x) =>
+      [6, 12, 18].map((y) =>
+        createElement("circle", { key: `${x}-${y}`, cx: x, cy: y, r: 1.75 }),
+      ),
+    ),
+  );
+}) as IconComponent;
 export const QrIcon = stable(Reicon.Qr, "QrIcon");
 /** Sliders: "adjust what you see" (owner, 14 Oct 2026: clearer than the funnel shape). */
 export const FilterIcon = stable(Reicon.Setting4, "FilterIcon");
