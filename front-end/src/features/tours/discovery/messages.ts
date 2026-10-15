@@ -79,6 +79,25 @@ export const tourDiscoveryEn = {
   "tourDiscovery.onlyInGerman":
     "This tour’s details are only available in German.",
   "tourDiscovery.sample": "Sample tour policies · awaiting merchant approval",
+  "tourDiscovery.picker.date": "Date",
+  "tourDiscovery.picker.time": "Time",
+  "tourDiscovery.picker.left": "{n} left",
+  "tourDiscovery.picker.morning": "Morning",
+  "tourDiscovery.picker.afternoon": "Afternoon",
+  "tourDiscovery.picker.halfFull": "full",
+  "tourDiscovery.picker.slotLabel": "{from} to {to}, {seats}",
+  "tourDiscovery.picker.noFit":
+    "No time fits {n} guests this day · next: {next}",
+  "tourDiscovery.picker.noFitNone": "No time fits {n} guests this day.",
+  "tourDiscovery.picker.noTime": "No time chosen yet",
+  "tourDiscovery.picker.announce": "{date}, {time}. {seats}.",
+  "tourDiscovery.picker.noDay": "No date chosen yet",
+  "tourDiscovery.picker.noDates": "No dates available this month",
+  "tourDiscovery.picker.legendOpen": "Available",
+  "tourDiscovery.picker.legendLow": "Few left",
+  "tourDiscovery.picker.legendFull": "Sold out",
+  "tourDiscovery.picker.policyVaries":
+    "Payment differs by date · shown for your choice",
 };
 
 export const tourDiscoveryDe: Record<keyof typeof tourDiscoveryEn, string> = {
@@ -164,4 +183,24 @@ export const tourDiscoveryDe: Record<keyof typeof tourDiscoveryEn, string> = {
   "tourDiscovery.onlyInGerman":
     "Die Angaben zu dieser Tour gibt es nur auf Deutsch.",
   "tourDiscovery.sample": "Beispielregeln · Zustimmung des Händlers ausstehend",
+  "tourDiscovery.picker.date": "Datum",
+  "tourDiscovery.picker.time": "Uhrzeit",
+  "tourDiscovery.picker.left": "{n} frei",
+  "tourDiscovery.picker.morning": "Vormittag",
+  "tourDiscovery.picker.afternoon": "Nachmittag",
+  "tourDiscovery.picker.halfFull": "voll",
+  "tourDiscovery.picker.slotLabel": "{from} bis {to}, {seats}",
+  "tourDiscovery.picker.noFit":
+    "Keine Zeit passt für {n} Gäste an diesem Tag · nächste: {next}",
+  "tourDiscovery.picker.noFitNone":
+    "Keine Zeit passt für {n} Gäste an diesem Tag.",
+  "tourDiscovery.picker.noTime": "Noch keine Zeit gewählt",
+  "tourDiscovery.picker.announce": "{date}, {time}. {seats}.",
+  "tourDiscovery.picker.noDay": "Noch kein Datum gewählt",
+  "tourDiscovery.picker.noDates": "Diesen Monat keine Termine",
+  "tourDiscovery.picker.legendOpen": "Frei",
+  "tourDiscovery.picker.legendLow": "Wenige frei",
+  "tourDiscovery.picker.legendFull": "Ausgebucht",
+  "tourDiscovery.picker.policyVaries":
+    "Zahlung je nach Datum · bei Ihrer Wahl angezeigt",
 };

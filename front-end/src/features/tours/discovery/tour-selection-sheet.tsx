@@ -1,14 +1,13 @@
 import type { Tour } from "../types";
 
-import { Alert, Description, Label, Radio, RadioGroup } from "@heroui/react";
+import { Alert } from "@heroui/react";
 import { useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
 import { ChoiceSheet } from "@/components/choice-sheet";
 import { EmptyState } from "@/components/empty-state";
-import { InfoIcon, SelectedIcon, TourIcon } from "@/components/icons";
+import { InfoIcon, TourIcon } from "@/components/icons";
 import { QuantityStepper } from "@/components/quantity-stepper";
-import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { useTourActions, useTours } from "@/features/tours/hooks/use-tours";
@@ -21,6 +20,12 @@ import {
   upcomingDepartures,
 } from "@/features/tours/lib/selectors";
 import { ageBandLabels } from "@/features/tours/discovery/age-bands";
+import { DeparturePicker } from "@/features/tours/discovery/departure-picker/departure-picker";
+import {
+  usePickerFormat,
+  useSlotChoice,
+  useSlotModel,
+} from "@/features/tours/discovery/departure-picker/model";
 import { formatMoney, formatShortDate } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
@@ -65,6 +70,13 @@ export function TourSelectionSheet({
   const total = tourTotal(tour, group);
   const dueToday = selected ? firstPaymentAmount(selected.policy, total) : 0;
   const ages = ageBandLabels(tour.ageBands, t);
+  const model = useSlotModel(tour);
+  const picker = usePickerFormat(model.today);
+  const choice = useSlotChoice(model, picker, {
+    group,
+    slotId: departureId,
+    setSlotId: (id) => updateDraft({ departureId: id }),
+  });
   const plural = (count: number) =>
     new Intl.PluralRules(intlLocale).select(count) === "one" ? "one" : "other";
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
@@ -129,65 +141,28 @@ export function TourSelectionSheet({
         if (!open) close();
       }}
     >
-      {choices.length === 0 ? (
-        <EmptyState
-          action={{ label: t("tourDiscovery.browse"), to: "/tours" }}
-          icon={TourIcon}
-          message={t("tourDiscovery.noDates")}
-        />
-      ) : (
-        // C03 option tiles: filled; chosen = red border and the corner check (owner, round 3).
-        <RadioGroup
-          className="gap-2"
-          value={departureId}
-          onChange={(value) => updateDraft({ departureId: value })}
-        >
-          <Label className="text-heading">
-            {t("tourDiscovery.departures")}
-          </Label>
-          {choices.map((departure) => {
-            const available = availableSeats(data, departure.id, now);
-
-            return (
-              <Radio
-                key={departure.id}
-                className="group relative !mt-0 w-full rounded-2xl border-2 border-transparent bg-default px-3.5 py-3 transition-colors hover:bg-default-hover has-data-[focus-visible=true]:focus-ring data-[selected=true]:border-accent"
-                isDisabled={available === 0}
-                value={departure.id}
-              >
-                <Radio.Content className="items-start">
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <span className="font-semibold group-data-[selected=true]:text-accent-soft-foreground">
-                      {date(departure.startsAt)} · {time(departure.startsAt)}
-                    </span>
-                    <Description className="px-0 group-data-[selected=true]:text-accent-soft-foreground">
-                      {t("tourDiscovery.adults")} {money(tour.adultPrice)} ·{" "}
-                      {t("tourDiscovery.children")} {money(tour.childPrice)}
-                    </Description>
-                    <Description className="px-0 group-data-[selected=true]:text-accent-soft-foreground">
-                      {t(`tourDiscovery.policyShort.${departure.policy}`)}
-                    </Description>
-                    <div className="pt-1">
-                      <StatusChip tone={available > 0 ? "success" : "neutral"}>
-                        {available > 0
-                          ? t(`tourDiscovery.available.${plural(available)}`, {
-                              count: available,
-                            })
-                          : t("tourDiscovery.soldOut")}
-                      </StatusChip>
-                    </div>
-                  </div>
-                </Radio.Content>
-                <SelectedIcon
-                  aria-hidden
-                  className="absolute -end-1 -top-1 hidden size-4.5 rounded-full bg-surface text-accent group-data-[selected=true]:block"
-                  weight="Filled"
-                />
-              </Radio>
-            );
-          })}
-        </RadioGroup>
-      )}
+      <DeparturePicker
+        key={tour.id}
+        choice={choice}
+        config={{
+          policyText: (policy) => t(`tourDiscovery.policyShort.${policy}`),
+          policyVaries: picker.t("policyVaries"),
+          empty: (
+            <EmptyState
+              action={{ label: t("tourDiscovery.browse"), to: "/tours" }}
+              icon={TourIcon}
+              message={t("tourDiscovery.noDates")}
+            />
+          ),
+          soldOut: (
+            <p className="text-sm text-foreground">
+              {t("tourDiscovery.soldOutBody")}
+            </p>
+          ),
+        }}
+        f={picker}
+        model={model}
+      />
       {/* Ink, as the sheet's field labels; the drawer body's own text is muted. */}
       <section className="flex flex-col gap-3 text-foreground">
         <h3 className="text-heading">{t("tourDiscovery.group")}</h3>
