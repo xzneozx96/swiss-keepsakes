@@ -25,7 +25,7 @@ import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
 // C12 Payment (step 1.14): the simulated provider C15's Pay opens. The trailing underscore after
 // $orderId keeps it from nesting under C15, which has no <Outlet/>.
 export const Route = createFileRoute("/_guest/account_/orders/$orderId_/pay")({
-  staticData: { hideTabBar: true },
+  staticData: { hideTabBar: true, ownsBottomSpace: true },
   component: PayPage,
 });
 

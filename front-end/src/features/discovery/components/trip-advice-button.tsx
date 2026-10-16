@@ -12,19 +12,28 @@ const offset = {
 
 /**
  * Floating entry to the AI trip assistant, bottom-right on C01, C09 and C20 (spec §3.1, D1,
- * R19): the assistant's icon alone, named for screen readers, with a slow ripple. Ink rather
- * than Swiss red: the screen's one red action stays the banner or the booking bar.
+ * R19): the assistant's icon alone, named for screen readers, with a slow ripple, in the
+ * assistant's gradient like the tab bar button.
  */
-export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
+export function TripAdviceButton({
+  above,
+  clearContent = false,
+}: {
+  above: keyof typeof offset;
+  /** Reserve in-flow room above an action bar so the last content scrolls clear of the buttons. */
+  clearContent?: boolean;
+}) {
   const { t } = useLocale();
 
-  // The spacer lets the screen's last content scroll clear of the floating button.
+  // The spacer lets the last content scroll clear of the buttons. Above an action bar it is
+  // opt-in: it leaves a blank band the width of the screen, so a screen whose last content
+  // has nothing at the right edge lets the buttons float over it (owner, 16.10.2026).
+  const spacer =
+    above === "tabBar" ? "h-14" : clearContent ? "h-[7.5rem]" : undefined;
+
   return (
     <>
-      <div
-        aria-hidden
-        className={`shrink-0 ${above === "tabBar" ? "h-14" : "h-[7.5rem]"}`}
-      />
+      {spacer && <div aria-hidden className={`shrink-0 ${spacer}`} />}
       <div
         className={`pointer-events-none fixed inset-x-0 z-20 mx-auto flex max-w-[430px] flex-col items-end gap-3 px-4 ${offset[above]}`}
       >

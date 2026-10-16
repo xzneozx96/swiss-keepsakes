@@ -451,7 +451,7 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
           />
         )}
       </div>
-      <TripAdviceButton above="actionBar" />
+      <TripAdviceButton clearContent above="actionBar" />
       <div className="sticky bottom-0 z-30 flex items-center gap-3 border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="font-semibold tabular-nums">

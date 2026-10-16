@@ -7,18 +7,10 @@ import {
   setMusic,
   useMusic,
 } from "@/components/background-music-store";
-import {
-  BackTenIcon,
-  ForwardTenIcon,
-  MusicOffIcon,
-  MusicOnIcon,
-  PauseIcon,
-  PlayIcon,
-} from "@/components/icons";
+import { PauseIcon, PlayIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 
 const SEEK_STEP = 5;
-const SKIP_SECONDS = 10;
 
 const clock = (seconds: number) =>
   Number.isFinite(seconds)
@@ -26,19 +18,16 @@ const clock = (seconds: number) =>
     : "–:–";
 
 /**
- * The two sliders: a slim 4px track filled with `--range-color`, drawn on the native range input so
- * touch, mouse and keys come for free. The input is 44px tall for the touch target; the thumb shows
- * on hover, drag and keyboard focus only.
+ * The position slider: a slim 4px track filled with `--range-color`, drawn on the native range input so
+ * touch, mouse and keys come for free. The input is 44px tall for the touch target; the thumb is
+ * always shown, since a touch screen has no hover to reveal it.
  */
 const rangeClass =
   "h-11 w-full cursor-pointer appearance-none bg-transparent outline-none disabled:cursor-default disabled:opacity-40 focus-visible:focus-ring rounded-full " +
   "[&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--range-color)_var(--fill),var(--default)_var(--fill))] " +
   "[&::-webkit-slider-thumb]:-mt-[5px] [&::-webkit-slider-thumb]:size-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-0 [&::-webkit-slider-thumb]:bg-[var(--range-color)] [&::-webkit-slider-thumb]:shadow-surface " +
-  "[&::-webkit-slider-thumb]:scale-0 [&::-webkit-slider-thumb]:transition-transform motion-reduce:[&::-webkit-slider-thumb]:transition-none " +
-  "hover:[&::-webkit-slider-thumb]:scale-100 active:[&::-webkit-slider-thumb]:scale-100 focus-visible:[&::-webkit-slider-thumb]:scale-100 " +
   "[&::-moz-range-track]:h-1 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-default [&::-moz-range-progress]:h-1 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-[var(--range-color)] " +
-  "[&::-moz-range-thumb]:size-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-[var(--range-color)] " +
-  "[&::-moz-range-thumb]:scale-0 hover:[&::-moz-range-thumb]:scale-100 active:[&::-moz-range-thumb]:scale-100 focus-visible:[&::-moz-range-thumb]:scale-100";
+  "[&::-moz-range-thumb]:size-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-[var(--range-color)]";
 
 function Range({
   label,
@@ -47,7 +36,6 @@ function Range({
   valueText,
   disabled,
   step = "any",
-  color = "var(--accent)",
   onChange,
   onStep,
 }: {
@@ -57,7 +45,6 @@ function Range({
   valueText: string;
   disabled?: boolean;
   step?: number | "any";
-  color?: string;
   onChange: (value: number) => void;
   /** Arrow key presses; without it the range keeps its own key handling. */
   onStep?: (direction: 1 | -1) => void;
@@ -73,7 +60,12 @@ function Range({
       max={max}
       min={0}
       step={step}
-      style={{ "--fill": fill, "--range-color": color } as React.CSSProperties}
+      style={
+        {
+          "--fill": fill,
+          "--range-color": "var(--accent)",
+        } as React.CSSProperties
+      }
       type="range"
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
@@ -91,16 +83,6 @@ function Range({
         onStep(dir);
       }}
     />
-  );
-}
-
-/** Jump by `delta` seconds, kept inside the track; nothing happens before its length is known. */
-function skip(delta: number) {
-  const audio = musicControls.audio;
-
-  if (!audio || !Number.isFinite(audio.duration)) return;
-  musicControls.seek(
-    Math.min(Math.max(audio.currentTime + delta, 0), audio.duration),
   );
 }
 
@@ -141,6 +123,9 @@ export function MusicSheet() {
                 <span className="truncate font-serif text-lg leading-tight text-foreground">
                   Swiss Keepsakes
                 </span>
+                <span className="text-sm leading-snug text-muted">
+                  {t("music.description")}
+                </span>
                 <span aria-live="polite" className="sr-only">
                   {t(`music.status.${status}`)}
                 </span>
@@ -162,28 +147,6 @@ export function MusicSheet() {
             </div>
 
             <SeekBar />
-
-            <div className="flex items-center gap-1">
-              <button
-                aria-label={t("music.back")}
-                className="flex size-11 shrink-0 items-center justify-center rounded-full text-foreground outline-none transition-transform focus-visible:focus-ring active:scale-95"
-                type="button"
-                onClick={() => skip(-SKIP_SECONDS)}
-              >
-                <BackTenIcon aria-hidden size={26} />
-              </button>
-              <div className="min-w-0 flex-1">
-                <VolumeRow />
-              </div>
-              <button
-                aria-label={t("music.forward")}
-                className="flex size-11 shrink-0 items-center justify-center rounded-full text-foreground outline-none transition-transform focus-visible:focus-ring active:scale-95"
-                type="button"
-                onClick={() => skip(SKIP_SECONDS)}
-              >
-                <ForwardTenIcon aria-hidden size={26} />
-              </button>
-            </div>
           </Drawer.Body>
         </Drawer.Dialog>
       </Drawer.Content>
@@ -258,40 +221,6 @@ function SeekBar() {
         <span>{clock(time)}</span>
         <span>{clock(duration)}</span>
       </div>
-    </div>
-  );
-}
-
-function VolumeRow() {
-  const { t, intlLocale } = useLocale();
-  const { level, muted } = useMusic();
-  const shown = muted ? 0 : Math.round(level * 100);
-
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        aria-label={t(muted ? "music.unmute" : "music.mute")}
-        className="flex size-11 shrink-0 items-center justify-center rounded-full text-muted outline-none transition-transform focus-visible:focus-ring active:scale-95"
-        type="button"
-        onClick={() => musicControls.toggleMute()}
-      >
-        {muted ? (
-          <MusicOffIcon aria-hidden size={20} />
-        ) : (
-          <MusicOnIcon aria-hidden size={20} />
-        )}
-      </button>
-      <Range
-        color="var(--foreground)"
-        label={t("music.volume")}
-        max={100}
-        step={1}
-        value={shown}
-        valueText={new Intl.NumberFormat(intlLocale, {
-          style: "percent",
-        }).format(shown / 100)}
-        onChange={(v) => musicControls.setLevel(v / 100)}
-      />
     </div>
   );
 }
