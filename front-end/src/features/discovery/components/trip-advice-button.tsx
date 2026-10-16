@@ -4,36 +4,26 @@ import { AssistantIcon } from "@/components/icons";
 import { MusicLauncher } from "@/components/music-launcher";
 import { useLocale } from "@/contexts/locale-context";
 
-/** Clears the 58px tab bar on C01, or the in-flow action bar on C09 and C20. */
+/** Clears the 58px tab bar on C01, or the in-flow action bar on C20. */
 const offset = {
   tabBar: "bottom-[calc(env(safe-area-inset-bottom,0px)+72px)]",
   actionBar: "bottom-[calc(env(safe-area-inset-bottom,0px)+88px)]",
 } as const;
 
 /**
- * Floating entry to the AI trip assistant, bottom-right on C01, C09 and C20 (spec §3.1, D1,
+ * Floating entry to the AI trip assistant, bottom-right on C01 and C20 (spec §3.1, D1,
  * R19): the assistant's icon alone, named for screen readers, with a slow ripple, in the
  * assistant's gradient like the tab bar button.
  */
-export function TripAdviceButton({
-  above,
-  clearContent = false,
-}: {
-  above: keyof typeof offset;
-  /** Reserve in-flow room above an action bar so the last content scrolls clear of the buttons. */
-  clearContent?: boolean;
-}) {
+export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
   const { t } = useLocale();
 
-  // The spacer lets the last content scroll clear of the buttons. Above an action bar it is
-  // opt-in: it leaves a blank band the width of the screen, so a screen whose last content
-  // has nothing at the right edge lets the buttons float over it (owner, 16.10.2026).
-  const spacer =
-    above === "tabBar" ? "h-14" : clearContent ? "h-[7.5rem]" : undefined;
-
+  // On the tab-bar screen the spacer lets the last content scroll clear of the music button.
+  // Above an action bar there is none: the buttons float over the content, as a FAB does,
+  // rather than leave a blank band the width of the screen (owner, 16.10.2026).
   return (
     <>
-      {spacer && <div aria-hidden className={`shrink-0 ${spacer}`} />}
+      {above === "tabBar" && <div aria-hidden className="shrink-0 h-14" />}
       <div
         className={`pointer-events-none fixed inset-x-0 z-20 mx-auto flex max-w-[430px] flex-col items-end gap-3 px-4 ${offset[above]}`}
       >

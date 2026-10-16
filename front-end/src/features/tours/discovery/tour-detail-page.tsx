@@ -35,7 +35,6 @@ import {
 } from "@/features/tours/lib/selectors";
 import { ageBandLabels } from "@/features/tours/discovery/age-bands";
 import { TourSelectionSheet } from "@/features/tours/discovery/tour-selection-sheet";
-import { TripAdviceButton } from "@/features/discovery/components/trip-advice-button";
 import { TourItineraryMap } from "@/features/tours/map/tour-itinerary-map";
 import { useBack } from "@/hooks/use-back";
 import { useScrolledPast } from "@/hooks/use-scrolled-past";
@@ -451,7 +450,6 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
           />
         )}
       </div>
-      <TripAdviceButton clearContent above="actionBar" />
       <div className="sticky bottom-0 z-30 flex items-center gap-3 border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="font-semibold tabular-nums">
