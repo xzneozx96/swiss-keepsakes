@@ -1,6 +1,7 @@
 import { Drawer } from "@heroui/react";
 import { useEffect, useState } from "react";
 
+import coverUrl from "@/assets/audio/background-swiss-keepsakes-cover.jpg?url";
 import {
   musicControls,
   setMusic,
@@ -9,7 +10,6 @@ import {
 import {
   BackTenIcon,
   ForwardTenIcon,
-  MusicIcon,
   MusicOffIcon,
   MusicOnIcon,
   PauseIcon,
@@ -128,61 +128,62 @@ export function MusicSheet() {
             </Drawer.Heading>
             <Drawer.CloseTrigger aria-label={t("music.close")} />
           </Drawer.Header>
-          <Drawer.Body className="flex flex-col gap-5 overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+24px)]">
-            {/* Cover art: a Swiss-red gradient and a large note, in place of artwork the track does not have. */}
-            <div
-              aria-hidden
-              className="mx-auto flex aspect-square w-[60%] max-w-[260px] items-center justify-center rounded-2xl bg-[radial-gradient(circle_at_28%_22%,color-mix(in_oklab,var(--accent)_70%,white),transparent_60%),linear-gradient(150deg,var(--accent),color-mix(in_oklab,var(--accent)_62%,var(--foreground)))] text-accent-foreground shadow-overlay"
-            >
-              <MusicIcon size={88} weight="Filled" />
-            </div>
-
-            <div className="flex flex-col gap-0.5">
-              <span className="font-serif text-2xl leading-tight text-foreground">
-                A Little of You
-              </span>
-              <span className="text-sm text-muted">bachhac</span>
-              <span aria-live="polite" className="text-sm text-muted">
-                {t(`music.status.${status}`)}
-              </span>
-            </div>
-
-            <SeekBar />
-
-            <div className="grid grid-cols-3 items-center justify-items-center">
-              <button
-                aria-label={t("music.back")}
-                className="flex size-12 items-center justify-center rounded-full text-foreground outline-none transition-transform focus-visible:focus-ring active:scale-95"
-                type="button"
-                onClick={() => skip(-SKIP_SECONDS)}
-              >
-                <BackTenIcon aria-hidden size={30} />
-              </button>
+          <Drawer.Body className="flex flex-col gap-3 overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+20px)]">
+            <div className="flex items-center gap-3">
+              <img
+                alt=""
+                className="size-16 shrink-0 rounded-xl object-cover shadow-sm"
+                height={64}
+                src={coverUrl}
+                width={64}
+              />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate font-serif text-lg leading-tight text-foreground">
+                  Swiss Keepsakes
+                </span>
+                <span aria-live="polite" className="sr-only">
+                  {t(`music.status.${status}`)}
+                </span>
+              </div>
               <button
                 aria-label={t(active ? "music.pause" : "music.play")}
-                className="flex size-16 items-center justify-center rounded-full bg-accent text-accent-foreground outline-none transition-transform focus-visible:focus-ring active:scale-95"
+                className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground outline-none transition-transform focus-visible:focus-ring active:scale-95"
                 type="button"
                 onClick={() =>
                   active ? musicControls.pause() : musicControls.play()
                 }
               >
                 {active ? (
-                  <PauseIcon aria-hidden size={30} weight="Filled" />
+                  <PauseIcon aria-hidden size={24} weight="Filled" />
                 ) : (
-                  <PlayIcon aria-hidden size={30} weight="Filled" />
+                  <PlayIcon aria-hidden size={24} weight="Filled" />
                 )}
-              </button>
-              <button
-                aria-label={t("music.forward")}
-                className="flex size-12 items-center justify-center rounded-full text-foreground outline-none transition-transform focus-visible:focus-ring active:scale-95"
-                type="button"
-                onClick={() => skip(SKIP_SECONDS)}
-              >
-                <ForwardTenIcon aria-hidden size={30} />
               </button>
             </div>
 
-            <VolumeRow />
+            <SeekBar />
+
+            <div className="flex items-center gap-1">
+              <button
+                aria-label={t("music.back")}
+                className="flex size-11 shrink-0 items-center justify-center rounded-full text-foreground outline-none transition-transform focus-visible:focus-ring active:scale-95"
+                type="button"
+                onClick={() => skip(-SKIP_SECONDS)}
+              >
+                <BackTenIcon aria-hidden size={26} />
+              </button>
+              <div className="min-w-0 flex-1">
+                <VolumeRow />
+              </div>
+              <button
+                aria-label={t("music.forward")}
+                className="flex size-11 shrink-0 items-center justify-center rounded-full text-foreground outline-none transition-transform focus-visible:focus-ring active:scale-95"
+                type="button"
+                onClick={() => skip(SKIP_SECONDS)}
+              >
+                <ForwardTenIcon aria-hidden size={26} />
+              </button>
+            </div>
           </Drawer.Body>
         </Drawer.Dialog>
       </Drawer.Content>

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 
+import coverUrl from "@/assets/audio/background-swiss-keepsakes-cover.jpg?url";
 import trackUrl from "@/assets/audio/background-swiss-keepsakes.mp3?url";
 import {
   getMusic,
@@ -214,8 +215,8 @@ export function BackgroundMusic({ showDock }: { showDock: boolean }) {
     if (session) {
       try {
         session.metadata = new MediaMetadata({
-          title: "A Little of You",
-          artist: "bachhac",
+          title: "Swiss Keepsakes",
+          artwork: [{ src: coverUrl, sizes: "256x256", type: "image/jpeg" }],
         });
       } catch {
         // No MediaMetadata: the controls still work without a title.
