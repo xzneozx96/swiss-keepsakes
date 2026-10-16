@@ -4,6 +4,8 @@ import type {
   Departure,
   Tour,
   TourData,
+  TourSection,
+  TourSectionItem,
   TourStop,
 } from "@/features/tours/types";
 import type { LocalizedRich, RichNode } from "@/lib/rich-text";
@@ -33,6 +35,7 @@ import {
 
 import { useProductArchive } from "./use-merchant-products";
 
+import { safeHref } from "@/lib/rich-text";
 import { useLocale } from "@/contexts/locale-context";
 import { useDemo, useDemoNow } from "@/features/demo";
 import { createTourSeed } from "@/features/tours/seed";
@@ -52,6 +55,19 @@ export interface TourEdit {
   /** Long story ("About this tour"), rich text per language; optional. */
   storyTitle: LocalizedText;
   storyBody: LocalizedRich;
+  /** Free-form sections (practical info, timetable, notices); the whole section is edited. */
+  sections: TourSection[];
+  /** ISO date the practical information was last verified; "" when not given. */
+  checkedOn: string;
+  /** Linked keepsakes (`Product.id`), in the order guests see them. */
+  keepsakeIds: string[];
+  /** Under maintenance (R21): the reason guests read, an optional notice link and expected-back date. */
+  maintenance: {
+    active: boolean;
+    reason: LocalizedText;
+    url: string;
+    expectedBack: string;
+  };
   /** Main photo (`photos[0]`): a library slug or an uploaded data URL. */
   photo?: string;
   durationHours: number;
@@ -82,6 +98,10 @@ function blankEdit(): TourEdit {
     cancellationPolicy: {},
     storyTitle: {},
     storyBody: {},
+    sections: [],
+    checkedOn: "",
+    keepsakeIds: [],
+    maintenance: { active: false, reason: {}, url: "", expectedBack: "" },
     durationHours: 2,
     adultPrice: Number.NaN,
     childPrice: Number.NaN,
@@ -115,6 +135,15 @@ function toEdit(tour: Tour): TourEdit {
     cancellationPolicy: { ...tour.cancellationPolicy },
     storyTitle: { ...tour.longStory?.title },
     storyBody: { ...tour.longStory?.body },
+    sections: structuredClone(tour.sections ?? []),
+    checkedOn: tour.checkedOn ?? "",
+    keepsakeIds: [...(tour.keepsakeIds ?? [])],
+    maintenance: {
+      active: tour.maintenance?.active ?? false,
+      reason: { ...tour.maintenance?.reason },
+      url: tour.maintenance?.url ?? "",
+      expectedBack: tour.maintenance?.expectedBack ?? "",
+    },
     photo: tour.photos[0],
     durationHours: tour.durationMinutes / 60,
     adultPrice: tour.adultPrice / 100,
@@ -127,11 +156,85 @@ function toEdit(tour: Tour): TourEdit {
   };
 }
 
+const cleanContact = (contact: TourSectionItem["contact"]) => {
+  const entries = Object.entries(contact ?? {})
+    .map(([key, value]) => [key, value?.trim()] as const)
+    .filter(([, value]) => value);
+
+  return entries.length
+    ? (Object.fromEntries(entries) as TourSectionItem["contact"])
+    : undefined;
+};
+
+/**
+ * The sections as saved: text trimmed per language, a row with nothing in it removed, and a
+ * section with no title, text or rows removed (like an included item cleared in both languages).
+ */
+function cleanSections(sections: TourSection[]): TourSection[] {
+  return sections
+    .map((section) => {
+      const items = (section.items ?? [])
+        .filter(
+          (item) =>
+            hasAny(item.text) ||
+            hasAny(item.label ?? {}) ||
+            hasAny(item.detail ?? {}),
+        )
+        .map((item): TourSectionItem => ({
+          id: item.id,
+          ...(item.label && hasAny(item.label)
+            ? { label: cleanText(item.label) }
+            : {}),
+          text: cleanText(item.text),
+          ...(item.detail && hasAny(item.detail)
+            ? { detail: cleanText(item.detail) }
+            : {}),
+          ...(item.stopId ? { stopId: item.stopId } : {}),
+          ...(item.giftId ? { giftId: item.giftId } : {}),
+          ...(cleanContact(item.contact)
+            ? { contact: cleanContact(item.contact) }
+            : {}),
+          ...(item.optional ? { optional: true } : {}),
+        }));
+
+      return {
+        id: section.id,
+        layout: section.layout,
+        title: cleanText(section.title),
+        ...(section.body && hasAny(section.body)
+          ? { body: cleanText(section.body) }
+          : {}),
+        ...(items.length ? { items } : {}),
+      } satisfies TourSection;
+    })
+    .filter(
+      (section) =>
+        hasAny(section.title) || section.body !== undefined || section.items,
+    );
+}
+
 /** The text as guests will get it: an item cleared in both languages is removed. */
 function textOf(edit: TourEdit) {
   return {
     ...edit,
     included: edit.included.map((item) => item.text).filter(hasAny),
+    sections: cleanSections(edit.sections),
+  };
+}
+
+/** Kept while it is on, or while it still holds a reason: turning it off keeps the text for next time. */
+function toMaintenance(
+  edit: TourEdit["maintenance"],
+): Tour["maintenance"] | undefined {
+  const reason = cleanText(edit.reason);
+
+  if (!edit.active && !hasAnyText(reason)) return undefined;
+
+  return {
+    active: edit.active,
+    reason,
+    ...(edit.url.trim() ? { url: edit.url.trim() } : {}),
+    ...(edit.expectedBack ? { expectedBack: edit.expectedBack } : {}),
   };
 }
 
@@ -165,6 +268,10 @@ function toTour(edit: TourEdit, base: Tour): Tour {
     conditions: cleanText(edit.conditions),
     cancellationPolicy: cleanText(edit.cancellationPolicy),
     longStory: toStory(edit.storyTitle, edit.storyBody),
+    sections: text.sections.length ? text.sections : undefined,
+    checkedOn: edit.checkedOn || undefined,
+    maintenance: toMaintenance(edit.maintenance),
+    keepsakeIds: edit.keepsakeIds.length ? edit.keepsakeIds : undefined,
     photos: edit.photo ? [edit.photo, ...base.photos.slice(1)] : base.photos,
     durationMinutes: Math.round(edit.durationHours * 60),
     adultPrice: rappen(edit.adultPrice),
@@ -174,6 +281,33 @@ function toTour(edit: TourEdit, base: Tour): Tour {
     commissionRate: Math.round(edit.commissionRate * 10_000) / 10_000,
     published: edit.published,
     unannounced: edit.published ? undefined : base.unannounced,
+  };
+}
+
+/** A tour with nothing in it yet: the base "Add tour" and the preview of an unsaved tour start from. */
+function emptyTour(id: string, slug: string): Tour {
+  return {
+    id,
+    slug,
+    name: {},
+    summary: {},
+    description: {},
+    photos: [],
+    durationMinutes: 120,
+    adultPrice: 0,
+    childPrice: 0,
+    infantPrice: 0,
+    meetingPoint: {},
+    included: [],
+    excluded: {},
+    conditions: {},
+    cancellationPolicy: {},
+    published: false,
+    unannounced: true,
+    commissionRate: 0.1,
+    itinerary: [],
+    ageBands: { childFrom: 6, adultFrom: 16 },
+    participantFields: [],
   };
 }
 
@@ -214,6 +348,7 @@ let justCreated: string | null = null;
 export const TOUR_STEPS = [
   "basics",
   "details",
+  "sections",
   "prices",
   "departures",
   "policies",
@@ -234,6 +369,7 @@ export const TOUR_TEXT_STEP: Partial<Record<TextFieldId, TourStep>> = {
   conditions: "details",
   cancellation: "policies",
   longStory: "story",
+  sections: "sections",
 };
 const textIdsOf = (step: TourStep) =>
   (Object.keys(TOUR_TEXT_STEP) as TextFieldId[]).filter(
@@ -251,6 +387,8 @@ type FieldKey =
   | "adultFrom"
   | "departure"
   | "commission"
+  | "maintenanceReason"
+  | "maintenanceUrl"
   | "storyTitle";
 
 const FIELD_STEP: Record<FieldKey, TourStep> = {
@@ -264,6 +402,8 @@ const FIELD_STEP: Record<FieldKey, TourStep> = {
   adultFrom: "prices",
   departure: "departures",
   commission: "policies",
+  maintenanceReason: "departures",
+  maintenanceUrl: "departures",
   storyTitle: "story",
 };
 
@@ -347,6 +487,12 @@ export function useTourEditor(
         Date.parse(d.startsAt) > now.getTime(),
     );
   const missing = missingText(editText(edit));
+  /** The draft as guests would see it once published: M13's preview. */
+  const previewTour = (): Tour =>
+    toTour(
+      { ...edit, published: true },
+      tour ?? emptyTour("preview", "preview"),
+    );
 
   const validate = (level: Level): TourErrors => {
     const strict = level !== "draft";
@@ -390,6 +536,19 @@ export function useTourEditor(
             ? undefined
             : t("products.prices.adultAgeError")),
         commission: rangeError(Math.round(edit.commissionRate * 100), 0, 50),
+        // A draft may keep half-written maintenance text; saving a tour that guests see may not.
+        maintenanceReason:
+          strict &&
+          edit.maintenance.active &&
+          !hasAnyText(edit.maintenance.reason)
+            ? t("products.maintenance.reasonError")
+            : undefined,
+        maintenanceUrl:
+          strict &&
+          edit.maintenance.url.trim() &&
+          !safeHref(edit.maintenance.url.trim())
+            ? t("products.maintenance.urlError")
+            : undefined,
       },
       text: textErrors(editText(edit), level),
     };
@@ -499,34 +658,17 @@ export function useTourEditor(
 
   const commit = (published: boolean) => {
     setStorageFull(false);
-    const base: Tour = tour ?? {
-      id: newId("tour"),
-      // C22 owns /tours/private-tour, so no tour may take that slug.
-      slug: uniqueSlug(
-        edit.name,
-        [...data.tours.map((item) => item.slug), "private-tour"],
-        "tour",
-      ),
-      name: {},
-      summary: {},
-      description: {},
-      photos: [],
-      durationMinutes: 120,
-      adultPrice: 0,
-      childPrice: 0,
-      infantPrice: 0,
-      meetingPoint: {},
-      included: [],
-      excluded: {},
-      conditions: {},
-      cancellationPolicy: {},
-      published: false,
-      unannounced: true,
-      commissionRate: 0.1,
-      itinerary: [],
-      ageBands: { childFrom: 6, adultFrom: 16 },
-      participantFields: [],
-    };
+    const base: Tour =
+      tour ??
+      emptyTour(
+        newId("tour"),
+        // C22 owns /tours/private-tour, so no tour may take that slug.
+        uniqueSlug(
+          edit.name,
+          [...data.tours.map((item) => item.slug), "private-tour"],
+          "tour",
+        ),
+      );
     // An archived tour is never published from here; "Restore as draft" comes first.
     const next = toTour({ ...edit, published: published && !archived }, base);
     const nextTours = tour
@@ -590,6 +732,7 @@ export function useTourEditor(
     archived,
     live,
     edit,
+    previewTour,
     change,
     changeStory,
     missing,

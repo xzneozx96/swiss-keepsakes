@@ -34,8 +34,8 @@ type Step =
 const samples: Sample[] = [
   // Awaiting seller confirmation
   {
-    productId: "p-name-knife",
-    variantId: "oak",
+    productId: "p-vx-swan",
+    variantId: "s",
     engraving: "Anna",
     pickupDate: "2026-10-22",
     pickupPlaceId: "altstadt",
@@ -43,7 +43,7 @@ const samples: Sample[] = [
   },
   // Accepted, payment due (the demo path knife)
   {
-    productId: "p-knife",
+    productId: "p-vx-chapel-bridge",
     variantId: "m",
     engraving: "Anna",
     pickupDate: "2026-10-21",
@@ -60,7 +60,7 @@ const samples: Sample[] = [
   },
   // Paid in full, being prepared
   {
-    productId: "p-knife",
+    productId: "p-vx-chapel-bridge",
     variantId: "s",
     engraving: "Ben",
     pickupDate: "2026-10-19",

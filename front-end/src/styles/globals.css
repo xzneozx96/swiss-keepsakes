@@ -129,6 +129,13 @@ button {
  * The assistant tab's sparkle twinkles: a slow scale and tilt, then a rest, so it reads as
  * alive without competing with the content. Off for prefers-reduced-motion.
  */
+@keyframes vx-rise {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+  }
+}
+
 @keyframes sparkle-twinkle {
   0%,
   60%,

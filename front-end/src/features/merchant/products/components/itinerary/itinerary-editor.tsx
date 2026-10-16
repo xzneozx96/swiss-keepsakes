@@ -23,6 +23,20 @@ type Editor = ReturnType<typeof useTourEditor>;
 const stopId = () =>
   `stop-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
+function BareFrame({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-col gap-4">{children}</div>;
+}
+
+function CardFrame({ children }: { children: React.ReactNode }) {
+  const { t } = useLocale();
+
+  return (
+    <DetailCard icon={BookingsIcon} title={t("products.field.itinerary")}>
+      {children}
+    </DetailCard>
+  );
+}
+
 /**
  * Step 2's itinerary (owner reference: Wanderlog): search a place or drop a pin to add a
  * stop; the map above and the numbered list below are the same stops in the same order,
@@ -32,9 +46,12 @@ const stopId = () =>
 export function ItineraryCard({
   editor,
   language,
+  bare = false,
 }: {
   editor: Editor;
   language: Language;
+  /** Without its card frame, to sit inside a sheet. */
+  bare?: boolean;
 }) {
   const { t } = useLocale();
   const { confirm, dialog } = useConfirm();
@@ -160,8 +177,10 @@ export function ItineraryCard({
     setAnnouncement(t("products.itinerary.live.removed"));
   };
 
+  const Frame = bare ? BareFrame : CardFrame;
+
   return (
-    <DetailCard icon={BookingsIcon} title={t("products.field.itinerary")}>
+    <Frame>
       <p className="text-sm text-pretty text-muted">
         {t("products.itinerary.hint")}
       </p>
@@ -236,6 +255,6 @@ export function ItineraryCard({
         {announcement}
       </p>
       {dialog}
-    </DetailCard>
+    </Frame>
   );
 }

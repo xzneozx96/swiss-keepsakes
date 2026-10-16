@@ -19,7 +19,7 @@ export function addSampleTourBookings(
   language: Language,
   now: Date,
 ): TourData {
-  const tour = data.tours.find((item) => item.id === "lucerne-90");
+  const tour = data.tours.find((item) => item.id === "things-that-remain");
   const past = data.departures.find((item) => item.id === "walk-13");
   const future = data.departures.find((item) => item.id === "walk-20");
 

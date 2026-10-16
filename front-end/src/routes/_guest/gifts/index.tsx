@@ -54,7 +54,9 @@ function GiftsPage() {
   const query = q.trim().toLocaleLowerCase(intlLocale);
   const cards = state.data.products
     // A draft from M12 is hidden from guests (4.9).
-    .filter((p) => isPublished(p) && (!selected || p.subcategoryId === selected.id))
+    .filter(
+      (p) => isPublished(p) && (!selected || p.subcategoryId === selected.id),
+    )
     .map(toCard)
     .filter(
       (c) => !query || c.name.toLocaleLowerCase(intlLocale).includes(query),

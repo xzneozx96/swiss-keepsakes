@@ -18,7 +18,6 @@ import {
 } from "@/components/icons";
 import { MerchantPageHeader } from "@/components/layout/merchant-page-header";
 import { RowActions } from "@/components/row-actions";
-import { StatusChip } from "@/components/status-chip";
 import { categories } from "@/features/catalog/categories";
 import { useLocale } from "@/contexts/locale-context";
 import { pickText } from "@/lib/localized";
@@ -193,17 +192,8 @@ export function CategoriesPage() {
           <section key={category.id} aria-label={name} className={card}>
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-heading">{name}</h2>
-              {!category.live && (
-                <StatusChip tone="neutral">{t("home.soon")}</StatusChip>
-              )}
             </div>
-            <p className="text-sm text-muted">
-              {t(
-                category.live
-                  ? "categories.tours.note"
-                  : "categories.soon.note",
-              )}
-            </p>
+            <p className="text-sm text-muted">{t("categories.tours.note")}</p>
             {category.id === "tours" && (
               <Link
                 className="w-fit rounded-lg text-sm font-medium text-accent outline-none hover:underline focus-visible:focus-ring"

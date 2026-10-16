@@ -37,4 +37,14 @@ rothorn-steam|images-commons/brienzer-rothorn/Brienzer_Rothornbahn_Dampfzug_2013
 rothorn-view|images/brienzer-rothorn/rothorn-timon-studler.jpg|Center
 finsterwald-entlebuch|images-commons/finsterwald-honey/UNESCO_Biosphäre_Entlebuch_12.jpg|Center
 finsterwald-beehouse|images-commons/finsterwald-honey/Bienenstand_OW_021_Bienenhaltung_im_Kanton_Obwalden.jpg|Center
+spreuer-totentanz|images-commons/spreuer-bridge/Luzerner_Totentanz-16.jpg|Center
+spreuer-bridge|images-commons/spreuer-bridge/Nadelwehr_und_Spreuerbrücke_Luzern.jpg|Center
+nadelwehr|images-commons/nadelwehr/Nadelwehr_in_der_Reuss_in_Luzern_(2019).jpg|Center
+pilatus-dragon-ride|images-commons/pilatus/Pilatus-gipfel-luftseilbahn.jpg|Center
+pilatus-fraekmuentegg|images-commons/pilatus/Fraekmuentegg_Kriens_Switzerland.jpg|Center
+rigi-vitznau-pier|images-commons/rigi/Vitznau_pier_Lake_Lucerne.jpg|Center
+rigi-kaltbad|images-commons/rigi/Zug_der_Vitznau-Rigi-Bahn_am_Bahnhof_Rigi-Kaltbad.jpg|Center
+rigi-kulm|images-commons/rigi/Bahnhof_Rigi_Kulm_2004_2.jpg|Center
+rigi-kulm-restaurant|images-commons/rigi/20240906.Rigi_Kulm.-033.jpg|Center
+rigi-vitznau-train|images-commons/rigi/Vitznau-Rigi-Bahn_Vitznau_Bahnhof.jpg|Center
 LIST

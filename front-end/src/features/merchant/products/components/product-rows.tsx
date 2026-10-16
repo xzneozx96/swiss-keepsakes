@@ -3,7 +3,7 @@ import type { DataTableColumn } from "@/components/data-table";
 import type { EmptyStateProps } from "@/components/empty-state";
 import type { RowAction } from "@/components/row-actions";
 
-import { LanguageChip, PublishChip } from "./status-chips";
+import { LanguageChip, MaintenanceChip, PublishChip } from "./status-chips";
 
 import { ArchiveIcon, EditIcon, RestoreIcon } from "@/components/icons";
 import { DataTable } from "@/components/data-table";
@@ -68,7 +68,10 @@ function StateChip({ row }: { row: ProductRow }) {
   return row.archived ? (
     <StatusChip tone="neutral">{t("products.archived")}</StatusChip>
   ) : (
-    <PublishChip published={row.published} />
+    <>
+      <PublishChip published={row.published} />
+      {row.maintenance && <MaintenanceChip />}
+    </>
   );
 }
 

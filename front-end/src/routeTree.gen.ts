@@ -16,10 +16,8 @@ import { Route as GuestIndexRouteImport } from './routes/_guest/index'
 import { Route as GuestAccountRouteImport } from './routes/_guest/account'
 import { Route as GuestCartRouteImport } from './routes/_guest/cart'
 import { Route as GuestCreditsRouteImport } from './routes/_guest/credits'
-import { Route as GuestExperiencesRouteImport } from './routes/_guest/experiences'
 import { Route as GuestPlanRouteImport } from './routes/_guest/plan'
 import { Route as GuestSearchRouteImport } from './routes/_guest/search'
-import { Route as GuestStaysRouteImport } from './routes/_guest/stays'
 import { Route as GuestToursRouteImport } from './routes/_guest/tours'
 import { Route as LabIndexRouteImport } from './routes/lab.index'
 import { Route as LabAdviceRouteImport } from './routes/lab.advice'
@@ -34,6 +32,7 @@ import { Route as LabPrivateTourRouteImport } from './routes/lab.private-tour'
 import { Route as LabQuantityRouteImport } from './routes/lab.quantity'
 import { Route as LabReviewRouteImport } from './routes/lab.review'
 import { Route as LabSellerRouteImport } from './routes/lab.seller'
+import { Route as LabVictorinoxRouteImport } from './routes/lab.victorinox'
 import { Route as PartnerIndexRouteImport } from './routes/partner/index'
 import { Route as PartnerTokenRouteImport } from './routes/partner/$token'
 import { Route as RCodeRouteImport } from './routes/r.$code'
@@ -66,9 +65,7 @@ import { Route as StorePartnersPartnerIdRouteImport } from './routes/store/partn
 import { Route as StorePartnersAnalyticsRouteImport } from './routes/store/partners/analytics'
 import { Route as StoreProductsIndexRouteImport } from './routes/store/products/index'
 import { Route as StoreProductsCategoriesRouteImport } from './routes/store/products/categories'
-import { Route as StoreProductsExperiencesRouteImport } from './routes/store/products/experiences'
 import { Route as StoreProductsPickupRouteImport } from './routes/store/products/pickup'
-import { Route as StoreProductsStaysRouteImport } from './routes/store/products/stays'
 import { Route as StoreReportsIndexRouteImport } from './routes/store/reports/index'
 import { Route as StoreReportsCostsRouteImport } from './routes/store/reports/costs'
 import { Route as StoreReportsGuestsRouteImport } from './routes/store/reports/guests'
@@ -129,11 +126,6 @@ const GuestCreditsRoute = GuestCreditsRouteImport.update({
   path: '/credits',
   getParentRoute: () => GuestRoute,
 } as any)
-const GuestExperiencesRoute = GuestExperiencesRouteImport.update({
-  id: '/experiences',
-  path: '/experiences',
-  getParentRoute: () => GuestRoute,
-} as any)
 const GuestPlanRoute = GuestPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -142,11 +134,6 @@ const GuestPlanRoute = GuestPlanRouteImport.update({
 const GuestSearchRoute = GuestSearchRouteImport.update({
   id: '/search',
   path: '/search',
-  getParentRoute: () => GuestRoute,
-} as any)
-const GuestStaysRoute = GuestStaysRouteImport.update({
-  id: '/stays',
-  path: '/stays',
   getParentRoute: () => GuestRoute,
 } as any)
 const GuestToursRoute = GuestToursRouteImport.update({
@@ -217,6 +204,11 @@ const LabReviewRoute = LabReviewRouteImport.update({
 const LabSellerRoute = LabSellerRouteImport.update({
   id: '/lab/seller',
   path: '/lab/seller',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabVictorinoxRoute = LabVictorinoxRouteImport.update({
+  id: '/lab/victorinox',
+  path: '/lab/victorinox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnerIndexRoute = PartnerIndexRouteImport.update({
@@ -379,20 +371,9 @@ const StoreProductsCategoriesRoute = StoreProductsCategoriesRouteImport.update({
   path: '/products/categories',
   getParentRoute: () => StoreRoute,
 } as any)
-const StoreProductsExperiencesRoute =
-  StoreProductsExperiencesRouteImport.update({
-    id: '/products/experiences',
-    path: '/products/experiences',
-    getParentRoute: () => StoreRoute,
-  } as any)
 const StoreProductsPickupRoute = StoreProductsPickupRouteImport.update({
   id: '/products/pickup',
   path: '/products/pickup',
-  getParentRoute: () => StoreRoute,
-} as any)
-const StoreProductsStaysRoute = StoreProductsStaysRouteImport.update({
-  id: '/products/stays',
-  path: '/products/stays',
   getParentRoute: () => StoreRoute,
 } as any)
 const StoreReportsIndexRoute = StoreReportsIndexRouteImport.update({
@@ -541,10 +522,8 @@ export interface FileRoutesByFullPath {
   '/account': typeof GuestAccountRoute
   '/cart': typeof GuestCartRoute
   '/credits': typeof GuestCreditsRoute
-  '/experiences': typeof GuestExperiencesRoute
   '/plan': typeof GuestPlanRoute
   '/search': typeof GuestSearchRoute
-  '/stays': typeof GuestStaysRoute
   '/tours': typeof GuestToursRouteWithChildren
   '/lab/advice': typeof LabAdviceRoute
   '/lab/calendar': typeof LabCalendarRoute
@@ -558,6 +537,7 @@ export interface FileRoutesByFullPath {
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
   '/lab/seller': typeof LabSellerRoute
+  '/lab/victorinox': typeof LabVictorinoxRoute
   '/partner/$token': typeof PartnerTokenRoute
   '/r/$code': typeof RCodeRoute
   '/store/$section': typeof StoreSectionRoute
@@ -582,9 +562,7 @@ export interface FileRoutesByFullPath {
   '/store/partners/$partnerId': typeof StorePartnersPartnerIdRoute
   '/store/partners/analytics': typeof StorePartnersAnalyticsRoute
   '/store/products/categories': typeof StoreProductsCategoriesRoute
-  '/store/products/experiences': typeof StoreProductsExperiencesRoute
   '/store/products/pickup': typeof StoreProductsPickupRoute
-  '/store/products/stays': typeof StoreProductsStaysRoute
   '/store/reports/costs': typeof StoreReportsCostsRoute
   '/store/reports/guests': typeof StoreReportsGuestsRoute
   '/store/reports/margin': typeof StoreReportsMarginRoute
@@ -624,10 +602,8 @@ export interface FileRoutesByTo {
   '/account': typeof GuestAccountRoute
   '/cart': typeof GuestCartRoute
   '/credits': typeof GuestCreditsRoute
-  '/experiences': typeof GuestExperiencesRoute
   '/plan': typeof GuestPlanRoute
   '/search': typeof GuestSearchRoute
-  '/stays': typeof GuestStaysRoute
   '/lab/advice': typeof LabAdviceRoute
   '/lab/calendar': typeof LabCalendarRoute
   '/lab/cards': typeof LabCardsRoute
@@ -640,6 +616,7 @@ export interface FileRoutesByTo {
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
   '/lab/seller': typeof LabSellerRoute
+  '/lab/victorinox': typeof LabVictorinoxRoute
   '/partner/$token': typeof PartnerTokenRoute
   '/r/$code': typeof RCodeRoute
   '/store/$section': typeof StoreSectionRoute
@@ -664,9 +641,7 @@ export interface FileRoutesByTo {
   '/store/partners/$partnerId': typeof StorePartnersPartnerIdRoute
   '/store/partners/analytics': typeof StorePartnersAnalyticsRoute
   '/store/products/categories': typeof StoreProductsCategoriesRoute
-  '/store/products/experiences': typeof StoreProductsExperiencesRoute
   '/store/products/pickup': typeof StoreProductsPickupRoute
-  '/store/products/stays': typeof StoreProductsStaysRoute
   '/store/reports/costs': typeof StoreReportsCostsRoute
   '/store/reports/guests': typeof StoreReportsGuestsRoute
   '/store/reports/margin': typeof StoreReportsMarginRoute
@@ -710,10 +685,8 @@ export interface FileRoutesById {
   '/_guest/account': typeof GuestAccountRoute
   '/_guest/cart': typeof GuestCartRoute
   '/_guest/credits': typeof GuestCreditsRoute
-  '/_guest/experiences': typeof GuestExperiencesRoute
   '/_guest/plan': typeof GuestPlanRoute
   '/_guest/search': typeof GuestSearchRoute
-  '/_guest/stays': typeof GuestStaysRoute
   '/_guest/tours': typeof GuestToursRouteWithChildren
   '/lab/advice': typeof LabAdviceRoute
   '/lab/calendar': typeof LabCalendarRoute
@@ -727,6 +700,7 @@ export interface FileRoutesById {
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
   '/lab/seller': typeof LabSellerRoute
+  '/lab/victorinox': typeof LabVictorinoxRoute
   '/partner/$token': typeof PartnerTokenRoute
   '/r/$code': typeof RCodeRoute
   '/store/$section': typeof StoreSectionRoute
@@ -752,9 +726,7 @@ export interface FileRoutesById {
   '/store/partners/$partnerId': typeof StorePartnersPartnerIdRoute
   '/store/partners/analytics': typeof StorePartnersAnalyticsRoute
   '/store/products/categories': typeof StoreProductsCategoriesRoute
-  '/store/products/experiences': typeof StoreProductsExperiencesRoute
   '/store/products/pickup': typeof StoreProductsPickupRoute
-  '/store/products/stays': typeof StoreProductsStaysRoute
   '/store/reports/costs': typeof StoreReportsCostsRoute
   '/store/reports/guests': typeof StoreReportsGuestsRoute
   '/store/reports/margin': typeof StoreReportsMarginRoute
@@ -799,10 +771,8 @@ export interface FileRouteTypes {
     | '/account'
     | '/cart'
     | '/credits'
-    | '/experiences'
     | '/plan'
     | '/search'
-    | '/stays'
     | '/tours'
     | '/lab/advice'
     | '/lab/calendar'
@@ -816,6 +786,7 @@ export interface FileRouteTypes {
     | '/lab/quantity'
     | '/lab/review'
     | '/lab/seller'
+    | '/lab/victorinox'
     | '/partner/$token'
     | '/r/$code'
     | '/store/$section'
@@ -840,9 +811,7 @@ export interface FileRouteTypes {
     | '/store/partners/$partnerId'
     | '/store/partners/analytics'
     | '/store/products/categories'
-    | '/store/products/experiences'
     | '/store/products/pickup'
-    | '/store/products/stays'
     | '/store/reports/costs'
     | '/store/reports/guests'
     | '/store/reports/margin'
@@ -882,10 +851,8 @@ export interface FileRouteTypes {
     | '/account'
     | '/cart'
     | '/credits'
-    | '/experiences'
     | '/plan'
     | '/search'
-    | '/stays'
     | '/lab/advice'
     | '/lab/calendar'
     | '/lab/cards'
@@ -898,6 +865,7 @@ export interface FileRouteTypes {
     | '/lab/quantity'
     | '/lab/review'
     | '/lab/seller'
+    | '/lab/victorinox'
     | '/partner/$token'
     | '/r/$code'
     | '/store/$section'
@@ -922,9 +890,7 @@ export interface FileRouteTypes {
     | '/store/partners/$partnerId'
     | '/store/partners/analytics'
     | '/store/products/categories'
-    | '/store/products/experiences'
     | '/store/products/pickup'
-    | '/store/products/stays'
     | '/store/reports/costs'
     | '/store/reports/guests'
     | '/store/reports/margin'
@@ -967,10 +933,8 @@ export interface FileRouteTypes {
     | '/_guest/account'
     | '/_guest/cart'
     | '/_guest/credits'
-    | '/_guest/experiences'
     | '/_guest/plan'
     | '/_guest/search'
-    | '/_guest/stays'
     | '/_guest/tours'
     | '/lab/advice'
     | '/lab/calendar'
@@ -984,6 +948,7 @@ export interface FileRouteTypes {
     | '/lab/quantity'
     | '/lab/review'
     | '/lab/seller'
+    | '/lab/victorinox'
     | '/partner/$token'
     | '/r/$code'
     | '/store/$section'
@@ -1009,9 +974,7 @@ export interface FileRouteTypes {
     | '/store/partners/$partnerId'
     | '/store/partners/analytics'
     | '/store/products/categories'
-    | '/store/products/experiences'
     | '/store/products/pickup'
-    | '/store/products/stays'
     | '/store/reports/costs'
     | '/store/reports/guests'
     | '/store/reports/margin'
@@ -1063,6 +1026,7 @@ export interface RootRouteChildren {
   LabQuantityRoute: typeof LabQuantityRoute
   LabReviewRoute: typeof LabReviewRoute
   LabSellerRoute: typeof LabSellerRoute
+  LabVictorinoxRoute: typeof LabVictorinoxRoute
   PartnerTokenRoute: typeof PartnerTokenRoute
   RCodeRoute: typeof RCodeRoute
   LabIndexRoute: typeof LabIndexRoute
@@ -1120,13 +1084,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestCreditsRouteImport
       parentRoute: typeof GuestRoute
     }
-    '/_guest/experiences': {
-      id: '/_guest/experiences'
-      path: '/experiences'
-      fullPath: '/experiences'
-      preLoaderRoute: typeof GuestExperiencesRouteImport
-      parentRoute: typeof GuestRoute
-    }
     '/_guest/plan': {
       id: '/_guest/plan'
       path: '/plan'
@@ -1139,13 +1096,6 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof GuestSearchRouteImport
-      parentRoute: typeof GuestRoute
-    }
-    '/_guest/stays': {
-      id: '/_guest/stays'
-      path: '/stays'
-      fullPath: '/stays'
-      preLoaderRoute: typeof GuestStaysRouteImport
       parentRoute: typeof GuestRoute
     }
     '/_guest/tours': {
@@ -1244,6 +1194,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/seller'
       fullPath: '/lab/seller'
       preLoaderRoute: typeof LabSellerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/victorinox': {
+      id: '/lab/victorinox'
+      path: '/lab/victorinox'
+      fullPath: '/lab/victorinox'
+      preLoaderRoute: typeof LabVictorinoxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner/': {
@@ -1470,25 +1427,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreProductsCategoriesRouteImport
       parentRoute: typeof StoreRoute
     }
-    '/store/products/experiences': {
-      id: '/store/products/experiences'
-      path: '/products/experiences'
-      fullPath: '/store/products/experiences'
-      preLoaderRoute: typeof StoreProductsExperiencesRouteImport
-      parentRoute: typeof StoreRoute
-    }
     '/store/products/pickup': {
       id: '/store/products/pickup'
       path: '/products/pickup'
       fullPath: '/store/products/pickup'
       preLoaderRoute: typeof StoreProductsPickupRouteImport
-      parentRoute: typeof StoreRoute
-    }
-    '/store/products/stays': {
-      id: '/store/products/stays'
-      path: '/products/stays'
-      fullPath: '/store/products/stays'
-      preLoaderRoute: typeof StoreProductsStaysRouteImport
       parentRoute: typeof StoreRoute
     }
     '/store/reports/': {
@@ -1695,10 +1638,8 @@ interface GuestRouteChildren {
   GuestAccountRoute: typeof GuestAccountRoute
   GuestCartRoute: typeof GuestCartRoute
   GuestCreditsRoute: typeof GuestCreditsRoute
-  GuestExperiencesRoute: typeof GuestExperiencesRoute
   GuestPlanRoute: typeof GuestPlanRoute
   GuestSearchRoute: typeof GuestSearchRoute
-  GuestStaysRoute: typeof GuestStaysRoute
   GuestToursRoute: typeof GuestToursRouteWithChildren
   GuestIndexRoute: typeof GuestIndexRoute
   GuestCartReviewRoute: typeof GuestCartReviewRoute
@@ -1719,10 +1660,8 @@ const GuestRouteChildren: GuestRouteChildren = {
   GuestAccountRoute: GuestAccountRoute,
   GuestCartRoute: GuestCartRoute,
   GuestCreditsRoute: GuestCreditsRoute,
-  GuestExperiencesRoute: GuestExperiencesRoute,
   GuestPlanRoute: GuestPlanRoute,
   GuestSearchRoute: GuestSearchRoute,
-  GuestStaysRoute: GuestStaysRoute,
   GuestToursRoute: GuestToursRouteWithChildren,
   GuestIndexRoute: GuestIndexRoute,
   GuestCartReviewRoute: GuestCartReviewRoute,
@@ -1792,9 +1731,7 @@ interface StoreRouteChildren {
   StorePartnersPartnerIdRoute: typeof StorePartnersPartnerIdRoute
   StorePartnersAnalyticsRoute: typeof StorePartnersAnalyticsRoute
   StoreProductsCategoriesRoute: typeof StoreProductsCategoriesRoute
-  StoreProductsExperiencesRoute: typeof StoreProductsExperiencesRoute
   StoreProductsPickupRoute: typeof StoreProductsPickupRoute
-  StoreProductsStaysRoute: typeof StoreProductsStaysRoute
   StoreRequestsAnalyticsRoute: typeof StoreRequestsAnalyticsRoute
   StoreRequestsPrivateRoute: typeof StoreRequestsPrivateRoute
   StoreRequestsQuestionsRoute: typeof StoreRequestsQuestionsRoute
@@ -1826,9 +1763,7 @@ const StoreRouteChildren: StoreRouteChildren = {
   StorePartnersPartnerIdRoute: StorePartnersPartnerIdRoute,
   StorePartnersAnalyticsRoute: StorePartnersAnalyticsRoute,
   StoreProductsCategoriesRoute: StoreProductsCategoriesRoute,
-  StoreProductsExperiencesRoute: StoreProductsExperiencesRoute,
   StoreProductsPickupRoute: StoreProductsPickupRoute,
-  StoreProductsStaysRoute: StoreProductsStaysRoute,
   StoreRequestsAnalyticsRoute: StoreRequestsAnalyticsRoute,
   StoreRequestsPrivateRoute: StoreRequestsPrivateRoute,
   StoreRequestsQuestionsRoute: StoreRequestsQuestionsRoute,
@@ -1864,6 +1799,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabQuantityRoute: LabQuantityRoute,
   LabReviewRoute: LabReviewRoute,
   LabSellerRoute: LabSellerRoute,
+  LabVictorinoxRoute: LabVictorinoxRoute,
   PartnerTokenRoute: PartnerTokenRoute,
   RCodeRoute: RCodeRoute,
   LabIndexRoute: LabIndexRoute,

@@ -148,7 +148,7 @@ function useSampleOrders(): ReviewOrderView[] {
   };
 
   const fullItems = [
-    ...item("p-knife", "m", 1, "Anna"),
+    ...item("p-vx-chapel-bridge", "m", 1, "Anna"),
     ...item("p-print", "std", 1),
   ];
   const full = fullItems.reduce((sum, i) => sum + i.cents, 0);
@@ -168,7 +168,7 @@ function useSampleOrders(): ReviewOrderView[] {
       total: money(full),
       due: money(full),
       rule: t("checkout.rule.full", { hours: 24 }),
-      cancellation: cancellation("p-knife", "p-print"),
+      cancellation: cancellation("p-vx-chapel-bridge", "p-print"),
     },
     {
       ...shared,

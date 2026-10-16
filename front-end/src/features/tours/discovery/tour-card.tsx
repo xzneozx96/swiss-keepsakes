@@ -74,6 +74,12 @@ export function TourCard({
               {t("tourDiscovery.comingSoon")}
             </StatusChip>
           </div>
+        ) : tour.maintenance?.active ? (
+          <div className="pt-1">
+            <StatusChip tone="warning">
+              {t("tourDiscovery.maintenance.label")}
+            </StatusChip>
+          </div>
         ) : next ? (
           <p className="text-label text-muted">
             {t("tourDiscovery.next", {

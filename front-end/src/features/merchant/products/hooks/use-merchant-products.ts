@@ -20,13 +20,7 @@ import { formatMoney } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 /** The M11 tabs (D3); the ids are the `tab` search param of /store/products. */
-export const PRODUCT_TABS = [
-  "gifts",
-  "tours",
-  "stays",
-  "experiences",
-  "pickup",
-] as const;
+export const PRODUCT_TABS = ["gifts", "tours", "pickup"] as const;
 export type ProductTab = (typeof PRODUCT_TABS)[number];
 
 export function isProductTab(value: unknown): value is ProductTab {
@@ -44,6 +38,8 @@ export interface ProductRow {
   /** A keepsake's sub-category, for the Keepsakes filter; tours have none. */
   subcategoryId?: string;
   published: boolean;
+  /** A tour paused for maintenance: guests cannot book it (R21). */
+  maintenance?: boolean;
   /** Archived from the row menu: listed under "Archived" only, hidden from guests. */
   archived: boolean;
   languages: LanguageStatus;
@@ -140,6 +136,7 @@ export function useMerchantProducts() {
       }).format(tour.durationMinutes / 60),
     }),
     published: tour.published,
+    maintenance: !!tour.maintenance?.active,
     archived: !!tour.archivedAt,
     languages: languageStatus(missingText(tourText(tour))),
     facts: [

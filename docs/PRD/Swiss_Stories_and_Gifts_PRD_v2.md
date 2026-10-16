@@ -248,6 +248,10 @@ Trang tour cần thể hiện mô tả, ảnh, thời lượng, lịch trình, p
 
 **Đề xuất:** cho phép giá thay đổi theo từng lịch khởi hành. Quy tắc mỗi nhóm tuổi có chiếm chỗ hay không cần hiển thị rõ. Việc đặt đồng thời không được làm vượt số chỗ.
 
+**Nội dung tự do và xem trước (16/10/2026).** Ngoài các trường cố định (giá, thời lượng, lịch khởi hành, điểm dừng, chính sách), merchant thêm được các mục nội dung tự do cho mỗi tour: văn bản, danh sách, lịch trình theo giờ, thông tin dạng cặp tên-giá trị và hộp thông báo. Mọi mục đều hiện cho khách; không có mục chỉ nhân sự và không có ngày hiển thị từ/đến, merchant tự gỡ thông tin theo mùa. Mỗi dòng có thể kèm địa chỉ, điện thoại, email, liên kết; ngày kiểm tra thông tin hiện dưới trang. Không lưu và không hiển thị danh sách nguồn tham khảo. Trình soạn tour có chế độ xem trước: trang tour đúng như khách thấy, bằng EN hoặc DE, gồm cả thay đổi chưa lưu, với nút đặt tour tắt.
+
+**Keepsake liên quan và bảo trì (R21, 16/10/2026).** Merchant chọn các keepsake đã xuất bản gắn với từng tour; trang tour giới thiệu chúng nhẹ nhàng, gần cuối trang và tách khỏi nút đặt tour, mỗi thẻ dẫn tới trang keepsake. Keepsake luôn được đặt riêng qua luồng đặt keepsake, không nằm trong booking hay tổng tiền tour. Merchant cũng đặt được trạng thái "Under maintenance" cho tour, kèm lý do EN/DE, liên kết tới trang thông báo và ngày dự kiến mở lại; khách thấy lý do và không đặt được trong thời gian đó, booking đã có giữ nguyên. Trang tour không hiển thị danh sách nguồn tham khảo. Hai tính năng này là yêu cầu mới, thiết kế chi tiết làm sau khi hoàn tất nội dung tour.
+
 **Còn mở:** số khách tối thiểu để chạy tour, hạn đặt và đóng bán, đổi lịch, thông tin người tham gia, chính sách thu/hoàn tiền cụ thể khi no-show, thời tiết và merchant hủy chuyến. Đối tác tour chưa có cửa hàng ở Phase 1 phối hợp cung ứng bên ngoài; không được truy cập cửa hàng Chị Ngọc chỉ vì là nhà cung cấp.
 
 ### 7.4 Lưu trú ở giai đoạn sau
@@ -541,6 +545,7 @@ Yêu cầu chất lượng đề xuất gồm dùng tốt trên điện thoại,
 | AC32 | Khách mở bài viết có ảnh, video và audio | Có ảnh bìa, tác giả, ngày đăng và thời gian đọc, mục lục theo phần đánh dấu phần đang đọc; video chỉ tải trình phát khi khách bấm phát; audio là bản thu sẵn do cửa hàng tải lên, không tạo bằng AI | Phase 1 |
 | AC33 | Khách đọc xong một bài viết | Phần "Khám phá thêm" hiện tối đa 3 bài đã xuất bản cùng ngôn ngữ, theo lựa chọn của merchant hoặc các bài mới nhất nếu merchant chưa chọn; không hiện chính bài đang đọc, bài nháp hoặc bài khác ngôn ngữ | Phase 1 |
 | AC34 | Khách mở tư vấn chuyến đi | Giao diện trò chuyện với trợ lý AI: mỗi lần một câu hỏi của cửa hàng dạng tin nhắn, ô nhập hoặc lựa chọn theo loại câu hỏi, câu trả lời hiện như tin nhắn của khách; không trả lời câu hỏi tự do, không tạo kế hoạch; tóm tắt có Gửi và Sửa; sau khi gửi có lời cảm ơn và thông báo liên hệ qua email, không hứa thời hạn | Phase 1 |
+| AC35 | Merchant chọn keepsake liên quan cho tour, rồi đặt tour sang trạng thái Under maintenance | Trang tour hiện các keepsake đã xuất bản dưới dạng thẻ dẫn tới trang keepsake, ẩn khi không còn mục nào; keepsake không nằm trong giỏ tour hay tổng booking. Khi bảo trì: thẻ tour và trang tour hiện lý do EN/DE và liên kết, không đặt được; booking đã có không đổi | Sau Phase 1 (R21) |
 
 ## 16. Rủi ro và điều kiện phụ thuộc
 
@@ -588,6 +593,7 @@ Bảng này tập hợp lựa chọn ảnh hưởng phạm vi, hành vi hoặc l
 | O17 | Chọn phí thuê bao tháng hay hoa hồng theo đơn/booking cho nền tảng, mức và cách thu; onboarding merchant mới, checkout nhiều merchant và lỗi một phần | Trước mở rộng merchant hoặc trước khi bật thu phí | Chủ sản phẩm, merchant, provider |
 | O18 | Chính sách chi tiết lưu trú và trải nghiệm, ngôn ngữ bổ sung ngoài Anh/Đức, CRM, AI và phí plan | Trước từng giai đoạn tương ứng | Chủ sản phẩm và merchant liên quan |
 | O19 | Tác tử AI trò chuyện thật cho tư vấn chuyến đi: phạm vi trả lời, nguồn dữ liệu (sản phẩm, tour, bài viết), giới hạn và chuyển cho nhân sự, ngôn ngữ, chi phí, lưu và xóa hội thoại, consent. Giai đoạn hiện tại (R19) chỉ hỏi bộ câu hỏi cố định | Trước khi bật tác tử AI | Chủ sản phẩm, merchant, kỹ thuật |
+| O20 | Thiết kế chi tiết cho keepsake liên quan tới tour (R21): vị trí và giọng điệu khối trên C09/C13, số thẻ tối đa, trình chọn trong M13, quy tắc ẩn; và trạng thái bảo trì: ô lý do dạng văn bản thường hay rich text, ngày dự kiến, thông báo cho khách đã đặt | Sau khi hoàn tất nội dung tour | Chủ sản phẩm, merchant, thiết kế |
 
 Ưu tiên trước khi lập kế hoạch phát triển là phạm vi từng đợt, quy tắc thanh toán và hủy, quyền nhân sự, attribution, dữ liệu hồ sơ chuyến đi và khả năng provider. Chi tiết lưu trú, trải nghiệm hoặc mô hình thu phí tương lai không cần làm chậm pilot nếu chưa nằm trong đợt phát hành đó.
 

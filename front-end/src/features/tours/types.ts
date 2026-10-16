@@ -10,6 +10,51 @@ export type TourPaymentPolicy = "full" | "deposit" | "later";
  */
 export type TourOverduePolicy =
   { action: "cancel" } | { action: "grace"; graceHours: number };
+/**
+ * What a section's items look like on the page. A render hint, not a meaning: a layout the
+ * page does not know falls back to the title, the text and a plain list.
+ */
+export type TourSectionLayout =
+  "text" | "list" | "timeline" | "facts" | "notice";
+/** One row of a section: a timetable row, a fact or a restaurant. */
+export interface TourSectionItem {
+  id: string;
+  /** A time window, a fact name or a place name. */
+  label?: LocalizedText;
+  text: LocalizedText;
+  detail?: LocalizedText;
+  /** The itinerary stop this row belongs to. */
+  stopId?: string;
+  /** A keepsake (`Product.id`) this row points to. */
+  giftId?: string;
+  contact?: { address?: string; phone?: string; email?: string; url?: string };
+  optional?: boolean;
+}
+/**
+ * Free-form tour content beyond the typed core (prices, departures, stops, policies):
+ * practical information, a timetable, seasonal notices and lunch options.
+ */
+export interface TourSection {
+  id: string;
+  layout: TourSectionLayout;
+  title: LocalizedText;
+  /** Plain text; a blank line starts a new paragraph. */
+  body?: LocalizedText;
+  items?: TourSectionItem[];
+}
+/**
+ * A tour the merchant paused for maintenance (R21): guests read the reason, and booking is
+ * switched off. Bookings and departures that already exist are not touched, and the status
+ * never ends by itself: the merchant turns it off.
+ */
+export interface TourMaintenance {
+  active: boolean;
+  reason: LocalizedText;
+  /** Optional link to a notice page (https). */
+  url?: string;
+  /** ISO date shown as "Expected back"; display only. */
+  expectedBack?: string;
+}
 export interface TourStop {
   id: string;
   name: LocalizedText;
@@ -50,6 +95,16 @@ export interface Tour {
   itinerary: TourStop[];
   ageBands: TourAgeBands;
   participantFields: TourParticipantField[];
+  /** Free-form content shown after "About this experience" (guest) or kept for the merchant (staff). */
+  sections?: TourSection[];
+  /** When the practical information was last verified (ISO date); shown as "Checked on". */
+  checkedOn?: string;
+  maintenance?: TourMaintenance;
+  /**
+   * Keepsakes (`Product.id`) the merchant links to this tour, in the order guests see them
+   * (at most the first three). They are ordered separately from the booking, never in it.
+   */
+  keepsakeIds?: string[];
 }
 /** Sample age bands per tour: infants are younger than childFrom, adults are adultFrom or older. */
 export interface TourAgeBands {

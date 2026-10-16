@@ -7,6 +7,8 @@ import type {
   Shop,
 } from "./types";
 
+import { victorinoxProducts } from "./victorinox";
+
 import { demoAt } from "@/features/demo/clock";
 import { storyFromChapters } from "@/lib/rich-text";
 
@@ -23,13 +25,13 @@ export const shop: Shop = {
 /** The pilot store's five keepsake sub-categories; the merchant edits them on M26 (PRD §7.0). */
 export const subcategories: Subcategory[] = [
   {
-    id: "pocket-knives",
+    id: "victorinox",
     categoryId: "keepsakes",
-    name: { en: "Pocket knives", de: "Taschenmesser" },
-    photo: "pocket-knife",
+    name: { en: "Victorinox", de: "Victorinox" },
+    photo: "victorinox-spartan",
     tagline: {
-      en: "Folding knives, engraved by hand in the old town",
-      de: "Klappmesser, von Hand graviert in der Altstadt",
+      en: "Swiss Army Knives with a Lucerne story, engraved with your name",
+      de: "Schweizer Taschenmesser mit einer Luzerner Geschichte, mit Ihrem Namen graviert",
     },
   },
   {
@@ -80,84 +82,7 @@ const standardCancellation = {
 };
 
 export const products: Product[] = [
-  {
-    id: "p-knife",
-    photo: "pocket-knife",
-    photos: ["engraving", "artisan-workshop"],
-    // Demo story (owner request 13.10.2026): the business plan lists a Chapel Bridge
-    // knife design and sells "a keepsake with a story". Facts are the widely published
-    // history of the bridge; the shop should check the wording before launch.
-    longStory: storyFromChapters({
-      title: {
-        en: "The bridge on the handle",
-        de: "Die Brücke auf dem Griff",
-      },
-      chapters: [
-        {
-          photo: "lucerne-kapellbruecke-1200",
-          title: {
-            en: "A bridge built to guard the town",
-            de: "Eine Brücke, die die Stadt schützte",
-          },
-          body: {
-            en: "In the 14th century Lucerne built a covered wooden walkway across the Reuss, right where the river leaves the lake. It was part of the town’s defences: the roof kept the guards dry, and the bridge closed off the old town from the water. Beside it stands the eight-sided Water Tower, older than the bridge itself. Over the centuries it served as an archive, a treasury and a prison.",
-            de: "Im 14. Jahrhundert baute Luzern einen gedeckten Holzsteg über die Reuss, genau dort, wo der Fluss den See verlässt. Er gehörte zur Stadtbefestigung: Das Dach hielt die Wachen trocken, und die Brücke schloss die Altstadt zum Wasser hin ab. Daneben steht der achteckige Wasserturm, älter als die Brücke selbst. Im Lauf der Jahrhunderte diente er als Archiv, Schatzkammer und Gefängnis.",
-          },
-        },
-        {
-          photo: "lucerne-old-town",
-          title: {
-            en: "A history book under the roof",
-            de: "Ein Geschichtsbuch unter dem Dach",
-          },
-          body: {
-            en: "In the 17th century, painted triangular panels were hung between the roof beams. They told the story of Lucerne and its patron saints to everyone who crossed. Merchants on their way to market, children, soldiers: they all walked under the history of their own town, one panel at a time.",
-            de: "Im 17. Jahrhundert wurden bemalte dreieckige Tafeln zwischen die Dachbalken gehängt. Sie erzählten allen, die die Brücke überquerten, die Geschichte Luzerns und seiner Stadtpatrone. Händler auf dem Weg zum Markt, Kinder, Soldaten: Sie alle gingen unter der Geschichte ihrer eigenen Stadt hindurch, Tafel für Tafel.",
-          },
-        },
-        {
-          photo: "lucerne-night",
-          title: {
-            en: "The night it burned",
-            de: "Die Nacht, in der sie brannte",
-          },
-          body: {
-            en: "In August 1993 a fire destroyed much of the bridge and many of its paintings. Lucerne did not wait: the bridge was rebuilt and reopened the following year. Look up as you cross today and you can still find darkened panels among the restored ones. The town chose to keep the scars visible.",
-            de: "Im August 1993 zerstörte ein Brand grosse Teile der Brücke und viele ihrer Bilder. Luzern wartete nicht: Die Brücke wurde wieder aufgebaut und im folgenden Jahr neu eröffnet. Wer heute nach oben schaut, entdeckt zwischen den restaurierten Tafeln noch angekohlte. Die Stadt hat die Narben bewusst sichtbar gelassen.",
-          },
-        },
-        {
-          photo: "engraving",
-          title: {
-            en: "Why it is on this knife",
-            de: "Warum sie auf diesem Messer ist",
-          },
-          body: {
-            en: "The etching on the handle shows the bridge and the Water Tower as you see them from the Rathausquai. Add a name, and the shop engraves it by hand in the old town, a short walk from the bridge. It is a small, useful thing to carry home, and each time you open it, you are back on the bridge for a moment.",
-            de: "Die Ätzung auf dem Griff zeigt die Brücke und den Wasserturm, wie man sie vom Rathausquai aus sieht. Mit einem Namen graviert der Laden das Messer von Hand in der Altstadt, nur ein paar Schritte von der Brücke entfernt. Ein kleines, nützliches Andenken: Jedes Mal, wenn Sie es öffnen, stehen Sie für einen Moment wieder auf der Brücke.",
-          },
-        },
-      ],
-    }),
-    slug: "kapellbruecke-pocket-knife",
-    subcategoryId: "pocket-knives",
-    name: { en: "Kapellbrücke pocket knife", de: "Kapellbrücke Taschenmesser" },
-    story: {
-      en: "A stainless steel pocket knife with the Chapel Bridge etched on the handle. Add a name and the shop engraves it by hand in the old town.",
-      de: "Ein Taschenmesser aus rostfreiem Stahl mit der Kapellbrücke auf dem Griff. Mit Namen graviert die Werkstatt in der Altstadt es von Hand.",
-    },
-    cancellationPolicy: standardCancellation,
-    variants: [
-      { id: "s", label: { en: "Small", de: "Klein" }, price: 4900, stock: 6 },
-      { id: "m", label: { en: "Medium", de: "Mittel" }, price: 5400, stock: 4 },
-      { id: "l", label: { en: "Large", de: "Gross" }, price: 6400, stock: 2 },
-    ],
-    preparationDays: 3,
-    dayMode: "working-days",
-    paymentPolicy: { kind: "full", firstDueHours: 24 },
-    commissionRate: 0.1,
-    engraving: { maxLength: 12 },
-  },
+  ...victorinoxProducts(standardCancellation),
   {
     id: "p-giftbox",
     photo: "gift-box",
@@ -415,76 +340,6 @@ export const products: Product[] = [
     dayMode: "working-days",
     paymentPolicy: { kind: "full", firstDueHours: 24 },
     commissionRate: 0.1,
-  },
-  {
-    id: "p-name-knife",
-    photo: "engraving",
-    photos: ["pocket-knife", "artisan-workshop"],
-    longStory: storyFromChapters({
-      title: {
-        en: "A name on the blade",
-        de: "Ein Name auf der Klinge",
-      },
-      chapters: [
-        {
-          photo: "engraving",
-          title: {
-            en: "Why we put names on things",
-            de: "Warum wir Dinge beschriften",
-          },
-          body: {
-            en: "A pocket knife is one of the few objects people carry for decades. Engraving a name turns it from a tool into a keepsake: it was yours, or it was a gift to you. In Switzerland, a good knife is often passed on, and the name is the first thing that tells the story.",
-            de: "Ein Taschenmesser ist einer der wenigen Gegenstände, die man jahrzehntelang bei sich trägt. Mit einer Gravur wird aus dem Werkzeug ein Andenken: Es gehörte Ihnen, oder man hat es Ihnen geschenkt. In der Schweiz wird ein gutes Messer oft weitergegeben, und der Name erzählt als Erstes davon.",
-          },
-        },
-        {
-          photo: "artisan-workshop",
-          title: {
-            en: "Twelve characters",
-            de: "Zwölf Zeichen",
-          },
-          body: {
-            en: "There is room for up to twelve characters. That is enough for a first name, a nickname, or a short date. People often choose the name of the person who will carry it, and sometimes the name of the place where it was bought.",
-            de: "Es ist Platz für bis zu zwölf Zeichen. Das reicht für einen Vornamen, einen Spitznamen oder ein kurzes Datum. Viele wählen den Namen der Person, die das Messer tragen wird, manchmal auch den Namen des Ortes, an dem es gekauft wurde.",
-          },
-        },
-        {
-          photo: "pocket-knife",
-          title: {
-            en: "Oak, worn in by use",
-            de: "Eiche, vom Gebrauch geglättet",
-          },
-          body: {
-            en: "The handle is oak. It starts crisp and lightly textured, and with use the wood darkens and softens where your thumb rests. After a year in a pocket it looks different from every other knife, which is the point.",
-            de: "Der Griff ist aus Eiche. Anfangs ist er frisch und leicht strukturiert, mit der Zeit wird das Holz dunkler und weicher, dort wo der Daumen liegt. Nach einem Jahr in der Tasche sieht es anders aus als jedes andere Messer, und genau das ist der Sinn.",
-          },
-        },
-      ],
-    }),
-    slug: "personal-name-knife",
-    subcategoryId: "pocket-knives",
-    name: { en: "Personal name knife", de: "Namensmesser" },
-    story: {
-      en: "A slim folding knife with an oak handle and room for up to 12 characters, engraved by hand.",
-      de: "Ein schlankes Klappmesser mit Eichengriff und Platz für bis zu 12 Zeichen, von Hand graviert.",
-    },
-    cancellationPolicy: standardCancellation,
-    variants: [
-      { id: "oak", label: { en: "Oak", de: "Eiche" }, price: 6900, stock: 5 },
-      // Shows the "variant not sold" state on C03.
-      {
-        id: "walnut",
-        label: { en: "Walnut", de: "Nussbaum" },
-        price: 7900,
-        stock: 3,
-        notForSale: true,
-      },
-    ],
-    preparationDays: 3,
-    dayMode: "working-days",
-    paymentPolicy: { kind: "full", firstDueHours: 24 },
-    commissionRate: 0.1,
-    engraving: { maxLength: 12 },
   },
   {
     id: "p-candle-box",
@@ -854,7 +709,7 @@ export const pickupPlaceSeed: PickupPlace[] = [
 const featuredReviews: Review[] = [
   {
     id: "r1",
-    productId: "p-knife",
+    productId: "p-vx-chapel-bridge",
     guestName: "Marie D.",
     rating: 5,
     text: {
@@ -874,7 +729,7 @@ const featuredReviews: Review[] = [
   },
   {
     id: "r2",
-    productId: "p-knife",
+    productId: "p-vx-chapel-bridge",
     guestName: "Kenji T.",
     rating: 4,
     text: {
@@ -942,7 +797,7 @@ const featuredReviews: Review[] = [
 type PoolEntry = { rating: Review["rating"]; text: LocalizedText };
 
 const reviewPools: Record<string, PoolEntry[]> = {
-  "pocket-knives": [
+  victorinox: [
     {
       rating: 5,
       text: {
@@ -988,8 +843,8 @@ const reviewPools: Record<string, PoolEntry[]> = {
     {
       rating: 5,
       text: {
-        en: "The bridge etching is finer than in the photos.",
-        de: "Die Brücke auf dem Griff ist feiner als auf den Fotos.",
+        en: "The design is finer than in the photos.",
+        de: "Das Design ist feiner als auf den Fotos.",
       },
     },
     {
@@ -1232,7 +1087,7 @@ const reviewPools: Record<string, PoolEntry[]> = {
 };
 
 const reviewPhotos: Record<string, string[][]> = {
-  "pocket-knives": [["engraving", "pocket-knife"], ["pocket-knife"]],
+  victorinox: [["victorinox-spartan", "engraving"], ["victorinox-classic-sd"]],
   "gift-boxes": [["gift-box", "candle"], ["postcards"]],
   chocolate: [["pralines"], ["chocolate-bar", "pralines"]],
   prints: [["art-print", "lucerne-old-town"], ["lucerne-kapellbruecke-1200"]],
@@ -1263,6 +1118,7 @@ const reviewerNames = [
 const sampleReviews: Review[] = products.flatMap((product, productIndex) => {
   const pool = reviewPools[product.subcategoryId];
   const photoSets = reviewPhotos[product.subcategoryId];
+
   // A sub-category the merchant added after the seed has no sample reviews.
   if (!pool || !photoSets) return [];
   const existing = featuredReviews.filter(

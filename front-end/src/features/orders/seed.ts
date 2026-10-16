@@ -132,8 +132,8 @@ export function seedOrders(): Order[] {
       ...base(
         "SK-1031",
         "g-tom",
-        "p-knife",
-        [line("p-knife", "s", 1, "Tom")],
+        "p-vx-chapel-bridge",
+        [line("p-vx-chapel-bridge", "s", 1, "Tom")],
         "2026-10-19",
         "altstadt",
         "hotel-am-see",
@@ -179,8 +179,8 @@ export function seedOrders(): Order[] {
       ...base(
         "SK-1028",
         "g-daniel",
-        "p-knife",
-        [line("p-knife", "l", 1, "Daniel")],
+        "p-vx-chapel-bridge",
+        [line("p-vx-chapel-bridge", "l", 1, "Daniel")],
         "2026-10-20",
         "bahnhof",
         "hotel-am-see",
@@ -239,8 +239,8 @@ export function seedOrders(): Order[] {
       ...base(
         "SK-1017",
         "g-marie",
-        "p-knife",
-        [line("p-knife", "m", 1, "Papa")],
+        "p-vx-chapel-bridge",
+        [line("p-vx-chapel-bridge", "m", 1, "Papa")],
         "2026-10-12",
         "altstadt",
         "hotel-am-see",

@@ -11,6 +11,7 @@ import { Hero } from "./hero";
 import { Rail, Section } from "./section";
 import { StoryRow } from "./story-row";
 import { TripAdviceButton } from "./trip-advice-button";
+import { VictorinoxShowcase } from "./victorinox-showcase";
 
 import { StoryCard } from "@/features/content/components/story-card";
 import { TourCard } from "@/features/tours/discovery/tour-card";
@@ -40,25 +41,28 @@ export interface DiscoveryHomeView {
     searchPrompt: string;
   };
   categories: { label: string; items: CategoryRailItem[] };
-  quick: {
-    title: string;
-    subtitle: string;
-    seeAll: string;
-    items: ProductCardProps[];
-    story?: StoryView;
-  };
-  engraved: {
-    title: string;
-    subtitle: string;
-    seeAll: string;
-    items: ProductCardProps[];
-  };
   tours: {
     title: string;
     subtitle: string;
     seeAll: string;
     items: Tour[];
     story?: StoryView;
+  };
+  victorinox: {
+    title: string;
+    subtitle: string;
+    eyebrow: string;
+    since: string;
+    seeAll: string;
+    intro: string;
+    items: ProductCardProps[];
+    story?: StoryView;
+  };
+  keepsakes: {
+    title: string;
+    subtitle: string;
+    seeAll: string;
+    items: ProductCardProps[];
   };
   stories: {
     title: string;
@@ -89,9 +93,9 @@ function RailSkeleton() {
 }
 
 /**
- * C01 Discovery home (spec §4.1, decision D6): hero with search, category rail, then
- * content blocks by length of stay, each with a story to read, then engraved gifts, the
- * stories in the guest's language and the advice banner. The floating button also opens C21.
+ * C01 Discovery home (spec §4.1, decision D6): hero with search, a rail of three tiles, then
+ * Tours, Victorinox (its own section, with the brand story) and Keepsakes, the stories in
+ * the guest's language and the advice banner. The floating button also opens C21.
  */
 export function DiscoveryHome({
   view,
@@ -100,7 +104,8 @@ export function DiscoveryHome({
   view: DiscoveryHomeView;
   isLoading: boolean;
 }) {
-  const { hero, categories, quick, engraved, tours, stories, advice } = view;
+  const { hero, categories, tours, victorinox, keepsakes, stories, advice } =
+    view;
 
   const [heroEnd, scrolledPast] = useScrolledPast<HTMLDivElement>();
 
@@ -129,26 +134,6 @@ export function DiscoveryHome({
         <CategoryRail items={categories.items} label={categories.label} />
 
         <Section
-          id="quick"
-          seeAll={{ label: quick.seeAll, to: "/gifts" }}
-          subtitle={quick.subtitle}
-          title={quick.title}
-        >
-          {isLoading ? (
-            <RailSkeleton />
-          ) : (
-            <Rail label={quick.title}>
-              {quick.items.map((item) => (
-                <li key={item.slug} className="flex">
-                  <ProductCard {...item} layout="carousel" />
-                </li>
-              ))}
-            </Rail>
-          )}
-          {!isLoading && quick.story && <StoryRow {...quick.story} />}
-        </Section>
-
-        <Section
           id="tours"
           seeAll={{ label: tours.seeAll, to: "/tours" }}
           subtitle={tours.subtitle}
@@ -168,17 +153,19 @@ export function DiscoveryHome({
           {!isLoading && tours.story && <StoryRow {...tours.story} />}
         </Section>
 
+        <VictorinoxShowcase isLoading={isLoading} {...victorinox} />
+
         <Section
-          id="engraved"
-          seeAll={{ label: engraved.seeAll, to: "/gifts" }}
-          subtitle={engraved.subtitle}
-          title={engraved.title}
+          id="keepsakes"
+          seeAll={{ label: keepsakes.seeAll, to: "/gifts" }}
+          subtitle={keepsakes.subtitle}
+          title={keepsakes.title}
         >
           {isLoading ? (
             <RailSkeleton />
           ) : (
-            <Rail label={engraved.title}>
-              {engraved.items.map((item) => (
+            <Rail label={keepsakes.title}>
+              {keepsakes.items.map((item) => (
                 <li key={item.slug} className="flex">
                   <ProductCard {...item} layout="carousel" />
                 </li>

@@ -1,5 +1,3 @@
-import type { CategoryId } from "@/features/catalog/types";
-
 import { Link } from "@tanstack/react-router";
 
 import {
@@ -7,28 +5,18 @@ import {
   categoryThumbItemClass,
 } from "@/features/catalog/components/category-thumb";
 
+export type CategoryRailId = "tours" | "victorinox" | "keepsakes";
+
 export interface CategoryRailItem {
-  id: CategoryId;
+  id: CategoryRailId;
   name: string;
   photo?: string;
-  /** Small note on the photo for types not open yet, e.g. "Soon". */
-  note?: string;
 }
 
-const destinations: Record<
-  CategoryId,
-  "/gifts" | "/tours" | "/stays" | "/experiences"
-> = {
-  keepsakes: "/gifts",
-  tours: "/tours",
-  stays: "/stays",
-  experiences: "/experiences",
-};
-
 /**
- * Discovery rail of the four categories (PRD §7.0: keepsakes, tours, stays, experiences) using the
- * shared CategoryThumb as links. Each opens its own screen; types not open yet carry a
- * "Soon" note and open a later-phase page.
+ * Discovery rail of three tiles in the order of the home sections: tours, Victorinox and
+ * keepsakes. Victorinox opens the keepsakes list filtered to its sub-category. Uses the
+ * shared CategoryThumb as links.
  */
 export function CategoryRail({
   label,
@@ -39,15 +27,34 @@ export function CategoryRail({
 }) {
   return (
     <nav aria-label={label}>
-      <ul className="grid grid-cols-4 gap-1 pt-2 pb-1">
-        {items.map(({ id, name, photo, note }) => (
+      <ul className="grid grid-cols-3 gap-1 pt-2 pb-1">
+        {items.map(({ id, name, photo }) => (
           <li key={id} className="flex justify-center">
-            <Link
-              className={`${categoryThumbItemClass} text-foreground`}
-              to={destinations[id]}
-            >
-              <CategoryThumb name={name} note={note} photo={photo} />
-            </Link>
+            {id === "tours" && (
+              <Link
+                className={`${categoryThumbItemClass} text-foreground`}
+                to="/tours"
+              >
+                <CategoryThumb name={name} photo={photo} />
+              </Link>
+            )}
+            {id === "victorinox" && (
+              <Link
+                className={`${categoryThumbItemClass} text-foreground`}
+                search={{ subcategory: "victorinox" }}
+                to="/gifts"
+              >
+                <CategoryThumb name={name} photo={photo} />
+              </Link>
+            )}
+            {id === "keepsakes" && (
+              <Link
+                className={`${categoryThumbItemClass} text-foreground`}
+                to="/gifts"
+              >
+                <CategoryThumb name={name} photo={photo} />
+              </Link>
+            )}
           </li>
         ))}
       </ul>

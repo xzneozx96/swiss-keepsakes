@@ -140,7 +140,7 @@ interface SampleLine {
 const sample: SampleLine[] = [
   {
     id: "l1",
-    productId: "p-knife",
+    productId: "p-vx-chapel-bridge",
     variantId: "m",
     engraving: "Anna",
     quantity: 1,
@@ -306,7 +306,7 @@ function useSampleOrders() {
       policy: t("cart.policy.full"),
       pickup: "Fri 16 Oct · Shop Altstadt",
       lines: [
-        ...line("k", "p-knife", "m", 1, "Anna"),
+        ...line("k", "p-vx-chapel-bridge", "m", 1, "Anna"),
         ...line("r", "p-postcards", "8", 2),
       ],
     },

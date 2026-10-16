@@ -1,6 +1,0 @@
-Tool: built-in image_gen, transparent_background=true.
-Reference: user-supplied Sonja Lucerne business card, 15 October 2026.
-
-undefined
-
-Integration: transparent wordmark and a separate bridge-and-tower mark for mobile, under front-end/src/assets/brand/.

@@ -32,7 +32,7 @@ export interface Article {
   updatedAt: string;
 }
 
-/** A gift (`Product.id`) or tour (`Tour.id`, e.g. "lucerne-90") linked from a story (R16). */
+/** A gift (`Product.id`) or tour (`Tour.id`, e.g. "things-that-remain") linked from a story (R16). */
 export interface ArticleLink {
   kind: "gift" | "tour";
   id: string;

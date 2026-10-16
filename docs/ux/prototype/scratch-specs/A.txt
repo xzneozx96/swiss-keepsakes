@@ -1,7 +1,0 @@
-Phase 2 worker A: tour data, discovery, detail and selection. Read docs/ux/prototype/worker-brief-phase2.md in full first and follow it. Working folder: /home/ross-geller/Projects/minastik/swiss-keepsakes (no git, shared with other workers).
-Steps: 2.1 (tour demo data and booking state), 2.2 (C08 Tour list), 2.3 (C09 Tour detail incl. itinerary + interactive 3D map), 2.4 (C10 Departure and participant selection).
-Owned files: features/tours/discovery/*, features/tours/detail/*, features/tours/map/*, features/tours/seed.ts (you are the primary owner; others may make small anchored additions, so re-read before each edit), routes src/routes/_guest/tours/index.tsx, $slug.tsx, $slug_.book.tsx, and the Tour navigation entry (anchored edit in its shared file).
-2.1 notes: confirm fixtures cover full-payment, 30% deposit and pay-later tours, sold-out and unpublished tours, age-group prices, capacity and participant fields; booking stores booking-time prices, policy snapshot, referral source and hold deadline; Reset restores fixtures; reload keeps holds without extending them. Worker C will add overdue-policy fixtures for 2.14; leave room.
-Booking cases you own: "EN and DE" (incl. missing-merchant-translation language notice).
-Also check the shared ListingDetail/listing card extraction did not break gift list and gift detail (375px EN quick check, screenshot).
-Dev server port: 5231. Reports: reports/2.1.md 2.2.md 2.3.md 2.4.md.

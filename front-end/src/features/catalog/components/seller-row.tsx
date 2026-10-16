@@ -32,8 +32,8 @@ export interface SellerRowProps {
     label: string;
     href: string;
   }[];
-  /** "Visit shop": the shop's gifts (one shop in Phase 1, so the gift list). */
-  visitLabel: string;
+  /** "Visit shop": the shop's gifts (one shop in Phase 1, so the gift list). Left out, the row is not shown. */
+  visitLabel?: string;
 }
 
 const contactIcon: Record<
@@ -46,7 +46,7 @@ const contactIcon: Record<
 };
 
 const rowClass =
-  "flex items-center gap-4 border-b border-separator py-4 outline-none focus-visible:focus-ring";
+  "flex items-center gap-4 border-b border-separator py-4 outline-none last:border-b-0 focus-visible:focus-ring";
 
 /**
  * Seller as the Airbnb host row (owner choice 13.10.2026, Lab option B): shop photo (a
@@ -124,11 +124,13 @@ export function SellerRow({
                   </a>
                 );
               })}
-              <Link className={`${rowClass} border-b-0`} to="/gifts">
-                <ShopIcon aria-hidden size={22} />
-                <span className="flex-1 font-medium">{visitLabel}</span>
-                <ChevronRightIcon aria-hidden size={18} />
-              </Link>
+              {visitLabel && (
+                <Link className={rowClass} to="/gifts">
+                  <ShopIcon aria-hidden size={22} />
+                  <span className="flex-1 font-medium">{visitLabel}</span>
+                  <ChevronRightIcon aria-hidden size={18} />
+                </Link>
+              )}
             </Drawer.Body>
           </Drawer.Dialog>
         </Drawer.Content>

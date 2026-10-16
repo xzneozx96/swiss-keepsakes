@@ -35,6 +35,9 @@ import {
 } from "@/features/tours/lib/selectors";
 import { ageBandLabels } from "@/features/tours/discovery/age-bands";
 import { TourSelectionSheet } from "@/features/tours/discovery/tour-selection-sheet";
+import { TourKeepsakes } from "@/features/tours/discovery/tour-keepsakes";
+import { MaintenanceNotice } from "@/features/tours/discovery/maintenance-notice";
+import { TourSections } from "@/features/tours/discovery/tour-sections";
 import { TourItineraryMap } from "@/features/tours/map/tour-itinerary-map";
 import { useBack } from "@/hooks/use-back";
 import { useScrolledPast } from "@/hooks/use-scrolled-past";
@@ -66,7 +69,19 @@ export function TourDetailPage({
   return <TourDetail isBooking={isBooking} tour={tour} />;
 }
 
-function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
+/**
+ * C09. `preview` is M13's guest preview: the same page for a draft, with every action that
+ * would leave the page or write demo state (back, save, book) switched off.
+ */
+export function TourDetail({
+  tour,
+  isBooking,
+  preview = false,
+}: {
+  tour: Tour;
+  isBooking: boolean;
+  preview?: boolean;
+}) {
   const { t, language, intlLocale } = useLocale();
   const { state } = useDemo();
   const { data, now } = useTours();
@@ -78,7 +93,9 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
   const saved = isFavourite(`tour:${tour.id}`);
   const favourite = {
     isSaved: saved,
-    onToggle: () => toggle(`tour:${tour.id}`),
+    onToggle: () => {
+      if (!preview) toggle(`tour:${tour.id}`);
+    },
     label: t(saved ? "card.unsave" : "card.save", {
       name: pickText(tour.name, language).text,
     }),
@@ -114,7 +131,11 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
       ? t("tourDiscovery.policy.variesShort")
       : (policyTexts[0] ?? t("tourDiscovery.noDates"));
   const ages = ageBandLabels(tour.ageBands, t);
-  const back = useBack(() => void navigate({ to: "/tours", replace: true }));
+  const goBack = useBack(() => void navigate({ to: "/tours", replace: true }));
+  const back = () => {
+    if (!preview) goBack();
+  };
+  const paused = !!tour.maintenance?.active;
   const sections = [
     {
       id: "meeting",
@@ -170,6 +191,14 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
     tour.cancellationPolicy,
     ...tour.included,
     ...tour.itinerary.flatMap((stop) => [stop.name, stop.description]),
+    ...(tour.sections ?? []).flatMap((section) => [
+      section.title,
+      ...(section.body ? [section.body] : []),
+      ...(section.items ?? []).flatMap((item) => [
+        item.text,
+        ...(item.detail ? [item.detail] : []),
+      ]),
+    ]),
   ]
     .map((value) => pickText(value, language))
     .find((value) => value.isFallback);
@@ -230,6 +259,11 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
           }}
           subtitle={text(tour.summary)}
         />
+        {tour.maintenance?.active && (
+          <div className="pt-5">
+            <MaintenanceNotice maintenance={tour.maintenance} />
+          </div>
+        )}
         <section className="py-5">
           <SellerRow
             address={shopPlace.address}
@@ -244,17 +278,11 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
                 label: t("detail.seller.email"),
                 href: `mailto:${shop.email}?subject=${encodeURIComponent(t("detail.seller.emailSubject", { name: name.text }))}`,
               },
-              {
-                kind: "directions",
-                label: t("detail.seller.directions"),
-                href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shopPlace.address)}`,
-              },
             ]}
             hours={text(shopPlace.openingHours)}
             name={shop.name}
             sub={t("tourDetail.operatorSub")}
             title={t("tourDetail.operatorTitle", { shop: shop.name })}
-            visitLabel={t("detail.seller.visit")}
           />
         </section>
         <ul className="flex flex-col gap-5 border-t border-separator py-7">
@@ -371,6 +399,7 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
             <TourItineraryMap key={tour.id} tour={tour} />
           </section>
         )}
+        <TourSections checkedOn={tour.checkedOn} sections={tour.sections} />
         <section className="flex flex-col gap-3 border-t border-separator py-7">
           <h2 className="font-serif text-title">
             {t("tourDiscovery.included")}
@@ -438,7 +467,8 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
             </Accordion.Item>
           ))}
         </Accordion>
-        {!next && (
+        <TourKeepsakes ids={tour.keepsakeIds} />
+        {!next && !paused && (
           <EmptyState
             action={{ label: t("tourDiscovery.browse"), to: "/tours" }}
             icon={TourIcon}
@@ -456,19 +486,21 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
             {formatMoney(tour.adultPrice / 100, intlLocale)}
           </span>
           <span className="text-xs text-muted">
-            {next
-              ? date(next.startsAt)
-              : t(
-                  upcoming.length > 0
-                    ? "tourDiscovery.soldOut"
-                    : "tourDiscovery.noDates",
-                )}
+            {paused
+              ? t("tourDiscovery.maintenance.label")
+              : next
+                ? date(next.startsAt)
+                : t(
+                    upcoming.length > 0
+                      ? "tourDiscovery.soldOut"
+                      : "tourDiscovery.noDates",
+                  )}
           </span>
         </div>
         {/* Opens the C10 sheet over this entry, as C03's bar opens its sheet; closing it
             steps back here. A button: RouterLink pushes twice on Enter. */}
         <Button
-          isDisabled={!next}
+          isDisabled={!next || preview || paused}
           size="lg"
           onPress={() =>
             void navigate({
@@ -483,7 +515,9 @@ function TourDetail({ tour, isBooking }: { tour: Tour; isBooking: boolean }) {
           {t("tourDiscovery.choose")}
         </Button>
       </div>
-      <TourSelectionSheet isOpen={isBooking} tour={tour} />
+      {!preview && (
+        <TourSelectionSheet isOpen={isBooking && !paused} tour={tour} />
+      )}
     </div>
   );
 }

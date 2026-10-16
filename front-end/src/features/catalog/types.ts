@@ -7,15 +7,13 @@ export type LocalizedText = Partial<Record<Language, string>>;
 /** Money in Rappen (1 CHF = 100) so sums never drift. */
 export type Rappen = number;
 
-/** The four product categories (PRD §7.0). Fixed: a merchant cannot add, rename or remove them. */
-export type CategoryId = "keepsakes" | "stays" | "experiences" | "tours";
+/** The two product categories (PRD §7.0). Fixed: a merchant cannot add, rename or remove them. */
+export type CategoryId = "keepsakes" | "tours";
 
 export interface Category {
   id: CategoryId;
   name: LocalizedText;
   photo: string;
-  /** Stays and experiences are a later stage: the tile says "soon" and opens nothing yet. */
-  live: boolean;
 }
 
 /**

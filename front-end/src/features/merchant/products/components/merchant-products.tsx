@@ -107,19 +107,6 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
       label: t("products.tab.tours"),
       badge: all.tours.filter((r) => !r.archived).length,
     },
-    // Stays and experiences are a later stage (PRD §7.0): listed, with nothing in them yet.
-    {
-      id: "stays",
-      to: "/store/products/stays",
-      label: t("products.tab.stays"),
-      badge: t("home.soon"),
-    },
-    {
-      id: "experiences",
-      to: "/store/products/experiences",
-      label: t("products.tab.experiences"),
-      badge: t("home.soon"),
-    },
     {
       id: "pickup",
       to: "/store/products/pickup",
@@ -221,11 +208,6 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
 
   const panel = (id: ProductTab) => {
     if (isLoading && id === "pickup") return <PickupSkeleton />;
-    if (id === "stays" || id === "experiences") {
-      return (
-        <EmptyState icon={OptionIcon} message={t(`products.empty.${id}`)} />
-      );
-    }
     if (id === "pickup") {
       return places.length ? (
         <PickupPoints label={selectedLabel} rows={places} />

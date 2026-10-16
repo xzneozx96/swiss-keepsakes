@@ -98,6 +98,24 @@ export const tourDiscoveryEn = {
   "tourDiscovery.picker.legendFull": "Sold out",
   "tourDiscovery.picker.policyVaries":
     "Payment differs by date · shown for your choice",
+  "tourDiscovery.sections.optional": "Optional",
+  "tourDiscovery.sections.website": "Website",
+  "tourDiscovery.sections.checkedOn":
+    "Practical information checked on {date}.",
+  "tourDiscovery.maintenance.label": "Temporarily unavailable",
+  "tourDiscovery.maintenance.title": "Booking is paused for maintenance",
+  "tourDiscovery.maintenance.noReason":
+    "This tour cannot be booked at the moment.",
+  "tourDiscovery.maintenance.until": "Expected back {date}",
+  "tourDiscovery.maintenance.link": "More information",
+  "tourDiscovery.maintenance.existing":
+    "Bookings you already made are not affected.",
+  "tourDiscovery.keepsakes.title": "Take the story home",
+  "tourDiscovery.keepsakes.intro":
+    "Keepsakes that continue this tour. They are ordered separately from your booking, and the tour has no shopping stop.",
+  "tourDiscovery.keepsakes.confirmedTitle": "A keepsake from this tour",
+  "tourDiscovery.keepsakes.confirmedIntro":
+    "Optional. Order it separately, any time before your tour.",
 };
 
 export const tourDiscoveryDe: Record<keyof typeof tourDiscoveryEn, string> = {
@@ -203,4 +221,23 @@ export const tourDiscoveryDe: Record<keyof typeof tourDiscoveryEn, string> = {
   "tourDiscovery.picker.legendFull": "Ausgebucht",
   "tourDiscovery.picker.policyVaries":
     "Zahlung je nach Datum · bei Ihrer Wahl angezeigt",
+  "tourDiscovery.sections.optional": "Optional",
+  "tourDiscovery.sections.website": "Website",
+  "tourDiscovery.sections.checkedOn": "Praktische Angaben geprüft am {date}.",
+  "tourDiscovery.maintenance.label": "Vorübergehend nicht verfügbar",
+  "tourDiscovery.maintenance.title":
+    "Buchungen sind wegen Wartungsarbeiten pausiert",
+  "tourDiscovery.maintenance.noReason":
+    "Diese Tour kann im Moment nicht gebucht werden.",
+  "tourDiscovery.maintenance.until":
+    "Voraussichtlich wieder verfügbar ab {date}",
+  "tourDiscovery.maintenance.link": "Weitere Informationen",
+  "tourDiscovery.maintenance.existing":
+    "Bereits gemachte Buchungen sind nicht betroffen.",
+  "tourDiscovery.keepsakes.title": "Die Geschichte mitnehmen",
+  "tourDiscovery.keepsakes.intro":
+    "Andenken, die diese Tour fortsetzen. Sie werden getrennt von Ihrer Buchung bestellt, und die Tour hat keinen Einkaufsstopp.",
+  "tourDiscovery.keepsakes.confirmedTitle": "Ein Andenken zu dieser Tour",
+  "tourDiscovery.keepsakes.confirmedIntro":
+    "Optional. Separat bestellbar, jederzeit vor Ihrer Tour.",
 };

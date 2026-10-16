@@ -1,8 +1,8 @@
 /**
- * The story under each time block on C01 (spec §4.1): a short walk for two hours, a lake
- * day for a few days. A block shows its story only when it exists in the guest's language.
+ * The story under a block on C01 (spec §4.1), shown only when it exists in the guest's
+ * language: a lake day under Tours, the brand story under Victorinox.
  */
 export const timeBlockStories = {
-  quick: "musegg-morning",
   fewDays: "lake-steamboat",
+  victorinox: "victorinox-story",
 } as const;

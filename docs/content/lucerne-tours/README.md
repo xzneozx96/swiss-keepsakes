@@ -1,5 +1,8 @@
 # Lucerne tours: what changed and what the client must confirm
 
+> **Superseded 16 Oct 2026.** The eleven tours below were removed from the app. The app now shows only the three curated tours from `client-resources/Swiss_Native_Lucerne_Tour_01.pdf` to `_03.pdf`. The research notes, stop stories (`front-end/src/features/tours/lucerne/stops.ts`) and photos here are kept as source material for the Stories articles.
+
+
 Source: client brief `[EN] Lucerne_Storyteling.pdf` (Oct 2026). The five sample tours were replaced by
 the 11 tours below. All prices, capacities, departure dates and meeting points are **sample values**.
 

@@ -11,6 +11,8 @@ import { SurfaceCard } from "@/components/surface-card";
 import { useLocale } from "@/contexts/locale-context";
 import { TripProfile } from "@/features/checkout/components/trip-profile";
 import { useTripProfile } from "@/features/checkout/hooks/use-trip-profile";
+import { TourKeepsakes } from "@/features/tours/discovery/tour-keepsakes";
+import { useTours } from "@/features/tours/hooks/use-tours";
 import { bookingBalance } from "@/features/tours/lib/selectors";
 import { pickText } from "@/lib/localized";
 
@@ -20,6 +22,7 @@ export function TourConfirmedPage({ bookingId }: { bookingId: string }) {
   const { money, date } = useBookingFormat();
   const navigate = useNavigate();
   const trip = useTripProfile({ kind: "tour", bookingId });
+  const tour = useTours().tours.find((item) => item.id === booking?.tourId);
 
   if (!booking) return <MissingBooking />;
   if (booking.status !== "confirmed")
@@ -91,6 +94,7 @@ export function TourConfirmedPage({ bookingId }: { bookingId: string }) {
           {t("tourBooking.view")}
         </Button>
       </section>
+      <TourKeepsakes ids={tour?.keepsakeIds} variant="confirmation" />
       <TripProfile
         answers={trip.answers}
         kind="tour"

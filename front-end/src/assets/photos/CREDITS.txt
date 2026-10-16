@@ -166,3 +166,82 @@ https://commons.wikimedia.org/wiki/File:UNESCO_Biosphäre_Entlebuch_12.JPG
 finsterwald-beehouse.jpg
 "Bienenstand OW 021 Bienenhaltung im Kanton Obwalden (a beehouse in Obwalden, shown as an example)" by JoachimKohler-HB, CC BY-SA 4.0, Wikimedia Commons.
 https://commons.wikimedia.org/wiki/File:Bienenstand_OW_021_Bienenhaltung_im_Kanton_Obwalden.jpg
+
+spreuer-totentanz.jpg
+"Luzerner Totentanz-16" by Foto-Max 1234, CC BY-SA 4.0, Wikimedia Commons. One of the Dance of Death paintings under the roof of Spreuer Bridge.
+https://commons.wikimedia.org/wiki/File:Luzerner_Totentanz-16.jpg
+
+spreuer-bridge.jpg
+"Nadelwehr und Spreuerbrücke Luzern" by JoachimKohler-HB, CC BY-SA 4.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:Nadelwehr_und_Spreuerbr%C3%BCcke_Luzern.jpg
+
+nadelwehr.jpg
+"Nadelwehr in der Reuss in Luzern (2019)" by JoachimKohler-HB, CC BY-SA 4.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:Nadelwehr_in_der_Reuss_in_Luzern_(2019).jpg
+
+---- Hammetschwand lift stories (16 Oct 2026; each resized to 1000x750 JPEG) ----
+
+hammetschwand-lift.jpg
+"Hammetschwand-Lift Oben" by Tschubby, CC BY-SA 3.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:Hammetschwand-Lift_Oben.jpg
+
+hammetschwand-cliff-path.jpg
+"Bürgenstock, Felsenweg zum Hammetschwand-Lift - panoramio" by qwesy qwesy, CC BY 3.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:B%C3%BCrgenstock,_Felsenweg_zum_Hammetschwand-Lift_-_panoramio.jpg
+
+hammetschwand-view.jpg
+"Hammetschwand-Lift N" by Tschubby, CC BY-SA 3.0, Wikimedia Commons. View north from the top platform: Lake Lucerne and the Rigi.
+https://commons.wikimedia.org/wiki/File:Hammetschwand-Lift_N.jpg
+
+pilatus-dragon-ride.jpg
+"Pilatus-gipfel-luftseilbahn" by Mboesch, CC BY-SA 4.0, Wikimedia Commons. The Dragon Ride aerial cableway at the Pilatus summit.
+https://commons.wikimedia.org/wiki/File:Pilatus-gipfel-luftseilbahn.jpg
+
+pilatus-fraekmuentegg.jpg
+"Fräkmüntegg, Kriens, Switzerland" by Eluveitie, CC BY-SA 3.0, Wikimedia Commons. Fräkmüntegg station.
+https://commons.wikimedia.org/wiki/File:Fräkmüntegg,_Kriens,_Switzerland.JPG
+
+rigi-vitznau-pier.jpg
+"Vitznau pier Lake Lucerne" by Paradise Chronicle, CC BY-SA 4.0, Wikimedia Commons. Vitznau pier on Lake Lucerne.
+https://commons.wikimedia.org/wiki/File:Vitznau_pier_Lake_Lucerne.jpg
+
+rigi-kaltbad.jpg
+"Zug der Vitznau-Rigi-Bahn am Bahnhof Rigi-Kaltbad" by JoachimKohler-HB, CC BY-SA 4.0, Wikimedia Commons. Rigi cogwheel train at Rigi Kaltbad.
+https://commons.wikimedia.org/wiki/File:Zug_der_Vitznau-Rigi-Bahn_am_Bahnhof_Rigi-Kaltbad.jpg
+
+rigi-kulm.jpg
+"Bahnhof Rigi Kulm 2004 2" by P. E. Dressel, CC BY-SA 4.0, Wikimedia Commons. Rigi Kulm station with Pilatus beyond.
+https://commons.wikimedia.org/wiki/File:Bahnhof_Rigi_Kulm_2004_2.jpg
+
+rigi-kulm-restaurant.jpg
+"20240906.Rigi Kulm.-033" by Bybbisch94, CC BY 4.0, Wikimedia Commons. The restaurant at Rigi Kulm.
+https://commons.wikimedia.org/wiki/File:20240906.Rigi_Kulm.-033.jpg
+
+rigi-vitznau-train.jpg
+"Vitznau-Rigi-Bahn Vitznau Bahnhof" by Frank Nowotny, CC BY-SA 4.0, Wikimedia Commons. Vitznau-Rigi-Bahn at Vitznau station.
+https://commons.wikimedia.org/wiki/File:Vitznau-Rigi-Bahn_Vitznau_Bahnhof.jpg
+
+---- Victorinox product photos (16 Oct 2026; each resized to 1000x750 JPEG on white) ----
+Official product photos from victorinox.com, (c) Victorinox AG. Used as demo images in the prototype only.
+The client needs Victorinox's written permission before these go into a public build.
+
+victorinox-classic-sd.jpg
+"Classic SD, red" (item 0.6223), 58 mm. Victorinox AG, victorinox.com.
+https://www.victorinox.com/en-CH/Products/Swiss-Army-Knife%E2%84%A2-and-Tools/Essentials/Classic-SD-Classic-Colors/p/0.6223.G
+
+victorinox-spartan.jpg
+"Spartan, red" (item 1.3603), 91 mm. Victorinox AG, victorinox.com.
+https://www.victorinox.com/en/Products/Swiss-Army-Knives/Medium-Pocket-Knives/Spartan/p/1.3603
+
+victorinox-picknicker.jpg
+"Picknicker, red" (item 0.8353), 111 mm. Victorinox AG, victorinox.com.
+https://www.victorinox.com/en/Products/Swiss-Army-Knives/Large-Pocket-Knives/Picknicker/p/0.8353
+
+lucerne-swan.jpg
+Crop of lucerne-water-tower.jpg (the swan and the bridge), 1000x750. "Luzern-1170926" by ermell, CC BY-SA 3.0, Wikimedia Commons.
+https://commons.wikimedia.org/wiki/File:Luzern-1170926.jpg
+
+vx-*.jpg (12 files, 1000x750)
+Product covers for the Victorinox designs: the client's concept art of each knife (front of the handle, cut from
+the boards the client supplied on 16.10.2026) on a cream ground. Concept renders, not photos of real knives.
+assets/brand/victorinox/*.webp are the transparent cut-outs, read through lib/victorinox-art.ts.

@@ -7,12 +7,10 @@ import { isProductTab } from "@/features/merchant/products/hooks/use-merchant-pr
 
 const TAB_PAGES = {
   tours: "/store/products/tours",
-  stays: "/store/products/stays",
-  experiences: "/store/products/experiences",
   pickup: "/store/products/pickup",
 } as const;
 
-// M11 Products › Keepsakes. Tours, Stays, Experiences and M14 Pickup points are pages next
+// M11 Products › Keepsakes. Tours and M14 Pickup points are pages next
 // to it; the old `?tab=` links still land on them. M12 and M13 are
 // /store/products/gifts/$productId and /store/products/tours/$tourId.
 export const Route = createFileRoute("/store/products/")({

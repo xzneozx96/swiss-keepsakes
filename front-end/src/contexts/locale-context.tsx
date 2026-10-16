@@ -72,6 +72,34 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Renders its children in a fixed language without touching the visitor's saved choice: M13's
+ * guest preview shows the page in English or German whatever language the merchant uses.
+ */
+export function LocaleOverride({
+  language,
+  children,
+}: {
+  language: Language;
+  children: React.ReactNode;
+}) {
+  const value = useMemo<LocaleContextValue>(
+    () => ({
+      language,
+      intlLocale: intlLocales[language],
+      setLanguage: () => undefined,
+      t: (key, vars) => fill(messages[language][key], vars),
+    }),
+    [language],
+  );
+
+  return (
+    <LocaleContext.Provider value={value}>
+      <I18nProvider locale={value.intlLocale}>{children}</I18nProvider>
+    </LocaleContext.Provider>
+  );
+}
+
 export function useLocale(): LocaleContextValue {
   const context = useContext(LocaleContext);
 

@@ -5,6 +5,11 @@ export const Route = createFileRoute("/lab/")({ component: LabIndex });
 
 const experiments = [
   {
+    to: "/lab/victorinox" as const,
+    title: "Victorinox section options",
+    note: "Five layouts for the partner section on the home screen (16.10.2026).",
+  },
+  {
     to: "/lab/calendar" as const,
     title: "Merchant calendar",
     note: "Calendar-only direction: mobile-first day, week and month views, date navigation and event details on tap.",

@@ -22,7 +22,7 @@ import { useEffect } from "react";
 
 import { LANGUAGES, hasText, languageStatus } from "../lib/completeness";
 
-import { LanguageChip, PublishChip } from "./status-chips";
+import { LanguageChip, MaintenanceChip, PublishChip } from "./status-chips";
 
 import { AutoTextArea } from "@/components/auto-textarea";
 import { EditorFormSkeleton } from "@/components/layout/detail-skeletons";
@@ -94,6 +94,7 @@ export function EditorHeader({
   subtitle,
   published,
   archived = false,
+  maintenance = false,
   languages,
 }: {
   tab: Exclude<ProductTab, "pickup">;
@@ -101,6 +102,8 @@ export function EditorHeader({
   subtitle: string;
   published: boolean;
   archived?: boolean;
+  /** A tour paused for maintenance (R21). */
+  maintenance?: boolean;
   languages: LanguageStatus;
 }) {
   const { t } = useLocale();
@@ -132,6 +135,7 @@ export function EditorHeader({
           ) : (
             <PublishChip published={published} />
           )}
+          {maintenance && !archived && <MaintenanceChip />}
           <LanguageChip status={languages} />
         </div>
       </div>

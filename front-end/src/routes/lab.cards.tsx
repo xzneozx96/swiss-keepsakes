@@ -22,7 +22,11 @@ import { pickText } from "@/lib/localized";
 /** Lab: compare gift-card layouts at phone width. Not part of the product. */
 export const Route = createFileRoute("/lab/cards")({ component: CardLab });
 
-const sampleIds = ["p-chocolate", "p-knife", "p-swiss-chocolate-box"];
+const sampleIds = [
+  "p-chocolate",
+  "p-vx-chapel-bridge",
+  "p-swiss-chocolate-box",
+];
 
 const options = [
   {

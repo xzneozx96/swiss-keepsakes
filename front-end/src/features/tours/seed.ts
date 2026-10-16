@@ -9,12 +9,17 @@ import type {
 
 import { firstPaymentAmount, tourTotal } from "./lib/selectors";
 import { operationsFixtures } from "./merchant/lib/fixtures";
-import { lucerneDepartures, lucerneTours } from "./lucerne/tours";
+import { pilatus, pilatusDepartures } from "./lucerne/pilatus";
+import { rigi, rigiDepartures } from "./lucerne/rigi";
+import {
+  thingsThatRemain,
+  thingsThatRemainDepartures,
+} from "./lucerne/things-that-remain";
 
-export const tourSeed: Tour[] = lucerneTours;
+export const tourSeed: Tour[] = [thingsThatRemain, pilatus, rigi];
 export function emptyTourDraft(): TourDraft {
   return {
-    tourId: "lucerne-90",
+    tourId: "things-that-remain",
     departureId: "walk-16",
     adults: 2,
     children: 1,
@@ -86,7 +91,7 @@ export function createTourSeed(): TourData {
   const departures = [
     {
       id: "walk-13",
-      tourId: "lucerne-90",
+      tourId: "things-that-remain",
       startsAt: "2026-10-13T07:00:00+02:00",
       capacity: 12,
       policy: "deposit",
@@ -95,8 +100,8 @@ export function createTourSeed(): TourData {
     },
     {
       id: "walk-16",
-      tourId: "lucerne-90",
-      startsAt: "2026-10-16T10:00:00+02:00",
+      tourId: "things-that-remain",
+      startsAt: "2026-10-16T09:00:00+02:00",
       capacity: 12,
       policy: "deposit",
       balanceDueAt: "2026-10-15T18:00:00+02:00",
@@ -104,27 +109,27 @@ export function createTourSeed(): TourData {
     },
     {
       id: "walk-18",
-      tourId: "lucerne-90",
-      startsAt: "2026-10-18T14:00:00+02:00",
+      tourId: "things-that-remain",
+      startsAt: "2026-10-18T09:00:00+02:00",
       capacity: 12,
       policy: "full",
-      balanceDueAt: "2026-10-18T14:00:00+02:00",
+      balanceDueAt: "2026-10-18T09:00:00+02:00",
       closed: false,
     },
     {
       id: "walk-20",
-      tourId: "lucerne-90",
-      startsAt: "2026-10-20T10:00:00+02:00",
+      tourId: "things-that-remain",
+      startsAt: "2026-10-20T09:00:00+02:00",
       capacity: 12,
       policy: "full",
-      balanceDueAt: "2026-10-20T10:00:00+02:00",
+      balanceDueAt: "2026-10-20T09:00:00+02:00",
       closed: false,
     },
     {
       id: "history-17",
-      tourId: "time-history-loyalty",
-      startsAt: "2026-10-17T10:00:00+02:00",
-      capacity: 16,
+      tourId: "pilatus-above-the-city",
+      startsAt: "2026-10-17T08:30:00+02:00",
+      capacity: 8,
       policy: "later",
       balanceDueAt: "2026-10-16T18:00:00+02:00",
       closed: false,
@@ -132,8 +137,8 @@ export function createTourSeed(): TourData {
     // Last seats: 9 of 12 seats are booked, so the sample group of 3 takes the last ones.
     {
       id: "walk-23",
-      tourId: "lucerne-90",
-      startsAt: "2026-10-23T10:00:00+02:00",
+      tourId: "things-that-remain",
+      startsAt: "2026-10-23T09:00:00+02:00",
       capacity: 12,
       policy: "deposit",
       balanceDueAt: "2026-10-22T18:00:00+02:00",
@@ -141,14 +146,16 @@ export function createTourSeed(): TourData {
     },
     {
       id: "quiet-17",
-      tourId: "quieter-lives",
-      startsAt: "2026-10-17T14:00:00+02:00",
+      tourId: "rigi-from-lake-to-sky",
+      startsAt: "2026-10-17T08:45:00+02:00",
       capacity: 6,
       policy: "full",
-      balanceDueAt: "2026-10-17T14:00:00+02:00",
+      balanceDueAt: "2026-10-17T08:45:00+02:00",
       closed: false,
     },
-    ...lucerneDepartures,
+    ...thingsThatRemainDepartures,
+    ...pilatusDepartures,
+    ...rigiDepartures,
   ] satisfies TourData["departures"];
   const tour = tourSeed[0];
   const record = {
@@ -158,7 +165,7 @@ export function createTourSeed(): TourData {
     tourName: tour.name,
     meetingPoint: tour.meetingPoint,
     startsAt: "2026-10-13T07:00:00+02:00",
-    endsAt: "2026-10-13T08:30:00+02:00",
+    endsAt: "2026-10-13T10:00:00+02:00",
     adults: 2,
     children: 1,
     infants: 0,
@@ -235,8 +242,8 @@ export function createTourSeed(): TourData {
       contactName: "Tom Becker",
       phone: "+49 151 555 0143",
       departureId: "walk-16",
-      startsAt: "2026-10-16T10:00:00+02:00",
-      endsAt: "2026-10-16T11:30:00+02:00",
+      startsAt: "2026-10-16T09:00:00+02:00",
+      endsAt: "2026-10-16T12:00:00+02:00",
       balanceDueAt: "2026-10-15T18:00:00+02:00",
       status: "confirmed",
       holdUntil: null,

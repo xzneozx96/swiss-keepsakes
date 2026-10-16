@@ -4,7 +4,7 @@ import type {
   PickupPlace,
   Product,
 } from "@/features/catalog/types";
-import type { Tour } from "@/features/tours/types";
+import type { Tour, TourSection } from "@/features/tours/types";
 import type { LocalizedRich } from "@/lib/rich-text";
 
 import { isEmptyDoc } from "@/lib/rich-text";
@@ -26,7 +26,8 @@ export type TextFieldId =
   | "conditions"
   | "openingHours"
   | "instructions"
-  | "longStory";
+  | "longStory"
+  | "sections";
 
 export interface RequiredText {
   id: TextFieldId;
@@ -107,6 +108,31 @@ export function giftText(
   ];
 }
 
+/**
+ * The text of the sections guests see: titles, bodies, and each row's text and detail. Row
+ * labels (times, fact names) and staff sections are left out: they are often the same in
+ * both languages, or never shown to guests.
+ */
+export function sectionTexts(
+  sections: TourSection[] | undefined,
+): RequiredText[] {
+  const filled = (text: LocalizedText | undefined): text is LocalizedText =>
+    !!text && LANGUAGES.some((language) => hasText(text, language));
+
+  return (sections ?? []).flatMap((section) => [
+    { id: "sections" as const, text: section.title },
+    ...(filled(section.body)
+      ? [{ id: "sections" as const, text: section.body }]
+      : []),
+    ...(section.items ?? []).flatMap((item) => [
+      { id: "sections" as const, text: item.text },
+      ...(filled(item.detail)
+        ? [{ id: "sections" as const, text: item.detail }]
+        : []),
+    ]),
+  ]);
+}
+
 /** Tour text shown on C08–C11, and the long story (a must since 15.10.2026); stop notes stay optional. */
 export function tourText(
   tour: Pick<
@@ -122,6 +148,7 @@ export function tourText(
   > & {
     itinerary: Pick<Tour["itinerary"][number], "name" | "description">[];
     longStory?: { title: LocalizedText; body: LocalizedRich };
+    sections?: TourSection[];
   },
 ): RequiredText[] {
   return [
@@ -138,6 +165,7 @@ export function tourText(
     { id: "conditions", text: tour.conditions },
     { id: "cancellation", text: tour.cancellationPolicy },
     { id: "longStory", text: storyText(tour.longStory) },
+    ...sectionTexts(tour.sections),
   ];
 }
 

@@ -15,6 +15,15 @@ export function PublishChip({ published }: { published: boolean }) {
   );
 }
 
+/** "Under maintenance": the tour is paused and guests cannot book it (R21). */
+export function MaintenanceChip() {
+  const { t } = useLocale();
+
+  return (
+    <StatusChip tone="warning">{t("products.maintenance.chip")}</StatusChip>
+  );
+}
+
 const languageTone: Record<LanguageStatus, StatusTone> = {
   complete: "neutral",
   "de-missing": "warning",

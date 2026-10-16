@@ -4,7 +4,16 @@ import type { Language } from "@/contexts/locale-context";
 import type { LocalizedText } from "@/features/catalog/types";
 import type { Departure, Tour } from "@/features/tours/types";
 
-import { Button, FieldError, Label, NumberField } from "@heroui/react";
+import {
+  Button,
+  Description,
+  FieldError,
+  Input,
+  Label,
+  NumberField,
+  Switch,
+  TextField,
+} from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import { useId, useRef, useState } from "react";
 
@@ -17,9 +26,11 @@ import {
   LocalizedField,
   useFocusFirstInvalid,
 } from "./editor-parts";
+import { DetailsStep } from "./details-step";
 import { CommissionCard } from "./gift-editor";
-import { ItineraryCard } from "./itinerary/itinerary-editor";
 import { PhotoField } from "./photo-field";
+import { Group, NavRow, rowHairline } from "./settings-rows";
+import { PracticalInfoStep } from "./sections-editor";
 import {
   ArchivedNotice,
   ReviewOverview,
@@ -31,18 +42,21 @@ import {
   useStepBar,
 } from "./step-shell";
 import { StoryCard } from "./story-card";
+import { TourPreview } from "./tour-preview";
 
 import { DateTile } from "@/components/date-tile";
 import {
   BookingsIcon,
   ChevronRightIcon,
   ContentIcon,
+  InfoIcon,
   PayLaterIcon,
   PhotoAddIcon,
-  PickupIcon,
   PlusIcon,
 } from "@/components/icons";
 import { Media } from "@/components/media";
+import { RowIcon, rowClass } from "@/features/account/components/settings-list";
+import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
 import { useLocale } from "@/contexts/locale-context";
 import { DetailCard } from "@/features/merchant/order-detail/components/detail-card";
 import { useTours } from "@/features/tours/hooks/use-tours";
@@ -140,91 +154,6 @@ function BasicsTextCard({
         rows={4}
       />
     </DetailCard>
-  );
-}
-
-/**
- * Step 2, in the step's language: the itinerary (map and stops), what is included (one item
- * each; "Add item"), what is not, the meeting point and the conditions.
- */
-function DetailsCards({
-  editor,
-  language,
-}: {
-  editor: Editor;
-  language: Language;
-}) {
-  const { t } = useLocale();
-  const { edit, change } = editor;
-  const itemError = (id: "itinerary" | "included", value: LocalizedText) =>
-    // An item cleared in both languages is removed on save, so it is never an error.
-    hasText(value, "en") || hasText(value, "de") || id === "itinerary"
-      ? editor.textError(id, language, value)
-      : undefined;
-
-  return (
-    <>
-      <DetailCard icon={PickupIcon} title={t("products.details.meeting")}>
-        <TourField
-          editor={editor}
-          label={t("products.field.meetingPoint")}
-          language={language}
-          name="meetingPoint"
-        />
-      </DetailCard>
-      <ItineraryCard editor={editor} language={language} />
-      <DetailCard icon={ContentIcon} title={t("products.field.included")}>
-        <p className="text-xs text-muted">{t("products.included.hint")}</p>
-        {edit.included.map((item, index) => (
-          <LocalizedField
-            key={item.key}
-            error={itemError("included", item.text)}
-            label={t("products.field.includedItem", { n: index + 1 })}
-            language={language}
-            value={item.text}
-            onChange={(text) =>
-              change({
-                included: edit.included.map((i) =>
-                  i.key === item.key ? { ...i, text } : i,
-                ),
-              })
-            }
-          />
-        ))}
-        <Button
-          className="w-fit"
-          size="sm"
-          variant="tertiary"
-          onPress={() =>
-            change({
-              included: [
-                ...edit.included,
-                { key: `new-${Date.now().toString(36)}`, text: {} },
-              ],
-            })
-          }
-        >
-          <PlusIcon aria-hidden size={16} />
-          {t("products.included.add")}
-        </Button>
-        <TourField
-          editor={editor}
-          label={t("products.field.excluded")}
-          language={language}
-          name="excluded"
-          rows={2}
-        />
-      </DetailCard>
-      <DetailCard icon={ContentIcon} title={t("products.field.conditions")}>
-        <TourField
-          editor={editor}
-          label={t("products.field.conditions")}
-          language={language}
-          name="conditions"
-          rows={3}
-        />
-      </DetailCard>
-    </>
   );
 }
 
@@ -393,34 +322,109 @@ function NoDeparturesYet({ error }: { error?: string }) {
   const { t } = useLocale();
 
   return (
-    <DetailCard
-      icon={BookingsIcon}
-      id="tour-departures"
-      title={t("products.departures.title")}
-    >
+    <Group title={t("products.departures.title")}>
       <p
-        className="rounded-2xl bg-surface-secondary p-4 text-sm text-muted"
+        className="px-4 py-4 text-sm text-muted"
         data-error-focus={error ? "true" : undefined}
         tabIndex={error ? -1 : undefined}
       >
         {t("products.departures.saveFirst")}
       </p>
       {error && (
-        <p data-visible className="field-error" role="alert">
+        <p data-visible className="field-error px-4 pb-3" role="alert">
           {error}
         </p>
       )}
-    </DetailCard>
+    </Group>
   );
 }
 
+/** One upcoming departure as a row: date tile, start, phase, seats booked and the payment rule. */
+function DepartureRow({
+  row,
+  onPress,
+}: {
+  row: {
+    departure: Departure;
+    phase: ReturnType<typeof departurePhase>;
+    seats: ReturnType<typeof departureSeats>;
+  };
+  onPress: () => void;
+}) {
+  const { t } = useLocale();
+  const { date, weekday, day, month, dayMonth, time } = useTourFormatting();
+  const { departure, phase, seats } = row;
+
+  return (
+    <button
+      aria-label={t("products.departures.edit", {
+        date: date(departure.startsAt),
+      })}
+      className={`${rowClass} min-w-0`}
+      type="button"
+      onClick={onPress}
+    >
+      <DateTile
+        date={{
+          weekday: weekday(departure.startsAt),
+          day: day(departure.startsAt),
+          month: month(departure.startsAt),
+        }}
+      />
+      <span className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="flex items-center gap-2">
+          <span className="font-medium tabular-nums">
+            {time(departure.startsAt)}
+          </span>
+          <ToneLine tone={phaseChip[phase].tone}>
+            {t(phaseChip[phase].key)}
+          </ToneLine>
+        </span>
+        <span className="text-sm text-muted tabular-nums">
+          {t("tourMerchant.seatsBooked", {
+            count: seats.confirmed,
+            capacity: seats.capacity,
+          })}{" "}
+          ·{" "}
+          {t("tourMerchant.seatsDetail", {
+            held: seats.held,
+            free: seats.available,
+          })}
+        </span>
+        <span
+          aria-hidden
+          className="h-1 overflow-hidden rounded-full bg-default"
+        >
+          <span
+            className="block h-full rounded-full bg-foreground"
+            style={{
+              width: `${seats.capacity ? Math.min(100, (seats.confirmed / seats.capacity) * 100) : 0}%`,
+            }}
+          />
+        </span>
+        <span className="truncate text-xs text-muted tabular-nums">
+          {t(`products.departures.policy.${departure.policy}`, {
+            due: `${dayMonth(departure.balanceDueAt)}, ${time(departure.balanceDueAt)}`,
+          })}
+        </span>
+      </span>
+      <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={20} />
+    </button>
+  );
+}
+
+/**
+ * Departures as a settings-style group (the account screen's pattern): the next three as rows,
+ * the rest in a sheet, "Add departure" and the bookings link as rows. A row opens the seats
+ * sheet; Add opens the new-departure sheet. Departures save as soon as they change.
+ */
 function DeparturesCard({ tour, error }: { tour: Tour; error?: string }) {
   const { t } = useLocale();
   const { data, departures, now } = useTours();
-  const { date, money, weekday, day, month, dayMonth, time } =
-    useTourFormatting();
+  const { money } = useTourFormatting();
   const [adding, setAdding] = useState(false);
   const [seatsFor, setSeatsFor] = useState<string | null>(null);
+  const [listOpen, setListOpen] = useState(false);
   const upcoming = departures
     .filter((d) => d.tourId === tour.id)
     .map((departure) => ({
@@ -434,121 +438,102 @@ function DeparturesCard({ tour, error }: { tour: Tour; error?: string }) {
         Date.parse(a.departure.startsAt) - Date.parse(b.departure.startsAt),
     );
   const editing = upcoming.find((row) => row.departure.id === seatsFor);
-  const policyLine = (departure: Departure) =>
-    t(`products.departures.policy.${departure.policy}`, {
-      due: `${dayMonth(departure.balanceDueAt)}, ${time(departure.balanceDueAt)}`,
-    });
+  const preview = upcoming.slice(0, 3);
+  const separate = "border-t border-separator/70";
 
   return (
-    <DetailCard
-      icon={BookingsIcon}
-      id="tour-departures"
-      title={t("products.departures.title")}
-      trailing={
-        <Button
-          className="shrink-0"
-          data-error-focus={error ? "true" : undefined}
-          size="sm"
-          variant="tertiary"
-          onPress={() => setAdding(true)}
-        >
-          <PlusIcon aria-hidden size={16} />
-          {t("products.departures.add")}
-        </Button>
-      }
-    >
-      <p className="text-sm text-pretty text-muted">
-        {t("products.departures.note")}
-      </p>
-      <p className="text-sm text-muted tabular-nums">
-        {t("products.departure.prices", {
-          prices: t("products.departures.price", {
-            adult: money(tour.adultPrice),
-            child: money(tour.childPrice),
-          }),
-        })}
-      </p>
-      {upcoming.length ? (
-        <ul className="flex flex-col divide-y divide-separator">
-          {upcoming.map(({ departure, phase, seats }) => (
-            <li key={departure.id} className="py-0.5 first:pt-0 last:pb-0">
-              <button
-                aria-label={t("products.departures.edit", {
-                  date: date(departure.startsAt),
-                })}
-                className="flex min-h-11 w-full items-center gap-3 rounded-2xl py-2 text-start outline-none hover:bg-surface-secondary focus-visible:focus-ring"
-                type="button"
-                onClick={() => setSeatsFor(departure.id)}
-              >
-                <DateTile
-                  date={{
-                    weekday: weekday(departure.startsAt),
-                    day: day(departure.startsAt),
-                    month: month(departure.startsAt),
-                  }}
-                />
-                <span className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="flex items-center gap-2">
-                    <span className="font-medium tabular-nums">
-                      {time(departure.startsAt)}
-                    </span>
-                    <ToneLine tone={phaseChip[phase].tone}>
-                      {t(phaseChip[phase].key)}
-                    </ToneLine>
-                  </span>
-                  <span className="flex items-baseline justify-between gap-2 text-sm tabular-nums">
-                    <span className="font-semibold whitespace-nowrap">
-                      {t("tourMerchant.seatsBooked", {
-                        count: seats.confirmed,
-                        capacity: seats.capacity,
-                      })}
-                    </span>
-                    <span className="truncate text-xs text-muted">
-                      {t("tourMerchant.seatsDetail", {
-                        held: seats.held,
-                        free: seats.available,
-                      })}
-                    </span>
-                  </span>
-                  <span
-                    aria-hidden
-                    className="h-1 overflow-hidden rounded-full bg-default"
-                  >
-                    <span
-                      className="block h-full rounded-full bg-foreground"
-                      style={{
-                        width: `${seats.capacity ? Math.min(100, (seats.confirmed / seats.capacity) * 100) : 0}%`,
-                      }}
-                    />
-                  </span>
-                  <span className="truncate text-xs text-muted tabular-nums">
-                    {policyLine(departure)}
-                  </span>
-                </span>
-                <ChevronRightIcon
-                  aria-hidden
-                  className="shrink-0 text-muted"
-                  size={18}
-                />
-              </button>
+    <Group title={t("products.departures.title")}>
+      <div className="flex flex-col gap-1 px-4 py-3 text-sm text-muted">
+        <p className="text-pretty">{t("products.departures.note")}</p>
+        <p className="tabular-nums">
+          {t("products.departure.prices", {
+            prices: t("products.departures.price", {
+              adult: money(tour.adultPrice),
+              child: money(tour.childPrice),
+            }),
+          })}
+        </p>
+      </div>
+      {preview.length ? (
+        <ul className={separate}>
+          {preview.map((row) => (
+            <li key={row.departure.id} className={rowHairline}>
+              <DepartureRow
+                row={row}
+                onPress={() => setSeatsFor(row.departure.id)}
+              />
             </li>
           ))}
         </ul>
       ) : (
-        <p className="rounded-2xl bg-surface-secondary p-4 text-sm text-muted">
+        <p className={`${separate} px-4 py-4 text-sm text-muted`}>
           {t("products.departures.none")}
         </p>
       )}
-      <Link
-        className="w-fit rounded-lg text-sm font-medium underline underline-offset-4 outline-none focus-visible:focus-ring"
-        to="/store/bookings"
+      {upcoming.length > preview.length && (
+        <div className={separate}>
+          <NavRow
+            icon={BookingsIcon}
+            title={t("products.departures.showAll", {
+              count: upcoming.length,
+            })}
+            onPress={() => setListOpen(true)}
+          />
+        </div>
+      )}
+      <div
+        className={separate}
+        data-error-focus={error ? "true" : undefined}
+        tabIndex={error ? -1 : undefined}
       >
-        {t("products.departures.all")}
-      </Link>
+        <NavRow
+          icon={PlusIcon}
+          isInvalid={!!error}
+          title={t("products.departures.add")}
+          tone="accent"
+          onPress={() => setAdding(true)}
+        />
+      </div>
+      <div className={separate}>
+        <Link className={`${rowClass} min-w-0`} to="/store/bookings">
+          <RowIcon icon={BookingsIcon} />
+          <span className="flex-1 font-medium">
+            {t("products.departures.all")}
+          </span>
+          <ChevronRightIcon
+            aria-hidden
+            className="shrink-0 text-muted"
+            size={20}
+          />
+        </Link>
+      </div>
       {error && (
-        <p data-visible className="field-error" role="alert">
+        <p data-visible className="field-error px-4 pb-3" role="alert">
           {error}
         </p>
+      )}
+      {listOpen && !editing && (
+        <SheetFrame
+          isOpen
+          footer={
+            <Button fullWidth size="lg" onPress={() => setListOpen(false)}>
+              {t("products.sections.sheetDone")}
+            </Button>
+          }
+          title={t("products.departures.title")}
+          onClose={() => setListOpen(false)}
+        >
+          <ul className="-my-2 flex flex-col">
+            {upcoming.map((row) => (
+              <li key={row.departure.id} className={rowHairline}>
+                <DepartureRow
+                  row={row}
+                  onPress={() => setSeatsFor(row.departure.id)}
+                />
+              </li>
+            ))}
+          </ul>
+        </SheetFrame>
       )}
       {adding && (
         <NewDepartureSheet
@@ -565,6 +550,78 @@ function DeparturesCard({ tour, error }: { tour: Tour; error?: string }) {
           seats={editing.seats}
           onClose={() => setSeatsFor(null)}
         />
+      )}
+    </Group>
+  );
+}
+
+/**
+ * Maintenance (R21): pauses booking for this tour. Guests see the reason and an optional
+ * link, and cannot book; bookings and departures that already exist are not changed, and the
+ * status ends only when the merchant turns it off.
+ */
+function MaintenanceCard({ editor }: { editor: Editor }) {
+  const { t } = useLocale();
+  const { edit, change, errors } = editor;
+  const m = edit.maintenance;
+  const set = (patch: Partial<typeof m>) =>
+    change({ maintenance: { ...m, ...patch } });
+
+  return (
+    <DetailCard
+      icon={InfoIcon}
+      id="tour-maintenance"
+      title={t("products.maintenance.title")}
+    >
+      <p className="text-sm text-pretty text-muted">
+        {t("products.maintenance.help")}
+      </p>
+      <Switch isSelected={m.active} onChange={(active) => set({ active })}>
+        <Switch.Content>
+          <Switch.Control>
+            <Switch.Thumb />
+          </Switch.Control>
+          {t("products.maintenance.switch")}
+        </Switch.Content>
+      </Switch>
+      {(m.active || hasText(m.reason, "en") || hasText(m.reason, "de")) && (
+        <>
+          <LocalizedField
+            error={errors.maintenanceReason}
+            label={t("products.maintenance.reason.en")}
+            language="en"
+            rows={3}
+            value={m.reason}
+            onChange={(reason) => set({ reason })}
+          />
+          <LocalizedField
+            label={t("products.maintenance.reason.de")}
+            language="de"
+            rows={3}
+            value={m.reason}
+            onChange={(reason) => set({ reason })}
+          />
+          <TextField
+            fullWidth
+            isInvalid={errors.maintenanceUrl !== undefined}
+            value={m.url}
+            onChange={(url) => set({ url })}
+          >
+            <Label>{t("products.maintenance.url")}</Label>
+            <Input placeholder="https://" type="url" />
+            <Description>{t("products.maintenance.urlHelp")}</Description>
+            <FieldError>{errors.maintenanceUrl}</FieldError>
+          </TextField>
+          <TextField
+            fullWidth
+            value={m.expectedBack}
+            onChange={(expectedBack) => set({ expectedBack })}
+          >
+            <Label>{t("products.maintenance.expected")}</Label>
+            <Input type="date" />
+            <Description>{t("products.maintenance.expectedHelp")}</Description>
+          </TextField>
+        </>
       )}
     </DetailCard>
   );
@@ -708,6 +765,17 @@ function TourReview({
         </>,
       )}
       {section(
+        "sections",
+        <>
+          <ReviewRow label={t("products.sections.title")}>
+            {edit.sections.length}
+          </ReviewRow>
+          <ReviewRow label={t("products.keepsakes.review")}>
+            {edit.keepsakeIds.length}
+          </ReviewRow>
+        </>,
+      )}
+      {section(
         "prices",
         <>
           <ReviewRow label={t("products.prices.adults")}>
@@ -723,7 +791,16 @@ function TourReview({
       )}
       {section(
         "departures",
-        <ReviewRow label={t("products.fact.upcoming")}>{upcoming}</ReviewRow>,
+        <>
+          <ReviewRow label={t("products.fact.upcoming")}>{upcoming}</ReviewRow>
+          <ReviewRow label={t("products.maintenance.title")}>
+            {t(
+              edit.maintenance.active
+                ? "products.maintenance.on"
+                : "products.maintenance.off",
+            )}
+          </ReviewRow>
+        </>,
       )}
       {section(
         "policies",
@@ -776,6 +853,7 @@ export function TourEditor({
   const editor = useTourEditor(tour, step, onStep);
   const root = useRef<HTMLDivElement>(null);
   const { edit, change } = editor;
+  const [previewing, setPreviewing] = useState(false);
 
   useFocusFirstInvalid(root, editor.focusCount);
 
@@ -803,14 +881,21 @@ export function TourEditor({
           </>
         );
       case "details":
-        return <DetailsCards editor={editor} language={lang} />;
+        return <DetailsStep editor={editor} language={lang} />;
+      case "sections":
+        return <PracticalInfoStep editor={editor} language={lang} />;
       case "prices":
         return <PricesCard editor={editor} />;
       case "departures":
-        return tour ? (
-          <DeparturesCard error={editor.errors.departure} tour={tour} />
-        ) : (
-          <NoDeparturesYet error={editor.errors.departure} />
+        return (
+          <>
+            <MaintenanceCard editor={editor} />
+            {tour ? (
+              <DeparturesCard error={editor.errors.departure} tour={tour} />
+            ) : (
+              <NoDeparturesYet error={editor.errors.departure} />
+            )}
+          </>
         );
       case "policies":
         return (
@@ -885,6 +970,7 @@ export function TourEditor({
       <EditorHeader
         archived={editor.archived}
         languages={languageStatus(editor.missing)}
+        maintenance={edit.maintenance.active}
         published={editor.live}
         subtitle={`${t("products.kind.tour")} · ${t("products.duration", { hours })}`}
         tab="tours"
@@ -899,20 +985,49 @@ export function TourEditor({
           onRestore={editor.restore}
         />
       )}
-      <StepLayout
-        canGo={(id) => editor.canGo(id as TourStep)}
-        current={step}
-        steps={steps}
-        onGo={(id) => onStep(id as TourStep)}
+      <div
+        aria-label={t("products.preview.mode")}
+        className="flex w-fit gap-1 rounded-full bg-surface-secondary p-1"
+        role="group"
       >
-        <StepBody
-          language={editor.language}
-          render={render}
-          step={current}
-          onLanguage={editor.setLanguage}
+        <Button
+          aria-pressed={!previewing}
+          size="sm"
+          variant={previewing ? "tertiary" : "primary"}
+          onPress={() => setPreviewing(false)}
+        >
+          {t("products.preview.edit")}
+        </Button>
+        <Button
+          aria-pressed={previewing}
+          size="sm"
+          variant={previewing ? "primary" : "tertiary"}
+          onPress={() => setPreviewing(true)}
+        >
+          {t("products.preview.show")}
+        </Button>
+      </div>
+      {previewing ? (
+        <TourPreview
+          tour={editor.previewTour()}
+          onClose={() => setPreviewing(false)}
         />
-        <StepBar {...bar} />
-      </StepLayout>
+      ) : (
+        <StepLayout
+          canGo={(id) => editor.canGo(id as TourStep)}
+          current={step}
+          steps={steps}
+          onGo={(id) => onStep(id as TourStep)}
+        >
+          <StepBody
+            language={editor.language}
+            render={render}
+            step={current}
+            onLanguage={editor.setLanguage}
+          />
+          <StepBar {...bar} />
+        </StepLayout>
+      )}
     </div>
   );
 }
