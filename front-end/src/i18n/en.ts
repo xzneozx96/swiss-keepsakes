@@ -73,7 +73,8 @@ export const en = {
     "This page does not exist. It may have moved in the prototype.",
 
   "home.hello": "Grüezi!",
-  "home.heroTitle": "Let's find your Lucerne keepsake",
+  "home.heroTitle":
+    "Take a piece of Lucerne home. Explore the town with guides who live here.",
   "home.searchPrompt": "Search keepsakes, tours, stories",
   "home.title": "Lucerne, a place you always want to return to",
   "home.intro":

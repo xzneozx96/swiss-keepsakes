@@ -75,7 +75,8 @@ export const de: Record<MessageKey, string> = {
     "Diese Seite gibt es nicht. Sie wurde im Prototyp eventuell verschoben.",
 
   "home.hello": "Grüezi!",
-  "home.heroTitle": "Finden Sie Ihr Andenken aus Luzern",
+  "home.heroTitle":
+    "Nehmen Sie ein Stück Luzern mit nach Hause. Entdecken Sie die Stadt mit Guides, die hier leben.",
   "home.searchPrompt": "Andenken, Touren, Geschichten",
   "home.title": "Luzern, ein Ort, an den man immer zurückkehren möchte",
   "home.intro":
