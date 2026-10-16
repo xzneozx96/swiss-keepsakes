@@ -39,9 +39,9 @@ export function AssistantAvatar({ size = "size-8" }: { size?: string }) {
   return (
     <span
       aria-hidden
-      className={`flex shrink-0 items-center justify-center rounded-full bg-foreground text-background ${size}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-assistant text-white ${size}`}
     >
-      <AssistantIcon size={size === "size-8" ? 16 : 20} />
+      <AssistantIcon className="animate-sparkle" size={size === "size-8" ? 16 : 20} weight="Filled" />
     </span>
   );
 }

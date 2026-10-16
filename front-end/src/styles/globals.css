@@ -146,6 +146,11 @@ button {
   }
 }
 
+/* The assistant's brand gradient: the tab bar button, the floating button and the chat avatar. */
+@utility bg-assistant {
+  background-image: linear-gradient(135deg, #ff8a3d 0%, #d52b1e 55%, #b3197a 100%);
+}
+
 @utility animate-sparkle {
   @media (prefers-reduced-motion: no-preference) {
     animation: sparkle-twinkle 3.6s ease-in-out infinite;

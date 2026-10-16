@@ -101,7 +101,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
                 >
                   <span
                     aria-hidden
-                    className="absolute -top-9 flex size-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,#ff8a3d_0%,#d52b1e_55%,#b3197a_100%)] text-white shadow-[0_10px_18px_-6px_rgba(213,43,30,0.5)] transition-transform group-active:scale-95"
+                    className="absolute -top-9 flex size-14 items-center justify-center rounded-full bg-assistant text-white shadow-[0_10px_18px_-6px_rgba(213,43,30,0.5)] transition-transform group-active:scale-95"
                   >
                     <SparkleIcon
                       className="animate-sparkle"

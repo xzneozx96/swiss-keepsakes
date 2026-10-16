@@ -33,7 +33,7 @@ export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
         {above !== "tabBar" && (
           <Link
             aria-label={t("advice.fab")}
-            className="group pointer-events-auto relative flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-overlay outline-none transition-transform focus-visible:focus-ring active:scale-95"
+            className="group pointer-events-auto relative flex size-14 items-center justify-center rounded-full bg-assistant text-white shadow-overlay outline-none transition-transform focus-visible:focus-ring active:scale-95"
             to="/plan"
           >
             {/* Two slow ripples, half a cycle apart, so one is always moving (owner, 14.10.2026). */}
@@ -41,14 +41,15 @@ export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
               <span
                 key={delay}
                 aria-hidden
-                className="absolute inset-0 hidden rounded-full bg-foreground/55 motion-safe:block motion-safe:animate-ping motion-safe:[animation-duration:2.4s]"
+                className="absolute inset-0 hidden rounded-full bg-[#d52b1e]/45 motion-safe:block motion-safe:animate-ping motion-safe:[animation-duration:2.4s]"
                 style={{ animationDelay: `${delay}ms` }}
               />
             ))}
             <AssistantIcon
               aria-hidden
-              className="relative transition-transform group-hover:rotate-12"
+              className="relative animate-sparkle"
               size={26}
+              weight="Filled"
             />
           </Link>
         )}
