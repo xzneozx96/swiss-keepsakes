@@ -26,6 +26,7 @@ export const ExploreIcon = stable(Reicon.Compass, "ExploreIcon");
 export const GiftIcon = stable(Reicon.Gift, "GiftIcon");
 export const TourIcon = stable(Reicon.Ticket, "TourIcon");
 export const AccountIcon = stable(Reicon.User, "AccountIcon");
+export const SparkleIcon = stable(Reicon.Sparkles, "SparkleIcon");
 export const CartIcon = stable(Reicon.ShoppingBag, "CartIcon");
 
 // Merchant navigation

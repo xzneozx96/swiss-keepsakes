@@ -21,13 +21,16 @@ export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
   // The spacer lets the screen's last content scroll clear of the floating button.
   return (
     <>
-      <div aria-hidden className="h-[7.5rem] shrink-0" />
+      <div
+        aria-hidden
+        className={`shrink-0 ${above === "tabBar" ? "h-14" : "h-[7.5rem]"}`}
+      />
       <div
         className={`pointer-events-none fixed inset-x-0 z-20 mx-auto flex max-w-[430px] flex-col items-end gap-3 px-4 ${offset[above]}`}
       >
         {/* The background music launcher stacks directly on the assistant (owner, 16.10.2026). */}
         <MusicLauncher stacked />
-        {
+        {above !== "tabBar" && (
           <Link
             aria-label={t("advice.fab")}
             className="group pointer-events-auto relative flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-overlay outline-none transition-transform focus-visible:focus-ring active:scale-95"
@@ -48,7 +51,7 @@ export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
               size={26}
             />
           </Link>
-        }
+        )}
       </div>
     </>
   );

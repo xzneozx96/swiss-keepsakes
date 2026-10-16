@@ -126,6 +126,33 @@ button {
 }
 
 /*
+ * The assistant tab's sparkle twinkles: a slow scale and tilt, then a rest, so it reads as
+ * alive without competing with the content. Off for prefers-reduced-motion.
+ */
+@keyframes sparkle-twinkle {
+  0%,
+  60%,
+  100% {
+    scale: 1;
+    rotate: 0deg;
+  }
+  75% {
+    scale: 1.14;
+    rotate: 12deg;
+  }
+  88% {
+    scale: 0.96;
+    rotate: -6deg;
+  }
+}
+
+@utility animate-sparkle {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: sparkle-twinkle 3.6s ease-in-out infinite;
+  }
+}
+
+/*
  * Hover for clickable list cards (owner, 15.10.2026): the card stays white and lifts to the
  * overlay shadow. A grey fill blended into the page and hid the grey icon tiles.
  */

@@ -41,6 +41,7 @@ export const de: Record<MessageKey, string> = {
   "nav.gifts": "Andenken",
   "nav.tours": "Touren",
   "nav.account": "Konto",
+  "nav.assistant": "Assistent",
   "nav.cart": "Warenkorb",
   "nav.cartCount.one": "Warenkorb, {count} Artikel",
   "nav.cartCount.other": "Warenkorb, {count} Artikel",

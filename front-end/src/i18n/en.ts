@@ -39,6 +39,7 @@ export const en = {
   "nav.gifts": "Keepsakes",
   "nav.tours": "Tours",
   "nav.account": "Account",
+  "nav.assistant": "Assistant",
   "nav.cart": "Cart",
   "nav.cartCount.one": "Cart, {count} item",
   "nav.cartCount.other": "Cart, {count} items",
