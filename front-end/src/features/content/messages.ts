@@ -1,4 +1,7 @@
+import { musicDe, musicEn } from "@/components/background-music-messages";
+
 export const contentEn = {
+  ...musicEn,
   "stories.title": "Local stories",
   "stories.intro": "Walks, history and the lake, to read before you go.",
   "stories.count.one": "1 story",
@@ -35,6 +38,7 @@ export const contentEn = {
 };
 
 export const contentDe: Record<keyof typeof contentEn, string> = {
+  ...musicDe,
   "stories.title": "Geschichten aus Luzern",
   "stories.intro":
     "Spaziergänge, Geschichte und der See, zum Lesen vor dem Besuch.",

@@ -2,6 +2,7 @@ import type { IconComponent } from "@/components/icons";
 
 import { Link, useMatches } from "@tanstack/react-router";
 
+import { BackgroundMusic } from "@/components/background-music";
 import {
   AccountIcon,
   ExploreIcon,
@@ -57,6 +58,8 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </main>
+
+        <BackgroundMusic showDock={!hideTabBar} />
 
         {!hideTabBar && (
           <nav

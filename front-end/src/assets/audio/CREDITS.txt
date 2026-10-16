@@ -5,3 +5,13 @@ tower-clock.mp3
   Bell tower of the church of La Loupe (Eure-et-Loir, France), 12.8 s
   Source: https://bigsoundbank.com/bell-5-o-clock-s3445.html
   Licence: CC0 1.0 (public domain), downloaded 14.10.2026
+
+background-swiss-keepsakes.mp3
+  "A Little of You" by bachhac. Guest app background music, 5:48 loop. Provided by the owner on 2026-10-16.
+  The original's ID3 comment reads "made with suno" (id 99dd9f88-6dde-4ee7-af81-b5594e13d5c1,
+  https://suno.com/song/99dd9f88-6dde-4ee7-af81-b5594e13d5c1), i.e. AI-generated.
+  Before launch the owner must confirm the Suno plan's commercial-use licence, and PRD §11
+  (never AI audio for story content): this track must stay out of story content.
+  Re-encoded from the owner's original (8 MB, never copied into the repo): 96 kbps joint-stereo MP3,
+  cover art and tags removed (title and artist are set in code). Command: ffmpeg -i <original> -vn -map_metadata -1 -map 0:a
+  -c:a libmp3lame -b:a 96k -joint_stereo 1 -write_xing 0 -id3v2_version 0 background-swiss-keepsakes.mp3

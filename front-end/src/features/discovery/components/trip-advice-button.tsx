@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 
 import { AssistantIcon } from "@/components/icons";
+import { MusicLauncher } from "@/components/music-launcher";
 import { useLocale } from "@/contexts/locale-context";
 
 /** Clears the 58px tab bar on C01, or the in-flow action bar on C09 and C20. */
@@ -20,30 +21,34 @@ export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
   // The spacer lets the screen's last content scroll clear of the floating button.
   return (
     <>
-      <div aria-hidden className="h-16 shrink-0" />
+      <div aria-hidden className="h-[7.5rem] shrink-0" />
       <div
-        className={`pointer-events-none fixed inset-x-0 z-20 mx-auto flex max-w-[430px] justify-end px-4 ${offset[above]}`}
+        className={`pointer-events-none fixed inset-x-0 z-20 mx-auto flex max-w-[430px] flex-col items-end gap-3 px-4 ${offset[above]}`}
       >
-        <Link
-          aria-label={t("advice.fab")}
-          className="group pointer-events-auto relative flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-overlay outline-none transition-transform focus-visible:focus-ring active:scale-95"
-          to="/plan"
-        >
-          {/* Two slow ripples, half a cycle apart, so one is always moving (owner, 14.10.2026). */}
-          {[0, 1200].map((delay) => (
-            <span
-              key={delay}
+        {/* The background music launcher stacks directly on the assistant (owner, 16.10.2026). */}
+        <MusicLauncher stacked />
+        {
+          <Link
+            aria-label={t("advice.fab")}
+            className="group pointer-events-auto relative flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-overlay outline-none transition-transform focus-visible:focus-ring active:scale-95"
+            to="/plan"
+          >
+            {/* Two slow ripples, half a cycle apart, so one is always moving (owner, 14.10.2026). */}
+            {[0, 1200].map((delay) => (
+              <span
+                key={delay}
+                aria-hidden
+                className="absolute inset-0 hidden rounded-full bg-foreground/55 motion-safe:block motion-safe:animate-ping motion-safe:[animation-duration:2.4s]"
+                style={{ animationDelay: `${delay}ms` }}
+              />
+            ))}
+            <AssistantIcon
               aria-hidden
-              className="absolute inset-0 hidden rounded-full bg-foreground/55 motion-safe:block motion-safe:animate-ping motion-safe:[animation-duration:2.4s]"
-              style={{ animationDelay: `${delay}ms` }}
+              className="relative transition-transform group-hover:rotate-12"
+              size={26}
             />
-          ))}
-          <AssistantIcon
-            aria-hidden
-            className="relative transition-transform group-hover:rotate-12"
-            size={26}
-          />
-        </Link>
+          </Link>
+        }
       </div>
     </>
   );
