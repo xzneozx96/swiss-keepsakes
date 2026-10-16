@@ -104,8 +104,8 @@ export function MusicSheet() {
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
         <Drawer.Dialog data-music-ui className="flex sheet-max flex-col">
           <Drawer.Handle />
-          <Drawer.Header className="flex items-center justify-between">
-            <Drawer.Heading className="font-serif text-title">
+          <Drawer.Header className="flex items-center justify-end">
+            <Drawer.Heading className="sr-only">
               {t("music.title")}
             </Drawer.Heading>
             <Drawer.CloseTrigger aria-label={t("music.close")} />
