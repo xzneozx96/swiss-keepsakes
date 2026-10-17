@@ -5,6 +5,16 @@ export const Route = createFileRoute("/lab/")({ component: LabIndex });
 
 const experiments = [
   {
+    to: "/lab/eyebrow" as const,
+    title: "Home part heading: eyebrow styles",
+    note: "Six styles for the label above Read it, Walk it and Keep it on the home (17.10.2026).",
+  },
+  {
+    to: "/lab/blog-home" as const,
+    title: "Stories-first home: structures and Christmas effects",
+    note: "Round 2: the hero is kept and the home reads as a story (stories, then tours, Victorinox and keepsakes), with story-category circles and “Discover Lucerne” tiles. Snow and lights effects. Round 1 kept for reference (17.10.2026).",
+  },
+  {
     to: "/lab/victorinox" as const,
     title: "Victorinox section options",
     note: "Five layouts for the partner section on the home screen (16.10.2026).",

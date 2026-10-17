@@ -1,6 +1,7 @@
 import type { MediaTarget } from "./article-sections";
 import type { ArticleEditor as Editor } from "../hooks/use-article-editor";
 import type { Language } from "@/contexts/locale-context";
+import type { StoryCategory } from "../../types";
 
 import {
   Button,
@@ -14,6 +15,7 @@ import {
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
+import { STORY_CATEGORIES } from "../../types";
 import { useArticleEditor } from "../hooks/use-article-editor";
 
 import { LinkSheet, LinksCard, RelatedCard, StorySheet } from "./article-links";
@@ -262,6 +264,33 @@ function DetailsCard({
         label={t("merchantArticles.cover")}
         photo={form.photo}
         onChoose={onPickCover}
+      />
+      <RadioGroup
+        value={form.category}
+        onChange={(v) => patch({ category: v as StoryCategory })}
+      >
+        <Label>{t("merchantArticles.category")}</Label>
+        <Description>{t("merchantArticles.categoryHelp")}</Description>
+        <div className="grid grid-cols-2 gap-2">
+          {STORY_CATEGORIES.map((category) => (
+            <Radio key={category} className={choiceCard} value={category}>
+              <Radio.Content>
+                <Radio.Control>
+                  <Radio.Indicator />
+                </Radio.Control>
+                {t(`stories.category.${category}`)}
+              </Radio.Content>
+            </Radio>
+          ))}
+        </div>
+      </RadioGroup>
+      <Field
+        description={t("merchantArticles.field.placeHelp")}
+        error={errors.place}
+        label={t("merchantArticles.field.place")}
+        lang={lang}
+        value={form.place}
+        onChange={(place) => patch({ place })}
       />
     </DetailCard>
   );

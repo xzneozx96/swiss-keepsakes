@@ -21,9 +21,11 @@ import { Route as GuestSearchRouteImport } from './routes/_guest/search'
 import { Route as GuestToursRouteImport } from './routes/_guest/tours'
 import { Route as LabIndexRouteImport } from './routes/lab.index'
 import { Route as LabAdviceRouteImport } from './routes/lab.advice'
+import { Route as LabBlogHomeRouteImport } from './routes/lab.blog-home'
 import { Route as LabCalendarRouteImport } from './routes/lab.calendar'
 import { Route as LabCardsRouteImport } from './routes/lab.cards'
 import { Route as LabCartLineRouteImport } from './routes/lab.cart-line'
+import { Route as LabEyebrowRouteImport } from './routes/lab.eyebrow'
 import { Route as LabHeroRouteImport } from './routes/lab.hero'
 import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
@@ -52,6 +54,7 @@ import { Route as GuestStoriesSlugRouteImport } from './routes/_guest/stories/$s
 import { Route as GuestToursIndexRouteImport } from './routes/_guest/tours/index'
 import { Route as GuestToursSlugRouteImport } from './routes/_guest/tours/$slug'
 import { Route as GuestToursPrivateTourRouteImport } from './routes/_guest/tours/private-tour'
+import { Route as LabBlogHomeStoriesRouteImport } from './routes/lab.blog-home_.stories'
 import { Route as StoreBookingsIndexRouteImport } from './routes/store/bookings/index'
 import { Route as StoreBookingsBookingIdRouteImport } from './routes/store/bookings/$bookingId'
 import { Route as StoreContentIndexRouteImport } from './routes/store/content/index'
@@ -151,6 +154,11 @@ const LabAdviceRoute = LabAdviceRouteImport.update({
   path: '/lab/advice',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LabBlogHomeRoute = LabBlogHomeRouteImport.update({
+  id: '/lab/blog-home',
+  path: '/lab/blog-home',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LabCalendarRoute = LabCalendarRouteImport.update({
   id: '/lab/calendar',
   path: '/lab/calendar',
@@ -164,6 +172,11 @@ const LabCardsRoute = LabCardsRouteImport.update({
 const LabCartLineRoute = LabCartLineRouteImport.update({
   id: '/lab/cart-line',
   path: '/lab/cart-line',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabEyebrowRoute = LabEyebrowRouteImport.update({
+  id: '/lab/eyebrow',
+  path: '/lab/eyebrow',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabHeroRoute = LabHeroRouteImport.update({
@@ -305,6 +318,11 @@ const GuestToursPrivateTourRoute = GuestToursPrivateTourRouteImport.update({
   id: '/private-tour',
   path: '/private-tour',
   getParentRoute: () => GuestToursRoute,
+} as any)
+const LabBlogHomeStoriesRoute = LabBlogHomeStoriesRouteImport.update({
+  id: '/lab/blog-home_/stories',
+  path: '/lab/blog-home/stories',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const StoreBookingsIndexRoute = StoreBookingsIndexRouteImport.update({
   id: '/',
@@ -526,9 +544,11 @@ export interface FileRoutesByFullPath {
   '/search': typeof GuestSearchRoute
   '/tours': typeof GuestToursRouteWithChildren
   '/lab/advice': typeof LabAdviceRoute
+  '/lab/blog-home': typeof LabBlogHomeRoute
   '/lab/calendar': typeof LabCalendarRoute
   '/lab/cards': typeof LabCardsRoute
   '/lab/cart-line': typeof LabCartLineRoute
+  '/lab/eyebrow': typeof LabEyebrowRoute
   '/lab/hero': typeof LabHeroRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
@@ -554,6 +574,7 @@ export interface FileRoutesByFullPath {
   '/stories/$slug': typeof GuestStoriesSlugRoute
   '/tours/$slug': typeof GuestToursSlugRoute
   '/tours/private-tour': typeof GuestToursPrivateTourRoute
+  '/lab/blog-home/stories': typeof LabBlogHomeStoriesRoute
   '/store/bookings/$bookingId': typeof StoreBookingsBookingIdRoute
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
@@ -605,9 +626,11 @@ export interface FileRoutesByTo {
   '/plan': typeof GuestPlanRoute
   '/search': typeof GuestSearchRoute
   '/lab/advice': typeof LabAdviceRoute
+  '/lab/blog-home': typeof LabBlogHomeRoute
   '/lab/calendar': typeof LabCalendarRoute
   '/lab/cards': typeof LabCardsRoute
   '/lab/cart-line': typeof LabCartLineRoute
+  '/lab/eyebrow': typeof LabEyebrowRoute
   '/lab/hero': typeof LabHeroRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
@@ -633,6 +656,7 @@ export interface FileRoutesByTo {
   '/stories/$slug': typeof GuestStoriesSlugRoute
   '/tours/$slug': typeof GuestToursSlugRoute
   '/tours/private-tour': typeof GuestToursPrivateTourRoute
+  '/lab/blog-home/stories': typeof LabBlogHomeStoriesRoute
   '/store/bookings/$bookingId': typeof StoreBookingsBookingIdRoute
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
@@ -689,9 +713,11 @@ export interface FileRoutesById {
   '/_guest/search': typeof GuestSearchRoute
   '/_guest/tours': typeof GuestToursRouteWithChildren
   '/lab/advice': typeof LabAdviceRoute
+  '/lab/blog-home': typeof LabBlogHomeRoute
   '/lab/calendar': typeof LabCalendarRoute
   '/lab/cards': typeof LabCardsRoute
   '/lab/cart-line': typeof LabCartLineRoute
+  '/lab/eyebrow': typeof LabEyebrowRoute
   '/lab/hero': typeof LabHeroRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
@@ -718,6 +744,7 @@ export interface FileRoutesById {
   '/_guest/stories/$slug': typeof GuestStoriesSlugRoute
   '/_guest/tours/$slug': typeof GuestToursSlugRoute
   '/_guest/tours/private-tour': typeof GuestToursPrivateTourRoute
+  '/lab/blog-home_/stories': typeof LabBlogHomeStoriesRoute
   '/store/bookings/$bookingId': typeof StoreBookingsBookingIdRoute
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
@@ -775,9 +802,11 @@ export interface FileRouteTypes {
     | '/search'
     | '/tours'
     | '/lab/advice'
+    | '/lab/blog-home'
     | '/lab/calendar'
     | '/lab/cards'
     | '/lab/cart-line'
+    | '/lab/eyebrow'
     | '/lab/hero'
     | '/lab/map'
     | '/lab/map-loading'
@@ -803,6 +832,7 @@ export interface FileRouteTypes {
     | '/stories/$slug'
     | '/tours/$slug'
     | '/tours/private-tour'
+    | '/lab/blog-home/stories'
     | '/store/bookings/$bookingId'
     | '/store/content/analytics'
     | '/store/content/comments'
@@ -854,9 +884,11 @@ export interface FileRouteTypes {
     | '/plan'
     | '/search'
     | '/lab/advice'
+    | '/lab/blog-home'
     | '/lab/calendar'
     | '/lab/cards'
     | '/lab/cart-line'
+    | '/lab/eyebrow'
     | '/lab/hero'
     | '/lab/map'
     | '/lab/map-loading'
@@ -882,6 +914,7 @@ export interface FileRouteTypes {
     | '/stories/$slug'
     | '/tours/$slug'
     | '/tours/private-tour'
+    | '/lab/blog-home/stories'
     | '/store/bookings/$bookingId'
     | '/store/content/analytics'
     | '/store/content/comments'
@@ -937,9 +970,11 @@ export interface FileRouteTypes {
     | '/_guest/search'
     | '/_guest/tours'
     | '/lab/advice'
+    | '/lab/blog-home'
     | '/lab/calendar'
     | '/lab/cards'
     | '/lab/cart-line'
+    | '/lab/eyebrow'
     | '/lab/hero'
     | '/lab/map'
     | '/lab/map-loading'
@@ -966,6 +1001,7 @@ export interface FileRouteTypes {
     | '/_guest/stories/$slug'
     | '/_guest/tours/$slug'
     | '/_guest/tours/private-tour'
+    | '/lab/blog-home_/stories'
     | '/store/bookings/$bookingId'
     | '/store/content/analytics'
     | '/store/content/comments'
@@ -1015,9 +1051,11 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   StoreRoute: typeof StoreRouteWithChildren
   LabAdviceRoute: typeof LabAdviceRoute
+  LabBlogHomeRoute: typeof LabBlogHomeRoute
   LabCalendarRoute: typeof LabCalendarRoute
   LabCardsRoute: typeof LabCardsRoute
   LabCartLineRoute: typeof LabCartLineRoute
+  LabEyebrowRoute: typeof LabEyebrowRoute
   LabHeroRoute: typeof LabHeroRoute
   LabMapRoute: typeof LabMapRoute
   LabMapLoadingRoute: typeof LabMapLoadingRoute
@@ -1031,6 +1069,7 @@ export interface RootRouteChildren {
   RCodeRoute: typeof RCodeRoute
   LabIndexRoute: typeof LabIndexRoute
   PartnerIndexRoute: typeof PartnerIndexRoute
+  LabBlogHomeStoriesRoute: typeof LabBlogHomeStoriesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1119,6 +1158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LabAdviceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lab/blog-home': {
+      id: '/lab/blog-home'
+      path: '/lab/blog-home'
+      fullPath: '/lab/blog-home'
+      preLoaderRoute: typeof LabBlogHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lab/calendar': {
       id: '/lab/calendar'
       path: '/lab/calendar'
@@ -1138,6 +1184,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/cart-line'
       fullPath: '/lab/cart-line'
       preLoaderRoute: typeof LabCartLineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/eyebrow': {
+      id: '/lab/eyebrow'
+      path: '/lab/eyebrow'
+      fullPath: '/lab/eyebrow'
+      preLoaderRoute: typeof LabEyebrowRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/hero': {
@@ -1335,6 +1388,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/tours/private-tour'
       preLoaderRoute: typeof GuestToursPrivateTourRouteImport
       parentRoute: typeof GuestToursRoute
+    }
+    '/lab/blog-home_/stories': {
+      id: '/lab/blog-home_/stories'
+      path: '/lab/blog-home/stories'
+      fullPath: '/lab/blog-home/stories'
+      preLoaderRoute: typeof LabBlogHomeStoriesRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/store/bookings/': {
       id: '/store/bookings/'
@@ -1788,9 +1848,11 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   StoreRoute: StoreRouteWithChildren,
   LabAdviceRoute: LabAdviceRoute,
+  LabBlogHomeRoute: LabBlogHomeRoute,
   LabCalendarRoute: LabCalendarRoute,
   LabCardsRoute: LabCardsRoute,
   LabCartLineRoute: LabCartLineRoute,
+  LabEyebrowRoute: LabEyebrowRoute,
   LabHeroRoute: LabHeroRoute,
   LabMapRoute: LabMapRoute,
   LabMapLoadingRoute: LabMapLoadingRoute,
@@ -1804,6 +1866,7 @@ const rootRouteChildren: RootRouteChildren = {
   RCodeRoute: RCodeRoute,
   LabIndexRoute: LabIndexRoute,
   PartnerIndexRoute: PartnerIndexRoute,
+  LabBlogHomeStoriesRoute: LabBlogHomeStoriesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

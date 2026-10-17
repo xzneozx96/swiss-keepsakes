@@ -95,6 +95,13 @@ export const contentMerchantEn = {
   "merchantArticles.error.authorName": "Enter the author's name.",
   "merchantArticles.error.authorRole": "Enter the author's role.",
   "merchantArticles.error.cover": "Choose a cover photo.",
+  "merchantArticles.error.place": "Enter where the story happens.",
+  "merchantArticles.category": "Category",
+  "merchantArticles.categoryHelp":
+    "Guests filter the stories by it and see it on the home cards.",
+  "merchantArticles.field.place": "Place",
+  "merchantArticles.field.placeHelp":
+    "Where the story happens, e.g. Old Town or Bürgenstock. Shown with a pin on the home cards.",
   "merchantArticles.error.sections": "Add at least one section.",
   "merchantArticles.error.heading": "Enter a heading.",
   "merchantArticles.error.blocks": "Add at least one block to this section.",
@@ -377,6 +384,13 @@ export const contentMerchantDe: Record<keyof typeof contentMerchantEn, string> =
     "merchantArticles.error.authorName": "Geben Sie den Namen ein.",
     "merchantArticles.error.authorRole": "Geben Sie die Funktion ein.",
     "merchantArticles.error.cover": "Wählen Sie ein Titelbild.",
+    "merchantArticles.error.place": "Geben Sie an, wo die Geschichte spielt.",
+    "merchantArticles.category": "Kategorie",
+    "merchantArticles.categoryHelp":
+      "Gäste filtern die Geschichten danach und sehen sie auf den Karten der Startseite.",
+    "merchantArticles.field.place": "Ort",
+    "merchantArticles.field.placeHelp":
+      "Wo die Geschichte spielt, z. B. Altstadt oder Bürgenstock. Mit Stecknadel auf den Karten der Startseite.",
     "merchantArticles.error.sections":
       "Fügen Sie mindestens einen Abschnitt hinzu.",
     "merchantArticles.error.heading": "Geben Sie eine Überschrift ein.",

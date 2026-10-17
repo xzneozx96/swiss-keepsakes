@@ -3,22 +3,26 @@ import type {
   StoryView,
 } from "../components/discovery-home";
 import type { Article } from "@/features/content/types";
-import type { CategoryRailItem } from "../components/category-rail";
 
 import { timeBlockStories } from "../seed";
 
 import { useLocale } from "@/contexts/locale-context";
-import { categories } from "@/features/catalog/categories";
 import { useProductCard } from "@/features/catalog/hooks/use-product-card";
 import { isPublished } from "@/features/catalog/lib/publish";
 import { isSoldOut } from "@/features/catalog/lib/stock";
 import { publishedArticles } from "@/features/content/lib/articles";
+import {
+  ALL_STORIES_PHOTO,
+  storyCategoryPhoto,
+} from "@/features/content/lib/categories";
+import { STORY_CATEGORIES } from "@/features/content/types";
 import { useDemo } from "@/features/demo";
-import { pickText } from "@/lib/localized";
 
-/** Builds the discovery home from the catalogue, the demo clock and the language. */
+const STORIES_ON_HOME = 6;
+
+/** Builds the discovery home from the catalogue, the stories, the tours and the language. */
 export function useDiscoveryView(): DiscoveryHomeView {
-  const { t, language } = useLocale();
+  const { t, language, intlLocale } = useLocale();
   const { state } = useDemo();
 
   const available = state.data.products.filter(
@@ -26,18 +30,14 @@ export function useDiscoveryView(): DiscoveryHomeView {
   );
 
   const articles = publishedArticles(state.data.articles, language);
-  const toStory = (a: Article): StoryView => ({
-    slug: a.slug,
-    photo: a.photo,
-    title: a.title,
-    meta: t("home.stories.read", { minutes: a.readMinutes }),
-  });
-  const blockStory = (slug: string) => {
+  const blockStory = (slug: string): StoryView | undefined => {
     const article = articles.find((a) => a.slug === slug);
 
     return article
       ? {
-          ...toStory(article),
+          slug: article.slug,
+          photo: article.photo,
+          title: article.title,
           meta: t("home.storyRow", { minutes: article.readMinutes }),
         }
       : undefined;
@@ -54,21 +54,16 @@ export function useDiscoveryView(): DiscoveryHomeView {
   const tours = (state.data.tours?.tours ?? []).filter(
     (tour) => tour.published,
   );
+  // The story a tour comes from: the newest story in this language that links to it (R16).
+  const storyFor = (tourId: string): Article | undefined =>
+    articles.find((a) =>
+      a.links.some((l) => l.kind === "tour" && l.id === tourId),
+    );
 
-  const name = (id: "tours" | "keepsakes") =>
-    pickText(categories.find((c) => c.id === id)?.name ?? {}, language).text;
-  const photo = (id: "tours" | "keepsakes") =>
-    categories.find((c) => c.id === id)?.photo;
-  // Tours first, then Victorinox, then keepsakes, as the sections below.
-  const categoryItems: CategoryRailItem[] = [
-    { id: "tours", name: name("tours"), photo: photo("tours") },
-    {
-      id: "victorinox",
-      name: t("home.victorinox.title"),
-      photo: "victorinox-spartan",
-    },
-    { id: "keepsakes", name: name("keepsakes"), photo: photo("keepsakes") },
-  ];
+  const showAllKey =
+    new Intl.PluralRules(intlLocale).select(articles.length) === "one"
+      ? "home.stories.showAll.one"
+      : "home.stories.showAll.other";
 
   return {
     hero: {
@@ -79,13 +74,78 @@ export function useDiscoveryView(): DiscoveryHomeView {
       searchLabel: t("search.open"),
       searchPrompt: t("home.searchPrompt"),
     },
-    categories: { label: t("home.categories"), items: categoryItems },
+    journey: {
+      title: t("home.journey.title"),
+      subtitle: t("home.journey.subtitle"),
+      steps: [
+        {
+          id: "read",
+          photo: "musegg-wall",
+          color: "var(--accent)",
+          eyebrow: t("home.part.read"),
+          title: t("home.journey.read.title"),
+          line: t("home.journey.read.line"),
+        },
+        {
+          id: "walk",
+          photo: "rigi-vitznau-train",
+          color: "var(--info)",
+          eyebrow: t("home.part.walk"),
+          title: t("home.journey.walk.title"),
+          line: t("home.journey.walk.line"),
+        },
+        {
+          id: "keep",
+          photo: "victorinox-spartan",
+          color: "var(--chart-4)",
+          eyebrow: t("home.part.keep"),
+          title: t("home.journey.keep.title"),
+          line: t("home.journey.keep.line"),
+        },
+      ],
+    },
+    stories: {
+      eyebrow: t("home.part.read"),
+      title: t("home.stories.title"),
+      subtitle: t("home.stories.subtitle"),
+      categoriesLabel: t("stories.filter"),
+      categories: [
+        { name: t("stories.all"), photo: ALL_STORIES_PHOTO },
+        ...STORY_CATEGORIES.map((id) => ({
+          id,
+          name: t(`stories.category.${id}`),
+          photo: storyCategoryPhoto[id],
+        })),
+      ],
+      items: articles.slice(0, STORIES_ON_HOME).map((a) => ({
+        slug: a.slug,
+        photo: a.photo,
+        title: a.title,
+        category: t(`stories.category.${a.category}`),
+        place: a.place,
+        author: a.author.name,
+        meta: t("home.stories.read", { minutes: a.readMinutes }),
+      })),
+      showAll: t(showAllKey, { count: articles.length }),
+    },
     tours: {
+      eyebrow: t("home.part.walk"),
       title: t("home.tours.title"),
       subtitle: t("home.tours.subtitle"),
       seeAll: t("home.seeAll"),
       items: tours,
+      fromStory: t("home.tours.fromStory"),
+      storyFor: (tourId) => {
+        const article = storyFor(tourId);
+
+        return article && { slug: article.slug, title: article.title };
+      },
       story: blockStory(timeBlockStories.fewDays),
+    },
+    keep: {
+      eyebrow: t("home.part.keep"),
+      title: t("home.keep.title"),
+      subtitle: t("home.keep.subtitle"),
     },
     victorinox: {
       title: t("home.victorinox.title"),
@@ -102,12 +162,6 @@ export function useDiscoveryView(): DiscoveryHomeView {
       subtitle: t("home.keepsakes.subtitle"),
       seeAll: t("home.seeAll"),
       items: keepsakes,
-    },
-    stories: {
-      title: t("home.stories.title"),
-      subtitle: t("home.stories.subtitle"),
-      seeAll: t("home.seeAll"),
-      items: articles.map(toStory),
     },
     advice: {
       title: t("home.advice.title"),

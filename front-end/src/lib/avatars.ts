@@ -21,7 +21,10 @@ const pool = [...bySlug.values()];
  * stable pick from the cast, so every name always shows the same face and never initials.
  */
 export function avatarUrl(name: string): string {
+  // Accents drop their marks first, so "Ngọc" finds ngoc.svg.
   const slug = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z]+/g, "-")
     .replace(/-$/, "");

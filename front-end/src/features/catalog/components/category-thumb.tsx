@@ -8,8 +8,8 @@ interface CategoryThumbProps {
 }
 
 /**
- * Shared category tile: a 56px photo thumbnail above its label. Used by the discovery
- * rail (inside links) and the gifts filter (inside TagGroup tags). Selection styling
+ * Shared category tile: a 56px photo thumbnail above its label. Used by the home's story
+ * categories (inside links) and the gifts and stories filters (inside TagGroup tags). Selection styling
  * follows the parent's data-selected attribute via the `group` class on that parent:
  * red ring plus a check badge, so selection never relies on hue alone.
  */
@@ -42,7 +42,9 @@ export function CategoryThumb({ name, photo, note }: CategoryThumbProps) {
           </svg>
         </span>
       </span>
-      <span className="whitespace-nowrap">{name}</span>
+      <span className="line-clamp-2 text-center leading-4 text-balance">
+        {name}
+      </span>
     </>
   );
 }

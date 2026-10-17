@@ -1,21 +1,26 @@
-import type { CategoryRailItem } from "./category-rail";
+import type { JourneyStep } from "./journey-steps";
+import type { MovingStory } from "./moving-story-rail";
+import type { StoryCategoryLink } from "./story-categories";
 import type { ProductCardProps } from "@/features/catalog/components/product-card";
 import type { Tour } from "@/features/tours/types";
 
-import { Skeleton } from "@heroui/react";
+import { Skeleton, buttonVariants } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 
 import { AdviceBanner } from "./advice-banner";
-import { CategoryRail } from "./category-rail";
 import { Hero } from "./hero";
-import { Rail, Section } from "./section";
-import { StoryRow } from "./story-row";
+import { JourneySteps } from "./journey-steps";
+import { MovingStoryRail } from "./moving-story-rail";
+import { PartHeading } from "./part-heading";
+import { Rail } from "./section";
+import { Snowfall } from "./snowfall";
+import { StoryCategories } from "./story-categories";
 import { TripAdviceButton } from "./trip-advice-button";
 import { VictorinoxShowcase } from "./victorinox-showcase";
 
-import { StoryCard } from "@/features/content/components/story-card";
 import { TourCard } from "@/features/tours/discovery/tour-card";
 import brandLogo from "@/assets/brand/swiss-keepsakes-logo.png";
+import { ChevronRightIcon, StoryIcon } from "@/components/icons";
 import {
   CartButton,
   CompactBar,
@@ -31,6 +36,12 @@ export interface StoryView {
   meta: string;
 }
 
+interface PartView {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+}
+
 export interface DiscoveryHomeView {
   hero: {
     appName: string;
@@ -40,14 +51,22 @@ export interface DiscoveryHomeView {
     searchLabel: string;
     searchPrompt: string;
   };
-  categories: { label: string; items: CategoryRailItem[] };
-  tours: {
-    title: string;
-    subtitle: string;
+  journey: { title: string; subtitle: string; steps: JourneyStep[] };
+  stories: PartView & {
+    categoriesLabel: string;
+    categories: StoryCategoryLink[];
+    items: MovingStory[];
+    showAll: string;
+  };
+  tours: PartView & {
     seeAll: string;
     items: Tour[];
+    fromStory: string;
+    storyFor: (tourId: string) => { slug: string; title: string } | undefined;
+    /** The tours' story for the lab's earlier layouts. */
     story?: StoryView;
   };
+  keep: PartView;
   victorinox: {
     title: string;
     subtitle: string;
@@ -63,12 +82,6 @@ export interface DiscoveryHomeView {
     subtitle: string;
     seeAll: string;
     items: ProductCardProps[];
-  };
-  stories: {
-    title: string;
-    subtitle: string;
-    seeAll: string;
-    items: StoryView[];
   };
   advice: {
     title: string;
@@ -93,18 +106,22 @@ function RailSkeleton() {
 }
 
 /**
- * C01 Discovery home (spec §4.1, decision D6): hero with search, a rail of three tiles, then
- * Tours, Victorinox (its own section, with the brand story) and Keepsakes, the stories in
- * the guest's language and the advice banner. The floating button also opens C21.
+ * C01 Discovery home, stories first (owner, Lab round 3, 17.10.2026): one narrator and one
+ * walk through Lucerne. The hero welcomes, the journey steps preview the three parts, then
+ * 01 Read it (stories), 02 Walk it (tours, each with the story it comes from) and 03 Keep it
+ * (Victorinox and keepsakes as one ending), with "ask me" as the epilogue. In the Christmas
+ * season the hero snows.
  */
 export function DiscoveryHome({
   view,
   isLoading,
+  snowing,
 }: {
   view: DiscoveryHomeView;
   isLoading: boolean;
+  snowing: boolean;
 }) {
-  const { hero, categories, tours, victorinox, keepsakes, stories, advice } =
+  const { hero, journey, stories, tours, keep, victorinox, keepsakes, advice } =
     view;
 
   const [heroEnd, scrolledPast] = useScrolledPast<HTMLDivElement>();
@@ -128,39 +145,118 @@ export function DiscoveryHome({
         <SearchButton label={hero.searchLabel} to="/search" tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
-      <div className="flex flex-col gap-9 px-4 pb-4">
-        <Hero ref={heroEnd} {...hero} />
+      <div className="flex flex-col gap-10 px-4 pb-4">
+        <div className="relative -mx-4 px-4">
+          <Hero ref={heroEnd} {...hero} />
+          {snowing && <Snowfall />}
+        </div>
 
-        <CategoryRail items={categories.items} label={categories.label} />
+        <JourneySteps {...journey} />
 
-        <Section
-          id="tours"
-          seeAll={{ label: tours.seeAll, to: "/tours" }}
-          subtitle={tours.subtitle}
-          title={tours.title}
+        <section
+          aria-labelledby="read-title"
+          className="flex scroll-mt-20 flex-col gap-4"
+          id="read"
         >
+          <PartHeading
+            color={journey.steps[0]?.color ?? "var(--accent)"}
+            eyebrow={stories.eyebrow}
+            id="read-title"
+            subtitle={stories.subtitle}
+            title={stories.title}
+          />
+          <StoryCategories
+            items={stories.categories}
+            label={stories.categoriesLabel}
+          />
+          {isLoading ? (
+            <RailSkeleton />
+          ) : (
+            <MovingStoryRail label={stories.title} stories={stories.items} />
+          )}
+          {/* Same treatment as "Show all {count} reviews" and the comments' show-all. */}
+          <Link
+            className={`${buttonVariants({ variant: "secondary", size: "lg", fullWidth: true })} transition-transform active:scale-[0.98]`}
+            to="/stories"
+          >
+            {stories.showAll}
+          </Link>
+        </section>
+
+        <section
+          aria-labelledby="walk-title"
+          className="flex scroll-mt-20 flex-col gap-4"
+          id="walk"
+        >
+          <PartHeading
+            color={journey.steps[1]?.color ?? "var(--accent)"}
+            eyebrow={tours.eyebrow}
+            id="walk-title"
+            seeAll={{ label: tours.seeAll, to: "/tours" }}
+            subtitle={tours.subtitle}
+            title={tours.title}
+          />
           {isLoading ? (
             <RailSkeleton />
           ) : (
             <Rail label={tours.title}>
-              {tours.items.map((item) => (
-                <li key={item.id}>
-                  <TourCard layout="carousel" tour={item} />
-                </li>
-              ))}
+              {tours.items.map((tour) => {
+                const story = tours.storyFor(tour.id);
+
+                return (
+                  <li key={tour.id} className="flex flex-col gap-2">
+                    <TourCard layout="carousel" tour={tour} />
+                    {story && (
+                      <Link
+                        className="flex w-60 items-start gap-2 rounded-xl px-1 text-label outline-none focus-visible:focus-ring"
+                        params={{ slug: story.slug }}
+                        to="/stories/$slug"
+                      >
+                        <StoryIcon
+                          className="mt-0.5 shrink-0 text-accent"
+                          size={16}
+                        />
+                        <span className="min-w-0">
+                          <span className="text-muted">
+                            {tours.fromStory}:{" "}
+                          </span>
+                          <span className="underline decoration-separator underline-offset-4">
+                            {story.title}
+                          </span>
+                        </span>
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </Rail>
           )}
-          {!isLoading && tours.story && <StoryRow {...tours.story} />}
-        </Section>
+        </section>
 
-        <VictorinoxShowcase isLoading={isLoading} {...victorinox} />
-
-        <Section
-          id="keepsakes"
-          seeAll={{ label: keepsakes.seeAll, to: "/gifts" }}
-          subtitle={keepsakes.subtitle}
-          title={keepsakes.title}
+        <section
+          aria-labelledby="keep-title"
+          className="flex scroll-mt-20 flex-col gap-4"
+          id="keep"
         >
+          <PartHeading
+            color={journey.steps[2]?.color ?? "var(--accent)"}
+            id="keep-title"
+            {...keep}
+          />
+          <VictorinoxShowcase isLoading={isLoading} {...victorinox} />
+          <div className="flex items-end justify-between gap-4 pt-2">
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <h3 className="text-heading">{keepsakes.title}</h3>
+              <p className="text-label text-muted">{keepsakes.subtitle}</p>
+            </div>
+            <Link
+              className="flex shrink-0 items-center gap-0.5 rounded-md py-1 text-sm font-medium text-muted outline-none select-none focus-visible:focus-ring active:opacity-60"
+              to="/gifts"
+            >
+              {keepsakes.seeAll}
+              <ChevronRightIcon size={16} />
+            </Link>
+          </div>
           {isLoading ? (
             <RailSkeleton />
           ) : (
@@ -172,28 +268,7 @@ export function DiscoveryHome({
               ))}
             </Rail>
           )}
-        </Section>
-
-        {(isLoading || stories.items.length > 0) && (
-          <Section
-            id="stories"
-            seeAll={{ label: stories.seeAll, to: "/stories" }}
-            subtitle={stories.subtitle}
-            title={stories.title}
-          >
-            {isLoading ? (
-              <RailSkeleton />
-            ) : (
-              <Rail label={stories.title}>
-                {stories.items.map((item) => (
-                  <li key={item.slug}>
-                    <StoryCard {...item} layout="rail" />
-                  </li>
-                ))}
-              </Rail>
-            )}
-          </Section>
-        )}
+        </section>
 
         <AdviceBanner {...advice} />
       </div>

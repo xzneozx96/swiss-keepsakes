@@ -23,6 +23,10 @@ export interface Article {
   sections: ArticleSection[];
   /** Cover photo slug in src/assets/photos (see lib/photos.ts). */
   photo: string;
+  /** Filters the C19 list and labels the C01 cards (owner, stories-first home 17.10.2026). */
+  category: StoryCategory;
+  /** Where the story happens, in this version's language, e.g. "Old Town" / "Altstadt". */
+  place: string;
   readMinutes: number;
   /** Up to 6 gifts and tours in the merchant's order, per language version (R16). */
   links: ArticleLink[];
@@ -31,6 +35,14 @@ export interface Article {
   publication: ArticlePublication;
   updatedAt: string;
 }
+
+/**
+ * Sights and local spots were one category from the start (owner, 17.10.2026): "town" is
+ * anything in the city, "lake" anything out on the lake or up a mountain.
+ */
+export const STORY_CATEGORIES = ["eat", "town", "lake", "craft"] as const;
+
+export type StoryCategory = (typeof STORY_CATEGORIES)[number];
 
 /** A gift (`Product.id`) or tour (`Tour.id`, e.g. "things-that-remain") linked from a story (R16). */
 export interface ArticleLink {

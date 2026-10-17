@@ -24,7 +24,7 @@ export const articleSeed: Article[] = [
     title: "A morning on the Musegg wall",
     excerpt:
       "Climb the old town wall before the city wakes up, and see Lucerne laid out between the lake and the hills.",
-    author: { name: "Lukas", role: "Shop manager, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "The Musegg wall runs along the hill above the old town. It was built in the late 14th century to guard Lucerne from the north, and long stretches of it still stand.",
     sections: [
@@ -99,6 +99,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "musegg-wall",
+    category: "town",
+    place: "Old Town",
     readMinutes: 4,
     links: [{ kind: "gift", id: "p-postcards" }],
     related: ["water-tower", "lion-monument"],
@@ -115,7 +117,7 @@ export const articleSeed: Article[] = [
     title: "Ein Morgen auf der Museggmauer",
     excerpt:
       "Steigen Sie auf die alte Stadtmauer, bevor die Stadt erwacht, und sehen Sie Luzern zwischen See und Hügeln.",
-    author: { name: "Lukas", role: "Ladenleiter, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Die Museggmauer zieht sich über den Hügel oberhalb der Altstadt. Sie wurde im späten 14. Jahrhundert gebaut, um Luzern gegen Norden zu schützen, und lange Abschnitte stehen bis heute.",
     sections: [
@@ -190,6 +192,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "musegg-wall",
+    category: "town",
+    place: "Altstadt",
     readMinutes: 4,
     links: [{ kind: "gift", id: "p-postcards" }],
     related: ["luzern-bei-nacht", "lion-monument"],
@@ -206,7 +210,7 @@ export const articleSeed: Article[] = [
     title: "The story behind the Lion Monument",
     excerpt:
       "A dying lion carved into the rock, and the Swiss guards he remembers.",
-    author: { name: "Lukas", role: "Shop manager, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "A short walk from the old town, a lion lies carved into a sandstone cliff above a small, still pond. He is wounded, a broken spear in his side, one paw resting on a shield. Most people fall quiet when they first see him.",
     sections: [
@@ -247,6 +251,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "lion-monument",
+    category: "town",
+    place: "Löwenplatz",
     readMinutes: 6,
     links: [],
     related: ["musegg-morning"],
@@ -263,7 +269,7 @@ export const articleSeed: Article[] = [
     title: "Die Geschichte hinter dem Löwendenkmal",
     excerpt:
       "Ein sterbender Löwe im Fels und die Schweizer Gardisten, an die er erinnert.",
-    author: { name: "Lukas", role: "Ladenleiter, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Ein paar Gehminuten von der Altstadt entfernt liegt ein Löwe, in eine Sandsteinwand gehauen, über einem kleinen, stillen Teich. Er ist verwundet, ein abgebrochener Speer steckt in seiner Seite, eine Pranke ruht auf einem Schild. Die meisten werden still, wenn sie ihn zum ersten Mal sehen.",
     sections: [
@@ -305,6 +311,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "lion-monument",
+    category: "town",
+    place: "Löwenplatz",
     readMinutes: 6,
     links: [],
     related: ["luzern-bei-nacht", "musegg-morning"],
@@ -373,6 +381,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "lake-steamboat",
+    category: "lake",
+    place: "Lakefront",
     readMinutes: 5,
     links: [{ kind: "gift", id: "p-candle-box" }],
     related: [],
@@ -441,6 +451,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "lake-steamboat",
+    category: "lake",
+    place: "Seebecken",
     readMinutes: 5,
     links: [{ kind: "gift", id: "p-candle-box" }],
     related: [],
@@ -505,6 +517,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "lucerne-water-tower",
+    category: "town",
+    place: "Chapel Bridge",
     readMinutes: 3,
     links: [
       { kind: "tour", id: "things-that-remain" },
@@ -585,6 +599,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "weinmarkt",
+    category: "town",
+    place: "Weinmarkt",
     readMinutes: 3,
     links: [
       { kind: "gift", id: "p-old-town-print" },
@@ -660,6 +676,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "weinmarkt",
+    category: "town",
+    place: "Weinmarkt",
     readMinutes: 3,
     links: [
       { kind: "gift", id: "p-old-town-print" },
@@ -679,7 +697,7 @@ export const articleSeed: Article[] = [
     title: "Under the Dance of Death on the Spreuer Bridge",
     excerpt:
       "Lucerne’s quieter wooden bridge carries 45 triangular paintings in its roof, and in every one of them Death is somewhere in the crowd.",
-    author: { name: "Lukas", role: "Shop manager, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "Everyone photographs the Chapel Bridge. A few hundred metres downstream there is a second covered wooden bridge, plainer and much quieter, and its roof is the more unusual gallery. Look up when you cross it.",
     sections: [
@@ -737,6 +755,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "spreuer-bridge",
+    category: "town",
+    place: "River Reuss",
     readMinutes: 5,
     links: [{ kind: "tour", id: "things-that-remain" }],
     related: ["water-tower", "needle-dam"],
@@ -753,7 +773,7 @@ export const articleSeed: Article[] = [
     title: "Unter dem Totentanz auf der Spreuerbrücke",
     excerpt:
       "Luzerns stillere Holzbrücke trägt 45 dreieckige Bilder im Dach, und auf jedem ist der Tod irgendwo in der Menge.",
-    author: { name: "Lukas", role: "Ladenleiter, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Alle fotografieren die Kapellbrücke. Ein paar hundert Meter flussabwärts gibt es eine zweite gedeckte Holzbrücke, schlichter und viel ruhiger, und ihr Dach ist die ungewöhnlichere Galerie. Schauen Sie nach oben, wenn Sie hinübergehen.",
     sections: [
@@ -811,6 +831,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "spreuer-bridge",
+    category: "town",
+    place: "Reuss",
     readMinutes: 5,
     links: [{ kind: "tour", id: "things-that-remain" }],
     related: ["luzern-bei-nacht", "needle-dam"],
@@ -827,7 +849,7 @@ export const articleSeed: Article[] = [
     title: "The wooden needles that hold back a lake",
     excerpt:
       "Since 1861, Lucerne has controlled the level of Lake Lucerne with timber needles, set into the Reuss by hand.",
-    author: { name: "Lukas", role: "Shop manager, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "From the Spreuer Bridge, look upstream. Across the river stands a long row of thin wooden beams, and behind it the whole of Lake Lucerne. This is the Needle Dam, and it still works much as it did in 1861.",
     sections: [
@@ -883,6 +905,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "nadelwehr",
+    category: "town",
+    place: "River Reuss",
     readMinutes: 4,
     links: [],
     related: ["spreuer-bridge", "water-tower"],
@@ -899,7 +923,7 @@ export const articleSeed: Article[] = [
     title: "Die Holznadeln, die einen See zurückhalten",
     excerpt:
       "Seit 1861 reguliert Luzern den Pegel des Vierwaldstättersees mit Holznadeln, die von Hand in die Reuss gesetzt werden.",
-    author: { name: "Lukas", role: "Ladenleiter, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Schauen Sie von der Spreuerbrücke flussaufwärts. Quer im Fluss steht eine lange Reihe dünner Holzbalken, und dahinter liegt der ganze Vierwaldstättersee. Das ist das Nadelwehr, und es funktioniert noch fast so wie 1861.",
     sections: [
@@ -954,6 +978,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "nadelwehr",
+    category: "town",
+    place: "Reuss",
     readMinutes: 4,
     links: [],
     related: ["spreuer-bridge", "luzern-bei-nacht"],
@@ -1016,6 +1042,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "suidter-pharmacy",
+    category: "town",
+    place: "Old Town",
     readMinutes: 3,
     links: [],
     related: ["weinmarkt-oath", "water-tower"],
@@ -1078,6 +1106,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "suidter-pharmacy",
+    category: "town",
+    place: "Altstadt",
     readMinutes: 3,
     links: [],
     related: ["weinmarkt-oath", "luzern-bei-nacht"],
@@ -1094,7 +1124,7 @@ export const articleSeed: Article[] = [
     title: "Europe’s highest outdoor lift, built in 1905",
     excerpt:
       "An iron tower on the cliff above Lake Lucerne, a ride of under a minute and a view that took five years to reach.",
-    author: { name: "Lukas", role: "Shop manager, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "On the Bürgenstock, on the cliff above Lake Lucerne, a slim iron tower stands against the rock. It is the Hammetschwand lift, and it has taken visitors to the summit for more than a hundred years.",
     sections: [
@@ -1152,6 +1182,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "hammetschwand-lift",
+    category: "lake",
+    place: "Bürgenstock",
     readMinutes: 4,
     links: [],
     related: ["lake-steamboat", "musegg-morning"],
@@ -1168,7 +1200,7 @@ export const articleSeed: Article[] = [
     title: "Europas höchster Aussenlift, gebaut 1905",
     excerpt:
       "Ein eiserner Turm an der Felswand über dem Vierwaldstättersee, eine Fahrt von unter einer Minute und eine Aussicht, für die man fünf Jahre baute.",
-    author: { name: "Lukas", role: "Ladenleiter, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Auf dem Bürgenstock, an der Felswand über dem Vierwaldstättersee, steht ein schlanker Eisenturm vor dem Felsen. Es ist der Hammetschwand-Lift, und er bringt seit über hundert Jahren Gäste auf den Gipfel.",
     sections: [
@@ -1225,6 +1257,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "hammetschwand-lift",
+    category: "lake",
+    place: "Bürgenstock",
     readMinutes: 4,
     links: [],
     related: ["lake-steamboat", "musegg-morning"],
@@ -1313,6 +1347,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "victorinox-store",
+    category: "craft",
+    place: "Hirschenplatz",
     readMinutes: 4,
     links: [
       { kind: "gift", id: "p-vx-chapel-bridge" },
@@ -1404,6 +1440,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "victorinox-store",
+    category: "craft",
+    place: "Hirschenplatz",
     readMinutes: 4,
     links: [
       { kind: "gift", id: "p-vx-chapel-bridge" },
@@ -1424,7 +1462,7 @@ export const articleSeed: Article[] = [
     title: "Luzern bei Nacht",
     excerpt:
       "Wenn die Altstadt still wird: beleuchtete Brücken, leere Gassen und ein Spaziergang mit Laterne.",
-    author: { name: "Lukas", role: "Ladenleiter, Swiss Keepsakes Luzern" },
+    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Wenn die Tagesgäste abgereist sind, wird es in der Altstadt still. Brücken und Türme sind beleuchtet, und ihr Licht spiegelt sich in der Reuss.",
     sections: [
@@ -1472,6 +1510,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "lucerne-night",
+    category: "town",
+    place: "Altstadt",
     readMinutes: 3,
     links: [],
     related: [],
@@ -1521,6 +1561,8 @@ export const articleSeed: Article[] = [
       },
     ],
     photo: "pilatus",
+    category: "lake",
+    place: "Pilatus",
     readMinutes: 4,
     links: [],
     related: [],

@@ -1,0 +1,87 @@
+.blog-bulb {
+  position: absolute;
+  width: 7px;
+  height: 10px;
+  margin-left: -3.5px;
+  border-radius: 50% 50% 45% 45%;
+  background: #ffe2a3;
+  box-shadow:
+    0 0 6px 2px rgba(255, 196, 92, 0.75),
+    0 0 16px 4px rgba(255, 176, 64, 0.35);
+  animation: blog-bulb-glow 2.4s ease-in-out infinite;
+}
+
+.blog-bulb::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 1.5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+  background: rgba(40, 32, 24, 0.7);
+}
+
+@keyframes blog-bulb-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-bulb {
+    animation: none;
+  }
+}
+
+.blog-reel-run,
+.blog-reel-still {
+  transform-origin: left;
+}
+
+.blog-reel-run {
+  animation-name: blog-reel;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+
+.blog-reel-still {
+  transform: scaleX(0);
+}
+
+@keyframes blog-reel {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.blog-kenburns {
+  animation: blog-kenburns 14s ease-in-out infinite alternate;
+}
+
+@keyframes blog-kenburns {
+  from {
+    transform: scale(1.04) translate(0, 0);
+  }
+  to {
+    transform: scale(1.18) translate(-3%, -2%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-reel-run {
+    animation: none;
+    transform: scaleX(0.5);
+  }
+
+  .blog-kenburns {
+    animation: none;
+  }
+}

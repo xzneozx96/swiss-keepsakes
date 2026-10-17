@@ -4,6 +4,7 @@ import type {
   ArticleBlock,
   ArticleLink,
   ArticleSection,
+  StoryCategory,
 } from "../../types";
 import type { Language } from "@/contexts/locale-context";
 import type { MessageKey } from "@/i18n/en";
@@ -38,6 +39,8 @@ export interface ArticleForm {
   intro: string;
   author: ArticleAuthor;
   photo: string;
+  category: StoryCategory;
+  place: string;
   sections: FormSection[];
   links: ArticleLink[];
   related: string[];
@@ -89,6 +92,8 @@ export function toForm(article: Article): ArticleForm {
     intro: article.intro,
     author: { ...article.author },
     photo: article.photo,
+    category: article.category,
+    place: article.place,
     sections: article.sections.map((s) => ({
       key: newKey(),
       id: s.id,
@@ -111,6 +116,8 @@ export function emptyForm(
     intro: "",
     author,
     photo: "",
+    category: "town",
+    place: "",
     sections: [newSection()],
     links: [],
     related: [],
@@ -181,6 +188,8 @@ export function fromForm(
     intro: form.intro.trim(),
     author: { name: form.author.name.trim(), role: form.author.role.trim() },
     photo: form.photo,
+    category: form.category,
+    place: form.place.trim(),
     sections,
     readMinutes: readMinutes(form),
     links: form.links,
@@ -223,6 +232,7 @@ export function validate(
   if (blank(form.author.role))
     errors["author.role"] = "merchantArticles.error.authorRole";
   if (!form.photo) errors.photo = "merchantArticles.error.cover";
+  if (blank(form.place)) errors.place = "merchantArticles.error.place";
   if (blank(form.intro)) errors.intro = "merchantArticles.error.intro";
   if (form.sections.length === 0)
     errors.sections = "merchantArticles.error.sections";

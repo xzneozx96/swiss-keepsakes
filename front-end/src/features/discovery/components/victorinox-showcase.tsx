@@ -1,6 +1,7 @@
 import type { ProductCardProps } from "@/features/catalog/components/product-card";
 import type { StoryView } from "./discovery-home";
 
+import { buttonVariants } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 
 import { ChevronRightIcon } from "@/components/icons";
@@ -157,13 +158,13 @@ export function VictorinoxShowcase({
       </div>
 
       <div className="mt-5 flex flex-col gap-4 px-4">
+        {/* Same treatment as the home's "Show all {count} stories" and "Show all {count} reviews". */}
         <Link
-          className="flex h-12 items-center justify-center gap-1 rounded-full bg-white text-base font-semibold text-[#173f52] outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173f52] active:opacity-85"
+          className={`${buttonVariants({ variant: "secondary", size: "lg", fullWidth: true })} transition-transform focus-visible:ring-offset-[#173f52] active:scale-[0.98]`}
           search={{ subcategory: "victorinox" }}
           to="/gifts"
         >
           {seeAll}
-          <ChevronRightIcon size={18} />
         </Link>
 
         {story && (

@@ -1,5 +1,6 @@
 import type { DemoData } from "./types";
 import type { Product } from "@/features/catalog/types";
+import type { Article } from "@/features/content/types";
 
 import { createSeedState } from "./seed";
 
@@ -37,8 +38,11 @@ type AddedKey =
  * booking, so the old map is dropped.
  */
 export type StoredDemoData = Omit<DemoData, AddedKey | "products"> &
-  Partial<Pick<DemoData, AddedKey>> & {
+  Partial<Pick<DemoData, Exclude<AddedKey, "articles">>> & {
     tripProfiles?: unknown;
+    /** Before 17.10.2026 a story had no category or place. */
+    articles?: (Omit<Article, "category" | "place"> &
+      Partial<Pick<Article, "category" | "place">>)[];
     /** Before the four fixed categories, a product held one of the five keepsake `categoryId`s. */
     products: (Omit<Product, "subcategoryId"> & {
       subcategoryId?: string;
@@ -101,8 +105,20 @@ export function upgradeDemoData({
       ),
     ],
     pickupPlaces: stored.pickupPlaces ?? seed.pickupPlaces,
+    // Articles saved before 17.10.2026 have no category or place: the seeded version of the
+    // same record gives them, and a story the merchant wrote counts as "town" until edited.
     articles:
-      articlesCurrent && stored.articles ? stored.articles : seed.articles,
+      articlesCurrent && stored.articles
+        ? stored.articles.map((article) => {
+            const seeded = seed.articles.find((a) => a.id === article.id);
+
+            return {
+              ...article,
+              category: article.category ?? seeded?.category ?? "town",
+              place: article.place ?? seeded?.place ?? "",
+            };
+          })
+        : seed.articles,
     comments: articlesCurrent
       ? (stored.comments ?? seed.comments)
       : [

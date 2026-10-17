@@ -3,3 +3,4 @@ Style: "Notionists" by Zoish (https://heyzoish.gumroad.com/l/notionists), genera
 Licence: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/). No attribution required; credited here anyway.
 Downloaded 13.10.2026, one per reviewer name; file name = reviewer name in lower case.
 anna-k.svg: the demo guest Anna Keller's default profile photo (step 1.12t). Same style, source and licence: DiceBear 9.x "notionists", seed "Anna K.", background from the same pastel set. Downloaded 13.10.2026.
+ngoc.svg: the story author Ngọc (owner). Same style, source and licence: DiceBear 9.x "notionists", seed "Ngoc-c", hair variant41, no glasses or beard, background #fce9e7. Downloaded 17.10.2026.

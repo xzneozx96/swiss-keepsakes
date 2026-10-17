@@ -213,6 +213,22 @@ button {
   }
 }
 
+/* Home story cards (Lab R4, owner 17.10.2026): each photo drifts slowly instead of a timer. */
+@keyframes ken-burns {
+  from {
+    transform: scale(1.04) translate(0, 0);
+  }
+  to {
+    transform: scale(1.18) translate(-3%, -2%);
+  }
+}
+
+@utility animate-ken-burns {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: ken-burns 14s ease-in-out infinite alternate;
+  }
+}
+
 @utility animate-sparkle {
   @media (prefers-reduced-motion: no-preference) {
     animation: sparkle-twinkle 3.6s ease-in-out infinite;
