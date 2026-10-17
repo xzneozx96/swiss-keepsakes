@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router";
 
 import { ChevronRightIcon } from "@/components/icons";
 import { Media } from "@/components/media";
+import { useInView } from "@/hooks/use-in-view";
 import { knifeArt } from "@/lib/victorinox-art";
 
 export interface VictorinoxShowcaseProps {
@@ -49,6 +50,8 @@ export function VictorinoxShowcase({
   story,
   isLoading,
 }: VictorinoxShowcaseProps) {
+  const [fanRef, fanSeen] = useInView<HTMLDivElement>();
+
   return (
     <section
       aria-labelledby="victorinox"
@@ -79,12 +82,20 @@ export function VictorinoxShowcase({
         >
           {title}
         </h2>
-        <div aria-hidden className="absolute inset-x-0 top-[70px] h-[260px]">
+        <div
+          ref={fanRef}
+          aria-hidden
+          className="absolute inset-x-0 top-[70px] h-[260px]"
+        >
           {fan.map(({ key, rotate }, i) => (
             <img
               key={key}
               alt=""
-              className="absolute top-0 left-1/2 h-[230px] origin-[50%_150%] drop-shadow-[0_10px_14px_rgba(0,20,30,0.5)] motion-safe:animate-[vx-rise_700ms_cubic-bezier(0.2,0.8,0.2,1)_both]"
+              className={`absolute top-0 left-1/2 h-[230px] origin-[50%_150%] drop-shadow-[0_10px_14px_rgba(0,20,30,0.5)] ${
+                fanSeen
+                  ? "motion-safe:animate-[vx-rise_700ms_cubic-bezier(0.2,0.8,0.2,1)_both]"
+                  : "motion-safe:opacity-0"
+              }`}
               src={knifeArt[key]}
               style={{
                 transform: `translateX(-50%) rotate(${rotate}deg)`,
