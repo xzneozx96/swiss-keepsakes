@@ -12,6 +12,7 @@
     "build:artifact": "npm run build && node scripts/artifact-page.mjs"
   },
   "dependencies": {
+    "@ai-sdk/react": "^3.0.312",
     "@fullcalendar/react": "^7.1.2",
     "@heroui/react": "3.2.6",
     "@heroui/styles": "3.2.6",
@@ -20,6 +21,7 @@
     "@tiptap/pm": "^3.32.0",
     "@tiptap/react": "^3.32.0",
     "@tiptap/starter-kit": "^3.32.0",
+    "ai": "^6.0.309",
     "clsx": "2.1.1",
     "maplibre-gl": "^6.14.0",
     "qrcode.react": "4.2.0",
@@ -28,7 +30,8 @@
     "react-is": "19.3.0",
     "recharts": "3.10.1",
     "reicon-react": "1.2.6",
-    "temporal-polyfill": "^1.0.6"
+    "temporal-polyfill": "^1.0.6",
+    "use-stick-to-bottom": "^1.1.6"
   },
   "devDependencies": {
     "@eslint/compat": "1.4.1",

@@ -101,7 +101,7 @@ function GuestSays({
 }
 
 /** Three dots while the assistant "types" its next message. */
-function TypingBubble({ label }: { label: string }) {
+export function TypingBubble({ label }: { label: string }) {
   return (
     <li
       aria-label={label}

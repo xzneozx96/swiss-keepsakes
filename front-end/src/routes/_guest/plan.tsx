@@ -5,9 +5,9 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 
-import { AdviceChat } from "@/features/requests/components/advice-chat";
+import { PlannerChat } from "@/features/planner/components/planner-chat";
 
-// C21 Trip assistant (R19): the floating button and the C01 banner open it (D1).
+// C21 Trip planner demo (R19): the floating button and the C01 banner open it (D1).
 export const Route = createFileRoute("/_guest/plan")({
   // The composer is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
@@ -20,7 +20,7 @@ function PlanPage() {
   const canGoBack = useCanGoBack();
 
   return (
-    <AdviceChat
+    <PlannerChat
       onLeave={() =>
         canGoBack ? router.history.back() : void navigate({ to: "/" })
       }
