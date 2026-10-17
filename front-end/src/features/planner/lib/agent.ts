@@ -155,7 +155,7 @@ function planTurn(input: PlanInput, lead: string): Turn {
       group: "Next",
     },
     { id: "tours", label: "Browse our tours", group: "Next" },
-    { id: "send", label: "Send this plan to our team", group: "Next" },
+    { id: "send", label: "Send this plan to Swiss Keepsakes", group: "Next" },
   ]
     .flat()
     .filter(Boolean);
@@ -388,7 +388,7 @@ export function nextTurn(messages: UIMessage[], hooks: AgentHooks): Turn {
                 options: [
                   {
                     id: "send",
-                    label: "Send this plan to our team",
+                    label: "Send this plan to Swiss Keepsakes",
                     group: "Next",
                   },
                   { id: "tours", label: "Browse our tours", group: "Next" },
@@ -429,7 +429,7 @@ export function nextTurn(messages: UIMessage[], hooks: AgentHooks): Turn {
           return [
             {
               kind: "reasoning",
-              text: "Packaging the answers and the plan into a brief the team can read at a glance, then filing it in their inbox.",
+              text: "Packaging the answers and the plan into a brief that is easy to read at a glance, then filing it in the Swiss Keepsakes inbox.",
             },
             {
               kind: "tool",
@@ -440,7 +440,7 @@ export function nextTurn(messages: UIMessage[], hooks: AgentHooks): Turn {
             },
             {
               kind: "text",
-              text: "Done. The team has your plan with everything you chose. They will reply by email.",
+              text: "Done. Swiss Keepsakes has your plan with everything you chose, and will reply by email.",
             },
           ];
         }

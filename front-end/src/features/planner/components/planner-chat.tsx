@@ -51,7 +51,7 @@ const TITLES: Record<string, string> = {
   find_lunch: "Find lunch options",
   build_itinerary: "Build the itinerary",
   get_booking_info: "Get booking details",
-  create_inquiry: "Send the plan to the team",
+  create_inquiry: "Send the plan to Swiss Keepsakes",
 };
 
 const PICKERS = {
@@ -364,7 +364,7 @@ export function PlannerChat({ onLeave }: { onLeave: () => void }) {
 
       return (
         <div className="animate-rise flex w-full flex-col gap-3 rounded-3xl bg-surface p-4 shadow-surface">
-          <p className="font-medium">Your plan is with the team.</p>
+          <p className="font-medium">Your plan is with Swiss Keepsakes.</p>
           <Button
             fullWidth
             variant="secondary"
@@ -376,7 +376,7 @@ export function PlannerChat({ onLeave }: { onLeave: () => void }) {
               });
             }}
           >
-            View as the shop team
+            Open it in the Swiss Keepsakes inbox
           </Button>
         </div>
       );

@@ -81,7 +81,7 @@ export const contentMerchantEn = {
     "The first paragraph, before the sections.",
   "merchantArticles.author": "Author",
   "merchantArticles.author.help":
-    "A member of the shop team, shown with their photo.",
+    "A member of Swiss Keepsakes, shown with their photo.",
   "merchantArticles.field.authorName": "Name",
   "merchantArticles.field.authorRole": "Role",
   "merchantArticles.cover": "Cover photo",
@@ -363,7 +363,7 @@ export const contentMerchantDe: Record<keyof typeof contentMerchantEn, string> =
     "merchantArticles.field.introHelp": "Der erste Absatz vor den Abschnitten.",
     "merchantArticles.author": "Autor:in",
     "merchantArticles.author.help":
-      "Jemand aus dem Ladenteam, mit Foto angezeigt.",
+      "Jemand von Swiss Keepsakes, mit Foto angezeigt.",
     "merchantArticles.field.authorName": "Name",
     "merchantArticles.field.authorRole": "Funktion",
     "merchantArticles.cover": "Titelbild",

@@ -22,7 +22,7 @@ const shots = [
  * Trip-advice call to action (spec §4.1, §4.10), layout J "Polaroid stack" (owner choice
  * 13.10.2026): three tilted snapshots with captions, centred text and the screen's one
  * red primary action. Opens the trip assistant chat (C21, R19). No promised reply time,
- * no personal name: the shop team answers by email.
+ * no personal name: Swiss Keepsakes answers by email.
  */
 export function AdviceBanner({
   title,
