@@ -3,12 +3,16 @@ import type { CalendarDate } from "@internationalized/date";
 import { Button, Calendar, Drawer } from "@heroui/react";
 import { parseDate } from "@internationalized/date";
 import clsx from "clsx";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { INTERESTS, type Interest } from "../data/places";
 import { WINDOW_FROM, WINDOW_TO, shortDay } from "../lib/hours";
 
-import { PickupDateIcon } from "@/components/icons";
+import {
+  ArrowUpRightIcon,
+  PickupDateIcon,
+  SelectedIcon,
+} from "@/components/icons";
 import { QuantityStepper } from "@/components/quantity-stepper";
 
 type Submit = (output: Record<string, unknown>) => void;
@@ -19,17 +23,152 @@ interface PickerProps {
   onSubmit: Submit;
 }
 
-const chip = (selected: boolean) =>
-  clsx(
-    "rounded-2xl border-2 bg-surface px-3.5 py-2.5 text-start font-medium outline-none transition-colors focus-visible:focus-ring disabled:opacity-50",
-    selected
-      ? "border-accent bg-default"
-      : "border-transparent shadow-surface hover:bg-surface-secondary",
-  );
+/**
+ * Options sit on the guest's side as white cards with the app's surface shadow (no borders).
+ * They fill one even grid, and a chosen one turns soft red with a ring, which is also a
+ * shadow, so nothing shifts when it is picked.
+ */
+const optionBase =
+  "animate-rise card-hover min-h-12 rounded-2xl bg-surface text-[15px] text-foreground shadow-surface outline-none transition-[background-color,box-shadow,scale] duration-150 focus-visible:focus-ring disabled:pointer-events-none disabled:text-muted motion-safe:active:scale-[0.98]";
 
-function Wrap({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-col gap-3 ps-10">{children}</div>;
+const chosen =
+  "bg-accent-soft text-accent-soft-foreground shadow-none ring-2 ring-accent hover:shadow-none";
+
+const delay = (i = 0) =>
+  ({ "--d": `${Math.min(i, 8) * 45}ms` }) as React.CSSProperties;
+
+/** Options sit on the right, under the question, as one block of equal width. */
+export function Group({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  const id = useId();
+
+  return (
+    <div className="ms-auto flex w-full max-w-[92%] flex-col gap-2">
+      <span className="animate-rise self-end text-xs text-muted" id={id}>
+        {label}
+      </span>
+      <div aria-labelledby={id} className="flex flex-col gap-2" role="group">
+        {children}
+      </div>
+    </div>
+  );
 }
+
+const Grid = ({
+  cols,
+  children,
+}: {
+  cols: 2 | 4;
+  children: React.ReactNode;
+}) => (
+  <div
+    className={clsx("grid gap-2", cols === 4 ? "grid-cols-4" : "grid-cols-2")}
+  >
+    {children}
+  </div>
+);
+
+/** A centred cell for a grid of choices. */
+export function Chip({
+  selected = false,
+  hint,
+  index = 0,
+  className,
+  children,
+  ...props
+}: {
+  selected?: boolean;
+  hint?: string;
+  index?: number;
+  children: React.ReactNode;
+} & React.ComponentProps<"button">) {
+  return (
+    <button
+      aria-pressed={selected || undefined}
+      className={clsx(
+        optionBase,
+        "flex flex-col items-center justify-center gap-0.5 px-2 py-2.5 text-center font-medium tabular-nums",
+        selected && chosen,
+        className,
+      )}
+      style={delay(index)}
+      type="button"
+      {...props}
+    >
+      <span className="inline-flex items-center gap-1.5">
+        {selected && (
+          <SelectedIcon
+            aria-hidden
+            className="animate-pop size-4 shrink-0"
+            weight="Filled"
+          />
+        )}
+        {children}
+      </span>
+      {hint && <span className="text-xs font-normal text-muted">{hint}</span>}
+    </button>
+  );
+}
+
+/** A full-width choice with a trailing arrow, for lists of unequal text. */
+export function Row({
+  hint,
+  index = 0,
+  children,
+  ...props
+}: {
+  hint?: string;
+  index?: number;
+  children: React.ReactNode;
+} & React.ComponentProps<"button">) {
+  return (
+    <button
+      className={clsx(
+        optionBase,
+        "group flex w-full items-center gap-3 px-4 py-2.5 text-start",
+      )}
+      style={delay(index)}
+      type="button"
+      {...props}
+    >
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate font-medium">{children}</span>
+        {hint && (
+          <span className="line-clamp-1 text-sm text-muted">{hint}</span>
+        )}
+      </span>
+      <ArrowUpRightIcon
+        aria-hidden
+        className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-px group-hover:-translate-y-px"
+      />
+    </button>
+  );
+}
+
+const Continue = ({
+  disabled,
+  onPress,
+  children = "Continue",
+}: {
+  disabled?: boolean;
+  onPress: () => void;
+  children?: React.ReactNode;
+}) => (
+  <Button
+    fullWidth
+    className="animate-rise min-h-12"
+    isDisabled={disabled}
+    size="lg"
+    onPress={onPress}
+  >
+    {children}
+  </Button>
+);
 
 export function StayPicker({ input, disabled, onSubmit }: PickerProps) {
   const options = input.options as {
@@ -39,22 +178,19 @@ export function StayPicker({ input, disabled, onSubmit }: PickerProps) {
   }[];
 
   return (
-    <Wrap>
-      <div className="flex flex-col gap-2">
-        {options.map((o) => (
-          <button
-            key={o.id}
-            className={`${chip(false)} flex flex-col gap-0.5`}
-            disabled={disabled}
-            type="button"
-            onClick={() => onSubmit({ id: o.id, label: o.label })}
-          >
-            <span>{o.label}</span>
-            <span className="text-xs font-normal text-muted">{o.hint}</span>
-          </button>
-        ))}
-      </div>
-    </Wrap>
+    <Group label="Choose one">
+      {options.map((o, i) => (
+        <Row
+          key={o.id}
+          disabled={disabled}
+          hint={o.hint}
+          index={i}
+          onClick={() => onSubmit({ id: o.id, label: o.label })}
+        >
+          {o.label}
+        </Row>
+      ))}
+    </Group>
   );
 }
 
@@ -66,8 +202,8 @@ export function PartyPicker({ disabled, onSubmit }: PickerProps) {
   }`;
 
   return (
-    <Wrap>
-      <div className="flex flex-col gap-2 rounded-2xl bg-surface p-3 shadow-surface">
+    <Group label="Set the numbers">
+      <div className="animate-rise flex flex-col gap-3 rounded-2xl bg-surface p-4 shadow-surface">
         <QuantityStepper
           label="Adults"
           max={8}
@@ -83,15 +219,13 @@ export function PartyPicker({ disabled, onSubmit }: PickerProps) {
           onChange={setChildren}
         />
       </div>
-      <Button
-        fullWidth
-        isDisabled={disabled}
-        size="lg"
+      <Continue
+        disabled={disabled}
         onPress={() => onSubmit({ adults, children, label })}
       >
-        Continue
-      </Button>
-    </Wrap>
+        Continue · {label}
+      </Continue>
+    </Group>
   );
 }
 
@@ -108,30 +242,29 @@ export function DatePicker({ disabled, onSubmit }: PickerProps) {
   const pick = (iso: string) => onSubmit({ date: iso, label: shortDay(iso) });
 
   return (
-    <Wrap>
-      <div className="flex flex-wrap gap-2">
-        {SUGGESTED.map((s) => (
-          <button
+    <Group label="Choose one">
+      <Grid cols={2}>
+        {SUGGESTED.map((s, i) => (
+          <Chip
             key={s.date}
-            className={`${chip(false)} flex flex-col`}
             disabled={disabled}
-            type="button"
+            hint={s.hint}
+            index={i}
             onClick={() => pick(s.date)}
           >
-            <span>{shortDay(s.date)}</span>
-            <span className="text-xs font-normal text-muted">{s.hint}</span>
-          </button>
+            {shortDay(s.date)}
+          </Chip>
         ))}
-        <button
-          className={`${chip(false)} flex items-center gap-2`}
+        <Chip
+          className="col-span-2 flex-row gap-2"
           disabled={disabled}
-          type="button"
+          index={SUGGESTED.length}
           onClick={() => setOpen(true)}
         >
           <PickupDateIcon aria-hidden size={18} />
           Pick another date
-        </button>
-      </div>
+        </Chip>
+      </Grid>
       <Drawer.Backdrop isOpen={open} onOpenChange={setOpen}>
         <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
           <Drawer.Dialog className="flex sheet-max flex-col">
@@ -188,7 +321,7 @@ export function DatePicker({ disabled, onSubmit }: PickerProps) {
           </Drawer.Dialog>
         </Drawer.Content>
       </Drawer.Backdrop>
-    </Wrap>
+    </Group>
   );
 }
 
@@ -203,118 +336,113 @@ export function TimePicker({ disabled, onSubmit }: PickerProps) {
   const [length, setLength] = useState<string | null>(null);
 
   return (
-    <Wrap>
-      <div
-        aria-label="Start time"
-        className="flex flex-wrap gap-2"
-        role="group"
-      >
-        {STARTS.map((s) => (
-          <button
+    <Group label="Pick a start time and a length">
+      <Grid cols={4}>
+        {STARTS.map((s, i) => (
+          <Chip
             key={s}
-            aria-pressed={start === s}
-            className={chip(start === s)}
             disabled={disabled}
-            type="button"
+            index={i}
+            selected={start === s}
             onClick={() => setStart(s)}
           >
             {s}
-          </button>
+          </Chip>
         ))}
-      </div>
-      <div aria-label="Length" className="flex flex-wrap gap-2" role="group">
-        {LENGTHS.map((l) => (
-          <button
+      </Grid>
+      <Grid cols={2}>
+        {LENGTHS.map((l, i) => (
+          <Chip
             key={l.id}
-            aria-pressed={length === l.id}
-            className={`${chip(length === l.id)} flex flex-col`}
             disabled={disabled}
-            type="button"
+            hint={l.hint}
+            index={STARTS.length + i}
+            selected={length === l.id}
             onClick={() => setLength(l.id)}
           >
-            <span>{l.label}</span>
-            <span className="text-xs font-normal text-muted">{l.hint}</span>
-          </button>
+            {l.label}
+          </Chip>
         ))}
-      </div>
-      <Button
-        fullWidth
-        isDisabled={disabled || !start || !length}
-        size="lg"
-        onPress={() =>
-          onSubmit({
-            start,
-            length,
-            label: `${start}, ${length === "full" ? "full day" : "half day"}`,
-          })
-        }
-      >
-        Continue
-      </Button>
-    </Wrap>
+      </Grid>
+      {start && length && (
+        <Continue
+          disabled={disabled}
+          onPress={() =>
+            onSubmit({
+              start,
+              length,
+              label: `${start}, ${length === "full" ? "full day" : "half day"}`,
+            })
+          }
+        />
+      )}
+    </Group>
   );
 }
 
 export function InterestsPicker({ disabled, onSubmit }: PickerProps) {
-  const [chosen, setChosen] = useState<Interest[]>([]);
+  const [picked, setPicked] = useState<Interest[]>([]);
   const toggle = (id: Interest) =>
-    setChosen((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
+    setPicked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
   return (
-    <Wrap>
-      <div aria-label="Interests" className="flex flex-wrap gap-2" role="group">
-        {INTERESTS.map((i) => (
-          <button
-            key={i.id}
-            aria-pressed={chosen.includes(i.id)}
-            className={chip(chosen.includes(i.id))}
+    <Group label="Choose any">
+      <Grid cols={2}>
+        {INTERESTS.map((it, n) => (
+          <Chip
+            key={it.id}
+            className={
+              n === INTERESTS.length - 1 && INTERESTS.length % 2
+                ? "col-span-2"
+                : undefined
+            }
             disabled={disabled}
-            type="button"
-            onClick={() => toggle(i.id)}
+            index={n}
+            selected={picked.includes(it.id)}
+            onClick={() => toggle(it.id)}
           >
-            {i.label}
-          </button>
+            {it.label}
+          </Chip>
         ))}
-      </div>
-      <Button
-        fullWidth
-        isDisabled={disabled || chosen.length === 0}
-        size="lg"
-        onPress={() =>
-          onSubmit({
-            interests: chosen,
-            label: chosen
-              .map((c) => INTERESTS.find((i) => i.id === c)?.label)
-              .join(", "),
-          })
-        }
-      >
-        Continue
-      </Button>
-    </Wrap>
+      </Grid>
+      {picked.length > 0 && (
+        <Continue
+          disabled={disabled}
+          onPress={() =>
+            onSubmit({
+              interests: picked,
+              label: picked
+                .map((c) => INTERESTS.find((i) => i.id === c)?.label)
+                .join(", "),
+            })
+          }
+        >
+          Continue · {picked.length}
+        </Continue>
+      )}
+    </Group>
   );
 }
 
 export function DietPicker({ disabled, onSubmit }: PickerProps) {
   return (
-    <Wrap>
-      <div className="flex flex-wrap gap-2">
+    <Group label="Choose one">
+      <Grid cols={2}>
         {[
           { id: "any", label: "No preference" },
           { id: "veg", label: "Vegetarian" },
-        ].map((d) => (
-          <button
+        ].map((d, i) => (
+          <Chip
             key={d.id}
-            className={chip(false)}
             disabled={disabled}
-            type="button"
+            index={i}
             onClick={() => onSubmit({ diet: d.id, label: d.label })}
           >
             {d.label}
-          </button>
+          </Chip>
         ))}
-      </div>
-    </Wrap>
+      </Grid>
+    </Group>
   );
 }
 
@@ -327,29 +455,23 @@ export function NextPicker({ input, disabled, onSubmit }: PickerProps) {
   const groups = [...new Set(options.map((o) => o.group))];
 
   return (
-    <Wrap>
+    <div className="flex flex-col gap-4">
       {groups.map((g) => (
-        <div key={g} className="flex flex-col gap-1.5">
-          <span className="text-xs text-muted">
-            {g === "Adjust" ? "Adjust the plan" : "Next step"}
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {options
-              .filter((o) => o.group === g)
-              .map((o) => (
-                <button
-                  key={o.id}
-                  className={chip(false)}
-                  disabled={disabled}
-                  type="button"
-                  onClick={() => onSubmit({ id: o.id, label: o.label })}
-                >
-                  {o.label}
-                </button>
-              ))}
-          </div>
-        </div>
+        <Group key={g} label={g === "Adjust" ? "Adjust the plan" : "Next step"}>
+          {options
+            .filter((o) => o.group === g)
+            .map((o, n) => (
+              <Row
+                key={o.id}
+                disabled={disabled}
+                index={n}
+                onClick={() => onSubmit({ id: o.id, label: o.label })}
+              >
+                {o.label}
+              </Row>
+            ))}
+        </Group>
       ))}
-    </Wrap>
+    </div>
   );
 }

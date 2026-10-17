@@ -158,6 +158,37 @@ button {
   background-image: linear-gradient(135deg, #ff8a3d 0%, #d52b1e 55%, #b3197a 100%);
 }
 
+/*
+ * Chat motion: new messages, options, trace steps and plan rows rise in once (transform and
+ * opacity only, ease-out-quart). --d staggers siblings. Reduced motion shows them at once.
+ */
+@keyframes chat-rise {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+@keyframes chat-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@utility animate-rise {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: chat-rise 320ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: var(--d, 0ms);
+  }
+}
+
+@utility animate-pop {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: chat-pop 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
 /* "Thinking…" label while the assistant reasons (the AI Elements shimmer, in CSS). */
 @keyframes text-shimmer {
   from {

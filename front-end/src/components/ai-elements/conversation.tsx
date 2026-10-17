@@ -24,7 +24,7 @@ export function ConversationContent({
 }: ComponentProps<typeof StickToBottom.Content>) {
   return (
     <StickToBottom.Content
-      className={clsx("flex flex-col gap-3 px-4 pt-5 pb-6", className)}
+      className={clsx("flex flex-col gap-4 px-4 pt-5 pb-6", className)}
       {...props}
     />
   );
