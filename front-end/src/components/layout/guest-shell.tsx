@@ -82,7 +82,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
                   viewBox="0 0 92 30"
                 >
                   <path
-                    d="M0 30V0H8C20 0 24 28 46 28C68 28 72 0 84 0H92V30Z"
+                    d="M0 30V0H8.53A6 6 0 0 1 14.15 3.9A34 34 0 0 0 77.85 3.9A6 6 0 0 1 83.47 0H92V30Z"
                     fill="currentColor"
                   />
                 </svg>
