@@ -103,10 +103,10 @@ export const en = {
   "home.advice.caption1": "the lake",
   "home.advice.caption2": "Pilatus",
   "home.advice.caption3": "old town",
-  "home.advice.title": "Not sure where to start?",
+  "home.advice.title": "Come, let us show you Lucerne",
   "home.advice.body":
-    "The people at the shop know Lucerne well. Answer a few questions and get personal tips by email.",
-  "home.advice.action": "Ask a local",
+    "We live here and love showing visitors our town: the quiet corners, the best hour by the lake. Tell us about your trip, and we'll write back with places picked just for you.",
+  "home.advice.action": "Ask us where to go",
   "home.storyRow": "Story · {minutes} min read",
   "advice.fab": "Trip assistant",
   "credits.title": "Photo credits",

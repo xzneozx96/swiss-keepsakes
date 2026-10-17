@@ -106,10 +106,10 @@ export const de: Record<MessageKey, string> = {
   "home.advice.caption1": "der See",
   "home.advice.caption2": "Pilatus",
   "home.advice.caption3": "Altstadt",
-  "home.advice.title": "Nicht sicher, wo Sie anfangen sollen?",
+  "home.advice.title": "Kommen Sie, wir zeigen Ihnen Luzern",
   "home.advice.body":
-    "Die Leute im Laden kennen Luzern gut. Beantworten Sie ein paar Fragen und erhalten Sie persönliche Tipps per E-Mail.",
-  "home.advice.action": "Tipps von hier holen",
+    "Wir leben hier und zeigen Gästen unsere Stadt am liebsten selbst: die stillen Ecken, die schönste Stunde am See. Erzählen Sie uns von Ihrer Reise, und wir schreiben Ihnen zurück mit Orten, die genau zu Ihnen passen.",
+  "home.advice.action": "Fragen Sie uns, wohin es geht",
   "home.storyRow": "Geschichte · {minutes} Min. Lesezeit",
   "advice.fab": "Reiseassistent",
   "credits.title": "Fotonachweis",
