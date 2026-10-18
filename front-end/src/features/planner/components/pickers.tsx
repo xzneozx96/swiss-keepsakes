@@ -25,14 +25,13 @@ interface PickerProps {
 
 /**
  * Options sit on the guest's side as white cards with the app's surface shadow (no borders).
- * They fill one even grid, and a chosen one turns soft red with a ring, which is also a
- * shadow, so nothing shifts when it is picked.
+ * They fill one even grid. A chosen one follows the gift option style (C03): a red ring and
+ * a check on the top edge, so nothing shifts when it is picked.
  */
 const optionBase =
   "animate-rise card-hover min-h-12 rounded-2xl bg-surface text-[15px] text-foreground shadow-surface outline-none transition-[background-color,box-shadow,scale] duration-150 focus-visible:focus-ring disabled:pointer-events-none disabled:text-muted motion-safe:active:scale-[0.98]";
 
-const chosen =
-  "bg-accent-soft text-accent-soft-foreground shadow-none ring-2 ring-accent hover:shadow-none";
+const chosen = "ring-2 ring-accent";
 
 const delay = (i = 0) =>
   ({ "--d": `${Math.min(i, 8) * 45}ms` }) as React.CSSProperties;
@@ -92,7 +91,7 @@ export function Chip({
       aria-pressed={selected || undefined}
       className={clsx(
         optionBase,
-        "flex flex-col items-center justify-center gap-0.5 px-2 py-2.5 text-center font-medium tabular-nums",
+        "relative flex flex-col items-center justify-center gap-0.5 px-2 py-2.5 text-center font-medium tabular-nums",
         selected && chosen,
         className,
       )}
@@ -100,16 +99,14 @@ export function Chip({
       type="button"
       {...props}
     >
-      <span className="inline-flex items-center gap-1.5">
-        {selected && (
-          <SelectedIcon
-            aria-hidden
-            className="animate-pop size-4 shrink-0"
-            weight="Filled"
-          />
-        )}
-        {children}
-      </span>
+      <span className="inline-flex items-center gap-1.5">{children}</span>
+      {selected && (
+        <SelectedIcon
+          aria-hidden
+          className="animate-pop absolute -end-1 -top-1 size-4.5 rounded-full bg-surface text-accent"
+          weight="Filled"
+        />
+      )}
       {hint && <span className="text-xs font-normal text-muted">{hint}</span>}
     </button>
   );
