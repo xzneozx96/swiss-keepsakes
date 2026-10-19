@@ -279,3 +279,29 @@ Open questions for the owner:
 - Is the GHCR MinIO mirror acceptable for a client project? The alternatives are Chainguard's free `minio` image, or another S3 server such as SeaweedFS or Garage.
 - Should problem `type` values stay bare codes, as the architecture says, or become absolute URIs, as RFC 9457 recommends? Changing later also means changing the front-end map.
 - Should `/healthz` stay out of the request log? Fly health checks will add a line every few seconds per machine.
+
+## Review fixes
+
+An independent Opus review of f023673 found 0 Critical, 1 High, 3 Medium and 10 Low. The fixes are in commits d9da054 to 28e6ebc. Some Output and What changed sections above describe the code before these fixes. Where they differ, this section wins.
+
+- H1. The 500 path logged the raw error, and pino copies every enumerable error property, so a Drizzle or pg error could put an email or engraving text in the logs. The `err` serializer is now an allow-list (type, code, constraint, table, stack frames without message lines), applied to `cause` up to 3 deep. The 500 test throws a pg-style error with an enumerable `detail` and a `params:` message, and asserts none of the personal data is logged.
+- M1. The request log uses `routePath(c)`, so it holds the route pattern and a catch-all registered later does not hide it. A test on `/partner/{token}` asserts the pattern is logged and the token is not.
+- M2. An `HTTPException` keeps its response headers (`Retry-After`, `WWW-Authenticate`). A 5xx one is logged at error level with its cause.
+- M3. `main().catch`, `uncaughtException` and `unhandledRejection` log a fatal line through pino, run the shutdown and exit 1. A stop that rejects no longer skips the remaining stops.
+- L1. New `HOST` config (default 0.0.0.0, 127.0.0.1 in `api/.env.example`), passed to the server.
+- L2. Redaction covers more key names, one and two levels down, and arrays. Three or more levels deep is not covered, and `data-jobs-security.md` says so.
+- L4. Stops run in start order, so the HTTP server stops before the worker.
+- L8, L9. The MinIO image is pinned by digest (amd64 only). The Postgres healthcheck uses `pg_isready -h 127.0.0.1`.
+- L7. The "Design, not built" lines are replaced where code now exists, and the stale package rows are fixed.
+- Nits. `PORT` forms such as `0x1F90` and `1e3` and a `DATABASE_URL` without a host are rejected, and `api/package.json` has `engines.node >=22.12`.
+
+Evidence: `pnpm typecheck`, `pnpm lint:zones`, `pnpm --filter @sk/api lint` and `pnpm build` pass. `pnpm test` reports 302 passed, 45 of them tagged `[E1.8]`. The process tests ran 3 times without a flake. The worker reverted each of 11 mutants and all 45 `[E1.8]` tests passed afterwards. Live runs showed the API on `127.0.0.1:3000`, a `/partner/:token` route in the log with the token absent, `Retry-After: 30` on a 429 problem response, an `EADDRINUSE` startup failure that exits 1, and a crash path that logs a level 60 line and exits 1 without the email.
+
+Decided and left alone: the request id policy (a client can still choose `X-Request-Id`, to decide before E1.9 writes it into `audit_log`), the raw path in the problem `instance`, the layer zones in `api/eslint.config.mjs`, and pino itself (the owner approved it).
+
+Not verified after the fixes:
+
+- Intermediate commits were not run one by one, only HEAD.
+- MinIO was not pulled by digest from an empty cache. The registry serves the digest anonymously (HTTP 200).
+- Two log-redaction gaps are documented but not enforced. An `Error` logged under a key other than `err` still serializes its enumerable fields, and `logger.error(error)` as the first argument puts `error.message` into `msg`. A lint rule could enforce both.
+- `docs/development-rules/README.md` still describes `backend/` as "Design, not built".
