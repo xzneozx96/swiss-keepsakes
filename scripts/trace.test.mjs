@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { after, test } from "node:test";
@@ -27,13 +27,14 @@ function workspace(name, { plan, status, tests }) {
 }
 
 const header = "## 4. Backlog\n\n| ID | Story | Side | Pts | Priority | Depends | Acceptance |\n|---|---|---|---|---|---|---|\n";
+const testCall = (title) => `test(${JSON.stringify(title)}, () => {});\n`;
 const row = (id) => `| ${id} | A story | FE | 1 | High | | Proof |\n`;
 
 test("[E0.9] a plan whose Verified stories all have tests exits 0 and prints one line per story", () => {
   const w = workspace("pass", {
     plan: header + row("E0.1") + row("E0.2"),
     status: { "E0.1": "Verified" },
-    tests: { "a.spec.ts": 'test("[E0.1] works", () => {});\ntest.skip("[E0.1] also works", () => {});\n' },
+    tests: { "a.spec.ts": testCall("[E0.1] works") + testCall("[E0.1] also works") },
   });
   const result = run([w.plan, "--tests", w.tests]);
 
@@ -60,7 +61,7 @@ test("[E0.9] a Done story with no test also exits 1", () => {
 });
 
 test("[E0.9] an unknown story ID in a test title warns and does not fail", () => {
-  const w = workspace("unknown", { plan: header + row("E0.1"), tests: { "a.spec.ts": 'test("[E9.9] stray", () => {});\n' } });
+  const w = workspace("unknown", { plan: header + row("E0.1"), tests: { "a.spec.ts": testCall("[E9.9] stray") } });
   const result = run([w.plan, "--tests", w.tests]);
 
   assert.equal(result.status, 0);
@@ -96,10 +97,21 @@ test("[E0.9] the output is the same from a subdirectory", () => {
 test("[E0.9] a test inside a Playwright project folder counts once per project", () => {
   const w = workspace("projects", {
     plan: header + row("E0.1"),
-    tests: { "a.spec.ts": 'test("[E0.1] runs twice", () => {});\n' },
+    tests: { "a.spec.ts": testCall("[E0.1] runs twice") },
   });
   writeFileSync(join(w.tests, "playwright.config.ts"), 'export default { projects: [\n  { name: "a" },\n  { name: "b" },\n],\n};\n');
   const result = run([w.plan, "--tests", w.tests]);
 
   assert.equal(result.stdout.trim(), "E0.1 tests=2 status=Backlog");
+});
+
+test("[E0.9] fixture test titles do not count toward the real plan", () => {
+  const plan = resolve(here, "..", "docs", "plan", "delivery-plan.md");
+  const real = run([plan]);
+  const own = (readFileSync(script.replace("trace.mjs", "trace.test.mjs"), "utf8").match(/^test\("\[E0\.9\]/gm) ?? []).length;
+
+  assert.equal(real.status, 0, real.stderr);
+  assert.match(real.stdout, new RegExp(`^E0\\.9 tests=${own} `, "m"));
+  assert.match(real.stdout, /^E0\.1 tests=0 /m);
+  assert.doesNotMatch(real.stderr, /unknown story ID/);
 });

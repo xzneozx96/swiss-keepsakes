@@ -3,8 +3,8 @@
 //
 //   node scripts/trace.mjs <plan.md> [--tests <dir>]... [--status <status.json>] [--verbose]
 //
-// Test titles are matched by [E<n>.<n>] on test() and it() calls under e2e, packages and api, skipping
-// node_modules. A test in a folder with a playwright.config.ts counts once per project in that config,
+// Test titles are matched by [E<n>.<n>] on test() and it() calls under e2e, packages, api and scripts, skipping
+// node_modules and scripts/fixtures. A test in a folder with a playwright.config.ts counts once per project in that config,
 // so a test that runs in English and German counts 2. Statuses come from status.json beside the plan;
 // a missing file makes every story Backlog.
 // Exit 0 ok, 1 when a Verified or Done story has no test, 2 on a malformed story row or unreadable input.
@@ -13,6 +13,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const fixtures = join(repoRoot, "scripts", "fixtures");
 const TEST_FILE = /\.(?:[cm]?[jt]sx?)$/;
 const TEST_CALL = /\b(?:test|it)(?:\.\w+)*\(\s*(["'`])((?:\\.|(?!\1).)*)\1/g;
 const STORY_ID = /^E\d+\.\d+$/;
@@ -45,6 +46,8 @@ function walk(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.name === "node_modules") continue;
     const path = join(dir, entry.name);
+
+    if (path === fixtures) continue;
 
     if (entry.isDirectory()) walk(path, out);
     else if (TEST_FILE.test(entry.name)) out.push(path);
@@ -126,7 +129,7 @@ function main(argv) {
     return 2;
   }
   const plan = resolve(positional[0]);
-  const testRoots = flag("--tests").length ? flag("--tests").map((p) => resolve(p)) : ["e2e", "packages", "api"].map((d) => join(repoRoot, d));
+  const testRoots = flag("--tests").length ? flag("--tests").map((p) => resolve(p)) : ["e2e", "packages", "api", "scripts"].map((d) => join(repoRoot, d));
   const statusPath = flag("--status")[0] ? resolve(flag("--status")[0]) : join(dirname(plan), "status.json");
 
   let result;
