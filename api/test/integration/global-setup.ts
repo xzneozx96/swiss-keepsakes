@@ -38,13 +38,19 @@ export default async function setup(project: TestProject) {
     throw new Error(`Integration tests not started: ${refused}`)
 
   const database = `sk_test_${randomBytes(6).toString('hex')}`
+  const drop = () => admin(DATABASE_URL_UNPOOLED, `drop database ${database} with (force)`)
   await admin(DATABASE_URL_UNPOOLED, `create database ${database}`)
   const databaseUrlUnpooled = withDatabase(DATABASE_URL_UNPOOLED, database)
-  await migrateDatabase(databaseUrlUnpooled, createLogger('warn'))
+  try {
+    await migrateDatabase(databaseUrlUnpooled, createLogger('warn'))
+  }
+  catch (error) {
+    // Vitest runs no teardown when setup fails, so drop the database here.
+    await drop()
+    throw error
+  }
   project.provide('databaseUrl', withDatabase(DATABASE_URL, database))
   project.provide('databaseUrlUnpooled', databaseUrlUnpooled)
 
-  return async () => {
-    await admin(DATABASE_URL_UNPOOLED, `drop database ${database} with (force)`)
-  }
+  return drop
 }
