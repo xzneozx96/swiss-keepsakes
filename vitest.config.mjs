@@ -8,7 +8,7 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
-          include: ['api/**/*.test.ts', 'packages/**/*.test.ts', 'scripts/boundaries.test.mjs'],
+          include: ['api/**/*.test.ts', 'packages/**/*.test.ts', 'scripts/boundaries.test.mjs', 'scripts/workspace.test.mjs'],
           exclude: ['**/node_modules/**', '**/dist/**'],
         },
       },
