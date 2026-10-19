@@ -11,6 +11,7 @@ import {
 import { useLocale } from '@/contexts/locale-context'
 import { categories } from '@/features/catalog/categories'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
+import { useArticles } from '@/features/content/api/queries'
 import { publishedArticles } from '@/features/content/lib/articles'
 import { useDemoSelector } from '@/features/demo'
 import { GlobalSearch } from '@/features/search/components/global-search'
@@ -25,7 +26,7 @@ export const Route = createFileRoute('/_guest/search')({
 
 function SearchPage() {
   const { t, language, intlLocale } = useLocale()
-  const demoArticles = useDemoSelector(s => s.data.articles)
+  const demoArticles = useArticles()
   const products = useDemoSelector(s => s.data.products)
   const subcategories = useDemoSelector(s => s.data.subcategories)
   const demoTours = useDemoSelector(s => s.data.tours)

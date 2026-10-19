@@ -9,6 +9,7 @@ import { isPublished, isSoldOut } from '@sk/domain/catalog'
 import { STORY_CATEGORIES } from '@sk/domain/content'
 import { useLocale } from '@/contexts/locale-context'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
+import { useArticles } from '@/features/content/api/queries'
 import { publishedArticles } from '@/features/content/lib/articles'
 import {
   ALL_STORIES_PHOTO,
@@ -22,7 +23,7 @@ const STORIES_ON_HOME = 6
 /** Builds the discovery home from the catalogue, the stories, the tours and the language. */
 export function useDiscoveryView(): DiscoveryHomeView {
   const { t, language, intlLocale } = useLocale()
-  const demoArticles = useDemoSelector(s => s.data.articles)
+  const demoArticles = useArticles()
   const orders = useDemoSelector(s => s.data.orders)
   const products = useDemoSelector(s => s.data.products)
   const demoTours = useDemoSelector(s => s.data.tours)

@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query'
 import {
   createHashHistory,
   createRouter,
@@ -11,7 +12,9 @@ import {
   LocaleProvider,
   storedLanguage,
 } from '@/contexts/locale-context'
+import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
+import { startDemo } from '@/features/demo/data-client'
 import { routeTree } from '@/routeTree.gen'
 import '@/styles/globals.css'
 
@@ -39,19 +42,26 @@ declare module '@tanstack/react-router' {
 const rootElement = document.getElementById('root')!
 
 if (!rootElement.innerHTML) {
+  const demo = startDemo()
+
   // Whoever saved German waits for its chunk before the first paint; everyone else already has English.
   // If German cannot be fetched the app still starts, in English.
-  void loadDictionary(storedLanguage())
-    .catch(() => undefined)
-    .then(() => {
-      ReactDOM.createRoot(rootElement).render(
-        <StrictMode>
-          <LocaleProvider>
-            <DemoProvider>
-              <RouterProvider router={router} />
-            </DemoProvider>
-          </LocaleProvider>
-        </StrictMode>,
-      )
-    })
+  void Promise.all([
+    loadDictionary(storedLanguage()).catch(() => undefined),
+    demo.ready,
+  ]).then(() => {
+    ReactDOM.createRoot(rootElement).render(
+      <StrictMode>
+        <QueryClientProvider client={demo.queryClient}>
+          <DataClientProvider client={demo.dataClient}>
+            <LocaleProvider>
+              <DemoProvider store={demo.store}>
+                <RouterProvider router={router} />
+              </DemoProvider>
+            </LocaleProvider>
+          </DataClientProvider>
+        </QueryClientProvider>
+      </StrictMode>,
+    )
+  })
 }

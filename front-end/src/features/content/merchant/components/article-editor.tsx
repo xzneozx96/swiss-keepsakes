@@ -407,16 +407,16 @@ export function ArticleEditor({
     }
   }
 
-  const onSaveDraft = () => {
-    const id = editor.save('draft')
+  const onSaveDraft = async () => {
+    const id = await editor.save('draft')
 
     if (!id)
       return focusFirstError()
     toast.success(t('merchantArticles.toast.saved'))
     openSaved(id)
   }
-  const onPublish = () => {
-    const id = editor.publish()
+  const onPublish = async () => {
+    const id = await editor.publish()
 
     if (!id)
       return focusFirstError()
@@ -425,8 +425,8 @@ export function ArticleEditor({
     )
     openSaved(id)
   }
-  const onSaveChanges = () => {
-    if (!editor.save('publish'))
+  const onSaveChanges = async () => {
+    if (!(await editor.save('publish')))
       return focusFirstError()
     toast.success(t('merchantArticles.toast.savedPublished'))
   }
@@ -441,12 +441,12 @@ export function ArticleEditor({
 
     if (!ok)
       return
-    if (!editor.unpublish())
+    if (!(await editor.unpublish()))
       return focusFirstError()
     toast.success(t('merchantArticles.toast.unpublished'))
   }
-  const onAddVersion = () => {
-    const id = editor.addOtherVersion()
+  const onAddVersion = async () => {
+    const id = await editor.addOtherVersion()
 
     if (!id)
       return
@@ -463,9 +463,9 @@ export function ArticleEditor({
     <Actions
       dirty={editor.dirty}
       status={status}
-      onPublish={onPublish}
-      onSaveChanges={onSaveChanges}
-      onSaveDraft={onSaveDraft}
+      onPublish={() => void onPublish()}
+      onSaveChanges={() => void onSaveChanges()}
+      onSaveDraft={() => void onSaveDraft()}
       onUnpublish={() => void onUnpublish()}
     />
   )
@@ -508,7 +508,7 @@ export function ArticleEditor({
         languageName={languageName}
         onAdd={() => setSheet('stories')}
       />
-      {stored && <VersionCard editor={editor} onAdd={onAddVersion} />}
+      {stored && <VersionCard editor={editor} onAdd={() => void onAddVersion()} />}
     </>
   )
 

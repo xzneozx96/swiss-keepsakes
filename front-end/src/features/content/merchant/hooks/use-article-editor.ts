@@ -1,4 +1,4 @@
-import type { Article, ArticleLink, ArticlePublication } from '@sk/domain/content'
+import type { ArticleLink, ArticlePublication } from '@sk/domain/content'
 import type {
   ArticleForm,
   BlockType,
@@ -15,8 +15,10 @@ import { pickText, slugify } from '@sk/domain/shared'
 
 import { useState } from 'react'
 
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
 import { useDemo } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
+import { useArticles } from '../../api/queries'
 import { publishedArticles } from '../../lib/articles'
 import {
   emptyForm,
@@ -60,8 +62,17 @@ function sameLink(a: ArticleLink, b: ArticleLink) {
  * refresh drops them (outline side path "Refresh"). A new article is stored on its first save.
  */
 export function useArticleEditor(articleId: string, newLanguage: Language) {
-  const { state, update } = useDemo()
-  const { articles } = state.data
+  const { state } = useDemo()
+  const client = useDataClient()
+  const { mutateAsync: createArticle } = useCommand(
+    client.content.createArticle,
+    [queryKeys.content.articles],
+  )
+  const { mutateAsync: updateArticle } = useCommand(
+    client.content.updateArticle,
+    [queryKeys.content.articles],
+  )
+  const articles = useArticles()
   const stored = articles.find(a => a.id === articleId)
   const [form, setForm] = useState<ArticleForm>(() =>
     stored
@@ -234,36 +245,21 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
 
   /**
    * Validates for the mode, then stores the working copy with the given publication (or the
-   * current one). Returns the article id, or null when a field needs fixing.
+   * current one). Resolves to the article id once screens can read it, or null when a field
+   * needs fixing.
    */
-  const save = (
+  const save = async (
     mode: SaveMode,
     publication?: ArticlePublication,
-  ): string | null => {
+  ): Promise<string | null> => {
     setAttempt(mode)
     if (Object.keys(validate(form, mode)).length)
       return null
     const content = fromForm(form)
-    const at = now()
     let id = stored?.id
 
     if (stored) {
-      update(s => ({
-        ...s,
-        data: {
-          ...s.data,
-          articles: s.data.articles.map(a =>
-            a.id === stored.id
-              ? {
-                  ...a,
-                  ...content,
-                  publication: publication ?? a.publication,
-                  updatedAt: at,
-                }
-              : a,
-          ),
-        },
-      }))
+      await updateArticle({ id: stored.id, content, publication })
     }
     else {
       const slug = uniqueValue(
@@ -275,18 +271,12 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
         `${slug}-${content.language}`,
         new Set(articles.map(a => a.id)),
       )
-      const created: Article = {
+      await createArticle({
         ...content,
         id,
         slug,
         publication: publication ?? { status: 'draft' },
-        updatedAt: at,
-      }
-
-      update(s => ({
-        ...s,
-        data: { ...s.data, articles: [...s.data.articles, created] },
-      }))
+      })
     }
     setBaseline(form)
     setAttempt(null)
@@ -295,14 +285,15 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
   }
 
   /** The other language version as a draft copy of the saved one, to translate (R02). */
-  const addOtherVersion = (): string | null => {
+  const addOtherVersion = async (): Promise<string | null> => {
     if (!stored || otherVersion)
       return null
     const id = uniqueValue(
       `${stored.slug}-${otherLanguage}`,
       new Set(articles.map(a => a.id)),
     )
-    const copy: Article = {
+
+    await createArticle({
       ...structuredClone(stored),
       id,
       language: otherLanguage,
@@ -311,13 +302,7 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
         role: translateRole(stored.author.role, otherLanguage),
       },
       publication: { status: 'draft' },
-      updatedAt: now(),
-    }
-
-    update(s => ({
-      ...s,
-      data: { ...s.data, articles: [...s.data.articles, copy] },
-    }))
+    })
 
     return id
   }

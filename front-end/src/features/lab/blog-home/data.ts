@@ -5,6 +5,7 @@ import type { Language } from '@/contexts/locale-context'
 
 import { pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
+import { useArticles } from '@/features/content/api/queries'
 import { publishedArticles } from '@/features/content/lib/articles'
 import { useDemo } from '@/features/demo'
 import {
@@ -185,7 +186,8 @@ export type GentleLink
 export function useBlogData() {
   const { language } = useLocale()
   const { state } = useDemo()
-  const articles = publishedArticles(state.data.articles, language)
+  const stored = useArticles()
+  const articles = publishedArticles(stored, language)
   const tours = state.data.tours?.tours ?? []
 
   const categoryOf = (a: Article): Category => meta[a.slug]?.category ?? 'town'

@@ -6,8 +6,8 @@ import { EmptyState } from '@/components/empty-state'
 import { ContentIcon } from '@/components/icons'
 import { EditorFormSkeleton } from '@/components/layout/detail-skeletons'
 import { useLocale } from '@/contexts/locale-context'
+import { useArticles } from '@/features/content/api/queries'
 import { ArticleEditor } from '@/features/content/merchant/components/article-editor'
-import { useDemo } from '@/features/demo'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 
 interface EditorSearch {
@@ -28,10 +28,10 @@ function ArticleEditorPage() {
   const { articleId } = Route.useParams()
   const { lang } = Route.useSearch()
   const { t, language } = useLocale()
-  const { state } = useDemo()
   const isLoading = useSimulatedLoading()
-  const exists
-    = articleId === 'new' || state.data.articles.some(a => a.id === articleId)
+  const exists = useArticles(
+    articles => articleId === 'new' || articles.some(a => a.id === articleId),
+  )
 
   if (isLoading) {
     return <EditorFormSkeleton cards={3} />

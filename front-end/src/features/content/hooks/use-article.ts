@@ -8,9 +8,10 @@ import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from '@sk/domain/content'
 import { formatDate } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { useDemoActions, useDemoSelector } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useDemoSelector } from '@/features/demo'
 import { avatarUrl } from '@/lib/avatars'
+import { useArticles, useComments } from '../api/queries'
 import { publishedArticles } from '../lib/articles'
 
 const WHITESPACE_RUN = /\s+/
@@ -60,9 +61,12 @@ const published = (a: Article) => a.publication.status === 'published'
  */
 export function useArticle(slug: string): ArticleView | null {
   const { t, language, intlLocale } = useLocale()
-  const { update } = useDemoActions()
-  const demoArticles = useDemoSelector(s => s.data.articles)
-  const demoComments = useDemoSelector(s => s.data.comments)
+  const client = useDataClient()
+  const { mutate: postComment } = useCommand(client.content.addComment, [
+    queryKeys.content.comments,
+  ])
+  const demoArticles = useArticles()
+  const demoComments = useComments()
   const demoGuests = useDemoSelector(s => s.data.guests)
   const products = useDemoSelector(s => s.data.products)
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
@@ -172,24 +176,7 @@ export function useArticle(slug: string): ArticleView | null {
         return null
       const id = `c-${Date.now().toString(36)}`
 
-      update(s => ({
-        ...s,
-        data: {
-          ...s.data,
-          comments: [
-            ...s.data.comments,
-            {
-              id,
-              articleId: article.id,
-              author: { kind: 'guest', guestId },
-              text: text.trim(),
-              createdAt: demoNow(s.clockStartedAt).toISOString(),
-              hidden: false,
-              ...(parentId && { parentId }),
-            },
-          ],
-        },
-      }))
+      postComment({ id, articleId: article.id, text, parentId })
 
       return id
     },

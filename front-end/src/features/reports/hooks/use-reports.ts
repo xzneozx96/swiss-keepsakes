@@ -19,6 +19,7 @@ import {
 
 import { useMemo } from 'react'
 import { useLocale } from '@/contexts/locale-context'
+import { useArticles } from '@/features/content/api/queries'
 import { useDemo, useDemoNow } from '@/features/demo'
 import {
   articleStats,
@@ -95,6 +96,7 @@ export function useReports(
 ) {
   const { t, language, intlLocale } = useLocale()
   const { state } = useDemo()
+  const storedArticles = useArticles()
   const now = useDemoNow()
   const today = zurichDate(now)
   const { orders, tours, commissionAdjustments, partners, products }
@@ -326,7 +328,7 @@ export function useReports(
     })
   const outcome = (kind: 'goods' | 'tours', status: string) =>
     inPeriod.filter(tx => tx.kind === kind && tx.status === status).length
-  const articles = state.data.articles
+  const articles = storedArticles
     .filter(a => a.publication.status === 'published')
     .map((a) => {
       const stats = articleStats(a.id, current)
