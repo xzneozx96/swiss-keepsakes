@@ -58,8 +58,8 @@ describe('[E1.6] reminders (Q5)', () => {
     const r = firstPaymentReminders(new Date('2026-10-20T10:00:00Z'))
 
     expect(r.map(x => [x.kind, iso(x.at)])).toEqual([
-      ['first-payment-24h', '2026-10-19T10:00:00.000Z'],
-      ['first-payment-2h', '2026-10-20T08:00:00.000Z'],
+      ['first-payment-first', '2026-10-19T10:00:00.000Z'],
+      ['first-payment-second', '2026-10-20T08:00:00.000Z'],
     ])
   })
 
@@ -113,13 +113,43 @@ describe('[E1.6] reminders (Q5)', () => {
   })
 
   it('reminderSet returns only what applies, oldest first', () => {
-    expect(reminderSet({})).toEqual([])
+    const acceptedAt = new Date('2026-10-19T08:00:00Z')
+
+    expect(reminderSet({ acceptedAt })).toEqual([])
     const set = reminderSet({
+      acceptedAt,
       pickupDate: '2026-10-27',
       firstPaymentDeadline: new Date('2026-10-20T10:00:00Z'),
     })
 
-    expect(set.map(r => r.kind)).toEqual(['first-payment-24h', 'first-payment-2h', 'pickup'])
+    expect(set.map(r => r.kind)).toEqual(['first-payment-first', 'first-payment-second', 'pickup'])
+  })
+
+  it('reminderSet applies the merchant overrides', () => {
+    const set = reminderSet({
+      acceptedAt: new Date('2026-10-01T00:00:00Z'),
+      balanceDueDate: '2026-10-27',
+      pickupDate: '2026-10-30',
+      firstPaymentDeadline: new Date('2026-10-20T10:00:00Z'),
+      settings: { firstPaymentHoursBefore: [48, 6], balanceDaysBefore: 5, balanceTime: '10:30', dayBeforeTime: '17:00' },
+    })
+
+    expect(set.map(r => [r.kind, iso(r.at)])).toEqual([
+      ['first-payment-first', '2026-10-18T10:00:00.000Z'],
+      ['first-payment-second', '2026-10-20T04:00:00.000Z'],
+      ['balance', '2026-10-22T08:30:00.000Z'],
+      ['pickup', '2026-10-29T16:00:00.000Z'],
+    ])
+  })
+
+  it('reminderSet drops a reminder that falls before the order was accepted and keeps one at that instant', () => {
+    const deadline = new Date('2026-10-20T10:00:00Z')
+    const late = reminderSet({ acceptedAt: new Date('2026-10-20T04:00:00Z'), firstPaymentDeadline: deadline })
+    const exact = reminderSet({ acceptedAt: new Date('2026-10-20T08:00:00Z'), firstPaymentDeadline: deadline })
+
+    expect(late.map(r => r.kind)).toEqual(['first-payment-second'])
+    expect(exact.map(r => r.kind)).toEqual(['first-payment-second'])
+    expect(reminderSet({ acceptedAt: new Date('2026-10-20T08:00:00.001Z'), firstPaymentDeadline: deadline })).toEqual([])
   })
 })
 

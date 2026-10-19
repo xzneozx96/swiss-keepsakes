@@ -37,6 +37,30 @@ describe('[E1.5][S9] commission basis and refunds', () => {
     expect(first + rest).toBe(1000)
   })
 
+  it('many small refunds never drift from the commission on what is left', () => {
+    const refundAll = (total: number, parts: number[], rate: number) => {
+      let already = 0
+      let adjusted = 0
+
+      for (const part of parts) {
+        adjusted += refundAdjustment({ basis: total, alreadyRefundedBasis: already, refundedBasis: part, rate })
+        already += part
+      }
+
+      return commissionAmount(total, rate) - adjusted
+    }
+
+    expect(refundAll(15, [5, 5, 5], 0.1)).toBe(0)
+    expect(refundAll(25, [12, 13], 0.1)).toBe(0)
+    expect(refundAll(25, [12], 0.1)).toBe(commissionAmount(13, 0.1))
+
+    for (let total = 0; total <= 60; total++) {
+      for (const rate of [0.05, 0.1, 0.125, 0.15]) {
+        expect(refundAll(total, Array.from({ length: total }, () => 1), rate)).toBe(0)
+      }
+    }
+  })
+
   it('rounds half up to the Rappen and does not drift on 0.1', () => {
     expect(commissionAmount(5, 0.1)).toBe(1)
     expect(commissionAmount(4, 0.1)).toBe(0)
@@ -93,13 +117,24 @@ describe('[E1.5][Q9] discount split', () => {
   })
 
   it('always sums to the discount', () => {
-    for (const [d, values] of [[1, [1, 1, 1]], [7, [10, 20, 30, 40]], [999, [1, 2, 3]], [5, [0, 0]]] as const) {
+    for (const [d, values] of [[1, [1, 1, 1]], [7, [10, 20, 30, 40]], [5, [1, 2, 3]], [5, [2, 3]]] as const) {
       expect(splitDiscount(d, [...values]).reduce((a, b) => a + b, 0)).toBe(d)
     }
   })
 
-  it('one line takes it all; no lines give none', () => {
+  it('one line takes it all; no lines and no discount give none', () => {
     expect(splitDiscount(250, [9000])).toEqual([250])
-    expect(splitDiscount(250, [])).toEqual([])
+    expect(splitDiscount(0, [])).toEqual([])
+    expect(splitDiscount(0, [0, 0])).toEqual([0, 0])
+  })
+
+  it('rejects a negative, fractional or oversized input', () => {
+    expect(() => splitDiscount(-1, [100])).toThrow(RangeError)
+    expect(() => splitDiscount(1.5, [100])).toThrow(RangeError)
+    expect(() => splitDiscount(10, [100, -5])).toThrow(RangeError)
+    expect(() => splitDiscount(10, [100.5])).toThrow(RangeError)
+    expect(() => splitDiscount(101, [60, 40])).toThrow(RangeError)
+    expect(() => splitDiscount(5, [])).toThrow(RangeError)
+    expect(() => splitDiscount(Number.NaN, [100])).toThrow(RangeError)
   })
 })
