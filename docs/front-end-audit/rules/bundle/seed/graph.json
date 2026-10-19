@@ -1,0 +1,276 @@
+{
+ "chunks": [
+  {
+   "file": "assets/index.js",
+   "isEntry": true,
+   "isDynamicEntry": false,
+   "imports": [],
+   "dynamicImports": [
+    "assets/b.js"
+   ],
+   "size": 1,
+   "modules": {
+    "<ROOT>/src/main.tsx": 120,
+    "<ROOT>/src/a.tsx": 300,
+    "<ROOT>/src/components/icons.ts": 600,
+    "<ROOT>/node_modules/fakelib/icons/One.js": 2500,
+    "<ROOT>/node_modules/fakelib/icons/Two.js": 2500,
+    "<ROOT>/node_modules/fakelib/icons/Three.js": 2500,
+    "<ROOT>/node_modules/fakelib/icons/Four.js": 2500,
+    "<ROOT>/node_modules/fakelib/icons/Five.js": 2500,
+    "<ROOT>/node_modules/fakelib/icons/Six.js": 2500,
+    "<ROOT>/node_modules/fakelib/icons/Seven.js": 2500,
+    "<ROOT>/node_modules/fakelib/icons/Eight.js": 2500,
+    "<ROOT>/node_modules/fakelib/icons/Nine.js": 2500,
+    "<ROOT>/node_modules/fakelib/icons/Ten.js": 2500,
+    "<ROOT>/src/routes/leaky.tsx": 150,
+    "<ROOT>/src/features/x/components/thing.tsx": 30000,
+    "<ROOT>/node_modules/qrcode.react/lib/esm/index.js": 31000,
+    "<ROOT>/node_modules/fakelib/dist/fakelib.css": 0,
+    "<ROOT>/node_modules/@heroui/react/dist/components/calendar/calendar.js": 9000,
+    "<ROOT>/src/i18n/en.ts": 20000,
+    "<ROOT>/src/features/merchant/messages.ts": 15000,
+    "<ROOT>/node_modules/react-aria/dist/private/intl/calendar/el-GR.mjs": 12000
+   }
+  },
+  {
+   "file": "assets/b.js",
+   "isEntry": false,
+   "isDynamicEntry": true,
+   "imports": [
+    "assets/index.js"
+   ],
+   "dynamicImports": [],
+   "size": 1,
+   "modules": {
+    "<ROOT>/src/b.tsx": 200,
+    "<ROOT>/src/routes/leaky.tsx?tsr-split=component": 60
+   }
+  }
+ ],
+ "modules": {
+  "<ROOT>/src/main.tsx": {
+   "importedIds": [
+    "<ROOT>/src/a.tsx",
+    "<ROOT>/src/routes/leaky.tsx",
+    "<ROOT>/src/i18n/en.ts"
+   ],
+   "dynamicallyImportedIds": [],
+   "importers": [],
+   "dynamicImporters": []
+  },
+  "<ROOT>/src/a.tsx": {
+   "importedIds": [
+    "<ROOT>/src/components/icons.ts",
+    "<ROOT>/node_modules/qrcode.react/lib/esm/index.js"
+   ],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/src/main.tsx"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/src/components/icons.ts": {
+   "importedIds": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/src/a.tsx",
+    "<ROOT>/src/b.tsx"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/One.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/Two.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/Three.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/Four.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/Five.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/Six.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/Seven.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/Eight.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/Nine.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/icons/Ten.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/fakelib/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/src/routes/leaky.tsx": {
+   "importedIds": [
+    "<ROOT>/node_modules/fakelib/dist/fakelib.css",
+    "<ROOT>/src/features/x/components/thing.tsx"
+   ],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/src/main.tsx"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/src/features/x/components/thing.tsx": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/src/routes/leaky.tsx",
+    "<ROOT>/src/routes/leaky.tsx?tsr-split=component"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/qrcode.react/lib/esm/index.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/src/a.tsx"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/dist/fakelib.css": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/src/routes/leaky.tsx"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/@heroui/react/dist/components/calendar/calendar.js": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/node_modules/@heroui/react/dist/index.js"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/src/i18n/en.ts": {
+   "importedIds": [
+    "<ROOT>/src/features/merchant/messages.ts"
+   ],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/src/main.tsx"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/src/features/merchant/messages.ts": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/src/i18n/en.ts"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/react-aria/dist/private/intl/calendar/el-GR.mjs": {
+   "importedIds": [],
+   "dynamicallyImportedIds": [],
+   "importers": [],
+   "dynamicImporters": []
+  },
+  "<ROOT>/src/b.tsx": {
+   "importedIds": [
+    "<ROOT>/src/components/icons.ts"
+   ],
+   "dynamicallyImportedIds": [],
+   "importers": [],
+   "dynamicImporters": []
+  },
+  "<ROOT>/src/routes/leaky.tsx?tsr-split=component": {
+   "importedIds": [
+    "<ROOT>/src/features/x/components/thing.tsx"
+   ],
+   "dynamicallyImportedIds": [],
+   "importers": [],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/fakelib/index.js": {
+   "importedIds": [
+    "<ROOT>/node_modules/fakelib/icons/One.js",
+    "<ROOT>/node_modules/fakelib/icons/Two.js",
+    "<ROOT>/node_modules/fakelib/icons/Three.js",
+    "<ROOT>/node_modules/fakelib/icons/Four.js",
+    "<ROOT>/node_modules/fakelib/icons/Five.js",
+    "<ROOT>/node_modules/fakelib/icons/Six.js",
+    "<ROOT>/node_modules/fakelib/icons/Seven.js",
+    "<ROOT>/node_modules/fakelib/icons/Eight.js",
+    "<ROOT>/node_modules/fakelib/icons/Nine.js",
+    "<ROOT>/node_modules/fakelib/icons/Ten.js"
+   ],
+   "dynamicallyImportedIds": [],
+   "importers": [
+    "<ROOT>/src/components/icons.ts"
+   ],
+   "dynamicImporters": []
+  },
+  "<ROOT>/node_modules/@heroui/react/dist/index.js": {
+   "importedIds": [
+    "<ROOT>/node_modules/@heroui/react/dist/components/calendar/calendar.js"
+   ],
+   "dynamicallyImportedIds": [],
+   "importers": [],
+   "dynamicImporters": []
+  }
+ }
+}

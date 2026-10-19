@@ -1,0 +1,13 @@
+files_scanned	572
+functions_compiled	979
+non_success_events	9
+use_no_memo_files	0
+features/account/components/guest-avatar.tsx:16	CompileError		(BuildHIR::node.lowerReorderableExpression) Expression type `MemberExpression` cannot be safely reordered
+features/merchant/products/components/itinerary/itinerary-map.tsx:40	CompileError		(BuildHIR::lowerExpression) Handle Import expressions
+features/merchant/products/components/itinerary/itinerary-map.tsx:40	CompileError		(BuildHIR::lowerExpression) Handle Import expressions
+features/merchant/products/components/itinerary/use-place-search.ts:71	CompileError		(BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch
+features/partners/report/hooks/use-partner-overview.ts:65	CompileError		[Codegen] Internal error: MethodCall::property must be an unpromoted + unmemoized MemberExpression
+features/tours/map/tour-itinerary-map.tsx:39	CompileError		(BuildHIR::lowerExpression) Handle Import expressions
+features/tours/map/tour-itinerary-map.tsx:39	CompileError		(BuildHIR::lowerExpression) Handle Import expressions
+routes/lab.map.tsx:40	CompileError		(BuildHIR::lowerExpression) Handle Import expressions
+routes/lab.map.tsx:40	CompileError		(BuildHIR::lowerExpression) Handle Import expressions

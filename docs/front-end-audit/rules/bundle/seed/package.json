@@ -1,0 +1,1 @@
+{ "name": "seed", "dependencies": { "@vercel/analytics": "1.0.0", "react": "19.0.0", "qrcode.react": "4.2.0" } }

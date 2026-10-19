@@ -1,0 +1,109 @@
+useDemo_calls	61
+useDemo_calls_per_list_item	1
+input_handlers_writing_store	14
+useDemo	features/notifications/components/mail-list.tsx:19	MailList	guest	components=MailList	not per item
+useDemo	features/notifications/components/mail-panel.tsx:17	MailPanel	guest	components=MailPanel	not per item
+useDemo	features/demo/components/prototype-bar.tsx:81	PrototypeBar	guest	components=PrototypeBar	not per item
+useDemo	features/auth/hooks/use-sign-in.ts:38	useSignIn	guest	components=SignInScreen	not per item
+useDemo	features/auth/components/sign-in-screen.tsx:27	SignInScreen	guest	components=SignInScreen	not per item
+useDemo	features/orders/hooks/use-orders.ts:39	useOrderActions	guest	components=PayScreen,RecordPaymentSheet,OrderDetailScreen,FulfilmentActions,PaymentDemoControl,OrderDetailDemoControl	not per item
+useDemo	features/checkout/hooks/use-trip-profile.ts:14	useTripProfile	guest	components=TripCard,TourConfirmedPage,RequestSent	not per item
+useDemo	features/reviews/hooks/use-order-reviews.ts:39	useOrderReviews	guest	components=OrderReviews	not per item
+useDemo	features/lab/blog-home/data.ts:190	useBlogData	lab	components=CategoryPill,AuthorChip,ReelInfo,StoryPlayer,ViewerRail,Postcards,Bento,Trail,Scrapbook,TopBar,StoryMeta,GentleLinkLine,CategoryChips,FeedCard,EmptyFeed,ChristmasRail,ShopStrip,AuthorsCard,StoryCircles,Narrator,JourneyHome,StoryListLab,CoverHome,CirclesHome,EditionHome,AdventHome,ChapterHeading,DiscoverTiles,ChaptersHome,StorybookHome,ThreadsHome,EmptyStories,KeepsakesChapter	PER-ITEM: CategoryPill per item at features/lab/blog-home/stories-styles.tsx:135; StoryMeta per item at features/lab/blog-home/options.tsx:175; FeedCard per item at features/lab/blog-home/options-v3.tsx:756; FeedCard per item at features/lab/blog-home/options.tsx:95
+useDemo	routes/lab.cards.tsx:66	CardLab	lab	components=CardLab	not per item
+useDemo	routes/lab.order-cards.tsx:149	useLabRows	lab	components=OrderCardsLab	not per item
+useDemo	routes/lab.review.tsx:99	useSampleOrders	lab	components=ReviewLab	not per item
+useDemo	routes/lab.seller.tsx:55	SellerLab	lab	components=SellerLab	not per item
+useDemo	features/partners/hooks/use-partner-access.ts:43	useCodeStep	guest	components=PartnerPage	not per item
+useDemo	features/partners/hooks/use-partner-access.ts:148	usePartnerAccess	guest	components=PartnerPage	not per item
+useDemo	routes/partner/index.tsx:12	PartnerHome	merchant/partner	components=PartnerHome	not per item
+useDemo	features/partners/report/hooks/use-partner-report.ts:99	usePartnerReport	merchant/partner	components=ReportPage	not per item
+useDemo	features/merchant/sales/hooks/use-sales-overview.ts:140	useSalesOverview	merchant/partner	components=ReportPage,SalesOverview,ReportPagesProvider	not per item
+useDemo	features/partners/report/hooks/use-partner-overview.ts:71	usePartnerOverview	merchant/partner	components=ReportPage	not per item
+useDemo	features/merchant/today/hooks/use-merchant-today.ts:55	useMerchantToday	merchant/partner	components=TodayOverview	not per item
+useDemo	features/merchant/calendar/use-calendar-items.ts:38	useCalendarItems	merchant/partner	components=CalendarPage	not per item
+useDemo	features/reports/hooks/use-reports.ts:97	useReports	merchant/partner	components=ReportPagesProvider	not per item
+useDemo	features/reports/hooks/use-report-pages.tsx:39	useReportPagesState	merchant/partner	components=ReportPagesProvider	not per item
+useDemo	features/checkout/hooks/use-review.ts:39	useReview	guest	components=ReviewScreen	not per item
+useDemo	routes/_guest/gifts/index.tsx:40	GiftsPage	guest	components=GiftsPage	not per item
+useDemo	features/catalog/hooks/use-gift-detail.ts:42	useGiftDetail	guest	components=GiftDetailScreen	not per item
+useDemo	features/requests/components/advice-sent.tsx:18	AdviceSent	guest	components=AdviceSent	not per item
+useDemo	features/content/components/stories-page.tsx:46	StoriesPage	guest	components=StoriesPage	not per item
+useDemo	features/tours/discovery/tour-detail-page.tsx:86	TourDetail	guest	components=TourDetail	not per item
+useDemo	features/tours/merchant/booking-page.tsx:164	CommissionCard	merchant/partner	components=CommissionCard	not per item
+useDemo	features/content/merchant/hooks/use-merchant-comments.ts:43	useMerchantComments	merchant/partner	components=CommentsPanel	not per item
+useDemo	features/content/merchant/hooks/use-merchant-reviews.ts:45	useMerchantReviews	merchant/partner	components=ReviewsPanel	not per item
+useDemo	features/content/merchant/hooks/use-merchant-articles.ts:59	useMerchantArticles	merchant/partner	components=ArticlesPanel	not per item
+useDemo	features/merchant/orders/hooks/use-merchant-orders.ts:80	useMerchantOrders	merchant/partner	components=OrdersPage	not per item
+useDemo	features/merchant/order-detail/hooks/use-merchant-order-detail.ts:151	useMerchantOrderDetail	merchant/partner	components=OrderDetailScreen	not per item
+useDemo	features/merchant/partners/hooks/use-merchant-partners.ts:29	useMerchantPartners	merchant/partner	components=MerchantPartners	not per item
+useDemo	features/merchant/partners/hooks/use-partner-detail.ts:65	usePartnerDetail	merchant/partner	components=PartnerDetailPage	not per item
+useDemo	features/merchant/partners/hooks/use-partner-analytics.ts:63	usePartnerAnalytics	merchant/partner	components=PartnersAnalyticsPage	not per item
+useDemo	features/merchant/products/hooks/use-merchant-products.ts:68	useMerchantProducts	merchant/partner	components=MerchantProducts	not per item
+useDemo	features/merchant/products/components/pickup-points.tsx:194	PickupPoints	merchant/partner	components=PickupPoints	not per item
+useDemo	features/merchant/products/components/merchant-products.tsx:79	MerchantProducts	merchant/partner	components=MerchantProducts	not per item
+useDemo	features/merchant/products/hooks/use-subcategories.ts:13	useSubcategories	merchant/partner	components=CategoriesPage	not per item
+useDemo	features/reports/hooks/use-cost-data.ts:73	useCostData	merchant/partner	components=CostDataPage	not per item
+useDemo	features/requests/merchant/hooks/use-merchant-requests.ts:87	useMerchantRequests	merchant/partner	components=MerchantRequests	not per item
+useDemo	features/transactions/order-detail/hooks/use-order-detail.ts:139	useOwnOrder	guest	components=OrderDetailPage,PayPage	not per item
+useDemo	features/transactions/order-detail/hooks/use-order-detail.ts:149	useOrderDetail	guest	components=OrderDetailScreen	not per item
+useDemo	routes/_guest/account_.orders.$orderId.tsx:44	OrderDetailPage	guest	components=OrderDetailPage	not per item
+useDemo	features/requests/components/private-tour-sent.tsx:17	PrivateTourSent	guest	components=PrivateTourSent	not per item
+useDemo	features/content/merchant/hooks/use-article-editor.ts:64	useArticleEditor	merchant/partner	components=ArticleEditor	not per item
+useDemo	routes/store/content/articles/$articleId.tsx:31	ArticleEditorPage	merchant/partner	components=ArticleEditorPage	not per item
+useDemo	features/merchant/products/hooks/use-gift-editor.ts:286	useGiftEditor	merchant/partner	components=GiftEditor	not per item
+useDemo	features/merchant/products/components/gift-editor.tsx:315	PhotoCard	merchant/partner	components=PhotoCard	not per item
+useDemo	features/merchant/products/components/gift-editor.tsx:481	PlacesCard	merchant/partner	components=PlacesCard	not per item
+useDemo	features/merchant/products/components/gift-editor.tsx:640	GiftReview	merchant/partner	components=GiftReview	not per item
+useDemo	features/merchant/products/components/gift-editor.tsx:816	GiftEditor	merchant/partner	components=GiftEditor	not per item
+useDemo	routes/store/products/gifts/$productId.tsx:36	GiftEditorPage	merchant/partner	components=GiftEditorPage	not per item
+useDemo	features/merchant/products/hooks/use-tour-editor.ts:422	useTourEditor	merchant/partner	components=TourEditor	not per item
+useDemo	routes/store/products/tours/$tourId.tsx:32	TourEditorPage	merchant/partner	components=TourEditorPage	not per item
+useDemo	routes/_guest/account_.orders.$orderId_.pay.tsx:35	PayPage	guest	components=PayPage	not per item
+useDemo	features/tours/booking/booking-demo-control.tsx:33	TourBookingDemoControl	guest	components=TourBookingDemoControl	not per item
+useDemo	features/transactions/order-detail/components/order-detail-demo-control.tsx:18	OrderDetailDemoControl	guest	components=OrderDetailDemoControl	not per item
+input-write	features/demo/components/prototype-bar.tsx:150	<RadioGroup onChange>	(features/demo/components/prototype-bar.tsx:89) => setRole() features/demo/components/prototype-bar.tsx:93
+input-write	features/tours/booking/tour-review-page.tsx:244	<TextField onChange>	updateDraft useTourActions().updateDraft (features/tours/hooks/use-tours.ts:79) => change (features/tours/hooks/use-tours.ts:74) => update() features/tours/hooks/use-tours.ts:75
+input-write	features/tours/booking/tour-review-page.tsx:256	<TextField onChange>	updateDraft useTourActions().updateDraft (features/tours/hooks/use-tours.ts:79) => change (features/tours/hooks/use-tours.ts:74) => update() features/tours/hooks/use-tours.ts:75
+input-write	features/tours/booking/tour-review-page.tsx:268	<TextField onChange>	updateDraft useTourActions().updateDraft (features/tours/hooks/use-tours.ts:79) => change (features/tours/hooks/use-tours.ts:74) => update() features/tours/hooks/use-tours.ts:75
+input-write	components/quantity-stepper.tsx:50	<NumberField onChange>	onChange prop onChange from <QuantityStepper> at features/tours/discovery/tour-selection-sheet.tsx:172 => updateDraft useTourActions().updateDraft (features/tours/hooks/use-tours.ts:79) => change (features/tours/hooks/use-tours.ts:74) => update() features/tours/hooks/use-tours.ts:75
+input-write	components/quantity-stepper.tsx:107	<NumberField onChange>	onChange prop onChange from <QuantityLarge> at features/requests/components/advice-answer.tsx:56 -> onChange => setValue (features/requests/hooks/use-advice.ts:75) => update() features/requests/hooks/use-advice.ts:76
+input-write	features/requests/components/advice-answer.tsx:61	<QuantityLarge onChange>	prop onChange from <AdviceAnswer> at features/requests/components/advice-chat.tsx:266 => setValue (features/requests/hooks/use-advice.ts:75) => update() features/requests/hooks/use-advice.ts:76
+input-write	features/requests/components/advice-answer.tsx:117	<DateAnswer onChange>	prop onChange from <AdviceAnswer> at features/requests/components/advice-chat.tsx:266 => setValue (features/requests/hooks/use-advice.ts:75) => update() features/requests/hooks/use-advice.ts:76
+input-write	features/requests/components/advice-answer.tsx:126	<TextField onChange>	onChange prop onChange from <AdviceAnswer> at features/requests/components/advice-chat.tsx:266 => setValue (features/requests/hooks/use-advice.ts:75) => update() features/requests/hooks/use-advice.ts:76
+input-write	features/requests/components/advice-chat.tsx:275	<AdviceAnswer onChange>	setValue (features/requests/hooks/use-advice.ts:75) => update() features/requests/hooks/use-advice.ts:76
+input-write	features/requests/components/advice-chat.tsx:495	<TextField onChange>	setEmail (features/requests/hooks/use-advice.ts:89) => save (features/requests/hooks/use-advice.ts:51) => update() features/requests/hooks/use-advice.ts:52
+input-write	features/tours/discovery/tour-selection-sheet.tsx:180	<QuantityStepper onChange>	updateDraft useTourActions().updateDraft (features/tours/hooks/use-tours.ts:79) => change (features/tours/hooks/use-tours.ts:74) => update() features/tours/hooks/use-tours.ts:75
+input-write	features/tours/discovery/tour-selection-sheet.tsx:190	<QuantityStepper onChange>	updateDraft useTourActions().updateDraft (features/tours/hooks/use-tours.ts:79) => change (features/tours/hooks/use-tours.ts:74) => update() features/tours/hooks/use-tours.ts:75
+input-write	features/tours/discovery/tour-selection-sheet.tsx:204	<QuantityStepper onChange>	updateDraft useTourActions().updateDraft (features/tours/hooks/use-tours.ts:79) => change (features/tours/hooks/use-tours.ts:74) => update() features/tours/hooks/use-tours.ts:75
+keystroke_text_fields_writing_store	5
+keystroke-wakes	features/tours/booking/tour-review-page.tsx:244	routes=routes/_guest/tours/$slug_.book_.review.tsx#Page	whole-state useDemo() mounted: features/demo/components/prototype-bar.tsx:81, features/notifications/components/mail-panel.tsx:17
+keystroke-wakes	features/tours/booking/tour-review-page.tsx:256	routes=routes/_guest/tours/$slug_.book_.review.tsx#Page	whole-state useDemo() mounted: features/demo/components/prototype-bar.tsx:81, features/notifications/components/mail-panel.tsx:17
+keystroke-wakes	features/tours/booking/tour-review-page.tsx:268	routes=routes/_guest/tours/$slug_.book_.review.tsx#Page	whole-state useDemo() mounted: features/demo/components/prototype-bar.tsx:81, features/notifications/components/mail-panel.tsx:17
+keystroke-wakes	features/requests/components/advice-answer.tsx:126	routes=	whole-state useDemo() mounted: features/demo/components/prototype-bar.tsx:81, features/notifications/components/mail-panel.tsx:17
+keystroke-wakes	features/requests/components/advice-chat.tsx:495	routes=	whole-state useDemo() mounted: features/demo/components/prototype-bar.tsx:81, features/notifications/components/mail-panel.tsx:17
+draft-keystroke-wakes-selectors	features/tours/booking/tour-review-page.tsx:244	3	useDemo@features/demo/demo-store.tsx:134 (s) => s; useTourActions@features/tours/hooks/use-tours.ts:66 (s) => s.data.tours; useTours@features/tours/hooks/use-tours.ts:48 (s) => s.data.tours
+per_item_components_with_subscriptions	11
+item-subscriptions	features/tours/discovery/tour-card.tsx#TourCard	8	useTours:useDemoSelector((s) => s.data.tours); useTours:useDemoSelector((s) => s.clockStartedAt); useTours:useDemoSelector((s) => s.data.signedInGuestId); useTours:useDemoSelector((s) => s.role); useTours:useSharedClock(precision === "second" ? 1_000 : 60_000); useFavourites:useDemoSelector((s) => s.data.favouriteProductIds); useProductReviews:useDemoSelector((s) => s.data.reviews); useProductReviews:useDemoNow()
+item-subscriptions	features/account/components/payments-panel.tsx#DueCard	3	useTransactionRow:useDemoSelector((s) => s.data.pickupPlaces); useTransactionRow:useDemoSelector((s) => s.data.products); useOrderSummary:useDemoNow()
+item-subscriptions	features/tours/components/booking-status.tsx#BookingStatusLabels	1	useBookingLabels:useDemoNow()
+item-subscriptions	features/tours/booking/booking-summary.tsx#TourTicketHead	5	useTours:useDemoSelector((s) => s.data.tours); useTours:useDemoSelector((s) => s.clockStartedAt); useTours:useDemoSelector((s) => s.data.signedInGuestId); useTours:useDemoSelector((s) => s.role); useTours:useSharedClock(precision === "second" ? 1_000 : 60_000)
+item-subscriptions	features/tours/booking/tour-booking-list.tsx#PastRow	5	useTours:useDemoSelector((s) => s.data.tours); useTours:useDemoSelector((s) => s.clockStartedAt); useTours:useDemoSelector((s) => s.data.signedInGuestId); useTours:useDemoSelector((s) => s.role); useTours:useSharedClock(precision === "second" ? 1_000 : 60_000)
+item-subscriptions	features/transactions/components/transaction-list.tsx#OrderTicket	3	useTransactionRow:useDemoSelector((s) => s.data.pickupPlaces); useTransactionRow:useDemoSelector((s) => s.data.products); useOrderSummary:useDemoNow()
+item-subscriptions	features/transactions/components/transaction-list.tsx#PastRow	3	useTransactionRow:useDemoSelector((s) => s.data.pickupPlaces); useTransactionRow:useDemoSelector((s) => s.data.products); useOrderSummary:useDemoNow()
+item-subscriptions	features/tours/merchant/attendance-actions.tsx#AttendanceActions	10	useTours:useDemoSelector((s) => s.data.tours); useTours:useDemoSelector((s) => s.clockStartedAt); useTours:useDemoSelector((s) => s.data.signedInGuestId); useTours:useDemoSelector((s) => s.role); useTours:useSharedClock(precision === "second" ? 1_000 : 60_000); useTourActions:useDemoSelector((s) => s.data.tours); useTourActions:useDemoSelector((s) => s.clockStartedAt); useTourActions:useDemoSelector((s) => s.data.signedInGuestId); useTourActions:useDemoSelector((s) => s.data.referralVisits); useTourActions:useDemoSelector((s) => s.role)
+item-subscriptions	features/tours/merchant/manifest-page.tsx#Money	6	useTours:useDemoSelector((s) => s.data.tours); useTours:useDemoSelector((s) => s.clockStartedAt); useTours:useDemoSelector((s) => s.data.signedInGuestId); useTours:useDemoSelector((s) => s.role); useTours:useSharedClock(precision === "second" ? 1_000 : 60_000); useBookingLabels:useDemoNow()
+item-subscriptions	features/tours/merchant/manifest-page.tsx#BookingStatus	1	useBookingLabels:useDemoNow()
+item-subscriptions	features/reviews/components/order-reviews.tsx#PostedReview	2	useProductReviews:useDemoSelector((s) => s.data.reviews); useProductReviews:useDemoNow()
+effect_or_timer_store_writes	7
+timer-write	features/auth/hooks/use-sign-in.ts:136	useSignIn	setTimeout	finish (features/auth/hooks/use-sign-in.ts:59) => update() features/auth/hooks/use-sign-in.ts:60
+effect-write	features/tours/booking/tour-payment-page.tsx:25	useOwnedBooking	deps=[expired, expireHolds]	expireHolds useTourActions().expireHolds (features/tours/hooks/use-tours.ts:139) => change (features/tours/hooks/use-tours.ts:74) => update() features/tours/hooks/use-tours.ts:75
+effect-write	features/planner/components/planner-chat.tsx:240	PlannerChat	deps=[update]	update() features/planner/components/planner-chat.tsx:244
+effect-write	routes/r.$code.tsx:20	ReferralLink	deps=[code, demoPartners, update]	update() routes/r.$code.tsx:28
+effect-write	features/tours/merchant/use-overdue-check.ts:16	useOverdueCheck	deps=[due, checkOverdue]	checkOverdue useTourActions().checkOverdue (features/tours/hooks/use-tours.ts:299) => update() features/tours/hooks/use-tours.ts:300
+effect-write	features/tours/discovery/tour-selection-sheet.tsx:115	TourSelectionSheet	deps=[isOpen, draft.tourId, tour.id, first?.id, updateDraft]	updateDraft useTourActions().updateDraft (features/tours/hooks/use-tours.ts:79) => change (features/tours/hooks/use-tours.ts:74) => update() features/tours/hooks/use-tours.ts:75
+effect-write	features/requests/merchant/hooks/use-advice-request.ts:39	useAdviceRequest	deps=[id, isUnread, update]	update() features/requests/merchant/hooks/use-advice-request.ts:41
+useDemo-unreached	features/notifications/components/mail-list.tsx:19	MailList
+useDemo-unreached	features/tours/booking/booking-demo-control.tsx:33	TourBookingDemoControl
+useDemo-unreached	features/transactions/order-detail/components/order-detail-demo-control.tsx:18	OrderDetailDemoControl
+useDemo_calls_not_reached_from_any_route	3

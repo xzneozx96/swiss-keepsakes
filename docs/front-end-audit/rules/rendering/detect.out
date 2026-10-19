@@ -1,0 +1,81 @@
+rendering-activity	48
+   front-end/src/components/route-tabs.tsx:52 tab.badge !== undefined && ( <span className="ms-1.5 min-w-5 rounded-full bg-def
+   front-end/src/features/auth/components/sign-in-form.tsx:34 view.step === "code" && ( <Button isIconOnly aria-label={t("auth.changeEmail")} 
+   front-end/src/features/discovery/components/trip-advice-button.tsx:26 above === "tabBar" && <div aria-hidden className="shrink-0 h-14" />
+   front-end/src/features/discovery/components/trip-advice-button.tsx:32 above !== "tabBar" && ( <Link aria-label={t("advice.fab")} className="group poin
+   front-end/src/features/content/merchant/components/article-editor.tsx:582 sheet === "links" && ( <LinkSheet editor={editor} onClose={() => setSheet(null)}
+   front-end/src/features/content/merchant/components/article-editor.tsx:585 sheet === "stories" && ( <StorySheet editor={editor} languageName={languageName}
+   front-end/src/features/content/merchant/components/content-page.tsx:298 tab === "articles" && ( <Link className={`${buttonVariants({ size: "sm" })} shri
+   front-end/src/features/content/merchant/components/content-page.tsx:315 tab === "articles" && ( <ArticlesPanel filter={articleFilter} isLoading={isLoadi
+   front-end/src/features/content/merchant/components/content-page.tsx:322 tab === "comments" && <CommentsPanel isLoading={isLoading} />
+   front-end/src/features/content/merchant/components/content-page.tsx:323 tab === "reviews" && <ReviewsPanel isLoading={isLoading} />
+   front-end/src/features/lab/calendar/calendar-lab.tsx:374 view !== "month" && item.kind === "tour" && ( <span className="mc-event-person">
+   front-end/src/features/lab/cart-select-options.tsx:183 mode === "item" && ( <Check hideLabel isSelected={isOn(line.id)} label={line.nam
+   front-end/src/features/merchant/calendar/calendar-page.tsx:378 view !== "month" && person(item) && ( <span className="mc-event-person">{person(
+   front-end/src/features/merchant/order-detail/components/decision-block.tsx:204 sheet === "change" && ( <ChangeSheet actions={actions} current={`${view.pickup.d
+   front-end/src/features/merchant/order-detail/components/decision-block.tsx:213 sheet === "decline" && ( <DeclineSheet actions={actions} guestName={view.guest.n
+   front-end/src/features/merchant/partners/components/partner-detail.tsx:202 next.kind === "pay" && view.canPay && ( <Button className="self-start" onPress={
+   front-end/src/features/merchant/partners/components/partner-detail.tsx:482 sheet === "pay" && ( <PayoutSheet partnerId={partner.id} partnerName={partner.na
+   front-end/src/features/merchant/partners/components/partner-detail.tsx:490 sheet === "qr" && ( <PartnerQrSheet code={partner.code} name={partner.name} onCl
+   front-end/src/features/merchant/products/components/details-step.tsx:151 open === "meeting" && ( <TextSheet language={language} title={t("products.field.
+   front-end/src/features/merchant/products/components/details-step.tsx:168 open === "itinerary" && ( <TextSheet language={language} title={t("products.fiel
+   front-end/src/features/merchant/products/components/details-step.tsx:177 open === "included" && ( <TextSheet language={language} title={t("products.field
+   front-end/src/features/merchant/products/components/details-step.tsx:249 open === "excluded" && ( <TextSheet language={language} title={t("products.field
+   front-end/src/features/merchant/products/components/details-step.tsx:267 open === "conditions" && ( <TextSheet language={language} title={t("products.fie
+   front-end/src/features/merchant/products/components/merchant-products.tsx:258 tab !== "pickup" && ( <Link className={buttonVariants({ size: "sm", className: "
+   front-end/src/features/merchant/products/components/sections-editor.tsx:797 sections.length === 0 && ( <p className="px-4 py-4 text-sm text-muted"> {t("prod
+   front-end/src/features/merchant/products/components/sections-editor.tsx:924 view === "keepsakes" && ( <KeepsakesListSheet editor={editor} onAdd={() => setVi
+   front-end/src/features/merchant/products/components/sections-editor.tsx:931 view === "pick" && ( <KeepsakesPickerSheet editor={editor} onClose={() => setVie
+   front-end/src/features/merchant/products/components/sections-editor.tsx:937 view === "checked" && ( <CheckedOnSheet value={edit.checkedOn} onChange={(checke
+   front-end/src/features/tours/discovery/departure-picker/day-cell.tsx:62 state === "open" && ( <span className={`size-1 rounded-full ${isSelected ? "bg-a
+   front-end/src/features/payment/components/provider-page.tsx:56 step.kind === "choose" && ( <fieldset className="flex flex-col gap-2"> <legend c
+   front-end/src/features/payment/components/provider-page.tsx:84 step.kind === "failed" && ( <Message role="alert" title={t("payment.failed.title
+   front-end/src/features/payment/components/provider-page.tsx:93 step.kind === "processing" && ( <Message title={t("payment.processing.title")}> 
+   front-end/src/features/payment/components/provider-page.tsx:99 step.kind === "blocked" && ( <Message title={t("payment.blocked.title")}>{step.r
+   front-end/src/features/requests/components/advice-chat.tsx:350 step >= emailStep && !(typing && step === emailStep) && ( <AssistantSays>{t("adv
+   front-end/src/features/requests/components/advice-chat.tsx:478 step === emailStep && ( <form noValidate className="flex items-start gap-2" onSu
+   front-end/src/features/requests/components/advice-chat.tsx:518 step === emailStep && ( <p className="text-xs text-muted">{t("advice.email.help"
+   front-end/src/features/requests/components/advice-chat.tsx:522 step === summaryStep && ( <Button fullWidth size="lg" onPress={send}> <SendIcon 
+   front-end/src/features/requests/merchant/components/merchant-requests.tsx:83 tab === "advice" && ( <AdviceRows empty={emptyState("merchantRequests.advice.emp
+   front-end/src/features/requests/merchant/components/merchant-requests.tsx:91 tab === "private" && ( <PrivateTourRows empty={emptyState("merchantRequests.priv
+   front-end/src/features/requests/merchant/components/merchant-requests.tsx:100 tab === "questions" && (isLoading ? <QuestionsSkeleton /> : <QuestionSetEditor /
+   front-end/src/features/tours/merchant/departures-page.tsx:229 phase !== "open" && ( <StatusChip tone={phaseChip[phase].tone}> {t(phaseChip[pha
+   front-end/src/routes/_guest/account.tsx:75 tab === "orders" && <TransactionList />
+   front-end/src/routes/_guest/account.tsx:76 tab === "bookings" && <TourBookingList />
+   front-end/src/routes/_guest/account.tsx:77 tab === "payments" && <PaymentsPanel />
+   front-end/src/routes/_guest/account.tsx:78 tab === "profile" && <ProfilePanel />
+   front-end/src/routes/_guest/account.tsx:79 tab === "notifications" && ( <NotificationsPanel email={guest.email} guestId={gu
+   front-end/src/routes/_guest/account.tsx:82 tab === "edit" && <EditProfile guest={guest} />
+   front-end/src/routes/lab.cart-line.tsx:219 views.length === 0 && ( <p className="py-6 text-sm text-muted"> {language === "d
+rendering-animate-svg-wrapper	13
+   front-end/src/components/ai-elements/chain-of-thought.tsx:44 SparkleIcon className={clsx("shrink-0", isStreaming && "animate-pulse text-accent")}
+   front-end/src/components/ai-elements/chain-of-thought.tsx:54 ChevronDownIcon className="shrink-0 transition-transform duration-200 group-aria-expanded:rotate-180"
+   front-end/src/components/ai-elements/chain-of-thought.tsx:83 StatusSuccessIcon className="animate-pop text-muted"
+   front-end/src/components/ai-elements/chain-of-thought.tsx:91 StatusDangerIcon className="animate-pop text-danger"
+   front-end/src/components/ai-elements/chain-of-thought.tsx:166 ChevronDownIcon className="shrink-0 text-muted transition-transform duration-200 group-aria-expanded:rotat
+   front-end/src/components/layout/guest-shell.tsx:105 SparkleIcon className="animate-sparkle"
+   front-end/src/components/layout/merchant-shell.tsx:339 ChevronDownIcon className={`text-muted transition-transform ${isOpen ? "" : "-rotate-90"}`}
+   front-end/src/features/discovery/components/trip-advice-button.tsx:47 AssistantIcon className="relative animate-sparkle"
+   front-end/src/features/lab/blog-home/shared.tsx:366 SparkleIcon className="animate-sparkle"
+   front-end/src/features/merchant/products/components/itinerary/stop-card.tsx:160 ChevronDownIcon className={`transition-transform ${more ? "rotate-180" : ""}`}
+   front-end/src/features/planner/components/pickers.tsx:104 SelectedIcon className="animate-pop absolute -end-1 -top-1 size-4.5 rounded-full bg-surface text-accent
+   front-end/src/features/planner/components/pickers.tsx:142 ArrowUpRightIcon className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-px grou
+   front-end/src/features/requests/components/advice-chat.tsx:44 AssistantIcon className="animate-sparkle"
+rendering-conditional-render	4
+   front-end/src/components/app-toasts.tsx:35 title
+   front-end/src/components/app-toasts.tsx:36 description
+   front-end/src/components/app-toasts.tsx:39 actionProps?.children
+   front-end/src/features/merchant/today/components/overview-analytics.tsx:43 footer
+rendering-content-visibility	0
+rendering-hoist-jsx	0
+rendering-hydration-no-flicker	n/a(no SSR; see index.html)
+rendering-hydration-suppress-warning	0
+rendering-resource-hints	0
+rendering-script-defer-async	0
+rendering-svg-precision	0
+rendering-usetransition-loading	4
+   front-end/src/features/payment/hooks/use-payment.ts:47 [isPending, setPending] = useState(false)
+   front-end/src/hooks/use-simulated-loading.ts:8 [loading, setLoading] = useState(true)
+   front-end/src/features/requests/components/advice-chat.tsx:170 [typing, setTyping] = useState(false)
+   front-end/src/features/tours/booking/use-tour-payment.ts:23 [isPending, setPending] = useState(false)
+bytes_saved_at_3dp=0 bytes_saved_at_1dp=0 numbers=0

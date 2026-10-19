@@ -1,0 +1,1 @@
+{ "extends": "../../../../../front-end/tsconfig.json", "compilerOptions": { "noEmit": true, "composite": false, "incremental": false, "typeRoots": ["../../../../../front-end/node_modules/@types"] }, "include": ["tosorted-probe.ts"], "files": [], "references": [] }

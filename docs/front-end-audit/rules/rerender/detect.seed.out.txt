@@ -1,0 +1,50 @@
+rerender-defer-reads	3	SEED-OK
+rerender-dependencies	1	SEED-OK
+rerender-derived-state	2	SEED-OK
+rerender-derived-state-no-effect	1	SEED-OK
+rerender-functional-setstate	2	SEED-OK
+rerender-lazy-state-init	2	SEED-OK
+rerender-memo	1	SEED-OK
+rerender-memo-with-default-value	2	SEED-OK
+rerender-move-effect-to-event	1	SEED-OK
+rerender-no-inline-components	3	SEED-OK
+rerender-simple-expression-in-memo	1	SEED-OK
+rerender-split-combined-hooks	2	SEED-OK
+rerender-transitions	3	SEED-OK
+rerender-use-deferred-value	1	SEED-OK
+rerender-use-ref-transient-values	4	SEED-OK
+(roots scanned	23 components+hooks in 1 files)
+(info useMemo-total	3)
+(info useDemo-census	1)
+(info store-writes	1)
+rerender-defer-reads	seed-violations.tsx:67	useContext() value theme is never read (subscription for nothing) [SeedEffectEvent]
+rerender-defer-reads	seed-violations.tsx:109	useDemoSelector() value orders read only in handlers (1) [SeedDeferReads]
+rerender-defer-reads	seed-violations.tsx:110	useDemo() subscribes to the whole state but only update is used -> useDemoActions() [SeedDeferReads]
+rerender-dependencies	seed-violations.tsx:136	[user] but effect reads only user.id [SeedDeps]
+rerender-derived-state	seed-violations.tsx:126	useDemoSelector returns a collection but render only uses orders.length [SeedSubscribeDerived]
+rerender-derived-state	seed-violations.tsx:233	useTours() reads only {role} but subscribes to s.data.tours (every booking/draft write) and a 60 s clock [SeedTours]
+rerender-derived-state-no-effect	seed-violations.tsx:83	setFull(first + " " + last) in useEffect [SeedDerived]
+rerender-functional-setstate	seed-violations.tsx:55	setCount(count + 1) ctx=deferred [SeedFunctional]
+rerender-functional-setstate	seed-violations.tsx:56	setItems([...items, "x"]) ctx=deferred stale-risk=setTimeout [SeedFunctional]
+rerender-lazy-state-init	seed-violations.tsx:41	useState(buildSearchIndex(items)) args-from-props/state [SeedLazy]
+rerender-lazy-state-init	seed-violations.tsx:42	useState(JSON.parse(localStorage.getItem("s") || "{}")) constant-args [SeedLazy]
+rerender-memo	seed-violations.tsx:172	useMemo with array work computed before early return at line 174 that does not use it [SeedMemo]
+rerender-memo-with-default-value	seed-violations.tsx:98	SeedDefault: tags = [] MEMO-WRAPPED
+rerender-memo-with-default-value	seed-violations.tsx:99	SeedDefault: onClick = () => {} MEMO-WRAPPED
+rerender-move-effect-to-event	seed-violations.tsx:69	dep submitted set in handler(s) at 75; gated=true renderReads=0 [SeedEffectEvent]
+rerender-no-inline-components	seed-violations.tsx:26	const Avatar inside SeedInline
+rerender-no-inline-components	seed-violations.tsx:27	function Stats inside SeedInline
+rerender-no-inline-components	seed-violations.tsx:228	local tooltip as recharts Tooltip content (createElement) in SeedChart
+rerender-simple-expression-in-memo	seed-violations.tsx:91	a.loading || b.loading -> boolean [SeedSimpleMemo]
+rerender-split-combined-hooks	seed-violations.tsx:162	useEffect body splits into 2 independent groups: {pathname} {pageTitle} [SeedSplit]
+rerender-split-combined-hooks	seed-violations.tsx:155	useMemo: filter() reads 2 of 3 deps (products.filter((p) => p.category === category)) [SeedSplit]
+rerender-transitions	seed-violations.tsx:185	addEventListener("scroll") -> setScrollY(window.scrollY) urgent [SeedScroll]
+rerender-transitions	seed-violations.tsx:186	addEventListener("mousemove") -> setLastX(e.clientX) urgent [SeedScroll]
+rerender-transitions	seed-violations.tsx:240	useChat without experimental_throttle: one render per streamed chunk [SeedChat]
+rerender-use-deferred-value	seed-violations.tsx:207	query typed -> filter not deferred [SeedSearch]
+rerender-use-ref-transient-values	seed-violations.tsx:50	state items never read during render (1 reads in deferred) [SeedFunctional]
+rerender-use-ref-transient-values	seed-violations.tsx:66	state submitted never read during render (1 reads in effect) [SeedEffectEvent]
+rerender-use-ref-transient-values	seed-violations.tsx:185	addEventListener("scroll") sets scrollY per event [SeedScroll]
+rerender-use-ref-transient-values	seed-violations.tsx:186	addEventListener("mousemove") sets lastX per event [SeedScroll]
+info:useDemo-census	seed-violations.tsx:110	SeedDeferReads	actions-only(update)
+info:store-writes	seed-violations.tsx:117	update ctx=deferred trigger=onDoubleClick on <button> [SeedDeferReads] guest

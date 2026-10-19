@@ -1,0 +1,62 @@
+variant	js_gz	js_raw	css_gz	css_raw	js_files	maplibre_css_rules	delta_js_gz	delta_js_raw	delta_css_gz	home_screen_js_gz	delta_home_gz
+baseline	495656	1553447	72493	672079	49	63	0	0	0	532831	0
+orders	432280	1356853	72493	672079	34	63	-63376	-196594	0	478915	-53916
+routeLeaks	426322	1342623	72493	672079	31	63	-69334	-210824	0	473229	-59602
+maplibreCss	495677	1553497	62019	589211	49	0	21	50	-10474	532851	20
+iconsPure	495181	1552142	72493	672079	49	63	-475	-1305	0	532355	-476
+iconsReexport	441499	1373655	72493	672079	58	63	-54157	-179792	0	494244	-38587
+qrLazy	490235	1538151	72493	672079	50	63	-5421	-15296	0	527513	-5318
+merchantMsgs	480412	1487266	72493	672079	49	63	-15244	-66181	0	517594	-15237
+ariaLocales	485205	1519117	72493	672079	49	63	-10451	-34330	0	522379	-10452
+all	352374	1110727	62019	589211	32	0	-143282	-442720	-10474	423530	-109301
+allPlus	332226	1032273	62019	589211	32	0	-163430	-521174	-10474	403371	-129460
+
+## orders
+left first load: assets/chip.js (1263), assets/Input.js (1679), assets/useTextField.js (1786), assets/textfield.js (2962), assets/form.js (171), assets/textarea.styles.js (255), assets/textarea.js (436), assets/lucerne-water-tower.js (86), assets/photos.js (7454), assets/useDateFormatter.js (29373), assets/useUpdateEffect.js (371), assets/calendar-day-view-grid-header.js (55842), assets/calendar.js (5296), assets/sheet-exit.js (948), assets/trip-profile.js (13793)
+joined first load: -
+changed >500B raw: assets/index.js 398776->324509, assets/demo.js 139968->139356
+
+## routeLeaks
+left first load: assets/chip.js (1263), assets/Input.js (1679), assets/useTextField.js (1786), assets/textfield.js (2962), assets/form.js (171), assets/textarea.styles.js (255), assets/textarea.js (436), assets/articles.js (178), assets/localized.js (213), assets/link-opens.js (447), assets/lucerne-water-tower.js (86), assets/photos.js (7454), assets/useDateFormatter.js (29373), assets/useUpdateEffect.js (371), assets/calendar-day-view-grid-header.js (55842), assets/calendar.js (5296), assets/sheet-exit.js (948), assets/trip-profile.js (13793)
+joined first load: -
+changed >500B raw: assets/index.js 398776->311531, assets/demo.js 139968->138942
+
+## maplibreCss
+left first load: -
+joined first load: -
+changed >500B raw: assets/index.css 672079->589211
+
+## iconsPure
+left first load: -
+joined first load: -
+changed >500B raw: assets/icons.js 229635->228330
+
+## iconsReexport
+left first load: -
+joined first load: assets/AlertTriangle.js (2353), assets/ArrowLeft.js (1001), assets/Calendar.js (4359), assets/Clock.js (1527), assets/TickCircle.js (786), assets/status-chip.js (4548), assets/Star.js (4928), assets/Profile2user.js (2560), assets/User.js (1744)
+changed >500B raw: assets/index.js 398776->416379, assets/icons.js 229635->2263, assets/demo.js 139968->146001
+
+## qrLazy
+left first load: -
+joined first load: assets/react.js (8529)
+changed >500B raw: assets/jsx-runtime.js 8901->424, assets/demo.js 139968->124032
+
+## merchantMsgs
+left first load: -
+joined first load: -
+changed >500B raw: assets/locale-context.js 172539->106358
+
+## ariaLocales
+left first load: -
+joined first load: -
+changed >500B raw: assets/index.js 398776->392102, assets/close-button.js 130194->124610, assets/calendar-day-view-grid-header.js 55842->33770
+
+## all
+left first load: assets/chip.js (1263), assets/Input.js (1679), assets/useTextField.js (1786), assets/textfield.js (2962), assets/form.js (171), assets/textarea.styles.js (255), assets/textarea.js (436), assets/articles.js (178), assets/localized.js (213), assets/link-opens.js (447), assets/lucerne-water-tower.js (86), assets/photos.js (7454), assets/useDateFormatter.js (29373), assets/useUpdateEffect.js (371), assets/calendar-day-view-grid-header.js (55842), assets/calendar.js (5296), assets/sheet-exit.js (948), assets/trip-profile.js (13793)
+joined first load: assets/react.js (8529)
+changed >500B raw: assets/index.js 398776->316984, assets/jsx-runtime.js 8901->424, assets/icons.js 229635->2252, assets/demo.js 139968->128783, assets/index.css 672079->589211
+
+## allPlus
+left first load: assets/chip.js (1263), assets/Input.js (1679), assets/useTextField.js (1786), assets/textfield.js (2962), assets/form.js (171), assets/textarea.styles.js (255), assets/textarea.js (436), assets/articles.js (178), assets/localized.js (213), assets/link-opens.js (447), assets/lucerne-water-tower.js (86), assets/photos.js (7454), assets/useDateFormatter.js (29373), assets/useUpdateEffect.js (371), assets/calendar-day-view-grid-header.js (55842), assets/calendar.js (5296), assets/sheet-exit.js (948), assets/trip-profile.js (13793)
+joined first load: assets/react.js (8529)
+changed >500B raw: assets/index.js 398776->310295, assets/jsx-runtime.js 8901->424, assets/close-button.js 130194->124638, assets/locale-context.js 172539->106380, assets/icons.js 229635->2252, assets/demo.js 139968->128783, assets/index.css 672079->589211

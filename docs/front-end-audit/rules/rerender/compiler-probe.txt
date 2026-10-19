@@ -1,0 +1,849 @@
+# node compiler-probe.mjs seed/seed-violations.tsx  (2026-10-19T10:43:53+07:00)
+import { c as _c } from "react/compiler-runtime";
+// Known violations, one per rule, to prove each detector fires. Not part of the app.
+import { createContext, memo, useContext, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { Tooltip } from "recharts";
+declare function buildSearchIndex(items: string[]): Map<string, number>;
+declare function post(url: string): void;
+declare function useDemo(): {
+  state: {
+    data: {
+      orders: string[];
+    };
+  };
+  update: (r: (s: unknown) => unknown) => void;
+};
+declare function useDemoSelector<T>(select: (s: {
+  data: {
+    orders: string[];
+  };
+}) => T): T;
+declare function useWindowWidth(): number;
+declare function fuzzyMatch(item: string, q: string): boolean;
+declare function useTours(): {
+  data: unknown;
+  tours: string[];
+  now: Date;
+  role: string;
+};
+declare function useChat(options: {
+  chat: unknown;
+}): unknown;
+const Ctx = createContext<{
+  a: number;
+} | null>(null);
+
+// SEED rerender-no-inline-components
+export function SeedInline(t0) {
+  const $ = _c(11);
+  const {
+    user
+  } = t0;
+  let t1;
+  if ($[0] !== user) {
+    t1 = () => <span>{user.name}</span>;
+    $[0] = user;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const Avatar = t1;
+  let t2;
+  if ($[2] !== user) {
+    t2 = function Stats() {
+      return <b>{user.name}</b>;
+    };
+    $[2] = user;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  const Stats = t2;
+  let t3;
+  if ($[4] !== Avatar) {
+    t3 = <Avatar />;
+    $[4] = Avatar;
+    $[5] = t3;
+  } else {
+    t3 = $[5];
+  }
+  let t4;
+  if ($[6] !== Stats) {
+    t4 = <Stats />;
+    $[6] = Stats;
+    $[7] = t4;
+  } else {
+    t4 = $[7];
+  }
+  let t5;
+  if ($[8] !== t3 || $[9] !== t4) {
+    t5 = <div>{t3}{t4}</div>;
+    $[8] = t3;
+    $[9] = t4;
+    $[10] = t5;
+  } else {
+    t5 = $[10];
+  }
+  return t5;
+}
+
+// SEED rerender-lazy-state-init
+export function SeedLazy(t0) {
+  const $ = _c(7);
+  const {
+    items
+  } = t0;
+  let t1;
+  if ($[0] !== items) {
+    t1 = buildSearchIndex(items);
+    $[0] = items;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const [index] = useState(t1);
+  let t2;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = JSON.parse(localStorage.getItem("s") || "{}");
+    $[2] = t2;
+  } else {
+    t2 = $[2];
+  }
+  const [settings] = useState(t2);
+  const t3 = index.size;
+  let t4;
+  if ($[3] !== settings) {
+    t4 = Object.keys(settings);
+    $[3] = settings;
+    $[4] = t4;
+  } else {
+    t4 = $[4];
+  }
+  const t5 = t3 + t4.length;
+  let t6;
+  if ($[5] !== t5) {
+    t6 = <p>{t5}</p>;
+    $[5] = t5;
+    $[6] = t6;
+  } else {
+    t6 = $[6];
+  }
+  return t6;
+}
+
+// SEED rerender-functional-setstate
+export function SeedFunctional() {
+  const $ = _c(7);
+  const [count, setCount] = useState(0);
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = [];
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  const [items, setItems] = useState(t0);
+  let t1;
+  if ($[1] !== count || $[2] !== items) {
+    t1 = () => {
+      setCount(count + 1);
+      setTimeout(() => setItems([...items, "x"]), 10);
+    };
+    $[1] = count;
+    $[2] = items;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  let t2;
+  if ($[4] !== count || $[5] !== t1) {
+    t2 = <button onClick={t1}>{count}</button>;
+    $[4] = count;
+    $[5] = t1;
+    $[6] = t2;
+  } else {
+    t2 = $[6];
+  }
+  return t2;
+}
+
+// SEED rerender-move-effect-to-event
+export function SeedEffectEvent() {
+  const $ = _c(6);
+  const [submitted, setSubmitted] = useState(false);
+  const theme = useContext(Ctx);
+  let t0;
+  if ($[0] !== submitted) {
+    t0 = () => {
+      if (submitted) {
+        post("/api/register");
+      }
+    };
+    $[0] = submitted;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  let t1;
+  if ($[2] !== submitted || $[3] !== theme) {
+    t1 = [submitted, theme];
+    $[2] = submitted;
+    $[3] = theme;
+    $[4] = t1;
+  } else {
+    t1 = $[4];
+  }
+  useEffect(t0, t1);
+  let t2;
+  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = <button onClick={() => setSubmitted(true)}>Submit</button>;
+    $[5] = t2;
+  } else {
+    t2 = $[5];
+  }
+  return t2;
+}
+
+// SEED rerender-derived-state-no-effect
+export function SeedDerived(t0) {
+  const $ = _c(6);
+  const {
+    first,
+    last
+  } = t0;
+  const [full, setFull] = useState("");
+  let t1;
+  let t2;
+  if ($[0] !== first || $[1] !== last) {
+    t1 = () => {
+      setFull(first + " " + last);
+    };
+    t2 = [first, last];
+    $[0] = first;
+    $[1] = last;
+    $[2] = t1;
+    $[3] = t2;
+  } else {
+    t1 = $[2];
+    t2 = $[3];
+  }
+  useEffect(t1, t2);
+  let t3;
+  if ($[4] !== full) {
+    t3 = <p>{full}</p>;
+    $[4] = full;
+    $[5] = t3;
+  } else {
+    t3 = $[5];
+  }
+  return t3;
+}
+
+// SEED rerender-simple-expression-in-memo
+export function SeedSimpleMemo(t0) {
+  const $ = _c(2);
+  const {
+    a,
+    b
+  } = t0;
+  const isLoading = a.loading || b.loading;
+  const t1 = String(isLoading);
+  let t2;
+  if ($[0] !== t1) {
+    t2 = <p>{t1}</p>;
+    $[0] = t1;
+    $[1] = t2;
+  } else {
+    t2 = $[1];
+  }
+  return t2;
+}
+
+// SEED rerender-memo-with-default-value
+export const SeedDefault = memo(function SeedDefault(t0) {
+  const $ = _c(5);
+  const {
+    tags: t1,
+    onClick: t2
+  } = t0;
+  let t3;
+  if ($[0] !== t1) {
+    t3 = t1 === undefined ? [] : t1;
+    $[0] = t1;
+    $[1] = t3;
+  } else {
+    t3 = $[1];
+  }
+  const tags = t3;
+  const onClick = t2 === undefined ? _temp : t2;
+  let t4;
+  if ($[2] !== onClick || $[3] !== tags.length) {
+    t4 = <button onClick={onClick}>{tags.length}</button>;
+    $[2] = onClick;
+    $[3] = tags.length;
+    $[4] = t4;
+  } else {
+    t4 = $[4];
+  }
+  return t4;
+});
+
+// SEED rerender-defer-reads
+export function SeedDeferReads(t0) {
+  const $ = _c(8);
+  const {
+    id
+  } = t0;
+  const orders = useDemoSelector(_temp2);
+  const {
+    update
+  } = useDemo();
+  let t1;
+  if ($[0] !== id || $[1] !== orders) {
+    t1 = () => {
+      post(id + orders.join(","));
+    };
+    $[0] = id;
+    $[1] = orders;
+    $[2] = t1;
+  } else {
+    t1 = $[2];
+  }
+  const handleShare = t1;
+  let t2;
+  if ($[3] !== update) {
+    t2 = () => update(_temp3);
+    $[3] = update;
+    $[4] = t2;
+  } else {
+    t2 = $[4];
+  }
+  let t3;
+  if ($[5] !== handleShare || $[6] !== t2) {
+    t3 = <button onClick={handleShare} onDoubleClick={t2}>Share</button>;
+    $[5] = handleShare;
+    $[6] = t2;
+    $[7] = t3;
+  } else {
+    t3 = $[7];
+  }
+  return t3;
+}
+
+// SEED rerender-derived-state
+function _temp3(s_0) {
+  return s_0;
+}
+function _temp2(s) {
+  return s.data.orders;
+}
+export function SeedSubscribeDerived() {
+  const $ = _c(3);
+  const width = useWindowWidth();
+  const orders = useDemoSelector(_temp4);
+  const isMobile = width < 768;
+  const t0 = isMobile ? "m" : "d";
+  const t1 = orders.length > 0 ? "yes" : "no";
+  let t2;
+  if ($[0] !== t0 || $[1] !== t1) {
+    t2 = <nav className={t0}>{t1}</nav>;
+    $[0] = t0;
+    $[1] = t1;
+    $[2] = t2;
+  } else {
+    t2 = $[2];
+  }
+  return t2;
+}
+
+// SEED rerender-dependencies
+function _temp4(s) {
+  return s.data.orders;
+}
+export function SeedDeps(t0) {
+  const $ = _c(4);
+  const {
+    user
+  } = t0;
+  let t1;
+  if ($[0] !== user.id) {
+    t1 = () => {
+      post(user.id);
+    };
+    $[0] = user.id;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  let t2;
+  if ($[2] !== user) {
+    t2 = [user];
+    $[2] = user;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  useEffect(t1, t2);
+  return null;
+}
+
+// SEED rerender-split-combined-hooks
+export function SeedSplit(t0) {
+  const $ = _c(14);
+  const {
+    products,
+    category,
+    sortOrder,
+    pathname,
+    pageTitle
+  } = t0;
+  let t1;
+  if ($[0] !== category || $[1] !== products || $[2] !== sortOrder) {
+    let t2;
+    if ($[4] !== category) {
+      t2 = p => p.category === category;
+      $[4] = category;
+      $[5] = t2;
+    } else {
+      t2 = $[5];
+    }
+    const filtered = products.filter(t2);
+    let t3;
+    if ($[6] !== sortOrder) {
+      t3 = (a, b) => sortOrder === "asc" ? a.price - b.price : b.price - a.price;
+      $[6] = sortOrder;
+      $[7] = t3;
+    } else {
+      t3 = $[7];
+    }
+    t1 = filtered.toSorted(t3);
+    $[0] = category;
+    $[1] = products;
+    $[2] = sortOrder;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  const out = t1;
+  const sorted = out;
+  let t2;
+  let t3;
+  if ($[8] !== pageTitle || $[9] !== pathname) {
+    t2 = () => {
+      post(pathname);
+      document.title = `${pageTitle} | App`;
+    };
+    t3 = [pathname, pageTitle];
+    $[8] = pageTitle;
+    $[9] = pathname;
+    $[10] = t2;
+    $[11] = t3;
+  } else {
+    t2 = $[10];
+    t3 = $[11];
+  }
+  useEffect(t2, t3);
+  let t4;
+  if ($[12] !== sorted.length) {
+    t4 = <p>{sorted.length}</p>;
+    $[12] = sorted.length;
+    $[13] = t4;
+  } else {
+    t4 = $[13];
+  }
+  return t4;
+}
+
+// SEED rerender-memo
+export function SeedMemo(t0) {
+  const $ = _c(7);
+  const {
+    items,
+    loading
+  } = t0;
+  let t1;
+  if ($[0] !== items) {
+    t1 = items.map(_temp5).toSorted();
+    $[0] = items;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const expensive = t1;
+  if (loading) {
+    let t2;
+    if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+      t2 = <p>loading</p>;
+      $[2] = t2;
+    } else {
+      t2 = $[2];
+    }
+    return t2;
+  }
+  let t2;
+  if ($[3] !== expensive) {
+    t2 = expensive.join();
+    $[3] = expensive;
+    $[4] = t2;
+  } else {
+    t2 = $[4];
+  }
+  let t3;
+  if ($[5] !== t2) {
+    t3 = <p>{t2}</p>;
+    $[5] = t2;
+    $[6] = t3;
+  } else {
+    t3 = $[6];
+  }
+  return t3;
+}
+
+// SEED rerender-transitions + rerender-use-ref-transient-values
+function _temp5(i) {
+  return i.toUpperCase();
+}
+export function SeedScroll() {
+  const $ = _c(5);
+  const [scrollY, setScrollY] = useState(0);
+  const [lastX, setLastX] = useState(0);
+  let t0;
+  let t1;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = () => {
+      const handler = () => setScrollY(window.scrollY);
+      const onMove = e => setLastX(e.clientX);
+      window.addEventListener("scroll", handler, {
+        passive: true
+      });
+      window.addEventListener("mousemove", onMove);
+      return () => {
+        window.removeEventListener("scroll", handler);
+        window.removeEventListener("mousemove", onMove);
+      };
+    };
+    t1 = [];
+    $[0] = t0;
+    $[1] = t1;
+  } else {
+    t0 = $[0];
+    t1 = $[1];
+  }
+  useEffect(t0, t1);
+  let t2;
+  if ($[2] !== lastX || $[3] !== scrollY) {
+    t2 = <div style={{
+      left: lastX,
+      top: scrollY
+    }} />;
+    $[2] = lastX;
+    $[3] = scrollY;
+    $[4] = t2;
+  } else {
+    t2 = $[4];
+  }
+  return t2;
+}
+
+// SEED rerender-use-deferred-value
+export function SeedSearch(t0) {
+  const $ = _c(14);
+  const {
+    items
+  } = t0;
+  const [query, setQuery] = useState("");
+  let t1;
+  let t2;
+  if ($[0] !== items || $[1] !== query) {
+    let t3;
+    if ($[4] !== query) {
+      t3 = item => fuzzyMatch(item, query);
+      $[4] = query;
+      $[5] = t3;
+    } else {
+      t3 = $[5];
+    }
+    const filtered = items.filter(t3);
+    let t4;
+    if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+      t4 = e => setQuery(e.target.value);
+      $[6] = t4;
+    } else {
+      t4 = $[6];
+    }
+    if ($[7] !== query) {
+      t2 = <input value={query} onChange={t4} />;
+      $[7] = query;
+      $[8] = t2;
+    } else {
+      t2 = $[8];
+    }
+    t1 = filtered.map(_temp6);
+    $[0] = items;
+    $[1] = query;
+    $[2] = t1;
+    $[3] = t2;
+  } else {
+    t1 = $[2];
+    t2 = $[3];
+  }
+  let t3;
+  if ($[9] !== t1) {
+    t3 = <ul>{t1}</ul>;
+    $[9] = t1;
+    $[10] = t3;
+  } else {
+    t3 = $[10];
+  }
+  let t4;
+  if ($[11] !== t2 || $[12] !== t3) {
+    t4 = <>{t2}{t3}</>;
+    $[11] = t2;
+    $[12] = t3;
+    $[13] = t4;
+  } else {
+    t4 = $[13];
+  }
+  return t4;
+}
+
+// SEED jsx-no-constructed-context-values
+function _temp6(f) {
+  return <li key={f}>{f}</li>;
+}
+export function SeedProvider(t0) {
+  const $ = _c(5);
+  const {
+    children
+  } = t0;
+  const [a] = useState(1);
+  let t1;
+  if ($[0] !== a) {
+    t1 = {
+      a
+    };
+    $[0] = a;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  let t2;
+  if ($[2] !== children || $[3] !== t1) {
+    t2 = <Ctx.Provider value={t1}>{children}</Ctx.Provider>;
+    $[2] = children;
+    $[3] = t1;
+    $[4] = t2;
+  } else {
+    t2 = $[4];
+  }
+  return t2;
+}
+
+// SEED rerender-no-inline-components (recharts mounts Tooltip.content with createElement)
+export function SeedChart(t0) {
+  const $ = _c(2);
+  const {
+    label
+  } = t0;
+  let t1;
+  if ($[0] !== label) {
+    const tooltip = () => <div>{label}</div>;
+    t1 = <Tooltip content={tooltip} />;
+    $[0] = label;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  return t1;
+}
+
+// SEED rerender-derived-state (useTours read for one field)
+export function SeedTours() {
+  const $ = _c(2);
+  const {
+    role
+  } = useTours();
+  let t0;
+  if ($[0] !== role) {
+    t0 = <p>{role}</p>;
+    $[0] = role;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  return t0;
+}
+
+// SEED rerender-transitions (streamed chunks without experimental_throttle)
+export function SeedChat() {
+  const $ = _c(1);
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = {
+      chat: null
+    };
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  useChat(t0);
+  return null;
+}
+
+// keep imports used
+export const _keep = useSyncExternalStore;
+function _temp() {}
+
+# node compiler-probe.mjs seed/probe/split-plain.tsx
+import { c as _c } from "react/compiler-runtime";
+export function Plain(t0) {
+  const $ = _c(10);
+  const {
+    products,
+    category,
+    sortOrder
+  } = t0;
+  let t1;
+  if ($[0] !== category || $[1] !== products || $[2] !== sortOrder) {
+    let t2;
+    if ($[4] !== category) {
+      t2 = p => p.category === category;
+      $[4] = category;
+      $[5] = t2;
+    } else {
+      t2 = $[5];
+    }
+    const filtered = products.filter(t2);
+    let t3;
+    if ($[6] !== sortOrder) {
+      t3 = (a, b) => sortOrder === "asc" ? a.price - b.price : b.price - a.price;
+      $[6] = sortOrder;
+      $[7] = t3;
+    } else {
+      t3 = $[7];
+    }
+    t1 = filtered.toSorted(t3);
+    $[0] = category;
+    $[1] = products;
+    $[2] = sortOrder;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  const sorted = t1;
+  let t2;
+  if ($[8] !== sorted.length) {
+    t2 = <p>{sorted.length}</p>;
+    $[8] = sorted.length;
+    $[9] = t2;
+  } else {
+    t2 = $[9];
+  }
+  return t2;
+}
+export function PlainUsed(t0) {
+  const $ = _c(12);
+  const {
+    products,
+    category,
+    sortOrder
+  } = t0;
+  let filtered;
+  let t1;
+  if ($[0] !== category || $[1] !== products || $[2] !== sortOrder) {
+    let t2;
+    if ($[5] !== category) {
+      t2 = p => p.category === category;
+      $[5] = category;
+      $[6] = t2;
+    } else {
+      t2 = $[6];
+    }
+    filtered = products.filter(t2);
+    let t3;
+    if ($[7] !== sortOrder) {
+      t3 = (a, b) => sortOrder === "asc" ? a.price - b.price : b.price - a.price;
+      $[7] = sortOrder;
+      $[8] = t3;
+    } else {
+      t3 = $[8];
+    }
+    t1 = filtered.toSorted(t3);
+    $[0] = category;
+    $[1] = products;
+    $[2] = sortOrder;
+    $[3] = filtered;
+    $[4] = t1;
+  } else {
+    filtered = $[3];
+    t1 = $[4];
+  }
+  const sorted = t1;
+  let t2;
+  if ($[9] !== filtered.length || $[10] !== sorted.length) {
+    t2 = <p>{sorted.length}{filtered.length}</p>;
+    $[9] = filtered.length;
+    $[10] = sorted.length;
+    $[11] = t2;
+  } else {
+    t2 = $[11];
+  }
+  return t2;
+}
+
+# node compiler-probe.mjs seed/probe/split-correct.tsx
+import { c as _c } from "react/compiler-runtime";
+import { useMemo } from "react";
+export function TwoMemos(t0) {
+  const $ = _c(12);
+  const {
+    products,
+    category,
+    sortOrder
+  } = t0;
+  let t1;
+  if ($[0] !== category || $[1] !== products) {
+    let t2;
+    if ($[3] !== category) {
+      t2 = p => p.category === category;
+      $[3] = category;
+      $[4] = t2;
+    } else {
+      t2 = $[4];
+    }
+    t1 = products.filter(t2);
+    $[0] = category;
+    $[1] = products;
+    $[2] = t1;
+  } else {
+    t1 = $[2];
+  }
+  const filteredProducts = t1;
+  let t2;
+  if ($[5] !== filteredProducts || $[6] !== sortOrder) {
+    let t3;
+    if ($[8] !== sortOrder) {
+      t3 = (a, b) => sortOrder === "asc" ? a.price - b.price : b.price - a.price;
+      $[8] = sortOrder;
+      $[9] = t3;
+    } else {
+      t3 = $[9];
+    }
+    t2 = filteredProducts.toSorted(t3);
+    $[5] = filteredProducts;
+    $[6] = sortOrder;
+    $[7] = t2;
+  } else {
+    t2 = $[7];
+  }
+  const sortedProducts = t2;
+  let t3;
+  if ($[10] !== sortedProducts.length) {
+    t3 = <p>{sortedProducts.length}</p>;
+    $[10] = sortedProducts.length;
+    $[11] = t3;
+  } else {
+    t3 = $[11];
+  }
+  return t3;
+}

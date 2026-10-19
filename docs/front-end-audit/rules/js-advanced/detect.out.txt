@@ -1,0 +1,591 @@
+js-batch-dom-css	src/components/auto-textarea.tsx:24	[review] W-R-W order WRW in <anon>
+js-cache-storage	src/components/background-music-store.ts:29	readStored in <module>
+js-cache-storage	src/components/background-music-store.ts:32	readStored in <module>
+advanced-init-once	src/components/confirm-dialog.tsx:136	useEffect([]) without cleanup in useConfirm: () => resolveRef.current?.(false)
+js-combine-iterations	src/components/detail-tabs.tsx:41	same receiver iterated ×2: tabs.map
+js-set-map-lookups	src/components/filter-bar.tsx:50	OUTER-ARRAY .includes() inside .filter(): selected.includes(o.id)
+js-index-maps	src/components/filter-bar.tsx:181	per-item receiver .filter() inside .flatMap(): g.options .filter((o) => g.selected.includes(o.id))
+js-set-map-lookups	src/components/filter-bar.tsx:182	per-item receiver .includes() inside .filter(): g.selected.includes(o.id)
+js-index-maps	src/components/filter-bar.tsx:192	OUTER-ARRAY .filter() inside loop: g.options .filter((o) => (ticked ? ticked.has(key(g, o)) : true))
+js-index-maps	src/components/filter-bar.tsx:248	per-item receiver .filter() inside .flatMap(): g.options .filter((o) => g.selected.includes(o.id))
+js-set-map-lookups	src/components/filter-bar.tsx:249	per-item receiver .includes() inside .filter(): g.selected.includes(o.id)
+js-index-maps	src/components/filter-bar.tsx:263	OUTER-ARRAY .filter() inside .map(): group.selected.filter((id) => id !== option.id)
+js-cache-function-results	src/components/filter-bar.tsx:206	[review] identical call ×2 in one function: key(g, o)
+js-cache-function-results	src/components/layout/cart-button.tsx:65	new Intl.PluralRules inside CartButton 
+js-combine-iterations	src/components/layout/merchant-shell.tsx:113	same receiver iterated ×2: contentPages.filter
+js-cache-function-results	src/components/layout/merchant-shell.tsx:348	[review] identical call ×2 in one function: labelOf(item)
+js-cache-function-results	src/components/list-pagination.tsx:83	[review] identical call ×2 in one function: count(to)
+js-cache-function-results	src/components/list-pagination.tsx:84	[review] identical call ×2 in one function: count(total)
+advanced-init-once	src/components/sheet-exit.ts:56	useEffect([]) without cleanup in useSheetExit: () => { const marker = markerRef.current; queueMicrotask(() => { if (marker && !marker.isConnected) playSheetE…
+js-combine-iterations	src/components/stat-card.tsx:324	same receiver iterated ×2: chart.bars.map
+js-cache-storage	src/contexts/locale-context.tsx:40	readStored in storedLanguage
+js-hoist-regexp	src/contexts/locale-context.tsx:89	literal /\{(\w+)\}/g in fill [fn]
+js-min-max-loop	src/features/account/hooks/use-account-hub.ts:29	sort()[idx] directly: orders .filter((o) => !isClosedOrder(o)) .sort((a, b) => a.pickupDate.localeComp…
+js-min-max-loop	src/features/account/hooks/use-account-hub.ts:34	sort()[idx] directly: bookings .filter( (b) => liveBooking.includes(b.status) && Date.parse(b.startsAt…
+js-set-map-lookups	src/features/account/hooks/use-account-hub.ts:36	OUTER-ARRAY .includes() inside .filter(): liveBooking.includes(b.status)
+js-hoist-regexp	src/features/auth/hooks/use-sign-in.ts:99	literal /^[^\s@]+@[^\s@]+\.[^\s@]+$/ in submitEmail [fn]
+js-cache-function-results	src/features/cart/hooks/use-cart-view.ts:42	new Intl.PluralRules inside plural 
+js-index-maps	src/features/cart/hooks/use-cart-view.ts:96	OUTER-ARRAY .filter() inside .map(): [variantLabel, engraving].filter((part): part is string => Boolean(part), )
+js-index-maps	src/features/cart/hooks/use-cart-view.ts:99	OUTER-ARRAY .find() inside .map(): pickupPlaces.find((p) => p.id === line.pickupPlaceId)
+js-index-maps	src/features/cart/hooks/use-cart-view.ts:100	OUTER-ARRAY .filter() inside .map(): [name, variantLabel].filter(Boolean)
+js-combine-iterations	src/features/cart/hooks/use-cart-view.ts:80	same receiver iterated ×2: priced.map
+js-cache-function-results	src/features/cart/hooks/use-cart-view.ts:196	[review] identical call ×3 in one function: money(total)
+js-set-map-lookups	src/features/cart/hooks/use-cart.ts:102	OUTER-ARRAY .includes() inside .map(): ids.includes(l.id)
+js-index-maps	src/features/cart/lib/group-cart.ts:74	OUTER-ARRAY .find() inside .flatMap(): products.find((p) => p.id === line.productId)
+js-index-maps	src/features/cart/lib/group-cart.ts:75	OUTER-ARRAY .find() inside .flatMap(): product?.variants.find((v) => v.id === line.variantId)
+js-combine-iterations	src/features/catalog/components/gift-detail.tsx:556	same receiver iterated ×2: blocked.map
+js-cache-function-results	src/features/catalog/components/seller-row.tsx:87	[review] identical call ×2 in one function: photoUrl(photo)
+js-cache-function-results	src/features/catalog/hooks/use-gift-detail.ts:71	new Intl.PluralRules inside plural 
+js-set-map-lookups	src/features/catalog/hooks/use-gift-detail.ts:151	OUTER-ARRAY .includes() inside .filter(): product.pickupPlaceIds?.includes(p.id)
+js-hoist-regexp	src/features/catalog/hooks/use-gift-detail.ts:295	literal /\s/g in useGiftDetail [component/hook]
+js-combine-iterations	src/features/catalog/hooks/use-gift-detail.ts:362	same receiver iterated ×2: product.variants.map
+js-cache-function-results	src/features/catalog/hooks/use-gift-detail.ts:358	[review] identical call ×3 in one function: money(lineTotal)
+js-cache-function-results	src/features/catalog/hooks/use-gift-detail.ts:414	[review] identical call ×3 in one function: short(earliest)
+js-cache-function-results	src/features/catalog/hooks/use-gift-detail.ts:499	[review] identical call ×2 in one function: short(iso)
+js-cache-function-results	src/features/catalog/hooks/use-product-card.ts:65	new Intl.PluralRules inside useProductCard 
+js-cache-function-results	src/features/catalog/hooks/use-product-card.ts:69	[review] identical call ×2 in one function: number.format(average)
+js-cache-function-results	src/features/catalog/hooks/use-product-reviews.ts:46	new Intl.RelativeTimeFormat inside reviewDate 
+js-cache-function-results	src/features/catalog/hooks/use-product-reviews.ts:77	new Intl.PluralRules inside useProductReviews 
+js-index-maps	src/features/catalog/hooks/use-product-reviews.ts:89	OUTER-ARRAY .filter() inside .map(): reviews.filter((r) => r.rating === stars)
+js-cache-function-results	src/features/catalog/lib/pickup.ts:77	[review] identical call ×2 in one function: addDays(date, 1)
+js-combine-iterations	src/features/catalog/lib/stock.ts:19	chain flatMap().filter().reduce()
+js-combine-iterations	src/features/catalog/lib/stock.ts:19	chain filter().flatMap().filter()
+js-index-maps	src/features/catalog/seed.ts:1124	OUTER-ARRAY .filter() inside .flatMap(): featuredReviews.filter( (r) => r.productId === product.id, )
+js-combine-iterations	src/features/checkout/components/request-sent.tsx:88	same receiver iterated ×2: orders.map
+js-combine-iterations	src/features/checkout/components/review-view.tsx:160	same receiver iterated ×2: orders.map
+js-cache-function-results	src/features/checkout/components/trip-profile.tsx:401	[review] identical call ×2 in one function: parseDate(min)
+js-flatmap-filter	src/features/checkout/hooks/use-request-sent.ts:65	[review] map().filter(custom) (o): o is Order => !!o && o.guestId === signedInGuestId
+js-index-maps	src/features/checkout/hooks/use-request-sent.ts:66	OUTER-ARRAY .find() inside .map(): demoOrders.find((o) => o.id === id)
+js-index-maps	src/features/checkout/hooks/use-request-sent.ts:103	OUTER-ARRAY .find() inside .map(): products.find((p) => p.id === line.productId)
+js-cache-function-results	src/features/checkout/hooks/use-review.ts:48	new Intl.PluralRules inside plural 
+js-index-maps	src/features/checkout/hooks/use-review.ts:115	OUTER-ARRAY .find() inside .map(): state.data.pickupPlaces.find( (p) => p.id === order.pickupPlaceId, )
+js-index-maps	src/features/checkout/hooks/use-review.ts:154	OUTER-ARRAY .find() inside .map(): state.data.products.find( (p) => p.id === line.productId, )
+js-cache-function-results	src/features/checkout/hooks/use-review.ts:141	[review] identical call ×2 in one function: dueDatesAtAcceptance(order, now)
+js-cache-function-results	src/features/checkout/hooks/use-review.ts:186	[review] identical call ×2 in one function: money(total)
+js-flatmap-filter	src/features/checkout/lib/create-orders.ts:49	map().filter(non-null) texts.map((t) => t[language]).filter(Boolean)
+js-index-maps	src/features/checkout/lib/create-orders.ts:49	OUTER-ARRAY .filter() inside loop: texts.map((t) => t[language]).filter(Boolean)
+js-combine-iterations	src/features/checkout/lib/create-orders.ts:105	same receiver iterated ×2: group.lines.map
+js-min-max-loop	src/features/checkout/lib/trip.ts:77	sort()[idx] directly: all .filter((p) => !keys.has(p.key) && covers(p.trip)) .sort((a, b) => (b.trip?.…
+js-combine-iterations	src/features/checkout/lib/trip.ts:77	same receiver iterated ×2: all.filter
+js-cache-function-results	src/features/content/components/article-blocks.tsx:109	[review] identical call ×2 in one function: useState(0)
+js-cache-function-results	src/features/content/components/article-comments.tsx:163	new Intl.PluralRules inside ArticleComments 
+js-combine-iterations	src/features/content/components/article-contents.tsx:37	chain filter().filter()
+js-combine-iterations	src/features/content/components/article-contents.tsx:37	chain map().filter().filter()
+js-flatmap-filter	src/features/content/components/article-contents.tsx:37	map().filter(non-null) sections .map((s) => document.getElementById(sectionAnchor(s.id))) .filter((el): el is HTMLElement =…
+js-cache-storage	src/features/content/components/article-page.tsx:81	readStored in ArticlePage
+js-cache-function-results	src/features/content/components/stories-page.tsx:57	new Intl.PluralRules inside StoriesPage 
+js-index-maps	src/features/content/components/stories-page.tsx:172	OUTER-ARRAY .filter() inside .map(): [ story.place, t("home.stories.read", { minutes: story.readMinutes }), ] .filter(Boolean)
+js-hoist-regexp	src/features/content/hooks/use-article.ts:47	literal /\s+/ in shortName [fn]
+js-index-maps	src/features/content/hooks/use-article.ts:113	OUTER-ARRAY .filter() inside .map(): visible.filter((r) => r.parentId === c.id)
+js-index-maps	src/features/content/hooks/use-article.ts:121	OUTER-ARRAY .find() inside .flatMap(): others.find((a) => a.slug === slug)
+js-index-maps	src/features/content/hooks/use-article.ts:153	OUTER-ARRAY .find() inside .flatMap(): demoTours?.tours.find((x) => x.id === link.id)
+js-index-maps	src/features/content/hooks/use-article.ts:157	OUTER-ARRAY .find() inside .flatMap(): products.find((p) => p.id === link.id)
+js-cache-function-results	src/features/content/merchant/components/article-editor.tsx:161	new Intl.PluralRules inside SaveNotes 
+js-index-maps	src/features/content/merchant/components/article-links.tsx:317	OUTER-ARRAY .filter() inside .map(): links.candidates .filter((c) => c.link.kind === group.kind)
+js-set-map-lookups	src/features/content/merchant/components/article-links.tsx:392	OUTER-ARRAY .includes() inside .map(): form.related.includes(story.slug)
+js-cache-function-results	src/features/content/merchant/components/article-sections.tsx:136	[review] identical call ×2 in one function: error("title")
+js-cache-function-results	src/features/content/merchant/components/comment-rows.tsx:116	new Intl.PluralRules inside State 
+js-cache-function-results	src/features/content/merchant/components/content-page.tsx:146	new Intl.PluralRules inside onAction 
+js-hoist-regexp	src/features/content/merchant/components/media-sheets.tsx:17	literal /-\d+$/ in readable [fn]
+js-hoist-regexp	src/features/content/merchant/components/media-sheets.tsx:17	literal /-/g in readable [fn]
+js-length-check-first	src/features/content/merchant/hooks/use-article-editor.ts:75	JSON.stringify compare: JSON.stringify(form) !== JSON.stringify(baseline)
+js-combine-iterations	src/features/content/merchant/hooks/use-article-editor.ts:277	same receiver iterated ×2: articles.map
+js-set-map-lookups	src/features/content/merchant/hooks/use-merchant-articles.ts:68	OUTER-ARRAY .some() inside .map(): articles.some( (a) => a.slug === article.slug && a.language === other, )
+js-index-maps	src/features/content/merchant/hooks/use-merchant-articles.ts:71	per-item receiver .filter() inside .map(): article.links.filter((l) => isLinkHidden(state.data, l), )
+js-index-maps	src/features/content/merchant/hooks/use-merchant-articles.ts:98	OUTER-ARRAY .filter() inside .map(): comments.filter((c) => c.articleId === article.id)
+js-set-map-lookups	src/features/content/merchant/hooks/use-merchant-articles.ts:119	OUTER-ARRAY .includes() inside .filter(): filter.includes(row.language)
+js-index-maps	src/features/content/merchant/hooks/use-merchant-articles.ts:123	OUTER-ARRAY .filter() inside .map(): all.filter((row) => row.language === id)
+js-index-maps	src/features/content/merchant/hooks/use-merchant-comments.ts:64	OUTER-ARRAY .find() inside .map(): articles.find((a) => a.id === c.articleId)
+js-index-maps	src/features/content/merchant/hooks/use-merchant-comments.ts:66	OUTER-ARRAY .filter() inside .map(): comments.filter((r) => r.parentId === c.id)
+js-set-map-lookups	src/features/content/merchant/hooks/use-merchant-comments.ts:85	OUTER-ARRAY .some() inside .map(): replies.some((r) => r.author.kind === "shop")
+js-set-map-lookups	src/features/content/merchant/hooks/use-merchant-comments.ts:104	OUTER-ARRAY .some() inside .filter(): filter.some((id) => inFilter(row, id))
+js-index-maps	src/features/content/merchant/hooks/use-merchant-comments.ts:109	OUTER-ARRAY .filter() inside .map(): all.filter((row) => inFilter(row, id))
+js-cache-function-results	src/features/content/merchant/hooks/use-merchant-comments.ts:71	[review] identical call ×2 in one function: name(c)
+js-index-maps	src/features/content/merchant/hooks/use-merchant-reviews.ts:58	OUTER-ARRAY .find() inside .map(): state.data.tours?.tours.find((x) => x.id === tourId)
+js-index-maps	src/features/content/merchant/hooks/use-merchant-reviews.ts:62	OUTER-ARRAY .find() inside .map(): products.find((p) => p.id === r.productId)
+js-set-map-lookups	src/features/content/merchant/hooks/use-merchant-reviews.ts:105	OUTER-ARRAY .some() inside .filter(): filter.some((id) => inFilter(row, id))
+js-index-maps	src/features/content/merchant/hooks/use-merchant-reviews.ts:110	OUTER-ARRAY .filter() inside .map(): all.filter((row) => inFilter(row, id))
+js-hoist-regexp	src/features/content/merchant/lib/article-form.ts:154	literal /\s+/ in words [fn]
+js-cache-function-results	src/features/content/merchant/lib/article-form.ts:268	[review] identical call ×2 in one function: at("title")
+js-hoist-regexp	src/features/content/merchant/lib/youtube.ts:14	literal /^https?:\/\//i in parseYoutubeId [fn]
+js-hoist-regexp	src/features/content/merchant/lib/youtube.ts:18	literal /^(www\.|m\.)/ in parseYoutubeId [fn]
+js-cache-storage	src/features/demo/demo-store.tsx:22	readStored in loadState
+js-cache-storage	src/features/demo/proposals.ts:11	readStored in <module>
+js-index-maps	src/features/demo/upgrade.ts:86	OUTER-ARRAY .find() inside .map(): seed.products.find((p) => p.id === product.id)
+js-index-maps	src/features/demo/upgrade.ts:113	OUTER-ARRAY .find() inside .map(): seed.articles.find((a) => a.id === article.id)
+js-hoist-regexp	src/features/discovery/components/victorinox-showcase.tsx:36	literal /^victorinox-/ in artKey [fn]
+js-hoist-regexp	src/features/discovery/components/victorinox-showcase.tsx:149	literal /^Victorinox / in VictorinoxShowcase [component/hook] in .map()
+js-set-map-lookups	src/features/discovery/hooks/use-discovery-view.ts:61	per-item receiver .some() inside .find(): a.links.some((l) => l.kind === "tour" && l.id === tourId)
+js-cache-function-results	src/features/discovery/hooks/use-discovery-view.ts:65	new Intl.PluralRules inside useDiscoveryView 
+js-combine-iterations	src/features/discovery/hooks/use-discovery-view.ts:54	same receiver iterated ×2: available.filter
+js-index-maps	src/features/lab/blog-home/data.ts:200	OUTER-ARRAY .find() inside loop: tours.find((t) => t.id === link.id && t.published)
+js-index-maps	src/features/lab/blog-home/data.ts:209	OUTER-ARRAY .find() inside loop: state.data.products.find((p) => p.id === link.id)
+js-cache-function-results	src/features/lab/blog-home/options-v2.tsx:281	[review] identical call ×3 in one function: face(t)
+js-set-map-lookups	src/features/lab/blog-home/options-v3.tsx:597	per-item receiver .some() inside .find(): a.links.some((l) => l.kind === "tour" && l.id === tourId)
+js-cache-function-results	src/features/lab/blog-home/options-v3.tsx:384	[review] identical call ×2 in one function: label(item)
+js-set-map-lookups	src/features/lab/blog-home/options.tsx:114	OUTER-ARRAY .includes() inside .filter(): featured.includes(a)
+js-flatmap-filter	src/features/lab/blog-home/options.tsx:219	[review] map().filter(custom) (p): p is { author: Article["author"]; article: Article } => Boolean(p…
+js-index-maps	src/features/lab/blog-home/options.tsx:222	OUTER-ARRAY .find() inside .map(): articles.find( (a) => a.author.name === author.name && a.id !== lead?.id, )
+js-cache-function-results	src/features/lab/blog-home/options.tsx:230	new Intl.DateTimeFormat inside EditionHome 
+js-set-map-lookups	src/features/lab/blog-home/stories-styles.tsx:200	OUTER-ARRAY .indexOf() inside .map(): items.indexOf(article)
+js-combine-iterations	src/features/lab/blog-home/stories-styles.tsx:189	same receiver iterated ×2: items.filter
+js-cache-function-results	src/features/lab/blog-home/stories-styles.tsx:80	[review] identical call ×3 in one function: categoryOf(article)
+js-cache-function-results	src/features/lab/blog-home/stories-styles.tsx:92	[review] identical call ×2 in one function: areaOf(article)
+js-cache-function-results	src/features/lab/calendar/calendar-core.ts:22	new Intl.DateTimeFormat inside swissDate 
+js-batch-dom-css	src/features/lab/calendar/calendar-lab.tsx:61	[review] R-W-R order RRRWWR in <anon>
+js-cache-function-results	src/features/lab/calendar/calendar-lab.tsx:99	new Intl.DateTimeFormat inside updatePeriod 
+js-cache-function-results	src/features/lab/calendar/calendar-lab.tsx:105	new Intl.DateTimeFormat inside updatePeriod 
+js-cache-function-results	src/features/lab/calendar/calendar-lab.tsx:144	new Intl.DateTimeFormat inside weekdayLabel 
+js-cache-function-results	src/features/lab/calendar/calendar-lab.tsx:324	new Intl.DateTimeFormat inside CalendarLab 
+js-cache-function-results	src/features/lab/calendar/calendar-lab.tsx:39	[review] identical call ×2 in one function: useState("")
+js-cache-function-results	src/features/lab/calendar/calendar-overlays.tsx:40	new Intl.DateTimeFormat inside fullDate 
+js-flatmap-filter	src/features/lab/cart-select-options.tsx:106	[review] map().filter(custom) (o) => o.lines.length > 0
+js-flatmap-filter	src/features/lab/cart-select-options.tsx:119	[review] map().filter(custom) (c) => c.lines.length > 0
+js-index-maps	src/features/lab/cart-select-options.tsx:120	per-item receiver .filter() inside .map(): o.lines.filter((l) => isOn(l.id))
+js-index-maps	src/features/lab/cart-select-options.tsx:141	OUTER-ARRAY .filter() inside .map(): ids.filter(isOn)
+js-combine-iterations	src/features/lab/cart-select-options.tsx:139	same receiver iterated ×2: orders.map
+js-combine-iterations	src/features/lab/cart-select-options.tsx:174	same receiver iterated ×2: order.lines.map
+js-combine-iterations	src/features/lab/hero-options-v3.tsx:93	same receiver iterated ×2: c.types.map
+js-index-maps	src/features/lab/order-card-directions.tsx:216	OUTER-ARRAY .filter() inside .map(): rows.filter((row) => row.pickupDate === date)
+js-index-maps	src/features/lab/order-card-directions.tsx:220	OUTER-ARRAY .filter() inside .map(): rows .filter((row) => row.pickupDate === date)
+js-combine-iterations	src/features/lab/order-card-directions.tsx:220	same receiver iterated ×2: rows.filter
+js-index-maps	src/features/lab/order-card-options.tsx:113	OUTER-ARRAY .filter() inside .map(): [gift.meta, `Qty ${gift.quantity}`].filter(Boolean)
+js-cache-function-results	src/features/lab/order-card-options.tsx:51	[review] identical call ×2 in one function: key(item)
+js-index-maps	src/features/lab/review-order-options.tsx:234	OUTER-ARRAY .filter() inside .map(): [item.option, item.engraving].filter(Boolean)
+js-index-maps	src/features/lab/victorinox-options-2.tsx:153	OUTER-ARRAY .filter() inside .map(): designs.filter((d) => d.group === c.id)
+js-flatmap-filter	src/features/lab/victorinox-options.tsx:135	[review] map().filter(custom) (d) => isLoading || d.onSale
+js-hoist-regexp	src/features/lab/victorinox-options.tsx:145	literal /^Victorinox / in toDesigns [fn] in .map()
+js-combine-iterations	src/features/lab/victorinox-options.tsx:452	same receiver iterated ×2: designs.filter
+js-batch-dom-css	src/features/merchant/calendar/calendar-page.tsx:73	[review] R-W-R order RRRWWR in <anon>
+js-cache-function-results	src/features/merchant/calendar/calendar-page.tsx:51	[review] identical call ×2 in one function: useState("")
+js-cache-function-results	src/features/merchant/calendar/calendar-page.tsx:378	[review] identical call ×3 in one function: person(item)
+js-index-maps	src/features/merchant/calendar/use-calendar-items.ts:46	OUTER-ARRAY .find() inside .flatMap(): data.tours.find((entry) => entry.id === departure.tourId)
+js-min-max-loop	src/features/merchant/calendar/use-calendar-items.ts:51	[review] sorted var `active` is indexed: bookings .filter( (b) => !["pending_payment", "exp…
+js-index-maps	src/features/merchant/calendar/use-calendar-items.ts:51	OUTER-ARRAY .filter() inside .flatMap(): bookings .filter( (b) => !["pending_payment", "expired", "cancelled"].includes(b.status), )
+js-set-map-lookups	src/features/merchant/calendar/use-calendar-items.ts:54	OUTER-ARRAY .includes() inside .filter(): ["pending_payment", "expired", "cancelled"].includes(b.status)
+js-index-maps	src/features/merchant/calendar/use-calendar-items.ts:102	OUTER-ARRAY .find() inside .map(): pickupPlaces.find((p) => p.id === order.pickupPlaceId)
+js-index-maps	src/features/merchant/calendar/use-calendar-items.ts:113	OUTER-ARRAY .find() inside .map(): guests.find((g) => g.id === order.guestId)
+js-cache-function-results	src/features/merchant/order-detail/components/fulfilment-actions.tsx:147	[review] identical call ×2 in one function: orderTotal(order)
+js-index-maps	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:196	OUTER-ARRAY .filter() inside .map(): order.lines .filter((o) => o.productId === l.productId && o.variantId === l.variantId)
+js-set-map-lookups	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:205	OUTER-ARRAY .some() inside .map(): short.some( (s) => s.productId === l.productId && s.variantId === l.variantId, )
+js-index-maps	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:293	OUTER-ARRAY .filter() inside .map(): [ e.type === "pickup-changed" ? e.note : null, actorName(e.actor), dateTime(e.at), ] .filter(Boolean…
+js-index-maps	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:361	OUTER-ARRAY .find() inside .map(): state.data.products.find((p) => p.id === l.productId)
+js-index-maps	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:388	OUTER-ARRAY .filter() inside .map(): [ t(methodKey[p.method]), p.recordedBy ? actorName(p.recordedBy) : null, dateTime(p.at), p.note ?? n…
+js-index-maps	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:404	OUTER-ARRAY .find() inside .map(): order.lines.find((x) => x.id === c.lineId)
+js-combine-iterations	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:351	same receiver iterated ×2: order.lines.map
+js-cache-function-results	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:329	[review] identical call ×2 in one function: money(total)
+js-cache-function-results	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:455	[review] identical call ×2 in one function: money(total)
+js-cache-function-results	src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts:472	[review] identical call ×3 in one function: money(first)
+js-combine-iterations	src/features/merchant/orders/components/merchant-orders.tsx:91	same receiver iterated ×2: tabs.map
+js-index-maps	src/features/merchant/orders/hooks/use-merchant-orders.ts:124	OUTER-ARRAY .find() inside .map(): products.find((p) => p.id === line.productId)
+js-index-maps	src/features/merchant/orders/hooks/use-merchant-orders.ts:137	OUTER-ARRAY .filter() inside .map(): [variant, engraving].filter(Boolean)
+js-index-maps	src/features/merchant/orders/hooks/use-merchant-orders.ts:174	OUTER-ARRAY .filter() inside .map(): orders.filter((o) => orderTab(o) === id)
+js-hoist-regexp	src/features/merchant/partners/components/add-partner-sheet.tsx:29	literal /^[^\s@]+@[^\s@]+\.[^\s@]+$/ in isEmail [fn]
+js-cache-function-results	src/features/merchant/partners/components/add-partner-sheet.tsx:48	[review] identical call ×3 in one function: useState("")
+js-combine-iterations	src/features/merchant/partners/components/partner-analytics-page.tsx:292	same receiver iterated ×2: series.map
+js-index-maps	src/features/merchant/partners/hooks/use-merchant-partners.ts:49	OUTER-ARRAY .filter() inside .map(): opens.filter( (o) => o.partnerId === partner.id && within(o.at), )
+js-index-maps	src/features/merchant/partners/hooks/use-merchant-partners.ts:52	OUTER-ARRAY .filter() inside .map(): ledger.items.filter((i) => within(i.createdAt), )
+js-index-maps	src/features/merchant/partners/hooks/use-merchant-partners.ts:64	OUTER-ARRAY .filter() inside .map(): ledger.items.filter((i) => Date.parse(i.createdAt) <= to)
+js-set-map-lookups	src/features/merchant/partners/hooks/use-merchant-partners.ts:83	per-item receiver .includes() inside .some(): v.toLowerCase().includes(needle)
+js-set-map-lookups	src/features/merchant/partners/hooks/use-merchant-partners.ts:91	OUTER-ARRAY .some() inside .filter(): filter.some((id) => inFilter(row, id))
+js-index-maps	src/features/merchant/partners/hooks/use-merchant-partners.ts:97	OUTER-ARRAY .filter() inside .map(): all.filter((row) => inFilter(row, id))
+js-combine-iterations	src/features/merchant/partners/hooks/use-merchant-partners.ts:100	same receiver iterated ×2: state.data.partners.map
+js-combine-iterations	src/features/merchant/partners/hooks/use-merchant-partners.ts:99	same receiver iterated ×2: all.filter
+js-combine-iterations	src/features/merchant/partners/hooks/use-merchant-partners.ts:64	same receiver iterated ×2: ledger.items.filter
+js-set-map-lookups	src/features/merchant/partners/hooks/use-partner-analytics.ts:180	OUTER-ARRAY .some() inside .filter(): opens.some((o) => o.partnerId === p.id && inRange(o.at, current))
+js-flatmap-filter	src/features/merchant/partners/hooks/use-partner-analytics.ts:188	[review] map().filter(custom) (row) => row.opensValue > 0 || row.transactionsValue > 0
+js-index-maps	src/features/merchant/partners/hooks/use-partner-analytics.ts:190	OUTER-ARRAY .filter() inside .map(): opens.filter( (x) => x.partnerId === p.id && inRange(x.at, current), )
+js-index-maps	src/features/merchant/partners/hooks/use-partner-analytics.ts:193	OUTER-ARRAY .filter() inside .map(): items.filter((i) => i.partnerId === p.id)
+js-index-maps	src/features/merchant/partners/hooks/use-partner-analytics.ts:194	OUTER-ARRAY .filter() inside .map(): own.filter((i) => inRange(i.createdAt, current))
+js-index-maps	src/features/merchant/partners/hooks/use-partner-analytics.ts:196	OUTER-ARRAY .filter() inside .map(): own .filter((i) => i.recordedAt && inRange(i.recordedAt, current))
+js-index-maps	src/features/merchant/partners/hooks/use-partner-analytics.ts:199	OUTER-ARRAY .filter() inside .map(): adjustments .filter((a) => a.partnerId === p.id && inRange(a.at, current))
+js-combine-iterations	src/features/merchant/partners/hooks/use-partner-analytics.ts:99	same receiver iterated ×2: items.filter
+js-combine-iterations	src/features/merchant/partners/hooks/use-partner-analytics.ts:196	same receiver iterated ×2: own.filter
+js-cache-function-results	src/features/merchant/partners/hooks/use-partner-analytics.ts:147	[review] identical call ×2 in one function: range(previous)
+js-index-maps	src/features/merchant/partners/hooks/use-partner-detail.ts:112	OUTER-ARRAY .find() inside .map(): ledger.items.find( (i) => transactionKey(i.transaction) === transactionKey(e.adjustment.transaction)…
+js-index-maps	src/features/merchant/partners/hooks/use-partner-detail.ts:213	OUTER-ARRAY .filter() inside .map(): [ guestName(item.guestId), formatOrderDate(zurichDate(new Date(item.createdAt)), intlLocale), ] .fil…
+js-cache-function-results	src/features/merchant/partners/hooks/use-partner-detail.ts:126	[review] identical call ×4 in one function: balance(e)
+js-cache-function-results	src/features/merchant/products/components/categories-page.tsx:85	new Intl.PluralRules inside CategoriesPage 
+js-cache-function-results	src/features/merchant/products/components/categories-page.tsx:105	[review] identical call ×2 in one function: nameOf(row)
+js-cache-function-results	src/features/merchant/products/components/categories-page.tsx:170	[review] identical call ×2 in one function: nameOf(row)
+js-min-max-loop	src/features/merchant/products/components/departure-sheets.tsx:93	sort()[idx] directly: [...departures] .filter((d) => d.tourId === tour.id) .sort((a, b) => Date.parse(…
+js-cache-function-results	src/features/merchant/products/components/details-step.tsx:43	new Intl.PluralRules inside DetailsStep 
+js-combine-iterations	src/features/merchant/products/components/details-step.tsx:51	chain filter().map().find()
+js-flatmap-filter	src/features/merchant/products/components/details-step.tsx:104	map().filter(non-null) stops .slice(0, 2) .map((s) => pick(s.name)) .filter(Boolean)
+js-index-maps	src/features/merchant/products/components/details-step.tsx:221	OUTER-ARRAY .filter() inside .map(): items.filter((i) => i.key !== item.key)
+js-combine-iterations	src/features/merchant/products/components/details-step.tsx:51	same receiver iterated ×2: items.filter
+js-set-map-lookups	src/features/merchant/products/components/editor-parts.tsx:175	OUTER-ARRAY .includes() inside .filter(): missing[otherLanguage(language)].includes(id)
+js-combine-iterations	src/features/merchant/products/components/editor-parts.tsx:211	same receiver iterated ×2: LANGUAGES.map
+js-cache-function-results	src/features/merchant/products/components/editor-parts.tsx:226	[review] identical call ×2 in one function: gaps(language)
+js-cache-function-results	src/features/merchant/products/components/editor-parts.tsx:253	[review] identical call ×2 in one function: otherLanguage(language)
+js-cache-function-results	src/features/merchant/products/components/editor-parts.tsx:306	[review] identical call ×2 in one function: hasText(value, language)
+js-set-map-lookups	src/features/merchant/products/components/gift-editor.tsx:650	OUTER-ARRAY .includes() inside .filter(): draft.placeIds.includes(p.id)
+js-combine-iterations	src/features/merchant/products/components/itinerary/itinerary-editor.tsx:215	same receiver iterated ×2: stops.map
+js-combine-iterations	src/features/merchant/products/components/itinerary/itinerary-map.tsx:257	same receiver iterated ×2: stops.map
+js-combine-iterations	src/features/merchant/products/components/itinerary/itinerary-map.tsx:247	same receiver iterated ×2: live.current.stops.map
+js-hoist-regexp	src/features/merchant/products/components/itinerary/use-place-search.ts:32	literal /\s+/g in clean [fn]
+js-hoist-regexp	src/features/merchant/products/components/itinerary/use-place-search.ts:39	literal /<b>([\s\S]*?)<\/b>/ in toPlace [fn]
+js-hoist-regexp	src/features/merchant/products/components/itinerary/use-place-search.ts:46	literal /<b>[\s\S]*?<\/b>/ in toPlace [fn]
+js-cache-property-access	src/features/merchant/products/components/itinerary/use-stop-drag.ts:89	loop re-reads .length: i < nodes.length
+js-combine-iterations	src/features/merchant/products/components/itinerary/use-stop-drag.ts:147	same receiver iterated ×2: nodes.map
+js-combine-iterations	src/features/merchant/products/components/merchant-products.tsx:90	chain filter().filter()
+js-set-map-lookups	src/features/merchant/products/components/merchant-products.tsx:94	OUTER-ARRAY .includes() inside .filter(): subs.includes(r.subcategoryId)
+js-index-maps	src/features/merchant/products/components/merchant-products.tsx:180	OUTER-ARRAY .filter() inside .map(): source.filter((r) => r.archived === (v === "archived"))
+js-index-maps	src/features/merchant/products/components/merchant-products.tsx:197	OUTER-ARRAY .filter() inside .map(): source.filter((r) => r.subcategoryId === c.id)
+js-combine-iterations	src/features/merchant/products/components/merchant-products.tsx:103	same receiver iterated ×2: all.gifts.filter
+js-combine-iterations	src/features/merchant/products/components/merchant-products.tsx:109	same receiver iterated ×2: all.tours.filter
+js-cache-function-results	src/features/merchant/products/components/photo-field.tsx:115	[review] identical call ×2 in one function: isUploadedPhoto(value)
+js-index-maps	src/features/merchant/products/components/sections-editor.tsx:371	OUTER-ARRAY .filter() inside .map(): items.filter((x) => x.id !== item.id)
+js-index-maps	src/features/merchant/products/components/sections-editor.tsx:584	OUTER-ARRAY .filter() inside .map(): ids.filter((x) => x !== id)
+js-set-map-lookups	src/features/merchant/products/components/sections-editor.tsx:626	OUTER-ARRAY .some() inside .filter(): LANGUAGES.some((l) => (p.name[l] ?? "").toLocaleLowerCase(intlLocale).includes(needle), )
+js-set-map-lookups	src/features/merchant/products/components/sections-editor.tsx:627	OUTER-ARRAY .includes() inside .some(): (p.name[l] ?? "").toLocaleLowerCase(intlLocale).includes(needle)
+js-set-map-lookups	src/features/merchant/products/components/sections-editor.tsx:662	OUTER-ARRAY .includes() inside .map(): ids.includes(p.id)
+js-index-maps	src/features/merchant/products/components/sections-editor.tsx:671	OUTER-ARRAY .filter() inside .map(): ids.filter((x) => x !== p.id)
+js-cache-function-results	src/features/merchant/products/components/sections-editor.tsx:744	new Intl.PluralRules inside PracticalInfoStep 
+js-cache-function-results	src/features/merchant/products/components/sections-editor.tsx:567	[review] identical call ×3 in one function: name(id)
+js-hoist-regexp	src/features/merchant/products/components/step-shell.tsx:465	literal /^(input|textarea|select)$/i in isField [fn]
+js-combine-iterations	src/features/merchant/products/components/step-shell.tsx:237	same receiver iterated ×2: steps.map
+js-flatmap-filter	src/features/merchant/products/components/tour-editor.tsx:431	[review] map().filter(custom) (row) => row.phase === "open" || row.phase === "closed"
+js-combine-iterations	src/features/merchant/products/components/tour-editor.tsx:431	chain filter().map().filter()
+js-combine-iterations	src/features/merchant/products/hooks/use-gift-editor.ts:85	chain flatMap().filter().reduce()
+js-combine-iterations	src/features/merchant/products/hooks/use-gift-editor.ts:85	chain filter().flatMap().filter()
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:148	OUTER-ARRAY .includes() inside .filter(): product.pickupPlaceIds?.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:190	OUTER-ARRAY .includes() inside .every(): draft.placeIds.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:437	OUTER-ARRAY .includes() inside loop: out.includes(e)
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:441	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:444	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:444	OUTER-ARRAY .includes() inside .filter(): any.includes(id)
+js-index-maps	src/features/merchant/products/hooks/use-gift-editor.ts:470	OUTER-ARRAY .filter() inside .flatMap(): missing[lang].filter( (id) => ids.includes(id) && !missing[other].includes(id), )
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:471	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:471	OUTER-ARRAY .includes() inside .filter(): missing[other].includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:638	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-gift-editor.ts:639	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-length-check-first	src/features/merchant/products/hooks/use-gift-editor.ts:683	JSON.stringify compare: JSON.stringify(draft) !== JSON.stringify(saved)
+js-combine-iterations	src/features/merchant/products/hooks/use-gift-editor.ts:561	same receiver iterated ×2: products.map
+js-flatmap-filter	src/features/merchant/products/hooks/use-tour-editor.ts:165	[review] map().filter(custom) ([, value]) => value
+js-flatmap-filter	src/features/merchant/products/hooks/use-tour-editor.ts:179	[review] map().filter(custom) (section) => hasAny(section.title) || section.body !== undefined || se…
+js-index-maps	src/features/merchant/products/hooks/use-tour-editor.ts:181	OUTER-ARRAY .filter() inside .map(): (section.items ?? []) .filter( (item) => hasAny(item.text) || hasAny(item.label ?? {}) || hasAny(ite…
+js-flatmap-filter	src/features/merchant/products/hooks/use-tour-editor.ts:225	[review] map().filter(custom) hasAny
+js-flatmap-filter	src/features/merchant/products/hooks/use-tour-editor.ts:556	[review] map().filter(custom) (value, i, all) => all.indexOf(value) === i
+js-combine-iterations	src/features/merchant/products/hooks/use-tour-editor.ts:556	chain filter().map().filter()
+js-set-map-lookups	src/features/merchant/products/hooks/use-tour-editor.ts:559	per-item receiver .indexOf() inside .filter(): all.indexOf(value)
+js-set-map-lookups	src/features/merchant/products/hooks/use-tour-editor.ts:561	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-tour-editor.ts:564	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-tour-editor.ts:564	OUTER-ARRAY .includes() inside .filter(): any.includes(id)
+js-index-maps	src/features/merchant/products/hooks/use-tour-editor.ts:592	OUTER-ARRAY .filter() inside .flatMap(): missing[lang].filter( (id) => ids.includes(id) && !missing[other].includes(id), )
+js-set-map-lookups	src/features/merchant/products/hooks/use-tour-editor.ts:593	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-tour-editor.ts:593	OUTER-ARRAY .includes() inside .filter(): missing[other].includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-tour-editor.ts:738	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-set-map-lookups	src/features/merchant/products/hooks/use-tour-editor.ts:739	OUTER-ARRAY .includes() inside .filter(): ids.includes(id)
+js-length-check-first	src/features/merchant/products/hooks/use-tour-editor.ts:782	JSON.stringify compare: JSON.stringify(edit) !== JSON.stringify(saved)
+js-combine-iterations	src/features/merchant/products/hooks/use-tour-editor.ts:660	same receiver iterated ×2: data.tours.map
+js-hoist-regexp	src/features/merchant/products/lib/photo-upload.ts:35	literal /^image\/(jpeg|png|webp)$/ in preparePhoto [fn]
+js-cache-function-results	src/features/merchant/record-payment/hooks/use-record-payment.ts:111	[review] identical call ×2 in one function: blockText(block)
+js-cache-function-results	src/features/merchant/record-payment/hooks/use-record-payment.ts:123	[review] identical call ×2 in one function: money(rappen)
+js-combine-iterations	src/features/merchant/sales/components/sales-all-time.tsx:161	same receiver iterated ×2: allTime.months.map
+js-combine-iterations	src/features/merchant/sales/components/sales-overview.tsx:489	same receiver iterated ×3: mix.map
+js-combine-iterations	src/features/merchant/sales/hooks/use-sales-overview.ts:292	same receiver iterated ×2: list.filter
+js-cache-function-results	src/features/merchant/sales/hooks/use-sales-overview.ts:363	[review] identical call ×2 in one function: range(r)
+js-cache-function-results	src/features/merchant/sales/hooks/use-sales-overview.ts:381	[review] identical call ×2 in one function: rangeText(previous)
+js-cache-function-results	src/features/merchant/sales/hooks/use-sales-overview.ts:429	[review] identical call ×4 in one function: at(k)
+js-cache-function-results	src/features/merchant/sales/lib/periods.ts:100	[review] identical call ×3 in one function: before(r)
+js-combine-iterations	src/features/merchant/today/components/merchant-today.tsx:219	same receiver iterated ×2: parts.map
+js-combine-iterations	src/features/merchant/today/components/today-overview.tsx:119	same receiver iterated ×2: today.tiles.filter
+js-combine-iterations	src/features/merchant/today/components/today-overview.tsx:180	same receiver iterated ×2: strip.map
+js-cache-function-results	src/features/merchant/today/hooks/use-merchant-today.ts:59	new Intl.PluralRules inside useMerchantToday 
+js-index-maps	src/features/merchant/today/hooks/use-merchant-today.ts:114	OUTER-ARRAY .find() inside .map(): guests.find((g) => g.id === order.guestId)
+js-min-max-loop	src/features/merchant/today/lib/today.ts:84	sort() destructured: [soonest] = [...matching].sort((a, b) => a.pickupDate.localeCompare(b.pickupDate…
+js-flatmap-filter	src/features/merchant/today/lib/today.ts:175	[review] map().filter(custom) (part) => part.amount > 0
+js-index-maps	src/features/merchant/today/lib/today.ts:176	OUTER-ARRAY .filter() inside .map(): open.filter((o) => o.status === status && balance(o) > 0)
+js-combine-iterations	src/features/merchant/today/lib/today.ts:188	chain map().filter().reduce()
+js-flatmap-filter	src/features/merchant/today/lib/today.ts:188	[review] map().filter(custom) (c) => c.state === "estimated"
+js-index-maps	src/features/notifications/components/mail-list.tsx:34	OUTER-ARRAY .find() inside .map(): state.data.guests.find((g) => g.id === mail.guestId)
+js-index-maps	src/features/notifications/components/mail-list.tsx:35	OUTER-ARRAY .find() inside .map(): state.data.partners.find( (p) => p.id === mail.partnerId, )
+js-combine-iterations	src/features/notifications/components/mail-panel.tsx:21	same receiver iterated ×3: mail.filter
+js-hoist-regexp	src/features/notifications/components/render-mail.ts:136	literal /\{(\w+)\}/g in fill [fn]
+js-index-maps	src/features/notifications/components/render-mail.ts:163	OUTER-ARRAY .find() inside loop: places.find((p) => p.id === value)
+js-cache-function-results	src/features/orders/lib/labels.ts:132	[review] identical call ×2 in one function: processingPayment(order)
+js-cache-function-results	src/features/orders/lib/labels.ts:171	[review] identical call ×2 in one function: money(paid)
+js-cache-function-results	src/features/orders/lib/labels.ts:151	[review] identical call ×2 in one function: amountDueNow(order)
+js-cache-function-results	src/features/orders/lib/labels.ts:168	[review] identical call ×3 in one function: money(owed)
+js-cache-function-results	src/features/orders/lib/selectors.ts:36	[review] identical call ×2 in one function: orderTotal(order)
+js-cache-function-results	src/features/orders/lib/selectors.ts:144	[review] identical call ×2 in one function: lineTotal(l)
+js-index-maps	src/features/orders/lib/transitions.ts:558	per-item receiver .filter() inside .map(): order.lines .filter((l) => l.productId === p.id && l.variantId === v.id)
+js-cache-function-results	src/features/orders/lib/transitions.ts:218	[review] identical call ×2 in one function: balance(order)
+js-cache-function-results	src/features/orders/lib/transitions.ts:246	[review] identical call ×2 in one function: balance(order)
+js-cache-function-results	src/features/orders/lib/transitions.ts:256	[review] identical call ×2 in one function: balance(order)
+js-cache-function-results	src/features/orders/seed.ts:167	[review] identical call ×3 in one function: line("p-print", "std", 1)
+js-cache-function-results	src/features/orders/seed.ts:294	[review] identical call ×2 in one function: line("p-chocolate", "12", 2)
+js-cache-function-results	src/features/orders/seed.ts:271	[review] identical call ×2 in one function: line("p-giftbox", "std", 1)
+js-hoist-regexp	src/features/partners/hooks/use-partner-actions.ts:20	literal /[\u0300-\u036f]/g in suggestCode [fn]
+js-hoist-regexp	src/features/partners/hooks/use-partner-actions.ts:22	literal /[^A-Z0-9]/g in suggestCode [fn]
+js-hoist-regexp	src/features/partners/hooks/use-partner-actions.ts:26	literal /^[A-Z0-9]{3,12}$/ in isValidCode [fn]
+js-set-map-lookups	src/features/partners/hooks/use-partner-actions.ts:70	OUTER-ARRAY .some() inside loop: demoPartners.some((p) => p.id === id)
+js-index-maps	src/features/partners/lib/ledger.ts:261	OUTER-ARRAY .filter() inside loop: items .filter((x) => x.recordedAt)
+js-combine-iterations	src/features/partners/lib/ledger.ts:261	same receiver iterated ×3: items.filter
+js-combine-iterations	src/features/partners/report/components/dashboard-widgets.tsx:58	same receiver iterated ×2: parts.map
+js-combine-iterations	src/features/partners/report/components/dashboard-widgets.tsx:218	same receiver iterated ×2: months.map
+js-set-map-lookups	src/features/partners/report/components/partner-dashboard.tsx:227	OUTER-ARRAY .includes() inside .filter(): filter.includes(filterOf(r))
+js-combine-iterations	src/features/partners/report/components/partner-report.tsx:310	same receiver iterated ×2: chart.columns.map
+js-combine-iterations	src/features/partners/report/components/partner-report.tsx:740	same receiver iterated ×2: periods.map
+js-cache-function-results	src/features/partners/report/components/partner-report.tsx:299	[review] identical call ×2 in one function: pct(total)
+js-index-maps	src/features/partners/report/hooks/use-partner-dashboard.ts:290	OUTER-ARRAY .find() inside .map(): report.buckets.find((b) => b.hour === undefined ? day >= b.start && day <= b.end : b.hour === zurich…
+js-combine-iterations	src/features/partners/report/hooks/use-partner-dashboard.ts:178	same receiver iterated ×2: drawn.map
+js-cache-function-results	src/features/partners/report/hooks/use-partner-dashboard.ts:112	[review] identical call ×2 in one function: formatShortDate(start, today, intlLocale)
+js-index-maps	src/features/partners/report/hooks/use-partner-overview.ts:174	OUTER-ARRAY .filter() inside .map(): ledger.entries .filter((e) => e.type === "payout" && inSlot(e.at, i))
+js-index-maps	src/features/partners/report/hooks/use-partner-overview.ts:193	OUTER-ARRAY .filter() inside .map(): ledger.entries.filter((e) => upToSlotEnd(e.at, i))
+js-combine-iterations	src/features/partners/report/hooks/use-partner-overview.ts:190	same receiver iterated ×2: slots.map
+js-cache-function-results	src/features/partners/report/hooks/use-partner-overview.ts:152	[review] identical call ×3 in one function: dayOf(at)
+js-cache-function-results	src/features/partners/report/hooks/use-partner-overview.ts:160	[review] identical call ×3 in one function: dayOf(at)
+js-hoist-regexp	src/features/partners/report/hooks/use-partner-report.ts:84	literal /\.$/ in dayRange [fn]
+js-cache-function-results	src/features/partners/report/hooks/use-partner-report.ts:209	new Intl.PluralRules inside usePartnerReport 
+js-index-maps	src/features/partners/report/hooks/use-partner-report.ts:279	OUTER-ARRAY .find() inside .map(): subcategories.find((c) => c.id === g.subcategoryId)
+js-combine-iterations	src/features/partners/report/hooks/use-partner-report.ts:331	same receiver iterated ×2: report.buckets.map
+js-cache-function-results	src/features/partners/report/hooks/use-partner-report.ts:218	[review] identical call ×2 in one function: formatShortDate(start, today, intlLocale)
+js-cache-function-results	src/features/partners/report/hooks/use-partner-report.ts:649	[review] identical call ×2 in one function: shiftPeriod(period, day, 1)
+js-combine-iterations	src/features/partners/report/lib/payouts.ts:45	same receiver iterated ×2: ledger.entries.filter
+js-cache-function-results	src/features/partners/report/lib/payouts.ts:73	[review] identical call ×2 in one function: last(through)
+js-combine-iterations	src/features/partners/report/lib/report.ts:210	chain filter().filter()
+js-index-maps	src/features/partners/report/lib/report.ts:229	OUTER-ARRAY .find() inside .map(): buckets.find((b) => b.hour === undefined ? day >= b.start && day <= b.end : b.hour === zurichHour(pl…
+js-index-maps	src/features/partners/report/lib/report.ts:249	OUTER-ARRAY .find() inside .forEach(): data.products.find( (p) => p.id === line.productId, )
+js-index-maps	src/features/partners/report/lib/report.ts:276	OUTER-ARRAY .find() inside .map(): data.guests.find((g) => g.id === order.guestId)
+js-index-maps	src/features/partners/report/lib/report.ts:310	OUTER-ARRAY .find() inside .map(): buckets.find((b) => b.hour === undefined ? day >= b.start && day <= b.end : b.hour === zurichHour(pl…
+js-index-maps	src/features/partners/report/lib/report.ts:439	OUTER-ARRAY .find() inside loop: months.find((m) => m.start.slice(0, 7) === day.slice(0, 7))
+js-index-maps	src/features/partners/seed.ts:61	OUTER-ARRAY .filter() inside .flatMap(): items .filter( (i) => i.recordedAt && Date.parse(i.recordedAt) < Date.parse(`${paidOn}T12:00:00+02:0…
+js-min-max-loop	src/features/partners/seed.ts:93	sort()[idx] directly: allOrders(data) .filter( (o) => o.partnerId === "hotel-am-see" && o.status === "…
+advanced-init-once	src/features/payment/components/provider-page.tsx:157	useEffect([]) without cleanup in RetryButton: ref.current?.focus()
+js-cache-function-results	src/features/planner/components/itinerary-card.tsx:52	[review] identical call ×2 in one function: rise(n)
+js-set-map-lookups	src/features/planner/components/pickers.tsx:398	OUTER-ARRAY .includes() inside .map(): picked.includes(it.id)
+js-index-maps	src/features/planner/components/pickers.tsx:412	OUTER-ARRAY .find() inside .map(): INTERESTS.find((i) => i.id === c)
+js-index-maps	src/features/planner/components/pickers.tsx:458	OUTER-ARRAY .filter() inside .map(): options .filter((o) => o.group === g)
+js-cache-function-results	src/features/planner/components/pickers.tsx:284	[review] identical call ×2 in one function: parseDate(WINDOW_FROM)
+js-combine-iterations	src/features/planner/components/planner-chat.tsx:326	chain flatMap().filter().map()
+js-hoist-regexp	src/features/planner/components/planner-chat.tsx:367	literal / /g in card [fn]
+js-cache-function-results	src/features/planner/components/planner-chat.tsx:154	[review] identical call ×3 in one function: useState(streaming)
+js-combine-iterations	src/features/planner/lib/agent.ts:39	chain filter().flatMap().flatMap()
+js-flatmap-filter	src/features/planner/lib/agent.ts:79	[review] map().filter(custom) (id) => TWEAKS.includes(id) || id.startsWith("lunch:")
+js-combine-iterations	src/features/planner/lib/agent.ts:79	chain filter().map().filter()
+js-set-map-lookups	src/features/planner/lib/agent.ts:82	OUTER-ARRAY .includes() inside .filter(): TWEAKS.includes(id)
+js-index-maps	src/features/planner/lib/agent.ts:88	OUTER-ARRAY .find() inside .map(): INTERESTS.find((x) => x.id === i)
+js-set-map-lookups	src/features/planner/lib/agent.ts:288	OUTER-ARRAY .some() inside .filter(): closed.some((c) => c.id === p.id)
+js-combine-iterations	src/features/planner/lib/agent.ts:94	same receiver iterated ×2: RESTAURANTS.filter
+js-combine-iterations	src/features/planner/lib/agent.ts:174	same receiver iterated ×2: lunchClosed.map
+js-combine-iterations	src/features/planner/lib/agent.ts:249	same receiver iterated ×2: HOTELS.map
+js-cache-function-results	src/features/planner/lib/agent.ts:301	[review] identical call ×3 in one function: dayLabel(iso)
+js-cache-function-results	src/features/planner/lib/agent.ts:345	[review] identical call ×3 in one function: inputFrom(a)
+js-cache-function-results	src/features/planner/lib/hours.ts:131	[review] identical call ×3 in one function: m(8)
+js-cache-function-results	src/features/planner/lib/hours.ts:99	[review] identical call ×3 in one function: m(19)
+js-cache-function-results	src/features/planner/lib/hours.ts:69	[review] identical call ×8 in one function: m(10)
+js-cache-function-results	src/features/planner/lib/hours.ts:72	[review] identical call ×7 in one function: m(18)
+js-cache-function-results	src/features/planner/lib/hours.ts:73	[review] identical call ×7 in one function: m(17)
+js-cache-function-results	src/features/planner/lib/hours.ts:99	[review] identical call ×4 in one function: m(11)
+js-cache-function-results	src/features/planner/lib/hours.ts:136	[review] identical call ×2 in one function: sundaySalesClosed(iso)
+js-cache-function-results	src/features/planner/lib/hours.ts:123	[review] identical call ×5 in one function: m(9)
+js-cache-function-results	src/features/planner/lib/hours.ts:131	[review] identical call ×2 in one function: m(20)
+js-min-max-loop	src/features/planner/lib/plan.ts:140	[review] sorted var `open` is indexed: RESTAURANTS.filter( (r) => restaurantOpen(r.id, p.…
+js-set-map-lookups	src/features/planner/lib/plan.ts:177	per-item receiver .some() inside .filter(): pl.interests.some((i) => p.interests.includes(i))
+js-set-map-lookups	src/features/planner/lib/plan.ts:177	OUTER-ARRAY .includes() inside .some(): p.interests.includes(i)
+js-set-map-lookups	src/features/planner/lib/plan.ts:178	per-item receiver .includes() inside .filter(): pl.interests.includes("shopping")
+js-set-map-lookups	src/features/planner/lib/plan.ts:204	OUTER-ARRAY .includes() inside .filter(): p.interests.includes(i)
+js-cache-function-results	src/features/planner/lib/plan.ts:168	[review] identical call ×2 in one function: tweaks.has("shopping")
+js-cache-function-results	src/features/planner/lib/plan.ts:368	[review] identical call ×2 in one function: fmt(startMin)
+js-cache-function-results	src/features/planner/lib/plan.ts:296	[review] identical call ×2 in one function: fmt(arrive)
+js-cache-storage	src/features/planner/lib/session.ts:18	sessionStorage.getItem(KEY) in restore
+js-hoist-regexp	src/features/planner/lib/transport.ts:15	literal /\S+\s*/g in words [fn]
+js-index-maps	src/features/reports/components/report-charts.tsx:68	per-item receiver .filter() inside .map(): r.parts .filter((p) => p.share > 0)
+js-combine-iterations	src/features/reports/components/report-charts.tsx:207	same receiver iterated ×3: rows.map
+js-combine-iterations	src/features/reports/components/report-charts.tsx:315	same receiver iterated ×2: parts.map
+js-flatmap-filter	src/features/reports/components/report-pages.tsx:634	[review] map().filter(custom) ({ part }) => part.hasData
+js-hoist-regexp	src/features/reports/components/report-pages.tsx:870	literal /\D/g in InquiriesAnalyticsPage [component/hook] in .map()
+js-combine-iterations	src/features/reports/components/report-pages.tsx:252	same receiver iterated ×3: sales.methods.map
+js-combine-iterations	src/features/reports/components/report-pages.tsx:656	same receiver iterated ×2: m.parts.map
+js-cache-function-results	src/features/reports/components/report-pages.tsx:128	[review] identical call ×2 in one function: labelOf(key)
+js-index-maps	src/features/reports/hooks/use-cost-data.ts:183	OUTER-ARRAY .filter() inside .map(): scoped.filter((row) => inFilter(row, id))
+js-combine-iterations	src/features/reports/hooks/use-cost-data.ts:187	same receiver iterated ×2: all.filter
+js-combine-iterations	src/features/reports/hooks/use-cost-data.ts:170	same receiver iterated ×2: inWeek.filter
+js-index-maps	src/features/reports/hooks/use-report-pages.tsx:99	OUTER-ARRAY .find() inside loop: products.find((p) => p.id === l.itemId)
+js-index-maps	src/features/reports/hooks/use-report-pages.tsx:162	OUTER-ARRAY .filter() inside .map(): placed.filter((tx) => tx.group === g.id)
+js-index-maps	src/features/reports/hooks/use-report-pages.tsx:188	OUTER-ARRAY .filter() inside .map(): placed.filter((tx) => src.id === "direct" ? !tx.partnerId : tx.partnerId === src.id, )
+js-combine-iterations	src/features/reports/hooks/use-report-pages.tsx:203	same receiver iterated ×2: report.txs.filter
+js-combine-iterations	src/features/reports/hooks/use-report-pages.tsx:228	same receiver iterated ×2: adviceIn.filter
+js-combine-iterations	src/features/reports/hooks/use-report-pages.tsx:232	same receiver iterated ×2: privateIn.filter
+js-cache-function-results	src/features/reports/hooks/use-report-pages.tsx:182	[review] identical call ×2 in one function: part("goods")
+js-cache-function-results	src/features/reports/hooks/use-report-pages.tsx:182	[review] identical call ×2 in one function: part("tours")
+js-index-maps	src/features/reports/hooks/use-reports.ts:186	OUTER-ARRAY .filter() inside .map(): txs.filter((tx) => id === "direct" ? !tx.partnerId : tx.partnerId === id, )
+js-index-maps	src/features/reports/hooks/use-reports.ts:190	OUTER-ARRAY .filter() inside .map(): sourceTxs .filter((tx) => tx.day >= current.start && tx.day <= current.end)
+js-set-map-lookups	src/features/reports/hooks/use-reports.ts:201	OUTER-ARRAY .includes() inside .filter(): ["sent", "paid", "completed"].includes(step)
+js-index-maps	src/features/reports/hooks/use-reports.ts:226	OUTER-ARRAY .filter() inside .map(): inPeriod.filter((tx) => tx.group === g)
+js-flatmap-filter	src/features/reports/hooks/use-reports.ts:288	[review] map().filter(custom) (v) => v.left <= 2
+js-index-maps	src/features/reports/hooks/use-reports.ts:288	per-item receiver .filter() inside .flatMap(): p.variants .map((v) => ({ id: `${p.id}-${v.id}`, name: p.variants.length > 1 ? `${pickText(p.name, l…
+js-length-check-first	src/features/reports/hooks/use-reports.ts:419	[review] every() indexing a second array: MONEY_METRICS.every((id) => total(summary.cur[id]) === 0)
+js-cache-function-results	src/features/reports/hooks/use-reports.ts:167	[review] identical call ×2 in one function: range(previous)
+js-index-maps	src/features/reports/lib/behaviour.ts:96	OUTER-ARRAY .filter() inside loop: sales.filter((tx) => tx.day === day)
+js-combine-iterations	src/features/reports/lib/behaviour.ts:87	same receiver iterated ×3: sales.filter
+js-cache-function-results	src/features/reports/lib/behaviour.ts:94	[review] identical call ×2 in one function: opensByDay.get(day)
+js-index-maps	src/features/reports/lib/margin.ts:68	OUTER-ARRAY .filter() inside loop: COST_TYPES.filter((type) => !record?.costs[type])
+js-tosorted-immutable	src/features/reports/lib/margin.ts:89	sort on `result.missing`
+js-cache-function-results	src/features/reports/lib/transactions.ts:103	[review] identical call ×2 in one function: allOrders(data)
+js-min-max-loop	src/features/reports/seed.ts:82	[review] sorted var `records` is indexed: [...orders, ...bookings]
+js-cache-function-results	src/features/requests/components/advice-answer.tsx:60	[review] identical call ×2 in one function: numberStart(question)
+js-cache-function-results	src/features/requests/components/advice-chat.tsx:447	[review] identical call ×2 in one function: isChoice(question)
+js-cache-function-results	src/features/requests/components/advice-chat.tsx:447	[review] identical call ×2 in one function: answerInput(question)
+js-cache-function-results	src/features/requests/components/advice-chat.tsx:241	[review] identical call ×2 in one function: after(step)
+js-cache-function-results	src/features/requests/components/advice-chat.tsx:384	[review] identical call ×2 in one function: advice.answerText(q)
+js-hoist-regexp	src/features/requests/lib/answers.ts:46	literal /^[^\s@]+@[^\s@]+\.[^\s@]+$/ in looksLikeEmail [fn]
+js-hoist-regexp	src/features/requests/lib/render-request-mail.ts:18	literal /\{(\w+)\}/g in fill [fn]
+js-cache-function-results	src/features/requests/merchant/components/question-set-editor.tsx:48	new Intl.PluralRules inside plural 
+js-index-maps	src/features/requests/merchant/components/question-sheet.tsx:240	OUTER-ARRAY .filter() inside .map(): (["en", "de"] as const).filter((l) => !o[l].trim())
+js-index-maps	src/features/requests/merchant/components/question-sheet.tsx:260	per-item receiver .filter() inside .map(): list.filter((x) => x.id !== o.id)
+js-cache-function-results	src/features/requests/merchant/hooks/use-merchant-requests.ts:91	new Intl.PluralRules inside plural 
+js-set-map-lookups	src/features/requests/merchant/lib/question-set.ts:19	OUTER-ARRAY .some() inside .filter(): (q.options ?? []).some((o) => blank(o.label[l]))
+js-index-maps	src/features/reviews/hooks/use-order-reviews.ts:46	OUTER-ARRAY .find() inside .map(): state.data.products.find((p) => p.id === line.productId)
+js-set-map-lookups	src/features/reviews/hooks/use-order-reviews.ts:55	OUTER-ARRAY .some() inside .map(): state.data.reviews.some((r) => r.id === id)
+js-hoist-regexp	src/features/reviews/lib/review.ts:11	literal /\s+/ in reviewerName [fn]
+js-hoist-regexp	src/features/tours/booking/booking-summary.tsx:27	literal /\.$/ in part [fn]
+js-hoist-regexp	src/features/tours/booking/calendar.ts:6	literal /[-:]/g in stamp [fn]
+js-hoist-regexp	src/features/tours/booking/calendar.ts:7	literal /\.\d{3}/ in stamp [fn]
+js-hoist-regexp	src/features/tours/booking/calendar.ts:11	literal /[\\;,]/g in escape [fn]
+js-hoist-regexp	src/features/tours/booking/calendar.ts:11	literal /\n/g in escape [fn]
+js-index-maps	src/features/tours/booking/expired-notice.tsx:113	OUTER-ARRAY .find() inside .map(): booking.lateResults?.find( (result) => result.paymentId === payment.id, )
+js-index-maps	src/features/tours/booking/guest-tour-booking-page.tsx:261	OUTER-ARRAY .find() inside .map(): booking.lateResults?.find( (result) => result.paymentId === payment.id, )
+js-hoist-regexp	src/features/tours/booking/guest-tour-booking-page.tsx:342	literal /\s/g in PolicyPanel [component/hook]
+js-combine-iterations	src/features/tours/booking/tour-booking-list.tsx:39	same receiver iterated ×2: owned.filter
+js-cache-function-results	src/features/tours/booking/tour-confirmed-page.tsx:47	[review] identical call ×2 in one function: bookingBalance(booking)
+js-cache-function-results	src/features/tours/booking/tour-review-page.tsx:342	[review] identical call ×3 in one function: money(firstAmount)
+js-flatmap-filter	src/features/tours/booking/transitions.ts:73	[review] map().filter(custom) (answer) => answer.value
+js-cache-function-results	src/features/tours/discovery/departure-picker/model.ts:216	new Intl.PluralRules inside plural 
+js-combine-iterations	src/features/tours/discovery/departure-picker/time-slots.tsx:155	same receiver iterated ×2: day.slots.filter
+js-cache-function-results	src/features/tours/discovery/tour-detail-page.tsx:104	new Intl.PluralRules inside TourDetail 
+js-index-maps	src/features/tours/discovery/tour-detail-page.tsx:161	OUTER-ARRAY .filter() inside .map(): bookable .filter((d) => d.policy === policy)
+js-hoist-regexp	src/features/tours/discovery/tour-detail-page.tsx:274	literal /\s/g in TourDetail [component/hook]
+js-combine-iterations	src/features/tours/discovery/tour-detail-page.tsx:158	same receiver iterated ×2: policies.map
+js-flatmap-filter	src/features/tours/discovery/tour-keepsakes.tsx:30	[review] map().filter(custom) (p): p is NonNullable<typeof p> => !!p && isPublished(p) && !isSoldOut…
+js-index-maps	src/features/tours/discovery/tour-keepsakes.tsx:31	OUTER-ARRAY .find() inside .map(): demoProducts.find((p) => p.id === id)
+js-hoist-regexp	src/features/tours/discovery/tour-sections.tsx:25	literal /\s/g in Contact [component/hook]
+js-hoist-regexp	src/features/tours/discovery/tour-sections.tsx:72	literal /\n{2,}/ in Paragraphs [component/hook]
+js-combine-iterations	src/features/tours/discovery/tour-sections.tsx:108	same receiver iterated ×3: items.map
+js-cache-function-results	src/features/tours/discovery/tour-sections.tsx:136	[review] identical call ×2 in one function: label(item)
+js-cache-function-results	src/features/tours/discovery/tour-selection-sheet.tsx:81	new Intl.PluralRules inside plural 
+js-cache-function-results	src/features/tours/discovery/tour-selection-sheet.tsx:233	[review] identical call ×2 in one function: money(total)
+js-hoist-regexp	src/features/tours/hooks/use-tours.ts:113	literal /^\+?[\d ()-]{8,}$/ in createBooking [fn]
+js-cache-function-results	src/features/tours/hooks/use-tours.ts:208	[review] identical call ×2 in one function: bookingAmountDue(b)
+js-set-map-lookups	src/features/tours/lib/selectors.ts:48	OUTER-ARRAY .includes() inside .filter(): ["expired", "cancelled"].includes(b.status)
+js-set-map-lookups	src/features/tours/lib/selectors.ts:105	OUTER-ARRAY .includes() inside .filter(): ["pending_payment", "expired", "cancelled"].includes(b.status)
+js-combine-iterations	src/features/tours/lib/selectors.ts:109	same receiver iterated ×2: bookings.filter
+js-cache-function-results	src/features/tours/lib/selectors.ts:173	[review] identical call ×2 in one function: Date.parse(since)
+js-index-maps	src/features/tours/lib/upgrade.ts:16	OUTER-ARRAY .find() inside .map(): seed.find((s) => s.id === tour.id)
+js-set-map-lookups	src/features/tours/merchant/attendance-actions.tsx:168	OUTER-ARRAY .includes() inside .find(): [booking.status, "cancelled-overdue", "departure-cancelled"].includes( a.event, )
+js-hoist-regexp	src/features/tours/merchant/booking-page.tsx:492	literal /\s/g in MerchantTourBookingPage [component/hook]
+js-cache-function-results	src/features/tours/merchant/booking-page.tsx:398	[review] identical call ×3 in one function: money(paid)
+js-cache-function-results	src/features/tours/merchant/booking-page.tsx:414	[review] identical call ×2 in one function: money(balance)
+js-index-maps	src/features/tours/merchant/departures-page.tsx:107	OUTER-ARRAY .filter() inside .map(): attention.filter((a) => a.count(work) > 0)
+js-index-maps	src/features/tours/merchant/departures-page.tsx:324	OUTER-ARRAY .find() inside .map(): tours.find((item) => item.id === departure.tourId)
+js-combine-iterations	src/features/tours/merchant/departures-page.tsx:337	same receiver iterated ×2: rows.filter
+js-hoist-regexp	src/features/tours/merchant/lib/render-mail.ts:111	literal /\{(\w+)\}/g in fill [fn]
+js-set-map-lookups	src/features/tours/merchant/lib/render-mail.ts:139	OUTER-ARRAY .includes() inside loop: MONEY.includes(key)
+js-set-map-lookups	src/features/tours/merchant/lib/render-mail.ts:141	OUTER-ARRAY .includes() inside loop: TIMES.includes(key)
+js-combine-iterations	src/features/tours/merchant/lib/work.ts:63	same receiver iterated ×4: bookings.filter
+js-hoist-regexp	src/features/tours/merchant/manifest-page.tsx:138	literal /\s/g in Phone [component/hook]
+js-cache-function-results	src/features/tours/merchant/payment-sheet.tsx:181	[review] identical call ×2 in one function: blockText(block)
+js-cache-function-results	src/features/tours/merchant/payment-sheet.tsx:147	[review] identical call ×2 in one function: money(balance)
+js-index-maps	src/features/tours/merchant/today-queue.tsx:183	OUTER-ARRAY .find() inside .filter(): tours.find((tour) => tour.id === d.tourId)
+js-index-maps	src/features/tours/merchant/today-queue.tsx:212	OUTER-ARRAY .find() inside .map(): tours.find((item) => item.id === departure.tourId)
+js-flatmap-filter	src/features/tours/merchant/today-queue.tsx:321	[review] map().filter(custom) (p) => p.list.length > 0
+js-index-maps	src/features/tours/merchant/today-queue.tsx:323	OUTER-ARRAY .filter() inside .map(): owed.filter((b) => stageOf(b, now) === stage.id)
+js-min-max-loop	src/features/tours/merchant/today-queue.tsx:329	sort()[idx] directly: owed .filter((b) => stageOf(b, now) === "upcoming") .sort((a, b) => Date.parse(a…
+js-combine-iterations	src/features/tours/merchant/today-queue.tsx:369	same receiver iterated ×2: parts.map
+js-index-maps	src/features/tours/seed.ts:350	OUTER-ARRAY .find() inside loop: departures.find((d) => d.id === departureId)
+js-index-maps	src/features/tours/seed.ts:351	OUTER-ARRAY .find() inside loop: tourSeed.find((t) => t.id === departure?.tourId)
+js-combine-iterations	src/features/transactions/components/transaction-list.tsx:35	same receiver iterated ×2: orders.filter
+js-set-map-lookups	src/features/transactions/order-detail/hooks/use-order-detail.ts:133	OUTER-ARRAY .indexOf() inside .filter(): progressOrder.indexOf(status)
+js-set-map-lookups	src/features/transactions/order-detail/hooks/use-order-detail.ts:313	OUTER-ARRAY .some() inside loop: products.some((p) => p.id === line.productId)
+js-index-maps	src/features/transactions/order-detail/hooks/use-order-detail.ts:482	OUTER-ARRAY .filter() inside .map(): [ pick(line.variantLabel), t("guestOrder.items.quantity", { quantity: line.quantity, price: money(li…
+js-index-maps	src/features/transactions/order-detail/hooks/use-order-detail.ts:494	OUTER-ARRAY .find() inside .map(): products.find((p) => p.id === line.productId)
+js-hoist-regexp	src/features/transactions/order-detail/hooks/use-order-detail.ts:530	literal /\s/g in useOrderDetail [component/hook]
+js-cache-function-results	src/features/transactions/order-detail/hooks/use-order-detail.ts:429	[review] identical call ×2 in one function: money(total)
+js-cache-function-results	src/features/transactions/order-detail/lib/sample-orders.ts:180	[review] identical call ×4 in one function: ctx("manager")
+js-cache-function-results	src/features/transactions/order-detail/lib/sample-orders.ts:191	[review] identical call ×2 in one function: ctx("system")
+js-hoist-regexp	src/lib/avatars.ts:27	literal /[\u0300-\u036f]/g in avatarUrl [fn]
+js-hoist-regexp	src/lib/avatars.ts:29	literal /[^a-z]+/g in avatarUrl [fn]
+js-hoist-regexp	src/lib/avatars.ts:30	literal /-$/ in avatarUrl [fn]
+js-cache-function-results	src/lib/format.ts:19	new Intl.NumberFormat inside numberFormat 
+js-cache-function-results	src/lib/format.ts:34	new Intl.DateTimeFormat inside dateTimeFormat 
+js-hoist-regexp	src/lib/format.ts:52	literal /\.$/ in part [fn]
+js-hoist-regexp	src/lib/format.ts:85	literal /'/g in formatMoney [fn]
+js-cache-function-results	src/lib/format.ts:110	[review] identical call ×2 in one function: isoDate.slice(0, 4)
+js-cache-function-results	src/lib/format.ts:115	[review] identical call ×2 in one function: part("weekday")
+js-cache-function-results	src/lib/format.ts:115	[review] identical call ×2 in one function: part("day")
+js-cache-function-results	src/lib/format.ts:115	[review] identical call ×2 in one function: part("month")
+js-hoist-regexp	src/lib/rich-text.ts:29	literal /^(https?:\/\/|mailto:)/i in safeHref [fn]
+js-index-maps	src/lib/rich-text.ts:163	OUTER-ARRAY .filter() inside .flatMap(): (text ?? "") .split(/\n{2,}/) .filter(Boolean)
+js-hoist-regexp	src/lib/rich-text.ts:164	literal /\n{2,}/ in storyFromChapters [fn] in .flatMap()
+js-cache-function-results	src/lib/rich-text.ts:100	[review] identical call ×2 in one function: nodeText(n)
+js-hoist-regexp	src/lib/slug.ts:5	literal /ä/g in slugify [fn]
+js-hoist-regexp	src/lib/slug.ts:6	literal /ö/g in slugify [fn]
+js-hoist-regexp	src/lib/slug.ts:7	literal /ü/g in slugify [fn]
+js-hoist-regexp	src/lib/slug.ts:9	literal /[̀-ͯ]/g in slugify [fn]
+js-hoist-regexp	src/lib/slug.ts:10	literal /[^a-z0-9]+/g in slugify [fn]
+js-hoist-regexp	src/lib/slug.ts:11	literal /^-+|-+$/g in slugify [fn]
+js-hoist-regexp	src/lib/slug.ts:13	literal /-+$/ in slugify [fn]
+js-cache-storage	src/lib/storage.ts:7	window.localStorage.getItem(key) in readStored
+js-flatmap-filter	src/routes/_guest/credits.tsx:14	[review] map().filter(custom) (block) => block.length > 0 && !block.startsWith("----")
+js-hoist-regexp	src/routes/_guest/credits.tsx:20	literal /^https?:\/\// in Line [component/hook]
+js-set-map-lookups	src/routes/_guest/gifts/index.tsx:58	OUTER-ARRAY .some() inside .filter(): state.data.products.some( (p) => p.subcategoryId === c.id && isPublished(p), )
+js-flatmap-filter	src/routes/_guest/gifts/index.tsx:64	[review] map().filter(custom) (c) => !query || c.name.toLocaleLowerCase(intlLocale).includes(query)
+js-combine-iterations	src/routes/_guest/gifts/index.tsx:64	chain filter().map().filter()
+js-set-map-lookups	src/routes/_guest/gifts/index.tsx:71	per-item receiver .includes() inside .filter(): c.name.toLocaleLowerCase(intlLocale).includes(query)
+js-cache-function-results	src/routes/_guest/gifts/index.tsx:80	new Intl.PluralRules inside GiftsPage 
+js-set-map-lookups	src/routes/_guest/search.tsx:45	per-item receiver .includes() inside .some(): text?.toLocaleLowerCase(intlLocale).includes(query)
+js-set-map-lookups	src/routes/_guest/search.tsx:118	OUTER-ARRAY .some() inside .filter(): products.some( (p) => p.subcategoryId === c.id && isPublished(p), )
+js-index-maps	src/routes/lab.blog-home.tsx:314	OUTER-ARRAY .filter() inside .map(): storyStyles .filter((m) => m.group === group)
+js-index-maps	src/routes/lab.blog-home.tsx:348	OUTER-ARRAY .filter() inside .map(): options .filter((o) => o.round === round)
+js-combine-iterations	src/routes/lab.cards.tsx:70	chain map().filter().map()
+js-flatmap-filter	src/routes/lab.cards.tsx:70	map().filter(non-null) sampleIds .map((id) => state.data.products.find((p) => p.id === id)) .filter((p) => p !== undefined)
+js-index-maps	src/routes/lab.cards.tsx:71	OUTER-ARRAY .find() inside .map(): state.data.products.find((p) => p.id === id)
+js-index-maps	src/routes/lab.cart-line.tsx:166	OUTER-ARRAY .find() inside .flatMap(): products.find((p) => p.id === l.productId)
+js-index-maps	src/routes/lab.cart-line.tsx:167	OUTER-ARRAY .find() inside .flatMap(): product?.variants.find((v) => v.id === l.variantId)
+js-index-maps	src/routes/lab.cart-line.tsx:170	OUTER-ARRAY .filter() inside .flatMap(): [ product.variants.length > 1 ? pick(variant.label) : undefined, l.engraving ? t("cart.line.engravin…
+js-index-maps	src/routes/lab.cart-line.tsx:208	OUTER-ARRAY .find() inside .some(): sample.find((item) => item.id === line.id)
+js-index-maps	src/routes/lab.cart-line.tsx:247	per-item receiver .filter() inside .map(): ls.filter((l) => l.id !== view.id)
+js-set-map-lookups	src/routes/lab.cart-line.tsx:455	OUTER-ARRAY .includes() inside .map(): ["L", "M", "N"].includes(id)
+js-cache-function-results	src/routes/lab.cart-line.tsx:384	[review] identical call ×2 in one function: options.slice(0, 3)
+js-cache-function-results	src/routes/lab.cart-line.tsx:415	[review] identical call ×2 in one function: options.slice(3)
+advanced-init-once	src/routes/lab.eyebrow.tsx:125	useEffect([]) without cleanup in EyebrowLab: { if (document.querySelector(`link[href="${HANDWRITING}"]`)) return; const link = document.createElement("link…
+js-set-map-lookups	src/routes/lab.order-cards.tsx:161	OUTER-ARRAY .includes() inside .filter(): ["completed", "cancelled"].includes(orderTab(o))
+js-tosorted-immutable	src/routes/lab.order-cards.tsx:166	sort on `shown`
+js-index-maps	src/routes/lab.order-cards.tsx:169	OUTER-ARRAY .find() inside .map(): guests.find((g) => g.id === order.guestId)
+js-index-maps	src/routes/lab.order-cards.tsx:171	OUTER-ARRAY .find() inside .map(): products.find((p) => p.id === line.productId)
+js-index-maps	src/routes/lab.order-cards.tsx:181	OUTER-ARRAY .filter() inside .map(): [variant, engraving].filter(Boolean)
+js-index-maps	src/routes/lab.order-cards.tsx:187	OUTER-ARRAY .find() inside .map(): state.data.pickupPlaces.find( (p) => p.id === order.pickupPlaceId, )
+js-cache-function-results	src/routes/lab.order-cards.tsx:289	[review] identical call ×2 in one function: options.slice(0, 3)
+js-cache-function-results	src/routes/lab.order-cards.tsx:318	[review] identical call ×2 in one function: options.slice(3)
+js-index-maps	src/routes/lab.review.tsx:140	OUTER-ARRAY .find() inside .map(): products.find((p) => p.id === id)
+js-combine-iterations	src/routes/lab.review.tsx:228	same receiver iterated ×3: options.filter
+js-cache-function-results	src/routes/lab.review.tsx:169	[review] identical call ×2 in one function: money(full)
+js-hoist-regexp	src/routes/lab.seller.tsx:68	literal /\s/g in SellerLab [component/hook]
+js-hoist-regexp	src/routes/partner/$token.tsx:25	literal /^\d{4}-\d{2}-\d{2}$/ in isIsoDate [fn]
+js-set-map-lookups	src/routes/partner/index.tsx:17	OUTER-ARRAY .some() inside .find(): partners.some((p) => p.reportToken === s.token && !p.archivedAt)
+js-set-map-lookups	src/routes/store/content/index.tsx:27	OUTER-ARRAY .includes() inside .filter(): (search.lang as unknown[]).includes(id)
+js-set-map-lookups	src/routes/store/partners/index.tsx:21	OUTER-ARRAY .includes() inside .filter(): (search.filter as unknown[]).includes(id)
+js-hoist-regexp	src/routes/store/reports/costs.tsx:24	literal /^\d{4}-\d{2}-\d{2}$/ in <anon> [fn]
+# sort/reverse sites total 73: 71 on fresh copies, 2 in-place candidates
+
+rule	hits
+js-batch-dom-css	3
+js-cache-function-results	149
+js-cache-property-access	1
+js-cache-storage	8
+js-combine-iterations	93
+js-early-exit	0
+js-flatmap-filter	25
+js-hoist-regexp	61
+js-index-maps	137
+js-length-check-first	4
+js-min-max-loop	10
+js-request-idle-callback	0
+js-set-map-lookups	73
+js-tosorted-immutable	2
+advanced-effect-event-deps	0
+advanced-event-handler-refs	0
+advanced-init-once	4
+advanced-use-latest	0

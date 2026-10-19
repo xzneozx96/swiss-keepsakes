@@ -1,0 +1,92 @@
+# first-load chunks: 49, minified bytes 1528383
+chunk	379449	assets/index-DIJ1oAUF.js
+chunk	229635	assets/icons-BHDsE2eE.js
+chunk	172026	assets/locale-context-keZflqlS.js
+chunk	138011	assets/demo-BPouDY0S.js
+chunk	129586	assets/close-button-CPxy8t82.js
+chunk	103690	assets/seed-DAi_5cTZ.js
+chunk	56293	assets/seed-BhA1H4eO.js
+chunk	55740	assets/matchContext-58oShlM4.js
+chunk	54459	assets/calendar-day-view-grid-header-DobDD1e-.js
+chunk	48029	assets/compose-B514_wBk.js
+chunk	39926	assets/dist-P6Br2Qrv.js
+chunk	29371	assets/useDateFormatter-CKSZTf5g.js
+chunk	13793	assets/trip-profile-D9kJT8RB.js
+chunk	10672	assets/radio-group-4avmnTYJ.js
+chunk	10447	assets/drawer-87sUd07f.js
+
+# top 10 first-load modules by rendered bytes (pre-minify); lazy: marks an importer outside the first load
+module	529556	nm:react-dom/cjs/react-dom-client.production.js	assets/index-DIJ1oAUF.js	importers(1): nm:react-dom/client.js
+module	79621	src/i18n/en.ts	assets/locale-context-keZflqlS.js	importers(6): src/contexts/locale-context.tsx, lazy:src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts, lazy:src/features/notifications/components/render-mail.ts, lazy:src/features/requests/lib/render-request-mail.ts, lazy:src/features/requests/merchant/hooks/use-merchant-requests.ts, lazy:src/features/tours/merchant/lib/render-mail.ts
+module	72993	src/features/content/seed.ts	assets/demo-BPouDY0S.js	importers(1): src/features/demo/seed.ts
+module	62925	nm:tailwind-variants/dist/index.js	assets/dist-P6Br2Qrv.js	importers(91): nm:@heroui/react/dist/components/badge/badge.js, nm:@heroui/react/dist/components/calendar/calendar.js, nm:@heroui/react/dist/components/range-calendar/range-calendar.js, nm:@heroui/react/dist/components/table/table.js, nm:@heroui/react/dist/index.js, nm:@heroui/react/dist/utils/compose.js, ...
+module	37766	src/features/catalog/seed.ts	assets/seed-BhA1H4eO.js	importers(25): lazy:src/components/layout/merchant-shell.tsx, lazy:src/components/layout/partner-shell.tsx, lazy:src/features/cart/hooks/use-cart-view.ts, lazy:src/features/catalog/hooks/use-gift-detail.ts, lazy:src/features/checkout/hooks/use-request-sent.ts, lazy:src/features/checkout/hooks/use-review.ts, ...
+module	36781	src/features/tours/lucerne/stops.ts	assets/seed-DAi_5cTZ.js	importers(1): src/features/tours/lucerne/things-that-remain.ts
+module	36144	nm:@tanstack/router-core/dist/esm/load-client.js	assets/matchContext-58oShlM4.js	importers(3): nm:@tanstack/router-core/dist/esm/index.js, nm:@tanstack/router-core/dist/esm/router.js, nm:@tanstack/router-core/dist/esm/ssr/bodyScripts.js
+module	34399	nm:@tanstack/router-core/dist/esm/router.js	assets/matchContext-58oShlM4.js	importers(3): nm:@tanstack/router-core/dist/esm/defer.js, nm:@tanstack/router-core/dist/esm/index.js, nm:@tanstack/router-core/dist/esm/load-client.js
+module	31407	src/features/transactions/order-detail/components/order-detail.tsx	assets/index-DIJ1oAUF.js	importers(2): src/routes/_guest/account_.orders.$orderId.tsx, lazy:src/routes/_guest/account_.orders.$orderId.tsx
+module	31044	nm:qrcode.react/lib/esm/index.js	assets/demo-BPouDY0S.js	importers(2): src/features/demo/components/prototype-bar.tsx, lazy:src/features/merchant/partners/components/partner-qr-sheet.tsx
+
+# first-load rendered bytes per package
+pkg	766799	src
+pkg	536767	react-dom
+pkg	447022	react-aria
+pkg	235918	reicon-react
+pkg	123037	@heroui/react
+pkg	114271	@tanstack/router-core
+pkg	100495	react-aria-components
+pkg	90513	tailwind-variants
+pkg	73385	@internationalized/date
+pkg	70833	react-stately
+pkg	36306	@tanstack/react-router
+pkg	31044	qrcode.react
+pkg	17838	react
+pkg	11905	@heroui/styles
+pkg	10607	@tanstack/history
+pkg	9252	scheduler
+pkg	8483	@tanstack/store
+pkg	4835	other
+pkg	4619	use-sync-external-store
+pkg	4148	@internationalized/string
+
+# first-load src modules: 288
+src	79621	src/i18n/en.ts	src/contexts/locale-context.tsx, lazy:src/features/merchant/order-detail/hooks/use-merchant-order-detail.ts, lazy:src/features/notifications/components/render-mail.ts, lazy:src/features/requests/lib/render-request-mail.ts, lazy:src/features/requests/merchant/hooks/use-merchant-requests.ts
+src	72993	src/features/content/seed.ts	src/features/demo/seed.ts
+src	37766	src/features/catalog/seed.ts	lazy:src/components/layout/merchant-shell.tsx, lazy:src/components/layout/partner-shell.tsx, lazy:src/features/cart/hooks/use-cart-view.ts, lazy:src/features/catalog/hooks/use-gift-detail.ts, lazy:src/features/checkout/hooks/use-request-sent.ts
+src	36781	src/features/tours/lucerne/stops.ts	src/features/tours/lucerne/things-that-remain.ts
+src	31407	src/features/transactions/order-detail/components/order-detail.tsx	src/routes/_guest/account_.orders.$orderId.tsx, lazy:src/routes/_guest/account_.orders.$orderId.tsx
+src	27137	src/features/catalog/victorinox.ts	src/features/catalog/seed.ts
+src	26195	src/features/tours/lucerne/things-that-remain.ts	src/features/tours/seed.ts
+src	25272	src/features/merchant/products/messages.ts	src/i18n/en.ts
+src	22535	src/features/checkout/components/trip-profile.tsx	lazy:src/features/checkout/components/request-sent.tsx, src/features/checkout/components/trip-card.tsx, lazy:src/features/requests/components/private-tour-request.tsx, lazy:src/features/tours/booking/tour-confirmed-page.tsx
+src	18355	src/features/tours/lucerne/pilatus.ts	src/features/tours/seed.ts
+src	17141	src/features/tours/lucerne/rigi.ts	src/features/tours/seed.ts
+src	14040	src/features/content/merchant/messages.ts	src/i18n/en.ts
+src	14017	src/features/tours/merchant/messages.ts	src/i18n/en.ts
+src	13933	src/routeTree.gen.ts	src/main.tsx
+src	12752	src/features/demo/components/prototype-bar.tsx	src/features/demo/index.ts
+src	10833	src/features/requests/messages.ts	src/i18n/en.ts
+src	10457	src/features/reviews/components/write-review-sheet.tsx	src/features/reviews/components/order-reviews.tsx, lazy:src/features/tours/reviews/tour-booking-review.tsx
+src	9774	src/features/catalog/components/review-item.tsx	lazy:src/components/listings/listing-reviews.tsx, lazy:src/features/catalog/components/reviews-sheet.tsx, src/features/reviews/components/order-reviews.tsx, lazy:src/features/tours/reviews/tour-booking-review.tsx
+src	9532	src/components/photo-gallery.tsx	lazy:src/features/catalog/components/gift-detail.tsx, src/features/catalog/components/review-item.tsx, lazy:src/features/tours/discovery/tour-detail-page.tsx
+src	9406	src/features/tours/reviews/seed.ts	src/features/demo/seed.ts, src/features/demo/upgrade.ts
+src	8619	src/features/orders/seed.ts	lazy:src/features/auth/hooks/use-sign-in.ts, src/features/demo/seed.ts, src/features/merchant/today/lib/demo-history.ts
+src	7638	src/features/checkout/components/trip-card.tsx	lazy:src/features/tours/booking/guest-tour-booking-page.tsx, src/features/transactions/order-detail/components/order-detail.tsx
+src	7585	src/features/tours/booking/messages.ts	src/i18n/en.ts
+src	7240	src/features/tours/seed.ts	src/features/demo/seed.ts, src/features/demo/upgrade.ts, lazy:src/features/merchant/products/hooks/use-merchant-products.ts, lazy:src/features/merchant/products/hooks/use-tour-editor.ts, lazy:src/features/tours/hooks/use-tours.ts
+src	7096	src/features/lab/blog-home/data.ts	lazy:src/features/lab/blog-home/chips.tsx, lazy:src/features/lab/blog-home/options-v2.tsx, lazy:src/features/lab/blog-home/options-v3.tsx, lazy:src/features/lab/blog-home/options.tsx, lazy:src/features/lab/blog-home/reels.tsx
+src	6994	src/features/notifications/components/mail-panel.tsx	src/features/demo/components/prototype-bar.tsx
+src	6684	src/features/tours/merchant/lib/fixtures.ts	src/features/tours/seed.ts
+src	6316	src/components/layout/cart-button.tsx	lazy:src/features/account/components/account-screen.tsx, lazy:src/features/auth/components/sign-in-screen.tsx, lazy:src/features/cart/components/cart-view.tsx, lazy:src/features/catalog/components/gift-detail.tsx, lazy:src/features/catalog/components/gift-list.tsx
+src	6051	src/features/tours/discovery/messages.ts	src/i18n/en.ts
+src	5676	src/features/reports/hooks/use-cost-data.ts	lazy:src/features/reports/components/cost-data-page.tsx, src/routes/store/reports/costs.tsx
+src	5412	src/features/reports/pages-messages.ts	src/i18n/en.ts
+src	5074	src/features/requests/seed.ts	src/features/demo/seed.ts
+src	4962	src/components/icons.ts	lazy:src/components/ai-elements/chain-of-thought.tsx, src/components/copy-text.tsx, lazy:src/components/filter-bar.tsx, lazy:src/components/info-note.tsx, src/components/layout/cart-button.tsx
+src	4910	src/lib/photos.ts	src/components/media.tsx, src/components/photo-gallery.tsx, lazy:src/components/rich-text.tsx, lazy:src/features/catalog/components/gift-detail.tsx, src/features/catalog/components/review-item.tsx
+src	4851	src/contexts/locale-context.tsx	src/components/app-toasts.tsx, lazy:src/components/background-music.tsx, src/components/confirm-dialog.tsx, src/components/copy-text.tsx, lazy:src/components/data-table.tsx
+src	4789	src/features/catalog/hooks/use-product-reviews.ts	lazy:src/features/catalog/hooks/use-gift-detail.ts, src/features/reviews/components/order-reviews.tsx, lazy:src/features/tours/discovery/tour-card.tsx, lazy:src/features/tours/discovery/tour-detail-page.tsx, lazy:src/features/tours/reviews/tour-booking-review.tsx
+src	4448	src/components/confirm-dialog.tsx	lazy:src/features/account/components/edit-profile.tsx, lazy:src/features/cart/components/cart-view.tsx, lazy:src/features/content/merchant/components/article-editor.tsx, lazy:src/features/content/merchant/components/content-page.tsx, lazy:src/features/merchant/order-detail/components/decision-block.tsx
+src	4411	src/features/merchant/today/lib/demo-history.ts	src/features/partners/lib/ledger.ts, src/features/partners/lib/link-opens.ts, lazy:src/features/partners/report/hooks/use-partner-report.ts, lazy:src/features/reports/lib/behaviour.ts, lazy:src/features/reports/lib/transactions.ts
+src	4280	src/features/merchant/sales/messages.ts	src/i18n/en.ts
+src	4045	src/features/reviews/components/order-reviews.tsx	src/features/transactions/order-detail/components/order-detail.tsx

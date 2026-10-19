@@ -1,0 +1,18 @@
+rendering-activity	0
+rendering-animate-svg-wrapper	1
+   docs/audit/rules/rendering/seed/Bad.tsx:5 svg className="animate-spin"
+rendering-conditional-render	2
+   docs/audit/rules/rendering/seed/Bad.tsx:5 count
+   docs/audit/rules/rendering/seed/Bad.tsx:5 list.length
+rendering-content-visibility	0
+rendering-hoist-jsx	1
+   docs/audit/rules/rendering/seed/Bad.tsx:4 s
+rendering-hydration-no-flicker	n/a(no SSR; see index.html)
+rendering-hydration-suppress-warning	0
+rendering-resource-hints	0
+rendering-script-defer-async	0
+rendering-svg-precision	1
+   docs/audit/rules/rendering/seed/Bad.tsx 4 numbers
+rendering-usetransition-loading	1
+   docs/audit/rules/rendering/seed/Bad.tsx:3 [isLoading, setIsLoading] = useState(false)
+bytes_saved_at_3dp=12 bytes_saved_at_1dp=20 numbers=4

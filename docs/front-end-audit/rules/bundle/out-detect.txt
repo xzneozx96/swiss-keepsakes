@@ -1,0 +1,140 @@
+
+## bundle-analyzable-paths (0 hits)
+ok  import.meta.glob literal, lazy	src/features/content/merchant/lib/media-library.ts:10	"/src/assets/photos/*.jpg"
+ok  import.meta.glob literal, lazy	src/features/content/merchant/lib/media-library.ts:16	"/src/assets/audio/*.mp3"
+ok  import.meta.glob literal, eager asset URLs only	src/lib/audio.ts:5	"/src/assets/audio/*.mp3"
+ok  import.meta.glob literal, eager asset URLs only	src/lib/avatars.ts:5	"/src/assets/avatars/*.svg"
+ok  import.meta.glob literal, eager asset URLs only	src/lib/photos.ts:5	"/src/assets/photos/*.jpg"
+ok  import.meta.glob literal, eager asset URLs only	src/lib/victorinox-art.ts:6	"/src/assets/brand/victorinox/*.webp"
+info build log lines scanned for analysis warnings: 405
+info literal import()/require()/new URL sites: 8
+
+## bundle-barrel-imports (1 hits)
+HIT barrel src/components/icons.ts (86 wrapper consts; in first load: true; 515 named imports from 171 files)	exports 86, used by first-load code 24, lazy-only 59, unused 0	lazy-only targets rendered in first load: 187251 B
+    lazy-only: ExploreIcon GiftIcon TourIcon SparkleIcon TodayIcon OrdersIcon ProductsIcon PartnersIcon ContentIcon RequestsIcon ReportsIcon SettingsIcon MoreIcon ArrowRightIcon MessageIcon FavouriteIcon LanguageIcon EngraveIcon PayLaterIcon OptionIcon DirectionsIcon ShopIcon TrashIcon QrIcon FilterIcon ArchiveIcon CartRemoveIcon MinusIcon PlusIcon ChevronDownIcon TrendUpIcon TrendDownIcon ArrowUpRightIcon CameraIcon CardIcon CashIcon BankIcon NotificationIcon LogoutIcon ProfileEditIcon SendIcon AssistantIcon HeadingIcon BoldIcon ItalicIcon BulletListIcon NumberedListIcon QuoteIcon LinkIcon PhotoAddIcon UploadIcon UndoIcon RedoIcon StoryIcon EditIcon RestoreIcon MusicIcon PlayIcon PauseIcon
+ok  barrel src/features/demo/index.ts (2 re-exports; in first load: true; 148 named imports from 103 files)	exports 7, used by first-load code 7, lazy-only 0, unused 0	lazy-only targets rendered in first load: 0 B
+ok  barrel src/features/tours/booking/index.ts (5 re-exports; in first load: false; 5 named imports from 5 files)	exports 5, used by first-load code 0, lazy-only 5, unused 0	lazy-only targets rendered in first load: 0 B
+    lazy-only: TourReviewPage TourPaymentPage TourConfirmedPage GuestTourBookingPage TourBookingList
+ok  barrel src/features/tours/discovery/index.ts (2 re-exports; in first load: false; 2 named imports from 2 files)	exports 2, used by first-load code 0, lazy-only 2, unused 0	lazy-only targets rendered in first load: 0 B
+    lazy-only: TourListPage TourDetailPage
+ok  barrel src/features/tours/merchant/index.tsx (3 re-exports; in first load: false; 3 named imports from 3 files)	exports 3, used by first-load code 0, lazy-only 3, unused 0	lazy-only targets rendered in first load: 0 B
+    lazy-only: MerchantTourBookingPage TourDeparturesPage TourManifestPage
+info pkg @heroui/react	files importing 183	sideEffects false	first-load rendered 123037 B
+info pkg @tanstack/react-router	files importing 183	sideEffects false	first-load rendered 36306 B
+info pkg react	files importing 166	sideEffects undefined	first-load rendered 17838 B
+info pkg @internationalized/date	files importing 13	sideEffects false	first-load rendered 73385 B
+info pkg recharts	files importing 8	sideEffects false	first-load rendered 0 B
+info pkg @fullcalendar/react	files importing 6	sideEffects ["**/*.css"]	first-load rendered 0 B
+info pkg clsx	files importing 5	sideEffects undefined	first-load rendered 531 B
+info pkg react-dom	files importing 4	sideEffects undefined	first-load rendered 536767 B
+info pkg maplibre-gl	files importing 3	sideEffects ["*.css","src/**/*.ts"]	first-load rendered 0 B
+info pkg qrcode.react	files importing 2	sideEffects undefined	first-load rendered 31044 B
+info pkg @ai-sdk/react	files importing 2	sideEffects false	first-load rendered 0 B
+info pkg use-stick-to-bottom	files importing 1	sideEffects false	first-load rendered 0 B
+info pkg reicon-react	files importing 1	sideEffects false	first-load rendered 235918 B
+info pkg @heroui/styles	files importing 1	sideEffects ["*.css"]	first-load rendered 11905 B
+info pkg @tiptap/react	files importing 1	sideEffects false	first-load rendered 0 B
+info pkg @tiptap/starter-kit	files importing 1	sideEffects undefined	first-load rendered 0 B
+info pkg ai	files importing 1	sideEffects false	first-load rendered 0 B
+ok  @heroui/react toast in first load	27264 B	imported by first-load source
+ok  @heroui/react calendar-year-picker in first load	12359 B	used by another first-load HeroUI component
+ok  @heroui/react calendar in first load	11301 B	imported by first-load source
+ok  @heroui/react drawer in first load	10537 B	imported by first-load source
+ok  @heroui/react alert-dialog in first load	6704 B	imported by first-load source
+ok  @heroui/react tabs in first load	5883 B	imported by first-load source
+ok  @heroui/react modal in first load	5814 B	imported by first-load source
+ok  @heroui/react scroll-shadow in first load	5547 B	used by another first-load HeroUI component
+ok  @heroui/react spinner in first load	3038 B	used by another first-load HeroUI component
+ok  @heroui/react alert in first load	2970 B	imported by first-load source
+ok  @heroui/react radio in first load	2415 B	imported by first-load source
+ok  @heroui/react chip in first load	1502 B	imported by first-load source
+ok  @heroui/react button in first load	1349 B	imported by first-load source
+ok  @heroui/react textfield in first load	1039 B	imported by first-load source
+ok  @heroui/react close-button in first load	886 B	used by another first-load HeroUI component
+ok  @heroui/react textarea in first load	803 B	imported by first-load source
+ok  @heroui/react radio-group in first load	783 B	imported by first-load source
+ok  @heroui/react field-error in first load	694 B	imported by first-load source
+ok  @heroui/react description in first load	644 B	imported by first-load source
+ok  @heroui/react label in first load	601 B	imported by first-load source
+ok  @heroui/react empty-state in first load	518 B	imported by first-load source
+ok  @heroui/react form in first load	409 B	imported by first-load source
+ok  @heroui/react button-group in first load	332 B	used by another first-load HeroUI component
+ok  @heroui/react surface in first load	157 B	used by another first-load HeroUI component
+
+## bundle-conditional (15 hits)
+info framework pkg in first load	react-dom	536767 B
+info framework pkg in first load	react-aria	447022 B
+CANDIDATE pkg	reicon-react	235918 B	first-load importers: 
+info framework pkg in first load	@heroui/react	123037 B
+info framework pkg in first load	@tanstack/router-core	114271 B
+info framework pkg in first load	react-aria-components	100495 B
+info framework pkg in first load	tailwind-variants	90513 B
+info framework pkg in first load	@internationalized/date	73385 B
+info framework pkg in first load	react-stately	70833 B
+info framework pkg in first load	@tanstack/react-router	36306 B
+CANDIDATE pkg	qrcode.react	31044 B	first-load importers: src/features/demo/components/prototype-bar.tsx
+info framework pkg in first load	react	17838 B
+info framework pkg in first load	@heroui/styles	11905 B
+info framework pkg in first load	@tanstack/history	10607 B
+CANDIDATE src	src/i18n/en.ts	79621 B	first-load importers: src/contexts/locale-context.tsx
+CANDIDATE src	src/features/content/seed.ts	72993 B	first-load importers: src/features/demo/seed.ts
+CANDIDATE src	src/features/catalog/seed.ts	37766 B	first-load importers: src/features/demo/seed.ts, src/features/merchant/today/lib/demo-history.ts, src/features/orders/seed.ts
+CANDIDATE src	src/features/tours/lucerne/stops.ts	36781 B	first-load importers: src/features/tours/lucerne/things-that-remain.ts
+CANDIDATE src	src/features/transactions/order-detail/components/order-detail.tsx	31407 B	first-load importers: src/routes/_guest/account_.orders.$orderId.tsx
+CANDIDATE src	src/features/catalog/victorinox.ts	27137 B	first-load importers: src/features/catalog/seed.ts
+CANDIDATE src	src/features/tours/lucerne/things-that-remain.ts	26195 B	first-load importers: src/features/tours/seed.ts
+CANDIDATE src	src/features/merchant/products/messages.ts	25272 B	first-load importers: src/i18n/en.ts
+CANDIDATE src	src/features/checkout/components/trip-profile.tsx	22535 B	first-load importers: src/features/checkout/components/trip-card.tsx
+CANDIDATE src	src/features/tours/lucerne/pilatus.ts	18355 B	first-load importers: src/features/tours/seed.ts
+CANDIDATE src	src/features/tours/lucerne/rigi.ts	17141 B	first-load importers: src/features/tours/seed.ts
+CANDIDATE locale strings	136 modules, 68307 B rendered; en-US + de-DE 3246 B
+CANDIDATE merchant message files imported by i18n/en.ts	6 files, 65875 B rendered	src/features/tours/merchant/messages.ts, src/features/content/merchant/messages.ts, src/features/partners/report/messages.ts, src/features/merchant/products/messages.ts, src/features/merchant/sales/messages.ts, src/features/reports/pages-messages.ts
+
+## bundle-defer-third-party (1 hits)
+info external link preconnect	https://fonts.googleapis.com
+info external link preconnect	https://fonts.gstatic.com
+info external link preload (swapped to stylesheet on load)	https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz
+HIT maplibre-gl CSS in first-load stylesheet assets/index-BQRPlOku.css	63 selectors (.maplibregl-map .maplibregl-canvas .maplibregl-ctrl-group)	library CSS imported by: src/features/merchant/products/components/itinerary/itinerary-map.tsx, src/features/tours/map/tour-itinerary-map.tsx, src/routes/lab.map.tsx
+ok  tiptap/prosemirror CSS in first-load stylesheet assets/index-BQRPlOku.css	1 selectors (.ProseMirror-selectednode)	library CSS imported by: -
+ok  <audio> preload=none	src/components/background-music.tsx:299
+ok  <audio> preload=metadata	src/features/content/components/article-blocks.tsx:158
+
+## bundle-dynamic-imports (6 hits)
+ok  route option reads accountSections from plain module	src/routes/_guest/account.tsx	src/features/account/lib/sections.ts	first-load: true
+HIT route option reads orderTabs from component module	src/routes/_guest/account_.orders.$orderId.tsx	src/features/transactions/order-detail/components/order-detail.tsx	first-load: true
+ok  route option reads isStoryCategory from plain module	src/routes/_guest/stories/index.tsx	src/features/content/lib/categories.ts	first-load: true
+HIT route option reads categories from hook module	src/routes/lab.blog-home_.stories.tsx	src/features/lab/blog-home/data.ts	first-load: true
+HIT side-effect import in route file	src/routes/lab.map.tsx:10	import "maplibre-gl/dist/maplibre-gl.css";
+ok  route option reads SALES_PERIODS from plain module	src/routes/partner/$token.tsx	src/features/merchant/sales/lib/periods.ts	first-load: true
+ok  route option reads ARTICLE_FILTERS from plain module	src/routes/store/content/index.tsx	src/features/content/merchant/lib/search-params.ts	first-load: true
+ok  route option reads isOrderTab from plain module	src/routes/store/orders/index.tsx	src/features/merchant/orders/lib/order-tabs.ts	first-load: true
+HIT route option reads PARTNER_FILTERS from hook module	src/routes/store/partners/index.tsx	src/features/merchant/partners/hooks/use-merchant-partners.ts	first-load: true
+ok  route option reads GIFT_STEPS from plain module	src/routes/store/products/gifts/$productId.tsx	src/features/merchant/products/lib/search-params.ts	first-load: true
+ok  route option reads GIFT_STEPS from plain module	src/routes/store/products/gifts/new.tsx	src/features/merchant/products/lib/search-params.ts	first-load: true
+ok  route option reads isProductTab from plain module	src/routes/store/products/index.tsx	src/features/merchant/products/lib/search-params.ts	first-load: true
+ok  route option reads TOUR_STEPS from plain module	src/routes/store/products/tours/$tourId.tsx	src/features/merchant/products/lib/search-params.ts	first-load: true
+ok  route option reads TOUR_STEPS from plain module	src/routes/store/products/tours/new.tsx	src/features/merchant/products/lib/search-params.ts	first-load: true
+HIT route option reads COST_FILTERS from hook module	src/routes/store/reports/costs.tsx	src/features/reports/hooks/use-cost-data.ts	first-load: true
+ok  route option reads isRequestsTab from plain module	src/routes/store/requests/index.tsx	src/features/requests/merchant/lib/search-params.ts	first-load: true
+HIT heavy package in first load	qrcode.react	31044 B
+info heavy packages only in lazy chunks: recharts 567351, d3-shape 20239, d3-path 3231, d3-array 7955, d3-scale 27643, d3-color 10354, d3-interpolate 6392, d3-format 10422, d3-time 11252, d3-time-format 17759, maplibre-gl 1318704, @ai-sdk/provider 9073, zod 282555, @ai-sdk/provider-utils 49780, ai 88197, @ai-sdk/react 11723, use-stick-to-bottom 13032, prosemirror-model 73687, prosemirror-transform 53949, prosemirror-state 19734, @tiptap/core 177682, prosemirror-commands 17952, prosemirror-schema-list 5338, prosemirror-view 170780, prosemirror-keymap 2259, prosemirror-history 11489, @tiptap/react 19371, @tiptap/extension-blockquote 3202, @tiptap/extension-bold 2137, @tiptap/extension-code 2466, @tiptap/extension-code-block 9155, @tiptap/extension-document 276, @tiptap/extension-hard-break 1578, @tiptap/extension-heading 2067, @tiptap/extension-horizontal-rule 1982, @tiptap/extension-italic 1962, @tiptap/extension-link 19253, @tiptap/extension-list 41854, @tiptap/extension-paragraph 2102, @tiptap/extension-strike 1484, @tiptap/extension-text 270, @tiptap/extension-underline 1573, prosemirror-dropcursor 5203, prosemirror-gapcursor 5999, @tiptap/extensions 17123, @tiptap/starter-kit 2878, temporal-polyfill 47834, @fullcalendar/react 499099
+
+## bundle-preload (9 hits)
+HIT import() with no hover/focus preload	src/contexts/locale-context.tsx:25	import("@/i18n/de")
+HIT import() with no hover/focus preload	src/features/merchant/products/components/itinerary/itinerary-map.tsx:85	import("maplibre-gl")
+HIT import() with no hover/focus preload	src/features/merchant/products/components/itinerary/itinerary-map.tsx:197	import("maplibre-gl")
+HIT lazy() with no hover/focus preload	src/features/merchant/products/components/story-card.tsx:16	lazy(() => import("./story-editor"))
+HIT lazy() with no hover/focus preload	src/features/notifications/components/mail-panel.tsx:7	lazy(() => import("./mail-list").then((module) => ({ default: module.M
+HIT import() with no hover/focus preload	src/features/tours/map/tour-itinerary-map.tsx:96	import("maplibre-gl")
+HIT import() with no hover/focus preload	src/features/tours/map/tour-itinerary-map.tsx:342	import("maplibre-gl")
+HIT createRouter without defaultPreload	src/main.tsx:20
+HIT import() with no hover/focus preload	src/routes/lab.map.tsx:56	import("maplibre-gl")
+info <Link preload=...> props: 0; router.preloadRoute/loadRouteChunk calls: 0
+
+rule	hits
+bundle-analyzable-paths	0
+bundle-barrel-imports	1
+bundle-conditional	15
+bundle-defer-third-party	1
+bundle-dynamic-imports	6
+bundle-preload	9

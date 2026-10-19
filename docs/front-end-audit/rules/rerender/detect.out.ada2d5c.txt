@@ -1,0 +1,417 @@
+rerender-defer-reads	16
+rerender-dependencies	0
+rerender-derived-state	77
+rerender-derived-state-no-effect	4
+rerender-functional-setstate	8
+rerender-lazy-state-init	6
+rerender-memo	5
+rerender-memo-with-default-value	0
+rerender-move-effect-to-event	18
+rerender-no-inline-components	6
+rerender-simple-expression-in-memo	0
+rerender-split-combined-hooks	4
+rerender-transitions	12
+rerender-use-deferred-value	3
+rerender-use-ref-transient-values	18
+(roots scanned	994 components+hooks in 569 files)
+(info force-update-state	1)
+(info useMemo-total	26)
+(info dependencies-stable-object	10)
+(info defer-reads-returned-only	19)
+(info deferred-value-light-only	5)
+(info text-input-calls	14)
+(info memo-hook-below-threshold	14)
+(info skeleton-early-return	23)
+(info defer-reads-effect-only	2)
+(info useDemo-census	64)
+(info store-writes	61)
+rerender-defer-reads	features/auth/hooks/use-sign-in.ts:39	useLocale() value language read only in handlers (1) [useSignIn]
+rerender-defer-reads	features/orders/hooks/use-orders.ts:40	useLocale() value language read only in handlers (1) [useOrderActions]
+rerender-defer-reads	features/tours/reviews/tour-booking-review.tsx:24	useDemoSelector() value clockStartedAt read only in handlers (1) [TourBookingReview]
+rerender-defer-reads	features/tours/reviews/tour-booking-review.tsx:25	useDemoSelector() value guests read only in handlers (1) [TourBookingReview]
+rerender-defer-reads	features/tours/reviews/tour-booking-review.tsx:26	useDemoSelector() value demoReviews read only in handlers (1) [TourBookingReview]
+rerender-defer-reads	features/requests/hooks/use-advice.ts:29	useLocale() value intlLocale read only in handlers (1) [useAdvice]
+rerender-defer-reads	features/partners/hooks/use-partner-access.ts:44	useLocale() value language read only in handlers (1) [useCodeStep]
+rerender-defer-reads	features/requests/hooks/use-private-tour.ts:36	useLocale() value language read only in handlers (1) [usePrivateTour]
+rerender-defer-reads	features/partners/hooks/use-partner-actions.ts:56	useDemoNow() value now read only in handlers (3) [usePartnerActions]
+rerender-defer-reads	features/merchant/products/hooks/use-merchant-products.ts:171	useDemo() subscribes to the whole state but only update is used -> useDemoActions() [useProductArchive]
+rerender-defer-reads	features/merchant/products/components/pickup-points.tsx:55	useDemo() subscribes to the whole state but only update is used -> useDemoActions() [PickupPointSheet]
+rerender-defer-reads	features/merchant/products/hooks/use-tour-editor.ts:321	useDemo() subscribes to the whole state but only update is used -> useDemoActions() [useTourWrite]
+rerender-defer-reads	features/tours/booking/booking-demo-control.tsx:34	useLocale() value language read only in handlers (1) [TourBookingDemoControl]
+rerender-defer-reads	features/transactions/order-detail/components/order-detail-demo-control.tsx:19	useLocale() value language read only in handlers (1) [OrderDetailDemoControl]
+rerender-defer-reads	features/auth/hooks/use-sign-in.ts:38	useDemo() state read only in returned [useSignIn]
+rerender-defer-reads	features/partners/hooks/use-partner-access.ts:43	useDemo() state read only in returned [useCodeStep]
+rerender-derived-state	components/layout/guest-shell.tsx:42	useDemoSelector returns a collection but render only uses guests.find [GuestShell]
+rerender-derived-state	features/transactions/hooks/use-transaction-row.ts:40	useDemoSelector returns a collection but render only uses pickupPlaces.find [useTransactionRow]
+rerender-derived-state	features/transactions/hooks/use-transaction-row.ts:41	useDemoSelector returns a collection but render only uses products.find [useTransactionRow]
+rerender-derived-state	features/tours/booking/booking-summary.tsx:82	useTours() reads only {tours} but subscribes to a 60 s clock [useTourPhoto]
+rerender-derived-state	features/tours/booking/expired-notice.tsx:23	useTours() reads only {tours} but subscribes to a 60 s clock [useRebook]
+rerender-derived-state	features/tours/booking/tour-confirmed-page.tsx:25	useTours() reads only {tours} but subscribes to a 60 s clock [TourConfirmedPage]
+rerender-derived-state	features/tours/booking/tour-booking-list.tsx:31	useTours() reads only {bookings, guestId} but subscribes to a 60 s clock [TourBookingList]
+rerender-derived-state	routes/_guest/account.tsx:48	useDemoSelector returns a collection but render only uses guests.find [AccountPage]
+rerender-derived-state	features/requests/hooks/use-advice.ts:34	useDemoSelector returns a collection but render only uses guests.find [useAdvice]
+rerender-derived-state	features/tours/discovery/tour-list-page.tsx:17	useTours() reads only {tours} but subscribes to a 60 s clock [TourListPage]
+rerender-derived-state	features/tours/discovery/tour-detail-page.tsx:56	useTours() reads only {tours} but subscribes to a 60 s clock [TourDetailPage]
+rerender-derived-state	features/requests/hooks/use-private-tour.ts:38	useDemoSelector returns a collection but render only uses guests.find [usePrivateTour]
+rerender-derived-state	features/tours/merchant/attendance-actions.tsx:54	useTours() reads only {now, role} but subscribes to s.data.tours (every booking/draft write) [AttendanceActions]
+rerender-derived-state	features/tours/merchant/payment-sheet.tsx:69	useTours() reads only {role} but subscribes to s.data.tours (every booking/draft write) and a 60 s clock [TourPaymentSheet]
+rerender-derived-state	features/tours/merchant/manifest-page.tsx:75	useTours() reads only {now} but subscribes to s.data.tours (every booking/draft write) [Money]
+rerender-derived-state	features/requests/merchant/hooks/use-advice-request.ts:35	useDemoSelector returns a collection but render only uses adviceRequests.find [useAdviceRequest]
+rerender-derived-state	features/payment/components/payment-demo-control.tsx:14	useDemoSelector returns a collection but render only uses demoOrders.find [PaymentDemoControl]
+rerender-derived-state	features/tours/discovery/tours-demo-control.tsx:14	useTours() reads only {tours} but subscribes to a 60 s clock [ToursDemoControl]
+rerender-derived-state	features/notifications/components/mail-list.tsx:19	useDemo() whole state; render reads state.data.pickupPlaces, state.data.guests, state.data.partners, state.role [MailList]
+rerender-derived-state	features/notifications/components/mail-panel.tsx:17	useDemo() whole state; render reads state.data.mail [MailPanel]
+rerender-derived-state	features/demo/components/prototype-bar.tsx:78	useDemo() whole state; render reads state.data.partners, state.role, state.data.referralVisits, state.clockStartedAt [PrototypeBar]
+rerender-derived-state	features/auth/components/sign-in-screen.tsx:27	useDemo() whole state; render reads state.data.signedInGuestId [SignInScreen]
+rerender-derived-state	features/orders/hooks/use-orders.ts:39	useDemo() whole state; render reads state.role, state.data.orders, state (whole object passed on) [useOrderActions]
+rerender-derived-state	features/checkout/hooks/use-trip-profile.ts:14	useDemo() whole state; render reads state.data.signedInGuestId, state.data [useTripProfile]
+rerender-derived-state	features/reviews/hooks/use-order-reviews.ts:39	useDemo() whole state; render reads state.data.products, state.data.reviews, state.data [useOrderReviews]
+rerender-derived-state	features/lab/blog-home/data.ts:190	useDemo() whole state; render reads state.data.articles, state.data.tours, state.data.products [useBlogData]
+rerender-derived-state	routes/lab.cards.tsx:66	useDemo() whole state; render reads state.data.products [CardLab]
+rerender-derived-state	routes/lab.order-cards.tsx:149	useDemo() whole state; render reads state.data, state.data.pickupPlaces [useLabRows]
+rerender-derived-state	routes/lab.review.tsx:99	useDemo() whole state; render reads state.data.pickupPlaces [useSampleOrders]
+rerender-derived-state	routes/lab.seller.tsx:55	useDemo() whole state; render reads state.data.pickupPlaces [SellerLab]
+rerender-derived-state	features/partners/hooks/use-partner-access.ts:148	useDemo() whole state; render reads state.data.partners, state.data.partnerSessions [usePartnerAccess]
+rerender-derived-state	routes/partner/index.tsx:12	useDemo() whole state; render reads state.data [PartnerHome]
+rerender-derived-state	features/partners/report/hooks/use-partner-report.ts:99	useDemo() whole state; render reads state.data.partners, state.data, state.data.tours [usePartnerReport]
+rerender-derived-state	features/merchant/sales/hooks/use-sales-overview.ts:140	useDemo() whole state; render reads state.data [useSalesOverview]
+rerender-derived-state	features/partners/report/hooks/use-partner-overview.ts:71	useDemo() whole state; render reads state.data [usePartnerOverview]
+rerender-derived-state	features/merchant/today/hooks/use-merchant-today.ts:55	useDemo() whole state; render reads state.data [useMerchantToday]
+rerender-derived-state	features/merchant/calendar/use-calendar-items.ts:38	useDemo() whole state; render reads state.data [useCalendarItems]
+rerender-derived-state	features/reports/hooks/use-reports.ts:97	useDemo() whole state; render reads state.data, state.data.articles, state.data.adviceRequests [useReports]
+rerender-derived-state	features/reports/hooks/use-report-pages.tsx:39	useDemo() whole state; render reads state.data, state.data.adviceRequests, state.data.privateTourRequests [useReportPagesState]
+rerender-derived-state	features/checkout/hooks/use-review.ts:39	useDemo() whole state; render reads state, state.data.pickupPlaces, state.data.products (whole object passed on) [useReview]
+rerender-derived-state	routes/_guest/gifts/index.tsx:40	useDemo() whole state; render reads state.data.subcategories, state.data.products [GiftsPage]
+rerender-derived-state	features/catalog/hooks/use-gift-detail.ts:42	useDemo() whole state; render reads state.data.products, state.data, state.data.subcategories [useGiftDetail]
+rerender-derived-state	features/requests/components/advice-sent.tsx:18	useDemo() whole state; render reads state.data.adviceRequests [AdviceSent]
+rerender-derived-state	features/content/components/stories-page.tsx:46	useDemo() whole state; render reads state.data.articles [StoriesPage]
+rerender-derived-state	features/tours/discovery/tour-detail-page.tsx:86	useDemo() whole state; render reads state.data.pickupPlaces [TourDetail]
+rerender-derived-state	features/tours/merchant/booking-page.tsx:164	useDemo() whole state, reads only useDemo().state.data.partners -> useDemoSelector [CommissionCard]
+rerender-derived-state	features/content/merchant/hooks/use-merchant-comments.ts:43	useDemo() whole state; render reads state.data, state.role, state.clockStartedAt [useMerchantComments]
+rerender-derived-state	features/content/merchant/hooks/use-merchant-reviews.ts:45	useDemo() whole state; render reads state.data, state.data.tours, state.role [useMerchantReviews]
+rerender-derived-state	features/content/merchant/hooks/use-merchant-articles.ts:59	useDemo() whole state; render reads state.data [useMerchantArticles]
+rerender-derived-state	features/merchant/orders/hooks/use-merchant-orders.ts:80	useDemo() whole state; render reads state.data [useMerchantOrders]
+rerender-derived-state	features/merchant/order-detail/hooks/use-merchant-order-detail.ts:151	useDemo() whole state; render reads state.data.guests, state.data.pickupPlaces, state.data.partners, state.data, state.data.products, state.clockStartedAt, state (whole object passed on) [useMerchantOrderDetail]
+rerender-derived-state	features/merchant/partners/hooks/use-merchant-partners.ts:30	useDemo() whole state; render reads state.data, state.data.partners [useMerchantPartners]
+rerender-derived-state	features/merchant/partners/hooks/use-partner-detail.ts:65	useDemo() whole state; render reads state.data.partners, state.data, state.data.guests, state.role, state.data.partnerPayouts [usePartnerDetail]
+rerender-derived-state	features/merchant/partners/hooks/use-partner-analytics.ts:63	useDemo() whole state; render reads state.data.partners, state.data, state.data.commissionAdjustments [usePartnerAnalytics]
+rerender-derived-state	features/merchant/products/hooks/use-merchant-products.ts:68	useDemo() whole state; render reads state.data, state.data.tours [useMerchantProducts]
+rerender-derived-state	features/merchant/products/components/pickup-points.tsx:194	useDemo() whole state; render reads state.data.pickupPlaces [PickupPoints]
+rerender-derived-state	features/merchant/products/components/merchant-products.tsx:79	useDemo() whole state, reads only useDemo().state.data -> useDemoSelector [MerchantProducts]
+rerender-derived-state	features/merchant/products/hooks/use-subcategories.ts:13	useDemo() whole state; render reads state.data [useSubcategories]
+rerender-derived-state	features/reports/hooks/use-cost-data.ts:75	useDemo() whole state; render reads state.data.costs, state.data.products, state.data.tours, state.data.guests, state.data [useCostData]
+rerender-derived-state	features/requests/merchant/hooks/use-merchant-requests.ts:87	useDemo() whole state; render reads state.data [useMerchantRequests]
+rerender-derived-state	features/transactions/order-detail/hooks/use-order-detail.ts:139	useDemo() whole state; render reads state.data.orders, state.data.signedInGuestId [useOwnOrder]
+rerender-derived-state	features/transactions/order-detail/hooks/use-order-detail.ts:149	useDemo() whole state; render reads state.data.products, state.data.pickupPlaces [useOrderDetail]
+rerender-derived-state	routes/_guest/account_.orders.$orderId.tsx:44	useDemo() whole state; render reads state.data.signedInGuestId [OrderDetailPage]
+rerender-derived-state	features/requests/components/private-tour-sent.tsx:17	useDemo() whole state; render reads state.data.privateTourRequests [PrivateTourSent]
+rerender-derived-state	features/content/merchant/hooks/use-article-editor.ts:64	useDemo() whole state; render reads state.data, state.role, state.data.tours, state.data.products, state.data.orders, state.clockStartedAt [useArticleEditor]
+rerender-derived-state	routes/store/content/articles/$articleId.tsx:31	useDemo() whole state; render reads state.data.articles [ArticleEditorPage]
+rerender-derived-state	features/merchant/products/hooks/use-gift-editor.ts:286	useDemo() whole state; render reads state.data.pickupPlaces, state.data.orders, state.data.products, state.data.subcategories, state, state.data (whole object passed on) [useGiftEditor]
+rerender-derived-state	features/merchant/products/components/gift-editor.tsx:315	useDemo() whole state; render reads state.data.subcategories [PhotoCard]
+rerender-derived-state	features/merchant/products/components/gift-editor.tsx:481	useDemo() whole state; render reads state.data.pickupPlaces [PlacesCard]
+rerender-derived-state	features/merchant/products/components/gift-editor.tsx:640	useDemo() whole state; render reads state.data.subcategories, state.data.pickupPlaces [GiftReview]
+rerender-derived-state	features/merchant/products/components/gift-editor.tsx:816	useDemo() whole state; render reads state.data.subcategories [GiftEditor]
+rerender-derived-state	routes/store/products/gifts/$productId.tsx:36	useDemo() whole state; render reads state.data.products [GiftEditorPage]
+rerender-derived-state	features/merchant/products/hooks/use-tour-editor.ts:422	useDemo() whole state; render reads state.data.tours, state, state.data (whole object passed on) [useTourEditor]
+rerender-derived-state	routes/store/products/tours/$tourId.tsx:32	useDemo() whole state; render reads state.data.tours [TourEditorPage]
+rerender-derived-state	routes/_guest/account_.orders.$orderId_.pay.tsx:35	useDemo() whole state; render reads state.data.signedInGuestId [PayPage]
+rerender-derived-state	features/tours/booking/booking-demo-control.tsx:33	useDemo() whole state; render reads state.data.tours, state.clockStartedAt, state.data.guests, state.data.signedInGuestId [TourBookingDemoControl]
+rerender-derived-state	features/transactions/order-detail/components/order-detail-demo-control.tsx:18	useDemo() whole state; render reads state.data.orders, state.data.signedInGuestId [OrderDetailDemoControl]
+rerender-derived-state-no-effect	features/requests/components/advice-chat.tsx:194	setTyping(true) in useEffect [AdviceChat]
+rerender-derived-state-no-effect	features/planner/components/planner-chat.tsx:317	setTimings((prev) => new Map([...prev, ...finished])) in useEffect [PlannerChat]
+rerender-derived-state-no-effect	hooks/use-url-input.ts:32	setValue(urlValue) in useEffect [useUrlInput]
+rerender-derived-state-no-effect	features/merchant/products/components/itinerary/itinerary-map.tsx:81	setMapState("loading") in useEffect [ItineraryMap]
+rerender-functional-setstate	features/demo/components/prototype-bar.tsx:171	setQrCode(qrCode === p.code ? null : p.code) ctx=deferred [PrototypeBar]
+rerender-functional-setstate	features/auth/hooks/use-sign-in.ts:114	setCodeStep({ ...codeStep, status: "expired" }) ctx=returned [useSignIn]
+rerender-functional-setstate	features/auth/hooks/use-sign-in.ts:122	setCodeStep({ ...codeStep, attempts, status: attempts >= MAX ctx=returned [useSignIn]
+rerender-functional-setstate	features/auth/hooks/use-sign-in.ts:161	setCodeStep({ ...codeStep, status: "idle" }) ctx=deferred [useSignIn]
+rerender-functional-setstate	features/lab/blog-home/options.tsx:135	setFilter(filter === item ? "all" : item) ctx=deferred [CirclesHome]
+rerender-functional-setstate	features/partners/hooks/use-partner-access.ts:95	setStep({ ...step, status: "expired" }) ctx=returned [useCodeStep]
+rerender-functional-setstate	features/partners/hooks/use-partner-access.ts:103	setStep({ ...step, attempts, status: attempts >= MAX_ATTEMPT ctx=returned [useCodeStep]
+rerender-functional-setstate	features/partners/hooks/use-partner-access.ts:134	setStep({ ...step, status: "idle" }) ctx=deferred [useCodeStep]
+rerender-lazy-state-init	components/layout/merchant-shell.tsx:272	useState(new Set()) constant-args [MerchantShell]
+rerender-lazy-state-init	features/checkout/components/trip-profile.tsx:381	useState(value ? parseDate(value) : null) args-from-props/state [DateSheet]
+rerender-lazy-state-init	features/requests/components/advice-answer.tsx:151	useState(value ? parseDate(value) : null) args-from-props/state [DateAnswer]
+rerender-lazy-state-init	features/tours/discovery/departure-picker/time-slots.tsx:160	useState(anchor && !isMorning(anchor) ? "pm" : "am") args-from-props/state [Halves]
+rerender-lazy-state-init	features/merchant/order-detail/components/decision-block.tsx:328	useState(parseDate(initialDate)) args-from-props/state [ChangeSheet]
+rerender-lazy-state-init	features/requests/merchant/components/question-sheet.tsx:70	useState(question?.options?.map((o) => ({ id: o.id, en: o.label.en ??) args-from-props/state [QuestionSheet]
+rerender-memo	features/tours/booking/tour-booking-list.tsx:36	array work in render (2 chained calls) computed before early return at line 41 that does not use it [TourBookingList]
+rerender-memo	features/transactions/components/transaction-list.tsx:32	array work in render (2 chained calls) computed before early return at line 37 that does not use it [TransactionList]
+rerender-memo	routes/partner/index.tsx:14	array work in render (2 chained calls) computed before early return at line 22 that does not use it [PartnerHome]
+rerender-memo	features/merchant/sales/components/sales-overview.tsx:766	heavy hook useSalesOverview() (25 array calls inside) computed before early return at line 768 that does not use it [SalesOverview]
+rerender-memo	features/merchant/partners/components/partner-analytics-page.tsx:151	heavy hook usePartnerAnalytics() (25 array calls inside) computed before early return at line 234 that does not use it [PartnersAnalyticsPage]
+rerender-move-effect-to-event	components/layout/cart-button.tsx:37	dep shown set in handler(s) at 42; gated=true renderReads=3 [CartButton]
+rerender-move-effect-to-event	components/layout/cart-button.tsx:50	dep shown set in handler(s) at 42; gated=true renderReads=3 [CartButton]
+rerender-move-effect-to-event	hooks/use-in-view.ts:11	dep seen set in handler(s) at 17; gated=true renderReads=0 [useInView]
+rerender-move-effect-to-event	features/tours/booking/tour-review-page.tsx:80	dep created set in handler(s) at 149; gated=true renderReads=4 [TourReviewPage]
+rerender-move-effect-to-event	features/tours/booking/tour-review-page.tsx:100	dep error set in handler(s) at 143,148; gated=true renderReads=1 [TourReviewPage]
+rerender-move-effect-to-event	features/lab/blog-home/reels.tsx:372	dep open set in handler(s) at 392,418; gated=true renderReads=2 [ViewerRail]
+rerender-move-effect-to-event	features/lab/calendar/calendar-lab.tsx:59	dep mobile set in handler(s) at 52; gated=true renderReads=3 [CalendarLab]
+rerender-move-effect-to-event	features/merchant/calendar/calendar-page.tsx:71	dep mobile set in handler(s) at 64; gated=true renderReads=2 [CalendarScreen]
+rerender-move-effect-to-event	features/tours/map/tour-itinerary-map.tsx:73	dep attempt set in handler(s) at 506; gated=false renderReads=0 [TourItineraryMap]
+rerender-move-effect-to-event	features/tours/map/tour-itinerary-map.tsx:236	dep mapState set in handler(s) at 88,181,184,187,209; gated=true renderReads=5 [TourItineraryMap]
+rerender-move-effect-to-event	features/tours/map/tour-itinerary-map.tsx:236	dep fullscreen set in handler(s) at 136,137; gated=false renderReads=0 [TourItineraryMap]
+rerender-move-effect-to-event	features/tours/map/tour-itinerary-map.tsx:290	dep fullscreen set in handler(s) at 136,137; gated=true renderReads=0 [TourItineraryMap]
+rerender-move-effect-to-event	features/tours/map/tour-itinerary-map.tsx:324	dep fullscreen set in handler(s) at 136,137; gated=true renderReads=0 [TourItineraryMap]
+rerender-move-effect-to-event	features/tours/map/tour-itinerary-map.tsx:324	dep sheetOpen set in handler(s) at 558,586; gated=true renderReads=1 [TourItineraryMap]
+rerender-move-effect-to-event	features/merchant/products/components/itinerary/itinerary-map.tsx:71	dep attempt set in handler(s) at 330; gated=false renderReads=0 [ItineraryMap]
+rerender-move-effect-to-event	features/merchant/products/components/itinerary/itinerary-map.tsx:191	dep mapState set in handler(s) at 152,163,166; gated=true renderReads=3 [ItineraryMap]
+rerender-move-effect-to-event	features/merchant/products/components/itinerary/itinerary-map.tsx:272	dep mapState set in handler(s) at 152,163,166; gated=true renderReads=3 [ItineraryMap]
+rerender-move-effect-to-event	features/merchant/products/components/itinerary/itinerary-map.tsx:289	dep dropping set in handler(s) at 159,295,342; gated=true renderReads=5 [ItineraryMap]
+rerender-no-inline-components	components/stat-card.tsx:293	local tooltip as recharts Tooltip content (createElement) in AllTimeCard
+rerender-no-inline-components	features/merchant/sales/components/sales-overview.tsx:415	local tooltip as recharts Tooltip content (createElement) in FigureChart
+rerender-no-inline-components	features/partners/report/components/partner-dashboard.tsx:146	local tooltip as recharts Tooltip content (createElement) in SingleFigureChart
+rerender-no-inline-components	features/reports/components/report-charts.tsx:314	local tooltip as recharts Tooltip content (createElement) in HBars
+rerender-no-inline-components	features/merchant/partners/components/partner-analytics-page.tsx:291	local tooltip as recharts Tooltip content (createElement) in PartnersAnalyticsPage
+rerender-no-inline-components	features/reports/components/cost-data-page.tsx:100	inline fn as recharts Tooltip content (createElement) in WeeksChart
+rerender-split-combined-hooks	features/merchant/calendar/use-calendar-items.ts:43	useMemo: flatMap() reads 4 of 8 deps (data.departures.flatMap((departure) => { const tou) [useCalendarItems]
+rerender-split-combined-hooks	features/reports/hooks/use-reports.ts:136	useMemo: map() reads 3 of 4 deps (daysOf(current).map((day) => moneySummary(txs, com) [useReports]
+rerender-split-combined-hooks	features/reports/hooks/use-reports.ts:181	useMemo: filter() reads 2 of 5 deps (["direct", ...partners.map((p) => p.id)] .filter(() [useReports]
+rerender-split-combined-hooks	features/tours/discovery/departure-picker/model.ts:59	useMemo: map() reads 3 of 4 deps (upcomingDepartures(data, tour.id, at).map((d) => {) [useSlotModel]
+rerender-transitions	components/photo-gallery.tsx:62	onScroll -> setIndex(slideIndex(e.currentTarget)) urgent [PhotoGallery]
+rerender-transitions	components/photo-gallery.tsx:174	onScroll -> setIndex(slideIndex(e.currentTarget)) urgent [PhotoViewer]
+rerender-transitions	features/account/components/avatar-crop-sheet.tsx:35	onPointerMove -> setCrop(clampCrop(image, next)) urgent [AvatarCropSheet]
+rerender-transitions	features/requests/components/advice-chat.tsx:180	addEventListener("resize") -> setTop(rootRef.current?.getBoundingClientRect().to urgent [AdviceChat]
+rerender-transitions	features/planner/components/planner-chat.tsx:172	requestAnimationFrame -> setElapsed(Math.max(1, Math.round((ended - started urgent [TracePanel]
+rerender-transitions	features/planner/components/planner-chat.tsx:286	addEventListener("resize") -> setTop(rootRef.current?.getBoundingClientRect().to urgent [PlannerChat]
+rerender-transitions	features/planner/components/planner-chat.tsx:276	useChat without experimental_throttle: one render per streamed chunk [PlannerChat]
+rerender-transitions	features/lab/blog-home/reels.tsx:212	onScroll -> setIndex(nearest) urgent [AutoRail]
+rerender-transitions	features/content/components/article-blocks.tsx:169	onTimeUpdate -> setTime(e.currentTarget.currentTime) urgent [AudioBlock]
+rerender-transitions	features/content/components/article-contents.tsx:43	requestAnimationFrame -> setActive( sections.find((s) => sectionAnchor(s.id urgent [ArticleContents]
+rerender-transitions	features/content/components/article-contents.tsx:52	requestAnimationFrame -> setProgress(Math.min(1, Math.max(0, read))) urgent [ArticleContents]
+rerender-transitions	features/merchant/products/components/step-shell.tsx:472	addEventListener("resize") -> setOpen(focused && height < tall * 0.85) urgent [useKeyboardOpen]
+rerender-use-deferred-value	features/merchant/partners/components/merchant-partners.tsx:133	query typed -> useMerchantPartners, <PartnerRows resetKey>, <PartnerRows empty> not deferred [MerchantPartners]
+rerender-use-deferred-value	features/merchant/products/components/itinerary/place-search.tsx:24	query typed -> usePlaceSearch, map not deferred [PlaceSearch]
+rerender-use-deferred-value	features/merchant/products/components/sections-editor.tsx:648	query typed -> filter, some not deferred [KeepsakesPickerSheet]
+rerender-use-ref-transient-values	components/photo-gallery.tsx:62	onScroll sets index per event [PhotoGallery]
+rerender-use-ref-transient-values	components/photo-gallery.tsx:174	onScroll sets index per event [PhotoViewer]
+rerender-use-ref-transient-values	features/account/components/avatar-crop-sheet.tsx:35	onPointerMove sets crop per event [AvatarCropSheet]
+rerender-use-ref-transient-values	features/requests/components/advice-chat.tsx:160	state changing never read during render (3 reads in deferred) [AdviceChat]
+rerender-use-ref-transient-values	features/requests/components/advice-chat.tsx:180	addEventListener("resize") sets top per event [AdviceChat]
+rerender-use-ref-transient-values	features/planner/components/planner-chat.tsx:153	state startedAt never read during render (1 reads in deferred) [TracePanel]
+rerender-use-ref-transient-values	features/planner/components/planner-chat.tsx:172	requestAnimationFrame sets elapsed per event [TracePanel]
+rerender-use-ref-transient-values	features/planner/components/planner-chat.tsx:286	addEventListener("resize") sets top per event [PlannerChat]
+rerender-use-ref-transient-values	features/lab/blog-home/reels.tsx:212	onScroll sets index per event [AutoRail]
+rerender-use-ref-transient-values	features/content/components/article-blocks.tsx:169	onTimeUpdate sets time per event [AudioBlock]
+rerender-use-ref-transient-values	features/content/components/article-contents.tsx:43	requestAnimationFrame sets active per event [ArticleContents]
+rerender-use-ref-transient-values	features/content/components/article-contents.tsx:52	requestAnimationFrame sets progress per event [ArticleContents]
+rerender-use-ref-transient-values	features/tours/map/tour-itinerary-map.tsx:54	state fullscreen never read during render (2 reads in effect) [TourItineraryMap]
+rerender-use-ref-transient-values	features/tours/map/tour-itinerary-map.tsx:58	state attempt never read during render (0 reads in nothing) [TourItineraryMap]
+rerender-use-ref-transient-values	features/merchant/products/components/step-shell.tsx:472	addEventListener("resize") sets open per event [useKeyboardOpen]
+rerender-use-ref-transient-values	features/merchant/products/hooks/use-gift-editor.ts:304	state furthest never read during render (6 reads in effect/returned) [useGiftEditor]
+rerender-use-ref-transient-values	features/merchant/products/hooks/use-tour-editor.ts:439	state furthest never read during render (6 reads in effect/returned) [useTourEditor]
+rerender-use-ref-transient-values	features/merchant/products/components/itinerary/itinerary-map.tsx:58	state attempt never read during render (0 reads in nothing) [ItineraryMap]
+info:force-update-state	contexts/locale-context.tsx:59	[, setLoadedCount] = useState in useDictionary
+info:dependencies-stable-object	features/auth/components/sign-in-screen.tsx:42	[router] (RouterCore<Route<Register, any, "/", "/") is stable, not counted [SignInScreen]
+info:dependencies-stable-object	features/content/components/article-contents.tsx:68	[bodyRef] (RefObject<HTMLElement | null>) is stable, not counted [ArticleContents]
+info:dependencies-stable-object	features/tours/map/tour-itinerary-map.tsx:234	[translationsRef] (RefObject<{ t: (key: "app.name" | "app.p) is stable, not counted [TourItineraryMap]
+info:dependencies-stable-object	features/merchant/products/components/editor-parts.tsx:87	[root] (RefObject<HTMLElement | null>) is stable, not counted [useFocusFirstInvalid]
+info:dependencies-stable-object	features/merchant/products/components/itinerary/itinerary-map.tsx:184	[live] (RefObject<{ stops: PinStop[]; selectedId) is stable, not counted [ItineraryMap]
+info:dependencies-stable-object	features/merchant/products/components/itinerary/itinerary-map.tsx:184	[translations] (RefObject<(key: "app.name" | "app.protot) is stable, not counted [ItineraryMap]
+info:dependencies-stable-object	features/merchant/products/components/itinerary/itinerary-map.tsx:255	[live] (RefObject<{ stops: PinStop[]; selectedId) is stable, not counted [ItineraryMap]
+info:dependencies-stable-object	features/merchant/products/components/itinerary/itinerary-map.tsx:255	[translations] (RefObject<(key: "app.name" | "app.protot) is stable, not counted [ItineraryMap]
+info:dependencies-stable-object	features/merchant/products/components/itinerary/itinerary-map.tsx:269	[live] (RefObject<{ stops: PinStop[]; selectedId) is stable, not counted [ItineraryMap]
+info:dependencies-stable-object	features/merchant/products/components/itinerary/itinerary-map.tsx:287	[live] (RefObject<{ stops: PinStop[]; selectedId) is stable, not counted [ItineraryMap]
+info:defer-reads-returned-only	features/catalog/hooks/use-favourites.ts:11	useDemoSelector() value ids read only in callbacks the hook returns [useFavourites]
+info:defer-reads-returned-only	features/orders/hooks/use-orders.ts:169	useLocale() value language read only in callbacks the hook returns [useBlockText]
+info:defer-reads-returned-only	features/orders/hooks/use-orders.ts:169	useLocale() value intlLocale read only in callbacks the hook returns [useBlockText]
+info:defer-reads-returned-only	features/tours/hooks/use-tours.ts:67	useDemoSelector() value clockStartedAt read only in callbacks the hook returns [useTourActions]
+info:defer-reads-returned-only	features/tours/hooks/use-tours.ts:68	useDemoSelector() value signedInGuestId read only in callbacks the hook returns [useTourActions]
+info:defer-reads-returned-only	features/tours/hooks/use-tours.ts:69	useDemoSelector() value referralVisits read only in callbacks the hook returns [useTourActions]
+info:defer-reads-returned-only	features/tours/hooks/use-tours.ts:70	useDemoSelector() value staffRole read only in callbacks the hook returns [useTourActions]
+info:defer-reads-returned-only	features/tours/hooks/use-tours.ts:71	useLocale() value language read only in callbacks the hook returns [useTourActions]
+info:defer-reads-returned-only	features/catalog/hooks/use-product-card.ts:25	useDemoSelector() value orders read only in callbacks the hook returns [useProductCard]
+info:defer-reads-returned-only	features/catalog/hooks/use-product-card.ts:26	useDemoSelector() value demoReviews read only in callbacks the hook returns [useProductCard]
+info:defer-reads-returned-only	features/auth/hooks/use-require-sign-in.tsx:27	useRouterState() value here read only in callbacks the hook returns [useRequireSignIn]
+info:defer-reads-returned-only	features/tours/booking/booking-summary.tsx:19	useLocale() value intlLocale read only in callbacks the hook returns [useBookingFormat]
+info:defer-reads-returned-only	features/checkout/components/trip-profile.tsx:142	useLocale() value intlLocale read only in callbacks the hook returns [useShortDate]
+info:defer-reads-returned-only	features/reviews/hooks/use-order-reviews.ts:40	useDemoNow() value now read only in callbacks the hook returns [useOrderReviews]
+info:defer-reads-returned-only	features/requests/hooks/use-advice.ts:29	useLocale() value language read only in callbacks the hook returns [useAdvice]
+info:defer-reads-returned-only	features/tours/merchant/shared.tsx:12	useLocale() value intlLocale read only in callbacks the hook returns [useTourFormatting]
+info:defer-reads-returned-only	features/merchant/products/components/sections-editor.tsx:438	useLocale() value language read only in callbacks the hook returns [useKeepsakeInfo]
+info:defer-reads-returned-only	features/merchant/products/components/sections-editor.tsx:438	useLocale() value intlLocale read only in callbacks the hook returns [useKeepsakeInfo]
+info:defer-reads-returned-only	features/merchant/products/components/sections-editor.tsx:439	useDemoSelector() value orders read only in callbacks the hook returns [useKeepsakeInfo]
+info:deferred-value-light-only	features/account/components/edit-profile.tsx:189	name typed -> <Button isDisabled> [EditProfile]
+info:deferred-value-light-only	features/tours/merchant/payment-sheet.tsx:229	note typed -> <Button isDisabled>, <SheetFrame footer>, <NumberField isInvalid> [TourPaymentSheet]
+info:deferred-value-light-only	features/merchant/partners/components/payout-sheet.tsx:212	reference typed -> <NumberField isInvalid> [PayoutSheet]
+info:deferred-value-light-only	features/merchant/products/components/pickup-points.tsx:132	draft typed -> <LanguageTabs missing>, <LocalizedField isInvalid> [PickupPointSheet]
+info:deferred-value-light-only	features/requests/merchant/components/question-set-editor.tsx:256	value typed -> <Button isDisabled> [RecipientCard]
+info:text-input-calls	features/tours/booking/tour-review-page.tsx:244	TextField.onChange calls updateDraft [TourReviewPage]
+info:text-input-calls	features/tours/booking/tour-review-page.tsx:256	TextField.onChange calls updateDraft [TourReviewPage]
+info:text-input-calls	features/tours/booking/tour-review-page.tsx:268	TextField.onChange calls updateDraft [TourReviewPage]
+info:text-input-calls	features/requests/components/advice-answer.tsx:126	TextField.onChange calls onChange [AdviceAnswer]
+info:text-input-calls	features/requests/components/advice-answer.tsx:126	TextField.onChange calls v.trim [AdviceAnswer]
+info:text-input-calls	features/requests/components/advice-chat.tsx:495	TextField.onChange calls advice.setEmail [AdviceChat]
+info:text-input-calls	features/merchant/partners/components/add-partner-sheet.tsx:136	TextField.onChange calls suggestCode [AddPartnerSheet]
+info:text-input-calls	components/auto-textarea.tsx:66	TextArea.onInput calls fit [AutoTextArea]
+info:text-input-calls	components/auto-textarea.tsx:66	TextArea.onInput calls onInput [AutoTextArea]
+info:text-input-calls	features/merchant/products/components/editor-parts.tsx:309	TextField.onChange calls onChange [LocalizedField]
+info:text-input-calls	features/requests/merchant/components/question-sheet.tsx:273	TextField.onChange calls editOption [QuestionSheet]
+info:text-input-calls	features/merchant/products/components/gift-editor.tsx:205	TextField.onChange calls changeVariant [OptionsCard]
+info:text-input-calls	features/merchant/products/components/tour-editor.tsx:611	TextField.onChange calls set [MaintenanceCard]
+info:text-input-calls	features/merchant/products/components/tour-editor.tsx:621	TextField.onChange calls set [MaintenanceCard]
+info:memo-hook-below-threshold	features/tours/booking/guest-tour-booking-page.tsx:66	useOwnedBooking() 1 render-time array calls
+info:memo-hook-below-threshold	features/tours/booking/tour-confirmed-page.tsx:20	useOwnedBooking() 1 render-time array calls
+info:memo-hook-below-threshold	features/transactions/components/transaction-list.tsx:31	useGuestOrders() 2 render-time array calls
+info:memo-hook-below-threshold	routes/_guest/cart.tsx:48	useCartView() 11 render-time array calls
+info:memo-hook-below-threshold	features/lab/blog-home/reels.tsx:264	useBlogData() 1 render-time array calls
+info:memo-hook-below-threshold	routes/partner/$token.tsx:45	usePartnerAccess() 2 render-time array calls
+info:memo-hook-below-threshold	features/merchant/today/components/today-overview.tsx:112	useMerchantToday() 5 render-time array calls
+info:memo-hook-below-threshold	routes/_guest/cart_.review.tsx:38	useReview() 7 render-time array calls
+info:memo-hook-below-threshold	features/checkout/components/request-sent.tsx:34	useRequestSent() 7 render-time array calls
+info:memo-hook-below-threshold	routes/store/orders/$orderId.tsx:23	useOrder() 1 render-time array calls
+info:memo-hook-below-threshold	routes/store/partners/$partnerId.tsx:20	usePartnerDetail() 9 render-time array calls
+info:memo-hook-below-threshold	routes/_guest/account_.orders.$orderId.tsx:50	useOwnOrder() 1 render-time array calls
+info:memo-hook-below-threshold	routes/store/requests/advice/$requestId.tsx:21	useAdviceRequest() 2 render-time array calls
+info:memo-hook-below-threshold	routes/_guest/account_.orders.$orderId_.pay.tsx:41	useOwnOrder() 1 render-time array calls
+info:skeleton-early-return	features/transactions/components/transaction-list.tsx:37	TransactionList: before the skeleton return: useGuestOrders(2)
+info:skeleton-early-return	routes/_guest/cart.tsx:28	CartPage: before the skeleton return: no custom hooks
+info:skeleton-early-return	features/merchant/sales/components/sales-overview.tsx:768	SalesOverview: before the skeleton return: useSalesOverview(25)
+info:skeleton-early-return	features/merchant/today/components/today-overview.tsx:125	TodayOverview: before the skeleton return: useMerchantToday(5), useOverdueCheck(0)
+info:skeleton-early-return	routes/_guest/cart_.review.tsx:21	ReviewPage: before the skeleton return: no custom hooks
+info:skeleton-early-return	routes/_guest/cart_.sent.tsx:24	SentPage: before the skeleton return: no custom hooks
+info:skeleton-early-return	routes/_guest/gifts/$slug.tsx:27	GiftDetailPage: before the skeleton return: no custom hooks
+info:skeleton-early-return	routes/_guest/stories/$slug.tsx:26	ArticleRoute: before the skeleton return: useCanGoBack(0)
+info:skeleton-early-return	features/reports/components/report-pages.tsx:217	ReportsMoneyPage: before the skeleton return: useReportPages(0), useEmpty(0)
+info:skeleton-early-return	features/reports/components/report-pages.tsx:347	ReportsSalesPage: before the skeleton return: useReportPages(0), useEmpty(0)
+info:skeleton-early-return	features/reports/components/report-pages.tsx:536	ReportsGuestsPage: before the skeleton return: useReportPages(0), useEmpty(0)
+info:skeleton-early-return	features/reports/components/report-pages.tsx:626	ReportsMarginPage: before the skeleton return: useReportPages(0)
+info:skeleton-early-return	features/reports/components/report-pages.tsx:749	ContentAnalyticsPage: before the skeleton return: useReportPages(0)
+info:skeleton-early-return	features/reports/components/report-pages.tsx:850	InquiriesAnalyticsPage: before the skeleton return: useReportPages(0)
+info:skeleton-early-return	routes/store/orders/$orderId.tsx:25	OrderDetailPage: before the skeleton return: useOrder(1)
+info:skeleton-early-return	routes/store/partners/$partnerId.tsx:22	PartnerDetailPage: before the skeleton return: usePartnerDetail(9)
+info:skeleton-early-return	features/merchant/partners/components/partner-analytics-page.tsx:234	PartnersAnalyticsPage: before the skeleton return: useReportPages(0), usePartnerAnalytics(25)
+info:skeleton-early-return	routes/_guest/account_.orders.$orderId.tsx:55	OrderDetailPage: before the skeleton return: useDemo(0), useCanGoBack(0), useRequireSignIn(0), useOwnOrder(1)
+info:skeleton-early-return	routes/store/content/articles/$articleId.tsx:36	ArticleEditorPage: before the skeleton return: useDemo(0)
+info:skeleton-early-return	routes/store/products/gifts/$productId.tsx:40	GiftEditorPage: before the skeleton return: useDemo(0)
+info:skeleton-early-return	routes/store/products/tours/$tourId.tsx:38	TourEditorPage: before the skeleton return: useDemo(0)
+info:skeleton-early-return	routes/store/requests/advice/$requestId.tsx:23	AdviceRequestPage: before the skeleton return: useAdviceRequest(2)
+info:skeleton-early-return	routes/_guest/account_.orders.$orderId_.pay.tsx:43	PayPage: before the skeleton return: useDemo(0), useCanGoBack(0), useRequireSignIn(0), useOwnOrder(1)
+info:defer-reads-effect-only	routes/r.$code.tsx:15	useParams() value code read only in effects/handlers [ReferralLink]
+info:defer-reads-effect-only	routes/r.$code.tsx:17	useDemoSelector() value demoPartners read only in effects/handlers [ReferralLink]
+info:useDemo-census	features/notifications/components/mail-list.tsx:19	MailList	state[render/deferred] paths=state.data.pickupPlaces,state.data.guests,state.data.partners,state.role actions=setRole
+info:useDemo-census	features/notifications/components/mail-panel.tsx:17	MailPanel	state[render] paths=state.data.mail
+info:useDemo-census	features/demo/components/prototype-bar.tsx:78	PrototypeBar	state[render] paths=state.data.partners,state.role,state.data.referralVisits,state.clockStartedAt actions=setRole,reset
+info:useDemo-census	features/auth/hooks/use-sign-in.ts:38	useSignIn	state[returned] paths=state.clockStartedAt actions=update
+info:useDemo-census	features/auth/components/sign-in-screen.tsx:27	SignInScreen	state[render] paths=state.data.signedInGuestId
+info:useDemo-census	features/orders/hooks/use-orders.ts:39	useOrderActions	state[render/returned] paths=state.role,state.data.orders,state (whole state passed on) actions=update
+info:useDemo-census	features/checkout/hooks/use-trip-profile.ts:14	useTripProfile	state[render] paths=state.data.signedInGuestId,state.data actions=update
+info:useDemo-census	features/reviews/hooks/use-order-reviews.ts:39	useOrderReviews	state[render/returned] paths=state.data.products,state.data.reviews,state.data actions=update
+info:useDemo-census	features/lab/blog-home/data.ts:190	useBlogData	state[render/returned] paths=state.data.articles,state.data.tours,state.data.products
+info:useDemo-census	routes/lab.cards.tsx:66	CardLab	state[render] paths=state.data.products
+info:useDemo-census	routes/lab.order-cards.tsx:149	useLabRows	state[render] paths=state.data,state.data.pickupPlaces
+info:useDemo-census	routes/lab.review.tsx:99	useSampleOrders	state[render] paths=state.data.pickupPlaces
+info:useDemo-census	routes/lab.seller.tsx:55	SellerLab	state[render] paths=state.data.pickupPlaces
+info:useDemo-census	features/partners/hooks/use-partner-access.ts:43	useCodeStep	state[returned] paths=state.clockStartedAt actions=update
+info:useDemo-census	features/partners/hooks/use-partner-access.ts:148	usePartnerAccess	state[render] paths=state.data.partners,state.data.partnerSessions
+info:useDemo-census	routes/partner/index.tsx:12	PartnerHome	state[render] paths=state.data
+info:useDemo-census	features/partners/report/hooks/use-partner-report.ts:99	usePartnerReport	state[render] paths=state.data.partners,state.data,state.data.tours
+info:useDemo-census	features/merchant/sales/hooks/use-sales-overview.ts:140	useSalesOverview	state[render] paths=state.data
+info:useDemo-census	features/partners/report/hooks/use-partner-overview.ts:71	usePartnerOverview	state[render] paths=state.data
+info:useDemo-census	features/merchant/today/hooks/use-merchant-today.ts:55	useMerchantToday	state[render] paths=state.data
+info:useDemo-census	features/merchant/calendar/use-calendar-items.ts:38	useCalendarItems	state[render] paths=state.data
+info:useDemo-census	features/reports/hooks/use-reports.ts:97	useReports	state[render] paths=state.data,state.data.articles,state.data.adviceRequests
+info:useDemo-census	features/reports/hooks/use-report-pages.tsx:39	useReportPagesState	state[render] paths=state.data,state.data.adviceRequests,state.data.privateTourRequests
+info:useDemo-census	features/checkout/hooks/use-review.ts:39	useReview	state[render/returned] paths=state,state.data.pickupPlaces,state.data.products (whole state passed on) actions=update
+info:useDemo-census	routes/_guest/gifts/index.tsx:40	GiftsPage	state[render] paths=state.data.subcategories,state.data.products
+info:useDemo-census	features/catalog/hooks/use-gift-detail.ts:42	useGiftDetail	state[render] paths=state.data.products,state.data,state.data.subcategories
+info:useDemo-census	features/requests/components/advice-sent.tsx:18	AdviceSent	state[render] paths=state.data.adviceRequests
+info:useDemo-census	features/content/components/stories-page.tsx:46	StoriesPage	state[render] paths=state.data.articles
+info:useDemo-census	features/tours/discovery/tour-detail-page.tsx:86	TourDetail	state[render] paths=state.data.pickupPlaces
+info:useDemo-census	features/tours/merchant/booking-page.tsx:164	CommissionCard	slice useDemo().state.data.partners
+info:useDemo-census	features/content/merchant/hooks/use-merchant-comments.ts:43	useMerchantComments	state[render/returned] paths=state.data,state.role,state.clockStartedAt actions=update
+info:useDemo-census	features/content/merchant/hooks/use-merchant-reviews.ts:45	useMerchantReviews	state[render] paths=state.data,state.data.tours,state.role actions=update
+info:useDemo-census	features/content/merchant/hooks/use-merchant-articles.ts:59	useMerchantArticles	state[render] paths=state.data
+info:useDemo-census	features/merchant/orders/hooks/use-merchant-orders.ts:80	useMerchantOrders	state[render] paths=state.data
+info:useDemo-census	features/merchant/order-detail/hooks/use-merchant-order-detail.ts:151	useMerchantOrderDetail	state[render] paths=state.data.guests,state.data.pickupPlaces,state.data.partners,state.data,state.data.products,state.clockStartedAt,state (whole state passed on)
+info:useDemo-census	features/merchant/partners/hooks/use-merchant-partners.ts:30	useMerchantPartners	state[render] paths=state.data,state.data.partners
+info:useDemo-census	features/merchant/partners/hooks/use-partner-detail.ts:65	usePartnerDetail	state[render] paths=state.data.partners,state.data,state.data.guests,state.role,state.data.partnerPayouts
+info:useDemo-census	features/merchant/partners/hooks/use-partner-analytics.ts:63	usePartnerAnalytics	state[render] paths=state.data.partners,state.data,state.data.commissionAdjustments
+info:useDemo-census	features/merchant/products/hooks/use-merchant-products.ts:68	useMerchantProducts	state[render] paths=state.data,state.data.tours
+info:useDemo-census	features/merchant/products/hooks/use-merchant-products.ts:171	useProductArchive	actions-only(update)
+info:useDemo-census	features/merchant/products/components/pickup-points.tsx:55	PickupPointSheet	actions-only(update)
+info:useDemo-census	features/merchant/products/components/pickup-points.tsx:194	PickupPoints	state[render] paths=state.data.pickupPlaces
+info:useDemo-census	features/merchant/products/components/merchant-products.tsx:79	MerchantProducts	slice useDemo().state.data
+info:useDemo-census	features/merchant/products/hooks/use-subcategories.ts:13	useSubcategories	state[render] paths=state.data actions=update
+info:useDemo-census	features/reports/hooks/use-cost-data.ts:75	useCostData	state[render] paths=state.data.costs,state.data.products,state.data.tours,state.data.guests,state.data
+info:useDemo-census	features/requests/merchant/hooks/use-merchant-requests.ts:87	useMerchantRequests	state[render] paths=state.data actions=update
+info:useDemo-census	features/transactions/order-detail/hooks/use-order-detail.ts:139	useOwnOrder	state[render] paths=state.data.orders,state.data.signedInGuestId
+info:useDemo-census	features/transactions/order-detail/hooks/use-order-detail.ts:149	useOrderDetail	state[render] paths=state.data.products,state.data.pickupPlaces
+info:useDemo-census	routes/_guest/account_.orders.$orderId.tsx:44	OrderDetailPage	state[render] paths=state.data.signedInGuestId
+info:useDemo-census	features/requests/components/private-tour-sent.tsx:17	PrivateTourSent	state[render] paths=state.data.privateTourRequests
+info:useDemo-census	features/content/merchant/hooks/use-article-editor.ts:64	useArticleEditor	state[render/deferred/returned] paths=state.data,state.role,state.data.tours,state.data.products,state.data.orders,state.clockStartedAt actions=update
+info:useDemo-census	routes/store/content/articles/$articleId.tsx:31	ArticleEditorPage	state[render] paths=state.data.articles
+info:useDemo-census	features/merchant/products/hooks/use-gift-editor.ts:286	useGiftEditor	state[render/returned] paths=state.data.pickupPlaces,state.data.orders,state.data.products,state.data.subcategories,state,state.data (whole state passed on) actions=update
+info:useDemo-census	features/merchant/products/components/gift-editor.tsx:315	PhotoCard	state[render] paths=state.data.subcategories
+info:useDemo-census	features/merchant/products/components/gift-editor.tsx:481	PlacesCard	state[render] paths=state.data.pickupPlaces
+info:useDemo-census	features/merchant/products/components/gift-editor.tsx:640	GiftReview	state[render] paths=state.data.subcategories,state.data.pickupPlaces
+info:useDemo-census	features/merchant/products/components/gift-editor.tsx:816	GiftEditor	state[render] paths=state.data.subcategories
+info:useDemo-census	routes/store/products/gifts/$productId.tsx:36	GiftEditorPage	state[render] paths=state.data.products
+info:useDemo-census	features/merchant/products/hooks/use-tour-editor.ts:321	useTourWrite	actions-only(update)
+info:useDemo-census	features/merchant/products/hooks/use-tour-editor.ts:422	useTourEditor	state[render/returned] paths=state.data.tours,state,state.data (whole state passed on)
+info:useDemo-census	routes/store/products/tours/$tourId.tsx:32	TourEditorPage	state[render] paths=state.data.tours
+info:useDemo-census	routes/_guest/account_.orders.$orderId_.pay.tsx:35	PayPage	state[render] paths=state.data.signedInGuestId
+info:useDemo-census	features/tours/booking/booking-demo-control.tsx:33	TourBookingDemoControl	state[render] paths=state.data.tours,state.clockStartedAt,state.data.guests,state.data.signedInGuestId actions=update
+info:useDemo-census	features/transactions/order-detail/components/order-detail-demo-control.tsx:18	OrderDetailDemoControl	state[render] paths=state.data.orders,state.data.signedInGuestId actions=update
+info:store-writes	features/notifications/components/mail-list.tsx:75	setRole ctx=deferred trigger=onClick on <a> [MailList] guest
+info:store-writes	features/demo/components/prototype-bar.tsx:90	setRole ctx=deferred trigger=deferred [PrototypeBar] guest
+info:store-writes	features/demo/components/prototype-bar.tsx:98	setRole ctx=deferred trigger=deferred [PrototypeBar] guest
+info:store-writes	features/auth/hooks/use-sign-in.ts:60	update ctx=returned trigger=returned [useSignIn] guest
+info:store-writes	features/auth/hooks/use-sign-in.ts:75	update ctx=returned trigger=returned [useSignIn] guest
+info:store-writes	features/cart/hooks/use-cart.ts:38	update ctx=returned trigger=returned [useCart] guest
+info:store-writes	features/cart/hooks/use-cart.ts:51	update ctx=returned trigger=returned [useCart] guest
+info:store-writes	features/cart/hooks/use-cart.ts:61	update ctx=returned trigger=returned [useCart] guest
+info:store-writes	features/cart/hooks/use-cart.ts:70	update ctx=returned trigger=returned [useCart] guest
+info:store-writes	features/cart/hooks/use-cart.ts:99	update ctx=returned trigger=returned [useCart] guest
+info:store-writes	features/cart/hooks/use-cart.ts:112	update ctx=returned trigger=returned [useCart] guest
+info:store-writes	components/layout/merchant-shell.tsx:394	setRole ctx=deferred trigger=onPress on <Button> [MerchantShell] merchant
+info:store-writes	features/catalog/hooks/use-favourites.ts:15	update ctx=returned trigger=returned [useFavourites] guest
+info:store-writes	features/orders/hooks/use-orders.ts:54	update ctx=returned trigger=returned [useOrderActions] guest
+info:store-writes	features/tours/hooks/use-tours.ts:75	update ctx=returned trigger=returned [useTourActions] guest
+info:store-writes	features/tours/hooks/use-tours.ts:142	update ctx=returned trigger=returned [useTourActions] guest
+info:store-writes	features/tours/hooks/use-tours.ts:283	update ctx=returned trigger=returned [useTourActions] guest
+info:store-writes	features/tours/hooks/use-tours.ts:294	update ctx=returned trigger=returned [useTourActions] guest
+info:store-writes	features/tours/hooks/use-tours.ts:300	update ctx=returned trigger=returned [useTourActions] guest
+info:store-writes	features/tours/hooks/use-tours.ts:305	update ctx=returned trigger=returned [useTourActions] guest
+info:store-writes	features/tours/hooks/use-tours.ts:308	update ctx=returned trigger=returned [useTourActions] guest
+info:store-writes	features/account/components/edit-profile.tsx:53	update ctx=deferred trigger=deferred [EditProfile] guest
+info:store-writes	features/checkout/hooks/use-trip-profile.ts:19	update ctx=returned trigger=returned [useTripProfile] guest
+info:store-writes	features/reviews/hooks/use-order-reviews.ts:82	update ctx=returned trigger=returned [useOrderReviews] guest
+info:store-writes	features/tours/reviews/tour-booking-review.tsx:87	update ctx=deferred trigger=deferred [TourBookingReview] guest
+info:store-writes	routes/_guest/account.tsx:55	update ctx=deferred trigger=deferred [AccountPage] guest
+info:store-writes	features/requests/hooks/use-advice.ts:52	update ctx=returned trigger=returned [useAdvice] guest
+info:store-writes	features/requests/hooks/use-advice.ts:76	update ctx=returned trigger=returned [useAdvice] guest
+info:store-writes	features/requests/hooks/use-advice.ts:99	update ctx=returned trigger=returned [useAdvice] guest
+info:store-writes	features/planner/components/planner-chat.tsx:244	update ctx=effect trigger=effect [PlannerChat] guest
+info:store-writes	features/planner/components/planner-chat.tsx:385	setRole ctx=deferred trigger=onPress on <Button> [PlannerChat] guest
+info:store-writes	features/partners/hooks/use-partner-access.ts:66	update ctx=returned trigger=returned [useCodeStep] merchant
+info:store-writes	features/partners/hooks/use-partner-access.ts:112	update ctx=returned trigger=returned [useCodeStep] merchant
+info:store-writes	routes/r.$code.tsx:28	update ctx=effect trigger=effect [ReferralLink] guest
+info:store-writes	features/checkout/hooks/use-review.ts:57	update ctx=returned trigger=returned [useReview] guest
+info:store-writes	features/content/hooks/use-article.ts:171	update ctx=returned trigger=returned [useArticle] guest
+info:store-writes	features/requests/hooks/use-private-tour.ts:56	update ctx=returned trigger=returned [usePrivateTour] guest
+info:store-writes	features/content/merchant/hooks/use-merchant-comments.ts:97	update ctx=returned trigger=returned [useMerchantComments] merchant
+info:store-writes	features/content/merchant/hooks/use-merchant-reviews.ts:116	update ctx=returned trigger=returned [useMerchantReviews] merchant
+info:store-writes	features/partners/hooks/use-partner-actions.ts:59	update ctx=render trigger=render [usePartnerActions] merchant
+info:store-writes	features/partners/hooks/use-partner-actions.ts:73	update ctx=render trigger=render [usePartnerActions] merchant
+info:store-writes	features/partners/hooks/use-partner-actions.ts:118	update ctx=render trigger=render [usePartnerActions] merchant
+info:store-writes	features/merchant/products/hooks/use-merchant-products.ts:174	update ctx=returned trigger=returned [useProductArchive] merchant
+info:store-writes	features/merchant/products/components/pickup-points.tsx:93	update ctx=deferred trigger=deferred [PickupPointSheet] merchant
+info:store-writes	features/merchant/products/hooks/use-subcategories.ts:18	update ctx=returned trigger=returned [useSubcategories] merchant
+info:store-writes	features/reports/hooks/use-cost-actions.ts:23	update ctx=render trigger=render [useCostActions] merchant
+info:store-writes	features/requests/merchant/hooks/use-merchant-requests.ts:165	update ctx=returned trigger=returned [useMerchantRequests] merchant
+info:store-writes	features/requests/merchant/hooks/use-question-set.ts:25	update ctx=returned trigger=returned [useQuestionSet] merchant
+info:store-writes	features/content/merchant/hooks/use-article-editor.ts:253	update ctx=returned trigger=returned [useArticleEditor] merchant
+info:store-writes	features/content/merchant/hooks/use-article-editor.ts:287	update ctx=returned trigger=returned [useArticleEditor] merchant
+info:store-writes	features/content/merchant/hooks/use-article-editor.ts:317	update ctx=returned trigger=returned [useArticleEditor] merchant
+info:store-writes	features/merchant/products/hooks/use-gift-editor.ts:576	update ctx=returned trigger=returned [useGiftEditor] merchant
+info:store-writes	features/merchant/products/hooks/use-tour-editor.ts:324	update ctx=returned trigger=returned [useTourWrite] merchant
+info:store-writes	features/requests/merchant/hooks/use-advice-request.ts:41	update ctx=effect trigger=effect [useAdviceRequest] merchant
+info:store-writes	features/checkout/components/checkout-demo-control.tsx:52	update ctx=deferred trigger=onPress on <Button> [CheckoutDemoControl] guest
+info:store-writes	features/tours/booking/booking-demo-control.tsx:72	update ctx=deferred trigger=onPress on <Button> [TourBookingDemoControl] guest
+info:store-writes	features/tours/booking/booking-demo-control.tsx:94	update ctx=deferred trigger=onPress on <Button> [TourBookingDemoControl] guest
+info:store-writes	features/tours/booking/booking-demo-control.tsx:180	update ctx=deferred trigger=onPress on <Button> [TourBookingDemoControl] guest
+info:store-writes	features/tours/discovery/tours-demo-control.tsx:26	update ctx=deferred trigger=onPress on <Button> [ToursDemoControl] guest
+info:store-writes	features/transactions/components/transactions-demo-control.tsx:25	update ctx=deferred trigger=onPress on <Button> [TransactionsDemoControl] guest
+info:store-writes	features/transactions/order-detail/components/order-detail-demo-control.tsx:47	update ctx=deferred trigger=onPress on <Button> [OrderDetailDemoControl] guest

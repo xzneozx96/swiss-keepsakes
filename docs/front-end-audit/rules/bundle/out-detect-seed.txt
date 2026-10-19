@@ -1,0 +1,55 @@
+
+## bundle-analyzable-paths (4 hits)
+HIT non-literal import()	src/dyn.ts:4	import(PAGES[name])
+HIT new URL(non-literal, import.meta.url)	src/dyn.ts:5
+HIT import.meta.glob eager over code modules	src/dyn.ts:6
+HIT build log	[plugin vite:dynamic-import-vars] src/dyn.ts: invalid import "import(PAGES[name])". This dynamic import cannot be analyz
+info build log lines scanned for analysis warnings: 3
+info literal import()/require()/new URL sites: 1
+
+## bundle-barrel-imports (2 hits)
+HIT barrel src/components/icons.ts (10 wrapper consts; in first load: true; 10 named imports from 2 files)	exports 10, used by first-load code 1, lazy-only 9, unused 0	lazy-only targets rendered in first load: 22500 B
+    lazy-only: TwoIcon ThreeIcon FourIcon FiveIcon SixIcon SevenIcon EightIcon NineIcon TenIcon
+info pkg react	files importing 3	sideEffects "n/a"	first-load rendered 0 B
+info pkg @tanstack/react-router	files importing 2	sideEffects "n/a"	first-load rendered 0 B
+info pkg qrcode.react	files importing 1	sideEffects "n/a"	first-load rendered 31000 B
+info pkg fakelib	files importing 1	sideEffects "n/a"	first-load rendered 25000 B
+HIT @heroui/react calendar in first load	9000 B	no first-load user
+
+## bundle-conditional (7 hits)
+CANDIDATE pkg	qrcode.react	31000 B	first-load importers: src/a.tsx
+CANDIDATE pkg	fakelib	25000 B	first-load importers: src/routes/leaky.tsx
+info framework pkg in first load	react-aria	12000 B
+CANDIDATE src	src/features/x/components/thing.tsx	30000 B	first-load importers: src/routes/leaky.tsx
+CANDIDATE src	src/i18n/en.ts	20000 B	first-load importers: src/main.tsx
+CANDIDATE src	src/features/merchant/messages.ts	15000 B	first-load importers: src/i18n/en.ts
+CANDIDATE locale strings	1 modules, 12000 B rendered; en-US + de-DE 0 B
+CANDIDATE merchant message files imported by i18n/en.ts	1 files, 15000 B rendered	src/features/merchant/messages.ts
+
+## bundle-defer-third-party (7 hits)
+HIT telemetry dependency	@vercel/analytics
+HIT telemetry call	src/main.tsx:7	declare const gtag: (...args: unknown[]) => void;
+HIT telemetry call	src/main.tsx:8	gtag("config", "G-SEED");
+HIT external script in index.html	https://www.googletagmanager.com/gtag/js?id=G-SEED (blocking)
+HIT render-blocking external stylesheet	https://fonts.example.com/blocking.css
+HIT maplibre-gl CSS in first-load stylesheet assets/index.css	6 selectors (.maplibregl-map .maplibregl-canvas .maplibregl-ctrl)	library CSS imported by: -
+HIT <video> preload=(default)	src/player.tsx:2
+
+## bundle-dynamic-imports (3 hits)
+HIT side-effect import in route file	src/routes/leaky.tsx:5	import "fakelib/dist/fakelib.css";
+HIT route option reads THING_TABS from component module	src/routes/leaky.tsx	src/features/x/components/thing.tsx	first-load: true
+HIT heavy package in first load	qrcode.react	31000 B
+info heavy packages only in lazy chunks: 
+
+## bundle-preload (2 hits)
+HIT lazy() with no hover/focus preload	src/lazy-panel.tsx:4	lazy(() => import("./heavy"))
+HIT createRouter without defaultPreload	src/main.tsx:6
+info <Link preload=...> props: 0; router.preloadRoute/loadRouteChunk calls: 0
+
+rule	hits
+bundle-analyzable-paths	4
+bundle-barrel-imports	2
+bundle-conditional	7
+bundle-defer-third-party	7
+bundle-dynamic-imports	3
+bundle-preload	2

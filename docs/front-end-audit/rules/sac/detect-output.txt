@@ -1,0 +1,77 @@
+server-premise:directives	0
+server-premise:ssr-or-node-http	0
+server-premise:route-handlers	0
+server-premise:react-cache-lru	0
+server-premise:after()	0
+async-parallel	4
+async-dependencies:chain	3
+async-defer-await	4
+async-cheap-condition-before-await	0
+client-event-listeners	25
+client-passive-event-listeners	0
+client-passive-event-listeners:unresolved-event-name	3
+client-passive-event-listeners:react-prop	5
+client-localstorage-schema:direct-storage	5
+client-swr-dedup:fetch	3
+client-swr-dedup:cache-lib-import	0
+
+## async-parallel
+  features/merchant/products/components/itinerary/itinerary-map.tsx:90  independent of the await at line 84
+  features/planner/lib/transport.ts:71  independent of the await at line 69
+  features/planner/lib/transport.ts:88  independent of the await at line 81
+  features/tours/map/tour-itinerary-map.tsx:102  independent of the await at line 90
+## async-dependencies:chain
+  features/merchant/products/components/itinerary/use-place-search.ts:101  awaits a value from the await above
+  features/tours/map/aerial-style.ts:112  awaits a value from the await above
+  features/tours/map/aerial-style.ts:53  awaits a value from the await above
+## async-defer-await
+  features/merchant/products/components/itinerary/itinerary-map.tsx:84  awaited value unused by the early exit below
+  features/merchant/products/components/itinerary/itinerary-map.tsx:90  awaited value unused by the early exit below
+  features/tours/map/tour-itinerary-map.tsx:90  awaited value unused by the early exit below
+  features/tours/map/tour-itinerary-map.tsx:102  awaited value unused by the early exit below
+## client-event-listeners
+  components/background-music.tsx:99  document.<type>
+  components/background-music.tsx:234  document.<type>
+  components/background-music.tsx:235  audio.play
+  components/background-music.tsx:236  audio.pause
+  components/background-music.tsx:237  document.visibilitychange
+  components/background-music.tsx:258  window.load
+  components/music-sheet.tsx:182  audio.<type>
+  features/content/components/article-contents.tsx:60  window.scroll
+  features/content/components/article-contents.tsx:61  window.resize
+  features/lab/blog-home/reels.tsx:288  window.keydown
+  features/lab/calendar/calendar-lab.tsx:54  media.change
+  features/merchant/calendar/calendar-page.tsx:66  media.change
+  features/merchant/products/components/itinerary/itinerary-map.tsx:214  element.click
+  features/merchant/products/components/itinerary/itinerary-map.tsx:298  window.keydown
+  features/merchant/products/components/step-shell.tsx:475  viewport.resize
+  features/merchant/products/components/step-shell.tsx:476  window.resize
+  features/merchant/products/components/step-shell.tsx:477  document.focusin
+  features/merchant/products/components/step-shell.tsx:478  document.focusout
+  features/planner/components/planner-chat.tsx:290  window.resize
+  features/planner/lib/transport.ts:9  signal.abort
+  features/reports/components/report-charts.tsx:31  list.change
+  features/requests/components/advice-chat.tsx:184  window.resize
+  features/tours/map/tour-itinerary-map.tsx:200  button.click
+  features/tours/map/tour-itinerary-map.tsx:333  window.keydown
+  hooks/use-is-wide.ts:8  list.change
+## client-passive-event-listeners:unresolved-event-name
+  components/background-music.tsx:99  type
+  components/background-music.tsx:234  type
+  components/music-sheet.tsx:182  type
+## client-passive-event-listeners:react-prop
+  components/photo-gallery.tsx:62  onScroll
+  components/photo-gallery.tsx:174  onScroll
+  features/lab/blog-home/reels.tsx:225  onScroll
+  features/lab/calendar/calendar-lab.tsx:216  onScroll
+  features/merchant/calendar/calendar-page.tsx:230  onScroll
+## client-localstorage-schema:direct-storage
+  features/planner/lib/session.ts:18  sessionStorage
+  features/planner/lib/session.ts:26  sessionStorage
+  features/planner/lib/session.ts:51  sessionStorage
+  lib/storage.ts:7  localStorage
+  lib/storage.ts:20  localStorage
+## client-swr-dedup:fetch
+  features/merchant/products/components/itinerary/use-place-search.ts:98
+  features/tours/map/aerial-style.ts:52
+  features/tours/map/aerial-style.ts:129

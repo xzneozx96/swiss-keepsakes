@@ -1,0 +1,36 @@
+rule	outcome
+bundle-dynamic-imports	FIXED. validateSearch constants for order detail, cost data, partners and the lab story list moved into light lib/search-params modules. First-load JS 495,660 to 354,772 B gz together with the icons fix.
+bundle-barrel-imports	FIXED. components/icons.ts is now 86 plain re-exports, so lazy screens bring their own icons. The React.memo wrapper is gone; the compiler memoizes the call sites.
+bundle-conditional	PARTLY FIXED. qrcode.react is now a lazy chunk (verified: not requested on first paint, loaded on choosing a partner QR). NOT DONE: merchant messages out of en.ts (about 15 to 30 KB, mail renderers read the dictionaries directly) and React Aria locale trimming (about 5 to 10 KB, needs a new dependency and a check against en-CH and de-CH). Owner decision.
+bundle-defer-third-party	FIXED. maplibre-gl.css in the lab map route is now imported with the map code, so 10.5 KB gz of blocking CSS left the first load.
+bundle-preload	FIXED. createRouter has defaultPreload "intent". Verified in a browser: hovering the Tours link fetches the tours chunks, and the old build fetched none.
+bundle-analyzable-paths	SATISFIED. No change.
+async-parallel	FIXED. Both map components start the style fetch before awaiting the maplibre import.
+async-suspense-boundaries	LEFT. German-saved visitors wait for the dictionary chunk before first paint. Deliberate (main.tsx comment); a placeholder would need the mount guard changed. Product decision.
+client-swr-dedup	FIXED. loadAerialStyle fetches once per page load, keeps only a successful result, and hands each map its own copy. The fetch itself needs the network and was not exercised.
+client-localstorage-schema	LEFT. sk.demo is demo-only state that the full-stack phase replaces. The planner session key is unversioned and restored without validation (cold).
+client-event-listeners	LEFT. Cold merchant screens; one matchMedia listener per chart card is cheap. The no-deps effect in lab reels.tsx is lab only.
+rendering-resource-hints	LEFT. A static hero preload would also fetch 165 KB for visitors who deep-link into merchant pages, because routing is hash based. fetchPriority high is already set. Revisit with server routing.
+rendering-animate-svg-wrapper	LEFT. 13 sites animate svg icons; the compositor handles the root box. Not measured.
+rendering-usetransition-loading	LEFT. The flags wrap timers, mock delays and double-tap guards where useTransition does not fit.
+rendering-hydration-no-flicker	NOT REPRODUCED. The worker flagged html lang being set in an effect. Measured on the old build: lang was already de when the first content appeared. No change made.
+rerender-defer-reads	FIXED at the three actions-only useDemo sites (useDemoActions). Remaining 13 sites are cold and left.
+rerender-derived-state	PARTLY FIXED. The per-listing favourite flag now uses a boolean selector (useFavourite) in the tour card and tour detail page. The tour card change is unmeasured (the /gifts scenario cannot show it). The 59 page-level whole-state useDemo callers are left: the static trace found none that run per list item and a profile of two scenarios shows library internals on top; no selector comparison was measured.
+rerender-derived-state-no-effect	LEFT. The one violation compares against a ref and fires only on an external URL change.
+rerender-functional-setstate	LEFT. All 8 sites run once per event in synchronous handlers.
+rerender-memo	LEFT. The two heavy hooks run before a skeleton that useSimulatedLoading fakes; it disappears with real data.
+rerender-move-effect-to-event	LEFT. Cold, once per booking; the fix changes createBooking semantics.
+rerender-no-inline-components	LEFT. Six recharts tooltip renderers in cold merchant charts that hold no state.
+rerender-split-combined-hooks	LEFT. Merchant calendar only; the 60 s tick recomputes both halves anyway.
+rerender-transitions	FIXED. useChat in the planner is throttled to 50 ms and the story progress bar no longer sets state per scroll frame.
+rerender-use-ref-transient-values	FIXED for the story progress bar (ref, written in the rAF callback; verified same values 0, 0.78, 1). Avatar crop left (cold).
+js-cache-function-results	PARTLY FIXED. pluralCategory caches PluralRules; the two hot sites use it. 22 cold production sites left.
+js-hoist-regexp	FIXED for the two hot sites (t() placeholder fill and formatMoney). Other regex literals left.
+js-index-maps	FIXED at the one costly site (partner analytics opens, was about 80k iterations per render). The other sites hold under 25 items.
+js-length-check-first	LEFT. Merchant editors only; JSON.stringify dirty checks.
+js-cache-property-access	LEFT. A handful of stops.
+js-combine-iterations	LEFT. Arrays under 200.
+js-flatmap-filter	LEFT. Tiny arrays.
+js-min-max-loop	LEFT. Arrays under 25 items.
+js-set-map-lookups	LEFT. Lists under 25 items except reviews (169).
+js-request-idle-callback	LEFT. A deferred save risks losing the last edit on a quick reload.
