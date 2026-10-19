@@ -1,0 +1,59 @@
+{
+  "tasklist": "e6f3a487-f282-4409-888b-1896e12349cf",
+  "url": "https://applink.larksuite.com/client/todo/task_list?guid=e6f3a487-f282-4409-888b-1896e12349cf",
+  "fields": {
+    "Priority": {
+      "guid": "d691d972-2dd8-4606-bb7b-0396bc757bb9",
+      "options": {
+        "High": "0ed00092-3dbc-4146-ac67-d3bd198d9955",
+        "Medium": "19e6f40f-fdb6-4851-924a-2e7ff66ee354",
+        "Low": "ae2113a8-17b1-4c52-8c7e-08a8d5849b3e"
+      }
+    },
+    "Status": {
+      "guid": "3de3b992-a9d2-43d6-a6a7-2f8ae3c93434",
+      "options": {
+        "Backlog": "3ae0b880-eadb-4ae1-92ea-68de896147d8",
+        "Ready": "f4abadf8-878a-48c9-a893-40b11c46ba62",
+        "In progress": "2dbd2cd2-ee89-4bd8-b9b8-efa107c748c2",
+        "In review": "848a8f87-175c-48dc-9d4b-532f90d08bfa",
+        "Verified": "23efac06-6af6-4e6c-b773-5ea52f139cb1",
+        "Done": "e830ed58-24da-4d68-af4f-296c06c3b9af",
+        "Blocked": "584c122d-10cb-4487-928b-5274e61476cb"
+      }
+    },
+    "Epic": {
+      "guid": "9393de1c-580a-4dd0-afd3-40c7b125c2e8",
+      "options": {
+        "E0 Spikes and harness foundation": "ba1e661d-8b82-4565-b292-166734f513b6",
+        "E1 Monorepo and seams": "550729ba-9d36-4e69-977e-e13e3e48852f",
+        "E2 Identity, catalogue and staging": "a5ce2568-81ed-48e0-8944-c45234387241",
+        "E3 Keepsake orders": "bb8dce40-2c68-41d2-a1a6-4d8b1b3236a6",
+        "E4 Tours and online payment": "9b8fad2c-531f-49ba-bb67-9f5fa28463ed",
+        "E5 Partners": "5bd50bac-4e1c-4b0c-93bc-60f22b675181",
+        "E6 Content, requests, reports and admin": "a33c4298-255a-4576-bce6-4961c8002d37",
+        "E7 Going live": "7c61c6a6-f048-4c88-9082-bb45158c71fd"
+      }
+    }
+  },
+  "sections": {
+    "0": "a24423d2-1c5e-4b48-b627-65a278076fe0",
+    "1": "7055ceb2-23f2-413f-91f6-72d6b024d8b6",
+    "2": "38e37620-b478-4955-89c6-c42212504d76",
+    "3": "cf237b9f-ebe2-47cd-9c2d-9fff61de2382",
+    "4": "173490a3-985b-4c68-aa52-4ad837848f70",
+    "5": "80d53470-0c33-4e8b-9721-0079103f60cb",
+    "6": "aa371889-5303-4612-b5ba-344992ffd8de",
+    "7": "5661a479-3442-48ad-90bb-4015cc815cc0",
+    "8": "a4cf00d2-e5b9-4237-b8fe-5cdeaeee18a4",
+    "9": "88cef836-fea9-4bbd-b13d-3932f3a9d1ea",
+    "10": "08302cb7-1ffd-42e7-b9e3-2db172a0d82e",
+    "11": "d71bf25d-6ed7-46df-aed7-da99054b954c",
+    "12": "e599e87c-6c1e-4936-9bd3-b726c67830ed",
+    "13": "6a0f4f2f-7e38-4b51-8388-2e39211ba90a",
+    "14": "f97bb914-dd66-4013-ba26-d9b9bb0eb00a",
+    "15": "5acdc862-b4e9-494b-be5b-062b49c33d30",
+    "16": "0b91228e-1200-43cc-b79d-e575dc5ed89a",
+    "17": "da4126f2-1e52-4f76-b7bc-a395005872cf"
+  }
+}
