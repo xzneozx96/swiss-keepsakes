@@ -3,9 +3,10 @@ import type { HealthReport } from '../src/platform/health.ts'
 import type { HttpServer } from '../src/platform/http/server.ts'
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { createRoute, z } from '@hono/zod-openapi'
 import { createApiClient, problemSchema, problemTypes } from '@sk/api-contract'
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest'
-import { generateContract, generatedDir } from '../scripts/contract.ts'
+import { contractApp, generateContract, generatedDir } from '../scripts/contract.ts'
 import { createApp } from '../src/platform/http/app.ts'
 import { startHttpServer } from '../src/platform/http/server.ts'
 import { createLogger } from '../src/platform/logger.ts'
@@ -75,5 +76,25 @@ describe('[E1.10] API contract', () => {
 
     expect(problemTypes).not.toContain(later.type)
     expect(problemSchema.parse(later)).toEqual(later)
+  })
+
+  it('[E1.10] generation fails when two different schemas share one .meta id, which zod-to-openapi would merge silently', async () => {
+    const app = contractApp()
+    const first = z.object({ seats: z.int() }).meta({ id: 'Clash' })
+    const second = z.object({ email: z.string() }).meta({ id: 'Clash' })
+    app.openapi(createRoute({ method: 'get', path: '/first', responses: { 200: { description: 'First', content: { 'application/json': { schema: first } } } } }), c => c.json({ seats: 2 }, 200))
+    // Nested, so the check has to look inside schemas, not only at each route's top level.
+    const wrapper = z.object({ guest: second })
+    app.openapi(createRoute({ method: 'get', path: '/second', responses: { 200: { description: 'Second', content: { 'application/json': { schema: wrapper } } } } }), c => c.json({ guest: { email: 'a@b.ch' } }, 200))
+
+    await expect(generateContract(app)).rejects.toThrow('Two different schemas are named "Clash"')
+  })
+
+  it('[E1.10] generation fails when a component is named with .openapi(name), which the id check cannot see', async () => {
+    const app = contractApp()
+    const named = z.object({ seats: z.int() }).openapi('NamedOutsideTheContract')
+    app.openapi(createRoute({ method: 'get', path: '/named', responses: { 200: { description: 'Named', content: { 'application/json': { schema: named } } } } }), c => c.json({ seats: 2 }, 200))
+
+    await expect(generateContract(app)).rejects.toThrow('Schema components NamedOutsideTheContract are not named with .meta({ id })')
   })
 })
