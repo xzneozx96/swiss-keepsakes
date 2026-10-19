@@ -33,3 +33,7 @@ docs/ux/prototype/reports/*.out
 docs/proposal-deck/
 docs/content/lucerne-tours/images/
 docs/content/lucerne-tours/images-commons/
+
+# Spikes: credentials and installs
+spikes/.env
+spikes/node_modules/
