@@ -69,7 +69,7 @@ function setup() {
   }
 
   const logs: { level: number, msg: string }[] = []
-  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }))
+  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }))
   app.use('/api/*', idempotency({ db, clock, actorId: c => c.req.header('X-Test-Actor') ?? 'anonymous' }))
   app.openapi(probeRoute, async (c) => {
     const { name, fail } = c.req.valid('json')

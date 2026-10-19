@@ -1,8 +1,10 @@
 import process from 'node:process'
 import { loadConfig } from './platform/config.ts'
+import { createPool } from './platform/db/client.ts'
+import { createHealthCheck } from './platform/health.ts'
 import { createApp } from './platform/http/app.ts'
 import { startHttpServer } from './platform/http/server.ts'
-import { startWorker } from './platform/jobs/worker.ts'
+import { startJobs } from './platform/jobs/boss.ts'
 import { createLogger } from './platform/logger.ts'
 
 const loaded = loadConfig(process.env)
@@ -12,7 +14,8 @@ if (!loaded.ok) {
 }
 const { config } = loaded
 const logger = createLogger(config.LOG_LEVEL)
-// Shutdown runs these in start order, so the API stops taking requests before the worker stops.
+// Each start puts its stop first, so shutdown runs in reverse start order: the API stops taking requests,
+// then pg-boss stops, then the database pool closes.
 const stops: (() => Promise<void>)[] = []
 
 let stopping = false
@@ -45,12 +48,15 @@ function crash(message: string, error: unknown) {
 }
 
 async function main() {
+  const pool = createPool(config.DATABASE_URL, logger)
+  stops.unshift(() => pool.end())
+  const jobs = await startJobs(config.DATABASE_URL_UNPOOLED, config.ROLE !== 'api', logger)
+  stops.unshift(jobs.stop)
   if (config.ROLE !== 'worker') {
-    const server = await startHttpServer(createApp(logger).fetch, config.HOST, config.PORT, logger)
-    stops.push(server.close)
+    const checkHealth = createHealthCheck({ pool, boss: jobs.boss, logger })
+    const server = await startHttpServer(createApp(logger, checkHealth).fetch, config.HOST, config.PORT, logger)
+    stops.unshift(server.close)
   }
-  if (config.ROLE !== 'api')
-    stops.push(startWorker(logger).stop)
   logger.info({ role: config.ROLE }, 'started')
   process.on('SIGINT', shutdown)
   process.on('SIGTERM', shutdown)

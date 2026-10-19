@@ -1,5 +1,6 @@
 import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
+import type { HealthCheck } from '../health.ts'
 import { STATUS_CODES } from 'node:http'
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { HTTPException } from 'hono/http-exception'
@@ -19,13 +20,14 @@ const healthRoute = createRoute({
   path: '/healthz',
   responses: {
     200: {
-      description: 'The process is up',
+      description: 'The database and this process\'s pg-boss answer',
       content: { 'application/json': { schema: z.object({ status: z.literal('ok') }) } },
     },
+    503: { description: 'A check failed. The problem+json body lists each check' },
   },
 })
 
-export function createApp(logger: Logger): OpenAPIHono<AppEnv> {
+export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono<AppEnv> {
   const app = new OpenAPIHono<AppEnv>({
     defaultHook: (result, c) => {
       if (!result.success) {
@@ -57,7 +59,13 @@ export function createApp(logger: Logger): OpenAPIHono<AppEnv> {
     requestLogger.info({ method: c.req.method, route: routePath(c), status: c.res.status, ms: Math.round(performance.now() - started) }, 'request')
   })
 
-  app.openapi(healthRoute, c => c.json({ status: 'ok' as const }, 200))
+  app.openapi(healthRoute, async (c) => {
+    const report = await checkHealth()
+    if (report.database && report.jobs)
+      return c.json({ status: 'ok' as const }, 200)
+    const checks = Object.fromEntries(Object.entries(report).map(([name, ok]) => [name, ok ? 'ok' as const : 'failed' as const]))
+    return problem(c, { type: 'unhealthy', status: 503, title: 'A dependency is not available', checks })
+  })
 
   app.notFound(c => problem(c, { type: 'not-found', status: 404, title: 'Not found' }))
 

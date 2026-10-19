@@ -1,3 +1,4 @@
+import type { HealthReport } from '../../../src/platform/health.ts'
 import { createRoute, z } from '@hono/zod-openapi'
 import { HTTPException } from 'hono/http-exception'
 import { describe, expect, it } from 'vitest'
@@ -33,9 +34,9 @@ const probeRoute = createRoute({
   responses: { 200: { description: 'Valid', content: { 'application/json': { schema: z.object({ ok: z.boolean() }) } } } },
 })
 
-function setup() {
+function setup(health: HealthReport = { database: true, jobs: true }) {
   const logs: Record<string, unknown>[] = []
-  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }))
+  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => health)
   app.openapi(probeRoute, c => c.json({ ok: true }, 200))
   app.openapi(partnerRoute, c => c.json({ ok: true }, 200))
   app.get('/boom', () => {
@@ -56,12 +57,24 @@ function setup() {
 const postJson = (body: string) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
 
 describe('[E1.8] HTTP app', () => {
-  it('[E1.8] GET /healthz answers ok without a database', async () => {
+  it('[E1.9] GET /healthz answers 200 ok when the database and pg-boss checks pass', async () => {
     const { app } = setup()
     const response = await app.request('/healthz')
 
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ status: 'ok' })
+  })
+
+  it.each([
+    [{ database: false, jobs: true }, { database: 'failed', jobs: 'ok' }],
+    [{ database: true, jobs: false }, { database: 'ok', jobs: 'failed' }],
+  ])('[E1.9] GET /healthz answers 503 problem+json naming the failed check (%j)', async (health, checks) => {
+    const { app } = setup(health)
+    const response = await app.request('/healthz')
+
+    expect(response.status).toBe(503)
+    expect(response.headers.get('Content-Type')).toBe('application/problem+json')
+    expect(await response.json()).toMatchObject({ type: 'unhealthy', status: 503, checks })
   })
 
   it('[E1.8] generates a request id, returns it and logs it on the request line', async () => {
