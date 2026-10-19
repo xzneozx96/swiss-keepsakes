@@ -5,6 +5,7 @@
 ## Rules
 
 - **REST with `@hono/zod-openapi`.** A route parses its request, calls a use case and maps the result. It holds no business logic. (D11)
+  - Register every route with `app.openapi(createRoute(...))` inside `createApp` (or a function `createApp` calls), because `contractApp()` in `api/scripts/contract.ts` builds the document from that factory. A plain `app.get` or `app.post` is missing from the contract, and the `[E1.10]` route inventory test in `api/test/contract.test.ts` fails on it.
 - **The Zod schemas in `packages/api-contract` are the single source.** The generated client is committed under `packages/api-contract/generated/`. CI fails if it differs from a fresh build. (D11)
   - Built: `packages/api-contract/src/` holds `problemSchema` and `healthSchema`, and the routes in `api/src/platform/http/app.ts` use them. A schema imports only `zod`. Give a schema that several routes share `.meta({ id })`, so the document names it once. Each id belongs to one schema object: reuse the object, never a second schema with the same id, because zod-to-openapi would silently point both at one component. Never name a schema with `.openapi(name)`. `generateContract()` fails on either.
   - After you change a route or a schema, run `pnpm contract:build` and commit `packages/api-contract/generated/`. It writes the app's OpenAPI 3.1 document (`openapi.json`, keys sorted) and the `openapi-typescript` types made from it (`schema.ts`). The generator is `generateContract()` in `api/scripts/contract.ts`.

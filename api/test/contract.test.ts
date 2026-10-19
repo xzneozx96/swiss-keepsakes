@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { createRoute, z } from '@hono/zod-openapi'
 import { createApiClient, problemSchema, problemTypes } from '@sk/api-contract'
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest'
-import { contractApp, generateContract, generatedDir } from '../scripts/contract.ts'
+import { contractApp, generateContract, generatedDir, openApiDocument } from '../scripts/contract.ts'
 import { createApp } from '../src/platform/http/app.ts'
 import { startHttpServer } from '../src/platform/http/server.ts'
 import { createLogger } from '../src/platform/logger.ts'
@@ -24,6 +24,19 @@ async function serve(health: HealthReport) {
   servers.push(await startHttpServer(createApp(logger, async () => health).fetch, '127.0.0.1', 0, logger))
   const listening = logs.find(line => line.msg === 'api listening')
   return `http://127.0.0.1:${listening?.port}`
+}
+
+const httpMethods = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'])
+
+// `GET /partner/{token}` for each method and path the app answers. Middleware is registered as method ALL.
+function servedRoutes(app: ReturnType<typeof contractApp>) {
+  const routes = app.routes.filter(route => route.method !== 'ALL').map(route => `${route.method} ${route.path.replace(/:(\w+)(\{[^}]*\})?/g, '{$1}')}`)
+  return [...new Set(routes)].sort()
+}
+
+function operations(document: ReturnType<typeof openApiDocument>) {
+  return Object.entries(document.paths ?? {}).flatMap(([path, item]) =>
+    Object.entries(item).filter(([method]) => httpMethods.has(method)).map(([method, operation]) => ({ route: `${method.toUpperCase()} ${path}`, operation })))
 }
 
 describe('[E1.10] API contract', () => {
@@ -96,5 +109,17 @@ describe('[E1.10] API contract', () => {
     app.openapi(createRoute({ method: 'get', path: '/named', responses: { 200: { description: 'Named', content: { 'application/json': { schema: named } } } } }), c => c.json({ seats: 2 }, 200))
 
     await expect(generateContract(app)).rejects.toThrow('Schema components NamedOutsideTheContract are not named with .meta({ id })')
+  })
+
+  it('[E1.10] every route the app serves is in the document, with the shared problem response and X-Request-Id on every response', () => {
+    const app = contractApp()
+    const document = openApiDocument(app)
+
+    expect(operations(document).map(({ route }) => route).sort(), 'A route registered without app.openapi() is missing from the contract').toEqual(servedRoutes(app))
+    for (const { route, operation } of operations(document)) {
+      expect(operation.responses?.default, `${route} has no shared problem response`).toMatchObject({ content: { 'application/problem+json': { schema: { $ref: '#/components/schemas/Problem' } } } })
+      for (const [status, response] of Object.entries(operation.responses ?? {}))
+        expect(response, `${route} ${status} has no X-Request-Id header`).toMatchObject({ headers: { 'X-Request-Id': { $ref: '#/components/headers/RequestId' } } })
+    }
   })
 })
