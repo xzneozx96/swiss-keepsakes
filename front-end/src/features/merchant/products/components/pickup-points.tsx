@@ -25,7 +25,8 @@ import { ChevronRightIcon, ClockIcon, PickupIcon } from '@/components/icons'
 
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoActions } from '@/features/demo'
+import { usePickupPlaces } from '@/features/catalog/api/queries'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
 import {
   LanguageTabs,
   LocalizedField,
@@ -51,7 +52,11 @@ function PickupPointSheet({
   onClose: () => void
 }) {
   const { t, language: uiLanguage } = useLocale()
-  const { update } = useDemoActions()
+  const client = useDataClient()
+  const { mutate: savePickupPlace } = useCommand(
+    client.catalog.savePickupPlace,
+    [queryKeys.catalog.pickupPlaces],
+  )
   const [draft, setDraft] = useState<PlaceDraft>(() => ({
     name: { ...place.name },
     address: place.address,
@@ -90,15 +95,7 @@ function PickupPointSheet({
       instructions: cleanText(draft.instructions),
     }
 
-    update(s => ({
-      ...s,
-      data: {
-        ...s.data,
-        pickupPlaces: s.data.pickupPlaces.map(p =>
-          p.id === place.id ? next : p,
-        ),
-      },
-    }))
+    savePickupPlace(next)
     toast.success(
       t('products.place.saved', {
         name: pickText(next.name, uiLanguage).text,
@@ -189,9 +186,8 @@ export function PickupPoints({
   label: string
 }) {
   const { t } = useLocale()
-  const { state } = useDemo()
   const [openId, setOpenId] = useState<string | null>(null)
-  const open = state.data.pickupPlaces.find(p => p.id === openId)
+  const open = usePickupPlaces(places => places.find(p => p.id === openId))
 
   return (
     <div className="flex flex-col gap-4">

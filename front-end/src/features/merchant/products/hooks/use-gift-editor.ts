@@ -9,16 +9,18 @@ import { cleanText, giftText, isPublished, LANGUAGES, missingText, textErrors, t
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
+import { usePickupPlaces, useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { StorageFullError } from '@/features/demo/store'
+
 import {
   GIFT_STEPS,
 
 } from '@/features/merchant/products/lib/search-params'
+
+import { useOrders } from '@/features/orders/api/queries'
 import { useFieldList, useRangeError } from '../components/editor-parts'
-
 import { markJustCreated, takeJustCreated } from '../lib/just-created'
-
-import { STORAGE_BUDGET } from '../lib/photo-upload'
 import {
   hasAnyText,
   newId,
@@ -274,12 +276,19 @@ export function useGiftEditor(
   go: (step: GiftStep) => void,
 ) {
   const { t, language: interfaceLanguage } = useLocale()
-  const { state, update } = useDemo()
+  const client = useDataClient()
+  const { mutateAsync: saveProduct } = useCommand(client.catalog.saveProduct, [
+    queryKeys.catalog.products,
+  ])
+  const products = useProducts()
+  const subcategories = useStoreSubcategories()
+  const orders = useOrders()
+  const pickupPlaces = usePickupPlaces()
   const navigate = useNavigate()
   const rangeError = useRangeError()
   const fieldList = useFieldList()
   const archive = useProductArchive()
-  const placeIds = state.data.pickupPlaces.map(p => p.id)
+  const placeIds = pickupPlaces.map(p => p.id)
   const [draft, setDraft] = useState(() =>
     product ? toDraft(product, placeIds) : blankDraft(placeIds),
   )
@@ -330,7 +339,7 @@ export function useGiftEditor(
   const held = Object.fromEntries(
     draft.variants.map(v => [
       v.id,
-      product ? heldUnits(product.id, v.id, state.data.orders) : 0,
+      product ? heldUnits(product.id, v.id, orders) : 0,
     ]),
   )
 
@@ -540,9 +549,8 @@ export function useGiftEditor(
   const hasIssues = (errors: GiftErrors) =>
     GIFT_STEPS.some(s => issuesIn(errors, s).length > 0)
 
-  const commit = (published: boolean) => {
+  const commit = async (published: boolean) => {
     setStorageFull(false)
-    const products = state.data.products
     const next = toProduct(
       { ...draft, published: published && !archived },
       product ?? {
@@ -554,34 +562,19 @@ export function useGiftEditor(
         ),
       },
       placeIds,
-      state.data.subcategories.find(c => c.categoryId === 'keepsakes')?.id
-      ?? '',
+      subcategories.find(c => c.categoryId === 'keepsakes')?.id ?? '',
     )
-    const nextProducts = product
-      ? products.map(p => (p.id === product.id ? next : p))
-      : [...products, next]
 
-    // Demo state lives in localStorage; refuse a save that would not fit, rather than
-    // keeping it only until the next reload.
-    if (
-      JSON.stringify({
-        ...state,
-        data: { ...state.data, products: nextProducts },
-      }).length > STORAGE_BUDGET
-    ) {
+    try {
+      await saveProduct(next)
+    }
+    catch (error) {
+      if (!(error instanceof StorageFullError))
+        throw error
       setStorageFull(true)
 
       return
     }
-    update(s => ({
-      ...s,
-      data: {
-        ...s.data,
-        products: product
-          ? s.data.products.map(p => (p.id === product.id ? next : p))
-          : [...s.data.products, next],
-      },
-    }))
     setAttempt(null)
     if (!product) {
       markJustCreated(next.id)
@@ -609,7 +602,7 @@ export function useGiftEditor(
 
       return
     }
-    commit(published)
+    void commit(published)
   }
 
   return {

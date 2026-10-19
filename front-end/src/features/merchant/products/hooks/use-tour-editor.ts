@@ -1,7 +1,6 @@
 import type {
   Departure,
   Tour,
-  TourData,
   TourSection,
   TourSectionItem,
   TourStop,
@@ -25,17 +24,17 @@ import { safeHref } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoActions, useDemoNow } from '@/features/demo'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useDemoNow } from '@/features/demo'
+import { StorageFullError } from '@/features/demo/store'
+
 import {
   TOUR_STEPS,
 
 } from '@/features/merchant/products/lib/search-params'
-
-import { createTourSeed } from '@/features/tours/seed'
-
+import { useTourRecords } from '@/features/tours/api/queries'
 import { useFieldList, useRangeError } from '../components/editor-parts'
 import { markJustCreated, takeJustCreated } from '../lib/just-created'
-import { STORAGE_BUDGET } from '../lib/photo-upload'
 import {
   hasAnyText,
   newId,
@@ -319,33 +318,22 @@ function emptyTour(id: string, slug: string): Tour {
   }
 }
 
-/** Tour writes as `useTourActions` makes them: stored tour data, or the seed. */
-export function useTourWrite() {
-  const { update } = useDemoActions()
-
-  return (recipe: (data: TourData) => TourData) =>
-    update(s => ({
-      ...s,
-      data: { ...s.data, tours: recipe(s.data.tours ?? createTourSeed()) },
-    }))
-}
-
 export function useDepartureActions() {
-  const write = useTourWrite()
+  const client = useDataClient()
+  const affects = [queryKeys.tours.records]
+  const { mutate: addDeparture } = useCommand(
+    client.tours.addDeparture,
+    affects,
+  )
+  const { mutate: setDepartureCapacity } = useCommand(
+    client.tours.setDepartureCapacity,
+    affects,
+  )
 
   return {
-    add: (departure: Departure) =>
-      write(data => ({
-        ...data,
-        departures: [...data.departures, departure],
-      })),
+    add: (departure: Departure) => addDeparture(departure),
     setCapacity: (id: string, capacity: number) =>
-      write(data => ({
-        ...data,
-        departures: data.departures.map(d =>
-          d.id === id ? { ...d, capacity } : d,
-        ),
-      })),
+      setDepartureCapacity({ id, capacity }),
   }
 }
 
@@ -424,10 +412,13 @@ export function useTourEditor(
   go: (step: TourStep) => void,
 ) {
   const { t, language: interfaceLanguage } = useLocale()
-  const { state } = useDemo()
+  const client = useDataClient()
+  const { mutateAsync: saveTour } = useCommand(client.tours.saveTour, [
+    queryKeys.tours.records,
+  ])
+  const data = useTourRecords()
   const now = useDemoNow()
   const navigate = useNavigate()
-  const write = useTourWrite()
   const rangeError = useRangeError()
   const fieldList = useFieldList()
   const archive = useProductArchive()
@@ -467,7 +458,6 @@ export function useTourEditor(
   const changeStory = (lang: Language, doc: RichNode | undefined) =>
     setEdit(e => ({ ...e, storyBody: { ...e.storyBody, [lang]: doc } }))
 
-  const data = state.data.tours ?? createTourSeed()
   const hasUpcoming
     = !!tour
       && data.departures.some(
@@ -652,7 +642,7 @@ export function useTourEditor(
     ]
   }
 
-  const commit = (published: boolean) => {
+  const commit = async (published: boolean) => {
     setStorageFull(false)
     const base: Tour
       = tour
@@ -667,28 +657,17 @@ export function useTourEditor(
         )
     // An archived tour is never published from here; "Restore as draft" comes first.
     const next = toTour({ ...edit, published: published && !archived }, base)
-    const nextTours = tour
-      ? data.tours.map(item => (item.id === tour.id ? next : item))
-      : [...data.tours, next]
 
-    // Demo state lives in localStorage; refuse a save that would not fit, rather than
-    // keeping it only until the next reload.
-    if (
-      JSON.stringify({
-        ...state,
-        data: { ...state.data, tours: { ...data, tours: nextTours } },
-      }).length > STORAGE_BUDGET
-    ) {
+    try {
+      await saveTour(next)
+    }
+    catch (error) {
+      if (!(error instanceof StorageFullError))
+        throw error
       setStorageFull(true)
 
       return
     }
-    write(current => ({
-      ...current,
-      tours: tour
-        ? current.tours.map(item => (item.id === tour.id ? next : item))
-        : [...current.tours, next],
-    }))
     setAttempt(null)
     if (!tour) {
       markJustCreated(next.id)
@@ -721,7 +700,7 @@ export function useTourEditor(
 
       return
     }
-    commit(published)
+    void commit(published)
   }
 
   return {

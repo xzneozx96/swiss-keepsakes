@@ -1,10 +1,11 @@
-import type { TourRecords } from '@sk/domain/bookings'
+import type { TourData, TourRecords } from '@sk/domain/bookings'
 import type { ToursClient } from './client'
 import type { Language } from '@/contexts/locale-context'
 import type { DemoStore } from '@/features/demo/store'
 import type { DemoState } from '@/features/demo/types'
 
 import { demoNow } from '@/features/demo/clock'
+import { updateWithinBudget } from '@/features/demo/store'
 import { createTourSeed } from '../seed'
 
 const fallback = createTourSeed()
@@ -14,6 +15,11 @@ export function createToursDemoClient(store: DemoStore): ToursClient {
   // same records, so screens that show tours do not re-render on every keystroke in it.
   let records: TourRecords | undefined
 
+  const change = (recipe: (data: TourData, s: DemoState) => TourData) =>
+    store.update(s => ({
+      ...s,
+      data: { ...s.data, tours: recipe(s.data.tours ?? createTourSeed(), s) },
+    }))
   const staffContext = (s: DemoState, language: Language) => ({
     now: demoNow(s.clockStartedAt),
     role: s.role,
@@ -85,6 +91,52 @@ export function createToursDemoClient(store: DemoStore): ToursClient {
       const { recordOutcome } = await import('../merchant/lib/transitions')
 
       store.update(s => recordOutcome(s, id, result, staffContext(s, language)))
+    },
+    saveTour: async (tour) => {
+      updateWithinBudget(store, (s) => {
+        const data = s.data.tours ?? createTourSeed()
+
+        return {
+          ...s,
+          data: {
+            ...s.data,
+            tours: {
+              ...data,
+              tours: data.tours.some(item => item.id === tour.id)
+                ? data.tours.map(item => (item.id === tour.id ? tour : item))
+                : [...data.tours, tour],
+            },
+          },
+        }
+      })
+    },
+    setTourArchived: async ({ id, archived }) => {
+      change((data, s) => {
+        const at = archived
+          ? demoNow(s.clockStartedAt).toISOString()
+          : undefined
+
+        return {
+          ...data,
+          tours: data.tours.map(t =>
+            t.id === id ? { ...t, archivedAt: at, published: false } : t,
+          ),
+        }
+      })
+    },
+    addDeparture: async (departure) => {
+      change(data => ({
+        ...data,
+        departures: [...data.departures, departure],
+      }))
+    },
+    setDepartureCapacity: async ({ id, capacity }) => {
+      change(data => ({
+        ...data,
+        departures: data.departures.map(d =>
+          d.id === id ? { ...d, capacity } : d,
+        ),
+      }))
     },
   }
 }

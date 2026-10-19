@@ -68,6 +68,3 @@ export async function preparePhoto(file: File): Promise<UploadResult> {
 
   return { ok: false, reason: 'size' }
 }
-
-/** The demo state this app may keep in localStorage before a save is refused. */
-export const STORAGE_BUDGET = 4_500_000

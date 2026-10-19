@@ -37,7 +37,8 @@ import {
 import { Media } from '@/components/media'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoSelector } from '@/features/demo'
+import { useProducts } from '@/features/catalog/api/queries'
+import { useOrders } from '@/features/orders/api/queries'
 import { MAX_TOUR_KEEPSAKES } from '@/features/tours/discovery/tour-keepsakes'
 import { newId } from '../lib/records'
 import { LocalizedField } from './editor-parts'
@@ -434,8 +435,8 @@ function CheckedOnSheet({
 /** Names, prices and visibility of the linked keepsakes, shared by the row, the list and the picker. */
 function useKeepsakeInfo() {
   const { t, language, intlLocale } = useLocale()
-  const orders = useDemoSelector(s => s.data.orders)
-  const demoProducts = useDemoSelector(s => s.data.products)
+  const orders = useOrders()
+  const demoProducts = useProducts()
   const products = demoProducts
   const find = (id: string) => products.find(p => p.id === id)
 

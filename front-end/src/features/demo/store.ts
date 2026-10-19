@@ -89,3 +89,29 @@ export function updateCollection<K extends keyof DemoData>(
     data: { ...s.data, [key]: recipe(s.data[key], s) },
   }))
 }
+
+/** The demo refused a write: the data would no longer fit in the browser's storage. */
+export class StorageFullError extends Error {
+  constructor() {
+    super('The demo data would not fit in this browser\'s storage')
+    this.name = 'StorageFullError'
+  }
+}
+
+/** The demo state this app may keep in localStorage before a save is refused. */
+const STORAGE_BUDGET = 4_500_000
+
+/**
+ * A write that can add large photos. It is refused, and nothing changes, when the saved data
+ * would not fit, rather than living only until the next reload.
+ */
+export function updateWithinBudget(
+  store: DemoStore,
+  recipe: (state: DemoState) => DemoState,
+): void {
+  const next = recipe(store.getState())
+
+  if (JSON.stringify(next).length > STORAGE_BUDGET)
+    throw new StorageFullError()
+  store.update(() => next)
+}

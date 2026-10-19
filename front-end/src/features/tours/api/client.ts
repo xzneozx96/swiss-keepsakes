@@ -1,4 +1,9 @@
-import type { TourBooking, TourRecords } from '@sk/domain/bookings'
+import type {
+  Departure,
+  Tour,
+  TourBooking,
+  TourRecords,
+} from '@sk/domain/bookings'
 import type { Language } from '@/contexts/locale-context'
 import type { Outcome } from '@/features/payment/hooks/use-payment'
 import type {
@@ -29,4 +34,10 @@ export interface ToursClient {
     input: BookingInput & { payment: ExternalPaymentInput },
   ) => Promise<void>
   recordOutcome: (input: BookingInput & { result: TourOutcome }) => Promise<void>
+  /** Adds the tour, or replaces the stored one with the same id (M13). */
+  saveTour: (tour: Tour) => Promise<void>
+  /** Archived tours are unpublished and hidden from guests; restoring brings one back as a draft. */
+  setTourArchived: (input: { id: string, archived: boolean }) => Promise<void>
+  addDeparture: (departure: Departure) => Promise<void>
+  setDepartureCapacity: (input: { id: string, capacity: number }) => Promise<void>
 }

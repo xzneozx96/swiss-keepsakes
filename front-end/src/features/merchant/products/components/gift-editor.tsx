@@ -39,8 +39,9 @@ import {
 } from '@/components/icons'
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
+import { usePickupPlaces, useStoreSubcategories } from '@/features/catalog/api/queries'
 import { categories } from '@/features/catalog/categories'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useDemoNow } from '@/features/demo'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
 import {
   GIFT_STEPS,
@@ -309,10 +310,9 @@ function CancellationCard({
 /** The main photo (lists, home, gallery) and the category C02 files the gift under. */
 function PhotoCard({ editor }: { editor: Editor }) {
   const { t, language } = useLocale()
-  const { state } = useDemo()
   const { draft, change, errors } = editor
-  const subcategories = state.data.subcategories.filter(
-    c => c.categoryId === 'keepsakes',
+  const subcategories = useStoreSubcategories(list =>
+    list.filter(c => c.categoryId === 'keepsakes'),
   )
 
   return (
@@ -475,7 +475,7 @@ function PreparationCard({ editor }: { editor: Editor }) {
 
 function PlacesCard({ editor }: { editor: Editor }) {
   const { t, language } = useLocale()
-  const { state } = useDemo()
+  const pickupPlaces = usePickupPlaces()
   const { draft, change, errors } = editor
 
   return (
@@ -486,7 +486,7 @@ function PlacesCard({ editor }: { editor: Editor }) {
         onChange={placeIds => change({ placeIds })}
       >
         <Label>{t('products.places.label')}</Label>
-        {state.data.pickupPlaces.map(place => (
+        {pickupPlaces.map(place => (
           <Checkbox key={place.id} className={choiceCard} value={place.id}>
             <Checkbox.Content className="flex-row items-start gap-3">
               <Checkbox.Control className="mt-0.5 size-6 shrink-0 rounded-lg">
@@ -635,18 +635,15 @@ export function CommissionCard({
 /** Step 6: every step's facts and what it still needs, with "Edit"; then publish or save. */
 function GiftReview({ editor, steps }: { editor: Editor, steps: StepView[] }) {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const subcategories = useStoreSubcategories()
+  const pickupPlaces = usePickupPlaces()
   const { draft } = editor
   const pick = (text: Partial<Record<Language, string>>) =>
     pickText(text, language).text
   const money = (chf: number) =>
     Number.isFinite(chf) ? formatMoney(chf, intlLocale) : '–'
-  const category = state.data.subcategories.find(
-    c => c.id === draft.subcategoryId,
-  )
-  const places = state.data.pickupPlaces.filter(p =>
-    draft.placeIds.includes(p.id),
-  )
+  const category = subcategories.find(c => c.id === draft.subcategoryId)
+  const places = pickupPlaces.filter(p => draft.placeIds.includes(p.id))
   const storyLanguages = (['en', 'de'] as const).filter(
     l => draft.storyBody[l] && !isEmptyDoc(draft.storyBody[l]),
   )
@@ -813,16 +810,14 @@ export function GiftEditor({
   onStep: (step: GiftStep) => void
 }) {
   const { t, language } = useLocale()
-  const { state } = useDemo()
+  const subcategories = useStoreSubcategories()
   const editor = useGiftEditor(product, step, onStep)
   const rootRef = useRef<HTMLDivElement>(null)
   const { draft, change } = editor
 
   useFocusFirstInvalid(rootRef, editor.focusCount)
 
-  const category = state.data.subcategories.find(
-    c => c.id === draft.subcategoryId,
-  )
+  const category = subcategories.find(c => c.id === draft.subcategoryId)
   const steps: StepView[] = GIFT_STEPS.map(id => ({
     id,
     label: t(`products.step.${id}`),
