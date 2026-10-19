@@ -12,7 +12,7 @@ Most of this is **planned**. It follows `docs/architecture/backend.md` (a propos
 - **Money is an integer in the smallest unit.** Never a float. Use one formatter to show it. In this repo money is in Rappen, and `formatMoney` in `packages/domain/src/shared/format.ts` formats it.
 - **Calendar days use one timezone helper.** Do not build dates with `new Date()` arithmetic in features. In this repo the helper is `zurichDate` in `packages/domain/src/dates/zurich.ts` and `zurichDayOf` in `packages/domain/src/catalog/pickup.ts`.
 - **User-written text is one type with a fallback.** In this repo that is `pickText` and its `isFallback` flag in `packages/domain/src/shared/localized.ts`.
-- **Errors are a contract.** The API returns RFC 9457 problem details with stable `type` codes (`docs/architecture/backend.md` D11). The front-end maps a `type` to translated copy in `packages/i18n`. It never shows a server message string.
+- **Errors are a contract.** The API returns RFC 9457 problem details with stable `type` codes (`docs/architecture/backend.md` D11). The front-end maps a `type` to translated copy in `packages/i18n`, with generic copy for a `type` it does not know (`problemTypes` in `packages/api-contract` lists the known ones). It never shows a server message string.
 - **Everything the UI shows is translated.** Add each string to both the English and German files.
 
 ## Layout the rules assume (planned)

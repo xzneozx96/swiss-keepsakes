@@ -1,0 +1,2 @@
+# The [E1.10] contract test compares these byte for byte with a fresh build, which writes LF.
+packages/api-contract/generated/** text eol=lf

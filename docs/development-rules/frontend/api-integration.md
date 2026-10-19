@@ -6,7 +6,7 @@ Read this before you call an API or read server data. Check `front-end/package.j
 
 - There is no backend client yet. Data comes from the browser-held demo store (`front-end/src/features/demo`).
 - The network calls today are the place search (`front-end/src/features/merchant/products/components/itinerary/use-place-search.ts`) and the map style and tiles (`front-end/src/features/tours/map/aerial-style.ts`).
-- The backend design (`docs/architecture/backend.md`) chooses **TanStack Query v5** for server state (D19) and a **generated client** from the OpenAPI contract in `packages/api-contract` (D11). Neither is installed. Do not add them until the backend work starts, and ask first.
+- The backend design (`docs/architecture/backend.md`) chooses **TanStack Query v5** for server state (D19) and a **generated client** from the OpenAPI contract in `packages/api-contract` (D11). The client exists (`createApiClient` from `@sk/api-contract`, E1.10), and no screen imports it yet. TanStack Query is not installed. Do not add it until the backend work starts, and ask first.
 
 ## Rules that apply today
 

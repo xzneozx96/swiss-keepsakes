@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // `.` and not `src`, because src/client.ts imports ../generated/schema.ts.
+    "rootDir": ".",
+    "noEmit": false,
+    "outDir": "dist"
+  }
+}

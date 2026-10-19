@@ -2,13 +2,15 @@ import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
 import { STATUS_CODES } from 'node:http'
-import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
+import { healthSchema } from '@sk/api-contract'
 import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
 import { IdempotencyKeyTaken } from '../idempotency.ts'
 import { idempotencyKeyInUse } from './idempotency.ts'
-import { problem } from './problem.ts'
+import { isErrorStatus, problem } from './problem.ts'
+import { problemResponses, requestIdHeader } from './responses.ts'
 
 export interface AppEnv {
   Variables: RequestIdVariables & { logger: Logger }
@@ -25,9 +27,11 @@ const healthRoute = createRoute({
   responses: {
     200: {
       description: 'The database and this process\'s pg-boss answer',
-      content: { 'application/json': { schema: z.object({ status: z.literal('ok') }) } },
+      headers: requestIdHeader,
+      content: { 'application/json': { schema: healthSchema } },
     },
-    503: { description: 'A check failed. The problem+json body lists each check' },
+    503: { ...problemResponses.default, description: 'A check failed. The problem+json body lists each check' },
+    ...problemResponses,
   },
 })
 
@@ -43,6 +47,10 @@ export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono
         })
       }
     },
+  })
+  app.openAPIRegistry.registerComponent('headers', 'RequestId', {
+    description: 'The server\'s id for this request. A problem body carries it as requestId',
+    schema: { type: 'string', format: 'uuid' },
   })
 
   app.use(async (c, next) => {
@@ -82,7 +90,8 @@ export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono
     // A race on one Idempotency-Key, not a fault. The idempotency middleware replaces this answer.
     if (error instanceof IdempotencyKeyTaken)
       return idempotencyKeyInUse(c)
-    if (error instanceof HTTPException) {
+    // An HTTPException under 400 is a bug, not a problem, so it falls through to the 500 below.
+    if (error instanceof HTTPException && isErrorStatus(error.status)) {
       if (error.status >= 500)
         c.get('logger').error({ err: error }, 'http exception')
       const response = problem(c, { type: 'about:blank', status: error.status, title: STATUS_CODES[error.status] ?? 'Error' })

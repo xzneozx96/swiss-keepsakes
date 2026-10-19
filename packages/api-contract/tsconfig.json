@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    // The client runs in the browser and on Node, both with the fetch API.
+    "lib": ["ES2023", "DOM"],
+    "rewriteRelativeImportExtensions": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": [],
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    // Node 22.18 and later strip types by default and would run this source if the sk-compiled flag were missing.
+    "erasableSyntaxOnly": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "generated"]
+}
