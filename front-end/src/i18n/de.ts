@@ -1,5 +1,6 @@
 import type { MessageKey } from './en'
 
+import { mailDe } from '@sk/i18n/de'
 import { contentMerchantDe } from '@/features/content/merchant/messages.de'
 import { contentDe } from '@/features/content/messages.de'
 import { productsDe } from '@/features/merchant/products/messages.de'
@@ -31,6 +32,7 @@ export const de: Record<MessageKey, string> = {
   ...productsDe,
   ...salesOverviewDe,
   ...reportPagesDe,
+  ...mailDe,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototyp · Beispieldaten',
@@ -338,78 +340,6 @@ export const de: Record<MessageKey, string> = {
     'Stöbern und den Warenkorb füllen geht ohne Konto. Melden Sie sich beim Senden einer Anfrage an und verfolgen Sie Ihre Bestellungen hier.',
   'auth.account.signIn': 'Anmelden',
   'auth.account.signOut': 'Abmelden',
-
-  'mail.greeting': 'Grüezi',
-  'mail.N19.subject': 'Ihr Code für den Provisionsbericht von {shop}: {code}',
-  'mail.N19.greeting': 'Guten Tag {partner}',
-  'mail.N19.code':
-    'Ihr Code für den Provisionsbericht von {shop} lautet {code}.',
-  'mail.N19.ignore':
-    'Wenn Sie den Berichtslink nicht geöffnet haben, können Sie diese E-Mail ignorieren. Ohne diesen Code kann niemand Ihren Bericht öffnen.',
-  'mail.N01.subject': 'Ihr Anmeldecode für {shop}: {code}',
-  'mail.N01.code': 'Ihr Anmeldecode lautet {code}.',
-  'mail.N01.expiry':
-    'Geben Sie ihn im Anmeldefenster ein. Er ist 10 Minuten gültig.',
-  'mail.N01.ignore':
-    'Wenn Sie sich nicht anmelden wollten, können Sie diese E-Mail ignorieren.',
-  'mail.pickup': 'Abholung: {pickupDate} in {place}.',
-  'mail.N02.subject': 'Wir haben Ihre Anfrage {orderRef} erhalten',
-  'mail.N02.request':
-    'Ihre Anfrage {orderRef} liegt beim Laden. Gewünschte Abholung: {pickupDate} in {place}.',
-  'mail.N02.noPayment': 'Es wurde nichts belastet.',
-  'mail.N02.status':
-    'Status: Wartet auf Bestätigung des Ladens. Wir schreiben Ihnen, sobald der Laden antwortet.',
-  'mail.N03.subject': 'Neue Andenken-Anfrage {orderRef}',
-  'mail.N03.new':
-    'Ein Gast hat eine neue Andenken-Anfrage gesendet: {orderRef}.',
-  'mail.N03.action':
-    'Öffnen Sie sie unter Bestellungen, um sie anzunehmen, Datum oder Ort zu ändern oder abzulehnen.',
-  'mail.N04.subject':
-    '{orderRef} angenommen: Bitte bis {dueAt} {amount} bezahlen',
-  'mail.N04.accepted':
-    'Gute Nachricht: Der Laden hat Ihre Bestellung {orderRef} angenommen.',
-  'mail.N04.pay': 'Bitte bezahlen Sie {amount} bis {dueAt}.',
-  'mail.N04.warning':
-    'Ist bis dahin nicht bezahlt, wird die Bestellung automatisch storniert.',
-  'mail.N04.action': 'Jetzt bezahlen: Bestellung unter Konto öffnen.',
-  'mail.N05.subject': '{orderRef} angenommen: Jetzt nichts zu bezahlen',
-  'mail.N05.pay':
-    'Jetzt nichts zu bezahlen. Bitte bezahlen Sie {amount} bis {dueDate}.',
-  'mail.N06.subject': 'Der Laden konnte {orderRef} nicht annehmen',
-  'mail.N06.declined':
-    'Leider hat der Laden Ihre Bestellung {orderRef} abgelehnt.',
-  'mail.N06.reason': 'Grund: {reason}',
-  'mail.N06.others': 'Ihre anderen Bestellungen sind davon nicht betroffen.',
-  'mail.N07.subject': 'Quittung für {orderRef}: {amount} bezahlt',
-  'mail.N07.seller': 'Verkäufer: {seller}',
-  'mail.N07.paid': 'Bezahlt: {amount}',
-  'mail.N07.balance': 'Noch offen: {balance}',
-  'mail.N08.subject': 'Ihre Zahlung für {orderRef} hat nicht geklappt',
-  'mail.N08.failed':
-    'Ihre Zahlung von {amount} für {orderRef} ist fehlgeschlagen. Es wurde nichts belastet.',
-  'mail.N08.retry':
-    'Versuchen Sie es in der Bestellung unter Konto erneut. Solange nicht bezahlt ist, bleiben die Artikel möglicherweise nicht für Sie reserviert.',
-  'mail.N12.subject': '{orderRef} ist abholbereit',
-  'mail.N12.ready':
-    'Ihre Bestellung {orderRef} ist bereit. Abholung in {place}, {placeAddress}.',
-  'mail.N12.hours': 'Öffnungszeiten: {placeHours}',
-  'mail.N12.instructions': '{placeInstructions}',
-  'mail.N15.subject': 'Wie gefällt Ihr Andenken? Bewerten Sie {orderRef}',
-  'mail.N15.thanks': 'Ihre Bestellung {orderRef} ist abgeschlossen. Danke!',
-  'mail.N15.review':
-    'Erzählen Sie anderen Reisenden davon: Schreiben Sie eine Bewertung in der Bestellung unter Konto.',
-  'mail.N21.subject': 'Gast hat {amount} für {orderRef} bezahlt',
-  'mail.N21.paid':
-    'Der Gast hat {amount} online für {orderRef} bezahlt. Noch einzuziehen: {balance}.',
-  'mail.N21.preparing': 'Die Bestellung wird jetzt vorbereitet.',
-  'mail.N23.subject': '{orderRef} storniert: Zahlungsfrist abgelaufen',
-  'mail.N23.guest':
-    'Ihre Bestellung {orderRef} wurde storniert, weil die erste Zahlung nicht bis {dueAt} eingegangen ist.',
-  'mail.N23.again':
-    'Möchten Sie die Artikel weiterhin, senden Sie eine neue Anfrage, damit der Laden das Abholdatum erneut bestätigen kann.',
-  'mail.N23.staff':
-    'Bestellung {orderRef} wurde automatisch storniert: Die erste Zahlung ist nicht bis {dueAt} eingegangen.',
-  'mail.N23.stock': 'Die reservierten Artikel sind wieder an Lager.',
 
   'proto.proposal': 'UX-Vorschlag: {name}',
   'demo.storageFull':

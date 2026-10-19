@@ -204,23 +204,4 @@ export const requestsDe: Record<keyof typeof requestsEn, string> = {
   'adviceQuestions.delete.title': '«{question}» löschen?',
   'adviceQuestions.delete.body':
     'Neue Anfragen stellen sie nicht mehr. Gesendete Anfragen behalten sie.',
-  'requestMail.link.advice': 'Anfrage öffnen',
-  'requestMail.link.private': 'Anfragen für private Touren öffnen',
-  'requestMail.guestEmail': 'E-Mail des Gastes: {email}',
-  'requestMail.N16.subject': 'Neue Beratungsanfrage von {email}',
-  'requestMail.N16.intro':
-    'Ein Gast hat am {at} die Fragen des Reiseassistenten beantwortet.',
-  'requestMail.guestLanguage': 'Sprache des Gastes: {language}',
-  'requestMail.N16.answer': '{question} — {answer}',
-  'requestMail.N16.skipped': 'Übersprungene Fragen fehlen.',
-  'requestMail.N16.reply': 'Antworten Sie dem Gast per E-Mail.',
-  'requestMail.N17.subject':
-    'Neue Anfrage für eine private Tour: {group}, {dates}',
-  'requestMail.N17.greeting': 'Grüezi {name}',
-  'requestMail.N17.intro': 'Ein Gast hat am {at} eine private Tour angefragt.',
-  'requestMail.N17.group': 'Gruppe: {group}',
-  'requestMail.N17.dates': 'Gewünschte Daten: {dates}',
-  'requestMail.N17.interests': 'Interessen: {interests}',
-  'requestMail.N17.reply':
-    'Antworten Sie per E-Mail mit einem Tourvorschlag und dem Preis und markieren Sie die Anfrage dann als beantwortet.',
 }

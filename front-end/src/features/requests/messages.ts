@@ -193,22 +193,4 @@ export const requestsEn = {
   'adviceQuestions.delete.title': 'Delete “{question}”?',
   'adviceQuestions.delete.body':
     'New requests won’t ask it. Requests already sent keep it.',
-  'requestMail.link.advice': 'Open the request',
-  'requestMail.link.private': 'Open private tour requests',
-  'requestMail.guestEmail': 'Guest email: {email}',
-  'requestMail.N16.subject': 'New advice request from {email}',
-  'requestMail.N16.intro':
-    'A guest answered the trip assistant’s questions on {at}.',
-  'requestMail.guestLanguage': 'Guest language: {language}',
-  'requestMail.N16.answer': '{question} — {answer}',
-  'requestMail.N16.skipped': 'Questions the guest skipped are left out.',
-  'requestMail.N16.reply': 'Reply to the guest by email.',
-  'requestMail.N17.subject': 'New private tour request: {group}, {dates}',
-  'requestMail.N17.greeting': 'Hello {name},',
-  'requestMail.N17.intro': 'A guest asked for a private tour on {at}.',
-  'requestMail.N17.group': 'Group: {group}',
-  'requestMail.N17.dates': 'Preferred dates: {dates}',
-  'requestMail.N17.interests': 'Interests: {interests}',
-  'requestMail.N17.reply':
-    'Reply by email with a tour plan and its price, then mark the request as answered.',
 }

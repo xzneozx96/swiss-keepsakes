@@ -1,3 +1,4 @@
+import { mailEn } from '@sk/i18n/en'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
 import { productsEn } from '@/features/merchant/products/messages'
@@ -29,6 +30,7 @@ export const en = {
   ...productsEn,
   ...salesOverviewEn,
   ...reportPagesEn,
+  ...mailEn,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototype · mock data',
@@ -323,70 +325,6 @@ export const en = {
     'You can browse and fill your cart without an account. Sign in when you send a request, then follow your orders here.',
   'auth.account.signIn': 'Sign in',
   'auth.account.signOut': 'Sign out',
-
-  'mail.greeting': 'Hello,',
-  'mail.N19.subject': 'Your code for the {shop} commission report: {code}',
-  'mail.N19.greeting': 'Hello {partner},',
-  'mail.N19.code': 'Your code for the commission report from {shop} is {code}.',
-  'mail.N19.ignore':
-    'If you didn\'t open the report link, you can ignore this email. Nobody can open your report without this code.',
-  'mail.N01.subject': 'Your {shop} sign-in code: {code}',
-  'mail.N01.code': 'Your sign-in code is {code}.',
-  'mail.N01.expiry': 'Enter it in the sign-in window. It works for 10 minutes.',
-  'mail.N01.ignore': 'If you didn’t try to sign in, you can ignore this email.',
-  'mail.pickup': 'Pickup: {pickupDate} at {place}.',
-  'mail.N02.subject': 'We received your request {orderRef}',
-  'mail.N02.request':
-    'Your request {orderRef} is with the shop. You asked to pick it up on {pickupDate} at {place}.',
-  'mail.N02.noPayment': 'Nothing has been charged.',
-  'mail.N02.status':
-    'Status: awaiting seller confirmation. We’ll email you when the shop replies.',
-  'mail.N03.subject': 'New keepsake request {orderRef}',
-  'mail.N03.new': 'A guest sent a new keepsake request, {orderRef}.',
-  'mail.N03.action':
-    'Open it in Orders to accept it, change the date or place, or decline it.',
-  'mail.N04.subject': '{orderRef} accepted: please pay {amount} by {dueAt}',
-  'mail.N04.accepted': 'Good news: the shop accepted your order {orderRef}.',
-  'mail.N04.pay': 'Please pay {amount} by {dueAt}.',
-  'mail.N04.warning':
-    'If it isn’t paid by then, the order is cancelled automatically.',
-  'mail.N04.action': 'Pay now: open the order under Account.',
-  'mail.N05.subject': '{orderRef} accepted: nothing to pay now',
-  'mail.N05.pay': 'Nothing to pay now. Please pay {amount} by {dueDate}.',
-  'mail.N06.subject': 'The shop couldn’t accept {orderRef}',
-  'mail.N06.declined': 'Sorry, the shop declined your order {orderRef}.',
-  'mail.N06.reason': 'Reason: {reason}',
-  'mail.N06.others': 'Your other orders are not affected.',
-  'mail.N07.subject': 'Receipt for {orderRef}: {amount} paid',
-  'mail.N07.seller': 'Seller: {seller}',
-  'mail.N07.paid': 'Paid: {amount}',
-  'mail.N07.balance': 'Still to pay: {balance}',
-  'mail.N08.subject': 'Your payment for {orderRef} didn’t go through',
-  'mail.N08.failed':
-    'Your payment of {amount} for {orderRef} failed. Nothing was charged.',
-  'mail.N08.retry':
-    'Try again from the order under Account. Until it’s paid, the items may not stay reserved for you.',
-  'mail.N12.subject': '{orderRef} is ready for pickup',
-  'mail.N12.ready':
-    'Your order {orderRef} is ready. Pick it up at {place}, {placeAddress}.',
-  'mail.N12.hours': 'Opening hours: {placeHours}',
-  'mail.N12.instructions': '{placeInstructions}',
-  'mail.N15.subject': 'How was your keepsake? Review {orderRef}',
-  'mail.N15.thanks': 'Your order {orderRef} is complete. Thank you!',
-  'mail.N15.review':
-    'Tell other travellers what you thought: write a review from the order under Account.',
-  'mail.N21.subject': 'Guest paid {amount} for {orderRef}',
-  'mail.N21.paid':
-    'The guest paid {amount} online for {orderRef}. Still to collect: {balance}.',
-  'mail.N21.preparing': 'The order is now being prepared.',
-  'mail.N23.subject': '{orderRef} cancelled: payment deadline passed',
-  'mail.N23.guest':
-    'Your order {orderRef} was cancelled because the first payment wasn’t made by {dueAt}.',
-  'mail.N23.again':
-    'If you still want it, send a new request so the shop can confirm the pickup date again.',
-  'mail.N23.staff':
-    'Order {orderRef} was cancelled automatically: the first payment wasn’t made by {dueAt}.',
-  'mail.N23.stock': 'The items it held are back in stock.',
 
   'proto.proposal': 'UX proposal: {name}',
   'demo.storageFull':
