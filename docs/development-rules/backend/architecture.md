@@ -1,6 +1,6 @@
 # Back-end architecture
 
-**Design, not built.** Source: `docs/architecture/backend.md` sections 4.1 to 4.3 (a proposal, pending owner review). Do not edit that file from here. If a rule below and the source disagree, the source wins, and this file needs fixing. Rules for the front-end are in `../frontend/`, and rules for both sides are in `../shared/`.
+**Mostly design.** The platform layer is built (E1.8, E1.9). No module exists yet. Source: `docs/architecture/backend.md` sections 4.1 to 4.3 (a proposal, pending owner review). Do not edit that file from here. If a rule below and the source disagree, the source wins, and this file needs fixing. Rules for the front-end are in `../frontend/`, and rules for both sides are in `../shared/`.
 
 ## Layers
 
@@ -17,6 +17,7 @@ The code follows clean architecture in four layers. Each layer imports only from
 
 - **A use case is a plain async function.** A factory takes its dependencies, as in `makeCreateHold({ uow, bookings, jobs, payments, clock })`. No classes and no dependency-injection container. `main.ts` is the only file that connects concrete adapters to use cases. (4.1)
 - **Transactions are a port.** A use case calls `uow.run(async (tx) => ...)`. Repositories and the job queue take that `tx`. A use case never touches Drizzle. (4.1)
+  - Built (E1.9): the platform adapters and their port shapes are `UnitOfWork<T>` (`api/src/platform/db/unit-of-work.ts`), `AuditLog<T>` (`audit.ts`), `JobQueue<T>` (`jobs/queue.ts`) and `Clock` (`clock.ts`). The lint zones forbid an application file to import `platform/`, so a module's `ports.ts` declares the same small shapes, and the platform adapters fit them structurally. Make the use-case factory generic over the transaction type, as in `makeRecordProbe` in `api/test/integration/unit-of-work.test.ts`.
 - **Locking SQL stays in the repository**, in named functions such as `lockDepartureForHold`. The use case decides what to do and the repository decides how to lock. (4.1)
 - **Modules talk through `index.ts` only.** No module imports another module's `application/` or `adapters/` files. (4.1)
 - **Each module owns one Postgres schema.** No module reads another module's tables, and each command is one transaction. `reporting` is the one exception, because it owns views over other schemas. (section 4)

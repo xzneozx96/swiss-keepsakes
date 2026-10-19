@@ -9,6 +9,7 @@ export interface Problem {
   status: ContentfulStatusCode
   title: string
   errors?: { in: string, path: string, message: string }[]
+  checks?: Record<string, 'ok' | 'failed'>
 }
 
 export function problem<E extends { Variables: RequestIdVariables }>(c: Context<E>, details: Problem): Response {

@@ -1,6 +1,6 @@
 # Data, jobs and security
 
-**Mostly design.** Configuration and logging are built (E1.8). Data, jobs and the rest are not. Source: `docs/architecture/backend.md` (the section is in brackets after each rule). Rules about money, Stripe holds and the commission ledger are specific to this product. They are in `docs/architecture/backend.md` sections 6 and 7 and are not repeated here.
+**Mostly design.** Configuration and logging are built (E1.8), and so is the platform layer for data and jobs (E1.9). No module and no business table exists yet. Source: `docs/architecture/backend.md` (the section is in brackets after each rule). Rules about money, Stripe holds and the commission ledger are specific to this product. They are in `docs/architecture/backend.md` sections 6 and 7 and are not repeated here.
 
 ## Data
 
@@ -9,13 +9,18 @@
 - **Postgres row locks decide every seat and every unit of stock.** Nothing else holds a lock. (1)
 - **Money history is append-only.** Balances and payment labels are computed from ledger rows and never stored. (D5)
 - **One `audit_log` records every money and status change** with before, after, actor, reason and request id. (D10)
+  - Built: call `audit.record(tx, entry)` (`api/src/platform/audit.ts`) inside the use case's `uow.run`. `requestId` is the server's id, `c.get('requestId')`, and `null` in a job. `at` comes from the `Clock`.
 - **Migrations move forward only** and follow expand and contract, so the previous version keeps working during a deploy. They run as the release command before new machines take traffic. (11)
+  - Built: change a `schema.ts`, run `pnpm --filter @sk/api db:generate`, and commit the SQL and `migrations/meta/`. Never edit a migration that has been applied. `db:migrate` (or `node dist/platform/db/migrate.js`) applies them and then pg-boss's schema. Running services start pg-boss with `migrate: false`.
 - **Request handlers use the pooled connection.** pg-boss and migrations use the direct one. (D2)
+  - Built: `DATABASE_URL` and `DATABASE_URL_UNPOOLED`, the names `neon env pull` writes. `api/src/platform/db/client.ts`.
+- **A use case never touches Drizzle.** It calls `uow.run(async (tx) => ...)` (`api/src/platform/db/unit-of-work.ts`) and passes `tx` to its ports. `uow.run` inside another `uow.run` throws: pass the outer `tx` instead. Its factory is generic over the transaction type, so tests can pass fakes. Read the time from the `Clock` port (`api/src/platform/clock.ts`), never `new Date()`. Tests use `api/test/support/manual-clock.ts`. (4.1)
 
 ## Jobs
 
 - **pg-boss in the application database runs every timer and side effect.** (D4)
 - **Create a job inside the business transaction** (`boss.send(..., { db: tx })`). There is no separate outbox table and no event bus. (D4)
+  - Built: `jobs.send(tx, queue, data, { startAfter })` (`api/src/platform/jobs/queue.ts`). Every role starts pg-boss (`api/src/platform/jobs/boss.ts`), because sending needs a started instance. Only `worker` and `all` supervise. Create a queue with `boss.createQueue` at startup before the first send. Proof that a rollback leaves no job: `api/test/integration/unit-of-work.test.ts`.
 - **Cross-module work that must be atomic is a direct call in the same transaction.** Only effects outside the system become jobs. (D4)
 
 ## Configuration

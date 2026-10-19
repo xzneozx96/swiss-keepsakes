@@ -7,6 +7,7 @@
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "vitest run --passWithNoTests",
+    "test:integration": "vitest run --config vitest.integration.config.mjs",
     "e2e": "pnpm --dir front-end build && pnpm --dir e2e test",
     "lint:zones": "eslint --no-error-on-unmatched-pattern api packages"
   },
