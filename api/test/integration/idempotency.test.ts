@@ -52,7 +52,17 @@ type PausePoint = 'in-transaction' | 'after-commit'
 
 // A command route the way a module will write one: it writes an audit row and a job in one unit of work.
 // A test can make it fail, or pause the next request at a point, inside the transaction or after the commit.
-function setup() {
+// The database the middleware sees. One that fails every update stands in for a database lost
+// between the command's commit and storing its response.
+const storingFails = new Proxy(db, {
+  get: (target, property, receiver) => property === 'update'
+    ? () => {
+        throw new Error('database went away')
+      }
+    : Reflect.get(target, property, receiver),
+})
+
+function setup({ storeFails = false } = {}) {
   const clock = createManualClock(new Date('2026-10-20T08:00:00Z'))
   const uow = createUnitOfWork(db)
   const audit = createAuditLog(clock)
@@ -70,7 +80,7 @@ function setup() {
 
   const logs: { level: number, msg: string }[] = []
   const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }))
-  app.use('/api/*', idempotency({ db, clock, actorId: c => c.req.header('X-Test-Actor') ?? 'anonymous' }))
+  app.use('/api/*', idempotency({ db: storeFails ? storingFails : db, clock, actorId: c => c.req.header('X-Test-Actor') ?? 'anonymous' }))
   app.openapi(probeRoute, async (c) => {
     const { name, fail } = c.req.valid('json')
     const probeId = randomUUID()
@@ -260,6 +270,20 @@ describe('[E1.9] Idempotency-Key', () => {
     pause.release.open()
     expect((await first).status).toBe(201)
     expect((await send(key, { name })).headers.get('Idempotent-Replayed')).toBe('true')
+    expect(executions).toEqual([name])
+  })
+
+  it('[E1.9] when the response cannot be stored, the client still gets it, and a repeat gets 409 instead of running again', async () => {
+    const { send, logs, executions } = setup({ storeFails: true })
+    const key = unique('key')
+    const name = unique('anna')
+
+    const first = await send(key, { name })
+    const again = await send(key, { name })
+
+    expect(first.status).toBe(201)
+    expect(logs).toContainEqual(expect.objectContaining({ level: 50, msg: 'idempotent response not stored' }))
+    expect(again.status).toBe(409)
     expect(executions).toEqual([name])
   })
 

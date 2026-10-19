@@ -79,7 +79,13 @@ export function idempotency(deps: { db: Database, clock: Clock, actorId: (c: Con
     }
     else if (claim.committed) {
       // Whatever the status: the command committed, so a repeat must not run it again.
-      await saveIdempotentResponse(deps.db, scope, await stored(c.res))
+      try {
+        await saveIdempotentResponse(deps.db, scope, await stored(c.res))
+      }
+      catch (error) {
+        // The command did commit, so this client still gets its answer. A repeat gets 409 until the key expires.
+        c.get('logger').error({ err: error }, 'idempotent response not stored')
+      }
     }
   }
 }
