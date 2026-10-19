@@ -14,7 +14,7 @@
   - Built: change a `schema.ts`, run `pnpm --filter @sk/api db:generate`, and commit the SQL and `migrations/meta/`. Never edit a migration that has been applied. `db:migrate` (or `node dist/platform/db/migrate.js`) applies them and then pg-boss's schema. Running services start pg-boss with `migrate: false`.
 - **Request handlers use the pooled connection.** pg-boss and migrations use the direct one. (D2)
   - Built: `DATABASE_URL` and `DATABASE_URL_UNPOOLED`, the names `neon env pull` writes. `api/src/platform/db/client.ts`.
-- **A use case never touches Drizzle.** It calls `uow.run(async (tx) => ...)` (`api/src/platform/db/unit-of-work.ts`) and passes `tx` to its ports. Its factory is generic over the transaction type, so tests can pass fakes. Read the time from the `Clock` port (`api/src/platform/clock.ts`), never `new Date()`. Tests use `api/test/support/manual-clock.ts`. (4.1)
+- **A use case never touches Drizzle.** It calls `uow.run(async (tx) => ...)` (`api/src/platform/db/unit-of-work.ts`) and passes `tx` to its ports. `uow.run` inside another `uow.run` throws: pass the outer `tx` instead. Its factory is generic over the transaction type, so tests can pass fakes. Read the time from the `Clock` port (`api/src/platform/clock.ts`), never `new Date()`. Tests use `api/test/support/manual-clock.ts`. (4.1)
 
 ## Jobs
 
