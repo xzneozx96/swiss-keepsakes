@@ -33,7 +33,7 @@ const allowedBooking = new Set([
 
 describe('[E1.3] order transitions', () => {
   it('covers every status', () => {
-    expect(orders.ORDER_STATUSES.toSorted()).toEqual([...orderStatuses].toSorted())
+    expect([...orders.ORDER_STATUSES].sort()).toEqual([...orderStatuses].sort())
   })
 
   for (const from of orderStatuses) {
@@ -47,7 +47,7 @@ describe('[E1.3] order transitions', () => {
   }
 
   it('lists exactly the allowed moves', () => {
-    expect(orders.orderTransitions().map(t => `${t.from}>${t.to}`).toSorted()).toEqual([...allowedOrder].toSorted())
+    expect(orders.orderTransitions().map(t => `${t.from}>${t.to}`).sort()).toEqual([...allowedOrder].sort())
   })
 
   it('ends at completed, declined and cancelled', () => {
@@ -58,7 +58,7 @@ describe('[E1.3] order transitions', () => {
 
 describe('[E1.3] booking transitions', () => {
   it('covers every status', () => {
-    expect(bookings.BOOKING_STATUSES.toSorted()).toEqual([...bookingStatuses].toSorted())
+    expect([...bookings.BOOKING_STATUSES].sort()).toEqual([...bookingStatuses].sort())
   })
 
   for (const from of bookingStatuses) {
@@ -72,7 +72,7 @@ describe('[E1.3] booking transitions', () => {
   }
 
   it('lists exactly the allowed moves', () => {
-    expect(bookings.bookingTransitions().map(t => `${t.from}>${t.to}`).toSorted()).toEqual([...allowedBooking].toSorted())
+    expect(bookings.bookingTransitions().map(t => `${t.from}>${t.to}`).sort()).toEqual([...allowedBooking].sort())
   })
 
   it('never lets no_show reach completed, even in several steps', () => {
