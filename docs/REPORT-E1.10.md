@@ -207,3 +207,47 @@ Open questions for the owner
 - `type` is a closed enum. A guest's tab still running an older SPA build would fail `problemSchema.parse` on a code added later. Should the client use `safeParse` and fall back to generic copy (E1.11 or E1.12), or should `type` be an open string in the client schema?
 - May the contract import `packages/domain`, for example to reuse a status list in a schema? The zone forbids it today, as the brief asked.
 - E1.11 and E1.12 probably edit the same rows in `tech-stack.md` and the same line in `frontend/api-integration.md`. Expect a small doc conflict on rebase.
+
+## Follow-up: the compiled start (commit abdc0ab)
+
+The owner's lead approved the `sk-compiled` condition and asked for proof that `pnpm --filter @sk/api build` followed by `node --conditions=sk-compiled api/dist/main.js` serves `/healthz`.
+
+- Found: on a clean tree, `pnpm --filter @sk/api build` built only the API, so the compiled API imported a contract `dist/` that did not exist: `Error [ERR_MODULE_NOT_FOUND]: Cannot find module '.../api/node_modules/@sk/api-contract/dist/src/index.js' imported from .../api/dist/platform/http/app.js`.
+- Fix: the API's build script is now `pnpm --filter @sk/api^... --if-present build && tsc -p tsconfig.build.json`. It builds every workspace package the API depends on first. A new package listed in `api/package.json` is picked up with no other change. Root `pnpm build` now compiles the contract twice, about 1 s each.
+- `docs/development-rules/backend/architecture.md` has a new rule. A workspace package the API imports copies `packages/api-contract`: a `build` script into `dist/`, NodeNext with `.ts` relative imports, and each export as `{ "sk-compiled": "./dist/src/<entry>.js", "default": "./src/<entry>.ts" }`. Every production start, including the E1.13 image CMD, runs `node --conditions=sk-compiled api/dist/main.js`. `tech-stack.md` and `backend/api-contract.md` point to it.
+- For `@sk/domain`: its relative imports have no extension (`export * from './format'`). To be compiled this way it needs `.ts` extensions and NodeNext. Its `./*` subpath export takes the same two conditions.
+
+```
+$ rm -rf packages/api-contract/dist api/dist
+$ pnpm --filter @sk/api build
+> pnpm --filter @sk/api^... --if-present build && tsc -p tsconfig.build.json
+> @sk/api-contract@0.0.0 build .../packages/api-contract
+> tsc -p tsconfig.build.json
+exit 0
+$ node --conditions=sk-compiled api/dist/main.js     (PORT=3010, compose Postgres sk-e1-10 on 5443)
+{"worker":true,"msg":"jobs started"}
+{"address":"127.0.0.1","port":3010,"msg":"api listening"}
+{"role":"all","msg":"started"}
+$ curl -i http://127.0.0.1:3010/healthz
+HTTP/1.1 200 OK
+content-type: application/json
+{"status":"ok"}
+$ curl -i http://127.0.0.1:3010/api/stores/lucerne
+HTTP/1.1 404 Not Found
+content-type: application/problem+json
+{"type":"not-found","status":404,"title":"Not found","instance":"/api/stores/lucerne","requestId":"99c6a9b4-bea5-431b-8234-390e9d2a3a42"}
+healthSchema.safeParse: success=true, parse result equals body: true
+problemSchema.safeParse: success=true, parse result equals body: true
+createApiClient GET /healthz -> 200 application/json  data: {"status":"ok"}
+$ node --conditions=sk-compiled -e "import.meta.resolve('@sk/api-contract')"   (from api/)
+@sk/api-contract -> file:///.../packages/api-contract/dist/src/index.js
+SIGTERM: shutting down, api stopped, jobs stopped, stopped
+$ pnpm build                         -> exit 0 (packages/api-contract, api, front-end: Done)
+$ pnpm --filter "@sk/api..." build   -> exit 0
+$ pnpm test                          -> 329 passed
+$ pnpm --filter @sk/api lint         -> exit 0
+```
+
+The first start attempt on port 3000 failed with `EADDRINUSE`. Another process on this machine held the port at that moment, and it was free again a few seconds later. I moved to 3010 and did not touch the other process. Cleanup: `sk-e1-10` was taken down with `down -v` (0 containers, 0 volumes). Ports 3000, 3010 and 5443 are free.
+
+Not verified: the E1.13 image itself, and `pnpm --filter @sk/api build` running inside a Docker build.
