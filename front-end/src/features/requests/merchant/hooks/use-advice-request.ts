@@ -5,8 +5,8 @@ import { formatOrderDateTime } from '@sk/domain/orders'
 import { useEffect } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoActions, useDemoSelector } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useAdviceRequests } from '@/features/requests/api/queries'
 import { replyHref } from './use-merchant-requests'
 
 export interface AdviceRequestView {
@@ -31,26 +31,18 @@ export interface AdviceRequestView {
  */
 export function useAdviceRequest(id: string): AdviceRequestView | null {
   const { t, intlLocale } = useLocale()
-  const { update } = useDemoActions()
-  const adviceRequests = useDemoSelector(s => s.data.adviceRequests)
-  const request = adviceRequests.find(r => r.id === id)
+  const client = useDataClient()
+  const { mutate: markRead } = useCommand(
+    client.requests.markAdviceRequestRead,
+    [queryKeys.requests.adviceRequests],
+  )
+  const request = useAdviceRequests(requests => requests.find(r => r.id === id))
   const isUnread = !!request && !request.readAt
 
   useEffect(() => {
-    if (!isUnread)
-      return
-    update(s => ({
-      ...s,
-      data: {
-        ...s.data,
-        adviceRequests: s.data.adviceRequests.map(r =>
-          r.id === id && !r.readAt
-            ? { ...r, readAt: demoNow(s.clockStartedAt).toISOString() }
-            : r,
-        ),
-      },
-    }))
-  }, [id, isUnread, update])
+    if (isUnread)
+      markRead({ id })
+  }, [id, isUnread, markRead])
 
   if (!request)
     return null

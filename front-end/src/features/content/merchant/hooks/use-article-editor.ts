@@ -15,9 +15,12 @@ import { pickText, slugify } from '@sk/domain/shared'
 
 import { useState } from 'react'
 
+import { useProducts } from '@/features/catalog/api/queries'
 import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
-import { useDemo } from '@/features/demo'
+import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
+import { useOrders } from '@/features/orders/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { useArticles } from '../../api/queries'
 import { publishedArticles } from '../../lib/articles'
 import {
@@ -62,7 +65,11 @@ function sameLink(a: ArticleLink, b: ArticleLink) {
  * refresh drops them (outline side path "Refresh"). A new article is stored on its first save.
  */
 export function useArticleEditor(articleId: string, newLanguage: Language) {
-  const { state } = useDemo()
+  const role = useDemoSelector(s => s.role)
+  const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
+  const tours = useTourRecords()
+  const products = useProducts()
+  const orders = useOrders()
   const client = useDataClient()
   const { mutateAsync: createArticle } = useCommand(
     client.content.createArticle,
@@ -77,7 +84,7 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
   const [form, setForm] = useState<ArticleForm>(() =>
     stored
       ? toForm(stored)
-      : emptyForm(newLanguage, defaultAuthor(state.role, newLanguage)),
+      : emptyForm(newLanguage, defaultAuthor(role, newLanguage)),
   )
   const [baseline, setBaseline] = useState(form)
   const [attempt, setAttempt] = useState<SaveMode | null>(null)
@@ -94,8 +101,8 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       ...f,
       language,
       author:
-        f.author.role === defaultAuthor(state.role, f.language).role
-          ? defaultAuthor(state.role, language)
+        f.author.role === defaultAuthor(role, f.language).role
+          ? defaultAuthor(role, language)
           : f.author,
       related: [],
     }))
@@ -150,31 +157,31 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
   // new ones can only be published items.
   const toOption = (link: ArticleLink): LinkOption => {
     if (link.kind === 'tour') {
-      const tour = state.data.tours?.tours.find(x => x.id === link.id)
+      const tour = tours.tours.find(x => x.id === link.id)
 
       return {
         link,
         name: tour ? pickText(tour.name, form.language).text : link.id,
         photo: tour?.photos[0],
-        hidden: isLinkHidden(state.data, link),
+        hidden: isLinkHidden({ tours, products }, link),
         soldOut: false,
       }
     }
-    const product = state.data.products.find(p => p.id === link.id)
+    const product = products.find(p => p.id === link.id)
 
     return {
       link,
       name: product ? pickText(product.name, form.language).text : link.id,
       photo: product?.photo,
-      hidden: isLinkHidden(state.data, link),
-      soldOut: product ? isSoldOut(product, state.data.orders) : false,
+      hidden: isLinkHidden({ tours, products }, link),
+      soldOut: product ? isSoldOut(product, orders) : false,
     }
   }
   const linkCandidates: LinkOption[] = [
-    ...state.data.products
+    ...products
       .filter(isPublished)
       .map(p => toOption({ kind: 'gift', id: p.id })),
-    ...(state.data.tours?.tours ?? [])
+    ...tours.tours
       .filter(x => x.published)
       .map(x => toOption({ kind: 'tour', id: x.id })),
   ]
@@ -241,7 +248,7 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       )
     : undefined
 
-  const now = () => demoNow(state.clockStartedAt).toISOString()
+  const now = () => demoNow(clockStartedAt).toISOString()
 
   /**
    * Validates for the mode, then stores the working copy with the given publication (or the

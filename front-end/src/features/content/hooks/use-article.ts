@@ -7,9 +7,12 @@ import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from '@sk/domain/content'
 
 import { formatDate } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
+import { useGuests } from '@/features/account/api/queries'
+import { useProducts } from '@/features/catalog/api/queries'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
 import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { avatarUrl } from '@/lib/avatars'
 import { useArticles, useComments } from '../api/queries'
 import { publishedArticles } from '../lib/articles'
@@ -67,10 +70,10 @@ export function useArticle(slug: string): ArticleView | null {
   ])
   const demoArticles = useArticles()
   const demoComments = useComments()
-  const demoGuests = useDemoSelector(s => s.data.guests)
-  const products = useDemoSelector(s => s.data.products)
+  const demoGuests = useGuests()
+  const products = useProducts()
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
-  const demoTours = useDemoSelector(s => s.data.tours)
+  const demoTours = useTourRecords()
   const toCard = useProductCard()
 
   const versions = demoArticles.filter(a => a.slug === slug && published(a))

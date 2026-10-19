@@ -7,11 +7,13 @@ import { zurichDayOf } from '@sk/domain/catalog'
 import { formatMoney, percentOf, pickText } from '@sk/domain/shared'
 import { createContext, use, useMemo, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
+import { usePickupPlaces, useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
 import { useSalesOverview } from '@/features/merchant/sales/hooks/use-sales-overview'
+import { useOrders } from '@/features/orders/api/queries'
 import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
 import { useReports } from '@/features/reports/hooks/use-reports'
 import { NO_FILTERS } from '@/features/reports/lib/money'
+import { useAdviceRequests, usePrivateTourRequests } from '@/features/requests/api/queries'
 
 /** A previous range that holds nothing, for "All time" (no comparison). */
 const NOTHING: DayRange = { start: '0000-01-01', end: '0000-01-01' }
@@ -34,7 +36,12 @@ export interface ShareBar {
 
 function useReportPagesState() {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const products = useProducts()
+  const subcategories = useStoreSubcategories()
+  const pickupPlaces = usePickupPlaces()
+  const orders = useOrders()
+  const adviceRequests = useAdviceRequests()
+  const privateTourRequests = usePrivateTourRequests()
   const [period, setPeriod] = useState<SalesPeriodId>('7d')
   const [custom, setCustom] = useState<DayRange | null>(null)
   const [filters, setFilters] = useState<ReportFilters>(NO_FILTERS)
@@ -47,7 +54,6 @@ function useReportPagesState() {
     current: sales.current,
     previous: sales.previous ?? NOTHING,
   })
-  const { products, subcategories, pickupPlaces, orders } = state.data
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const pct = (part: number, whole: number) =>
     percentOf(part, whole, intlLocale)
@@ -219,8 +225,8 @@ function useReportPagesState() {
 
     return day >= sales.current.start && day <= sales.current.end
   }
-  const adviceIn = state.data.adviceRequests.filter(r => sentIn(r.sentAt))
-  const privateIn = state.data.privateTourRequests.filter(r =>
+  const adviceIn = adviceRequests.filter(r => sentIn(r.sentAt))
+  const privateIn = privateTourRequests.filter(r =>
     sentIn(r.sentAt),
   )
   const inquiries = {

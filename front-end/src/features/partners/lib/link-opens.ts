@@ -1,4 +1,4 @@
-import type { DemoData } from '@/features/demo/types'
+import type { QueriedData } from '@/features/demo/types'
 
 import { DEMO_START } from '@/features/demo/clock'
 import { prng } from '@/features/merchant/today/lib/demo-history'
@@ -47,6 +47,6 @@ const HISTORY_OPENS: readonly LinkOpen[] = (() => {
 })()
 
 /** Every link open: the seeded history plus the opens made in this demo. */
-export function linkOpens(data: Pick<DemoData, 'referralVisits'>): LinkOpen[] {
+export function linkOpens(data: Pick<QueriedData, 'referralVisits'>): LinkOpen[] {
   return [...HISTORY_OPENS, ...data.referralVisits]
 }

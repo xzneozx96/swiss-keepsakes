@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/empty-state'
 import { MessageIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { shop } from '@/features/catalog/seed'
-import { useDemo } from '@/features/demo'
+import { useAdviceRequests } from '@/features/requests/api/queries'
 
 /**
  * C21 sent (spec §4.10, R19): the chat ends with the assistant's thank-you; the team takes
@@ -16,8 +16,9 @@ import { useDemo } from '@/features/demo'
  */
 export function AdviceSent({ requestId }: { requestId?: string }) {
   const { t } = useLocale()
-  const { state } = useDemo()
-  const request = state.data.adviceRequests.find(r => r.id === requestId)
+  const request = useAdviceRequests(requests =>
+    requests.find(r => r.id === requestId),
+  )
 
   if (!request) {
     return (

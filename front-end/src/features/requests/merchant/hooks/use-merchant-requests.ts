@@ -6,8 +6,8 @@ import { formatOrderDateTime } from '@sk/domain/orders'
 
 import { calendarDay, dateTimeFormat } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useAdviceQuestions, useAdviceRequests, usePrivateTourRequests } from '@/features/requests/api/queries'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 import { formatDateRange } from '../../lib/render-request-mail'
@@ -82,8 +82,14 @@ function newestFirst<T extends { sentAt: string }>(items: T[]) {
  */
 export function useMerchantRequests() {
   const { t, intlLocale } = useLocale()
-  const { state, update } = useDemo()
-  const { adviceRequests, privateTourRequests, adviceQuestions } = state.data
+  const client = useDataClient()
+  const { mutate: setPrivateTourAnswered } = useCommand(
+    client.requests.setPrivateTourAnswered,
+    [queryKeys.requests.privateTourRequests],
+  )
+  const adviceRequests = useAdviceRequests()
+  const privateTourRequests = usePrivateTourRequests()
+  const adviceQuestions = useAdviceQuestions()
 
   const plural = (count: number) =>
     new Intl.PluralRules(intlLocale).select(count) === 'one' ? 'one' : 'other'
@@ -160,25 +166,7 @@ export function useMerchantRequests() {
   })
 
   const setAnswered = (id: string, answered: boolean) =>
-    update(s => ({
-      ...s,
-      data: {
-        ...s.data,
-        privateTourRequests: s.data.privateTourRequests.map((r) => {
-          if (r.id !== id)
-            return r
-          if (!answered) {
-            const reopened = { ...r }
-
-            delete reopened.answeredAt
-
-            return reopened
-          }
-
-          return { ...r, answeredAt: demoNow(s.clockStartedAt).toISOString() }
-        }),
-      },
-    }))
+    setPrivateTourAnswered({ id, answered })
 
   return {
     tabs: [

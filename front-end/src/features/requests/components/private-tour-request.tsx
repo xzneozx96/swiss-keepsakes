@@ -63,8 +63,8 @@ export function PrivateTourRequest() {
   const fromRef = useRef<HTMLButtonElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
 
-  const submit = () => {
-    const result = request.send({
+  const submit = async () => {
+    const result = await request.send({
       groupSize,
       dateFrom,
       dateTo,
@@ -127,7 +127,7 @@ export function PrivateTourRequest() {
         validationBehavior="aria"
         onSubmit={(event) => {
           event.preventDefault()
-          submit()
+          void submit()
         }}
       >
         <div className="flex flex-1 flex-col gap-5 px-6 pt-2 pb-5">

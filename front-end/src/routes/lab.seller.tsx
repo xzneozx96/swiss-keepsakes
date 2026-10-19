@@ -4,8 +4,8 @@ import { pickText } from '@sk/domain/shared'
 
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useLocale } from '@/contexts/locale-context'
+import { usePickupPlaces } from '@/features/catalog/api/queries'
 import { shop } from '@/features/catalog/seed'
-import { useDemo } from '@/features/demo'
 import {
   SellerChips,
   SellerIconRow,
@@ -54,8 +54,7 @@ const options = [
 
 function SellerLab() {
   const { t, language } = useLocale()
-  const { state } = useDemo()
-  const place = state.data.pickupPlaces[0]
+  const place = usePickupPlaces(places => places[0])
 
   const props: SellerOptionProps = {
     initial: shop.name.charAt(0),

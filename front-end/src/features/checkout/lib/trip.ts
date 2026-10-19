@@ -1,6 +1,5 @@
-import type { TourData } from '@sk/domain/bookings'
 import type { TripAnswers, TripRecord } from '@sk/domain/orders'
-import type { DemoData } from '@/features/demo/types'
+import type { DemoData, QueriedData } from '@/features/demo/types'
 
 import { zurichDate } from '@sk/domain/catalog'
 
@@ -37,7 +36,7 @@ interface Purchase {
 }
 
 /** The guest's orders and tour bookings, which the trip questions are asked about. */
-type Purchases = Pick<DemoData, 'orders'> & { tours?: Pick<TourData, 'bookings'> }
+type Purchases = Pick<QueriedData, 'orders' | 'tours'>
 
 function guestPurchases(data: Purchases, guestId: string): Purchase[] {
   return [

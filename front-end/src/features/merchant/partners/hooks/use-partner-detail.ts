@@ -14,11 +14,15 @@ import {
 } from '@sk/domain/orders'
 import { formatMoney } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
+import { useGuests } from '@/features/account/api/queries'
 import { shop } from '@/features/catalog/seed'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useDemoNow, useDemoSelector } from '@/features/demo'
 import { methodLabelKeys } from '@/features/merchant/record-payment/hooks/use-record-payment'
+import { useOrders } from '@/features/orders/api/queries'
+import { useCommissionAdjustments, usePartnerPayouts, usePartners, useReferralVisits } from '@/features/partners/api/queries'
 import { partnerLedger, transactionKey } from '@/features/partners/lib/ledger'
 import { linkOpens } from '@/features/partners/lib/link-opens'
+import { useTourRecords } from '@/features/tours/api/queries'
 
 const WINDOW_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -65,19 +69,31 @@ function hrefOf(item: CommissionItem) {
  */
 export function usePartnerDetail(partnerId: string) {
   const { t, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const partners = usePartners()
+  const orders = useOrders()
+  const tours = useTourRecords()
+  const commissionAdjustments = useCommissionAdjustments()
+  const partnerPayouts = usePartnerPayouts()
+  const referralVisits = useReferralVisits()
+  const ledgerData = {
+    orders,
+    tours,
+    commissionAdjustments,
+    partnerPayouts,
+    referralVisits,
+  }
+  const guests = useGuests()
+  const role = useDemoSelector(s => s.role)
   const now = useDemoNow()
-  const partner: Partner | undefined = state.data.partners.find(
-    p => p.id === partnerId,
-  )
+  const partner: Partner | undefined = partners.find(p => p.id === partnerId)
 
   if (!partner)
     return undefined
 
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const dateTime = (iso: string) => formatOrderDateTime(iso, intlLocale)
-  const ledger = partnerLedger(state.data, partner.id, now)
-  const opens30 = linkOpens(state.data).filter((o) => {
+  const ledger = partnerLedger(ledgerData, partner.id, now)
+  const opens30 = linkOpens(ledgerData).filter((o) => {
     const at = Date.parse(o.at)
 
     return (
@@ -87,7 +103,7 @@ export function usePartnerDetail(partnerId: string) {
     )
   }).length
   const guestName = (id: string) =>
-    state.data.guests.find(g => g.id === id)?.name ?? ''
+    guests.find(g => g.id === id)?.name ?? ''
 
   const balance = (e: LedgerEntry) =>
     e.toOffset > 0
@@ -240,15 +256,15 @@ export function usePartnerDetail(partnerId: string) {
   return {
     partner,
     kind: t(`merchantPartners.kind.${partner.kind}`),
-    isOwner: state.role === 'owner',
-    canPay: state.role === 'owner' || state.role === 'manager',
+    isOwner: role === 'owner',
+    canPay: role === 'owner' || role === 'manager',
     facts: {
       toPay: money(ledger.toPay),
       toOffset: ledger.toOffset > 0 ? money(ledger.toOffset) : null,
       earned: money(ledger.earned),
       estimated: money(ledger.estimated),
       paid: money(ledger.paid),
-      payouts: state.data.partnerPayouts.filter(
+      payouts: partnerPayouts.filter(
         p => p.partnerId === partner.id,
       ).length,
       opens30,

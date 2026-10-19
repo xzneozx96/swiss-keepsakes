@@ -12,9 +12,12 @@ import {
 } from '@sk/domain/shared'
 import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
+import { useCommissionAdjustments, usePartners, useReferralVisits } from '@/features/partners/api/queries'
 import { commissionItems } from '@/features/partners/lib/ledger'
 import { linkOpens } from '@/features/partners/lib/link-opens'
+import { useTourRecords } from '@/features/tours/api/queries'
 
 /** Fixed per partner, in list order; partners beyond three share the muted colour. */
 const PARTNER_COLOURS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)']
@@ -60,7 +63,11 @@ export function usePartnerAnalytics(
   override?: { current: DayRange, previous: DayRange },
 ) {
   const { t, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const partners = usePartners()
+  const orders = useOrders()
+  const tours = useTourRecords()
+  const adjustments = useCommissionAdjustments()
+  const referralVisits = useReferralVisits()
   const now = useDemoNow()
   const [period, setPeriod] = useState<PeriodId>('30d')
   const today = zurichDate(now)
@@ -88,10 +95,10 @@ export function usePartnerAnalytics(
     return day >= r.start && day <= r.end
   }
 
-  const partners = state.data.partners
-  const opens = linkOpens(state.data)
-  const items = partners.flatMap(p => commissionItems(state.data, p.id))
-  const adjustments = state.data.commissionAdjustments
+  const opens = linkOpens({ referralVisits })
+  const items = partners.flatMap(p =>
+    commissionItems({ orders, tours, commissionAdjustments: adjustments }, p.id),
+  )
 
   const totals = (r: DayRange) => {
     const o = opens.filter(x => inRange(x.at, r)).length

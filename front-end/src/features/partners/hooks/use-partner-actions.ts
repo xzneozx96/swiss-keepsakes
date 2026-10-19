@@ -1,9 +1,11 @@
 import type { Partner, PartnerPayout } from '@sk/domain/partners'
-import type { DemoData } from '@/features/demo/types'
+import type { QueriedData } from '@/features/demo/types'
 
-import { useDemoActions, useDemoNow, useDemoSelector } from '@/features/demo'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useDemoSelector } from '@/features/demo'
+
+import { usePartners } from '@/features/partners/api/queries'
 import { commissionItems } from '../lib/ledger'
-
 import { linkOpens } from '../lib/link-opens'
 
 const PARTNER_CODE = /^[A-Z0-9]{3,12}$/
@@ -42,7 +44,7 @@ function randomToken() {
  */
 export function canDeletePartner(
   data: Pick<
-    DemoData,
+    QueriedData,
     'orders' | 'tours' | 'commissionAdjustments' | 'referralVisits'
   >,
   partnerId: string,
@@ -55,16 +57,30 @@ export function canDeletePartner(
 
 /** M15 and M16 partner management: add, archive, restore, delete (D17), payouts, report link. */
 export function usePartnerActions() {
-  const { update } = useDemoActions()
-  const demoPartners = useDemoSelector(s => s.data.partners)
+  const client = useDataClient()
+  const affects = [queryKeys.partners.partners]
+  const { mutate: addPartner } = useCommand(client.partners.addPartner, affects)
+  const { mutate: setPartnerArchived } = useCommand(
+    client.partners.setPartnerArchived,
+    affects,
+  )
+  const { mutate: deletePartner } = useCommand(
+    client.partners.deletePartner,
+    affects,
+  )
+  const { mutate: recordPayout } = useCommand(client.partners.recordPayout, [
+    queryKeys.partners.partnerPayouts,
+  ])
+  const { mutate: revokeReportLink } = useCommand(
+    client.partners.revokeReportLink,
+    affects,
+  )
+  const { mutate: issueReportLink } = useCommand(
+    client.partners.issueReportLink,
+    affects,
+  )
+  const demoPartners = usePartners()
   const role = useDemoSelector(s => s.role)
-  const now = useDemoNow()
-
-  const setPartners = (change: (partners: Partner[]) => Partner[]) =>
-    update(s => ({
-      ...s,
-      data: { ...s.data, partners: change(s.data.partners) },
-    }))
 
   return {
     /** Adds the partner with a fresh report link; returns its id. */
@@ -75,43 +91,26 @@ export function usePartnerActions() {
       for (let n = 2; demoPartners.some(p => p.id === id); n++) {
         id = `${base}-${n}`
       }
-      update(s => ({
-        ...s,
-        data: {
-          ...s.data,
-          partners: [
-            ...s.data.partners,
-            {
-              id,
-              name: input.name.trim(),
-              kind: input.kind,
-              code: input.code,
-              email: input.email.trim(),
-              reportToken: randomToken(),
-              revokedTokens: [],
-            },
-          ],
-        },
-      }))
+      addPartner({
+        id,
+        name: input.name.trim(),
+        kind: input.kind,
+        code: input.code,
+        email: input.email.trim(),
+        reportToken: randomToken(),
+        revokedTokens: [],
+      })
 
       return id
     },
     archive(partnerId: string) {
-      setPartners(partners =>
-        partners.map(p =>
-          p.id === partnerId ? { ...p, archivedAt: now.toISOString() } : p,
-        ),
-      )
+      setPartnerArchived({ id: partnerId, archived: true })
     },
     restore(partnerId: string) {
-      setPartners(partners =>
-        partners.map(p =>
-          p.id === partnerId ? { ...p, archivedAt: undefined } : p,
-        ),
-      )
+      setPartnerArchived({ id: partnerId, archived: false })
     },
     remove(partnerId: string) {
-      setPartners(partners => partners.filter(p => p.id !== partnerId))
+      deletePartner({ id: partnerId })
     },
     /** M16 "Record as paid" (5.4, AC13): money paid outside the app; Owner or Manager. */
     recordPayout(
@@ -119,51 +118,19 @@ export function usePartnerActions() {
     ) {
       if (role !== 'owner' && role !== 'manager')
         return
-      const recordedBy = role
-
-      update(s => ({
-        ...s,
-        data: {
-          ...s.data,
-          partnerPayouts: [
-            ...s.data.partnerPayouts,
-            {
-              ...payout,
-              id: `payout-${payout.partnerId}-${now.getTime()}`,
-              recordedBy,
-              recordedAt: now.toISOString(),
-            },
-          ],
-        },
-      }))
+      recordPayout(payout)
     },
     /** M16, Owner only (R10, Q5): the current report link stops working at once. */
     revokeReportLink(partnerId: string) {
       if (role !== 'owner')
         return
-      setPartners(partners =>
-        partners.map(p =>
-          p.id === partnerId && p.reportToken
-            ? {
-                ...p,
-                reportToken: null,
-                revokedTokens: [...p.revokedTokens, p.reportToken],
-              }
-            : p,
-        ),
-      )
+      revokeReportLink({ id: partnerId })
     },
     /** M16, Owner only (R10): a new private report link after a revoke. */
     issueReportLink(partnerId: string) {
       if (role !== 'owner')
         return
-      setPartners(partners =>
-        partners.map(p =>
-          p.id === partnerId && !p.reportToken
-            ? { ...p, reportToken: randomToken() }
-            : p,
-        ),
-      )
+      issueReportLink({ id: partnerId, token: randomToken() })
     },
   }
 }

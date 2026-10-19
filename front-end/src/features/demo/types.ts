@@ -1,4 +1,4 @@
-import type { TourData } from '@sk/domain/bookings'
+import type { TourData, TourRecords } from '@sk/domain/bookings'
 import type {
   PickupPlace,
   Product,
@@ -64,6 +64,9 @@ export interface DemoData {
   /** P01 sessions on this browser (R10, step 5.6). */
   partnerSessions: PartnerSession[]
 }
+
+/** The collections as the queries return them: tours come without the guest's booking draft. */
+export type QueriedData = Omit<DemoData, 'tours'> & { tours?: TourRecords }
 
 export interface DemoState {
   version: number

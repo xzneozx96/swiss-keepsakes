@@ -6,7 +6,8 @@ import { Link } from '@tanstack/react-router'
 import { EmptyState } from '@/components/empty-state'
 import { StatusSuccessIcon, TourIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useDemoNow } from '@/features/demo'
+import { usePrivateTourRequests } from '@/features/requests/api/queries'
 
 /**
  * C22 sent, in C07's grammar: the success mark and title, who replies and where, then the
@@ -14,10 +15,9 @@ import { useDemo, useDemoNow } from '@/features/demo'
  */
 export function PrivateTourSent({ requestId }: { requestId?: string }) {
   const { t, intlLocale } = useLocale()
-  const { state } = useDemo()
   const today = zurichDate(useDemoNow())
-  const request = state.data.privateTourRequests.find(
-    r => r.id === requestId,
+  const request = usePrivateTourRequests(requests =>
+    requests.find(r => r.id === requestId),
   )
 
   if (!request) {

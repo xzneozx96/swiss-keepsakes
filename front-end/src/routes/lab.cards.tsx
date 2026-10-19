@@ -9,7 +9,8 @@ import {
 import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useProducts } from '@/features/catalog/api/queries'
+import { useDemoNow } from '@/features/demo'
 import {
   OptionBorderless,
   OptionCompact,
@@ -62,12 +63,12 @@ const options = [
 
 function CardLab() {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const products = useProducts()
   const now = useDemoNow()
   const today = zurichDate(now)
 
   const samples: CardOptionProps[] = sampleIds
-    .map(id => state.data.products.find(p => p.id === id))
+    .map(id => products.find(p => p.id === id))
     .filter(p => p !== undefined)
     .map(p => ({
       name: pickText(p.name, language).text,

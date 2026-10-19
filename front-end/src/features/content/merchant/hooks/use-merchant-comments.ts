@@ -5,6 +5,7 @@ import { reviewerName } from '@sk/domain/catalog'
 
 import { dateTimeFormat } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
+import { useGuests } from '@/features/account/api/queries'
 import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 import { avatarUrl } from '@/lib/avatars'
@@ -54,7 +55,7 @@ export function useMerchantComments(filter: CommentFilter[]) {
   const { mutate: replyAsShop } = useCommand(client.content.replyAsShop, affects)
   const comments = useComments()
   const articles = useArticles()
-  const guests = useDemoSelector(s => s.data.guests)
+  const guests = useGuests()
   const role = useDemoSelector(s => s.role)
   const time = dateTimeFormat(intlLocale, {
     day: '2-digit',

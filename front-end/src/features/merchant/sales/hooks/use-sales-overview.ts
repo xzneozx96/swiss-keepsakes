@@ -18,10 +18,14 @@ import {
 } from '@sk/domain/shared'
 import { useMemo } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useProducts } from '@/features/catalog/api/queries'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
+import { useCommissionAdjustments } from '@/features/partners/api/queries'
 import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
 import { matchesFilters, NO_FILTERS } from '@/features/reports/lib/money'
 import { reportTransactions } from '@/features/reports/lib/transactions'
+import { useTourRecords } from '@/features/tours/api/queries'
 
 /** A change smaller than this either way counts as stable: grey line, no arrow. */
 const STABLE = 0.05
@@ -127,11 +131,13 @@ export function useSalesOverview(
   filters: ReportFilters = NO_FILTERS,
 ) {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const orders = useOrders()
+  const tours = useTourRecords()
+  const products = useProducts()
+  const commissionAdjustments = useCommissionAdjustments()
   const now = useDemoNow()
   const today = zurichDate(now)
   const nowTime = timeOf(now.toISOString())
-  const { orders, tours, products, commissionAdjustments } = state.data
 
   const { sales, payments, moves, firstDay } = useMemo(() => {
     const txs = new Map(

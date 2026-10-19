@@ -18,7 +18,9 @@ import {
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useGuests } from '@/features/account/api/queries'
+import { usePickupPlaces, useProducts } from '@/features/catalog/api/queries'
+import { useDemoNow } from '@/features/demo'
 import {
   OrderLedger,
   OrderSheets,
@@ -34,6 +36,7 @@ import {
   OrderTimeline,
 } from '@/features/lab/order-card-options'
 import { orderTab } from '@/features/merchant/orders/lib/order-tabs'
+import { useOrders } from '@/features/orders/api/queries'
 import {
   formatLabel,
   paymentLabel,
@@ -146,9 +149,11 @@ function withTwoGifts(order: Order): Order {
 
 function useLabRows(): LabOrderRow[] {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const orders = useOrders()
+  const guests = useGuests()
+  const products = useProducts()
+  const pickupPlaces = usePickupPlaces()
   const now = useDemoNow()
-  const { orders, guests, products } = state.data
   const today = zurichDate(now)
   const pick = (text: Partial<Record<'en' | 'de', string>>) =>
     pickText(text, language).text
@@ -184,7 +189,7 @@ function useLabRows(): LabOrderRow[] {
         }
       })
       const [first, ...rest] = gifts
-      const place = state.data.pickupPlaces.find(
+      const place = pickupPlaces.find(
         p => p.id === order.pickupPlaceId,
       )
       const shownLabel = (label: ReturnType<typeof progressLabel>) => ({

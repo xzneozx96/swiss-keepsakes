@@ -12,9 +12,10 @@ import {
   RESEND_AFTER_MS,
   WRONG_CODE,
 } from '@/features/auth/hooks/use-sign-in'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useDemoActions, useDemoNow, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { sendMail } from '@/features/notifications/mail'
+import { usePartners } from '@/features/partners/api/queries'
 
 /** R10: once the code is entered, the report opens on this browser for 30 days. */
 const SESSION_MS = 30 * 24 * 60 * 60 * 1000
@@ -40,7 +41,8 @@ export type PartnerAccess
 
 /** The C05 code step's state for one partner, with the same demo code rules. */
 function useCodeStep(partner: Partner | undefined, token: string) {
-  const { state, update } = useDemo()
+  const { update } = useDemoActions()
+  const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const { language } = useLocale()
   const [step, setStep] = useState<CodeStep | null>(null)
   const [code, setCode] = useState('')
@@ -61,7 +63,7 @@ function useCodeStep(partner: Partner | undefined, token: string) {
     if (!partner)
       return
     const now = Date.now()
-    const sentAt = demoNow(state.clockStartedAt, now)
+    const sentAt = demoNow(clockStartedAt, now)
     // Shown only in the N19 email; any 6 digits open the report (as C05).
     const mailedCode = String(Math.floor(100_000 + Math.random() * 900_000))
 
@@ -90,7 +92,7 @@ function useCodeStep(partner: Partner | undefined, token: string) {
       return
     if (value.length !== CODE_LENGTH)
       return
-    const now = demoNow(state.clockStartedAt)
+    const now = demoNow(clockStartedAt)
 
     if (
       value === EXPIRED_CODE
@@ -150,16 +152,16 @@ function useCodeStep(partner: Partner | undefined, token: string) {
  * A valid session on this browser skips the code for 30 days.
  */
 export function usePartnerAccess(token: string): PartnerAccess {
-  const { state } = useDemo()
   const now = useDemoNow()
-  const partner = state.data.partners.find(
-    p => p.reportToken === token && !p.archivedAt,
+  const partner = usePartners(partners =>
+    partners.find(p => p.reportToken === token && !p.archivedAt),
   )
+  const partnerSessions = useDemoSelector(s => s.data.partnerSessions)
   const codeStep = useCodeStep(partner, token)
 
   if (!partner)
     return { kind: 'invalid' }
-  const session = state.data.partnerSessions.find(
+  const session = partnerSessions.find(
     s => s.token === token && s.partnerId === partner.id,
   )
 

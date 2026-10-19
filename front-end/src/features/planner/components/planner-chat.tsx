@@ -1,4 +1,3 @@
-import type { AdviceRequest } from '@sk/domain/requests'
 import type { ReactNode } from 'react'
 
 import type { Plan } from '../lib/plan'
@@ -31,9 +30,8 @@ import { ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { AssistantHeader } from '@/components/assistant'
 
 import { shop } from '@/features/catalog/seed'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
 import { useDemoActions } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
-import { mailAdviceRequest } from '@/features/requests/lib/request-mail'
 import { getChat, hooks, resetChat, saveMessages } from '../lib/session'
 import { ItineraryCard } from './itinerary-card'
 import {
@@ -247,44 +245,34 @@ function TracePanel({
  */
 export function PlannerChat({ onLeave }: { onLeave: () => void }) {
   const navigate = useNavigate()
-  const { update, setRole } = useDemoActions()
+  const { setRole } = useDemoActions()
+  const client = useDataClient()
+  const { mutate: sendAdviceRequest } = useCommand(
+    client.requests.sendAdviceRequest,
+    [queryKeys.requests.adviceRequests, queryKeys.notifications.mail],
+  )
 
   // The scripted chat lives outside this component and calls back into it, so the handler is
-  // registered after render. `update` never changes, so the handler is never stale.
+  // registered after render. `sendAdviceRequest` never changes, so the handler is never stale.
   useEffect(() => {
     hooks.createInquiry = ({ answers }) => {
       const requestId = `adv-${Date.now().toString(36)}`
 
-      update((s) => {
-        const request: AdviceRequest = {
-          id: requestId,
-          sentAt: demoNow(s.clockStartedAt).toISOString(),
-          language: 'en',
-          email: 'demo.guest@example.com',
-          answers: answers.map((a, i) => ({
-            questionId: `planner-${i}`,
-            question: a.question,
-            questionLanguage: 'en',
-            answer: a.answer,
-          })),
-        }
-
-        return mailAdviceRequest(
-          {
-            ...s,
-            data: {
-              ...s.data,
-              adviceRequests: [...s.data.adviceRequests, request],
-            },
-          },
-          request,
-          s.data.adviceQuestions.recipientEmail,
-        )
+      sendAdviceRequest({
+        id: requestId,
+        language: 'en',
+        email: 'demo.guest@example.com',
+        answers: answers.map((a, i) => ({
+          questionId: `planner-${i}`,
+          question: a.question,
+          questionLanguage: 'en',
+          answer: a.answer,
+        })),
       })
 
       return requestId
     }
-  }, [update])
+  }, [sendAdviceRequest])
 
   const [chat, setChat] = useState(getChat)
   // The scripted answer arrives a word at a time; the screen redraws at most every 50 ms.

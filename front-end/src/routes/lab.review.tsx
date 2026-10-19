@@ -8,8 +8,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
+import { usePickupPlaces } from '@/features/catalog/api/queries'
 import { products, shop } from '@/features/catalog/seed'
-import { useDemo } from '@/features/demo'
 import {
   ReviewCompact,
   ReviewDueFirst,
@@ -95,7 +95,7 @@ const options: {
  */
 function useSampleOrders(): ReviewOrderView[] {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const pickupPlaces = usePickupPlaces()
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const pick = (text: Partial<Record<'en' | 'de', string>>) =>
     pickText(text, language).text
@@ -132,7 +132,7 @@ function useSampleOrders(): ReviewOrderView[] {
     ]
   }
   const place = (id: string) =>
-    pick(state.data.pickupPlaces.find(p => p.id === id)?.name ?? {})
+    pick(pickupPlaces.find(p => p.id === id)?.name ?? {})
   const cancellation = (...ids: string[]) =>
     [
       ...new Set(

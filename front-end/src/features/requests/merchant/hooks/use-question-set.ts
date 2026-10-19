@@ -1,8 +1,7 @@
 import type { AdviceQuestion, AdviceQuestionSet } from '@sk/domain/requests'
 
-import { useDemoActions, useDemoSelector } from '@/features/demo'
-
-import { demoNow } from '@/features/demo/clock'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useAdviceQuestions } from '@/features/requests/api/queries'
 import {
   missingLanguages,
   moveQuestion,
@@ -17,21 +16,15 @@ import {
  * (AC18).
  */
 export function useQuestionSet() {
-  const { update } = useDemoActions()
-  const adviceQuestions = useDemoSelector(s => s.data.adviceQuestions)
-  const set = adviceQuestions
+  const client = useDataClient()
+  const { mutate: saveQuestionSet } = useCommand(
+    client.requests.saveQuestionSet,
+    [queryKeys.requests.adviceQuestions],
+  )
+  const set = useAdviceQuestions()
 
   const change = (recipe: (set: AdviceQuestionSet) => AdviceQuestionSet) =>
-    update(s => ({
-      ...s,
-      data: {
-        ...s.data,
-        adviceQuestions: {
-          ...recipe(s.data.adviceQuestions),
-          updatedAt: demoNow(s.clockStartedAt).toISOString(),
-        },
-      },
-    }))
+    saveQuestionSet(recipe(set))
 
   return {
     set,

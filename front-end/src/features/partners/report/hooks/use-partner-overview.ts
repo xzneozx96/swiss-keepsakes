@@ -11,10 +11,13 @@ import { calendarDay, dateTimeFormat, formatMoney } from '@sk/domain/shared'
 
 import { useMemo } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useDemoNow } from '@/features/demo'
 import { useSalesOverview } from '@/features/merchant/sales/hooks/use-sales-overview'
+import { useOrders } from '@/features/orders/api/queries'
+import { useCommissionAdjustments, usePartnerPayouts } from '@/features/partners/api/queries'
 import { partnerLedger } from '@/features/partners/lib/ledger'
 import { NO_FILTERS } from '@/features/reports/lib/money'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { periodMoney } from '../lib/payouts'
 import { zurichHour } from '../lib/report'
 import { usePartnerDashboard } from './use-partner-dashboard'
@@ -66,7 +69,10 @@ export function usePartnerOverview(
   custom: DayRange | null,
 ) {
   const { t, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const orders = useOrders()
+  const tours = useTourRecords()
+  const commissionAdjustments = useCommissionAdjustments()
+  const partnerPayouts = usePartnerPayouts()
   const now = useDemoNow()
   const nowMs = now.getTime()
   const today = zurichDate(now)
@@ -78,7 +84,6 @@ export function usePartnerOverview(
     start: sales.current.start,
     end: sales.current.end,
   })
-  const { orders, tours, commissionAdjustments, partnerPayouts } = state.data
   const ledger = useMemo(
     () =>
       partnerLedger(

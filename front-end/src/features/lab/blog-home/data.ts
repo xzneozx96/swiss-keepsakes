@@ -5,9 +5,10 @@ import type { Language } from '@/contexts/locale-context'
 
 import { pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
+import { useProducts } from '@/features/catalog/api/queries'
 import { useArticles } from '@/features/content/api/queries'
 import { publishedArticles } from '@/features/content/lib/articles'
-import { useDemo } from '@/features/demo'
+import { useTourRecords } from '@/features/tours/api/queries'
 import {
   categories,
 
@@ -185,10 +186,10 @@ export type GentleLink
 /** Published stories in the guest's language, with the lab-only category, area and first shop link. */
 export function useBlogData() {
   const { language } = useLocale()
-  const { state } = useDemo()
   const stored = useArticles()
+  const products = useProducts()
+  const tours = useTourRecords(records => records.tours)
   const articles = publishedArticles(stored, language)
-  const tours = state.data.tours?.tours ?? []
 
   const categoryOf = (a: Article): Category => meta[a.slug]?.category ?? 'town'
   const areaOf = (a: Article) => meta[a.slug]?.area[language] ?? 'Luzern'
@@ -207,7 +208,7 @@ export function useBlogData() {
         }
       }
       else {
-        const product = state.data.products.find(p => p.id === link.id)
+        const product = products.find(p => p.id === link.id)
 
         if (product) {
           return {

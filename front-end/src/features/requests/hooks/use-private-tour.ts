@@ -1,11 +1,9 @@
-import type { PrivateTourRequest } from '@sk/domain/requests'
-
 import { looksLikeEmail } from '@sk/domain/requests'
 import { useLocale } from '@/contexts/locale-context'
 
-import { useDemoActions, useDemoSelector } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
-import { mailPrivateTourRequest } from '../lib/request-mail'
+import { useGuests } from '@/features/account/api/queries'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useDemoSelector } from '@/features/demo'
 
 export interface PrivateTourInput {
   groupSize: number
@@ -34,14 +32,18 @@ export const GROUP_MAX = 50
  */
 export function usePrivateTour() {
   const { language } = useLocale()
-  const { update } = useDemoActions()
-  const guests = useDemoSelector(s => s.data.guests)
+  const client = useDataClient()
+  const { mutateAsync: sendRequest } = useCommand(
+    client.requests.sendPrivateTourRequest,
+    [queryKeys.requests.privateTourRequests, queryKeys.notifications.mail],
+  )
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
-  const guest = guests.find(g => g.id === signedInGuestId)
+  const guest = useGuests(guests => guests.find(g => g.id === signedInGuestId))
 
   return {
     defaultEmail: guest?.email ?? '',
-    send: (input: PrivateTourInput): PrivateTourResult => {
+    /** Resolves once the request is stored, so C22's sent screen can show it. */
+    send: async (input: PrivateTourInput): Promise<PrivateTourResult> => {
       const email = input.email.trim()
       const errors: PrivateTourErrors = {}
 
@@ -57,29 +59,15 @@ export function usePrivateTour() {
       const dateFrom = input.dateFrom as string
       const requestId = `pt-${Date.now().toString(36)}`
 
-      update((s) => {
-        const request: PrivateTourRequest = {
-          id: requestId,
-          sentAt: demoNow(s.clockStartedAt).toISOString(),
-          language,
-          email,
-          groupSize: Math.min(GROUP_MAX, Math.max(GROUP_MIN, input.groupSize)),
-          dateFrom,
-          dateTo: input.dateTo ?? dateFrom,
-          interests: input.interests.trim(),
-        }
-
-        // N17 to the Owner and the Manager; the guest gets no email (A2).
-        return mailPrivateTourRequest(
-          {
-            ...s,
-            data: {
-              ...s.data,
-              privateTourRequests: [...s.data.privateTourRequests, request],
-            },
-          },
-          request,
-        )
+      // N17 to the Owner and the Manager; the guest gets no email (A2).
+      await sendRequest({
+        id: requestId,
+        language,
+        email,
+        groupSize: Math.min(GROUP_MAX, Math.max(GROUP_MIN, input.groupSize)),
+        dateFrom,
+        dateTo: input.dateTo ?? dateFrom,
+        interests: input.interests.trim(),
       })
 
       return { ok: true, requestId }
