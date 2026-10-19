@@ -2,7 +2,8 @@ import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
 import { STATUS_CODES } from 'node:http'
-import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
+import { healthSchema, problemSchema } from '@sk/api-contract'
 import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
@@ -25,9 +26,12 @@ const healthRoute = createRoute({
   responses: {
     200: {
       description: 'The database and this process\'s pg-boss answer',
-      content: { 'application/json': { schema: z.object({ status: z.literal('ok') }) } },
+      content: { 'application/json': { schema: healthSchema } },
     },
-    503: { description: 'A check failed. The problem+json body lists each check' },
+    503: {
+      description: 'A check failed. The problem+json body lists each check',
+      content: { 'application/problem+json': { schema: problemSchema } },
+    },
   },
 })
 

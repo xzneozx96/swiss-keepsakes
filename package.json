@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "pnpm --filter @sk/api dev",
     "build": "pnpm -r --if-present build",
+    "contract:build": "pnpm --filter @sk/api contract:build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "vitest run --passWithNoTests",
     "test:integration": "vitest run --config vitest.integration.config.mjs",
