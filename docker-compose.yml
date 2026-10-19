@@ -16,14 +16,15 @@ services:
       # From Postgres 18 the image keeps its data under /var/lib/postgresql/18/docker.
       - postgres:/var/lib/postgresql
     healthcheck:
-      test: [CMD, pg_isready, -U, postgres, -d, swiss_keepsakes]
+      # Over TCP: during first start the image runs a temporary server on the Unix socket only.
+      test: [CMD, pg_isready, -h, 127.0.0.1, -U, postgres, -d, swiss_keepsakes]
       interval: 2s
       timeout: 5s
       retries: 30
 
   minio:
-    # MinIO stopped publishing community images in October 2025. This is the owner's GHCR copy of the last one.
-    image: ghcr.io/xzneozx96/minio:RELEASE.2025-09-07T16-13-09Z
+    # MinIO stopped publishing community images in October 2025. This is the owner's amd64-only GHCR copy of the last one.
+    image: ghcr.io/xzneozx96/minio:RELEASE.2025-09-07T16-13-09Z@sha256:52dfd5c0bbd38d3219f2058c7af216d9f9a27a994b7b5baad09bbd38866015ff
     command: [server, /data]
     ports:
       - 127.0.0.1:9100:9000
