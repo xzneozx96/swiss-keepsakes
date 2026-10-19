@@ -4,9 +4,11 @@
 //   node scripts/trace.mjs <plan.md> [--tests <dir>]... [--status <status.json>] [--verbose]
 //
 // Test titles are matched by [E<n>.<n>] on test() and it() calls under e2e, packages, api and scripts, skipping
-// node_modules and scripts/fixtures. A test in a folder with a playwright.config.ts counts once per project in that config,
+// node_modules and scripts/fixtures. A tag on a describe() title counts for every test() and it() inside that block. A test in a folder with a playwright.config.ts counts once per project in that config,
 // so a test that runs in English and German counts 2. Statuses come from status.json beside the plan;
 // a missing file makes every story Backlog.
+// A spike story has no automated test: its acceptance names a docs/spikes/SP<n>.md proof, and that file existing
+// satisfies the check.
 // Exit 0 ok, 1 when a Verified or Done story has no test, 2 on a malformed story row or unreadable input.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -15,7 +17,8 @@ import { fileURLToPath } from "node:url";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const fixtures = join(repoRoot, "scripts", "fixtures");
 const TEST_FILE = /\.(?:[cm]?[jt]sx?)$/;
-const TEST_CALL = /\b(?:test|it)(?:\.\w+)*\(\s*(["'`])((?:\\.|(?!\1).)*)\1/g;
+const TEST_CALL = /\b(test|it|describe)(?:\.\w+)*\(\s*(["'`])((?:\\.|(?!\2).)*)\2/g;
+const SPIKE_PROOF = /docs\/spikes\/SP\d+\.md/;
 const STORY_ID = /^E\d+\.\d+$/;
 
 export function parseStories(md) {
@@ -29,7 +32,7 @@ export function parseStories(md) {
 
     if (!STORY_ID.test(cells[0])) continue;
     if (cells.length !== 7) throw new MalformedRow(line);
-    stories.push({ id: cells[0], story: cells[1] });
+    stories.push({ id: cells[0], story: cells[1], acceptance: cells[6] });
   }
 
   return stories;
@@ -70,6 +73,18 @@ function projectCount(file, stop) {
   }
 }
 
+function blockEnd(source, from) {
+  const open = source.indexOf("{", from);
+
+  if (open === -1) return from;
+  for (let i = open, depth = 0; i < source.length; i++) {
+    if (source[i] === "{") depth++;
+    else if (source[i] === "}" && --depth === 0) return i;
+  }
+
+  return source.length;
+}
+
 export function collectTests(roots, stop = repoRoot) {
   const found = [];
 
@@ -77,8 +92,19 @@ export function collectTests(roots, stop = repoRoot) {
     for (const file of walk(root)) {
       const runs = projectCount(file, stop);
 
-      for (const [, , title] of readFileSync(file, "utf8").matchAll(TEST_CALL)) {
-        for (const [, id] of title.matchAll(/\[(E\d+\.\d+)\]/g)) found.push({ id, title, file, runs });
+      const source = readFileSync(file, "utf8");
+      const blocks = [];
+
+      for (const match of source.matchAll(TEST_CALL)) {
+        const [, kind, , title] = match;
+        const inherited = blocks.filter((b) => match.index < b.end).flatMap((b) => b.ids);
+        const own = [...title.matchAll(/\[(E\d+\.\d+)\]/g)].map((m) => m[1]);
+
+        if (kind === "describe") {
+          blocks.push({ ids: own, end: blockEnd(source, match.index + match[0].length) });
+          continue;
+        }
+        for (const id of new Set([...own, ...inherited])) found.push({ id, title, file, runs });
       }
     }
   }
@@ -100,9 +126,12 @@ export function trace({ plan, testRoots, statusPath }) {
     const count = mine.reduce((n, t) => n + t.runs, 0);
     const status = statuses[story.id] ?? "Backlog";
 
-    lines.push(`${story.id} tests=${count} status=${status}`);
+    const proof = story.acceptance.match(SPIKE_PROOF)?.[0];
+    const proofed = proof && existsSync(join(repoRoot, proof));
+
+    lines.push(`${story.id} tests=${count} status=${status}${proofed ? ` proof=${proof}` : ""}`);
     for (const t of mine) lines.push(`  ${t.title}${t.runs > 1 ? ` (x${t.runs} projects)` : ""}`);
-    if (count === 0 && (status === "Verified" || status === "Done")) missing.push(story.id);
+    if (count === 0 && !proofed && (status === "Verified" || status === "Done")) missing.push(story.id);
   }
   for (const t of tests) {
     if (!known.has(t.id)) warnings.push(`warning: unknown story ID ${t.id} in test title "${t.title}" (${t.file})`);

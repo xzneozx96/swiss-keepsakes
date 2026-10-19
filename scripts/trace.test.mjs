@@ -86,7 +86,7 @@ test("[E0.9] a missing status.json makes every story Backlog", () => {
 });
 
 test("[E0.9] the output is the same from a subdirectory", () => {
-  const plan = resolve(here, "..", "docs", "plan", "delivery-plan.md");
+  const plan = resolve(here, "..", "docs", "development-plan", "delivery-plan.md");
   const fromRoot = run([plan], resolve(here, ".."));
   const fromSub = run([plan], resolve(here, "fixtures", "trace"));
 
@@ -106,7 +106,7 @@ test("[E0.9] a test inside a Playwright project folder counts once per project",
 });
 
 test("[E0.9] fixture test titles do not count toward the real plan", () => {
-  const plan = resolve(here, "..", "docs", "plan", "delivery-plan.md");
+  const plan = resolve(here, "..", "docs", "development-plan", "delivery-plan.md");
   const real = run([plan]);
   const own = (readFileSync(script.replace("trace.mjs", "trace.test.mjs"), "utf8").match(/^test\("\[E0\.9\]/gm) ?? []).length;
 
@@ -114,4 +114,27 @@ test("[E0.9] fixture test titles do not count toward the real plan", () => {
   assert.match(real.stdout, new RegExp(`^E0\\.9 tests=${own} `, "m"));
   assert.match(real.stdout, /^E0\.1 tests=0 /m);
   assert.doesNotMatch(real.stderr, /unknown story ID/);
+});
+
+test("[E0.9] a tag on describe() counts for each test inside it and not for the next block", () => {
+  const w = workspace("describe", {
+    plan: header + row("E0.1") + row("E0.2"),
+    tests: {
+      "a.test.ts": `describe('[${"E0.1"}] group', () => {\n  it('one', () => { const x = { a: 1 } })\n  it('two', () => {})\n})\ndescribe('plain', () => {\n  it('three', () => {})\n  it('[${"E0.2"}] four', () => {})\n})\n`,
+    },
+  });
+  const result = run([w.plan, "--tests", w.tests]);
+
+  assert.deepEqual(result.stdout.trim().split("\n"), ["E0.1 tests=2 status=Backlog", "E0.2 tests=1 status=Backlog"]);
+});
+
+test("[E0.9] a Done spike whose proof document exists passes without a test", () => {
+  const w = workspace("spike", {
+    plan: `${header}| E0.1 | A spike | BE | 1 | High | | Proof is \`docs/spikes/SP1.md\` |\n`,
+    status: { "E0.1": "Done" },
+  });
+  const result = run([w.plan, "--tests", w.tests]);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.trim(), "E0.1 tests=0 status=Done proof=docs/spikes/SP1.md");
 });
