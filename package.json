@@ -6,9 +6,15 @@
     "build": "pnpm -r --if-present build",
     "typecheck": "pnpm -r --if-present typecheck",
     "test": "vitest run --passWithNoTests",
-    "e2e": "pnpm --dir front-end build && pnpm --dir e2e test"
+    "e2e": "pnpm --dir front-end build && pnpm --dir e2e test",
+    "lint:zones": "eslint --no-error-on-unmatched-pattern api packages"
   },
   "devDependencies": {
+    "@typescript-eslint/parser": "8.71.2",
+    "eslint": "9.39.5",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-boundaries": "^6.0.2",
+    "typescript": "5.9.3",
     "vitest": "^4.1.12"
   }
 }
