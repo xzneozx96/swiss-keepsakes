@@ -1,6 +1,5 @@
 # Local services for the API (architecture section 11). `docker compose up -d --wait` starts them.
-# Ports bind to 127.0.0.1 only, and nothing here is a secret: Postgres trusts local connections,
-# and MinIO runs on its built-in default credentials because no root user is set.
+# Ports bind to 127.0.0.1 only, and nothing here is a secret: Postgres trusts local connections.
 name: swiss-keepsakes
 
 services:
@@ -22,20 +21,6 @@ services:
       timeout: 5s
       retries: 30
 
-  minio:
-    # MinIO stopped publishing community images in October 2025. This is the owner's amd64-only GHCR copy of the last one.
-    image: ghcr.io/xzneozx96/minio:RELEASE.2025-09-07T16-13-09Z@sha256:52dfd5c0bbd38d3219f2058c7af216d9f9a27a994b7b5baad09bbd38866015ff
-    command: [server, /data]
-    ports:
-      - 127.0.0.1:9100:9000
-    volumes:
-      - minio:/data
-    healthcheck:
-      test: [CMD, curl, -f, http://localhost:9000/minio/health/live]
-      interval: 2s
-      timeout: 5s
-      retries: 30
-
   mailpit:
     image: axllent/mailpit:v1.31.6
     ports:
@@ -49,4 +34,3 @@ services:
 
 volumes:
   postgres:
-  minio:

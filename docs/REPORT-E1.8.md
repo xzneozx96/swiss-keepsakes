@@ -305,3 +305,7 @@ Not verified after the fixes:
 - MinIO was not pulled by digest from an empty cache. The registry serves the digest anonymously (HTTP 200).
 - Two log-redaction gaps are documented but not enforced. An `Error` logged under a key other than `err` still serializes its enumerable fields, and `logger.error(error)` as the first argument puts `error.message` into `msg`. A lint rule could enforce both.
 - `docs/development-rules/README.md` still describes `backend/` as "Design, not built".
+
+## Update after owner review
+
+The owner pointed out that object storage is Neon Object Storage (D14, SP5), so MinIO was removed from `docker-compose.yml`, along with its port 9100, its volume and its image from the owner's registry. Wherever this report mentions MinIO, that service no longer exists. Compose now holds Postgres 18.6 and Mailpit. Local storage work will use the `development` branch's `uploads` and `media` buckets from `neon env pull`. The architecture document was brought in line: section 11 (storage and database rows), 4.2 (`config.ts` sits in `platform/`, as the 4.1 table says) and 4.1 (the layer rule names `eslint-plugin-boundaries`, which E1.7 uses).

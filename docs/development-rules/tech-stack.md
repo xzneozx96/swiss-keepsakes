@@ -42,7 +42,7 @@ The source is `docs/architecture/backend.md` section 1 and the decision numbers 
 | Service | One TypeScript service on Node, Hono 4.13 on `@hono/node-server` 2.1. It runs the API, the worker or both, chosen by `ROLE`. `tsx watch` runs it in development | In use. The worker is a process shell until pg-boss arrives | D1 |
 | Configuration | One Zod 4 schema over the environment, checked at startup (`api/src/platform/config.ts`) | In use | Section 11 |
 | Logging | pino 10, JSON lines with the request id (`api/src/platform/logger.ts`). Errors under `err` keep only type, code, constraint, table and stack frames. A fixed list of keys (email, phone, token, engraving, auth header and similar) is redacted at the top level, one and two levels down, and in arrays of objects up to one level down. Deeper fields and other key names are not covered | In use | Section 13 |
-| Local services | `docker-compose.yml`: Postgres 18.6, MinIO, Mailpit | In use | Section 11 |
+| Local services | `docker-compose.yml`: Postgres 18.6, Mailpit | In use | Section 11 |
 | Lint | `@antfu/eslint-config` for `api/` (`pnpm --filter @sk/api lint`). Layer rules come from the root `pnpm lint:zones` | In use | `frontend/linting.md` |
 | Database | Neon Postgres 18, AWS Frankfurt, branches `production`, `staging`, `development` | Planned | D2 |
 | ORM and migrations | Drizzle, SQL migrations that only move forward (expand and contract) | Planned | Section 1, 11 |
