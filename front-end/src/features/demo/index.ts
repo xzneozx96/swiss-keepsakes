@@ -1,7 +1,6 @@
 export { PrototypeBar } from './components/prototype-bar'
 export {
   DemoProvider,
-  useDemo,
   useDemoActions,
   useDemoNow,
   useDemoSelector,

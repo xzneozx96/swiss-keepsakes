@@ -31,14 +31,15 @@ function useStore(): DemoStore {
   const store = use(DemoContext)
 
   if (!store)
-    throw new Error('useDemo must be used inside DemoProvider')
+    throw new Error('Demo hooks must be used inside DemoProvider')
 
   return store
 }
 
 /**
- * One slice of the state. The component re-renders only when the slice changes, so select a
- * primitive or an existing part of the state (`(s) => s.data.orders`), never a new object.
+ * One slice of the browser-only state: the role, the clock, sign-in, the cart, saved gifts and
+ * drafts. Shop data comes from the feature query hooks. The component re-renders only when the
+ * slice changes, so select a primitive or an existing part of the state, never a new object.
  */
 export function useDemoSelector<T>(select: (state: DemoState) => T): T {
   const store = useStore()
@@ -58,14 +59,6 @@ export function useStorageFull(): boolean {
   const store = useStore()
 
   return useSyncExternalStore(store.subscribe, store.getStorageFull)
-}
-
-/** The whole state: re-renders on every change. Prefer `useDemoSelector` for a part of it. */
-export function useDemo(): DemoActions & { state: DemoState } {
-  const state = useDemoSelector(s => s)
-  const actions = useDemoActions()
-
-  return useMemo(() => ({ state, ...actions }), [state, actions])
 }
 
 /** Current demo time, refreshed every 30 seconds for countdowns and "due in" labels. */

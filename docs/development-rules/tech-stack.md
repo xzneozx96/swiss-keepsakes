@@ -24,7 +24,7 @@ The lint standard is `@antfu/eslint-config` with no Prettier, adopted on 2026-10
 | Assistant chat UI | `@ai-sdk/react` | In use | `package.json` |
 | Dates | `@internationalized/date`, `temporal-polyfill` | In use | `package.json` |
 | Lint | ESLint 9 with `@antfu/eslint-config` (`react`, `typescript`, jsx-a11y), `eslint-plugin-boundaries` for layers, react-hooks 7.1 compiler rules. Formatting is ESLint Stylistic | In use | `front-end/eslint.config.mjs`, `frontend/linting.md` |
-| Server state | TanStack Query v5 | Planned | `docs/architecture/backend.md` D19 |
+| Server state | TanStack Query 5.104 (`@tanstack/react-query`), a `DataClient` per feature, the demo store behind it | In use since E1.11. No devtools | `front-end/src/features/data-client`, `frontend/api-integration.md`, `docs/architecture/backend.md` D19 |
 | API client | `createApiClient` from `@sk/api-contract`: `openapi-fetch` 0.17 over types that `openapi-typescript` 7.13 generates from the API's OpenAPI document | Planned. The client exists in `packages/api-contract` (E1.10), and no screen uses it yet | `docs/architecture/backend.md` D11 |
 | Validation | Zod | Planned | `docs/architecture/backend.md` D11, D16 |
 | Markdown rendering | Streamdown | Planned | `docs/architecture/backend.md` D20 |

@@ -30,7 +30,7 @@ import { sendMail } from '@/features/notifications/mail'
 
 /**
  * Order transitions (UX spec §2.1, §2.3). Each one is DemoState → DemoState and returns the
- * state unchanged when its guard blocks, so it is safe inside useDemo().update even if the
+ * state unchanged when its guard blocks, so it is safe inside the demo store's update even if the
  * data moved since the screen rendered (last-item race). Screens call the matching guard
  * first to show the reason. Time and actor come in through the context, never a clock read.
  */

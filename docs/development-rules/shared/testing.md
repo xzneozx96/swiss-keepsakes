@@ -54,4 +54,4 @@ The contract gate is built (E1.10). `api/test/contract.test.ts` builds `packages
 
 ## Front-end notes
 
-When TanStack Query is added, wrap hooks and components that use it in a fresh `QueryClientProvider` per test, with retries off. A hook that needs IndexedDB or another browser API gets a fake from the test setup.
+Wrap hooks and components that read shop data in a fresh `QueryClientProvider` and `DataClientProvider` per test, with retries off. To prove a mutation invalidates what a screen reads, leave the demo store bridge out (`renderWithoutBridge` in `front-end/tests/data-client.test.tsx`), or the bridge refreshes the cache and hides a missing invalidation. A hook that needs IndexedDB or another browser API gets a fake from the test setup.
