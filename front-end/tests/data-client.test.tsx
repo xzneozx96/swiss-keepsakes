@@ -24,6 +24,7 @@ import {
 import { createSeedState } from '@/features/demo/seed'
 import { createDemoStore, updateCollection } from '@/features/demo/store'
 import { requestsQueries } from '@/features/requests/api/queries'
+import { useQuestionSet } from '@/features/requests/merchant/hooks/use-question-set'
 import { newBooking } from '@/features/tours/booking/transitions'
 
 beforeEach(() => {
@@ -274,6 +275,27 @@ describe('mutation then invalidate', () => {
       expect(result.current.rows.find(r => r.id === row.id)?.hidden).toBe(
         true,
       ),
+    )
+  })
+
+  it('[E1.11] two quick moves on M19 both land', async () => {
+    const store = createDemoStore({ ...createSeedState(), role: 'owner' })
+    const { result } = renderWithoutBridge(() => useQuestionSet(), store)
+
+    await waitFor(() => expect(result.current).not.toBeNull())
+    const ids = result.current.set.questions.map(q => q.id)
+    const last = ids.at(-1)!
+
+    expect(ids.length).toBeGreaterThanOrEqual(3)
+    act(() => {
+      result.current.move(last, -1)
+      result.current.move(last, -1)
+    })
+
+    await waitFor(() =>
+      expect(
+        store.getState().data.adviceQuestions.questions.map(q => q.id),
+      ).toEqual([...ids.slice(0, -3), last, ...ids.slice(-3, -1)]),
     )
   })
 
