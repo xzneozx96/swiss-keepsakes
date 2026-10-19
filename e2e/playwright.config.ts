@@ -23,7 +23,7 @@ export default defineConfig({
     { name: "phone-de", use: { ...phone, locale: "de-CH" } },
   ],
   webServer: {
-    command: `npx vite preview --outDir "${dist}" --port ${port} --strictPort`,
+    command: `pnpm exec vite preview --outDir "${dist}" --port ${port} --strictPort`,
     cwd: frontEnd,
     url: `http://localhost:${port}/`,
     reuseExistingServer: false,
