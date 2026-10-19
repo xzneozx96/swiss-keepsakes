@@ -38,3 +38,4 @@
 - **Analytics send no personal data.** Google Analytics loads only after cookie consent. Every money, status and source figure is SQL over our own tables. (D13)
 - **Guests can export and delete their account.** Deletion anonymizes the profile, and ledger and order rows stay for 10 years for Swiss accounting retention. (13)
 - **A dependency audit runs in CI.** (13)
+  - Built: the `gates` job fails on a high or critical advisory in a production dependency (`pnpm audit --prod --audit-level=high`). Advisories in development dependencies only raise a warning. See `docs/ops/ci.md`.

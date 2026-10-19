@@ -1,4 +1,6 @@
+import { readMigrationFiles } from 'drizzle-orm/migrator'
 import { afterAll, describe, expect, inject, it } from 'vitest'
+import { appliedMigrations, migrationsFolder, unknownMigrations } from '../../scripts/check-branch-migrations.ts'
 import { migrateDatabase } from '../../src/platform/db/migrate.ts'
 import { count, openTestDatabase, silentLogger } from './support.ts'
 
@@ -21,5 +23,16 @@ describe('[E1.9] migrations', () => {
 
     expect(before).toBe(1)
     expect(await applied()).toBe(1)
+  })
+})
+
+describe('[E1.13] the branch migration check', () => {
+  it('[E1.13] finds every migration drizzle applied in api/migrations, and flags a row it does not have', async () => {
+    const known = readMigrationFiles({ migrationsFolder })
+    const rows = await appliedMigrations(pool)
+
+    expect(rows.map(row => row.hash)).toEqual(known.map(migration => migration.hash))
+    expect(unknownMigrations(rows, known)).toEqual([])
+    expect(unknownMigrations(rows, known.slice(1))).toEqual(rows.slice(0, 1))
   })
 })

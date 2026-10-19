@@ -16,7 +16,7 @@ Set up on 2026-10-19 to match the owner's agentic-rag project: Vitest 4.1 with j
 
 Commands, run in `front-end/`:
 - `pnpm test` runs every unit test (about 2 s). `pnpm exec vitest tests/format.test.ts` runs one file.
-- `pnpm typecheck:tests` type-checks the tests. Nothing runs it automatically.
+- `pnpm typecheck:tests` type-checks the tests. CI runs it.
 - `pnpm test:e2e` runs Playwright. It starts its own dev server on port 5391 and stops it afterwards. Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Google Chrome. Without it, run `pnpm exec playwright install chromium` first.
 
 Examples to copy: `front-end/tests/format.test.ts` replaces `Intl.NumberFormat` to reproduce Chrome's straight apostrophe, and `front-end/tests/storage.test.ts` makes `setItem` throw a quota error. `front-end/tests/e2e/smoke.spec.ts` checks that the app mounts, with a stable selector and no page errors. Use `/#/` URLs, because routing is hash based.
@@ -24,7 +24,6 @@ Examples to copy: `front-end/tests/format.test.ts` replaces `Intl.NumberFormat` 
 Gaps:
 - `front-end/eslint.config.mjs` ignores `tests/*`, so tests are not linted. The owner's standard (`eslint .`) would lint them.
 - Nothing type-checks `front-end/tests/e2e/*.spec.ts` or `front-end/playwright.config.ts`. `tsconfig.test.json` excludes the e2e folder and the config file sits outside both tsconfigs. agentic-rag has the same gap.
-- There is no CI, so nothing runs the tests for you. Run them before you finish.
 - There are no component tests yet. The first ones are unwritten, and the stubs in `setup.ts` are the generic ones only.
 
 ## Rules
@@ -39,7 +38,7 @@ Gaps:
 
 The front-end has unit tests and an end-to-end smoke test today. The rows about use cases, the API and load wait for the backend modules.
 
-Database tests are built (E1.9). They live in `api/test/integration/` and run with `pnpm test:integration` from the repo root, with `DATABASE_URL` and `DATABASE_URL_UNPOOLED` set, for example to the compose Postgres (`docker compose up -d --wait postgres`, then both `postgres://postgres@127.0.0.1:5433/swiss_keepsakes`). Each run creates its own database, migrates it and drops it. It refuses a host other than this machine unless `INTEGRATION_ALLOW_REMOTE_DATABASE=1`, which only a throwaway server may get. `pnpm test` never runs them, so it needs no Docker. Count rows by a marker your test made, not by table totals, because test files run in parallel on one database.
+Database tests are built (E1.9). They live in `api/test/integration/` and run with `pnpm test:integration` from the repo root, with `DATABASE_URL` and `DATABASE_URL_UNPOOLED` set, for example to the compose Postgres (`docker compose up -d --wait postgres`, then both `postgres://postgres@127.0.0.1:5433/swiss_keepsakes`). Each run creates its own database, migrates it and drops it. It refuses a host other than this machine unless `INTEGRATION_ALLOW_REMOTE_DATABASE=1`, which only a throwaway server may get. `pnpm test` never runs them, so it needs no Docker. CI runs them on the pull request's Neon branch, with `DATABASE_URL` through Neon's pooler (`docs/ops/ci.md`). Count rows by a marker your test made, not by table totals, because test files run in parallel on one database.
 
 The contract gate is built (E1.10). `api/test/contract.test.ts` builds `packages/api-contract/generated/` in memory from the API routes and fails when the committed files differ, so `pnpm test` runs it. After you change a route or a schema, run `pnpm contract:build` and commit the result. The gate is `pnpm test` plus `pnpm typecheck`: the test compares the files, lists the routes and checks the problem bodies, and the type check proves that the generated client's types equal the Zod types and that `problem()` refuses an unknown code or a status under 400.
 
