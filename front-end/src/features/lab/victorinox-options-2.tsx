@@ -123,7 +123,7 @@ function ChapterKnives({ designs }: { designs: Design[] }) {
 }
 
 /**
- * V3 Three chapters: Lucerne icons, Alpine passes and Finsterwald as three stacked cards,
+ * V3 Three chapters: Luzerne icons, Alpine passes and Finsterwald as three stacked cards,
  * each with its own colour world and photo. The cards stick and pile up as you scroll.
  */
 export function VxChapters({
@@ -296,7 +296,7 @@ export function VxHeritage({
       </ol>
 
       <div className="mt-8 flex flex-col gap-1">
-        <h3 className="font-serif text-title">Your Lucerne design</h3>
+        <h3 className="font-serif text-title">Your Luzerne design</h3>
         <p className="text-sm text-muted">{subtitle}.</p>
       </div>
 

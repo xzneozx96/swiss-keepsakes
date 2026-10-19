@@ -65,7 +65,7 @@ export const adviceQuestionSeed: AdviceQuestionSet = {
     {
       id: "arrival",
       text: {
-        en: "When do you arrive in Lucerne?",
+        en: "When do you arrive in Luzerne?",
         de: "Wann kommen Sie in Luzern an?",
       },
       type: "date",
@@ -74,7 +74,7 @@ export const adviceQuestionSeed: AdviceQuestionSet = {
     {
       id: "departure",
       text: {
-        en: "When do you leave Lucerne?",
+        en: "When do you leave Luzerne?",
         de: "Wann reisen Sie aus Luzern ab?",
       },
       type: "date",
@@ -142,13 +142,13 @@ export const adviceRequestSeed: AdviceRequest[] = [
       },
       {
         questionId: "arrival",
-        question: "When do you arrive in Lucerne?",
+        question: "When do you arrive in Luzerne?",
         questionLanguage: "en",
         answer: "21.10.2026",
       },
       {
         questionId: "departure",
-        question: "When do you leave Lucerne?",
+        question: "When do you leave Luzerne?",
         questionLanguage: "en",
         answer: "24.10.2026",
       },

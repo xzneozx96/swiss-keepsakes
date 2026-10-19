@@ -4,7 +4,7 @@ import "./blog-home.css";
 
 export type Effect = "off" | "snow" | "lights" | "snowLights" | "fullSnow";
 
-/** The window the live site would show the effect: Lucerne's Christmas market season. */
+/** The window the live site would show the effect: Luzerne's Christmas market season. */
 export function isFestiveSeason(date: Date) {
   const month = date.getMonth();
   const day = date.getDate();

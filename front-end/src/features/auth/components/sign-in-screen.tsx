@@ -17,7 +17,7 @@ import { useDemo } from "@/features/demo";
 const noop = () => {};
 
 /**
- * C05 sign-in screen (owner review 1.6r). Phones, inside the 430px guest frame: the Lucerne
+ * C05 sign-in screen (owner review 1.6r). Phones, inside the 430px guest frame: the Luzerne
  * photo on top and the form on a sheet that overlaps it, so the code slots and errors sit on
  * a plain surface. From 1024px: two columns, form on the left, the photo filling the right.
  * Once signed in (or when opened signed in) it replaces itself with `returnTo`.

@@ -12,7 +12,7 @@ const experiments = [
   {
     to: "/lab/blog-home" as const,
     title: "Stories-first home: structures and Christmas effects",
-    note: "Round 2: the hero is kept and the home reads as a story (stories, then tours, Victorinox and keepsakes), with story-category circles and “Discover Lucerne” tiles. Snow and lights effects. Round 1 kept for reference (17.10.2026).",
+    note: "Round 2: the hero is kept and the home reads as a story (stories, then tours, Victorinox and keepsakes), with story-category circles and “Discover Luzerne” tiles. Snow and lights effects. Round 1 kept for reference (17.10.2026).",
   },
   {
     to: "/lab/victorinox" as const,

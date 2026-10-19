@@ -47,12 +47,12 @@ const voices: Record<Language, Record<Voice, VoiceCopy>> = {
   en: {
     we: {
       hello: "Grüezi!",
-      heroTitle: "This is our Lucerne. Read it, walk it, keep it.",
+      heroTitle: "This is our Luzerne. Read it, walk it, keep it.",
       narrator:
-        "We’re Lukas and Ngọc. We run Swiss Keepsakes and write about the corners of Lucerne we keep going back to.",
+        "We’re Lukas and Sonja. We run Swiss Keepsakes and write about the corners of Luzerne we keep going back to.",
       acts: {
         read: {
-          title: "The Lucerne we know",
+          title: "The Luzerne we know",
           line: "Stories about the places we love, where we eat and the views worth the climb.",
         },
         walk: {
@@ -60,26 +60,26 @@ const voices: Record<Language, Record<Voice, VoiceCopy>> = {
           line: "Each tour follows places from our stories.",
         },
         keep: {
-          title: "Take a piece of Lucerne home",
+          title: "Take a piece of Luzerne home",
           line: "Swiss craft from just up the lake, and small things from local makers.",
         },
       },
-      mapTitle: "How we’ll show you Lucerne",
+      mapTitle: "How we’ll show you Luzerne",
       mapSubtitle: "Three steps, in the order we’d take a friend.",
       recapTitle: "Ready when you are",
       recapSubtitle: "See it with us, or take a piece of it home.",
       askTitle: "Not sure where to start? Ask us.",
-      askBody: "Tell us your days in Lucerne and we’ll plan them with you.",
+      askBody: "Tell us your days in Luzerne and we’ll plan them with you.",
     },
     brand: {
       hello: "Grüezi!",
       heroTitle:
-        "Discover Lucerne with Swiss Keepsakes. Read it, walk it, keep it.",
+        "Discover Luzerne with Swiss Keepsakes. Read it, walk it, keep it.",
       narrator:
-        "Swiss Keepsakes is a small shop in Lucerne. Its team writes about the city it calls home.",
+        "Swiss Keepsakes is a small shop in Luzerne. Its team writes about the city it calls home.",
       acts: {
         read: {
-          title: "Lucerne, story by story",
+          title: "Luzerne, story by story",
           line: "Places worth knowing, where to eat and the views worth the climb.",
         },
         walk: {
@@ -87,26 +87,26 @@ const voices: Record<Language, Record<Voice, VoiceCopy>> = {
           line: "Every tour follows places from the stories.",
         },
         keep: {
-          title: "Take a piece of Lucerne home",
+          title: "Take a piece of Luzerne home",
           line: "Swiss craft from just up the lake, and small things from local makers.",
         },
       },
-      mapTitle: "Three ways to discover Lucerne",
+      mapTitle: "Three ways to discover Luzerne",
       mapSubtitle: "Read the stories, walk the places, keep a piece.",
-      recapTitle: "Lucerne, to see and to keep",
+      recapTitle: "Luzerne, to see and to keep",
       recapSubtitle: "Book a tour or take a piece of the city home.",
       askTitle: "Not sure where to start?",
       askBody:
-        "Tell Swiss Keepsakes your days in Lucerne and get a plan from locals.",
+        "Tell Swiss Keepsakes your days in Luzerne and get a plan from locals.",
     },
     me: {
-      hello: "Grüezi, I’m Ngọc!",
-      heroTitle: "This is my Lucerne. Read it, walk it, keep it.",
+      hello: "Grüezi, I’m Sonja!",
+      heroTitle: "This is my Luzerne. Read it, walk it, keep it.",
       narrator:
-        "I run Swiss Keepsakes and write about the corners of Lucerne I keep going back to.",
+        "I run Swiss Keepsakes and write about the corners of Luzerne I keep going back to.",
       acts: {
         read: {
-          title: "The Lucerne I know",
+          title: "The Luzerne I know",
           line: "Stories about the places I love, where I eat and the views worth the climb.",
         },
         walk: {
@@ -114,16 +114,16 @@ const voices: Record<Language, Record<Voice, VoiceCopy>> = {
           line: "Our guides take you to the places in my stories.",
         },
         keep: {
-          title: "Take a piece of Lucerne home",
+          title: "Take a piece of Luzerne home",
           line: "Swiss craft from just up the lake, and small things from local makers.",
         },
       },
-      mapTitle: "How I’ll show you Lucerne",
+      mapTitle: "How I’ll show you Luzerne",
       mapSubtitle: "Three steps, in the order I’d take a friend.",
       recapTitle: "Ready when you are",
       recapSubtitle: "Go and see it, or take a piece of it home.",
       askTitle: "Not sure where to start? Ask me.",
-      askBody: "Tell me your days in Lucerne and I’ll help you plan them.",
+      askBody: "Tell me your days in Luzerne and I’ll help you plan them.",
     },
   },
   de: {
@@ -131,7 +131,7 @@ const voices: Record<Language, Record<Voice, VoiceCopy>> = {
       hello: "Grüezi!",
       heroTitle: "Das ist unser Luzern. Lesen, erleben, mitnehmen.",
       narrator:
-        "Wir sind Lukas und Ngọc. Wir führen Swiss Keepsakes und schreiben über die Ecken Luzerns, zu denen wir immer wieder zurückkehren.",
+        "Wir sind Lukas und Sonja. Wir führen Swiss Keepsakes und schreiben über die Ecken Luzerns, zu denen wir immer wieder zurückkehren.",
       acts: {
         read: {
           title: "Das Luzern, das wir kennen",
@@ -183,7 +183,7 @@ const voices: Record<Language, Record<Voice, VoiceCopy>> = {
         "Erzähl Swiss Keepsakes von deinen Tagen in Luzern und erhalte einen Plan von Einheimischen.",
     },
     me: {
-      hello: "Grüezi, ich bin Ngọc!",
+      hello: "Grüezi, ich bin Sonja!",
       heroTitle: "Das ist mein Luzern. Lesen, erleben, mitnehmen.",
       narrator:
         "Ich führe Swiss Keepsakes und schreibe über die Ecken Luzerns, zu denen ich immer wieder zurückkehre.",
@@ -239,7 +239,7 @@ const common = {
     showAllStories: (n: number) =>
       n === 1 ? `Show ${n} story` : `Show all ${n} stories`,
     listTitle: "Local stories",
-    listIntro: "The places we love around Lucerne, one story at a time.",
+    listIntro: "The places we love around Luzerne, one story at a time.",
     count: (n: number) => (n === 1 ? "1 story" : `${n} stories`),
     tours: "Tours",
     keepsakes: "Keepsakes",

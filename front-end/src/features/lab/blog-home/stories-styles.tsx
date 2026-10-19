@@ -40,7 +40,7 @@ function StoryLink({
   );
 }
 
-/** 2 · Postcards: each story is a Lucerne postcard with a stamp and a postmark, slightly tilted. */
+/** 2 · Postcards: each story is a Luzerne postcard with a stamp and a postmark, slightly tilted. */
 function Postcards({ articles }: { articles: Article[] }) {
   const { areaOf, categoryOf, language } = useBlogData();
   const tilt = [-2, 1.5, -1, 2, -1.5, 1];

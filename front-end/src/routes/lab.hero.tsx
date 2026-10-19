@@ -46,7 +46,7 @@ const round3 = [
   {
     id: "F3",
     title: "F3 · Sky fade (chosen)",
-    note: "The sky band from F; the Lucerne skyline fades in under the greeting and the card sits on the water.",
+    note: "The sky band from F; the Luzerne skyline fades in under the greeting and the card sits on the water.",
     Option: HeroF3SkyFade,
   },
   {
@@ -58,7 +58,7 @@ const round3 = [
   {
     id: "F5",
     title: "F5 · Photo in the card",
-    note: "Plain sky band; the card opens with a Lucerne photo and a place chip, then tabs, date and Search.",
+    note: "Plain sky band; the card opens with a Luzerne photo and a place chip, then tabs, date and Search.",
     Option: HeroF5CardPhoto,
   },
 ];
@@ -72,14 +72,14 @@ const round2 = [
   },
   {
     id: "G",
-    title: "G · Explore Lucerne",
+    title: "G · Explore Luzerne",
     note: "Reference 2: place line, two-weight title, tab row. No photo in the hero; the rails below carry the pictures.",
     Option: HeroTwoWeight,
   },
   {
     id: "H",
     title: "H · Serif title, soft photo",
-    note: "Reference 3: two-tone serif title, the Lucerne photo fading in and out, a search pill on top.",
+    note: "Reference 3: two-tone serif title, the Luzerne photo fading in and out, a search pill on top.",
     Option: HeroSoftPhoto,
   },
   {
@@ -94,7 +94,7 @@ const options = [
   {
     id: "A",
     title: "A · Sky glass",
-    note: "Full-bleed photo; title, intro and Lucerne clock on a frosted panel at the bottom (the sky-glass direction from the moodboard review).",
+    note: "Full-bleed photo; title, intro and Luzerne clock on a frosted panel at the bottom (the sky-glass direction from the moodboard review).",
     Option: HeroSkyGlass,
   },
   {
@@ -106,7 +106,7 @@ const options = [
   {
     id: "C",
     title: "C · Swipe gallery (Airbnb Experiences)",
-    note: "Title first, then four Lucerne places to swipe through; the place sells the trip.",
+    note: "Title first, then four Luzerne places to swipe through; the place sells the trip.",
     Option: HeroGallery,
   },
   {

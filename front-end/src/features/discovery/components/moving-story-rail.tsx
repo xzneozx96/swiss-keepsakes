@@ -17,7 +17,7 @@ export interface MovingStory {
 }
 
 /**
- * Home stories (Lab R4 "Moving photos", owner 17.10.2026): tall 9:16 cards whose photo
+ * Home stories (Lab R4 "Moving photos", owner 17.10.2026): tall 2:3 cards whose photo
  * drifts slowly, so the rail feels alive without a timer. Still for reduced motion.
  */
 export function MovingStoryRail({
@@ -44,7 +44,7 @@ export function MovingStoryRail({
               params={{ slug: story.slug }}
               to="/stories/$slug"
             >
-              <div className="relative aspect-[9/16] overflow-hidden rounded-[28px] bg-gradient-to-b from-hero-sky to-surface-tertiary">
+              <div className="relative aspect-[2/3] overflow-hidden rounded-[28px] bg-gradient-to-b from-hero-sky to-surface-tertiary">
                 <img
                   alt=""
                   className="absolute inset-0 size-full animate-ken-burns object-cover"

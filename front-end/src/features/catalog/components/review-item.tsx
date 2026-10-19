@@ -22,7 +22,7 @@ export interface ReviewView {
   photos?: { slugs: string[]; labels: PhotoGalleryLabels };
   /** The shop's public reply (M23), in the language it was written in. */
   reply?: {
-    /** "Reply from Ngọc". */
+    /** "Reply from Sonja". */
     title: string;
     date: string;
     text: string;

@@ -1,6 +1,6 @@
 /**
  * Lab, round 3: variants of round 2's F (greeting band plus a white search card), the
- * direction the owner picked. Each varies the band or the card and adds a Lucerne photo.
+ * direction the owner picked. Each varies the band or the card and adds a Luzerne photo.
  * Compared on #/lab/hero. Tabs, fields and the Search button are inert here.
  */
 import { BookingsIcon, PickupIcon } from "@/components/icons";
@@ -15,14 +15,14 @@ export interface HeroV3Props {
 const copy = {
   en: {
     hello: "Grüezi!",
-    title: "Let's find your Lucerne keepsake",
+    title: "Let's find your Luzerne keepsake",
     types: ["Gifts", "Tours", "Stays"],
     pickup: "Pickup date",
     pickupValue: "Tue, 14 Oct",
     where: "Pickup in",
     whereValue: "Old town",
     search: "Search",
-    place: "Lucerne old town",
+    place: "Luzerne old town",
   },
   de: {
     hello: "Grüezi!",
@@ -186,7 +186,7 @@ export function HeroF2LakeBlue({ language }: HeroV3Props) {
   );
 }
 
-/** F3 · Sky fade: sky band, the Lucerne skyline fades in under the greeting, card on top. */
+/** F3 · Sky fade: sky band, the Luzerne skyline fades in under the greeting, card on top. */
 export function HeroF3SkyFade({ language, photoAlt }: HeroV3Props) {
   return (
     <section className="flex flex-col">
@@ -217,7 +217,7 @@ export function HeroF4PhotoTabs({ language }: HeroV3Props) {
   );
 }
 
-/** F5 · Photo in the card: sky band; the card opens with a Lucerne photo and a place chip. */
+/** F5 · Photo in the card: sky band; the card opens with a Luzerne photo and a place chip. */
 export function HeroF5CardPhoto({ language, photoAlt }: HeroV3Props) {
   const c = copy[language];
 

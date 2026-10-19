@@ -107,7 +107,7 @@ function RailSkeleton() {
 
 /**
  * C01 Discovery home, stories first (owner, Lab round 3, 17.10.2026): one narrator and one
- * walk through Lucerne. The hero welcomes, the journey steps preview the three parts, then
+ * walk through Luzerne. The hero welcomes, the journey steps preview the three parts, then
  * 01 Read it (stories), 02 Walk it (tours, each with the story it comes from) and 03 Keep it
  * (Victorinox and keepsakes as one ending), with "ask me" as the epilogue. In the Christmas
  * season the hero snows.

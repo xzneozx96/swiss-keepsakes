@@ -1,5 +1,5 @@
 export const tourDiscoveryEn = {
-  "tourDiscovery.title": "Tours around Lucerne",
+  "tourDiscovery.title": "Tours around Luzerne",
   "tourDiscovery.intro": "A little time here. A story to take home.",
   "tourDiscovery.from": "From",
   "tourDiscovery.duration": "{hours} hours",
@@ -11,7 +11,7 @@ export const tourDiscoveryEn = {
   "tourDiscovery.noDatesBody":
     "This tour has no upcoming departures yet. Explore our other tours, or ask the organiser about new dates.",
   "tourDiscovery.empty":
-    "New tours are on their way. Come back soon to discover Lucerne with us.",
+    "New tours are on their way. Come back soon to discover Luzerne with us.",
   "tourDiscovery.notFound":
     "This tour is unavailable. Choose another tour to continue.",
   "tourDiscovery.browse": "Explore other tours",
@@ -25,7 +25,7 @@ export const tourDiscoveryEn = {
   "tourDiscovery.durationLabel": "Duration",
   "tourDiscovery.startingPrice": "Adult price",
   "tourDiscovery.about": "About this experience",
-  "tourDiscovery.itinerary": "Your route through Lucerne",
+  "tourDiscovery.itinerary": "Your route through Luzerne",
   "tourDiscovery.included": "What is included",
   "tourDiscovery.excluded": "Not included",
   "tourDiscovery.meeting": "Where we meet",

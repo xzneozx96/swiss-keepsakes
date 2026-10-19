@@ -108,7 +108,7 @@ export function EyebrowIcon({ part }: { part: Part }) {
   );
 }
 
-/** E4 · Trail stop: the round photo and number from "How I'll show you Lucerne", so each part picks up its step. */
+/** E4 · Trail stop: the round photo and number from "How I'll show you Luzerne", so each part picks up its step. */
 export function EyebrowTrail({ part }: { part: Part }) {
   return (
     <div className="flex items-center gap-3.5">

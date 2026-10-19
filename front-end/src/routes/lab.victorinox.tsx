@@ -36,7 +36,7 @@ const options = [
   {
     id: "V3",
     title: "V3 · Three chapters",
-    note: "Lucerne icons, Alpine passes and Finsterwald as three cards with their own colours; they stack as you scroll.",
+    note: "Luzerne icons, Alpine passes and Finsterwald as three cards with their own colours; they stack as you scroll.",
     Option: VxChapters,
   },
   {

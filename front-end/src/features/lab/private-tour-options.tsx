@@ -195,7 +195,7 @@ export function PrivateHeadcount({
   );
 }
 
-/** E · Postcard to the team: the guest's request half-written on a Lucerne postcard. */
+/** E · Postcard to the team: the guest's request half-written on a Luzerne postcard. */
 export function PrivatePostcard({
   title,
   body,
@@ -211,7 +211,7 @@ export function PrivatePostcard({
         className="grid w-full rotate-1 grid-cols-[1fr_auto] gap-3 rounded-lg bg-white p-4 text-start shadow-overlay"
       >
         <p className="font-serif text-sm leading-relaxed italic">
-          {de ? "Liebes Team," : "Dear Lucerne team,"}
+          {de ? "Liebes Team," : "Dear Luzerne team,"}
           <br />
           {de ? "wir sind " : "we are "}
           <span className="border-b border-dashed border-muted/60 px-3 text-muted">

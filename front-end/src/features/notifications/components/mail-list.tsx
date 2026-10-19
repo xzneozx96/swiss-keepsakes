@@ -38,7 +38,7 @@ export function MailList({
         const to = mail.recipient
           ? mail.recipient
           : mail.to === "staff"
-            ? "Shop staff (Chị Ngọc, Lukas)"
+            ? "Shop staff (Sonja, Lukas)"
             : partner
               ? `${partner.name} <${partner.email}>`
               : guest

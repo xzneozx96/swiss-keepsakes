@@ -16,7 +16,7 @@ import { storyFromChapters } from "@/lib/rich-text";
 
 export const shop: Shop = {
   name: "Swiss Keepsakes Luzern",
-  ownerName: "Chị Ngọc",
+  ownerName: "Sonja",
   email: "hello@swisskeepsakes.example",
   // Sample number for the prototype, not a real line.
   phone: "+41 41 000 12 34",
@@ -30,7 +30,7 @@ export const subcategories: Subcategory[] = [
     name: { en: "Victorinox", de: "Victorinox" },
     photo: "victorinox-spartan",
     tagline: {
-      en: "Swiss Army Knives with a Lucerne story, engraved with your name",
+      en: "Swiss Army Knives with a Luzerne story, engraved with your name",
       de: "Schweizer Taschenmesser mit einer Luzerner Geschichte, mit Ihrem Namen graviert",
     },
   },
@@ -40,7 +40,7 @@ export const subcategories: Subcategory[] = [
     name: { en: "Gift boxes", de: "Geschenkboxen" },
     photo: "gift-box",
     tagline: {
-      en: "Small things from Lucerne makers, packed together",
+      en: "Small things from Luzerne makers, packed together",
       de: "Kleine Dinge von Luzerner Herstellern, zusammen verpackt",
     },
   },
@@ -60,7 +60,7 @@ export const subcategories: Subcategory[] = [
     name: { en: "Prints", de: "Drucke" },
     photo: "art-print",
     tagline: {
-      en: "Lucerne on paper, by local illustrators",
+      en: "Luzerne on paper, by local illustrators",
       de: "Luzern auf Papier, von lokalen Illustratorinnen und Illustratoren",
     },
   },
@@ -100,7 +100,7 @@ export const products: Product[] = [
             de: "Drei Hände, ein Deckel",
           },
           body: {
-            en: "Lucerne has always been a town of small trades: candle makers, bakers, printers, each with a bench a few streets from the next. This box puts three of them side by side. The candle is for the evening, the postcards are for writing home, and the almond biscuits are for the train.",
+            en: "Luzerne has always been a town of small trades: candle makers, bakers, printers, each with a bench a few streets from the next. This box puts three of them side by side. The candle is for the evening, the postcards are for writing home, and the almond biscuits are for the train.",
             de: "Luzern war schon immer eine Stadt der kleinen Handwerke: Kerzenmacher, Bäcker, Drucker, jeder mit seiner Werkbank nur ein paar Gassen vom nächsten entfernt. Diese Box stellt drei davon nebeneinander. Die Kerze ist für den Abend, die Postkarten sind zum Schreiben nach Hause, und das Mandelgebäck begleitet Sie im Zug.",
           },
         },
@@ -130,9 +130,9 @@ export const products: Product[] = [
     }),
     slug: "lucerne-gift-box",
     subcategoryId: "gift-boxes",
-    name: { en: "Lucerne gift box", de: "Luzerner Geschenkbox" },
+    name: { en: "Luzerne gift box", de: "Luzerner Geschenkbox" },
     story: {
-      en: "Three small things from Lucerne makers in one box: a candle, a postcard set and almond biscuits from the lake.",
+      en: "Three small things from Luzerne makers in one box: a candle, a postcard set and almond biscuits from the lake.",
       de: "Drei kleine Dinge von Luzerner Herstellern in einer Box: eine Kerze, ein Postkartenset und Mandelgebäck vom See.",
     },
     cancellationPolicy: standardCancellation,
@@ -193,7 +193,7 @@ export const products: Product[] = [
             de: "Zwölf Stück, am Vortag verpackt",
           },
           body: {
-            en: "The twelve pralines come from a Lucerne chocolatier and are packed the day before you collect them. Chocolate is a fresh product, so we keep the gap short. Let each piece come to room temperature before you eat it.",
+            en: "The twelve pralines come from a Luzerne chocolatier and are packed the day before you collect them. Chocolate is a fresh product, so we keep the gap short. Let each piece come to room temperature before you eat it.",
             de: "Die zwölf Pralinen stammen von einer Luzerner Confiserie und werden am Vortag der Abholung verpackt. Schokolade ist ein frisches Produkt, darum halten wir die Zeit kurz. Lassen Sie jedes Stück vor dem Essen Zimmertemperatur annehmen.",
           },
         },
@@ -203,7 +203,7 @@ export const products: Product[] = [
     subcategoryId: "chocolate",
     name: { en: "Chocolate set", de: "Schokoladenset" },
     story: {
-      en: "Twelve pralines from a Lucerne chocolatier, packed the day before you pick them up.",
+      en: "Twelve pralines from a Luzerne chocolatier, packed the day before you pick them up.",
       de: "Zwölf Pralinen einer Luzerner Confiserie, am Vortag der Abholung verpackt.",
     },
     cancellationPolicy: standardCancellation,
@@ -263,7 +263,7 @@ export const products: Product[] = [
     // English only on purpose: shows the missing-translation notice (AC30, R02).
     name: { en: "Limited-edition print: Water Tower at dawn" },
     story: {
-      en: "A signed giclée print, edition of 50, by a Lucerne illustrator. 30 × 40 cm, packed flat.",
+      en: "A signed giclée print, edition of 50, by a Luzerne illustrator. 30 × 40 cm, packed flat.",
     },
     cancellationPolicy: {
       en: "Free cancellation until you pay. Prints are made to order, so they cannot be cancelled after payment.",
@@ -292,7 +292,7 @@ export const products: Product[] = [
             de: "Ein Berg, vor dem man sich fürchtete",
           },
           body: {
-            en: "Mount Pilatus rises above Lucerne like a wall. Old stories tied it to Pontius Pilate, who was said to be buried in a lake on the mountain. For a long time, people believed that disturbing the lake would bring storms down on the town, and climbing the mountain was forbidden.",
+            en: "Mount Pilatus rises above Luzerne like a wall. Old stories tied it to Pontius Pilate, who was said to be buried in a lake on the mountain. For a long time, people believed that disturbing the lake would bring storms down on the town, and climbing the mountain was forbidden.",
             de: "Der Pilatus steigt über Luzern auf wie eine Mauer. Alte Geschichten verbanden ihn mit Pontius Pilatus, der in einem See auf dem Berg begraben liegen soll. Lange glaubte man, wer den See störe, bringe Stürme über die Stadt, und das Besteigen des Berges war verboten.",
           },
         },
@@ -303,7 +303,7 @@ export const products: Product[] = [
             de: "Die Drachensagen",
           },
           body: {
-            en: "Pilatus is also called the Dragon Mountain. Tales of dragons living in its caves were told in Lucerne for centuries. Look up at the ridge on a cloudy day and you will understand how it started.",
+            en: "Pilatus is also called the Dragon Mountain. Tales of dragons living in its caves were told in Luzerne for centuries. Look up at the ridge on a cloudy day and you will understand how it started.",
             de: "Der Pilatus heisst auch Drachenberg. In Luzern erzählte man sich über Jahrhunderte von Drachen in seinen Höhlen. Schauen Sie an einem Wolkentag zum Grat hinauf, und Sie verstehen, wie es anfing.",
           },
         },
@@ -358,7 +358,7 @@ export const products: Product[] = [
             de: "Licht auf dem Wasser",
           },
           body: {
-            en: "When the last steamers come in, Lake Lucerne turns the colour of the sky and the old town lights come on one by one. This box is made for that hour. Light the candle, put the postcards on the table, and the room starts to feel like the shore.",
+            en: "When the last steamers come in, Lake Luzerne turns the colour of the sky and the old town lights come on one by one. This box is made for that hour. Light the candle, put the postcards on the table, and the room starts to feel like the shore.",
             de: "Wenn die letzten Dampfschiffe einlaufen, nimmt der Vierwaldstättersee die Farbe des Himmels an, und in der Altstadt gehen die Lichter an. Diese Box ist für diese Stunde gemacht. Kerze anzünden, Postkarten auf den Tisch, und der Raum fühlt sich nach Ufer an.",
           },
         },
@@ -369,7 +369,7 @@ export const products: Product[] = [
             de: "Bienenwachs, langsam",
           },
           body: {
-            en: "The candle is made from beeswax by a Lucerne chandler. Beeswax burns slowly and gives a warm, steady flame. It smells faintly of honey, not of perfume, and it burns long enough to outlast the evening you lit it for.",
+            en: "The candle is made from beeswax by a Luzerne chandler. Beeswax burns slowly and gives a warm, steady flame. It smells faintly of honey, not of perfume, and it burns long enough to outlast the evening you lit it for.",
             de: "Die Kerze ist aus Bienenwachs und stammt von einer Luzerner Kerzenmacherin. Bienenwachs brennt langsam und gibt eine warme, ruhige Flamme. Sie duftet leicht nach Honig, nicht nach Parfüm, und ihr Licht überdauert den Abend, für den Sie sie angezündet haben.",
           },
         },
@@ -390,7 +390,7 @@ export const products: Product[] = [
     subcategoryId: "gift-boxes",
     name: { en: "Lakeside candle box", de: "Kerzenbox Seeufer" },
     story: {
-      en: "A beeswax candle from a Lucerne chandler with two postcards of the lake, packed in a kraft box.",
+      en: "A beeswax candle from a Luzerne chandler with two postcards of the lake, packed in a kraft box.",
       de: "Eine Bienenwachskerze einer Luzerner Kerzenmacherin mit zwei Postkarten vom See, in einer Kraftpapierbox.",
     },
     cancellationPolicy: standardCancellation,
@@ -445,7 +445,7 @@ export const products: Product[] = [
             de: "Kleine Manufaktur, kleine Menge",
           },
           body: {
-            en: "The bars come from a small Lucerne maker, not a factory line. Small batches mean small differences from one season to the next, and we think that is a good thing. Try the three side by side, and you will find a favourite quickly.",
+            en: "The bars come from a small Luzerne maker, not a factory line. Small batches mean small differences from one season to the next, and we think that is a good thing. Try the three side by side, and you will find a favourite quickly.",
             de: "Die Tafeln stammen von einer kleinen Luzerner Manufaktur, nicht vom Fliessband. Kleine Mengen bedeuten kleine Unterschiede von Saison zu Saison, und wir finden das gut. Probieren Sie die drei nebeneinander, und Sie haben schnell Ihre Lieblingstafel.",
           },
         },
@@ -455,7 +455,7 @@ export const products: Product[] = [
     subcategoryId: "chocolate",
     name: { en: "Dark chocolate trio", de: "Dunkles Schokoladentrio" },
     story: {
-      en: "Three bars from a small Lucerne maker: 70% dark, dark with hazelnut, dark with sea salt.",
+      en: "Three bars from a small Luzerne maker: 70% dark, dark with hazelnut, dark with sea salt.",
       de: "Drei Tafeln einer kleinen Luzerner Manufaktur: 70 % dunkel, dunkel mit Haselnuss, dunkel mit Meersalz.",
     },
     cancellationPolicy: standardCancellation,
@@ -484,11 +484,11 @@ export const products: Product[] = [
         {
           photo: "lucerne-old-town",
           title: {
-            en: "Where Lucerne swore its oath",
+            en: "Where Luzerne swore its oath",
             de: "Wo Luzern den Eid schwor",
           },
           body: {
-            en: "The Weinmarkt is one of the old town’s best-known squares. In 1332 the people of Lucerne swore their alliance with Uri, Schwyz and Unterwalden here. A fountain has stood here since 1481, and you can still sit beside it and look at the painted façades around the square.",
+            en: "The Weinmarkt is one of the old town’s best-known squares. In 1332 the people of Luzerne swore their alliance with Uri, Schwyz and Unterwalden here. A fountain has stood here since 1481, and you can still sit beside it and look at the painted façades around the square.",
             de: "Der Weinmarkt ist einer der bekanntesten Plätze der Altstadt. Hier schworen die Luzerner 1332 ihren Bund mit Uri, Schwyz und Unterwalden. Seit 1481 steht hier ein Brunnen, und noch heute kann man daneben sitzen und die bemalten Fassaden rund um den Platz betrachten.",
           },
         },
@@ -542,7 +542,7 @@ export const products: Product[] = [
     photo: "postcards",
     longStory: storyFromChapters({
       title: {
-        en: "Eight small windows onto Lucerne",
+        en: "Eight small windows onto Luzerne",
         de: "Acht kleine Fenster auf Luzern",
       },
       chapters: [
@@ -583,7 +583,7 @@ export const products: Product[] = [
     }),
     slug: "lucerne-postcard-set",
     subcategoryId: "small-gifts",
-    name: { en: "Lucerne postcard set", de: "Luzerner Postkartenset" },
+    name: { en: "Luzerne postcard set", de: "Luzerner Postkartenset" },
     story: {
       en: "Eight postcards drawn by a local illustrator, from the Musegg towers to the lake.",
       de: "Acht Postkarten einer lokalen Illustratorin, von den Musegg-Türmen bis zum See.",
@@ -959,7 +959,7 @@ const reviewPools: Record<string, PoolEntry[]> = {
     {
       rating: 5,
       text: {
-        en: "The packaging looks like a real Lucerne souvenir.",
+        en: "The packaging looks like a real Luzerne souvenir.",
         de: "Die Verpackung sieht aus wie ein echtes Luzerner Andenken.",
       },
     },

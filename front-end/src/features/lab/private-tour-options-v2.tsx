@@ -246,7 +246,7 @@ export function PrivateTapedCorners(p: PrivateTourOptionProps) {
         <Polaroid
           caption={caption(
             p.language,
-            "Lucerne, just for you",
+            "Luzerne, just for you",
             "Luzern, nur für euch",
           )}
           className="start-[10%] top-2 w-[70%] rotate-2"

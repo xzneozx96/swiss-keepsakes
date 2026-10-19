@@ -49,13 +49,13 @@ const round2 = [
   {
     id: "F4",
     title: "F4 · Postmark",
-    note: "A round ink postmark “LUZERN · LUCERNE” with the step number, stamped over the corner. Says Lucerne without a photo.",
+    note: "A round ink postmark “LUZERN · LUCERNE” with the step number, stamped over the corner. Says Luzerne without a photo.",
     Option: EyebrowPostmark,
   },
   {
     id: "F5",
     title: "F5 · Trail pin",
-    note: "The dotted path from “How I’ll show you Lucerne” comes down to a map pin at each part, so the page reads as one walk.",
+    note: "The dotted path from “How I’ll show you Luzerne” comes down to a map pin at each part, so the page reads as one walk.",
     Option: EyebrowTrailPin,
   },
   {
@@ -94,7 +94,7 @@ const options = [
   {
     id: "E4",
     title: "E4 · Trail stop",
-    note: "Each part opens with its round photo and number from “How I’ll show you Lucerne”, so the page reads as one walk.",
+    note: "Each part opens with its round photo and number from “How I’ll show you Luzerne”, so the page reads as one walk.",
     Option: EyebrowTrail,
   },
   {

@@ -8,7 +8,7 @@ export const sampleTourReviews: Review[] = [
     guestName: "Julia H.",
     rating: 5,
     text: {
-      en: "Spreuer Bridge was the moment I will remember. Our guide introduced the paintings gently and then left us a minute of quiet. A thoughtful way to see Lucerne.",
+      en: "Spreuer Bridge was the moment I will remember. Our guide introduced the paintings gently and then left us a minute of quiet. A thoughtful way to see Luzerne.",
       de: "Die Spreuerbrücke bleibt mir in Erinnerung. Unsere Führung ordnete die Bilder behutsam ein und liess uns dann eine Minute in Ruhe. Eine nachdenkliche Art, Luzern zu sehen.",
     },
     createdAt: "2026-10-14T13:30:00+02:00",
@@ -30,7 +30,7 @@ export const sampleTourReviews: Review[] = [
     reply: {
       text: "Thank you, Marc. The 1993 fire changes how many people see the bridge, and we are glad it stayed with you.",
       language: "en",
-      by: "Chị Ngọc",
+      by: "Sonja",
       at: "2026-10-14T08:40:00+02:00",
     },
   },
@@ -128,7 +128,7 @@ export const sampleTourReviews: Review[] = [
     reply: {
       text: "Thank you, Mia. We are glad the engineering story worked on a cloudy day. Clear views cannot be promised, and we hope you return on a bright one.",
       language: "en",
-      by: "Chị Ngọc",
+      by: "Sonja",
       at: "2026-10-11T09:00:00+02:00",
     },
   },
@@ -197,7 +197,7 @@ export const sampleTourReviews: Review[] = [
     reply: {
       text: "Thank you, Lena. The boat timetable changes with the season, so we check it for each date before the day.",
       language: "en",
-      by: "Chị Ngọc",
+      by: "Sonja",
       at: "2026-10-10T09:00:00+02:00",
     },
   },

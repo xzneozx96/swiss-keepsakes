@@ -52,7 +52,7 @@ const roles: {
   {
     id: "owner",
     label: "Merchant · Owner",
-    detail: "Chị Ngọc",
+    detail: "Sonja",
     home: "/store",
   },
   {

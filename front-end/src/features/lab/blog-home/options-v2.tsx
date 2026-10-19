@@ -35,7 +35,7 @@ const chapterCopy: Record<
   en: {
     stories: {
       eyebrow: "Start with a story",
-      title: "Lucerne, told by locals",
+      title: "Luzerne, told by locals",
       line: "The places we love, where we eat and the views worth the climb.",
     },
     tours: {
@@ -50,7 +50,7 @@ const chapterCopy: Record<
     },
     keepsakes: {
       eyebrow: "And bring it home",
-      title: "Keepsakes from Lucerne",
+      title: "Keepsakes from Luzerne",
       line: "Little things from local makers that carry the trip home.",
     },
   },
@@ -88,17 +88,17 @@ const bridgeCopy: Record<
 > = {
   en: {
     discover: {
-      title: "Discover Lucerne, bring it home",
+      title: "Discover Luzerne, bring it home",
       subtitle: "See the places for yourself, then keep a piece of them.",
     },
     bring: {
-      title: "Bring Lucerne home",
+      title: "Bring Luzerne home",
       subtitle:
         "Discover it on foot, keep it in your pocket, give it as a gift.",
     },
     streets: {
       title: "From the stories to the streets",
-      subtitle: "Go and find the places, then take a little Lucerne home.",
+      subtitle: "Go and find the places, then take a little Luzerne home.",
     },
     tours: "Go and see it",
     victorinox: "Swiss craft",
@@ -476,7 +476,7 @@ function PortraitStory({ article }: { article: Article }) {
 
 /**
  * R2-B · Storybook: the circles sit right under the hero, the stories swipe like a book
- * of large portrait cards, and the tiles close the page as "Bring Lucerne home".
+ * of large portrait cards, and the tiles close the page as "Bring Luzerne home".
  */
 export function StorybookHome({ effect }: StoryHomeProps) {
   const { c } = useBlogData();

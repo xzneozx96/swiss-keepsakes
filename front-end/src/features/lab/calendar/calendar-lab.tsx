@@ -362,7 +362,7 @@ export function CalendarLab() {
                     {mobile && view === "month"
                       ? item.kind === "pickup"
                         ? `${item.quantity} ${de ? "Messer" : item.quantity === 1 ? "knife" : "knives"}`
-                        : item.title.startsWith("Lucerne")
+                        : item.title.startsWith("Luzerne")
                           ? de
                             ? "Altstadt"
                             : "Old town"

@@ -189,7 +189,7 @@ function planTurn(input: PlanInput, lead: string): Turn {
       kind: "text",
       text:
         (first
-          ? `Here is your ${input.length === "full" ? "full" : "half"} day in Lucerne, ${lines.length} stops, every one checked against ${plan.dayLabel}'s opening hours.`
+          ? `Here is your ${input.length === "full" ? "full" : "half"} day in Luzerne, ${lines.length} stops, every one checked against ${plan.dayLabel}'s opening hours.`
           : `Updated. ${changes || "The plan is unchanged: nothing else fits."}`) +
         " Want to adjust anything?",
     },
@@ -226,7 +226,7 @@ export function nextTurn(messages: UIMessage[], hooks: AgentHooks): Turn {
       {
         kind: "tool",
         name: "list_hotels",
-        input: { area: "Lucerne centre" },
+        input: { area: "Luzerne centre" },
         output: {
           count: HOTELS.length,
           hotels: HOTELS.map((h) => ({
@@ -239,7 +239,7 @@ export function nextTurn(messages: UIMessage[], hooks: AgentHooks): Turn {
       },
       {
         kind: "text",
-        text: "Hi! I'm your Lucerne trip planner. I plan from real opening hours, so you won't be sent anywhere that is closed. Where are you staying?",
+        text: "Hi! I'm your Luzerne trip planner. I plan from real opening hours, so you won't be sent anywhere that is closed. Where are you staying?",
       },
       {
         kind: "ask",
@@ -290,7 +290,7 @@ export function nextTurn(messages: UIMessage[], hooks: AgentHooks): Turn {
       return [
         {
           kind: "reasoning",
-          text: `${dayLabel(iso)}. Before I suggest anything I should check what is actually open that day, because several Lucerne attractions close or change hours in winter.`,
+          text: `${dayLabel(iso)}. Before I suggest anything I should check what is actually open that day, because several Luzerne attractions close or change hours in winter.`,
         },
         {
           kind: "tool",

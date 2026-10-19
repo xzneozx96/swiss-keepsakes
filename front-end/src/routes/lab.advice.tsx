@@ -23,7 +23,7 @@ const round2 = [
   {
     id: "F",
     title: "F · Postcard from the shop",
-    note: "A handwritten-style postcard with a Lucerne photo stamp and a postmark.",
+    note: "A handwritten-style postcard with a Luzerne photo stamp and a postmark.",
     Option: AdvicePostcard,
   },
   {

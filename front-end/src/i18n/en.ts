@@ -73,13 +73,13 @@ export const en = {
     "This page does not exist. It may have moved in the prototype.",
 
   "home.hello": "Grüezi and welcome!",
-  "home.heroTitle": "Make yourself at home. I’ll show you the Lucerne I love.",
+  "home.heroTitle": "Make yourself at home. I’ll show you the Luzerne I love.",
   "home.searchPrompt": "Search stories, tours, keepsakes",
-  "home.title": "Lucerne, a place you always want to return to",
+  "home.title": "Luzerne, a place you always want to return to",
   "home.intro":
-    "Keepsakes from Lucerne makers to pick up in town, and tours to come. Choose a date, the shop confirms, then you pay.",
+    "Keepsakes from Luzerne makers to pick up in town, and tours to come. Choose a date, the shop confirms, then you pay.",
   "home.photoAlt":
-    "The Chapel Bridge and the Water Tower in Lucerne, with Mount Pilatus behind",
+    "The Chapel Bridge and the Water Tower in Luzerne, with Mount Pilatus behind",
   "home.seeAll": "See all",
   "home.from": "from",
   "home.earliestPickup": "Earliest pickup {date}",
@@ -91,11 +91,11 @@ export const en = {
   "home.victorinox.seeAll": "Show all {count} designs",
   "home.victorinox.subtitle": "Swiss Army Knives engraved with your name",
   "home.victorinox.intro":
-    "Karl Elsener opened his cutler’s workshop in Ibach in 1884, and Victorinox still makes its knives in Switzerland. Choose a Lucerne or Alpine design in three sizes, and the shop engraves a name and a date on the back.",
+    "Karl Elsener opened his cutler’s workshop in Ibach in 1884, and Victorinox still makes its knives in Switzerland. Choose a Luzerne or Alpine design in three sizes, and the shop engraves a name and a date on the back.",
   "home.victorinox.fact1": "Since 1884",
   "home.keepsakes.title": "More keepsakes",
-  "home.keepsakes.subtitle": "Small things from Lucerne makers",
-  "home.stories.title": "The Lucerne I know",
+  "home.keepsakes.subtitle": "Small things from Luzerne makers",
+  "home.stories.title": "The Luzerne I know",
   "home.stories.subtitle":
     "Stories about the places I love, where I eat and the views worth the climb.",
   "home.stories.read": "{minutes} min read",
@@ -104,10 +104,10 @@ export const en = {
   "home.advice.caption3": "old town",
   "home.advice.title": "Not sure where to start? Ask me.",
   "home.advice.body":
-    "Tell me how many days you have in Lucerne and what you like, and I’ll write back with places that suit you.",
+    "Tell me how many days you have in Luzerne and what you like, and I’ll write back with places that suit you.",
   "home.advice.action": "Ask me where to go",
   "home.storyRow": "Story · {minutes} min read",
-  "home.journey.title": "How I’ll show you Lucerne",
+  "home.journey.title": "How I’ll show you Luzerne",
   "home.journey.subtitle": "Three steps, in the order I’d take a friend.",
   "home.journey.read.title": "Read the stories",
   "home.journey.read.line":
@@ -122,7 +122,7 @@ export const en = {
   "home.stories.showAll.one": "Show {count} story",
   "home.stories.showAll.other": "Show all {count} stories",
   "home.tours.fromStory": "From the story",
-  "home.keep.title": "Take a piece of Lucerne home",
+  "home.keep.title": "Take a piece of Luzerne home",
   "home.keep.subtitle":
     "Swiss craft from just up the lake, and small things from local makers.",
   "advice.fab": "Trip assistant",
@@ -139,7 +139,7 @@ export const en = {
   "search.noResults": "Nothing found for «{query}». Try a shorter word.",
   "search.inCategory": "Search in {category}",
   "search.inGifts": "Search keepsakes",
-  "gifts.tagline": "Keepsakes from Lucerne makers, to pick up in town",
+  "gifts.tagline": "Keepsakes from Luzerne makers, to pick up in town",
   "card.save": "Save {name}",
   "card.unsave": "Remove {name} from saved",
   "card.ratingLabel.one":
@@ -237,7 +237,7 @@ export const en = {
   "detail.highlight.engrave.title": "Engraved by hand",
   "detail.highlight.engrave.body":
     "Add a name of up to {max} characters, free of charge.",
-  "detail.highlight.pickup.title": "Pick up in Lucerne",
+  "detail.highlight.pickup.title": "Pick up in Luzerne",
   "detail.highlight.pickup.places": "{first} or {second}",
   "detail.highlight.pay.title": "Nothing to pay now",
   "detail.highlight.pay.full":
@@ -1203,9 +1203,9 @@ export const en = {
   "tripProfile.style.label": "Travelling",
   "tripProfile.style.group": "With a tour group",
   "tripProfile.style.independent": "On my own",
-  "tripProfile.dates.question": "When are you in Lucerne?",
-  "tripProfile.arrive.label": "Arrival in Lucerne",
-  "tripProfile.leave.label": "Departure from Lucerne",
+  "tripProfile.dates.question": "When are you in Luzerne?",
+  "tripProfile.arrive.label": "Arrival in Luzerne",
+  "tripProfile.leave.label": "Departure from Luzerne",
   "tripProfile.date.add": "Add date",
   "tripProfile.date.done": "Use this date",
   "tripProfile.date.clear": "Leave empty",
@@ -1497,8 +1497,8 @@ export const en = {
   // C05 sign-in screen (1.6r)
   "auth.back": "Back",
   "auth.hero.alt":
-    "The Chapel Bridge with its flower boxes and the stone Water Tower on the river Reuss in Lucerne",
-  "auth.hero.place": "Chapel Bridge and Water Tower, Lucerne",
+    "The Chapel Bridge with its flower boxes and the stone Water Tower on the river Reuss in Luzerne",
+  "auth.hero.place": "Chapel Bridge and Water Tower, Luzerne",
   "auth.hero.credit": "Photo: ermell, CC BY-SA 3.0",
   "overview.today": "Today",
   "overview.analytics": "Analytics",

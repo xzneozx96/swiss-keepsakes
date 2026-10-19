@@ -6,7 +6,7 @@ import { stopStories } from "./stops";
 import { storyFromChapters } from "@/lib/rich-text";
 
 /**
- * Tour 01 of the client's three curated tours: "Lucerne: The Things That Remain"
+ * Tour 01 of the client's three curated tours: "Luzerne: The Things That Remain"
  * (client-resources/Swiss_Native_Lucerne_Tour_01.pdf, planning edition, verified 16.10.2026).
  * Prices, capacity and departures are sample values. Spreuer Bridge and the Needle Dam are
  * written from that document; the other three stops reuse the researched stop stories.
@@ -82,7 +82,7 @@ const fromStory = (
 const itinerary: TourStop[] = [
   {
     id: "station",
-    name: lt("Bahnhofplatz, Lucerne", "Bahnhofplatz Luzern"),
+    name: lt("Bahnhofplatz, Luzerne", "Bahnhofplatz Luzern"),
     description: lt(
       "Meet by the historic station arch. Your guide confirms the exact meeting pin before the day, so please arrive by 08:50.",
       "Treffpunkt beim historischen Bahnhofportal. Ihre Führung bestätigt den genauen Standort vor dem Tag, bitte seien Sie bis 08:50 Uhr da.",
@@ -460,7 +460,7 @@ const sections: TourSection[] = [
         "r-hotel",
         lt("From your hotel", "Ab Hotel"),
         lt(
-          "Plan the connection from your hotel address. Eligible overnight guests can use the Lucerne Visitor Card on buses and trains in Zone 10; boats are excluded.",
+          "Plan the connection from your hotel address. Eligible overnight guests can use the Luzerne Visitor Card on buses and trains in Zone 10; boats are excluded.",
           "Verbindung anhand der tatsächlichen Adresse planen. Berechtigte Übernachtungsgäste können mit der Gästekarte Bus und Bahn in Zone 10 nutzen; Schiffe sind ausgeschlossen.",
         ),
         {
@@ -519,7 +519,7 @@ const sections: TourSection[] = [
         "l-taube",
         lt("Wirtshaus Taube (recommended)", "Wirtshaus Taube (empfohlen)"),
         lt(
-          "Traditional regional cooking, including Lucerne-style pastry and rösti on the operator's menu. Daily 11:30–23:30, kitchen until 21:30.",
+          "Traditional regional cooking, including Luzerne-style pastry and rösti on the operator's menu. Daily 11:30–23:30, kitchen until 21:30.",
           "Regionale Küche, auf der Karte unter anderem Luzerner Pastetli und Rösti. Täglich 11:30–23:30, Küche bis 21:30.",
         ),
         {
@@ -600,13 +600,13 @@ const sections: TourSection[] = [
 export const thingsThatRemain: Tour = {
   id: "things-that-remain",
   slug: "lucerne-the-things-that-remain",
-  name: lt("Lucerne: The Things That Remain", "Luzern: Was bleibt"),
+  name: lt("Luzerne: The Things That Remain", "Luzern: Was bleibt"),
   summary: lt(
     "A slow, three-hour cultural walk: bridges, painted squares and the working river",
     "Ein dreistündiger Kulturspaziergang: Brücken, bemalte Plätze und der Fluss als Lebensader",
   ),
   description: lt(
-    "At first, Lucerne is a postcard: a wooden bridge, painted houses and water catching the light. Then someone helps you notice a small detail. A painting becomes a question about life, a river becomes a story of human ingenuity, and a familiar view becomes your own memory. This walk invites you to discover the city through the things its people have built, protected, used and rebuilt.",
+    "At first, Luzerne is a postcard: a wooden bridge, painted houses and water catching the light. Then someone helps you notice a small detail. A painting becomes a question about life, a river becomes a story of human ingenuity, and a familiar view becomes your own memory. This walk invites you to discover the city through the things its people have built, protected, used and rebuilt.",
     "Zuerst wirkt Luzern wie eine Postkarte: eine Holzbrücke, bemalte Häuser und Licht auf dem Wasser. Dann macht Sie jemand auf ein kleines Detail aufmerksam. Ein Bild wird zur Frage nach dem Leben, der Fluss erzählt von menschlichem Erfindergeist, und aus einer schönen Aussicht wird eine persönliche Erinnerung. Dieser Spaziergang erschliesst die Stadt über das, was ihre Menschen gebaut, bewahrt, genutzt und wieder aufgebaut haben.",
   ),
   longStory: storyFromChapters({
@@ -664,7 +664,7 @@ export const thingsThatRemain: Tour = {
     ),
   ],
   excluded: lt(
-    "Lunch, drinks, keepsakes and your journey to Lucerne are optional or separate extras, and there is no compulsory shopping stop. Mountain scenery, private interiors and workshop visits are not part of this walk.",
+    "Lunch, drinks, keepsakes and your journey to Luzerne are optional or separate extras, and there is no compulsory shopping stop. Mountain scenery, private interiors and workshop visits are not part of this walk.",
     "Mittagessen, Getränke, Andenken und Ihre Anreise nach Luzern sind optionale oder separate Leistungen, einen Einkaufsstopp gibt es nicht. Bergtouren, private Innenräume und Werkstattbesuche gehören nicht zu diesem Rundgang.",
   ),
   conditions: lt(

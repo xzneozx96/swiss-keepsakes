@@ -510,17 +510,17 @@ export function PlannerChat({ onLeave }: { onLeave: () => void }) {
           {messages.length === 0 && (
             <>
               <Assistant>
-                Hi! I plan Lucerne days from real opening hours, so you are
+                Hi! I plan Luzerne days from real opening hours, so you are
                 never sent somewhere that is closed. I will ask a few quick
                 questions.
               </Assistant>
               <Group label="Start here">
                 <Row
                   onClick={() =>
-                    void sendMessage({ text: "Plan my day in Lucerne" })
+                    void sendMessage({ text: "Plan my day in Luzerne" })
                   }
                 >
-                  Plan my day in Lucerne
+                  Plan my day in Luzerne
                 </Row>
               </Group>
             </>

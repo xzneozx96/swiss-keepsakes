@@ -25,7 +25,7 @@ export interface PinStop {
 
 type MapState = "loading" | "ready" | "error";
 
-/** Lucerne's old town, where an empty tour starts. */
+/** Luzerne's old town, where an empty tour starts. */
 const LUCERNE: Coordinates = [8.3093, 47.0502];
 const STOP_ZOOM = 16.2;
 

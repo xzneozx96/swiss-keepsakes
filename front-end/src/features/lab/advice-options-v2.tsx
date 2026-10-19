@@ -1,5 +1,5 @@
 /**
- * Lab, round 2: trip-advice call to action built from the subject itself (Lucerne, travel
+ * Lab, round 2: trip-advice call to action built from the subject itself (Luzerne, travel
  * paper, a shop owner who writes back). Compared on #/lab/advice. Copy rules (spec §4.10):
  * no "AI", no promised reply time; the shop replies by email.
  */
@@ -13,13 +13,13 @@ export interface AdviceV2Props {
 
 const copy = {
   en: {
-    postcardTo: "To: you, somewhere in Lucerne",
+    postcardTo: "To: you, somewhere in Luzerne",
     postcardNote:
       "Tell me how long you are staying and what you like. I will write back with a few ideas for your days here.",
-    postcardSign: "Ngọc, from the shop in the old town",
+    postcardSign: "Sonja, from the shop in the old town",
     postcardAction: "Write to the shop",
     stamp: "LUZERN",
-    ticketTitle: "Your days in Lucerne",
+    ticketTitle: "Your days in Luzerne",
     ticketFrom: "From",
     ticketTo: "To",
     ticketArrive: "Arrive",
@@ -29,7 +29,7 @@ const copy = {
     ticketAction: "Fill in with the shop",
     ticketFoot: "The shop replies by email",
     questionKicker: "Question 1 of 7 · from the shop",
-    question: "How long are you in Lucerne?",
+    question: "How long are you in Luzerne?",
     answers: ["A few hours", "1–2 days", "3 days or more", "Not sure yet"],
     questionFoot: "Answer a few short questions; the shop replies by email.",
     mapTitle: "Your route, drawn by a local",
@@ -40,14 +40,14 @@ const copy = {
     polaroidTitle: "Not sure where to start?",
     polaroidBody:
       "The shop has lived here for years. Ask, and get a few personal tips by email.",
-    polaroidAction: "Ask Ngọc",
+    polaroidAction: "Ask Sonja",
     captions: ["the lake", "Pilatus", "old town"],
   },
   de: {
     postcardTo: "An: Sie, irgendwo in Luzern",
     postcardNote:
       "Erzählen Sie mir, wie lange Sie bleiben und was Ihnen gefällt. Ich schreibe Ihnen ein paar Ideen für Ihre Tage hier.",
-    postcardSign: "Ngọc, vom Laden in der Altstadt",
+    postcardSign: "Sonja, vom Laden in der Altstadt",
     postcardAction: "Dem Laden schreiben",
     stamp: "LUZERN",
     ticketTitle: "Ihre Tage in Luzern",
@@ -76,7 +76,7 @@ const copy = {
     polaroidTitle: "Wissen Sie nicht, wo anfangen?",
     polaroidBody:
       "Der Laden ist seit Jahren hier. Fragen Sie und erhalten Sie persönliche Tipps per E-Mail.",
-    polaroidAction: "Ngọc fragen",
+    polaroidAction: "Sonja fragen",
     captions: ["der See", "Pilatus", "Altstadt"],
   },
 };
@@ -97,7 +97,7 @@ export function AdvicePostcard({ language }: AdviceV2Props) {
           </p>
         </div>
         <div className="flex w-24 shrink-0 flex-col items-end gap-3">
-          {/* Stamp: white border with a dotted perforation edge, Lucerne photo inside. */}
+          {/* Stamp: white border with a dotted perforation edge, Luzerne photo inside. */}
           <div className="relative rotate-3 bg-white p-1.5 shadow-surface outline-2 outline-offset-[-3px] outline-white outline-dotted">
             <Media
               alt=""

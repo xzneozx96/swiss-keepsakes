@@ -21,7 +21,7 @@ const photos = {
 const itinerary: TourStop[] = [
   {
     id: "piers",
-    name: lt("Lucerne landing stages", "Luzerner Landungsbrücken"),
+    name: lt("Luzerne landing stages", "Luzerner Landungsbrücken"),
     description: lt(
       "Meet near the landing stages. SGV normally lists Pier 1 for Vitznau; your guide checks the pier and the service before the day.",
       "Treffpunkt bei den Landungsbrücken. Für Vitznau nennt SGV normalerweise Steg 1; Ihre Führung prüft Steg und Kurs vor dem Tag.",
@@ -102,7 +102,7 @@ const sections: TourSection[] = [
         lt("A full day, from about 08:45", "Ein ganzer Tag, ab etwa 08:45 Uhr"),
         {
           detail: lt(
-            "Return to Lucerne around 16:00–17:00, depending on the connection.",
+            "Return to Luzerne around 16:00–17:00, depending on the connection.",
             "Rückkehr nach Luzern etwa 16:00–17:00 Uhr, je nach Verbindung.",
           ),
         },
@@ -177,7 +177,7 @@ const sections: TourSection[] = [
         "08:45–09:15",
         "t1",
         lt(
-          "Meet near the Lucerne landing stages",
+          "Meet near the Luzerne landing stages",
           "Treffen bei den Luzerner Landungsbrücken",
         ),
         lt(
@@ -245,7 +245,7 @@ const sections: TourSection[] = [
       [
         "About 16–17",
         "t8",
-        lt("Return to Lucerne", "Rückkehr nach Luzern"),
+        lt("Return to Luzerne", "Rückkehr nach Luzern"),
         lt(
           "According to the selected connection. Book onward travel only after confirming the return timetable.",
           "Je nach Verbindung. Weiterreise erst nach bestätigtem Rückfahrplan buchen.",
@@ -299,7 +299,7 @@ const sections: TourSection[] = [
     layout: "list",
     title: lt("The lake and mountain route", "Die Route über See und Berg"),
     body: lt(
-      "Lucerne, Vitznau, Rigi Kulm, Rigi Kaltbad, Vitznau, Lucerne.",
+      "Luzerne, Vitznau, Rigi Kulm, Rigi Kaltbad, Vitznau, Luzerne.",
       "Luzern, Vitznau, Rigi Kulm, Rigi Kaltbad, Vitznau, Luzern.",
     ),
     items: [
@@ -367,7 +367,7 @@ export const rigi: Tour = {
     "Ein ganzer Tag mit Schiff und Zahnradbahn, mit Zeit zum Verweilen",
   ),
   description: lt(
-    "Lucerne slowly falls behind the boat. Shorelines pass and the water gives the day a different rhythm. At Vitznau, the perspective changes: the cogwheel train climbs towards the Rigi. This day combines travel across the lake, the fascination of a mountain railway and a stay with room for personal discoveries.",
+    "Luzerne slowly falls behind the boat. Shorelines pass and the water gives the day a different rhythm. At Vitznau, the perspective changes: the cogwheel train climbs towards the Rigi. This day combines travel across the lake, the fascination of a mountain railway and a stay with room for personal discoveries.",
     "Luzern bleibt langsam hinter dem Schiff zurück. Die Ufer ziehen vorbei, und das Wasser gibt dem Tag einen anderen Rhythmus. In Vitznau wechselt die Perspektive: Die Zahnradbahn führt hinauf zur Rigi. Dieser Ausflug verbindet das Reisen auf dem See mit dem Staunen über eine Bergbahn und einem Aufenthalt, der Raum für persönliche Entdeckungen lässt.",
   ),
   longStory: storyFromChapters({
@@ -380,7 +380,7 @@ export const rigi: Tour = {
           "Schon der Weg ist eine Erinnerung",
         ),
         body: lt(
-          "Lucerne slowly falls behind the boat. Shorelines pass and the water gives the day a different rhythm. At Vitznau, the perspective changes: the cogwheel train climbs towards the Rigi.",
+          "Luzerne slowly falls behind the boat. Shorelines pass and the water gives the day a different rhythm. At Vitznau, the perspective changes: the cogwheel train climbs towards the Rigi.",
           "Luzern bleibt langsam hinter dem Schiff zurück. Die Ufer ziehen vorbei, und das Wasser gibt dem Tag einen anderen Rhythmus. In Vitznau wechselt die Perspektive: Die Zahnradbahn führt hinauf zur Rigi.",
         ),
       },
@@ -408,12 +408,12 @@ export const rigi: Tour = {
   childPrice: 7000,
   infantPrice: 0,
   meetingPoint: lt(
-    "Lucerne landing stages (Pier 1 for Vitznau; pier and service confirmed before the day)",
+    "Luzerne landing stages (Pier 1 for Vitznau; pier and service confirmed before the day)",
     "Luzerner Landungsbrücken (Steg 1 nach Vitznau; Steg und Kurs werden vorab bestätigt)",
   ),
   included: [
     lt(
-      "Guiding from Lucerne across the lake and up the Rigi and back, in a small group",
+      "Guiding from Luzerne across the lake and up the Rigi and back, in a small group",
       "Führung ab Luzern über den See auf die Rigi und zurück, in kleiner Gruppe",
     ),
     lt(

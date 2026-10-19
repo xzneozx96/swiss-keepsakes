@@ -43,7 +43,7 @@ export const HOTELS: Hotel[] = [
   },
   {
     id: "radisson",
-    name: "Radisson Blu Hotel Lucerne",
+    name: "Radisson Blu Hotel Luzerne",
     area: "Station and KKL",
     address: "Inseliquai 12",
   },
@@ -86,7 +86,7 @@ export const PLACES: Place[] = [
   },
   {
     id: "laederach",
-    name: "Läderach chocolate, Lucerne station",
+    name: "Läderach chocolate, Luzerne station",
     walkId: "station",
     minutes: 20,
     indoor: true,
@@ -116,7 +116,7 @@ export const PLACES: Place[] = [
     interests: ["culture"],
     price:
       "Adult CHF 15, free to age 16, free on the first Sunday of the month",
-    fact: "Lucerne's art museum, in the KKL building by the lake.",
+    fact: "Luzerne's art museum, in the KKL building by the lake.",
     source: "https://www.kunstmuseumluzern.ch",
   },
   {
@@ -140,7 +140,7 @@ export const PLACES: Place[] = [
     indoor: true,
     interests: ["shopping"],
     price: "Shop",
-    fact: "The Lucerne flagship store, Schwanenplatz 5.",
+    fact: "The Luzerne flagship store, Schwanenplatz 5.",
     source: "https://www.longines.com/de-ch/store/id/bucherer-luzern-173757",
   },
   {
@@ -202,7 +202,7 @@ export const PLACES: Place[] = [
     core: true,
     interests: ["culture", "scenic"],
     price: "Free",
-    fact: "Built 1859–1861. The water level of Lake Lucerne is still regulated by setting and removing timber needles by hand.",
+    fact: "Built 1859–1861. The water level of Lake Luzerne is still regulated by setting and removing timber needles by hand.",
     source: "https://www.luzern.com/en/the-city/sights/top-sights/needle-dam",
   },
   {
@@ -292,7 +292,7 @@ export const RESTAURANTS: Restaurant[] = [
     closedOn: [],
     veg: true,
     price: "Mains about CHF 28.50–58.50. Chügelipastetli CHF 41.50",
-    note: "By the Reuss next to the Needle Dam, with Lucerne and Swiss dishes.",
+    note: "By the Reuss next to the Needle Dam, with Luzerne and Swiss dishes.",
     phone: "+41 41 210 07 47",
     bookUrl: "https://www.taube-luzern.ch/",
     source:
@@ -304,8 +304,8 @@ export const RESTAURANTS: Restaurant[] = [
     walkId: "galliker",
     closedOn: [0, 1],
     veg: false,
-    price: "Lucerne classics such as Chügelipastetli",
-    note: "A traditional Lucerne tavern near the Spreuer Bridge. The family has run it since 1856.",
+    price: "Luzerne classics such as Chügelipastetli",
+    note: "A traditional Luzerne tavern near the Spreuer Bridge. The family has run it since 1856.",
     phone: "+41 41 240 10 02",
     source: "https://wirtshaus-galliker.ch/en/tradition",
   },
@@ -316,7 +316,7 @@ export const RESTAURANTS: Restaurant[] = [
     closedOn: [],
     veg: true,
     price: "Mains CHF 36–52. Weekday two-course lunch around CHF 28",
-    note: "First mentioned in 1517, set in seven interlocking houses. The Burgerstube serves Lucerne dishes.",
+    note: "First mentioned in 1517, set in seven interlocking houses. The Burgerstube serves Luzerne dishes.",
     phone: "+41 41 210 16 66",
     bookUrl:
       "https://guest.foratable.com/restaurants/ab10890dbb1fc2d661005da5c716e5d8",
@@ -390,9 +390,9 @@ export const EVENTS: CityEvent[] = [
     to: "2026-11-08",
     text: "Swiss Specialities Week at Wirtshaus Taube.",
   },
-  { from: "2026-11-07", to: "2026-11-15", text: "Blues Festival in Lucerne." },
+  { from: "2026-11-07", to: "2026-11-15", text: "Blues Festival in Luzerne." },
   { from: "2026-11-20", to: "2027-01-01", text: "The ice rink is open." },
-  { from: "2026-11-21", to: "2026-11-21", text: "Advent opens in Lucerne." },
+  { from: "2026-11-21", to: "2026-11-21", text: "Advent opens in Luzerne." },
   { from: "2026-11-22", to: "2026-12-27", text: "The Christmas Train runs." },
   { from: "2027-01-14", to: "2027-01-24", text: "Lilu Light Festival." },
 ];

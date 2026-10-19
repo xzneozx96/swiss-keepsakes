@@ -2,7 +2,7 @@
  * Lab: discovery-home hero options, compared on #/lab/hero. Each option keeps the real
  * top row (logo, global search, cart). To promote one into Hero it still needs the
  * forwarded end ref (collapsing bar) and -mx-4 against the home's side padding.
- * Rules: Swiss red only for actions; no live data except the Lucerne clock; EN + DE.
+ * Rules: Swiss red only for actions; no live data except the Luzerne clock; EN + DE.
  * Stay-length chips are inert here; in the product they scroll to #quick and #tours.
  */
 import { ArrowRightIcon, ClockIcon, PickupIcon } from "@/components/icons";
@@ -17,16 +17,16 @@ export interface HeroOptionProps {
   intro: string;
   photoAlt: string;
   searchLabel: string;
-  /** Local time in Lucerne, already formatted, e.g. "14:32". */
+  /** Local time in Luzerne, already formatted, e.g. "14:32". */
   localTime: string;
 }
 
 const copy = {
   en: {
-    place: "Lucerne, Switzerland",
+    place: "Luzerne, Switzerland",
     localTime: "local time",
-    kicker: "Welcome to Lucerne",
-    stayQuestion: "How long are you in Lucerne?",
+    kicker: "Welcome to Luzerne",
+    stayQuestion: "How long are you in Luzerne?",
     stays: [
       { label: "A few hours", note: "Gifts ready today or tomorrow" },
       { label: "A few days", note: "Walks and day trips" },
@@ -35,7 +35,7 @@ const copy = {
     short: "Keepsakes from local makers, picked up in town.",
     gallery: [
       { photo: "lucerne-kapellbruecke-1200", caption: "Chapel Bridge" },
-      { photo: "lake-steamboat", caption: "Lake Lucerne by steamboat" },
+      { photo: "lake-steamboat", caption: "Lake Luzerne by steamboat" },
       { photo: "pilatus", caption: "Mount Pilatus" },
       { photo: "lucerne-old-town", caption: "The old town" },
     ],
@@ -217,7 +217,7 @@ export function HeroPhotoCard(p: HeroOptionProps) {
   );
 }
 
-/** C · Swipe gallery: title on the page ground, then a sideways gallery of Lucerne places. */
+/** C · Swipe gallery: title on the page ground, then a sideways gallery of Luzerne places. */
 export function HeroGallery(p: HeroOptionProps) {
   const c = copy[p.language];
 

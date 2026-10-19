@@ -3,7 +3,7 @@ import type { LocalizedText, Product } from "./types";
 import { storyFromChapters } from "@/lib/rich-text";
 
 /**
- * The Victorinox range (owner request 16.10.2026): twelve Lucerne and Alpine designs, each
+ * The Victorinox range (owner request 16.10.2026): twelve Luzerne and Alpine designs, each
  * an ordinary keepsake with its own story. Every design comes in three sizes, which are
  * three genuine Victorinox models (specifications and photos from victorinox.com):
  * Classic SD 58 mm, Spartan 91 mm and Picknicker 111 mm. The shop engraves a name and a
@@ -72,21 +72,21 @@ const designs: Design[] = [
       de: "Victorinox Schwan auf dem See",
     },
     story: {
-      en: "The white swans of Lake Lucerne on a genuine Swiss Army Knife, with your name and a date on the back.",
+      en: "The white swans of Lake Luzerne on a genuine Swiss Army Knife, with your name and a date on the back.",
       de: "Die weissen Schwäne des Vierwaldstättersees auf einem echten Schweizer Taschenmesser, mit Ihrem Namen und einem Datum auf der Rückseite.",
     },
     storyTitle: {
-      en: "The swans of Lake Lucerne",
+      en: "The swans of Lake Luzerne",
       de: "Die Schwäne vom Vierwaldstättersee",
     },
     chapterTitle: { en: "A gift from a king", de: "Das Geschenk eines Königs" },
     chapterBody: {
-      en: "Local history says the swans began in 1690, when Louis XIV of France rewarded Ludwig Christoph Pfyffer von Wyher, a Lucerne captain in the Swiss Guard, with four white swans. He gave them to the city, and the town soon passed rules to protect them.\n\nToday you meet them along the lakefront and by the Chapel Bridge. The city asks visitors not to feed them, because bread makes them bold and unhealthy, so watch from a distance.",
+      en: "Local history says the swans began in 1690, when Louis XIV of France rewarded Ludwig Christoph Pfyffer von Wyher, a Luzerne captain in the Swiss Guard, with four white swans. He gave them to the city, and the town soon passed rules to protect them.\n\nToday you meet them along the lakefront and by the Chapel Bridge. The city asks visitors not to feed them, because bread makes them bold and unhealthy, so watch from a distance.",
       de: "Die Lokalgeschichte erzählt, dass alles 1690 begann, als Ludwig XIV. von Frankreich den Luzerner Schweizergardehauptmann Ludwig Christoph Pfyffer von Wyher mit vier weissen Schwänen belohnte. Er schenkte sie der Stadt, und bald erliess Luzern Regeln zu ihrem Schutz.\n\nHeute begegnen Sie ihnen am Seeufer und bei der Kapellbrücke. Die Stadt bittet darum, sie nicht zu füttern, weil Brot sie aufdringlich und krank macht, schauen Sie also aus der Ferne zu.",
     },
     onKnifeTitle: { en: "Why a swan", de: "Warum ein Schwan" },
     onKnifeBody: {
-      en: "A swan on calm water is what most people remember of an evening in Lucerne. This design keeps that moment small enough for a pocket.",
+      en: "A swan on calm water is what most people remember of an evening in Luzerne. This design keeps that moment small enough for a pocket.",
       de: "Ein Schwan auf ruhigem Wasser ist das, woran sich die meisten nach einem Abend in Luzern erinnern. Dieses Design hält den Moment klein genug für die Tasche.",
     },
   },
@@ -109,12 +109,12 @@ const designs: Design[] = [
       de: "Die Brücke, die neu entstand",
     },
     chapterBody: {
-      en: "The Chapel Bridge crosses the Reuss where the river leaves the lake. It was once part of the town’s defences, and so was the eight-sided Water Tower beside it, which is the older of the two. Triangular paintings hang under the roof.\n\nIn the night of 18 August 1993 a fire destroyed much of the bridge and about two thirds of its paintings. Lucerne rebuilt it in eight months and reopened it on 14 April 1994.",
+      en: "The Chapel Bridge crosses the Reuss where the river leaves the lake. It was once part of the town’s defences, and so was the eight-sided Water Tower beside it, which is the older of the two. Triangular paintings hang under the roof.\n\nIn the night of 18 August 1993 a fire destroyed much of the bridge and about two thirds of its paintings. Luzerne rebuilt it in eight months and reopened it on 14 April 1994.",
       de: "Die Kapellbrücke führt über die Reuss, dort wo der Fluss den See verlässt. Sie gehörte einst zur Stadtbefestigung, ebenso der achteckige Wasserturm daneben, der älter ist als die Brücke. Unter dem Dach hängen dreieckige Bilder.\n\nIn der Nacht auf den 18. August 1993 zerstörte ein Brand grosse Teile der Brücke und rund zwei Drittel der Bilder. Luzern baute sie in acht Monaten wieder auf und eröffnete sie am 14. April 1994 neu.",
     },
     onKnifeTitle: { en: "Why the bridge", de: "Warum die Brücke" },
     onKnifeBody: {
-      en: "It is the one picture of Lucerne everybody knows. On the knife it sits on the front of the handle, as you see it from the Rathausquai.",
+      en: "It is the one picture of Luzerne everybody knows. On the knife it sits on the front of the handle, as you see it from the Rathausquai.",
       de: "Es ist das Bild von Luzern, das alle kennen. Auf dem Messer steht es vorne auf dem Griff, so wie man es vom Rathausquai sieht.",
     },
   },
@@ -134,12 +134,12 @@ const designs: Design[] = [
       de: "Drachen und eine steile Bahn",
     },
     chapterBody: {
-      en: "Pilatus was once feared. Lucerne forbade climbing it in the Middle Ages, and people told of dragons in its caves. A dragon stone said to have fallen in 1421 is kept in Lucerne’s nature museum.\n\nThe mountain is also a place of engineering. The Pilatus Railway opened in 1889 and is still the steepest cogwheel railway in the world, with a gradient of up to 48 per cent. From Fräkmüntegg the Dragon Ride cable car reaches the summit at 2,132 m in about three and a half minutes.",
+      en: "Pilatus was once feared. Luzerne forbade climbing it in the Middle Ages, and people told of dragons in its caves. A dragon stone said to have fallen in 1421 is kept in Luzerne’s nature museum.\n\nThe mountain is also a place of engineering. The Pilatus Railway opened in 1889 and is still the steepest cogwheel railway in the world, with a gradient of up to 48 per cent. From Fräkmüntegg the Dragon Ride cable car reaches the summit at 2,132 m in about three and a half minutes.",
       de: "Der Pilatus wurde einst gefürchtet. Im Mittelalter verbot Luzern die Besteigung, und man erzählte von Drachen in den Höhlen. Ein Drachenstein, der 1421 gefallen sein soll, liegt im Natur-Museum Luzern.\n\nDer Berg ist auch ein Ort der Technik. Die Pilatusbahn wurde 1889 eröffnet und ist bis heute die steilste Zahnradbahn der Welt, mit bis zu 48 Prozent Steigung. Ab Fräkmüntegg erreicht die Luftseilbahn Dragon Ride den Gipfel auf 2132 m in etwa dreieinhalb Minuten.",
     },
     onKnifeTitle: { en: "Why Pilatus", de: "Warum der Pilatus" },
     onKnifeBody: {
-      en: "From almost anywhere in Lucerne you can see it, and many guests go up at least once. The red cabin on the front is the Dragon Ride.",
+      en: "From almost anywhere in Luzerne you can see it, and many guests go up at least once. The red cabin on the front is the Dragon Ride.",
       de: "Man sieht ihn von fast überall in Luzern, und viele fahren mindestens einmal hinauf. Die rote Kabine vorne ist die Dragon Ride.",
     },
   },
@@ -150,7 +150,7 @@ const designs: Design[] = [
     extraPhoto: "musegg-wall",
     name: { en: "Victorinox Lion Monument", de: "Victorinox Löwendenkmal" },
     story: {
-      en: "The dying lion of Lucerne on a genuine Swiss Army Knife, with your name and a date on the back.",
+      en: "The dying lion of Luzerne on a genuine Swiss Army Knife, with your name and a date on the back.",
       de: "Der sterbende Löwe von Luzern auf einem echten Schweizer Taschenmesser, mit Ihrem Namen und einem Datum auf der Rückseite.",
     },
     storyTitle: { en: "The lion who remembers", de: "Der Löwe, der erinnert" },
@@ -203,7 +203,7 @@ const designs: Design[] = [
     extraPhoto: "lucerne-water-tower",
     name: { en: "Victorinox Paddle steamer", de: "Victorinox Raddampfer" },
     story: {
-      en: "A historic Lake Lucerne paddle steamer on a genuine Swiss Army Knife, with your name and a date on the back.",
+      en: "A historic Lake Luzerne paddle steamer on a genuine Swiss Army Knife, with your name and a date on the back.",
       de: "Ein historischer Raddampfer vom Vierwaldstättersee auf einem echten Schweizer Taschenmesser, mit Ihrem Namen und einem Datum auf der Rückseite.",
     },
     storyTitle: { en: "Five paddle steamers", de: "Fünf Raddampfer" },
@@ -212,12 +212,12 @@ const designs: Design[] = [
       de: "Die Dampfer des Sees",
     },
     chapterBody: {
-      en: "Lucerne’s first paddle steamer, the Stadt Luzern, sailed in 1837. Today five historic steamers still run, all built between 1901 and 1928: the Uri, the oldest paddle steamer in Switzerland, then the Unterwalden, the Schiller, the Gallia and the Stadt Luzern, the flagship.\n\nIn the 1950s and 60s plans to replace them with motor boats met resistance, and a preservation society was founded to keep them. On 2 May 1980 Queen Elizabeth II crossed the lake on the Stadt Luzern.",
+      en: "Luzerne’s first paddle steamer, the Stadt Luzern, sailed in 1837. Today five historic steamers still run, all built between 1901 and 1928: the Uri, the oldest paddle steamer in Switzerland, then the Unterwalden, the Schiller, the Gallia and the Stadt Luzern, the flagship.\n\nIn the 1950s and 60s plans to replace them with motor boats met resistance, and a preservation society was founded to keep them. On 2 May 1980 Queen Elizabeth II crossed the lake on the Stadt Luzern.",
       de: "Luzerns erster Raddampfer, die «Stadt Luzern», fuhr 1837. Heute sind noch fünf historische Dampfer unterwegs, alle zwischen 1901 und 1928 gebaut: die «Uri», der älteste Raddampfer der Schweiz, dann «Unterwalden», «Schiller», «Gallia» und die «Stadt Luzern» als Flaggschiff.\n\nIn den 1950er- und 60er-Jahren stiessen Pläne, sie durch Motorschiffe zu ersetzen, auf Widerstand, und ein Verein zu ihrer Erhaltung wurde gegründet. Am 2. Mai 1980 fuhr Königin Elisabeth II. auf der «Stadt Luzern» über den See.",
     },
     onKnifeTitle: { en: "Why a steamer", de: "Warum ein Dampfer" },
     onKnifeBody: {
-      en: "A day on the lake is the slowest way to see Lucerne, and the steamer is the best part of it. The design shows one with the Swiss flag at the stern.",
+      en: "A day on the lake is the slowest way to see Luzerne, and the steamer is the best part of it. The design shows one with the Swiss flag at the stern.",
       de: "Ein Tag auf dem See ist die gemütlichste Art, Luzern zu sehen, und der Dampfer ist der schönste Teil davon. Das Design zeigt einen mit der Schweizer Flagge am Heck.",
     },
   },
@@ -377,7 +377,7 @@ const designs: Design[] = [
       de: "Honig aus einem Biosphärenreservat",
     },
     chapterBody: {
-      en: "Finsterwald is a small village in the municipality of Entlebuch, canton Lucerne, on the road over the Glaubenberg. Moors surround it, and the whole Entlebuch region has been a UNESCO biosphere reserve since 2001, the first in Switzerland.\n\nHoney is one way to read such a landscape. Bees make blossom honey from nectar and darker forest honey from the sugary sap that aphids leave on trees, so the taste changes with place and weather. Switzerland has about 165,000 bee colonies, and each gives roughly 15 kilograms a year.",
+      en: "Finsterwald is a small village in the municipality of Entlebuch, canton Luzerne, on the road over the Glaubenberg. Moors surround it, and the whole Entlebuch region has been a UNESCO biosphere reserve since 2001, the first in Switzerland.\n\nHoney is one way to read such a landscape. Bees make blossom honey from nectar and darker forest honey from the sugary sap that aphids leave on trees, so the taste changes with place and weather. Switzerland has about 165,000 bee colonies, and each gives roughly 15 kilograms a year.",
       de: "Finsterwald ist ein kleines Dorf in der Gemeinde Entlebuch, Kanton Luzern, an der Strasse über den Glaubenberg. Moore umgeben es, und die ganze Region Entlebuch ist seit 2001 UNESCO-Biosphäre, die erste der Schweiz.\n\nHonig ist eine Art, eine solche Landschaft zu lesen. Bienen machen Blütenhonig aus Nektar und dunkleren Waldhonig aus dem zuckerhaltigen Saft, den Blattläuse auf Bäumen hinterlassen, und so ändert sich der Geschmack mit Ort und Wetter. Die Schweiz hat rund 165 000 Bienenvölker, und jedes liefert etwa 15 Kilogramm im Jahr.",
     },
     onKnifeTitle: { en: "Why a bee", de: "Warum eine Biene" },

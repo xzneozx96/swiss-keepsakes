@@ -23,7 +23,7 @@ export const stopStories = {
       de: "Die Brücke, die brannte und neu entstand",
     },
     body: {
-      en: "The Chapel Bridge crosses the Reuss where the river leaves the lake. It was once part of the town's defences, and so was the octagonal Water Tower beside it, which is the older of the two. Look up under the roof. Triangular paintings hang in the gables, with scenes from Swiss history and the legends of Lucerne's patron saints, Leodegar and Maurice. In the night of 18 August 1993 a fire destroyed much of the bridge and about two-thirds of its paintings. Lucerne rebuilt it in eight months and reopened it on 14 April 1994. Some gaps in the picture cycle remain.",
+      en: "The Chapel Bridge crosses the Reuss where the river leaves the lake. It was once part of the town's defences, and so was the octagonal Water Tower beside it, which is the older of the two. Look up under the roof. Triangular paintings hang in the gables, with scenes from Swiss history and the legends of Luzerne's patron saints, Leodegar and Maurice. In the night of 18 August 1993 a fire destroyed much of the bridge and about two-thirds of its paintings. Luzerne rebuilt it in eight months and reopened it on 14 April 1994. Some gaps in the picture cycle remain.",
       de: "Die Kapellbrücke führt dort über die Reuss, wo der Fluss den See verlässt. Sie gehörte einst zur Stadtbefestigung, ebenso der achteckige Wasserturm neben ihr, der älter ist als die Brücke. Schauen Sie unter das Dach. In den Giebeln hängen dreieckige Bildtafeln mit Szenen aus der Schweizer Geschichte und den Legenden der Luzerner Stadtpatrone Leodegar und Mauritius. In der Nacht auf den 18. August 1993 zerstörte ein Feuer einen grossen Teil der Brücke und etwa zwei Drittel der Bilder. Luzern baute sie in acht Monaten wieder auf und eröffnete sie am 14. April 1994. Einige Lücken im Bilderzyklus sind geblieben.",
     },
     description: {
@@ -65,11 +65,11 @@ export const stopStories = {
     },
     coordinates: [8.30482, 47.05201],
     title: {
-      en: "The square where Lucerne swore its oath",
+      en: "The square where Luzerne swore its oath",
       de: "Der Platz, auf dem Luzern den Bund beschwor",
     },
     body: {
-      en: "In 1332 the people of Lucerne swore their alliance with Uri, Schwyz and Unterwalden on the Weinmarkt. Before that it was a fish market, and a wooden market hall stood here until 1841, when it was pulled down and the square took its present shape. At the centre is the Weinmarkt fountain. The first one dates from 1481 and took the sculptor Konrad Lux about ten years. The stone you see now is a later work by Leopold Häfliger, and the original is in the Historical Museum on Pfistergasse. Look up from the basin at the painted house fronts. One, on the former Alte Apotheke, is by Seraphin Weingartner.",
+      en: "In 1332 the people of Luzerne swore their alliance with Uri, Schwyz and Unterwalden on the Weinmarkt. Before that it was a fish market, and a wooden market hall stood here until 1841, when it was pulled down and the square took its present shape. At the centre is the Weinmarkt fountain. The first one dates from 1481 and took the sculptor Konrad Lux about ten years. The stone you see now is a later work by Leopold Häfliger, and the original is in the Historical Museum on Pfistergasse. Look up from the basin at the painted house fronts. One, on the former Alte Apotheke, is by Seraphin Weingartner.",
       de: "Auf dem Weinmarkt schworen die Luzerner 1332 den Bund mit Uri, Schwyz und Unterwalden. Davor war hier ein Fischmarkt, und bis 1841 stand eine hölzerne Markthalle auf dem Platz. Dann wurde sie abgebrochen, und der Platz erhielt seine heutige Form. In der Mitte steht der Weinmarktbrunnen. Der erste stammt von 1481, Konrad Lux arbeitete rund zehn Jahre daran. Der Stein, den Sie heute sehen, ist ein späteres Werk von Leopold Häfliger, das Original steht im Historischen Museum an der Pfistergasse. Schauen Sie vom Brunnen aus hinauf zu den bemalten Hausfassaden. Eine an der ehemaligen Alten Apotheke stammt von Seraphin Weingartner.",
     },
     description: {
@@ -138,7 +138,7 @@ export const stopStories = {
       de: "Eine Mauer und eine Uhr, die früher schlägt",
     },
     body: {
-      en: "Above the Old Town, the Musegg Wall runs for about 800 metres along the ridge. Lucerne began fortifying the hill in the 13th century, and nine of the original thirty towers still stand. In the Zyt Tower, a clock mechanism dated 1535 strikes each hour one minute before the church clocks. Why is not recorded for certain. One explanation is that the city wanted its public clock to speak first, as a sign of independence from the church bells. Treat that as a story, not proven history. Stand by the tower just before the hour and wait for it.",
+      en: "Above the Old Town, the Musegg Wall runs for about 800 metres along the ridge. Luzerne began fortifying the hill in the 13th century, and nine of the original thirty towers still stand. In the Zyt Tower, a clock mechanism dated 1535 strikes each hour one minute before the church clocks. Why is not recorded for certain. One explanation is that the city wanted its public clock to speak first, as a sign of independence from the church bells. Treat that as a story, not proven history. Stand by the tower just before the hour and wait for it.",
       de: "Über der Altstadt zieht sich die Museggmauer auf rund 800 Metern dem Hügelkamm entlang. Luzern befestigte den Hügel ab dem 13. Jahrhundert, und von den ursprünglich dreissig Türmen stehen noch neun. Im Zytturm schlägt ein Uhrwerk von 1535 jede volle Stunde eine Minute vor den Kirchenuhren. Warum, ist nicht sicher überliefert. Eine Erklärung lautet, die Stadt wollte ihre öffentliche Uhr zuerst sprechen lassen, als Zeichen der Unabhängigkeit von den Kirchenglocken. Das ist eine Deutung, kein belegter Fakt. Stellen Sie sich kurz vor der vollen Stunde an den Turm und warten Sie.",
     },
     description: {
@@ -253,7 +253,7 @@ export const stopStories = {
       de: "Ein Florentiner Palast an der Bahnhofstrasse",
     },
     body: {
-      en: "Lux Ritter, a Lucerne magistrate and captain in French service, had this palace built from about 1556. He chose the Florentine Renaissance style, with arcades around a courtyard. He died in 1559, before it was finished. In 1577 the city gave the house to the Jesuits, and since 1804 it has been the seat of the cantonal government. On an upper floor, a corridor holds a Dance of Death, painted around 1615 and attributed to Jakob von Wyl. In seven pictures, Death leads people of every rank away. The semicircular parliament chamber was added in 1841.",
+      en: "Lux Ritter, a Luzerne magistrate and captain in French service, had this palace built from about 1556. He chose the Florentine Renaissance style, with arcades around a courtyard. He died in 1559, before it was finished. In 1577 the city gave the house to the Jesuits, and since 1804 it has been the seat of the cantonal government. On an upper floor, a corridor holds a Dance of Death, painted around 1615 and attributed to Jakob von Wyl. In seven pictures, Death leads people of every rank away. The semicircular parliament chamber was added in 1841.",
       de: "Lux Ritter, Luzerner Magistrat und Hauptmann in französischen Diensten, liess diesen Palast ab etwa 1556 bauen. Er wählte den Stil der florentinischen Renaissance, mit Arkaden um einen Innenhof. 1559 starb er, noch vor der Vollendung. 1577 übergab die Stadt das Haus den Jesuiten, seit 1804 ist es Sitz der Kantonsregierung. In einem Gang im Obergeschoss hängt ein Totentanz, um 1615 gemalt und Jakob von Wyl zugeschrieben. In sieben Bildern führt der Tod Menschen aller Stände ab. Direkt neben dem Palast steht die Jesuitenkirche. Der halbrunde Ratssaal kam 1841 dazu.",
     },
     description: {
@@ -272,11 +272,11 @@ export const stopStories = {
     },
     coordinates: [8.30287, 47.05021],
     title: {
-      en: "The oldest pharmacy in Lucerne",
+      en: "The oldest pharmacy in Luzerne",
       de: "Die älteste Apotheke Luzerns",
     },
     body: {
-      en: "In 1833 Leopold Suidter, a doctor trained in Vienna, opened a pharmacy in Lucerne. It still trades under his name at Bahnhofstrasse 21 and calls itself the oldest in the city. His son Otto took it over in 1855, and the next Otto, his grandson, rebuilt it in 1906. A 2017 trade report says the interior and some herbal preparations go back to the early years. This is a working pharmacy, not a museum. Look from the street, and go in as a customer or by arrangement.",
+      en: "In 1833 Leopold Suidter, a doctor trained in Vienna, opened a pharmacy in Luzerne. It still trades under his name at Bahnhofstrasse 21 and calls itself the oldest in the city. His son Otto took it over in 1855, and the next Otto, his grandson, rebuilt it in 1906. A 2017 trade report says the interior and some herbal preparations go back to the early years. This is a working pharmacy, not a museum. Look from the street, and go in as a customer or by arrangement.",
       de: "1833 eröffnete Leopold Suidter, ein in Wien ausgebildeter Arzt, in Luzern eine Apotheke. Sie trägt noch heute seinen Namen, liegt an der Bahnhofstrasse 21 und bezeichnet sich als älteste der Stadt. Sein Sohn Otto übernahm sie 1855, der nächste Otto, sein Enkel, baute sie 1906 um. Ein Fachbericht von 2017 nennt eine Einrichtung und Kräuterzubereitungen, die teils aus den Anfangsjahren stammen. Es ist eine Apotheke im Alltagsbetrieb, kein Museum. Schauen Sie von der Strasse aus, und treten Sie als Kundin oder Kunde oder nach Absprache ein.",
     },
     description: {
@@ -437,7 +437,7 @@ export const stopStories = {
       de: "Finsterwald, ein Dorf in der Biosphäre",
     },
     body: {
-      en: "Finsterwald is a small village in the municipality of Entlebuch, canton Lucerne, on the road over the Glaubenberg. Moors surround it, and the whole Entlebuch region has been a UNESCO biosphere reserve since 2001, the first in Switzerland. Honey is one way to read such a landscape. Bees make blossom honey from nectar and darker forest honey from the sugary sap that aphids leave on trees, so the taste changes with place and weather. Switzerland has about 165,000 bee colonies, and each gives roughly 15 kilograms a year. Whether you meet a beekeeper here depends on an invitation.",
+      en: "Finsterwald is a small village in the municipality of Entlebuch, canton Luzerne, on the road over the Glaubenberg. Moors surround it, and the whole Entlebuch region has been a UNESCO biosphere reserve since 2001, the first in Switzerland. Honey is one way to read such a landscape. Bees make blossom honey from nectar and darker forest honey from the sugary sap that aphids leave on trees, so the taste changes with place and weather. Switzerland has about 165,000 bee colonies, and each gives roughly 15 kilograms a year. Whether you meet a beekeeper here depends on an invitation.",
       de: "Finsterwald ist ein kleines Dorf in der Gemeinde Entlebuch im Kanton Luzern, an der Strasse über den Glaubenberg. Moore umgeben es, und die ganze Region Entlebuch ist seit 2001 UNESCO-Biosphäre, die erste der Schweiz. Honig ist eine Art, eine solche Landschaft zu lesen. Bienen machen Blütenhonig aus Nektar und dunkleren Waldhonig aus dem zuckerhaltigen Saft, den Blattläuse auf Bäumen hinterlassen. Darum schmeckt er je nach Ort und Wetter anders. In der Schweiz leben etwa 165’000 Bienenvölker, jedes liefert rund 15 Kilogramm im Jahr. Ob Sie hier einem Imker begegnen, hängt von einer Einladung ab.",
     },
     description: {

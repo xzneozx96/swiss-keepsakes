@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-/** Lucerne's Christmas market season: the home hero snows from 24 November to 6 January. */
+/** Luzerne's Christmas market season: the home hero snows from 24 November to 6 January. */
 export function isFestiveSeason(date: Date) {
   const month = date.getMonth();
   const day = date.getDate();

@@ -19,7 +19,7 @@ interface HeroProps {
 
 /**
  * Discovery hero (Lab round 3, F3 "Sky fade", chosen 13.10.2026): app top row and a
- * greeting on the sky, the Lucerne skyline fading in below, and a big search box on
+ * greeting on the sky, the Luzerne skyline fading in below, and a big search box on
  * the water that opens global search, like the search icon in the top row.
  * The forwarded ref marks the hero's bottom edge for the collapsing header.
  */

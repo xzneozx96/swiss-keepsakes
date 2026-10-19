@@ -1,4 +1,4 @@
-Kapellbrücke and the Water Tower with Mount Pilatus, Lucerne.
+Kapellbrücke and the Water Tower with Mount Pilatus, Luzerne.
 Photo by Juliet van Ree, CC0 1.0 (public domain dedication), Wikimedia Commons:
 https://commons.wikimedia.org/wiki/File:Kapellbr%C3%BCcke_Luzern_1_by_Juliet_van_Ree.jpg
 Resized to 1200 px wide from docs/ux/design-system/project/assets/Photos/lucerne-kapellbruecke.jpg.
@@ -74,10 +74,10 @@ stay.jpg
 https://www.pexels.com/photo/a-mountain-hut-overlooks-a-spectacular-valley-in-the-swiss-alps-27971523/
 
 lucerne-water-tower.jpg
-"Luzern-1170926" (Kapellbruecke and Water Tower, Lucerne) by ermell, CC BY-SA 3.0, Wikimedia Commons. Resized to 1200x1600 JPEG.
+"Luzern-1170926" (Kapellbruecke and Water Tower, Luzerne) by ermell, CC BY-SA 3.0, Wikimedia Commons. Resized to 1200x1600 JPEG.
 https://commons.wikimedia.org/wiki/File:Luzern-1170926.jpg
 
----- Lucerne tours set (Oct 2026), each cropped to 4:3 and resized to 1200x900 JPEG ----
+---- Luzerne tours set (Oct 2026), each cropped to 4:3 and resized to 1200x900 JPEG ----
 
 kornmarkt.jpg
 "Das Rathaus in Luzern" by JoachimKohler-HB, CC BY-SA 4.0, Wikimedia Commons.
@@ -92,7 +92,7 @@ hirschenplatz.jpg
 https://commons.wikimedia.org/wiki/File:Switzerland-03472_-_Hirschenplatz_Square_(23216544653).jpg
 
 victorinox-store.jpg
-"Lucerne Hirschenplatz 12 (Victorinox Store)" by Ymblanter, CC BY-SA 4.0, Wikimedia Commons.
+"Luzerne Hirschenplatz 12 (Victorinox Store)" by Ymblanter, CC BY-SA 4.0, Wikimedia Commons.
 https://commons.wikimedia.org/wiki/File:Lucerne_Hirschenplatz_12.jpg
 
 zytturm.jpg
@@ -108,7 +108,7 @@ old-swiss-house.jpg
 https://commons.wikimedia.org/wiki/File:Switzerland-03276_-_Old_Swiss_House_(23733914622).jpg
 
 jesuit-church.jpg
-"The Jesuit Church with twin onion domes on the Reuss river in Lucerne" by Tushar Mahajan (@route2tushar), Unsplash License.
+"The Jesuit Church with twin onion domes on the Reuss river in Luzerne" by Tushar Mahajan (@route2tushar), Unsplash License.
 https://unsplash.com/photos/aRIWR7gtrNs
 
 ritter-palace.jpg
@@ -116,7 +116,7 @@ ritter-palace.jpg
 https://commons.wikimedia.org/wiki/File:Ehemaliger_Ritter%27scher_Palast_(Regierungsgeb%C3%A4ude_Bahnhofstrasse_15,_P1010087_01).jpg
 
 suidter-pharmacy.jpg
-"Lucerne Alte Suidtersche Apotheke" by Ymblanter, CC BY-SA 4.0, Wikimedia Commons.
+"Luzerne Alte Suidtersche Apotheke" by Ymblanter, CC BY-SA 4.0, Wikimedia Commons.
 https://commons.wikimedia.org/wiki/File:Lucerne_Alte_Suidtersche_Apotheke.jpg
 
 furka-rhone-glacier.jpg
@@ -190,7 +190,7 @@ hammetschwand-cliff-path.jpg
 https://commons.wikimedia.org/wiki/File:B%C3%BCrgenstock,_Felsenweg_zum_Hammetschwand-Lift_-_panoramio.jpg
 
 hammetschwand-view.jpg
-"Hammetschwand-Lift N" by Tschubby, CC BY-SA 3.0, Wikimedia Commons. View north from the top platform: Lake Lucerne and the Rigi.
+"Hammetschwand-Lift N" by Tschubby, CC BY-SA 3.0, Wikimedia Commons. View north from the top platform: Lake Luzerne and the Rigi.
 https://commons.wikimedia.org/wiki/File:Hammetschwand-Lift_N.jpg
 
 pilatus-dragon-ride.jpg
@@ -202,7 +202,7 @@ pilatus-fraekmuentegg.jpg
 https://commons.wikimedia.org/wiki/File:Fräkmüntegg,_Kriens,_Switzerland.JPG
 
 rigi-vitznau-pier.jpg
-"Vitznau pier Lake Lucerne" by Paradise Chronicle, CC BY-SA 4.0, Wikimedia Commons. Vitznau pier on Lake Lucerne.
+"Vitznau pier Lake Luzerne" by Paradise Chronicle, CC BY-SA 4.0, Wikimedia Commons. Vitznau pier on Lake Luzerne.
 https://commons.wikimedia.org/wiki/File:Vitznau_pier_Lake_Lucerne.jpg
 
 rigi-kaltbad.jpg

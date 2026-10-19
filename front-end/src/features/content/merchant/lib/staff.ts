@@ -5,10 +5,10 @@ import type { Role } from "@/features/demo";
 /**
  * The name guests see on a story, a shop comment or a review reply written by the signed-in
  * staff member (the prototype bar's role stands in for staff sign-in). The seeded stories and
- * shop comments use "Ngọc" and "Lukas", so new ones match them.
+ * shop comments use "Sonja" and "Lukas", so new ones match them.
  */
 export const publicStaffName = (role: Role) =>
-  role === "manager" ? "Lukas" : "Ngọc";
+  role === "manager" ? "Lukas" : "Sonja";
 
 const roles: Record<"owner" | "manager", Record<Language, string>> = {
   owner: {

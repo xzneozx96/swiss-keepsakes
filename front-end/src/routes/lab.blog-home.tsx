@@ -59,7 +59,7 @@ const pick = <T extends string>(
 ): T => (allowed.includes(value as T) ? (value as T) : fallback);
 
 /**
- * Lab: stories-first home structures for the personal Lucerne blog, with Christmas effects.
+ * Lab: stories-first home structures for the personal Luzerne blog, with Christmas effects.
  * The choices live in the URL so Back from the lab story list returns to the same view.
  */
 export const Route = createFileRoute("/lab/blog-home")({
@@ -80,14 +80,14 @@ const options = [
     id: "R2-A",
     round: 2,
     title: "A · Chapters",
-    note: "Hero, then chapter 1 Stories (category circles, one lead story, three more). The tiles “Discover Lucerne, bring it home” act as a bridge and jump to chapters 2 Tours, 3 Victorinox, 4 Keepsakes.",
+    note: "Hero, then chapter 1 Stories (category circles, one lead story, three more). The tiles “Discover Luzerne, bring it home” act as a bridge and jump to chapters 2 Tours, 3 Victorinox, 4 Keepsakes.",
     Option: ChaptersHome,
   },
   {
     id: "R2-B",
     round: 2,
     title: "B · Storybook",
-    note: "The category circles sit right under the hero. Stories swipe like a book of large photo cards. Tours, Victorinox and Keepsakes follow, and the tiles close the page as “Bring Lucerne home”.",
+    note: "The category circles sit right under the hero. Stories swipe like a book of large photo cards. Tours, Victorinox and Keepsakes follow, and the tiles close the page as “Bring Luzerne home”.",
     Option: StorybookHome,
   },
   {
@@ -193,7 +193,7 @@ const storyStyles: {
     id: "postcards",
     group: "earlier",
     label: "Postcards",
-    note: "Each story is a tilted Lucerne postcard with a stamp of its category, a postmark with the place and “Greetings from …”.",
+    note: "Each story is a tilted Luzerne postcard with a stamp of its category, a postmark with the place and “Greetings from …”.",
   },
   {
     id: "bento",
@@ -216,9 +216,9 @@ const storyStyles: {
 ];
 
 const voiceModes: { id: Voice; label: string }[] = [
-  { id: "we", label: "We · Lukas & Ngọc" },
+  { id: "we", label: "We · Lukas & Sonja" },
   { id: "brand", label: "Swiss Keepsakes" },
-  { id: "me", label: "I · Ngọc" },
+  { id: "me", label: "I · Sonja" },
 ];
 
 const R3_NOTE =
@@ -250,7 +250,7 @@ function BlogHomeLab() {
 
         <div className="flex flex-col gap-2">
           <p className="text-label font-medium text-muted">
-            Round 3 · Read it, walk it, keep it (picked: journey map, I · Ngọc,
+            Round 3 · Read it, walk it, keep it (picked: journey map, I · Sonja,
             R4 moving photos)
           </p>
           <div className="flex flex-wrap gap-2">

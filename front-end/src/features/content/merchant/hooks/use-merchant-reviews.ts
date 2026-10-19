@@ -27,7 +27,7 @@ export interface ReviewRowProps {
   reply: {
     text: string;
     language: Language;
-    /** "Reply from Ngọc · 14.10.2026". */
+    /** "Reply from Sonja · 14.10.2026". */
     meta: string;
     languageNote: string | null;
   } | null;

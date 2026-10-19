@@ -398,7 +398,7 @@ export const hotelName = (id: string) =>
   id === "none"
     ? "the station area"
     : id === "zurich"
-      ? "Lucerne station (day trip from Zürich)"
+      ? "Luzerne station (day trip from Zürich)"
       : (HOTELS.find((h) => h.id === id)?.name ?? id);
 
 export const lunchById = restaurantById;

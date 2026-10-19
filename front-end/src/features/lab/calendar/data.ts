@@ -22,7 +22,7 @@ export const calendarItems: CalendarItem[] = [
   {
     id: "BK-1042",
     kind: "tour",
-    title: "Lucerne old town walk",
+    title: "Luzerne old town walk",
     customer: "Anna Müller & family",
     date: "2026-10-15",
     time: "09:00",
@@ -56,7 +56,7 @@ export const calendarItems: CalendarItem[] = [
     end: "15:30",
     guests: 8,
     capacity: 8,
-    location: "Lucerne station · main entrance",
+    location: "Luzerne station · main entrance",
     status: "Confirmed",
     payment: "Paid in full",
     note: "Departure is full. Bring the printed guest list.",
@@ -88,7 +88,7 @@ export const calendarItems: CalendarItem[] = [
   {
     id: "BK-1044",
     kind: "tour",
-    title: "Lucerne old town walk",
+    title: "Luzerne old town walk",
     customer: "Daniel Weber",
     date: "2026-10-16",
     time: "09:30",
@@ -122,7 +122,7 @@ export const calendarItems: CalendarItem[] = [
     end: "15:30",
     guests: 4,
     capacity: 8,
-    location: "Lucerne station · main entrance",
+    location: "Luzerne station · main entrance",
     status: "Confirmed",
     payment: "CHF 96 remaining",
     note: "Collect the balance separately from attendance.",
@@ -142,7 +142,7 @@ export const calendarItems: CalendarItem[] = [
   {
     id: "BK-1046",
     kind: "tour",
-    title: "Lucerne old town walk",
+    title: "Luzerne old town walk",
     customer: "Oliver Brown",
     date: "2026-10-21",
     time: "10:00",
@@ -157,7 +157,7 @@ export const calendarItems: CalendarItem[] = [
   {
     id: "BK-1047",
     kind: "tour",
-    title: "Lucerne old town walk",
+    title: "Luzerne old town walk",
     customer: "Mia Keller",
     date: "2026-10-23",
     time: "09:00",

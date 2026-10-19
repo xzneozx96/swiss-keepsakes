@@ -15,7 +15,7 @@ export const knifeArt: Record<string, string> = Object.fromEntries(
   ]),
 );
 
-/** The twelve designs in showcase order: Lucerne icons, then the passes, then Finsterwald. */
+/** The twelve designs in showcase order: Luzerne icons, then the passes, then Finsterwald. */
 export const knifeDesigns = [
   { key: "swan", group: "lucerne" },
   { key: "chapel-bridge", group: "lucerne" },

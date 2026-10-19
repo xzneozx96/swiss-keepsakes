@@ -20,7 +20,7 @@ const photos = {
 const itinerary: TourStop[] = [
   {
     id: "station",
-    name: lt("Lucerne railway station", "Bahnhof Luzern"),
+    name: lt("Luzerne railway station", "Bahnhof Luzern"),
     description: lt(
       "Meet at the station. Your guide agrees the exact meeting pin with you before the day. Bus 1 towards Kriens/Obernau leaves from here.",
       "Treffpunkt am Bahnhof. Ihre Führung vereinbart den genauen Treffpunkt vorab mit Ihnen. Von hier fährt Bus 1 Richtung Kriens/Obernau.",
@@ -183,7 +183,7 @@ const sections: TourSection[] = [
         "08:30–09:10",
         "t1",
         lt(
-          "Meet at Lucerne station and take bus 1 to Kriens",
+          "Meet at Luzerne station and take bus 1 to Kriens",
           "Treffen am Bahnhof Luzern, Bus 1 nach Kriens",
         ),
         lt(
@@ -236,9 +236,9 @@ const sections: TourSection[] = [
       [
         "13:30–15:00",
         "t6",
-        lt("Descent and return to Lucerne", "Rückfahrt nach Luzern"),
+        lt("Descent and return to Luzerne", "Rückfahrt nach Luzern"),
         lt(
-          "Via Fräkmüntegg and Kriens, a walk to the bus, and back to Lucerne. Allow time for queues.",
+          "Via Fräkmüntegg and Kriens, a walk to the bus, and back to Luzerne. Allow time for queues.",
           "Über Fräkmüntegg und Kriens, Fussweg zum Bus, Rückkehr nach Luzern. Zeit für Warteschlangen lassen.",
         ),
       ],
@@ -271,7 +271,7 @@ const sections: TourSection[] = [
         "r-main",
         lt("Main route", "Hauptroute"),
         lt(
-          "Lucerne, bus 1 to Kriens, Zentrum Pilatus, a walk to the valley station, the gondola via Krienseregg to Fräkmüntegg, then the Dragon Ride to Pilatus Kulm. You return the same way.",
+          "Luzerne, bus 1 to Kriens, Zentrum Pilatus, a walk to the valley station, the gondola via Krienseregg to Fräkmüntegg, then the Dragon Ride to Pilatus Kulm. You return the same way.",
           "Luzern, Bus 1 nach Kriens, Zentrum Pilatus, Fussweg zur Talstation, Gondel über Krienseregg zur Fräkmüntegg, dann Dragon Ride nach Pilatus Kulm. Gleicher Rückweg.",
         ),
         {
@@ -408,11 +408,11 @@ export const pilatus: Tour = {
   slug: "pilatus-above-the-city",
   name: lt("Pilatus: Above the City", "Pilatus: Über der Stadt"),
   summary: lt(
-    "A day from Lucerne: bus, gondola and the Dragon Ride to the summit, with no hike",
+    "A day from Luzerne: bus, gondola and the Dragon Ride to the summit, with no hike",
     "Ein Tag ab Luzern: Bus, Gondel und Dragon Ride zum Gipfel, ohne Wanderung",
   ),
   description: lt(
-    "In the morning, you are still among the buildings of Lucerne. Soon, forest passes beneath the gondola and the city becomes a small part of a much larger landscape. This journey explores the relationship between town and mountain: our desire for open horizons, and the engineering that makes such heights accessible.",
+    "In the morning, you are still among the buildings of Luzerne. Soon, forest passes beneath the gondola and the city becomes a small part of a much larger landscape. This journey explores the relationship between town and mountain: our desire for open horizons, and the engineering that makes such heights accessible.",
     "Am Morgen stehen Sie noch zwischen den Häusern von Luzern. Wenig später ziehen unter der Gondel Wälder vorbei, und die Stadt wird zu einem kleinen Teil einer viel grösseren Landschaft. Dieser Ausflug erzählt von der Beziehung zwischen Stadt und Berg: von unserer Sehnsucht nach Weite und den technischen Ideen, die diese Höhe erreichbar machen.",
   ),
   longStory: storyFromChapters({
@@ -422,7 +422,7 @@ export const pilatus: Tour = {
         photo: photos.kriens,
         title: lt("A change of perspective", "Eine andere Perspektive"),
         body: lt(
-          "In the morning, you are still among the buildings of Lucerne. Soon, forest passes beneath the gondola and the city becomes a small part of a much larger landscape. This journey explores the relationship between town and mountain: our desire for open horizons, and the engineering that makes such heights accessible.",
+          "In the morning, you are still among the buildings of Luzerne. Soon, forest passes beneath the gondola and the city becomes a small part of a much larger landscape. This journey explores the relationship between town and mountain: our desire for open horizons, and the engineering that makes such heights accessible.",
           "Am Morgen stehen Sie noch zwischen den Häusern von Luzern. Wenig später ziehen unter der Gondel Wälder vorbei, und die Stadt wird zu einem kleinen Teil einer viel grösseren Landschaft. Dieser Ausflug erzählt von der Beziehung zwischen Stadt und Berg: von unserer Sehnsucht nach Weite und den technischen Ideen, die diese Höhe erreichbar machen.",
         ),
       },
@@ -453,12 +453,12 @@ export const pilatus: Tour = {
   childPrice: 6500,
   infantPrice: 0,
   meetingPoint: lt(
-    "Lucerne railway station (exact meeting point agreed before the day)",
+    "Luzerne railway station (exact meeting point agreed before the day)",
     "Bahnhof Luzern (genauer Treffpunkt wird vorab vereinbart)",
   ),
   included: [
     lt(
-      "Guiding from Lucerne to Pilatus Kulm and back, in a small group",
+      "Guiding from Luzerne to Pilatus Kulm and back, in a small group",
       "Führung von Luzern auf den Pilatus Kulm und zurück, in kleiner Gruppe",
     ),
     lt(

@@ -16,8 +16,8 @@ export interface HeroV2Props {
 const copy = {
   en: {
     hello: "Grüezi!",
-    place: "Lucerne",
-    letsStart: "Let's find your Lucerne keepsake",
+    place: "Luzerne",
+    letsStart: "Let's find your Luzerne keepsake",
     searchPlaceholder: "Search gifts, tours, stories",
     what: "Looking for",
     pickup: "Pickup date",
@@ -26,8 +26,8 @@ const copy = {
     explore: "Explore",
     titleStart: "A place you always",
     titleAccent: "want to return to.",
-    sub: "Keepsakes from Lucerne makers, picked up in town.",
-    plainTitle: "Explore Lucerne like a local",
+    sub: "Keepsakes from Luzerne makers, picked up in town.",
+    plainTitle: "Explore Luzerne like a local",
     types: ["Gifts", "Tours", "Stays", "Experiences"],
   },
   de: {
@@ -120,7 +120,7 @@ export function HeroSearchCard({ language }: HeroV2Props) {
   );
 }
 
-/** G · Two-weight title and tabs (reference 2): place line, "Explore / Lucerne", tab row. */
+/** G · Two-weight title and tabs (reference 2): place line, "Explore / Luzerne", tab row. */
 export function HeroTwoWeight({ language }: HeroV2Props) {
   const c = copy[language];
 

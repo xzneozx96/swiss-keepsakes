@@ -10,7 +10,7 @@ export interface JourneyStep {
 }
 
 /**
- * "How I'll show you Lucerne" (Lab R3, owner 17.10.2026): the three parts of the home as
+ * "How I'll show you Luzerne" (Lab R3, owner 17.10.2026): the three parts of the home as
  * numbered round photos on a dotted path that zigzags down. A step scrolls to its part.
  */
 export function JourneySteps({

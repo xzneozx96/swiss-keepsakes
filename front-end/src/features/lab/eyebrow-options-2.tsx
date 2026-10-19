@@ -156,7 +156,7 @@ export function EyebrowPostmark({ part }: { part: Part }) {
   );
 }
 
-/** F5 · Trail pin: the dotted path from "How I'll show you Lucerne" arrives at a map pin for each stop. */
+/** F5 · Trail pin: the dotted path from "How I'll show you Luzerne" arrives at a map pin for each stop. */
 export function EyebrowTrailPin({ part }: { part: Part }) {
   return (
     <div className="relative flex gap-3 pt-9">

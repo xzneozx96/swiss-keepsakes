@@ -91,7 +91,7 @@ const options = [
   {
     id: "E",
     title: "E · Postcard to the team",
-    note: "The request half-written on a Lucerne postcard, with a photo stamp.",
+    note: "The request half-written on a Luzerne postcard, with a photo stamp.",
     Option: PrivatePostcard,
   },
 ];

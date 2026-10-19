@@ -40,7 +40,7 @@ export interface Design {
 const meta: Record<string, { name: string; line: string; scene: string }> = {
   swan: {
     name: "Swan on the lake",
-    line: "The white swans of Lake Lucerne",
+    line: "The white swans of Lake Luzerne",
     scene: "lucerne-swan",
   },
   "chapel-bridge": {
@@ -107,7 +107,7 @@ export const collections: {
 }[] = [
   {
     id: "lucerne",
-    title: "Lucerne icons",
+    title: "Luzerne icons",
     line: "The lake, the bridges and the mountain above town",
   },
   {
@@ -444,7 +444,7 @@ export function VxCabinet({
     designs.find((d) => d.key === selectedKey) ?? designs[0] ?? undefined;
   const shelves = [
     {
-      label: "Lucerne icons",
+      label: "Luzerne icons",
       designs: designs.filter((d) => d.group === "lucerne"),
     },
     {

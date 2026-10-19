@@ -23,10 +23,10 @@ export const articleSeed: Article[] = [
     language: "en",
     title: "A morning on the Musegg wall",
     excerpt:
-      "Climb the old town wall before the city wakes up, and see Lucerne laid out between the lake and the hills.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+      "Climb the old town wall before the city wakes up, and see Luzerne laid out between the lake and the hills.",
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
-      "The Musegg wall runs along the hill above the old town. It was built in the late 14th century to guard Lucerne from the north, and long stretches of it still stand.",
+      "The Musegg wall runs along the hill above the old town. It was built in the late 14th century to guard Luzerne from the north, and long stretches of it still stand.",
     sections: [
       {
         id: "on-the-wall",
@@ -59,7 +59,7 @@ export const articleSeed: Article[] = [
           {
             type: "video",
             youtubeId: "0UHyzRnAxy8",
-            title: "Lucerne city wall with 9 Musegg towers",
+            title: "Luzerne city wall with 9 Musegg towers",
             caption:
               "Video: Private Luxury Travel Switzerland by Brigitte, on YouTube.",
           },
@@ -71,7 +71,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: "paragraph",
-            text: "Listen for the Zyt tower. Its clock is the oldest in town, and by tradition it may strike one minute before every other clock in Lucerne.",
+            text: "Listen for the Zyt tower. Its clock is the oldest in town, and by tradition it may strike one minute before every other clock in Luzerne.",
           },
           {
             type: "audio",
@@ -117,7 +117,7 @@ export const articleSeed: Article[] = [
     title: "Ein Morgen auf der Museggmauer",
     excerpt:
       "Steigen Sie auf die alte Stadtmauer, bevor die Stadt erwacht, und sehen Sie Luzern zwischen See und Hügeln.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Die Museggmauer zieht sich über den Hügel oberhalb der Altstadt. Sie wurde im späten 14. Jahrhundert gebaut, um Luzern gegen Norden zu schützen, und lange Abschnitte stehen bis heute.",
     sections: [
@@ -152,7 +152,7 @@ export const articleSeed: Article[] = [
           {
             type: "video",
             youtubeId: "0UHyzRnAxy8",
-            title: "Lucerne city wall with 9 Musegg towers",
+            title: "Luzerne city wall with 9 Musegg towers",
             caption:
               "Video: Private Luxury Travel Switzerland by Brigitte, auf YouTube.",
           },
@@ -210,7 +210,7 @@ export const articleSeed: Article[] = [
     title: "The story behind the Lion Monument",
     excerpt:
       "A dying lion carved into the rock, and the Swiss guards he remembers.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "A short walk from the old town, a lion lies carved into a sandstone cliff above a small, still pond. He is wounded, a broken spear in his side, one paw resting on a shield. Most people fall quiet when they first see him.",
     sections: [
@@ -269,7 +269,7 @@ export const articleSeed: Article[] = [
     title: "Die Geschichte hinter dem Löwendenkmal",
     excerpt:
       "Ein sterbender Löwe im Fels und die Schweizer Gardisten, an die er erinnert.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Ein paar Gehminuten von der Altstadt entfernt liegt ein Löwe, in eine Sandsteinwand gehauen, über einem kleinen, stillen Teich. Er ist verwundet, ein abgebrochener Speer steckt in seiner Seite, eine Pranke ruht auf einem Schild. Die meisten werden still, wenn sie ihn zum ersten Mal sehen.",
     sections: [
@@ -329,9 +329,9 @@ export const articleSeed: Article[] = [
     title: "Crossing the lake by steamboat",
     excerpt:
       "Paddle wheels, polished brass and a slow way to watch the mountains rise out of the water.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
-      "Lake Lucerne still has a fleet of paddle steamers, the oldest of them more than a hundred years old. They carry you from the middle of town to the villages along the shore.",
+      "Lake Luzerne still has a fleet of paddle steamers, the oldest of them more than a hundred years old. They carry you from the middle of town to the villages along the shore.",
     sections: [
       {
         id: "from-the-station",
@@ -399,7 +399,7 @@ export const articleSeed: Article[] = [
     title: "Mit dem Dampfschiff über den See",
     excerpt:
       "Schaufelräder, glänzendes Messing und eine langsame Art, die Berge aus dem Wasser steigen zu sehen.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Auf dem Vierwaldstättersee fahren noch immer Raddampfer, der älteste von ihnen ist mehr als hundert Jahre alt. Sie bringen Sie von der Stadtmitte zu den Dörfern am Ufer.",
     sections: [
@@ -469,8 +469,8 @@ export const articleSeed: Article[] = [
     language: "en",
     title: "The Water Tower, older than the bridge",
     excerpt:
-      "The stone tower in the river was guarding Lucerne before the Chapel Bridge was built.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+      "The stone tower in the river was guarding Luzerne before the Chapel Bridge was built.",
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "The eight-sided stone tower beside the Chapel Bridge is older than the bridge itself. It stood in the river as part of the town’s defences, and over the centuries it served as an archive, a treasury and a prison.",
     sections: [
@@ -540,12 +540,12 @@ export const articleSeed: Article[] = [
     id: "weinmarkt-oath-en",
     slug: "weinmarkt-oath",
     language: "en",
-    title: "The square where Lucerne swore its oath",
+    title: "The square where Luzerne swore its oath",
     excerpt:
       "A fish market, a fountain and a row of painted houses: the Weinmarkt is where the town promised to join the Swiss Confederation.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
-      "Most visitors cross the Weinmarkt on the way to somewhere else. It is worth stopping. This small cobbled square is where the people of Lucerne are said to have gathered in 1332 to swear their alliance with Uri, Schwyz and Unterwalden.",
+      "Most visitors cross the Weinmarkt on the way to somewhere else. It is worth stopping. This small cobbled square is where the people of Luzerne are said to have gathered in 1332 to swear their alliance with Uri, Schwyz and Unterwalden.",
     sections: [
       {
         id: "the-oath",
@@ -553,7 +553,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: "paragraph",
-            text: "In 1332 Lucerne joined the three founding cantons of the Swiss Confederation, and the town’s tourist office places the oath on this square. It was the first town to join the three rural cantons, which turned a small trading town on a lake into part of something much larger.",
+            text: "In 1332 Luzerne joined the three founding cantons of the Swiss Confederation, and the town’s tourist office places the oath on this square. It was the first town to join the three rural cantons, which turned a small trading town on a lake into part of something much larger.",
           },
         ],
       },
@@ -563,7 +563,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: "paragraph",
-            text: "Until the middle of the 16th century this was Lucerne’s fish market. Later a two-storey wooden market hall stood here, where butchers, bakers and leather sellers had their stalls. It was pulled down in 1841, and the square took the open shape you see today.",
+            text: "Until the middle of the 16th century this was Luzerne’s fish market. Later a two-storey wooden market hall stood here, where butchers, bakers and leather sellers had their stalls. It was pulled down in 1841, and the square took the open shape you see today.",
           },
           {
             type: "image",
@@ -593,7 +593,7 @@ export const articleSeed: Article[] = [
           },
           {
             type: "paragraph",
-            text: "Our Old Town print shows these houses, and the Lucerne in 90 minutes walk passes the square on its way through the old town.",
+            text: "Our Old Town print shows these houses, and the Luzerne in 90 minutes walk passes the square on its way through the old town.",
           },
         ],
       },
@@ -620,7 +620,7 @@ export const articleSeed: Article[] = [
     title: "Der Platz, auf dem Luzern seinen Eid schwor",
     excerpt:
       "Ein Fischmarkt, ein Brunnen und bemalte Häuser: Auf dem Weinmarkt versprach die Stadt, der Eidgenossenschaft beizutreten.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Die meisten gehen über den Weinmarkt auf dem Weg zu etwas anderem. Es lohnt sich, stehen zu bleiben. Auf diesem kleinen Kopfsteinplatz sollen sich die Luzernerinnen und Luzerner 1332 versammelt haben, um den Bund mit Uri, Schwyz und Unterwalden zu beschwören.",
     sections: [
@@ -696,8 +696,8 @@ export const articleSeed: Article[] = [
     language: "en",
     title: "Under the Dance of Death on the Spreuer Bridge",
     excerpt:
-      "Lucerne’s quieter wooden bridge carries 45 triangular paintings in its roof, and in every one of them Death is somewhere in the crowd.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+      "Luzerne’s quieter wooden bridge carries 45 triangular paintings in its roof, and in every one of them Death is somewhere in the crowd.",
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "Everyone photographs the Chapel Bridge. A few hundred metres downstream there is a second covered wooden bridge, plainer and much quieter, and its roof is the more unusual gallery. Look up when you cross it.",
     sections: [
@@ -723,7 +723,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: "paragraph",
-            text: "Under the roof hang triangular wooden panels, painted in the 17th century, mostly under the direction of Kaspar Meglinger, with help from other Lucerne painters. They belong to the tradition of the Dance of Death: scenes in which Death meets people of every rank, from the pope and the emperor to the child, the doctor, the farmer and the beggar. The cycle once had about seventy panels. When the bridge was shortened in 1785, some were lost, and 45 remain.",
+            text: "Under the roof hang triangular wooden panels, painted in the 17th century, mostly under the direction of Kaspar Meglinger, with help from other Luzerne painters. They belong to the tradition of the Dance of Death: scenes in which Death meets people of every rank, from the pope and the emperor to the child, the doctor, the farmer and the beggar. The cycle once had about seventy panels. When the bridge was shortened in 1785, some were lost, and 45 remain.",
           },
           {
             type: "image",
@@ -739,7 +739,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: "paragraph",
-            text: "What makes the Lucerne cycle special is that Death does not drag people away in a dance. He walks among them, usually recognisable only by his skull: he leads the priest ahead of the Host as a sexton with a bell and a lantern, and he sits among the judges in court. Many of the faces are portraits of the people who paid for a panel. The verses on the black frames are not always easy to read, but the scenes are clear.",
+            text: "What makes the Luzerne cycle special is that Death does not drag people away in a dance. He walks among them, usually recognisable only by his skull: he leads the priest ahead of the Host as a sexton with a bell and a lantern, and he sits among the judges in court. Many of the faces are portraits of the people who paid for a panel. The verses on the black frames are not always easy to read, but the scenes are clear.",
           },
         ],
       },
@@ -773,7 +773,7 @@ export const articleSeed: Article[] = [
     title: "Unter dem Totentanz auf der Spreuerbrücke",
     excerpt:
       "Luzerns stillere Holzbrücke trägt 45 dreieckige Bilder im Dach, und auf jedem ist der Tod irgendwo in der Menge.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Alle fotografieren die Kapellbrücke. Ein paar hundert Meter flussabwärts gibt es eine zweite gedeckte Holzbrücke, schlichter und viel ruhiger, und ihr Dach ist die ungewöhnlichere Galerie. Schauen Sie nach oben, wenn Sie hinübergehen.",
     sections: [
@@ -848,18 +848,18 @@ export const articleSeed: Article[] = [
     language: "en",
     title: "The wooden needles that hold back a lake",
     excerpt:
-      "Since 1861, Lucerne has controlled the level of Lake Lucerne with timber needles, set into the Reuss by hand.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+      "Since 1861, Luzerne has controlled the level of Lake Luzerne with timber needles, set into the Reuss by hand.",
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
-      "From the Spreuer Bridge, look upstream. Across the river stands a long row of thin wooden beams, and behind it the whole of Lake Lucerne. This is the Needle Dam, and it still works much as it did in 1861.",
+      "From the Spreuer Bridge, look upstream. Across the river stands a long row of thin wooden beams, and behind it the whole of Lake Luzerne. This is the Needle Dam, and it still works much as it did in 1861.",
     sections: [
       {
         id: "why-a-weir",
-        heading: "Why Lucerne needed a weir",
+        heading: "Why Luzerne needed a weir",
         blocks: [
           {
             type: "paragraph",
-            text: "The Reuss is the only outlet of Lake Lucerne, and for centuries the lake flooded the town in wet years. After the great flood of 1821 the cantons around the lake quarrelled with Lucerne over who was to blame. They finally agreed on a new weir in 1858, together with the railway company, and it was built between 1859 and 1861 on the model of the French engineer Charles Poirée’s needle weirs. Rules for opening and closing it followed in 1867.",
+            text: "The Reuss is the only outlet of Lake Luzerne, and for centuries the lake flooded the town in wet years. After the great flood of 1821 the cantons around the lake quarrelled with Luzerne over who was to blame. They finally agreed on a new weir in 1858, together with the railway company, and it was built between 1859 and 1861 on the model of the French engineer Charles Poirée’s needle weirs. Rules for opening and closing it followed in 1867.",
           },
         ],
       },
@@ -923,7 +923,7 @@ export const articleSeed: Article[] = [
     title: "Die Holznadeln, die einen See zurückhalten",
     excerpt:
       "Seit 1861 reguliert Luzern den Pegel des Vierwaldstättersees mit Holznadeln, die von Hand in die Reuss gesetzt werden.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Schauen Sie von der Spreuerbrücke flussaufwärts. Quer im Fluss steht eine lange Reihe dünner Holzbalken, und dahinter liegt der ganze Vierwaldstättersee. Das ist das Nadelwehr, und es funktioniert noch fast so wie 1861.",
     sections: [
@@ -996,7 +996,7 @@ export const articleSeed: Article[] = [
     title: "The pharmacy that has stayed on its corner since 1833",
     excerpt:
       "A doctor from Vienna, three generations of Suidters and a shop that still serves the neighbours on Bahnhofstrasse.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "On Bahnhofstrasse, a few doors from the old Ritter Palace, there is a pharmacy with a very old name above its window: Alte Suidtersche Apotheke. It opened in 1833, and it is still a working pharmacy.",
     sections: [
@@ -1006,7 +1006,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: "paragraph",
-            text: "Leopold Suidter was born in 1803 in Stein, in the canton of Aargau, and studied medicine in Vienna, where his father lived for a time. He came back to Switzerland in 1827. In the summer of 1832 he took over a house in Lucerne, the Cloos-Haus, and in 1833 he opened a pharmacy in it. He died in 1855, and the pharmacy has carried the family name ever since.",
+            text: "Leopold Suidter was born in 1803 in Stein, in the canton of Aargau, and studied medicine in Vienna, where his father lived for a time. He came back to Switzerland in 1827. In the summer of 1832 he took over a house in Luzerne, the Cloos-Haus, and in 1833 he opened a pharmacy in it. He died in 1855, and the pharmacy has carried the family name ever since.",
           },
         ],
       },
@@ -1016,7 +1016,7 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: "paragraph",
-            text: "His son Otto Suidter took the pharmacy over in 1855 and ran it until his death in 1901. The next Otto, his grandson, took over then and had the building rebuilt in 1906. Since 1937 several other pharmacists have followed one after the other. The pharmacy calls itself the oldest in Lucerne.",
+            text: "His son Otto Suidter took the pharmacy over in 1855 and ran it until his death in 1901. The next Otto, his grandson, took over then and had the building rebuilt in 1906. Since 1937 several other pharmacists have followed one after the other. The pharmacy calls itself the oldest in Luzerne.",
           },
           {
             type: "image",
@@ -1060,7 +1060,7 @@ export const articleSeed: Article[] = [
     title: "Die Apotheke, die seit 1833 an ihrer Ecke steht",
     excerpt:
       "Ein Arzt aus Wien, drei Generationen Suidter und ein Geschäft, das noch heute die Nachbarschaft an der Bahnhofstrasse bedient.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "An der Bahnhofstrasse, ein paar Türen vom alten Ritterschen Palast entfernt, steht über einem Schaufenster ein sehr alter Name: Alte Suidtersche Apotheke. Sie wurde 1833 eröffnet und ist noch immer eine Apotheke im Alltagsbetrieb.",
     sections: [
@@ -1123,10 +1123,10 @@ export const articleSeed: Article[] = [
     language: "en",
     title: "Europe’s highest outdoor lift, built in 1905",
     excerpt:
-      "An iron tower on the cliff above Lake Lucerne, a ride of under a minute and a view that took five years to reach.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+      "An iron tower on the cliff above Lake Luzerne, a ride of under a minute and a view that took five years to reach.",
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
-      "On the Bürgenstock, on the cliff above Lake Lucerne, a slim iron tower stands against the rock. It is the Hammetschwand lift, and it has taken visitors to the summit for more than a hundred years.",
+      "On the Bürgenstock, on the cliff above Lake Luzerne, a slim iron tower stands against the rock. It is the Hammetschwand lift, and it has taken visitors to the summit for more than a hundred years.",
     sections: [
       {
         id: "a-hotelier-with-an-idea",
@@ -1160,13 +1160,13 @@ export const articleSeed: Article[] = [
         blocks: [
           {
             type: "paragraph",
-            text: "The first lift took about three minutes to climb to the top, at one metre a second. Today a glass cabin takes you up 152.8 metres in under a minute. After a renovation in 1992 the lift was in fact slowed down, so that visitors could see more on the way. At the top a platform, at about 1,130 metres, looks over Lake Lucerne and the mountains around it. In summer the tower is lit at night and can be seen from Lucerne.",
+            text: "The first lift took about three minutes to climb to the top, at one metre a second. Today a glass cabin takes you up 152.8 metres in under a minute. After a renovation in 1992 the lift was in fact slowed down, so that visitors could see more on the way. At the top a platform, at about 1,130 metres, looks over Lake Luzerne and the mountains around it. In summer the tower is lit at night and can be seen from Luzerne.",
           },
           {
             type: "image",
             photo: "hammetschwand-view",
             caption:
-              "Lake Lucerne and the Rigi, seen from the Hammetschwand viewpoint.",
+              "Lake Luzerne and the Rigi, seen from the Hammetschwand viewpoint.",
           },
         ],
       },
@@ -1200,7 +1200,7 @@ export const articleSeed: Article[] = [
     title: "Europas höchster Aussenlift, gebaut 1905",
     excerpt:
       "Ein eiserner Turm an der Felswand über dem Vierwaldstättersee, eine Fahrt von unter einer Minute und eine Aussicht, für die man fünf Jahre baute.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Auf dem Bürgenstock, an der Felswand über dem Vierwaldstättersee, steht ein schlanker Eisenturm vor dem Felsen. Es ist der Hammetschwand-Lift, und er bringt seit über hundert Jahren Gäste auf den Gipfel.",
     sections: [
@@ -1275,7 +1275,7 @@ export const articleSeed: Article[] = [
     title: "The knife that began in Ibach",
     excerpt:
       "How a cutler’s workshop in a village in Schwyz became Victorinox, and why a Swiss Army Knife makes a good keepsake.",
-    author: { name: "Ngọc", role: "Owner, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Owner, Swiss Keepsakes Luzern" },
     intro:
       "Almost everyone has held a red Swiss Army Knife, but few know where it comes from. It began in 1884 in Ibach, a village in the canton of Schwyz, and the company is still there.",
     sections: [
@@ -1327,11 +1327,11 @@ export const articleSeed: Article[] = [
       },
       {
         id: "in-lucerne",
-        heading: "In Lucerne",
+        heading: "In Luzerne",
         blocks: [
           {
             type: "paragraph",
-            text: "The Victorinox Store sits on Hirschenplatz 12 in the old town, with more than 120 square metres of knives, kitchen knives, watches and travel gear, and a configurator where you can personalise a knife on the spot. Our Lucerne in 90 minutes walk ends there.",
+            text: "The Victorinox Store sits on Hirschenplatz 12 in the old town, with more than 120 square metres of knives, kitchen knives, watches and travel gear, and a configurator where you can personalise a knife on the spot. Our Luzerne in 90 minutes walk ends there.",
           },
           {
             type: "image",
@@ -1341,7 +1341,7 @@ export const articleSeed: Article[] = [
           },
           {
             type: "paragraph",
-            text: "Our own Victorinox range pairs a genuine knife in three sizes with a Lucerne or Alpine design, and the shop engraves a name and a date on the back. Pocket knives are not allowed in cabin baggage, so pack yours in your checked luggage.",
+            text: "Our own Victorinox range pairs a genuine knife in three sizes with a Luzerne or Alpine design, and the shop engraves a name and a date on the back. Pocket knives are not allowed in cabin baggage, so pack yours in your checked luggage.",
           },
         ],
       },
@@ -1368,7 +1368,7 @@ export const articleSeed: Article[] = [
     title: "Das Messer, das in Ibach begann",
     excerpt:
       "Wie aus einer Messerschmiede in einem Dorf im Kanton Schwyz Victorinox wurde, und warum ein Schweizer Taschenmesser ein gutes Andenken ist.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Fast alle haben schon ein rotes Schweizer Taschenmesser in der Hand gehabt, aber nur wenige wissen, woher es kommt. Es begann 1884 in Ibach, einem Dorf im Kanton Schwyz, und die Firma ist noch immer dort.",
     sections: [
@@ -1462,7 +1462,7 @@ export const articleSeed: Article[] = [
     title: "Luzern bei Nacht",
     excerpt:
       "Wenn die Altstadt still wird: beleuchtete Brücken, leere Gassen und ein Spaziergang mit Laterne.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Wenn die Tagesgäste abgereist sind, wird es in der Altstadt still. Brücken und Türme sind beleuchtet, und ihr Licht spiegelt sich in der Reuss.",
     sections: [
@@ -1529,7 +1529,7 @@ export const articleSeed: Article[] = [
     title: "Ein Tag auf dem Pilatus",
     excerpt:
       "Mit der Zahnradbahn hinauf, mit der Gondel hinunter: Luzerns Hausberg an einem Tag.",
-    author: { name: "Ngọc", role: "Inhaberin, Swiss Keepsakes Luzern" },
+    author: { name: "Sonja", role: "Inhaberin, Swiss Keepsakes Luzern" },
     intro:
       "Der Pilatus ist Luzerns Hausberg. An klaren Tagen sieht man ihn von fast überall in der Stadt, und viele Gäste möchten wenigstens einmal hinauf.",
     sections: [
@@ -1593,7 +1593,7 @@ export const commentSeed: ArticleComment[] = [
     id: "c2",
     articleId: "musegg-morning-en",
     author: { kind: "shop", staffName: "Lukas" },
-    text: "It is, Marie. The Zyt tower clock is the oldest in town, and by tradition it may strike one minute before every other clock in Lucerne. Thank you for going up so early!",
+    text: "It is, Marie. The Zyt tower clock is the oldest in town, and by tradition it may strike one minute before every other clock in Luzerne. Thank you for going up so early!",
     createdAt: demoAt({ days: -8, hours: -1 }),
     hidden: false,
     parentId: "c1",
@@ -1800,7 +1800,7 @@ export const commentSeed: ArticleComment[] = [
   {
     id: "c26",
     articleId: "lake-steamboat-en",
-    author: { kind: "shop", staffName: "Ngọc" },
+    author: { kind: "shop", staffName: "Sonja" },
     text: "An afternoon is plenty, Yuki. Sail for an hour, step off where you like and take a later boat back. Just check the time of the last boat before you set off.",
     createdAt: demoAt({ days: -6, hours: 5 }),
     hidden: false,
@@ -1851,7 +1851,7 @@ export const commentSeed: ArticleComment[] = [
   {
     id: "c32",
     articleId: "lake-steamboat-de",
-    author: { kind: "shop", staffName: "Ngọc" },
+    author: { kind: "shop", staffName: "Sonja" },
     text: "Nur ein paar Gehminuten, Sofia: Die Stege liegen direkt vor dem Bahnhof. Fragen Sie beim Einsteigen kurz nach, wo der Kinderwagen am besten Platz hat.",
     createdAt: demoAt({ days: -5, hours: 5 }),
     hidden: false,
@@ -1894,8 +1894,8 @@ export const commentSeed: ArticleComment[] = [
   {
     id: "c37",
     articleId: "water-tower-en",
-    author: { kind: "shop", staffName: "Ngọc" },
-    text: "They tell the story of Lucerne and its patron saints, Marie. They were hung between the roof beams in the 17th century, so everyone who crossed walked under the history of their town.",
+    author: { kind: "shop", staffName: "Sonja" },
+    text: "They tell the story of Luzerne and its patron saints, Marie. They were hung between the roof beams in the 17th century, so everyone who crossed walked under the history of their town.",
     createdAt: demoAt({ days: -3 }),
     hidden: false,
     parentId: "c36",
