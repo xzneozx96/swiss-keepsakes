@@ -33,3 +33,17 @@ Findings for D8: open email+password sign-up is on by default and needs no verif
 | Token lifetime | 900 s; renewal not tested |
 | Code expiry (10 min) and attempts (5), email sender and language | not tested |
 | Staff invitation, user export | not tested |
+
+## Email code checks on development, 19.10.2026
+
+Run by the coordinator against `development` with the owner's real inbox.
+
+| Check | Result | UX L327 asks | Verdict |
+|---|---|---|---|
+| Code sign-in end to end | `POST /sign-in/email-otp` with a fresh code returned 200 and a session. A new user row was created with `emailVerified = true`. | Code sign-in creates the guest | Pass |
+| Code lifetime | A code used 8 min 34 s after sending returned 400 `OTP_EXPIRED`. A code used after 34 s worked. | 10 minutes | Gap: under 8.5 minutes, probably the 5-minute default |
+| Wrong attempts | 3 wrong codes are allowed. The 4th returns 403 `TOO_MANY_ATTEMPTS` and the code stops working. A per-IP limit also returns 429. | 5 attempts | Gap: 3 attempts |
+| Password sign-up | Switched off on all branches. `POST /sign-up/email` returns 400 `EMAIL_PASSWORD_SIGN_UP_DISABLED`. | Google or emailed code only (D8) | Pass |
+| Session to JWT | `GET /token` needs the session cookie. A bearer session token gets 401. The SDK does this for the SPA. | | Note for E2.1 |
+
+The Neon CLI exposes no email code settings, so the lifetime and attempt gaps go to D8 as owner decisions.

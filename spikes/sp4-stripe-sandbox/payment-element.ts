@@ -4,7 +4,7 @@ import Stripe from 'stripe'
 import { requireEnv, secret } from '../lib/env.ts'
 
 const env = requireEnv('SP4', {
-  STRIPE_SECRET_KEY: secret('rk_test_'),
+  STRIPE_SECRET_KEY: secret('rk_test_', 'sk_test_'),
   STRIPE_PUBLISHABLE_KEY: secret('pk_test_'),
 })
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)

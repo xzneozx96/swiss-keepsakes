@@ -187,7 +187,7 @@ async function cliStage(env: { STRIPE_SECRET_KEY: string }): Promise<boolean> {
 const localPass = await localStage()
 console.log(`LOCAL SP1: ${localPass ? 'PASS' : 'FAIL'}`)
 
-const stripeEnv = tryEnv(SPIKE, { STRIPE_SECRET_KEY: secret('rk_test_') })
+const stripeEnv = tryEnv(SPIKE, { STRIPE_SECRET_KEY: secret('rk_test_', 'sk_test_') })
 const missing: string[] = []
 if (!stripeEnv) missing.push('STRIPE_SECRET_KEY')
 else if (!cliAvailable()) {

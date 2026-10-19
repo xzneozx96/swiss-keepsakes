@@ -2,7 +2,7 @@ import Stripe from 'stripe'
 import { finish, requireEnv, secret } from '../lib/env.ts'
 
 const SPIKE = 'SP4'
-const env = requireEnv(SPIKE, { STRIPE_SECRET_KEY: secret('rk_test_') })
+const env = requireEnv(SPIKE, { STRIPE_SECRET_KEY: secret('rk_test_', 'sk_test_') })
 const stripe = new Stripe(env.STRIPE_SECRET_KEY)
 
 const observations: string[] = []
@@ -29,7 +29,6 @@ try {
   observe('account.country', account.country ?? 'unknown')
   const twint = account.capabilities?.twint_payments
   observe('account.capabilities.twint_payments', twint ?? 'absent')
-  if (twint === undefined) fail('twint capability', 'twint_payments is absent from capabilities; request it in Dashboard > Settings > Payment methods')
 } catch (error) {
   fail('accounts.retrieveCurrent()', describeError(error))
 }
@@ -82,9 +81,11 @@ try {
     automatic_payment_methods: { enabled: true, allow_redirects: 'always' },
   })
   observe('TWINT server-side confirm', `status ${twintIntent.status}, next_action ${twintIntent.next_action?.type ?? 'none'}`)
+  // The account's own capabilities list omits twint_payments even when TWINT works, so the redirect is the gate
+  if (twintIntent.next_action?.type !== 'redirect_to_url') fail('TWINT server-side confirm', 'no TWINT redirect; enable TWINT in Dashboard > Settings > Payment methods')
   await stripe.paymentIntents.cancel(twintIntent.id).catch(() => undefined)
 } catch (error) {
-  observe('TWINT server-side confirm', describeError(error))
+  fail('TWINT server-side confirm', describeError(error))
 }
 
 console.log('MANUAL: TWINT in the Payment Element needs a browser. Run `npm --prefix spikes run sp4:twint`, open the printed URL, pick TWINT and complete the test redirect.')

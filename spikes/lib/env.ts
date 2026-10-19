@@ -81,5 +81,7 @@ export function requireEnv<S extends Record<string, z.ZodType>>(spike: string, s
   process.exit(0)
 }
 
-export const secret = (prefix?: string) =>
-  prefix ? z.string().min(1).startsWith(prefix) : z.string().min(1)
+export const secret = (...prefixes: string[]) =>
+  prefixes.length
+    ? z.string().min(1).refine((v) => prefixes.some((p) => v.startsWith(p)), `must start with ${prefixes.join(' or ')}`)
+    : z.string().min(1)
