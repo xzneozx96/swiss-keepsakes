@@ -41,7 +41,7 @@ The front-end has unit tests and an end-to-end smoke test today. The rows about 
 
 Database tests are built (E1.9). They live in `api/test/integration/` and run with `pnpm test:integration` from the repo root, with `DATABASE_URL` and `DATABASE_URL_UNPOOLED` set, for example to the compose Postgres (`docker compose up -d --wait postgres`, then both `postgres://postgres@127.0.0.1:5433/swiss_keepsakes`). Each run creates its own database, migrates it and drops it. It refuses a host other than this machine unless `INTEGRATION_ALLOW_REMOTE_DATABASE=1`, which only a throwaway server may get. `pnpm test` never runs them, so it needs no Docker. Count rows by a marker your test made, not by table totals, because test files run in parallel on one database.
 
-The contract gate is built (E1.10). `api/test/contract.test.ts` builds `packages/api-contract/generated/` in memory from the API routes and fails when the committed files differ, so `pnpm test` runs it. After you change a route or a schema, run `pnpm contract:build` and commit the result.
+The contract gate is built (E1.10). `api/test/contract.test.ts` builds `packages/api-contract/generated/` in memory from the API routes and fails when the committed files differ, so `pnpm test` runs it. After you change a route or a schema, run `pnpm contract:build` and commit the result. The gate is `pnpm test` plus `pnpm typecheck`: the test compares the files, lists the routes and checks the problem bodies, and the type check proves that the generated client's types equal the Zod types and that `problem()` refuses an unknown code or a status under 400.
 
 | Level | Proves | Tool |
 | :-- | :-- | :-- |
