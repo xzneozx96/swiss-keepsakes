@@ -1,4 +1,4 @@
-import type { AdviceQuestion, AdviceQuestionSet } from '../../types'
+import type { AdviceQuestion, AdviceQuestionSet } from '@sk/domain/requests'
 
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 

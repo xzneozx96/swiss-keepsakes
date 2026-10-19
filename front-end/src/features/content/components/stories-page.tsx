@@ -1,11 +1,13 @@
 import type { Key } from '@heroui/react'
-import type { StoryCategory } from '../types'
+import type { StoryCategory } from '@sk/domain/content'
 
 import { ScrollShadow, Skeleton, Tag, TagGroup } from '@heroui/react'
-import { useNavigate } from '@tanstack/react-router'
+import { STORY_CATEGORIES } from '@sk/domain/content'
 
+import { useNavigate } from '@tanstack/react-router'
 import { EmptyState } from '@/components/empty-state'
 import { ContentIcon } from '@/components/icons'
+
 import {
   BackButton,
   CartButton,
@@ -13,7 +15,6 @@ import {
 } from '@/components/layout/cart-button'
 
 import { Media } from '@/components/media'
-
 import { useLocale } from '@/contexts/locale-context'
 import {
   CategoryThumb,
@@ -25,7 +26,6 @@ import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 import { publishedArticles } from '../lib/articles'
 import { ALL_STORIES_PHOTO, storyCategoryPhoto } from '../lib/categories'
-import { STORY_CATEGORIES } from '../types'
 import { StoryCard } from './story-card'
 
 const ALL = 'all'

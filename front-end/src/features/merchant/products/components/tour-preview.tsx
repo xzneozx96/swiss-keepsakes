@@ -1,13 +1,13 @@
+import type { Tour } from '@sk/domain/bookings'
 import type { Language } from '@/contexts/locale-context'
-import type { Tour } from '@/features/tours/types'
 
 import { Button } from '@heroui/react'
-import { useState } from 'react'
+import { pickText } from '@sk/domain/shared'
 
+import { useState } from 'react'
 import { InfoIcon } from '@/components/icons'
 import { LocaleOverride, useLocale } from '@/contexts/locale-context'
 import { TourDetail } from '@/features/tours/discovery/tour-detail-page'
-import { pickText } from '@/lib/localized'
 
 const LANGUAGES: Language[] = ['en', 'de']
 

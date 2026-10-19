@@ -1,5 +1,5 @@
+import type { Order } from '@sk/domain/orders'
 import type { OfflineMethod } from '@/features/orders/lib/transitions'
-import type { Order } from '@/features/orders/types'
 
 import {
   Alert,

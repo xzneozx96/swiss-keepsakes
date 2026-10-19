@@ -4,7 +4,9 @@ import type { CalendarItem, CalendarOverlay } from './calendar-core'
 import FullCalendar from '@fullcalendar/react'
 import deLocale from '@fullcalendar/react/locales/de'
 import { buttonVariants, Drawer } from '@heroui/react'
+import { calendarDay, dateTimeFormat } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
+
 import { useRef, useState } from 'react'
 
 import {
@@ -14,10 +16,8 @@ import {
   ClockIcon,
   PickupIcon,
 } from '@/components/icons'
-
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
-import { calendarDay, dateTimeFormat } from '@/lib/format'
 import { calendarPlugins, swissDate } from './calendar-core'
 
 function EventDetail({ item }: { item: CalendarItem }) {

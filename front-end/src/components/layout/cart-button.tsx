@@ -1,11 +1,11 @@
+import { pluralCategory } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
 
+import { useEffect, useRef, useState } from 'react'
 import { cartFlight, prefersReducedMotion } from '@/components/fly-to-cart'
 import { BackIcon, CartIcon, SearchIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useCart } from '@/features/cart/hooks/use-cart'
-import { pluralCategory } from '@/lib/format'
 
 const roundAction
   = 'flex size-11 items-center justify-center rounded-full outline-none transition-transform focus-visible:focus-ring active:scale-95'

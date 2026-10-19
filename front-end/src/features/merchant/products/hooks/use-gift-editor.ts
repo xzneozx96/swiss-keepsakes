@@ -1,33 +1,20 @@
-import type { TextFieldId } from '../lib/completeness'
-import type { Issue, Level, StepStatus, TextErrors } from '../lib/validation'
+import type { DayMode, Issue, Level, LocalizedText, PaymentPolicy, Product, StepStatus, TextErrors, TextFieldId } from '@sk/domain/catalog'
+import type { Order } from '@sk/domain/orders'
+import type { LocalizedRich, RichNode } from '@sk/domain/shared'
 import type { Language } from '@/contexts/locale-context'
-import type {
-  DayMode,
-  LocalizedText,
-  PaymentPolicy,
-  Product,
-} from '@/features/catalog/types'
+
 import type { GiftStep } from '@/features/merchant/products/lib/search-params'
-import type { Order } from '@/features/orders/types'
+import { cleanText, giftText, isPublished, LANGUAGES, missingText, textErrors, textFieldError } from '@sk/domain/catalog'
 
-import type { LocalizedRich, RichNode } from '@/lib/rich-text'
 import { useNavigate } from '@tanstack/react-router'
-
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { isPublished } from '@/features/catalog/lib/publish'
 import { useDemo } from '@/features/demo'
 import {
   GIFT_STEPS,
 
 } from '@/features/merchant/products/lib/search-params'
 import { useFieldList, useRangeError } from '../components/editor-parts'
-import {
-  cleanText,
-  giftText,
-  LANGUAGES,
-  missingText,
-} from '../lib/completeness'
 
 import { markJustCreated, takeJustCreated } from '../lib/just-created'
 
@@ -39,7 +26,6 @@ import {
   toStory,
   uniqueSlug,
 } from '../lib/records'
-import { textErrors, textFieldError } from '../lib/validation'
 import { useProductArchive } from './use-merchant-products'
 
 export interface GiftDraft {

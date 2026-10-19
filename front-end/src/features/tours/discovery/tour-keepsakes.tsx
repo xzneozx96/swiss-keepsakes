@@ -1,8 +1,7 @@
+import { isPublished, isSoldOut } from '@sk/domain/catalog'
 import { useLocale } from '@/contexts/locale-context'
 import { ProductCard } from '@/features/catalog/components/product-card'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { isPublished } from '@/features/catalog/lib/publish'
-import { isSoldOut } from '@/features/catalog/lib/stock'
 import { useDemoSelector } from '@/features/demo'
 import { Rail } from '@/features/discovery/components/section'
 

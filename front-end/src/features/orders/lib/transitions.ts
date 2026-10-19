@@ -1,3 +1,5 @@
+import type { Rappen } from '@sk/domain/catalog'
+import type { MailParams, MailTemplate } from '@sk/domain/notifications'
 import type {
   Actor,
   LogEvent,
@@ -5,17 +7,12 @@ import type {
   OrderStatus,
   Payment,
   PaymentMethod,
+  ShortLine,
   StaffId,
-} from '../types'
-import type { ShortLine } from './selectors'
+} from '@sk/domain/orders'
 import type { Language } from '@/contexts/locale-context'
-import type { Rappen } from '@/features/catalog/types'
 import type { DemoState } from '@/features/demo/types'
-import type { MailParams, MailTemplate } from '@/features/notifications/types'
 
-import { sendMail } from '@/features/notifications/mail'
-
-import { findDuplicatePayment } from '@/lib/payments'
 import {
   amountDueNow,
   amountPaid,
@@ -25,7 +22,10 @@ import {
   orderTotal,
   processingPayment,
   shortLines,
-} from './selectors'
+} from '@sk/domain/orders'
+
+import { findDuplicatePayment } from '@sk/domain/payments'
+import { sendMail } from '@/features/notifications/mail'
 
 /**
  * Order transitions (UX spec §2.1, §2.3). Each one is DemoState → DemoState and returns the

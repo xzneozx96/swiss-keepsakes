@@ -1,6 +1,14 @@
 import type { MessageKey } from '@/i18n/en'
 
 import { Alert, Button, Form, Input, Label, TextField } from '@heroui/react'
+import {
+  availableSeats,
+  firstPaymentAmount,
+  participantSeats,
+  tourTotal,
+} from '@sk/domain/bookings'
+import { pickText } from '@sk/domain/shared'
+
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
@@ -13,7 +21,6 @@ import {
   TourIcon,
   TravelGroupIcon,
 } from '@/components/icons'
-
 import { InfoNote } from '@/components/info-note'
 import { BackButton } from '@/components/layout/cart-button'
 import { Media } from '@/components/media'
@@ -25,14 +32,7 @@ import {
 import { useLocale } from '@/contexts/locale-context'
 import { useRequireSignIn } from '@/features/auth/hooks/use-require-sign-in'
 import { useTourActions, useTours } from '@/features/tours/hooks/use-tours'
-import {
-  availableSeats,
-  firstPaymentAmount,
-  participantSeats,
-  tourTotal,
-} from '@/features/tours/lib/selectors'
 import { useBack } from '@/hooks/use-back'
-import { pickText } from '@/lib/localized'
 import { useBookingFormat, useGroupText } from './booking-summary'
 import { activeHold } from './transitions'
 

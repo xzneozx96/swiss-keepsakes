@@ -6,18 +6,18 @@ import type {
 import type { CollectStatus, TodayTaskId } from '../lib/today'
 import type { MessageKey } from '@/i18n/en'
 
-import { useLocale } from '@/contexts/locale-context'
+import { zurichDate } from '@sk/domain/catalog'
 
-import { zurichDate } from '@/features/catalog/lib/pickup'
-import { useDemo, useDemoNow } from '@/features/demo'
-import { formatLabel, progressLabel } from '@/features/orders/lib/labels'
 import {
   calendarDay,
   dateTimeFormat,
   formatMoney,
   formatShortDate,
-} from '@/lib/format'
-import { pickText } from '@/lib/localized'
+  pickText,
+} from '@sk/domain/shared'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo, useDemoNow } from '@/features/demo'
+import { formatLabel, progressLabel } from '@/features/orders/lib/labels'
 import {
   nextPickups,
   TODAY_TASKS,

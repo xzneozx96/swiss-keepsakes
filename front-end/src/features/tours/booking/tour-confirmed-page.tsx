@@ -1,18 +1,17 @@
 import { Button, buttonVariants } from '@heroui/react'
-import { useNavigate } from '@tanstack/react-router'
+import { bookingBalance, calendarHref } from '@sk/domain/bookings'
 
+import { pickText } from '@sk/domain/shared'
+import { useNavigate } from '@tanstack/react-router'
 import { BookingsIcon, StatusSuccessIcon } from '@/components/icons'
+
 import { SurfaceCard } from '@/components/surface-card'
 import { useLocale } from '@/contexts/locale-context'
 import { TripProfile } from '@/features/checkout/components/trip-profile'
-
 import { useTripProfile } from '@/features/checkout/hooks/use-trip-profile'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
 import { useTours } from '@/features/tours/hooks/use-tours'
-import { bookingBalance } from '@/features/tours/lib/selectors'
-import { pickText } from '@/lib/localized'
 import { BookingSummary, useBookingFormat } from './booking-summary'
-import { calendarHref } from './calendar'
 import { BookingMoney, GuestTourBookingPage } from './guest-tour-booking-page'
 import { MissingBooking, useOwnedBooking } from './tour-payment-page'
 

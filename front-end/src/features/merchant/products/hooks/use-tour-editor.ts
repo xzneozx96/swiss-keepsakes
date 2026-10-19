@@ -1,8 +1,3 @@
-import type { TextFieldId } from '../lib/completeness'
-import type { Issue, Level, StepStatus, TextErrors } from '../lib/validation'
-import type { Language } from '@/contexts/locale-context'
-import type { LocalizedText } from '@/features/catalog/types'
-import type { TourStep } from '@/features/merchant/products/lib/search-params'
 import type {
   Departure,
   Tour,
@@ -10,11 +5,24 @@ import type {
   TourSection,
   TourSectionItem,
   TourStop,
-} from '@/features/tours/types'
+} from '@sk/domain/bookings'
+import type { Issue, Level, LocalizedText, StepStatus, TextErrors, TextFieldId } from '@sk/domain/catalog'
+import type { LocalizedRich, RichNode } from '@sk/domain/shared'
+import type { Language } from '@/contexts/locale-context'
 
-import type { LocalizedRich, RichNode } from '@/lib/rich-text'
+import type { TourStep } from '@/features/merchant/products/lib/search-params'
+import {
+  cleanText,
+  hasText,
+  LANGUAGES,
+  missingText,
+  textErrors,
+  textFieldError,
+  tourText,
+} from '@sk/domain/catalog'
+
+import { safeHref } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
-
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemo, useDemoActions, useDemoNow } from '@/features/demo'
@@ -22,18 +30,10 @@ import {
   TOUR_STEPS,
 
 } from '@/features/merchant/products/lib/search-params'
+
 import { createTourSeed } from '@/features/tours/seed'
-import { safeHref } from '@/lib/rich-text'
+
 import { useFieldList, useRangeError } from '../components/editor-parts'
-
-import {
-  cleanText,
-  hasText,
-  LANGUAGES,
-  missingText,
-  tourText,
-} from '../lib/completeness'
-
 import { markJustCreated, takeJustCreated } from '../lib/just-created'
 import { STORAGE_BUDGET } from '../lib/photo-upload'
 import {
@@ -43,7 +43,6 @@ import {
   toStory,
   uniqueSlug,
 } from '../lib/records'
-import { textErrors, textFieldError } from '../lib/validation'
 import { useProductArchive } from './use-merchant-products'
 
 export interface TourEdit {

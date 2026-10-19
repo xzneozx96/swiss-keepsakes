@@ -1,23 +1,13 @@
-import type { LanguageStatus } from '../lib/completeness'
-import type { Product } from '@/features/catalog/types'
-import type { Tour } from '@/features/tours/types'
+import type { Tour } from '@sk/domain/bookings'
+import type { LanguageStatus, Product } from '@sk/domain/catalog'
 
+import { availableUnits, fromPrice, giftText, isPublished, languageStatus, missingText, placeText, tourText } from '@sk/domain/catalog'
+
+import { formatMoney, numberFormat, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-
-import { isPublished } from '@/features/catalog/lib/publish'
-import { availableUnits, fromPrice } from '@/features/catalog/lib/stock'
 import { useDemo, useDemoActions, useDemoNow } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { createTourSeed } from '@/features/tours/seed'
-import { formatMoney, numberFormat } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import {
-  giftText,
-  languageStatus,
-  missingText,
-  placeText,
-  tourText,
-} from '../lib/completeness'
 
 export interface ProductRow {
   id: string

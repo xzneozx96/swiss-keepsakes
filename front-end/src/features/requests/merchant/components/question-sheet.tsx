@@ -1,5 +1,5 @@
-import type { AdviceAnswerType, AdviceQuestion } from '../../types'
-import type { LocalizedText } from '@/features/catalog/types'
+import type { LocalizedText } from '@sk/domain/catalog'
+import type { AdviceAnswerType, AdviceQuestion } from '@sk/domain/requests'
 
 import {
   Button,

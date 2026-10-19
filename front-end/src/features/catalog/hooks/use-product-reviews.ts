@@ -1,12 +1,11 @@
 import type { ReviewView } from '../components/review-item'
 
-import { useLocale } from '@/contexts/locale-context'
+import { zurichDate } from '@sk/domain/catalog'
 
+import { dateTimeFormat, formatShortDate, numberFormat, pickText } from '@sk/domain/shared'
+import { useLocale } from '@/contexts/locale-context'
 import { useDemoNow, useDemoSelector } from '@/features/demo'
 import { avatarUrl } from '@/lib/avatars'
-import { dateTimeFormat, formatShortDate, numberFormat } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { zurichDate } from '../lib/pickup'
 
 /**
  * "Guest favourite" (Airbnb pattern, UX proposal): at least two reviews averaging 4.5 or

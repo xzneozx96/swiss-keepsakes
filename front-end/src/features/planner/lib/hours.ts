@@ -1,6 +1,6 @@
 import type { Place } from '../data/places'
 
-import { calendarDay, dateTimeFormat } from '@/lib/format'
+import { calendarDay, dateTimeFormat } from '@sk/domain/shared'
 import { PLACES, RESTAURANTS } from '../data/places'
 
 export const WINDOW_FROM = '2026-10-17'

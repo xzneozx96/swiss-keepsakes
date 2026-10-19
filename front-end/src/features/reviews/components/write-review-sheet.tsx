@@ -1,5 +1,5 @@
+import type { Review } from '@sk/domain/catalog'
 import type { ReviewableProduct } from '../hooks/use-order-reviews'
-import type { Review } from '@/features/catalog/types'
 
 import {
   Button,

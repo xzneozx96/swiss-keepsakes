@@ -1,4 +1,4 @@
-import type { Order } from '@/features/orders/types'
+import type { Order } from '@sk/domain/orders'
 
 /**
  * M03 status tabs (UX spec §3.2), in order. The ids are the `status` search param of

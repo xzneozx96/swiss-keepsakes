@@ -1,17 +1,17 @@
+import type { Guest } from '@sk/domain/orders'
 import type { AvatarPickError } from '../lib/avatar'
-import type { Guest } from '@/features/orders/types'
 
 import { Button, FieldError, Input, Label, TextField } from '@heroui/react'
+import { numberFormat } from '@sk/domain/shared'
 import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
+
 import { useRef, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
-
 import { CameraIcon, StatusDangerIcon } from '@/components/icons'
-import { useLocale } from '@/contexts/locale-context'
 
+import { useLocale } from '@/contexts/locale-context'
 import { useDemoActions } from '@/features/demo'
-import { numberFormat } from '@/lib/format'
 import {
   AVATAR_MAX_BYTES,
   avatarPickError,

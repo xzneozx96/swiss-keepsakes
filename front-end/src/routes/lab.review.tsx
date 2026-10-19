@@ -2,9 +2,10 @@ import type { ReviewOrderView } from '@/features/checkout/components/review-view
 import type { ReviewOrderOptionProps } from '@/features/lab/review-order-options'
 
 import { Alert } from '@heroui/react'
+import { formatMoney, pickText } from '@sk/domain/shared'
+
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-
 import { InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { products, shop } from '@/features/catalog/seed'
@@ -20,8 +21,6 @@ import {
   ReviewSectioned,
   ReviewTiles,
 } from '@/features/lab/review-order-options'
-import { formatMoney } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 /** Lab: C06 orders as one white card each. Not part of the product. */
 export const Route = createFileRoute('/lab/review')({

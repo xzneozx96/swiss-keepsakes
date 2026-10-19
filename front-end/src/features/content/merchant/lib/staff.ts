@@ -1,4 +1,4 @@
-import type { ArticleAuthor } from '../../types'
+import type { ArticleAuthor } from '@sk/domain/content'
 import type { Language } from '@/contexts/locale-context'
 import type { Role } from '@/features/demo'
 

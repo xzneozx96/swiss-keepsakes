@@ -1,5 +1,5 @@
+import type { IntlLocale, Language } from '@sk/domain/shared'
 import type { MessageKey } from '@/i18n/en'
-import type { IntlLocale } from '@/lib/format'
 
 import { I18nProvider } from '@heroui/react'
 import {
@@ -15,7 +15,7 @@ import {
 import { en } from '@/i18n/en'
 import { readStored, writeStored } from '@/lib/storage'
 
-export type Language = 'en' | 'de'
+export type { Language }
 
 type Dictionary = Record<MessageKey, string>
 

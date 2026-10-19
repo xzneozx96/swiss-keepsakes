@@ -1,5 +1,5 @@
+import type { CostType, CostValue } from '@sk/domain/reporting'
 import type { CostRow } from '../hooks/use-cost-data'
-import type { CostType, CostValue } from '../types'
 
 import {
   Button,
@@ -9,13 +9,13 @@ import {
   NumberField,
   toast,
 } from '@heroui/react'
+import { COST_TYPES } from '@sk/domain/reporting'
+
 import { useState } from 'react'
-
 import { SheetFrame } from '@/components/sheet-frame'
-import { useLocale } from '@/contexts/locale-context'
 
+import { useLocale } from '@/contexts/locale-context'
 import { useCostActions } from '../hooks/use-cost-actions'
-import { COST_TYPES } from '../types'
 
 type Draft = Record<CostType, { amount: number, notApplicable: boolean }>
 

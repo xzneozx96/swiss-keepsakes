@@ -1,14 +1,16 @@
 import type { ZonedDateTime } from '@internationalized/date'
+import type { Order } from '@sk/domain/orders'
 import type {
   OfflineMethod,
   OfflinePaymentInput,
 } from '@/features/orders/lib/transitions'
-import type { Order } from '@/features/orders/types'
 import type { MessageKey } from '@/i18n/en'
 
 import { fromDate, toCalendarDate } from '@internationalized/date'
-import { useState } from 'react'
+import { amountPaid, balance, formatOrderDate, orderTotal } from '@sk/domain/orders'
 
+import { formatMoney } from '@sk/domain/shared'
+import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
@@ -16,14 +18,7 @@ import {
   useBlockText,
   useOrderActions,
 } from '@/features/orders/hooks/use-orders'
-import { formatOrderDate } from '@/features/orders/lib/format'
-import {
-  amountPaid,
-  balance,
-  orderTotal,
-} from '@/features/orders/lib/selectors'
 import { recordOfflinePaymentBlock } from '@/features/orders/lib/transitions'
-import { formatMoney } from '@/lib/format'
 
 export const offlineMethods: OfflineMethod[] = [
   'cash',

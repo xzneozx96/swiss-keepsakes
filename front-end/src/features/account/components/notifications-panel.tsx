@@ -1,11 +1,11 @@
+import { formatOrderDateTime } from '@sk/domain/orders'
+
 import { Link } from '@tanstack/react-router'
 
 import { ChevronRightIcon, EmailIcon } from '@/components/icons'
-
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoSelector } from '@/features/demo'
 import { renderMail } from '@/features/notifications/components/render-mail'
-import { formatOrderDateTime } from '@/features/orders/lib/format'
 import {
   itemClass,
   plainItemClass,

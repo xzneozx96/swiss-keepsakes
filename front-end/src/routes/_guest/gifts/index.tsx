@@ -1,16 +1,16 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { isPublished } from '@sk/domain/catalog'
 
+import { pickText } from '@sk/domain/shared'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useLocale } from '@/contexts/locale-context'
 import {
   ALL_CATEGORIES,
   GiftList,
 } from '@/features/catalog/components/gift-list'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { isPublished } from '@/features/catalog/lib/publish'
 import { useDemo } from '@/features/demo'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 import { useUrlInput } from '@/hooks/use-url-input'
-import { pickText } from '@/lib/localized'
 
 interface GiftsSearch {
   /** Sub-category from the discovery home or the filter rail; absent = all keepsakes. */

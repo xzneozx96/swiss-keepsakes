@@ -1,17 +1,17 @@
-import type { Order } from '@/features/orders/types'
+import type { Order } from '@sk/domain/orders'
+
+import { amountDueNow } from '@sk/domain/orders'
+import { formatMoney } from '@sk/domain/shared'
 
 import { useNavigate } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
-
 import { useLocale } from '@/contexts/locale-context'
 import { shop } from '@/features/catalog/seed'
 import {
   useBlockText,
   useOrderActions,
 } from '@/features/orders/hooks/use-orders'
-import { amountDueNow } from '@/features/orders/lib/selectors'
 import { startOnlinePaymentBlock } from '@/features/orders/lib/transitions'
-import { formatMoney } from '@/lib/format'
 
 export type Outcome = 'succeeded' | 'failed' | 'processing'
 

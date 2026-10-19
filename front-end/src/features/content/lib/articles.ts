@@ -1,4 +1,4 @@
-import type { Article } from '../types'
+import type { Article } from '@sk/domain/content'
 import type { Language } from '@/contexts/locale-context'
 
 function publishedAt(a: Article) {

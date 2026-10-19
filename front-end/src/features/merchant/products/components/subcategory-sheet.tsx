@@ -1,4 +1,4 @@
-import type { LocalizedText, Subcategory } from '@/features/catalog/types'
+import type { LocalizedText, Subcategory } from '@sk/domain/catalog'
 
 import { Button, FieldError, Input, Label, TextField } from '@heroui/react'
 import { useState } from 'react'

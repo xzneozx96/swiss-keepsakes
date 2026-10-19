@@ -1,19 +1,19 @@
 import type { CalendarDate } from '@internationalized/date'
-import type { Departure, Tour, TourParticipants } from '@/features/tours/types'
+import type { Departure, Tour, TourParticipants } from '@sk/domain/bookings'
 import type { MessageKey } from '@/i18n/en'
 
 import { parseDate } from '@internationalized/date'
-import { useMemo, useState } from 'react'
-
-import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
-import { useTours } from '@/features/tours/hooks/use-tours'
 import {
   availableSeats,
   participantSeats,
   upcomingDepartures,
-} from '@/features/tours/lib/selectors'
-import { dateTimeFormat, formatShortDate } from '@/lib/format'
+} from '@sk/domain/bookings'
+
+import { zurichDate } from '@sk/domain/catalog'
+import { dateTimeFormat, formatShortDate } from '@sk/domain/shared'
+import { useMemo, useState } from 'react'
+import { useLocale } from '@/contexts/locale-context'
+import { useTours } from '@/features/tours/hooks/use-tours'
 
 /** At or below this many free seats a day or slot reads as "few left". */
 export const LOW_SEATS = 2

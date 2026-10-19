@@ -1,12 +1,11 @@
-import type { CostRecord, CostType } from '../types'
+import type { Rappen } from '@sk/domain/catalog'
+import type { CommissionAdjustment } from '@sk/domain/partners'
+import type { CostRecord, CostType, DayRange } from '@sk/domain/reporting'
 import type { ReportTx } from './transactions'
-import type { Rappen } from '@/features/catalog/types'
-import type { CommissionAdjustment } from '@/features/partners/types'
-import type { DayRange } from '@/lib/analytics'
+
+import { COST_TYPES } from '@sk/domain/reporting'
 
 import { transactionKey } from '@/features/partners/lib/ledger'
-
-import { COST_TYPES } from '../types'
 
 export interface MarginPart {
   /** Completed sales in the period. */

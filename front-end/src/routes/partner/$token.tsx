@@ -1,9 +1,9 @@
-import type { SalesPeriodId } from '@/features/merchant/sales/lib/periods'
+import type { SalesPeriodId } from '@sk/domain/reporting'
+
+import { SALES_PERIODS } from '@sk/domain/reporting'
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-
 import { PartnerShell } from '@/components/layout/partner-shell'
-import { SALES_PERIODS } from '@/features/merchant/sales/lib/periods'
 import { PartnerAccessScreen } from '@/features/partners/access/partner-access-screen'
 import { usePartnerAccess } from '@/features/partners/hooks/use-partner-access'
 import { PartnerDashboard } from '@/features/partners/report/components/partner-dashboard'

@@ -1,5 +1,5 @@
 import type { CalendarDate } from '@internationalized/date'
-import type { AdviceQuestion, AdviceValue } from '../types'
+import type { AdviceQuestion, AdviceValue } from '@sk/domain/requests'
 
 import {
   Button,
@@ -12,17 +12,16 @@ import {
   TextField,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date'
+import { zurichDate } from '@sk/domain/catalog'
+
+import { NUMBER_MAX, numberStart } from '@sk/domain/requests'
+
+import { calendarDay, formatDate, pickText } from '@sk/domain/shared'
 import { useState } from 'react'
-
 import { PickupDateIcon, SelectedIcon } from '@/components/icons'
-
 import { QuantityLarge } from '@/components/quantity-stepper'
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { useDemoNow } from '@/features/demo'
-import { calendarDay, formatDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { NUMBER_MAX, numberStart } from '../lib/answers'
 
 /**
  * The input for one C21 question (R19). Choices are offered in the conversation, under the

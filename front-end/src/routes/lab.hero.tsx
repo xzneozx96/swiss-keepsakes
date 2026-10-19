@@ -1,7 +1,8 @@
 import type { HeroOptionProps } from '@/features/lab/hero-options'
 
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { dateTimeFormat } from '@sk/domain/shared'
 
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoNow } from '@/features/demo'
 import { Hero } from '@/features/discovery/components/hero'
@@ -25,7 +26,6 @@ import {
   HeroF4PhotoTabs,
   HeroF5CardPhoto,
 } from '@/features/lab/hero-options-v3'
-import { dateTimeFormat } from '@/lib/format'
 
 /** Lab: compare discovery-home hero layouts at phone width. Not part of the product. */
 export const Route = createFileRoute('/lab/hero')({ component: HeroLab })

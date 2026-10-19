@@ -1,17 +1,17 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 
 import { Alert, Button } from '@heroui/react'
-import { useNavigate } from '@tanstack/react-router'
-
-import { StateHeadline } from '@/components/state-headline'
-import { SurfaceCard, SurfaceCardBlock } from '@/components/surface-card'
-
-import { useLocale } from '@/contexts/locale-context'
-import { useTourActions, useTours } from '@/features/tours/hooks/use-tours'
 import {
   reconciliationAmount,
   reconciliationPayments,
-} from '@/features/tours/lib/selectors'
+} from '@sk/domain/bookings'
+
+import { useNavigate } from '@tanstack/react-router'
+import { StateHeadline } from '@/components/state-headline'
+
+import { SurfaceCard, SurfaceCardBlock } from '@/components/surface-card'
+import { useLocale } from '@/contexts/locale-context'
+import { useTourActions, useTours } from '@/features/tours/hooks/use-tours'
 import { useBookingFormat } from './booking-summary'
 import { openPayment } from './transitions'
 

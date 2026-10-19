@@ -2,14 +2,14 @@ import type { IconComponent } from '@/components/icons'
 import type { Language } from '@/contexts/locale-context'
 
 import { Button } from '@heroui/react'
+import { LANGUAGES } from '@sk/domain/catalog'
+
 import { useState } from 'react'
 
 import { ChevronRightIcon } from '@/components/icons'
-
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { rowClass, RowIcon } from '@/features/account/components/settings-list'
-import { LANGUAGES } from '../lib/completeness'
 
 /** A hairline above every row but the first, inset past the icon tile (as on the account screen). */
 export const rowHairline

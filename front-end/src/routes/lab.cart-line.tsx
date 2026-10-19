@@ -4,8 +4,9 @@ import type {
 } from '@/features/lab/cart-line-options'
 
 import type { LabCartOrder } from '@/features/lab/cart-select-options'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { formatMoney, pickText } from '@sk/domain/shared'
 
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import { products } from '@/features/catalog/seed'
@@ -29,8 +30,6 @@ import {
   CartSelectDemo,
 
 } from '@/features/lab/cart-select-options'
-import { formatMoney } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 /** Lab: more compact cart lines for C04. Not part of the product. */
 export const Route = createFileRoute('/lab/cart-line')({

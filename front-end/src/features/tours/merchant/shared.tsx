@@ -1,12 +1,12 @@
-import type { TourParticipants } from '../types'
+import type { TourParticipants } from '@sk/domain/bookings'
 import type { TourBlock } from './lib/transitions'
 import type { DeparturePhase } from './lib/work'
 import type { StatusTone } from '@/components/status-chip'
 import type { MessageKey } from '@/i18n/en'
 
+import { dateTimeFormat, formatMoney } from '@sk/domain/shared'
 import { StatusDangerIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { dateTimeFormat, formatMoney } from '@/lib/format'
 
 export function useTourFormatting() {
   const { intlLocale } = useLocale()

@@ -1,4 +1,4 @@
-import type { AdviceQuestion } from '../../types'
+import type { AdviceQuestion } from '@sk/domain/requests'
 
 import {
   Alert,
@@ -10,22 +10,22 @@ import {
   TextField,
   toast,
 } from '@heroui/react'
-import { useState } from 'react'
+import { formatOrderDateTime } from '@sk/domain/orders'
 
+import { looksLikeEmail } from '@sk/domain/requests'
+import { useState } from 'react'
 import {
   ChevronDownIcon,
   EmailIcon,
   MessageIcon,
   PlusIcon,
 } from '@/components/icons'
+
 import { InfoNote } from '@/components/info-note'
+
 import { StatusChip } from '@/components/status-chip'
-
 import { useLocale } from '@/contexts/locale-context'
-
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
-import { formatOrderDateTime } from '@/features/orders/lib/format'
-import { looksLikeEmail } from '../../lib/answers'
 import { useQuestionSet } from '../hooks/use-question-set'
 import { isChoice, missingLanguages } from '../lib/question-set'
 import { QuestionSheet } from './question-sheet'

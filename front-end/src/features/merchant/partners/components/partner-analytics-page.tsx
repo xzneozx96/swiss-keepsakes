@@ -2,7 +2,9 @@ import type { DataTableColumn } from '@/components/data-table'
 import type { PartnerAnalyticsView } from '@/features/merchant/partners/hooks/use-partner-analytics'
 
 import { Skeleton } from '@heroui/react'
+import { formatMoney } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
+
 import {
   Bar,
   BarChart,
@@ -12,7 +14,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-
 import { DataTable } from '@/components/data-table'
 import { EmptyState } from '@/components/empty-state'
 import { ReportsIcon } from '@/components/icons'
@@ -27,7 +28,6 @@ import { WidgetSkeleton } from '@/features/merchant/today/components/overview-pa
 import { HBars } from '@/features/reports/components/report-charts'
 import { useReportPages } from '@/features/reports/hooks/use-report-pages'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-import { formatMoney } from '@/lib/format'
 
 const noAnimation = { isAnimationActive: false } as const
 const tick = { fill: 'var(--muted)', fontSize: 11 }

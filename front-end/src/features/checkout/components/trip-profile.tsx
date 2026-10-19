@@ -1,6 +1,6 @@
 import type { CalendarDate } from '@internationalized/date'
+import type { TripAnswers } from '@sk/domain/orders'
 import type { TripStatus } from '../lib/trip'
-import type { TripAnswers } from '../types'
 import type { IconComponent } from '@/components/icons'
 
 import {
@@ -12,20 +12,20 @@ import {
   RadioGroup,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date'
-import { useRef, useState } from 'react'
+import { zurichDate } from '@sk/domain/catalog'
 
+import { formatShortDate } from '@sk/domain/shared'
+
+import { useRef, useState } from 'react'
 import {
   PickupDateIcon,
   StatusSuccessIcon,
   TravelGroupIcon,
   TravelSoloIcon,
 } from '@/components/icons'
-
 import { useSheetExit } from '@/components/sheet-exit'
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { useDemoNow } from '@/features/demo'
-import { formatShortDate } from '@/lib/format'
 import { hasTripAnswers } from '../lib/trip'
 
 export interface TripProfileProps {

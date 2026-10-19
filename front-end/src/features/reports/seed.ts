@@ -1,8 +1,8 @@
-import type { CostRecord, CostValue } from './types'
+import type { Payment } from '@sk/domain/orders'
+import type { CostRecord, CostValue } from '@sk/domain/reporting'
 import type { DemoData } from '@/features/demo/types'
-import type { Payment } from '@/features/orders/types'
 
-import { lineTotal } from '@/features/orders/lib/selectors'
+import { lineTotal } from '@sk/domain/orders'
 import { allOrders } from '@/features/partners/lib/ledger'
 
 const NOT_APPLICABLE: CostValue = { notApplicable: true }

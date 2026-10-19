@@ -1,11 +1,11 @@
-import type { Review } from '@/features/catalog/types'
-import type { Order } from '@/features/orders/types'
+import type { Review } from '@sk/domain/catalog'
+import type { Order } from '@sk/domain/orders'
 
+import { buildReview, reviewId } from '@sk/domain/catalog'
+
+import { pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-
 import { useDemo, useDemoNow } from '@/features/demo'
-import { pickText } from '@/lib/localized'
-import { buildReview, reviewId } from '../lib/review'
 
 export interface ReviewableProduct {
   productId: string

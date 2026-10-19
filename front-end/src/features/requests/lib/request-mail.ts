@@ -1,7 +1,7 @@
-import type { AdviceRequest, PrivateTourRequest } from '../types'
+import type { MailParams } from '@sk/domain/notifications'
+import type { AdviceRequest, PrivateTourRequest } from '@sk/domain/requests'
 import type { Language } from '@/contexts/locale-context'
 import type { DemoState, Role } from '@/features/demo/types'
-import type { MailParams } from '@/features/notifications/types'
 
 import { shop } from '@/features/catalog/seed'
 import { sendMail } from '@/features/notifications/mail'

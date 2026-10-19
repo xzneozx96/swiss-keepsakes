@@ -1,4 +1,4 @@
-import type { Partner, PartnerPayout } from '../types'
+import type { Partner, PartnerPayout } from '@sk/domain/partners'
 import type { DemoData } from '@/features/demo/types'
 
 import { useDemoActions, useDemoNow, useDemoSelector } from '@/features/demo'

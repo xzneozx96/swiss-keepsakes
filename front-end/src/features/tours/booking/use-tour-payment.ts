@@ -1,17 +1,17 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 import type {
   PaymentStep,
   PaymentView,
 } from '@/features/payment/hooks/use-payment'
 
+import { bookingAmountDue } from '@sk/domain/bookings'
 import { useNavigate } from '@tanstack/react-router'
+
 import { useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
-
 import { shop } from '@/features/catalog/seed'
 import { useTourActions } from '@/features/tours/hooks/use-tours'
-import { bookingAmountDue } from '@/features/tours/lib/selectors'
 import { useBookingFormat } from './booking-summary'
 
 export function useTourPayment(booking: TourBooking, now: Date): PaymentView {

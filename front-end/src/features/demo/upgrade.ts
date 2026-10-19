@@ -1,12 +1,12 @@
+import type { Product } from '@sk/domain/catalog'
+import type { Article } from '@sk/domain/content'
 import type { DemoData } from './types'
-import type { Product } from '@/features/catalog/types'
-import type { Article } from '@/features/content/types'
+
+import { isChapterStory, storyFromChapters } from '@sk/domain/shared'
 
 import { upgradeTourData } from '@/features/tours/lib/upgrade'
-
 import { sampleTourReviews } from '@/features/tours/reviews/seed'
 import { createTourSeed } from '@/features/tours/seed'
-import { isChapterStory, storyFromChapters } from '@/lib/rich-text'
 import { createSeedState } from './seed'
 
 /**

@@ -1,8 +1,8 @@
 import { Button } from '@heroui/react'
-import { useParams } from '@tanstack/react-router'
+import { bookingBalance } from '@sk/domain/bookings'
 
+import { useParams } from '@tanstack/react-router'
 import { useTourActions, useTours } from '../hooks/use-tours'
-import { bookingBalance } from '../lib/selectors'
 
 /**
  * Prototype-bar controls for tour operations (English, outside the product UI). The demo

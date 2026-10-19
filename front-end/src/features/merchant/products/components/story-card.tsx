@@ -1,15 +1,15 @@
+import type { LocalizedText } from '@sk/domain/catalog'
+import type { LocalizedRich, RichNode } from '@sk/domain/shared'
 import type { Language } from '@/contexts/locale-context'
-import type { LocalizedText } from '@/features/catalog/types'
-import type { LocalizedRich, RichNode } from '@/lib/rich-text'
 
 import { Skeleton } from '@heroui/react'
+import { isEmptyDoc } from '@sk/domain/shared'
+
 import { lazy, Suspense } from 'react'
 
 import { StoryIcon } from '@/components/icons'
-
 import { useLocale } from '@/contexts/locale-context'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
-import { isEmptyDoc } from '@/lib/rich-text'
 import { LocalizedField } from './editor-parts'
 
 // Tiptap loads only when an editor opens a story.

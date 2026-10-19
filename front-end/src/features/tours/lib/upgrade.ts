@@ -1,4 +1,4 @@
-import type { TourData } from '../types'
+import type { TourData } from '@sk/domain/bookings'
 
 import { createTourSeed } from '../seed'
 

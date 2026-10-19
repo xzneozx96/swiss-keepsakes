@@ -1,4 +1,4 @@
-import type { AdviceQuestion, AdviceQuestionSet } from '../../types'
+import type { AdviceQuestion, AdviceQuestionSet } from '@sk/domain/requests'
 import type { Language } from '@/contexts/locale-context'
 
 export const LANGUAGES: Language[] = ['en', 'de']

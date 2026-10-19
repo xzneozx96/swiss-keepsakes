@@ -1,4 +1,4 @@
-import type { Article, ArticleComment } from './types'
+import type { Article, ArticleComment } from '@sk/domain/content'
 
 import { demoAt } from '@/features/demo/clock'
 

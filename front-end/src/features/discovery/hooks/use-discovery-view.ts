@@ -1,20 +1,19 @@
+import type { Article } from '@sk/domain/content'
 import type {
   DiscoveryHomeView,
   StoryView,
 } from '../components/discovery-home'
-import type { Article } from '@/features/content/types'
 
+import { isPublished, isSoldOut } from '@sk/domain/catalog'
+
+import { STORY_CATEGORIES } from '@sk/domain/content'
 import { useLocale } from '@/contexts/locale-context'
-
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { isPublished } from '@/features/catalog/lib/publish'
-import { isSoldOut } from '@/features/catalog/lib/stock'
 import { publishedArticles } from '@/features/content/lib/articles'
 import {
   ALL_STORIES_PHOTO,
   storyCategoryPhoto,
 } from '@/features/content/lib/categories'
-import { STORY_CATEGORIES } from '@/features/content/types'
 import { useDemoSelector } from '@/features/demo'
 import { timeBlockStories } from '../seed'
 

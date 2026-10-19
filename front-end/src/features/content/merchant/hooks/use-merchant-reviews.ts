@@ -1,12 +1,11 @@
 import type { Language } from '@/contexts/locale-context'
 
-import { useLocale } from '@/contexts/locale-context'
+import { formatDate, pickText } from '@sk/domain/shared'
 
+import { useLocale } from '@/contexts/locale-context'
 import { useDemo } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { avatarUrl } from '@/lib/avatars'
-import { formatDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 import { publicStaffName } from '../lib/staff'
 
 export const REVIEW_FILTERS = ['notReplied', 'replied'] as const

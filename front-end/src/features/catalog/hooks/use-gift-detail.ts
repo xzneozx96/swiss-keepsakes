@@ -3,28 +3,28 @@ import type { GiftDetailProps } from '../components/gift-detail'
 
 import { toast } from '@heroui/react'
 import { parseDate } from '@internationalized/date'
-import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import {
+  availableUnits,
+  fromPrice,
+  isPickupClosed,
+  isSoldOut,
+  productEarliestPickup,
+  zurichDate,
+} from '@sk/domain/catalog'
 
+import { formatMoney, formatShortDate, pickDoc, pickText } from '@sk/domain/shared'
+import { useNavigate } from '@tanstack/react-router'
+
+import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
+
 import { useCart } from '@/features/cart/hooks/use-cart'
 import { useDemo, useDemoNow } from '@/features/demo'
-import { formatMoney, formatShortDate } from '@/lib/format'
-
-import { pickText } from '@/lib/localized'
-import { pickDoc } from '@/lib/rich-text'
-
 import {
   closeCartToast,
   forgetCartToast,
   trackCartToast,
 } from '../lib/cart-toast'
-import {
-  isPickupClosed,
-  productEarliestPickup,
-  zurichDate,
-} from '../lib/pickup'
-import { availableUnits, fromPrice, isSoldOut } from '../lib/stock'
 import { shop } from '../seed'
 import { useFavourites } from './use-favourites'
 import { useProductReviews } from './use-product-reviews'

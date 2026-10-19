@@ -1,6 +1,6 @@
+import type { Product } from '@sk/domain/catalog'
 import type { StepView } from './step-shell'
 import type { Language } from '@/contexts/locale-context'
-import type { Product } from '@/features/catalog/types'
 
 import type { GiftStep } from '@/features/merchant/products/lib/search-params'
 import {
@@ -19,9 +19,13 @@ import {
   Switch,
   TextField,
 } from '@heroui/react'
-import { Link } from '@tanstack/react-router'
+import { earliestPickupDate, languageStatus, storyText, zurichDate } from '@sk/domain/catalog'
 
+import { firstPhoto, formatMoney, formatShortDate, isEmptyDoc, numberFormat, pickText } from '@sk/domain/shared'
+
+import { Link } from '@tanstack/react-router'
 import { useRef } from 'react'
+
 import {
   ClockIcon,
   ContentIcon,
@@ -33,23 +37,16 @@ import {
   PickupIcon,
   PlusIcon,
 } from '@/components/icons'
-
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
 import { categories } from '@/features/catalog/categories'
-import { earliestPickupDate, zurichDate } from '@/features/catalog/lib/pickup'
-
 import { useDemo, useDemoNow } from '@/features/demo'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
 import {
   GIFT_STEPS,
 
 } from '@/features/merchant/products/lib/search-params'
-import { formatMoney, formatShortDate, numberFormat } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { firstPhoto, isEmptyDoc } from '@/lib/rich-text'
 import { useGiftEditor } from '../hooks/use-gift-editor'
-import { languageStatus, storyText } from '../lib/completeness'
 import {
   EditorHeader,
   LocalizedField,

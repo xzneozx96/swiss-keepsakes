@@ -3,15 +3,14 @@ import type {
   AdviceQuestion,
   AdviceRequest,
   AdviceValue,
-} from '../types'
+} from '@sk/domain/requests'
+
+import { displayAnswer, isAnswered, looksLikeEmail } from '@sk/domain/requests'
+import { calendarDay, formatDate, pickText } from '@sk/domain/shared'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
-
 import { demoNow } from '@/features/demo/clock'
-import { calendarDay, formatDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { displayAnswer, isAnswered, looksLikeEmail } from '../lib/answers'
 import { mailAdviceRequest } from '../lib/request-mail'
 
 export type SendResult

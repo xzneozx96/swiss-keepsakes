@@ -1,5 +1,5 @@
 import type { ZonedDateTime } from '@internationalized/date'
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 import type { ExternalPaymentInput } from './lib/transitions'
 
 import {
@@ -17,6 +17,9 @@ import {
   toast,
 } from '@heroui/react'
 import { fromDate, toCalendarDate } from '@internationalized/date'
+import { bookingBalance, bookingPaid } from '@sk/domain/bookings'
+
+import { formatOrderDate } from '@sk/domain/orders'
 import { useState } from 'react'
 
 import { SheetFrame } from '@/components/sheet-frame'
@@ -24,14 +27,11 @@ import { useLocale } from '@/contexts/locale-context'
 
 import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-
 import {
   methodLabelKeys,
   offlineMethods,
 } from '@/features/merchant/record-payment/hooks/use-record-payment'
-import { formatOrderDate } from '@/features/orders/lib/format'
 import { useTourActions, useTours } from '../hooks/use-tours'
-import { bookingBalance, bookingPaid } from '../lib/selectors'
 import { externalPaymentBlock } from './lib/transitions'
 import { useBlockText, useTourFormatting } from './shared'
 

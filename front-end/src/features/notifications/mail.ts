@@ -1,4 +1,4 @@
-import type { Mail } from './types'
+import type { Mail } from '@sk/domain/notifications'
 import type { DemoState } from '@/features/demo/types'
 
 /** Appends an email to the demo mail log. Ids follow the log length, so they stay unique. */

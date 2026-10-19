@@ -1,10 +1,9 @@
-import type { LocalizedText, ProductStory } from '@/features/catalog/types'
-import type { LocalizedRich } from '@/lib/rich-text'
+import type { LocalizedText, ProductStory } from '@sk/domain/catalog'
+import type { LocalizedRich } from '@sk/domain/shared'
 
-import { isEmptyDoc } from '@/lib/rich-text'
+import { cleanText, hasText, LANGUAGES } from '@sk/domain/catalog'
 
-import { slugify } from '@/lib/slug'
-import { cleanText, hasText, LANGUAGES } from './completeness'
+import { isEmptyDoc, slugify } from '@sk/domain/shared'
 
 /** A slug from the name (English first), unique among `taken`; set once, at the first save. */
 export function uniqueSlug(

@@ -1,9 +1,9 @@
+import type { Rappen } from '@sk/domain/catalog'
+import type { CommissionAdjustment } from '@sk/domain/partners'
+import type { DayRange } from '@sk/domain/reporting'
 import type { GuestGroup, ReportTx } from './transactions'
-import type { Rappen } from '@/features/catalog/types'
-import type { CommissionAdjustment } from '@/features/partners/types'
-import type { DayRange } from '@/lib/analytics'
 
-import { zurichDayOf } from '@/features/catalog/lib/pickup'
+import { zurichDayOf } from '@sk/domain/catalog'
 import { transactionKey } from '@/features/partners/lib/ledger'
 
 /** M21 filters (spec §4.13): source, goods or tours, guest group, product or tour. */

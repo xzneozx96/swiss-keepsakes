@@ -5,10 +5,12 @@ import type {
   TourItem,
 } from './calendar-core'
 
+import { departureSeats } from '@sk/domain/bookings'
+
+import { formatMoney, pickText } from '@sk/domain/shared'
+
 import { useMemo } from 'react'
-
 import { useLocale } from '@/contexts/locale-context'
-
 import { useDemo } from '@/features/demo'
 import {
   formatLabel,
@@ -16,7 +18,6 @@ import {
   progressLabel,
 } from '@/features/orders/lib/labels'
 import { useTours } from '@/features/tours/hooks/use-tours'
-import { departureSeats } from '@/features/tours/lib/selectors'
 import {
   departureBookings,
   departureEnd,
@@ -24,8 +25,6 @@ import {
   tourWork,
 } from '@/features/tours/merchant/lib/work'
 import { phaseChip } from '@/features/tours/merchant/shared'
-import { formatMoney } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 import { swissDate, zurichLocal } from './calendar-core'
 
 /**

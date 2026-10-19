@@ -1,4 +1,4 @@
-import type { TourAgeBands } from '../types'
+import type { TourAgeBands } from '@sk/domain/bookings'
 import type { MessageKey } from '@/i18n/en'
 
 type Translate = (key: MessageKey, vars?: Record<string, number>) => string

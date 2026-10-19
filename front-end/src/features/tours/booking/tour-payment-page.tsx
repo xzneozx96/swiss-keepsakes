@@ -1,4 +1,4 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 
 import { Alert } from '@heroui/react'
 import { useEffect } from 'react'

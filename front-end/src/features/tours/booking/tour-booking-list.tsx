@@ -1,9 +1,10 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
+
+import { pickText } from '@sk/domain/shared'
 
 import { Link } from '@tanstack/react-router'
 
 import { EmptyState } from '@/components/empty-state'
-
 import { ChevronRightIcon, TourIcon } from '@/components/icons'
 import { Media } from '@/components/media'
 import {
@@ -14,7 +15,6 @@ import {
 import { useLocale } from '@/contexts/locale-context'
 import { BookingStatusLabels } from '@/features/tours/components/booking-status'
 import { useTours } from '@/features/tours/hooks/use-tours'
-import { pickText } from '@/lib/localized'
 import {
   isClosedBooking,
   TourTicketHead,

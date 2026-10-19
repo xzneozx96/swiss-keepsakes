@@ -1,6 +1,6 @@
-import type { Departure, Tour, TourSection, TourStop } from '../types'
+import type { Departure, Tour, TourSection, TourStop } from '@sk/domain/bookings'
 
-import { storyFromChapters } from '@/lib/rich-text'
+import { storyFromChapters } from '@sk/domain/shared'
 import { lt, row, sampleDeparture, timeline } from './curated'
 
 import { stopStories } from './stops'

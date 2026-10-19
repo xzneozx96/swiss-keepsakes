@@ -1,8 +1,8 @@
+import type { Tour } from '@sk/domain/bookings'
 import type { JourneyStep } from './journey-steps'
 import type { MovingStory } from './moving-story-rail'
 import type { StoryCategoryLink } from './story-categories'
 import type { ProductCardProps } from '@/features/catalog/components/product-card'
-import type { Tour } from '@/features/tours/types'
 
 import { buttonVariants, Skeleton } from '@heroui/react'
 import { Link } from '@tanstack/react-router'

@@ -1,12 +1,12 @@
 import type { Language } from '@/contexts/locale-context'
 
+import { formatOrderDateTime } from '@sk/domain/orders'
+
 import { useEffect } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
-
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-import { formatOrderDateTime } from '@/features/orders/lib/format'
 import { replyHref } from './use-merchant-requests'
 
 export interface AdviceRequestView {

@@ -1,10 +1,8 @@
-import type { TourMaintenance } from '../types'
+import type { TourMaintenance } from '@sk/domain/bookings'
 
+import { calendarDay, formatDate, pickText, safeHref } from '@sk/domain/shared'
 import { InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { calendarDay, formatDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { safeHref } from '@/lib/rich-text'
 
 /**
  * The reason a tour cannot be booked right now (C09): the merchant's text in the guest's

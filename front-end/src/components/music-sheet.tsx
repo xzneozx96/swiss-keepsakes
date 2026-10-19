@@ -1,6 +1,7 @@
 import { Drawer } from '@heroui/react'
-import { useEffect, useSyncExternalStore } from 'react'
+import { numberFormat } from '@sk/domain/shared'
 
+import { useEffect, useSyncExternalStore } from 'react'
 import coverUrl from '@/assets/audio/background-swiss-keepsakes-cover.jpg?url'
 import {
   musicControls,
@@ -9,7 +10,6 @@ import {
 } from '@/components/background-music-store'
 import { PauseIcon, PlayIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { numberFormat } from '@/lib/format'
 
 const SEEK_STEP = 5
 

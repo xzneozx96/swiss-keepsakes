@@ -1,16 +1,13 @@
+import type { PaymentPolicy, Product } from '@sk/domain/catalog'
 import type { CartViewProps } from '../components/cart-view'
-import type { PaymentPolicy, Product } from '@/features/catalog/types'
 
+import { availableUnits, zurichDate } from '@sk/domain/catalog'
+
+import { priceCartLines } from '@sk/domain/orders'
+import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-
-import { zurichDate } from '@/features/catalog/lib/pickup'
-
-import { availableUnits } from '@/features/catalog/lib/stock'
 import { shop } from '@/features/catalog/seed'
 import { useDemoNow, useDemoSelector } from '@/features/demo'
-import { formatMoney, formatShortDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { priceCartLines } from '../lib/group-cart'
 import { useCart } from './use-cart'
 
 /**

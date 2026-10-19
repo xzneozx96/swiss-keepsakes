@@ -1,6 +1,6 @@
-import type { StoryCategory } from '../types'
+import type { StoryCategory } from '@sk/domain/content'
 
-import { STORY_CATEGORIES } from '../types'
+import { STORY_CATEGORIES } from '@sk/domain/content'
 
 /** Thumbnail per category, shared by the C01 links and the C19 filter (photo slugs). */
 export const storyCategoryPhoto: Record<StoryCategory, string> = {

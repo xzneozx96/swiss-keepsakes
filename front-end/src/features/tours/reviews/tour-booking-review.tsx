@@ -1,22 +1,22 @@
-import type { TourBooking } from '../types'
-import type { Review } from '@/features/catalog/types'
+import type { TourBooking } from '@sk/domain/bookings'
+import type { Review } from '@sk/domain/catalog'
 import type { ReviewableProduct } from '@/features/reviews/hooks/use-order-reviews'
 
 import { Button, toast } from '@heroui/react'
-import { Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { bookingBalance } from '@sk/domain/bookings'
+import { reviewerName, reviewId } from '@sk/domain/catalog'
 
+import { pickText } from '@sk/domain/shared'
+import { Link } from '@tanstack/react-router'
+
+import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import { ReviewItem } from '@/features/catalog/components/review-item'
-
 import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { WriteReviewSheet } from '@/features/reviews/components/write-review-sheet'
-import { reviewerName, reviewId } from '@/features/reviews/lib/review'
-import { pickText } from '@/lib/localized'
 import { useBookingFormat, useGroupText } from '../booking/booking-summary'
-import { bookingBalance } from '../lib/selectors'
 
 /** A completed, settled tour booking opens the same review sheet as a gift order. */
 export function TourBookingReview({ booking }: { booking: TourBooking }) {

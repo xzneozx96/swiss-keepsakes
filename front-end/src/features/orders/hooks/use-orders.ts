@@ -1,12 +1,20 @@
+import type { Order, StaffId } from '@sk/domain/orders'
 import type { OrderBlock, TransitionContext } from '../lib/transitions'
-import type { Order, StaffId } from '../types'
 import type { StatusTone } from '@/components/status-chip'
 import type { DemoState } from '@/features/demo/types'
 
+import {
+  amountDueNow,
+  amountPaid,
+  balance,
+  commission,
+  orderTotal,
+  processingPayment,
+} from '@sk/domain/orders'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemo, useDemoNow, useDemoSelector } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
 
+import { demoNow } from '@/features/demo/clock'
 import { allOrders } from '@/features/partners/lib/ledger'
 import {
   blockLabel,
@@ -15,14 +23,6 @@ import {
   paymentLabel,
   progressLabel,
 } from '../lib/labels'
-import {
-  amountDueNow,
-  amountPaid,
-  balance,
-  commission,
-  orderTotal,
-  processingPayment,
-} from '../lib/selectors'
 import * as tr from '../lib/transitions'
 
 export interface ShownLabel {

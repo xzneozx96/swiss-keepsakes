@@ -1,4 +1,4 @@
-import type { Article } from '@/features/content/types'
+import type { Article } from '@sk/domain/content'
 
 import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'

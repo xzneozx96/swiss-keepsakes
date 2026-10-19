@@ -1,5 +1,5 @@
+import type { Order } from '@sk/domain/orders'
 import type { ReviewableProduct } from '../hooks/use-order-reviews'
-import type { Order } from '@/features/orders/types'
 
 import { Button, toast } from '@heroui/react'
 import { Link } from '@tanstack/react-router'

@@ -1,10 +1,21 @@
-import type { PickupPlace } from '@/features/catalog/types'
+import type { PickupPlace } from '@sk/domain/catalog'
+import type { LogEntry, Order, Payment } from '@sk/domain/orders'
 import type { ShownLabel } from '@/features/orders/hooks/use-orders'
-import type { LogEntry, Order, Payment } from '@/features/orders/types'
 import type { MessageKey } from '@/i18n/en'
 
-import { useNavigate } from '@tanstack/react-router'
+import {
+  amountDueNow,
+  firstPaymentAmount,
+  formatOrderDate,
+  formatOrderDateTime,
+  lineTotal,
+  orderTotal,
+  paymentsAfterCancellation,
+  pickupChangedBySeller,
+} from '@sk/domain/orders'
 
+import { formatMoney, pickText, pickupDay } from '@sk/domain/shared'
+import { useNavigate } from '@tanstack/react-router'
 import { useLocale } from '@/contexts/locale-context'
 import { useCart } from '@/features/cart/hooks/use-cart'
 import { shop } from '@/features/catalog/seed'
@@ -14,23 +25,9 @@ import {
   useOrderSummary,
 } from '@/features/orders/hooks/use-orders'
 import {
-  formatOrderDate,
-  formatOrderDateTime,
-} from '@/features/orders/lib/format'
-import {
-  amountDueNow,
-  firstPaymentAmount,
-  lineTotal,
-  orderTotal,
-  paymentsAfterCancellation,
-  pickupChangedBySeller,
-} from '@/features/orders/lib/selectors'
-import {
   cancelBlock,
   startOnlinePaymentBlock,
 } from '@/features/orders/lib/transitions'
-import { formatMoney, pickupDay } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 const WHITESPACE = /\s/g
 

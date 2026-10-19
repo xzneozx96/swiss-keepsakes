@@ -1,14 +1,14 @@
+import type { TourStop } from '@sk/domain/bookings'
 import type { Language } from '@/contexts/locale-context'
-import type { TourStop } from '@/features/tours/types'
 
 import { FieldError, Label, NumberField } from '@heroui/react'
+import { pickText } from '@sk/domain/shared'
+
 import { useState } from 'react'
-
 import { ChevronDownIcon, GripIcon, TrashIcon } from '@/components/icons'
-import { useLocale } from '@/contexts/locale-context'
 
+import { useLocale } from '@/contexts/locale-context'
 import { IconAction } from '@/features/content/merchant/components/editor-fields'
-import { pickText } from '@/lib/localized'
 import { LocalizedField } from '../editor-parts'
 import { PhotoField } from '../photo-field'
 

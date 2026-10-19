@@ -1,12 +1,20 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 import type { IconComponent } from '@/components/icons'
 import type { MessageKey } from '@/i18n/en'
 
 import { Button } from '@heroui/react'
+import {
+  balanceOverdue,
+  bookingBalance,
+  bookingCommission,
+  bookingPaid,
+} from '@sk/domain/bookings'
+import { pickText } from '@sk/domain/shared'
+
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
-
 import { EmptyState } from '@/components/empty-state'
+
 import {
   AccountIcon,
   BackIcon,
@@ -22,27 +30,19 @@ import {
   TourIcon,
 } from '@/components/icons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
-
 import { StatCard } from '@/components/stat-card'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemo } from '@/features/demo'
+
 import { ProposalMark } from '@/features/demo/components/proposal-mark'
 import {
   ActionPanel,
   DetailCard,
 } from '@/features/merchant/order-detail/components/detail-card'
-
 import { useIsWide } from '@/hooks/use-is-wide'
-import { pickText } from '@/lib/localized'
 import { BookingStatusLabels } from '../components/booking-status'
 import { useTours } from '../hooks/use-tours'
-import {
-  balanceOverdue,
-  bookingBalance,
-  bookingCommission,
-  bookingPaid,
-} from '../lib/selectors'
 import { AttendanceActions } from './attendance-actions'
 import { externalPaymentBlock } from './lib/transitions'
 import { needsReconciliation } from './lib/work'

@@ -1,5 +1,6 @@
-import type { TourBooking, TourParticipants } from '../types'
+import type { TourBooking, TourParticipants } from '@sk/domain/bookings'
 
+import { dateTimeFormat, formatMoney, pickText } from '@sk/domain/shared'
 import { DateTile } from '@/components/date-tile'
 import {
   BookingsIcon,
@@ -12,8 +13,6 @@ import { SurfaceCardBlock, SurfaceCardTitle } from '@/components/surface-card'
 import { useLocale } from '@/contexts/locale-context'
 import { BookingStatusLabels } from '@/features/tours/components/booking-status'
 import { useTours } from '@/features/tours/hooks/use-tours'
-import { dateTimeFormat, formatMoney } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 const TRAILING_DOT = /\.$/
 

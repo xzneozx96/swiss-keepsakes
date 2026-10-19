@@ -1,10 +1,14 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 import type { TourWork } from './lib/work'
 import type { IconComponent } from '@/components/icons'
 import type { MessageKey } from '@/i18n/en'
 
-import { Link } from '@tanstack/react-router'
+import { balanceOverdue, departureSeats } from '@sk/domain/bookings'
 
+import { zurichDate } from '@sk/domain/catalog'
+import { pickText } from '@sk/domain/shared'
+
+import { Link } from '@tanstack/react-router'
 import {
   ChevronRightIcon,
   ClockIcon,
@@ -12,15 +16,11 @@ import {
   StatusDangerIcon,
   TourIcon,
 } from '@/components/icons'
+
 import { StatCard } from '@/components/stat-card'
-
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
-
 import { Widget } from '@/features/merchant/today/components/overview-analytics'
-import { pickText } from '@/lib/localized'
 import { useTours } from '../hooks/use-tours'
-import { balanceOverdue, departureSeats } from '../lib/selectors'
 import { balanceToCollect, departurePhase, tourWork } from './lib/work'
 import { useTourFormatting } from './shared'
 

@@ -1,4 +1,4 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 import type { TourOutcome } from './lib/transitions'
 import type { MessageKey } from '@/i18n/en'
 

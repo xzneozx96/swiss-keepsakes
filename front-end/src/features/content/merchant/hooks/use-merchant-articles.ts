@@ -1,19 +1,19 @@
-import type { Article } from '../../types'
+import type { Article } from '@sk/domain/content'
 import type { StatusTone } from '@/components/status-chip'
 import type { Language } from '@/contexts/locale-context'
 import type { ArticleFilter } from '@/features/content/merchant/lib/search-params'
 
 import type { DemoData } from '@/features/demo/types'
 
+import { isPublished } from '@sk/domain/catalog'
+import { MAX_ARTICLE_LINKS } from '@sk/domain/content'
+import { formatDate } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { isPublished } from '@/features/catalog/lib/publish'
 import {
   ARTICLE_FILTERS,
 
 } from '@/features/content/merchant/lib/search-params'
 import { useDemo } from '@/features/demo'
-import { formatDate } from '@/lib/format'
-import { MAX_ARTICLE_LINKS } from '../../types'
 
 export interface ArticleRowProps {
   id: string

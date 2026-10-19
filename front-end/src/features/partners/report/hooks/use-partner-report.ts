@@ -1,3 +1,4 @@
+import type { IntlLocale } from '@sk/domain/shared'
 import type {
   ReportChartView,
   ReportGroupView,
@@ -13,19 +14,12 @@ import type {
 } from '../lib/report'
 import type { AllTimeCardProps } from '@/components/stat-card'
 import type { MessageKey } from '@/i18n/en'
-import type { IntlLocale } from '@/lib/format'
 
-import { useMemo } from 'react'
+import { zurichDate } from '@sk/domain/catalog'
 
-import { ClockIcon, PartnersIcon, PayLaterIcon } from '@/components/icons'
-import { useLocale } from '@/contexts/locale-context'
+import { formatOrderDate } from '@sk/domain/orders'
+import { deltaOf } from '@sk/domain/reporting'
 
-import { zurichDate } from '@/features/catalog/lib/pickup'
-import { useDemo, useDemoNow } from '@/features/demo'
-import { DEMO_HISTORY } from '@/features/merchant/today/lib/demo-history'
-import { formatOrderDate } from '@/features/orders/lib/format'
-import { formatLabel } from '@/features/orders/lib/labels'
-import { deltaOf } from '@/lib/analytics'
 import {
   calendarDay,
   dateTimeFormat,
@@ -33,8 +27,14 @@ import {
   formatShortDate,
   numberFormat,
   percentOf,
-} from '@/lib/format'
-import { pickText } from '@/lib/localized'
+  pickText,
+} from '@sk/domain/shared'
+import { useMemo } from 'react'
+import { ClockIcon, PartnersIcon, PayLaterIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo, useDemoNow } from '@/features/demo'
+import { DEMO_HISTORY } from '@/features/merchant/today/lib/demo-history'
+import { formatLabel } from '@/features/orders/lib/labels'
 import { periodMoney } from '../lib/payouts'
 import {
   partnerAllTime,

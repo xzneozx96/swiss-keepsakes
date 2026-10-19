@@ -1,4 +1,4 @@
-import type { LanguageStatus } from '../lib/completeness'
+import type { LanguageStatus } from '@sk/domain/catalog'
 import type { StatusTone } from '@/components/status-chip'
 
 import { StatusChip } from '@/components/status-chip'

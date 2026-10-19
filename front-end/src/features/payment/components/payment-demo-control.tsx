@@ -1,9 +1,9 @@
 import { Button } from '@heroui/react'
-import { useParams } from '@tanstack/react-router'
+import { processingPayment } from '@sk/domain/orders'
 
+import { useParams } from '@tanstack/react-router'
 import { useDemoSelector } from '@/features/demo'
 import { useOrderActions } from '@/features/orders/hooks/use-orders'
-import { processingPayment } from '@/features/orders/lib/selectors'
 
 /**
  * Prototype-bar control for C12 (English, outside the product UI): the provider answers a

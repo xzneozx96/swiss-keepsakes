@@ -1,10 +1,10 @@
-import type { Departure, Tour, TourBooking, TourData } from '../../types'
+import type { Departure, Tour, TourBooking, TourData } from '@sk/domain/bookings'
 
 import {
   balanceOverdue,
   bookingBalance,
   reconciliationAmount,
-} from '../../lib/selectors'
+} from '@sk/domain/bookings'
 
 /** The tour has ended and the merchant has not recorded delivered or no-show yet (AC09). */
 export function needsResult(booking: TourBooking, now: Date): boolean {

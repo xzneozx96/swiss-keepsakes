@@ -1,30 +1,30 @@
+import type { Order } from '@sk/domain/orders'
 import type { OrderRowProps } from '../components/order-rows'
 import type { OrderTabId } from '../lib/order-tabs'
 import type { OrderLabel } from '@/features/orders/lib/labels'
-import type { Order } from '@/features/orders/types'
 import type { MessageKey } from '@/i18n/en'
 
-import { useLocale } from '@/contexts/locale-context'
+import { zurichDate } from '@sk/domain/catalog'
 
-import { zurichDate } from '@/features/catalog/lib/pickup'
-import { useDemo, useDemoNow } from '@/features/demo'
 import {
   formatOrderDate,
   formatOrderDateTime,
-} from '@/features/orders/lib/format'
-import {
-  formatLabel,
-  paymentLabel,
-  progressLabel,
-} from '@/features/orders/lib/labels'
-import { orderTotal } from '@/features/orders/lib/selectors'
+  orderTotal,
+} from '@sk/domain/orders'
 import {
   calendarDay,
   dateTimeFormat,
   formatMoney,
   formatShortDate,
-} from '@/lib/format'
-import { pickText } from '@/lib/localized'
+  pickText,
+} from '@sk/domain/shared'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo, useDemoNow } from '@/features/demo'
+import {
+  formatLabel,
+  paymentLabel,
+  progressLabel,
+} from '@/features/orders/lib/labels'
 import { ORDER_TABS, orderTab } from '../lib/order-tabs'
 
 const tabLabels: Record<OrderTabId, MessageKey> = {

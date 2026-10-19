@@ -1,5 +1,5 @@
-import type { CostType, CostValue } from '../types'
-import type { TransactionRef } from '@/features/partners/types'
+import type { TransactionRef } from '@sk/domain/partners'
+import type { CostType, CostValue } from '@sk/domain/reporting'
 
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'

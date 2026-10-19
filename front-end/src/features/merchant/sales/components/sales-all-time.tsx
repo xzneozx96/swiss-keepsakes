@@ -1,13 +1,13 @@
 import type { SalesOverviewView } from '../hooks/use-sales-overview'
 
+import { numberFormat } from '@sk/domain/shared'
+
 import { useState } from 'react'
 
 import { DeltaChip } from '@/components/stat-card'
-
 import { useLocale } from '@/contexts/locale-context'
 import { Widget } from '@/features/merchant/today/components/overview-analytics'
 import { Donut } from '@/features/partners/report/components/dashboard-widgets'
-import { numberFormat } from '@/lib/format'
 import { MIX_COLOURS } from './sales-overview'
 
 type AllTime = SalesOverviewView['allTime']

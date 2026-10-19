@@ -1,7 +1,11 @@
+import type { Order, Payment } from '@sk/domain/orders'
 import type { IconComponent } from '@/components/icons'
-import type { Order, Payment } from '@/features/orders/types'
 
 import { buttonVariants } from '@heroui/react'
+import { amountDueNow } from '@sk/domain/orders'
+
+import { formatMoney } from '@sk/domain/shared'
+
 import { Link } from '@tanstack/react-router'
 
 import {
@@ -11,15 +15,11 @@ import {
   ChevronRightIcon,
   OrdersIcon,
 } from '@/components/icons'
-
 import { Media } from '@/components/media'
-
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
-import { amountDueNow } from '@/features/orders/lib/selectors'
 import { startOnlinePaymentBlock } from '@/features/orders/lib/transitions'
 import { useTransactionRow } from '@/features/transactions/hooks/use-transaction-row'
-import { formatMoney } from '@/lib/format'
 import { useAccountPayments } from '../hooks/use-account-payments'
 import { itemClass, rowClass, RowIcon, SettingsGroup } from './settings-list'
 

@@ -1,8 +1,8 @@
 import { Pagination } from '@heroui/react'
-import { useState } from 'react'
+import { numberFormat } from '@sk/domain/shared'
 
+import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { numberFormat } from '@/lib/format'
 
 /** Rows per page on every list screen (owner request 15.10.2026). */
 export const PAGE_SIZE = 10

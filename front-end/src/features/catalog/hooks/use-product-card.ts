@@ -1,19 +1,18 @@
+import type { Product } from '@sk/domain/catalog'
 import type { ProductCardProps } from '../components/product-card'
-import type { Product } from '../types'
 
-import { useLocale } from '@/contexts/locale-context'
-import { useDemoNow, useDemoSelector } from '@/features/demo'
+import { fromPrice, isSoldOut, productEarliestPickup, zurichDate } from '@sk/domain/catalog'
 
 import {
   formatMoney,
   formatShortDate,
   numberFormat,
+  pickText,
   pluralCategory,
-} from '@/lib/format'
+} from '@sk/domain/shared'
 
-import { pickText } from '@/lib/localized'
-import { productEarliestPickup, zurichDate } from '../lib/pickup'
-import { fromPrice, isSoldOut } from '../lib/stock'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemoNow, useDemoSelector } from '@/features/demo'
 import { useFavourites } from './use-favourites'
 
 export type ProductCardView = ProductCardProps & {

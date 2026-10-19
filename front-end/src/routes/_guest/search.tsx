@@ -1,21 +1,20 @@
 import type { SearchResultGroup } from '@/features/search/components/global-search'
 
+import { isPublished } from '@sk/domain/catalog'
+
+import { formatMoney, pickText } from '@sk/domain/shared'
 import {
   createFileRoute,
   useNavigate,
   useRouter,
 } from '@tanstack/react-router'
-
 import { useLocale } from '@/contexts/locale-context'
 import { categories } from '@/features/catalog/categories'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { isPublished } from '@/features/catalog/lib/publish'
 import { publishedArticles } from '@/features/content/lib/articles'
 import { useDemoSelector } from '@/features/demo'
 import { GlobalSearch } from '@/features/search/components/global-search'
 import { useUrlInput } from '@/hooks/use-url-input'
-import { formatMoney } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 // Global search from the discovery home (UX proposal: search is not in the spec).
 export const Route = createFileRoute('/_guest/search')({

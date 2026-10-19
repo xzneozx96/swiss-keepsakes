@@ -1,11 +1,11 @@
+import type { DayRange } from '@sk/domain/reporting'
 import type { ReportTx } from './transactions'
 import type { DemoData } from '@/features/demo/types'
-import type { DayRange } from '@/lib/analytics'
 
-import { zurichDayOf } from '@/features/catalog/lib/pickup'
+import { zurichDayOf } from '@sk/domain/catalog'
+import { calendarDay } from '@sk/domain/shared'
 import { prng } from '@/features/merchant/today/lib/demo-history'
 import { linkOpens } from '@/features/partners/lib/link-opens'
-import { calendarDay } from '@/lib/format'
 
 export const FUNNEL_STEPS = [
   'visits',

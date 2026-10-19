@@ -3,7 +3,7 @@ import type {
   Tour,
   TourBooking,
   TourParticipants,
-} from '../../types'
+} from '@sk/domain/bookings'
 
 /**
  * Merchant-operation fixtures (steps 2.10–2.14), relative to the demo start 13.10.2026 10:00.

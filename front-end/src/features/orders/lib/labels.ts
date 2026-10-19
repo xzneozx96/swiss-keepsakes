@@ -1,25 +1,14 @@
-import type { Order } from '../types'
-import type { CommissionState } from './selectors'
+import type { Rappen } from '@sk/domain/catalog'
+import type { CommissionState, Order } from '@sk/domain/orders'
+import type { IntlLocale } from '@sk/domain/shared'
 import type { OrderBlock } from './transitions'
 import type { StatusTone } from '@/components/status-chip'
 import type { Language } from '@/contexts/locale-context'
-import type { Rappen } from '@/features/catalog/types'
 import type { MessageKey } from '@/i18n/en'
-import type { IntlLocale } from '@/lib/format'
 
-import { formatMoney } from '@/lib/format'
-import { pickText } from '@/lib/localized'
+import { amountDueNow, amountPaid, balance, formatOrderDate, formatOrderDateTime, isOverdue, orderTotal, paymentsAfterCancellation, processingPayment } from '@sk/domain/orders'
 
-import { formatOrderDate, formatOrderDateTime } from './format'
-import {
-  amountDueNow,
-  amountPaid,
-  balance,
-  isOverdue,
-  orderTotal,
-  paymentsAfterCancellation,
-  processingPayment,
-} from './selectors'
+import { formatMoney, pickText } from '@sk/domain/shared'
 
 /** A raw value in a label: money and dates are formatted for the reader's language. */
 export type LabelValue

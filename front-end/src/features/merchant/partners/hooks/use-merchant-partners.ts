@@ -2,12 +2,12 @@ import type { PartnerRowProps } from '../components/partner-rows'
 
 import type { PartnerFilter } from '../lib/search-params'
 
+import { formatMoney, numberFormat } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemo, useDemoNow } from '@/features/demo'
 import { canDeletePartner } from '@/features/partners/hooks/use-partner-actions'
 import { partnerLedger } from '@/features/partners/lib/ledger'
 import { linkOpens } from '@/features/partners/lib/link-opens'
-import { formatMoney, numberFormat } from '@/lib/format'
 import { PARTNER_FILTERS } from '../lib/search-params'
 
 const WINDOW_MS = 30 * 24 * 60 * 60 * 1000

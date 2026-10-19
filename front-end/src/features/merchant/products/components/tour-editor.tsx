@@ -1,9 +1,9 @@
+import type { Departure, Tour } from '@sk/domain/bookings'
+import type { LocalizedText } from '@sk/domain/catalog'
 import type { StepView } from './step-shell'
 import type { Language } from '@/contexts/locale-context'
-import type { LocalizedText } from '@/features/catalog/types'
-import type { TourStep } from '@/features/merchant/products/lib/search-params'
 
-import type { Departure, Tour } from '@/features/tours/types'
+import type { TourStep } from '@/features/merchant/products/lib/search-params'
 import {
   Button,
   Description,
@@ -14,11 +14,14 @@ import {
   Switch,
   TextField,
 } from '@heroui/react'
-import { Link } from '@tanstack/react-router'
+import { departureSeats } from '@sk/domain/bookings'
 
+import { hasText, languageStatus, storyText } from '@sk/domain/catalog'
+import { formatMoney, isEmptyDoc, numberFormat, pickText } from '@sk/domain/shared'
+
+import { Link } from '@tanstack/react-router'
 import { useId, useRef, useState } from 'react'
 import { DateTile } from '@/components/date-tile'
-
 import {
   BookingsIcon,
   ChevronRightIcon,
@@ -33,24 +36,19 @@ import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { rowClass, RowIcon } from '@/features/account/components/settings-list'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
+
 import {
   TOUR_STEPS,
 
 } from '@/features/merchant/products/lib/search-params'
 import { useTours } from '@/features/tours/hooks/use-tours'
-import { departureSeats } from '@/features/tours/lib/selectors'
 import { departurePhase } from '@/features/tours/merchant/lib/work'
 import {
   phaseChip,
   ToneLine,
   useTourFormatting,
 } from '@/features/tours/merchant/shared'
-
-import { formatMoney, numberFormat } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { isEmptyDoc } from '@/lib/rich-text'
 import { useTourEditor } from '../hooks/use-tour-editor'
-import { hasText, languageStatus, storyText } from '../lib/completeness'
 import { NewDepartureSheet, SeatsSheet } from './departure-sheets'
 import { DetailsStep } from './details-step'
 import {

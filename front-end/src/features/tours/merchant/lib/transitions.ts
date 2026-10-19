@@ -1,18 +1,18 @@
-import type { ExternalTourPayment, TourBooking, TourData } from '../../types'
+import type { ExternalTourPayment, TourBooking, TourData } from '@sk/domain/bookings'
 import type { Language } from '@/contexts/locale-context'
 import type { DemoState, Role } from '@/features/demo/types'
-
-import { zurichDate } from '@/features/catalog/lib/pickup'
-import { demoNow } from '@/features/demo/clock'
-
-import { findDuplicatePayment } from '@/lib/payments'
 
 import {
   balanceOverdue,
   bookingBalance,
   bookingPaid,
   participantSeats,
-} from '../../lib/selectors'
+} from '@sk/domain/bookings'
+import { zurichDate } from '@sk/domain/catalog'
+
+import { findDuplicatePayment } from '@sk/domain/payments'
+
+import { demoNow } from '@/features/demo/clock'
 import { createTourSeed } from '../../seed'
 import { mailTourGuest, mailTourStaff } from './mail'
 
