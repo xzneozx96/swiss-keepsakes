@@ -53,7 +53,7 @@ The source is `docs/architecture/backend.md` section 1 and the decision numbers 
 | Payments | Stripe Payment Element with PaymentIntents, per store account | Planned | D6, D7 |
 | Email | Resend, EU sending region | Planned | D12 |
 | Errors and analytics | Sentry EU, Plausible EU, Google Analytics 4 after consent | Planned | D13 |
-| Hosting | Fly.io, region `fra`, one image that also serves the SPA | Planned | D3 |
+| Hosting | Fly.io, region `fra`, one image that also serves the SPA | Planned. The image exists: the root `Dockerfile` builds the API (no SPA yet), and CI builds and smoke-tests it without pushing it. No Fly app yet | D3 |
 | Architecture | Clean architecture in four layers, modules with their own Postgres schemas | Platform layer in use. No module yet | Section 4 |
 
 ## Shared
@@ -62,5 +62,5 @@ The source is `docs/architecture/backend.md` section 1 and the decision numbers 
 | :-- | :-- | :-- | :-- |
 | Repository | pnpm workspace: `front-end/`, `api/`, `packages/domain`, `packages/api-contract`, `packages/i18n` | In use for `front-end/`, `api/`, `packages/domain`, `packages/api-contract`, `e2e/` and `spikes/` (`pnpm-workspace.yaml`). `packages/i18n` is planned. A package that `api/dist` imports builds to `dist/` and exports it under the `sk-compiled` condition, which `pnpm --filter @sk/api start` and the E1.13 image CMD pass to Node. Every other tool reads the `.ts` source. See `backend/architecture.md` | `docs/architecture/backend.md` D16 |
 | Package manager | pnpm 10.33.4, the same as agentic-rag | In use | Root `package.json` (`packageManager`), root `pnpm-lock.yaml` |
-| CI | GitHub Actions: typecheck, lint, tests, contract diff, build, deploy | Planned. No CI exists today | `docs/architecture/backend.md` section 11 |
+| CI | GitHub Actions: typecheck, lint, tests, contract diff, build, deploy | In use, except deploy (E2.9). `.github/workflows/ci.yml` runs the gates, the dependency audit, integration tests on a Neon branch per pull request, the API image build and Playwright. See `docs/ops/ci.md` | `docs/architecture/backend.md` section 11 |
 | Hosting of the SPA now | Vercel, static build | In use | `front-end/vercel.json` |
