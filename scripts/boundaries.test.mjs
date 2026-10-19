@@ -10,6 +10,7 @@ const fixtures = join(root, 'scripts', 'fixtures', 'boundaries')
 
 const RULE = 'boundaries/dependencies'
 const DOMAIN = 'The domain may import only packages/domain'
+const I18N = 'The i18n package may import only packages/i18n'
 const APPLICATION = 'The application layer must not import adapters or platform code'
 const PORTS = 'A ports file may import only the domain'
 const COMPOSITION = 'Adapters must not import the composition root'
@@ -50,6 +51,18 @@ describe('[E1.7] layer boundary lint zones', () => {
 
   it('[E1.7] the domain importing api code is one error', () => {
     expectOneError('packages/domain/src/orders/violates-domain-api.ts', DOMAIN)
+  })
+
+  it('[E1.7] the domain importing packages/i18n is one error', () => {
+    expectOneError('packages/domain/src/orders/violates-domain-i18n.ts', DOMAIN)
+  })
+
+  it('[E1.7] packages/i18n importing react is one error', () => {
+    expectOneError('packages/i18n/src/violates-i18n-react.ts', I18N)
+  })
+
+  it('[E1.7] packages/i18n importing a front-end path is one error', () => {
+    expectOneError('packages/i18n/src/violates-i18n-front-end.ts', I18N)
   })
 
   it('[E1.7] an application file importing adapters is one error', () => {
@@ -108,6 +121,7 @@ describe('[E1.7] layer boundary lint zones', () => {
     const others = [...byFile].filter(([file]) => !file.includes('violates-'))
     expect(others.map(([file]) => file)).toEqual(expect.arrayContaining([
       'packages/domain/src/orders/clean-domain.ts',
+      'packages/i18n/src/clean-i18n.ts',
       'api/src/modules/orders/application/clean-use-case.ts',
       'api/src/modules/orders/adapters/clean-adapter.ts',
       'api/src/modules/clean-ports/ports.ts',
