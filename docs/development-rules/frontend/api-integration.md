@@ -11,13 +11,15 @@ Read this before you call an API or read server data. Check `front-end/package.j
 
 - **One client per feature.** `front-end/src/features/<feature>/api/` has `client.ts` (the typed interface: reads and commands), `demo-client.ts` (the demo store implementation) and `queries.ts` (`queryOptions` and the read hooks). `front-end/src/features/data-client/data-client.ts` combines them. A feature moves to the API by replacing its own client.
 - **Reads** use the feature's hook, such as `useOrders(select?)` or `useTourRecords()`. They wrap `useSuspenseQuery`, so `data` is always defined. Pass a `select` to subscribe to one item or a boolean: `useProducts(ps => ps.find(p => p.slug === slug))`.
-- **Writes** use `useCommand(client.<feature>.<command>, [queryKeys...])`, a `useMutation` that invalidates the keys it lists and waits for them. Take `mutate` or `mutateAsync` from it, never the whole result.
-- **Before you navigate to what you just wrote, `await mutateAsync`.** C07 after C06, the order after a payment, a new gift's editor: the next screen must not read the old cache.
+- **Writes** use `useCommand('orders', 'accept')`, a `useMutation` over that command. On success it reads again every query `commandAffects` (`front-end/src/features/data-client/commands.ts`) lists for the command, the ones no screen shows right now too (`refetchType: 'all'`), and waits for them. A new command must list what it writes. `front-end/tests/command-affects.test.ts` runs every command and fails when it writes a collection its entry leaves out. Take `mutate`, `mutateAsync` or `isPending` from the result, never the whole result.
+- **A screen that saves and then leaves uses `useSubmit`**: C06, C11, C12, C22, the editors' save and publish, the profile. A ref ignores a repeat tap, `isPending` disables the button, and the navigation goes in the per-call `onSuccess`, which TanStack Query skips when the screen is gone by then. Never `await mutateAsync` and then navigate.
+- **A demo command may `import()` a module only when every screen that calls the command already imports it**, so sending never waits for a chunk. Otherwise import it statically (`request-mail.ts` in the requests demo client).
 - **Query keys** come from `front-end/src/features/data-client/query-keys.ts`. Never write a key array inline.
 - **Browser-only state stays in the store**: the role, the demo clock, who is signed in, the cart, saved gifts, the advice and tour booking drafts and partner sessions. Read it with `useDemoSelector` and write it with `useDemoActions`. Never read shop data that way.
-- **Demo simulations** (the payment provider, hold expiry, deadline jobs, the prototype bar and the `*-demo-control` panels) write the store directly. `bridgeStore` in `front-end/src/features/demo/data-client.ts` invalidates every collection the store changed, so the screens catch up.
+- **The exceptions that write shop data to the store directly** are the demo's stand-ins for things that are not our API commands: the payment provider and hold expiry (`simulate` in `use-orders.ts`, `expireHolds` and the provider answers in `use-tours.ts`), the deadline and reminder jobs, the code emails of guest sign-in (`use-sign-in.ts`) and partner access (`use-partner-access.ts`), the prototype bar and the `*-demo-control` panels. `bridgeStore` in `front-end/src/features/demo/data-client.ts` invalidates every collection the store changed, so the screens catch up. Nothing else writes shop data to the store.
 - **Every demo collection is read before the first render** (`startDemo().ready`), and demo queries never go stale or get collected, so no screen waits on a demo read. A new `DemoData` key must be listed in `collections` or in `StoreOnlyKey`, and TypeScript enforces this.
 - Guidance. **Typed input fields do not read from a query.** A query result arrives a macrotask after the write, so a controlled input that reads it can lose its caret. Keep the draft in component state or the store.
+- **A screen whose read suspends or fails** shows the router's `defaultPendingComponent` (a skeleton) or `defaultErrorComponent` (a message and Try again), from `front-end/src/components/route-fallbacks.tsx`. Demo reads never suspend.
 - **Tests** wrap hooks in a fresh `QueryClientProvider` and `DataClientProvider` per test (`front-end/tests/data-client.test.tsx`).
 
 ## Rules that apply today
@@ -34,7 +36,12 @@ Read this before you call an API or read server data. Check `front-end/package.j
 These follow `docs/architecture/backend.md` D11 and D19. The server-state patterns are the owner's, from agentic-rag (`frontend/CLAUDE.md`).
 
 - **Call the API only through the generated client**, inside the feature's API `DataClient`. Do not write `fetch` calls to the same endpoints, and do not redefine its request or response types. Never edit the generated client by hand. CI fails if it differs from a fresh build.
-- **An API feature sets its own query options.** The demo `QueryClient` defaults (`staleTime` and `gcTime` infinite, no retries, no structural sharing) suit the demo store only. Its screens need a pending state or a route loader, because `useSuspenseQuery` suspends while the first read is on the way.
+- **An API feature sets its own query options.** The demo `QueryClient` defaults (`staleTime` and `gcTime` infinite, no retries, no structural sharing) suit the demo store only. While its first read is on the way its screens show the route skeleton, or a route loader reads ahead.
+- **These features move to the API together**, because their demo commands read or write each other's collections:
+  - orders with catalog and notifications: `submitCart` reads products and partner visits and the browser cart, `handOver` and `handOverAndComplete` take stock from products, and most order commands send mail.
+  - account's `saveTrip` with orders and tours: it writes the trip answers into both.
+  - reviews with orders and tours: `addReview` checks the purchase on the latest order or booking.
+  - tours and requests with notifications: their commands send mail.
 - Lists that load more as you scroll use `useInfiniteQuery`.
 - **Handle errors once, in the query client's cache.** Do not wrap each call in `try/catch` with a toast. A query that shows its error inline opts out with `meta: { silent: true }`.
 - **Polling** uses `refetchInterval`, not `setInterval`. Return `false` when the work has finished. `docs/architecture/backend.md` section 8 has the merchant screens that poll.
