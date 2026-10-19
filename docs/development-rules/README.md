@@ -8,7 +8,7 @@ These files tell people and AI coding agents how to build in this repo. `AGENTS.
 | `shared/` | Front-end and back-end | write any TypeScript, share a rule or a type across both sides, or write a test |
 | `frontend/` | Front-end only (`front-end/`) | build UI, routes, forms, client data access, styling or lint config |
 | `reference/` | Lookup only | want the full text of a React best-practice rule that another file cites by id. Do not read it end to end |
-| `backend/` | Back-end only (`api/`, `packages/domain`, `packages/api-contract`) | build the API, data layer, jobs or security. **Design, not built** |
+| `backend/` | Back-end only (`api/`, `packages/domain`, `packages/api-contract`) | build the API, data layer, jobs or security. **Mostly design**: the platform layer is built, no module yet |
 
 ## Files
 
@@ -39,7 +39,7 @@ Every rule is a "do" or "don't" with a short reason. It points to real code in t
 
 Many rules are conditional. They start with "check `package.json` first" or "follow the existing pattern", so the same files work in a project that uses different libraries.
 
-**Backend files describe a design that is not built.** Each one names its section in `docs/architecture/backend.md` and does not copy it. If they disagree, `docs/architecture/backend.md` wins and the rule file needs fixing.
+**Backend files mostly describe a design that is not built yet.** A "Built:" line under a rule points at the code that exists. Each file names its section in `docs/architecture/backend.md` and does not copy it. If they disagree, `docs/architecture/backend.md` wins and the rule file needs fixing.
 
 ## Keeping them current
 

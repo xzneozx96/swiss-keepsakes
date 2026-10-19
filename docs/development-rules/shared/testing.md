@@ -37,7 +37,9 @@ Gaps:
 
 ## Levels (from `docs/architecture/backend.md` section 12)
 
-The front-end has unit tests and an end-to-end smoke test today. The rows about use cases, the database, the API and load wait for the backend.
+The front-end has unit tests and an end-to-end smoke test today. The rows about use cases, the API and load wait for the backend modules.
+
+Database tests are built (E1.9). They live in `api/test/integration/` and run with `pnpm test:integration` from the repo root, with `DATABASE_URL` and `DATABASE_URL_UNPOOLED` set, for example to the compose Postgres (`docker compose up -d --wait postgres`, then both `postgres://postgres@127.0.0.1:5433/swiss_keepsakes`). Each run creates its own database, migrates it and drops it. It refuses a host other than this machine unless `INTEGRATION_ALLOW_REMOTE_DATABASE=1`, which only a throwaway server may get. `pnpm test` never runs them, so it needs no Docker. Count rows by a marker your test made, not by table totals, because test files run in parallel on one database.
 
 | Level | Proves | Tool |
 | :-- | :-- | :-- |
