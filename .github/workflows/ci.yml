@@ -68,9 +68,22 @@ jobs:
       - name: Audit production dependencies
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: pnpm audit --prod --audit-level=high
+      # Advisories in development dependencies only warn. A registry outage fails the step: pnpm audit exits 1 for
+      # both, so the JSON tells them apart.
       - name: Audit development dependencies (warning only)
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: pnpm audit --audit-level=high || echo '::warning title=Dependency audit::A development dependency has a high or critical advisory. This step lists them.'
+        run: |
+          pnpm audit --json > audit.json || true
+          if ! jq -e '.metadata.vulnerabilities' audit.json > /dev/null; then
+            cat audit.json
+            echo '::error::pnpm audit returned no report'
+            exit 1
+          fi
+          jq -r '.advisories[] | "\(.severity) \(.module_name) \(.github_advisory_id) via \(.findings[0].paths[0])"' audit.json
+          count=$(jq '.metadata.vulnerabilities.high + .metadata.vulnerabilities.critical' audit.json)
+          if [ "$count" != 0 ]; then
+            echo "::warning title=Dependency audit::$count high or critical advisories in development dependencies. This step lists them."
+          fi
 
   integration:
     name: integration (Neon)
@@ -106,7 +119,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      # preview/pr-<number> from development, expiring in 7 days, or the same branch again on later pushes.
+      # preview/pr-<number> from development, expiring in 3 days, or the same branch again with a new expiry.
       # Not neondatabase/create-branch-action: its password and URL outputs are unmasked, and debug logs print outputs.
       - name: Create or reuse the Neon branch
         if: steps.neon.outputs.available == 'true'
@@ -114,9 +127,7 @@ jobs:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
         run: node scripts/neon-preview-branch.mjs create
-      - name: Install
-        if: steps.neon.outputs.available == 'true'
-        run: pnpm install --frozen-lockfile
+      # Resets the branch's password first, so the URLs every later step sees work on this branch only.
       - name: Connect to the Neon branch
         id: connect
         if: steps.neon.outputs.available == 'true'
@@ -124,7 +135,14 @@ jobs:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
         run: node scripts/neon-preview-branch.mjs connect
-      # The release command over the direct URL. There are no seeds yet: the first module story adds them.
+      - name: Install
+        if: steps.neon.outputs.available == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: The branch holds no migration this commit lacks
+        if: steps.neon.outputs.available == 'true'
+        run: pnpm --filter @sk/api db:check-branch
+      # The release command from source (tsx) over the direct URL. The API image job runs the compiled one.
+      # There are no seeds yet: the first module story adds them.
       - name: Migrate the branch
         if: steps.neon.outputs.available == 'true'
         run: pnpm --filter @sk/api db:migrate
@@ -172,11 +190,32 @@ jobs:
             echo '::error::The NEON_API_KEY secret is missing.'
             exit 1
           fi
-      # The merge ref can be gone once a pull request is closed. The head commit stays.
+      # The delete runs reviewed code from the default branch, never the pull request's own, and works for a
+      # pull request whose head predates the script.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.neon.outputs.available == 'true'
         with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+          sparse-checkout: scripts
+      - name: Choose the delete script
+        id: script
+        if: steps.neon.outputs.available == 'true'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ -f scripts/neon-preview-branch.mjs ]; then
+            echo 'path=scripts/neon-preview-branch.mjs' >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::$DEFAULT_BRANCH has no scripts/neon-preview-branch.mjs yet, so this run uses the copy at the pull request head."
+            echo 'path=pr-head/scripts/neon-preview-branch.mjs' >> "$GITHUB_OUTPUT"
+          fi
+      # Only until the default branch has the script, which is while the E1.13 stack is unmerged.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.neon.outputs.available == 'true' && steps.script.outputs.path != 'scripts/neon-preview-branch.mjs'
+        with:
           ref: ${{ github.event.pull_request.head.sha }}
+          path: pr-head
           persist-credentials: false
           sparse-checkout: scripts
       - name: Delete preview/pr-${{ github.event.pull_request.number }}
@@ -184,9 +223,11 @@ jobs:
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
           NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          SCRIPT: ${{ steps.script.outputs.path }}
         run: |
           [[ "preview/pr-$PR_NUMBER" =~ ^preview/pr-[1-9][0-9]*$ ]] || { echo "::error::Refusing to delete preview/pr-$PR_NUMBER"; exit 1; }
-          node scripts/neon-preview-branch.mjs delete
+          [ -f "$SCRIPT" ] || { echo "::error::Neither the default branch nor the pull request head has scripts/neon-preview-branch.mjs. preview/pr-$PR_NUMBER expires on its own within 3 days."; exit 1; }
+          node "$SCRIPT" delete
 
   image:
     name: API image
