@@ -2,6 +2,7 @@ import type { CommandName, Feature } from './commands'
 import type { DataClient } from './data-client'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useRef } from 'react'
 import { commandAffects } from './commands'
 import { useDataClient } from './data-client-context'
 
@@ -39,4 +40,44 @@ export function useCommand<F extends Feature, C extends CommandName<F>>(
         ),
       ),
   })
+}
+
+/**
+ * A command a screen submits once and then usually leaves, such as C06's send or a gift's save.
+ * A repeat tap while it runs is ignored: a ref, not `isPending`, because both taps arrive before
+ * React re-renders. Like any per-call callback, `onSuccess` and `onError` do not run when the
+ * screen is gone by then. `submit` returns false for an ignored tap; disable the button with
+ * `isPending`.
+ */
+export function useSubmit<F extends Feature, C extends CommandName<F>>(
+  feature: F,
+  command: C,
+) {
+  type TInput = Command<F, C>['input']
+  type TResult = Command<F, C>['result']
+  const { mutate, isPending } = useCommand(feature, command)
+  const runningRef = useRef(false)
+
+  const submit = (
+    input: TInput,
+    callbacks: {
+      onSuccess?: (result: TResult) => void
+      onError?: (error: Error) => void
+    } = {},
+  ): boolean => {
+    if (runningRef.current)
+      return false
+    runningRef.current = true
+    mutate(input, {
+      onSuccess: result => callbacks.onSuccess?.(result),
+      onError: error => callbacks.onError?.(error),
+      onSettled: () => {
+        runningRef.current = false
+      },
+    })
+
+    return true
+  }
+
+  return { submit, isPending }
 }

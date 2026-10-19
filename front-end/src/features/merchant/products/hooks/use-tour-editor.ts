@@ -24,7 +24,7 @@ import { safeHref } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { StorageFullError, useCommand } from '@/features/data-client'
+import { StorageFullError, useCommand, useSubmit } from '@/features/data-client'
 import { useDemoNow } from '@/features/demo'
 
 import {
@@ -403,7 +403,7 @@ export function useTourEditor(
   go: (step: TourStep) => void,
 ) {
   const { t, language: interfaceLanguage } = useLocale()
-  const { mutateAsync: saveTour } = useCommand('tours', 'saveTour')
+  const { submit: saveTour, isPending: isSaving } = useSubmit('tours', 'saveTour')
   const data = useTourRecords()
   const now = useDemoNow()
   const navigate = useNavigate()
@@ -630,7 +630,7 @@ export function useTourEditor(
     ]
   }
 
-  const commit = async (published: boolean) => {
+  const commit = (published: boolean) => {
     setStorageFull(false)
     const base: Tour
       = tour
@@ -646,33 +646,31 @@ export function useTourEditor(
     // An archived tour is never published from here; "Restore as draft" comes first.
     const next = toTour({ ...edit, published: published && !archived }, base)
 
-    try {
-      await saveTour(next)
-    }
-    catch (error) {
-      if (!(error instanceof StorageFullError))
-        throw error
-      setStorageFull(true)
+    saveTour(next, {
+      onSuccess: () => {
+        setAttempt(null)
+        if (!tour) {
+          markJustCreated(next.id)
+          void navigate({
+            to: '/store/products/tours/$tourId',
+            params: { tourId: next.id },
+            search: { step },
+            replace: true,
+          })
 
-      return
-    }
-    setAttempt(null)
-    if (!tour) {
-      markJustCreated(next.id)
-      void navigate({
-        to: '/store/products/tours/$tourId',
-        params: { tourId: next.id },
-        search: { step },
-        replace: true,
-      })
+          return
+        }
+        const kept = { ...edit, published: next.published }
 
-      return
-    }
-    const kept = { ...edit, published: next.published }
-
-    setEdit(kept)
-    setSaved(kept)
-    setJustSaved(true)
+        setEdit(kept)
+        setSaved(kept)
+        setJustSaved(true)
+      },
+      onError: (error) => {
+        if (error instanceof StorageFullError)
+          setStorageFull(true)
+      },
+    })
   }
 
   const run = (level: Level, published: boolean, stay = false) => {
@@ -688,7 +686,7 @@ export function useTourEditor(
 
       return
     }
-    void commit(published)
+    commit(published)
   }
 
   return {
@@ -764,6 +762,8 @@ export function useTourEditor(
     isDirty: JSON.stringify(edit) !== JSON.stringify(saved),
     hasErrors: !!shown && hasIssues(shown),
     storageFull,
+    /** A save is on its way: the save buttons are off. */
+    isSaving,
     justSaved,
     focusCount,
   }

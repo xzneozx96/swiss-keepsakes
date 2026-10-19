@@ -46,7 +46,7 @@ export function useOrderActions() {
   const { mutate: accept } = useCommand('orders', 'accept')
   const { mutate: changePickup } = useCommand('orders', 'changePickup')
   const { mutate: decline } = useCommand('orders', 'decline')
-  const { mutateAsync: payOnline } = useCommand('orders', 'payOnline')
+  const { mutate: payOnline } = useCommand('orders', 'payOnline')
   const { mutate: recordOfflinePayment } = useCommand('orders', 'recordOfflinePayment')
   const { mutate: markReady } = useCommand('orders', 'markReady')
   const { mutate: handOver } = useCommand('orders', 'handOver')
@@ -108,22 +108,20 @@ export function useOrderActions() {
         () => decline({ id, language, reason }),
       ),
     /**
-     * C12 simulated provider: Pay, Fail, or Processing (left open until resolved). Resolves once
-     * the payment is stored, so the order screen opens on its result.
+     * C12 simulated provider: Pay, Fail, or Processing (left open until resolved). `onPaid` runs
+     * once the payment is stored, so the order screen opens on its result, and only while the
+     * provider screen is still open.
      */
-    payOnline: async (
+    payOnline: (
       id: string,
       outcome: 'succeeded' | 'failed' | 'processing',
-    ): Promise<OrderBlock | null> => {
-      const order = orders.find(o => o.id === id)
-      const block = order ? tr.startOnlinePaymentBlock(order) : null
-
-      if (!order || block)
-        return block
-      await payOnline({ id, language, outcome })
-
-      return null
-    },
+      onPaid: () => void,
+    ) =>
+      run(
+        id,
+        o => tr.startOnlinePaymentBlock(o),
+        () => payOnline({ id, language, outcome }, { onSuccess: onPaid }),
+      ),
     /** Prototype action: the provider answers a processing payment (possibly after cancellation). */
     resolveOnlinePayment: (id: string, outcome: 'succeeded' | 'failed') =>
       simulate(

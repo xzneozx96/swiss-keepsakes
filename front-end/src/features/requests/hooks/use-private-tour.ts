@@ -2,7 +2,7 @@ import { looksLikeEmail } from '@sk/domain/requests'
 import { useLocale } from '@/contexts/locale-context'
 
 import { useGuests } from '@/features/account/api/queries'
-import { useCommand } from '@/features/data-client'
+import { useSubmit } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 
 export interface PrivateTourInput {
@@ -32,14 +32,21 @@ export const GROUP_MAX = 50
  */
 export function usePrivateTour() {
   const { language } = useLocale()
-  const { mutateAsync: sendRequest } = useCommand('requests', 'sendPrivateTourRequest')
+  const { submit, isPending } = useSubmit('requests', 'sendPrivateTourRequest')
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   const guest = useGuests(guests => guests.find(g => g.id === signedInGuestId))
 
   return {
     defaultEmail: guest?.email ?? '',
-    /** Resolves once the request is stored, so C22's sent screen can show it. */
-    send: async (input: PrivateTourInput): Promise<PrivateTourResult> => {
+    isSending: isPending,
+    /**
+     * Checks the input and sends it. `onSent` runs once the request is stored, so C22's sent
+     * screen can show it; a tap while one is on its way returns null and does nothing.
+     */
+    send: (
+      input: PrivateTourInput,
+      onSent: (requestId: string) => void,
+    ): PrivateTourResult | null => {
       const email = input.email.trim()
       const errors: PrivateTourErrors = {}
 
@@ -56,17 +63,20 @@ export function usePrivateTour() {
       const requestId = `pt-${Date.now().toString(36)}`
 
       // N17 to the Owner and the Manager; the guest gets no email (A2).
-      await sendRequest({
-        id: requestId,
-        language,
-        email,
-        groupSize: Math.min(GROUP_MAX, Math.max(GROUP_MIN, input.groupSize)),
-        dateFrom,
-        dateTo: input.dateTo ?? dateFrom,
-        interests: input.interests.trim(),
-      })
+      const sent = submit(
+        {
+          id: requestId,
+          language,
+          email,
+          groupSize: Math.min(GROUP_MAX, Math.max(GROUP_MIN, input.groupSize)),
+          dateFrom,
+          dateTo: input.dateTo ?? dateFrom,
+          interests: input.interests.trim(),
+        },
+        { onSuccess: () => onSent(requestId) },
+      )
 
-      return { ok: true, requestId }
+      return sent ? { ok: true, requestId } : null
     },
   }
 }

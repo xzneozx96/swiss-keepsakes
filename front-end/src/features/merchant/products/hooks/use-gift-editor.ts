@@ -10,7 +10,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import { usePickupPlaces, useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
-import { StorageFullError, useCommand } from '@/features/data-client'
+import { StorageFullError, useSubmit } from '@/features/data-client'
 
 import {
   GIFT_STEPS,
@@ -275,7 +275,7 @@ export function useGiftEditor(
   go: (step: GiftStep) => void,
 ) {
   const { t, language: interfaceLanguage } = useLocale()
-  const { mutateAsync: saveProduct } = useCommand('catalog', 'saveProduct')
+  const { submit: saveProduct, isPending: isSaving } = useSubmit('catalog', 'saveProduct')
   const products = useProducts()
   const subcategories = useStoreSubcategories()
   const orders = useOrders()
@@ -545,7 +545,7 @@ export function useGiftEditor(
   const hasIssues = (errors: GiftErrors) =>
     GIFT_STEPS.some(s => issuesIn(errors, s).length > 0)
 
-  const commit = async (published: boolean) => {
+  const commit = (published: boolean) => {
     setStorageFull(false)
     const next = toProduct(
       { ...draft, published: published && !archived },
@@ -561,33 +561,31 @@ export function useGiftEditor(
       subcategories.find(c => c.categoryId === 'keepsakes')?.id ?? '',
     )
 
-    try {
-      await saveProduct(next)
-    }
-    catch (error) {
-      if (!(error instanceof StorageFullError))
-        throw error
-      setStorageFull(true)
+    saveProduct(next, {
+      onSuccess: () => {
+        setAttempt(null)
+        if (!product) {
+          markJustCreated(next.id)
+          void navigate({
+            to: '/store/products/gifts/$productId',
+            params: { productId: next.id },
+            search: { step },
+            replace: true,
+          })
 
-      return
-    }
-    setAttempt(null)
-    if (!product) {
-      markJustCreated(next.id)
-      void navigate({
-        to: '/store/products/gifts/$productId',
-        params: { productId: next.id },
-        search: { step },
-        replace: true,
-      })
+          return
+        }
+        const kept = { ...draft, published: next.published !== false }
 
-      return
-    }
-    const kept = { ...draft, published: next.published !== false }
-
-    setDraft(kept)
-    setSaved(kept)
-    setJustSaved(true)
+        setDraft(kept)
+        setSaved(kept)
+        setJustSaved(true)
+      },
+      onError: (error) => {
+        if (error instanceof StorageFullError)
+          setStorageFull(true)
+      },
+    })
   }
 
   const run = (level: Level, published: boolean, stay = false) => {
@@ -598,7 +596,7 @@ export function useGiftEditor(
 
       return
     }
-    void commit(published)
+    commit(published)
   }
 
   return {
@@ -675,6 +673,8 @@ export function useGiftEditor(
     isDirty: JSON.stringify(draft) !== JSON.stringify(saved),
     hasErrors: !!shown && hasIssues(shown),
     storageFull,
+    /** A save is on its way: the save buttons are off. */
+    isSaving,
     justSaved,
     focusCount,
   }

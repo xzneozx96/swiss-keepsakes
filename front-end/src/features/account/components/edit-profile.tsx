@@ -11,7 +11,7 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { CameraIcon, StatusDangerIcon } from '@/components/icons'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useCommand } from '@/features/data-client'
+import { useCommand, useSubmit } from '@/features/data-client'
 import {
   AVATAR_MAX_BYTES,
   avatarPickError,
@@ -34,7 +34,11 @@ const errorKey = {
  */
 export function EditProfile({ guest }: { guest: Guest }) {
   const { t, intlLocale } = useLocale()
-  const { mutateAsync: saveGuest } = useCommand('account', 'updateProfile')
+  const { mutate: savePhoto } = useCommand('account', 'updateProfile')
+  const { submit: saveProfile, isPending: isSaving } = useSubmit(
+    'account',
+    'updateProfile',
+  )
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
@@ -85,16 +89,12 @@ export function EditProfile({ guest }: { guest: Guest }) {
         confirmLabel: t('account.edit.remove.confirm'),
       })
     ) {
-      await saveGuest({ avatar: undefined })
+      savePhoto({ avatar: undefined })
     }
   }
 
   const done = () =>
     canGoBack ? router.history.back() : void navigate({ to: '/account' })
-  const saveName = async () => {
-    await saveGuest({ name: name.trim() })
-    done()
-  }
 
   return (
     <>
@@ -174,7 +174,7 @@ export function EditProfile({ guest }: { guest: Guest }) {
           e.preventDefault()
           if (invalid || !changed)
             return
-          void saveName()
+          saveProfile({ name: name.trim() }, { onSuccess: done })
         }}
       >
         <div className="flex flex-col gap-5 rounded-2xl bg-surface p-4 shadow-surface">
@@ -203,7 +203,7 @@ export function EditProfile({ guest }: { guest: Guest }) {
         <Button
           fullWidth
           className="h-14 text-base"
-          isDisabled={invalid || !changed}
+          isDisabled={invalid || !changed || isSaving}
           type="submit"
         >
           {t('account.edit.save')}
@@ -215,7 +215,7 @@ export function EditProfile({ guest }: { guest: Guest }) {
           image={picked}
           onCancel={closeCrop}
           onSave={(avatar) => {
-            void saveGuest({ avatar })
+            savePhoto({ avatar })
             closeCrop()
           }}
         />

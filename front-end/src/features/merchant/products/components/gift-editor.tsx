@@ -908,6 +908,7 @@ export function GiftEditor({
     publishRefused: editor.publishRefused,
     storageFull: editor.storageFull,
     justSaved: editor.justSaved,
+    isSaving: editor.isSaving,
     actions: editor,
   })
 

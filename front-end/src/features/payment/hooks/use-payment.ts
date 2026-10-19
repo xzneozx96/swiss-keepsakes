@@ -58,7 +58,7 @@ export function usePayment(order: Order): PaymentView {
       replace: true,
     })
 
-  const choose = async (outcome: Outcome) => {
+  const choose = (outcome: Outcome) => {
     if (pendingRef.current)
       return
     const settle = () => {
@@ -68,12 +68,15 @@ export function usePayment(order: Order): PaymentView {
 
     pendingRef.current = true
     setIsPending(true)
-    if (await actions.payOnline(order.id, outcome))
-      return settle()
-    if (outcome !== 'failed')
-      return toOrder()
-    setFailed(true)
-    settle()
+    const block = actions.payOnline(order.id, outcome, () => {
+      if (outcome !== 'failed')
+        return toOrder()
+      setFailed(true)
+      settle()
+    })
+
+    if (block)
+      settle()
   }
 
   const step: PaymentStep = failed
@@ -90,7 +93,7 @@ export function usePayment(order: Order): PaymentView {
     ref: order.ref,
     step,
     isPending,
-    choose: outcome => void choose(outcome),
+    choose,
     retry: () => setFailed(false),
     back: toOrder,
   }

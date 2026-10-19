@@ -16,7 +16,7 @@ import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import { usePickupPlaces, useProducts } from '@/features/catalog/api/queries'
 import { shop } from '@/features/catalog/seed'
-import { useCommand } from '@/features/data-client'
+import { useSubmit } from '@/features/data-client'
 import { useDemoNow, useDemoSelector } from '@/features/demo'
 import { useOrders } from '@/features/orders/api/queries'
 import { useReferralVisits } from '@/features/partners/api/queries'
@@ -29,16 +29,16 @@ import {
  * C06 Review and send (AC25, AC28): the orders the request creates, each with its items,
  * requested pickup, total, the amount due once the seller confirms, the deadline rule and the
  * cancellation policy. Amounts come from T0's selectors on the very drafts that are stored on
- * send. `send` returns null when it is blocked (the error is shown and the cart stays as it
- * was), and otherwise the new order ids once the screens can read them. Null view when no cart
- * line is ticked.
+ * send. `send` returns false when it is blocked (the error is shown and the cart stays as it
+ * was) or a send is already on its way; `onSent` gets the new order ids once the screens can
+ * read them, while this screen is still open. Null view when no cart line is ticked.
  */
 export function useReview(): {
   view: Omit<ReviewViewProps, 'onBack' | 'onSend' | 'onEditCart'> | null
-  send: () => Promise<string[]> | null
+  send: (onSent: (orderIds: string[]) => void) => boolean
 } {
   const { t, language, intlLocale } = useLocale()
-  const { mutateAsync: submitCart } = useCommand('orders', 'submitCart')
+  const { submit, isPending } = useSubmit('orders', 'submitCart')
   const cart = useDemoSelector(s => s.data.cart)
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   const nextOrderNumber = useDemoSelector(s => s.data.nextOrderNumber)
@@ -65,14 +65,14 @@ export function useReview(): {
     new Intl.PluralRules(intlLocale).select(count) === 'one' ? 'one' : 'other'
   const pick = (text: LocalizedText) => pickText(text, language)
 
-  const send = () => {
+  const send = (onSent: (orderIds: string[]) => void) => {
     const block = sendBlock(cartData, now)
 
     setError(block)
     if (block)
-      return null
+      return false
 
-    return submitCart({ language })
+    return submit({ language }, { onSuccess: onSent })
   }
 
   if (drafts.length === 0)
@@ -233,6 +233,7 @@ export function useReview(): {
         closeLabel: t('cart.sheet.close'),
       },
       error: errorView(),
+      isSending: isPending,
     },
   }
 }

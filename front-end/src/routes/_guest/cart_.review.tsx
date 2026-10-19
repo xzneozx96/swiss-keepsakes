@@ -48,24 +48,23 @@ function ReviewScreen() {
     return <Navigate replace to="/cart" />
 
   // A direct visit may be signed out: sign in first; the guest then sends with a second tap.
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!signedIn) {
       requireSignIn()
 
       return
     }
-    const sending = send()
+    const sending = send(
+      orderIds =>
+        void navigate({
+          to: '/cart/sent',
+          search: { orders: orderIds.join(',') },
+          replace: true,
+        }),
+    )
 
-    if (!sending)
-      return
-    setSent(true)
-    const ids = await sending
-
-    void navigate({
-      to: '/cart/sent',
-      search: { orders: ids.join(',') },
-      replace: true,
-    })
+    if (sending)
+      setSent(true)
   }
 
   return (
@@ -74,7 +73,7 @@ function ReviewScreen() {
         {...view}
         onBack={toCart}
         onEditCart={toCart}
-        onSend={() => void handleSend()}
+        onSend={handleSend}
       />
       {signInSheet}
     </>

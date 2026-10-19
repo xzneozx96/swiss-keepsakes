@@ -16,7 +16,7 @@ import { pickText, slugify } from '@sk/domain/shared'
 import { useState } from 'react'
 
 import { useProducts } from '@/features/catalog/api/queries'
-import { useCommand } from '@/features/data-client'
+import { useSubmit } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { useOrders } from '@/features/orders/api/queries'
@@ -70,8 +70,14 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
   const tours = useTourRecords()
   const products = useProducts()
   const orders = useOrders()
-  const { mutateAsync: createArticle } = useCommand('content', 'createArticle')
-  const { mutateAsync: updateArticle } = useCommand('content', 'updateArticle')
+  const { submit: createArticle, isPending: isCreating } = useSubmit(
+    'content',
+    'createArticle',
+  )
+  const { submit: updateArticle, isPending: isUpdating } = useSubmit(
+    'content',
+    'updateArticle',
+  )
   const articles = useArticles()
   const stored = articles.find(a => a.id === articleId)
   const [form, setForm] = useState<ArticleForm>(() =>
@@ -245,66 +251,76 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
 
   /**
    * Validates for the mode, then stores the working copy with the given publication (or the
-   * current one). Resolves to the article id once screens can read it, or null when a field
-   * needs fixing.
+   * current one). Returns false when a field needs fixing. `onSaved` gets the article id once
+   * screens can read it, while the editor is still open.
    */
-  const save = async (
+  const save = (
     mode: SaveMode,
     publication?: ArticlePublication,
-  ): Promise<string | null> => {
+    onSaved?: (id: string) => void,
+  ): boolean => {
     setAttempt(mode)
     if (Object.keys(validate(form, mode)).length)
-      return null
+      return false
     const content = fromForm(form)
-    let id = stored?.id
+    const saved = (id: string) => {
+      setBaseline(form)
+      setAttempt(null)
+      onSaved?.(id)
+    }
 
     if (stored) {
-      await updateArticle({ id: stored.id, content, publication })
-    }
-    else {
-      const slug = uniqueValue(
-        slugify(content.title) || 'story',
-        new Set(articles.map(a => a.slug)),
+      updateArticle(
+        { id: stored.id, content, publication },
+        { onSuccess: () => saved(stored.id) },
       )
 
-      id = uniqueValue(
-        `${slug}-${content.language}`,
-        new Set(articles.map(a => a.id)),
-      )
-      await createArticle({
+      return true
+    }
+    const slug = uniqueValue(
+      slugify(content.title) || 'story',
+      new Set(articles.map(a => a.slug)),
+    )
+    const id = uniqueValue(
+      `${slug}-${content.language}`,
+      new Set(articles.map(a => a.id)),
+    )
+
+    createArticle(
+      {
         ...content,
         id,
         slug,
         publication: publication ?? { status: 'draft' },
-      })
-    }
-    setBaseline(form)
-    setAttempt(null)
+      },
+      { onSuccess: () => saved(id) },
+    )
 
-    return id ?? null
+    return true
   }
 
   /** The other language version as a draft copy of the saved one, to translate (R02). */
-  const addOtherVersion = async (): Promise<string | null> => {
+  const addOtherVersion = (onAdded: (id: string) => void) => {
     if (!stored || otherVersion)
-      return null
+      return
     const id = uniqueValue(
       `${stored.slug}-${otherLanguage}`,
       new Set(articles.map(a => a.id)),
     )
 
-    await createArticle({
-      ...structuredClone(stored),
-      id,
-      language: otherLanguage,
-      author: {
-        name: stored.author.name,
-        role: translateRole(stored.author.role, otherLanguage),
+    createArticle(
+      {
+        ...structuredClone(stored),
+        id,
+        language: otherLanguage,
+        author: {
+          name: stored.author.name,
+          role: translateRole(stored.author.role, otherLanguage),
+        },
+        publication: { status: 'draft' },
       },
-      publication: { status: 'draft' },
-    })
-
-    return id
+      { onSuccess: () => onAdded(id) },
+    )
   }
 
   return {
@@ -327,9 +343,13 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       stored?.publication.status === 'published'
         ? stored.publication.publishedAt
         : null,
+    /** A save is on its way: the save buttons are off. */
+    isSaving: isCreating || isUpdating,
     save,
-    publish: () => save('publish', { status: 'published', publishedAt: now() }),
-    unpublish: () => save('draft', { status: 'draft' }),
+    publish: (onSaved?: (id: string) => void) =>
+      save('publish', { status: 'published', publishedAt: now() }, onSaved),
+    unpublish: (onSaved?: (id: string) => void) =>
+      save('draft', { status: 'draft' }, onSaved),
     addOtherVersion,
   }
 }
