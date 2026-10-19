@@ -108,3 +108,80 @@ describe('[E1.4] moneyState: duplicate payment', () => {
     expect(moneyState(input({ entries: [col(8900)], dueNow: 0 }), NOW).overpaid).toBe(0)
   })
 })
+
+describe('[E1.4] moneyState: tour bookings (balance due at an instant, expired holds)', () => {
+  const tour = (over: Partial<MoneyInput> = {}) => input({ total: 8900, dueNow: 6230, depositPolicy: true, ...over })
+
+  it('an expired booking that holds money is an exception, and owes nothing', () => {
+    const s = moneyState(tour({ stage: 'expired', entries: [col(2670)] }), NOW)
+
+    expect(s).toMatchObject({ payment: 'after-expiry', paid: 2670, balance: 0, overdue: false })
+  })
+
+  it('an expired booking without money is none; a processing payment says the session closed', () => {
+    expect(moneyState(tour({ stage: 'expired' }), NOW).payment).toBe('none')
+    expect(moneyState(tour({ stage: 'expired', entries: [col(2670, 'processing')] }), NOW).payment).toBe('session-closed')
+  })
+
+  it('deposit paid with the balance due at a later instant', () => {
+    const s = moneyState(tour({ entries: [col(2670)], balanceDueAt: '2026-10-19T10:00:01Z' }), NOW)
+
+    expect(s).toMatchObject({ payment: 'deposit-paid', balance: 6230, overdue: false })
+  })
+
+  it('nothing paid with a balance due instant is pay later', () => {
+    expect(moneyState(tour({ dueNow: 8900, balanceDueAt: '2026-10-20T10:00:00Z' }), NOW).payment).toBe('pay-later')
+  })
+
+  it('overdue from the due instant on, not only from the next day', () => {
+    const paid = [col(2670)]
+
+    expect(moneyState(tour({ entries: paid, balanceDueAt: '2026-10-19T09:59:59Z' }), NOW)).toMatchObject({ payment: 'overdue', overdue: true })
+    expect(moneyState(tour({ entries: paid, balanceDueAt: '2026-10-19T10:00:00Z' }), NOW).overdue).toBe(true)
+    expect(moneyState(tour({ entries: paid, balanceDueAt: '2026-10-19T10:00:01Z' }), NOW).overdue).toBe(false)
+  })
+
+  it('a processing payment wins over overdue, and a zero balance wins over both', () => {
+    const due = { balanceDueAt: '2026-10-18T10:00:00Z' }
+
+    expect(moneyState(tour({ ...due, entries: [col(2670), col(6230, 'processing')] }), NOW).payment).toBe('processing')
+    expect(moneyState(tour({ ...due, entries: [col(8900)], dueNow: 0 }), NOW).payment).toBe('paid-in-full')
+  })
+
+  it('fully paid', () => {
+    expect(moneyState(tour({ entries: [col(2670), col(6230)], dueNow: 0, balanceDueAt: '2026-10-18T10:00:00Z' }), NOW)).toMatchObject({ payment: 'paid-in-full', balance: 0, overdue: false })
+  })
+
+  it('refunded: the whole payment comes back and the balance stays zero', () => {
+    const s = moneyState(tour({ stage: 'closed', dueNow: 0, entries: [col(2670), ref(2670)] }), NOW)
+
+    expect(s).toMatchObject({ refund: 'full', refunded: 2670, balance: 0 })
+  })
+})
+
+describe('[E1.4] moneyState: edge cases', () => {
+  it('a closed stage with something still due is not overdue', () => {
+    const s = moneyState(input({ stage: 'closed', dueNow: 6230, balanceDueDate: '2026-10-01' }), NOW)
+
+    expect(s.overdue).toBe(false)
+    expect(s.payment).not.toBe('overdue')
+  })
+
+  it('a closed stage with a first payment past due is not overdue either', () => {
+    expect(moneyState(input({ stage: 'closed', dueNow: 5400, awaitingFirstPayment: true, firstPaymentDueAt: '2026-10-01T00:00:00Z' }), NOW).overdue).toBe(false)
+  })
+
+  it('a refund recorded when nothing was paid does not report full', () => {
+    expect(moneyState(input({ entries: [ref(1000)], dueNow: 0 }), NOW).refund).toBe('partial')
+  })
+
+  it('refunding only the duplicate reports full, not partial', () => {
+    const s = moneyState(input({ total: 5400, dueNow: 0, entries: [col(5400), col(5400, 'succeeded', '2026-10-18T10:05:00Z'), ref(5400)] }), NOW)
+
+    expect(s).toMatchObject({ refund: 'full', paid: 10_800, refunded: 5400 })
+  })
+
+  it('refunding less than the total after a duplicate is still partial', () => {
+    expect(moneyState(input({ total: 5400, dueNow: 0, entries: [col(5400), col(5400), ref(5399)] }), NOW).refund).toBe('partial')
+  })
+})

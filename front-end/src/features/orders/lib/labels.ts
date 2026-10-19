@@ -143,6 +143,9 @@ export function paymentLabel(order: Order, now: Date): OrderLabel {
         tone: 'neutral',
         vars: { amount: money(state.paid) },
       }
+    // Only tour holds expire; an order never reaches these two.
+    case 'session-closed':
+    case 'after-expiry':
     case 'none':
       return { key: 'order.payment.none', tone: 'neutral' }
     case 'paid-in-full':
