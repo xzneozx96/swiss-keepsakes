@@ -13,6 +13,7 @@ const allowedOrder = new Set([
   'requested>accepted',
   'requested>preparing',
   'requested>declined',
+  'requested>cancelled',
   'accepted>preparing',
   'accepted>cancelled',
   'preparing>ready',

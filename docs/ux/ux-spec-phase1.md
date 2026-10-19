@@ -56,6 +56,7 @@ Chuyển trạng thái:
 | `requested` | `accepted` | Owner, Manager | Kiểm tra và giữ đủ tồn toàn bộ đơn tại lúc chấp nhận; khoản đến hạn > 0 (trả đủ hoặc đặt cọc) |
 | `requested` | `preparing` | Owner, Manager | Kiểm tra và giữ đủ tồn toàn bộ đơn tại lúc chấp nhận; chính sách không trả trước (AC07) |
 | `requested` | `declined` | Owner, Manager | Bắt buộc lý do; các đơn khác cùng giỏ không bị ảnh hưởng |
+| `requested` | `cancelled` | Khách | Khách rút yêu cầu trước khi người bán chấp nhận; chưa thu tiền, chưa giữ tồn; lưu lý do. Người bán không dùng đường này, họ từ chối (`declined`) |
 | `accepted` | `preparing` | Hệ thống | Provider xác nhận khoản đến hạn đã thu |
 | `accepted` | `cancelled` | Khách; Owner, Manager; hệ thống | Khách hủy trước khi trả; merchant hủy theo chính sách; hệ thống tự hủy khi hết hạn chưa trả khoản đầu (R05), lưu lý do và thông báo |
 | `preparing` | `ready` | Owner, Manager | Hàng đã sẵn sàng tại nơi nhận |
