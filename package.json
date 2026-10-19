@@ -1,0 +1,7 @@
+{
+  "name": "swiss-keepsakes",
+  "private": true,
+  "scripts": {
+    "e2e": "npm --prefix front-end run build && npm --prefix e2e test"
+  }
+}
