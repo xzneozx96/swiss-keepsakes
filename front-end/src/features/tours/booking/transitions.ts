@@ -12,6 +12,7 @@ import type { Language } from '@/contexts/locale-context'
 import {
   availableSeats,
   bookingPaid,
+  canTransition,
   firstPaymentAmount,
   tourTotal,
 } from '@sk/domain/bookings'
@@ -233,7 +234,7 @@ export function applyProviderResult(
     ],
   }
   const confirmed: TourBooking
-    = next.status === 'pending_payment'
+    = canTransition(next.status, 'confirmed')
       && outcome === 'succeeded'
       && bookingPaid(next) >= next.firstAmount
       ? { ...next, status: 'confirmed', holdUntil: null }

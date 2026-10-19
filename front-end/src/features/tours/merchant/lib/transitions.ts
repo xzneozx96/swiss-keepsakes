@@ -6,6 +6,7 @@ import {
   balanceOverdue,
   bookingBalance,
   bookingPaid,
+  canTransition,
   participantSeats,
 } from '@sk/domain/bookings'
 import { zurichDate } from '@sk/domain/catalog'
@@ -143,7 +144,7 @@ export function recordExternalPayment(
     ],
   }
   const next: TourBooking
-    = paid.status === 'pending_payment' && bookingPaid(paid) >= paid.firstAmount
+    = canTransition(paid.status, 'confirmed') && bookingPaid(paid) >= paid.firstAmount
       ? { ...paid, status: 'confirmed', holdUntil: null }
       : paid
 
@@ -167,13 +168,13 @@ export function outcomeBlock(
   if (result === 'completed') {
     if (booking.status === 'confirmed')
       return { code: 'not-delivered' }
-    if (booking.status !== 'delivered')
+    if (!canTransition(booking.status, 'completed'))
       return { code: 'unavailable' }
     const owed = bookingBalance(booking)
 
     return owed > 0 ? { code: 'balance-owed', balance: owed } : null
   }
-  if (booking.status !== 'confirmed')
+  if (!canTransition(booking.status, result))
     return { code: 'unavailable' }
 
   return Date.parse(booking.endsAt) > now.getTime()
