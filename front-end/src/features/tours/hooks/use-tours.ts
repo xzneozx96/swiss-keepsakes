@@ -69,7 +69,7 @@ export function useTours(precision: 'minute' | 'second' = 'minute') {
 export function useTourActions() {
   const { update } = useDemoActions()
   const { mutate: addBooking } = useCommand('tours', 'createBooking')
-  const { mutateAsync: payBooking } = useCommand('tours', 'pay')
+  const { mutate: payBooking } = useCommand('tours', 'pay')
   const { mutate: recordBookingPayment } = useCommand('tours', 'recordPayment')
   const { mutate: recordBookingOutcome } = useCommand('tours', 'recordOutcome')
   const records = useTourRecords()
@@ -91,8 +91,13 @@ export function useTourActions() {
     change(data => ({ ...data, draft: { ...data.draft, ...patch } }))
   const changeAndMail = (id: string, recipe: (data: TourData) => TourData) =>
     update(s => changeWithMails(s, id, recipe, language))
-  const createBooking = ():
-    { bookingId: string } | { error: string, bookingId?: string } => {
+  /**
+   * Checks the draft and sends the booking. Returns why it cannot be sent, or null when it was
+   * sent; `onStored` runs once the command answered, and only while the screen is still open.
+   */
+  const createBooking = (
+    onStored: (booking: { id: string, added: boolean }) => void,
+  ): { error: string, bookingId?: string } | null => {
     const guestId = signedInGuestId
     const tour = records.tours.find(t => t.id === draft.tourId)
     const departure = records.departures.find(
@@ -142,11 +147,14 @@ export function useTourActions() {
       now: now(),
     })
 
-    // Rechecked on the latest state: if the seats went meanwhile, nothing is added and the
-    // review page reports it (it waits for the booking to appear before leaving).
-    addBooking({ booking, language })
+    // Rechecked on the latest data: if the seats went meanwhile, nothing is added and the review
+    // page reports it.
+    addBooking(
+      { booking, language },
+      { onSuccess: added => onStored({ id: booking.id, added }) },
+    )
 
-    return { bookingId: booking.id }
+    return null
   }
   const modify = (id: string, recipe: (b: TourBooking) => TourBooking) =>
     change(data => ({
@@ -154,11 +162,12 @@ export function useTourActions() {
       bookings: data.bookings.map(b => (b.id === id ? recipe(b) : b)),
     }))
   const expireHolds = () => change(data => expireLapsedHolds(data, now()))
-  /** Resolves once the payment is stored, so the next screen shows its result. */
-  const pay = async (
+  /** `onPaid` runs once the payment is stored, and only while the screen is still open. */
+  const pay = (
     id: string,
     outcome: Outcome,
-  ): Promise<TourActionResult> => {
+    onPaid: () => void,
+  ): TourActionResult => {
     const booking = records.bookings.find(b => b.id === id)
 
     if (
@@ -182,7 +191,7 @@ export function useTourActions() {
 
     if (amount <= 0)
       return { ok: false, reason: 'paid' }
-    await payBooking({ id, outcome, language })
+    payBooking({ id, outcome, language }, { onSuccess: onPaid })
 
     return { ok: true }
   }

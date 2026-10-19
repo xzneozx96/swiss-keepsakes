@@ -23,11 +23,14 @@ interface BookingInput {
  */
 export interface ToursClient {
   records: () => Promise<TourRecords>
-  /** Holds the seats of the guest's new booking (C11); nothing is added when they went meanwhile. */
+  /**
+   * Holds the seats of the guest's new booking (C11). Resolves to false when nothing was added:
+   * the seats went meanwhile, or the guest already holds seats on that departure.
+   */
   createBooking: (input: {
     booking: TourBooking
     language: Language
-  }) => Promise<void>
+  }) => Promise<boolean>
   /** The guest pays what is due online (C12); demo mode also takes the provider's answer. */
   pay: (input: BookingInput & { outcome: Outcome }) => Promise<void>
   recordPayment: (

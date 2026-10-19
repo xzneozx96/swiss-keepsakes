@@ -42,18 +42,28 @@ export function createToursDemoClient(store: DemoStore): ToursClient {
       return records
     },
     createBooking: async ({ booking, language }) => {
-      const [{ changeWithMails }, { addBooking }] = await Promise.all([
+      const [{ changeWithMails }, { activeHold, addBooking }] = await Promise.all([
         import('../booking/booking-changes'),
         import('../booking/transitions'),
       ])
 
-      store.update(s =>
-        changeWithMails(
+      store.update((s) => {
+        const now = demoNow(s.clockStartedAt)
+
+        // Checked again on the latest data: a hold the guest already has on this departure, or
+        // seats that went meanwhile, add nothing.
+        if (activeHold(s.data.tours ?? fallback, booking.guestId, booking.departureId, now))
+          return s
+
+        return changeWithMails(
           s,
           booking.id,
-          data => addBooking(data, booking, demoNow(s.clockStartedAt)),
+          data => addBooking(data, booking, now),
           language,
-        ))
+        )
+      })
+
+      return !!store.getState().data.tours?.bookings.some(b => b.id === booking.id)
     },
     pay: async ({ id, outcome, language }) => {
       const { changeWithMails, startPayment } = await import(

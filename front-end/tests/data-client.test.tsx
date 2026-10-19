@@ -13,9 +13,11 @@ import {
   StorageFullError,
 } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
+import { demoNow } from '@/features/demo/clock'
 import { createDemoDataClient, startDemo } from '@/features/demo/data-client'
 import { createSeedState } from '@/features/demo/seed'
 import { createDemoStore, updateCollection } from '@/features/demo/store'
+import { newBooking } from '@/features/tours/booking/transitions'
 
 beforeEach(() => {
   window.localStorage.clear()
@@ -84,6 +86,49 @@ describe('demo data client', () => {
     }))
 
     expect(await demo.dataClient.tours.records()).toBe(before)
+  })
+
+  it('[E1.11] a second booking on a departure the guest already holds adds nothing', async () => {
+    const demo = startDemo()
+    const { tours } = demo.store.getState().data
+    const now = demoNow(demo.store.getState().clockStartedAt)
+    const departure = tours!.departures.find(
+      d => !d.closed && Date.parse(d.startsAt) > now.getTime() + 86_400_000,
+    )!
+    const tour = tours!.tours.find(t => t.id === departure.tourId)!
+    const booking = (id: string) =>
+      newBooking({
+        id,
+        tour,
+        departure,
+        draft: { ...tours!.draft, adults: 1, children: 0, infants: 0 },
+        guestId: 'g-test',
+        partnerId: null,
+        language: 'en',
+        now,
+      })
+
+    expect(
+      await demo.dataClient.tours.createBooking({
+        booking: booking('first'),
+        language: 'en',
+      }),
+    ).toBe(true)
+    expect(
+      await demo.dataClient.tours.createBooking({
+        booking: booking('second'),
+        language: 'en',
+      }),
+    ).toBe(false)
+    expect(
+      demo.store
+        .getState()
+        .data
+        .tours!
+        .bookings
+        .filter(b => b.guestId === 'g-test')
+        .map(b => b.id),
+    ).toEqual(['first'])
   })
 
   it('[E1.11] a gift save that would not fit in the browser\'s storage is refused and changes nothing', async () => {
