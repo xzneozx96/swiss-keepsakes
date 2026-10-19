@@ -93,10 +93,12 @@ export function useTourActions() {
     update(s => changeWithMails(s, id, recipe, language))
   /**
    * Checks the draft and sends the booking. Returns why it cannot be sent, or null when it was
-   * sent; `onStored` runs once the command answered, and only while the screen is still open.
+   * sent; `onStored` runs once the command answered and `onFailed` if it failed, and only while
+   * the screen is still open.
    */
   const createBooking = (
     onStored: (booking: { id: string, added: boolean }) => void,
+    onFailed: () => void,
   ): { error: string, bookingId?: string } | null => {
     const guestId = signedInGuestId
     const tour = records.tours.find(t => t.id === draft.tourId)
@@ -151,7 +153,10 @@ export function useTourActions() {
     // page reports it.
     addBooking(
       { booking, language },
-      { onSuccess: added => onStored({ id: booking.id, added }) },
+      {
+        onSuccess: added => onStored({ id: booking.id, added }),
+        onError: onFailed,
+      },
     )
 
     return null
@@ -162,11 +167,15 @@ export function useTourActions() {
       bookings: data.bookings.map(b => (b.id === id ? recipe(b) : b)),
     }))
   const expireHolds = () => change(data => expireLapsedHolds(data, now()))
-  /** `onPaid` runs once the payment is stored, and only while the screen is still open. */
+  /**
+   * `onPaid` runs once the payment is stored and `onFailed` if it was not, and only while the
+   * screen is still open.
+   */
   const pay = (
     id: string,
     outcome: Outcome,
     onPaid: () => void,
+    onFailed: () => void,
   ): TourActionResult => {
     const booking = records.bookings.find(b => b.id === id)
 
@@ -191,7 +200,10 @@ export function useTourActions() {
 
     if (amount <= 0)
       return { ok: false, reason: 'paid' }
-    payBooking({ id, outcome, language }, { onSuccess: onPaid })
+    payBooking(
+      { id, outcome, language },
+      { onSuccess: onPaid, onError: onFailed },
+    )
 
     return { ok: true }
   }

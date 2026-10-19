@@ -122,24 +122,30 @@ export function TourReviewPage({ slug }: { slug: string }) {
       if (submittingRef.current)
         return
       submittingRef.current = true
-      const blocked = createBooking(({ id, added }) => {
-        if (added) {
-          void navigate({
-            to: later
-              ? '/account/bookings/$bookingId/confirmed'
-              : '/account/bookings/$bookingId/pay',
-            params: { bookingId: id },
-            replace: true,
-          })
-
-          return
-        }
-        // The seats went between the check and the save: nothing was created. The capacity error
-        // shows it, and the next tap may submit again.
-        setError({ code: 'capacity' })
+      // Nothing was created: the error says why, and the next tap may submit again.
+      const refuse = (code: string) => {
+        setError({ code })
         setSending(false)
         submittingRef.current = false
-      })
+      }
+      const blocked = createBooking(
+        ({ id, added }) => {
+          if (added) {
+            void navigate({
+              to: later
+                ? '/account/bookings/$bookingId/confirmed'
+                : '/account/bookings/$bookingId/pay',
+              params: { bookingId: id },
+              replace: true,
+            })
+
+            return
+          }
+          // The seats went between the check and the save.
+          refuse('capacity')
+        },
+        () => refuse('other'),
+      )
 
       if (blocked) {
         setError({ code: blocked.error, bookingId: blocked.bookingId })

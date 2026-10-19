@@ -66,26 +66,31 @@ export function useTourPayment(booking: TourBooking, now: Date): PaymentView {
       pendingRef.current = false
       setIsPending(false)
     }
-    const result = pay(booking.id, outcome, () => {
-      // The first payment confirms the booking (C13); a balance payment returns to C16.
-      if (outcome === 'succeeded') {
-        if (booking.status === 'pending_payment') {
-          void navigate({
-            to: '/account/bookings/$bookingId/confirmed',
-            params: { bookingId: booking.id },
-            replace: true,
-          })
-        }
-        else {
-          back()
-        }
+    const result = pay(
+      booking.id,
+      outcome,
+      () => {
+        // The first payment confirms the booking (C13); a balance payment returns to C16.
+        if (outcome === 'succeeded') {
+          if (booking.status === 'pending_payment') {
+            void navigate({
+              to: '/account/bookings/$bookingId/confirmed',
+              params: { bookingId: booking.id },
+              replace: true,
+            })
+          }
+          else {
+            back()
+          }
 
-        return
-      }
-      if (outcome === 'failed')
-        setFailed(true)
-      settle()
-    })
+          return
+        }
+        if (outcome === 'failed')
+          setFailed(true)
+        settle()
+      },
+      settle,
+    )
 
     if (!result.ok)
       settle()

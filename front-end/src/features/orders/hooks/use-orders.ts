@@ -109,18 +109,23 @@ export function useOrderActions() {
       ),
     /**
      * C12 simulated provider: Pay, Fail, or Processing (left open until resolved). `onPaid` runs
-     * once the payment is stored, so the order screen opens on its result, and only while the
-     * provider screen is still open.
+     * once the payment is stored, so the order screen opens on its result, and `onFailed` if it
+     * was not; both only while the provider screen is still open.
      */
     payOnline: (
       id: string,
       outcome: 'succeeded' | 'failed' | 'processing',
       onPaid: () => void,
+      onFailed: () => void,
     ) =>
       run(
         id,
         o => tr.startOnlinePaymentBlock(o),
-        () => payOnline({ id, language, outcome }, { onSuccess: onPaid }),
+        () =>
+          payOnline(
+            { id, language, outcome },
+            { onSuccess: onPaid, onError: onFailed },
+          ),
       ),
     /** Prototype action: the provider answers a processing payment (possibly after cancellation). */
     resolveOnlinePayment: (id: string, outcome: 'succeeded' | 'failed') =>

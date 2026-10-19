@@ -68,12 +68,17 @@ export function usePayment(order: Order): PaymentView {
 
     pendingRef.current = true
     setIsPending(true)
-    const block = actions.payOnline(order.id, outcome, () => {
-      if (outcome !== 'failed')
-        return toOrder()
-      setFailed(true)
-      settle()
-    })
+    const block = actions.payOnline(
+      order.id,
+      outcome,
+      () => {
+        if (outcome !== 'failed')
+          return toOrder()
+        setFailed(true)
+        settle()
+      },
+      settle,
+    )
 
     if (block)
       settle()
