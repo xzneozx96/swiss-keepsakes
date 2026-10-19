@@ -4,6 +4,8 @@ import { STATUS_CODES } from 'node:http'
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
+import { IdempotencyKeyTaken } from '../idempotency.ts'
+import { idempotencyKeyInUse } from './idempotency.ts'
 import { problem } from './problem.ts'
 
 export interface AppEnv {
@@ -60,6 +62,9 @@ export function createApp(logger: Logger): OpenAPIHono<AppEnv> {
   app.notFound(c => problem(c, { type: 'not-found', status: 404, title: 'Not found' }))
 
   app.onError((error, c) => {
+    // A race on one Idempotency-Key, not a fault. The idempotency middleware replaces this answer.
+    if (error instanceof IdempotencyKeyTaken)
+      return idempotencyKeyInUse(c)
     if (error instanceof HTTPException) {
       if (error.status >= 500)
         c.get('logger').error({ err: error }, 'http exception')
