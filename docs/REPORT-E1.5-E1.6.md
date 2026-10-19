@@ -13,7 +13,7 @@ Branch `xzneozx96/e1-5-e1-6-rules`, stacked on E1.3+E1.4 (`59a8d5c`). Date 2026-
 - Call sites: `orders/selectors.ts` `commission()` and `bookings/selectors.ts` `bookingCommission()` now call `commissionAmount` (the prototype has no discount or priced personalisation, so basis is unchanged); `front-end/src/features/partners/lib/ledger.ts` calls `offsetAmount` for its offset step. The ledger's event loop stays in the front-end.
 
 ### E1.6, new module `packages/domain/src/dates/`
-- `zurich.ts`: `zurichOffsetMinutes`, `zurichDate`, `addCalendarDays`, `zurichInstant(date, 'HH:mm')`. Manual rules (summer time from 01:00 UTC on the last Sunday of March to 01:00 UTC on the last Sunday of October), no Intl, no system timezone, no clock. `catalog/pickup.ts` now re-exports this `zurichDate`, so every existing import still works.
+- `zurich.ts`: `zurichOffsetMinutes`, `zurichDate`, `addCalendarDays`, `zurichInstant(date, 'HH:mm')`. The offset comes from `Intl.DateTimeFormat` with an explicit `timeZone: 'Europe/Zurich'` (tz database daylight-saving rules, not the machine's zone), and no clock is read. `catalog/pickup.ts` now re-exports this `zurichDate`, so every existing import still works.
 - `reminders.ts`: `firstPaymentReminders` (24 h and 2 h before the deadline, exact hours), `balanceReminder` (3 Zurich days before the due date), `dayBeforeReminder('pickup' | 'tour', date)` (day before at 18:00 Zurich), `reminderSet`, `REMINDER_DEFAULTS`.
 - `pickup-window.ts`: `isWithinPickupWindow(at, { date, from, to })` (from inclusive, to exclusive, Zurich time) and `isPickupDateInRange`.
 
