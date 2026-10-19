@@ -1,10 +1,11 @@
 import type { Context, MiddlewareHandler } from 'hono'
-import type { ContentfulStatusCode } from 'hono/utils/http-status'
+import type { ContentfulStatusCode, StatusCode } from 'hono/utils/http-status'
 import type { Clock } from '../clock.ts'
 import type { Database } from '../db/client.ts'
 import type { StoredResponse } from '../db/schema.ts'
 import type { IdempotencyRecord, IdempotencyScope, PendingClaim } from '../idempotency.ts'
 import type { AppEnv } from './app.ts'
+import { Buffer } from 'node:buffer'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { findIdempotencyRecord, hashRequest, IdempotencyKeyTaken, runWithClaim, saveIdempotentResponse } from '../idempotency.ts'
 import { problem } from './problem.ts'
@@ -15,8 +16,11 @@ const keptFor = 24 * 60 * 60 * 1000
 // How long a repeat waits for the first request's response before it answers 409.
 const pollEvery = 100
 const pollTimes = 10
-// Made for each response, or a secret: never stored, so never replayed.
-const headersNotStored = new Set(['x-request-id', 'set-cookie', 'content-length'])
+// Only headers that describe the answer are stored and replayed. Anything else, such as Set-Cookie or a
+// header a route adds later, may be secret or belong to one response only.
+const headersStored = new Set(['content-type', 'content-language', 'location', 'etag', 'cache-control'])
+// The Response constructor refuses any body, even an empty one, with these.
+const nullBodyStatuses = new Set([204, 205, 304])
 
 export function idempotencyKeyInUse(c: Context<AppEnv>): Response {
   const response = problem(c, { type: 'idempotency-key-in-use', status: 409, title: 'A request with this Idempotency-Key has not finished' })
@@ -37,13 +41,17 @@ function answer(c: Context<AppEnv>, record: IdempotencyRecord | undefined, reque
     return problem(c, { type: 'idempotency-key-reused', status: 422, title: 'This Idempotency-Key was used for a different request' })
   if (!record?.response)
     return idempotencyKeyInUse(c)
-  const { status, headers, body } = record.response
-  return c.body(body, status as ContentfulStatusCode, { ...headers, 'Idempotent-Replayed': 'true' })
+  const { status, headers, base64Body } = record.response
+  const replayHeaders = { ...headers, 'Idempotent-Replayed': 'true' }
+  if (base64Body === null)
+    return c.body(null, status as StatusCode, replayHeaders)
+  return c.body(Buffer.from(base64Body, 'base64'), status as ContentfulStatusCode, replayHeaders)
 }
 
 async function stored(response: Response): Promise<StoredResponse> {
-  const headers = Object.fromEntries([...response.headers].filter(([name]) => !headersNotStored.has(name)))
-  return { status: response.status, headers, body: await response.clone().text() }
+  const headers = Object.fromEntries([...response.headers].filter(([name]) => headersStored.has(name)))
+  const base64Body = nullBodyStatuses.has(response.status) ? null : Buffer.from(await response.clone().arrayBuffer()).toString('base64')
+  return { status: response.status, headers, base64Body }
 }
 
 // Every command carries an Idempotency-Key (D11). The first request with a key runs. A repeat from the

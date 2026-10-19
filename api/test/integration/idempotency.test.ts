@@ -34,10 +34,22 @@ const probeRoute = createRoute({
   request: {
     body: {
       required: true,
-      content: { 'application/json': { schema: z.object({ name: z.string().min(1), fail: z.enum(['in-transaction', 'after-commit']).optional() }) } },
+      content: {
+        'application/json': {
+          schema: z.object({
+            name: z.string().min(1),
+            fail: z.enum(['in-transaction', 'after-commit']).optional(),
+            respond: z.enum(['no-content', 'binary', 'with-headers']).optional(),
+          }),
+        },
+      },
     },
   },
-  responses: { 201: { description: 'Recorded', content: { 'application/json': { schema: z.object({ probeId: z.string(), name: z.string() }) } } } },
+  responses: {
+    201: { description: 'Recorded', content: { 'application/json': { schema: z.object({ probeId: z.string(), name: z.string() }) } } },
+    204: { description: 'Recorded, no body' },
+    200: { description: 'Recorded, binary body', content: { 'application/octet-stream': { schema: z.any() } } },
+  },
 })
 
 function latch() {
@@ -50,8 +62,9 @@ function latch() {
 
 type PausePoint = 'in-transaction' | 'after-commit'
 
-// A command route the way a module will write one: it writes an audit row and a job in one unit of work.
-// A test can make it fail, or pause the next request at a point, inside the transaction or after the commit.
+// Not valid UTF-8, so a text round trip would change it.
+const binaryBody = new Uint8Array([0x00, 0xFF, 0xFE, 0x80, 0xC3, 0x28, 0x0A, 0x7F])
+
 // The database the middleware sees. One that fails every update stands in for a database lost
 // between the command's commit and storing its response.
 const storingFails = new Proxy(db, {
@@ -62,6 +75,9 @@ const storingFails = new Proxy(db, {
     : Reflect.get(target, property, receiver),
 })
 
+// A command route the way a module will write one: it writes an audit row and a job in one unit of work.
+// A test can make it fail, answer in another shape, or pause the next request inside the transaction or
+// after the commit.
 function setup({ storeFails = false } = {}) {
   const clock = createManualClock(new Date('2026-10-20T08:00:00Z'))
   const uow = createUnitOfWork(db)
@@ -82,7 +98,7 @@ function setup({ storeFails = false } = {}) {
   const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }))
   app.use('/api/*', idempotency({ db: storeFails ? storingFails : db, clock, actorId: c => c.req.header('X-Test-Actor') ?? 'anonymous' }))
   app.openapi(probeRoute, async (c) => {
-    const { name, fail } = c.req.valid('json')
+    const { name, fail, respond } = c.req.valid('json')
     const probeId = randomUUID()
     await uow.run(async (tx) => {
       executions.push(name)
@@ -95,6 +111,16 @@ function setup({ storeFails = false } = {}) {
     await holdIfPaused('after-commit')
     if (fail === 'after-commit')
       throw new Error('failed after the commit')
+    if (respond === 'no-content')
+      return c.body(null, 204)
+    if (respond === 'binary')
+      return c.body(binaryBody, 200, { 'Content-Type': 'application/octet-stream' })
+    if (respond === 'with-headers') {
+      c.header('Set-Cookie', 'session=s3cret-session; HttpOnly')
+      c.header('X-Custom-Token', 'tok_s3cret')
+      c.header('Location', `/api/probes/${probeId}`)
+      c.header('ETag', '"v1"')
+    }
     return c.json({ probeId, name }, 201)
   })
 
@@ -145,6 +171,53 @@ describe('[E1.9] Idempotency-Key', () => {
     expect(again.headers.get('X-Request-Id')).not.toBe(first.headers.get('X-Request-Id'))
     expect(executions).toEqual([name])
     expect(await written(name)).toEqual({ audit: 1, jobs: 1 })
+  })
+
+  it('[E1.9] a 204 No Content answer replays as 204 with no body', async () => {
+    const { send, executions } = setup()
+    const key = unique('key')
+    const name = unique('anna')
+
+    const first = await send(key, { name, respond: 'no-content' })
+    const again = await send(key, { name, respond: 'no-content' })
+
+    expect(first.status).toBe(204)
+    expect(again.status).toBe(204)
+    expect(again.headers.get('Idempotent-Replayed')).toBe('true')
+    expect(again.body).toBeNull()
+    expect(executions).toEqual([name])
+  })
+
+  it('[E1.9] a binary body replays byte for byte', async () => {
+    const { send } = setup()
+    const key = unique('key')
+    const name = unique('anna')
+
+    const first = await send(key, { name, respond: 'binary' })
+    const again = await send(key, { name, respond: 'binary' })
+
+    expect(new Uint8Array(await first.arrayBuffer())).toEqual(binaryBody)
+    expect(again.headers.get('Idempotent-Replayed')).toBe('true')
+    expect(again.headers.get('Content-Type')).toBe('application/octet-stream')
+    expect(new Uint8Array(await again.arrayBuffer())).toEqual(binaryBody)
+  })
+
+  it('[E1.9] a replay carries only the headers that describe the answer, never Set-Cookie or a custom header', async () => {
+    const { send } = setup()
+    const key = unique('key')
+    const name = unique('anna')
+
+    const first = await send(key, { name, respond: 'with-headers' })
+    const again = await send(key, { name, respond: 'with-headers' })
+
+    expect(first.headers.get('Set-Cookie')).toContain('s3cret-session')
+    expect(again.headers.get('Idempotent-Replayed')).toBe('true')
+    expect(again.headers.get('Location')).toBe(first.headers.get('Location'))
+    expect(again.headers.get('ETag')).toBe('"v1"')
+    expect(again.headers.get('Set-Cookie')).toBeNull()
+    expect(again.headers.get('X-Custom-Token')).toBeNull()
+    const { rows } = await pool.query<{ response: string }>('select response::text from platform.idempotency_keys where key = $1', [key])
+    expect(rows[0]?.response).not.toMatch(/s3cret/)
   })
 
   it('[E1.9] the same key with a different body gets 422 problem+json, and the command does not run', async () => {

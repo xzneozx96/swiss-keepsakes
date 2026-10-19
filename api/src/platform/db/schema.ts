@@ -27,7 +27,8 @@ export const auditLog = platform.table('audit_log', {
 export interface StoredResponse {
   status: number
   headers: Record<string, string>
-  body: string
+  // Base64 of the exact bytes, so any body replays unchanged. Null for a status that has no body (204, 205, 304).
+  base64Body: string | null
 }
 
 export const idempotencyKeys = platform.table('idempotency_keys', {
