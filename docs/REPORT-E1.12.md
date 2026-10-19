@@ -48,7 +48,7 @@ The text did not change:
 
 ## Not verified
 
-- CI. E1.13 owns it.
+- A green CI run. `.github/workflows/e2e.yml` already runs `pnpm test` on every pull request, so the drift check would gate merges, but the first workflow step failed on `main` because E1.1 had no tagged test (fixed in PR #10). No run has shown this check going red on a seeded drift. E1.13 extends the pipeline.
 - The server side. No API code uses `@sk/i18n` yet. E2.8 adds that.
 - Problem `type` copy.
 - The check compares key sets only. It misses placeholder differences (none exist today), empty strings, and a key defined in two spreads.
