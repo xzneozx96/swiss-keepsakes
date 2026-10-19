@@ -3,6 +3,7 @@ import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
 import { STATUS_CODES } from 'node:http'
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
+import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
 import { IdempotencyKeyTaken } from '../idempotency.ts'
@@ -14,6 +15,9 @@ export interface AppEnv {
 }
 
 const clientRequestIdPattern = /^[\w=-]{1,255}$/
+// API requests carry JSON. Files go straight to storage through signed URLs (D14), so 1 MiB is plenty, and
+// the Idempotency-Key middleware reads the whole body into memory to hash it.
+const apiBodyLimit = 1024 * 1024
 
 const healthRoute = createRoute({
   method: 'get',
@@ -58,6 +62,11 @@ export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono
     // The pattern of the route that ran, not the URL: a path such as /partner/{token} carries a secret.
     requestLogger.info({ method: c.req.method, route: routePath(c), status: c.res.status, ms: Math.round(performance.now() - started) }, 'request')
   })
+  // Before anything under /api/* reads the body, such as the Idempotency-Key middleware mounted after this.
+  app.use('/api/*', bodyLimit({
+    maxSize: apiBodyLimit,
+    onError: c => problem(c, { type: 'body-too-large', status: 413, title: `The request body is over ${apiBodyLimit} bytes` }),
+  }))
 
   app.openapi(healthRoute, async (c) => {
     const report = await checkHealth()

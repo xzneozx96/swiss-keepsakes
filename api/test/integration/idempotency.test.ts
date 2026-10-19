@@ -492,6 +492,18 @@ describe('[E1.9] Idempotency-Key', () => {
     expect(await written(name)).toEqual({ audit: 2, jobs: 2 })
   })
 
+  it('[E1.9] a command body over 1 MiB is refused with 413 before the middleware reads it, so nothing runs or is stored', async () => {
+    const { send, executions, keyRows } = setup()
+    const key = unique('key')
+
+    const response = await send(key, { name: 'x'.repeat(1024 * 1024) })
+
+    expect(response.status).toBe(413)
+    expect(await response.json()).toMatchObject({ type: 'body-too-large' })
+    expect(executions).toEqual([])
+    expect(await keyRows(key)).toBe(0)
+  })
+
   it('[E1.9] reads under /api/* need no Idempotency-Key', async () => {
     const { app } = setup()
     const response = await app.request('/api/probes')

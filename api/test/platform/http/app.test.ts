@@ -51,10 +51,46 @@ function setup(health: HealthReport = { database: true, jobs: true }) {
   app.get('/unavailable', () => {
     throw new HTTPException(503, { message: 'pool exhausted while saving anna@example.ch', cause: new DatabaseError('params: anna@example.ch') })
   })
+  app.post('/api/size', async c => c.json({ bytes: (await c.req.arrayBuffer()).byteLength }, 200))
   return { app, logs }
 }
 
+const mebibyte = 1024 * 1024
+
+// A body the client streams, so it has no Content-Length and the limit has to count it.
+function streamed(bytes: number) {
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (let sent = 0; sent < bytes; sent += 64 * 1024)
+        controller.enqueue(new Uint8Array(Math.min(64 * 1024, bytes - sent)))
+      controller.close()
+    },
+  })
+}
+
 const postJson = (body: string) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+
+describe('[E1.9] the /api/* body limit', () => {
+  it('[E1.9] a body of exactly 1 MiB is read', async () => {
+    const { app } = setup()
+    const response = await app.request('/api/size', { method: 'POST', body: new Uint8Array(mebibyte) })
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ bytes: mebibyte })
+  })
+
+  it.each([
+    ['declared in Content-Length', () => ({ method: 'POST', headers: { 'Content-Length': String(mebibyte + 1) }, body: new Uint8Array(mebibyte + 1) })],
+    ['streamed without a length', () => ({ method: 'POST', body: streamed(mebibyte + 1), duplex: 'half' })],
+  ])('[E1.9] a body over 1 MiB, %s, is a 413 problem+json', async (_, init) => {
+    const { app } = setup()
+    const response = await app.request('/api/size', init() as RequestInit)
+
+    expect(response.status).toBe(413)
+    expect(response.headers.get('Content-Type')).toBe('application/problem+json')
+    expect(await response.json()).toMatchObject({ type: 'body-too-large', status: 413, instance: '/api/size' })
+  })
+})
 
 describe('[E1.8] HTTP app', () => {
   it('[E1.9] GET /healthz answers 200 ok when the database and pg-boss checks pass', async () => {
