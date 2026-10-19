@@ -148,11 +148,11 @@ These rules keep the layers honest without adding framework weight:
 
 ### 4.2 Repository layout
 
-The repository becomes an npm workspace. The front-end already uses npm.
+The repository becomes a pnpm workspace. The front-end already uses pnpm.
 
 ```
 swiss-keepsakes/
-  package.json                    npm workspaces: front-end, api, packages/*
+  package.json                    pnpm workspace: front-end, api, packages/*
   front-end/                      the SPA; feature folders stay as they are
   api/
     src/
@@ -558,7 +558,7 @@ The conventions are in D11. Commands are sub-resources, for example `POST /api/s
 
 | | Local | Staging | Production |
 |---|---|---|---|
-| API and worker | `npm run dev` (`ROLE=all`) | Fly app `sk-staging`, `fra`, 1 machine | Fly app `sk`, `fra`, 2 machines, autostop off |
+| API and worker | `pnpm dev` (`ROLE=all`) | Fly app `sk-staging`, `fra`, 1 machine | Fly app `sk`, `fra`, 2 machines, autostop off |
 | Database | Neon branch `development`, or a throwaway branch from it for tests | Neon branch `staging`, Frankfurt | Neon branch `production`, Frankfurt, 0.5 CU or more, scale to zero off, restore history of 7 days or more |
 | Storage | MinIO | Neon Object Storage, staging bucket | Neon Object Storage |
 | Stripe | Stripe CLI `listen --forward-to` against the sandbox, plus a scriptable fake for tests | Sandbox on the pilot store's test account | Live |
@@ -624,7 +624,7 @@ A money or status change isn't finished until a test shows the ledger and the au
 | Phase | Scope | Exit criteria |
 |---|---|---|
 | 0. Spike (one week) | SP1 to SP7 | Each spike answered in writing |
-| 1. Monorepo and seams | Create the npm workspace and the import-boundary lint zones (section 4). Extract `packages/domain` from `front-end/src/features/*/types.ts` and `lib/*`. Add `packages/api-contract`. Put the demo store (`front-end/src/features/demo/demo-store.tsx`) behind a `DataClient` interface, so demo mode stays available for design review. | No behaviour change. The front-end imports from the packages. |
+| 1. Monorepo and seams | Create the pnpm workspace and the import-boundary lint zones (section 4). Extract `packages/domain` from `front-end/src/features/*/types.ts` and `lib/*`. Add `packages/api-contract`. Put the demo store (`front-end/src/features/demo/demo-store.tsx`) behind a `DataClient` interface, so demo mode stays available for design review. | No behaviour change. The front-end imports from the packages. |
 | 2. First vertical slice | Identity, stores, catalogue reads, media, the SPA served by the API with history routing (needed for `/r/{code}` and `/partner/{token}`), staging deployed | Guests browse real data. Staff sign in and edit products and tours. A01, A02 and M01 work. |
 | 3. Keepsake orders | Cart submit, orders, acceptance with stock holds, pickup changes, merchant order screens, external payments, corrections, completion, mails N02 to N06, N12, N15, N21 and N23, the deadline job | S1 to S4 and S6 pass on staging with external payments. |
 | 4. Tours and online payment | Departures, bookings with holds, Payment Element, webhooks, provider sync, online ledger rows, refunds, mails N07 to N11, N13, N14 and N22, the pilot store's Stripe test account | Concurrency, late-payment and replay tests pass. S7 and S9 pass with the TWINT and card test flows. |
