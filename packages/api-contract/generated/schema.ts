@@ -70,8 +70,8 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @enum {string} */
-            type: "about:blank" | "not-found" | "validation-failed" | "internal-error" | "unhealthy" | "idempotency-key-required" | "idempotency-key-reused" | "idempotency-key-in-use" | "body-too-large";
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large. Show generic copy for any other */
+            type: string;
         };
     };
     responses: never;

@@ -53,6 +53,9 @@ function setup(health: HealthReport = { database: true, jobs: true }) {
     throw new HTTPException(503, { message: 'pool exhausted while saving anna@example.ch', cause: new DatabaseError('params: anna@example.ch') })
   })
   app.post('/api/size', async c => c.json({ bytes: (await c.req.arrayBuffer()).byteLength }, 200))
+  app.get('/moved', () => {
+    throw new HTTPException(302)
+  })
   return { app, logs }
 }
 
@@ -245,11 +248,21 @@ describe('[E1.8] HTTP app', () => {
     ['not-found', '/api/nope', undefined, { database: true, jobs: true }],
     ['internal-error', '/boom', undefined, { database: true, jobs: true }],
     ['unhealthy', '/healthz', undefined, { database: false, jobs: true }],
+    ['body-too-large', '/api/size', postJson('x'.repeat(mebibyte + 1)), { database: true, jobs: true }],
   ])('[E1.10] the %s problem matches the contract\'s problem schema with no extra field', async (type, path, init, health) => {
     const { app } = setup(health)
     const body = await (await app.request(path, init)).json()
 
     expect(body).toMatchObject({ type })
     expect(problemSchema.parse(body)).toEqual(body)
+  })
+
+  it('[E1.10] an HTTPException under 400 is a bug, answered as a 500 internal-error problem and logged', async () => {
+    const { app, logs } = setup()
+    const response = await app.request('/moved')
+
+    expect(response.status).toBe(500)
+    expect(await response.json()).toMatchObject({ type: 'internal-error', status: 500 })
+    expect(logs[0]).toMatchObject({ level: 50, msg: 'unhandled error', err: { type: 'HTTPException' } })
   })
 })

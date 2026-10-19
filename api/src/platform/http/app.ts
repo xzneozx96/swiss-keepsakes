@@ -9,7 +9,7 @@ import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
 import { IdempotencyKeyTaken } from '../idempotency.ts'
 import { idempotencyKeyInUse } from './idempotency.ts'
-import { problem } from './problem.ts'
+import { isErrorStatus, problem } from './problem.ts'
 
 export interface AppEnv {
   Variables: RequestIdVariables & { logger: Logger }
@@ -86,7 +86,8 @@ export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono
     // A race on one Idempotency-Key, not a fault. The idempotency middleware replaces this answer.
     if (error instanceof IdempotencyKeyTaken)
       return idempotencyKeyInUse(c)
-    if (error instanceof HTTPException) {
+    // An HTTPException under 400 is a bug, not a problem, so it falls through to the 500 below.
+    if (error instanceof HTTPException && isErrorStatus(error.status)) {
       if (error.status >= 500)
         c.get('logger').error({ err: error }, 'http exception')
       const response = problem(c, { type: 'about:blank', status: error.status, title: STATUS_CODES[error.status] ?? 'Error' })

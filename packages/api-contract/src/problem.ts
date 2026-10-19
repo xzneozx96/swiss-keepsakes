@@ -1,8 +1,9 @@
 import { z } from 'zod'
 
-// Every `type` the API sends. The SPA maps each one to translated copy (D11), so a new code starts here.
-// `about:blank` means the HTTP status says everything there is to say.
-const problemTypes = [
+// The codes the API sends: problem() in api/ takes no other, so a new code starts here. A client maps each one
+// to translated copy (D11) and shows generic copy for any other code, so a page loaded before the API gained a
+// code still reads the problem. `about:blank` means the HTTP status says everything there is to say.
+export const problemTypes = [
   'about:blank',
   'not-found',
   'validation-failed',
@@ -14,8 +15,11 @@ const problemTypes = [
   'body-too-large',
 ] as const
 
+export type ProblemType = (typeof problemTypes)[number]
+
 export const problemSchema = z.object({
-  type: z.enum(problemTypes),
+  // A string on the wire, not an enum, for the reason above.
+  type: z.string().meta({ description: `A stable code. Known codes: ${problemTypes.join(', ')}. Show generic copy for any other` }),
   status: z.int().min(400).max(599),
   title: z.string(),
   instance: z.string().meta({ description: 'The request path' }),

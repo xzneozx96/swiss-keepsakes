@@ -3,7 +3,7 @@ import type { HealthReport } from '../src/platform/health.ts'
 import type { HttpServer } from '../src/platform/http/server.ts'
 import { readdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { createApiClient, problemSchema } from '@sk/api-contract'
+import { createApiClient, problemSchema, problemTypes } from '@sk/api-contract'
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest'
 import { generateContract, generatedDir } from '../scripts/contract.ts'
 import { createApp } from '../src/platform/http/app.ts'
@@ -68,5 +68,12 @@ describe('[E1.10] API contract', () => {
     expect(response.headers.get('Content-Type')).toBe('application/problem+json')
     expect(problemSchema.parse(body)).toEqual(body)
     expect(body).toMatchObject({ type: 'not-found', status: 404, instance: '/api/stores/lucerne' })
+  })
+
+  it('[E1.10] a problem whose code this client does not know still parses, so an older page can show generic copy', () => {
+    const later = { type: 'departure-sold-out', status: 409, title: 'Sold out', instance: '/api/me/bookings', requestId: 'r-1' }
+
+    expect(problemTypes).not.toContain(later.type)
+    expect(problemSchema.parse(later)).toEqual(later)
   })
 })
