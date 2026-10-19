@@ -8,6 +8,7 @@ import type {
 import type { DemoData } from '@/features/demo/types'
 
 import { bookingCommission } from '@sk/domain/bookings'
+import { offsetAmount } from '@sk/domain/money'
 import { commission } from '@sk/domain/orders'
 import { DEMO_HISTORY } from '@/features/merchant/today/lib/demo-history'
 
@@ -222,7 +223,7 @@ export function partnerLedger(
         toPay: owed,
         toOffset: credit,
       })
-      const applied = Math.min(credit, e.item.amount)
+      const applied = offsetAmount(credit, e.item.amount)
 
       owed -= applied
       credit -= applied

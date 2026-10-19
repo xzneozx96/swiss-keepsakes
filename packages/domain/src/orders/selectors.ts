@@ -3,6 +3,7 @@ import type { LocalizedText, Product, Rappen } from '../catalog/types'
 
 import { zurichDate } from '../catalog/pickup'
 import { availableUnits } from '../catalog/stock'
+import { commissionAmount, commissionBasis } from '../money/commission'
 import { calendarDay } from '../shared/format'
 
 const HOUR_MS = 3_600_000
@@ -148,12 +149,16 @@ export interface Commission {
   total: Rappen
 }
 
+function lineBasis(line: OrderLine): Rappen {
+  return commissionBasis({ price: lineTotal(line), personalisation: 0, discount: 0 })
+}
+
 export function commission(order: Order): Commission {
   const lines = order.lines.map(l => ({
     lineId: l.id,
-    basis: lineTotal(l),
+    basis: lineBasis(l),
     rate: l.commissionRate,
-    amount: Math.round(lineTotal(l) * l.commissionRate),
+    amount: commissionAmount(lineBasis(l), l.commissionRate),
   }))
   const state: CommissionState = !order.partnerId
     ? 'none'

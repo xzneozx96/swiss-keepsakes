@@ -8,6 +8,8 @@ import type {
 } from './types'
 import type { CommissionState } from '../orders/selectors'
 
+import { commissionAmount } from '../money/commission'
+
 export function participantSeats(group: TourParticipants): number {
   return group.adults + group.children
 }
@@ -138,7 +140,7 @@ export function bookingCommission(booking: TourBooking): {
 
   return {
     state,
-    amount: Math.round(booking.total * booking.commissionRate),
+    amount: commissionAmount(booking.total, booking.commissionRate),
     basis: booking.total,
     rate: booking.commissionRate,
   }
