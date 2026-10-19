@@ -18,6 +18,8 @@ jobs:
           cache-dependency-path: |
             front-end/package-lock.json
             e2e/package-lock.json
+      - run: node --test scripts/trace.test.mjs
+      - run: node scripts/trace.mjs docs/plan/delivery-plan.md
       - run: npm --prefix front-end ci
       - run: npm --prefix e2e ci
       - run: npx playwright install --with-deps chromium
