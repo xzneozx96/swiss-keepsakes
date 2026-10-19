@@ -5,7 +5,8 @@ import { sql } from 'drizzle-orm'
 import { pgSchema, text, timestamp } from 'drizzle-orm/pg-core'
 import pg from 'pg'
 import { fromDrizzle, PgBoss } from 'pg-boss'
-import { finish, productionBranchGuard, secret, tryEnv } from '../lib/env.ts'
+import { finish } from '../lib/env.ts'
+import { withThrowawayBranch } from '../lib/neon-project.ts'
 import { dockerAvailable, withLocalPostgres } from '../lib/pg-docker.ts'
 import { ms } from '../lib/stats.ts'
 
@@ -226,13 +227,18 @@ if (dockerAvailable()) {
   missing.push('docker')
 }
 
-const remote = productionBranchGuard(SPIKE) ? null : tryEnv(SPIKE, { DATABASE_URL_UNPOOLED: secret() })
-if (!remote) missing.push(process.env.NEON_BRANCH?.trim() === 'production' ? 'throwaway NEON_BRANCH' : 'DATABASE_URL_UNPOOLED')
 let remotePass: boolean | null = null
-if (remote) {
+const remoteRun = await withThrowawayBranch(SPIKE, async (branch) => {
   lines.length = 0
-  remotePass = await suite('REMOTE (Neon direct connection)', remote.DATABASE_URL_UNPOOLED)
+  return suite('REMOTE (Neon direct connection, throwaway branch)', branch.unpooledUrl)
+})
+if ('skip' in remoteRun) {
+  console.log(`SKIP SP2 remote: ${remoteRun.skip}`)
+  missing.push('neon throwaway branch')
+} else {
+  remotePass = remoteRun.value
 }
+const remote = remotePass !== null
 
 const pass = ranLocal || remote ? (ranLocal ? localPass : true) && (remotePass ?? true) : null
 finish({

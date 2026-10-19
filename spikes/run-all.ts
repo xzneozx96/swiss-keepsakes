@@ -55,6 +55,7 @@ interface Row {
 }
 
 const rows: Row[] = []
+const manualOpen: string[] = []
 let anyFail = false
 try {
   for (const { id, script } of spikes) {
@@ -72,6 +73,7 @@ try {
       anyFail = true
       process.stderr.write(`${id} failed. Output tail:\n${output.split('\n').slice(-25).join('\n')}\n`)
     }
+    if (result.manual) manualOpen.push(`${id}: ${result.manual}`)
     const scopeLabel = result.scope === 'local' ? 'RAN (local)' : result.scope === 'remote' ? 'RAN (remote)' : result.scope === 'local+remote' ? 'RAN (local+remote)' : 'SKIPPED'
     rows.push({
       spike: id,
@@ -91,4 +93,5 @@ const line = (cells: string[]) => cells.map((c, i) => c.padEnd(widths[i] ?? 0)).
 console.log(line(headers))
 console.log(widths.map((w) => '-'.repeat(w)).join('-+-'))
 for (const r of table) console.log(line(r))
+for (const note of manualOpen) console.log(`MANUAL OPEN ${note}`)
 process.exit(anyFail ? 1 : 0)

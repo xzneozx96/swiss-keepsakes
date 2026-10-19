@@ -19,7 +19,7 @@ What the suite does: rolled-back transaction leaves no job and no row; 14 deferr
 
 ## Keys
 
-`DATABASE_URL_UNPOOLED` (direct, no `-pooler`) of a throwaway Neon branch, and `NEON_BRANCH` set to that branch's name. `.env.local` holds the production branch, so the REMOTE part is skipped while `NEON_BRANCH` is `production`; export the throwaway branch's values in your shell.
+No Neon connection string is needed: the REMOTE part creates a throwaway branch from `NEON_BRANCH` (from `api/.env.local`; expiry 24 h, project id from `api/.neon`), runs the suite on its direct URL and deletes the branch in a `finally`. It refuses `production`, `staging` and `main`. Needs the `neon` CLI logged in.
 
 ## Vendor guidance applied
 

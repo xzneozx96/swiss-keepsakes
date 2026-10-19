@@ -1,6 +1,6 @@
 # SP5. Neon Object Storage in Frankfurt
 
-**Status: Answered on Neon (Frankfurt).** Run for real against the operator's project (eu-central-1, the branch credential in `.env.local` from `neon deploy`: `production` for the first run, `development` for the final run, same results), buckets `uploads` (private) and `media` (`public_read`). Both test objects were deleted afterwards (bucket listings under `sp5/` were empty).
+**Status: Answered on Neon (Frankfurt).** Run for real against the operator's project (eu-central-1, the branch credential in `api/.env.local` from `neon deploy`: `production` for the first run, `development` for the final run, same results), buckets `uploads` (private) and `media` (`public_read`). Both test objects were deleted afterwards (bucket listings under `sp5/` were empty).
 
 **Pass condition (architecture section 16).** Upload and public read both work. If presigned URLs aren't supported, switch to Cloudflare R2 (D14).
 

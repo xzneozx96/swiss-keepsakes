@@ -10,7 +10,7 @@
 
 ## Observed (NEON Auth, throwaway user)
 
-Run twice with the same results: first against the `production` branch's Auth, then (after `.env.local` was repointed by the operator) against the `development` branch's Auth. Each time the throwaway user was deleted afterwards and `neon_auth.user` was checked to hold no test row.
+Run twice with the same results: first against the `production` branch's Auth, then (after the env file was repointed by the operator) against the `development` branch's Auth. Each time the throwaway user was deleted afterwards and `neon_auth.user` was checked to hold no test row.
 
 
 | Item | Result |

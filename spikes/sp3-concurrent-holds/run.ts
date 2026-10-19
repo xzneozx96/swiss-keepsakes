@@ -7,7 +7,8 @@ import { Hono } from 'hono'
 import pg from 'pg'
 import { fromDrizzle, PgBoss } from 'pg-boss'
 import { z } from 'zod'
-import { finish, productionBranchGuard, secret, tryEnv } from '../lib/env.ts'
+import { finish } from '../lib/env.ts'
+import { withThrowawayBranch } from '../lib/neon-project.ts'
 import { dockerAvailable, withLocalPostgres } from '../lib/pg-docker.ts'
 import { ms, percentile } from '../lib/stats.ts'
 
@@ -143,30 +144,24 @@ if (dockerAvailable()) {
   missing.push('docker')
 }
 
-const allowNonFly = process.env.SP3_ALLOW_NON_FLY === '1'
-const onProduction = productionBranchGuard(SPIKE)
-const remote = onProduction ? null : tryEnv(SPIKE, {
-  DATABASE_URL: secret(),
-  DATABASE_URL_UNPOOLED: secret(),
-  FLY_REGION: allowNonFly ? z.string().optional() : z.string().min(1),
-})
-if (!remote && onProduction) missing.push('throwaway NEON_BRANCH')
-else if (!remote) {
-  for (const key of ['DATABASE_URL', 'DATABASE_URL_UNPOOLED', 'FLY_REGION']) {
-    if (!process.env[key]?.trim() && !(key === 'FLY_REGION' && allowNonFly)) missing.push(key)
-  }
-}
+const region = process.env.FLY_REGION?.trim() || undefined
 let remotePass: boolean | null = null
-if (remote) {
+const remoteRun = await withThrowawayBranch(SPIKE, async (branch) => {
   lines.length = 0
-  const region = remote.FLY_REGION
-  remotePass = await suite(
-    `REMOTE (Neon pooled for requests, direct for pg-boss; FLY_REGION=${region ?? 'none, laptop run'})`,
-    remote.DATABASE_URL,
-    remote.DATABASE_URL_UNPOOLED,
+  return suite(
+    `REMOTE (Neon pooled for requests, direct for pg-boss, throwaway branch; FLY_REGION=${region ?? 'none, laptop run: latency is not a Fly fra result'})`,
+    branch.pooledUrl,
+    branch.unpooledUrl,
     region === undefined ? null : region === 'fra',
   )
+})
+if ('skip' in remoteRun) {
+  console.log(`SKIP SP3 remote: ${remoteRun.skip}`)
+  missing.push('neon throwaway branch')
+} else {
+  remotePass = remoteRun.value
 }
+const remote = remotePass !== null
 
 finish({
   spike: SPIKE,

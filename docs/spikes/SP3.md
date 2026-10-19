@@ -17,7 +17,7 @@ These latencies say nothing about Neon from Fly. They only show the race handlin
 
 ## Observed (NEON, pooled connection, laptop to Frankfurt)
 
-Branch `spike-sp2-sp3` (throwaway, deleted afterwards), Postgres 18.6. Requests use the pooled (`-pooler`, PgBouncer) URL, pg-boss the direct URL, with `SP3_ALLOW_NON_FLY=1`. **This is laptop to Frankfurt latency, not Fly `fra`.** It includes the laptop's internet round trip on every statement of the hold transaction.
+The spike now creates and deletes its own branch from the env file's branch (it refuses production, staging and main). Branch `spike-sp2-sp3` (throwaway, deleted afterwards), Postgres 18.6. Requests use the pooled (`-pooler`, PgBouncer) URL, pg-boss the direct URL, with `FLY_REGION` empty (laptop run). **This is laptop to Frankfurt latency, not Fly `fra`.** It includes the laptop's internet round trip on every statement of the hold transaction.
 
 - Every round, including the warm-up: `pending_payment` = 1 of 50, one 201, 49 conflicts (409), no other status, exactly one expiry job. The partial unique index plus `ON CONFLICT DO NOTHING` is correct through PgBouncer in transaction mode.
 - p95 over the 250 measured requests: **2586.8 ms** (p50 1811.5 ms, p99 2736.7 ms, max 2742.0 ms). Warm-up round p95 3684.6 ms. Per round p95 2.44 to 2.74 s.
@@ -27,4 +27,4 @@ The latency is not a valid answer to "p95 from Fly `fra`", which should be a sma
 
 ## Open
 
-p95 from a Fly `fra` machine. The script refuses to call a run a pass unless `FLY_REGION` is `fra`, unless `SP3_ALLOW_NON_FLY=1` (correctness only).
+p95 from a Fly `fra` machine. With `FLY_REGION` empty the script runs as a laptop run (correctness only); a region other than `fra` fails.

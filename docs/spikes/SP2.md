@@ -24,7 +24,7 @@ Answers: the budget is met locally with a worker that fetches in batches. Deadli
 
 ## Observed (NEON, direct connection, laptop to Frankfurt)
 
-Branch `spike-sp2-sp3`, a copy of `production` made with `neon branches create --parent production --expires-at <+1 day>`, deleted afterwards. Server is **PostgreSQL 18.6**, not 17 as the architecture assumes (see Findings). The same suite, schema `sp2_spike`, dropped at the end. Not Fly `fra`, and the two workers are two processes on the laptop.
+The spike now creates and deletes this branch itself (from the env file's branch, expiry 24 h; it refuses production, staging and main). Branch `spike-sp2-sp3`, a copy of `production` made with `neon branches create --parent production --expires-at <+1 day>`, deleted afterwards. Server is **PostgreSQL 18.6**, not 17 as the architecture assumes (see Findings). The same suite, schema `sp2_spike`, dropped at the end. Not Fly `fra`, and the two workers are two processes on the laptop.
 
 | Check | Result |
 |---|---|

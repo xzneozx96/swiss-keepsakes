@@ -20,7 +20,7 @@ import { defineConfig } from '@neon/config/v1'
 export default defineConfig({ buckets: { uploads: { access: 'private' }, media: { access: 'public_read' } } })
 ```
 
-`neon deploy` writes the credential into `.env.local`. The credential is branch-scoped, so with the production credential the test objects land in the real buckets, under `sp5/`, and are deleted at the end.
+`neon deploy` writes the credential into `api/.env.local`. The credential is branch-scoped (currently `development`), so the test objects land in that branch's real buckets, under `sp5/`, and are deleted at the end.
 
 ## Keys
 
