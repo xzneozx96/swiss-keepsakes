@@ -7,6 +7,7 @@ import {
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 
+import { RouteError, RoutePending } from '@/components/route-fallbacks'
 import {
   loadDictionary,
   LocaleProvider,
@@ -25,6 +26,9 @@ const router = createRouter({
   history: createHashHistory(),
   scrollRestoration: true,
   defaultPreload: 'intent',
+  // A screen whose query suspends or fails shows these instead of blanking the app.
+  defaultPendingComponent: RoutePending,
+  defaultErrorComponent: RouteError,
 })
 
 declare module '@tanstack/react-router' {
@@ -45,10 +49,13 @@ if (!rootElement.innerHTML) {
   const demo = startDemo()
 
   // Whoever saved German waits for its chunk before the first paint; everyone else already has English.
-  // If German cannot be fetched the app still starts, in English.
+  // If German cannot be fetched the app still starts, in English. If a demo collection cannot be
+  // read, the app still starts too: its screen reads it again and shows RouteError if that fails.
   void Promise.all([
     loadDictionary(storedLanguage()).catch(() => undefined),
-    demo.ready,
+    demo.ready.catch((error: unknown) =>
+      console.error('A demo collection could not be read', error),
+    ),
   ]).then(() => {
     ReactDOM.createRoot(rootElement).render(
       <StrictMode>

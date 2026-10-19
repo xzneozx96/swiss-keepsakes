@@ -1,4 +1,5 @@
 import type { DemoStore } from '@/features/demo/store'
+import type { DemoData } from '@/features/demo/types'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
@@ -15,7 +16,11 @@ import {
 } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-import { createDemoDataClient, startDemo } from '@/features/demo/data-client'
+import {
+  createDemoDataClient,
+  demoCollectionKey,
+  startDemo,
+} from '@/features/demo/data-client'
 import { createSeedState } from '@/features/demo/seed'
 import { createDemoStore, updateCollection } from '@/features/demo/store'
 import { requestsQueries } from '@/features/requests/api/queries'
@@ -26,6 +31,42 @@ beforeEach(() => {
 })
 
 describe('demo data client', () => {
+  it('[E1.11] demo data saved by an earlier build still fills every collection the screens read', async () => {
+    const { version, role, clockStartedAt, data } = createSeedState()
+    const {
+      subcategories: _subcategories,
+      pickupPlaces: _pickupPlaces,
+      articles: _articles,
+      comments: _comments,
+      adviceQuestions: _adviceQuestions,
+      adviceRequests: _adviceRequests,
+      privateTourRequests: _privateTourRequests,
+      partners: _partners,
+      partnerPayouts: _partnerPayouts,
+      commissionAdjustments: _commissionAdjustments,
+      costs: _costs,
+      partnerSessions: _partnerSessions,
+      tours: _tours,
+      ...older
+    } = data
+
+    window.localStorage.setItem(
+      'sk.demo',
+      JSON.stringify({ version, role, clockStartedAt, data: older }),
+    )
+    const demo = startDemo()
+
+    await demo.ready
+
+    const missing = (Object.keys(demo.store.getState().data) as (keyof DemoData)[])
+      .map(key => demoCollectionKey(key, demo.dataClient))
+      .filter(key => key !== undefined)
+      .filter(key => demo.queryClient.getQueryData(key) === undefined)
+
+    expect(Object.keys(data).every(key => key in demo.store.getState().data)).toBe(true)
+    expect(missing).toEqual([])
+  })
+
   it('[E1.11] reads every collection into the cache before the first render, as the store holds it', async () => {
     const demo = startDemo()
 
