@@ -36,6 +36,6 @@ export const queryKeys = {
     reviews: ['reviews', 'reviews'],
   },
   tours: {
-    tourData: ['tours', 'tourData'],
+    records: ['tours', 'records'],
   },
 } as const

@@ -19,7 +19,10 @@ import {
   pickText,
 } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useGuests } from '@/features/account/api/queries'
+import { usePickupPlaces, useProducts } from '@/features/catalog/api/queries'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
 import {
   formatLabel,
   paymentLabel,
@@ -77,9 +80,11 @@ export const orderDetailHref = (order: Order) => `#/store/orders/${order.id}`
  */
 export function useMerchantOrders(selected: OrderTabId) {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
   const now = useDemoNow()
-  const { orders, guests, products, pickupPlaces } = state.data
+  const orders = useOrders()
+  const guests = useGuests()
+  const products = useProducts()
+  const pickupPlaces = usePickupPlaces()
   const today = zurichDate(now)
   const shown = (label: OrderLabel) => ({
     text: formatLabel(label, t, intlLocale),

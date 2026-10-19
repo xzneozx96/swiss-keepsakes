@@ -15,7 +15,7 @@ import { useProductCard } from '@/features/catalog/hooks/use-product-card'
 import { useArticles } from '@/features/content/api/queries'
 import { publishedArticles } from '@/features/content/lib/articles'
 import { GlobalSearch } from '@/features/search/components/global-search'
-import { useTourData } from '@/features/tours/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { useUrlInput } from '@/hooks/use-url-input'
 
 // Global search from the discovery home (UX proposal: search is not in the spec).
@@ -30,7 +30,7 @@ function SearchPage() {
   const demoArticles = useArticles()
   const products = useProducts()
   const subcategories = useStoreSubcategories()
-  const demoTours = useTourData()
+  const demoTours = useTourRecords()
   const { q = '' } = Route.useSearch()
   const navigate = useNavigate({ from: '/search' })
   const router = useRouter()

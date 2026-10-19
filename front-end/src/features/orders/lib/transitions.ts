@@ -11,7 +11,7 @@ import type {
   StaffId,
 } from '@sk/domain/orders'
 import type { Language } from '@/contexts/locale-context'
-import type { DemoState } from '@/features/demo/types'
+import type { DemoData, DemoState } from '@/features/demo/types'
 
 import {
   amountDueNow,
@@ -171,8 +171,11 @@ function guarded(
 // --- guards ----------------------------------------------------------------
 // Each returns null when the action is allowed, or the reason it is not.
 
-export function acceptBlock(state: DemoState, order: Order): OrderBlock | null {
-  const short = shortLines(state.data, order)
+export function acceptBlock(
+  data: Pick<DemoData, 'products' | 'orders'>,
+  order: Order,
+): OrderBlock | null {
+  const short = shortLines(data, order)
 
   return (
     canMoveTo(order, 'accepted')
@@ -304,7 +307,7 @@ export function accept(
   orderId: string,
   ctx: StaffContext,
 ): DemoState {
-  return guarded(state, orderId, acceptBlock, (order) => {
+  return guarded(state, orderId, (s, o) => acceptBlock(s.data, o), (order) => {
     const dates = dueDatesAtAcceptance(order, ctx.now)
     const payLater = order.paymentPolicy.kind === 'later'
     const next = logged(

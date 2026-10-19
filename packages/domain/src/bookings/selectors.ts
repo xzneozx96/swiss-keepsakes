@@ -2,9 +2,9 @@ import type {
   Departure,
   Tour,
   TourBooking,
-  TourData,
   TourParticipants,
   TourPaymentPolicy,
+  TourRecords,
 } from './types'
 import type { CommissionState } from '../orders/selectors'
 
@@ -34,7 +34,7 @@ export function bookingAmountDue(booking: TourBooking): number {
     : bookingBalance(booking)
 }
 export function availableSeats(
-  data: TourData,
+  data: TourRecords,
   departureId: string,
   now: Date,
 ): number {
@@ -66,7 +66,7 @@ export function firstPaymentAmount(
 }
 /** Open, not cancelled departures of a tour that have not started yet, soonest first. */
 export function upcomingDepartures(
-  data: TourData,
+  data: TourRecords,
   tourId: string,
   now: Date,
 ): Departure[] {
@@ -82,7 +82,7 @@ export function upcomingDepartures(
 }
 /** The soonest upcoming departure that still has a free seat. */
 export function nextAvailableDeparture(
-  data: TourData,
+  data: TourRecords,
   tourId: string,
   now: Date,
 ): Departure | undefined {
@@ -95,7 +95,7 @@ export function nextAvailableDeparture(
  * (delivered, completed and no-show included), active payment holds, and what is still free.
  */
 export function departureSeats(
-  data: TourData,
+  data: TourRecords,
   departureId: string,
   now: Date,
 ): { confirmed: number, held: number, available: number, capacity: number } {

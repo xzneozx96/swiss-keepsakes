@@ -207,6 +207,8 @@ export interface TourData {
   bookings: TourBooking[]
   draft: TourDraft
 }
+/** What the shop holds about its tours. The guest's booking draft stays in the browser. */
+export type TourRecords = Omit<TourData, 'draft'>
 export type TourActionResult = { ok: true } | { ok: false, reason: string }
 export interface ExternalTourPayment {
   amount: number

@@ -7,7 +7,7 @@ import { useProducts } from '@/features/catalog/api/queries'
 import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 import { useReviews } from '@/features/reviews/api/queries'
-import { useTourData } from '@/features/tours/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { avatarUrl } from '@/lib/avatars'
 import { publicStaffName } from '../lib/staff'
 
@@ -50,7 +50,7 @@ export function useMerchantReviews(filter: ReviewFilter[]) {
   ])
   const reviews = useReviews()
   const products = useProducts()
-  const tours = useTourData()
+  const tours = useTourRecords()
   const role = useDemoSelector(s => s.role)
   const note = (lang: Language) =>
     t(lang === 'en' ? 'gifts.textInEnglish' : 'gifts.textInGerman')

@@ -1,19 +1,21 @@
-import type { TourData } from '@sk/domain/bookings'
+import type { TourRecords } from '@sk/domain/bookings'
 import type { DataClient } from '@/features/data-client'
 
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 import { queryKeys, useDataClient } from '@/features/data-client'
 
 export const toursQueries = {
-  tourData: (client: DataClient) =>
+  records: (client: DataClient) =>
     queryOptions({
-      queryKey: queryKeys.tours.tourData,
-      queryFn: client.tours.tourData,
+      queryKey: queryKeys.tours.records,
+      queryFn: client.tours.records,
     }),
 }
 
-export function useTourData<T = TourData>(select?: (data: TourData) => T): T {
+export function useTourRecords<T = TourRecords>(
+  select?: (records: TourRecords) => T,
+): T {
   const client = useDataClient()
 
-  return useSuspenseQuery({ ...toursQueries.tourData(client), select }).data
+  return useSuspenseQuery({ ...toursQueries.records(client), select }).data
 }

@@ -19,7 +19,7 @@ import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { useReviews } from '@/features/reviews/api/queries'
 import { WriteReviewSheet } from '@/features/reviews/components/write-review-sheet'
-import { useTourData } from '@/features/tours/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { useBookingFormat, useGroupText } from '../booking/booking-summary'
 
 /** A completed, settled tour booking opens the same review sheet as a gift order. */
@@ -32,7 +32,7 @@ export function TourBookingReview({ booking }: { booking: TourBooking }) {
   const guests = useGuests()
   const demoReviews = useReviews()
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
-  const demoTours = useTourData()
+  const demoTours = useTourRecords()
   const { t, language } = useLocale()
   const { date } = useBookingFormat()
   const groupText = useGroupText()

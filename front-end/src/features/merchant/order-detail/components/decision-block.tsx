@@ -39,7 +39,8 @@ import {
 } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoNow, useDemoSelector } from '@/features/demo'
+import { usePickupPlaces } from '@/features/catalog/api/queries'
+import { useDemoNow } from '@/features/demo'
 import { declineReasons } from '../hooks/use-merchant-order-detail'
 import { ActionPanel } from './detail-card'
 
@@ -326,7 +327,7 @@ function ChangeSheet({
   onClose: () => void
 }) {
   const { t, language } = useLocale()
-  const pickupPlaces = useDemoSelector(s => s.data.pickupPlaces)
+  const pickupPlaces = usePickupPlaces()
   const now = useDemoNow()
   const [date, setDate] = useState<CalendarDate>(() => parseDate(initialDate))
   const [placeId, setPlaceId] = useState(initialPlaceId)

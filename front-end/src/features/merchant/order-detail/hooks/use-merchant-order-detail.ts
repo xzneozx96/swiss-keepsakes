@@ -17,9 +17,12 @@ import {
 } from '@sk/domain/orders'
 import { formatMoney, numberFormat, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
+import { useGuests } from '@/features/account/api/queries'
+import { usePickupPlaces, useProducts } from '@/features/catalog/api/queries'
 import { shop } from '@/features/catalog/seed'
-import { useDemo } from '@/features/demo'
+import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
+import { useOrders } from '@/features/orders/api/queries'
 import {
   useBlockText,
   useOrderActions,
@@ -30,6 +33,7 @@ import {
   changePickupBlock,
   declineBlock,
 } from '@/features/orders/lib/transitions'
+import { usePartners } from '@/features/partners/api/queries'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 
@@ -145,7 +149,12 @@ export function useMerchantOrderDetail(order: Order): {
   actions: MerchantOrderActions
 } {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const guests = useGuests()
+  const places = usePickupPlaces()
+  const partners = usePartners()
+  const products = useProducts()
+  const orders = useOrders()
+  const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const orderActions = useOrderActions()
   const blockText = useBlockText()
   const summary = useOrderSummary(order, 'staff')
@@ -159,11 +168,10 @@ export function useMerchantOrderDetail(order: Order): {
       style: 'percent',
       maximumFractionDigits: 1,
     }).format(rate)
-  const guest = state.data.guests.find(g => g.id === order.guestId)
+  const guest = guests.find(g => g.id === order.guestId)
   const guestName = guest?.name ?? order.guestId
-  const places = state.data.pickupPlaces
   const place = places.find(p => p.id === order.pickupPlaceId)
-  const partner = state.data.partners.find(p => p.id === order.partnerId)
+  const partner = partners.find(p => p.id === order.partnerId)
   const lineName = (l: Order['lines'][number]) =>
     `${pick(l.productName)} (${pick(l.variantLabel)})`
 
@@ -188,7 +196,7 @@ export function useMerchantOrderDetail(order: Order): {
   }
 
   // --- stock per line (O05: held only on accept) ------------------------------
-  const short = shortLines(state.data, order)
+  const short = shortLines({ products, orders }, order)
   const stock: StockRow[] = order.lines.map((l) => {
     const needed = order.lines
       .filter(o => o.productId === l.productId && o.variantId === l.variantId)
@@ -197,7 +205,11 @@ export function useMerchantOrderDetail(order: Order): {
     return {
       id: l.id,
       name: lineName(l),
-      available: variantAvailable(state.data, l.productId, l.variantId),
+      available: variantAvailable(
+        { products, orders },
+        l.productId,
+        l.variantId,
+      ),
       needed,
       isShort: short.some(
         s => s.productId === l.productId && s.variantId === l.variantId,
@@ -355,7 +367,7 @@ export function useMerchantOrderDetail(order: Order): {
       }),
       engraving: l.engraving,
       total: money(lineTotal(l)),
-      photo: state.data.products.find(p => p.id === l.productId)?.photo,
+      photo: products.find(p => p.id === l.productId)?.photo,
     })),
     amounts: [
       { label: t('merchantOrder.amounts.total'), value: money(summary.total) },
@@ -433,7 +445,7 @@ export function useMerchantOrderDetail(order: Order): {
       units === 1 ? 'merchantOrder.accept.item' : 'merchantOrder.accept.items',
       { count: units },
     )
-    const due = dueDatesAtAcceptance(order, demoNow(state.clockStartedAt))
+    const due = dueDatesAtAcceptance(order, demoNow(clockStartedAt))
     const prepare = t('merchantOrder.accept.prepare', {
       items,
       date: date(order.pickupDate),
@@ -475,7 +487,7 @@ export function useMerchantOrderDetail(order: Order): {
   }
 
   const acceptCheck = () => {
-    const block = acceptBlock(state, order)
+    const block = acceptBlock({ products, orders }, order)
 
     return block ? blockText(block) : null
   }

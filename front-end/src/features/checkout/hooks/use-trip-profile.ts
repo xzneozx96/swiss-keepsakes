@@ -5,7 +5,7 @@ import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
 
 import { useDemoSelector } from '@/features/demo'
 import { useOrders } from '@/features/orders/api/queries'
-import { useTourData } from '@/features/tours/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { tripView } from '../lib/trip'
 
 /**
@@ -16,11 +16,11 @@ export function useTripProfile(target: TripTarget) {
   const client = useDataClient()
   const { mutate: saveTrip } = useCommand(client.account.saveTrip, [
     queryKeys.orders.orders,
-    queryKeys.tours.tourData,
+    queryKeys.tours.records,
   ])
   const guestId = useDemoSelector(s => s.data.signedInGuestId)
   const orders = useOrders()
-  const tours = useTourData()
+  const tours = useTourRecords()
   const { status, answers } = tripView({ orders, tours }, guestId, target)
 
   return {

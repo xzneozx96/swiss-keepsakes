@@ -70,7 +70,7 @@ const collections = {
   adviceRequests: collection(requestsQueries.adviceRequests),
   privateTourRequests: collection(requestsQueries.privateTourRequests),
   reviews: collection(reviewsQueries.reviews),
-  tours: collection(toursQueries.tourData),
+  tours: collection(toursQueries.records),
 } satisfies Record<
   Exclude<keyof DemoData, StoreOnlyKey>,
   ReturnType<typeof collection>

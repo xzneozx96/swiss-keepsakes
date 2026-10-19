@@ -17,7 +17,7 @@ import {
   storyCategoryPhoto,
 } from '@/features/content/lib/categories'
 import { useOrders } from '@/features/orders/api/queries'
-import { useTourData } from '@/features/tours/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { timeBlockStories } from '../seed'
 
 const STORIES_ON_HOME = 6
@@ -28,7 +28,7 @@ export function useDiscoveryView(): DiscoveryHomeView {
   const demoArticles = useArticles()
   const orders = useOrders()
   const products = useProducts()
-  const demoTours = useTourData()
+  const demoTours = useTourRecords()
 
   const available = products.filter(
     p => isPublished(p) && !isSoldOut(p, orders),

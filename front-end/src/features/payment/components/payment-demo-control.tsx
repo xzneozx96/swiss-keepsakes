@@ -2,7 +2,7 @@ import { Button } from '@heroui/react'
 import { processingPayment } from '@sk/domain/orders'
 
 import { useParams } from '@tanstack/react-router'
-import { useDemoSelector } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
 import { useOrderActions } from '@/features/orders/hooks/use-orders'
 
 /**
@@ -11,10 +11,9 @@ import { useOrderActions } from '@/features/orders/hooks/use-orders'
  * deadline" this shows the late provider result (S3, R05): the order stays cancelled.
  */
 export function PaymentDemoControl({ onDone }: { onDone: () => void }) {
-  const demoOrders = useDemoSelector(s => s.data.orders)
   const actions = useOrderActions()
   const { orderId } = useParams({ strict: false })
-  const order = demoOrders.find(o => o.id === orderId)
+  const order = useOrders(orders => orders.find(o => o.id === orderId))
   const pending = !!order && !!processingPayment(order)
 
   const answer = (outcome: 'succeeded' | 'failed') => {
