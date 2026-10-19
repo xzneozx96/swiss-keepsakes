@@ -1,34 +1,259 @@
-name: e2e
+# The gates, the pull request's Neon branch with migrations and integration tests, the API image, and the
+# Playwright suite. docs/ops/ci.md explains each job and the Neon safety rules.
+# Actions are pinned by commit. The comment after each pin is the release it points to.
+name: ci
 
 on:
   push:
     branches: [main]
   pull_request:
+    # closed deletes the pull request's Neon branch.
+    types: [opened, synchronize, reopened, closed]
+
+# One run per pull request. A push cancels the run it replaces, and a close cancels a run that may still be
+# creating the branch, then deletes it. Runs on main are never cancelled.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
 
 jobs:
-  e2e:
-    runs-on: ubuntu-latest
+  gates:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          node-version: 22
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
           cache: pnpm
-      - run: node --test scripts/trace.test.mjs
-      - run: node scripts/trace.mjs docs/development-plan/delivery-plan.md
+      # Each gate runs even when an earlier one failed, so the run shows every result.
+      - name: Trace script tests
+        run: node --test scripts/trace.test.mjs
+      - name: Story traceability
+        if: ${{ !cancelled() }}
+        run: node scripts/trace.mjs docs/development-plan/delivery-plan.md
+      - name: Install
+        id: install
+        if: ${{ !cancelled() }}
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm typecheck
+      - name: Unit tests and the contract gate
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm test
+      - name: Layer zones
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm lint:zones
+      - name: API lint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm --filter @sk/api lint
+      - name: Front-end lint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm --dir front-end lint
+      - name: Front-end test typecheck
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm --dir front-end typecheck:tests
+      - name: Build
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm build
+      # Production dependencies ship in the image, so a high or critical advisory blocks the merge.
+      - name: Audit production dependencies
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm audit --prod --audit-level=high
+      - name: Audit development dependencies (warning only)
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm audit --audit-level=high || echo '::warning title=Dependency audit::A development dependency has a high or critical advisory. This step lists them.'
+
+  integration:
+    name: integration (Neon)
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Neon secret
+        id: neon
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ -n "$NEON_API_KEY" ]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          elif [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ] || [ "$GITHUB_ACTOR" = 'dependabot[bot]' ]; then
+            echo '::notice title=No Neon branch::GitHub gives no secrets to pull requests from forks or Dependabot, so this job creates no Neon branch and runs no integration tests. The other jobs still run.'
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+          else
+            echo '::error::The NEON_API_KEY secret is missing.'
+            exit 1
+          fi
+      - name: Branch name and expiry
+        id: branch
+        if: steps.neon.outputs.available == 'true'
+        run: |
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]] || { echo "::error::Not a pull request number: $PR_NUMBER"; exit 1; }
+          echo "name=preview/pr-$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          # A fallback: Neon deletes the branch after 7 days if the closed event never deletes it.
+          echo "expires_at=$(date -u -d '+7 days' +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+      # Creates the branch, or reuses it on later pushes. Its db_url, db_url_pooled and password outputs are
+      # not masked, and this repository's logs are public, so the connect step below fetches masked URLs instead.
+      - name: Create or reuse the Neon branch
+        if: steps.neon.outputs.available == 'true'
+        uses: neondatabase/create-branch-action@fb620d43d4c565abaf088b848a4e28e5c4ea4d9c # v6 = release 6.3.1
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: ${{ steps.branch.outputs.name }}
+          parent_branch: development
+          expires_at: ${{ steps.branch.outputs.expires_at }}
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.neon.outputs.available == 'true'
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        if: steps.neon.outputs.available == 'true'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.neon.outputs.available == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install
+        if: steps.neon.outputs.available == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Connect to the Neon branch
+        id: connect
+        if: steps.neon.outputs.available == 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: node scripts/neon-preview-branch.mjs connect
+      # The release command over the direct URL. There are no seeds yet: the first module story adds them.
+      - name: Migrate the branch
+        if: steps.neon.outputs.available == 'true'
+        run: pnpm --filter @sk/api db:migrate
+      - name: Drop test databases left by a cancelled run
+        if: steps.neon.outputs.available == 'true'
+        run: |
+          for db in $(psql "$DATABASE_URL_UNPOOLED" -Atc "select datname from pg_database where datname like 'sk\_test\_%'"); do
+            psql "$DATABASE_URL_UNPOOLED" -qc "drop database \"$db\" with (force)"
+            echo "dropped $db"
+          done
+      # Each run creates its own sk_test_* database on the branch and drops it. Request pools go through Neon's
+      # pooler (DATABASE_URL), pg-boss and migrations through the direct URL.
+      - name: Integration tests
+        if: steps.neon.outputs.available == 'true'
+        env:
+          INTEGRATION_ALLOW_REMOTE_DATABASE: '1'
+        run: pnpm test:integration
+      - name: The run dropped its test database
+        if: always() && steps.connect.outcome == 'success'
+        run: |
+          left=$(psql "$DATABASE_URL_UNPOOLED" -Atc "select count(*) from pg_database where datname like 'sk\_test\_%'")
+          echo "sk_test_* databases left on the branch: $left"
+          test "$left" = 0
+
+  neon-cleanup:
+    name: delete Neon branch
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Neon secret
+        id: neon
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ -n "$NEON_API_KEY" ]; then
+            echo 'available=true' >> "$GITHUB_OUTPUT"
+          elif [ "$HEAD_REPO" != "$GITHUB_REPOSITORY" ] || [ "$GITHUB_ACTOR" = 'dependabot[bot]' ]; then
+            echo '::notice title=No Neon branch::GitHub gives no secrets to pull requests from forks or Dependabot, so this pull request never had a Neon branch.'
+            echo 'available=false' >> "$GITHUB_OUTPUT"
+          else
+            echo '::error::The NEON_API_KEY secret is missing.'
+            exit 1
+          fi
+      # The merge ref can be gone once a pull request is closed. The head commit stays.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.neon.outputs.available == 'true'
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          sparse-checkout: scripts
+      - name: Delete preview/pr-${{ github.event.pull_request.number }}
+        if: steps.neon.outputs.available == 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: |
+          [[ "preview/pr-$PR_NUMBER" =~ ^preview/pr-[1-9][0-9]*$ ]] || { echo "::error::Refusing to delete preview/pr-$PR_NUMBER"; exit 1; }
+          node scripts/neon-preview-branch.mjs delete
+
+  image:
+    name: API image
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18.6
+        env:
+          POSTGRES_DB: swiss_keepsakes
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U postgres -d swiss_keepsakes"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # Built and tested, not pushed: no registry is chosen yet.
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          load: true
+          push: false
+          tags: sk-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test
+        run: scripts/image-smoke.sh sk-api:ci postgres://postgres@127.0.0.1:5432/swiss_keepsakes
+
+  e2e:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm lint:zones
-      - run: pnpm --dir front-end lint
       - run: pnpm exec playwright install --with-deps chromium
         working-directory: e2e
       - run: pnpm e2e
         env:
-          CI: "true"
-      - uses: actions/upload-artifact@v4
+          CI: 'true'
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: playwright-report
