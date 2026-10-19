@@ -20,6 +20,13 @@ describe('[E1.9] the integration tests refuse a database that is not on this mac
     expect(refusedDatabaseTarget({ DATABASE_URL: neon, DATABASE_URL_UNPOOLED: neon }, { [allowRemoteFlag]: '1' })).toBeUndefined()
   })
 
+  it.each([
+    ['host', 'postgres://postgres@127.0.0.1:5433/swiss_keepsakes?host=ep-x.neon.tech'],
+    ['hostaddr', 'postgres://postgres@127.0.0.1:5433/swiss_keepsakes?hostaddr=203.0.113.7'],
+  ])('[E1.9] refuses a local URL whose %s query parameter points elsewhere', (_, url) => {
+    expect(refusedDatabaseTarget({ DATABASE_URL: url, DATABASE_URL_UNPOOLED: local }, {})).toBe('DATABASE_URL sets the host in a query parameter. Put it in the URL instead.')
+  })
+
   it('[E1.9] names a missing variable', () => {
     expect(refusedDatabaseTarget({ DATABASE_URL: local, DATABASE_URL_UNPOOLED: undefined }, {})).toMatch(/^DATABASE_URL_UNPOOLED is not set/)
   })
