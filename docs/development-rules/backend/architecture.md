@@ -1,0 +1,54 @@
+# Back-end architecture
+
+**Design, not built.** Source: `docs/architecture/backend.md` sections 4.1 to 4.3 (a proposal, pending owner review). Do not edit that file from here. If a rule below and the source disagree, the source wins, and this file needs fixing. Rules for the front-end are in `../frontend/`, and rules for both sides are in `../shared/`.
+
+## Layers
+
+The code follows clean architecture in four layers. Each layer imports only from the layers inside it.
+
+| Layer | Where | May import |
+| :-- | :-- | :-- |
+| Domain | `packages/domain/src/<module>/` | Only `packages/domain` |
+| Application | `api/src/modules/<module>/application/` | Domain, its own ports, other modules' `index.ts` |
+| Adapters | `api/src/modules/<module>/adapters/` | Application, domain, `api/src/platform/`, `packages/api-contract` |
+| Platform and composition | `api/src/platform/`, `api/src/main.ts` | Everything |
+
+## Rules
+
+- **A use case is a plain async function.** A factory takes its dependencies, as in `makeCreateHold({ uow, bookings, jobs, payments, clock })`. No classes and no dependency-injection container. `main.ts` is the only file that connects concrete adapters to use cases. (4.1)
+- **Transactions are a port.** A use case calls `uow.run(async (tx) => ...)`. Repositories and the job queue take that `tx`. A use case never touches Drizzle. (4.1)
+- **Locking SQL stays in the repository**, in named functions such as `lockDepartureForHold`. The use case decides what to do and the repository decides how to lock. (4.1)
+- **Modules talk through `index.ts` only.** No module imports another module's `application/` or `adapters/` files. (4.1)
+- **Each module owns one Postgres schema.** No module reads another module's tables, and each command is one transaction. `reporting` is the one exception, because it owns views over other schemas. (section 4)
+- **The domain is shared with the front-end.** See `../shared/domain-and-contract.md`. (4.1)
+
+## Where things go (4.3)
+
+| Concern | Location |
+| :-- | :-- |
+| Business rule | `packages/domain/src/<module>/` |
+| Workflow that loads, decides and saves | `api/src/modules/<module>/application/<use-case>.ts` |
+| SQL and Drizzle | `api/src/modules/<module>/adapters/*-repository.ts` and `schema.ts` |
+| Request parsing and response shape | `packages/api-contract/src/` schemas, used by `adapters/routes.ts` |
+| Talking to Stripe, Resend or storage | A port in the owning module, an adapter in that module, a client in `api/src/platform/` |
+| Audit, idempotency, webhook deduplication, rate limits | `api/src/platform/` |
+| Wiring | `api/src/main.ts` only |
+
+## Enforcing the layers
+
+`docs/architecture/backend.md` 4.1 says to use `import/no-restricted-paths`. The owner's standard is `eslint-plugin-boundaries` (see `../frontend/linting.md`). This conflict is open. The map below follows the owner's standard. It is not applied or tested.
+
+```js
+'boundaries/elements': [
+  { type: 'domain', pattern: 'packages/domain/src/**' },
+  { type: 'application', pattern: 'api/src/modules/*/application/**' },
+  { type: 'adapters', pattern: 'api/src/modules/*/adapters/**' },
+  { type: 'platform', pattern: 'api/src/platform/**' },
+],
+'boundaries/element-types': ['error', { default: 'allow', rules: [
+  { from: 'domain', disallow: ['application', 'adapters', 'platform'] },
+  { from: 'application', disallow: ['adapters', 'platform'] },
+] }],
+```
+
+The "modules talk through `index.ts` only" rule needs its own entry-point rule. It is not mapped here.

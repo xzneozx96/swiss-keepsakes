@@ -1,0 +1,33 @@
+# Data, jobs and security
+
+**Design, not built.** Source: `docs/architecture/backend.md` (the section is in brackets after each rule). Rules about money, Stripe holds and the commission ledger are specific to this product. They are in `docs/architecture/backend.md` sections 6 and 7 and are not repeated here.
+
+## Data
+
+- **Every tenant row has `store_id`.** Child rows use composite foreign keys `(store_id, parent_id)`, so a child cannot point at another store's parent. (D9)
+- **Every repository function requires a `StoreScope` argument.** Row-level security arrives with the second merchant. (D9)
+- **Postgres row locks decide every seat and every unit of stock.** Nothing else holds a lock. (1)
+- **Money history is append-only.** Balances and payment labels are computed from ledger rows and never stored. (D5)
+- **One `audit_log` records every money and status change** with before, after, actor, reason and request id. (D10)
+- **Migrations move forward only** and follow expand and contract, so the previous version keeps working during a deploy. They run as the release command before new machines take traffic. (11)
+- **Request handlers use the pooled connection.** pg-boss and migrations use the direct one. (D2)
+
+## Jobs
+
+- **pg-boss in the application database runs every timer and side effect.** (D4)
+- **Create a job inside the business transaction** (`boss.send(..., { db: tx })`). There is no separate outbox table and no event bus. (D4)
+- **Cross-module work that must be atomic is a direct call in the same transaction.** Only effects outside the system become jobs. (D4)
+
+## Configuration
+
+- Configuration comes from environment variables, checked at startup against one Zod schema. The service refuses to start on a bad value. Secrets live in Fly secrets. (11)
+
+## Security and privacy (both sides follow these)
+
+- **The SPA keeps the access token in memory.** Never in `localStorage`. (13)
+- **The partner session cookie is `httpOnly` and `SameSite=Lax`**, scoped to `/partner` and `/api/partner`, with an `Origin` check on mutations. (13)
+- **A Content Security Policy** protects the SPA. **Webhook signatures** are verified, plus the Stripe IP allow-list. No card data touches our servers. (13)
+- **Logs are JSON** with request id, actor and store id. They never contain emails, phone numbers, tokens or engraving text. (13)
+- **Analytics send no personal data.** Google Analytics loads only after cookie consent. Every money, status and source figure is SQL over our own tables. (D13)
+- **Guests can export and delete their account.** Deletion anonymizes the profile, and ledger and order rows stay for 10 years for Swiss accounting retention. (13)
+- **A dependency audit runs in CI.** (13)
