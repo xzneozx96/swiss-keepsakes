@@ -42,8 +42,8 @@ export function createApp(logger: Logger): OpenAPIHono<AppEnv> {
     const requestLogger = logger.child({ requestId: c.get('requestId') })
     c.set('logger', requestLogger)
     await next()
-    // The route pattern, not the URL: a path such as /partner/{token} carries a secret.
-    requestLogger.info({ method: c.req.method, route: routePath(c, -1), status: c.res.status, ms: Math.round(performance.now() - started) }, 'request')
+    // The pattern of the route that ran, not the URL: a path such as /partner/{token} carries a secret.
+    requestLogger.info({ method: c.req.method, route: routePath(c), status: c.res.status, ms: Math.round(performance.now() - started) }, 'request')
   })
 
   app.openapi(healthRoute, c => c.json({ status: 'ok' as const }, 200))
@@ -51,8 +51,17 @@ export function createApp(logger: Logger): OpenAPIHono<AppEnv> {
   app.notFound(c => problem(c, { type: 'not-found', status: 404, title: 'Not found' }))
 
   app.onError((error, c) => {
-    if (error instanceof HTTPException)
-      return problem(c, { type: 'about:blank', status: error.status, title: STATUS_CODES[error.status] ?? 'Error' })
+    if (error instanceof HTTPException) {
+      if (error.status >= 500)
+        c.get('logger').error({ err: error }, 'http exception')
+      const response = problem(c, { type: 'about:blank', status: error.status, title: STATUS_CODES[error.status] ?? 'Error' })
+      // Keep the headers the exception carries, such as Retry-After or WWW-Authenticate.
+      error.res?.headers.forEach((value, name) => {
+        if (name !== 'content-type' && name !== 'content-length')
+          response.headers.set(name, value)
+      })
+      return response
+    }
     c.get('logger').error({ err: error }, 'unhandled error')
     return problem(c, { type: 'internal-error', status: 500, title: 'Internal server error' })
   })

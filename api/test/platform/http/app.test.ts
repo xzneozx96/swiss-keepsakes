@@ -1,9 +1,25 @@
 import { createRoute, z } from '@hono/zod-openapi'
+import { HTTPException } from 'hono/http-exception'
 import { describe, expect, it } from 'vitest'
 import { createApp } from '../../../src/platform/http/app.ts'
 import { createLogger } from '../../../src/platform/logger.ts'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+
+// The shape of a node-postgres DatabaseError: its message and `detail` quote the row that failed.
+class DatabaseError extends Error {
+  code = '23505'
+  constraint = 'guests_email_key'
+  table = 'guests'
+  detail = 'Key (email)=(anna@example.ch) already exists.'
+}
+
+const partnerRoute = createRoute({
+  method: 'get',
+  path: '/partner/{token}',
+  request: { params: z.object({ token: z.string() }) },
+  responses: { 200: { description: 'Partner entry', content: { 'application/json': { schema: z.object({ ok: z.boolean() }) } } } },
+})
 
 const probeRoute = createRoute({
   method: 'post',
@@ -21,8 +37,18 @@ function setup() {
   const logs: Record<string, unknown>[] = []
   const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }))
   app.openapi(probeRoute, c => c.json({ ok: true }, 200))
+  app.openapi(partnerRoute, c => c.json({ ok: true }, 200))
   app.get('/boom', () => {
-    throw new Error('connection to db:5432 failed for user admin')
+    throw new DatabaseError('duplicate key value violates unique constraint, params: anna@example.ch,For Anna')
+  })
+  app.get('/limited', () => {
+    throw new HTTPException(429, { res: new Response(null, { headers: { 'Retry-After': '30' } }) })
+  })
+  app.get('/private', () => {
+    throw new HTTPException(401, { res: new Response(null, { headers: { 'WWW-Authenticate': 'Bearer realm="api"' } }) })
+  })
+  app.get('/unavailable', () => {
+    throw new HTTPException(503, { message: 'pool exhausted while saving anna@example.ch', cause: new DatabaseError('params: anna@example.ch') })
   })
   return { app, logs }
 }
@@ -106,7 +132,7 @@ describe('[E1.8] HTTP app', () => {
     expect(await response.json()).toMatchObject({ type: 'about:blank', status: 400, title: 'Bad Request' })
   })
 
-  it('[E1.8] an unexpected error is a 500 problem+json that hides the cause and logs it with the request id', async () => {
+  it('[E1.8] an unexpected error is a 500 problem+json that hides the cause, and the log keeps the error type and code but not the guest data in it', async () => {
     const { app, logs } = setup()
     const response = await app.request('/boom', { headers: { 'X-Request-Id': 'req-500' } })
     const text = await response.text()
@@ -115,10 +141,46 @@ describe('[E1.8] HTTP app', () => {
     expect(response.headers.get('Content-Type')).toBe('application/problem+json')
     expect(response.headers.get('X-Request-Id')).toBe('req-500')
     expect(JSON.parse(text)).toEqual({ type: 'internal-error', status: 500, title: 'Internal server error', instance: '/boom', requestId: 'req-500' })
-    expect(text).not.toContain('db:5432')
+    expect(text).not.toContain('anna@example.ch')
     expect(logs).toEqual([
-      expect.objectContaining({ level: 50, requestId: 'req-500', msg: 'unhandled error', err: expect.objectContaining({ message: 'connection to db:5432 failed for user admin' }) }),
+      expect.objectContaining({ level: 50, requestId: 'req-500', msg: 'unhandled error', err: expect.objectContaining({ type: 'DatabaseError', code: '23505', table: 'guests' }) }),
       expect.objectContaining({ level: 30, requestId: 'req-500', msg: 'request', status: 500 }),
     ])
+    const logText = JSON.stringify(logs)
+    for (const guestData of ['anna@example.ch', 'For Anna', 'Key (email)'])
+      expect(logText).not.toContain(guestData)
+  })
+
+  it('[E1.8] the request line logs the route pattern, not the token in the path', async () => {
+    const { app, logs } = setup()
+    const response = await app.request('/partner/tok_s3cr3t_partner')
+
+    expect(response.status).toBe(200)
+    expect(logs).toEqual([expect.objectContaining({ msg: 'request', route: '/partner/:token', status: 200 })])
+    expect(JSON.stringify(logs)).not.toContain('tok_s3cr3t_partner')
+  })
+
+  it.each([
+    ['/limited', 429, 'Too Many Requests', 'Retry-After', '30'],
+    ['/private', 401, 'Unauthorized', 'WWW-Authenticate', 'Bearer realm="api"'],
+  ])('[E1.8] an HTTPException on %s keeps its headers on the problem+json response', async (path, status, title, header, value) => {
+    const { app, logs } = setup()
+    const response = await app.request(path)
+
+    expect(response.status).toBe(status)
+    expect(response.headers.get('Content-Type')).toBe('application/problem+json')
+    expect(response.headers.get(header)).toBe(value)
+    expect(await response.json()).toMatchObject({ type: 'about:blank', status, title })
+    expect(logs.map(line => line.msg)).toEqual(['request'])
+  })
+
+  it('[E1.8] a 5xx HTTPException logs its cause at error level through the allow-list', async () => {
+    const { app, logs } = setup()
+    const response = await app.request('/unavailable', { headers: { 'X-Request-Id': 'req-503' } })
+
+    expect(response.status).toBe(503)
+    expect(await response.json()).toMatchObject({ type: 'about:blank', status: 503, title: 'Service Unavailable' })
+    expect(logs[0]).toMatchObject({ level: 50, requestId: 'req-503', msg: 'http exception', err: { type: 'HTTPException', cause: { type: 'DatabaseError', code: '23505' } } })
+    expect(JSON.stringify(logs)).not.toContain('anna@example.ch')
   })
 })
