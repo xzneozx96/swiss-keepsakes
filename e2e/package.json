@@ -1,0 +1,13 @@
+{
+  "name": "swiss-keepsakes-e2e",
+  "private": true,
+  "packageManager": "pnpm@10.33.4",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
