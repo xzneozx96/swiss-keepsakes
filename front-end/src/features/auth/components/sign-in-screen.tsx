@@ -9,7 +9,7 @@ import { BackIcon } from '@/components/icons'
 import { BrandLogo } from '@/components/layout/brand-logo'
 import { BackButton } from '@/components/layout/cart-button'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
+import { useDemoSelector } from '@/features/demo'
 import { useSignIn } from '../hooks/use-sign-in'
 import { SignInForm } from './sign-in-form'
 
@@ -24,12 +24,11 @@ function noop() {}
  */
 export function SignInScreen({ returnTo }: { returnTo: string }) {
   const { t } = useLocale()
-  const { state } = useDemo()
+  const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
   const view = useSignIn(noop)
-  const signedIn = state.data.signedInGuestId !== null
 
   // Leave sign-in out of history. Opened over its own return screen (C06, C11, Account), step
   // back to that entry: replacing would leave a second copy, so Back there seemed to do nothing.

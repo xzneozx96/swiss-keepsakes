@@ -12,7 +12,9 @@ import {
 } from '@sk/domain/shared'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoNow, useDemoSelector } from '@/features/demo'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
+import { useReviews } from '@/features/reviews/api/queries'
 import { useFavourites } from './use-favourites'
 
 export type ProductCardView = ProductCardProps & {
@@ -26,8 +28,8 @@ export function useProductCard(): (product: Product) => ProductCardView {
   const { t, language, intlLocale } = useLocale()
   const now = useDemoNow()
   const today = zurichDate(now)
-  const orders = useDemoSelector(s => s.data.orders)
-  const demoReviews = useDemoSelector(s => s.data.reviews)
+  const orders = useOrders()
+  const demoReviews = useReviews()
   const { isFavourite, toggle } = useFavourites()
   const number = numberFormat(intlLocale, {
     minimumFractionDigits: 1,

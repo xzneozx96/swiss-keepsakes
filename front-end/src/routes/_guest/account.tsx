@@ -4,6 +4,7 @@ import type { MessageKey } from '@/i18n/en'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { useLocale } from '@/contexts/locale-context'
+import { useGuests } from '@/features/account/api/queries'
 import { AccountHub } from '@/features/account/components/account-hub'
 import { AccountScreen } from '@/features/account/components/account-screen'
 import { EditProfile } from '@/features/account/components/edit-profile'
@@ -45,7 +46,7 @@ const sectionTitle: Record<AccountSection, MessageKey> = {
 function AccountPage() {
   const { t } = useLocale()
   const { update } = useDemoActions()
-  const guests = useDemoSelector(s => s.data.guests)
+  const guests = useGuests()
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   const { tab } = Route.useSearch()
   const { requireSignIn } = useRequireSignIn()

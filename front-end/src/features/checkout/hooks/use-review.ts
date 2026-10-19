@@ -14,12 +14,14 @@ import {
 import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
 import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
+import { usePickupPlaces, useProducts } from '@/features/catalog/api/queries'
 import { shop } from '@/features/catalog/seed'
-import { useDemo, useDemoNow } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useDemoNow, useDemoSelector } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
+import { useReferralVisits } from '@/features/partners/api/queries'
 import {
   buildOrderDrafts,
-  createOrdersFromCart,
   sendBlock,
 } from '../lib/create-orders'
 
@@ -27,19 +29,39 @@ import {
  * C06 Review and send (AC25, AC28): the orders the request creates, each with its items,
  * requested pickup, total, the amount due once the seller confirms, the deadline rule and the
  * cancellation policy. Amounts come from T0's selectors on the very drafts that are stored on
- * send. `send` returns the new order ids, or null when it is blocked (the error is shown and
- * the cart stays as it was). Null view when no cart line is ticked.
+ * send. `send` returns null when it is blocked (the error is shown and the cart stays as it
+ * was), and otherwise the new order ids once the screens can read them. Null view when no cart
+ * line is ticked.
  */
 export function useReview(): {
   view: Omit<ReviewViewProps, 'onBack' | 'onSend' | 'onEditCart'> | null
-  send: () => string[] | null
+  send: () => Promise<string[]> | null
 } {
   const { t, language, intlLocale } = useLocale()
-  const { state, update } = useDemo()
+  const client = useDataClient()
+  const { mutateAsync: submitCart } = useCommand(client.orders.submitCart, [
+    queryKeys.orders.orders,
+    queryKeys.notifications.mail,
+  ])
+  const cart = useDemoSelector(s => s.data.cart)
+  const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
+  const nextOrderNumber = useDemoSelector(s => s.data.nextOrderNumber)
+  const products = useProducts()
+  const storedOrders = useOrders()
+  const referralVisits = useReferralVisits()
+  const pickupPlaces = usePickupPlaces()
+  const cartData = {
+    cart,
+    signedInGuestId,
+    nextOrderNumber,
+    products,
+    orders: storedOrders,
+    referralVisits,
+  }
   const now = useDemoNow()
   const [error, setError] = useState<SendBlock | null>(null)
 
-  const drafts = buildOrderDrafts(state, { now, language })
+  const drafts = buildOrderDrafts(cartData, { now, language })
   const today = zurichDate(now)
   const short = (iso: string) => formatShortDate(iso, today, intlLocale)
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
@@ -48,21 +70,13 @@ export function useReview(): {
   const pick = (text: LocalizedText) => pickText(text, language)
 
   const send = () => {
-    const block = sendBlock(state, now)
+    const block = sendBlock(cartData, now)
 
     setError(block)
     if (block)
       return null
 
-    update(s =>
-      createOrdersFromCart(s, {
-        now: demoNow(s.clockStartedAt),
-        language,
-        staffLanguage: language,
-      }),
-    )
-
-    return drafts.map(o => o.id)
+    return submitCart({ language })
   }
 
   if (drafts.length === 0)
@@ -114,7 +128,7 @@ export function useReview(): {
   const onlyIn = new Set<string>()
 
   const orders = drafts.map((order, index) => {
-    const place = state.data.pickupPlaces.find(
+    const place = pickupPlaces.find(
       p => p.id === order.pickupPlaceId,
     )
     const total = orderTotal(order)
@@ -154,7 +168,7 @@ export function useReview(): {
           ? t('cart.policy.deposit', { percent: policy.depositPercent })
           : t(`cart.policy.${policy.kind}`),
       items: order.lines.map((line) => {
-        const product = state.data.products.find(
+        const product = products.find(
           p => p.id === line.productId,
         )
         const name = pick(line.productName)

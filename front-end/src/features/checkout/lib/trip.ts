@@ -35,7 +35,10 @@ interface Purchase {
   day: string
 }
 
-function guestPurchases(data: DemoData, guestId: string): Purchase[] {
+function guestPurchases(
+  data: Pick<DemoData, 'orders' | 'tours'>,
+  guestId: string,
+): Purchase[] {
   return [
     ...data.orders
       .filter(o => o.guestId === guestId)
@@ -62,7 +65,7 @@ function targetKeys(target: TripTarget) {
  * departure both cover every day of this one (inclusive), or blank.
  */
 export function tripView(
-  data: DemoData,
+  data: Pick<DemoData, 'orders' | 'tours'>,
   guestId: string | null,
   target: TripTarget,
 ): { status: TripStatus, answers: TripAnswers } {

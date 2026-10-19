@@ -4,8 +4,26 @@ import type { DemoData } from './types'
 import type { DataClient } from '@/features/data-client'
 
 import { QueryClient } from '@tanstack/react-query'
+import { createAccountDemoClient } from '@/features/account/api/demo-client'
+import { accountQueries } from '@/features/account/api/queries'
+import { createCatalogDemoClient } from '@/features/catalog/api/demo-client'
+import { catalogQueries } from '@/features/catalog/api/queries'
 import { createContentDemoClient } from '@/features/content/api/demo-client'
 import { contentQueries } from '@/features/content/api/queries'
+import { createNotificationsDemoClient } from '@/features/notifications/api/demo-client'
+import { notificationsQueries } from '@/features/notifications/api/queries'
+import { createOrdersDemoClient } from '@/features/orders/api/demo-client'
+import { ordersQueries } from '@/features/orders/api/queries'
+import { createPartnersDemoClient } from '@/features/partners/api/demo-client'
+import { partnersQueries } from '@/features/partners/api/queries'
+import { createReportsDemoClient } from '@/features/reports/api/demo-client'
+import { reportsQueries } from '@/features/reports/api/queries'
+import { createRequestsDemoClient } from '@/features/requests/api/demo-client'
+import { requestsQueries } from '@/features/requests/api/queries'
+import { createReviewsDemoClient } from '@/features/reviews/api/demo-client'
+import { reviewsQueries } from '@/features/reviews/api/queries'
+import { createToursDemoClient } from '@/features/tours/api/demo-client'
+import { toursQueries } from '@/features/tours/api/queries'
 import { createDemoStore, loadDemoState } from './store'
 
 /** A collection of the demo data, read into the cache by its query. */
@@ -21,11 +39,41 @@ function collection<TData, TKey extends QueryKey>(
   }
 }
 
+/**
+ * Data the browser keeps for itself with the API too (the cart, saved gifts, who is signed in,
+ * drafts, partner sessions), so screens read it from the store, and the order counter, which only
+ * commands use.
+ */
+type StoreOnlyKey
+  = | 'cart'
+    | 'favouriteProductIds'
+    | 'signedInGuestId'
+    | 'adviceDraft'
+    | 'partnerSessions'
+    | 'nextOrderNumber'
+
 const collections = {
+  guests: collection(accountQueries.guests),
+  products: collection(catalogQueries.products),
+  subcategories: collection(catalogQueries.subcategories),
+  pickupPlaces: collection(catalogQueries.pickupPlaces),
   articles: collection(contentQueries.articles),
   comments: collection(contentQueries.comments),
-} satisfies Partial<
-  Record<keyof DemoData, ReturnType<typeof collection>>
+  mail: collection(notificationsQueries.mail),
+  orders: collection(ordersQueries.orders),
+  partners: collection(partnersQueries.partners),
+  referralVisits: collection(partnersQueries.referralVisits),
+  commissionAdjustments: collection(partnersQueries.commissionAdjustments),
+  partnerPayouts: collection(partnersQueries.partnerPayouts),
+  costs: collection(reportsQueries.costs),
+  adviceQuestions: collection(requestsQueries.adviceQuestions),
+  adviceRequests: collection(requestsQueries.adviceRequests),
+  privateTourRequests: collection(requestsQueries.privateTourRequests),
+  reviews: collection(reviewsQueries.reviews),
+  tours: collection(toursQueries.tourData),
+} satisfies Record<
+  Exclude<keyof DemoData, StoreOnlyKey>,
+  ReturnType<typeof collection>
 >
 
 type QueriedKey = keyof typeof collections
@@ -34,7 +82,16 @@ const queriedKeys = Object.keys(collections) as QueriedKey[]
 
 export function createDemoDataClient(store: DemoStore): DataClient {
   return {
+    account: createAccountDemoClient(store),
+    catalog: createCatalogDemoClient(store),
     content: createContentDemoClient(store),
+    notifications: createNotificationsDemoClient(store),
+    orders: createOrdersDemoClient(store),
+    partners: createPartnersDemoClient(store),
+    reports: createReportsDemoClient(store),
+    requests: createRequestsDemoClient(store),
+    reviews: createReviewsDemoClient(store),
+    tours: createToursDemoClient(store),
   }
 }
 

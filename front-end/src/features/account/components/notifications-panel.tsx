@@ -4,7 +4,8 @@ import { Link } from '@tanstack/react-router'
 
 import { ChevronRightIcon, EmailIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoSelector } from '@/features/demo'
+import { usePickupPlaces } from '@/features/catalog/api/queries'
+import { useMail } from '@/features/notifications/api/queries'
 import { renderMail } from '@/features/notifications/components/render-mail'
 import {
   itemClass,
@@ -26,8 +27,8 @@ export function NotificationsPanel({
   email: string
 }) {
   const { t, intlLocale } = useLocale()
-  const demoMail = useDemoSelector(s => s.data.mail)
-  const pickupPlaces = useDemoSelector(s => s.data.pickupPlaces)
+  const demoMail = useMail()
+  const pickupPlaces = usePickupPlaces()
   const mails = demoMail
     .filter(m => m.to === 'guest' && m.guestId === guestId)
     .reverse()

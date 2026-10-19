@@ -9,12 +9,13 @@ import {
   useRouter,
 } from '@tanstack/react-router'
 import { useLocale } from '@/contexts/locale-context'
+import { useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
 import { categories } from '@/features/catalog/categories'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
 import { useArticles } from '@/features/content/api/queries'
 import { publishedArticles } from '@/features/content/lib/articles'
-import { useDemoSelector } from '@/features/demo'
 import { GlobalSearch } from '@/features/search/components/global-search'
+import { useTourData } from '@/features/tours/api/queries'
 import { useUrlInput } from '@/hooks/use-url-input'
 
 // Global search from the discovery home (UX proposal: search is not in the spec).
@@ -27,9 +28,9 @@ export const Route = createFileRoute('/_guest/search')({
 function SearchPage() {
   const { t, language, intlLocale } = useLocale()
   const demoArticles = useArticles()
-  const products = useDemoSelector(s => s.data.products)
-  const subcategories = useDemoSelector(s => s.data.subcategories)
-  const demoTours = useDemoSelector(s => s.data.tours)
+  const products = useProducts()
+  const subcategories = useStoreSubcategories()
+  const demoTours = useTourData()
   const { q = '' } = Route.useSearch()
   const navigate = useNavigate({ from: '/search' })
   const router = useRouter()

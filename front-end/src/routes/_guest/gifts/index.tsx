@@ -3,12 +3,12 @@ import { isPublished } from '@sk/domain/catalog'
 import { pickText } from '@sk/domain/shared'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useLocale } from '@/contexts/locale-context'
+import { useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
 import {
   ALL_CATEGORIES,
   GiftList,
 } from '@/features/catalog/components/gift-list'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { useDemo } from '@/features/demo'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 import { useUrlInput } from '@/hooks/use-url-input'
 
@@ -37,7 +37,8 @@ export const Route = createFileRoute('/_guest/gifts/')({
 
 function GiftsPage() {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const products = useProducts()
+  const subcategories = useStoreSubcategories()
   const { subcategory, q = '' } = Route.useSearch()
   const navigate = useNavigate({ from: '/gifts/' })
   const toCard = useProductCard()
@@ -52,16 +53,16 @@ function GiftsPage() {
   )
 
   // Only sub-categories a guest can buy from: at least one published keepsake in them.
-  const giftCategories = state.data.subcategories.filter(
+  const giftCategories = subcategories.filter(
     c =>
       c.categoryId === 'keepsakes'
-      && state.data.products.some(
+      && products.some(
         p => p.subcategoryId === c.id && isPublished(p),
       ),
   )
   const selected = giftCategories.find(c => c.id === subcategory)
   const query = deferred.trim().toLocaleLowerCase(intlLocale)
-  const cards = state.data.products
+  const cards = products
     // A draft from M12 is hidden from guests (4.9).
     .filter(
       p => isPublished(p) && (!selected || p.subcategoryId === selected.id),

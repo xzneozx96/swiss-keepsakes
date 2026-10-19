@@ -6,8 +6,10 @@ import { availableUnits, zurichDate } from '@sk/domain/catalog'
 import { priceCartLines } from '@sk/domain/orders'
 import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
+import { usePickupPlaces, useProducts } from '@/features/catalog/api/queries'
 import { shop } from '@/features/catalog/seed'
-import { useDemoNow, useDemoSelector } from '@/features/demo'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
 import { useCart } from './use-cart'
 
 /**
@@ -22,9 +24,9 @@ export function useCartView(): Omit<
   'onBack' | 'onContinue'
 > | null {
   const { t, language, intlLocale } = useLocale()
-  const demoOrders = useDemoSelector(s => s.data.orders)
-  const pickupPlaces = useDemoSelector(s => s.data.pickupPlaces)
-  const products = useDemoSelector(s => s.data.products)
+  const demoOrders = useOrders()
+  const pickupPlaces = usePickupPlaces()
+  const products = useProducts()
   const now = useDemoNow()
   const cart = useCart()
 

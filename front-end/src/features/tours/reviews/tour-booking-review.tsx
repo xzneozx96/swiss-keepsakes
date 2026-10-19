@@ -11,21 +11,28 @@ import { Link } from '@tanstack/react-router'
 
 import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
+import { useGuests } from '@/features/account/api/queries'
 import { ReviewItem } from '@/features/catalog/components/review-item'
 import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
-import { useDemoActions, useDemoSelector } from '@/features/demo'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
+import { useReviews } from '@/features/reviews/api/queries'
 import { WriteReviewSheet } from '@/features/reviews/components/write-review-sheet'
+import { useTourData } from '@/features/tours/api/queries'
 import { useBookingFormat, useGroupText } from '../booking/booking-summary'
 
 /** A completed, settled tour booking opens the same review sheet as a gift order. */
 export function TourBookingReview({ booking }: { booking: TourBooking }) {
-  const { update } = useDemoActions()
+  const client = useDataClient()
+  const { mutate: addReview } = useCommand(client.reviews.addReview, [
+    queryKeys.reviews.reviews,
+  ])
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
-  const guests = useDemoSelector(s => s.data.guests)
-  const demoReviews = useDemoSelector(s => s.data.reviews)
+  const guests = useGuests()
+  const demoReviews = useReviews()
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
-  const demoTours = useDemoSelector(s => s.data.tours)
+  const demoTours = useTourData()
   const { t, language } = useLocale()
   const { date } = useBookingFormat()
   const groupText = useGroupText()
@@ -85,27 +92,9 @@ export function TourBookingReview({ booking }: { booking: TourBooking }) {
       purchasedAt: current.startsAt,
     }
 
-    update((snapshot) => {
-      const live = snapshot.data.tours?.bookings.find(
-        item => item.id === booking.id,
-      )
-
-      if (
-        live?.status !== 'completed'
-        || bookingBalance(live) !== 0
-        || live.guestId !== snapshot.data.signedInGuestId
-        || snapshot.data.reviews.some(item => item.id === id)
-      ) {
-        return snapshot
-      }
-
-      return {
-        ...snapshot,
-        data: {
-          ...snapshot.data,
-          reviews: [...snapshot.data.reviews, submitted],
-        },
-      }
+    addReview({
+      review: submitted,
+      purchase: { kind: 'booking', id: booking.id },
     })
     toast.success(t('review.posted'))
   }

@@ -11,7 +11,7 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { CameraIcon, StatusDangerIcon } from '@/components/icons'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoActions } from '@/features/demo'
+import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
 import {
   AVATAR_MAX_BYTES,
   avatarPickError,
@@ -34,7 +34,11 @@ const errorKey = {
  */
 export function EditProfile({ guest }: { guest: Guest }) {
   const { t, intlLocale } = useLocale()
-  const { update } = useDemoActions()
+  const client = useDataClient()
+  const { mutateAsync: saveGuest } = useCommand(
+    client.account.updateProfile,
+    [queryKeys.account.guests],
+  )
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
@@ -48,17 +52,6 @@ export function EditProfile({ guest }: { guest: Guest }) {
   const [name, setName] = useState(guest.name)
   const invalid = name.trim().length === 0
   const changed = name.trim() !== guest.name
-
-  const saveGuest = (patch: Partial<Guest>) =>
-    update(s => ({
-      ...s,
-      data: {
-        ...s.data,
-        guests: s.data.guests.map(g =>
-          g.id === guest.id ? { ...g, ...patch } : g,
-        ),
-      },
-    }))
 
   const pick = async (file: File | undefined) => {
     if (!file)
@@ -96,12 +89,16 @@ export function EditProfile({ guest }: { guest: Guest }) {
         confirmLabel: t('account.edit.remove.confirm'),
       })
     ) {
-      saveGuest({ avatar: undefined })
+      await saveGuest({ avatar: undefined })
     }
   }
 
   const done = () =>
     canGoBack ? router.history.back() : void navigate({ to: '/account' })
+  const saveName = async () => {
+    await saveGuest({ name: name.trim() })
+    done()
+  }
 
   return (
     <>
@@ -181,8 +178,7 @@ export function EditProfile({ guest }: { guest: Guest }) {
           e.preventDefault()
           if (invalid || !changed)
             return
-          saveGuest({ name: name.trim() })
-          done()
+          void saveName()
         }}
       >
         <div className="flex flex-col gap-5 rounded-2xl bg-surface p-4 shadow-surface">
@@ -223,7 +219,7 @@ export function EditProfile({ guest }: { guest: Guest }) {
           image={picked}
           onCancel={closeCrop}
           onSave={(avatar) => {
-            saveGuest({ avatar })
+            void saveGuest({ avatar })
             closeCrop()
           }}
         />

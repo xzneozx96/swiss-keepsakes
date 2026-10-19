@@ -4,7 +4,10 @@ import { buttonVariants } from '@heroui/react'
 
 import { dateTimeFormat } from '@sk/domain/shared'
 
-import { useDemo } from '@/features/demo'
+import { useGuests } from '@/features/account/api/queries'
+import { usePickupPlaces } from '@/features/catalog/api/queries'
+import { useDemoActions, useDemoSelector } from '@/features/demo'
+import { usePartners } from '@/features/partners/api/queries'
 import { renderMail } from './render-mail'
 
 /** The emails of one recipient, rendered in the recipient's language. Loaded when the panel opens, so the dictionaries it needs stay out of the first load. */
@@ -16,7 +19,11 @@ export function MailList({
   /** A mail's link was followed (N16, N17): close the panel. */
   onOpenLink?: () => void
 }) {
-  const { state, setRole } = useDemo()
+  const { setRole } = useDemoActions()
+  const role = useDemoSelector(s => s.role)
+  const pickupPlaces = usePickupPlaces()
+  const guests = useGuests()
+  const partners = usePartners()
 
   if (items.length === 0) {
     return (
@@ -27,12 +34,9 @@ export function MailList({
   return (
     <ul className="flex flex-col gap-2">
       {items.map((mail, i) => {
-        const { subject, body, link } = renderMail(
-          mail,
-          state.data.pickupPlaces,
-        )
-        const guest = state.data.guests.find(g => g.id === mail.guestId)
-        const partner = state.data.partners.find(
+        const { subject, body, link } = renderMail(mail, pickupPlaces)
+        const guest = guests.find(g => g.id === mail.guestId)
+        const partner = partners.find(
           p => p.id === mail.partnerId,
         )
         const to = mail.recipient
@@ -71,7 +75,7 @@ export function MailList({
                     className={`${buttonVariants({ variant: 'secondary', size: 'sm' })} w-fit`}
                     href={link.href}
                     onClick={() => {
-                      if (state.role !== 'owner' && state.role !== 'manager')
+                      if (role !== 'owner' && role !== 'manager')
                         setRole(link.role)
                       onOpenLink?.()
                     }}

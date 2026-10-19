@@ -11,6 +11,7 @@ import {
   TourIcon,
 } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
+import { useGuests } from '@/features/account/api/queries'
 import { GuestAvatar } from '@/features/account/components/guest-avatar'
 import { useDemoSelector } from '@/features/demo'
 
@@ -39,7 +40,7 @@ const rightItems: NavItem[] = [
  */
 export function GuestShell({ children }: { children: React.ReactNode }) {
   const { t } = useLocale()
-  const guests = useDemoSelector(s => s.data.guests)
+  const guests = useGuests()
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   // 1.12s: a signed-in guest with a profile photo sees it on the Account tab (Instagram pattern).
   const photoGuest = guests.find(g => g.id === signedInGuestId && g.avatar)
