@@ -3,13 +3,14 @@ import type { Logger } from 'pino'
 import { STATUS_CODES } from 'node:http'
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { HTTPException } from 'hono/http-exception'
-import { requestId } from 'hono/request-id'
 import { routePath } from 'hono/route'
 import { problem } from './problem.ts'
 
 export interface AppEnv {
   Variables: RequestIdVariables & { logger: Logger }
 }
+
+const clientRequestIdPattern = /^[\w=-]{1,255}$/
 
 const healthRoute = createRoute({
   method: 'get',
@@ -36,10 +37,18 @@ export function createApp(logger: Logger): OpenAPIHono<AppEnv> {
     },
   })
 
-  app.use(requestId())
   app.use(async (c, next) => {
     const started = performance.now()
-    const requestLogger = logger.child({ requestId: c.get('requestId') })
+    // The server makes every request id, because it goes into audit_log. A client's own id is only
+    // logged beside it, and only when it is safe to log.
+    const requestId = crypto.randomUUID()
+    const clientRequestId = c.req.header('X-Request-Id')
+    c.set('requestId', requestId)
+    c.header('X-Request-Id', requestId)
+    const requestLogger = logger.child({
+      requestId,
+      clientRequestId: clientRequestId && clientRequestIdPattern.test(clientRequestId) ? clientRequestId : undefined,
+    })
     c.set('logger', requestLogger)
     await next()
     // The pattern of the route that ran, not the URL: a path such as /partner/{token} carries a secret.

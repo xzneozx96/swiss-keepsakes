@@ -73,32 +73,36 @@ describe('[E1.8] HTTP app', () => {
     expect(logs).toEqual([expect.objectContaining({ requestId: id, msg: 'request', method: 'GET', route: '/healthz', status: 200 })])
   })
 
-  it('[E1.8] echoes a sane incoming X-Request-Id', async () => {
+  it('[E1.9] a sane incoming X-Request-Id is logged as clientRequestId, and the server still makes its own id', async () => {
     const { app, logs } = setup()
     const response = await app.request('/healthz', { headers: { 'X-Request-Id': 'edge-7f3a_b=' } })
+    const id = response.headers.get('X-Request-Id')
 
-    expect(response.headers.get('X-Request-Id')).toBe('edge-7f3a_b=')
-    expect(logs[0]).toMatchObject({ requestId: 'edge-7f3a_b=' })
+    expect(id).toMatch(UUID)
+    expect(logs).toEqual([expect.objectContaining({ requestId: id, clientRequestId: 'edge-7f3a_b=', msg: 'request' })])
   })
 
   it.each([
     ['unsafe characters', 'id with spaces;"quotes"'],
     ['over 255 characters', 'a'.repeat(256)],
-  ])('[E1.8] replaces an incoming X-Request-Id with %s', async (_, incoming) => {
-    const { app } = setup()
+  ])('[E1.9] an incoming X-Request-Id with %s is neither used nor logged', async (_, incoming) => {
+    const { app, logs } = setup()
     const response = await app.request('/healthz', { headers: { 'X-Request-Id': incoming } })
 
     expect(response.headers.get('X-Request-Id')).toMatch(UUID)
+    expect(logs[0]).not.toHaveProperty('clientRequestId')
+    expect(JSON.stringify(logs)).not.toContain(incoming)
   })
 
   it('[E1.8] an unknown route is a 404 problem+json carrying the request id', async () => {
     const { app } = setup()
     const response = await app.request('/api/nope', { headers: { 'X-Request-Id': 'req-404' } })
+    const id = response.headers.get('X-Request-Id')
 
     expect(response.status).toBe(404)
     expect(response.headers.get('Content-Type')).toBe('application/problem+json')
-    expect(response.headers.get('X-Request-Id')).toBe('req-404')
-    expect(await response.json()).toEqual({ type: 'not-found', status: 404, title: 'Not found', instance: '/api/nope', requestId: 'req-404' })
+    expect(id).toMatch(UUID)
+    expect(await response.json()).toEqual({ type: 'not-found', status: 404, title: 'Not found', instance: '/api/nope', requestId: id })
   })
 
   it('[E1.8] a validation failure is a 400 problem+json listing each bad field', async () => {
@@ -134,17 +138,18 @@ describe('[E1.8] HTTP app', () => {
 
   it('[E1.8] an unexpected error is a 500 problem+json that hides the cause, and the log keeps the error type and code but not the guest data in it', async () => {
     const { app, logs } = setup()
-    const response = await app.request('/boom', { headers: { 'X-Request-Id': 'req-500' } })
+    const response = await app.request('/boom')
+    const id = response.headers.get('X-Request-Id')
     const text = await response.text()
 
     expect(response.status).toBe(500)
     expect(response.headers.get('Content-Type')).toBe('application/problem+json')
-    expect(response.headers.get('X-Request-Id')).toBe('req-500')
-    expect(JSON.parse(text)).toEqual({ type: 'internal-error', status: 500, title: 'Internal server error', instance: '/boom', requestId: 'req-500' })
+    expect(id).toMatch(UUID)
+    expect(JSON.parse(text)).toEqual({ type: 'internal-error', status: 500, title: 'Internal server error', instance: '/boom', requestId: id })
     expect(text).not.toContain('anna@example.ch')
     expect(logs).toEqual([
-      expect.objectContaining({ level: 50, requestId: 'req-500', msg: 'unhandled error', err: expect.objectContaining({ type: 'DatabaseError', code: '23505', table: 'guests' }) }),
-      expect.objectContaining({ level: 30, requestId: 'req-500', msg: 'request', status: 500 }),
+      expect.objectContaining({ level: 50, requestId: id, msg: 'unhandled error', err: expect.objectContaining({ type: 'DatabaseError', code: '23505', table: 'guests' }) }),
+      expect.objectContaining({ level: 30, requestId: id, msg: 'request', status: 500 }),
     ])
     const logText = JSON.stringify(logs)
     for (const guestData of ['anna@example.ch', 'For Anna', 'Key (email)'])
@@ -176,11 +181,11 @@ describe('[E1.8] HTTP app', () => {
 
   it('[E1.8] a 5xx HTTPException logs its cause at error level through the allow-list', async () => {
     const { app, logs } = setup()
-    const response = await app.request('/unavailable', { headers: { 'X-Request-Id': 'req-503' } })
+    const response = await app.request('/unavailable')
 
     expect(response.status).toBe(503)
     expect(await response.json()).toMatchObject({ type: 'about:blank', status: 503, title: 'Service Unavailable' })
-    expect(logs[0]).toMatchObject({ level: 50, requestId: 'req-503', msg: 'http exception', err: { type: 'HTTPException', cause: { type: 'DatabaseError', code: '23505' } } })
+    expect(logs[0]).toMatchObject({ level: 50, requestId: response.headers.get('X-Request-Id'), msg: 'http exception', err: { type: 'HTTPException', cause: { type: 'DatabaseError', code: '23505' } } })
     expect(JSON.stringify(logs)).not.toContain('anna@example.ch')
   })
 })
