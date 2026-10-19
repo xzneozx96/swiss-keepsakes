@@ -22,6 +22,7 @@ The code follows clean architecture in four layers. Each layer imports only from
 - **Modules talk through `index.ts` only.** No module imports another module's `application/` or `adapters/` files. (4.1)
 - **Each module owns one Postgres schema.** No module reads another module's tables, and each command is one transaction. `reporting` is the one exception, because it owns views over other schemas. (section 4)
 - **The domain is shared with the front-end.** See `../shared/domain-and-contract.md`. (4.1)
+- **A workspace package that `api/` imports ships compiled JS for Node.** Plain Node cannot load `.ts`, so copy `packages/api-contract`: a `build` script (`tsc -p tsconfig.build.json` into `dist/`, NodeNext with `.ts` relative imports) and each export as `{ "sk-compiled": "./dist/src/<entry>.js", "default": "./src/<entry>.ts" }`. `pnpm --filter @sk/api build` builds the API's workspace dependencies first, and every production start of the API, including the E1.13 image CMD, runs `node --conditions=sk-compiled api/dist/main.js`. tsc, tsx, Vitest and Vite read the source through `default`.
 
 ## Where things go (4.3)
 
