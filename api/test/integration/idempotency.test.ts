@@ -338,6 +338,9 @@ describe('[E1.9] Idempotency-Key', () => {
     expect([a.status, b.status]).toEqual([201, 201])
     expect(await b.text()).toBe(await a.text())
     expect(b.headers.get('Idempotent-Replayed')).toBe('true')
+    // Nothing of the 409 that onError made for the lost race carries over to the replay.
+    expect(b.headers.get('Retry-After')).toBeNull()
+    expect(b.headers.get('Content-Type')).toBe('application/json')
     expect(executions).toEqual([name])
     expect(await written(name)).toEqual({ audit: 1, jobs: 1 })
     // The lost race is an expected answer, not an error to alert on.
@@ -462,9 +465,38 @@ describe('[E1.9] Idempotency-Key', () => {
     expect(executions).toEqual([name, name])
   })
 
-  it('[E1.9] reads are not affected', async () => {
-    const { app } = setup()
+  it('[E1.9] another actor\'s answer for the same key never overwrites this actor\'s stored answer', async () => {
+    const { send } = setup()
+    const key = unique('key')
+    const [anna, bruno] = [unique('anna'), unique('bruno')]
 
-    expect((await app.request('/healthz')).status).toBe(200)
+    const annaFirst = await (await send(key, { name: anna }, { 'X-Test-Actor': 'user-a' })).text()
+    await send(key, { name: bruno }, { 'X-Test-Actor': 'user-b' })
+    const annaAgain = await send(key, { name: anna }, { 'X-Test-Actor': 'user-a' })
+
+    expect(annaAgain.headers.get('Idempotent-Replayed')).toBe('true')
+    expect(await annaAgain.text()).toBe(annaFirst)
+  })
+
+  it('[E1.9] a command with two units of work in sequence claims the key once, with the first, and replays', async () => {
+    const { send, executions, written } = setup()
+    const key = unique('key')
+    const name = unique('anna')
+
+    const first = await send(key, { name, units: 'two-in-sequence' })
+    const again = await send(key, { name, units: 'two-in-sequence' })
+
+    expect(first.status).toBe(201)
+    expect(again.headers.get('Idempotent-Replayed')).toBe('true')
+    expect(executions).toEqual([name, name])
+    expect(await written(name)).toEqual({ audit: 2, jobs: 2 })
+  })
+
+  it('[E1.9] reads under /api/* need no Idempotency-Key', async () => {
+    const { app } = setup()
+    const response = await app.request('/api/probes')
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ ok: true })
   })
 })
