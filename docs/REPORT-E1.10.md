@@ -251,3 +251,88 @@ $ pnpm --filter @sk/api lint         -> exit 0
 The first start attempt on port 3000 failed with `EADDRINUSE`. Another process on this machine held the port at that moment, and it was free again a few seconds later. I moved to 3010 and did not touch the other process. Cleanup: `sk-e1-10` was taken down with `down -v` (0 containers, 0 volumes). Ports 3000, 3010 and 5443 are free.
 
 Not verified: the E1.13 image itself, and `pnpm --filter @sk/api build` running inside a Docker build.
+
+## Review fixes (head 396afe3)
+
+Rebased onto `xzneozx96/e1-9-platform-layer` at e52fe2a. The only conflicts were the imports in `app.ts` and one line in `backend/api-contract.md`; both sides were kept. E1.9's new `body-too-large` code went into `problemTypes`, and `pnpm install` left the lockfile unchanged. Where this section and the sections above disagree, this section wins.
+
+- M4 (owner decision). On the wire, `problemSchema.type` is now `z.string()`, and its description lists the known codes. `problemTypes` and `ProblemType` are exported for the E1.12 copy map. A client maps a known code to copy and shows generic copy for any other code. `problem()` still takes only a `ProblemType`.
+- L9. `problem()` takes only a 4xx or 5xx status (`ClientErrorStatusCode | ServerErrorStatusCode`). `onError` now sends an `HTTPException` under 400 to the 500 `internal-error` path.
+- M3 and L5. `api/src/platform/http/responses.ts` defines `problemResponses`: a `default` response of `application/problem+json` with `problemSchema`. Every route spreads it into its `responses`, and `/healthz` reuses it for its 503. `createApp` registers the `X-Request-Id` header as the component `components.headers.RequestId`, and every response refers to it.
+- M1. `generateContract(app)` walks every schema the routes use, nested ones included. It fails when one `.meta({ id })` belongs to two different schema objects. It also fails when a component is not named by `.meta({ id })`, such as one named with `.openapi(name)`, because the id walk cannot see that kind of name. I checked that zod-to-openapi merges both kinds silently: the two routes pointed at one component.
+- M2. A new test compares `app.routes` with the operations in the document. It drops method ALL, removes duplicates and rewrites `:p` to `{p}`. It also asserts that every operation has the shared problem response and that every response carries `X-Request-Id`. New rule: every route goes through `app.openapi` inside `createApp`.
+- L6. `.gitattributes`: `packages/api-contract/generated/** text eol=lf`.
+- L7. `.nvmrc` is `22`, and `packages/api-contract/tsconfig.json` sets `erasableSyntaxOnly`. `backend/architecture.md` and `backend/api-contract.md` now say that Node 22.18 and later strip types by default, so a start without the flag runs the `.ts` source and does not fail.
+- L8. `shared/testing.md` says the gate is `pnpm test` plus `pnpm typecheck`.
+- Extra. Root `lint:zones` now ignores `**/dist/**`. After a build it linted `packages/api-contract/dist/` and warned about the generated file's eslint-disable header.
+
+Output on 396afe3. Both `dist/` folders were deleted first, and `DATABASE_URL` was unset except for `test:integration`.
+
+```
+$ pnpm typecheck               -> exit 0 (spikes, api-contract, domain, api, front-end: Done)
+$ pnpm lint:zones              -> exit 0 (no output)
+$ pnpm --filter @sk/api lint   -> exit 0
+$ pnpm test                    -> Test Files 20 passed (20), Tests 341 passed (341)
+$ pnpm build                   -> exit 0 (packages/api-contract, api, front-end: Done)
+$ pnpm test:integration        (compose -p sk-e1-10, Postgres on 127.0.0.1:5443) -> Test Files 5 passed (5), Tests 42 passed (42); 0 sk_test_* left
+$ vitest -t "\[E1\.10\]"       -> 25 passed
+$ node scripts/trace.mjs ...   -> E1.10 tests=14 (E1.1 error unchanged)
+```
+
+Mutation checks. Each one was reverted.
+
+```
+K1 problem() type: string                          tsc: test/platform/http/problem.test.ts(10,7) TS2578 Unused '@ts-expect-error'
+K2 problem() status: ContentfulStatusCode          tsc: problem.test.ts(12,7) and (14,7) TS2578 Unused '@ts-expect-error'
+K3 isErrorStatus always true                       x an HTTPException under 400 is a bug, answered as a 500 internal-error problem
+K4 wire type back to z.enum(problemTypes)          x the committed generated/ files equal a fresh build; x a problem whose code this client does not know still parses
+N1 no duplicate-id throw                           x generation fails when two different schemas share one .meta id
+N2 no unnamed-component check                      x generation fails when a component is named with .openapi(name)
+N3 walk does not look inside schemas               x generation fails when two different schemas share one .meta id (the second one is nested)
+N5 no visited set                                  x the gate and both name tests (problemSchema is used twice)
+R1 plain app.get('/api/public/stores') in createApp  x every route the app serves is in the document ... expected [ 'GET /healthz' ] to deeply equal [ 'GET /api/public/stores', …(1) ]
+R2 plain app.post('/partner/:token')               x the same test
+R3 /healthz without ...problemResponses            x GET /healthz has no shared problem response
+R4 the 200 without headers: requestIdHeader        x GET /healthz 200 has no X-Request-Id header
+erasableSyntaxOnly: an `export enum` in the contract -> TS1294; removed -> exit 0
+```
+
+The client types `error` for a route with a body. This scratch check was not committed: the real app plus `POST /api/scratch/holds` (a JSON body, 201 `{ holdId }`, `...problemResponses`), types from `generateContract(app)`, an `openapi-fetch` client:
+
+```
+$ tsc -p scratch --noEmit   -> exit 0 (Equal<typeof error, Problem | undefined> = true, Equal<typeof data, { holdId: string } | undefined> = true, and a body with seats: 'two' is a type error)
+$ tsx call.ts
+bad body -> 400 application/problem+json {"type":"validation-failed","status":400,"title":"The request is not valid","errors":[{"in":"json","path":"departureId","message":"Too small: expected string to have >=1 characters"}],...} true
+good body -> 201 {"holdId":"hold-2"} true
+control: expecting error to be { title: string } | undefined -> TS2322 Type 'true' is not assignable to type 'false'
+```
+
+The gate with CRLF checkouts (scratch clones):
+
+```
+git -c core.autocrlf=true clone (head 316f027, with .gitattributes): app.ts has CRLF, generated/schema.ts has LF -> contract test 8 passed
+the same clone at d76b6c4 (before .gitattributes): generated/schema.ts has CRLF -> x openapi.json differs ... expected '{\r\n  "components"...' to be '{\n ...'
+```
+
+Live compiled start from a clean tree:
+
+```
+$ rm -rf packages/api-contract/dist api/dist && pnpm --filter @sk/api build   -> builds api-contract, then api; exit 0
+$ node --conditions=sk-compiled api/dist/main.js     (PORT=3010)
+"jobs started" "api listening" (port 3010) "started"
+GET /healthz              -> 200 application/json {"status":"ok"}                              healthSchema: equals body
+GET /api/stores/lucerne   -> 404 application/problem+json {"type":"not-found",...}             problemSchema: equals body
+POST /api/anything (1 MiB + 24 bytes) -> 413 application/problem+json {"type":"body-too-large",...}  problemSchema: equals body
+createApiClient GET /healthz -> 200 data {"status":"ok"}
+SIGTERM: shutting down, api stopped, jobs stopped, stopped
+```
+
+Type stripping, seen on Node 22.15 with the flag: `node --experimental-strip-types` with no condition resolved `@sk/api-contract` to `packages/api-contract/src/index.ts` and loaded it. Node 22.18 and later do this by default.
+
+Cleanup: `sk-e1-10` is down with `-v` (0 containers, 0 volumes). Ports 3010, 3011 and 5443 are free. The scratch clone and scratch files were deleted.
+
+Not verified after the fixes:
+- A name set with `.openapi(name)` that two schemas share is caught only through the "not named with .meta" check, which rejects every `.openapi` name.
+- The walk does not call the getter of `z.lazy`. A named schema reached only through a lazy schema would fail generation as "not named", a false alarm rather than a silent merge.
+- No Node 22.18+ or 24 run. The stripping claim rests on the 22.15 flag run and Node's release notes.
+- Only HEAD was run, not each commit on its own.
