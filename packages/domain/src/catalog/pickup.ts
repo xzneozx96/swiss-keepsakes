@@ -1,19 +1,9 @@
 import type { DayMode, Product } from './types'
 
-import { calendarDay, dateTimeFormat } from '../shared/format'
+import { zurichDate } from '../dates/zurich'
+import { calendarDay } from '../shared/format'
 
-// Built once: a new Intl formatter costs about 50 µs, and analytics ask for thousands of days.
-const zurichDay = dateTimeFormat('en-CA', {
-  timeZone: 'Europe/Zurich',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-})
-
-/** Calendar date in Europe/Zurich as YYYY-MM-DD (the business time zone, spec §1.5). */
-export function zurichDate(at: Date): string {
-  return zurichDay.format(at)
-}
+export { zurichDate }
 
 const dayCache = new Map<string, string>()
 
