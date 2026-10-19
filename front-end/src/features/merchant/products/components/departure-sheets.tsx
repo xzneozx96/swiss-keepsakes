@@ -3,7 +3,7 @@ import type {
   Departure,
   Tour,
   TourPaymentPolicy,
-} from '@/features/tours/types'
+} from '@sk/domain/bookings'
 
 import {
   Button,
@@ -25,14 +25,14 @@ import {
   parseTime,
   toZoned,
 } from '@internationalized/date'
+import { zurichDate } from '@sk/domain/catalog'
+
+import { dateTimeFormat } from '@sk/domain/shared'
+
 import { useState } from 'react'
-
 import { SheetFrame } from '@/components/sheet-frame'
-
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { useTourFormatting } from '@/features/tours/merchant/shared'
-import { dateTimeFormat } from '@/lib/format'
 import { useDepartureActions } from '../hooks/use-tour-editor'
 
 const ZONE = 'Europe/Zurich'

@@ -1,4 +1,4 @@
-import type { RichNode } from '@/lib/rich-text'
+import type { RichNode } from '@sk/domain/shared'
 
 import { Drawer } from '@heroui/react'
 

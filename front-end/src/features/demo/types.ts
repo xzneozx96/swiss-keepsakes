@@ -1,28 +1,27 @@
-import type { CartLine } from '@/features/cart/types'
+import type { TourData } from '@sk/domain/bookings'
 import type {
   PickupPlace,
   Product,
   Review,
   Subcategory,
-} from '@/features/catalog/types'
-import type { Article, ArticleComment } from '@/features/content/types'
-import type { Mail } from '@/features/notifications/types'
-import type { Guest, Order } from '@/features/orders/types'
+} from '@sk/domain/catalog'
+import type { Article, ArticleComment } from '@sk/domain/content'
+import type { Mail } from '@sk/domain/notifications'
+import type { CartLine, Guest, Order } from '@sk/domain/orders'
 import type {
   CommissionAdjustment,
   Partner,
   PartnerPayout,
   PartnerSession,
   ReferralVisit,
-} from '@/features/partners/types'
-import type { CostRecord } from '@/features/reports/types'
+} from '@sk/domain/partners'
+import type { CostRecord } from '@sk/domain/reporting'
 import type {
   AdviceDraft,
   AdviceQuestionSet,
   AdviceRequest,
   PrivateTourRequest,
-} from '@/features/requests/types'
-import type { TourData } from '@/features/tours/types'
+} from '@sk/domain/requests'
 
 /** Who the prototype is acting as. Stands in for staff and partner sign-in in flow 1. */
 export type Role = 'guest' | 'owner' | 'manager' | 'partner'

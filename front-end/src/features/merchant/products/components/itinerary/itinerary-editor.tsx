@@ -1,16 +1,16 @@
+import type { TourStop } from '@sk/domain/bookings'
 import type { useTourEditor } from '../../hooks/use-tour-editor'
 import type { Coordinates } from './itinerary-map'
 import type { Place } from './use-place-search'
 import type { Language } from '@/contexts/locale-context'
-import type { TourStop } from '@/features/tours/types'
+
+import { pickText } from '@sk/domain/shared'
 
 import { useEffect, useRef, useState } from 'react'
-
 import { useConfirm } from '@/components/confirm-dialog'
 import { BookingsIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
-import { pickText } from '@/lib/localized'
 
 import { ItineraryMap } from './itinerary-map'
 import { reducedMotion } from './map-shared'

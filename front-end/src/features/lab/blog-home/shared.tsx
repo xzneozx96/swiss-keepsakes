@@ -1,5 +1,5 @@
+import type { Article } from '@sk/domain/content'
 import type { CategoryFilter, GentleLink } from './data'
-import type { Article } from '@/features/content/types'
 
 import { ScrollShadow } from '@heroui/react'
 import { Link } from '@tanstack/react-router'

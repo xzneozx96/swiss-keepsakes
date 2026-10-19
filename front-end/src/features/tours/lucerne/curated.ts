@@ -1,5 +1,5 @@
-import type { Departure, TourSectionItem } from '../types'
-import type { LocalizedText } from '@/features/catalog/types'
+import type { Departure, TourSectionItem } from '@sk/domain/bookings'
+import type { LocalizedText } from '@sk/domain/catalog'
 
 /** Shorthand for the curated tours' EN/DE text. */
 export const lt = (en: string, de: string): LocalizedText => ({ en, de })

@@ -1,7 +1,7 @@
-import type { TripAnswers, TripRecord } from '../types'
+import type { TripAnswers, TripRecord } from '@sk/domain/orders'
 import type { DemoData } from '@/features/demo/types'
 
-import { zurichDate } from '@/features/catalog/lib/pickup'
+import { zurichDate } from '@sk/domain/catalog'
 
 export type TripStatus = 'open' | 'answered' | 'skipped'
 

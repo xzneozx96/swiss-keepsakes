@@ -1,7 +1,8 @@
 import type { SellerOptionProps } from '@/features/lab/seller-options'
 
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { pickText } from '@sk/domain/shared'
 
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useLocale } from '@/contexts/locale-context'
 import { shop } from '@/features/catalog/seed'
 import { useDemo } from '@/features/demo'
@@ -12,7 +13,6 @@ import {
   SellerSheetRow,
   SellerStrip,
 } from '@/features/lab/seller-options'
-import { pickText } from '@/lib/localized'
 
 const WHITESPACE = /\s/g
 

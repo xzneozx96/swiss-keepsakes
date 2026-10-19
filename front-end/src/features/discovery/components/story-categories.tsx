@@ -1,4 +1,4 @@
-import type { StoryCategory } from '@/features/content/types'
+import type { StoryCategory } from '@sk/domain/content'
 
 import { ScrollShadow } from '@heroui/react'
 import { Link } from '@tanstack/react-router'

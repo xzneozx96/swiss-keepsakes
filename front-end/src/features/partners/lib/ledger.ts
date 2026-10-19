@@ -1,16 +1,16 @@
+import type { Rappen } from '@sk/domain/catalog'
+import type { CommissionState, Order } from '@sk/domain/orders'
 import type {
   CommissionAdjustment,
   PartnerPayout,
   TransactionRef,
-} from '../types'
-import type { Rappen } from '@/features/catalog/types'
+} from '@sk/domain/partners'
 import type { DemoData } from '@/features/demo/types'
-import type { CommissionState } from '@/features/orders/lib/selectors'
-import type { Order } from '@/features/orders/types'
 
+import { bookingCommission } from '@sk/domain/bookings'
+import { offsetAmount } from '@sk/domain/money'
+import { commission } from '@sk/domain/orders'
 import { DEMO_HISTORY } from '@/features/merchant/today/lib/demo-history'
-import { commission } from '@/features/orders/lib/selectors'
-import { bookingCommission } from '@/features/tours/lib/selectors'
 
 /**
  * Every order the shop has, as one source (outline D14): the generated M02 history and the
@@ -223,7 +223,7 @@ export function partnerLedger(
         toPay: owed,
         toOffset: credit,
       })
-      const applied = Math.min(credit, e.item.amount)
+      const applied = offsetAmount(credit, e.item.amount)
 
       owed -= applied
       credit -= applied

@@ -1,30 +1,30 @@
-import type { Departure, Tour } from '../types'
+import type { Departure, Tour } from '@sk/domain/bookings'
 import type { DeparturePhase, TourWork } from './lib/work'
 import type { DataTableColumn } from '@/components/data-table'
 import type { EmptyStateProps } from '@/components/empty-state'
 import type { StatusTone } from '@/components/status-chip'
 import type { MessageKey } from '@/i18n/en'
 
+import { departureSeats } from '@sk/domain/bookings'
+
+import { pickText } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
 
 import { DataTable } from '@/components/data-table'
 import { DateTile } from '@/components/date-tile'
-
 import {
   ArrowUpRightIcon,
   BookingsIcon,
   ChevronRightIcon,
 } from '@/components/icons'
+
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { Media } from '@/components/media'
-
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-import { pickText } from '@/lib/localized'
 import { useTours } from '../hooks/use-tours'
-import { departureSeats } from '../lib/selectors'
 import { departureBookings, departurePhase, tourWork } from './lib/work'
 import {
   phaseChip,

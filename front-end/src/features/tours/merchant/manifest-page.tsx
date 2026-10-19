@@ -1,11 +1,19 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 import type { DataTableColumn } from '@/components/data-table'
 import type { StatusTone } from '@/components/status-chip'
 
 import { Alert } from '@heroui/react'
-import { Link } from '@tanstack/react-router'
+import {
+  balanceOverdue,
+  bookingBalance,
+  bookingPaid,
+  departureSeats,
+} from '@sk/domain/bookings'
 
+import { pickText } from '@sk/domain/shared'
+import { Link } from '@tanstack/react-router'
 import { DataTable } from '@/components/data-table'
+
 import { EmptyState } from '@/components/empty-state'
 import {
   AccountIcon,
@@ -13,24 +21,16 @@ import {
   BookingsIcon,
   InfoIcon,
 } from '@/components/icons'
-
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
 import { StatusChip } from '@/components/status-chip'
+
 import { useLocale } from '@/contexts/locale-context'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-
-import { pickText } from '@/lib/localized'
 import {
   BookingStatusLabels,
   useBookingLabels,
 } from '../components/booking-status'
 import { useTours } from '../hooks/use-tours'
-import {
-  balanceOverdue,
-  bookingBalance,
-  bookingPaid,
-  departureSeats,
-} from '../lib/selectors'
 import { AttendanceActions } from './attendance-actions'
 import {
   departureBookings,

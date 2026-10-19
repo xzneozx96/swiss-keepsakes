@@ -1,9 +1,15 @@
-import type { Tour } from '../types'
+import type { Tour } from '@sk/domain/bookings'
 
 import { Accordion, Button } from '@heroui/react'
+import {
+  availableSeats,
+  upcomingDepartures,
+} from '@sk/domain/bookings'
+import { zurichDate } from '@sk/domain/catalog'
+
+import { firstPhoto, formatMoney, formatShortDate, openingText, pickDoc, pickText } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-
 import { EmptyState } from '@/components/empty-state'
 import {
   ClockIcon,
@@ -25,7 +31,6 @@ import { SellerRow } from '@/features/catalog/components/seller-row'
 import { StorySheet } from '@/features/catalog/components/story-sheet'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'
 import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { shop } from '@/features/catalog/seed'
 import { useDemo } from '@/features/demo'
 import { ageBandLabels } from '@/features/tours/discovery/age-bands'
@@ -34,16 +39,9 @@ import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
 import { TourSections } from '@/features/tours/discovery/tour-sections'
 import { TourSelectionSheet } from '@/features/tours/discovery/tour-selection-sheet'
 import { useTours } from '@/features/tours/hooks/use-tours'
-import {
-  availableSeats,
-  upcomingDepartures,
-} from '@/features/tours/lib/selectors'
 import { TourItineraryMap } from '@/features/tours/map/tour-itinerary-map'
 import { useBack } from '@/hooks/use-back'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
-import { formatMoney, formatShortDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { firstPhoto, openingText, pickDoc } from '@/lib/rich-text'
 
 const WHITESPACE = /\s/g
 

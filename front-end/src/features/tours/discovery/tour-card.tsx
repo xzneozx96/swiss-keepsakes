@@ -1,20 +1,19 @@
-import type { Tour } from '../types'
+import type { Tour } from '@sk/domain/bookings'
 
+import {
+  nextAvailableDeparture,
+  upcomingDepartures,
+} from '@sk/domain/bookings'
+
+import { zurichDate } from '@sk/domain/catalog'
+import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
 import { memo } from 'react'
-
 import { ListingCard } from '@/components/listing-card'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'
 import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { useTours } from '@/features/tours/hooks/use-tours'
-import {
-  nextAvailableDeparture,
-  upcomingDepartures,
-} from '@/features/tours/lib/selectors'
-import { formatMoney, formatShortDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 /** A tour on the shared gift and tour card: C08 list (grid) and the home Tours rail (carousel). */
 export const TourCard = memo(function TourCard({

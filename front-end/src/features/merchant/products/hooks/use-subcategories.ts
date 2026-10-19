@@ -1,4 +1,4 @@
-import type { LocalizedText, Subcategory } from '@/features/catalog/types'
+import type { LocalizedText, Subcategory } from '@sk/domain/catalog'
 
 import { useDemo } from '@/features/demo'
 

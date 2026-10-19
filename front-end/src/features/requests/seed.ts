@@ -2,7 +2,7 @@ import type {
   AdviceQuestionSet,
   AdviceRequest,
   PrivateTourRequest,
-} from './types'
+} from '@sk/domain/requests'
 
 import { demoAt } from '@/features/demo/clock'
 

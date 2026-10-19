@@ -5,9 +5,9 @@ import type {
   TourData,
   TourDraft,
   TourParticipants,
-} from './types'
+} from '@sk/domain/bookings'
 
-import { firstPaymentAmount, tourTotal } from './lib/selectors'
+import { firstPaymentAmount, tourTotal } from '@sk/domain/bookings'
 import { pilatus, pilatusDepartures } from './lucerne/pilatus'
 import { rigi, rigiDepartures } from './lucerne/rigi'
 import {

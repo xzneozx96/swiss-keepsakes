@@ -1,16 +1,12 @@
+import type { DayRange, PeriodId, Polarity } from '@sk/domain/reporting'
 import type { MoneyMetric, ReportFilters } from '../lib/money'
 import type { DeltaView } from '@/components/stat-card'
-import type { DayRange, PeriodId, Polarity } from '@/lib/analytics'
 
-import { useMemo } from 'react'
+import { departureSeats } from '@sk/domain/bookings'
 
-import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
-import { useDemo, useDemoNow } from '@/features/demo'
-import { variantAvailable } from '@/features/orders/lib/selectors'
-
-import { departureSeats } from '@/features/tours/lib/selectors'
-import { deltaOf, periodRanges, PERIODS } from '@/lib/analytics'
+import { zurichDate } from '@sk/domain/catalog'
+import { variantAvailable } from '@sk/domain/orders'
+import { deltaOf, periodRanges, PERIODS } from '@sk/domain/reporting'
 import {
   calendarDay,
   dateTimeFormat,
@@ -18,8 +14,12 @@ import {
   formatShortDate,
   numberFormat,
   percentOf,
-} from '@/lib/format'
-import { pickText } from '@/lib/localized'
+  pickText,
+} from '@sk/domain/shared'
+
+import { useMemo } from 'react'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo, useDemoNow } from '@/features/demo'
 import {
   articleStats,
   funnel,

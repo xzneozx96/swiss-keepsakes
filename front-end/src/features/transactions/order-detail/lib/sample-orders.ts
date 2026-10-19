@@ -1,7 +1,7 @@
+import type { Actor, Order, OrderLine } from '@sk/domain/orders'
 import type { Language } from '@/contexts/locale-context'
 import type { DemoState } from '@/features/demo/types'
 import type { TransitionContext } from '@/features/orders/lib/transitions'
-import type { Actor, Order, OrderLine } from '@/features/orders/types'
 
 import * as tr from '@/features/orders/lib/transitions'
 

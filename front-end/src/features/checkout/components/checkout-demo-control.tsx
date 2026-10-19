@@ -2,9 +2,8 @@ import type { DemoState } from '@/features/demo/types'
 
 import { Button } from '@heroui/react'
 
-import { selectedCartLines } from '@/features/cart/lib/group-cart'
+import { selectedCartLines, variantAvailable } from '@sk/domain/orders'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
-import { variantAvailable } from '@/features/orders/lib/selectors'
 
 /**
  * Lowers the on-hand stock of the first ticked cart gift's option to the units accepted orders

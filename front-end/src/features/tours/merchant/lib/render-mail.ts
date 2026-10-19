@@ -1,13 +1,13 @@
+import type { Mail, MailParams } from '@sk/domain/notifications'
 import type { TourMailTemplate } from './mail'
 import type { Language } from '@/contexts/locale-context'
-import type { Mail, MailParams } from '@/features/notifications/types'
 import type { MessageKey } from '@/i18n/en'
 
+import { formatOrderDateTime } from '@sk/domain/orders'
+import { formatMoney } from '@sk/domain/shared'
 import { shop } from '@/features/catalog/seed'
-import { formatOrderDateTime } from '@/features/orders/lib/format'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
-import { formatMoney } from '@/lib/format'
 
 const PLACEHOLDER = /\{(\w+)\}/g
 

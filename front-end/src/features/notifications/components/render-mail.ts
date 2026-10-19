@@ -1,20 +1,19 @@
-import type { Mail } from '../types'
+import type { PickupPlace } from '@sk/domain/catalog'
+import type { Mail } from '@sk/domain/notifications'
 import type { Language } from '@/contexts/locale-context'
-import type { PickupPlace } from '@/features/catalog/types'
 import type { Role } from '@/features/demo/types'
 import type { MessageKey } from '@/i18n/en'
 
-import { shop } from '@/features/catalog/seed'
 import {
   formatOrderDate,
   formatOrderDateTime,
-} from '@/features/orders/lib/format'
+} from '@sk/domain/orders'
+import { formatMoney, pickText } from '@sk/domain/shared'
+import { shop } from '@/features/catalog/seed'
 import { renderRequestMail } from '@/features/requests/lib/render-request-mail'
 import { renderTourMail } from '@/features/tours/merchant/lib/render-mail'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
-import { formatMoney } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 const PLACEHOLDER = /\{(\w+)\}/g
 

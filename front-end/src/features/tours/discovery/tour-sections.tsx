@@ -1,10 +1,8 @@
-import type { TourSection, TourSectionItem } from '../types'
+import type { TourSection, TourSectionItem } from '@sk/domain/bookings'
 
+import { calendarDay, formatDate, pickText, safeHref } from '@sk/domain/shared'
 import { CallIcon, EmailIcon, InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { calendarDay, formatDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { safeHref } from '@/lib/rich-text'
 
 const BLANK_LINE = /\n{2,}/
 const WHITESPACE = /\s/g

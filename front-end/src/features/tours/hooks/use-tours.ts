@@ -1,23 +1,24 @@
 import type {
-  ExternalPaymentInput,
-  StaffContext,
-  TourOutcome,
-} from '../merchant/lib/transitions'
-import type {
   TourActionResult,
   TourBooking,
   TourData,
   TourDraft,
-} from '../types'
+} from '@sk/domain/bookings'
+import type {
+  ExternalPaymentInput,
+  StaffContext,
+  TourOutcome,
+} from '../merchant/lib/transitions'
 import type { DemoState } from '@/features/demo/types'
 import type { Outcome } from '@/features/payment/hooks/use-payment'
 
+import { availableSeats, bookingAmountDue } from '@sk/domain/bookings'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { attributedPartnerId } from '@/features/partners/referral'
-import { useSharedClock } from '@/hooks/use-shared-clock'
 
+import { useSharedClock } from '@/hooks/use-shared-clock'
 import {
   activeHold,
   addBooking,
@@ -28,7 +29,6 @@ import {
   newBooking,
   openPayment,
 } from '../booking/transitions'
-import { availableSeats, bookingAmountDue } from '../lib/selectors'
 import { mailTourGuest, mailTourStaff } from '../merchant/lib/mail'
 import {
   cancelOverdueBookings,

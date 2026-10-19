@@ -1,23 +1,22 @@
+import type { LocalizedText } from '@sk/domain/catalog'
 import type { ReviewViewProps } from '../components/review-view'
 import type { SendBlock } from '../lib/create-orders'
-import type { LocalizedText } from '@/features/catalog/types'
 
-import { useState } from 'react'
+import { zurichDate } from '@sk/domain/catalog'
 
-import { useLocale } from '@/contexts/locale-context'
-
-import { zurichDate } from '@/features/catalog/lib/pickup'
-import { shop } from '@/features/catalog/seed'
-import { useDemo, useDemoNow } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
 import {
   dueDatesAtAcceptance,
   firstPaymentAmount,
   lineTotal,
   orderTotal,
-} from '@/features/orders/lib/selectors'
-import { formatMoney, formatShortDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
+} from '@sk/domain/orders'
+
+import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
+import { useState } from 'react'
+import { useLocale } from '@/contexts/locale-context'
+import { shop } from '@/features/catalog/seed'
+import { useDemo, useDemoNow } from '@/features/demo'
+import { demoNow } from '@/features/demo/clock'
 import {
   buildOrderDrafts,
   createOrdersFromCart,

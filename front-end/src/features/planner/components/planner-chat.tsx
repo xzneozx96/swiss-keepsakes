@@ -1,8 +1,8 @@
+import type { AdviceRequest } from '@sk/domain/requests'
 import type { ReactNode } from 'react'
-import type { Plan } from '../lib/plan'
 
+import type { Plan } from '../lib/plan'
 import type { StepStatus } from '@/components/ai-elements/chain-of-thought'
-import type { AdviceRequest } from '@/features/requests/types'
 import { useChat } from '@ai-sdk/react'
 import { Button } from '@heroui/react'
 

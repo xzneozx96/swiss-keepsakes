@@ -1,3 +1,4 @@
+import type { DayRange, SalesPeriodId } from '@sk/domain/reporting'
 import type { DashRow } from '../hooks/use-partner-dashboard'
 import type {
   PartnerOverviewView,
@@ -5,11 +6,11 @@ import type {
 } from '../hooks/use-partner-overview'
 import type { DataTableColumn } from '@/components/data-table'
 import type { FilterGroup } from '@/components/filter-bar'
-import type { SalesPeriodId } from '@/features/merchant/sales/lib/periods'
-import type { DayRange } from '@/lib/analytics'
 
 import { Skeleton } from '@heroui/react'
+import { numberFormat } from '@sk/domain/shared'
 import { useState } from 'react'
+
 import {
   Bar,
   BarChart,
@@ -20,10 +21,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-
 import { DataTable } from '@/components/data-table'
-import { EmptyState } from '@/components/empty-state'
 
+import { EmptyState } from '@/components/empty-state'
 import { filterGroup, FilterToolbar } from '@/components/filter-bar'
 import { ReportsIcon } from '@/components/icons'
 import { DeltaChip } from '@/components/stat-card'
@@ -40,7 +40,6 @@ import {
 } from '@/features/merchant/today/components/overview-analytics'
 import { WidgetSkeleton } from '@/features/merchant/today/components/overview-pages'
 import { avatarUrl } from '@/lib/avatars'
-import { numberFormat } from '@/lib/format'
 import { BalanceHero, MixWidget, MonthsWidget } from './dashboard-widgets'
 import { PaymentsWidget } from './payments-widget'
 

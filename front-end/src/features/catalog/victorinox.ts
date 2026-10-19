@@ -1,6 +1,6 @@
-import type { LocalizedText, Product } from './types'
+import type { LocalizedText, Product } from '@sk/domain/catalog'
 
-import { storyFromChapters } from '@/lib/rich-text'
+import { storyFromChapters } from '@sk/domain/shared'
 
 /**
  * The Victorinox range (owner request 16.10.2026): twelve Luzerne and Alpine designs, each

@@ -1,5 +1,5 @@
-import type { Guest, LogEntry, Order, OrderLine, Payment } from './types'
-import type { Product } from '@/features/catalog/types'
+import type { Product } from '@sk/domain/catalog'
+import type { Guest, LogEntry, Order, OrderLine, Payment } from '@sk/domain/orders'
 
 import { products } from '@/features/catalog/seed'
 import { demoAt } from '@/features/demo/clock'

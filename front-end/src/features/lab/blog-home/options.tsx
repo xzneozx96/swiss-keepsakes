@@ -1,6 +1,6 @@
+import type { Article } from '@sk/domain/content'
 import type { CategoryFilter } from './data'
 import type { Effect } from './effects'
-import type { Article } from '@/features/content/types'
 
 import { ScrollShadow } from '@heroui/react'
 import { Link } from '@tanstack/react-router'

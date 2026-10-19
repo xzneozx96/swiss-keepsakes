@@ -1,8 +1,10 @@
+import type { Tour } from '@sk/domain/bookings'
 import type { Map as MapLibreMap, Marker } from 'maplibre-gl'
-import type { Tour } from '../types'
 
 import { Button, Skeleton, Spinner, ToggleButton } from '@heroui/react'
+import { pickText } from '@sk/domain/shared'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
+
 import { useEffect, useRef, useState } from 'react'
 
 import {
@@ -14,12 +16,10 @@ import {
   ExploreIcon,
   InfoIcon,
 } from '@/components/icons'
-
 import { Media } from '@/components/media'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { useLatest } from '@/hooks/use-latest'
-import { pickText } from '@/lib/localized'
 import { loadAerialStyle, warmAerialTiles } from './aerial-style'
 
 import 'maplibre-gl/dist/maplibre-gl.css'

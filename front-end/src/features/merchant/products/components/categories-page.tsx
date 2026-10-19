@@ -1,8 +1,10 @@
+import type { Subcategory } from '@sk/domain/catalog'
 import type { RowAction } from '@/components/row-actions'
-import type { Subcategory } from '@/features/catalog/types'
 
 import { Button, toast } from '@heroui/react'
+import { pickText } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
+
 import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
@@ -13,12 +15,10 @@ import {
   PlusIcon,
   TrashIcon,
 } from '@/components/icons'
-
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { RowActions } from '@/components/row-actions'
 import { useLocale } from '@/contexts/locale-context'
 import { categories } from '@/features/catalog/categories'
-import { pickText } from '@/lib/localized'
 import { useSubcategories } from '../hooks/use-subcategories'
 import { SubcategorySheet } from './subcategory-sheet'
 

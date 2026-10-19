@@ -3,13 +3,13 @@ import type { MixSide } from '../hooks/use-partner-overview'
 import type { ReportGroupView } from './partner-report'
 import type { DeltaView } from '@/components/stat-card'
 
+import { numberFormat } from '@sk/domain/shared'
 import { useState } from 'react'
-import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import { DeltaChip } from '@/components/stat-card'
 import { useLocale } from '@/contexts/locale-context'
 import { Widget } from '@/features/merchant/today/components/overview-analytics'
-import { numberFormat } from '@/lib/format'
 
 const noAnimation = { isAnimationActive: false } as const
 const pct = (share: number) => `${(share * 100).toFixed(2)}%`

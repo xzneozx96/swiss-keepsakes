@@ -1,4 +1,4 @@
-import type { Article, ArticleLink, ArticlePublication } from '../../types'
+import type { Article, ArticleLink, ArticlePublication } from '@sk/domain/content'
 import type {
   ArticleForm,
   BlockType,
@@ -8,18 +8,16 @@ import type {
 } from '../lib/article-form'
 import type { Language } from '@/contexts/locale-context'
 
+import { isPublished, isSoldOut } from '@sk/domain/catalog'
+
+import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from '@sk/domain/content'
+import { pickText, slugify } from '@sk/domain/shared'
+
 import { useState } from 'react'
 
-import { isPublished } from '@/features/catalog/lib/publish'
-import { isSoldOut } from '@/features/catalog/lib/stock'
 import { useDemo } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-
-import { pickText } from '@/lib/localized'
-
-import { slugify } from '@/lib/slug'
 import { publishedArticles } from '../../lib/articles'
-import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from '../../types'
 import {
   emptyForm,
   fromForm,

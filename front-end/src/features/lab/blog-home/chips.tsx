@@ -1,5 +1,5 @@
+import type { Article } from '@sk/domain/content'
 import type { Category } from './data'
-import type { Article } from '@/features/content/types'
 
 import { useBlogData } from './data'
 

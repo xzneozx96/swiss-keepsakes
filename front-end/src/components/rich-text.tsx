@@ -1,8 +1,8 @@
-import type { RichNode } from '@/lib/rich-text'
+import type { RichNode } from '@sk/domain/shared'
 
+import { isUploadedPhoto, safeHref } from '@sk/domain/shared'
 import { Media } from '@/components/media'
 import { photoUrl } from '@/lib/photos'
-import { isUploadedPhoto, safeHref } from '@/lib/rich-text'
 
 /** A photo attribute is a library slug or an uploaded data URL; anything else is dropped. */
 function photoOf(node: RichNode): string | undefined {

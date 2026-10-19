@@ -1,7 +1,7 @@
-import type { CommissionAdjustment, Partner, PartnerPayout } from './types'
+import type { CommissionAdjustment, Partner, PartnerPayout } from '@sk/domain/partners'
 import type { DemoData } from '@/features/demo/types'
 
-import { zurichDate } from '@/features/catalog/lib/pickup'
+import { zurichDate } from '@sk/domain/catalog'
 
 import { allOrders, commissionItems } from './lib/ledger'
 

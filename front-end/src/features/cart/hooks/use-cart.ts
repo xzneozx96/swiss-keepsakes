@@ -1,10 +1,10 @@
-import type { CartLine } from '../types'
+import type { CartLine } from '@sk/domain/orders'
 import type { DemoState } from '@/features/demo/types'
 
-import { productEarliestPickup } from '@/features/catalog/lib/pickup'
+import { productEarliestPickup } from '@sk/domain/catalog'
+import { calendarDay } from '@sk/domain/shared'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-import { calendarDay } from '@/lib/format'
 
 function sameChoice(a: Omit<CartLine, 'id'>, b: Omit<CartLine, 'id'>) {
   return a.productId === b.productId

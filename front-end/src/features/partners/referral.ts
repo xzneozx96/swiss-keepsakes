@@ -1,4 +1,4 @@
-import type { Partner, ReferralVisit } from './types'
+import type { Partner, ReferralVisit } from '@sk/domain/partners'
 
 const WINDOW_MS = 30 * 24 * 60 * 60 * 1000
 

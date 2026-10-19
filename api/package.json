@@ -1,4 +1,8 @@
 {
+  "name": "@sk/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "dependencies": {
     "@neon/config": "^1.9.2",
     "@neon/env": "^1.6.3"

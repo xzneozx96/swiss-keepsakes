@@ -1,11 +1,11 @@
-import type { TourEdit } from '../hooks/use-tour-editor'
-import type { Language } from '@/contexts/locale-context'
-import type { LocalizedText } from '@/features/catalog/types'
 import type {
   TourSection,
   TourSectionItem,
   TourSectionLayout,
-} from '@/features/tours/types'
+} from '@sk/domain/bookings'
+import type { LocalizedText } from '@sk/domain/catalog'
+import type { TourEdit } from '../hooks/use-tour-editor'
+import type { Language } from '@/contexts/locale-context'
 
 import {
   Button,
@@ -17,6 +17,9 @@ import {
   Switch,
   TextField,
 } from '@heroui/react'
+import { fromPrice, isPublished, isSoldOut, LANGUAGES } from '@sk/domain/catalog'
+
+import { calendarDay, formatDate, formatMoney, pickText } from '@sk/domain/shared'
 import { useEffect, useRef, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
@@ -31,18 +34,11 @@ import {
   SelectedIcon,
   TrashIcon,
 } from '@/components/icons'
-
 import { Media } from '@/components/media'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
-
-import { isPublished } from '@/features/catalog/lib/publish'
-import { fromPrice, isSoldOut } from '@/features/catalog/lib/stock'
 import { useDemoSelector } from '@/features/demo'
 import { MAX_TOUR_KEEPSAKES } from '@/features/tours/discovery/tour-keepsakes'
-import { calendarDay, formatDate, formatMoney } from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import { LANGUAGES } from '../lib/completeness'
 import { newId } from '../lib/records'
 import { LocalizedField } from './editor-parts'
 import { useStopDrag } from './itinerary/use-stop-drag'

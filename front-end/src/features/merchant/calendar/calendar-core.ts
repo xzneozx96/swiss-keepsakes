@@ -5,8 +5,8 @@ import interactionPlugin from '@fullcalendar/react/interaction'
 import themePlugin from '@fullcalendar/react/themes/monarch'
 import timeGridPlugin from '@fullcalendar/react/timegrid'
 
-import { zurichDate } from '@/features/catalog/lib/pickup'
-import { dateTimeFormat } from '@/lib/format'
+import { zurichDate } from '@sk/domain/catalog'
+import { dateTimeFormat } from '@sk/domain/shared'
 
 export const calendarPlugins = [
   themePlugin,

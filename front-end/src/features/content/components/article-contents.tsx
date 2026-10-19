@@ -1,4 +1,4 @@
-import type { ArticleSection } from '../types'
+import type { ArticleSection } from '@sk/domain/content'
 
 import { useEffect, useRef, useState } from 'react'
 

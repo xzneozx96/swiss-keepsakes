@@ -1,17 +1,17 @@
-import type { Article, ArticleComment } from '../types'
+import type { Tour } from '@sk/domain/bookings'
+import type { Article, ArticleComment } from '@sk/domain/content'
 import type { ProductCardProps } from '@/features/catalog/components/product-card'
-import type { Tour } from '@/features/tours/types'
 
+import { isPublished } from '@sk/domain/catalog'
+import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from '@sk/domain/content'
+
+import { formatDate } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-
-import { isPublished } from '@/features/catalog/lib/publish'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { avatarUrl } from '@/lib/avatars'
-import { formatDate } from '@/lib/format'
 import { publishedArticles } from '../lib/articles'
-import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from '../types'
 
 const WHITESPACE_RUN = /\s+/
 

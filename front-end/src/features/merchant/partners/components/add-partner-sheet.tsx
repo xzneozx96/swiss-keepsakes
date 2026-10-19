@@ -1,5 +1,5 @@
+import type { Partner } from '@sk/domain/partners'
 import type { NewPartner } from '@/features/partners/hooks/use-partner-actions'
-import type { Partner } from '@/features/partners/types'
 
 import {
   Button,

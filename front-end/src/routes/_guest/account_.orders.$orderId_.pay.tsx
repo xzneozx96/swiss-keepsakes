@@ -1,4 +1,4 @@
-import type { Order } from '@/features/orders/types'
+import type { Order } from '@sk/domain/orders'
 
 import {
   createFileRoute,

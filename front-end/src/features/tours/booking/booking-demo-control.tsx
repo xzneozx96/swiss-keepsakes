@@ -1,18 +1,18 @@
 import { Button } from '@heroui/react'
+import {
+  availableSeats,
+  participantSeats,
+} from '@sk/domain/bookings'
+import { dateTimeFormat } from '@sk/domain/shared'
+
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useDemo } from '@/features/demo'
-
 import { demoNow } from '@/features/demo/clock'
 import { useTourActions } from '@/features/tours/hooks/use-tours'
-import {
-  availableSeats,
-  participantSeats,
-} from '@/features/tours/lib/selectors'
 import { createTourSeed } from '@/features/tours/seed'
-import { dateTimeFormat } from '@/lib/format'
 import { addSampleTourBookings } from './sample-bookings'
 import { competingHold, openPayment } from './transitions'
 

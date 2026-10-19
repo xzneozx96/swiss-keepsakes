@@ -1,12 +1,12 @@
 import { Button } from '@heroui/react'
+import { isUploadedPhoto } from '@sk/domain/shared'
+
 import { useRef, useState } from 'react'
 
 import { PhotoAddIcon, UploadIcon } from '@/components/icons'
-
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
 import { PhotoSheet } from '@/features/content/merchant/components/media-sheets'
-import { isUploadedPhoto } from '@/lib/rich-text'
 import { preparePhoto } from '../lib/photo-upload'
 
 /**

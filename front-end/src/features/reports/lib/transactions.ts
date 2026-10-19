@@ -1,13 +1,13 @@
-import type { Rappen } from '@/features/catalog/types'
-import type { TripRecord } from '@/features/checkout/types'
+import type { Rappen } from '@sk/domain/catalog'
+import type { TripRecord } from '@sk/domain/orders'
+import type { TransactionRef } from '@sk/domain/partners'
 import type { DemoData } from '@/features/demo/types'
-import type { TransactionRef } from '@/features/partners/types'
 
-import { zurichDayOf } from '@/features/catalog/lib/pickup'
+import { bookingCommission } from '@sk/domain/bookings'
+import { zurichDayOf } from '@sk/domain/catalog'
+import { commission, lineTotal } from '@sk/domain/orders'
 import { prng } from '@/features/merchant/today/lib/demo-history'
-import { commission, lineTotal } from '@/features/orders/lib/selectors'
 import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
-import { bookingCommission } from '@/features/tours/lib/selectors'
 
 /** The four guest groups of PRD §3, plus "not determined" when the trip answers are missing. */
 export const GUEST_GROUPS = [

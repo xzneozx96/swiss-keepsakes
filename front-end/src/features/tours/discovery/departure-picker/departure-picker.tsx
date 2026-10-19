@@ -1,7 +1,7 @@
 import type { CalendarDate } from '@internationalized/date'
+import type { TourPaymentPolicy } from '@sk/domain/bookings'
 import type { ReactNode } from 'react'
 import type { PickerFormat, SlotChoice, SlotModel } from './model'
-import type { TourPaymentPolicy } from '@/features/tours/types'
 
 import { Calendar } from '@heroui/react'
 import { useState } from 'react'

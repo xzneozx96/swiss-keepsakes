@@ -1,12 +1,12 @@
-import type { TourBooking } from '../../types'
+import type { TourBooking } from '@sk/domain/bookings'
+import type { Guest } from '@sk/domain/orders'
 import type { StatusTone } from '@/components/status-chip'
-import type { Guest } from '@/features/orders/types'
 import type { ReportRow } from '@/features/partners/report/lib/report'
 import type { MessageKey } from '@/i18n/en'
 
-import { commissionLabel } from '@/features/orders/lib/labels'
+import { bookingCommission } from '@sk/domain/bookings'
 
-import { bookingCommission } from '../../lib/selectors'
+import { commissionLabel } from '@/features/orders/lib/labels'
 
 const statusLabel: Record<
   TourBooking['status'],

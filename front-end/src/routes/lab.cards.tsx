@@ -1,13 +1,14 @@
 import type { CardOptionProps } from '@/features/lab/card-options'
 
-import { createFileRoute, Link } from '@tanstack/react-router'
-
-import { useLocale } from '@/contexts/locale-context'
 import {
+  fromPrice,
   productEarliestPickup,
   zurichDate,
-} from '@/features/catalog/lib/pickup'
-import { fromPrice } from '@/features/catalog/lib/stock'
+} from '@sk/domain/catalog'
+
+import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useLocale } from '@/contexts/locale-context'
 import { useDemo, useDemoNow } from '@/features/demo'
 import {
   OptionBorderless,
@@ -16,8 +17,6 @@ import {
   OptionPricePill,
   OptionRow,
 } from '@/features/lab/card-options'
-import { formatMoney, formatShortDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 /** Lab: compare gift-card layouts at phone width. Not part of the product. */
 export const Route = createFileRoute('/lab/cards')({ component: CardLab })

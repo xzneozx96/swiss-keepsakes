@@ -1,8 +1,9 @@
-import type { MissingText } from '../lib/completeness'
-import type { Issue, StepStatus } from '../lib/validation'
+import type { Issue, MissingText, StepStatus } from '@sk/domain/catalog'
 import type { Language } from '@/contexts/locale-context'
 
 import { Alert, Button, ProgressBar } from '@heroui/react'
+import { LANGUAGES } from '@sk/domain/catalog'
+
 import { useEffect, useState } from 'react'
 
 import {
@@ -17,10 +18,8 @@ import {
 } from '@/components/icons'
 
 import { SheetFrame } from '@/components/sheet-frame'
-
 import { useLocale } from '@/contexts/locale-context'
 import { ToneLine } from '@/features/tours/merchant/shared'
-import { LANGUAGES } from '../lib/completeness'
 import { LanguageTabs, useFieldList } from './editor-parts'
 
 const FORM_FIELD_TAG = /^(?:input|textarea|select)$/i

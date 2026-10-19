@@ -1,11 +1,14 @@
+import type { LocalizedText } from '@sk/domain/catalog'
 import type { useTourEditor } from '../hooks/use-tour-editor'
 import type { IconComponent } from '@/components/icons'
 import type { Language } from '@/contexts/locale-context'
-import type { LocalizedText } from '@/features/catalog/types'
 
 import { Button } from '@heroui/react'
-import { useState } from 'react'
+import { hasText } from '@sk/domain/catalog'
 
+import { pickText } from '@sk/domain/shared'
+
+import { useState } from 'react'
 import {
   BookingsIcon,
   ContentIcon,
@@ -13,10 +16,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from '@/components/icons'
-
 import { useLocale } from '@/contexts/locale-context'
-import { pickText } from '@/lib/localized'
-import { hasText } from '../lib/completeness'
 
 import { LocalizedField } from './editor-parts'
 import { ItineraryCard } from './itinerary/itinerary-editor'

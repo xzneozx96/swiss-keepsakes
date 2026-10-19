@@ -1,5 +1,5 @@
+import type { TripAnswers, TripRecord } from '@sk/domain/orders'
 import type { TripTarget } from '../lib/trip'
-import type { TripAnswers, TripRecord } from '../types'
 
 import { useDemo } from '@/features/demo'
 

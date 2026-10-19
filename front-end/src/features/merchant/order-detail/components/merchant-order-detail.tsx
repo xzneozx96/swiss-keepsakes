@@ -1,8 +1,8 @@
+import type { Order } from '@sk/domain/orders'
 import type {
   MerchantOrderActions,
   MerchantOrderView,
 } from '../hooks/use-merchant-order-detail'
-import type { Order } from '@/features/orders/types'
 
 import { Tabs } from '@heroui/react'
 import { useState } from 'react'

@@ -1,6 +1,6 @@
+import type { TourPaymentPolicy } from '@sk/domain/bookings'
 import type { KeyboardEvent } from 'react'
 import type { DaySlots, PickerFormat, Slot, SlotChoice } from './model'
-import type { TourPaymentPolicy } from '@/features/tours/types'
 
 import { Radio, RadioGroup } from '@heroui/react'
 import { parseDate } from '@internationalized/date'

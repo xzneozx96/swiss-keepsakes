@@ -1,10 +1,21 @@
+import type { PickupPlace } from '@sk/domain/catalog'
+import type { Actor, LogEntry, Order, Payment } from '@sk/domain/orders'
 import type { Language } from '@/contexts/locale-context'
-import type { PickupPlace } from '@/features/catalog/types'
 import type { ShownLabel } from '@/features/orders/hooks/use-orders'
 import type { PickupChange } from '@/features/orders/lib/transitions'
-import type { Actor, LogEntry, Order, Payment } from '@/features/orders/types'
 import type { MessageKey } from '@/i18n/en'
 
+import {
+  dueDatesAtAcceptance,
+  firstPaymentAmount,
+  formatOrderDate,
+  formatOrderDateTime,
+  lineTotal,
+  orderTotal,
+  shortLines,
+  variantAvailable,
+} from '@sk/domain/orders'
+import { formatMoney, numberFormat, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { shop } from '@/features/catalog/seed'
 import { useDemo } from '@/features/demo'
@@ -15,26 +26,12 @@ import {
   useOrderSummary,
 } from '@/features/orders/hooks/use-orders'
 import {
-  formatOrderDate,
-  formatOrderDateTime,
-} from '@/features/orders/lib/format'
-import {
-  dueDatesAtAcceptance,
-  firstPaymentAmount,
-  lineTotal,
-  orderTotal,
-  shortLines,
-  variantAvailable,
-} from '@/features/orders/lib/selectors'
-import {
   acceptBlock,
   changePickupBlock,
   declineBlock,
 } from '@/features/orders/lib/transitions'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
-import { formatMoney, numberFormat } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 export type DeclineReason = 'outOfStock' | 'date' | 'other'
 

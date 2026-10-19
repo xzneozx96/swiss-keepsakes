@@ -1,12 +1,12 @@
+import type { Article } from '@sk/domain/content'
 import type { Category, CategoryFilter } from './search-params'
+
 import type { Language } from '@/contexts/locale-context'
 
-import type { Article } from '@/features/content/types'
-
+import { pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { publishedArticles } from '@/features/content/lib/articles'
 import { useDemo } from '@/features/demo'
-import { pickText } from '@/lib/localized'
 import {
   categories,
 

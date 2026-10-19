@@ -1,4 +1,4 @@
-import type { Partner } from '../types'
+import type { Partner } from '@sk/domain/partners'
 import type { CodeStatus } from '@/features/auth/hooks/use-sign-in'
 
 import { useEffect, useState } from 'react'

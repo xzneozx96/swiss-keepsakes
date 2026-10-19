@@ -1,14 +1,14 @@
+import type { Mail } from '@sk/domain/notifications'
+import type { IntlLocale } from '@sk/domain/shared'
 import type { Language } from '@/contexts/locale-context'
 import type { Role } from '@/features/demo/types'
 import type { RenderedMail } from '@/features/notifications/components/render-mail'
-import type { Mail } from '@/features/notifications/types'
 import type { MessageKey } from '@/i18n/en'
-import type { IntlLocale } from '@/lib/format'
 
 import {
   formatOrderDate,
   formatOrderDateTime,
-} from '@/features/orders/lib/format'
+} from '@sk/domain/orders'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 

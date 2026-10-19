@@ -1,19 +1,17 @@
+import type { DayRange, SalesPeriodId } from '@sk/domain/reporting'
 import type { ReactNode } from 'react'
-import type { SalesPeriodId } from '@/features/merchant/sales/lib/periods'
 import type { ReportFilters } from '@/features/reports/lib/money'
-import type { DayRange } from '@/lib/analytics'
 
+import { zurichDayOf } from '@sk/domain/catalog'
+
+import { formatMoney, percentOf, pickText } from '@sk/domain/shared'
 import { createContext, use, useMemo, useState } from 'react'
-
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDayOf } from '@/features/catalog/lib/pickup'
 import { useDemo } from '@/features/demo'
 import { useSalesOverview } from '@/features/merchant/sales/hooks/use-sales-overview'
 import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
 import { useReports } from '@/features/reports/hooks/use-reports'
 import { NO_FILTERS } from '@/features/reports/lib/money'
-import { formatMoney, percentOf } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 /** A previous range that holds nothing, for "All time" (no comparison). */
 const NOTHING: DayRange = { start: '0000-01-01', end: '0000-01-01' }

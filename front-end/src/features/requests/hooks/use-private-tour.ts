@@ -1,10 +1,10 @@
-import type { PrivateTourRequest } from '../types'
+import type { PrivateTourRequest } from '@sk/domain/requests'
 
+import { looksLikeEmail } from '@sk/domain/requests'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoActions, useDemoSelector } from '@/features/demo'
 
+import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-import { looksLikeEmail } from '../lib/answers'
 import { mailPrivateTourRequest } from '../lib/request-mail'
 
 export interface PrivateTourInput {

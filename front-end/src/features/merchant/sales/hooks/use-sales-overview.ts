@@ -1,37 +1,27 @@
-import type { Bucket, SalesPeriodId, SalesRange } from '../lib/periods'
+import type { PaymentMethod } from '@sk/domain/orders'
+import type { Bucket, DayRange, SalesPeriodId, SalesRange } from '@sk/domain/reporting'
 import type { DeltaView } from '@/components/stat-card'
-import type { PaymentMethod } from '@/features/orders/types'
 import type { ReportFilters } from '@/features/reports/lib/money'
 import type { ReportTx } from '@/features/reports/lib/transactions'
-import type { DayRange } from '@/lib/analytics'
 
-import { useMemo } from 'react'
+import { zurichDate, zurichDayOf } from '@sk/domain/catalog'
 
-import { useLocale } from '@/contexts/locale-context'
+import { addDays, bucketKey, bucketOf, bucketSlots, deltaOf, inSalesRange, SALES_PERIODS, salesRanges } from '@sk/domain/reporting'
 
-import { zurichDate, zurichDayOf } from '@/features/catalog/lib/pickup'
-import { useDemo, useDemoNow } from '@/features/demo'
-import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
-import { matchesFilters, NO_FILTERS } from '@/features/reports/lib/money'
-import { reportTransactions } from '@/features/reports/lib/transactions'
-import { deltaOf } from '@/lib/analytics'
 import {
   calendarDay,
   dateTimeFormat,
   formatMoney,
   numberFormat,
   percentOf,
-} from '@/lib/format'
-import { pickText } from '@/lib/localized'
-import {
-  addDays,
-  bucketKey,
-  bucketOf,
-  bucketSlots,
-  inSalesRange,
-  SALES_PERIODS,
-  salesRanges,
-} from '../lib/periods'
+  pickText,
+} from '@sk/domain/shared'
+import { useMemo } from 'react'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo, useDemoNow } from '@/features/demo'
+import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
+import { matchesFilters, NO_FILTERS } from '@/features/reports/lib/money'
+import { reportTransactions } from '@/features/reports/lib/transactions'
 
 /** A change smaller than this either way counts as stable: grey line, no arrow. */
 const STABLE = 0.05

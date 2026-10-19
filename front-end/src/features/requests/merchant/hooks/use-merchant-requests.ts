@@ -1,15 +1,15 @@
-import type { AdviceRequest, PrivateTourRequest } from '../../types'
+import type { AdviceRequest, PrivateTourRequest } from '@sk/domain/requests'
 import type { StatusTone } from '@/components/status-chip'
 import type { Language } from '@/contexts/locale-context'
 
-import { useLocale } from '@/contexts/locale-context'
+import { formatOrderDateTime } from '@sk/domain/orders'
 
+import { calendarDay, dateTimeFormat } from '@sk/domain/shared'
+import { useLocale } from '@/contexts/locale-context'
 import { useDemo } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-import { formatOrderDateTime } from '@/features/orders/lib/format'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
-import { calendarDay, dateTimeFormat } from '@/lib/format'
 import { formatDateRange } from '../../lib/render-request-mail'
 
 /** How many answers an M19 card shows before "+n more". */

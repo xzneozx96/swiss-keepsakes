@@ -1,3 +1,5 @@
+import type { Rappen } from '@sk/domain/catalog'
+import type { MailParams, MailTemplate } from '@sk/domain/notifications'
 import type {
   Actor,
   LogEvent,
@@ -5,27 +7,26 @@ import type {
   OrderStatus,
   Payment,
   PaymentMethod,
+  ShortLine,
   StaffId,
-} from '../types'
-import type { ShortLine } from './selectors'
+} from '@sk/domain/orders'
 import type { Language } from '@/contexts/locale-context'
-import type { Rappen } from '@/features/catalog/types'
 import type { DemoState } from '@/features/demo/types'
-import type { MailParams, MailTemplate } from '@/features/notifications/types'
 
-import { sendMail } from '@/features/notifications/mail'
-
-import { findDuplicatePayment } from '@/lib/payments'
 import {
   amountDueNow,
   amountPaid,
   balance,
+  canTransition,
   dueDatesAtAcceptance,
   firstPaymentAmount,
   orderTotal,
   processingPayment,
   shortLines,
-} from './selectors'
+} from '@sk/domain/orders'
+
+import { findDuplicatePayment } from '@sk/domain/payments'
+import { sendMail } from '@/features/notifications/mail'
 
 /**
  * Order transitions (UX spec §2.1, §2.3). Each one is DemoState → DemoState and returns the
@@ -141,6 +142,13 @@ function statusIs(order: Order, ...allowed: OrderStatus[]): OrderBlock | null {
     : { code: 'wrong-status', status: order.status }
 }
 
+/** The status table decides: the order must be allowed to move to `to`. */
+function canMoveTo(order: Order, to: OrderStatus): OrderBlock | null {
+  return canTransition(order.status, to)
+    ? null
+    : { code: 'wrong-status', status: order.status }
+}
+
 /** Once the first amount due is paid, an accepted order is confirmed (spec §2.1, system step). */
 function confirmIfFirstPaid(order: Order): Order {
   return order.status === 'accepted' && amountDueNow(order) === 0
@@ -167,7 +175,7 @@ export function acceptBlock(state: DemoState, order: Order): OrderBlock | null {
   const short = shortLines(state.data, order)
 
   return (
-    statusIs(order, 'requested')
+    canMoveTo(order, 'accepted')
     ?? (short.length ? { code: 'stock-short', lines: short } : null)
   )
 }
@@ -184,7 +192,7 @@ export function changePickupBlock(
 
 export function declineBlock(order: Order, reason: string): OrderBlock | null {
   return (
-    statusIs(order, 'requested')
+    canMoveTo(order, 'declined')
     ?? (reason.trim() ? null : { code: 'reason-required' })
   )
 }
@@ -231,11 +239,11 @@ export function recordOfflinePaymentBlock(
 }
 
 export function markReadyBlock(order: Order): OrderBlock | null {
-  return statusIs(order, 'preparing')
+  return canMoveTo(order, 'ready')
 }
 
 export function handOverBlock(order: Order): OrderBlock | null {
-  return statusIs(order, 'ready')
+  return canMoveTo(order, 'handed_over')
 }
 
 /** Complete stays locked, with its reason, until the gift is handed over and fully paid (AC09). */
@@ -244,7 +252,7 @@ export function completeBlock(order: Order): OrderBlock | null {
     return { code: 'not-handed-over' }
 
   return (
-    statusIs(order, 'handed_over')
+    canMoveTo(order, 'completed')
     ?? (balance(order) > 0
       ? { code: 'balance-owed', balance: balance(order) }
       : null)
@@ -270,7 +278,7 @@ export function cancelBlock(
   reason: CancelReason,
 ): OrderBlock | null {
   if (reason === 'merchant')
-    return statusIs(order, 'accepted', 'preparing', 'ready')
+    return canMoveTo(order, 'cancelled')
 
   const status = statusIs(order, 'accepted')
 

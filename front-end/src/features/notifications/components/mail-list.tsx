@@ -1,10 +1,10 @@
-import type { Mail } from '../types'
+import type { Mail } from '@sk/domain/notifications'
 
 import { buttonVariants } from '@heroui/react'
 
-import { useDemo } from '@/features/demo'
+import { dateTimeFormat } from '@sk/domain/shared'
 
-import { dateTimeFormat } from '@/lib/format'
+import { useDemo } from '@/features/demo'
 import { renderMail } from './render-mail'
 
 /** The emails of one recipient, rendered in the recipient's language. Loaded when the panel opens, so the dictionaries it needs stay out of the first load. */

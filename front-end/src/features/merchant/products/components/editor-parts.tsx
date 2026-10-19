@@ -1,10 +1,10 @@
 import type {
   LanguageStatus,
+  LocalizedText,
   MissingText,
   TextFieldId,
-} from '../lib/completeness'
+} from '@sk/domain/catalog'
 import type { Language } from '@/contexts/locale-context'
-import type { LocalizedText } from '@/features/catalog/types'
 import type { ProductTab } from '@/features/merchant/products/lib/search-params'
 import type { MessageKey } from '@/i18n/en'
 
@@ -17,18 +17,18 @@ import {
   Tabs,
   TextField,
 } from '@heroui/react'
+import { hasText, LANGUAGES, languageStatus } from '@sk/domain/catalog'
 import { Link } from '@tanstack/react-router'
+
 import { useEffect } from 'react'
 
 import { AutoTextArea } from '@/components/auto-textarea'
 
 import { BackIcon } from '@/components/icons'
-
 import { EditorFormSkeleton } from '@/components/layout/detail-skeletons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
-import { hasText, LANGUAGES, languageStatus } from '../lib/completeness'
 import { LanguageChip, MaintenanceChip, PublishChip } from './status-chips'
 
 function otherLanguage(language: Language): Language {

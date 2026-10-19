@@ -1,4 +1,4 @@
-import type { Guest } from '@/features/orders/types'
+import type { Guest } from '@sk/domain/orders'
 
 import { buttonVariants } from '@heroui/react'
 import { Link } from '@tanstack/react-router'

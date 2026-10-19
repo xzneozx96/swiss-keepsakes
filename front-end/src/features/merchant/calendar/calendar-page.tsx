@@ -3,11 +3,11 @@ import type { CalendarRef, DatesSetInfo } from '@fullcalendar/react'
 import type { CalendarItem, CalendarOverlay } from './calendar-core'
 import FullCalendar from '@fullcalendar/react'
 import deLocale from '@fullcalendar/react/locales/de'
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { dateTimeFormat } from '@sk/domain/shared'
 
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { dateTimeFormat } from '@/lib/format'
 
 import { calendarPlugins, MOBILE_QUERY, swissDate } from './calendar-core'
 import { CalendarOverlays } from './calendar-overlays'

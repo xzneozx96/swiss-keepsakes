@@ -1,5 +1,5 @@
+import type { TripAnswers } from '@sk/domain/orders'
 import type { TripTarget } from '../lib/trip'
-import type { TripAnswers } from '../types'
 
 import { Button, Drawer } from '@heroui/react'
 import { useState } from 'react'

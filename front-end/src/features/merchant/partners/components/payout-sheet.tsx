@@ -18,18 +18,18 @@ import {
   toast,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date'
-import { useState } from 'react'
+import { zurichDate } from '@sk/domain/catalog'
 
+import { formatMoney } from '@sk/domain/shared'
+import { useState } from 'react'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { useDemoNow } from '@/features/demo'
 import {
   methodLabelKeys,
   offlineMethods,
 } from '@/features/merchant/record-payment/hooks/use-record-payment'
 import { usePartnerActions } from '@/features/partners/hooks/use-partner-actions'
-import { formatMoney } from '@/lib/format'
 
 /** Same choice card as M08: ink frame when selected. */
 const choiceCard

@@ -1,6 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { percentOf, pluralCategory } from '@sk/domain/shared'
 
-import { percentOf, pluralCategory } from '@/lib/format'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 describe('formatMoney', () => {
   afterEach(() => {
@@ -9,7 +9,7 @@ describe('formatMoney', () => {
   })
 
   it('formats Swiss francs with the ISO code and a typographic apostrophe', async () => {
-    const { formatMoney } = await import('@/lib/format')
+    const { formatMoney } = await import('@sk/domain/shared')
 
     expect(formatMoney(1249.5, 'de-CH')).toMatch(/^CHF.1’249\.50$/)
   })
@@ -21,7 +21,7 @@ describe('formatMoney', () => {
     vi.spyOn(Intl, 'NumberFormat').mockImplementation(function stub() {
       return { format: () => 'CHF 1\'249.00' } as unknown as Intl.NumberFormat
     })
-    const { formatMoney } = await import('@/lib/format')
+    const { formatMoney } = await import('@sk/domain/shared')
 
     expect(formatMoney(1249, 'de-CH')).toBe('CHF 1’249.00')
   })

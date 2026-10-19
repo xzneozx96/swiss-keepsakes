@@ -1,11 +1,10 @@
+import type { DayRange, SalesPeriodId } from '@sk/domain/reporting'
 import type {
   SalesBar,
   SalesKpi,
   SalesOverviewView,
 } from '../hooks/use-sales-overview'
-import type { SalesPeriodId } from '../lib/periods'
 import type { DataTableColumn } from '@/components/data-table'
-import type { DayRange } from '@/lib/analytics'
 
 import {
   Button,
@@ -19,8 +18,10 @@ import {
   Skeleton,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date'
+import { numberFormat } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
+
 import {
   Bar,
   BarChart,
@@ -37,7 +38,6 @@ import {
 import { DataTable } from '@/components/data-table'
 
 import { EmptyState } from '@/components/empty-state'
-
 import {
   ChevronDownIcon,
   ChevronRightIcon,
@@ -53,7 +53,6 @@ import {
 import { WidgetSkeleton } from '@/features/merchant/today/components/overview-pages'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-import { numberFormat } from '@/lib/format'
 import { useSalesOverview } from '../hooks/use-sales-overview'
 import { SalesAllTime } from './sales-all-time'
 

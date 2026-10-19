@@ -1,7 +1,6 @@
+import type { MissingText, PickupPlace } from '@sk/domain/catalog'
 import type { PlaceRow } from '../hooks/use-merchant-products'
-import type { MissingText } from '../lib/completeness'
 import type { Language } from '@/contexts/locale-context'
-import type { PickupPlace } from '@/features/catalog/types'
 
 import {
   Button,
@@ -11,22 +10,22 @@ import {
   TextField,
   toast,
 } from '@heroui/react'
-import { useRef, useState } from 'react'
-
-import { ChevronRightIcon, ClockIcon, PickupIcon } from '@/components/icons'
-
-import { SheetFrame } from '@/components/sheet-frame'
-import { useLocale } from '@/contexts/locale-context'
-
-import { useDemo, useDemoActions } from '@/features/demo'
-import { pickText } from '@/lib/localized'
 import {
   cleanText,
   closestLanguage,
   languageStatus,
   missingText,
   placeText,
-} from '../lib/completeness'
+} from '@sk/domain/catalog'
+
+import { pickText } from '@sk/domain/shared'
+
+import { useRef, useState } from 'react'
+import { ChevronRightIcon, ClockIcon, PickupIcon } from '@/components/icons'
+
+import { SheetFrame } from '@/components/sheet-frame'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo, useDemoActions } from '@/features/demo'
 import {
   LanguageTabs,
   LocalizedField,

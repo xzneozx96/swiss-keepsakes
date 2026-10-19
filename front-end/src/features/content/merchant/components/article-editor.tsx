@@ -1,4 +1,4 @@
-import type { StoryCategory } from '../../types'
+import type { StoryCategory } from '@sk/domain/content'
 import type { ArticleEditor as Editor } from '../hooks/use-article-editor'
 import type { MediaTarget } from './article-sections'
 import type { Language } from '@/contexts/locale-context'
@@ -12,6 +12,9 @@ import {
   RadioGroup,
   toast,
 } from '@heroui/react'
+import { STORY_CATEGORIES } from '@sk/domain/content'
+import { formatDate } from '@sk/domain/shared'
+
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 
@@ -22,18 +25,15 @@ import {
   LanguageIcon,
   StatusSuccessIcon,
 } from '@/components/icons'
-
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
 import { StatusChip } from '@/components/status-chip'
+
 import { useLocale } from '@/contexts/locale-context'
 import {
   ActionPanel,
   DetailCard,
 } from '@/features/merchant/order-detail/components/detail-card'
-
 import { useIsWide } from '@/hooks/use-is-wide'
-import { formatDate } from '@/lib/format'
-import { STORY_CATEGORIES } from '../../types'
 import { useArticleEditor } from '../hooks/use-article-editor'
 import { LinksCard, LinkSheet, RelatedCard, StorySheet } from './article-links'
 import { ArticleSections } from './article-sections'

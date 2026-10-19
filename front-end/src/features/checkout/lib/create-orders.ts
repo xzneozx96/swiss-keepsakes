@@ -1,14 +1,14 @@
+import type { LocalizedText } from '@sk/domain/catalog'
+import type { Order, OrderLine } from '@sk/domain/orders'
 import type { Language } from '@/contexts/locale-context'
-import type { LocalizedText } from '@/features/catalog/types'
 import type { DemoState } from '@/features/demo/types'
-import type { Order, OrderLine } from '@/features/orders/types'
 
 import {
   groupCartIntoOrders,
   selectedCartLines,
-} from '@/features/cart/lib/group-cart'
+  variantAvailable,
+} from '@sk/domain/orders'
 import { sendMail } from '@/features/notifications/mail'
-import { variantAvailable } from '@/features/orders/lib/selectors'
 import { attributedPartnerId } from '@/features/partners/referral'
 
 export interface CheckoutContext {

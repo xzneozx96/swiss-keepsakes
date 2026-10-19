@@ -5,16 +5,17 @@ import type {
   TourData,
   TourDraft,
   TourParticipants,
-} from '../types'
+} from '@sk/domain/bookings'
+import type { MailParams } from '@sk/domain/notifications'
 import type { Language } from '@/contexts/locale-context'
-import type { MailParams } from '@/features/notifications/types'
 
 import {
   availableSeats,
   bookingPaid,
+  canTransition,
   firstPaymentAmount,
   tourTotal,
-} from '../lib/selectors'
+} from '@sk/domain/bookings'
 
 /** R06: the first full or deposit payment holds the seats for 15 minutes from creation. */
 export const HOLD_MINUTES = 15
@@ -233,7 +234,7 @@ export function applyProviderResult(
     ],
   }
   const confirmed: TourBooking
-    = next.status === 'pending_payment'
+    = canTransition(next.status, 'confirmed')
       && outcome === 'succeeded'
       && bookingPaid(next) >= next.firstAmount
       ? { ...next, status: 'confirmed', holdUntil: null }

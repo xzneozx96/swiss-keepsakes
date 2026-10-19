@@ -1,15 +1,24 @@
-import type { Tour } from '../types'
+import type { Tour } from '@sk/domain/bookings'
 
 import { Alert } from '@heroui/react'
+import {
+  availableSeats,
+  firstPaymentAmount,
+  nextAvailableDeparture,
+  participantSeats,
+  tourTotal,
+  upcomingDepartures,
+} from '@sk/domain/bookings'
+import { zurichDate } from '@sk/domain/catalog'
+
+import { dateTimeFormat, formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
 import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
-
 import { ChoiceSheet } from '@/components/choice-sheet'
 import { EmptyState } from '@/components/empty-state'
 import { InfoIcon, TourIcon } from '@/components/icons'
 import { QuantityStepper } from '@/components/quantity-stepper'
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { ageBandLabels } from '@/features/tours/discovery/age-bands'
 import { DeparturePicker } from '@/features/tours/discovery/departure-picker/departure-picker'
 import {
@@ -18,16 +27,6 @@ import {
   useSlotModel,
 } from '@/features/tours/discovery/departure-picker/model'
 import { useTourActions, useTours } from '@/features/tours/hooks/use-tours'
-import {
-  availableSeats,
-  firstPaymentAmount,
-  nextAvailableDeparture,
-  participantSeats,
-  tourTotal,
-  upcomingDepartures,
-} from '@/features/tours/lib/selectors'
-import { dateTimeFormat, formatMoney, formatShortDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 declare module '@tanstack/history' {
   interface HistoryState {

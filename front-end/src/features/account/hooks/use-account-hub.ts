@@ -1,13 +1,12 @@
-import { useLocale } from '@/contexts/locale-context'
+import { zurichDate } from '@sk/domain/catalog'
 
-import { zurichDate } from '@/features/catalog/lib/pickup'
+import { amountDueNow } from '@sk/domain/orders'
+import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
+import { useLocale } from '@/contexts/locale-context'
 import { useDemoNow, useDemoSelector } from '@/features/demo'
 import { renderMail } from '@/features/notifications/components/render-mail'
 import { useGuestOrders } from '@/features/orders/hooks/use-orders'
-import { amountDueNow } from '@/features/orders/lib/selectors'
 import { isClosedOrder } from '@/features/transactions/hooks/use-transaction-row'
-import { formatMoney, formatShortDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 import { useAccountPayments } from './use-account-payments'
 
 const liveBooking = ['pending_payment', 'confirmed']

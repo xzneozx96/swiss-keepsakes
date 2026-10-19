@@ -1,9 +1,9 @@
+import type { Rappen } from '@sk/domain/catalog'
 import type { DateRange } from './report'
-import type { Rappen } from '@/features/catalog/types'
 import type { DemoData } from '@/features/demo/types'
 import type { LedgerEntry } from '@/features/partners/lib/ledger'
 
-import { zurichDate } from '@/features/catalog/lib/pickup'
+import { zurichDate } from '@sk/domain/catalog'
 import { partnerLedger } from '@/features/partners/lib/ledger'
 
 /** Payouts, refund adjustments and offsets in one P02 period (step 5.7, AC13, D16). */

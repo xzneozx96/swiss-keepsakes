@@ -1,4 +1,4 @@
-import type { Category } from './types'
+import type { Category } from '@sk/domain/catalog'
 
 /**
  * The two product categories (PRD §7.0), in the order the guest rail shows them. Fixed:

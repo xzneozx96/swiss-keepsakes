@@ -1,11 +1,23 @@
+import type { Order } from '@sk/domain/orders'
 import type { LabOrderRow } from '@/features/lab/order-card-options'
-import type { Order } from '@/features/orders/types'
 
+import { zurichDate } from '@sk/domain/catalog'
+import {
+  formatOrderDate,
+  formatOrderDateTime,
+  orderTotal,
+} from '@sk/domain/orders'
+
+import {
+  calendarDay,
+  dateTimeFormat,
+  formatMoney,
+  formatShortDate,
+  pickText,
+} from '@sk/domain/shared'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { useDemo, useDemoNow } from '@/features/demo'
 import {
   OrderLedger,
@@ -23,22 +35,10 @@ import {
 } from '@/features/lab/order-card-options'
 import { orderTab } from '@/features/merchant/orders/lib/order-tabs'
 import {
-  formatOrderDate,
-  formatOrderDateTime,
-} from '@/features/orders/lib/format'
-import {
   formatLabel,
   paymentLabel,
   progressLabel,
 } from '@/features/orders/lib/labels'
-import { orderTotal } from '@/features/orders/lib/selectors'
-import {
-  calendarDay,
-  dateTimeFormat,
-  formatMoney,
-  formatShortDate,
-} from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 /** Lab: roomier M03 order cards with a gift photo. Not part of the product. */
 export const Route = createFileRoute('/lab/order-cards')({

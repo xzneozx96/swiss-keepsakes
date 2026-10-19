@@ -1,17 +1,23 @@
+import type { Order, OrderStatus } from '@sk/domain/orders'
 import type { MerchantOrderView } from '../hooks/use-merchant-order-detail'
 import type { IconComponent } from '@/components/icons'
-import type { Order, OrderStatus } from '@/features/orders/types'
 
 import { Button } from '@heroui/react'
-import { useEffect, useRef, useState } from 'react'
+import {
+  amountPaid,
+  balance,
+  orderTotal,
+} from '@sk/domain/orders'
 
+import { formatMoney } from '@sk/domain/shared'
+
+import { useEffect, useRef, useState } from 'react'
 import {
   GiftIcon,
   PayLaterIcon,
   ShopIcon,
   StatusSuccessIcon,
 } from '@/components/icons'
-
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { ProposalMark } from '@/features/demo/components/proposal-mark'
@@ -20,13 +26,7 @@ import {
   useBlockText,
   useOrderActions,
 } from '@/features/orders/hooks/use-orders'
-import {
-  amountPaid,
-  balance,
-  orderTotal,
-} from '@/features/orders/lib/selectors'
 import { completeBlock } from '@/features/orders/lib/transitions'
-import { formatMoney } from '@/lib/format'
 import { ActionPanel } from './detail-card'
 
 /** The five fulfilment steps after the decision, in order. */

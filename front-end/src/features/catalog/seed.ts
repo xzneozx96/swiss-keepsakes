@@ -5,11 +5,11 @@ import type {
   Review,
   Shop,
   Subcategory,
-} from './types'
+} from '@sk/domain/catalog'
+
+import { storyFromChapters } from '@sk/domain/shared'
 
 import { demoAt } from '@/features/demo/clock'
-
-import { storyFromChapters } from '@/lib/rich-text'
 import { victorinoxProducts } from './victorinox'
 
 /** Sample data for the prototype. Names, addresses and texts are invented. */

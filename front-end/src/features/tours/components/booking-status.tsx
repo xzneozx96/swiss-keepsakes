@@ -1,11 +1,11 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 import type { StatusTone } from '@/components/status-chip'
 
-import { StatusChip } from '@/components/status-chip'
+import { balanceOverdue, bookingBalance, bookingPaid } from '@sk/domain/bookings'
 
+import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoNow } from '@/features/demo'
-import { balanceOverdue, bookingBalance, bookingPaid } from '../lib/selectors'
 
 const tones: Record<TourBooking['status'], StatusTone> = {
   pending_payment: 'warning',

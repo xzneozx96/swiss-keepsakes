@@ -3,18 +3,19 @@ import type { ProductAction } from './product-rows'
 import type { ProductTab } from '@/features/merchant/products/lib/search-params'
 
 import { buttonVariants, Skeleton, toast } from '@heroui/react'
+import { pickText } from '@sk/domain/shared'
 import { Link, useNavigate } from '@tanstack/react-router'
+
 import { useEffect, useRef, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
-
 import { EmptyState } from '@/components/empty-state'
+
 import {
   FilterButton,
   FilterChips,
   filterGroup,
 } from '@/components/filter-bar'
-
 import {
   GiftIcon,
   OptionIcon,
@@ -27,7 +28,6 @@ import { RouteTabs } from '@/components/route-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemo } from '@/features/demo'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-import { pickText } from '@/lib/localized'
 import {
   useMerchantProducts,
   useProductArchive,

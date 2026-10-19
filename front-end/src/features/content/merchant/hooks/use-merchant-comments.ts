@@ -1,13 +1,13 @@
-import type { ArticleComment } from '../../types'
+import type { ArticleComment } from '@sk/domain/content'
 import type { Language } from '@/contexts/locale-context'
 
-import { useLocale } from '@/contexts/locale-context'
+import { reviewerName } from '@sk/domain/catalog'
 
+import { dateTimeFormat } from '@sk/domain/shared'
+import { useLocale } from '@/contexts/locale-context'
 import { useDemo } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-import { reviewerName } from '@/features/reviews/lib/review'
 import { avatarUrl } from '@/lib/avatars'
-import { dateTimeFormat } from '@/lib/format'
 import { publicStaffName } from '../lib/staff'
 
 export const COMMENT_FILTERS = ['notReplied', 'hidden'] as const

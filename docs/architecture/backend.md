@@ -674,7 +674,7 @@ The owner answered these questions on 19.10.2026. Q2 and Q6 still need follow-up
 | Q2 | Is the pilot merchant a registered Swiss business with a CHF bank account and a Stripe account, and can the storefront show the legal notice TWINT requires? | Not known yet. Open until Phase 4. |
 | Q3 | What happens to a payment that succeeds after its seats are gone? | Prevent it with server-side confirmation, cancel at expiry and card manual capture. Refund the rare remainder automatically (section 6.4). |
 | Q4 | Is staff MFA required? | No, it is never needed. |
-| Q5 | Default reminder timings | First payment 24 hours and 2 hours before the deadline. Balance 3 days before the due date. Pickup and tour the day before at 18:00 Zurich time. The merchant can change them. |
+| Q5 | Default reminder timings | First payment 24 hours and 2 hours before the deadline. Balance 3 days before the due date, at 09:00 Zurich time. Pickup and tour the day before at 18:00 Zurich time. The merchant can change them. |
 | Q6 | Is Frankfurt for data and compute, with mail metadata in the US, acceptable? | Acceptable. The lawyer confirms before go-live, together with retention periods for requests and visitor ids (PRD L412, L475). |
 | Q7 | Analytics tools | Plausible plus GA4. GA4 loads only after cookie consent (D13). |
 | Q8 | Partner report sessions: 6-digit code, 10 minutes, 5 attempts, 30 days on the device (R10) | Confirmed. |

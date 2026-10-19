@@ -1,20 +1,20 @@
-import type { DayRange, DeltaTone, PeriodId } from '@/lib/analytics'
+import type { DayRange, DeltaTone, PeriodId } from '@sk/domain/reporting'
 
-import { useState } from 'react'
+import { zurichDate, zurichDayOf } from '@sk/domain/catalog'
 
-import { useLocale } from '@/contexts/locale-context'
-import { zurichDate, zurichDayOf } from '@/features/catalog/lib/pickup'
-import { useDemo, useDemoNow } from '@/features/demo'
-import { commissionItems } from '@/features/partners/lib/ledger'
-import { linkOpens } from '@/features/partners/lib/link-opens'
-import { deltaOf, periodRanges, PERIODS } from '@/lib/analytics'
+import { deltaOf, periodRanges, PERIODS } from '@sk/domain/reporting'
 import {
   calendarDay,
   dateTimeFormat,
   formatMoney,
   numberFormat,
   percentOf,
-} from '@/lib/format'
+} from '@sk/domain/shared'
+import { useState } from 'react'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo, useDemoNow } from '@/features/demo'
+import { commissionItems } from '@/features/partners/lib/ledger'
+import { linkOpens } from '@/features/partners/lib/link-opens'
 
 /** Fixed per partner, in list order; partners beyond three share the muted colour. */
 const PARTNER_COLOURS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)']

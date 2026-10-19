@@ -10,11 +10,13 @@ import {
   TextArea,
   TextField,
 } from '@heroui/react'
+import { zurichDate } from '@sk/domain/catalog'
+import { formatShortDate } from '@sk/domain/shared'
+
 import { useNavigate } from '@tanstack/react-router'
+
 import { useRef, useState } from 'react'
-
 import { PickupDateIcon } from '@/components/icons'
-
 import { InfoNote } from '@/components/info-note'
 import { BackButton } from '@/components/layout/cart-button'
 import { QuantityStepper } from '@/components/quantity-stepper'
@@ -24,11 +26,9 @@ import {
   SurfaceCardTitle,
 } from '@/components/surface-card'
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { DateSheet } from '@/features/checkout/components/trip-profile'
 import { useDemoNow } from '@/features/demo'
 import { useBack } from '@/hooks/use-back'
-import { formatShortDate } from '@/lib/format'
 import {
   GROUP_MAX,
   GROUP_MIN,

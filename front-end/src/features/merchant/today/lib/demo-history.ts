@@ -1,4 +1,4 @@
-import type { Order, OrderLine, Payment } from '@/features/orders/types'
+import type { Order, OrderLine, Payment } from '@sk/domain/orders'
 
 import { products } from '@/features/catalog/seed'
 import { DEMO_START } from '@/features/demo/clock'

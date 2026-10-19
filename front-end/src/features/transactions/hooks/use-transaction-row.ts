@@ -1,14 +1,12 @@
+import type { Order } from '@sk/domain/orders'
 import type { ShownLabel } from '@/features/orders/hooks/use-orders'
-import type { Order } from '@/features/orders/types'
 
+import { formatOrderDate, pickupChangedBySeller } from '@sk/domain/orders'
+import { formatMoney, pickText, pickupDay } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoSelector } from '@/features/demo'
 import { useOrderSummary } from '@/features/orders/hooks/use-orders'
-import { formatOrderDate } from '@/features/orders/lib/format'
-import { pickupChangedBySeller } from '@/features/orders/lib/selectors'
 import { cancelBlock } from '@/features/orders/lib/transitions'
-import { formatMoney, pickupDay } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 /** Orders that need nothing more from the guest or the shop: C14 lists them under "Past". */
 export function isClosedOrder(order: Order) {

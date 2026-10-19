@@ -5,7 +5,7 @@ import type {
   ArticleLink,
   ArticleSection,
   StoryCategory,
-} from '../../types'
+} from '@sk/domain/content'
 import type { Language } from '@/contexts/locale-context'
 import type { MessageKey } from '@/i18n/en'
 

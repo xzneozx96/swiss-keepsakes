@@ -1,4 +1,4 @@
-import type { TourBooking, TourData } from '../types'
+import type { TourBooking, TourData } from '@sk/domain/bookings'
 import type { Language } from '@/contexts/locale-context'
 
 import { newBooking } from './transitions'

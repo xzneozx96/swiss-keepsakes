@@ -1,10 +1,12 @@
+import type { RichNode } from '@sk/domain/shared'
 import type { Editor } from '@tiptap/react'
-import type { RichNode } from '@/lib/rich-text'
 
 import { Button, FieldError, Input, Label, TextField } from '@heroui/react'
 import { textAreaVariants } from '@heroui/styles'
+import { isEmptyDoc, isUploadedPhoto, safeHref } from '@sk/domain/shared'
 import { EditorContent, Node, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+
 import { useEffect, useId, useRef, useState } from 'react'
 
 import {
@@ -20,11 +22,9 @@ import {
   UndoIcon,
   UploadIcon,
 } from '@/components/icons'
-
 import { useLocale } from '@/contexts/locale-context'
 import { PhotoSheet } from '@/features/content/merchant/components/media-sheets'
 import { photoUrl } from '@/lib/photos'
-import { isEmptyDoc, isUploadedPhoto, safeHref } from '@/lib/rich-text'
 import { usePhotoInput } from './photo-field'
 
 /**

@@ -20,11 +20,13 @@ import {
   TagGroup,
   TextField,
 } from '@heroui/react'
+import { firstPhoto, openingText } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
-import { useState } from 'react'
 
+import { useState } from 'react'
 import { ChoiceSheet } from '@/components/choice-sheet'
 import { flyToCart } from '@/components/fly-to-cart'
+
 import {
   EngraveIcon,
   InfoIcon,
@@ -33,7 +35,6 @@ import {
   SelectedIcon,
   StatusSuccessIcon,
 } from '@/components/icons'
-
 import {
   BackButton,
   CartButton,
@@ -50,7 +51,6 @@ import { QuantityStepper } from '@/components/quantity-stepper'
 import { StatusChip } from '@/components/status-chip'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { photoUrl } from '@/lib/photos'
-import { firstPhoto, openingText } from '@/lib/rich-text'
 import { PickupDateField } from './pickup-date-field'
 import { SellerRow } from './seller-row'
 import { StorySheet } from './story-sheet'

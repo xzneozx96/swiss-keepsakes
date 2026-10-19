@@ -1,4 +1,4 @@
-import type { Guest } from '@/features/orders/types'
+import type { Guest } from '@sk/domain/orders'
 
 import { avatarUrl } from '@/lib/avatars'
 

@@ -20,10 +20,13 @@ import {
   TextField,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date'
+import { isPickupClosed, zurichDate } from '@sk/domain/catalog'
+
+import { pickText } from '@sk/domain/shared'
+
 import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
-
 import {
   GiftIcon,
   InfoIcon,
@@ -34,12 +37,9 @@ import {
   StatusDangerIcon,
   StatusSuccessIcon,
 } from '@/components/icons'
-
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
-import { isPickupClosed, zurichDate } from '@/features/catalog/lib/pickup'
 import { useDemoNow, useDemoSelector } from '@/features/demo'
-import { pickText } from '@/lib/localized'
 import { declineReasons } from '../hooks/use-merchant-order-detail'
 import { ActionPanel } from './detail-card'
 

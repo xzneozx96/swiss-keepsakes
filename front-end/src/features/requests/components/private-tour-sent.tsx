@@ -1,12 +1,12 @@
 import { buttonVariants } from '@heroui/react'
-import { Link } from '@tanstack/react-router'
+import { zurichDate } from '@sk/domain/catalog'
 
+import { formatShortDate } from '@sk/domain/shared'
+import { Link } from '@tanstack/react-router'
 import { EmptyState } from '@/components/empty-state'
 import { StatusSuccessIcon, TourIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { useDemo, useDemoNow } from '@/features/demo'
-import { formatShortDate } from '@/lib/format'
 
 /**
  * C22 sent, in C07's grammar: the success mark and title, who replies and where, then the

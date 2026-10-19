@@ -1,4 +1,4 @@
-import type { ArticleBlock } from '../types'
+import type { ArticleBlock } from '@sk/domain/content'
 
 import { ProgressBar } from '@heroui/react'
 import { useEffect, useRef, useState } from 'react'

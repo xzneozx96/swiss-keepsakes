@@ -1,0 +1,6 @@
+packages:
+  - front-end
+  - api
+  - e2e
+  - spikes
+  - packages/*

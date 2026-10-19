@@ -1,4 +1,4 @@
-import type { Review } from '@/features/catalog/types'
+import type { Review } from '@sk/domain/catalog'
 
 /** Illustrative prototype reviews, not customer endorsements or real bookings. */
 export const sampleTourReviews: Review[] = [

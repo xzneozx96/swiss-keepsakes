@@ -1,10 +1,17 @@
+import type { LocalizedText } from '@sk/domain/catalog'
+import type { Order } from '@sk/domain/orders'
 import type { ReviewOrderView } from '../components/order-card'
-import type { LocalizedText } from '@/features/catalog/types'
 import type { ShownLabel } from '@/features/orders/hooks/use-orders'
-import type { Order } from '@/features/orders/types'
 
+import { zurichDate } from '@sk/domain/catalog'
+import {
+  dueDatesAtAcceptance,
+  firstPaymentAmount,
+  lineTotal,
+  orderTotal,
+} from '@sk/domain/orders'
+import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { zurichDate } from '@/features/catalog/lib/pickup'
 import { shop } from '@/features/catalog/seed'
 import { useDemoNow, useDemoSelector } from '@/features/demo'
 import {
@@ -12,14 +19,6 @@ import {
   paymentLabel,
   progressLabel,
 } from '@/features/orders/lib/labels'
-import {
-  dueDatesAtAcceptance,
-  firstPaymentAmount,
-  lineTotal,
-  orderTotal,
-} from '@/features/orders/lib/selectors'
-import { formatMoney, formatShortDate } from '@/lib/format'
-import { pickText } from '@/lib/localized'
 
 export interface SentOrderView {
   id: string

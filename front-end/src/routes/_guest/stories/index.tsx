@@ -1,4 +1,4 @@
-import type { StoryCategory } from '@/features/content/types'
+import type { StoryCategory } from '@sk/domain/content'
 
 import { createFileRoute } from '@tanstack/react-router'
 

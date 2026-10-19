@@ -1,12 +1,12 @@
-import type { TourBooking } from '../../types'
+import type { TourBooking } from '@sk/domain/bookings'
+import type { MailParams } from '@sk/domain/notifications'
 import type { Language } from '@/contexts/locale-context'
 import type { DemoState } from '@/features/demo/types'
-import type { MailParams } from '@/features/notifications/types'
 
+import { bookingBalance, bookingPaid } from '@sk/domain/bookings'
+
+import { pickText } from '@sk/domain/shared'
 import { sendMail } from '@/features/notifications/mail'
-
-import { pickText } from '@/lib/localized'
-import { bookingBalance, bookingPaid } from '../../lib/selectors'
 
 /** Tour emails of spec §6 that flow 2 sends; rendered by `renderTourMail`. */
 export type TourMailTemplate

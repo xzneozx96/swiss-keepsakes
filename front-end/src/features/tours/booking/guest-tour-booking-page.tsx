@@ -1,12 +1,15 @@
-import type { TourBooking } from '../types'
+import type { TourBooking } from '@sk/domain/bookings'
 import type { IconComponent } from '@/components/icons'
 import type { MessageKey } from '@/i18n/en'
 
 import { Alert, Button, buttonVariants } from '@heroui/react'
+import { bookingBalance, bookingPaid } from '@sk/domain/bookings'
+import { pickText } from '@sk/domain/shared'
+
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
-
 import { DetailTabs } from '@/components/detail-tabs'
+
 import {
   AccountIcon,
   CallIcon,
@@ -16,7 +19,6 @@ import {
   TourIcon,
 } from '@/components/icons'
 import { BackButton } from '@/components/layout/cart-button'
-
 import { StateHeadline } from '@/components/state-headline'
 import { StatusChip } from '@/components/status-chip'
 import { SurfaceCard, SurfaceCardBlock } from '@/components/surface-card'
@@ -25,10 +27,8 @@ import { useLocale } from '@/contexts/locale-context'
 import { shop } from '@/features/catalog/seed'
 import { TripCard } from '@/features/checkout/components/trip-card'
 import { BookingStatusLabels } from '@/features/tours/components/booking-status'
-import { bookingBalance, bookingPaid } from '@/features/tours/lib/selectors'
 import { TourBookingReview } from '@/features/tours/reviews'
 import { useBack } from '@/hooks/use-back'
-import { pickText } from '@/lib/localized'
 import { TourTicketHead, useBookingFormat } from './booking-summary'
 import { ExpiredHeadline, ReconciliationNotice } from './expired-notice'
 import {
