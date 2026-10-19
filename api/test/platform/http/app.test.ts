@@ -1,5 +1,6 @@
 import type { HealthReport } from '../../../src/platform/health.ts'
 import { createRoute, z } from '@hono/zod-openapi'
+import { problemSchema } from '@sk/api-contract'
 import { HTTPException } from 'hono/http-exception'
 import { describe, expect, it } from 'vitest'
 import { createApp } from '../../../src/platform/http/app.ts'
@@ -236,5 +237,19 @@ describe('[E1.8] HTTP app', () => {
     expect(await response.json()).toMatchObject({ type: 'about:blank', status: 503, title: 'Service Unavailable' })
     expect(logs[0]).toMatchObject({ level: 50, requestId: response.headers.get('X-Request-Id'), msg: 'http exception', err: { type: 'HTTPException', cause: { type: 'DatabaseError', code: '23505' } } })
     expect(JSON.stringify(logs)).not.toContain('anna@example.ch')
+  })
+
+  it.each([
+    ['validation-failed', '/probe', postJson('{"name":"","seats":"two"}'), { database: true, jobs: true }],
+    ['about:blank', '/probe', postJson('{"name":'), { database: true, jobs: true }],
+    ['not-found', '/api/nope', undefined, { database: true, jobs: true }],
+    ['internal-error', '/boom', undefined, { database: true, jobs: true }],
+    ['unhealthy', '/healthz', undefined, { database: false, jobs: true }],
+  ])('[E1.10] the %s problem matches the contract\'s problem schema with no extra field', async (type, path, init, health) => {
+    const { app } = setup(health)
+    const body = await (await app.request(path, init)).json()
+
+    expect(body).toMatchObject({ type })
+    expect(problemSchema.parse(body)).toEqual(body)
   })
 })
