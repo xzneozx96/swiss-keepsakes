@@ -11,12 +11,15 @@ export interface LedgerEntry {
 }
 
 /** Where the transaction stands before money is looked at. */
-export type MoneyStage = 'requested' | 'open' | 'closed'
+export type MoneyStage = 'requested' | 'open' | 'closed' | 'expired'
 
 export interface MoneyInput {
   entries: readonly LedgerEntry[]
   total: Rappen
-  /** `requested`: nothing is due yet. `closed`: declined or cancelled, so nothing is owed. */
+  /**
+   * `requested`: nothing is due yet. `closed`: declined or cancelled, so nothing is owed.
+   * `expired`: a payment hold lapsed (tours): nothing is owed, and money that still arrived is an exception.
+   */
   stage: MoneyStage
   /** What is payable now: the rest of the first payment, or the balance once it is paid. */
   dueNow: Rappen
@@ -25,6 +28,8 @@ export interface MoneyInput {
   firstPaymentDueAt?: string | null
   /** Calendar day (YYYY-MM-DD) the rest is due. */
   balanceDueDate?: string | null
+  /** The instant the rest is due (tours). Overdue from that instant on. Wins over `balanceDueDate`. */
+  balanceDueAt?: string | null
   depositPolicy: boolean
   /** When the transaction was cancelled; money confirmed later is flagged for reconciliation. */
   closedAt?: string | null
@@ -35,6 +40,8 @@ export type PaymentCode
   = | 'not-due'
     | 'processing'
     | 'after-cancellation'
+    | 'after-expiry'
+    | 'session-closed'
     | 'paid'
     | 'none'
     | 'paid-in-full'
@@ -72,21 +79,26 @@ const sum = (entries: readonly LedgerEntry[], kind: LedgerEntry['kind'], status:
     .reduce((total, e) => total + e.amount, 0)
 
 function isOverdue(input: MoneyInput, now: Date): boolean {
-  if (input.dueNow === 0)
+  if (input.dueNow === 0 || input.stage === 'closed' || input.stage === 'expired')
     return false
   if (input.awaitingFirstPayment) {
     return !!input.firstPaymentDueAt
       && Date.parse(input.firstPaymentDueAt) < now.getTime()
   }
 
+  if (input.balanceDueAt)
+    return Date.parse(input.balanceDueAt) <= now.getTime()
+
   return !!input.balanceDueDate && zurichDate(now) > input.balanceDueDate
 }
 
-function refundCode(entries: readonly LedgerEntry[], paid: Rappen, refunded: Rappen): RefundCode {
+function refundCode(entries: readonly LedgerEntry[], paid: Rappen, total: Rappen, refunded: Rappen): RefundCode {
   if (entries.some(e => e.kind === 'refund' && e.status === 'processing'))
     return 'processing'
   if (refunded > 0)
-    return refunded >= paid ? 'full' : 'partial'
+    // Nothing was collected, so no refund can be the whole of it. Refunding the duplicate only
+    // (at or above the total) returns everything the transaction was worth.
+    return paid > 0 && refunded >= Math.min(paid, total) ? 'full' : 'partial'
 
   return entries.some(e => e.kind === 'refund' && e.status === 'failed')
     ? 'failed'
@@ -125,6 +137,12 @@ function paymentCode(
 
     return paid > 0 ? 'paid' : 'none'
   }
+  if (stage === 'expired') {
+    if (paid > 0)
+      return 'after-expiry'
+
+    return processing ? 'session-closed' : 'none'
+  }
   if (processing)
     return 'processing'
   if (balance === 0)
@@ -133,9 +151,11 @@ function paymentCode(
     return 'overdue'
   if (input.awaitingFirstPayment && input.firstPaymentDueAt)
     return 'due'
+  const hasBalanceDue = !!(input.balanceDueAt || input.balanceDueDate)
+
   if (paid === 0)
-    return input.balanceDueDate ? 'pay-later' : 'owed'
-  if (!input.balanceDueDate)
+    return hasBalanceDue ? 'pay-later' : 'owed'
+  if (!hasBalanceDue)
     return 'part-paid'
 
   return input.depositPolicy ? 'deposit-paid' : 'part-paid-due'
@@ -150,7 +170,7 @@ export function moneyState(input: MoneyInput, now: Date): MoneyState {
   const paid = sum(input.entries, 'collection', 'succeeded')
   const refunded = sum(input.entries, 'refund', 'succeeded')
   const balance
-    = input.stage === 'closed' ? 0 : Math.max(0, input.total - paid)
+    = input.stage === 'closed' || input.stage === 'expired' ? 0 : Math.max(0, input.total - paid)
   const overdue = isOverdue(input, now)
 
   return {
@@ -163,6 +183,6 @@ export function moneyState(input: MoneyInput, now: Date): MoneyState {
     dueNow: input.dueNow,
     overdue,
     payment: paymentCode(input, paid, balance, overdue),
-    refund: refundCode(input.entries, paid, refunded),
+    refund: refundCode(input.entries, paid, input.total, refunded),
   }
 }
