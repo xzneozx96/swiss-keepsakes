@@ -7,6 +7,7 @@
 - **REST with `@hono/zod-openapi`.** A route parses its request, calls a use case and maps the result. It holds no business logic. (D11)
 - **The Zod schemas in `packages/api-contract` are the single source.** The generated client is committed under `packages/api-contract/generated/`. CI fails if it differs from a fresh build. (D11)
 - **Errors are RFC 9457 problem details** with stable `type` codes. The front-end maps each `type` to translated copy. (D11)
+  - Built: return `problem(c, { type, status, title })` from `api/src/platform/http/problem.ts`. It sends `application/problem+json` with `instance` (the path) and `requestId`. The codes in use are `not-found`, `validation-failed` (with an `errors` list of `in`, `path`, `message`) and `internal-error`. Other `HTTPException`s become `about:blank` with the status text. Never put an exception's message in the body. Tests: `api/test/platform/http/app.test.ts`.
 - **Lists use cursor pagination.** (D11)
 - **Merchant edits send `If-Match`.** (D11)
 - **Every state-changing request carries an `Idempotency-Key`.** The server stores it with a hash of the request and replays the answer for 24 hours. A reused key with a different body returns 422. (D11)

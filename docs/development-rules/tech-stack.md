@@ -35,22 +35,26 @@ The lint standard is `@antfu/eslint-config` with no Prettier, adopted on 2026-10
 
 ## Back-end (`api/`)
 
-Everything below is **planned**. The source is `docs/architecture/backend.md` section 1 and the decision numbers shown. No application code exists yet. `api/` holds only the Neon service declaration (`neon.ts`) and its package files.
+The source is `docs/architecture/backend.md` section 1 and the decision numbers shown. Since E1.8, `api/` holds the service skeleton: config, logger, HTTP app with problem details and request ids, `/healthz` and the `ROLE` switch, in `api/src/platform/` and `api/src/main.ts`. It has no module and no database code yet.
 
-| Area | Choice | Decision |
-| :-- | :-- | :-- |
-| Service | One TypeScript service on Node, Hono on `@hono/node-server`. It runs the API, the workers or both, chosen by `ROLE` | D1 |
-| Database | Neon Postgres 18, AWS Frankfurt, branches `production`, `staging`, `development` | D2 |
-| ORM and migrations | Drizzle, SQL migrations that only move forward (expand and contract) | Section 1, 11 |
-| Jobs and timers | pg-boss, queue in the application database | D4 |
-| Auth | Neon Auth (managed Better Auth), JWTs verified with `jose` against the JWKS | D8 |
-| API contract | REST with `@hono/zod-openapi`, committed generated client, RFC 9457 errors | D11 |
-| File storage | Neon Object Storage through the S3 API | D14 |
-| Payments | Stripe Payment Element with PaymentIntents, per store account | D6, D7 |
-| Email | Resend, EU sending region | D12 |
-| Errors and analytics | Sentry EU, Plausible EU, Google Analytics 4 after consent | D13 |
-| Hosting | Fly.io, region `fra`, one image that also serves the SPA | D3 |
-| Architecture | Clean architecture in four layers, modules with their own Postgres schemas | Section 4 |
+| Area | Choice | State | Decision |
+| :-- | :-- | :-- | :-- |
+| Service | One TypeScript service on Node, Hono 4.13 on `@hono/node-server` 2.1. It runs the API, the worker or both, chosen by `ROLE`. `tsx watch` runs it in development | In use. The worker is a process shell until pg-boss arrives | D1 |
+| Configuration | One Zod 4 schema over the environment, checked at startup (`api/src/platform/config.ts`) | In use | Section 11 |
+| Logging | pino 10, JSON lines with the request id, redaction of the fields in section 13 (`api/src/platform/logger.ts`) | In use | Section 13 |
+| Local services | `docker-compose.yml`: Postgres 18.6, MinIO, Mailpit | In use | Section 11 |
+| Lint | `@antfu/eslint-config` for `api/` (`pnpm --filter @sk/api lint`). Layer rules come from the root `pnpm lint:zones` | In use | `frontend/linting.md` |
+| Database | Neon Postgres 18, AWS Frankfurt, branches `production`, `staging`, `development` | Planned | D2 |
+| ORM and migrations | Drizzle, SQL migrations that only move forward (expand and contract) | Planned | Section 1, 11 |
+| Jobs and timers | pg-boss, queue in the application database | Planned | D4 |
+| Auth | Neon Auth (managed Better Auth), JWTs verified with `jose` against the JWKS | Planned | D8 |
+| API contract | REST with `@hono/zod-openapi`, committed generated client, RFC 9457 errors | `OpenAPIHono` and the RFC 9457 errors are in use. The contract package and client are planned | D11 |
+| File storage | Neon Object Storage through the S3 API | Planned | D14 |
+| Payments | Stripe Payment Element with PaymentIntents, per store account | Planned | D6, D7 |
+| Email | Resend, EU sending region | Planned | D12 |
+| Errors and analytics | Sentry EU, Plausible EU, Google Analytics 4 after consent | Planned | D13 |
+| Hosting | Fly.io, region `fra`, one image that also serves the SPA | Planned | D3 |
+| Architecture | Clean architecture in four layers, modules with their own Postgres schemas | Platform layer in use. No module yet | Section 4 |
 
 ## Shared
 
