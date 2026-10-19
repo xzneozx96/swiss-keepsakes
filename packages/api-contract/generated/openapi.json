@@ -1,5 +1,14 @@
 {
   "components": {
+    "headers": {
+      "RequestId": {
+        "description": "The server's id for this request. A problem body carries it as requestId",
+        "schema": {
+          "format": "uuid",
+          "type": "string"
+        }
+      }
+    },
     "parameters": {},
     "schemas": {
       "Health": {
@@ -100,7 +109,12 @@
                 }
               }
             },
-            "description": "The database and this process's pg-boss answer"
+            "description": "The database and this process's pg-boss answer",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
           },
           "503": {
             "content": {
@@ -110,7 +124,27 @@
                 }
               }
             },
-            "description": "A check failed. The problem+json body lists each check"
+            "description": "A check failed. The problem+json body lists each check",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
           }
         }
       }

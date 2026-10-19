@@ -3,13 +3,14 @@ import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
 import { STATUS_CODES } from 'node:http'
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
-import { healthSchema, problemSchema } from '@sk/api-contract'
+import { healthSchema } from '@sk/api-contract'
 import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
 import { IdempotencyKeyTaken } from '../idempotency.ts'
 import { idempotencyKeyInUse } from './idempotency.ts'
 import { isErrorStatus, problem } from './problem.ts'
+import { problemResponses, requestIdHeader } from './responses.ts'
 
 export interface AppEnv {
   Variables: RequestIdVariables & { logger: Logger }
@@ -26,12 +27,11 @@ const healthRoute = createRoute({
   responses: {
     200: {
       description: 'The database and this process\'s pg-boss answer',
+      headers: requestIdHeader,
       content: { 'application/json': { schema: healthSchema } },
     },
-    503: {
-      description: 'A check failed. The problem+json body lists each check',
-      content: { 'application/problem+json': { schema: problemSchema } },
-    },
+    503: { ...problemResponses.default, description: 'A check failed. The problem+json body lists each check' },
+    ...problemResponses,
   },
 })
 
@@ -47,6 +47,10 @@ export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono
         })
       }
     },
+  })
+  app.openAPIRegistry.registerComponent('headers', 'RequestId', {
+    description: 'The server\'s id for this request. A problem body carries it as requestId',
+    schema: { type: 'string', format: 'uuid' },
   })
 
   app.use(async (c, next) => {

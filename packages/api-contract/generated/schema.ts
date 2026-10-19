@@ -21,6 +21,7 @@ export interface paths {
                 /** @description The database and this process's pg-boss answer */
                 200: {
                     headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
                         [name: string]: unknown;
                     };
                     content: {
@@ -30,6 +31,17 @@ export interface paths {
                 /** @description A check failed. The problem+json body lists each check */
                 503: {
                     headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
                         [name: string]: unknown;
                     };
                     content: {
@@ -77,7 +89,10 @@ export interface components {
     responses: never;
     parameters: never;
     requestBodies: never;
-    headers: never;
+    headers: {
+        /** @description The server's id for this request. A problem body carries it as requestId */
+        RequestId: string;
+    };
     pathItems: never;
 }
 export type $defs = Record<string, never>;
