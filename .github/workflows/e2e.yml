@@ -12,7 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -20,6 +19,10 @@ jobs:
       - run: node --test scripts/trace.test.mjs
       - run: node scripts/trace.mjs docs/development-plan/delivery-plan.md
       - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm lint:zones
+      - run: pnpm --dir front-end lint
       - run: pnpm exec playwright install --with-deps chromium
         working-directory: e2e
       - run: pnpm e2e

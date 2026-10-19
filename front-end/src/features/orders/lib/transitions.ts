@@ -277,8 +277,12 @@ export function cancelBlock(
   order: Order,
   reason: CancelReason,
 ): OrderBlock | null {
-  if (reason === 'merchant')
-    return canMoveTo(order, 'cancelled')
+  if (reason === 'merchant') {
+    // The table also allows a guest to cancel a requested order, but the shop declines those instead.
+    return order.status === 'requested'
+      ? { code: 'wrong-status', status: order.status }
+      : canMoveTo(order, 'cancelled')
+  }
 
   const status = statusIs(order, 'accepted')
 

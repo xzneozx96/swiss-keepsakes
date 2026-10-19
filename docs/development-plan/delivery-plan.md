@@ -4,9 +4,9 @@ Status: draft for owner review. Last updated 19.10.2026.
 
 This plan turns the front-end prototype into the production app described in `docs/architecture/backend.md`. It covers the backend and the front-end together. Work is split into eight epics, E0 to E7, which follow the phases in section 14 of the architecture doc. Each epic holds stories, and each story names the automated test that proves it.
 
-Sprints 0 and 1 are planned down to the pull request in `docs/plan/sprint-0-1.md`. Later sprints stay at story level and are refined at each sprint planning.
+Sprints 0 and 1 are planned down to the pull request in `docs/development-plan/sprint-0-1.md`. Later sprints stay at story level and are refined at each sprint planning.
 
-The Lark task list "Swiss Keepsakes" mirrors the story tables in this file, one task per story and one section per sprint. `docs/plan/sync-lark.mjs` pushes them. This file is the source of truth, so edit stories here and run the sync.
+The Lark task list "Swiss Keepsakes" mirrors the story tables in this file, one task per story and one section per sprint. `docs/development-plan/sync-lark.mjs` pushes them. This file is the source of truth, so edit stories here and run the sync.
 
 ## 1. Working agreement
 
@@ -19,7 +19,7 @@ The Lark task list "Swiss Keepsakes" mirrors the story tables in this file, one 
 - **Sprint planning**, on the first day. Pick stories from the top of the backlog that meet the Definition of Ready. Split anything over 5 points. Refine the next sprint's stories to pull-request level.
 - **Daily note.** One comment per active story on its Lark task. There is no meeting for a team of one.
 - **Sprint review**, on the last day. The owner uses the sprint's stories on staging, or on screenshots and video before staging exists in Sprint 3. Each story the owner accepts moves to Done.
-- **Retro.** Three lines in `docs/plan/retro.md`. What to keep, what to change, and what to try.
+- **Retro.** Three lines in `docs/development-plan/retro.md`. What to keep, what to change, and what to try.
 
 **Estimates.** Story points on the 1, 2, 3, 5, 8 scale. An 8 is split before it enters a sprint. The sprint map in section 5 is a guess until Sprint 2 ends. After that, it is rebuilt from the measured velocity.
 
@@ -271,4 +271,4 @@ The full list is architecture section 15. These are the ones that change the pla
 - `docs/architecture/backend.md` is the design every story builds on.
 - `docs/PRD/Swiss_Stories_and_Gifts_PRD_v2.md` holds the product rules.
 - `docs/ux/ux-spec-phase1.md` holds the screens (C, M, P, A), the mails (N01 to N23), the acceptance criteria (AC01 to AC34) and the scenarios (S1 to S12).
-- `docs/plan/sprint-0-1.md` is the pull-request plan for Sprints 0 and 1.
+- `docs/development-plan/sprint-0-1.md` is the pull-request plan for Sprints 0 and 1.

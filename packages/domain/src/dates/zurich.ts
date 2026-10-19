@@ -2,36 +2,45 @@ const DAY_MS = 86_400_000
 const HOUR_MS = 3_600_000
 const TIME = /^(\d{2}):(\d{2})$/
 
-/** Day of month (1-31) of the last Sunday of a month; `month` is 1-12. */
-function lastSunday(year: number, month: number): number {
-  const last = new Date(Date.UTC(year, month, 0))
+/** The explicit zone makes the result independent of the machine's own time zone; the tz database supplies the daylight-saving rules. */
+const wallClock = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Europe/Zurich',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+})
 
-  return last.getUTCDate() - last.getUTCDay()
-}
+const dayClock = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Europe/Zurich',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
 
-/**
- * Central European Time is UTC+1; summer time (UTC+2) runs from 01:00 UTC on the last Sunday
- * of March to 01:00 UTC on the last Sunday of October. Manual rules, so no system timezone
- * or Intl data is read.
- */
-function isSummerTime(ms: number): boolean {
-  const year = new Date(ms).getUTCFullYear()
-  const start = Date.UTC(year, 2, lastSunday(year, 3), 1)
-  const end = Date.UTC(year, 9, lastSunday(year, 10), 1)
+function wallParts(at: Date): Record<string, string> {
+  const parts: Record<string, string> = {}
 
-  return ms >= start && ms < end
+  for (const { type, value } of wallClock.formatToParts(at))
+    parts[type] = value
+
+  return parts
 }
 
 /** Zurich's offset from UTC at an instant, in minutes: 60 in winter, 120 in summer. */
 export function zurichOffsetMinutes(at: Date): number {
-  return isSummerTime(at.getTime()) ? 120 : 60
+  const p = wallParts(at)
+  const wall = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second)
+
+  return Math.round((wall - Math.floor(at.getTime() / 1000) * 1000) / 60_000)
 }
 
 /** Calendar date in Europe/Zurich as YYYY-MM-DD (the business time zone). */
 export function zurichDate(at: Date): string {
-  const shifted = new Date(at.getTime() + zurichOffsetMinutes(at) * 60_000)
-
-  return shifted.toISOString().slice(0, 10)
+  return dayClock.format(at)
 }
 
 /** Moves a YYYY-MM-DD date by whole calendar days. */

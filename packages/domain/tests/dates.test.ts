@@ -30,11 +30,21 @@ describe('[E1.6] Zurich calendar day', () => {
     expect(zurichOffsetMinutes(new Date('2026-10-25T01:00:00Z'))).toBe(60)
   })
 
-  it('agrees with Intl for every hour of 2026', () => {
-    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' })
+  it('matches the EU daylight-saving rule for every hour of 2026', () => {
+    const lastSunday = (month: number) => {
+      const last = new Date(Date.UTC(2026, month, 0))
 
-    for (let ms = Date.UTC(2026, 0, 1); ms < Date.UTC(2027, 0, 1); ms += 3_600_000)
-      expect(zurichDate(new Date(ms))).toBe(fmt.format(new Date(ms)))
+      return Date.UTC(2026, month - 1, last.getUTCDate() - last.getUTCDay(), 1)
+    }
+    const start = lastSunday(3)
+    const end = lastSunday(10)
+
+    for (let ms = Date.UTC(2026, 0, 1); ms < Date.UTC(2027, 0, 1); ms += 3_600_000) {
+      const offset = ms >= start && ms < end ? 120 : 60
+
+      expect(zurichOffsetMinutes(new Date(ms))).toBe(offset)
+      expect(zurichDate(new Date(ms))).toBe(new Date(ms + offset * 60_000).toISOString().slice(0, 10))
+    }
   })
 
   it('moves calendar days across a DST change without drift', () => {
@@ -48,8 +58,8 @@ describe('[E1.6] reminders (Q5)', () => {
     const r = firstPaymentReminders(new Date('2026-10-20T10:00:00Z'))
 
     expect(r.map(x => [x.kind, iso(x.at)])).toEqual([
-      ['first-payment-24h', '2026-10-19T10:00:00.000Z'],
-      ['first-payment-2h', '2026-10-20T08:00:00.000Z'],
+      ['first-payment-first', '2026-10-19T10:00:00.000Z'],
+      ['first-payment-second', '2026-10-20T08:00:00.000Z'],
     ])
   })
 
@@ -103,13 +113,43 @@ describe('[E1.6] reminders (Q5)', () => {
   })
 
   it('reminderSet returns only what applies, oldest first', () => {
-    expect(reminderSet({})).toEqual([])
+    const acceptedAt = new Date('2026-10-19T08:00:00Z')
+
+    expect(reminderSet({ acceptedAt })).toEqual([])
     const set = reminderSet({
+      acceptedAt,
       pickupDate: '2026-10-27',
       firstPaymentDeadline: new Date('2026-10-20T10:00:00Z'),
     })
 
-    expect(set.map(r => r.kind)).toEqual(['first-payment-24h', 'first-payment-2h', 'pickup'])
+    expect(set.map(r => r.kind)).toEqual(['first-payment-first', 'first-payment-second', 'pickup'])
+  })
+
+  it('reminderSet applies the merchant overrides', () => {
+    const set = reminderSet({
+      acceptedAt: new Date('2026-10-01T00:00:00Z'),
+      balanceDueDate: '2026-10-27',
+      pickupDate: '2026-10-30',
+      firstPaymentDeadline: new Date('2026-10-20T10:00:00Z'),
+      settings: { firstPaymentHoursBefore: [48, 6], balanceDaysBefore: 5, balanceTime: '10:30', dayBeforeTime: '17:00' },
+    })
+
+    expect(set.map(r => [r.kind, iso(r.at)])).toEqual([
+      ['first-payment-first', '2026-10-18T10:00:00.000Z'],
+      ['first-payment-second', '2026-10-20T04:00:00.000Z'],
+      ['balance', '2026-10-22T08:30:00.000Z'],
+      ['pickup', '2026-10-29T16:00:00.000Z'],
+    ])
+  })
+
+  it('reminderSet drops a reminder that falls before the order was accepted and keeps one at that instant', () => {
+    const deadline = new Date('2026-10-20T10:00:00Z')
+    const late = reminderSet({ acceptedAt: new Date('2026-10-20T04:00:00Z'), firstPaymentDeadline: deadline })
+    const exact = reminderSet({ acceptedAt: new Date('2026-10-20T08:00:00Z'), firstPaymentDeadline: deadline })
+
+    expect(late.map(r => r.kind)).toEqual(['first-payment-second'])
+    expect(exact.map(r => r.kind)).toEqual(['first-payment-second'])
+    expect(reminderSet({ acceptedAt: new Date('2026-10-20T08:00:00.001Z'), firstPaymentDeadline: deadline })).toEqual([])
   })
 })
 

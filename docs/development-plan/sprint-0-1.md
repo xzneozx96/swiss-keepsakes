@@ -4,7 +4,7 @@ These seven pull requests put a regression net under the prototype and then spli
 They serve the owner, who keeps a working demo throughout, and the developer, who gets tests that catch any change in behaviour.
 The rule is that no behaviour changes. The prototype flows produce the same output at trunk and at every head.
 The spikes SP1 to SP7 also run in Sprint 0. They are throwaway branches with written answers in `docs/spikes/`, not pull requests, so they sit in Appendix A.
-Pull requests in order are E0.8, E0.9, E1.1, E1.2, E1.7, E1.3+E1.4 and E1.5+E1.6. Story IDs match `docs/plan/delivery-plan.md`.
+Pull requests in order are E0.8, E0.9, E1.1, E1.2, E1.7, E1.3+E1.4 and E1.5+E1.6. Story IDs match `docs/development-plan/delivery-plan.md`.
 
 ## How to read this
 
@@ -19,7 +19,7 @@ Tests alone are not sufficient verification. A PR is verified only when its unit
 ### Arm the program
 
 - [ ] State the protocol and this plan to the operator, then stop. Start execution only on the operator's explicit go.
-- [ ] On the operator's go, write the program objective into the standing orders and your todolist with this exact text. "Run `docs/plan/sprint-0-1.md`. Pull requests in order are E0.8, E0.9, E1.1, E1.2, E1.7, E1.3+E1.4, E1.5+E1.6. Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. The operator lands every pull request. Done when all seven are verified and appended to the stack, and SP1 to SP7 each have a written answer in `docs/spikes/`."
+- [ ] On the operator's go, write the program objective into the standing orders and your todolist with this exact text. "Run `docs/development-plan/sprint-0-1.md`. Pull requests in order are E0.8, E0.9, E1.1, E1.2, E1.7, E1.3+E1.4, E1.5+E1.6. Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. The operator lands every pull request. Done when all seven are verified and appended to the stack, and SP1 to SP7 each have a written answer in `docs/spikes/`."
 - [ ] Read these from the installed plugin at program start. Re-read them at every tick.
   - [ ] `skills/poteto-mode/playbooks/autopilot-stack.md`
   - [ ] `skills/swarm/SKILL.md`
@@ -142,16 +142,16 @@ Each live lane is one `swarm workers` lane at the PR head, resolved through prov
 - [ ] Create `scripts/trace.mjs`.
 - [ ] Create `scripts/fixtures/trace/plan.md` and `scripts/fixtures/trace/tests/` with one covered story, one Verified story without a test, and one Backlog story without a test.
 - [ ] Create `scripts/trace.test.mjs`.
-- [ ] Edit `.github/workflows/e2e.yml` to run `node scripts/trace.mjs docs/plan/delivery-plan.md`.
+- [ ] Edit `.github/workflows/e2e.yml` to run `node scripts/trace.mjs docs/development-plan/delivery-plan.md`.
 
 **Build.**
 
-- [ ] `trace.mjs` reads the story tables from the plan, reads test titles from `e2e/**`, `packages/**` and `api/**` by matching `[E<n>.<n>]`, and reads each story's status from `docs/plan/status.json`, which `docs/plan/sync-lark.mjs` writes from Lark.
+- [ ] `trace.mjs` reads the story tables from the plan, reads test titles from `e2e/**`, `packages/**` and `api/**` by matching `[E<n>.<n>]`, and reads each story's status from `docs/development-plan/status.json`, which `docs/development-plan/sync-lark.mjs` writes from Lark.
 - [ ] It prints one line per story with its test count, and exits 1 when a Verified or Done story has none.
 
 **You see.**
 
-- [ ] `node scripts/trace.mjs docs/plan/delivery-plan.md` prints `E0.8 tests=8` and exits 0.
+- [ ] `node scripts/trace.mjs docs/development-plan/delivery-plan.md` prints `E0.8 tests=8` and exits 0.
 
 **Verify, unit.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
@@ -159,7 +159,7 @@ Each live lane is one `swarm workers` lane at the PR head, resolved through prov
 
 **Verify, live.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked. Ten lanes on the configured `swarm workers` role at the PR head, per the boot recipe.
 
-- [ ] Lane 1. Regression lane against trunk. Trunk has no `trace.mjs`, so the lane records that and gates the new command on the real plan. Run `node scripts/trace.mjs docs/plan/delivery-plan.md` at head. Save `trace-real.png`. Pass when it exits 0 and lists every story ID in the plan.
+- [ ] Lane 1. Regression lane against trunk. Trunk has no `trace.mjs`, so the lane records that and gates the new command on the real plan. Run `node scripts/trace.mjs docs/development-plan/delivery-plan.md` at head. Save `trace-real.png`. Pass when it exits 0 and lists every story ID in the plan.
 - [ ] Lane 2. Run it on the fixture plan. Save `trace-fixture.png`. Pass when it exits 1 and names the Verified story with no test.
 - [ ] Lane 3. Mark E0.8 as Done in a scratch `status.json` and delete one E0.8 test title. Save `trace-done.png`. Pass when the count for E0.8 drops by one and the exit code stays 0.
 - [ ] Lane 4. Delete every E0.8 test title in a scratch copy. Save `trace-missing.png`. Pass when it exits 1 and names E0.8.
@@ -172,7 +172,7 @@ Each live lane is one `swarm workers` lane at the PR head, resolved through prov
 
 **Verify, perf.** Tests alone are not sufficient verification. A PR is verified only when its unit, live, and perf boxes are all checked.
 
-- [ ] Metric. Wall time of `node scripts/trace.mjs docs/plan/delivery-plan.md`.
+- [ ] Metric. Wall time of `node scripts/trace.mjs docs/development-plan/delivery-plan.md`.
 - [ ] Probe. Run it ten times at head in a ten-run Node timing loop. Trunk has no such command, so the lane records that and sets an absolute budget.
 - [ ] Baseline. Record the trunk result first, which is that trunk has no trace command, before measuring head.
 - [ ] Rule. Fail if the median exceeds 2 seconds.
@@ -489,7 +489,7 @@ No prototype has run yet. The seven spikes below are open and run in Sprint 0 be
 ## Appendix D. Links and reading list
 
 - Read `docs/architecture/backend.md` sections 4, 12 and 16 before editing.
-- Read `docs/plan/delivery-plan.md` sections 1 and 2 for the Definition of Done and the harness.
+- Read `docs/development-plan/delivery-plan.md` sections 1 and 2 for the Definition of Done and the harness.
 - Read `docs/audit/2026-10-18-react-audit.md` before touching `front-end/` build config.
 - E1.3+E1.4 and E1.5+E1.6 get `skills/architect/SKILL.md` on their types first. E1.2 gets `skills/how/SKILL.md` on the front-end's current rule files before the codemod is written.
 - Each owner keeps a `decisions.tsv` trail per `skills/show-me-your-work/SKILL.md`, uncommitted, and returns it in its report.

@@ -24,6 +24,8 @@ export function commissionAmount(basis: Rappen, rate: number): Rappen {
  * Negative commission adjustment for a refund (UX S9), as a positive amount to subtract. Only
  * the part that counts toward the basis counts, and never more than the basis still left after
  * earlier refunds, so a line's commission cannot go below 0. The rate is the one stored on the line.
+ * It is the drop in commission from the basis left before this refund to the basis left after it, so rounding
+ * never adds up across many small refunds and a full refund always ends at exactly 0.
  */
 export function refundAdjustment(input: {
   basis: Rappen
@@ -34,19 +36,26 @@ export function refundAdjustment(input: {
   const left = Math.max(0, input.basis - input.alreadyRefundedBasis)
   const counted = Math.min(Math.max(0, input.refundedBasis), left)
 
-  return commissionAmount(counted, input.rate)
+  return commissionAmount(left, input.rate) - commissionAmount(left - counted, input.rate)
 }
 
 /**
  * Splits an order-level discount across lines in proportion to line value (Q9). Each line but
  * the last gets its share rounded to the Rappen, and the last line takes what is left, so the
- * parts always sum to the discount. A share never takes more than is left.
+ * parts always sum to the discount. A share never takes more than is left. Throws RangeError for a negative or
+ * fractional amount, or a discount larger than the lines together.
  */
 export function splitDiscount(discount: Rappen, lineValues: Rappen[]): Rappen[] {
+  if (![discount, ...lineValues].every(v => Number.isInteger(v) && v >= 0))
+    throw new RangeError('splitDiscount takes whole, non-negative Rappen amounts')
+
+  const total = lineValues.reduce((sum, v) => sum + v, 0)
+
+  if (discount > total)
+    throw new RangeError(`The discount ${discount} is larger than the lines ${total}`)
   if (lineValues.length === 0)
     return []
 
-  const total = lineValues.reduce((sum, v) => sum + v, 0)
   const parts: Rappen[] = []
   let left = discount
 

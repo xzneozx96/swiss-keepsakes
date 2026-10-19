@@ -4,18 +4,21 @@ import boundaries from 'eslint-plugin-boundaries'
 // Patterns start with `**/` so the fixtures under scripts/fixtures/boundaries/ mirror the real paths.
 const sameModule = '{{ from.captured.module }}'
 
+const sourceExtensions = '{ts,tsx,mts,cts,js,jsx,mjs,cjs}'
+
 export const zones = {
-  files: ['**/packages/domain/src/**/*.ts', '**/api/src/**/*.ts'],
+  files: [`**/packages/domain/src/**/*.${sourceExtensions}`, `**/api/src/**/*.${sourceExtensions}`],
   plugins: { boundaries },
   settings: {
     'import/resolver': { typescript: { project: './tsconfig.eslint.json' } },
     'boundaries/elements': [
       { type: 'domain', pattern: '**/packages/domain/src', mode: 'folder' },
-      { type: 'module-index', pattern: '**/api/src/modules/*/index.ts', mode: 'file', capture: ['prefix', 'module'] },
+      { type: 'module-index', pattern: '**/api/src/modules/*/index.*', mode: 'file', capture: ['prefix', 'module'] },
       { type: 'application', pattern: '**/api/src/modules/*/application', mode: 'folder', capture: ['prefix', 'module'] },
+      { type: 'ports', pattern: '**/api/src/modules/*/ports.*', mode: 'file', capture: ['prefix', 'module'] },
       { type: 'adapters', pattern: '**/api/src/modules/*/adapters', mode: 'folder', capture: ['prefix', 'module'] },
       { type: 'platform', pattern: '**/api/src/platform', mode: 'folder' },
-      { type: 'composition', pattern: '**/api/src/main.ts', mode: 'file' },
+      { type: 'composition', pattern: '**/api/src/main.*', mode: 'file' },
     ],
   },
   rules: {
@@ -27,7 +30,7 @@ export const zones = {
         {
           from: { type: 'domain' },
           disallow: [
-            { to: { type: ['application', 'adapters', 'platform', 'composition', 'module-index'] } },
+            { to: { type: ['application', 'adapters', 'ports', 'platform', 'composition', 'module-index'] } },
             { to: { origin: ['external', 'core'] } },
             { to: { isUnknown: true } },
           ],
@@ -39,8 +42,18 @@ export const zones = {
           message: 'The application layer must not import adapters or platform code',
         },
         {
-          from: { type: ['application', 'adapters', 'module-index'] },
-          disallow: { to: { type: ['application', 'adapters'], captured: { module: `!${sameModule}` } } },
+          from: { type: 'ports' },
+          disallow: { to: { type: ['application', 'adapters', 'platform', 'composition', 'module-index'] } },
+          message: 'A ports file may import only the domain',
+        },
+        {
+          from: { type: 'adapters' },
+          disallow: { to: { type: 'composition' } },
+          message: 'Adapters must not import the composition root',
+        },
+        {
+          from: { type: ['application', 'adapters', 'ports', 'module-index'] },
+          disallow: { to: { type: ['application', 'adapters', 'ports'], captured: { module: `!${sameModule}` } } },
           message: 'A module may import another module only through its index.ts',
         },
       ],

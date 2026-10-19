@@ -106,6 +106,7 @@ Base was built from `git archive 5f94bc5` in `/tmp/opencode/sk-base-src`, new fr
 - `pnpm verify:routes` and `verify:renders` were not run. The 100-route text diff was.
 - Text diff is a frozen-clock demo with seeded orders. No order in it has a refund, so the refund codes are only unit-tested, not seen on screen.
 - `paymentLabel` was checked by the text diff and e2e, not by a direct old-versus-new comparison over every status and payment combination.
+- Tour bookings do not use `moneyState`. `useBookingLabels` in `front-end/src/features/tours/components/booking-status.tsx` still builds its own payment label from the booking's payments (`tours.payment.*` keys: exception, closed, sessionClosed, processing, overdue, paid, deposit, unpaid, none). Only gift orders go through `paymentLabel`. Tour bookings are in the E1.4 scope of "one money rule" but were not moved, so the two can disagree on edge cases such as a refund or a duplicate payment. Moving them needs its own story or an addition to E1.4.
 - Guards in front-end places that read `order.status` directly (buttons, calendar, today queue) were left as they are. Only the transition guards listed above read the table. Moving the remaining button decisions is not done.
 - `pnpm test:e2e` in `front-end/` (old smoke spec) was not run. Root `pnpm e2e` was.
 - No live browser lanes from `sprint-0-1.md` (C14, C15, M04, M07 screenshots).

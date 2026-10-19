@@ -4,9 +4,9 @@
 // scripts/trace.mjs. The plan owns the summary, description, Priority and Epic; Lark owns
 // Status, comments and assignees, so a sync never overwrites those.
 //
-//   node docs/plan/sync-lark.mjs --parse     print what the plan parses to, touch nothing
-//   node docs/plan/sync-lark.mjs --dry-run   print every lark-cli write without running it
-//   node docs/plan/sync-lark.mjs             create or update the task list
+//   node docs/development-plan/sync-lark.mjs --parse     print what the plan parses to, touch nothing
+//   node docs/development-plan/sync-lark.mjs --dry-run   print every lark-cli write without running it
+//   node docs/development-plan/sync-lark.mjs             create or update the task list
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -150,7 +150,7 @@ function describe(story) {
     "Acceptance and proof",
     story.acceptance,
     "",
-    "Source: docs/plan/delivery-plan.md",
+    "Source: docs/development-plan/delivery-plan.md",
   ].join("\n");
 }
 

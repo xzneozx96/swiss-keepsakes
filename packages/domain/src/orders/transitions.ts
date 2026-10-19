@@ -8,10 +8,11 @@ import { canMove, listTransitions } from '../shared/transitions'
  * complete" button do not change the status on their own, so they have no row here.
  * - accept: requested to accepted (payment due) or preparing (pay later)
  * - first payment succeeded: accepted to preparing
+ * - cancel before acceptance: requested to cancelled by the guest (backend 6.1); the shop declines instead
  * - cancel: accepted by the guest or the overdue job; accepted, preparing or ready by the shop
  */
 export const ORDER_TRANSITIONS: TransitionTable<OrderStatus> = {
-  requested: ['accepted', 'preparing', 'declined'],
+  requested: ['accepted', 'preparing', 'declined', 'cancelled'],
   accepted: ['preparing', 'cancelled'],
   preparing: ['ready', 'cancelled'],
   ready: ['handed_over', 'cancelled'],
