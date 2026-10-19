@@ -17,4 +17,4 @@ Most of this is **planned**. It follows `docs/architecture/backend.md` (a propos
 
 ## Layout the rules assume (planned)
 
-`docs/architecture/backend.md` D16 and section 4.2 use an npm workspace with `front-end/`, `api/`, `packages/domain`, `packages/api-contract` and `packages/i18n`. `packages/domain` imports nothing outside itself. Each side imports from it, never the reverse.
+`docs/architecture/backend.md` D16 and section 4.2 use a pnpm workspace with `front-end/`, `api/`, `packages/domain`, `packages/api-contract` and `packages/i18n`. `packages/domain` imports nothing outside itself. Each side imports from it, never the reverse.
