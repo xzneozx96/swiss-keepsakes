@@ -7,10 +7,11 @@
 ## Run (scripted part)
 
 ```sh
-SP6_JWT=<token> npx tsx spikes/sp6-neon-auth/run.ts
+npx tsx spikes/sp6-neon-auth/run.ts   # signs up a throwaway user, gets a JWT, deletes the user
+SP6_JWT=<token> npx tsx spikes/sp6-neon-auth/run.ts   # or verify a JWT copied from the SPA
 ```
 
-Get the token from the SPA after signing in, in the browser console: `(await authClient.token()).data.token` (Neon JWT docs: `data.token`; the React and Hono guide reads `session.token`, the authentication-flow page `session.access_token`, so also log which of the three is set and write it into SP6.md). The token lives 15 minutes, so run the script straight away. The script checks: `alg` is EdDSA, signature and issuer verify with `jose` against `<NEON_AUTH_URL>/.well-known/jwks.json` (issuer is the origin of the Auth URL), `exp - iat` is 900 s, `sub` is a uuid, a tampered signature and a wrong issuer are rejected. Optional `SP6_JWT_LATER` (same user, fetched 16 minutes or a day later) proves renewal. Optional `DATABASE_URL_DIRECT` checks that `sub` is a row in `neon_auth."user"`. Tokens are never printed; `sub` is shown as its first 8 characters.
+Get the token from the SPA after signing in, in the browser console: `(await authClient.token()).data.token` (Neon JWT docs: `data.token`; the React and Hono guide reads `session.token`, the authentication-flow page `session.access_token`, so also log which of the three is set and write it into SP6.md). The token lives 15 minutes, so run the script straight away. The script checks: `alg` is EdDSA, signature and issuer verify with `jose` against `<NEON_AUTH_BASE_URL>/.well-known/jwks.json` (issuer is the origin of the Auth URL), `exp - iat` is 900 s, `sub` is a uuid, a tampered signature and a wrong issuer are rejected. Optional `SP6_JWT_LATER` (same user, fetched 16 minutes or a day later) proves renewal. Optional `DATABASE_URL_UNPOOLED` checks that `sub` is a row in `neon_auth."user"`. Tokens are never printed; `sub` is shown as its first 8 characters.
 
 ## Manual checklist (write each result into docs/spikes/SP6.md)
 
@@ -28,7 +29,7 @@ BrowserStack (App Live, real iPhone, Safari with default settings) is an option 
 
 ## Keys
 
-`NEON_AUTH_URL`, `SP6_JWT` (optional `SP6_JWT_LATER`, `DATABASE_URL_DIRECT`). No secret is needed: the JWKS is public.
+`NEON_AUTH_BASE_URL` (optional `NEON_AUTH_JWKS_URL`, `SP6_JWT`, `SP6_JWT_LATER`, `DATABASE_URL_UNPOOLED`, `NEON_PROJECT_ID`, `SP6_AUTH_BRANCH`). Without `SP6_JWT` the script uses Better Auth's `POST /sign-up/email` (open sign-up, no email code), `GET /token` with the session cookie, and removes the user with `neon neon-auth user delete` (the client `/delete-user` endpoint returns 404 on the managed service), which needs `NEON_PROJECT_ID`. The JWKS is public.
 
 ## Vendor guidance applied
 

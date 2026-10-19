@@ -5,7 +5,7 @@ import { sql } from 'drizzle-orm'
 import { pgSchema, text, timestamp } from 'drizzle-orm/pg-core'
 import pg from 'pg'
 import { fromDrizzle, PgBoss } from 'pg-boss'
-import { finish, secret, tryEnv } from '../lib/env.ts'
+import { finish, productionBranchGuard, secret, tryEnv } from '../lib/env.ts'
 import { dockerAvailable, withLocalPostgres } from '../lib/pg-docker.ts'
 import { ms } from '../lib/stats.ts'
 
@@ -226,12 +226,12 @@ if (dockerAvailable()) {
   missing.push('docker')
 }
 
-const remote = tryEnv(SPIKE, { DATABASE_URL_DIRECT: secret() })
-if (!remote) missing.push('DATABASE_URL_DIRECT')
+const remote = productionBranchGuard(SPIKE) ? null : tryEnv(SPIKE, { DATABASE_URL_UNPOOLED: secret() })
+if (!remote) missing.push(process.env.NEON_BRANCH?.trim() === 'production' ? 'throwaway NEON_BRANCH' : 'DATABASE_URL_UNPOOLED')
 let remotePass: boolean | null = null
 if (remote) {
   lines.length = 0
-  remotePass = await suite('REMOTE (Neon direct connection)', remote.DATABASE_URL_DIRECT)
+  remotePass = await suite('REMOTE (Neon direct connection)', remote.DATABASE_URL_UNPOOLED)
 }
 
 const pass = ranLocal || remote ? (ranLocal ? localPass : true) && (remotePass ?? true) : null

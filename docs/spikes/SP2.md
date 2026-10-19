@@ -1,6 +1,6 @@
 # SP2. pg-boss deferred jobs through Drizzle, in a transaction
 
-**Status: Answered (local).** LOCAL result on a throwaway Docker Postgres 17.11, not Neon. Ready, needs keys for the Neon run: `DATABASE_URL_DIRECT`.
+**Status: Answered (local and Neon).** Two results below: LOCAL on a throwaway Docker Postgres 17.11, and NEON on a throwaway branch of the Frankfurt project (Postgres 18.6, direct connection, run from a laptop).
 
 **Pass condition (architecture section 16).** The job fires within 5 seconds of the deadline. Cron jobs run once across two machines.
 
@@ -22,6 +22,26 @@
 
 Answers: the budget is met locally with a worker that fetches in batches. Deadline precision is set by the polling interval (2 s default) and batch size. A mass expiry at one instant (a tour that starts, many holds with the same `hold_until`) drains serially on the defaults and misses 5 s by the sixth job, so the real worker needs `batchSize` of 10 or more (`burstWhenBatchFull` is an unexplored option). The 4.0 s maximum with batching leaves only 1 s of margin and is worth a second look with `pollingIntervalSeconds: 1`. Not run.
 
+## Observed (NEON, direct connection, laptop to Frankfurt)
+
+Branch `spike-sp2-sp3`, a copy of `production` made with `neon branches create --parent production --expires-at <+1 day>`, deleted afterwards. Server is **PostgreSQL 18.6**, not 17 as the architecture assumes (see Findings). The same suite, schema `sp2_spike`, dropped at the end. Not Fly `fra`, and the two workers are two processes on the laptop.
+
+| Check | Result |
+|---|---|
+| Transaction rolled back after `boss.send` | 0 jobs, 0 hold rows |
+| 4 spread-out and 10 same-deadline jobs, `batchSize: 10`, polling 2 s | all 14 fired once; delay after `hold_until` min 472.3 ms, avg 1507.4 ms, max 2353.9 ms (limit 5000): **PASS** |
+| One job on pg-boss defaults | delay 2194.2 ms (locally 8.6 ms: here it waited for a poll) |
+| 6 jobs sharing one deadline on defaults | min 2014 ms, avg 5501 ms, max 8125 ms: serial drain, as locally |
+| 10 deferred jobs, two worker processes | each ran exactly once (6 on one process, 4 on the other); delay min 222.6 ms, avg 1534.7 ms, max 3250.5 ms |
+| `cron-minute`, two processes, 2 ticks | 2 runs, 2 distinct jobs, no duplicate slot |
+| `cron-rrule`, two processes | 3 runs, 3 distinct jobs, no duplicates (split 2 and 1 between the processes) |
+
+Answers: the 5 s budget and cron-once both hold on Neon through the direct connection, including pg-boss's own schema and supervision on Postgres 18. Work was shared across the two processes for the first time (locally one process took everything).
+
+## Findings
+
+- Neon runs Postgres 18.6; the architecture assumes 17. pg-boss 12.38 worked unchanged. Local Docker should move to `postgres:18` so dev matches.
+
 ## Open
 
-The same suite against Neon Frankfurt through the direct connection (`DATABASE_URL_DIRECT`). Timings from Fly `fra` machines, and two real machines, are not measured.
+Timings from Fly `fra` machines and two real machines are not measured. The 4 s maximum locally (2.4 s on Neon) is within budget but `pollingIntervalSeconds: 1` is not tried.

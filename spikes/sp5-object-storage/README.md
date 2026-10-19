@@ -12,19 +12,19 @@ npx tsx spikes/sp5-object-storage/run.ts
 
 Checks: region is `eu-central-1`; presigned PUT into the private bucket; presigned GET returns the same bytes; anonymous GET of a private object is refused; presigned PUT into the public bucket; anonymous GET of that object returns the bytes. Uploaded objects are deleted at the end. A failed presigned PUT means D14 moves to Cloudflare R2.
 
-Setup (once, on a spike branch):
+Buckets (default names `uploads` and `media`, as declared in the project's `neon.ts`):
 
 ```ts
 // neon.ts
 import { defineConfig } from '@neon/config/v1'
-export default defineConfig({ buckets: { 'sp5-private': {}, 'sp5-public': { access: 'public_read' } } })
+export default defineConfig({ buckets: { uploads: { access: 'private' }, media: { access: 'public_read' } } })
 ```
 
-then `neon deploy` and copy the credential from `neon env pull`.
+`neon deploy` writes the credential into `.env.local`. The credential is branch-scoped, so with the production credential the test objects land in the real buckets, under `sp5/`, and are deleted at the end.
 
 ## Keys
 
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION` (the names Neon injects), optional `SP5_BUCKET_PRIVATE`, `SP5_BUCKET_PUBLIC`.
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION` (the names Neon injects), optional `SP5_BUCKET_PRIVATE` (default `uploads`), `SP5_BUCKET_PUBLIC` (default `media`).
 
 ## Vendor guidance applied
 

@@ -7,7 +7,7 @@ import { Hono } from 'hono'
 import pg from 'pg'
 import { fromDrizzle, PgBoss } from 'pg-boss'
 import { z } from 'zod'
-import { finish, secret, tryEnv } from '../lib/env.ts'
+import { finish, productionBranchGuard, secret, tryEnv } from '../lib/env.ts'
 import { dockerAvailable, withLocalPostgres } from '../lib/pg-docker.ts'
 import { ms, percentile } from '../lib/stats.ts'
 
@@ -144,13 +144,15 @@ if (dockerAvailable()) {
 }
 
 const allowNonFly = process.env.SP3_ALLOW_NON_FLY === '1'
-const remote = tryEnv(SPIKE, {
-  DATABASE_URL_POOLED: secret(),
-  DATABASE_URL_DIRECT: secret(),
+const onProduction = productionBranchGuard(SPIKE)
+const remote = onProduction ? null : tryEnv(SPIKE, {
+  DATABASE_URL: secret(),
+  DATABASE_URL_UNPOOLED: secret(),
   FLY_REGION: allowNonFly ? z.string().optional() : z.string().min(1),
 })
-if (!remote) {
-  for (const key of ['DATABASE_URL_POOLED', 'DATABASE_URL_DIRECT', 'FLY_REGION']) {
+if (!remote && onProduction) missing.push('throwaway NEON_BRANCH')
+else if (!remote) {
+  for (const key of ['DATABASE_URL', 'DATABASE_URL_UNPOOLED', 'FLY_REGION']) {
     if (!process.env[key]?.trim() && !(key === 'FLY_REGION' && allowNonFly)) missing.push(key)
   }
 }
@@ -160,8 +162,8 @@ if (remote) {
   const region = remote.FLY_REGION
   remotePass = await suite(
     `REMOTE (Neon pooled for requests, direct for pg-boss; FLY_REGION=${region ?? 'none, laptop run'})`,
-    remote.DATABASE_URL_POOLED,
-    remote.DATABASE_URL_DIRECT,
+    remote.DATABASE_URL,
+    remote.DATABASE_URL_UNPOOLED,
     region === undefined ? null : region === 'fra',
   )
 }

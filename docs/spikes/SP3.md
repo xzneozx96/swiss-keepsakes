@@ -1,6 +1,6 @@
 # SP3. 50 concurrent holds for one seat
 
-**Status: Answered (local).** LOCAL result on a throwaway Docker Postgres 17.11. The Neon Frankfurt from Fly `fra` run is not done. Ready, needs keys: `DATABASE_URL_POOLED`, `DATABASE_URL_DIRECT`, and a Fly `fra` machine (`FLY_REGION`).
+**Status: Correctness answered (local and Neon); Neon latency is a laptop number, not Fly `fra`.** LOCAL on a throwaway Docker Postgres 17.11, and NEON through the pooled URL from a laptop to Frankfurt.
 
 **Pass condition (architecture section 16).** Exactly one `pending_payment`. p95 latency recorded.
 
@@ -15,6 +15,16 @@
 
 These latencies say nothing about Neon from Fly. They only show the race handling is correct and cheap.
 
+## Observed (NEON, pooled connection, laptop to Frankfurt)
+
+Branch `spike-sp2-sp3` (throwaway, deleted afterwards), Postgres 18.6. Requests use the pooled (`-pooler`, PgBouncer) URL, pg-boss the direct URL, with `SP3_ALLOW_NON_FLY=1`. **This is laptop to Frankfurt latency, not Fly `fra`.** It includes the laptop's internet round trip on every statement of the hold transaction.
+
+- Every round, including the warm-up: `pending_payment` = 1 of 50, one 201, 49 conflicts (409), no other status, exactly one expiry job. The partial unique index plus `ON CONFLICT DO NOTHING` is correct through PgBouncer in transaction mode.
+- p95 over the 250 measured requests: **2586.8 ms** (p50 1811.5 ms, p99 2736.7 ms, max 2742.0 ms). Warm-up round p95 3684.6 ms. Per round p95 2.44 to 2.74 s.
+- Locally the same code gave p95 42.4 ms, so almost all of the Neon figure is network: each hold is several round trips (BEGIN, insert, enqueue, COMMIT) from a distant client.
+
+The latency is not a valid answer to "p95 from Fly `fra`", which should be a small fraction of this. Correctness is.
+
 ## Open
 
-The pass condition names Neon Frankfurt through the pooled connection from Fly `fra`: not observed. The script refuses to call a run a pass unless `FLY_REGION` is `fra`, unless `SP3_ALLOW_NON_FLY=1` (correctness only).
+p95 from a Fly `fra` machine. The script refuses to call a run a pass unless `FLY_REGION` is `fra`, unless `SP3_ALLOW_NON_FLY=1` (correctness only).

@@ -1,9 +1,17 @@
-import { existsSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { parseEnv } from 'node:util'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
 
-const envFile = fileURLToPath(new URL('../.env', import.meta.url))
-if (existsSync(envFile)) process.loadEnvFile(envFile)
+const rootEnvFile = ['../../.env.local', '../../api/.env.local']
+  .map((rel) => fileURLToPath(new URL(rel, import.meta.url)))
+  .find((file) => existsSync(file)) ?? ''
+const spikeEnvFile = fileURLToPath(new URL('../.env', import.meta.url))
+if (rootEnvFile) process.loadEnvFile(rootEnvFile)
+if (existsSync(spikeEnvFile)) {
+  const override = parseEnv(readFileSync(spikeEnvFile, 'utf8'))
+  for (const [key, value] of Object.entries(override)) if (value !== undefined && value.trim() !== '') process.env[key] = value
+}
 
 export interface SpikeResult {
   spike: string
@@ -75,3 +83,9 @@ export function requireEnv<S extends Record<string, z.ZodType>>(spike: string, s
 
 export const secret = (prefix?: string) =>
   prefix ? z.string().min(1).startsWith(prefix) : z.string().min(1)
+
+export function productionBranchGuard(spike: string): boolean {
+  if (process.env.NEON_BRANCH?.trim() !== 'production') return false
+  console.log(`SKIP ${spike} remote: NEON_BRANCH is production. Set NEON_BRANCH and the DATABASE_URL* variables to a throwaway branch (e.g. in your shell) to run this against Neon`)
+  return true
+}

@@ -1,13 +1,20 @@
 # SP5. Neon Object Storage in Frankfurt
 
-**Status: Ready, needs keys: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ENDPOINT_URL_S3, AWS_REGION** (a branch credential on a Frankfurt Neon project with one private and one `public_read` bucket).
+**Status: Answered on Neon (Frankfurt).** Run for real against the operator's project (eu-central-1, the branch credential in `.env.local` from `neon deploy`: `production` for the first run, `development` for the final run, same results), buckets `uploads` (private) and `media` (`public_read`). Both test objects were deleted afterwards (bucket listings under `sp5/` were empty).
 
 **Pass condition (architecture section 16).** Upload and public read both work. If presigned URLs aren't supported, switch to Cloudflare R2 (D14).
 
-## What is ready
+## Observed (NEON)
 
-`spikes/sp5-object-storage/run.ts` checks the region, a presigned PUT and GET in a private bucket, the refusal of anonymous reads there, and a presigned PUT then anonymous GET in a `public_read` bucket. It was typechecked only and has not run against Neon. D14 stands unproven.
+`spikes/sp5-object-storage/run.ts`, AWS SDK v3, path-style, SigV4, `requestChecksumCalculation: 'WHEN_REQUIRED'`.
 
-## Observed
+| Check | Result |
+|---|---|
+| Region | `eu-central-1` |
+| Presigned PUT into `uploads` (private) | HTTP 200 |
+| Presigned GET of that object | HTTP 200, same bytes |
+| Anonymous GET of that object | **HTTP 403** (denied) |
+| Presigned PUT into `media` (`public_read`) | HTTP 200 |
+| Anonymous GET of that object at `${AWS_ENDPOINT_URL_S3}/media/<key>` | **HTTP 200**, same bytes, `content-type: text/plain` |
 
-Nothing yet. From the `neon-object-storage` skill: path-style addressing and SigV4 only, `public_read` objects are read at `${AWS_ENDPOINT_URL_S3}/<bucket>/<key>`, presigned URLs work with the AWS SDKs. The skill does not say that presigned PUT URLs work, which is why the spike tests it.
+Answer: presigned PUT works, so D14 (Neon Object Storage, no Cloudflare R2 fallback) stands for upload and public read. Not measured: large files, multipart, CORS for a browser PUT, CDN in front of `media`, and upload timing from Fly.

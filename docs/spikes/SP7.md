@@ -1,6 +1,6 @@
 # SP7. Fly release command with Drizzle migrations, plus a rollback drill
 
-**Status: Ready, needs keys: FLY_API_TOKEN, FLY_APP_STAGING, DATABASE_URL_DDL, DATABASE_URL_POOLED.**
+**Status: Ready, needs keys: FLY_API_TOKEN, FLY_APP_STAGING, DATABASE_URL_DDL, DATABASE_URL.**
 
 **Pass condition (architecture section 16).** A deploy with a migration, and a rollback, both run on staging without downtime.
 

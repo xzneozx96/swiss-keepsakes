@@ -8,7 +8,7 @@ const env = requireEnv(SPIKE, {
   FLY_API_TOKEN: secret(),
   FLY_APP_STAGING: z.string().min(1),
   DATABASE_URL_DDL: secret(),
-  DATABASE_URL_POOLED: secret(),
+  DATABASE_URL: secret(),
 })
 
 const appDir = fileURLToPath(new URL('./app', import.meta.url))
@@ -84,7 +84,7 @@ if (flyVersion.status !== 0) {
   finish({ spike: SPIKE, ran: false, scope: 'none', pass: null, missing: ['flyctl'] })
 }
 
-fly(['secrets', 'import', '--app', env.FLY_APP_STAGING, '--stage'], `DATABASE_URL_DDL=${env.DATABASE_URL_DDL}\nDATABASE_URL_POOLED=${env.DATABASE_URL_POOLED}\n`)
+fly(['secrets', 'import', '--app', env.FLY_APP_STAGING, '--stage'], `DATABASE_URL_DDL=${env.DATABASE_URL_DDL}\nDATABASE_URL=${env.DATABASE_URL}\n`)
 
 await deploy('baseline v1', ['--build-arg', 'STEP=v1', '--build-arg', 'APP_VERSION=v1'], true)
 const v1 = await version()

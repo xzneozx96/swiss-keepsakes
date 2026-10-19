@@ -10,8 +10,8 @@ const env = requireEnv(SPIKE, {
   AWS_SECRET_ACCESS_KEY: secret(),
   AWS_ENDPOINT_URL_S3: z.url(),
   AWS_REGION: secret(),
-  SP5_BUCKET_PRIVATE: z.string().default('sp5-private'),
-  SP5_BUCKET_PUBLIC: z.string().default('sp5-public'),
+  SP5_BUCKET_PRIVATE: z.string().default('uploads'),
+  SP5_BUCKET_PUBLIC: z.string().default('media'),
 })
 
 const s3 = new S3Client({

@@ -23,7 +23,7 @@ Each step expects zero failed probes. `app/fly.toml` uses `strategy = "bluegreen
 
 ## Keys
 
-`FLY_API_TOKEN` (app-scoped deploy token for the staging app only), `FLY_APP_STAGING`, `DATABASE_URL_DDL` (direct connection string of the DDL role), `DATABASE_URL_POOLED` (DML-only app role).
+`FLY_API_TOKEN` (app-scoped deploy token for the staging app only), `FLY_APP_STAGING`, `DATABASE_URL_DDL` (direct connection string of the DDL role), `DATABASE_URL` (DML-only app role).
 
 ## Vendor guidance applied
 

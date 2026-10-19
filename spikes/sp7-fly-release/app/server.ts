@@ -3,7 +3,7 @@ import { Hono } from 'hono'
 import pg from 'pg'
 
 const appVersion = process.env.APP_VERSION ?? 'unknown'
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL_POOLED, max: 3 })
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 3 })
 const app = new Hono()
 
 app.get('/healthz', (c) => c.json({ ok: true }))
