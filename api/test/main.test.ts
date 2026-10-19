@@ -31,8 +31,10 @@ function start(env: Record<string, string>) {
   child.stderr.setEncoding('utf8').on('data', (chunk: string) => {
     stderr += chunk
   })
-  const exited = once(child, 'exit').then(([code]) => code as number | null)
-  const logs = () => stdout.split('\n').filter(Boolean).map(line => JSON.parse(line) as LogLine)
+  // 'close' fires after stdout and stderr are drained; 'exit' can fire before.
+  const exited = once(child, 'close').then(([code]) => code as number | null)
+  // Only finished lines: a chunk can end in the middle of one.
+  const logs = () => stdout.split('\n').slice(0, -1).map(line => JSON.parse(line) as LogLine)
   const messages = () => logs().map(line => line.msg)
 
   async function waitFor(msg: string) {
