@@ -11,7 +11,7 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { CameraIcon, StatusDangerIcon } from '@/components/icons'
 
 import { useLocale } from '@/contexts/locale-context'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import {
   AVATAR_MAX_BYTES,
   avatarPickError,
@@ -34,11 +34,7 @@ const errorKey = {
  */
 export function EditProfile({ guest }: { guest: Guest }) {
   const { t, intlLocale } = useLocale()
-  const client = useDataClient()
-  const { mutateAsync: saveGuest } = useCommand(
-    client.account.updateProfile,
-    [queryKeys.account.guests],
-  )
+  const { mutateAsync: saveGuest } = useCommand('account', 'updateProfile')
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()

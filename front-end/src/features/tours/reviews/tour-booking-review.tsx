@@ -14,7 +14,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
 import { ReviewItem } from '@/features/catalog/components/review-item'
 import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { useReviews } from '@/features/reviews/api/queries'
@@ -24,10 +24,7 @@ import { useBookingFormat, useGroupText } from '../booking/booking-summary'
 
 /** A completed, settled tour booking opens the same review sheet as a gift order. */
 export function TourBookingReview({ booking }: { booking: TourBooking }) {
-  const client = useDataClient()
-  const { mutate: addReview } = useCommand(client.reviews.addReview, [
-    queryKeys.reviews.reviews,
-  ])
+  const { mutate: addReview } = useCommand('reviews', 'addReview')
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const guests = useGuests()
   const demoReviews = useReviews()

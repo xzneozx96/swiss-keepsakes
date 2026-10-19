@@ -3,6 +3,7 @@ import type { DemoStore } from '@/features/demo/store'
 
 import { demoNow } from '@/features/demo/clock'
 import { updateCollection, updateWithinBudget } from '@/features/demo/store'
+import { uniqueSlug } from '@/features/merchant/products/lib/records'
 
 export function createCatalogDemoClient(store: DemoStore): CatalogClient {
   const data = () => store.getState().data
@@ -34,10 +35,6 @@ export function createCatalogDemoClient(store: DemoStore): CatalogClient {
       })
     },
     addSubcategory: async ({ name }) => {
-      const { uniqueSlug } = await import(
-        '@/features/merchant/products/lib/records',
-      )
-
       updateCollection(store, 'subcategories', list => [
         ...list,
         {

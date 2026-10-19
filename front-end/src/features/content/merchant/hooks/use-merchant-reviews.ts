@@ -4,7 +4,7 @@ import { formatDate, pickText } from '@sk/domain/shared'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useProducts } from '@/features/catalog/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 import { useReviews } from '@/features/reviews/api/queries'
 import { useTourRecords } from '@/features/tours/api/queries'
@@ -44,10 +44,7 @@ export interface ReviewRowProps {
  */
 export function useMerchantReviews(filter: ReviewFilter[]) {
   const { t, language, intlLocale } = useLocale()
-  const client = useDataClient()
-  const { mutate: replyToReview } = useCommand(client.reviews.replyToReview, [
-    queryKeys.reviews.reviews,
-  ])
+  const { mutate: replyToReview } = useCommand('reviews', 'replyToReview')
   const reviews = useReviews()
   const products = useProducts()
   const tours = useTourRecords()

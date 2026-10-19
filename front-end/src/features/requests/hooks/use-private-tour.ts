@@ -2,7 +2,7 @@ import { looksLikeEmail } from '@sk/domain/requests'
 import { useLocale } from '@/contexts/locale-context'
 
 import { useGuests } from '@/features/account/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 
 export interface PrivateTourInput {
@@ -32,11 +32,7 @@ export const GROUP_MAX = 50
  */
 export function usePrivateTour() {
   const { language } = useLocale()
-  const client = useDataClient()
-  const { mutateAsync: sendRequest } = useCommand(
-    client.requests.sendPrivateTourRequest,
-    [queryKeys.requests.privateTourRequests, queryKeys.notifications.mail],
-  )
+  const { mutateAsync: sendRequest } = useCommand('requests', 'sendPrivateTourRequest')
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   const guest = useGuests(guests => guests.find(g => g.id === signedInGuestId))
 

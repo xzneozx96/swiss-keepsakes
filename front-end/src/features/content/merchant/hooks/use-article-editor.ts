@@ -16,7 +16,7 @@ import { pickText, slugify } from '@sk/domain/shared'
 import { useState } from 'react'
 
 import { useProducts } from '@/features/catalog/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { useOrders } from '@/features/orders/api/queries'
@@ -70,15 +70,8 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
   const tours = useTourRecords()
   const products = useProducts()
   const orders = useOrders()
-  const client = useDataClient()
-  const { mutateAsync: createArticle } = useCommand(
-    client.content.createArticle,
-    [queryKeys.content.articles],
-  )
-  const { mutateAsync: updateArticle } = useCommand(
-    client.content.updateArticle,
-    [queryKeys.content.articles],
-  )
+  const { mutateAsync: createArticle } = useCommand('content', 'createArticle')
+  const { mutateAsync: updateArticle } = useCommand('content', 'updateArticle')
   const articles = useArticles()
   const stored = articles.find(a => a.id === articleId)
   const [form, setForm] = useState<ArticleForm>(() =>

@@ -7,15 +7,15 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
 import { useMerchantComments } from '@/features/content/merchant/hooks/use-merchant-comments'
-import { DataClientProvider, queryKeys } from '@/features/data-client'
+import {
+  DataClientProvider,
+  queryKeys,
+  StorageFullError,
+} from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { createDemoDataClient, startDemo } from '@/features/demo/data-client'
 import { createSeedState } from '@/features/demo/seed'
-import {
-  createDemoStore,
-  StorageFullError,
-  updateCollection,
-} from '@/features/demo/store'
+import { createDemoStore, updateCollection } from '@/features/demo/store'
 
 beforeEach(() => {
   window.localStorage.clear()
@@ -107,7 +107,7 @@ describe('demo data client', () => {
     const cache = demo.queryClient.getQueryCache()
     const articlesRead = cache.find({ queryKey: queryKeys.content.articles })!
       .state
-      .dataUpdatedAt
+      .dataUpdateCount
     const comment = demo.store.getState().data.comments.find(c => !c.hidden)!
 
     await demo.dataClient.content.setCommentHidden({
@@ -124,7 +124,7 @@ describe('demo data client', () => {
       ).toBe(demo.store.getState().data.comments),
     )
     expect(
-      cache.find({ queryKey: queryKeys.content.articles })!.state.dataUpdatedAt,
+      cache.find({ queryKey: queryKeys.content.articles })!.state.dataUpdateCount,
     ).toBe(articlesRead)
   })
 

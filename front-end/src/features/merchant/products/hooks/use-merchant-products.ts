@@ -6,7 +6,7 @@ import { availableUnits, fromPrice, giftText, isPublished, languageStatus, missi
 import { formatMoney, numberFormat, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { usePickupPlaces, useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoNow } from '@/features/demo'
 import { useOrders } from '@/features/orders/api/queries'
 import { useTourRecords } from '@/features/tours/api/queries'
@@ -162,15 +162,8 @@ export type ProductKind = 'gift' | 'tour'
  * bookings that point at it are kept. Restoring brings it back as a draft to publish again.
  */
 export function useProductArchive() {
-  const client = useDataClient()
-  const { mutate: setProductArchived } = useCommand(
-    client.catalog.setProductArchived,
-    [queryKeys.catalog.products],
-  )
-  const { mutate: setTourArchived } = useCommand(
-    client.tours.setTourArchived,
-    [queryKeys.tours.records],
-  )
+  const { mutate: setProductArchived } = useCommand('catalog', 'setProductArchived')
+  const { mutate: setTourArchived } = useCommand('tours', 'setTourArchived')
 
   const set = (kind: ProductKind, id: string, archived: boolean) =>
     kind === 'gift'

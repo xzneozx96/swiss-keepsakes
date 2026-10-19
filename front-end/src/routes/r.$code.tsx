@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { usePartners } from '@/features/partners/api/queries'
 import { partnerByCode } from '@/features/partners/referral'
 
@@ -13,10 +13,7 @@ export const Route = createFileRoute('/r/$code')({ component: ReferralLink })
 
 function ReferralLink() {
   const { code } = Route.useParams()
-  const client = useDataClient()
-  const { mutate: recordVisit } = useCommand(client.partners.recordVisit, [
-    queryKeys.partners.referralVisits,
-  ])
+  const { mutate: recordVisit } = useCommand('partners', 'recordVisit')
   const demoPartners = usePartners()
   const recordedRef = useRef(false)
 

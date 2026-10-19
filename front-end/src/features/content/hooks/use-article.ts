@@ -10,7 +10,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
 import { useProducts } from '@/features/catalog/api/queries'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 import { useTourRecords } from '@/features/tours/api/queries'
 import { avatarUrl } from '@/lib/avatars'
@@ -64,10 +64,7 @@ const published = (a: Article) => a.publication.status === 'published'
  */
 export function useArticle(slug: string): ArticleView | null {
   const { t, language, intlLocale } = useLocale()
-  const client = useDataClient()
-  const { mutate: postComment } = useCommand(client.content.addComment, [
-    queryKeys.content.comments,
-  ])
+  const { mutate: postComment } = useCommand('content', 'addComment')
   const demoArticles = useArticles()
   const demoComments = useComments()
   const demoGuests = useGuests()

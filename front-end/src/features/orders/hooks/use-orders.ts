@@ -14,7 +14,7 @@ import {
 import { useLocale } from '@/contexts/locale-context'
 import { useProducts } from '@/features/catalog/api/queries'
 
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoActions, useDemoNow, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { useOrders } from '@/features/orders/api/queries'
@@ -40,30 +40,19 @@ export interface ShownLabel {
  */
 export function useOrderActions() {
   const { language } = useLocale()
-  const client = useDataClient()
   const { update } = useDemoActions()
   const orders = useOrders()
   const products = useProducts()
-  const affects = [queryKeys.orders.orders, queryKeys.notifications.mail]
-  const { mutate: accept } = useCommand(client.orders.accept, affects)
-  const { mutate: changePickup } = useCommand(client.orders.changePickup, affects)
-  const { mutate: decline } = useCommand(client.orders.decline, affects)
-  const { mutateAsync: payOnline } = useCommand(
-    client.orders.payOnline,
-    affects,
-  )
-  const { mutate: recordOfflinePayment } = useCommand(
-    client.orders.recordOfflinePayment,
-    affects,
-  )
-  const { mutate: markReady } = useCommand(client.orders.markReady, affects)
-  const { mutate: handOver } = useCommand(client.orders.handOver, affects)
-  const { mutate: complete } = useCommand(client.orders.complete, affects)
-  const { mutate: handOverAndComplete } = useCommand(
-    client.orders.handOverAndComplete,
-    affects,
-  )
-  const { mutate: cancel } = useCommand(client.orders.cancel, affects)
+  const { mutate: accept } = useCommand('orders', 'accept')
+  const { mutate: changePickup } = useCommand('orders', 'changePickup')
+  const { mutate: decline } = useCommand('orders', 'decline')
+  const { mutateAsync: payOnline } = useCommand('orders', 'payOnline')
+  const { mutate: recordOfflinePayment } = useCommand('orders', 'recordOfflinePayment')
+  const { mutate: markReady } = useCommand('orders', 'markReady')
+  const { mutate: handOver } = useCommand('orders', 'handOver')
+  const { mutate: complete } = useCommand('orders', 'complete')
+  const { mutate: handOverAndComplete } = useCommand('orders', 'handOverAndComplete')
+  const { mutate: cancel } = useCommand('orders', 'cancel')
 
   function run(
     orderId: string,

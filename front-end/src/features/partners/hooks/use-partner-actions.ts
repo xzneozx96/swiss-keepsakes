@@ -1,7 +1,7 @@
 import type { Partner, PartnerPayout } from '@sk/domain/partners'
 import type { QueriedData } from '@/features/demo/types'
 
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 
 import { usePartners } from '@/features/partners/api/queries'
@@ -57,28 +57,12 @@ export function canDeletePartner(
 
 /** M15 and M16 partner management: add, archive, restore, delete (D17), payouts, report link. */
 export function usePartnerActions() {
-  const client = useDataClient()
-  const affects = [queryKeys.partners.partners]
-  const { mutate: addPartner } = useCommand(client.partners.addPartner, affects)
-  const { mutate: setPartnerArchived } = useCommand(
-    client.partners.setPartnerArchived,
-    affects,
-  )
-  const { mutate: deletePartner } = useCommand(
-    client.partners.deletePartner,
-    affects,
-  )
-  const { mutate: recordPayout } = useCommand(client.partners.recordPayout, [
-    queryKeys.partners.partnerPayouts,
-  ])
-  const { mutate: revokeReportLink } = useCommand(
-    client.partners.revokeReportLink,
-    affects,
-  )
-  const { mutate: issueReportLink } = useCommand(
-    client.partners.issueReportLink,
-    affects,
-  )
+  const { mutate: addPartner } = useCommand('partners', 'addPartner')
+  const { mutate: setPartnerArchived } = useCommand('partners', 'setPartnerArchived')
+  const { mutate: deletePartner } = useCommand('partners', 'deletePartner')
+  const { mutate: recordPayout } = useCommand('partners', 'recordPayout')
+  const { mutate: revokeReportLink } = useCommand('partners', 'revokeReportLink')
+  const { mutate: issueReportLink } = useCommand('partners', 'issueReportLink')
   const demoPartners = usePartners()
   const role = useDemoSelector(s => s.role)
 

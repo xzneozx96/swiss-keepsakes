@@ -30,7 +30,7 @@ import { ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { AssistantHeader } from '@/components/assistant'
 
 import { shop } from '@/features/catalog/seed'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoActions } from '@/features/demo'
 import { getChat, hooks, resetChat, saveMessages } from '../lib/session'
 import { ItineraryCard } from './itinerary-card'
@@ -246,11 +246,7 @@ function TracePanel({
 export function PlannerChat({ onLeave }: { onLeave: () => void }) {
   const navigate = useNavigate()
   const { setRole } = useDemoActions()
-  const client = useDataClient()
-  const { mutate: sendAdviceRequest } = useCommand(
-    client.requests.sendAdviceRequest,
-    [queryKeys.requests.adviceRequests, queryKeys.notifications.mail],
-  )
+  const { mutate: sendAdviceRequest } = useCommand('requests', 'sendAdviceRequest')
 
   // The scripted chat lives outside this component and calls back into it, so the handler is
   // registered after render. `sendAdviceRequest` never changes, so the handler is never stale.

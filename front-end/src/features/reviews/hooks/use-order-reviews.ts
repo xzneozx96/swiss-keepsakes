@@ -7,7 +7,7 @@ import { pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
 import { useProducts } from '@/features/catalog/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoNow, useDemoSelector } from '@/features/demo'
 import { useOrders } from '@/features/orders/api/queries'
 import { useReviews } from '@/features/reviews/api/queries'
@@ -41,10 +41,7 @@ export interface OrderReviews {
  */
 export function useOrderReviews(order: Order): OrderReviews {
   const { language } = useLocale()
-  const client = useDataClient()
-  const { mutate: addReview } = useCommand(client.reviews.addReview, [
-    queryKeys.reviews.reviews,
-  ])
+  const { mutate: addReview } = useCommand('reviews', 'addReview')
   const storedProducts = useProducts()
   const reviews = useReviews()
   const orders = useOrders()

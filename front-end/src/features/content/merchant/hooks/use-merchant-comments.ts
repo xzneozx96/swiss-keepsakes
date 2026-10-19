@@ -6,7 +6,7 @@ import { reviewerName } from '@sk/domain/catalog'
 import { dateTimeFormat } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 import { avatarUrl } from '@/lib/avatars'
 import { useArticles, useComments } from '../../api/queries'
@@ -42,17 +42,9 @@ export interface CommentRowProps {
  */
 export function useMerchantComments(filter: CommentFilter[]) {
   const { t, intlLocale } = useLocale()
-  const client = useDataClient()
-  const affects = [queryKeys.content.comments]
-  const { mutate: setCommentHidden } = useCommand(
-    client.content.setCommentHidden,
-    affects,
-  )
-  const { mutate: deleteComment } = useCommand(
-    client.content.deleteComment,
-    affects,
-  )
-  const { mutate: replyAsShop } = useCommand(client.content.replyAsShop, affects)
+  const { mutate: setCommentHidden } = useCommand('content', 'setCommentHidden')
+  const { mutate: deleteComment } = useCommand('content', 'deleteComment')
+  const { mutate: replyAsShop } = useCommand('content', 'replyAsShop')
   const comments = useComments()
   const articles = useArticles()
   const guests = useGuests()

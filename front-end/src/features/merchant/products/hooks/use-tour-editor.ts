@@ -24,9 +24,8 @@ import { safeHref } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { StorageFullError, useCommand } from '@/features/data-client'
 import { useDemoNow } from '@/features/demo'
-import { StorageFullError } from '@/features/demo/store'
 
 import {
   TOUR_STEPS,
@@ -319,16 +318,8 @@ function emptyTour(id: string, slug: string): Tour {
 }
 
 export function useDepartureActions() {
-  const client = useDataClient()
-  const affects = [queryKeys.tours.records]
-  const { mutate: addDeparture } = useCommand(
-    client.tours.addDeparture,
-    affects,
-  )
-  const { mutate: setDepartureCapacity } = useCommand(
-    client.tours.setDepartureCapacity,
-    affects,
-  )
+  const { mutate: addDeparture } = useCommand('tours', 'addDeparture')
+  const { mutate: setDepartureCapacity } = useCommand('tours', 'setDepartureCapacity')
 
   return {
     add: (departure: Departure) => addDeparture(departure),
@@ -412,10 +403,7 @@ export function useTourEditor(
   go: (step: TourStep) => void,
 ) {
   const { t, language: interfaceLanguage } = useLocale()
-  const client = useDataClient()
-  const { mutateAsync: saveTour } = useCommand(client.tours.saveTour, [
-    queryKeys.tours.records,
-  ])
+  const { mutateAsync: saveTour } = useCommand('tours', 'saveTour')
   const data = useTourRecords()
   const now = useDemoNow()
   const navigate = useNavigate()

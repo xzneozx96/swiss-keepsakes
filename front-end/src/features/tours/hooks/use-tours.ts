@@ -12,7 +12,7 @@ import type { Outcome } from '@/features/payment/hooks/use-payment'
 
 import { availableSeats, bookingAmountDue } from '@sk/domain/bookings'
 import { useLocale } from '@/contexts/locale-context'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { useReferralVisits } from '@/features/partners/api/queries'
@@ -68,18 +68,10 @@ export function useTours(precision: 'minute' | 'second' = 'minute') {
 
 export function useTourActions() {
   const { update } = useDemoActions()
-  const client = useDataClient()
-  const affects = [queryKeys.tours.records, queryKeys.notifications.mail]
-  const { mutate: addBooking } = useCommand(client.tours.createBooking, affects)
-  const { mutateAsync: payBooking } = useCommand(client.tours.pay, affects)
-  const { mutate: recordBookingPayment } = useCommand(
-    client.tours.recordPayment,
-    affects,
-  )
-  const { mutate: recordBookingOutcome } = useCommand(
-    client.tours.recordOutcome,
-    affects,
-  )
+  const { mutate: addBooking } = useCommand('tours', 'createBooking')
+  const { mutateAsync: payBooking } = useCommand('tours', 'pay')
+  const { mutate: recordBookingPayment } = useCommand('tours', 'recordPayment')
+  const { mutate: recordBookingOutcome } = useCommand('tours', 'recordOutcome')
   const records = useTourRecords()
   const draft = useTourDraft()
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)

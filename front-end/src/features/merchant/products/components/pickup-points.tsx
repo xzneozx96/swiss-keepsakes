@@ -26,7 +26,7 @@ import { ChevronRightIcon, ClockIcon, PickupIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { usePickupPlaces } from '@/features/catalog/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import {
   LanguageTabs,
   LocalizedField,
@@ -52,11 +52,7 @@ function PickupPointSheet({
   onClose: () => void
 }) {
   const { t, language: uiLanguage } = useLocale()
-  const client = useDataClient()
-  const { mutate: savePickupPlace } = useCommand(
-    client.catalog.savePickupPlace,
-    [queryKeys.catalog.pickupPlaces],
-  )
+  const { mutate: savePickupPlace } = useCommand('catalog', 'savePickupPlace')
   const [draft, setDraft] = useState<PlaceDraft>(() => ({
     name: { ...place.name },
     address: place.address,

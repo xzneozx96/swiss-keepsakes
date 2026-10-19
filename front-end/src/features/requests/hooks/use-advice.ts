@@ -9,7 +9,7 @@ import { calendarDay, formatDate, pickText } from '@sk/domain/shared'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { useAdviceQuestions } from '@/features/requests/api/queries'
@@ -28,11 +28,7 @@ export type SendResult
 export function useAdvice() {
   const { language, intlLocale } = useLocale()
   const { update } = useDemoActions()
-  const client = useDataClient()
-  const { mutateAsync: sendAdviceRequest } = useCommand(
-    client.requests.sendAdviceRequest,
-    [queryKeys.requests.adviceRequests, queryKeys.notifications.mail],
-  )
+  const { mutateAsync: sendAdviceRequest } = useCommand('requests', 'sendAdviceRequest')
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const adviceDraft = useDemoSelector(s => s.data.adviceDraft)
   const adviceQuestions = useAdviceQuestions()

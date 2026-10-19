@@ -16,7 +16,7 @@ import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import { usePickupPlaces, useProducts } from '@/features/catalog/api/queries'
 import { shop } from '@/features/catalog/seed'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useDemoNow, useDemoSelector } from '@/features/demo'
 import { useOrders } from '@/features/orders/api/queries'
 import { useReferralVisits } from '@/features/partners/api/queries'
@@ -38,11 +38,7 @@ export function useReview(): {
   send: () => Promise<string[]> | null
 } {
   const { t, language, intlLocale } = useLocale()
-  const client = useDataClient()
-  const { mutateAsync: submitCart } = useCommand(client.orders.submitCart, [
-    queryKeys.orders.orders,
-    queryKeys.notifications.mail,
-  ])
+  const { mutateAsync: submitCart } = useCommand('orders', 'submitCart')
   const cart = useDemoSelector(s => s.data.cart)
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   const nextOrderNumber = useDemoSelector(s => s.data.nextOrderNumber)

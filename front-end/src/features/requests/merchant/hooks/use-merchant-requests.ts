@@ -6,7 +6,7 @@ import { formatOrderDateTime } from '@sk/domain/orders'
 
 import { calendarDay, dateTimeFormat } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useAdviceQuestions, useAdviceRequests, usePrivateTourRequests } from '@/features/requests/api/queries'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
@@ -82,11 +82,7 @@ function newestFirst<T extends { sentAt: string }>(items: T[]) {
  */
 export function useMerchantRequests() {
   const { t, intlLocale } = useLocale()
-  const client = useDataClient()
-  const { mutate: setPrivateTourAnswered } = useCommand(
-    client.requests.setPrivateTourAnswered,
-    [queryKeys.requests.privateTourRequests],
-  )
+  const { mutate: setPrivateTourAnswered } = useCommand('requests', 'setPrivateTourAnswered')
   const adviceRequests = useAdviceRequests()
   const privateTourRequests = usePrivateTourRequests()
   const adviceQuestions = useAdviceQuestions()

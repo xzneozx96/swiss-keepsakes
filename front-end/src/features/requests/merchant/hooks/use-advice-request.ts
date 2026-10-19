@@ -5,7 +5,7 @@ import { formatOrderDateTime } from '@sk/domain/orders'
 import { useEffect } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 import { useAdviceRequests } from '@/features/requests/api/queries'
 import { replyHref } from './use-merchant-requests'
 
@@ -31,11 +31,7 @@ export interface AdviceRequestView {
  */
 export function useAdviceRequest(id: string): AdviceRequestView | null {
   const { t, intlLocale } = useLocale()
-  const client = useDataClient()
-  const { mutate: markRead } = useCommand(
-    client.requests.markAdviceRequestRead,
-    [queryKeys.requests.adviceRequests],
-  )
+  const { mutate: markRead } = useCommand('requests', 'markAdviceRequestRead')
   const request = useAdviceRequests(requests => requests.find(r => r.id === id))
   const isUnread = !!request && !request.readAt
 

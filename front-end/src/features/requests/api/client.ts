@@ -1,4 +1,5 @@
 import type {
+  AdviceQuestion,
   AdviceQuestionSet,
   AdviceRequest,
   PrivateTourRequest,
@@ -21,6 +22,12 @@ export interface RequestsClient {
     id: string
     answered: boolean
   }) => Promise<void>
-  /** Replaces the whole set; requests already sent keep their own wording (AC18). */
-  saveQuestionSet: (set: AdviceQuestionSet) => Promise<void>
+  /**
+   * The question set edits (M19), each applied to the latest set. Requests already sent keep
+   * their own wording (AC18).
+   */
+  saveQuestion: (question: AdviceQuestion) => Promise<void>
+  removeQuestion: (input: { id: string }) => Promise<void>
+  moveQuestion: (input: { id: string, by: -1 | 1 }) => Promise<void>
+  setRecipient: (input: { email: string }) => Promise<void>
 }

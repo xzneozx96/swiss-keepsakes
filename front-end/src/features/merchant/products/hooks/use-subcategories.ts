@@ -1,7 +1,7 @@
 import type { LocalizedText } from '@sk/domain/catalog'
 
 import { useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
+import { useCommand } from '@/features/data-client'
 
 /**
  * M26 data: the store's own sub-categories under Keepsakes (PRD §7.0), their order, and how
@@ -9,18 +9,10 @@ import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
  * is ever left without one.
  */
 export function useSubcategories() {
-  const client = useDataClient()
-  const affects = [queryKeys.catalog.subcategories]
-  const { mutate: add } = useCommand(client.catalog.addSubcategory, affects)
-  const { mutate: rename } = useCommand(
-    client.catalog.renameSubcategory,
-    affects,
-  )
-  const { mutate: move } = useCommand(client.catalog.moveSubcategory, affects)
-  const { mutate: remove } = useCommand(
-    client.catalog.removeSubcategory,
-    affects,
-  )
+  const { mutate: add } = useCommand('catalog', 'addSubcategory')
+  const { mutate: rename } = useCommand('catalog', 'renameSubcategory')
+  const { mutate: move } = useCommand('catalog', 'moveSubcategory')
+  const { mutate: remove } = useCommand('catalog', 'removeSubcategory')
   const keepsakes = useStoreSubcategories(list =>
     list.filter(c => c.categoryId === 'keepsakes'),
   )

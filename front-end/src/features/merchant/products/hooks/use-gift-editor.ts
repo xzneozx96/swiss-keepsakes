@@ -10,8 +10,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import { usePickupPlaces, useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
-import { queryKeys, useCommand, useDataClient } from '@/features/data-client'
-import { StorageFullError } from '@/features/demo/store'
+import { StorageFullError, useCommand } from '@/features/data-client'
 
 import {
   GIFT_STEPS,
@@ -276,10 +275,7 @@ export function useGiftEditor(
   go: (step: GiftStep) => void,
 ) {
   const { t, language: interfaceLanguage } = useLocale()
-  const client = useDataClient()
-  const { mutateAsync: saveProduct } = useCommand(client.catalog.saveProduct, [
-    queryKeys.catalog.products,
-  ])
+  const { mutateAsync: saveProduct } = useCommand('catalog', 'saveProduct')
   const products = useProducts()
   const subcategories = useStoreSubcategories()
   const orders = useOrders()

@@ -1,5 +1,6 @@
 import type { DemoData, DemoState, Role } from './types'
 
+import { StorageFullError } from '@/features/data-client/errors'
 import { readStored, writeStored } from '@/lib/storage'
 
 import { createSeedState, DEMO_VERSION } from './seed'
@@ -88,14 +89,6 @@ export function updateCollection<K extends keyof DemoData>(
     ...s,
     data: { ...s.data, [key]: recipe(s.data[key], s) },
   }))
-}
-
-/** The demo refused a write: the data would no longer fit in the browser's storage. */
-export class StorageFullError extends Error {
-  constructor() {
-    super('The demo data would not fit in this browser\'s storage')
-    this.name = 'StorageFullError'
-  }
 }
 
 /** The demo state this app may keep in localStorage before a save is refused. */
