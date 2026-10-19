@@ -16,8 +16,11 @@ trap 'docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
 echo '== production dependencies only, not root'
 docker run --rm "$image" sh -ec '
   test "$(id -u)" != 0
+  # Fails when the folder is missing, and hono must be listed, so the dev check below cannot pass on an empty list.
+  packages=$(ls node_modules/.pnpm)
+  echo "$packages" | grep -q "^hono@" || { echo "hono is not in node_modules/.pnpm"; exit 1; }
   for dev in tsx typescript vitest drizzle-kit eslint; do
-    ! ls node_modules/.pnpm | grep -q "^$dev@" || { echo "dev dependency in the image: $dev"; exit 1; }
+    ! echo "$packages" | grep -q "^$dev@" || { echo "dev dependency in the image: $dev"; exit 1; }
   done
   test -z "$(find /app -name ".env*" -not -path "*/node_modules/*")"
   test -f packages/api-contract/dist/src/index.js
