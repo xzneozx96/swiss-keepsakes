@@ -6,6 +6,7 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator'
 import { Pool } from 'pg'
 import { PgBoss } from 'pg-boss'
 import { loadConfig } from '../config.ts'
+import { jobsSchema } from '../jobs/boss.ts'
 import { createLogger } from '../logger.ts'
 
 // The same depth from src/ and from dist/.
@@ -21,7 +22,7 @@ export async function migrateDatabase(directUrl: string, logger: Logger): Promis
   finally {
     await pool.end()
   }
-  const boss = new PgBoss({ connectionString: directUrl, max: 1, migrate: true, supervise: false, schedule: false, registerInstance: false })
+  const boss = new PgBoss({ connectionString: directUrl, schema: jobsSchema, max: 1, migrate: true, supervise: false, schedule: false, registerInstance: false })
   boss.on('error', error => logger.error({ err: error }, 'pg-boss error'))
   await boss.start()
   await boss.stop()

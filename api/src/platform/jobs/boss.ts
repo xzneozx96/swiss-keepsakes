@@ -6,11 +6,14 @@ export interface Jobs {
   stop: () => Promise<void>
 }
 
+// pg-boss's own tables. The health check reads its instance table directly.
+export const jobsSchema = 'pgboss'
+
 // Every role starts pg-boss, because sending a job needs a started instance. Only a worker supervises
 // (expiry, retention, maintenance) and runs schedules. pg-boss uses the direct connection (D2), and
 // `migrate: false` because its schema is installed by the release command (db/migrate.ts).
 export async function startJobs(directUrl: string, worker: boolean, logger: Logger): Promise<Jobs> {
-  const boss = new PgBoss({ connectionString: directUrl, connectionTimeoutMillis: 5_000, migrate: false, supervise: worker, schedule: worker })
+  const boss = new PgBoss({ connectionString: directUrl, schema: jobsSchema, connectionTimeoutMillis: 5_000, migrate: false, supervise: worker, schedule: worker })
   // pg-boss reports failed polls and heartbeats here, and an 'error' event with no listener ends the process.
   boss.on('error', error => logger.error({ err: error }, 'pg-boss error'))
   await boss.start()

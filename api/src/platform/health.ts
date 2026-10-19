@@ -4,6 +4,7 @@ import type { Logger } from 'pino'
 import os from 'node:os'
 import process from 'node:process'
 import { setTimeout as sleep } from 'node:timers/promises'
+import { jobsSchema } from './jobs/boss.ts'
 
 export interface HealthReport {
   database: boolean
@@ -34,9 +35,18 @@ async function passes(name: string, check: () => Promise<boolean>, logger: Logge
   }
 }
 
+// pg-boss records each instance with its host and pid, and getInstances() calls it live while it is not stopped
+// and has beaten within three of its intervals (30 s each by default). getInstances() reads up to 1000 rows of
+// every instance, so this reads only this process's rows, with the same rule.
+const thisProcessIsLive = `
+  select exists (
+    select 1 from ${jobsSchema}.instance
+     where host = $1 and pid = $2 and stopped_on is null
+       and heartbeat_on >= ${jobsSchema}.job_now() - heartbeat_seconds * 3 * interval '1 second'
+  ) as live`
+
 // Architecture section 13: the database through the pooled connection request handlers use, and this
-// process's pg-boss heartbeat. pg-boss records each instance with its host and pid, and calls it live while
-// it is not stopped and has beaten within three intervals (30 s each by default).
+// process's pg-boss heartbeat, read over pg-boss's own direct connection.
 export function createHealthCheck({ pool, boss, logger }: { pool: Pool, boss: PgBoss, logger: Logger }): HealthCheck {
   return async () => {
     const [database, jobs] = await Promise.all([
@@ -45,8 +55,8 @@ export function createHealthCheck({ pool, boss, logger }: { pool: Pool, boss: Pg
         return true
       }, logger),
       passes('jobs', async () => {
-        const instances = await boss.getInstances()
-        return instances.some(instance => instance.host === os.hostname() && instance.pid === process.pid && instance.live)
+        const { rows } = await boss.getDb().executeSql(thisProcessIsLive, [os.hostname(), process.pid])
+        return rows[0]?.live === true
       }, logger),
     ])
     return { database, jobs }
