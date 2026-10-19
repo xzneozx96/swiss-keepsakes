@@ -25,5 +25,5 @@
 
 ## Not verified
 - No unit test of `booking-status.tsx` itself. Label equivalence rests on the 100-route text diff (frozen clock, seeded data), which may not contain every status/payment combination, for example a cancelled booking with a processing payment or a confirmed one right at its due instant.
-- `pnpm typecheck:tests` and `pnpm test` in `front-end/` were not run separately (root `pnpm test` ran the root vitest only).
+- In `front-end/`: `pnpm test` 13 passed and `pnpm typecheck:tests` clean (run after writing this report).
 - Process note: I ran `pnpm exec eslint --fix` once on two files I own (booking-status.tsx was ignored from the root; money-state.ts was touched). It was a slip against the instruction; the diff of money-state.ts is limited to my edits (38 changed lines).
