@@ -258,3 +258,28 @@ Open questions for the owner
 - The preview branch shares `development`'s `neondb_owner` password, and `development` was branched from `production` (not checked whether they match). Masking keeps it out of the public logs. A password reset on each new preview branch, or a separate CI role, would limit the damage if it ever leaked.
 - Branch protection on `main` is off. Should `gates`, `integration (Neon)`, `API image` and `e2e` become required checks?
 - The 5 development-dependency advisories (above) need upstream fixes, or a replacement for `eslint-plugin-boundaries`.
+
+## Review fixes
+
+An independent Opus review of 0f46601 found 2 High, 3 Medium and several Low. The fixes are commits 1473b61 to 95fcef3. Where this section and the sections above differ, this section wins.
+
+- H1. The close-time delete job now checks out the default branch (`github.event.repository.default_branch`, sparse `scripts`), so a PR author's code never runs with the key at close time and older PR heads without the script no longer break. A "Choose the delete script" step falls back to the PR head only while the default branch lacks `scripts/neon-preview-branch.mjs`, which is true until this stack merges. The fallback ran on GitHub (close run 39332115608, "Deleted preview/pr-14"). The default-branch path was proved locally only, by running the step's script against a directory with and without the file, and was not tried on the real heads of #8, #10 or #12.
+- H2. The preview branch inherited `development`'s `neondb_owner` password, which came from `production`. `connect` now resets the password on every run, create or reuse, masks the new one at once, waits for the reset's operations, then reads both URIs and refuses any URI that does not carry the reset password. Tests assert the reset is sent before any connection URI is read and that the inherited password is never exported. The parent compared the live passwords in-process, printing nothing: the preview branch's password differs from `development`'s. The parent also scanned run 39332203432 for both passwords: 0 occurrences each.
+- M1. `main(argv, env, { fetch, write, pollMs, retryDelayMs })` is exported and tested over a fake fetch. Tests assert the exact `::add-mask::` lines come before any other output, the exact `GITHUB_ENV` content, that `GITHUB_OUTPUT` is never created, that the PR number comes from `PR_NUMBER` and not `GITHUB_RUN_NUMBER`, and that 423 and 503 stop after 5 attempts. 13 new mutants and 6 earlier ones were each killed.
+- M2. Expiry is 3 days, and extended on every reuse (L3). `create` fails with a clear message when Neon reports the branch limit (10 on the Free plan, counting the three long-lived branches, so at most 7 previews). The match is on the response message, because Neon documents no code for it. It was tested with a fake 422, and the real response was not seen.
+- M3. `pnpm --filter @sk/api db:check-branch` fails in CI when a branch's `drizzle.__drizzle_migrations` holds a hash that `api/migrations` lacks, using drizzle's own hash reader. It is CI-only and not part of the release command, because an SP7-style rollback deploys an older image onto a newer schema on purpose. On the fresh preview branch it reported 0 applied, which shows `development` has no drizzle table today.
+- L1. Branch lookups follow `pagination.next` with the cursor.
+- L2. `connect` runs right after `create`, before `pnpm install`.
+- L5. The dev audit parses `pnpm audit --json` and fails when there is no report, so a registry outage is no longer reported as an advisory.
+- L6. The image smoke test now fails when `node_modules/.pnpm` is missing and requires `hono@` in it.
+- L7. `docs/ops/ci.md` now says the key can read credentials for, reset and delete every branch including production, that a new branch starts with `development`'s password (which came from `production`), the 10-branch cap, that pending runs on `main` can be replaced, and that CI migrates with `tsx` from source while the image job covers the compiled release command.
+
+Evidence at 95fcef3: `actionlint` 0 errors, `pnpm typecheck`, `pnpm lint:zones` and the api lint pass, `pnpm test` reports 362 passed, `trace` shows E1.13 with 19 tests and exits 0, and the integration suite reports 43 passed locally with 0 `sk_test_` databases left. CI: push run [39331615085](https://github.com/xzneozx96/swiss-keepsakes/actions/runs/39331615085) green, close run [39332115608](https://github.com/xzneozx96/swiss-keepsakes/actions/runs/39332115608) deleted `preview/pr-14` with only the three long-lived branches left, and reopen run [39332203432](https://github.com/xzneozx96/swiss-keepsakes/actions/runs/39332203432) green with all of `gates`, `integration (Neon)`, `API image` and `e2e` passing.
+
+Not verified after the fixes:
+
+- The default-branch delete path on GitHub, and a delete on the real heads of #8, #10 and #12.
+- The real branch-limit response from Neon.
+- A close by merge.
+
+Owner decisions that remain: rotate the `development` and `production` passwords so they differ, make `gates`, `integration (Neon)`, `API image` and `e2e` required checks on `main`, and decide whether a fork or Dependabot PR may merge with a green but empty Neon check. Neon branch protection needs a paid plan.
