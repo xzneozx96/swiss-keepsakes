@@ -243,3 +243,21 @@ Open questions for the owner
 - The hash covers the raw body bytes. The same JSON in another key order is a 422. The SPA must resend the identical body on a retry.
 - A crash between the commit and storing the response leaves the key answering 409 for up to 24 hours. The command is never run twice.
 - Use cases must let `IdempotencyKeyTaken` through and must not nest `uow.run`. The first committed unit of work in a request claims the key.
+
+## Review fixes
+
+An independent Opus review of 12854fc found 1 High, 3 Medium and 5 Low. The fixes are nine commits, 801a0c7 to d08b6a4, pushed on top without rewriting history. Where this section and the sections above differ, this section wins.
+
+- H1. A stored 204, 205 or 304 replayed as a 500, and binary bodies came back corrupted. The body is now stored as base64 of the exact bytes, and those three statuses store a null body and replay with `c.body(null, status)`. Tests replay a 204 and 8 non-UTF-8 bytes.
+- L4. Stored response headers are an allow-list (`content-type`, `content-language`, `location`, `etag`, `cache-control`). A test sets `Set-Cookie` and a custom token header and checks neither is stored or replayed.
+- M1. A dropped connection during a unit of work killed the process. The pool now adds an error listener to every client on `connect`, logged through pino. A test terminates the transaction's backend and checks `uow.run` rejects while the process and the next unit of work survive.
+- M2. `uow.run` throws on nesting. A second unit opened while the claiming one is open is refused with a clear error. The claim runs under `SET LOCAL lock_timeout = '5s'`, reset right after, and error 55P03 becomes a 409 `idempotency-key-in-use`. Tests cover nesting inside and outside a request, `Promise.all` of two units, and a claim that waits over 5 s.
+- M3. The five surviving mutants now fail: cross-actor overwrite, stored `Set-Cookie`, the race replay carrying `Retry-After`, claiming on every unit, and the "reads are not affected" test (now a GET under `/api/*`).
+- L1. The integration database guard refuses `host` and `hostaddr` query parameters and checks the host that pg itself parses. A test uses the `?host=` bypass URL.
+- L2. A failed migration drops the `sk_test_` database before global setup rethrows.
+- L3. The health check queries only this process's `pgboss.instance` row (host and pid). Tests cover 1000 older rows of other machines, a stopped instance and a stale heartbeat.
+- L5. `bodyLimit` of 1 MiB on `/api/*` before anything reads the body. Over the limit the answer is a 413 problem with type `body-too-large`.
+
+Evidence at d08b6a4: `pnpm typecheck`, `pnpm lint:zones`, `pnpm --filter @sk/api lint` and `pnpm build` pass. `pnpm test` reports 316 passed and `pnpm test:integration` 42 passed (the worker ran it 3 times in a row, the parent once more). Every new test was mutation-checked by the worker. One mutant survives, swapping pg's parsed host back to the URL hostname, because with the host parameters refused the two agree. Live: a body of 1 MiB plus 1 byte to `/api/anything` returned a 413 problem, stopping Postgres turned `/healthz` to 503 with the process still up and one `database connection error` line, and restarting it returned 200.
+
+Not verified after the fixes: the full scratch-route curl run (success, replay, 422, rollback) was not repeated, and the integration tests cover those paths. Intermediate commits were run only at HEAD.
