@@ -1,6 +1,7 @@
 export * as bookings from './bookings'
 export * as catalog from './catalog'
 export * as content from './content'
+export * as money from './money'
 export * as notifications from './notifications'
 export * as orders from './orders'
 export * as partners from './partners'

@@ -6,7 +6,8 @@ import type { StatusTone } from '@/components/status-chip'
 import type { Language } from '@/contexts/locale-context'
 import type { MessageKey } from '@/i18n/en'
 
-import { amountDueNow, amountPaid, balance, formatOrderDate, formatOrderDateTime, isOverdue, orderTotal, paymentsAfterCancellation, processingPayment } from '@sk/domain/orders'
+import { moneyState } from '@sk/domain/money'
+import { amountDueNow, formatOrderDate, formatOrderDateTime, orderTotal } from '@sk/domain/orders'
 
 import { formatMoney, pickText } from '@sk/domain/shared'
 
@@ -95,85 +96,102 @@ export function progressLabel(
   }
 }
 
+function moneyInput(order: Order) {
+  return {
+    entries: order.payments.map(p => ({
+      kind: 'collection' as const,
+      status: p.status,
+      amount: p.amount,
+      at: p.at,
+    })),
+    total: orderTotal(order),
+    stage:
+      order.status === 'requested'
+        ? ('requested' as const)
+        : order.status === 'declined' || order.status === 'cancelled'
+          ? ('closed' as const)
+          : ('open' as const),
+    dueNow: amountDueNow(order),
+    awaitingFirstPayment: order.status === 'accepted',
+    firstPaymentDueAt: order.firstPaymentDueAt,
+    balanceDueDate: order.balanceDueDate,
+    depositPolicy: order.paymentPolicy.kind === 'deposit',
+    closedAt:
+      order.status === 'cancelled'
+        ? [...order.log].reverse().find(e => e.type === 'cancelled')?.at
+        : undefined,
+  }
+}
+
 /** The payment label (spec §2.3), separate from progress. `now` is demo time. */
 export function paymentLabel(order: Order, now: Date): OrderLabel {
-  const paid = amountPaid(order)
-  const owed = balance(order)
+  const state = moneyState(moneyInput(order), now)
   const money = (amount: Rappen) => ({ money: amount })
+  const due = order.balanceDueDate ?? ''
+  const parts = { paid: money(state.paid), balance: money(state.balance) }
 
-  if (order.status === 'requested')
-    return { key: 'order.payment.notDue', tone: 'neutral' }
-
-  if (order.status === 'declined' || order.status === 'cancelled') {
-    if (processingPayment(order))
+  switch (state.payment) {
+    case 'not-due':
+      return { key: 'order.payment.notDue', tone: 'neutral' }
+    case 'processing':
       return { key: 'order.payment.processing', tone: 'info' }
-    if (paymentsAfterCancellation(order).length)
+    case 'after-cancellation':
       return { key: 'order.payment.afterCancellation', tone: 'warning' }
-
-    return paid > 0
-      ? {
-          key: 'order.payment.paid',
-          tone: 'neutral',
-          vars: { amount: money(paid) },
-        }
-      : { key: 'order.payment.none', tone: 'neutral' }
-  }
-
-  if (processingPayment(order))
-    return { key: 'order.payment.processing', tone: 'info' }
-  if (owed === 0) {
-    return {
-      key: 'order.payment.paidInFull',
-      tone: 'success',
-      vars: { amount: money(orderTotal(order)) },
-    }
-  }
-  if (isOverdue(order, now)) {
-    return {
-      key: 'order.payment.overdue',
-      tone: 'danger',
-      vars: { amount: money(amountDueNow(order)) },
-    }
-  }
-  if (order.status === 'accepted' && order.firstPaymentDueAt) {
-    return {
-      key: 'order.payment.due',
-      tone: 'warning',
-      vars: {
-        amount: money(amountDueNow(order)),
-        due: { dateTime: order.firstPaymentDueAt },
-      },
-    }
-  }
-
-  const due = order.balanceDueDate
-
-  if (paid === 0) {
-    return due
-      ? {
-          key: 'order.payment.payLater',
-          tone: 'neutral',
-          vars: { amount: money(owed), due: { date: due } },
-        }
-      : {
-          key: 'order.payment.owed',
-          tone: 'neutral',
-          vars: { amount: money(owed) },
-        }
-  }
-
-  const parts = { paid: money(paid), balance: money(owed) }
-
-  if (!due)
-    return { key: 'order.payment.partPaid', tone: 'info', vars: parts }
-
-  return {
-    key:
-      order.paymentPolicy.kind === 'deposit'
-        ? 'order.payment.depositPaid'
-        : 'order.payment.partPaidDue',
-    tone: 'info',
-    vars: { ...parts, due: { date: due } },
+    case 'paid':
+      return {
+        key: 'order.payment.paid',
+        tone: 'neutral',
+        vars: { amount: money(state.paid) },
+      }
+    case 'none':
+      return { key: 'order.payment.none', tone: 'neutral' }
+    case 'paid-in-full':
+      return {
+        key: 'order.payment.paidInFull',
+        tone: 'success',
+        vars: { amount: money(orderTotal(order)) },
+      }
+    case 'overdue':
+      return {
+        key: 'order.payment.overdue',
+        tone: 'danger',
+        vars: { amount: money(state.dueNow) },
+      }
+    case 'due':
+      return {
+        key: 'order.payment.due',
+        tone: 'warning',
+        vars: {
+          amount: money(state.dueNow),
+          due: { dateTime: order.firstPaymentDueAt ?? '' },
+        },
+      }
+    case 'pay-later':
+      return {
+        key: 'order.payment.payLater',
+        tone: 'neutral',
+        vars: { amount: money(state.balance), due: { date: due } },
+      }
+    case 'owed':
+      return {
+        key: 'order.payment.owed',
+        tone: 'neutral',
+        vars: { amount: money(state.balance) },
+      }
+    case 'part-paid':
+      return { key: 'order.payment.partPaid', tone: 'info', vars: parts }
+    case 'deposit-paid':
+      return {
+        key: 'order.payment.depositPaid',
+        tone: 'info',
+        vars: { ...parts, due: { date: due } },
+      }
+    case 'part-paid-due':
+      return {
+        key: 'order.payment.partPaidDue',
+        tone: 'info',
+        vars: { ...parts, due: { date: due } },
+      }
   }
 }
 
