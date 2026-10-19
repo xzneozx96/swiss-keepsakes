@@ -237,7 +237,7 @@ The front-end keeps its feature folders. Each feature's `types.ts` and its pure 
 These conventions apply to every table:
 
 - Money is integer Rappen in `bigint`.
-- Timestamps are `timestamptz` in UTC. Business dates use Europe/Zurich, through the existing `zurichDate` in `front-end/src/features/catalog/lib/pickup.ts`.
+- Timestamps are `timestamptz` in UTC. Business dates use Europe/Zurich, through the existing `zurichDate` in `packages/domain/src/dates/zurich.ts`.
 - Localized text is `jsonb` shaped `{en?, de?}`.
 - Primary keys are UUIDv7, branded per entity in TypeScript. Guest-facing references such as `SK-1042` sit in a separate unique column.
 - Every store-owned row has `store_id`, and child rows have composite foreign keys.
@@ -444,7 +444,7 @@ Every movement of money is one `ledger_entries` row.
 - **Online payments.** An online collection is inserted as `pending` when the attempt is created. The provider result moves it to `succeeded`. Only `succeeded` rows count (UX L125).
 - **External payments.** Staff record cash and other external collections as `succeeded`, with amount, method, time and recorder (PRD L318).
 - **Corrections.** Only the Owner can correct a payment. The correction sets `voided` on the original and inserts a new row with `supersedes_id` and a reason. The original stays visible, struck through (UX L127, AC29).
-- **Guards.** The API refuses a collection that would make the balance negative. It warns when the same amount was recorded in the last 10 minutes (UX L130), reusing `findDuplicatePayment` from `front-end/src/lib/payments.ts`.
+- **Guards.** The API refuses a collection that would make the balance negative. It warns when the same amount was recorded in the last 10 minutes (UX L130), reusing `findDuplicatePayment` from `packages/domain/src/payments/duplicate.ts`.
 
 The view `money.transaction_balances` gives each transaction's total, collected, refunded, balance, and next due date and amount. The pure function `moneyState(entries, total, dueDates, now)` in `packages/domain` turns that into the eleven labels in UX L110 to L121. Screens, guards and reports all call it.
 

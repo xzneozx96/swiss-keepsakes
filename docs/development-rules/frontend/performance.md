@@ -18,7 +18,7 @@ Read this before you touch first load, lists, typing, scrolling, streaming, depe
 
 ## Work inside render
 
-9. **Cache formatters and hoist regexes** (`js-cache-function-results`, `js-hoist-regexp`). Use `numberFormat`, `dateTimeFormat`, `pluralCategory` and `formatMoney` from `front-end/src/lib/format.ts`. Do not build `new Intl.*` in render.
+9. **Cache formatters and hoist regexes** (`js-cache-function-results`, `js-hoist-regexp`). Use `numberFormat`, `dateTimeFormat`, `pluralCategory` and `formatMoney` from `packages/domain/src/shared/format.ts`. Do not build `new Intl.*` in render.
 10. **Index big collections once** (`js-index-maps`, `js-set-map-lookups`). If a loop looks something up in a large array, build a `Map` first, or a `Set` for membership checks (`new Set(selectedIds).has(id)`). Example: opens counted per day in `front-end/src/features/merchant/partners/hooks/use-partner-analytics.ts` (683 items). For lists under about 25 items, a plain `find` is fine.
 11. **Start independent async work together** (`async-parallel`). Example: the map style fetch starts with the map library import in `tour-itinerary-map.tsx`.
 

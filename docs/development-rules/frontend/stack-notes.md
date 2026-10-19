@@ -24,7 +24,7 @@ See `heroui-and-styling.md`.
 - `useLocale()` gives `t(key, vars)`, `language` and `intlLocale`. English is always loaded. German is a lazy chunk.
 - Each feature has `messages.ts` and `messages.de.ts`. Add every new string to both.
 - Never import `@/i18n/de` from first-load code.
-- Text that shop staff write exists in English and German. Show it with `pickText` from `front-end/src/lib/localized.ts`. It falls back to the other language when one is missing and sets `isFallback`, so the screen can say so.
+- Text that shop staff write exists in English and German. Show it with `pickText` from `packages/domain/src/shared/localized.ts`. It falls back to the other language when one is missing and sets `isFallback`, so the screen can say so.
 
 ## State and storage
 
