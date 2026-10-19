@@ -1,10 +1,32 @@
 {
   "name": "@sk/api",
-  "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env.local src/main.ts",
+    "start": "node dist/main.js",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc",
+    "lint": "eslint ."
+  },
   "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "@hono/zod-openapi": "^1.6.3",
     "@neon/config": "^1.9.2",
-    "@neon/env": "^1.6.3"
+    "@neon/env": "^1.6.3",
+    "hono": "^4.13.13",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^7.7.3",
+    "@types/node": "22.20.4",
+    "eslint": "9.39.5",
+    "tsx": "^4.23.15",
+    "typescript": "5.9.3"
   }
 }

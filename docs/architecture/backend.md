@@ -144,7 +144,7 @@ These rules keep the layers honest without adding framework weight:
 - **Locking SQL stays in the repository.** The two locking paths, order acceptance (section 6.1) and the seat hold (section 6.3), are named repository functions such as `lockDepartureForHold`. The use case decides what to do, and the repository decides how to lock.
 - **Modules talk through `index.ts` only.** Each module's `index.ts` exports the use cases and types other modules may call. For example, completing a booking calls `recordCommission(tx, ...)` from `partners/index.ts` in the same transaction. No module imports another module's `application/` or `adapters/` files.
 - **The domain is shared with the front-end.** The SPA imports the same transition tables and `moneyState` to decide which buttons to show and which payment label to print, so the rules live in one place.
-- **The lint config enforces the rule.** `eslint-plugin-import`'s `import/no-restricted-paths`, already in the front-end's ESLint setup, gets one zone per forbidden direction. The domain may not import anything outside `packages/domain`. The application layer may not import adapters or platform code. No module may import another module's internals. A wrong import fails CI.
+- **The lint config enforces the rule.** `eslint-plugin-boundaries`, the plugin the front-end's ESLint setup already uses, gets one zone per forbidden direction (`eslint.boundaries.mjs`). The domain may not import anything outside `packages/domain`. The application layer may not import adapters or platform code. No module may import another module's internals. A wrong import fails CI.
 
 ### 4.2 Repository layout
 
@@ -157,8 +157,8 @@ swiss-keepsakes/
   api/
     src/
       main.ts                     composition root; starts api, worker or both by ROLE
-      config.ts                   environment schema (Zod); refuses to start on a bad value
       platform/
+        config.ts                 environment schema (Zod); refuses to start on a bad value
         db/                       pool, unit of work, migration runner
         jobs/                     pg-boss setup and the JobQueue adapter
         http/                     Hono app, JWT verification, actor, idempotency, problem details,
@@ -559,8 +559,8 @@ The conventions are in D11. Commands are sub-resources, for example `POST /api/s
 | | Local | Staging | Production |
 |---|---|---|---|
 | API and worker | `pnpm dev` (`ROLE=all`) | Fly app `sk-staging`, `fra`, 1 machine | Fly app `sk`, `fra`, 2 machines, autostop off |
-| Database | Neon branch `development`, or a throwaway branch from it for tests | Neon branch `staging`, Frankfurt | Neon branch `production`, Frankfurt, 0.5 CU or more, scale to zero off, restore history of 7 days or more |
-| Storage | MinIO | Neon Object Storage, staging bucket | Neon Object Storage |
+| Database | Docker Compose Postgres 18.6 (the version Neon runs), or the Neon branch `development`. Integration tests use a throwaway database on either, and CI uses a Neon branch per pull request | Neon branch `staging`, Frankfurt | Neon branch `production`, Frankfurt, 0.5 CU or more, scale to zero off, restore history of 7 days or more |
+| Storage | Neon Object Storage, the `development` branch's `uploads` and `media` buckets | Neon Object Storage, staging bucket | Neon Object Storage |
 | Stripe | Stripe CLI `listen --forward-to` against the sandbox, plus a scriptable fake for tests | Sandbox on the pilot store's test account | Live |
 | Mail | Mailpit | Resend test domain with allow-listed recipients | Resend, store domain |
 | Errors and analytics | Off | Sentry EU staging | Sentry EU, Plausible, GA4 after consent |

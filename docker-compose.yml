@@ -1,0 +1,36 @@
+# Local services for the API (architecture section 11). `docker compose up -d --wait` starts them.
+# Ports bind to 127.0.0.1 only, and nothing here is a secret: Postgres trusts local connections.
+name: swiss-keepsakes
+
+services:
+  postgres:
+    # Neon runs Postgres 18.6 (docs/spikes/SP2.md).
+    image: postgres:18.6
+    environment:
+      POSTGRES_DB: swiss_keepsakes
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - 127.0.0.1:5433:5432
+    volumes:
+      # From Postgres 18 the image keeps its data under /var/lib/postgresql/18/docker.
+      - postgres:/var/lib/postgresql
+    healthcheck:
+      # Over TCP: during first start the image runs a temporary server on the Unix socket only.
+      test: [CMD, pg_isready, -h, 127.0.0.1, -U, postgres, -d, swiss_keepsakes]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  mailpit:
+    image: axllent/mailpit:v1.31.6
+    ports:
+      - 127.0.0.1:1025:1025
+      - 127.0.0.1:8025:8025
+    healthcheck:
+      test: [CMD, /mailpit, readyz]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  postgres:

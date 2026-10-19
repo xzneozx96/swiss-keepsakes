@@ -32,11 +32,12 @@ The code follows clean architecture in four layers. Each layer imports only from
 | Request parsing and response shape | `packages/api-contract/src/` schemas, used by `adapters/routes.ts` |
 | Talking to Stripe, Resend or storage | A port in the owning module, an adapter in that module, a client in `api/src/platform/` |
 | Audit, idempotency, webhook deduplication, rate limits | `api/src/platform/` |
+| Configuration | `api/src/platform/config.ts`, one Zod schema over the environment |
 | Wiring | `api/src/main.ts` only |
 
 ## Enforcing the layers
 
-`docs/architecture/backend.md` 4.1 says to use `import/no-restricted-paths`. The owner's standard is `eslint-plugin-boundaries` (see `../frontend/linting.md`). This conflict is open. The map below follows the owner's standard. It is not applied or tested.
+The zones use `eslint-plugin-boundaries`, the owner's standard (see `../frontend/linting.md`), and `docs/architecture/backend.md` 4.1 now says the same. They are in `eslint.boundaries.mjs` at the repository root, run by `pnpm lint:zones`, and tested by `scripts/boundaries.test.mjs`. The map below is the shape of the rules, not the full config.
 
 ```js
 'boundaries/elements': [
