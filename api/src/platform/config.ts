@@ -2,6 +2,8 @@ import { z } from 'zod'
 
 const portMessage = 'Expected a whole number from 0 to 65535'
 
+export const ciRedDemo: number = 'not a number'
+
 const postgresUrl = z.url({
   protocol: /^postgres(?:ql)?$/,
   hostname: /./,
