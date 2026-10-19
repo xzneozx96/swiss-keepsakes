@@ -7,12 +7,14 @@ import {
 import { AppToasts } from '@/components/app-toasts'
 import { EmptyState } from '@/components/empty-state'
 import { InfoIcon } from '@/components/icons'
+import { RouteError } from '@/components/route-fallbacks'
 import { useLocale } from '@/contexts/locale-context'
 import { PrototypeBar, useStorageFull } from '@/features/demo'
 
 export const Route = createRootRoute({
   component: RootLayout,
   notFoundComponent: NotFound,
+  errorComponent: RouteError,
 })
 
 function RootLayout() {

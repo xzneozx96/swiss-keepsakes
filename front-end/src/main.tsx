@@ -7,7 +7,7 @@ import {
 import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 
-import { RouteError, RoutePending } from '@/components/route-fallbacks'
+import { RoutePending } from '@/components/route-fallbacks'
 import {
   loadDictionary,
   LocaleProvider,
@@ -26,9 +26,11 @@ const router = createRouter({
   history: createHashHistory(),
   scrollRestoration: true,
   defaultPreload: 'intent',
-  // A screen whose query suspends or fails shows these instead of blanking the app.
+  // A screen whose query suspends shows a skeleton instead of blanking the app. A failed one shows
+  // the root route's error screen; one boundary there, not one per route, which re-rendered on
+  // every search change.
   defaultPendingComponent: RoutePending,
-  defaultErrorComponent: RouteError,
+  disableGlobalCatchBoundary: true,
 })
 
 declare module '@tanstack/react-router' {

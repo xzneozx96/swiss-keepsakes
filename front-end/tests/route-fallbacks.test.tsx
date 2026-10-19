@@ -22,7 +22,7 @@ beforeEach(() => {
   window.localStorage.clear()
 })
 
-/** One screen whose read waits for `answer` and then fails or succeeds, under the app's defaults. */
+/** One screen whose read waits for `answer` and then fails or succeeds, set up as main.tsx and __root.tsx do. */
 function renderScreen() {
   const reads: { answer: (outcome: 'fail' | 'load') => void }[] = []
   const queryClient = new QueryClient({
@@ -46,7 +46,7 @@ function renderScreen() {
     return <p>{data}</p>
   }
 
-  const root = createRootRoute({ component: Outlet })
+  const root = createRootRoute({ component: Outlet, errorComponent: RouteError })
   const page = createRoute({
     getParentRoute: () => root,
     path: '/',
@@ -56,7 +56,7 @@ function renderScreen() {
     routeTree: root.addChildren([page]),
     history: createMemoryHistory(),
     defaultPendingComponent: RoutePending,
-    defaultErrorComponent: RouteError,
+    disableGlobalCatchBoundary: true,
   })
 
   render(
