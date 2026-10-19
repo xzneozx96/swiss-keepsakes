@@ -95,25 +95,6 @@ jobs:
             echo '::error::The NEON_API_KEY secret is missing.'
             exit 1
           fi
-      - name: Branch name and expiry
-        id: branch
-        if: steps.neon.outputs.available == 'true'
-        run: |
-          [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]] || { echo "::error::Not a pull request number: $PR_NUMBER"; exit 1; }
-          echo "name=preview/pr-$PR_NUMBER" >> "$GITHUB_OUTPUT"
-          # A fallback: Neon deletes the branch after 7 days if the closed event never deletes it.
-          echo "expires_at=$(date -u -d '+7 days' +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
-      # Creates the branch, or reuses it on later pushes. Its db_url, db_url_pooled and password outputs are
-      # not masked, and this repository's logs are public, so the connect step below fetches masked URLs instead.
-      - name: Create or reuse the Neon branch
-        if: steps.neon.outputs.available == 'true'
-        uses: neondatabase/create-branch-action@fb620d43d4c565abaf088b848a4e28e5c4ea4d9c # v6 = release 6.3.1
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-          branch_name: ${{ steps.branch.outputs.name }}
-          parent_branch: development
-          expires_at: ${{ steps.branch.outputs.expires_at }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         if: steps.neon.outputs.available == 'true'
         with:
@@ -125,6 +106,14 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
+      # preview/pr-<number> from development, expiring in 7 days, or the same branch again on later pushes.
+      # Not neondatabase/create-branch-action: its password and URL outputs are unmasked, and debug logs print outputs.
+      - name: Create or reuse the Neon branch
+        if: steps.neon.outputs.available == 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+        run: node scripts/neon-preview-branch.mjs create
       - name: Install
         if: steps.neon.outputs.available == 'true'
         run: pnpm install --frozen-lockfile
