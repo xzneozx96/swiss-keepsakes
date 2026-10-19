@@ -186,3 +186,26 @@ store writers (useDemoActions): merchant-shell, mail-list, planner-chat, prototy
 - A global `MutationCache` error toast needs a decision when the first API feature lands.
 - The demo `QueryClient` defaults are client-wide (`staleTime` and `gcTime` Infinity, retry off, `structuralSharing` off, `networkMode` always). API features probably need per-key defaults (`setQueryDefaults`) at E2.5.
 - `payOnline` and `tours.pay` take the demo provider's outcome as input. The Payment Element flow will reshape these commands.
+
+## Review fixes
+
+An independent Opus review of ed182f9 asked for changes: 1 High, 4 Medium and several Low. The E0.8 suite passed 8/8 on that head, but two demo-mode regressions were visible only mid-transition in a browser. The fixes are commits d2c1def to 8ca5c64. Where this section and the sections above differ, this section wins.
+
+- H1. Every successful tour booking on C11 flashed the "not enough places" alert, and a fast double tap booked twice (5 to 20 ms apart: 2 bookings on the reviewed head, 1 on trunk). `createBooking` now resolves whether the booking was added, and the screen navigates only after that, from a per-call `onSuccess`. The guard stays closed until then, and the demo command re-checks the guest's active hold on the latest data. A per-call `onSuccess` was used instead of `mutateAsync` because it does not run after unmount. New `[E1.11]` Playwright spec `e2e/flows/tour-submit.spec.ts` (English and German, 4x CPU throttle) asserts the alert never appears and a double tap books once.
+- M1. C22 could send twice and Back during a send was overridden, because the request mail module was loaded on demand. It is now statically imported by the requests demo client. A new `useSubmit` hook (ref guard, `isPending`, per-call callbacks that do not run after unmount) disables submit on gift and tour publish, article save, publish and add version, profile save, C06 and C22. `tests/submit.test.tsx` holds the command open and checks a repeat tap stores once and that leaving the screen skips the navigate.
+- M2. `useCommand` refetches with `refetchType: 'all'`, so a query nothing observes is read again after a command (this hid behind the demo bridge). The signature is now `useCommand(feature, command)`, and the queries each command refreshes are one typed `commandAffects` table. A no-bridge test covers it, and the docstring and the `api-integration.md` rule were corrected.
+- M3. `orders.handOver` and `orders.handOverAndComplete` now list `catalog.products`. `tests/command-affects.test.ts` checks every command against what it really writes, without the store bridge.
+- M4. The router has a pending skeleton by default and a root error screen with Try again, so a suspending or failing first read cannot blank the app silently. This used a root `errorComponent` plus `disableGlobalCatchBoundary`, not `defaultErrorComponent`, because the per-route default added renders (+6 in S2, +3 in S4, +15 to 23 in S5). The trade-off is that an error replaces the whole app, shell and prototype bar included, not only the page. `demo.ready` has a `.catch` that logs and still mounts, and a test checks the upgrade fills every collection. `api-integration.md` lists which features must move to the API together.
+- L1, L3. Question set moves run as separate commands on the latest data, and `StorageFullError` lives in the data-client contract.
+- Added after self-review (87885cc). The hand-written guards on C11, C12 and tour payment were released only on success, so a failed command left the button disabled for good. They now release on failure too, and C11 shows its existing "could not be created" alert.
+- Docs. AGENTS.md rule 4 names `useSubmit` and points to the exceptions, and `rule-coverage.tsv` rows 47 and 49 are fixed.
+
+These features move to the API together, because their demo commands read or write each other's collections: orders with catalog and notifications; account's `saveTrip` with orders and tours; reviews with orders and tours; tours and requests with notifications.
+
+Evidence at 8ca5c64: front-end `tsc`, `typecheck:tests` and `pnpm build` pass, `pnpm lint` reports 0 errors and 46 warnings, front-end tests 31 passed, root tests 275 passed, `lint:zones` passes. `pnpm e2e` reports 12 passed (8 E0.8, 4 tour-submit, English and German), re-run by the parent. `verify:routes` shows 100 of 100 routes identical. `verify:renders` renders are equal or fewer in every scenario, and the S5 CPU median was 991 ms on trunk against 1054 ms on head, within the run-to-run spread seen earlier (1021 and 1031). First-load gzipped JS is 364,556 B against 352,800 B on trunk (+11.8 KB, of which 750 B is the static imports and `useSubmit`), CSS unchanged. The reviewer's probe scripts showed 0 capacity alerts in 3 of 3 runs and 1 booking at taps 5, 10 and 20 ms apart. Each new test was shown red against the broken behaviour.
+
+Not verified after the fixes:
+
+- Back during a slow send in a real browser. The send is instant now, so there is nothing to slow, and the unit test covers it.
+- A failed payment command (C12, tour payment) frees the button but shows no message. Demo commands cannot fail, and the API story needs copy for this.
+- A root error screen now replaces the shell too. Whether that is acceptable for API features is an open question.
