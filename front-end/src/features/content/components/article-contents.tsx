@@ -27,8 +27,9 @@ export function ArticleContents({
   bodyRef: React.RefObject<HTMLElement | null>;
 }) {
   const [active, setActive] = useState(sections[0]?.id);
-  const [progress, setProgress] = useState(0);
   const listRef = useRef<HTMLUListElement>(null);
+  // Written straight to the bar on each scroll frame, so reading never re-renders the nav.
+  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let frame = 0;
@@ -49,7 +50,8 @@ export function ArticleContents({
       if (body) {
         const read = (ACTIVE_LINE - body.top) / Math.max(body.height, 1);
 
-        setProgress(Math.min(1, Math.max(0, read)));
+        if (barRef.current)
+          barRef.current.style.transform = `scaleX(${Math.min(1, Math.max(0, read))})`;
       }
     };
     const onScroll = () => {
@@ -118,8 +120,9 @@ export function ArticleContents({
       </ul>
       <div aria-hidden className="h-0.5 bg-separator/60">
         <div
+          ref={barRef}
           className="h-full origin-left bg-foreground transition-transform duration-150 ease-out"
-          style={{ transform: `scaleX(${progress})` }}
+          style={{ transform: "scaleX(0)" }}
         />
       </div>
     </nav>

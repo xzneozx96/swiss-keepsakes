@@ -1,5 +1,7 @@
 import type { PartnerRowProps } from "../components/partner-rows";
 
+import { PARTNER_FILTERS, type PartnerFilter } from "../lib/search-params";
+
 import { useLocale } from "@/contexts/locale-context";
 import { useDemo, useDemoNow } from "@/features/demo";
 import { canDeletePartner } from "@/features/partners/hooks/use-partner-actions";
@@ -8,9 +10,6 @@ import { linkOpens } from "@/features/partners/lib/link-opens";
 import { formatMoney, numberFormat } from "@/lib/format";
 
 const WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
-
-export const PARTNER_FILTERS = ["toPay", "revoked", "archived"] as const;
-export type PartnerFilter = (typeof PARTNER_FILTERS)[number];
 
 const inFilter = (row: PartnerRowProps, filter: PartnerFilter) => {
   if (filter === "archived") return row.isArchived;

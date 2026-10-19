@@ -47,40 +47,52 @@ const LABEL_LAYERS = /^(waterway_line_label|water_name_|highway-name-|label_)/;
  * kept (no shields, arrows or POI icons) and recoloured to read on a photo. If the labels
  * cannot be fetched the photo still works without them.
  */
-export async function loadAerialStyle(): Promise<StyleSpecification> {
-  try {
-    const response = await fetch(LABELS_FROM);
-    const liberty = (await response.json()) as StyleSpecification;
-    const labels = liberty.layers
-      .filter((layer) => LABEL_LAYERS.test(layer.id))
-      .map((layer) => {
-        const layout = { ...(layer.layout as Record<string, unknown>) };
+async function fetchAerialStyle(): Promise<StyleSpecification> {
+  const response = await fetch(LABELS_FROM);
+  const liberty = (await response.json()) as StyleSpecification;
+  const labels = liberty.layers
+    .filter((layer) => LABEL_LAYERS.test(layer.id))
+    .map((layer) => {
+      const layout = { ...(layer.layout as Record<string, unknown>) };
 
-        delete layout["icon-image"];
+      delete layout["icon-image"];
 
-        return {
-          ...layer,
-          layout,
-          paint: {
-            "text-color": "#ffffff",
-            "text-halo-color": "rgba(0, 0, 0, 0.65)",
-            "text-halo-width": 1.5,
-          },
-        } as LayerSpecification;
-      });
+      return {
+        ...layer,
+        layout,
+        paint: {
+          "text-color": "#ffffff",
+          "text-halo-color": "rgba(0, 0, 0, 0.65)",
+          "text-halo-width": 1.5,
+        },
+      } as LayerSpecification;
+    });
 
-    return {
-      ...aerialStyle,
-      glyphs: liberty.glyphs,
-      sources: {
-        ...aerialStyle.sources,
-        openmaptiles: liberty.sources.openmaptiles,
-      },
-      layers: [...aerialStyle.layers, ...labels],
-    };
-  } catch {
+  return {
+    ...aerialStyle,
+    glyphs: liberty.glyphs,
+    sources: {
+      ...aerialStyle.sources,
+      openmaptiles: liberty.sources.openmaptiles,
+    },
+    layers: [...aerialStyle.layers, ...labels],
+  };
+}
+
+let loaded: Promise<StyleSpecification> | undefined;
+
+/**
+ * One fetch per page load; a failed fetch is not kept, so the next map tries again. Each map
+ * gets its own copy, because MapLibre may keep and change the style it is given.
+ */
+export function loadAerialStyle(): Promise<StyleSpecification> {
+  loaded ??= fetchAerialStyle().catch(() => {
+    loaded = undefined;
+
     return aerialStyle;
-  }
+  });
+
+  return loaded.then((style) => structuredClone(style));
 }
 
 const tileAt = (lng: number, lat: number, zoom: number) => {

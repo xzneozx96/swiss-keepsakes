@@ -5,6 +5,8 @@ import { Alert, Button, buttonVariants } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
 import { useRef } from "react";
 
+import { type OrderTab, orderTabs } from "../lib/search-params";
+
 import { CopyText } from "@/components/copy-text";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DateTile } from "@/components/date-tile";
@@ -25,14 +27,6 @@ import { useLocale } from "@/contexts/locale-context";
 import { TripCard } from "@/features/checkout/components/trip-card";
 import { ProposalMark } from "@/features/demo/components/proposal-mark";
 import { OrderReviews } from "@/features/reviews/components/order-reviews";
-
-export const orderTabs = [
-  "overview",
-  "payments",
-  "timeline",
-  "policy",
-] as const;
-export type OrderTab = (typeof orderTabs)[number];
 
 const tabLabel = {
   overview: "guestOrder.tab.overview",

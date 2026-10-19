@@ -21,7 +21,7 @@ import { ListingReviews } from "@/components/listings/listing-reviews";
 import { Media } from "@/components/media";
 import { SellerRow } from "@/features/catalog/components/seller-row";
 import { StorySheet } from "@/features/catalog/components/story-sheet";
-import { useFavourites } from "@/features/catalog/hooks/use-favourites";
+import { useFavourite } from "@/features/catalog/hooks/use-favourites";
 import { useProductReviews } from "@/features/catalog/hooks/use-product-reviews";
 import { shop } from "@/features/catalog/seed";
 import { PhotoGallery } from "@/components/photo-gallery";
@@ -89,12 +89,11 @@ export function TourDetail({
   const shopPlace = state.data.pickupPlaces[0];
   const navigate = useNavigate();
   const reviews = useProductReviews(`tour:${tour.id}`, { kind: "tour" });
-  const { isFavourite, toggle } = useFavourites();
-  const saved = isFavourite(`tour:${tour.id}`);
+  const { saved, toggle } = useFavourite(`tour:${tour.id}`);
   const favourite = {
     isSaved: saved,
     onToggle: () => {
-      if (!preview) toggle(`tour:${tour.id}`);
+      if (!preview) toggle();
     },
     label: t(saved ? "card.unsave" : "card.save", {
       name: pickText(tour.name, language).text,

@@ -15,11 +15,11 @@ import { useLocale } from "@/contexts/locale-context";
 import { SignInPrompt } from "@/features/auth/components/account-profile";
 import { useRequireSignIn } from "@/features/auth/hooks/use-require-sign-in";
 import { useDemo } from "@/features/demo";
+import { OrderDetail } from "@/features/transactions/order-detail/components/order-detail";
 import {
-  OrderDetail,
   type OrderTab,
   orderTabs,
-} from "@/features/transactions/order-detail/components/order-detail";
+} from "@/features/transactions/order-detail/lib/search-params";
 import {
   useOrderDetail,
   useOwnOrder,

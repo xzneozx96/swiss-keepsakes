@@ -5,6 +5,7 @@ import { cartFlight, prefersReducedMotion } from "@/components/fly-to-cart";
 import { BackIcon, CartIcon, SearchIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { useCart } from "@/features/cart/hooks/use-cart";
+import { pluralCategory } from "@/lib/format";
 
 const roundAction =
   "flex size-11 items-center justify-center rounded-full outline-none transition-transform focus-visible:focus-ring active:scale-95";
@@ -62,7 +63,7 @@ export function CartButton({ tone = "floating" }: { tone?: ActionTone }) {
   }, [shown]);
 
   const countKey =
-    new Intl.PluralRules(intlLocale).select(count) === "one"
+    pluralCategory(intlLocale, count) === "one"
       ? "nav.cartCount.one"
       : "nav.cartCount.other";
 

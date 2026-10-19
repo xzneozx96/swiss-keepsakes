@@ -8,7 +8,12 @@ import { useFavourites } from "./use-favourites";
 
 import { useLocale } from "@/contexts/locale-context";
 import { useDemoNow, useDemoSelector } from "@/features/demo";
-import { formatMoney, formatShortDate, numberFormat } from "@/lib/format";
+import {
+  formatMoney,
+  formatShortDate,
+  numberFormat,
+  pluralCategory,
+} from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 export type ProductCardView = ProductCardProps & {
@@ -62,7 +67,7 @@ export function useProductCard(): (product: Product) => ProductCardView {
             value: number.format(average),
             count: String(reviews.length),
             label: t(
-              new Intl.PluralRules(intlLocale).select(reviews.length) === "one"
+              pluralCategory(intlLocale, reviews.length) === "one"
                 ? "card.ratingLabel.one"
                 : "card.ratingLabel.other",
               {

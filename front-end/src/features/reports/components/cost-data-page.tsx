@@ -1,4 +1,5 @@
-import type { CostFilter, CostRow, CostWeek } from "../hooks/use-cost-data";
+import type { CostRow, CostWeek } from "../hooks/use-cost-data";
+import type { CostFilter } from "../lib/search-params";
 import type { DataTableColumn } from "@/components/data-table";
 
 import { Button, Tag, TagGroup } from "@heroui/react";

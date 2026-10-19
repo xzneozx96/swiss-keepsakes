@@ -30,7 +30,7 @@ import { LanguageChip } from "./status-chips";
 
 import { ChevronRightIcon, ClockIcon, PickupIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemo, useDemoActions } from "@/features/demo";
 import { SheetFrame } from "@/components/sheet-frame";
 import { pickText } from "@/lib/localized";
 
@@ -52,7 +52,7 @@ function PickupPointSheet({
   onClose: () => void;
 }) {
   const { t, language: uiLanguage } = useLocale();
-  const { update } = useDemo();
+  const { update } = useDemoActions();
   const [draft, setDraft] = useState<PlaceDraft>(() => ({
     name: { ...place.name },
     address: place.address,

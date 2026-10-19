@@ -7,8 +7,6 @@ import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import { demSource, loadAerialStyle } from "@/features/tours/map/aerial-style";
 import { tourSeed } from "@/features/tours/seed";
 
-import "maplibre-gl/dist/maplibre-gl.css";
-
 /** Lab: simple ways to make the 3D tour map look less like blocks. Not part of the product. */
 export const Route = createFileRoute("/lab/map")({ component: MapLab });
 
@@ -54,8 +52,9 @@ function LabMap({
 
     void Promise.all([
       import("maplibre-gl"),
+      import("maplibre-gl/dist/maplibre-gl.css"),
       style === "aerial" ? loadAerialStyle() : style,
-    ]).then(([{ Map, setWorkerUrl }, resolved]) => {
+    ]).then(([{ Map, setWorkerUrl }, , resolved]) => {
       if (disposed) return;
       setWorkerUrl(workerUrl);
       const first = tour.itinerary[0].coordinates;

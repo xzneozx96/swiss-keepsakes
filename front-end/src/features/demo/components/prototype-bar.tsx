@@ -11,8 +11,7 @@ import {
 } from "@heroui/react";
 // import { Link, useNavigate } from "@tanstack/react-router";
 import { useNavigate } from "@tanstack/react-router";
-import { QRCodeSVG } from "qrcode.react";
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 
 import { demoNow } from "../clock";
 import { useDemo } from "../demo-store";
@@ -32,6 +31,10 @@ import { attributedPartnerId } from "@/features/partners/referral";
 // import { OrderDetailDemoControl } from "@/features/transactions/order-detail/components/order-detail-demo-control";
 // import { ToursDemoControl } from "@/features/tours/discovery/tours-demo-control";
 // import { TourDemoControl } from "@/features/tours/merchant/tour-demo-control";
+
+const QRCodeSVG = lazy(() =>
+  import("qrcode.react").then((m) => ({ default: m.QRCodeSVG })),
+);
 
 /**
  * Presenter controls, deliberately outside the product design: an ink strip with a
@@ -184,14 +187,20 @@ export function PrototypeBar() {
                   </div>
                   {qrPartner && (
                     <div className="flex flex-col items-center gap-3 rounded-3xl bg-white p-4 text-center">
-                      <QRCodeSVG
-                        aria-label={`QR code for ${qrPartner.name}`}
-                        className="h-auto w-full max-w-56"
-                        level="M"
-                        marginSize={2}
-                        size={224}
-                        value={qrUrl(qrPartner.code)}
-                      />
+                      <Suspense
+                        fallback={
+                          <div className="aspect-square w-full max-w-56" />
+                        }
+                      >
+                        <QRCodeSVG
+                          aria-label={`QR code for ${qrPartner.name}`}
+                          className="h-auto w-full max-w-56"
+                          level="M"
+                          marginSize={2}
+                          size={224}
+                          value={qrUrl(qrPartner.code)}
+                        />
+                      </Suspense>
                       <p className="max-w-full text-xs break-all text-muted">
                         {qrUrl(qrPartner.code)}
                       </p>

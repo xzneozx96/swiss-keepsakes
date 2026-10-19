@@ -1,9 +1,9 @@
-import type { CategoryFilter } from "@/features/lab/blog-home/data";
+import type { CategoryFilter } from "@/features/lab/blog-home/search-params";
 import type { Voice } from "@/features/lab/blog-home/options-v3";
 
 import { createFileRoute } from "@tanstack/react-router";
 
-import { categories } from "@/features/lab/blog-home/data";
+import { categories } from "@/features/lab/blog-home/search-params";
 import { StoryListLab } from "@/features/lab/blog-home/options-v3";
 import { LabTabBar } from "@/features/lab/blog-home/shared";
 

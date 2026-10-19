@@ -87,6 +87,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
       started = true;
       setMapState("loading");
       try {
+        const styleLoading = loadAerialStyle();
         const {
           Map,
           Marker,
@@ -99,7 +100,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
         setWorkerUrl(workerUrl);
         const copy = translationsRef.current.t;
 
-        const style = await loadAerialStyle();
+        const style = await styleLoading;
 
         if (disposed) return;
         map = new Map({

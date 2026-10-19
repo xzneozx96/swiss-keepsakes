@@ -1,13 +1,18 @@
 import type { Language } from "@/contexts/locale-context";
 import type { Article } from "@/features/content/types";
 
+import {
+  categories,
+  type Category,
+  type CategoryFilter,
+} from "./search-params";
+
 import { useLocale } from "@/contexts/locale-context";
 import { publishedArticles } from "@/features/content/lib/articles";
 import { useDemo } from "@/features/demo";
 import { pickText } from "@/lib/localized";
 
-export type Category = "eat" | "town" | "lake" | "craft";
-export type CategoryFilter = "all" | Category;
+export { categories, type Category, type CategoryFilter };
 
 /** Lab-only stand-in for the category and place fields the article model does not have yet. */
 const meta: Record<
@@ -60,14 +65,6 @@ const meta: Record<
   },
   pilatus: { category: "lake", area: { en: "Pilatus", de: "Pilatus" } },
 };
-
-export const categories: CategoryFilter[] = [
-  "all",
-  "eat",
-  "town",
-  "lake",
-  "craft",
-];
 
 export const categoryPhoto: Record<Category, string> = {
   eat: "rigi-kulm-restaurant",

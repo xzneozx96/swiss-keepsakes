@@ -81,13 +81,14 @@ export function ItineraryMap({
     setMapState("loading");
     (async () => {
       try {
+        const styleLoading = loadAerialStyle();
         const { Map, NavigationControl, LngLatBounds, setWorkerUrl } =
           await import("maplibre-gl");
 
         if (disposed) return;
         setWorkerUrl(workerUrl);
         const copy = translations.current;
-        const style = await loadAerialStyle();
+        const style = await styleLoading;
 
         if (disposed) return;
         const { stops: initial, selectedId: initialId } = live.current;

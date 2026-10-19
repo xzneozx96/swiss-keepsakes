@@ -2,98 +2,82 @@
  * Single choke point for the icon library (same pattern as the agentic-rag frontend):
  * call sites import from here, so swapping the library only touches this file.
  *
- * reicon-react renders each SVG with a fresh `dangerouslySetInnerHTML` object on every
- * render, which makes React re-apply the markup each time. Wrapping every icon in
- * React.memo means re-renders with unchanged props skip the SVG entirely.
+ * Each icon is a plain re-export, so a screen that is loaded later brings only its own icons.
+ * Wrapping them here (React.memo) would put all of them in the first load.
  */
 import type { IconComponent, IconProps } from "reicon-react";
 
-import { createElement, forwardRef, memo } from "react";
-import * as Reicon from "reicon-react";
+import { createElement, forwardRef } from "react";
 
 export type { IconComponent };
 
-function stable(Base: IconComponent, name: string): IconComponent {
-  const Memoized = memo(Base);
-
-  Memoized.displayName = name;
-
-  return Memoized as unknown as IconComponent;
-}
-
 // Guest navigation and header
-export const ExploreIcon = stable(Reicon.Compass, "ExploreIcon");
-export const GiftIcon = stable(Reicon.Gift, "GiftIcon");
-export const TourIcon = stable(Reicon.Ticket, "TourIcon");
-export const AccountIcon = stable(Reicon.User, "AccountIcon");
-export const SparkleIcon = stable(Reicon.Sparkles, "SparkleIcon");
-export const CartIcon = stable(Reicon.ShoppingBag, "CartIcon");
+export { Compass as ExploreIcon } from "reicon-react";
+export { Gift as GiftIcon } from "reicon-react";
+export { Ticket as TourIcon } from "reicon-react";
+export { User as AccountIcon } from "reicon-react";
+export { Sparkles as SparkleIcon } from "reicon-react";
+export { ShoppingBag as CartIcon } from "reicon-react";
 
 // Merchant navigation
-export const TodayIcon = stable(Reicon.Home, "TodayIcon");
-export const OrdersIcon = stable(Reicon.Receipt, "OrdersIcon");
-export const BookingsIcon = stable(Reicon.Calendar, "BookingsIcon");
-export const ProductsIcon = stable(Reicon.Package, "ProductsIcon");
-export const PartnersIcon = stable(Reicon.Handshake, "PartnersIcon");
-export const ContentIcon = stable(Reicon.Document, "ContentIcon");
-export const RequestsIcon = stable(Reicon.Inbox, "RequestsIcon");
-export const ReportsIcon = stable(Reicon.ChartBar, "ReportsIcon");
-export const SettingsIcon = stable(Reicon.Settings, "SettingsIcon");
-export const MoreIcon = stable(Reicon.MoreH, "MoreIcon");
+export { Home as TodayIcon } from "reicon-react";
+export { Receipt as OrdersIcon } from "reicon-react";
+export { Calendar as BookingsIcon } from "reicon-react";
+export { Package as ProductsIcon } from "reicon-react";
+export { Handshake as PartnersIcon } from "reicon-react";
+export { Document as ContentIcon } from "reicon-react";
+export { Inbox as RequestsIcon } from "reicon-react";
+export { ChartBar as ReportsIcon } from "reicon-react";
+export { Settings as SettingsIcon } from "reicon-react";
+export { MoreH as MoreIcon } from "reicon-react";
 
 // Discovery
-export const SearchIcon = stable(Reicon.Search, "SearchIcon");
-export const BackIcon = stable(Reicon.ArrowLeft, "BackIcon");
-export const ArrowRightIcon = stable(Reicon.ArrowRight, "ArrowRightIcon");
-export const ClockIcon = stable(Reicon.Clock, "ClockIcon");
-export const MessageIcon = stable(Reicon.MessageText, "MessageIcon");
+export { Search as SearchIcon } from "reicon-react";
+export { ArrowLeft as BackIcon } from "reicon-react";
+export { ArrowRight as ArrowRightIcon } from "reicon-react";
+export { Clock as ClockIcon } from "reicon-react";
+export { MessageText as MessageIcon } from "reicon-react";
 
 // Card actions and ratings (use weight="Filled" for the saved / filled state)
-export const FavouriteIcon = stable(Reicon.Heart, "FavouriteIcon");
-export const RatingIcon = stable(Reicon.Star, "RatingIcon");
+export { Heart as FavouriteIcon } from "reicon-react";
+export { Star as RatingIcon } from "reicon-react";
 
 // Status labels (Chip card: every status is tint + icon + words)
-export const StatusInfoIcon = stable(Reicon.Hourglass, "StatusInfoIcon");
-export const StatusSuccessIcon = stable(Reicon.TickCircle, "StatusSuccessIcon");
-export const StatusWarningIcon = stable(Reicon.Clock, "StatusWarningIcon");
-export const StatusDangerIcon = stable(
-  Reicon.AlertTriangle,
-  "StatusDangerIcon",
-);
-export const StatusNeutralIcon = stable(
-  Reicon.MinusCircle,
-  "StatusNeutralIcon",
-);
+export { Hourglass as StatusInfoIcon } from "reicon-react";
+export { TickCircle as StatusSuccessIcon } from "reicon-react";
+export { Clock as StatusWarningIcon } from "reicon-react";
+export { AlertTriangle as StatusDangerIcon } from "reicon-react";
+export { MinusCircle as StatusNeutralIcon } from "reicon-react";
 
 // Prototype bar and general UI
-export const PrototypeIcon = stable(Reicon.Flask, "PrototypeIcon");
-export const ResetIcon = stable(Reicon.Refresh, "ResetIcon");
-export const LanguageIcon = stable(Reicon.Globe, "LanguageIcon");
-export const InfoIcon = stable(Reicon.InfoCircle, "InfoIcon");
-export const ChevronRightIcon = stable(Reicon.ChevronRight, "ChevronRightIcon");
-export const ChevronLeftIcon = stable(Reicon.ChevronLeft, "ChevronLeftIcon");
-export const CloseIcon = stable(Reicon.Xmark, "CloseIcon");
+export { Flask as PrototypeIcon } from "reicon-react";
+export { Refresh as ResetIcon } from "reicon-react";
+export { Globe as LanguageIcon } from "reicon-react";
+export { InfoCircle as InfoIcon } from "reicon-react";
+export { ChevronRight as ChevronRightIcon } from "reicon-react";
+export { ChevronLeft as ChevronLeftIcon } from "reicon-react";
+export { Xmark as CloseIcon } from "reicon-react";
 
 // Option tiles: the chosen tile's corner check (C03, C10; use weight="Filled")
-export const SelectedIcon = stable(Reicon.TickCircle, "SelectedIcon");
-export const CopyIcon = stable(Reicon.Copy, "CopyIcon");
-export const CopiedIcon = stable(Reicon.CopySuccess, "CopiedIcon");
+export { TickCircle as SelectedIcon } from "reicon-react";
+export { Copy as CopyIcon } from "reicon-react";
+export { CopySuccess as CopiedIcon } from "reicon-react";
 
 // Detail highlights
-export const EngraveIcon = stable(Reicon.PenNib, "EngraveIcon");
-export const PickupIcon = stable(Reicon.Location, "PickupIcon");
-export const PayLaterIcon = stable(Reicon.Wallet, "PayLaterIcon");
-export const PickupDateIcon = stable(Reicon.Calendar, "PickupDateIcon");
-export const OptionIcon = stable(Reicon.Tag, "OptionIcon");
+export { PenNib as EngraveIcon } from "reicon-react";
+export { Location as PickupIcon } from "reicon-react";
+export { Wallet as PayLaterIcon } from "reicon-react";
+export { Calendar as PickupDateIcon } from "reicon-react";
+export { Tag as OptionIcon } from "reicon-react";
 
 // Seller contact card
-export const CallIcon = stable(Reicon.Call, "CallIcon");
-export const EmailIcon = stable(Reicon.Sms, "EmailIcon");
-export const DirectionsIcon = stable(Reicon.Routing, "DirectionsIcon");
-export const ShopIcon = stable(Reicon.Shop, "ShopIcon");
+export { Call as CallIcon } from "reicon-react";
+export { Sms as EmailIcon } from "reicon-react";
+export { Routing as DirectionsIcon } from "reicon-react";
+export { Shop as ShopIcon } from "reicon-react";
 
 // Cart line
-export const TrashIcon = stable(Reicon.Trash4, "TrashIcon");
+export { Trash4 as TrashIcon } from "reicon-react";
 /** Drag handle: six dots in two columns; reicon-react has none (its bar icons read as a menu). */
 export const GripIcon = forwardRef<SVGSVGElement, IconProps>(function GripIcon(
   {
@@ -123,56 +107,56 @@ export const GripIcon = forwardRef<SVGSVGElement, IconProps>(function GripIcon(
     ),
   );
 }) as IconComponent;
-export const QrIcon = stable(Reicon.Qr, "QrIcon");
+export { Qr as QrIcon } from "reicon-react";
 /** Sliders: "adjust what you see" (owner, 14 Oct 2026: clearer than the funnel shape). */
-export const FilterIcon = stable(Reicon.Setting4, "FilterIcon");
-export const ArchiveIcon = stable(Reicon.Archive, "ArchiveIcon");
-export const CartRemoveIcon = stable(Reicon.Trash4, "CartRemoveIcon");
-export const MinusIcon = stable(Reicon.Minus, "MinusIcon");
-export const PlusIcon = stable(Reicon.Plus, "PlusIcon");
-export const ChevronDownIcon = stable(Reicon.ChevronDown, "ChevronDownIcon");
+export { Setting4 as FilterIcon } from "reicon-react";
+export { Archive as ArchiveIcon } from "reicon-react";
+export { Trash4 as CartRemoveIcon } from "reicon-react";
+export { Minus as MinusIcon } from "reicon-react";
+export { Plus as PlusIcon } from "reicon-react";
+export { ChevronDown as ChevronDownIcon } from "reicon-react";
 
 // Trip profile (C07)
-export const TravelGroupIcon = stable(Reicon.Profile2user, "TravelGroupIcon");
-export const TravelSoloIcon = stable(Reicon.User, "TravelSoloIcon");
+export { Profile2user as TravelGroupIcon } from "reicon-react";
+export { User as TravelSoloIcon } from "reicon-react";
 
 // Overview analytics deltas (M02, step 1.9s)
-export const TrendUpIcon = stable(Reicon.TrendUp, "TrendUpIcon");
-export const TrendDownIcon = stable(Reicon.TrendDown, "TrendDownIcon");
+export { TrendUp as TrendUpIcon } from "reicon-react";
+export { TrendDown as TrendDownIcon } from "reicon-react";
 // Dashboard card link affordance (step 1.9t)
-export const ArrowUpRightIcon = stable(Reicon.ArrowUpRight, "ArrowUpRightIcon");
+export { ArrowUpRight as ArrowUpRightIcon } from "reicon-react";
 
 // Account hub and Edit profile (step 1.12s)
-export const CameraIcon = stable(Reicon.Camera, "CameraIcon");
-export const CardIcon = stable(Reicon.Card, "CardIcon");
-export const CashIcon = stable(Reicon.Money, "CashIcon");
-export const BankIcon = stable(Reicon.Bank, "BankIcon");
-export const NotificationIcon = stable(Reicon.Notification, "NotificationIcon");
-export const LogoutIcon = stable(Reicon.Logout4, "LogoutIcon");
-export const ProfileEditIcon = stable(Reicon.UserEdit, "ProfileEditIcon");
-export const SendIcon = stable(Reicon.Send, "SendIcon");
+export { Camera as CameraIcon } from "reicon-react";
+export { Card as CardIcon } from "reicon-react";
+export { Money as CashIcon } from "reicon-react";
+export { Bank as BankIcon } from "reicon-react";
+export { Notification as NotificationIcon } from "reicon-react";
+export { Logout4 as LogoutIcon } from "reicon-react";
+export { UserEdit as ProfileEditIcon } from "reicon-react";
+export { Send as SendIcon } from "reicon-react";
 /** The C21 trip assistant (R19). */
-export const AssistantIcon = stable(Reicon.Sparkles, "AssistantIcon");
+export { Sparkles as AssistantIcon } from "reicon-react";
 
 // Rich-text toolbar for the long story (M12, M13; owner 15.10.2026)
-export const HeadingIcon = stable(Reicon.Text, "HeadingIcon");
-export const BoldIcon = stable(Reicon.TextBold, "BoldIcon");
-export const ItalicIcon = stable(Reicon.TextItalic, "ItalicIcon");
-export const BulletListIcon = stable(Reicon.UnorderedList, "BulletListIcon");
-export const NumberedListIcon = stable(Reicon.OrderedList, "NumberedListIcon");
-export const QuoteIcon = stable(Reicon.QuoteUp, "QuoteIcon");
-export const LinkIcon = stable(Reicon.Link, "LinkIcon");
-export const PhotoAddIcon = stable(Reicon.GalleryAdd, "PhotoAddIcon");
-export const UploadIcon = stable(Reicon.ImageUp, "UploadIcon");
-export const UndoIcon = stable(Reicon.Undo, "UndoIcon");
-export const RedoIcon = stable(Reicon.Redo, "RedoIcon");
+export { Text as HeadingIcon } from "reicon-react";
+export { TextBold as BoldIcon } from "reicon-react";
+export { TextItalic as ItalicIcon } from "reicon-react";
+export { UnorderedList as BulletListIcon } from "reicon-react";
+export { OrderedList as NumberedListIcon } from "reicon-react";
+export { QuoteUp as QuoteIcon } from "reicon-react";
+export { Link as LinkIcon } from "reicon-react";
+export { GalleryAdd as PhotoAddIcon } from "reicon-react";
+export { ImageUp as UploadIcon } from "reicon-react";
+export { Undo as UndoIcon } from "reicon-react";
+export { Redo as RedoIcon } from "reicon-react";
 /** The long story card (M12, M13). */
-export const StoryIcon = stable(Reicon.Book, "StoryIcon");
+export { Book as StoryIcon } from "reicon-react";
 /** Product row menu (M11): edit, archive and restore. */
-export const EditIcon = stable(Reicon.Edit2, "EditIcon");
-export const RestoreIcon = stable(Reicon.ArchiveUp, "RestoreIcon");
+export { Edit2 as EditIcon } from "reicon-react";
+export { ArchiveUp as RestoreIcon } from "reicon-react";
 
 // Guest background music player (launcher, sheet)
-export const MusicIcon = stable(Reicon.MusicNote, "MusicIcon");
-export const PlayIcon = stable(Reicon.Play, "PlayIcon");
-export const PauseIcon = stable(Reicon.Pause, "PauseIcon");
+export { MusicNote as MusicIcon } from "reicon-react";
+export { Play as PlayIcon } from "reicon-react";
+export { Pause as PauseIcon } from "reicon-react";

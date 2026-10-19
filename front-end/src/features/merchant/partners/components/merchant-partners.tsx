@@ -1,5 +1,5 @@
 import type { PartnerAction, PartnerRowProps } from "./partner-rows";
-import type { PartnerFilter } from "../hooks/use-merchant-partners";
+import type { PartnerFilter } from "../lib/search-params";
 
 import { Button, SearchField, toast } from "@heroui/react";
 import { useState } from "react";

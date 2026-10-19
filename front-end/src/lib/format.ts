@@ -6,6 +6,8 @@ export type IntlLocale = "en-CH" | "de-CH";
 
 const numberFormats = new Map<string, Intl.NumberFormat>();
 const dateTimeFormats = new Map<string, Intl.DateTimeFormat>();
+const pluralRules = new Map<string, Intl.PluralRules>();
+const APOSTROPHE = /'/g;
 
 /** Building an Intl formatter costs far more than calling one, so each locale and options pair is built once. */
 export function numberFormat(
@@ -21,6 +23,21 @@ export function numberFormat(
   }
 
   return format;
+}
+
+/** The plural category ("one", "other", ...) of a count; the rules are built once per locale. */
+export function pluralCategory(
+  locale: string,
+  count: number,
+): Intl.LDMLPluralRule {
+  let rules = pluralRules.get(locale);
+
+  if (!rules) {
+    rules = new Intl.PluralRules(locale);
+    pluralRules.set(locale, rules);
+  }
+
+  return rules.select(count);
 }
 
 export function dateTimeFormat(
@@ -82,7 +99,7 @@ export function formatMoney(amount: number, locale: IntlLocale): string {
     })
       .format(amount)
       // Chrome's ICU groups Swiss numbers with "'" while Node uses "’"; the design system specifies "’".
-      .replace(/'/g, "’")
+      .replace(APOSTROPHE, "’")
   );
 }
 

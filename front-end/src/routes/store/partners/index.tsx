@@ -1,11 +1,11 @@
-import type { PartnerFilter } from "@/features/merchant/partners/hooks/use-merchant-partners";
+import type { PartnerFilter } from "@/features/merchant/partners/lib/search-params";
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { SectionFrame } from "@/components/layout/section-frame";
 import { useLocale } from "@/contexts/locale-context";
 import { MerchantPartners } from "@/features/merchant/partners/components/merchant-partners";
-import { PARTNER_FILTERS } from "@/features/merchant/partners/hooks/use-merchant-partners";
+import { PARTNER_FILTERS } from "@/features/merchant/partners/lib/search-params";
 
 interface PartnersSearch {
   /** Absent = all active partners; several add up. */

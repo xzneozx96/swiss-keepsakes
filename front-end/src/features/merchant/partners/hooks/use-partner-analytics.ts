@@ -110,13 +110,19 @@ export function usePartnerAnalytics(
   const days = daysOf(current);
 
   const perDay = (pick: (day: string) => number) => days.map((d) => pick(d));
+  // Counted once per day, and per day and partner, so each chart point is a lookup.
+  const opensByDay = new Map<string, number>();
+
+  for (const o of opens) {
+    if (Date.parse(o.at) > nowMs) continue;
+    const day = dayOf(o.at);
+    const withPartner = `${day}|${o.partnerId}`;
+
+    opensByDay.set(day, (opensByDay.get(day) ?? 0) + 1);
+    opensByDay.set(withPartner, (opensByDay.get(withPartner) ?? 0) + 1);
+  }
   const opensOn = (day: string, partnerId?: string) =>
-    opens.filter(
-      (o) =>
-        (!partnerId || o.partnerId === partnerId) &&
-        Date.parse(o.at) <= nowMs &&
-        dayOf(o.at) === day,
-    ).length;
+    opensByDay.get(partnerId ? `${day}|${partnerId}` : day) ?? 0;
   const transactionsOn = (day: string) =>
     items.filter(
       (i) => Date.parse(i.createdAt) <= nowMs && dayOf(i.createdAt) === day,

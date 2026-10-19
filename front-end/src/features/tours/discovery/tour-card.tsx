@@ -5,7 +5,7 @@ import { memo } from "react";
 import { ListingCard } from "@/components/listing-card";
 import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
-import { useFavourites } from "@/features/catalog/hooks/use-favourites";
+import { useFavourite } from "@/features/catalog/hooks/use-favourites";
 import { useProductReviews } from "@/features/catalog/hooks/use-product-reviews";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { useTours } from "@/features/tours/hooks/use-tours";
@@ -27,10 +27,9 @@ export const TourCard = memo(function TourCard({
   const { t, language, intlLocale } = useLocale();
   const { data, now } = useTours();
   const name = pickText(tour.name, language);
-  const { isFavourite, toggle } = useFavourites();
   const listingId = `tour:${tour.id}`;
+  const { saved, toggle } = useFavourite(listingId);
   const reviews = useProductReviews(listingId);
-  const saved = isFavourite(listingId);
   const next = nextAvailableDeparture(data, tour.id, now);
   const soldOut = !next && upcomingDepartures(data, tour.id, now).length > 0;
 
@@ -39,7 +38,7 @@ export const TourCard = memo(function TourCard({
       disabled={!tour.published}
       favourite={{
         isSaved: saved,
-        onToggle: () => toggle(listingId),
+        onToggle: toggle,
         label: t(saved ? "card.unsave" : "card.save", { name: name.text }),
       }}
       fromLabel={t("home.from")}

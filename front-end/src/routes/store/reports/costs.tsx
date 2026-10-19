@@ -1,9 +1,9 @@
-import type { CostFilter } from "@/features/reports/hooks/use-cost-data";
+import type { CostFilter } from "@/features/reports/lib/search-params";
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { CostDataPage } from "@/features/reports/components/cost-data-page";
-import { COST_FILTERS } from "@/features/reports/hooks/use-cost-data";
+import { COST_FILTERS } from "@/features/reports/lib/search-params";
 
 interface CostSearch {
   /** Absent = missing first. */

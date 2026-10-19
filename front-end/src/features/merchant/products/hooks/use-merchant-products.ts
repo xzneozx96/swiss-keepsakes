@@ -13,7 +13,7 @@ import {
 import { useLocale } from "@/contexts/locale-context";
 import { isPublished } from "@/features/catalog/lib/publish";
 import { availableUnits, fromPrice } from "@/features/catalog/lib/stock";
-import { useDemo, useDemoNow } from "@/features/demo";
+import { useDemo, useDemoActions, useDemoNow } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { createTourSeed } from "@/features/tours/seed";
 import { formatMoney, numberFormat } from "@/lib/format";
@@ -168,7 +168,7 @@ export type ProductKind = "gift" | "tour";
  * bookings that point at it are kept. Restoring brings it back as a draft to publish again.
  */
 export function useProductArchive() {
-  const { update } = useDemo();
+  const { update } = useDemoActions();
 
   const set = (kind: ProductKind, id: string, archive: boolean) =>
     update((s) => {

@@ -273,7 +273,11 @@ export function PlannerChat({ onLeave }: { onLeave: () => void }) {
   }, [update]);
 
   const [chat, setChat] = useState(getChat);
-  const { messages, sendMessage, addToolOutput, status } = useChat({ chat });
+  // The scripted answer arrives a word at a time; the screen redraws at most every 50 ms.
+  const { messages, sendMessage, addToolOutput, status } = useChat({
+    chat,
+    experimental_throttle: 50,
+  });
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [top, setTop] = useState(0);

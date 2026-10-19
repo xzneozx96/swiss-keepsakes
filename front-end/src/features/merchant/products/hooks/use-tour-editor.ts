@@ -38,7 +38,7 @@ import { useProductArchive } from "./use-merchant-products";
 
 import { safeHref } from "@/lib/rich-text";
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo, useDemoNow } from "@/features/demo";
+import { useDemo, useDemoActions, useDemoNow } from "@/features/demo";
 import { createTourSeed } from "@/features/tours/seed";
 import {
   TOUR_STEPS,
@@ -318,7 +318,7 @@ function emptyTour(id: string, slug: string): Tour {
 
 /** Tour writes as `useTourActions` makes them: stored tour data, or the seed. */
 export function useTourWrite() {
-  const { update } = useDemo();
+  const { update } = useDemoActions();
 
   return (recipe: (data: TourData) => TourData) =>
     update((s) => ({

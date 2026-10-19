@@ -2,6 +2,7 @@ import type { CostRecord, CostType, CostValue } from "../types";
 import type { StatusTone } from "@/components/status-chip";
 import type { TransactionRef } from "@/features/partners/types";
 
+import { COST_FILTERS, type CostFilter } from "../lib/search-params";
 import { COST_TYPES } from "../types";
 
 import { useLocale } from "@/contexts/locale-context";
@@ -13,9 +14,6 @@ import { orderTotal } from "@/features/orders/lib/selectors";
 import { allOrders, transactionKey } from "@/features/partners/lib/ledger";
 import { formatMoney, dateTimeFormat, calendarDay } from "@/lib/format";
 import { pickText } from "@/lib/localized";
-
-export const COST_FILTERS = ["missing", "complete", "all"] as const;
-export type CostFilter = (typeof COST_FILTERS)[number];
 
 /** Weeks in the completeness chart, ending with the running week. */
 const CHART_WEEKS = 8;
