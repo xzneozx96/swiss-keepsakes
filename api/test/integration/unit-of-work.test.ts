@@ -124,3 +124,16 @@ describe('[E1.9] webhook_events deduplication', () => {
     expect(await db.transaction(tx => events.record(tx, { provider: 'other', eventId, payload: {} }))).toBe('recorded')
   })
 })
+
+describe('[E1.9] units of work do not nest', () => {
+  it('[E1.9] uow.run inside another uow.run rejects with a clear error, and the outer transaction rolls back', async () => {
+    const uow = createUnitOfWork(db)
+    const probeId = randomUUID()
+
+    await expect(uow.run(async (tx) => {
+      await createAuditLog(createManualClock(new Date())).record(tx, { storeId: null, actor: 'system', entity: 'probe', entityId: probeId, action: 'recorded', requestId: null })
+      await uow.run(async () => {})
+    })).rejects.toThrow('uow.run was called inside another uow.run')
+    expect(await count(pool, 'select count(*) from platform.audit_log where entity_id = $1', [probeId])).toBe(0)
+  })
+})

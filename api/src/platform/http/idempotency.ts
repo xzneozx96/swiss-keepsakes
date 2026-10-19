@@ -76,8 +76,10 @@ export function idempotency(deps: { db: Database, clock: Clock, actorId: (c: Con
     if (earlier)
       return answer(c, await settled(earlier, requestHash, lookup), requestHash)
 
-    const claim: PendingClaim = { ...scope, requestHash, now, expiresAt: new Date(now.getTime() + keptFor), committed: false }
+    const claim: PendingClaim = { ...scope, requestHash, now, expiresAt: new Date(now.getTime() + keptFor), state: 'unclaimed' }
     await runWithClaim(claim, next)
+    // The handler may have failed while its claiming unit of work was still open.
+    await claim.settled
 
     if (c.error instanceof IdempotencyKeyTaken) {
       const record = await settled(await lookup(), requestHash, lookup)
@@ -85,7 +87,7 @@ export function idempotency(deps: { db: Database, clock: Clock, actorId: (c: Con
       c.res = undefined
       c.res = answer(c, record, requestHash)
     }
-    else if (claim.committed) {
+    else if (claim.state === 'claimed') {
       // Whatever the status: the command committed, so a repeat must not run it again.
       try {
         await saveIdempotentResponse(deps.db, scope, await stored(c.res))

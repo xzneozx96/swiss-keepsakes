@@ -2,6 +2,7 @@ import type { Jobs } from '../../src/platform/jobs/boss.ts'
 import { randomUUID } from 'node:crypto'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { createRoute, z } from '@hono/zod-openapi'
+import { sql } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
 import { createAuditLog } from '../../src/platform/audit.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
@@ -40,6 +41,7 @@ const probeRoute = createRoute({
             name: z.string().min(1),
             fail: z.enum(['in-transaction', 'after-commit']).optional(),
             respond: z.enum(['no-content', 'binary', 'with-headers']).optional(),
+            units: z.enum(['two-in-sequence', 'two-at-once', 'nested']).optional(),
           }),
         },
       },
@@ -84,6 +86,8 @@ function setup({ storeFails = false } = {}) {
   const audit = createAuditLog(clock)
   const jobQueue = createJobQueue(jobs.boss)
   const executions: string[] = []
+  // lock_timeout as the command's own statements see it, after the claim.
+  const lockTimeouts: (string | undefined)[] = []
   let pause: { at: PausePoint, reached: ReturnType<typeof latch>, release: ReturnType<typeof latch> } | undefined
   const holdIfPaused = async (at: PausePoint) => {
     if (pause?.at !== at)
@@ -97,17 +101,30 @@ function setup({ storeFails = false } = {}) {
   const logs: { level: number, msg: string }[] = []
   const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }))
   app.use('/api/*', idempotency({ db: storeFails ? storingFails : db, clock, actorId: c => c.req.header('X-Test-Actor') ?? 'anonymous' }))
+  app.get('/api/probes', c => c.json({ ok: true }))
   app.openapi(probeRoute, async (c) => {
-    const { name, fail, respond } = c.req.valid('json')
+    const { name, fail, respond, units } = c.req.valid('json')
     const probeId = randomUUID()
-    await uow.run(async (tx) => {
+    const unit = () => uow.run(async (tx) => {
       executions.push(name)
+      const { rows } = await tx.execute<{ lock_timeout: string }>(sql`select current_setting('lock_timeout') as lock_timeout`)
+      lockTimeouts.push(rows[0]?.lock_timeout)
       await audit.record(tx, { storeId: null, actor: 'system', entity: 'probe', entityId: probeId, action: 'recorded', after: { name }, requestId: c.get('requestId') })
       await jobQueue.send(tx, queue, { name })
       await holdIfPaused('in-transaction')
       if (fail === 'in-transaction')
         throw new Error('refused after writing')
+      if (units === 'nested')
+        await uow.run(async () => {})
     })
+    if (units === 'two-at-once') {
+      await Promise.all([unit(), unit()])
+    }
+    else {
+      await unit()
+      if (units === 'two-in-sequence')
+        await unit()
+    }
     await holdIfPaused('after-commit')
     if (fail === 'after-commit')
       throw new Error('failed after the commit')
@@ -138,7 +155,8 @@ function setup({ storeFails = false } = {}) {
     jobs: await count(pool, `select count(*) from pgboss.job where name = $1 and data->>'name' = $2`, [queue, name]),
   })
   const keyRows = (key: string) => count(pool, 'select count(*) from platform.idempotency_keys where key = $1', [key])
-  return { app, clock, logs, executions, send, pauseNext, written, keyRows }
+  const storedResponses = (key: string) => count(pool, 'select count(*) from platform.idempotency_keys where key = $1 and response is not null', [key])
+  return { app, clock, logs, executions, lockTimeouts, send, pauseNext, written, keyRows, storedResponses }
 }
 
 async function waitForLockWait() {
@@ -344,6 +362,62 @@ describe('[E1.9] Idempotency-Key', () => {
     expect((await first).status).toBe(201)
     expect((await send(key, { name })).headers.get('Idempotent-Replayed')).toBe('true')
     expect(executions).toEqual([name])
+  })
+
+  it('[E1.9] a repeat whose claim waits more than 5 s on another open transaction gets 409, and the command runs once', async () => {
+    const { send, executions, pauseNext } = setup()
+    const key = unique('key')
+    const name = unique('anna')
+    const pause = pauseNext('in-transaction')
+
+    const first = send(key, { name })
+    await pause.reached.opened
+    const started = performance.now()
+    const second = await send(key, { name })
+    const waited = performance.now() - started
+    pause.release.open()
+
+    expect(second.status).toBe(409)
+    expect(await second.json()).toMatchObject({ type: 'idempotency-key-in-use' })
+    expect(waited).toBeGreaterThanOrEqual(5_000)
+    expect((await first).status).toBe(201)
+    expect(executions).toEqual([name])
+  })
+
+  it('[E1.9] the claim\'s lock timeout ends with the claim, so the command\'s own statements wait on locks as usual', async () => {
+    const { send, lockTimeouts } = setup()
+
+    expect((await send(unique('key'), { name: unique('anna') })).status).toBe(201)
+    expect(lockTimeouts).toEqual(['0'])
+  })
+
+  it('[E1.9] a uow.run nested in another fails at once instead of waiting on its own claim, and nothing is stored', async () => {
+    const { send, logs, keyRows, written } = setup()
+    const key = unique('key')
+    const name = unique('anna')
+
+    const response = await send(key, { name, units: 'nested' })
+
+    expect(response.status).toBe(500)
+    expect(logs).toContainEqual(expect.objectContaining({ msg: 'unhandled error', level: 50 }))
+    expect(await keyRows(key)).toBe(0)
+    expect(await written(name)).toEqual({ audit: 0, jobs: 0 })
+  })
+
+  it('[E1.9] two units of work at once in one command: the second is refused, and the answer is stored once the first commits', async () => {
+    const { send, executions, written, storedResponses } = setup()
+    const key = unique('key')
+    const name = unique('anna')
+
+    const first = await send(key, { name, units: 'two-at-once' })
+    const again = await send(key, { name, units: 'two-at-once' })
+
+    expect(first.status).toBe(500)
+    expect(executions).toEqual([name])
+    expect(await written(name)).toEqual({ audit: 1, jobs: 1 })
+    expect(await storedResponses(key)).toBe(1)
+    expect(again.status).toBe(500)
+    expect(again.headers.get('Idempotent-Replayed')).toBe('true')
   })
 
   it('[E1.9] when the response cannot be stored, the client still gets it, and a repeat gets 409 instead of running again', async () => {
