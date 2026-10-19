@@ -14,6 +14,13 @@ const wallClock = new Intl.DateTimeFormat('en-CA', {
   hourCycle: 'h23',
 })
 
+const dayClock = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Europe/Zurich',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
+
 function wallParts(at: Date): Record<string, string> {
   const parts: Record<string, string> = {}
 
@@ -33,9 +40,7 @@ export function zurichOffsetMinutes(at: Date): number {
 
 /** Calendar date in Europe/Zurich as YYYY-MM-DD (the business time zone). */
 export function zurichDate(at: Date): string {
-  const p = wallParts(at)
-
-  return `${p.year}-${p.month}-${p.day}`
+  return dayClock.format(at)
 }
 
 /** Moves a YYYY-MM-DD date by whole calendar days. */

@@ -30,11 +30,21 @@ describe('[E1.6] Zurich calendar day', () => {
     expect(zurichOffsetMinutes(new Date('2026-10-25T01:00:00Z'))).toBe(60)
   })
 
-  it('agrees with Intl for every hour of 2026', () => {
-    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Zurich', year: 'numeric', month: '2-digit', day: '2-digit' })
+  it('matches the EU daylight-saving rule for every hour of 2026', () => {
+    const lastSunday = (month: number) => {
+      const last = new Date(Date.UTC(2026, month, 0))
 
-    for (let ms = Date.UTC(2026, 0, 1); ms < Date.UTC(2027, 0, 1); ms += 3_600_000)
-      expect(zurichDate(new Date(ms))).toBe(fmt.format(new Date(ms)))
+      return Date.UTC(2026, month - 1, last.getUTCDate() - last.getUTCDay(), 1)
+    }
+    const start = lastSunday(3)
+    const end = lastSunday(10)
+
+    for (let ms = Date.UTC(2026, 0, 1); ms < Date.UTC(2027, 0, 1); ms += 3_600_000) {
+      const offset = ms >= start && ms < end ? 120 : 60
+
+      expect(zurichOffsetMinutes(new Date(ms))).toBe(offset)
+      expect(zurichDate(new Date(ms))).toBe(new Date(ms + offset * 60_000).toISOString().slice(0, 10))
+    }
   })
 
   it('moves calendar days across a DST change without drift', () => {
