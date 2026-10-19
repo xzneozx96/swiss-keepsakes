@@ -80,6 +80,16 @@ type QueriedKey = keyof typeof collections
 
 const queriedKeys = Object.keys(collections) as QueriedKey[]
 
+/** The query that reads a collection of the demo data; none for data only the store keeps. */
+export function demoCollectionKey(
+  key: keyof DemoData,
+  client: DataClient,
+): QueryKey | undefined {
+  return key in collections
+    ? collections[key as QueriedKey].queryKey(client)
+    : undefined
+}
+
 export function createDemoDataClient(store: DemoStore): DataClient {
   return {
     account: createAccountDemoClient(store),

@@ -11,12 +11,14 @@ import {
   DataClientProvider,
   queryKeys,
   StorageFullError,
+  useCommand,
 } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { createDemoDataClient, startDemo } from '@/features/demo/data-client'
 import { createSeedState } from '@/features/demo/seed'
 import { createDemoStore, updateCollection } from '@/features/demo/store'
+import { requestsQueries } from '@/features/requests/api/queries'
 import { newBooking } from '@/features/tours/booking/transitions'
 
 beforeEach(() => {
@@ -232,5 +234,42 @@ describe('mutation then invalidate', () => {
         true,
       ),
     )
+  })
+
+  it('[E1.11] a command reads again what no screen shows right now, before it resolves', async () => {
+    const store = createDemoStore(createSeedState())
+    const client = createDemoDataClient(store)
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: Infinity } },
+    })
+    // C22's sent screen read the requests earlier; nothing observes them now.
+    await queryClient.query(requestsQueries.privateTourRequests(client))
+    const cached = () =>
+      queryClient.getQueryData<unknown[]>(queryKeys.requests.privateTourRequests)
+    const before = cached()!.length
+    const { result } = renderHook(
+      () => useCommand('requests', 'sendPrivateTourRequest'),
+      {
+        wrapper: ({ children }) => (
+          <QueryClientProvider client={queryClient}>
+            <DataClientProvider client={client}>{children}</DataClientProvider>
+          </QueryClientProvider>
+        ),
+      },
+    )
+
+    await act(() =>
+      result.current.mutateAsync({
+        id: 'pt-new',
+        language: 'en',
+        email: 'guest@example.com',
+        groupSize: 2,
+        dateFrom: '2026-10-20',
+        dateTo: '2026-10-20',
+        interests: '',
+      }),
+    )
+
+    expect(cached()).toHaveLength(before + 1)
   })
 })
