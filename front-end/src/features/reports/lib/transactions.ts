@@ -1,65 +1,66 @@
-import type { Rappen } from "@/features/catalog/types";
-import type { TripRecord } from "@/features/checkout/types";
-import type { DemoData } from "@/features/demo/types";
-import type { TransactionRef } from "@/features/partners/types";
+import type { Rappen } from '@/features/catalog/types'
+import type { TripRecord } from '@/features/checkout/types'
+import type { DemoData } from '@/features/demo/types'
+import type { TransactionRef } from '@/features/partners/types'
 
-import { zurichDayOf } from "@/features/catalog/lib/pickup";
-import { prng } from "@/features/merchant/today/lib/demo-history";
-import { commission, lineTotal } from "@/features/orders/lib/selectors";
-import { allOrders, transactionKey } from "@/features/partners/lib/ledger";
-import { bookingCommission } from "@/features/tours/lib/selectors";
+import { zurichDayOf } from '@/features/catalog/lib/pickup'
+import { prng } from '@/features/merchant/today/lib/demo-history'
+import { commission, lineTotal } from '@/features/orders/lib/selectors'
+import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
+import { bookingCommission } from '@/features/tours/lib/selectors'
 
 /** The four guest groups of PRD §3, plus "not determined" when the trip answers are missing. */
 export const GUEST_GROUPS = [
-  "group-day",
-  "group-multi",
-  "independent-multi",
-  "independent-day",
-  "unknown",
-] as const;
-export type GuestGroup = (typeof GUEST_GROUPS)[number];
+  'group-day',
+  'group-multi',
+  'independent-multi',
+  'independent-day',
+  'unknown',
+] as const
+export type GuestGroup = (typeof GUEST_GROUPS)[number]
 
-export type TxStatus = "open" | "completed" | "lost" | "no-show";
+export type TxStatus = 'open' | 'completed' | 'lost' | 'no-show'
 
 export interface ReportLine {
   /** Product or tour id, for the product filter and the best-seller list. */
-  itemId: string;
-  kind: "goods" | "tours";
-  quantity: number;
-  value: Rappen;
+  itemId: string
+  kind: 'goods' | 'tours'
+  quantity: number
+  value: Rappen
 }
 
 /** One order or tour booking, normalised for M21 (spec §4.13). */
 export interface ReportTx {
-  key: string;
-  transaction: TransactionRef;
-  kind: "goods" | "tours";
-  ref: string;
+  key: string
+  transaction: TransactionRef
+  kind: 'goods' | 'tours'
+  ref: string
   /** Zurich day it was placed, YYYY-MM-DD. */
-  day: string;
-  partnerId: string | null;
-  group: GuestGroup;
-  status: TxStatus;
+  day: string
+  partnerId: string | null
+  group: GuestGroup
+  status: TxStatus
   /** Booking value; 0 for declined, cancelled and expired holds. */
-  value: Rappen;
+  value: Rappen
   /** Succeeded payments, each on its own Zurich day. */
-  payments: { day: string; amount: Rappen }[];
+  payments: { day: string, amount: Rappen }[]
   /** Still owed on an open transaction. */
-  outstanding: Rappen;
+  outstanding: Rappen
   /** Commission at the rate of booking, and the day it was recorded (AC10). */
-  commission: Rappen;
-  commissionDay: string | null;
+  commission: Rappen
+  commissionDay: string | null
   /** The day it completed, for the margin (R14). */
-  completedDay: string | null;
-  lines: ReportLine[];
+  completedDay: string | null
+  lines: ReportLine[]
 }
 
 /** PRD §3.1: group or independent, and one day or several at the place; else not determined. */
 export function guestGroup(trip?: TripRecord): GuestGroup {
-  if (!trip?.travelStyle || !trip.arriveOn || !trip.leaveOn) return "unknown";
-  const days = trip.arriveOn === trip.leaveOn ? "day" : "multi";
+  if (!trip?.travelStyle || !trip.arriveOn || !trip.leaveOn)
+    return 'unknown'
+  const days = trip.arriveOn === trip.leaveOn ? 'day' : 'multi'
 
-  return `${trip.travelStyle === "group" ? "group" : "independent"}-${days}` as GuestGroup;
+  return `${trip.travelStyle === 'group' ? 'group' : 'independent'}-${days}` as GuestGroup
 }
 
 /**
@@ -68,116 +69,115 @@ export function guestGroup(trip?: TripRecord): GuestGroup {
  * as real guests skip the optional questions). Never stored; demo data only.
  */
 function historyGroup(id: string): GuestGroup {
-  let seed = 0;
+  let seed = 0
 
-  for (const ch of id) seed = (seed * 31 + ch.charCodeAt(0)) | 0;
-  const r = prng(seed)();
+  for (const ch of id) seed = (seed * 31 + ch.charCodeAt(0)) | 0
+  const r = prng(seed)()
 
   return r < 0.22
-    ? "group-day"
+    ? 'group-day'
     : r < 0.36
-      ? "group-multi"
+      ? 'group-multi'
       : r < 0.52
-        ? "independent-multi"
+        ? 'independent-multi'
         : r < 0.66
-          ? "independent-day"
-          : "unknown";
+          ? 'independent-day'
+          : 'unknown'
 }
 
-const succeeded = (
-  payments: { status: string; amount: Rappen; at: string }[],
-) =>
-  payments
-    .filter((p) => p.status === "succeeded")
-    .map((p) => ({ day: zurichDayOf(p.at), amount: p.amount }));
+function succeeded(payments: { status: string, amount: Rappen, at: string }[]) {
+  return payments
+    .filter(p => p.status === 'succeeded')
+    .map(p => ({ day: zurichDayOf(p.at), amount: p.amount }))
+}
 
 /** Orders (with the generated history, D14) and tour bookings that became bookings. */
 export function reportTransactions(
-  data: Pick<DemoData, "orders" | "tours">,
+  data: Pick<DemoData, 'orders' | 'tours'>,
 ): ReportTx[] {
   const history = new Set(
     allOrders(data)
-      .filter((o) => o.ref.startsWith("SK-H"))
-      .map((o) => o.id),
-  );
+      .filter(o => o.ref.startsWith('SK-H'))
+      .map(o => o.id),
+  )
   const orders: ReportTx[] = allOrders(data).map((o) => {
-    const lost = o.status === "declined" || o.status === "cancelled";
-    const lines = o.lines.map((l) => ({
+    const lost = o.status === 'declined' || o.status === 'cancelled'
+    const lines = o.lines.map(l => ({
       itemId: l.productId,
-      kind: "goods" as const,
+      kind: 'goods' as const,
       quantity: l.quantity,
       value: lineTotal(l),
-    }));
-    const total = lines.reduce((sum, l) => sum + l.value, 0);
-    const payments = succeeded(o.payments);
-    const paid = payments.reduce((sum, p) => sum + p.amount, 0);
-    const c = commission(o);
+    }))
+    const total = lines.reduce((sum, l) => sum + l.value, 0)
+    const payments = succeeded(o.payments)
+    const paid = payments.reduce((sum, p) => sum + p.amount, 0)
+    const c = commission(o)
 
     return {
-      key: transactionKey({ kind: "order", id: o.id }),
-      transaction: { kind: "order", id: o.id },
-      kind: "goods",
+      key: transactionKey({ kind: 'order', id: o.id }),
+      transaction: { kind: 'order', id: o.id },
+      kind: 'goods',
       ref: o.ref,
       day: zurichDayOf(o.createdAt),
       partnerId: o.partnerId,
       group: history.has(o.id) ? historyGroup(o.id) : guestGroup(o.trip),
-      status: lost ? "lost" : o.status === "completed" ? "completed" : "open",
+      status: lost ? 'lost' : o.status === 'completed' ? 'completed' : 'open',
       value: lost ? 0 : total,
       payments,
       outstanding:
-        lost || o.status === "completed" ? 0 : Math.max(0, total - paid),
-      commission: c.state === "recorded" ? c.total : 0,
+        lost || o.status === 'completed' ? 0 : Math.max(0, total - paid),
+      commission: c.state === 'recorded' ? c.total : 0,
       commissionDay: o.commissionRecordedAt
         ? zurichDayOf(o.commissionRecordedAt)
         : null,
       completedDay: o.completedAt ? zurichDayOf(o.completedAt) : null,
       lines,
-    };
-  });
+    }
+  })
   const bookings: ReportTx[] = (data.tours?.bookings ?? [])
-    .filter((b) => b.status !== "pending_payment" && b.status !== "expired")
+    .filter(b => b.status !== 'pending_payment' && b.status !== 'expired')
     .map((b) => {
-      const lost = b.status === "cancelled";
-      const payments = succeeded(b.payments);
-      const paid = payments.reduce((sum, p) => sum + p.amount, 0);
-      const c = bookingCommission(b);
+      const lost = b.status === 'cancelled'
+      const payments = succeeded(b.payments)
+      const paid = payments.reduce((sum, p) => sum + p.amount, 0)
+      const c = bookingCommission(b)
 
       return {
-        key: transactionKey({ kind: "booking", id: b.id }),
-        transaction: { kind: "booking", id: b.id },
-        kind: "tours",
+        key: transactionKey({ kind: 'booking', id: b.id }),
+        transaction: { kind: 'booking', id: b.id },
+        kind: 'tours',
         ref: b.ref,
         day: zurichDayOf(b.createdAt),
         partnerId: b.partnerId,
         group: guestGroup(b.trip),
         status: lost
-          ? "lost"
-          : b.status === "no_show"
-            ? "no-show"
-            : b.status === "completed"
-              ? "completed"
-              : "open",
+          ? 'lost'
+          : b.status === 'no_show'
+            ? 'no-show'
+            : b.status === 'completed'
+              ? 'completed'
+              : 'open',
         value: lost ? 0 : b.total,
         payments,
         outstanding:
-          lost || b.status === "completed" || b.status === "no_show"
+          lost || b.status === 'completed' || b.status === 'no_show'
             ? 0
             : Math.max(0, b.total - paid),
-        commission: c.state === "recorded" ? c.amount : 0,
+        commission: c.state === 'recorded' ? c.amount : 0,
         commissionDay: b.commissionRecordedAt
           ? zurichDayOf(b.commissionRecordedAt)
           : null,
-        completedDay: b.status === "completed" ? zurichDayOf(b.endsAt) : null,
+        completedDay: b.status === 'completed' ? zurichDayOf(b.endsAt) : null,
         lines: [
           {
             itemId: b.tourId,
-            kind: "tours",
+            kind: 'tours',
             quantity: b.adults + b.children + b.infants,
             value: b.total,
           },
         ],
-      };
-    });
+      }
+    })
 
-  return [...orders, ...bookings];
+  return [...orders, ...bookings]
 }

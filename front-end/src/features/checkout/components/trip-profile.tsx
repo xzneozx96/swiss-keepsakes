@@ -1,7 +1,7 @@
-import type { TripStatus } from "../lib/trip";
-import type { TripAnswers } from "../types";
-import type { IconComponent } from "@/components/icons";
-import type { CalendarDate } from "@internationalized/date";
+import type { CalendarDate } from '@internationalized/date'
+import type { TripStatus } from '../lib/trip'
+import type { TripAnswers } from '../types'
+import type { IconComponent } from '@/components/icons'
 
 import {
   Button,
@@ -10,42 +10,42 @@ import {
   Label,
   Radio,
   RadioGroup,
-} from "@heroui/react";
-import { parseDate } from "@internationalized/date";
-import { useRef, useState } from "react";
-
-import { hasTripAnswers } from "../lib/trip";
+} from '@heroui/react'
+import { parseDate } from '@internationalized/date'
+import { useRef, useState } from 'react'
 
 import {
   PickupDateIcon,
   StatusSuccessIcon,
   TravelGroupIcon,
   TravelSoloIcon,
-} from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { zurichDate } from "@/features/catalog/lib/pickup";
-import { useDemoNow } from "@/features/demo";
-import { formatShortDate } from "@/lib/format";
-import { useSheetExit } from "@/components/sheet-exit";
+} from '@/components/icons'
+
+import { useSheetExit } from '@/components/sheet-exit'
+import { useLocale } from '@/contexts/locale-context'
+import { zurichDate } from '@/features/catalog/lib/pickup'
+import { useDemoNow } from '@/features/demo'
+import { formatShortDate } from '@/lib/format'
+import { hasTripAnswers } from '../lib/trip'
 
 export interface TripProfileProps {
   /** Gift intro says the answers don't change the pickup date; tour intro, the tour date. */
-  kind: "gift" | "tour";
-  status: TripStatus;
-  answers: TripAnswers;
-  onSave: (answers: TripAnswers) => void;
-  onSkip: () => void;
+  kind: 'gift' | 'tour'
+  status: TripStatus
+  answers: TripAnswers
+  onSave: (answers: TripAnswers) => void
+  onSkip: () => void
 }
 
-type DateField = "arriveOn" | "leaveOn";
+type DateField = 'arriveOn' | 'leaveOn'
 
 const styleIcon: Record<
-  NonNullable<TripAnswers["travelStyle"]>,
+  NonNullable<TripAnswers['travelStyle']>,
   IconComponent
 > = {
   group: TravelGroupIcon,
   independent: TravelSoloIcon,
-};
+}
 
 /**
  * Optional trip questions on C07 and C13 (spec §4.9, R09): travel style, arrival and departure,
@@ -60,12 +60,12 @@ export function TripProfile({
   onSave,
   onSkip,
 }: TripProfileProps) {
-  const { t } = useLocale();
-  const [editing, setEditing] = useState(false);
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const { t } = useLocale()
+  const [editing, setEditing] = useState(false)
+  const headingRef = useRef<HTMLHeadingElement>(null)
   // Skip and Save unmount the focused button; keep keyboard focus on the card.
-  const keepFocus = () => headingRef.current?.focus();
-  const showForm = status === "open" || editing;
+  const keepFocus = () => headingRef.current?.focus()
+  const showForm = status === 'open' || editing
 
   return (
     <section
@@ -80,83 +80,87 @@ export function TripProfile({
             id="trip-title"
             tabIndex={-1}
           >
-            {t("tripProfile.title")}
+            {t('tripProfile.title')}
           </h2>
           {showForm && (
             <p className="text-sm text-muted">
               {t(
-                kind === "tour" ? "tripProfile.introTour" : "tripProfile.intro",
+                kind === 'tour' ? 'tripProfile.introTour' : 'tripProfile.intro',
               )}
             </p>
           )}
         </div>
-        {!showForm && status === "answered" && (
+        {!showForm && status === 'answered' && (
           <Button
             className="shrink-0"
             size="sm"
             variant="tertiary"
             onPress={() => setEditing(true)}
           >
-            {t("tripProfile.edit")}
+            {t('tripProfile.edit')}
           </Button>
         )}
       </div>
 
-      {showForm ? (
-        <TripForm
-          initial={answers}
-          isEditing={editing}
-          onCancel={() => setEditing(false)}
-          onSave={(next) => {
-            onSave(next);
-            setEditing(false);
-            keepFocus();
-          }}
-          onSkip={() => {
-            onSkip();
-            keepFocus();
-          }}
-        />
-      ) : status === "answered" ? (
-        <Summary answers={answers} />
-      ) : (
-        <div className="flex items-center gap-4 p-5">
-          <p className="min-w-0 flex-1 text-sm text-muted" role="status">
-            {t("tripProfile.skipped")}
-          </p>
-          <Button
-            className="shrink-0"
-            size="sm"
-            variant="secondary"
-            onPress={() => setEditing(true)}
-          >
-            {t("tripProfile.answerNow")}
-          </Button>
-        </div>
-      )}
+      {showForm
+        ? (
+            <TripForm
+              initial={answers}
+              isEditing={editing}
+              onCancel={() => setEditing(false)}
+              onSave={(next) => {
+                onSave(next)
+                setEditing(false)
+                keepFocus()
+              }}
+              onSkip={() => {
+                onSkip()
+                keepFocus()
+              }}
+            />
+          )
+        : status === 'answered'
+          ? (
+              <Summary answers={answers} />
+            )
+          : (
+              <div className="flex items-center gap-4 p-5">
+                <p className="min-w-0 flex-1 text-sm text-muted" role="status">
+                  {t('tripProfile.skipped')}
+                </p>
+                <Button
+                  className="shrink-0"
+                  size="sm"
+                  variant="secondary"
+                  onPress={() => setEditing(true)}
+                >
+                  {t('tripProfile.answerNow')}
+                </Button>
+              </div>
+            )}
     </section>
-  );
+  )
 }
 
 function useShortDate() {
-  const { intlLocale } = useLocale();
-  const today = zurichDate(useDemoNow());
+  const { intlLocale } = useLocale()
+  const today = zurichDate(useDemoNow())
 
-  return (iso: string) => formatShortDate(iso, today, intlLocale);
+  return (iso: string) => formatShortDate(iso, today, intlLocale)
 }
 
 /** The three answers as icon, label and value rows, "Not answered" for a blank one (C07, C15, C16). */
 export function useTripRows(answers: TripAnswers) {
-  const { t } = useLocale();
-  const short = useShortDate();
-  const none = t("tripProfile.summary.none");
+  const { t } = useLocale()
+  const short = useShortDate()
+  const none = t('tripProfile.summary.none')
 
   return [
     {
       icon: answers.travelStyle
         ? styleIcon[answers.travelStyle]
         : TravelSoloIcon,
-      label: t("tripProfile.style.label"),
+      label: t('tripProfile.style.label'),
       value: answers.travelStyle
         ? t(`tripProfile.style.${answers.travelStyle}`)
         : none,
@@ -164,22 +168,22 @@ export function useTripRows(answers: TripAnswers) {
     },
     {
       icon: PickupDateIcon,
-      label: t("tripProfile.arrive.label"),
+      label: t('tripProfile.arrive.label'),
       value: answers.arriveOn ? short(answers.arriveOn) : none,
       isSet: !!answers.arriveOn,
     },
     {
       icon: PickupDateIcon,
-      label: t("tripProfile.leave.label"),
+      label: t('tripProfile.leave.label'),
       value: answers.leaveOn ? short(answers.leaveOn) : none,
       isSet: !!answers.leaveOn,
     },
-  ];
+  ]
 }
 
 function Summary({ answers }: { answers: TripAnswers }) {
-  const { t } = useLocale();
-  const rows = useTripRows(answers);
+  const { t } = useLocale()
+  const rows = useTripRows(answers)
 
   return (
     <div className="flex flex-col gap-3 p-5">
@@ -188,7 +192,7 @@ function Summary({ answers }: { answers: TripAnswers }) {
         role="status"
       >
         <StatusSuccessIcon aria-hidden className="mt-0.5 shrink-0" size={16} />
-        {t("tripProfile.thanks")}
+        {t('tripProfile.thanks')}
       </p>
       <dl className="flex flex-col divide-y divide-separator">
         {rows.map(({ icon: Icon, label, value, isSet }) => (
@@ -196,7 +200,7 @@ function Summary({ answers }: { answers: TripAnswers }) {
             <Icon aria-hidden className="shrink-0 text-muted" size={18} />
             <dt className="min-w-0 flex-1 text-sm text-muted">{label}</dt>
             <dd
-              className={`text-end text-sm ${isSet ? "font-medium" : "text-muted"}`}
+              className={`text-end text-sm ${isSet ? 'font-medium' : 'text-muted'}`}
             >
               {value}
             </dd>
@@ -204,7 +208,7 @@ function Summary({ answers }: { answers: TripAnswers }) {
         ))}
       </dl>
     </div>
-  );
+  )
 }
 
 function TripForm({
@@ -214,14 +218,14 @@ function TripForm({
   onSkip,
   onCancel,
 }: {
-  initial: TripAnswers;
-  isEditing: boolean;
-  onSave: (answers: TripAnswers) => void;
-  onSkip: () => void;
-  onCancel: () => void;
+  initial: TripAnswers
+  isEditing: boolean
+  onSave: (answers: TripAnswers) => void
+  onSkip: () => void
+  onCancel: () => void
 }) {
-  const { t } = useLocale();
-  const [answers, setAnswers] = useState<TripAnswers>(initial);
+  const { t } = useLocale()
+  const [answers, setAnswers] = useState<TripAnswers>(initial)
 
   return (
     <>
@@ -231,7 +235,7 @@ function TripForm({
 
       <div className="flex gap-3 p-5">
         <Button variant="ghost" onPress={isEditing ? onCancel : onSkip}>
-          {isEditing ? t("tripProfile.cancel") : t("tripProfile.skip")}
+          {isEditing ? t('tripProfile.cancel') : t('tripProfile.skip')}
         </Button>
         <Button
           className="flex-1"
@@ -239,11 +243,11 @@ function TripForm({
           variant="tertiary"
           onPress={() => onSave(answers)}
         >
-          {t("tripProfile.save")}
+          {t('tripProfile.save')}
         </Button>
       </div>
     </>
-  );
+  )
 }
 
 /**
@@ -254,24 +258,24 @@ export function TripFields({
   answers,
   onChange,
 }: {
-  answers: TripAnswers;
-  onChange: (answers: TripAnswers) => void;
+  answers: TripAnswers
+  onChange: (answers: TripAnswers) => void
 }) {
-  const { t } = useLocale();
-  const short = useShortDate();
-  const [sheet, setSheet] = useState<DateField>();
+  const { t } = useLocale()
+  const short = useShortDate()
+  const [sheet, setSheet] = useState<DateField>()
 
   // Arrival and departure as the two halves of one field (the booking-app date pair).
   const dateHalf = (field: DateField) => {
-    const value = answers[field];
-    const prefix = field === "arriveOn" ? "arrive" : "leave";
-    const shown = value ? short(value) : t("tripProfile.date.add");
+    const value = answers[field]
+    const prefix = field === 'arriveOn' ? 'arrive' : 'leave'
+    const shown = value ? short(value) : t('tripProfile.date.add')
 
     return (
       <button
         aria-label={`${t(`tripProfile.${prefix}.label`)}, ${shown}`}
         className={`flex min-w-0 flex-col gap-0.5 px-4 py-3 text-start outline-none transition-colors hover:bg-surface-secondary focus-visible:focus-ring ${
-          field === "arriveOn" ? "rounded-s-2xl" : "rounded-e-2xl"
+          field === 'arriveOn' ? 'rounded-s-2xl' : 'rounded-e-2xl'
         }`}
         type="button"
         onClick={() => setSheet(field)}
@@ -280,10 +284,10 @@ export function TripFields({
           <PickupDateIcon aria-hidden className="shrink-0" size={14} />
           {t(`tripProfile.${prefix}.short`)}
         </span>
-        <span className={value ? "font-medium" : "text-muted"}>{shown}</span>
+        <span className={value ? 'font-medium' : 'text-muted'}>{shown}</span>
       </button>
-    );
-  };
+    )
+  }
 
   return (
     <>
@@ -291,18 +295,17 @@ export function TripFields({
         className="grid grid-cols-2 gap-3"
         orientation="horizontal"
         value={answers.travelStyle ?? null}
-        onChange={(v) =>
+        onChange={v =>
           onChange({
             ...answers,
-            travelStyle: v as TripAnswers["travelStyle"],
-          })
-        }
+            travelStyle: v as TripAnswers['travelStyle'],
+          })}
       >
         <Label className="col-span-2 text-sm font-medium">
-          {t("tripProfile.style.question")}
+          {t('tripProfile.style.question')}
         </Label>
-        {(["group", "independent"] as const).map((style) => {
-          const Icon = styleIcon[style];
+        {(['group', 'independent'] as const).map((style) => {
+          const Icon = styleIcon[style]
 
           return (
             <Radio
@@ -320,39 +323,39 @@ export function TripFields({
                 </span>
               </Radio.Content>
             </Radio>
-          );
+          )
         })}
       </RadioGroup>
 
       <div className="flex flex-col gap-3">
         <span className="text-sm font-medium">
-          {t("tripProfile.dates.question")}
+          {t('tripProfile.dates.question')}
         </span>
         <div className="grid grid-cols-2 divide-x divide-field-border rounded-2xl border border-field-border">
-          {dateHalf("arriveOn")}
-          {dateHalf("leaveOn")}
+          {dateHalf('arriveOn')}
+          {dateHalf('leaveOn')}
         </div>
       </div>
 
       {sheet && (
         <DateSheet
-          max={sheet === "arriveOn" ? answers.leaveOn : undefined}
-          min={sheet === "leaveOn" ? answers.arriveOn : undefined}
+          max={sheet === 'arriveOn' ? answers.leaveOn : undefined}
+          min={sheet === 'leaveOn' ? answers.arriveOn : undefined}
           title={t(
-            sheet === "arriveOn"
-              ? "tripProfile.arrive.label"
-              : "tripProfile.leave.label",
+            sheet === 'arriveOn'
+              ? 'tripProfile.arrive.label'
+              : 'tripProfile.leave.label',
           )}
           value={answers[sheet]}
           onClose={() => setSheet(undefined)}
           onDone={(iso) => {
-            onChange({ ...answers, [sheet]: iso });
-            setSheet(undefined);
+            onChange({ ...answers, [sheet]: iso })
+            setSheet(undefined)
           }}
         />
       )}
     </>
-  );
+  )
 }
 
 /**
@@ -367,30 +370,29 @@ export function DateSheet({
   onDone,
   onClose,
 }: {
-  title: string;
-  value?: string;
+  title: string
+  value?: string
   /** Departure cannot be before arrival, and the other way round. */
-  min?: string;
-  max?: string;
-  onDone: (iso: string | undefined) => void;
-  onClose: () => void;
+  min?: string
+  max?: string
+  onDone: (iso: string | undefined) => void
+  onClose: () => void
 }) {
-  const exitRef = useSheetExit();
-  const { t } = useLocale();
-  const today = parseDate(zurichDate(useDemoNow()));
-  const [date, setDate] = useState<CalendarDate | null>(
-    value ? parseDate(value) : null,
-  );
+  const exitRef = useSheetExit()
+  const { t } = useLocale()
+  const today = parseDate(zurichDate(useDemoNow()))
+  const [date, setDate] = useState<CalendarDate | null>(() =>
+    value ? parseDate(value) : null)
 
   return (
-    <Drawer.Backdrop isOpen onOpenChange={(open) => !open && onClose()}>
+    <Drawer.Backdrop isOpen onOpenChange={open => !open && onClose()}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
         <Drawer.Dialog className="flex max-h-[92dvh] flex-col">
           <span ref={exitRef} hidden />
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-between">
             <Drawer.Heading className="text-title">{title}</Drawer.Heading>
-            <Drawer.CloseTrigger aria-label={t("tripProfile.date.close")} />
+            <Drawer.CloseTrigger aria-label={t('tripProfile.date.close')} />
           </Drawer.Header>
           <Drawer.Body className="flex flex-col gap-3 overflow-y-auto">
             <Calendar
@@ -409,15 +411,15 @@ export function DateSheet({
               </Calendar.Header>
               <Calendar.Grid>
                 <Calendar.GridHeader>
-                  {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
+                  {day => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
                 </Calendar.GridHeader>
                 <Calendar.GridBody>
-                  {(d) => (
+                  {d => (
                     <Calendar.Cell
                       className={
                         d.compare(today) === 0
-                          ? "calendar__cell--demo-today"
-                          : ""
+                          ? 'calendar__cell--demo-today'
+                          : ''
                       }
                       date={d}
                     />
@@ -433,18 +435,18 @@ export function DateSheet({
               isDisabled={!date}
               onPress={() => onDone(date?.toString())}
             >
-              {t("tripProfile.date.done")}
+              {t('tripProfile.date.done')}
             </Button>
             <Button
               fullWidth
               variant="tertiary"
               onPress={value ? () => onDone(undefined) : onClose}
             >
-              {value ? t("tripProfile.date.clear") : t("tripProfile.cancel")}
+              {value ? t('tripProfile.date.clear') : t('tripProfile.cancel')}
             </Button>
           </Drawer.Footer>
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>
-  );
+  )
 }

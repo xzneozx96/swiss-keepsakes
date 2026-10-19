@@ -1,69 +1,70 @@
-import type { ShownLabel } from "@/features/orders/hooks/use-orders";
+import type { ShownLabel } from '@/features/orders/hooks/use-orders'
 
-import { ChevronRightIcon, PickupIcon } from "@/components/icons";
-import { Media } from "@/components/media";
-import { StatusChip } from "@/components/status-chip";
+import { ChevronRightIcon, PickupIcon } from '@/components/icons'
+import { Media } from '@/components/media'
+import { StatusChip } from '@/components/status-chip'
 
 /** Lab only: one gift order in M03, with what a thumbnail layout needs. */
 export interface LabOrderRow {
-  id: string;
-  href: string;
-  reference: string;
-  guestName: string;
-  initial: string;
+  id: string
+  href: string
+  reference: string
+  guestName: string
+  initial: string
   /** One entry per order line. */
-  gifts: { name: string; meta: string; quantity: number; photo?: string }[];
+  gifts: { name: string, meta: string, quantity: number, photo?: string }[]
   /** "1 × Limited-edition print", "+1 more" for more lines. */
-  giftsSummary: string;
-  total: string;
-  progress: ShownLabel;
-  payment: ShownLabel;
+  giftsSummary: string
+  total: string
+  progress: ShownLabel
+  payment: ShownLabel
   paymentDetails: {
-    status: string;
-    facts: { label: string; value: string }[];
-  };
+    status: string
+    facts: { label: string, value: string }[]
+  }
   /** "Fri 16 Oct", "Today", "Tomorrow". */
-  pickupDate: string;
+  pickupDate: string
   /** Calendar tile parts. */
-  pickupDay: { weekday: string; day: string; month: string };
-  pickupPlace: string;
+  pickupDay: { weekday: string, day: string, month: string }
+  pickupPlace: string
 }
 
 export interface OrderCardOptionProps {
-  rows: LabOrderRow[];
+  rows: LabOrderRow[]
 }
 
-const card =
-  "flex flex-col rounded-3xl bg-surface shadow-surface outline-none hover:bg-surface-secondary focus-visible:focus-ring";
+const card
+  = 'flex flex-col rounded-3xl bg-surface shadow-surface outline-none hover:bg-surface-secondary focus-visible:focus-ring'
 
 /** Long payment labels ("Deposit paid · CHF 26.70 · …") wrap inside the chip. */
-const wrapChips =
-  "[&>*]:h-auto [&>*]:min-h-7 [&>*]:max-w-full [&>*]:py-1 [&>*]:whitespace-normal";
+const wrapChips
+  = '[&>*]:h-auto [&>*]:min-h-7 [&>*]:max-w-full [&>*]:py-1 [&>*]:whitespace-normal'
 
-const countLabel = (n: number) => (n === 1 ? "1 order" : `${n} orders`);
+const countLabel = (n: number) => (n === 1 ? '1 order' : `${n} orders`)
 
 /** Consecutive rows with the same key, in order (rows come sorted by pickup date). */
 function groupBy<T>(items: T[], key: (item: T) => string) {
-  return items.reduce<{ key: string; items: T[] }[]>((groups, item) => {
-    const last = groups.at(-1);
+  return items.reduce<{ key: string, items: T[] }[]>((groups, item) => {
+    const last = groups.at(-1)
 
-    if (last?.key === key(item)) last.items.push(item);
-    else groups.push({ key: key(item), items: [item] });
+    if (last?.key === key(item))
+      last.items.push(item)
+    else groups.push({ key: key(item), items: [item] })
 
-    return groups;
-  }, []);
+    return groups
+  }, [])
 }
 
 /** Product photo with a quantity badge; a second photo peeks behind for multi-gift orders. */
 function Thumb({
   row,
-  size = "size-[72px]",
+  size = 'size-[72px]',
 }: {
-  row: LabOrderRow;
-  size?: string;
+  row: LabOrderRow
+  size?: string
 }) {
-  const [first, second] = row.gifts;
-  const count = row.gifts.reduce((sum, g) => sum + g.quantity, 0);
+  const [first, second] = row.gifts
+  const count = row.gifts.reduce((sum, g) => sum + g.quantity, 0)
 
   return (
     <span aria-hidden className={`relative shrink-0 ${size}`}>
@@ -86,7 +87,7 @@ function Thumb({
         </span>
       )}
     </span>
-  );
+  )
 }
 
 function Chips({ row }: { row: LabOrderRow }) {
@@ -95,12 +96,12 @@ function Chips({ row }: { row: LabOrderRow }) {
       <StatusChip tone={row.progress.tone}>{row.progress.text}</StatusChip>
       <StatusChip tone={row.payment.tone}>{row.payment.text}</StatusChip>
     </div>
-  );
+  )
 }
 
 /** Each gift on its own line: 64px photo, name, option and quantity (A's middle). */
 function GiftRows({ row }: { row: LabOrderRow }) {
-  return row.gifts.map((gift) => (
+  return row.gifts.map(gift => (
     <div key={gift.name} className="flex items-center gap-3">
       <Media
         alt=""
@@ -110,11 +111,11 @@ function GiftRows({ row }: { row: LabOrderRow }) {
       <div className="flex min-w-0 flex-col">
         <span className="font-medium">{gift.name}</span>
         <span className="text-sm text-muted">
-          {[gift.meta, `Qty ${gift.quantity}`].filter(Boolean).join(" · ")}
+          {[gift.meta, `Qty ${gift.quantity}`].filter(Boolean).join(' · ')}
         </span>
       </div>
     </div>
-  ));
+  ))
 }
 
 /** A's footer: guest, reference, total. */
@@ -125,29 +126,29 @@ function GuestFooter({ row }: { row: LabOrderRow }) {
       <span className="text-label text-muted">{row.reference}</span>
       <span className="ms-auto font-semibold tabular-nums">{row.total}</span>
     </div>
-  );
+  )
 }
 
-function DayHeading({ date, count }: { date: string; count: number }) {
+function DayHeading({ date, count }: { date: string, count: number }) {
   return (
     <h3 className="flex items-baseline gap-2">
       <span className="text-heading">{date}</span>
       <span className="text-sm text-muted">{countLabel(count)}</span>
     </h3>
-  );
+  )
 }
 
 const chevron = (
   <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={18} />
-);
+)
 
 /** A's card with any header: header, gift rows and labels, guest footer. */
 function SectionedCard({
   row,
   header,
 }: {
-  row: LabOrderRow;
-  header: React.ReactNode;
+  row: LabOrderRow
+  header: React.ReactNode
 }) {
   return (
     <a className={card} href={row.href}>
@@ -161,7 +162,7 @@ function SectionedCard({
       </div>
       <GuestFooter row={row} />
     </a>
-  );
+  )
 }
 
 /* ------------------------------------------------------------------ Round 1 picks */
@@ -173,10 +174,10 @@ function SectionedCard({
 export function OrderSectionedCard({ rows }: OrderCardOptionProps) {
   return (
     <ul className="flex flex-col gap-4">
-      {rows.map((row) => (
+      {rows.map(row => (
         <li key={row.id}>
           <SectionedCard
-            header={
+            header={(
               <>
                 <PickupIcon aria-hidden className="shrink-0" size={18} />
                 <span className="flex-1 text-sm">
@@ -184,13 +185,13 @@ export function OrderSectionedCard({ rows }: OrderCardOptionProps) {
                   <span className="text-muted"> · {row.pickupPlace}</span>
                 </span>
               </>
-            }
+            )}
             row={row}
           />
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
 /**
@@ -200,11 +201,11 @@ export function OrderSectionedCard({ rows }: OrderCardOptionProps) {
 export function OrderDayGroups({ rows }: OrderCardOptionProps) {
   return (
     <div className="flex flex-col gap-6">
-      {groupBy(rows, (r) => r.pickupDate).map((day) => (
+      {groupBy(rows, r => r.pickupDate).map(day => (
         <section key={day.key} className="flex flex-col gap-3">
           <h3 className="text-heading">{day.key}</h3>
           <ul className="flex flex-col gap-3">
-            {day.items.map((row) => (
+            {day.items.map(row => (
               <li key={row.id}>
                 <a className={`${card} gap-3 p-4`} href={row.href}>
                   <div className="flex items-center gap-3">
@@ -219,7 +220,10 @@ export function OrderDayGroups({ rows }: OrderCardOptionProps) {
                   </div>
                   <span className="flex items-center gap-1.5 text-sm text-muted">
                     <PickupIcon aria-hidden className="shrink-0" size={16} />
-                    {row.pickupPlace} ·{" "}
+                    {row.pickupPlace}
+                    {' '}
+                    ·
+                    {' '}
                     <span className="whitespace-nowrap">{row.reference}</span>
                   </span>
                   <Chips row={row} />
@@ -230,7 +234,7 @@ export function OrderDayGroups({ rows }: OrderCardOptionProps) {
         </section>
       ))}
     </div>
-  );
+  )
 }
 
 /* ---------------------------------------------------------------------- Round 2 */
@@ -242,21 +246,21 @@ export function OrderDayGroups({ rows }: OrderCardOptionProps) {
 export function OrderDaySectioned({ rows }: OrderCardOptionProps) {
   return (
     <div className="flex flex-col gap-6">
-      {groupBy(rows, (r) => r.pickupDate).map((day) => (
+      {groupBy(rows, r => r.pickupDate).map(day => (
         <section key={day.key} className="flex flex-col gap-3">
           <DayHeading count={day.items.length} date={day.key} />
           <ul className="flex flex-col gap-3">
-            {day.items.map((row) => (
+            {day.items.map(row => (
               <li key={row.id}>
                 <SectionedCard
-                  header={
+                  header={(
                     <>
                       <PickupIcon aria-hidden className="shrink-0" size={18} />
                       <span className="flex-1 text-sm font-semibold">
                         {row.pickupPlace}
                       </span>
                     </>
-                  }
+                  )}
                   row={row}
                 />
               </li>
@@ -265,7 +269,7 @@ export function OrderDaySectioned({ rows }: OrderCardOptionProps) {
         </section>
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -275,11 +279,11 @@ export function OrderDaySectioned({ rows }: OrderCardOptionProps) {
 export function OrderDayPanel({ rows }: OrderCardOptionProps) {
   return (
     <div className="flex flex-col gap-6">
-      {groupBy(rows, (r) => r.pickupDate).map((day) => (
+      {groupBy(rows, r => r.pickupDate).map(day => (
         <section key={day.key} className="flex flex-col gap-3">
           <DayHeading count={day.items.length} date={day.key} />
           <ul className="flex flex-col divide-y divide-separator rounded-3xl bg-surface px-4 shadow-surface">
-            {day.items.map((row) => (
+            {day.items.map(row => (
               <li key={row.id}>
                 <a
                   className="flex gap-3 py-4 outline-none focus-visible:focus-ring"
@@ -300,7 +304,10 @@ export function OrderDayPanel({ rows }: OrderCardOptionProps) {
                     </span>
                     <span className="flex items-center gap-1.5 text-sm text-muted">
                       <PickupIcon aria-hidden className="shrink-0" size={16} />
-                      {row.pickupPlace} ·{" "}
+                      {row.pickupPlace}
+                      {' '}
+                      ·
+                      {' '}
                       <span className="whitespace-nowrap">{row.reference}</span>
                     </span>
                     <div className="pt-1">
@@ -314,7 +321,7 @@ export function OrderDayPanel({ rows }: OrderCardOptionProps) {
         </section>
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -324,17 +331,17 @@ export function OrderDayPanel({ rows }: OrderCardOptionProps) {
 export function OrderDayPlace({ rows }: OrderCardOptionProps) {
   return (
     <div className="flex flex-col gap-6">
-      {groupBy(rows, (r) => r.pickupDate).map((day) => (
+      {groupBy(rows, r => r.pickupDate).map(day => (
         <section key={day.key} className="flex flex-col gap-3">
           <DayHeading count={day.items.length} date={day.key} />
-          {groupBy(day.items, (r) => r.pickupPlace).map((place) => (
+          {groupBy(day.items, r => r.pickupPlace).map(place => (
             <div key={place.key} className="flex flex-col gap-2">
               <h4 className="flex items-center gap-1.5 text-sm font-semibold text-muted">
                 <PickupIcon aria-hidden className="shrink-0" size={16} />
                 {place.key}
               </h4>
               <ul className="flex flex-col gap-3">
-                {place.items.map((row) => (
+                {place.items.map(row => (
                   <li key={row.id}>
                     <a className={`${card} gap-3 p-4`} href={row.href}>
                       <div className="flex items-center gap-3">
@@ -366,7 +373,7 @@ export function OrderDayPlace({ rows }: OrderCardOptionProps) {
         </section>
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -376,7 +383,7 @@ export function OrderDayPlace({ rows }: OrderCardOptionProps) {
 export function OrderGuestHeader({ rows }: OrderCardOptionProps) {
   return (
     <ul className="flex flex-col gap-4">
-      {rows.map((row) => (
+      {rows.map(row => (
         <li key={row.id}>
           <a className={card} href={row.href}>
             <div className="flex items-center gap-3 border-b border-separator px-4 py-3">
@@ -408,7 +415,7 @@ export function OrderGuestHeader({ rows }: OrderCardOptionProps) {
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
 /**
@@ -418,8 +425,8 @@ export function OrderGuestHeader({ rows }: OrderCardOptionProps) {
 export function OrderTimeline({ rows }: OrderCardOptionProps) {
   return (
     <ol className="flex flex-col">
-      {groupBy(rows, (r) => r.pickupDate).map((day, i, days) => {
-        const { weekday, day: date, month } = day.items[0].pickupDay;
+      {groupBy(rows, r => r.pickupDate).map((day, i, days) => {
+        const { weekday, day: date, month } = day.items[0].pickupDay
 
         return (
           <li key={day.key} className="flex gap-3">
@@ -441,22 +448,22 @@ export function OrderTimeline({ rows }: OrderCardOptionProps) {
               aria-label={`${day.key}, ${countLabel(day.items.length)}`}
               className="flex min-w-0 flex-1 flex-col gap-3 pb-6"
             >
-              {day.items.map((row) => (
+              {day.items.map(row => (
                 <li key={row.id}>
                   <SectionedCard
-                    header={
+                    header={(
                       <span className="flex-1 text-sm font-semibold">
                         {row.pickupPlace}
                       </span>
-                    }
+                    )}
                     row={row}
                   />
                 </li>
               ))}
             </ul>
           </li>
-        );
+        )
       })}
     </ol>
-  );
+  )
 }

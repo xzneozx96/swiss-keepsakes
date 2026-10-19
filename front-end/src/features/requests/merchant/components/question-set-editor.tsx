@@ -1,4 +1,4 @@
-import type { AdviceQuestion } from "../../types";
+import type { AdviceQuestion } from '../../types'
 
 import {
   Alert,
@@ -9,29 +9,29 @@ import {
   Label,
   TextField,
   toast,
-} from "@heroui/react";
-import { useState } from "react";
-
-import { looksLikeEmail } from "../../lib/answers";
-import { useQuestionSet } from "../hooks/use-question-set";
-import { isChoice, missingLanguages } from "../lib/question-set";
-
-import { QuestionSheet } from "./question-sheet";
+} from '@heroui/react'
+import { useState } from 'react'
 
 import {
   ChevronDownIcon,
   EmailIcon,
   MessageIcon,
   PlusIcon,
-} from "@/components/icons";
-import { InfoNote } from "@/components/info-note";
-import { StatusChip } from "@/components/status-chip";
-import { useLocale } from "@/contexts/locale-context";
-import { DetailCard } from "@/features/merchant/order-detail/components/detail-card";
-import { formatOrderDateTime } from "@/features/orders/lib/format";
+} from '@/components/icons'
+import { InfoNote } from '@/components/info-note'
+import { StatusChip } from '@/components/status-chip'
+
+import { useLocale } from '@/contexts/locale-context'
+
+import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
+import { formatOrderDateTime } from '@/features/orders/lib/format'
+import { looksLikeEmail } from '../../lib/answers'
+import { useQuestionSet } from '../hooks/use-question-set'
+import { isChoice, missingLanguages } from '../lib/question-set'
+import { QuestionSheet } from './question-sheet'
 
 /** The sheet's subject: an existing question, or a new one. */
-type Editing = { question: AdviceQuestion } | { question: null } | null;
+type Editing = { question: AdviceQuestion } | { question: null } | null
 
 /**
  * M19 Questions tab (spec M19, outline step 15): where requests go, then the trip
@@ -40,33 +40,33 @@ type Editing = { question: AdviceQuestion } | { question: null } | null;
  * and a tap opens the edit sheet. Every change applies to new requests only (AC18).
  */
 export function QuestionSetEditor() {
-  const { t, intlLocale } = useLocale();
-  const editor = useQuestionSet();
-  const { set, incomplete } = editor;
-  const [editing, setEditing] = useState<Editing>(null);
+  const { t, intlLocale } = useLocale()
+  const editor = useQuestionSet()
+  const { set, incomplete } = editor
+  const [editing, setEditing] = useState<Editing>(null)
   const plural = (count: number) =>
-    new Intl.PluralRules(intlLocale).select(count) === "one" ? "one" : "other";
-  const last = set.questions.length - 1;
+    new Intl.PluralRules(intlLocale).select(count) === 'one' ? 'one' : 'other'
+  const last = set.questions.length - 1
 
   return (
     <div className="flex flex-col gap-5 lg:gap-6">
-      <InfoNote text={t("adviceQuestions.note")} />
+      <InfoNote text={t('adviceQuestions.note')} />
 
       {/* Keyed on the saved address, so Reset or a save restarts the field. */}
       <RecipientCard
         key={set.recipientEmail}
         email={set.recipientEmail}
         onSave={(email) => {
-          editor.setRecipient(email);
-          toast.success(t("adviceQuestions.recipient.saved"));
+          editor.setRecipient(email)
+          toast.success(t('adviceQuestions.recipient.saved'))
         }}
       />
 
       <DetailCard
         icon={MessageIcon}
         id="m19-questions"
-        title={t("adviceQuestions.list.title")}
-        trailing={
+        title={t('adviceQuestions.list.title')}
+        trailing={(
           <Button
             className="shrink-0"
             size="sm"
@@ -74,12 +74,12 @@ export function QuestionSetEditor() {
             onPress={() => setEditing({ question: null })}
           >
             <PlusIcon aria-hidden size={16} />
-            {t("adviceQuestions.add")}
+            {t('adviceQuestions.add')}
           </Button>
-        }
+        )}
       >
         <p className="-mt-2 text-sm text-muted tabular-nums">
-          {t("adviceQuestions.list.order", {
+          {t('adviceQuestions.list.order', {
             at: formatOrderDateTime(set.updatedAt, intlLocale),
           })}
         </p>
@@ -97,14 +97,14 @@ export function QuestionSetEditor() {
         )}
         <ol className="flex flex-col divide-y divide-separator">
           {set.questions.map((q, i) => {
-            const missing = missingLanguages(q);
-            const name = q.text.en || q.text.de || "";
+            const missing = missingLanguages(q)
+            const name = q.text.en || q.text.de || ''
             const meta = [
               t(`adviceQuestions.type.${q.type}`),
               t(
                 q.required
-                  ? "adviceQuestions.required"
-                  : "adviceQuestions.optional",
+                  ? 'adviceQuestions.required'
+                  : 'adviceQuestions.optional',
               ),
               ...(isChoice(q)
                 ? [
@@ -114,7 +114,7 @@ export function QuestionSetEditor() {
                     ),
                   ]
                 : []),
-            ].join(" · ");
+            ].join(' · ')
 
             return (
               <li
@@ -125,31 +125,33 @@ export function QuestionSetEditor() {
                   {i + 1}
                 </span>
                 <button
-                  aria-label={t("adviceQuestions.edit", { question: name })}
+                  aria-label={t('adviceQuestions.edit', { question: name })}
                   className="-my-1 flex min-w-0 flex-1 flex-col gap-1 rounded-xl py-1 text-start outline-none hover:bg-surface-secondary focus-visible:focus-ring"
                   type="button"
                   onClick={() => setEditing({ question: q })}
                 >
-                  {(["en", "de"] as const).map((l) => (
+                  {(['en', 'de'] as const).map(l => (
                     <span key={l} className="flex items-start gap-2">
                       <span className="mt-0.5 w-6 shrink-0 font-mono text-[11px] text-muted uppercase">
                         {l}
                       </span>
-                      {q.text[l]?.trim() ? (
-                        <span
-                          className={l === "en" ? "font-medium" : "text-sm"}
-                          lang={l}
-                        >
-                          {q.text[l]}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-muted">—</span>
-                      )}
+                      {q.text[l]?.trim()
+                        ? (
+                            <span
+                              className={l === 'en' ? 'font-medium' : 'text-sm'}
+                              lang={l}
+                            >
+                              {q.text[l]}
+                            </span>
+                          )
+                        : (
+                            <span className="text-sm text-muted">—</span>
+                          )}
                     </span>
                   ))}
                   <span className="flex flex-wrap items-center gap-x-2 gap-y-1.5 ps-8 pt-1">
                     <span className="text-xs text-muted">{meta}</span>
-                    {missing.map((l) => (
+                    {missing.map(l => (
                       <StatusChip key={l} tone="warning">
                         {t(`adviceQuestions.missingChip.${l}`)}
                       </StatusChip>
@@ -159,7 +161,7 @@ export function QuestionSetEditor() {
                 <div className="flex shrink-0 flex-col gap-1">
                   <Button
                     isIconOnly
-                    aria-label={t("adviceQuestions.moveUp", { question: name })}
+                    aria-label={t('adviceQuestions.moveUp', { question: name })}
                     isDisabled={i === 0}
                     size="sm"
                     variant="ghost"
@@ -173,7 +175,7 @@ export function QuestionSetEditor() {
                   </Button>
                   <Button
                     isIconOnly
-                    aria-label={t("adviceQuestions.moveDown", {
+                    aria-label={t('adviceQuestions.moveDown', {
                       question: name,
                     })}
                     isDisabled={i === last}
@@ -185,7 +187,7 @@ export function QuestionSetEditor() {
                   </Button>
                 </div>
               </li>
-            );
+            )
           })}
         </ol>
       </DetailCard>
@@ -196,19 +198,19 @@ export function QuestionSetEditor() {
           question={editing.question}
           onClose={() => setEditing(null)}
           onDelete={(id) => {
-            editor.removeQuestion(id);
-            setEditing(null);
-            toast.success(t("adviceQuestions.deleted"));
+            editor.removeQuestion(id)
+            setEditing(null)
+            toast.success(t('adviceQuestions.deleted'))
           }}
           onSave={(question) => {
-            editor.saveQuestion(question);
-            setEditing(null);
-            toast.success(t("adviceQuestions.saved"));
+            editor.saveQuestion(question)
+            setEditing(null)
+            toast.success(t('adviceQuestions.saved'))
           }}
         />
       )}
     </div>
-  );
+  )
 }
 
 /** Where N16 goes: one field, saved on its own. */
@@ -216,33 +218,33 @@ function RecipientCard({
   email,
   onSave,
 }: {
-  email: string;
-  onSave: (email: string) => void;
+  email: string
+  onSave: (email: string) => void
 }) {
-  const { t } = useLocale();
-  const [value, setValue] = useState(email);
-  const [error, setError] = useState<string | null>(null);
-  const changed = value.trim() !== email;
+  const { t } = useLocale()
+  const [value, setValue] = useState(email)
+  const [error, setError] = useState<string | null>(null)
+  const changed = value.trim() !== email
 
   return (
     <DetailCard
       icon={EmailIcon}
       id="m19-recipient"
-      title={t("adviceQuestions.recipient.title")}
+      title={t('adviceQuestions.recipient.title')}
     >
       <form
         noValidate
         className="flex flex-col gap-3 sm:flex-row sm:items-start"
         onSubmit={(e) => {
-          e.preventDefault();
-          const next = value.trim();
+          e.preventDefault()
+          const next = value.trim()
 
           if (!looksLikeEmail(next)) {
-            setError(t("adviceQuestions.recipient.error"));
+            setError(t('adviceQuestions.recipient.error'))
 
-            return;
+            return
           }
-          onSave(next);
+          onSave(next)
         }}
       >
         <TextField
@@ -254,13 +256,13 @@ function RecipientCard({
           type="email"
           value={value}
           onChange={(v) => {
-            setValue(v);
-            setError(null);
+            setValue(v)
+            setError(null)
           }}
         >
-          <Label>{t("adviceQuestions.recipient.label")}</Label>
+          <Label>{t('adviceQuestions.recipient.label')}</Label>
           <Input autoComplete="off" inputMode="email" />
-          <Description>{t("adviceQuestions.recipient.help")}</Description>
+          <Description>{t('adviceQuestions.recipient.help')}</Description>
           <FieldError>{error}</FieldError>
         </TextField>
         <Button
@@ -269,9 +271,9 @@ function RecipientCard({
           type="submit"
           variant="tertiary"
         >
-          {t("adviceQuestions.recipient.save")}
+          {t('adviceQuestions.recipient.save')}
         </Button>
       </form>
     </DetailCard>
-  );
+  )
 }

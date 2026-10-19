@@ -3,21 +3,21 @@
  * home (spec §4.1, §4.10). Compared on #/lab/advice. Copy rules: no "AI", no promised
  * reply time; the shop replies by email.
  */
-import { buttonVariants } from "@heroui/react";
+import { buttonVariants } from '@heroui/react'
 
-import { ChevronRightIcon, MessageIcon } from "@/components/icons";
-import { Media } from "@/components/media";
+import { ChevronRightIcon, MessageIcon } from '@/components/icons'
+import { Media } from '@/components/media'
 
 export interface AdviceOptionProps {
-  title: string;
-  body: string;
-  action: string;
+  title: string
+  body: string
+  action: string
   /** Short line used by the compact options. */
-  short: string;
-  shopName: string;
-  ownerName: string;
+  short: string
+  shopName: string
+  ownerName: string
   /** First-person greeting for the "note from the shop" option. */
-  greeting: string;
+  greeting: string
 }
 
 /** A · Photo banner: full-width lake photo, white serif title, white button. */
@@ -36,7 +36,7 @@ export function AdvicePhotoBanner({ title, body, action }: AdviceOptionProps) {
         </span>
       </div>
     </Media>
-  );
+  )
 }
 
 /** B · Note from the shop: a personal letter from the owner, initials avatar, ink text. */
@@ -61,15 +61,19 @@ export function AdviceShopNote({
           <span className="text-label text-muted">{shopName}</span>
         </div>
       </div>
-      <p className="font-serif text-card-title">“{greeting}”</p>
+      <p className="font-serif text-card-title">
+        “
+        {greeting}
+        ”
+      </p>
       <p className="text-sm text-muted">{body}</p>
       <span
-        className={`${buttonVariants({ variant: "secondary" })} self-start`}
+        className={`${buttonVariants({ variant: 'secondary' })} self-start`}
       >
         {action}
       </span>
     </section>
-  );
+  )
 }
 
 /** C · Split card: photo on top, text and a full-width button below. */
@@ -81,13 +85,13 @@ export function AdviceSplitCard({ title, body, action }: AdviceOptionProps) {
         <h2 className="font-serif text-card-title">{title}</h2>
         <p className="text-sm text-muted">{body}</p>
         <span
-          className={`${buttonVariants({ variant: "secondary", fullWidth: true })} mt-2`}
+          className={`${buttonVariants({ variant: 'secondary', fullWidth: true })} mt-2`}
         >
           {action}
         </span>
       </div>
     </section>
-  );
+  )
 }
 
 /** D · Soft card with picture: text left, round photo right (reference 1 style). */
@@ -104,7 +108,7 @@ export function AdviceSideImage({ title, short, action }: AdviceOptionProps) {
       </div>
       <Media alt="" className="size-24 shrink-0 rounded-full" photo="pilatus" />
     </section>
-  );
+  )
 }
 
 /** E · List row: one quiet tappable row, like an iOS settings cell. */
@@ -123,5 +127,5 @@ export function AdviceRow({ title, short }: AdviceOptionProps) {
       </div>
       <ChevronRightIcon className="shrink-0 text-muted" size={20} />
     </section>
-  );
+  )
 }

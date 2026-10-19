@@ -1,7 +1,7 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps } from 'react'
 
-import clsx from "clsx";
-import { StickToBottom } from "use-stick-to-bottom";
+import clsx from 'clsx'
+import { StickToBottom } from 'use-stick-to-bottom'
 
 export function Conversation({
   className,
@@ -9,13 +9,13 @@ export function Conversation({
 }: ComponentProps<typeof StickToBottom>) {
   return (
     <StickToBottom
-      className={clsx("relative min-h-0 flex-1 overflow-y-hidden", className)}
+      className={clsx('relative min-h-0 flex-1 overflow-y-hidden', className)}
       initial="smooth"
       resize="smooth"
       role="log"
       {...props}
     />
-  );
+  )
 }
 
 export function ConversationContent({
@@ -24,8 +24,8 @@ export function ConversationContent({
 }: ComponentProps<typeof StickToBottom.Content>) {
   return (
     <StickToBottom.Content
-      className={clsx("flex flex-col gap-4 px-4 pt-5 pb-6", className)}
+      className={clsx('flex flex-col gap-4 px-4 pt-5 pb-6', className)}
       {...props}
     />
-  );
+  )
 }

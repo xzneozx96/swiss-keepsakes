@@ -1,9 +1,9 @@
-import type { Partner, ReferralVisit } from "./types";
+import type { Partner, ReferralVisit } from './types'
 
-const WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+const WINDOW_MS = 30 * 24 * 60 * 60 * 1000
 
 export function partnerByCode(partners: Partner[], code: string) {
-  return partners.find((p) => p.code.toLowerCase() === code.toLowerCase());
+  return partners.find(p => p.code.toLowerCase() === code.toLowerCase())
 }
 
 /**
@@ -14,16 +14,17 @@ export function attributedPartnerId(
   visits: ReferralVisit[],
   at: Date,
 ): string | null {
-  const from = at.getTime() - WINDOW_MS;
+  const from = at.getTime() - WINDOW_MS
   const valid = visits.filter((v) => {
-    const t = Date.parse(v.at);
+    const t = Date.parse(v.at)
 
-    return t >= from && t <= at.getTime();
-  });
+    return t >= from && t <= at.getTime()
+  })
 
-  if (valid.length === 0) return null;
+  if (valid.length === 0)
+    return null
 
   return valid.reduce((latest, v) =>
     Date.parse(v.at) > Date.parse(latest.at) ? v : latest,
-  ).partnerId;
+  ).partnerId
 }

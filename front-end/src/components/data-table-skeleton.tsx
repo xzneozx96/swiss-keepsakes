@@ -1,25 +1,25 @@
-import { Skeleton } from "@heroui/react";
+import { Skeleton } from '@heroui/react'
 
 /** What a column's cells hold, so its loading bars take the same shape. */
-export type SkeletonShape = "line" | "two-line" | "lead" | "chip" | "action";
+export type SkeletonShape = 'line' | 'two-line' | 'lead' | 'chip' | 'action'
 
-export const SKELETON_ROWS = 5;
+export const SKELETON_ROWS = 5
 
-const lineWidths = ["w-3/4", "w-2/3", "w-4/5", "w-3/5", "w-2/3"];
+const lineWidths = ['w-3/4', 'w-2/3', 'w-4/5', 'w-3/5', 'w-2/3']
 
 /** One loading cell, shaped like the real content of its column. */
 export function SkeletonCell({
-  shape = "line",
+  shape = 'line',
   index,
 }: {
-  shape?: SkeletonShape;
+  shape?: SkeletonShape
   /** Row position, to vary the bar widths like real data does. */
-  index: number;
+  index: number
 }) {
-  const width = lineWidths[index % lineWidths.length];
+  const width = lineWidths[index % lineWidths.length]
 
   switch (shape) {
-    case "lead":
+    case 'lead':
       return (
         <div className="flex items-center gap-3">
           <Skeleton className="size-10 shrink-0 rounded-lg" />
@@ -28,20 +28,20 @@ export function SkeletonCell({
             <Skeleton className="h-3 w-1/3 rounded-lg" />
           </div>
         </div>
-      );
-    case "two-line":
+      )
+    case 'two-line':
       return (
         <div className="flex flex-col gap-2">
           <Skeleton className={`h-4 rounded-lg ${width}`} />
           <Skeleton className="h-3 w-1/2 rounded-lg" />
         </div>
-      );
-    case "chip":
-      return <Skeleton className="h-6 w-20 rounded-full" />;
-    case "action":
-      return <Skeleton className="ms-auto size-8 rounded-full" />;
+      )
+    case 'chip':
+      return <Skeleton className="h-6 w-20 rounded-full" />
+    case 'action':
+      return <Skeleton className="ms-auto size-8 rounded-full" />
     default:
-      return <Skeleton className={`h-4 rounded-lg ${width}`} />;
+      return <Skeleton className={`h-4 rounded-lg ${width}`} />
   }
 }
 
@@ -67,7 +67,7 @@ export function TicketSkeletons({ count = 3 }: { count?: number }) {
             <Skeleton className="h-6 w-16 rounded-full" />
           </div>
           <div className="flex flex-col gap-3 border-t border-dashed border-separator px-4 py-3.5">
-            {[0, 1].map((row) => (
+            {[0, 1].map(row => (
               <div key={row} className="flex items-center justify-between">
                 <Skeleton className="h-3.5 w-1/4 rounded-lg" />
                 <Skeleton className="h-3.5 w-16 rounded-lg" />
@@ -77,5 +77,5 @@ export function TicketSkeletons({ count = 3 }: { count?: number }) {
         </li>
       ))}
     </ul>
-  );
+  )
 }

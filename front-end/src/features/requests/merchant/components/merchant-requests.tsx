@@ -1,24 +1,24 @@
-import type { MessageKey } from "@/i18n/en";
-import type { RequestsTab } from "@/features/requests/merchant/lib/search-params";
+import type { RequestsTab } from '@/features/requests/merchant/lib/search-params'
+import type { MessageKey } from '@/i18n/en'
 
-import { Skeleton, toast } from "@heroui/react";
+import { Skeleton, toast } from '@heroui/react'
 
-import { useMerchantRequests } from "../hooks/use-merchant-requests";
+import { RequestsIcon } from '@/components/icons'
 
-import { AdviceRows } from "./advice-rows";
-import { PrivateTourRows } from "./private-tour-rows";
-import { QuestionSetEditor } from "./question-set-editor";
+import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
+import { useLocale } from '@/contexts/locale-context'
+import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 
-import { MerchantPageHeader } from "@/components/layout/merchant-page-header";
-import { RequestsIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { useMerchantRequests } from '../hooks/use-merchant-requests'
+import { AdviceRows } from './advice-rows'
+import { PrivateTourRows } from './private-tour-rows'
+import { QuestionSetEditor } from './question-set-editor'
 
 /** The question set: a card per question with its text lines and a switch. */
 function QuestionsSkeleton() {
   return (
     <div aria-hidden className="flex flex-col gap-4">
-      {[0, 1, 2].map((i) => (
+      {[0, 1, 2].map(i => (
         <div
           key={i}
           className="flex items-center gap-4 rounded-3xl bg-surface p-4 shadow-surface"
@@ -31,7 +31,7 @@ function QuestionsSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -42,63 +42,63 @@ function QuestionsSkeleton() {
  * question set (M19).
  */
 export function MerchantRequests({ tab }: { tab: RequestsTab }) {
-  const { t } = useLocale();
-  const { tabs, adviceRows, privateRows, markAnswered, undoAnswered } =
-    useMerchantRequests();
-  const isLoading = useSimulatedLoading();
+  const { t } = useLocale()
+  const { tabs, adviceRows, privateRows, markAnswered, undoAnswered }
+    = useMerchantRequests()
+  const isLoading = useSimulatedLoading()
 
   const onMarkAnswered = (id: string) => {
-    markAnswered(id);
-    const toastId = toast.success(t("merchantRequests.private.marked"), {
+    markAnswered(id)
+    const toastId = toast.success(t('merchantRequests.private.marked'), {
       actionProps: {
-        children: t("merchantRequests.private.undo"),
-        size: "sm",
-        variant: "tertiary",
+        children: t('merchantRequests.private.undo'),
+        size: 'sm',
+        variant: 'tertiary',
         onPress: () => {
-          toast.close(toastId);
-          undoAnswered(id);
+          toast.close(toastId)
+          undoAnswered(id)
         },
       },
       timeout: 6000,
-    });
-  };
+    })
+  }
 
   const emptyState = (message: MessageKey) => ({
     action: {
-      label: t("merchantRequests.empty.action"),
-      to: "/store" as const,
+      label: t('merchantRequests.empty.action'),
+      to: '/store' as const,
     },
     icon: RequestsIcon,
     message: t(message),
-  });
+  })
 
-  const label = (id: RequestsTab) => tabs.find((x) => x.id === id)?.label ?? "";
+  const label = (id: RequestsTab) => tabs.find(x => x.id === id)?.label ?? ''
 
   return (
     <div className="flex flex-col gap-4">
       <MerchantPageHeader
-        description={t("merchantRequests.intro")}
+        description={t('merchantRequests.intro')}
         title={t(`merchantRequests.tab.${tab}`)}
       />
-      {tab === "advice" && (
+      {tab === 'advice' && (
         <AdviceRows
-          empty={emptyState("merchantRequests.advice.empty")}
+          empty={emptyState('merchantRequests.advice.empty')}
           isLoading={isLoading}
-          label={label("advice")}
+          label={label('advice')}
           rows={adviceRows}
         />
       )}
-      {tab === "private" && (
+      {tab === 'private' && (
         <PrivateTourRows
-          empty={emptyState("merchantRequests.private.empty")}
+          empty={emptyState('merchantRequests.private.empty')}
           isLoading={isLoading}
-          label={label("private")}
+          label={label('private')}
           rows={privateRows}
           onMarkAnswered={onMarkAnswered}
         />
       )}
-      {tab === "questions" &&
-        (isLoading ? <QuestionsSkeleton /> : <QuestionSetEditor />)}
+      {tab === 'questions'
+        && (isLoading ? <QuestionsSkeleton /> : <QuestionSetEditor />)}
     </div>
-  );
+  )
 }

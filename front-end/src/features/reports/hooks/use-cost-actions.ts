@@ -1,32 +1,33 @@
-import type { CostType, CostValue } from "../types";
-import type { TransactionRef } from "@/features/partners/types";
+import type { CostType, CostValue } from '../types'
+import type { TransactionRef } from '@/features/partners/types'
 
-import { useDemoActions, useDemoSelector } from "@/features/demo";
-import { demoNow } from "@/features/demo/clock";
-import { transactionKey } from "@/features/partners/lib/ledger";
+import { useDemoActions, useDemoSelector } from '@/features/demo'
+import { demoNow } from '@/features/demo/clock'
+import { transactionKey } from '@/features/partners/lib/ledger'
 
 /** M24 save (R14, D7): Owner and Manager enter or correct a transaction's actual costs. */
 export function useCostActions() {
-  const { update } = useDemoActions();
-  const role = useDemoSelector((s) => s.role);
+  const { update } = useDemoActions()
+  const role = useDemoSelector(s => s.role)
 
   return {
-    canEdit: role === "owner" || role === "manager",
+    canEdit: role === 'owner' || role === 'manager',
     save(
       transaction: TransactionRef,
       costs: Partial<Record<CostType, CostValue>>,
     ) {
-      if (role !== "owner" && role !== "manager") return;
-      const updatedBy = role;
-      const key = transactionKey(transaction);
+      if (role !== 'owner' && role !== 'manager')
+        return
+      const updatedBy = role
+      const key = transactionKey(transaction)
 
-      update((s) => ({
+      update(s => ({
         ...s,
         data: {
           ...s.data,
           costs: [
             ...s.data.costs.filter(
-              (r) => transactionKey(r.transaction) !== key,
+              r => transactionKey(r.transaction) !== key,
             ),
             {
               transaction,
@@ -37,7 +38,7 @@ export function useCostActions() {
             },
           ],
         },
-      }));
+      }))
     },
-  };
+  }
 }

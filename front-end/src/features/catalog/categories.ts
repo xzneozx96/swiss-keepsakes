@@ -1,4 +1,4 @@
-import type { Category } from "./types";
+import type { Category } from './types'
 
 /**
  * The two product categories (PRD §7.0), in the order the guest rail shows them. Fixed:
@@ -7,13 +7,13 @@ import type { Category } from "./types";
  */
 export const categories: Category[] = [
   {
-    id: "keepsakes",
-    name: { en: "Keepsakes", de: "Andenken" },
-    photo: "gift-box",
+    id: 'keepsakes',
+    name: { en: 'Keepsakes', de: 'Andenken' },
+    photo: 'gift-box',
   },
   {
-    id: "tours",
-    name: { en: "Tours", de: "Touren" },
-    photo: "lucerne-old-town",
+    id: 'tours',
+    name: { en: 'Tours', de: 'Touren' },
+    photo: 'lucerne-old-town',
   },
-];
+]

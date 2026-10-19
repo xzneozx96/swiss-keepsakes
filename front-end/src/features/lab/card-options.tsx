@@ -3,29 +3,30 @@
  * Option D was chosen (13.10.2026) and lives in features/catalog/components/product-card.tsx;
  * the others stay here for later UI experiments. Not part of the product.
  */
-import { Card, Chip } from "@heroui/react";
+import { Card, Chip } from '@heroui/react'
 
-import { ClockIcon } from "@/components/icons";
-import { Media } from "@/components/media";
+import { ClockIcon } from '@/components/icons'
+import { Media } from '@/components/media'
 
 export interface CardOptionProps {
-  name: string;
-  photo?: string;
-  fromLabel: string;
-  price: string;
+  name: string
+  photo?: string
+  fromLabel: string
+  price: string
   /** Short pickup line, e.g. "Earliest pickup Wed 14.10." */
-  pickupLine: string;
-  badge?: string;
+  pickupLine: string
+  badge?: string
 }
 
 function Badge({ label }: { label?: string }) {
-  if (!label) return null;
+  if (!label)
+    return null
 
   return (
     <Chip className="absolute start-2.5 top-2.5" size="md" variant="secondary">
       <Chip.Label>{label}</Chip.Label>
     </Chip>
-  );
+  )
 }
 
 /** A · Borderless (Airbnb): square photo, text straight on the page, tight lines. */
@@ -45,13 +46,16 @@ export function OptionBorderless({
       <div className="flex flex-col gap-0.5 px-0.5">
         <h3 className="font-serif text-card-title">{name}</h3>
         <p className="text-sm">
-          <span className="text-muted">{fromLabel} </span>
+          <span className="text-muted">
+            {fromLabel}
+            {' '}
+          </span>
           <span className="font-semibold tabular-nums">{price}</span>
         </p>
         <p className="text-label text-muted">{pickupLine}</p>
       </div>
     </div>
-  );
+  )
 }
 
 /** B · Photo overlay: tall photo, name and price on an ink scrim, like the tour cards. */
@@ -73,13 +77,16 @@ export function OptionOverlay({
       <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 p-4 text-white">
         <h3 className="font-serif text-card-title">{name}</h3>
         <p className="text-sm">
-          <span className="text-white/80">{fromLabel} </span>
+          <span className="text-white/80">
+            {fromLabel}
+            {' '}
+          </span>
           <span className="font-semibold tabular-nums">{price}</span>
         </p>
         <p className="text-label text-white/80">{pickupLine}</p>
       </div>
     </Media>
-  );
+  )
 }
 
 /** C · Compact surface card: price and pickup in one block, clock icon. */
@@ -99,7 +106,10 @@ export function OptionCompact({
       <div className="flex flex-col gap-1.5 px-2 pb-2">
         <h3 className="font-serif text-card-title">{name}</h3>
         <p className="text-sm">
-          <span className="text-muted">{fromLabel} </span>
+          <span className="text-muted">
+            {fromLabel}
+            {' '}
+          </span>
           <span className="text-base font-semibold tabular-nums">{price}</span>
         </p>
         <p className="flex items-center gap-1.5 text-label text-muted">
@@ -108,7 +118,7 @@ export function OptionCompact({
         </p>
       </div>
     </Card>
-  );
+  )
 }
 
 /** D · Price on the photo (chosen): borderless, a price pill on the image, name and pickup below. */
@@ -125,7 +135,10 @@ export function OptionPricePill({
       <Media alt="" className="aspect-[4/3] rounded-3xl" photo={photo}>
         <Badge label={badge} />
         <span className="absolute start-2.5 bottom-2.5 rounded-full bg-surface/95 px-3 py-1 text-sm shadow-surface">
-          <span className="text-muted">{fromLabel} </span>
+          <span className="text-muted">
+            {fromLabel}
+            {' '}
+          </span>
           <span className="font-semibold tabular-nums">{price}</span>
         </span>
       </Media>
@@ -137,7 +150,7 @@ export function OptionPricePill({
         </p>
       </div>
     </div>
-  );
+  )
 }
 
 /** E · List row: thumbnail beside the text; suits the gifts list and search results. */
@@ -158,11 +171,14 @@ export function OptionRow({
         )}
         <h3 className="truncate font-serif text-card-title">{name}</h3>
         <p className="text-sm">
-          <span className="text-muted">{fromLabel} </span>
+          <span className="text-muted">
+            {fromLabel}
+            {' '}
+          </span>
           <span className="font-semibold tabular-nums">{price}</span>
         </p>
         <p className="truncate text-label text-muted">{pickupLine}</p>
       </div>
     </Card>
-  );
+  )
 }

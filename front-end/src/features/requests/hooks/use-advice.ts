@@ -3,20 +3,20 @@ import type {
   AdviceQuestion,
   AdviceRequest,
   AdviceValue,
-} from "../types";
+} from '../types'
 
-import { displayAnswer, isAnswered, looksLikeEmail } from "../lib/answers";
-import { mailAdviceRequest } from "../lib/request-mail";
+import { useLocale } from '@/contexts/locale-context'
+import { useDemoActions, useDemoSelector } from '@/features/demo'
 
-import { useLocale } from "@/contexts/locale-context";
-import { useDemoActions, useDemoSelector } from "@/features/demo";
-import { demoNow } from "@/features/demo/clock";
-import { formatDate, calendarDay } from "@/lib/format";
-import { pickText } from "@/lib/localized";
+import { demoNow } from '@/features/demo/clock'
+import { calendarDay, formatDate } from '@/lib/format'
+import { pickText } from '@/lib/localized'
+import { displayAnswer, isAnswered, looksLikeEmail } from '../lib/answers'
+import { mailAdviceRequest } from '../lib/request-mail'
 
-export type SendResult =
-  | { ok: true; requestId: string }
-  | { ok: false; reason: "email-missing" | "email-invalid" };
+export type SendResult
+  = | { ok: true, requestId: string }
+    | { ok: false, reason: 'email-missing' | 'email-invalid' }
 
 /**
  * C21 trip assistant (spec §4.10, R19, AC18, AC34, R08). The guest's draft keeps the question set it
@@ -26,42 +26,41 @@ export type SendResult =
  * its language and the answer exactly as shown.
  */
 export function useAdvice() {
-  const { language, intlLocale } = useLocale();
-  const { update } = useDemoActions();
-  const clockStartedAt = useDemoSelector((s) => s.clockStartedAt);
-  const adviceDraft = useDemoSelector((s) => s.data.adviceDraft);
-  const adviceQuestions = useDemoSelector((s) => s.data.adviceQuestions);
-  const guests = useDemoSelector((s) => s.data.guests);
-  const signedInGuestId = useDemoSelector((s) => s.data.signedInGuestId);
-  const guest = guests.find((g) => g.id === signedInGuestId);
+  const { language, intlLocale } = useLocale()
+  const { update } = useDemoActions()
+  const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
+  const adviceDraft = useDemoSelector(s => s.data.adviceDraft)
+  const adviceQuestions = useDemoSelector(s => s.data.adviceQuestions)
+  const guests = useDemoSelector(s => s.data.guests)
+  const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
+  const guest = guests.find(g => g.id === signedInGuestId)
 
   const draft: AdviceDraft = adviceDraft ?? {
     set: adviceQuestions,
     step: 0,
     values: {},
-    email: guest?.email ?? "",
+    email: guest?.email ?? '',
     startedAt: demoNow(clockStartedAt).toISOString(),
-  };
-  const questions = draft.set.questions;
+  }
+  const questions = draft.set.questions
   // Steps: one per question, then the email, then the summary card.
-  const emailStep = questions.length;
-  const summaryStep = questions.length + 1;
+  const emailStep = questions.length
+  const summaryStep = questions.length + 1
 
   // Merges into the stored draft, so two saves in one handler both land.
   const save = (patch: Partial<AdviceDraft>) =>
-    update((s) => ({
+    update(s => ({
       ...s,
       data: {
         ...s.data,
         adviceDraft: { ...(s.data.adviceDraft ?? draft), ...patch },
       },
-    }));
+    }))
 
-  const questionText = (q: AdviceQuestion) => pickText(q.text, language);
+  const questionText = (q: AdviceQuestion) => pickText(q.text, language)
   const answerText = (q: AdviceQuestion) =>
-    displayAnswer(q, draft.values[q.id], language, (iso) =>
-      formatDate(calendarDay(iso), intlLocale),
-    );
+    displayAnswer(q, draft.values[q.id], language, iso =>
+      formatDate(calendarDay(iso), intlLocale))
 
   return {
     questions,
@@ -74,27 +73,30 @@ export function useAdvice() {
     answerText,
     setValue: (id: string, value: AdviceValue | undefined) =>
       update((s) => {
-        const current = s.data.adviceDraft ?? draft;
-        const values = { ...current.values };
+        const current = s.data.adviceDraft ?? draft
+        const values = { ...current.values }
 
-        if (value === undefined) delete values[id];
-        else values[id] = value;
+        if (value === undefined)
+          delete values[id]
+        else values[id] = value
 
         return {
           ...s,
           data: { ...s.data, adviceDraft: { ...current, values } },
-        };
+        }
       }),
     goTo: (step: number) => save({ step }),
     setEmail: (email: string) => save({ email }),
     canLeave: (q: AdviceQuestion) =>
       !q.required || isAnswered(draft.values[q.id]),
     send: (): SendResult => {
-      const email = draft.email.trim();
+      const email = draft.email.trim()
 
-      if (!email) return { ok: false, reason: "email-missing" };
-      if (!looksLikeEmail(email)) return { ok: false, reason: "email-invalid" };
-      const requestId = `adv-${Date.now().toString(36)}`;
+      if (!email)
+        return { ok: false, reason: 'email-missing' }
+      if (!looksLikeEmail(email))
+        return { ok: false, reason: 'email-invalid' }
+      const requestId = `adv-${Date.now().toString(36)}`
 
       update((s) => {
         const request: AdviceRequest = {
@@ -103,18 +105,18 @@ export function useAdvice() {
           language,
           email,
           answers: questions
-            .filter((q) => isAnswered(draft.values[q.id]))
+            .filter(q => isAnswered(draft.values[q.id]))
             .map((q) => {
-              const shown = questionText(q);
+              const shown = questionText(q)
 
               return {
                 questionId: q.id,
                 question: shown.text,
                 questionLanguage: shown.language,
                 answer: answerText(q),
-              };
+              }
             }),
-        };
+        }
 
         // N16 goes to the shop's current request address, even for a draft begun earlier.
         return mailAdviceRequest(
@@ -128,10 +130,10 @@ export function useAdvice() {
           },
           request,
           s.data.adviceQuestions.recipientEmail,
-        );
-      });
+        )
+      })
 
-      return { ok: true, requestId };
+      return { ok: true, requestId }
     },
-  };
+  }
 }

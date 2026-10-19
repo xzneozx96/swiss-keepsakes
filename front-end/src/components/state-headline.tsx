@@ -1,27 +1,27 @@
-import type { IconComponent } from "@/components/icons";
+import type { IconComponent } from '@/components/icons'
 
 import {
   StatusDangerIcon,
   StatusInfoIcon,
   StatusSuccessIcon,
   StatusWarningIcon,
-} from "@/components/icons";
+} from '@/components/icons'
 
-export type HeadlineStatus = "default" | "success" | "warning" | "danger";
+export type HeadlineStatus = 'default' | 'success' | 'warning' | 'danger'
 
 const statusIcon: Record<HeadlineStatus, IconComponent> = {
   default: StatusInfoIcon,
   success: StatusSuccessIcon,
   warning: StatusWarningIcon,
   danger: StatusDangerIcon,
-};
+}
 
 const statusTone: Record<HeadlineStatus, string> = {
-  default: "text-info",
-  success: "text-success",
-  warning: "text-warning",
-  danger: "text-danger",
-};
+  default: 'text-info',
+  success: 'text-success',
+  warning: 'text-warning',
+  danger: 'text-danger',
+}
 
 /**
  * A state's headline (C15 ticket, 1.13r): tone icon, heading and one sentence, used instead of
@@ -34,13 +34,13 @@ export function StateHeadline({
   id,
   ref,
 }: {
-  status: HeadlineStatus;
-  title: string;
-  body?: string;
-  id?: string;
-  ref?: React.Ref<HTMLHeadingElement>;
+  status: HeadlineStatus
+  title: string
+  body?: string
+  id?: string
+  ref?: React.Ref<HTMLHeadingElement>
 }) {
-  const Icon = statusIcon[status];
+  const Icon = statusIcon[status]
 
   return (
     <div className="flex gap-3">
@@ -61,5 +61,5 @@ export function StateHeadline({
         {body && <p className="text-sm text-muted">{body}</p>}
       </div>
     </div>
-  );
+  )
 }

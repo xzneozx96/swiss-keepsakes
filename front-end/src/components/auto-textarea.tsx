@@ -1,10 +1,10 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps } from 'react'
 
-import { TextArea } from "@heroui/react";
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { TextArea } from '@heroui/react'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 
-const NATIVE_AUTO_SIZE =
-  typeof CSS !== "undefined" && CSS.supports("field-sizing", "content");
+const NATIVE_AUTO_SIZE
+  = typeof CSS !== 'undefined' && CSS.supports('field-sizing', 'content')
 
 /**
  * A TextArea that grows with its text: no inner scrollbar, no resize handle.
@@ -19,44 +19,47 @@ export function AutoTextArea({
   onInput,
   ...props
 }: ComponentProps<typeof TextArea>) {
-  const ref = useRef<HTMLTextAreaElement>(null);
+  const ref = useRef<HTMLTextAreaElement>(null)
 
   const fit = useCallback(() => {
-    const el = ref.current;
+    const el = ref.current
 
-    if (!el || NATIVE_AUTO_SIZE) return;
-    el.style.height = "auto";
-    const { borderTopWidth, borderBottomWidth } = getComputedStyle(el);
+    if (!el || NATIVE_AUTO_SIZE)
+      return
+    el.style.height = 'auto'
+    const { borderTopWidth, borderBottomWidth } = getComputedStyle(el)
 
-    el.style.height = `${el.scrollHeight + parseFloat(borderTopWidth) + parseFloat(borderBottomWidth)}px`;
-  }, []);
+    el.style.height = `${el.scrollHeight + Number.parseFloat(borderTopWidth) + Number.parseFloat(borderBottomWidth)}px`
+  }, [])
 
   // Every render: the value comes from the parent field, so a typed, pasted or swapped
   // (language switch) text all pass through here.
-  useLayoutEffect(fit);
+  useLayoutEffect(fit)
 
   // Width changes (rotation, sidebar) re-wrap the text.
   useLayoutEffect(() => {
-    const el = ref.current;
+    const el = ref.current
 
-    if (!el || NATIVE_AUTO_SIZE) return;
-    let width = el.clientWidth;
+    if (!el || NATIVE_AUTO_SIZE)
+      return
+    let width = el.clientWidth
     const observer = new ResizeObserver(() => {
-      if (el.clientWidth === width) return;
-      width = el.clientWidth;
-      fit();
-    });
+      if (el.clientWidth === width)
+        return
+      width = el.clientWidth
+      fit()
+    })
 
-    observer.observe(el);
+    observer.observe(el)
 
-    return () => observer.disconnect();
-  }, [fit]);
+    return () => observer.disconnect()
+  }, [fit])
 
   return (
     <TextArea
       {...props}
       ref={ref}
-      className={`resize-none overflow-hidden [field-sizing:content] ${className ?? ""}`}
+      className={`resize-none overflow-hidden [field-sizing:content] ${className ?? ''}`}
       rows={rows}
       style={{
         // field-sizing ignores `rows`; padding (0.5rem x2) and border are inside min-height.
@@ -64,9 +67,9 @@ export function AutoTextArea({
         ...style,
       }}
       onInput={(event) => {
-        fit();
-        onInput?.(event);
+        fit()
+        onInput?.(event)
       }}
     />
-  );
+  )
 }

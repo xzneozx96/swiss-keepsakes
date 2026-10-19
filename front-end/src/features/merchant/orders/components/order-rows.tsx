@@ -1,75 +1,75 @@
-import type { DataTableColumn } from "@/components/data-table";
-import type { EmptyStateProps } from "@/components/empty-state";
-import type { ShownLabel } from "@/features/orders/hooks/use-orders";
+import type { DataTableColumn } from '@/components/data-table'
+import type { EmptyStateProps } from '@/components/empty-state'
+import type { ShownLabel } from '@/features/orders/hooks/use-orders'
 
-import { DataTable } from "@/components/data-table";
-import { RowActions } from "@/components/row-actions";
+import { DataTable } from '@/components/data-table'
 import {
   ArrowUpRightIcon,
   ChevronRightIcon,
   PickupIcon,
-} from "@/components/icons";
-import { Media } from "@/components/media";
-import { StatusChip } from "@/components/status-chip";
-import { useLocale } from "@/contexts/locale-context";
+} from '@/components/icons'
+import { Media } from '@/components/media'
+import { RowActions } from '@/components/row-actions'
+import { StatusChip } from '@/components/status-chip'
+import { useLocale } from '@/contexts/locale-context'
 
 export interface OrderRowProps {
-  id: string;
+  id: string
   /** Opens M04 order detail. */
-  href: string;
-  reference: string;
-  guestName: string;
+  href: string
+  reference: string
+  guestName: string
   /** "1 × Kapellbrücke pocket knife", "+1 more" when the order has more lines. */
-  gifts: string;
+  gifts: string
   /** Phone ticket: every order line with its photo. */
   giftLines: {
-    id: string;
-    name: string;
+    id: string
+    name: string
     /** Variant and engraving, "" when there is neither. */
-    meta: string;
-    quantity: number;
-    photo?: string;
-  }[];
-  total: string;
-  progress: ShownLabel;
-  payment: ShownLabel;
+    meta: string
+    quantity: number
+    photo?: string
+  }[]
+  total: string
+  progress: ShownLabel
+  payment: ShownLabel
   /** Short payment status ("Deposit paid"); its amounts and due date are `paymentFacts`. */
-  paymentStatus: string;
-  paymentFacts: { label: string; value: string }[];
-  pickupDate: string;
+  paymentStatus: string
+  paymentFacts: { label: string, value: string }[]
+  pickupDate: string
   /** Date tile parts: "Fri", "16", "Oct". */
-  pickupDay: { weekday: string; day: string; month: string };
-  pickupPlace: string;
+  pickupDay: { weekday: string, day: string, month: string }
+  pickupPlace: string
 }
 
 interface OrderRowsProps {
-  rows: OrderRowProps[];
+  rows: OrderRowProps[]
   /** Accessible name of the list or table, e.g. the selected tab. */
-  label: string;
-  columns: { order: string; gifts: string; status: string; pickup: string };
+  label: string
+  columns: { order: string, gifts: string, status: string, pickup: string }
   /** Shown inside the table (a card on phones) when `rows` is empty. */
-  empty?: EmptyStateProps;
+  empty?: EmptyStateProps
   /** Back to page 1 when this changes. */
-  resetKey?: string;
-  isLoading?: boolean;
+  resetKey?: string
+  isLoading?: boolean
 }
 
 const progressText = {
-  neutral: "text-muted",
-  info: "text-info",
-  success: "text-success",
-  warning: "text-warning",
-  danger: "text-danger",
-};
+  neutral: 'text-muted',
+  info: 'text-info',
+  success: 'text-success',
+  warning: 'text-warning',
+  danger: 'text-danger',
+}
 
 /** Payment only takes a colour when it needs action. */
 const paymentText = {
-  neutral: "text-muted",
-  info: "text-muted",
-  success: "text-muted",
-  warning: "text-warning",
-  danger: "text-danger",
-};
+  neutral: 'text-muted',
+  info: 'text-muted',
+  success: 'text-muted',
+  warning: 'text-warning',
+  danger: 'text-danger',
+}
 
 /**
  * Phones: one pickup ticket per order (owner's lab choice L). Date tile, guest, reference and
@@ -77,11 +77,11 @@ const paymentText = {
  * The whole ticket opens M04.
  */
 function StackedRows({ rows, label }: OrderRowsProps) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <ul aria-label={label} className="flex flex-col gap-5 lg:hidden">
-      {rows.map((row) => (
+      {rows.map(row => (
         <li key={row.id}>
           <a
             className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface outline-none card-hover focus-visible:focus-ring"
@@ -122,7 +122,7 @@ function StackedRows({ rows, label }: OrderRowsProps) {
             </div>
             <div className="flex flex-col gap-4 p-4">
               <ul className="flex flex-col gap-3">
-                {row.giftLines.map((gift) => (
+                {row.giftLines.map(gift => (
                   <li key={gift.id} className="flex items-center gap-3">
                     <Media
                       alt=""
@@ -136,7 +136,8 @@ function StackedRows({ rows, label }: OrderRowsProps) {
                       )}
                     </div>
                     <span className="shrink-0 text-sm font-medium tabular-nums">
-                      ×{gift.quantity}
+                      ×
+                      {gift.quantity}
                     </span>
                   </li>
                 ))}
@@ -154,18 +155,18 @@ function StackedRows({ rows, label }: OrderRowsProps) {
             <div className="flex flex-col gap-2 border-t border-dashed border-separator px-4 py-3.5">
               <div className="flex items-baseline justify-between gap-2 text-sm">
                 <span className="text-muted">
-                  {t("merchantOrders.card.total")}
+                  {t('merchantOrders.card.total')}
                 </span>
                 <span className="font-semibold tabular-nums">{row.total}</span>
               </div>
               <dl className="flex flex-col gap-2 text-sm">
                 {[
                   {
-                    label: t("merchantOrders.card.payment"),
+                    label: t('merchantOrders.card.payment'),
                     value: row.paymentStatus,
                   },
                   ...row.paymentFacts,
-                ].map((fact) => (
+                ].map(fact => (
                   <div
                     key={fact.label}
                     className="flex items-baseline justify-between gap-4"
@@ -184,34 +185,34 @@ function StackedRows({ rows, label }: OrderRowsProps) {
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
 /** From 1024px: a Table, four columns so both labels fit beside the sidebar. */
 export function OrderRows(props: OrderRowsProps) {
-  const { t } = useLocale();
-  const { columns: names } = props;
+  const { t } = useLocale()
+  const { columns: names } = props
   const columns: DataTableColumn<OrderRowProps>[] = [
     {
-      id: "order",
+      id: 'order',
       header: names.order,
       isRowHeader: true,
-      skeleton: "two-line",
-      cellClassName: "whitespace-nowrap",
-      render: (row) => (
+      skeleton: 'two-line',
+      cellClassName: 'whitespace-nowrap',
+      render: row => (
         <div className="flex flex-col">
           <span className="font-semibold">{row.guestName}</span>
           <span className="text-label text-muted">{row.reference}</span>
         </div>
       ),
     },
-    { id: "gifts", header: names.gifts, render: (row) => row.gifts },
+    { id: 'gifts', header: names.gifts, render: row => row.gifts },
     {
-      id: "status",
+      id: 'status',
       header: names.status,
-      skeleton: "chip",
-      cellClassName: "py-2",
-      render: (row) => (
+      skeleton: 'chip',
+      cellClassName: 'py-2',
+      render: row => (
         <div className="flex flex-col items-start gap-1.5 [&_svg]:shrink-0">
           <StatusChip tone={row.progress.tone}>{row.progress.text}</StatusChip>
           <StatusChip tone={row.payment.tone}>{row.payment.text}</StatusChip>
@@ -219,45 +220,45 @@ export function OrderRows(props: OrderRowsProps) {
       ),
     },
     {
-      id: "pickup",
+      id: 'pickup',
       header: names.pickup,
-      skeleton: "two-line",
-      cellClassName: "whitespace-nowrap",
-      render: (row) => (
+      skeleton: 'two-line',
+      cellClassName: 'whitespace-nowrap',
+      render: row => (
         <div className="flex flex-col">
           <span>{row.pickupDate}</span>
           <span className="text-label text-muted">{row.pickupPlace}</span>
         </div>
       ),
     },
-  ];
+  ]
 
   return (
     <DataTable
-      cards={(page) => <StackedRows {...props} rows={page} />}
+      cards={page => <StackedRows {...props} rows={page} />}
       columns={columns}
       empty={props.empty}
-      getRowHref={(row) => row.href}
-      getRowId={(row) => row.id}
+      getRowHref={row => row.href}
+      getRowId={row => row.id}
       isLoading={props.isLoading}
       label={props.label}
       resetKey={props.resetKey}
       rowActions={{
-        render: (row) => (
+        render: row => (
           <RowActions
             actions={[
               {
-                id: "open",
-                label: t("rowAction.openOrder"),
+                id: 'open',
+                label: t('rowAction.openOrder'),
                 icon: ArrowUpRightIcon,
                 href: row.href,
               },
             ]}
-            label={t("table.rowActions", { name: row.guestName })}
+            label={t('table.rowActions', { name: row.guestName })}
           />
         ),
       }}
       rows={props.rows}
     />
-  );
+  )
 }

@@ -1,51 +1,51 @@
-import type { ReviewOrderView } from "./order-card";
+import type { ReviewOrderView } from './order-card'
 
-import { Alert, Button, Drawer } from "@heroui/react";
-import { useEffect, useRef, useState } from "react";
+import { Alert, Button, Drawer } from '@heroui/react'
+import { useEffect, useRef, useState } from 'react'
 
-import { OrderCard } from "./order-card";
+import { ChevronDownIcon, StatusSuccessIcon } from '@/components/icons'
 
-import { ChevronDownIcon, StatusSuccessIcon } from "@/components/icons";
-import { InfoNote } from "@/components/info-note";
-import { BackButton } from "@/components/layout/cart-button";
+import { InfoNote } from '@/components/info-note'
+import { BackButton } from '@/components/layout/cart-button'
+import { OrderCard } from './order-card'
 
-export type { ReviewItemView, ReviewOrderView } from "./order-card";
+export type { ReviewItemView, ReviewOrderView } from './order-card'
 
 export interface ReviewViewProps {
-  title: string;
-  backLabel: string;
+  title: string
+  backLabel: string
   /** Nothing is charged now; the seller confirms each order first. */
-  intro: string;
+  intro: string
   /** Some text is shown in the other language (R02, AC30). */
-  languageNotice?: string;
-  orders: ReviewOrderView[];
+  languageNotice?: string
+  orders: ReviewOrderView[]
   bar: {
     /** "Combined total, for reference". */
-    totalLabel: string;
-    total: string;
+    totalLabel: string
+    total: string
     /** "Nothing to pay now". */
-    chip: string;
+    chip: string
     /** Accessible name of the total, which opens the breakdown sheet. */
-    detailsLabel: string;
+    detailsLabel: string
     /** "Send request · no payment yet". */
-    sendLabel: string;
-  };
+    sendLabel: string
+  }
   /** Bottom sheet opened from the bar total: each order's total and due amount (C04 pattern). */
   breakdown: {
-    title: string;
-    closeLabel: string;
-  };
+    title: string
+    closeLabel: string
+  }
   /** Shown after a send that could not go through; the cart is unchanged. */
   error?: {
-    title: string;
+    title: string
     /** One line per gift that is short, naming it. */
-    lines: string[];
-    message: string;
-    actionLabel: string;
-  };
-  onBack: () => void;
-  onSend: () => void;
-  onEditCart: () => void;
+    lines: string[]
+    message: string
+    actionLabel: string
+  }
+  onBack: () => void
+  onSend: () => void
+  onEditCart: () => void
 }
 
 /**
@@ -66,15 +66,16 @@ export function ReviewView({
   onSend,
   onEditCart,
 }: ReviewViewProps) {
-  const errorRef = useRef<HTMLDivElement>(null);
-  const [showBreakdown, setShowBreakdown] = useState(false);
+  const errorRef = useRef<HTMLDivElement>(null)
+  const [showBreakdown, setShowBreakdown] = useState(false)
 
   // The error sits above the orders; bring it into view and give it focus so it is read out.
   useEffect(() => {
-    if (!error) return;
-    errorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    errorRef.current?.focus({ preventScroll: true });
-  }, [error]);
+    if (!error)
+      return
+    errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    errorRef.current?.focus({ preventScroll: true })
+  }, [error])
 
   return (
     <div className="flex flex-1 flex-col">
@@ -99,7 +100,7 @@ export function ReviewView({
                 <Alert.Title>{error.title}</Alert.Title>
                 {error.lines.length > 0 && (
                   <ul className="flex flex-col gap-1 text-sm font-medium">
-                    {error.lines.map((line) => (
+                    {error.lines.map(line => (
                       <li key={line}>{line}</li>
                     ))}
                   </ul>
@@ -116,7 +117,7 @@ export function ReviewView({
         {languageNotice && <InfoNote text={languageNotice} />}
 
         <div className="flex flex-col gap-4 pt-1">
-          {orders.map((order) => (
+          {orders.map(order => (
             <OrderCard key={order.key} order={order} />
           ))}
         </div>
@@ -157,7 +158,7 @@ export function ReviewView({
             </Drawer.Header>
             <Drawer.Body className="flex flex-col gap-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] text-foreground">
               <ul className="flex flex-col gap-3">
-                {orders.map((order) => (
+                {orders.map(order => (
                   <li key={order.key} className="flex items-start gap-3">
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span>{order.title}</span>
@@ -179,7 +180,7 @@ export function ReviewView({
         </Drawer.Content>
       </Drawer.Backdrop>
     </div>
-  );
+  )
 }
 
 function Chip({ children }: { children: React.ReactNode }) {
@@ -188,5 +189,5 @@ function Chip({ children }: { children: React.ReactNode }) {
       <StatusSuccessIcon aria-hidden size={12} />
       {children}
     </span>
-  );
+  )
 }

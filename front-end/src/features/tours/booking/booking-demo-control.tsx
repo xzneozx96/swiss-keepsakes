@@ -1,27 +1,28 @@
-import { Button } from "@heroui/react";
-import { useNavigate, useParams } from "@tanstack/react-router";
-import { useState } from "react";
+import { Button } from '@heroui/react'
+import { useNavigate, useParams } from '@tanstack/react-router'
+import { useState } from 'react'
 
-import { addSampleTourBookings } from "./sample-bookings";
-import { competingHold, openPayment } from "./transitions";
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo } from '@/features/demo'
 
-import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
-import { demoNow } from "@/features/demo/clock";
-import { useTourActions } from "@/features/tours/hooks/use-tours";
+import { demoNow } from '@/features/demo/clock'
+import { useTourActions } from '@/features/tours/hooks/use-tours'
 import {
   availableSeats,
   participantSeats,
-} from "@/features/tours/lib/selectors";
-import { createTourSeed } from "@/features/tours/seed";
-import { dateTimeFormat } from "@/lib/format";
+} from '@/features/tours/lib/selectors'
+import { createTourSeed } from '@/features/tours/seed'
+import { dateTimeFormat } from '@/lib/format'
+import { addSampleTourBookings } from './sample-bookings'
+import { competingHold, openPayment } from './transitions'
 
-const time = (iso: string) =>
-  dateTimeFormat("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Europe/Zurich",
-  }).format(new Date(iso));
+function time(iso: string) {
+  return dateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/Zurich',
+  }).format(new Date(iso))
+}
 
 /**
  * Prototype-bar controls for the guest tour booking (English, outside the product UI): a
@@ -30,34 +31,35 @@ const time = (iso: string) =>
  * bookings in every C16 state. Simulations of the browser prototype, not of a real backend.
  */
 export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
-  const { state, update } = useDemo();
-  const { language } = useLocale();
-  const navigate = useNavigate();
-  const { resolvePayment, repeatProviderResult } = useTourActions();
-  const { bookingId, slug } = useParams({ strict: false });
-  const [note, setNote] = useState("");
-  const data = state.data.tours ?? createTourSeed();
-  const now = demoNow(state.clockStartedAt);
-  const booking = data.bookings.find((b) => b.id === bookingId);
-  const open = booking && openPayment(booking);
+  const { state, update } = useDemo()
+  const { language } = useLocale()
+  const navigate = useNavigate()
+  const { resolvePayment, repeatProviderResult } = useTourActions()
+  const { bookingId, slug } = useParams({ strict: false })
+  const [note, setNote] = useState('')
+  const data = state.data.tours ?? createTourSeed()
+  const now = demoNow(state.clockStartedAt)
+  const booking = data.bookings.find(b => b.id === bookingId)
+  const open = booking && openPayment(booking)
   const answered = booking?.payments.some(
-    (p) => p.method === "online" && p.status !== "processing",
-  );
+    p => p.method === 'online' && p.status !== 'processing',
+  )
   const tour = data.tours.find(
-    (item) => item.slug === slug && item.id === data.draft.tourId,
-  );
+    item => item.slug === slug && item.id === data.draft.tourId,
+  )
   const departure = data.departures.find(
-    (item) => item.id === data.draft.departureId && item.tourId === tour?.id,
-  );
-  const seatsLeft = departure ? availableSeats(data, departure.id, now) : 0;
+    item => item.id === data.draft.departureId && item.tourId === tour?.id,
+  )
+  const seatsLeft = departure ? availableSeats(data, departure.id, now) : 0
   const guest = state.data.guests.find(
-    (g) => g.id === state.data.signedInGuestId,
-  );
+    g => g.id === state.data.signedInGuestId,
+  )
 
-  const done = (message = "") => {
-    setNote(message);
-    if (!message) onDone();
-  };
+  const done = (message = '') => {
+    setNote(message)
+    if (!message)
+      onDone()
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -68,8 +70,8 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
           size="sm"
           variant="tertiary"
           onPress={() => {
-            if (tour && departure)
-              update((s) => ({
+            if (tour && departure) {
+              update(s => ({
                 ...s,
                 data: {
                   ...s.data,
@@ -81,8 +83,9 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
                     demoNow(s.clockStartedAt),
                   ),
                 },
-              }));
-            done();
+              }))
+            }
+            done()
           }}
         >
           Another guest takes the last seats
@@ -91,11 +94,11 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
           size="sm"
           variant="tertiary"
           onPress={() => {
-            update((s) => ({
+            update(s => ({
               ...s,
               clockStartedAt: s.clockStartedAt - 16 * 60_000,
-            }));
-            done();
+            }))
+            done()
           }}
         >
           Skip ahead 16 minutes
@@ -103,7 +106,7 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
       </div>
       <p className="text-sm text-muted">
         Another guest: on the departure and group screens
-        {departure ? ` (${seatsLeft} seats left now)` : ""}, a competing guest
+        {departure ? ` (${seatsLeft} seats left now)` : ''}, a competing guest
         holds enough seats that your group no longer fits. Skip ahead moves the
         demo clock for everything, so a running 15-minute hold passes its
         deadline.
@@ -114,8 +117,9 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
           size="sm"
           variant="tertiary"
           onPress={() => {
-            if (booking) resolvePayment(booking.id, "succeeded");
-            done();
+            if (booking)
+              resolvePayment(booking.id, 'succeeded')
+            done()
           }}
         >
           Provider confirms this tour payment now
@@ -126,21 +130,22 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
           variant="tertiary"
           onPress={() => {
             if (booking && open)
-              resolvePayment(booking.id, "succeeded", open.at);
-            done();
+              resolvePayment(booking.id, 'succeeded', open.at)
+            done()
           }}
         >
           {open
             ? `Provider confirms it was paid at ${time(open.at)}, result arrives now`
-            : "Provider confirms an earlier payment, result arrives now"}
+            : 'Provider confirms an earlier payment, result arrives now'}
         </Button>
         <Button
           isDisabled={!open}
           size="sm"
           variant="tertiary"
           onPress={() => {
-            if (booking) resolvePayment(booking.id, "failed");
-            done();
+            if (booking)
+              resolvePayment(booking.id, 'failed')
+            done()
           }}
         >
           Provider declines or closes the session, no charge
@@ -150,10 +155,11 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
           size="sm"
           variant="tertiary"
           onPress={() => {
-            if (booking) repeatProviderResult(booking.id);
+            if (booking)
+              repeatProviderResult(booking.id)
             done(
-              "Repeated result ignored: that payment already has its result, so no money or booking changed.",
-            );
+              'Repeated result ignored: that payment already has its result, so no money or booking changed.',
+            )
           }}
         >
           Provider sends its last result again
@@ -161,7 +167,7 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
       </div>
       <p className="text-sm text-muted">
         Works on the tour booking on screen
-        {booking ? ` (${booking.ref})` : ""} whose payment is processing. Choose
+        {booking ? ` (${booking.ref})` : ''} whose payment is processing. Choose
         Processing on the payment page, skip ahead past the hold, then confirm:
         the booking stays expired and the money shows for reconciliation.
       </p>
@@ -176,22 +182,23 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
         size="sm"
         variant="tertiary"
         onPress={() => {
-          if (guest)
-            update((s) => ({
+          if (guest) {
+            update(s => ({
               ...s,
               data: {
                 ...s.data,
                 tours: addSampleTourBookings(
                   s.data.tours ?? createTourSeed(),
                   guest.id,
-                  { name: guest.name, phone: "+41 79 123 45 67" },
+                  { name: guest.name, phone: '+41 79 123 45 67' },
                   language,
                   demoNow(s.clockStartedAt),
                 ),
               },
-            }));
-          done();
-          void navigate({ to: "/account", search: { tab: "bookings" } });
+            }))
+          }
+          done()
+          void navigate({ to: '/account', search: { tab: 'bookings' } })
         }}
       >
         Add sample tour bookings in every state
@@ -202,5 +209,5 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
         removes them.
       </p>
     </div>
-  );
+  )
 }

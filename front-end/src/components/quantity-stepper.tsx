@@ -1,21 +1,21 @@
-import { Description, Label, NumberField } from "@heroui/react";
+import { Description, Label, NumberField } from '@heroui/react'
 
 interface QuantityProps {
-  value: number;
-  min?: number;
-  max: number;
-  onChange: (value: number) => void;
+  value: number
+  min?: number
+  max: number
+  onChange: (value: number) => void
 }
 
 interface QuantityStepperProps extends QuantityProps {
-  label: string;
+  label: string
   /** Muted line under the label, e.g. "4 available". */
-  hint?: string;
+  hint?: string
 }
 
 // One quantity control for C03 and C04 (owner request 13.10.2026): the cart's box.
-const stepButton =
-  "flex size-11 items-center justify-center rounded-lg border-0 bg-transparent outline-none transition-colors hover:bg-default focus-visible:focus-ring active:bg-default-hover disabled:opacity-30";
+const stepButton
+  = 'flex size-11 items-center justify-center rounded-lg border-0 bg-transparent outline-none transition-colors hover:bg-default focus-visible:focus-ring active:bg-default-hover disabled:opacity-30'
 
 /** The boxed − n +; must sit inside a NumberField. */
 function StepperGroup() {
@@ -25,7 +25,7 @@ function StepperGroup() {
       <NumberField.Input className="w-7 p-0 text-center text-sm font-semibold tabular-nums" />
       <NumberField.IncrementButton className={stepButton} />
     </NumberField.Group>
-  );
+  )
 }
 
 /**
@@ -47,7 +47,7 @@ export function QuantityStepper({
       maxValue={max}
       minValue={min}
       value={value}
-      onChange={(v) => onChange(Number.isNaN(v) ? min : v)}
+      onChange={v => onChange(Number.isNaN(v) ? min : v)}
     >
       <div className="flex flex-col">
         <Label className="text-heading">{label}</Label>
@@ -55,7 +55,7 @@ export function QuantityStepper({
       </div>
       <StepperGroup />
     </NumberField>
-  );
+  )
 }
 
 /**
@@ -76,15 +76,15 @@ export function QuantityBox({
       maxValue={max}
       minValue={min}
       value={value}
-      onChange={(v) => onChange(Number.isNaN(v) ? min : v)}
+      onChange={v => onChange(Number.isNaN(v) ? min : v)}
     >
       <StepperGroup />
     </NumberField>
-  );
+  )
 }
 
-const largeStepButton =
-  "flex size-16 shrink-0 items-center justify-center rounded-2xl border-0 bg-transparent outline-none transition-colors hover:bg-default focus-visible:focus-ring active:bg-default-hover disabled:opacity-30 [&_svg]:size-6";
+const largeStepButton
+  = 'flex size-16 shrink-0 items-center justify-center rounded-2xl border-0 bg-transparent outline-none transition-colors hover:bg-default focus-visible:focus-ring active:bg-default-hover disabled:opacity-30 [&_svg]:size-6'
 
 /**
  * The same − n + at full width with a large number to type into, for a screen that asks
@@ -104,7 +104,7 @@ export function QuantityLarge({
       maxValue={max}
       minValue={min}
       value={value}
-      onChange={(v) => onChange(Number.isNaN(v) ? min : v)}
+      onChange={v => onChange(Number.isNaN(v) ? min : v)}
     >
       <NumberField.Group className="flex h-auto w-full items-center rounded-3xl border border-border bg-surface p-2 shadow-none">
         <NumberField.DecrementButton className={largeStepButton} />
@@ -112,5 +112,5 @@ export function QuantityLarge({
         <NumberField.IncrementButton className={largeStepButton} />
       </NumberField.Group>
     </NumberField>
-  );
+  )
 }

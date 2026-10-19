@@ -1,17 +1,17 @@
-import { Button } from "@heroui/react";
-import { useNavigate } from "@tanstack/react-router";
+import { Button } from '@heroui/react'
+import { useNavigate } from '@tanstack/react-router'
 
-import { useDemoActions } from "@/features/demo";
-import { useGuestOrders } from "@/features/orders/hooks/use-orders";
+import { useDemoActions } from '@/features/demo'
+import { useGuestOrders } from '@/features/orders/hooks/use-orders'
 
 /**
  * Prototype-bar control (English, outside the product UI): removes the signed-in guest's
  * orders so C14 shows its empty state, then opens the Account tab. Reset brings them back.
  */
 export function TransactionsDemoControl({ onDone }: { onDone: () => void }) {
-  const { update } = useDemoActions();
-  const orders = useGuestOrders();
-  const navigate = useNavigate();
+  const { update } = useDemoActions()
+  const orders = useGuestOrders()
+  const navigate = useNavigate()
 
   return (
     <div className="flex flex-col gap-2">
@@ -22,17 +22,17 @@ export function TransactionsDemoControl({ onDone }: { onDone: () => void }) {
         size="sm"
         variant="tertiary"
         onPress={() => {
-          update((s) => ({
+          update(s => ({
             ...s,
             data: {
               ...s.data,
               orders: s.data.orders.filter(
-                (o) => o.guestId !== s.data.signedInGuestId,
+                o => o.guestId !== s.data.signedInGuestId,
               ),
             },
-          }));
-          onDone();
-          void navigate({ to: "/account" });
+          }))
+          onDone()
+          void navigate({ to: '/account' })
         }}
       >
         Remove my orders
@@ -42,5 +42,5 @@ export function TransactionsDemoControl({ onDone }: { onDone: () => void }) {
         orders.
       </p>
     </div>
-  );
+  )
 }

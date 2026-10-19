@@ -1,22 +1,22 @@
-import { buttonVariants } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { buttonVariants } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
-import { ArrowRightIcon } from "@/components/icons";
-import { Media } from "@/components/media";
+import { ArrowRightIcon } from '@/components/icons'
+import { Media } from '@/components/media'
 
 interface AdviceBannerProps {
-  title: string;
-  body: string;
-  action: string;
+  title: string
+  body: string
+  action: string
   /** Three captions for the snapshots: lake, Pilatus, old town. */
-  captions: [string, string, string];
+  captions: [string, string, string]
 }
 
 const shots = [
-  { photo: "lake-steamboat", tilt: "-rotate-6", z: "z-0", x: "start-[2%]" },
-  { photo: "pilatus", tilt: "rotate-3", z: "z-10", x: "start-[29%]" },
-  { photo: "lucerne-old-town", tilt: "-rotate-2", z: "z-20", x: "start-[56%]" },
-];
+  { photo: 'lake-steamboat', tilt: '-rotate-6', z: 'z-0', x: 'start-[2%]' },
+  { photo: 'pilatus', tilt: 'rotate-3', z: 'z-10', x: 'start-[29%]' },
+  { photo: 'lucerne-old-town', tilt: '-rotate-2', z: 'z-20', x: 'start-[56%]' },
+]
 
 /**
  * Trip-advice call to action (spec §4.1, §4.10), layout J "Polaroid stack" (owner choice
@@ -50,12 +50,12 @@ export function AdviceBanner({
         <p className="text-sm text-foreground/75">{body}</p>
       </div>
       <Link
-        className={`${buttonVariants({ variant: "primary" })} transition-transform active:scale-[0.98]`}
+        className={`${buttonVariants({ variant: 'primary' })} transition-transform active:scale-[0.98]`}
         to="/plan"
       >
         {action}
         <ArrowRightIcon size={18} />
       </Link>
     </section>
-  );
+  )
 }

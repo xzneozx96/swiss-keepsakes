@@ -1,35 +1,34 @@
-import type { StoryCategory } from "@/features/content/types";
+import type { StoryCategory } from '@/features/content/types'
 
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from '@tanstack/react-router'
 
-import { StoriesPage } from "@/features/content/components/stories-page";
-import { isStoryCategory } from "@/features/content/lib/categories";
+import { StoriesPage } from '@/features/content/components/stories-page'
+import { isStoryCategory } from '@/features/content/lib/categories'
 
 interface StoriesSearch {
   /** From a category on the discovery home or the filter row; absent = all stories. */
-  category?: StoryCategory;
+  category?: StoryCategory
 }
 
 // C19 Stories.
-export const Route = createFileRoute("/_guest/stories/")({
+export const Route = createFileRoute('/_guest/stories/')({
   validateSearch: (search: Record<string, unknown>): StoriesSearch =>
     isStoryCategory(search.category) ? { category: search.category } : {},
   component: StoriesRoute,
-});
+})
 
 function StoriesRoute() {
-  const { category } = Route.useSearch();
-  const navigate = Route.useNavigate();
+  const { category } = Route.useSearch()
+  const navigate = Route.useNavigate()
 
   return (
     <StoriesPage
       category={category}
-      onCategoryChange={(next) =>
+      onCategoryChange={next =>
         void navigate({
           search: next ? { category: next } : {},
           replace: true,
-        })
-      }
+        })}
     />
-  );
+  )
 }

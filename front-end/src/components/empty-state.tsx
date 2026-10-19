@@ -1,14 +1,14 @@
-import type { IconComponent } from "@/components/icons";
-import type { LinkProps } from "@tanstack/react-router";
+import type { LinkProps } from '@tanstack/react-router'
+import type { IconComponent } from '@/components/icons'
 
-import { EmptyState as HeroEmptyState, buttonVariants } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { buttonVariants, EmptyState as HeroEmptyState } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
 export interface EmptyStateProps {
-  icon: IconComponent;
-  message: string;
+  icon: IconComponent
+  message: string
   /** At most one next action (UX spec §5.5), shown as a secondary small button. */
-  action?: { label: string; to: LinkProps["to"] };
+  action?: { label: string, to: LinkProps['to'] }
 }
 
 /**
@@ -28,14 +28,14 @@ export function EmptyState({ icon: Icon, message, action }: EmptyStateProps) {
       <p className="max-w-xs text-sm text-muted">{message}</p>
       {action && (
         <Link
-          className={buttonVariants({ variant: "secondary", size: "sm" })}
+          className={buttonVariants({ variant: 'secondary', size: 'sm' })}
           to={action.to}
         >
           {action.label}
         </Link>
       )}
     </HeroEmptyState>
-  );
+  )
 }
 
 /**
@@ -53,12 +53,12 @@ export function TableEmptyState({
       <span className="text-sm text-muted">{message}</span>
       {action && (
         <Link
-          className={buttonVariants({ variant: "secondary", size: "sm" })}
+          className={buttonVariants({ variant: 'secondary', size: 'sm' })}
           to={action.to}
         >
           {action.label}
         </Link>
       )}
     </HeroEmptyState>
-  );
+  )
 }

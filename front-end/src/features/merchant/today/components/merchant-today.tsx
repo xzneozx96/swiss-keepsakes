@@ -1,12 +1,10 @@
-import type { CollectStatus, TodayTaskId } from "../lib/today";
-import type { IconComponent } from "@/components/icons";
-import type { StatusTone } from "@/components/status-chip";
-import type { OrderTabId } from "@/features/merchant/orders/lib/order-tabs";
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
+import type { CollectStatus, TodayTaskId } from '../lib/today'
+import type { IconComponent } from '@/components/icons'
+import type { StatusTone } from '@/components/status-chip'
+import type { OrderTabId } from '@/features/merchant/orders/lib/order-tabs'
 
-import { Link } from "@tanstack/react-router";
-
-import { Widget } from "./overview-analytics";
+import { Link } from '@tanstack/react-router'
 
 import {
   ChevronRightIcon,
@@ -16,97 +14,99 @@ import {
   PickupIcon,
   RequestsIcon,
   StatusDangerIcon,
-} from "@/components/icons";
-import { StatCard } from "@/components/stat-card";
-import { StatusChip } from "@/components/status-chip";
+} from '@/components/icons'
+
+import { StatCard } from '@/components/stat-card'
+import { StatusChip } from '@/components/status-chip'
+import { Widget } from './overview-analytics'
 
 export interface TaskTile {
-  id: TodayTaskId;
+  id: TodayTaskId
   /** The M03 tab the tile opens; null when the count is 0 (no link into an empty tab). */
-  tab: OrderTabId | null;
-  title: string;
+  tab: OrderTabId | null
+  title: string
   /** Only the alert rows (overdue, owing) carry a hint. */
-  hint: string;
-  count: number;
+  hint: string
+  count: number
   /** Accessible name with the count in words: "Awaiting confirmation, 3 orders". */
-  label: string;
+  label: string
 }
 
 export interface CollectPart {
-  id: CollectStatus;
-  label: string;
-  amount: string;
-  orders: string;
+  id: CollectStatus
+  label: string
+  amount: string
+  orders: string
   /** Share of the total, 0–1. */
-  share: number;
+  share: number
 }
 
 export interface PickupRow {
-  id: string;
-  reference: string;
-  guestName: string;
-  gift: string;
-  isToday: boolean;
+  id: string
+  reference: string
+  guestName: string
+  gift: string
+  isToday: boolean
   /** Date tile parts: "Wed", "14", "Oct" ("Today" instead of the weekday). */
-  day: { weekday: string; day: string; month: string };
-  status: { text: string; tone: StatusTone };
+  day: { weekday: string, day: string, month: string }
+  status: { text: string, tone: StatusTone }
 }
 
 export interface MerchantTodayProps {
-  title: string;
-  date: string;
-  todayHeading: string;
-  tasksHeading: string;
-  attentionHeading: string;
-  tiles: TaskTile[];
+  title: string
+  date: string
+  todayHeading: string
+  tasksHeading: string
+  attentionHeading: string
+  tiles: TaskTile[]
   collect: {
-    title: string;
-    total: string;
-    hint: string;
-    none: string;
-    parts: CollectPart[];
-  };
+    title: string
+    total: string
+    hint: string
+    none: string
+    parts: CollectPart[]
+  }
   pickups: {
-    title: string;
-    allLabel: string;
-    empty: string;
-    rows: PickupRow[];
-  };
-  empty: { message: string; actionLabel: string };
-  isLoading: boolean;
+    title: string
+    allLabel: string
+    empty: string
+    rows: PickupRow[]
+  }
+  empty: { message: string, actionLabel: string }
+  isLoading: boolean
   /** The analytics section under the Today part (step 1.9s). */
-  analytics: ReactNode;
+  analytics: ReactNode
   /** Tour work (step 2.10), last in the Today part; tour money stays separate from gifts. */
-  tours?: ReactNode;
+  tours?: ReactNode
 }
 
 const taskIcon: Record<TodayTaskId, IconComponent> = {
-  "awaiting-confirmation": RequestsIcon,
-  "awaiting-payment": ClockIcon,
-  "to-prepare": GiftIcon,
-  ready: PickupIcon,
-  overdue: StatusDangerIcon,
-  owing: PayLaterIcon,
-};
+  'awaiting-confirmation': RequestsIcon,
+  'awaiting-payment': ClockIcon,
+  'to-prepare': GiftIcon,
+  'ready': PickupIcon,
+  'overdue': StatusDangerIcon,
+  'owing': PayLaterIcon,
+}
 
 /** The tab each slice of "still to collect" opens. */
 const collectTab: Record<CollectStatus, OrderTabId> = {
-  accepted: "awaiting-payment",
-  preparing: "preparing",
-  ready: "ready",
-  handed_over: "owing",
-};
+  accepted: 'awaiting-payment',
+  preparing: 'preparing',
+  ready: 'ready',
+  handed_over: 'owing',
+}
 
 /** Each stage in the colour of its status chip (owner 15.10.2026), not shades of one red. */
 const collectShade: Record<CollectStatus, string> = {
-  accepted: "bg-(--status-warning-fill)",
-  preparing: "bg-(--status-info-fill)",
-  ready: "bg-(--status-success-fill)",
-  handed_over: "bg-(--status-warning-fill)",
-};
+  accepted: 'bg-(--status-warning-fill)',
+  preparing: 'bg-(--status-info-fill)',
+  ready: 'bg-(--status-success-fill)',
+  handed_over: 'bg-(--status-warning-fill)',
+}
 
-const cellLink =
-  "outline-none hover:bg-surface-secondary/50 focus-visible:focus-ring focus-visible:ring-inset";
+const cellLink
+  = 'outline-none hover:bg-surface-secondary/50 focus-visible:focus-ring focus-visible:ring-inset'
 
 /** A "To do" tile: a stat card with icon, name and count. Opens M03 on its tab; a tile at 0 is plain text. */
 export function Tile({ id, tab, title, count, label }: TaskTile) {
@@ -114,38 +114,39 @@ export function Tile({ id, tab, title, count, label }: TaskTile) {
     <StatCard
       isLarge
       as={({ className, children }) =>
-        tab ? (
-          <Link
-            aria-label={label}
-            className={`h-full ${className}`}
-            search={{ status: tab }}
-            to="/store/orders"
-          >
-            {children}
-          </Link>
-        ) : (
-          <div
-            aria-label={label}
-            className={`h-full ${className}`}
-            role="group"
-          >
-            {children}
-          </div>
-        )
-      }
+        tab
+          ? (
+              <Link
+                aria-label={label}
+                className={`h-full ${className}`}
+                search={{ status: tab }}
+                to="/store/orders"
+              >
+                {children}
+              </Link>
+            )
+          : (
+              <div
+                aria-label={label}
+                className={`h-full ${className}`}
+                role="group"
+              >
+                {children}
+              </div>
+            )}
       icon={taskIcon[id]}
       isLink={tab !== null}
       isMuted={!count}
       label={title}
       value={count}
     />
-  );
+  )
 }
 
 /** Overdue and owing: shown above the tiles only when there is something to chase. */
 export function AlertRow({ id, tab, title, hint, count, label }: TaskTile) {
-  const Icon = taskIcon[id];
-  const danger = id === "overdue";
+  const Icon = taskIcon[id]
+  const danger = id === 'overdue'
 
   return (
     <Link
@@ -158,15 +159,15 @@ export function AlertRow({ id, tab, title, hint, count, label }: TaskTile) {
         aria-hidden
         className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
           danger
-            ? "bg-danger-soft text-danger-soft-foreground"
-            : "bg-warning-soft text-warning-soft-foreground"
+            ? 'bg-danger-soft text-danger-soft-foreground'
+            : 'bg-warning-soft text-warning-soft-foreground'
         }`}
       >
         <Icon size={18} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
         <span
-          className={`font-semibold ${danger ? "text-danger" : "text-warning"}`}
+          className={`font-semibold ${danger ? 'text-danger' : 'text-warning'}`}
         >
           {title}
         </span>
@@ -174,13 +175,13 @@ export function AlertRow({ id, tab, title, hint, count, label }: TaskTile) {
       </span>
       <span
         aria-hidden
-        className={`text-2xl font-semibold tabular-nums ${danger ? "text-danger" : "text-warning"}`}
+        className={`text-2xl font-semibold tabular-nums ${danger ? 'text-danger' : 'text-warning'}`}
       >
         {count}
       </span>
       <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={18} />
     </Link>
-  );
+  )
 }
 
 /** Still to collect: the total, one stacked bar by stage, and a legend that links to M03. */
@@ -190,7 +191,7 @@ export function CollectWidget({
   hint,
   none,
   parts,
-}: MerchantTodayProps["collect"]) {
+}: MerchantTodayProps['collect']) {
   return (
     <Widget
       className="lg:col-span-2"
@@ -207,7 +208,7 @@ export function CollectWidget({
             aria-hidden
             className="mt-4 flex h-3 gap-0.5 overflow-hidden rounded-full"
           >
-            {parts.map((p) => (
+            {parts.map(p => (
               <span
                 key={p.id}
                 className={`h-full min-w-1.5 ${collectShade[p.id]}`}
@@ -216,7 +217,7 @@ export function CollectWidget({
             ))}
           </div>
           <ul className="mt-3 flex flex-col">
-            {parts.map((p) => (
+            {parts.map(p => (
               <li key={p.id}>
                 <Link
                   className={`-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 ${cellLink}`}
@@ -228,7 +229,8 @@ export function CollectWidget({
                     className={`size-2.5 shrink-0 rounded-full ${collectShade[p.id]}`}
                   />
                   <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2">
-                    <span className="text-sm font-medium">{p.label}</span>{" "}
+                    <span className="text-sm font-medium">{p.label}</span>
+                    {' '}
                     <span className="text-xs text-muted">{p.orders}</span>
                   </span>
                   <span className="shrink-0 text-sm font-medium tabular-nums">
@@ -241,7 +243,7 @@ export function CollectWidget({
         </>
       )}
     </Widget>
-  );
+  )
 }
 
 /** Next pickups: ready and preparing orders by pickup date; each row opens M04. */
@@ -250,7 +252,7 @@ export function PickupsWidget({
   allLabel,
   empty,
   rows,
-}: MerchantTodayProps["pickups"]) {
+}: MerchantTodayProps['pickups']) {
   return (
     <Widget
       actions={
@@ -268,60 +270,63 @@ export function PickupsWidget({
       id="today-pickups"
       title={title}
     >
-      {rows.length ? (
-        <ul className="-mx-2 -my-1.5 flex flex-col">
-          {rows.map((r) => (
-            <li key={r.id}>
-              <Link
-                className={`flex items-center gap-3 rounded-2xl px-2 py-2.5 ${cellLink}`}
-                params={{ orderId: r.id }}
-                to="/store/orders/$orderId"
-              >
-                <span
-                  className={`flex w-12 shrink-0 flex-col items-center rounded-xl py-1.5 ${
-                    r.isToday
-                      ? "bg-foreground text-background"
-                      : "bg-surface-secondary"
-                  }`}
-                >
-                  <span className="text-xs leading-4 font-medium">
-                    {r.day.weekday}
-                  </span>
-                  <span className="text-lg leading-6 font-semibold tabular-nums">
-                    {r.day.day}
-                  </span>
-                  <span className="text-xs leading-4">{r.day.month}</span>
-                </span>
-                <span className="flex min-w-0 flex-1 flex-col gap-1 xl:flex-row xl:items-center xl:gap-3">
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-medium">
-                      {r.guestName}{" "}
-                      <span className="ms-1 text-xs font-normal text-muted">
-                        {r.reference}
+      {rows.length
+        ? (
+            <ul className="-mx-2 -my-1.5 flex flex-col">
+              {rows.map(r => (
+                <li key={r.id}>
+                  <Link
+                    className={`flex items-center gap-3 rounded-2xl px-2 py-2.5 ${cellLink}`}
+                    params={{ orderId: r.id }}
+                    to="/store/orders/$orderId"
+                  >
+                    <span
+                      className={`flex w-12 shrink-0 flex-col items-center rounded-xl py-1.5 ${
+                        r.isToday
+                          ? 'bg-foreground text-background'
+                          : 'bg-surface-secondary'
+                      }`}
+                    >
+                      <span className="text-xs leading-4 font-medium">
+                        {r.day.weekday}
+                      </span>
+                      <span className="text-lg leading-6 font-semibold tabular-nums">
+                        {r.day.day}
+                      </span>
+                      <span className="text-xs leading-4">{r.day.month}</span>
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col gap-1 xl:flex-row xl:items-center xl:gap-3">
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate font-medium">
+                          {r.guestName}
+                          {' '}
+                          <span className="ms-1 text-xs font-normal text-muted">
+                            {r.reference}
+                          </span>
+                        </span>
+                        <span className="truncate text-sm text-muted">
+                          {r.gift}
+                        </span>
+                      </span>
+                      <span className="max-w-full self-start xl:self-center">
+                        <StatusChip tone={r.status.tone}>
+                          {r.status.text}
+                        </StatusChip>
                       </span>
                     </span>
-                    <span className="truncate text-sm text-muted">
-                      {r.gift}
-                    </span>
-                  </span>
-                  <span className="max-w-full self-start xl:self-center">
-                    <StatusChip tone={r.status.tone}>
-                      {r.status.text}
-                    </StatusChip>
-                  </span>
-                </span>
-                <ChevronRightIcon
-                  aria-hidden
-                  className="shrink-0 text-muted"
-                  size={18}
-                />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="text-sm text-muted">{empty}</p>
-      )}
+                    <ChevronRightIcon
+                      aria-hidden
+                      className="shrink-0 text-muted"
+                      size={18}
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )
+        : (
+            <p className="text-sm text-muted">{empty}</p>
+          )}
     </Widget>
-  );
+  )
 }

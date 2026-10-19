@@ -1,87 +1,89 @@
 import type {
-  DateRange,
-  ReportBucket,
-  ReportPeriod,
-  ReportRow,
-} from "../lib/report";
-import type {
   ReportChartView,
   ReportGroupView,
   ReportKpi,
   ReportRowView,
-} from "../components/partner-report";
-import type { PaymentsView } from "../components/payments-widget";
-import type { AllTimeCardProps } from "@/components/stat-card";
-import type { MessageKey } from "@/i18n/en";
-import type { IntlLocale } from "@/lib/format";
+} from '../components/partner-report'
+import type { PaymentsView } from '../components/payments-widget'
+import type {
+  DateRange,
+  ReportBucket,
+  ReportPeriod,
+  ReportRow,
+} from '../lib/report'
+import type { AllTimeCardProps } from '@/components/stat-card'
+import type { MessageKey } from '@/i18n/en'
+import type { IntlLocale } from '@/lib/format'
 
-import { useMemo } from "react";
+import { useMemo } from 'react'
 
+import { ClockIcon, PartnersIcon, PayLaterIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
+
+import { zurichDate } from '@/features/catalog/lib/pickup'
+import { useDemo, useDemoNow } from '@/features/demo'
+import { DEMO_HISTORY } from '@/features/merchant/today/lib/demo-history'
+import { formatOrderDate } from '@/features/orders/lib/format'
+import { formatLabel } from '@/features/orders/lib/labels'
+import { deltaOf } from '@/lib/analytics'
+import {
+  calendarDay,
+  dateTimeFormat,
+  formatMoney,
+  formatShortDate,
+  numberFormat,
+  percentOf,
+} from '@/lib/format'
+import { pickText } from '@/lib/localized'
+import { periodMoney } from '../lib/payouts'
 import {
   partnerAllTime,
   partnerReport,
   periodRange,
   REPORT_PERIODS,
   shiftPeriod,
-} from "../lib/report";
-import { periodMoney } from "../lib/payouts";
+} from '../lib/report'
 
-import { ClockIcon, PartnersIcon, PayLaterIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { zurichDate } from "@/features/catalog/lib/pickup";
-import { useDemo, useDemoNow } from "@/features/demo";
-import { deltaOf } from "@/lib/analytics";
-import { DEMO_HISTORY } from "@/features/merchant/today/lib/demo-history";
-import { formatLabel } from "@/features/orders/lib/labels";
-import { formatOrderDate } from "@/features/orders/lib/format";
-import {
-  formatMoney,
-  formatShortDate,
-  numberFormat,
-  dateTimeFormat,
-  calendarDay,
-  percentOf,
-} from "@/lib/format";
-import { pickText } from "@/lib/localized";
+const TRAILING_DOT = /\.$/
 
 const periodLabels: Record<ReportPeriod, MessageKey> = {
-  day: "partnerReport.period.day",
-  week: "partnerReport.period.week",
-  month: "partnerReport.period.month",
-};
-
-const chartTitles: Record<ReportPeriod, MessageKey> = {
-  day: "partnerReport.chart.title.day",
-  week: "partnerReport.chart.title.week",
-  month: "partnerReport.chart.title.month",
-};
-
-/** Smallest round step (in Rappen) that covers `max` in at most four gridlines. */
-function chartScale(max: number): { top: number; step: number } {
-  for (const francs of [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000]) {
-    const step = francs * 100;
-
-    if (max <= step * 4)
-      return { top: Math.max(1, Math.ceil(max / step)) * step, step };
-  }
-  const step = Math.ceil(max / 400) * 100;
-
-  return { top: step * 4, step };
+  day: 'partnerReport.period.day',
+  week: 'partnerReport.period.week',
+  month: 'partnerReport.period.month',
 }
 
-const hourLabel = (hour: number) => `${String(hour).padStart(2, "0")}:00`;
+const chartTitles: Record<ReportPeriod, MessageKey> = {
+  day: 'partnerReport.chart.title.day',
+  week: 'partnerReport.chart.title.week',
+  month: 'partnerReport.chart.title.month',
+}
+
+/** Smallest round step (in Rappen) that covers `max` in at most four gridlines. */
+function chartScale(max: number): { top: number, step: number } {
+  for (const francs of [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000]) {
+    const step = francs * 100
+
+    if (max <= step * 4)
+      return { top: Math.max(1, Math.ceil(max / step)) * step, step }
+  }
+  const step = Math.ceil(max / 400) * 100
+
+  return { top: step * 4, step }
+}
+
+const hourLabel = (hour: number) => `${String(hour).padStart(2, '0')}:00`
 
 /** "12–18 Oct" for a week inside one month. */
 function dayRange(b: ReportBucket, locale: IntlLocale): string {
   const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
-    dateTimeFormat(locale, { ...opts, timeZone: "UTC" }).format(
+    dateTimeFormat(locale, { ...opts, timeZone: 'UTC' }).format(
       calendarDay(iso),
-    );
-  const month = fmt(b.end, { day: "numeric", month: "short" });
+    )
+  const month = fmt(b.end, { day: 'numeric', month: 'short' })
 
   return b.start === b.end
     ? month
-    : `${fmt(b.start, { day: "numeric" }).replace(/\.$/, "")}–${month}`;
+    : `${fmt(b.start, { day: 'numeric' }).replace(TRAILING_DOT, '')}–${month}`
 }
 
 /**
@@ -95,25 +97,25 @@ export function usePartnerReport(
   /** Any range of days instead of the period around `anchor`. */
   range?: DateRange,
 ) {
-  const { t, language, intlLocale } = useLocale();
-  const { state } = useDemo();
-  const now = useDemoNow();
-  const today = zurichDate(now);
-  const day = anchor ?? today;
-  const partner =
-    state.data.partners.find((p) => p.id === partnerId) ??
-    state.data.partners[0];
-  const { orders, guests, products, subcategories, tours } = state.data;
-  const tourBookings = state.data.tours?.bookings;
+  const { t, language, intlLocale } = useLocale()
+  const { state } = useDemo()
+  const now = useDemoNow()
+  const today = zurichDate(now)
+  const day = anchor ?? today
+  const partner
+    = state.data.partners.find(p => p.id === partnerId)
+      ?? state.data.partners[0]
+  const { orders, guests, products, subcategories, tours } = state.data
+  const tourBookings = state.data.tours?.bookings
   // The 1.9s demo history counts here too (owner review 1.9t), so the all-time card and the
   // period report agree; only while the demo has orders, as on M02.
   const withHistory = useMemo(
     () => (orders.length ? [...DEMO_HISTORY, ...orders] : []),
     [orders],
-  );
-  const nowMs = now.getTime();
-  const rangeStart = range?.start;
-  const rangeEnd = range?.end;
+  )
+  const nowMs = now.getTime()
+  const rangeStart = range?.start
+  const rangeEnd = range?.end
   const report = useMemo(
     () =>
       partnerReport(
@@ -139,12 +141,12 @@ export function usePartnerReport(
       rangeStart,
       rangeEnd,
     ],
-  );
+  )
   const allTimeData = useMemo(
     () => partnerAllTime(withHistory, partner.id, today, tourBookings),
     [withHistory, partner.id, today, tourBookings],
-  );
-  const { commissionAdjustments, partnerPayouts } = state.data;
+  )
+  const { commissionAdjustments, partnerPayouts } = state.data
   // Payouts, refunds and offsets from the M15/M16 ledger (step 5.7), so P02 matches M16.
   const moneyIn = useMemo(
     () =>
@@ -163,9 +165,9 @@ export function usePartnerReport(
       report.range,
       nowMs,
     ],
-  );
+  )
   // The period before, for the dashboard's comparisons (deltas, previous-period markers).
-  const previousDay = shiftPeriod(period, day, -1);
+  const previousDay = shiftPeriod(period, day, -1)
   const previousReport = useMemo(
     () =>
       partnerReport(
@@ -186,7 +188,7 @@ export function usePartnerReport(
       previousDay,
       nowMs,
     ],
-  );
+  )
   const previousMoney = useMemo(
     () =>
       periodMoney(
@@ -204,48 +206,48 @@ export function usePartnerReport(
       previousReport.range,
       nowMs,
     ],
-  );
-  const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
-  const plural = new Intl.PluralRules(intlLocale);
+  )
+  const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
+  const plural = new Intl.PluralRules(intlLocale)
   const share = (part: number, whole: number) =>
-    percentOf(part, whole, intlLocale);
-  const { start, end } = report.range;
+    percentOf(part, whole, intlLocale)
+  const { start, end } = report.range
 
-  const rangeLabel =
-    period === "day"
+  const rangeLabel
+    = period === 'day'
       ? formatShortDate(start, today, intlLocale)
-      : period === "week"
+      : period === 'week'
         ? `${formatShortDate(start, today, intlLocale)} – ${formatShortDate(end, today, intlLocale)}`
         : dateTimeFormat(intlLocale, {
-            month: "long",
-            year: "numeric",
-            timeZone: "UTC",
-          }).format(calendarDay(start));
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'UTC',
+          }).format(calendarDay(start))
 
   const ordersText = (count: number) =>
     t(
-      plural.select(count) === "one"
-        ? "partnerReport.chart.orders.one"
-        : "partnerReport.chart.orders.other",
+      plural.select(count) === 'one'
+        ? 'partnerReport.chart.orders.one'
+        : 'partnerReport.chart.orders.other',
       { count },
-    );
+    )
 
   const gifts = ({ lines }: ReportRow) => {
-    const [first, ...rest] = lines;
-    const product = first ? pickText(first.productName, language).text : "";
+    const [first, ...rest] = lines
+    const product = first ? pickText(first.productName, language).text : ''
     const vars = {
       product,
       quantity: first?.quantity ?? 0,
       count: rest.length,
-    };
+    }
 
     return t(
-      rest.length ? "partnerReport.giftsMore" : "partnerReport.gifts",
+      rest.length ? 'partnerReport.giftsMore' : 'partnerReport.gifts',
       vars,
-    );
-  };
+    )
+  }
 
-  const rows: ReportRowView[] = report.rows.map((row) => ({
+  const rows: ReportRowView[] = report.rows.map(row => ({
     id: row.id,
     reference: row.ref,
     date: formatOrderDate(zurichDate(new Date(row.createdAt)), intlLocale),
@@ -258,7 +260,7 @@ export function usePartnerReport(
     },
     commission: {
       amount:
-        row.commission.state === "not-applicable"
+        row.commission.state === 'not-applicable'
           ? null
           : money(row.commission.amount),
       label: {
@@ -266,85 +268,86 @@ export function usePartnerReport(
         tone: row.commission.label.tone,
       },
     },
-  }));
+  }))
 
   // Largest first; the bar shows recorded plus estimated against the largest group.
   const groupMax = Math.max(
     1,
-    ...report.groups.map((g) => g.recorded + g.estimated),
-  );
+    ...report.groups.map(g => g.recorded + g.estimated),
+  )
   const groups: ReportGroupView[] = [...report.groups]
     .sort((a, b) => b.recorded + b.estimated - (a.recorded + a.estimated))
     .map((g) => {
-      const category = subcategories.find((c) => c.id === g.subcategoryId);
+      const category = subcategories.find(c => c.id === g.subcategoryId)
 
       return {
         id: g.subcategoryId,
         name: category
           ? pickText(category.name, language).text
-          : t("tourMerchant.reportGroup"),
+          : t('tourMerchant.reportGroup'),
         summary: t(
-          plural.select(g.orders) === "one"
-            ? "partnerReport.group.summary.one"
-            : "partnerReport.group.summary.other",
+          plural.select(g.orders) === 'one'
+            ? 'partnerReport.group.summary.one'
+            : 'partnerReport.group.summary.other',
           { count: g.orders, value: money(g.value) },
         ),
         commission: money(g.recorded),
         estimated: g.estimated
-          ? t("partnerReport.group.estimated", { amount: money(g.estimated) })
+          ? t('partnerReport.group.estimated', { amount: money(g.estimated) })
           : null,
         recordedShare: g.recorded / groupMax,
         estimatedShare: g.estimated / groupMax,
-      };
-    });
+      }
+    })
 
   const { top, step } = chartScale(
-    Math.max(...report.buckets.map((b) => b.recorded + b.estimated)),
-  );
+    Math.max(...report.buckets.map(b => b.recorded + b.estimated)),
+  )
   const francs = numberFormat(intlLocale, {
     maximumFractionDigits: 0,
-  });
+  })
   // Caps and gridlines drop "CHF": the chart subtitle names the unit once.
   const amount = numberFormat(intlLocale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
+  })
   const columnLabel = (b: ReportBucket) =>
     b.hour !== undefined
       ? `${hourLabel(b.hour)}–${hourLabel((b.hour + 1) % 24)}`
-      : period === "week"
+      : period === 'week'
         ? formatShortDate(b.start, today, intlLocale)
-        : dayRange(b, intlLocale);
+        : dayRange(b, intlLocale)
   const axisLabel = (b: ReportBucket) => {
     if (b.hour !== undefined)
-      return b.hour % 6 === 0 ? hourLabel(b.hour) : null;
+      return b.hour % 6 === 0 ? hourLabel(b.hour) : null
     // Days only; the month is in the period label above.
-    if (period === "month")
-      return `${Number(b.start.slice(8))}–${Number(b.end.slice(8))}`;
-    if (b.start === today) return t("partnerReport.chart.today");
+    if (period === 'month')
+      return `${Number(b.start.slice(8))}–${Number(b.end.slice(8))}`
+    if (b.start === today)
+      return t('partnerReport.chart.today')
 
     return dateTimeFormat(intlLocale, {
-      weekday: "short",
-      timeZone: "UTC",
-    }).format(calendarDay(b.start));
-  };
+      weekday: 'short',
+      timeZone: 'UTC',
+    }).format(calendarDay(b.start))
+  }
   const columns = report.buckets.map((b) => {
-    const label = columnLabel(b);
-    const recorded = money(b.recorded);
-    const estimated = money(b.estimated);
-    const orders = ordersText(b.orders);
+    const label = columnLabel(b)
+    const recorded = money(b.recorded)
+    const estimated = money(b.estimated)
+    const orders = ordersText(b.orders)
 
     return {
-      id: `${b.start}-${b.hour ?? ""}`,
+      id: `${b.start}-${b.hour ?? ''}`,
       axisLabel: axisLabel(b),
       label,
-      ariaLabel: t("partnerReport.chart.column", {
+      ariaLabel: t('partnerReport.chart.column', {
         label,
         recorded,
         estimated,
         orders,
       }),
-      readout: t("partnerReport.chart.readout", { recorded, estimated }),
+      readout: t('partnerReport.chart.readout', { recorded, estimated }),
       orders,
       // Value on the cap only when the columns are wide enough to hold it.
       cap:
@@ -355,24 +358,24 @@ export function usePartnerReport(
       estimatedShare: b.estimated / top,
       isFuture: b.isFuture,
       isCurrent: b.isCurrent,
-    };
-  });
+    }
+  })
   // The readout opens on the latest column with orders, else the running one.
   const latest = report.buckets.reduce(
     (found, b, i) => (!b.isFuture && b.orders ? i : found),
     -1,
-  );
-  const chartTitle = t(chartTitles[period]);
+  )
+  const chartTitle = t(chartTitles[period])
   const chart: ReportChartView = {
     title: chartTitle,
-    label: t("partnerReport.chart.label", {
+    label: t('partnerReport.chart.label', {
       title: chartTitle,
       range: rangeLabel,
     }),
-    unit: t("partnerReport.chart.unit"),
+    unit: t('partnerReport.chart.unit'),
     legend: {
-      recorded: t("partnerReport.chart.recorded"),
-      estimated: t("partnerReport.chart.estimated"),
+      recorded: t('partnerReport.chart.recorded'),
+      estimated: t('partnerReport.chart.estimated'),
     },
     ticks: Array.from({ length: top / step + 1 }, (_, i) => ({
       share: (i * step) / top,
@@ -384,78 +387,78 @@ export function usePartnerReport(
         ? latest
         : Math.max(
             0,
-            report.buckets.findIndex((b) => b.isCurrent),
+            report.buckets.findIndex(b => b.isCurrent),
           ),
-  };
+  }
 
-  const { recorded, estimated: open } = report.counts;
-  const closed = report.counts["not-applicable"];
+  const { recorded, estimated: open } = report.counts
+  const closed = report.counts['not-applicable']
   const kpis: ReportKpi[] = [
     {
-      id: "earned",
-      label: t("partnerReport.number.earned"),
+      id: 'earned',
+      label: t('partnerReport.number.earned'),
       // Never negative (D16): a refund larger than the period's commission shows as its
       // own line in the hint and in "Payments and adjustments".
       value: money(Math.max(0, report.earned - moneyIn.adjusted)),
       hint: moneyIn.adjusted
-        ? t("partnerReport.number.earned.hintRefund", {
+        ? t('partnerReport.number.earned.hintRefund', {
             recorded: money(report.earned),
             refund: money(moneyIn.adjusted),
           })
         : report.estimated
-          ? t("partnerReport.number.earned.hintEstimated", {
+          ? t('partnerReport.number.earned.hintEstimated', {
               amount: money(report.estimated),
             })
-          : t("partnerReport.number.earned.hint"),
+          : t('partnerReport.number.earned.hint'),
     },
     {
-      id: "paid",
-      label: t("partnerReport.number.paid"),
+      id: 'paid',
+      label: t('partnerReport.number.paid'),
       value: money(moneyIn.paid),
       hint: moneyIn.payouts
         ? t(
             moneyIn.payouts === 1
-              ? "partnerReport.number.paid.hintOne"
-              : "partnerReport.number.paid.hintOther",
+              ? 'partnerReport.number.paid.hintOne'
+              : 'partnerReport.number.paid.hintOther',
             { count: moneyIn.payouts },
           )
-        : t("partnerReport.number.paid.hintNone"),
+        : t('partnerReport.number.paid.hintNone'),
     },
     {
-      id: "to-pay",
-      label: t("partnerReport.number.toPay"),
+      id: 'to-pay',
+      label: t('partnerReport.number.toPay'),
       value: money(moneyIn.toPay),
       hint: moneyIn.toOffset
-        ? t("partnerReport.number.toPay.hintOffset", {
+        ? t('partnerReport.number.toPay.hintOffset', {
             amount: money(moneyIn.toOffset),
           })
-        : t("partnerReport.number.toPay.hintAfter"),
+        : t('partnerReport.number.toPay.hintAfter'),
     },
     {
-      id: "orders",
-      label: t("partnerReport.number.orders"),
+      id: 'orders',
+      label: t('partnerReport.number.orders'),
       value: String(report.rows.length),
       hint: t(
         closed
-          ? "partnerReport.number.orders.hintClosed"
-          : "partnerReport.number.orders.hint",
+          ? 'partnerReport.number.orders.hintClosed'
+          : 'partnerReport.number.orders.hint',
         { completed: recorded, open, closed },
       ),
     },
-  ];
+  ]
 
   const monthName = (iso: string, opts: Intl.DateTimeFormatOptions) =>
-    dateTimeFormat(intlLocale, { ...opts, timeZone: "UTC" }).format(
+    dateTimeFormat(intlLocale, { ...opts, timeZone: 'UTC' }).format(
       calendarDay(iso),
-    );
+    )
   const allTime: AllTimeCardProps | null = allTimeData && {
-    id: "report-alltime",
-    title: t("partnerReport.allTime.title"),
-    description: t("partnerReport.allTime.description", {
+    id: 'report-alltime',
+    title: t('partnerReport.allTime.title'),
+    description: t('partnerReport.allTime.description', {
       date: monthName(allTimeData.firstDay, {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
       }),
     }),
     value: money(allTimeData.earned),
@@ -463,57 +466,57 @@ export function usePartnerReport(
       const d = deltaOf(
         allTimeData.last30,
         allTimeData.previous30,
-        "up",
+        'up',
         intlLocale,
-      );
-      const { start: from, end: to } = allTimeData.previousRange;
-      const span = `${formatShortDate(from, today, intlLocale)} – ${formatShortDate(to, today, intlLocale)}`;
+      )
+      const { start: from, end: to } = allTimeData.previousRange
+      const span = `${formatShortDate(from, today, intlLocale)} – ${formatShortDate(to, today, intlLocale)}`
 
       return {
         text: d.delta,
         tone: d.tone,
         direction: d.direction,
         label: d.delta
-          ? t("partnerReport.allTime.delta", { delta: d.delta, range: span })
-          : t("partnerReport.allTime.deltaNone", { range: span }),
-      };
+          ? t('partnerReport.allTime.delta', { delta: d.delta, range: span })
+          : t('partnerReport.allTime.deltaNone', { range: span }),
+      }
     })(),
-    sentence: t("partnerReport.allTime.sentence", {
+    sentence: t('partnerReport.allTime.sentence', {
       last: money(allTimeData.last30),
       previous: money(allTimeData.previous30),
     }),
     chart: {
-      title: t("partnerReport.allTime.chart"),
+      title: t('partnerReport.allTime.chart'),
       bars: allTimeData.months.map((m, i) => {
-        const isCurrent = i === allTimeData.months.length - 1;
+        const isCurrent = i === allTimeData.months.length - 1
 
         return {
           id: m.start,
-          tick: monthName(m.start, { month: "short" }),
+          tick: monthName(m.start, { month: 'short' }),
           label: isCurrent
-            ? t("partnerReport.allTime.thisMonth")
-            : monthName(m.start, { month: "long", year: "numeric" }),
+            ? t('partnerReport.allTime.thisMonth')
+            : monthName(m.start, { month: 'long', year: 'numeric' }),
           value: m.earned === null ? null : m.earned / 100,
           valueText:
             m.earned === null
-              ? t("partnerReport.allTime.noData")
+              ? t('partnerReport.allTime.noData')
               : money(m.earned),
           isCurrent,
-        };
+        }
       }),
       tableLabels: {
-        item: t("partnerReport.allTime.monthColumn"),
-        value: t("partnerReport.allTime.earned"),
+        item: t('partnerReport.allTime.monthColumn'),
+        value: t('partnerReport.allTime.earned'),
       },
     },
-    metricsLabel: t("partnerReport.allTime.metrics"),
+    metricsLabel: t('partnerReport.allTime.metrics'),
     metrics: [
       {
-        id: "earned",
+        id: 'earned',
         icon: PartnersIcon,
-        label: t("partnerReport.allTime.earned"),
+        label: t('partnerReport.allTime.earned'),
         value: money(allTimeData.earned),
-        caption: t("partnerReport.allTime.earned.caption", {
+        caption: t('partnerReport.allTime.earned.caption', {
           share: share(
             allTimeData.earned,
             allTimeData.earned + allTimeData.estimated,
@@ -521,15 +524,15 @@ export function usePartnerReport(
           total: money(allTimeData.earned + allTimeData.estimated),
         }),
         share:
-          allTimeData.earned /
-          Math.max(1, allTimeData.earned + allTimeData.estimated),
+          allTimeData.earned
+          / Math.max(1, allTimeData.earned + allTimeData.estimated),
       },
       {
-        id: "paid",
+        id: 'paid',
         icon: PayLaterIcon,
-        label: t("partnerReport.allTime.paid"),
+        label: t('partnerReport.allTime.paid'),
         value: money(moneyIn.allTime.paid),
-        caption: t("partnerReport.allTime.ofEarned", {
+        caption: t('partnerReport.allTime.ofEarned', {
           share: share(moneyIn.allTime.paid, allTimeData.earned),
         }),
         share: Math.min(
@@ -538,75 +541,75 @@ export function usePartnerReport(
         ),
       },
       {
-        id: "to-pay",
+        id: 'to-pay',
         icon: ClockIcon,
-        label: t("partnerReport.number.toPay"),
+        label: t('partnerReport.number.toPay'),
         value: money(moneyIn.allTime.toPay),
         caption: moneyIn.allTime.toOffset
-          ? t("partnerReport.number.toPay.hintOffset", {
+          ? t('partnerReport.number.toPay.hintOffset', {
               amount: money(moneyIn.allTime.toOffset),
             })
-          : t("partnerReport.allTime.ofEarned", {
+          : t('partnerReport.allTime.ofEarned', {
               share: share(moneyIn.allTime.toPay, allTimeData.earned),
             }),
         share: moneyIn.allTime.toPay / Math.max(1, allTimeData.earned),
       },
     ],
-  };
+  }
 
   const refOf = (id: string) =>
-    withHistory.find((o) => o.id === id)?.ref ??
-    tourBookings?.find((b) => b.id === id)?.ref ??
-    "";
+    withHistory.find(o => o.id === id)?.ref
+    ?? tourBookings?.find(b => b.id === id)?.ref
+    ?? ''
   const entryDate = (at: string) =>
-    formatOrderDate(zurichDate(new Date(at)), intlLocale);
-  const payments: PaymentsView | null =
-    moneyIn.entries.length || moneyIn.carriedIn
+    formatOrderDate(zurichDate(new Date(at)), intlLocale)
+  const payments: PaymentsView | null
+    = moneyIn.entries.length || moneyIn.carriedIn
       ? {
-          heading: t("partnerReport.payments.heading"),
+          heading: t('partnerReport.payments.heading'),
           carriedIn: moneyIn.carriedIn
-            ? t("partnerReport.payments.carried", {
+            ? t('partnerReport.payments.carried', {
                 amount: money(moneyIn.carriedIn),
                 date: formatOrderDate(start, intlLocale),
               })
             : null,
           rows: moneyIn.entries.map((e, i) =>
-            e.type === "payout"
+            e.type === 'payout'
               ? {
                   id: `p${i}`,
-                  kind: "payout" as const,
-                  text: t("partnerReport.payments.payout"),
+                  kind: 'payout' as const,
+                  text: t('partnerReport.payments.payout'),
                   date: entryDate(e.at),
                   amount: money(e.payout.amount),
-                  tone: "success" as const,
+                  tone: 'success' as const,
                 }
-              : e.type === "adjustment"
+              : e.type === 'adjustment'
                 ? {
                     id: `a${i}`,
-                    kind: "adjustment" as const,
-                    text: t("partnerReport.payments.adjustment", {
+                    kind: 'adjustment' as const,
+                    text: t('partnerReport.payments.adjustment', {
                       ref: refOf(e.adjustment.transaction.id),
                     }),
                     date: entryDate(e.at),
                     amount: `−${money(e.adjustment.commission)}`,
-                    tone: "warning" as const,
+                    tone: 'warning' as const,
                   }
                 : {
                     id: `o${i}`,
-                    kind: "offset" as const,
-                    text: t("partnerReport.payments.offset", {
+                    kind: 'offset' as const,
+                    text: t('partnerReport.payments.offset', {
                       ref: e.item.ref,
                     }),
                     date: entryDate(e.at),
                     amount: money(e.amount),
-                    tone: "neutral" as const,
+                    tone: 'neutral' as const,
                   },
           ),
           totals: [
             ...(moneyIn.offset
               ? [
                   {
-                    label: t("partnerReport.payments.offsetTotal"),
+                    label: t('partnerReport.payments.offsetTotal'),
                     value: money(moneyIn.offset),
                   },
                 ]
@@ -614,14 +617,14 @@ export function usePartnerReport(
             ...(moneyIn.toOffset || moneyIn.offset || moneyIn.carriedIn
               ? [
                   {
-                    label: t("partnerReport.payments.stillToOffset"),
+                    label: t('partnerReport.payments.stillToOffset'),
                     value: money(moneyIn.toOffset),
                   },
                 ]
               : []),
           ],
         }
-      : null;
+      : null
 
   return {
     /** The unformatted figures behind the views, for the dashboard (use-partner-dashboard). */
@@ -636,8 +639,8 @@ export function usePartnerReport(
       chartTop: top,
     },
     allTime,
-    demoNote: withHistory.length ? t("partnerReport.demoNote") : null,
-    periods: REPORT_PERIODS.map((id) => ({
+    demoNote: withHistory.length ? t('partnerReport.demoNote') : null,
+    periods: REPORT_PERIODS.map(id => ({
       id,
       label: t(periodLabels[id]),
     })),
@@ -654,5 +657,5 @@ export function usePartnerReport(
     groups,
     rows,
     payments,
-  };
+  }
 }

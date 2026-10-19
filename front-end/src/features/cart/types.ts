@@ -4,14 +4,14 @@
  * lines into orders (R12).
  */
 export interface CartLine {
-  id: string;
-  productId: string;
-  variantId: string;
-  quantity: number;
-  engraving?: string;
+  id: string
+  productId: string
+  variantId: string
+  quantity: number
+  engraving?: string
   /** Requested pickup date, YYYY-MM-DD (a Zurich calendar day). */
-  pickupDate: string;
-  pickupPlaceId: string;
+  pickupDate: string
+  pickupPlaceId: string
   /** Ticked on C04: only selected lines go to C06 and are sent. Never set on add. */
-  selected?: boolean;
+  selected?: boolean
 }

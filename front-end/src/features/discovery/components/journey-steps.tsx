@@ -1,12 +1,12 @@
-import { Media } from "@/components/media";
+import { Media } from '@/components/media'
 
 export interface JourneyStep {
-  id: string;
-  photo: string;
-  color: string;
-  eyebrow: string;
-  title: string;
-  line: string;
+  id: string
+  photo: string
+  color: string
+  eyebrow: string
+  title: string
+  line: string
 }
 
 /**
@@ -18,9 +18,9 @@ export function JourneySteps({
   subtitle,
   steps,
 }: {
-  title: string;
-  subtitle: string;
-  steps: JourneyStep[];
+  title: string
+  subtitle: string
+  steps: JourneyStep[]
 }) {
   return (
     <section aria-labelledby="journey" className="flex flex-col gap-4">
@@ -32,18 +32,17 @@ export function JourneySteps({
       </div>
       <ol className="flex flex-col">
         {steps.map((step, i) => {
-          const left = i % 2 === 0;
+          const left = i % 2 === 0
 
           return (
             <li key={step.id} className="flex flex-col">
               <button
-                className={`flex w-full items-center gap-4 rounded-3xl outline-none focus-visible:focus-ring active:opacity-80 ${left ? "text-left" : "flex-row-reverse text-right"}`}
+                className={`flex w-full items-center gap-4 rounded-3xl outline-none focus-visible:focus-ring active:opacity-80 ${left ? 'text-left' : 'flex-row-reverse text-right'}`}
                 type="button"
                 onClick={() =>
                   document
                     .getElementById(step.id)
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
               >
                 <span className="relative shrink-0">
                   <Media
@@ -52,14 +51,14 @@ export function JourneySteps({
                     photo={step.photo}
                   />
                   <span
-                    className={`absolute -top-1 flex size-8 items-center justify-center rounded-full font-serif text-[15px] font-medium text-white ring-[3px] ring-background ${left ? "-left-1" : "-right-1"}`}
+                    className={`absolute -top-1 flex size-8 items-center justify-center rounded-full font-serif text-[15px] font-medium text-white ring-[3px] ring-background ${left ? '-left-1' : '-right-1'}`}
                     style={{ backgroundColor: step.color }}
                   >
                     {i + 1}
                   </span>
                 </span>
                 <span
-                  className={`flex min-w-0 flex-1 flex-col gap-1 ${left ? "items-start" : "items-end"}`}
+                  className={`flex min-w-0 flex-1 flex-col gap-1 ${left ? 'items-start' : 'items-end'}`}
                 >
                   <span
                     className="text-[12px] font-semibold"
@@ -83,8 +82,8 @@ export function JourneySteps({
                   <path
                     d={
                       left
-                        ? "M15.6 0 C15.6 26 84.4 14 84.4 40"
-                        : "M84.4 0 C84.4 26 15.6 14 15.6 40"
+                        ? 'M15.6 0 C15.6 26 84.4 14 84.4 40'
+                        : 'M84.4 0 C84.4 26 15.6 14 15.6 40'
                     }
                     fill="none"
                     stroke="var(--accent)"
@@ -96,9 +95,9 @@ export function JourneySteps({
                 </svg>
               )}
             </li>
-          );
+          )
         })}
       </ol>
     </section>
-  );
+  )
 }

@@ -1,47 +1,47 @@
-import type { ProductAction } from "./product-rows";
-import type { ProductRow } from "../hooks/use-merchant-products";
-import type { ProductTab } from "@/features/merchant/products/lib/search-params";
+import type { ProductRow } from '../hooks/use-merchant-products'
+import type { ProductAction } from './product-rows'
+import type { ProductTab } from '@/features/merchant/products/lib/search-params'
 
-import { Skeleton, buttonVariants, toast } from "@heroui/react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { buttonVariants, Skeleton, toast } from '@heroui/react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useEffect, useRef, useState } from 'react'
 
-import {
-  useMerchantProducts,
-  useProductArchive,
-} from "../hooks/use-merchant-products";
+import { useConfirm } from '@/components/confirm-dialog'
 
-import { PickupPoints } from "./pickup-points";
-import { ProductRows } from "./product-rows";
-
-import { useConfirm } from "@/components/confirm-dialog";
-import { EmptyState } from "@/components/empty-state";
-import { MerchantPageHeader } from "@/components/layout/merchant-page-header";
-import { RouteTabs } from "@/components/route-tabs";
+import { EmptyState } from '@/components/empty-state'
 import {
   FilterButton,
   FilterChips,
   filterGroup,
-} from "@/components/filter-bar";
+} from '@/components/filter-bar'
+
 import {
   GiftIcon,
   OptionIcon,
   PickupIcon,
   PlusIcon,
   TourIcon,
-} from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { pickText } from "@/lib/localized";
+} from '@/components/icons'
+import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
+import { RouteTabs } from '@/components/route-tabs'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo } from '@/features/demo'
+import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { pickText } from '@/lib/localized'
+import {
+  useMerchantProducts,
+  useProductArchive,
+} from '../hooks/use-merchant-products'
+import { PickupPoints } from './pickup-points'
+import { ProductRows } from './product-rows'
 
-type ProductView = "active" | "archived";
+type ProductView = 'active' | 'archived'
 
 /** Pickup points: two columns of cards, each with icon tile, name, hours and instructions. */
 function PickupSkeleton() {
   return (
     <ul aria-hidden className="grid gap-5 lg:grid-cols-2">
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2, 3].map(i => (
         <li
           key={i}
           className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface"
@@ -63,7 +63,7 @@ function PickupSkeleton() {
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
 /**
@@ -73,50 +73,50 @@ function PickupSkeleton() {
  * completeness (R02).
  */
 export function MerchantProducts({ tab }: { tab: ProductTab }) {
-  const { t, language } = useLocale();
-  const all = useMerchantProducts();
-  const { places } = all;
-  const { subcategories } = useDemo().state.data;
-  const archive = useProductArchive();
-  const navigate = useNavigate();
-  const { confirm, dialog } = useConfirm();
+  const { t, language } = useLocale()
+  const all = useMerchantProducts()
+  const { places } = all
+  const { subcategories } = useDemo().state.data
+  const archive = useProductArchive()
+  const navigate = useNavigate()
+  const { confirm, dialog } = useConfirm()
   // Archived gifts and tours sit under their own filter, as archived partners on M15.
   // Both ticked shows both; none ticked is no filter, the same as both.
-  const [view, setView] = useState<ProductView[]>(["active"]);
+  const [view, setView] = useState<ProductView[]>(['active'])
   const inView = (r: ProductRow) =>
-    !view.length || view.includes(r.archived ? "archived" : "active");
+    !view.length || view.includes(r.archived ? 'archived' : 'active')
   // Keepsakes only: the store's sub-categories, ticked like the status.
-  const [subs, setSubs] = useState<string[]>([]);
+  const [subs, setSubs] = useState<string[]>([])
   const gifts = all.gifts
     .filter(inView)
     .filter(
-      (r) =>
+      r =>
         !subs.length || (!!r.subcategoryId && subs.includes(r.subcategoryId)),
-    );
-  const tours = all.tours.filter(inView);
-  const isLoading = useSimulatedLoading();
+    )
+  const tours = all.tours.filter(inView)
+  const isLoading = useSimulatedLoading()
   const tabs = [
     {
-      id: "gifts",
-      to: "/store/products",
-      label: t("products.tab.gifts"),
-      badge: all.gifts.filter((r) => !r.archived).length,
+      id: 'gifts',
+      to: '/store/products',
+      label: t('products.tab.gifts'),
+      badge: all.gifts.filter(r => !r.archived).length,
     },
     {
-      id: "tours",
-      to: "/store/products/tours",
-      label: t("products.tab.tours"),
-      badge: all.tours.filter((r) => !r.archived).length,
+      id: 'tours',
+      to: '/store/products/tours',
+      label: t('products.tab.tours'),
+      badge: all.tours.filter(r => !r.archived).length,
     },
     {
-      id: "pickup",
-      to: "/store/products/pickup",
-      label: t("products.tab.pickup"),
+      id: 'pickup',
+      to: '/store/products/pickup',
+      label: t('products.tab.pickup'),
       badge: places.length,
     },
-  ] as const;
-  const selectedLabel = tabs.find((item) => item.id === tab)?.label ?? "";
-  const rootRef = useRef<HTMLDivElement>(null);
+  ] as const
+  const selectedLabel = tabs.find(item => item.id === tab)?.label ?? ''
+  const rootRef = useRef<HTMLDivElement>(null)
 
   // As M03: a link to a page whose tab starts off-screen in the scrolling
   // list on phones. React Aria mounts the tabs after the first commit, so wait a frame.
@@ -124,118 +124,122 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
     const frame = requestAnimationFrame(() =>
       rootRef.current
         ?.querySelector(`[role="tab"][data-key="${tab}"]`)
-        ?.scrollIntoView({ block: "nearest", inline: "nearest" }),
-    );
+        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
+    )
 
-    return () => cancelAnimationFrame(frame);
-  }, [tab]);
+    return () => cancelAnimationFrame(frame)
+  }, [tab])
 
   const onAction = async (
-    kind: "gift" | "tour",
+    kind: 'gift' | 'tour',
     row: ProductRow,
     action: ProductAction,
   ) => {
-    if (action === "edit") {
+    if (action === 'edit') {
       void navigate({
         to:
-          kind === "gift"
-            ? "/store/products/gifts/$productId"
-            : "/store/products/tours/$tourId",
+          kind === 'gift'
+            ? '/store/products/gifts/$productId'
+            : '/store/products/tours/$tourId',
         params: { productId: row.id, tourId: row.id },
-      });
+      })
 
-      return;
+      return
     }
-    if (action === "restore") {
-      archive.restore(kind, row.id);
-      toast.success(t("products.restored", { name: row.name }));
+    if (action === 'restore') {
+      archive.restore(kind, row.id)
+      toast.success(t('products.restored', { name: row.name }))
 
-      return;
+      return
     }
     const ok = await confirm({
-      title: t("products.archive.title", { name: row.name }),
+      title: t('products.archive.title', { name: row.name }),
       body: t(
-        kind === "gift"
-          ? "products.archive.body.gift"
-          : "products.archive.body.tour",
+        kind === 'gift'
+          ? 'products.archive.body.gift'
+          : 'products.archive.body.tour',
       ),
-      confirmLabel: t("products.action.archive"),
-    });
+      confirmLabel: t('products.action.archive'),
+    })
 
-    if (!ok) return;
-    archive.archive(kind, row.id);
-    toast.success(t("products.archivedToast", { name: row.name }));
-  };
+    if (!ok)
+      return
+    archive.archive(kind, row.id)
+    toast.success(t('products.archivedToast', { name: row.name }))
+  }
 
-  const filterGroups = (id: "gifts" | "tours") => {
-    const source = id === "gifts" ? all.gifts : all.tours;
+  const filterGroups = (id: 'gifts' | 'tours') => {
+    const source = id === 'gifts' ? all.gifts : all.tours
 
     const groups = [
       filterGroup({
-        id: "view",
-        label: t("products.view.label"),
-        options: (["active", "archived"] as const).map((v) => ({
+        id: 'view',
+        label: t('products.view.label'),
+        options: (['active', 'archived'] as const).map(v => ({
           id: v,
           label: t(`products.view.${v}`),
-          count: source.filter((r) => r.archived === (v === "archived")).length,
+          count: source.filter(r => r.archived === (v === 'archived')).length,
         })),
         selected: view,
         onChange: setView,
       }),
-    ];
+    ]
 
-    if (id === "gifts") {
+    if (id === 'gifts') {
       groups.push(
         filterGroup({
-          id: "subcategory",
-          label: t("products.subcategory.label"),
+          id: 'subcategory',
+          label: t('products.subcategory.label'),
           options: subcategories
-            .filter((c) => c.categoryId === "keepsakes")
-            .map((c) => ({
+            .filter(c => c.categoryId === 'keepsakes')
+            .map(c => ({
               id: c.id,
               label: pickText(c.name, language).text,
-              count: source.filter((r) => r.subcategoryId === c.id).length,
+              count: source.filter(r => r.subcategoryId === c.id).length,
             })),
           selected: subs,
           onChange: setSubs,
         }),
-      );
+      )
     }
 
-    return groups;
-  };
+    return groups
+  }
 
-  const groups = tab === "gifts" || tab === "tours" ? filterGroups(tab) : null;
+  const groups = tab === 'gifts' || tab === 'tours' ? filterGroups(tab) : null
 
   const panel = (id: ProductTab) => {
-    if (isLoading && id === "pickup") return <PickupSkeleton />;
-    if (id === "pickup") {
-      return places.length ? (
-        <PickupPoints label={selectedLabel} rows={places} />
-      ) : (
-        <EmptyState icon={PickupIcon} message={t("products.empty.pickup")} />
-      );
+    if (isLoading && id === 'pickup')
+      return <PickupSkeleton />
+    if (id === 'pickup') {
+      return places.length
+        ? (
+            <PickupPoints label={selectedLabel} rows={places} />
+          )
+        : (
+            <EmptyState icon={PickupIcon} message={t('products.empty.pickup')} />
+          )
     }
-    const rows = id === "gifts" ? gifts : tours;
+    const rows = id === 'gifts' ? gifts : tours
 
     return (
       <ProductRows
         columns={[
-          t(id === "gifts" ? "products.column.gift" : "products.column.tour"),
-          t("products.column.status"),
-          t("products.column.price"),
+          t(id === 'gifts' ? 'products.column.gift' : 'products.column.tour'),
+          t('products.column.status'),
+          t('products.column.price'),
           t(
-            id === "gifts"
-              ? "products.column.available"
-              : "products.column.departures",
+            id === 'gifts'
+              ? 'products.column.available'
+              : 'products.column.departures',
           ),
-          t("products.column.commission"),
+          t('products.column.commission'),
         ]}
         empty={{
-          icon: id === "gifts" ? GiftIcon : TourIcon,
+          icon: id === 'gifts' ? GiftIcon : TourIcon,
           message: t(
-            view.length === 1 && view[0] === "archived"
-              ? "products.empty.archived"
+            view.length === 1 && view[0] === 'archived'
+              ? 'products.empty.archived'
               : `products.empty.${id}`,
           ),
         }}
@@ -244,47 +248,46 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
         resetKey={`${id}|${selectedLabel}|${view.join()}`}
         rows={rows}
         onAction={(row, action) =>
-          void onAction(id === "gifts" ? "gift" : "tour", row, action)
-        }
+          void onAction(id === 'gifts' ? 'gift' : 'tour', row, action)}
       />
-    );
-  };
+    )
+  }
 
   return (
     <div ref={rootRef} className="flex flex-col gap-4">
       <MerchantPageHeader
         // The screen's one red action, as M15's "Add partner"; none for pickup points.
         action={
-          tab !== "pickup" && (
+          tab !== 'pickup' && (
             <Link
-              className={buttonVariants({ size: "sm", className: "shrink-0" })}
+              className={buttonVariants({ size: 'sm', className: 'shrink-0' })}
               to={
-                tab === "gifts"
-                  ? "/store/products/gifts/new"
-                  : "/store/products/tours/new"
+                tab === 'gifts'
+                  ? '/store/products/gifts/new'
+                  : '/store/products/tours/new'
               }
             >
               <PlusIcon aria-hidden size={16} />
-              {t(tab === "gifts" ? "products.addGift" : "products.addTour")}
+              {t(tab === 'gifts' ? 'products.addGift' : 'products.addTour')}
             </Link>
           )
         }
-        description={t("products.intro")}
-        title={t("products.title")}
+        description={t('products.intro')}
+        title={t('products.title')}
       />
       <Link
         className={buttonVariants({
-          size: "sm",
-          variant: "tertiary",
-          className: "w-fit",
+          size: 'sm',
+          variant: 'tertiary',
+          className: 'w-fit',
         })}
         to="/store/products/categories"
       >
         <OptionIcon aria-hidden size={16} />
-        {t("categories.manage")}
+        {t('categories.manage')}
       </Link>
       <RouteTabs
-        label={t("products.tabsLabel")}
+        label={t('products.tabsLabel')}
         selected={tab}
         tabs={tabs}
         trailing={groups && <FilterButton groups={groups} />}
@@ -293,5 +296,5 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
       {panel(tab)}
       {dialog}
     </div>
-  );
+  )
 }

@@ -1,7 +1,7 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from 'react'
 
-const DURATION = 200;
-const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
+const DURATION = 200
+const EASE = 'cubic-bezier(0.32, 0.72, 0, 1)'
 
 /**
  * Slides a bottom sheet out after it was removed from the page. Every sheet screen mounts its
@@ -10,37 +10,39 @@ const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
  * the backdrop fades, then goes. The copy cannot be touched or read out.
  */
 export function playSheetExit(inside: HTMLElement) {
-  const overlay = inside.closest<HTMLElement>(".drawer__backdrop");
+  const overlay = inside.closest<HTMLElement>('.drawer__backdrop')
 
   if (
-    !overlay ||
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    !overlay
+    || window.matchMedia('(prefers-reduced-motion: reduce)').matches
   ) {
-    return;
+    return
   }
 
-  const ghost = overlay.cloneNode(true) as HTMLElement;
-  const ghostDialog = ghost.querySelector<HTMLElement>(".drawer__dialog");
+  const ghost = overlay.cloneNode(true) as HTMLElement
+  const ghostDialog = ghost.querySelector<HTMLElement>('.drawer__dialog')
 
-  if (!ghostDialog) return;
-  ghost.setAttribute("aria-hidden", "true");
-  ghost.inert = true;
-  ghost.style.pointerEvents = "none";
+  if (!ghostDialog)
+    return
+  ghost.setAttribute('aria-hidden', 'true')
+  ghost.inert = true
+  ghost.style.pointerEvents = 'none'
   // The copy is a new element, so the slide-in keyframe would otherwise play again.
-  ghostDialog.style.animation = "none";
-  document.body.appendChild(ghost);
+  ghostDialog.style.animation = 'none'
+  document.body.appendChild(ghost)
 
   const timing = {
     duration: DURATION,
     easing: EASE,
-    fill: "forwards",
-  } as const;
+    fill: 'forwards',
+  } as const
 
-  ghost.animate([{ opacity: 1 }, { opacity: 0 }], timing);
+  ghost.animate([{ opacity: 1 }, { opacity: 0 }], timing)
   ghostDialog
-    .animate([{ translate: "0 0" }, { translate: "0 100%" }], timing)
-    .finished.catch(() => undefined)
-    .finally(() => ghost.remove());
+    .animate([{ translate: '0 0' }, { translate: '0 100%' }], timing)
+    .finished
+    .catch(() => undefined)
+    .finally(() => ghost.remove())
 }
 
 /**
@@ -51,18 +53,19 @@ export function playSheetExit(inside: HTMLElement) {
  * so only a sheet that is really gone slides out.
  */
 export function useSheetExit() {
-  const markerRef = useRef<HTMLSpanElement>(null);
+  const markerRef = useRef<HTMLSpanElement>(null)
 
   useLayoutEffect(
     () => () => {
-      const marker = markerRef.current;
+      const marker = markerRef.current
 
       queueMicrotask(() => {
-        if (marker && !marker.isConnected) playSheetExit(marker);
-      });
+        if (marker && !marker.isConnected)
+          playSheetExit(marker)
+      })
     },
     [],
-  );
+  )
 
-  return markerRef;
+  return markerRef
 }

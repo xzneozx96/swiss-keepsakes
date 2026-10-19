@@ -1,9 +1,9 @@
 import type {
   ReviewItemView,
   ReviewOrderView,
-} from "@/features/checkout/components/review-view";
+} from '@/features/checkout/components/review-view'
 
-import { Accordion } from "@heroui/react";
+import { Accordion } from '@heroui/react'
 
 import {
   EngraveIcon,
@@ -12,9 +12,9 @@ import {
   PickupDateIcon,
   PickupIcon,
   ShopIcon,
-} from "@/components/icons";
-import { Media } from "@/components/media";
-import { useLocale } from "@/contexts/locale-context";
+} from '@/components/icons'
+import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 
 /**
  * Lab: C06 order layouts where the whole order (facts, gifts, totals, terms) sits in one
@@ -22,12 +22,12 @@ import { useLocale } from "@/contexts/locale-context";
  * the chosen one can replace it without touching `useReview`.
  */
 export interface ReviewOrderOptionProps {
-  order: ReviewOrderView;
+  order: ReviewOrderView
 }
 
-const card = "rounded-3xl bg-surface shadow-surface";
-const row = "flex items-start gap-2 text-sm";
-const rowIcon = "mt-0.5 shrink-0";
+const card = 'rounded-3xl bg-surface shadow-surface'
+const row = 'flex items-start gap-2 text-sm'
+const rowIcon = 'mt-0.5 shrink-0'
 
 function Facts({ order }: ReviewOrderOptionProps) {
   return (
@@ -45,7 +45,7 @@ function Facts({ order }: ReviewOrderOptionProps) {
         {order.policy}
       </p>
     </div>
-  );
+  )
 }
 
 function Totals({ order }: ReviewOrderOptionProps) {
@@ -60,7 +60,7 @@ function Totals({ order }: ReviewOrderOptionProps) {
         <dd className="text-heading tabular-nums">{order.due}</dd>
       </div>
     </dl>
-  );
+  )
 }
 
 /** Collapsed by default: the policy text is long and the same for most orders. */
@@ -85,11 +85,12 @@ function Cancellation({ order }: ReviewOrderOptionProps) {
         </Accordion.Panel>
       </Accordion.Item>
     </Accordion>
-  );
+  )
 }
 
 function ItemMeta({ item }: { item: ReviewItemView }) {
-  if (!item.option && !item.engraving) return null;
+  if (!item.option && !item.engraving)
+    return null
 
   return (
     <div className="flex flex-col gap-1">
@@ -106,16 +107,16 @@ function ItemMeta({ item }: { item: ReviewItemView }) {
         </p>
       )}
     </div>
-  );
+  )
 }
 
 /** Photo, name, shop, option and engraving, with quantity and total on the last line. */
 function GiftRow({
   item,
-  photoSize = "size-16",
+  photoSize = 'size-16',
 }: {
-  item: ReviewItemView;
-  photoSize?: string;
+  item: ReviewItemView
+  photoSize?: string
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -141,7 +142,7 @@ function GiftRow({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 /** A · Sectioned card: one card, four sections split by full-width lines. */
@@ -156,7 +157,7 @@ export function ReviewSectioned({ order }: ReviewOrderOptionProps) {
         <Facts order={order} />
       </div>
       <ul className="flex flex-col divide-y divide-separator px-5">
-        {order.items.map((item) => (
+        {order.items.map(item => (
           <li key={item.id} className="py-4">
             <GiftRow item={item} />
           </li>
@@ -170,7 +171,7 @@ export function ReviewSectioned({ order }: ReviewOrderOptionProps) {
         <Cancellation order={order} />
       </div>
     </section>
-  );
+  )
 }
 
 /** B · Gift tiles: the gifts sit on soft grey tiles inside the white card. */
@@ -185,7 +186,7 @@ export function ReviewTiles({ order }: ReviewOrderOptionProps) {
         <Facts order={order} />
       </div>
       <ul className="flex flex-col gap-2">
-        {order.items.map((item) => (
+        {order.items.map(item => (
           <li key={item.id} className="rounded-2xl bg-surface-secondary p-3">
             <GiftRow item={item} />
           </li>
@@ -199,7 +200,7 @@ export function ReviewTiles({ order }: ReviewOrderOptionProps) {
         <Cancellation order={order} />
       </div>
     </section>
-  );
+  )
 }
 
 /**
@@ -217,7 +218,7 @@ export function ReviewReceipt({ order }: ReviewOrderOptionProps) {
         <Facts order={order} />
       </div>
       <ul className="mx-5 mt-4 flex flex-col gap-4 border-t border-separator pt-4">
-        {order.items.map((item) => (
+        {order.items.map(item => (
           <li key={item.id} className="flex items-start gap-3">
             <Media
               alt=""
@@ -231,7 +232,7 @@ export function ReviewReceipt({ order }: ReviewOrderOptionProps) {
               </div>
               {(item.option || item.engraving) && (
                 <p className="text-sm text-muted">
-                  {[item.option, item.engraving].filter(Boolean).join(" · ")}
+                  {[item.option, item.engraving].filter(Boolean).join(' · ')}
                 </p>
               )}
               <p className="text-sm text-muted tabular-nums">
@@ -249,7 +250,7 @@ export function ReviewReceipt({ order }: ReviewOrderOptionProps) {
         <Cancellation order={order} />
       </div>
     </section>
-  );
+  )
 }
 
 /**
@@ -273,7 +274,7 @@ export function ReviewDueFirst({ order }: ReviewOrderOptionProps) {
         <Facts order={order} />
       </div>
       <ul className="flex flex-col divide-y divide-separator">
-        {order.items.map((item) => (
+        {order.items.map(item => (
           <li key={item.id} className="py-3 first:pt-0">
             <GiftRow item={item} photoSize="size-14" />
           </li>
@@ -288,34 +289,34 @@ export function ReviewDueFirst({ order }: ReviewOrderOptionProps) {
       </div>
       <Cancellation order={order} />
     </section>
-  );
+  )
 }
 
 /* Round 2: variations on A. Same sectioned white card, different layout and styling. */
 
 /** Lab-only section labels; the chosen option would move these into the i18n files. */
 function useSectionLabels(order: ReviewOrderView) {
-  const { language } = useLocale();
-  const n = order.items.length;
+  const { language } = useLocale()
+  const n = order.items.length
 
-  return language === "de"
+  return language === 'de'
     ? {
-        pickup: "Abholung",
-        gifts: n === 1 ? "1 Geschenk" : `${n} Geschenke`,
-        payment: "Zahlung",
+        pickup: 'Abholung',
+        gifts: n === 1 ? '1 Geschenk' : `${n} Geschenke`,
+        payment: 'Zahlung',
       }
     : {
-        pickup: "Pickup",
-        gifts: n === 1 ? "1 gift" : `${n} gifts`,
-        payment: "Payment",
-      };
+        pickup: 'Pickup',
+        gifts: n === 1 ? '1 gift' : `${n} gifts`,
+        payment: 'Payment',
+      }
 }
 
-const sectionLabel = "text-xs font-medium tracking-wide text-muted uppercase";
+const sectionLabel = 'text-xs font-medium tracking-wide text-muted uppercase'
 
 /** A2 · Labelled sections: a small label opens each section; the lines are inset. */
 export function ReviewLabelled({ order }: ReviewOrderOptionProps) {
-  const labels = useSectionLabels(order);
+  const labels = useSectionLabels(order)
 
   return (
     <section aria-label={order.title} className={`${card} flex flex-col`}>
@@ -327,7 +328,7 @@ export function ReviewLabelled({ order }: ReviewOrderOptionProps) {
       <div className="mx-5 flex flex-col border-b border-separator pt-4">
         <p className={sectionLabel}>{labels.gifts}</p>
         <ul className="flex flex-col divide-y divide-separator">
-          {order.items.map((item) => (
+          {order.items.map(item => (
             <li key={item.id} className="py-4">
               <GiftRow item={item} />
             </li>
@@ -343,7 +344,7 @@ export function ReviewLabelled({ order }: ReviewOrderOptionProps) {
         <Cancellation order={order} />
       </div>
     </section>
-  );
+  )
 }
 
 /**
@@ -376,7 +377,7 @@ export function ReviewCompact({ order }: ReviewOrderOptionProps) {
         </div>
       </div>
       <ul className="flex flex-col divide-y divide-separator px-5">
-        {order.items.map((item) => (
+        {order.items.map(item => (
           <li key={item.id} className="flex items-start gap-3 py-3.5">
             <Media
               alt=""
@@ -421,7 +422,7 @@ export function ReviewCompact({ order }: ReviewOrderOptionProps) {
         <Cancellation order={order} />
       </div>
     </section>
-  );
+  )
 }
 
 /** A4 · Photo-forward: larger 88px photos with the quantity as a badge on the photo. */
@@ -436,7 +437,7 @@ export function ReviewPhotoForward({ order }: ReviewOrderOptionProps) {
         <Facts order={order} />
       </div>
       <ul className="flex flex-col divide-y divide-separator px-5">
-        {order.items.map((item) => (
+        {order.items.map(item => (
           <li key={item.id} className="flex items-start gap-4 py-4">
             <div className="relative shrink-0">
               <Media
@@ -445,9 +446,9 @@ export function ReviewPhotoForward({ order }: ReviewOrderOptionProps) {
                 photo={item.photo}
               />
               {/* `quantity` is "2 × CHF 24.00"; the badge shows the count only when above 1. */}
-              {item.quantity.split(" ")[0] !== "1" && (
+              {item.quantity.split(' ')[0] !== '1' && (
                 <span className="absolute -end-1.5 -top-1.5 flex min-w-6 items-center justify-center rounded-full bg-foreground px-1.5 py-0.5 text-xs font-semibold text-background tabular-nums">
-                  ×{item.quantity.split(" ")[0]}
+                  ×{item.quantity.split(' ')[0]}
                 </span>
               )}
             </div>
@@ -475,7 +476,7 @@ export function ReviewPhotoForward({ order }: ReviewOrderOptionProps) {
         <Cancellation order={order} />
       </div>
     </section>
-  );
+  )
 }
 
 /**
@@ -493,7 +494,7 @@ export function ReviewPaymentForward({ order }: ReviewOrderOptionProps) {
         <Facts order={order} />
       </div>
       <ul className="flex flex-col divide-y divide-separator px-5">
-        {order.items.map((item) => (
+        {order.items.map(item => (
           <li key={item.id} className="py-4">
             <GiftRow item={item} />
           </li>
@@ -516,7 +517,7 @@ export function ReviewPaymentForward({ order }: ReviewOrderOptionProps) {
         <Cancellation order={order} />
       </div>
     </section>
-  );
+  )
 }
 
 /**
@@ -546,7 +547,7 @@ export function ReviewHairline({ order }: ReviewOrderOptionProps) {
         </div>
       </div>
       <ul className="flex flex-col divide-y divide-separator px-5">
-        {order.items.map((item) => (
+        {order.items.map(item => (
           <li key={item.id} className="py-4">
             <GiftRow item={item} photoSize="size-14" />
           </li>
@@ -560,5 +561,5 @@ export function ReviewHairline({ order }: ReviewOrderOptionProps) {
         <Cancellation order={order} />
       </div>
     </section>
-  );
+  )
 }

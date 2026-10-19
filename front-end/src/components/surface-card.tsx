@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps } from 'react'
 
 /**
  * The gift flow's white card, with C06/C07 OrderCard's surface: white, rounded-3xl, the
@@ -6,15 +6,15 @@ import type { ComponentProps } from "react";
  * screens since round 2 (14.10.2026).
  */
 export function SurfaceCard({
-  className = "",
+  className = '',
   ...props
-}: ComponentProps<"section">) {
+}: ComponentProps<'section'>) {
   return (
     <section
       className={`flex flex-col divide-y divide-separator rounded-3xl bg-surface shadow-surface ${className}`}
       {...props}
     />
-  );
+  )
 }
 
 /**
@@ -24,26 +24,26 @@ export function SurfaceCard({
  * block's bottom border).
  */
 export function SurfaceCardBlock({
-  className = "",
+  className = '',
   compact = false,
   dashed = false,
   ...props
-}: ComponentProps<"div"> & { compact?: boolean; dashed?: boolean }) {
+}: ComponentProps<'div'> & { compact?: boolean, dashed?: boolean }) {
   return (
     <div
-      className={`flex flex-col gap-3 ${compact ? "p-4" : "p-5"}${dashed ? " border-dashed" : ""} ${className}`}
+      className={`flex flex-col gap-3 ${compact ? 'p-4' : 'p-5'}${dashed ? ' border-dashed' : ''} ${className}`}
       {...props}
     />
-  );
+  )
 }
 
 /** The card title in OrderCard's serif; `as` sets the heading level (h2 by default). */
 export function SurfaceCardTitle({
-  as: Heading = "h2",
-  className = "",
+  as: Heading = 'h2',
+  className = '',
   ...props
-}: ComponentProps<"h2"> & { as?: "h2" | "h3" }) {
+}: ComponentProps<'h2'> & { as?: 'h2' | 'h3' }) {
   return (
     <Heading className={`font-serif text-card-title ${className}`} {...props} />
-  );
+  )
 }

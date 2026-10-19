@@ -1,28 +1,28 @@
-import { buttonVariants } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { buttonVariants } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
-import { TourCard } from "./tour-card";
+import { EmptyState } from '@/components/empty-state'
 
-import { EmptyState } from "@/components/empty-state";
-import { ArrowRightIcon, TourIcon } from "@/components/icons";
-import { Media } from "@/components/media";
-import { CartButton, CompactBar } from "@/components/layout/cart-button";
-import { useScrolledPast } from "@/hooks/use-scrolled-past";
-import { useLocale } from "@/contexts/locale-context";
-import { useTours } from "@/features/tours/hooks/use-tours";
+import { ArrowRightIcon, TourIcon } from '@/components/icons'
+import { CartButton, CompactBar } from '@/components/layout/cart-button'
+import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
+import { useTours } from '@/features/tours/hooks/use-tours'
+import { useScrolledPast } from '@/hooks/use-scrolled-past'
+import { TourCard } from './tour-card'
 
 export function TourListPage() {
   // A tour added in M13 stays off C08 until its first publish; the seeded Pilatus draft
   // still shows as "Coming soon" (owner note, 15.10.2026). An archived tour is gone.
   const tours = useTours().tours.filter(
-    (tour) => !tour.unannounced && !tour.archivedAt,
-  );
-  const { t } = useLocale();
-  const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>();
+    tour => !tour.unannounced && !tour.archivedAt,
+  )
+  const { t } = useLocale()
+  const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
 
   return (
     <div className="flex flex-1 flex-col">
-      <CompactBar title={t("tourDiscovery.title")} visible={scrolledPast}>
+      <CompactBar title={t('tourDiscovery.title')} visible={scrolledPast}>
         <CartButton tone="bar" />
       </CompactBar>
       <Media alt="" className="h-[260px]" photo={tours[0]?.photos[0]}>
@@ -35,28 +35,30 @@ export function TourListPage() {
         </div>
         <header className="absolute inset-x-4 bottom-10 flex flex-col gap-1 text-white">
           <h1 className="font-serif text-display">
-            {t("tourDiscovery.title")}
+            {t('tourDiscovery.title')}
           </h1>
-          <p className="text-body text-white/85">{t("tourDiscovery.intro")}</p>
+          <p className="text-body text-white/85">{t('tourDiscovery.intro')}</p>
         </header>
       </Media>
       <div ref={bannerEnd} aria-hidden className="h-px" />
       <div className="relative -mt-6 flex flex-col gap-5 rounded-t-3xl bg-background px-4 pt-5 pb-4">
-        {tours.length === 0 ? (
-          <EmptyState icon={TourIcon} message={t("tourDiscovery.empty")} />
-        ) : (
-          <ul className="flex flex-col gap-7">
-            {tours.map((tour) => (
-              <li key={tour.id}>
-                <TourCard tour={tour} />
-              </li>
-            ))}
-          </ul>
-        )}
+        {tours.length === 0
+          ? (
+              <EmptyState icon={TourIcon} message={t('tourDiscovery.empty')} />
+            )
+          : (
+              <ul className="flex flex-col gap-7">
+                {tours.map(tour => (
+                  <li key={tour.id}>
+                    <TourCard tour={tour} />
+                  </li>
+                ))}
+              </ul>
+            )}
         <PrivateTourEntry />
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -65,24 +67,24 @@ export function TourListPage() {
  * home Polaroid stack, then the headline and the one red primary action.
  */
 function PrivateTourEntry() {
-  const { t } = useLocale();
+  const { t } = useLocale()
   const facts = [
-    t("privateTour.entry.size"),
-    t("privateTour.entry.dates"),
-    t("privateTour.entry.planned"),
-  ];
+    t('privateTour.entry.size'),
+    t('privateTour.entry.dates'),
+    t('privateTour.entry.planned'),
+  ]
   const shots = [
     {
-      photo: "lake-steamboat",
-      caption: t("privateTour.entry.captionDates"),
-      tilt: "-rotate-6 translate-y-3",
+      photo: 'lake-steamboat',
+      caption: t('privateTour.entry.captionDates'),
+      tilt: '-rotate-6 translate-y-3',
     },
     {
-      photo: "lucerne-old-town",
-      caption: t("privateTour.entry.captionGroup"),
-      tilt: "rotate-3",
+      photo: 'lucerne-old-town',
+      caption: t('privateTour.entry.captionGroup'),
+      tilt: 'rotate-3',
     },
-  ];
+  ]
 
   return (
     <section
@@ -93,7 +95,7 @@ function PrivateTourEntry() {
           headline down instead of covering it; the note floats between them, above the
           captions. */}
       <div className="relative flex w-full max-w-sm justify-between pb-3">
-        {shots.map((shot) => (
+        {shots.map(shot => (
           <figure
             key={shot.photo}
             aria-hidden
@@ -110,7 +112,7 @@ function PrivateTourEntry() {
             aria-hidden
             className="absolute -top-2 start-1/2 size-4 -translate-x-1/2 rounded-full bg-accent shadow-[0_2px_3px_rgba(0,0,0,0.3)] ring-2 ring-white/60"
           />
-          {facts.map((fact) => (
+          {facts.map(fact => (
             <li key={fact}>· {fact}</li>
           ))}
         </ul>
@@ -120,19 +122,19 @@ function PrivateTourEntry() {
           className="font-serif text-title text-balance"
           id="private-tour-entry"
         >
-          {t("privateTour.entry.title")}
+          {t('privateTour.entry.title')}
         </h2>
         <p className="text-sm text-foreground/75">
-          {t("privateTour.entry.body")}
+          {t('privateTour.entry.body')}
         </p>
       </div>
       <Link
-        className={`${buttonVariants({ variant: "primary" })} transition-transform active:scale-[0.98]`}
+        className={`${buttonVariants({ variant: 'primary' })} transition-transform active:scale-[0.98]`}
         to="/tours/private-tour"
       >
-        {t("privateTour.entry.action")}
+        {t('privateTour.entry.action')}
         <ArrowRightIcon aria-hidden size={18} />
       </Link>
     </section>
-  );
+  )
 }

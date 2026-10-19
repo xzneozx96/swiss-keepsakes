@@ -5,60 +5,60 @@ import type {
   Design,
   Group,
   VictorinoxOptionProps,
-} from "./victorinox-options";
+} from './victorinox-options'
 
-import { Link } from "@tanstack/react-router";
-import { useId, useState } from "react";
-
-import {
-  PartnerLine,
-  PlainRail,
-  Price,
-  collections,
-  SeeAll,
-  StoryLink,
-  ctaRed,
-  toDesigns,
-} from "./victorinox-options";
+import { Link } from '@tanstack/react-router'
+import { useId, useState } from 'react'
 
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   EngraveIcon,
-} from "@/components/icons";
-import { Media } from "@/components/media";
-import { knifeArt } from "@/lib/victorinox-art";
+} from '@/components/icons'
+
+import { Media } from '@/components/media'
+import { knifeArt } from '@/lib/victorinox-art'
+import {
+  collections,
+  ctaRed,
+  PartnerLine,
+  PlainRail,
+  Price,
+  SeeAll,
+  StoryLink,
+  toDesigns,
+} from './victorinox-options'
 
 const chapterStyle: Record<
   Group,
-  { scene: string; card: string; veil: string; text: string; sub: string }
+  { scene: string, card: string, veil: string, text: string, sub: string }
 > = {
   lucerne: {
-    scene: "lucerne-kapellbruecke-1200",
-    card: "bg-[#0e3a5c]",
-    veil: "bg-gradient-to-b from-[#0e3a5c]/30 via-[#0e3a5c]/80 to-[#0e3a5c]",
-    text: "text-white",
-    sub: "text-white",
+    scene: 'lucerne-kapellbruecke-1200',
+    card: 'bg-[#0e3a5c]',
+    veil: 'bg-gradient-to-b from-[#0e3a5c]/30 via-[#0e3a5c]/80 to-[#0e3a5c]',
+    text: 'text-white',
+    sub: 'text-white',
   },
   passes: {
-    scene: "furka-hairpins",
-    card: "bg-[#2c3138]",
-    veil: "bg-gradient-to-b from-[#2c3138]/30 via-[#2c3138]/80 to-[#2c3138]",
-    text: "text-white",
-    sub: "text-white",
+    scene: 'furka-hairpins',
+    card: 'bg-[#2c3138]',
+    veil: 'bg-gradient-to-b from-[#2c3138]/30 via-[#2c3138]/80 to-[#2c3138]',
+    text: 'text-white',
+    sub: 'text-white',
   },
   finsterwald: {
-    scene: "finsterwald-beehouse",
-    card: "bg-[#f4cf62]",
-    veil: "bg-gradient-to-b from-[#f4cf62]/70 via-[#f4cf62]/90 to-[#f4cf62]",
-    text: "text-foreground",
-    sub: "text-foreground",
+    scene: 'finsterwald-beehouse',
+    card: 'bg-[#f4cf62]',
+    veil: 'bg-gradient-to-b from-[#f4cf62]/70 via-[#f4cf62]/90 to-[#f4cf62]',
+    text: 'text-foreground',
+    sub: 'text-foreground',
   },
-};
+}
 
 function ChapterKnives({ designs }: { designs: Design[] }) {
   if (designs.length === 1) {
-    const d = designs[0];
+    const d = designs[0]
 
     return (
       <Link
@@ -80,15 +80,15 @@ function ChapterKnives({ designs }: { designs: Design[] }) {
           </span>
         </span>
       </Link>
-    );
+    )
   }
 
-  const mid = (designs.length - 1) / 2;
+  const mid = (designs.length - 1) / 2
 
   return (
     <ul className="flex items-end justify-center">
       {designs.map((d, i) => {
-        const offset = i - mid;
+        const offset = i - mid
 
         return (
           <li key={d.key} className="-mx-0.5 flex-1">
@@ -106,20 +106,20 @@ function ChapterKnives({ designs }: { designs: Design[] }) {
                   transform: `rotate(${offset * 6}deg) translateY(${(Math.abs(offset) - mid) * 8}px)`,
                 }}
               />
-              {d.group === "passes" && (
+              {d.group === 'passes' && (
                 <span
                   aria-hidden
                   className="relative z-10 text-[11px] font-semibold"
                 >
-                  {d.line.split(" · ")[1]}
+                  {d.line.split(' · ')[1]}
                 </span>
               )}
             </Link>
           </li>
-        );
+        )
       })}
     </ul>
-  );
+  )
 }
 
 /**
@@ -133,7 +133,7 @@ export function VxChapters({
   subtitle,
   story,
 }: VictorinoxOptionProps) {
-  const designs = toDesigns(items, isLoading);
+  const designs = toDesigns(items, isLoading)
 
   return (
     <section aria-labelledby="vx-chapters" className="flex flex-col gap-4">
@@ -149,8 +149,8 @@ export function VxChapters({
 
       <ol className="flex flex-col gap-4">
         {collections.map((c, i) => {
-          const style = chapterStyle[c.id];
-          const own = designs.filter((d) => d.group === c.id);
+          const style = chapterStyle[c.id]
+          const own = designs.filter(d => d.group === c.id)
 
           return (
             <li
@@ -168,10 +168,10 @@ export function VxChapters({
               <div className="relative flex flex-col gap-4 px-4 pt-5 pb-5">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="font-serif text-title">
-                    {String(i + 1).padStart(2, "0")}
+                    {String(i + 1).padStart(2, '0')}
                   </span>
                   <span className="rounded-full bg-black/45 px-2.5 py-1 text-xs font-semibold text-white">
-                    {own.length} {own.length === 1 ? "design" : "designs"}
+                    {own.length} {own.length === 1 ? 'design' : 'designs'}
                   </span>
                 </div>
                 <div className="mt-10 flex flex-col gap-1">
@@ -181,43 +181,43 @@ export function VxChapters({
                 <ChapterKnives designs={own} />
               </div>
             </li>
-          );
+          )
         })}
       </ol>
 
       <SeeAll label={seeAll} />
       <StoryLink story={story} />
     </section>
-  );
+  )
 }
 
 /* ------------------------------------------------------------------------------------- */
 
 const timeline = [
   {
-    year: "1884",
-    text: "Karl Elsener opens a cutler’s workshop in Ibach, canton Schwyz, with the support of his mother, Victoria.",
+    year: '1884',
+    text: 'Karl Elsener opens a cutler’s workshop in Ibach, canton Schwyz, with the support of his mother, Victoria.',
   },
-  { year: "1891", text: "The first soldier’s knives for the Swiss Army." },
+  { year: '1891', text: 'The first soldier’s knives for the Swiss Army.' },
   {
-    year: "1897",
-    text: "The Officer’s and Sports Knife is patented: the Swiss Army Knife.",
+    year: '1897',
+    text: 'The Officer’s and Sports Knife is patented: the Swiss Army Knife.',
   },
   {
-    year: "1909",
-    text: "The brand is named Victoria in her memory, and the Cross and Shield is registered.",
+    year: '1909',
+    text: 'The brand is named Victoria in her memory, and the Cross and Shield is registered.',
   },
-];
+]
 
 const later = [
-  { year: "2017", text: "In July, the 500 millionth pocket knife." },
+  { year: '2017', text: 'In July, the 500 millionth pocket knife.' },
   {
-    year: "Today",
-    text: "90% owned by a family foundation, with a lifetime warranty on every knife. The Victorinox Store is at Hirschenplatz 12, in the old town.",
+    year: 'Today',
+    text: '90% owned by a family foundation, with a lifetime warranty on every knife. The Victorinox Store is at Hirschenplatz 12, in the old town.',
   },
-];
+]
 
-function Step({ year, text }: { year: string; text: string }) {
+function Step({ year, text }: { year: string, text: string }) {
   return (
     <li className="relative flex flex-col gap-0.5 pl-6">
       <span
@@ -229,7 +229,7 @@ function Step({ year, text }: { year: string; text: string }) {
       </span>
       <span className="text-body text-pretty">{text}</span>
     </li>
-  );
+  )
 }
 
 /**
@@ -244,7 +244,7 @@ export function VxHeritage({
   subtitle,
   story,
 }: VictorinoxOptionProps) {
-  const designs = toDesigns(items, isLoading);
+  const designs = toDesigns(items, isLoading)
 
   return (
     <section
@@ -261,7 +261,7 @@ export function VxHeritage({
 
       <div className="mt-6 grid grid-cols-[1fr_6rem] gap-2">
         <ol className="flex flex-col gap-5 border-l-2 border-accent/30">
-          {timeline.map((s) => (
+          {timeline.map(s => (
             <Step key={s.year} {...s} />
           ))}
         </ol>
@@ -269,7 +269,7 @@ export function VxHeritage({
           <img
             alt=""
             className="sticky top-6 mx-auto h-52 rotate-[7deg] drop-shadow-[0_18px_20px_rgba(80,40,0,0.35)]"
-            src={knifeArt["lion"]}
+            src={knifeArt.lion}
           />
         </div>
       </div>
@@ -279,18 +279,23 @@ export function VxHeritage({
           1921 · stainless steel
         </span>
         <p className="font-serif text-title">
-          Victoria <span className="text-accent-soft-foreground">+</span> inox
+          Victoria
+          {' '}
+          <span className="text-accent-soft-foreground">+</span>
+          {' '}
+          inox
         </p>
         <span aria-hidden className="text-muted">
           =
         </span>
         <p className="font-serif text-[44px] leading-none tracking-tight">
-          Victor<span className="text-accent-soft-foreground">inox</span>
+          Victor
+          <span className="text-accent-soft-foreground">inox</span>
         </p>
       </div>
 
       <ol className="flex flex-col gap-5 border-l-2 border-accent/30">
-        {later.map((s) => (
+        {later.map(s => (
           <Step key={s.year} {...s} />
         ))}
       </ol>
@@ -302,7 +307,7 @@ export function VxHeritage({
 
       <div className="mt-4">
         <PlainRail label="Victorinox designs">
-          {designs.map((d) => (
+          {designs.map(d => (
             <li key={d.key} className="w-[15.5rem] shrink-0 snap-start">
               <Link
                 className="flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-surface outline-none select-none focus-visible:focus-ring active:opacity-85"
@@ -333,13 +338,13 @@ export function VxHeritage({
         <StoryLink story={story} />
       </div>
     </section>
-  );
+  )
 }
 
 /* ------------------------------------------------------------------------------------- */
 
-const roundButton =
-  "flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-foreground shadow-surface outline-none focus-visible:focus-ring active:opacity-70 disabled:opacity-40";
+const roundButton
+  = 'flex size-11 shrink-0 items-center justify-center rounded-full bg-white text-foreground shadow-surface outline-none focus-visible:focus-ring active:opacity-70 disabled:opacity-40'
 
 /**
  * V5 Workshop: a light, cream workbench. One big knife at a time (previous, next and a strip
@@ -352,15 +357,16 @@ export function VxWorkshop({
   seeAll,
   story,
 }: VictorinoxOptionProps) {
-  const designs = toDesigns(items, isLoading);
-  const [index, setIndex] = useState(1);
-  const [text, setText] = useState("Anna 16.10.2026");
-  const textId = useId();
-  const current = designs[Math.min(index, designs.length - 1)];
+  const designs = toDesigns(items, isLoading)
+  const [index, setIndex] = useState(1)
+  const [text, setText] = useState('Anna 16.10.2026')
+  const textId = useId()
+  const current = designs[Math.min(index, designs.length - 1)]
   const step = (by: number) =>
-    setIndex((i) => (i + by + designs.length) % designs.length);
+    setIndex(i => (i + by + designs.length) % designs.length)
 
-  if (!current) return null;
+  if (!current)
+    return null
 
   return (
     <section
@@ -387,7 +393,7 @@ export function VxWorkshop({
         </figure>
         <figure className="flex flex-col items-center gap-2">
           <div
-            aria-label={`Back of the knife, engraved: ${text || "your name"}`}
+            aria-label={`Back of the knife, engraved: ${text || 'your name'}`}
             className="relative flex h-[17rem] w-[6.5rem] rotate-3 items-center justify-center rounded-[3.25rem] bg-[linear-gradient(100deg,#8f959b_0%,#e6e9ec_28%,#b9bec3_52%,#f3f4f5_74%,#9aa0a6_100%)] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.18),0_20px_22px_rgba(80,50,0,0.3)]"
             role="img"
           >
@@ -395,7 +401,7 @@ export function VxWorkshop({
               aria-hidden
               className="max-h-60 rotate-180 overflow-hidden font-serif text-xl whitespace-nowrap italic [writing-mode:vertical-rl] text-[#4b5056] [text-shadow:0_1px_0_rgb(255_255_255/0.75),0_-1px_0_rgb(0_0_0/0.25)]"
             >
-              {text || "Your name"}
+              {text || 'Your name'}
             </span>
           </div>
           <figcaption className="text-label text-muted">
@@ -441,7 +447,7 @@ export function VxWorkshop({
               <button
                 aria-label={d.name}
                 aria-pressed={i === index}
-                className={`flex h-16 w-11 items-center justify-center rounded-xl outline-none focus-visible:focus-ring ${i === index ? "bg-white shadow-surface ring-2 ring-foreground" : ""}`}
+                className={`flex h-16 w-11 items-center justify-center rounded-xl outline-none focus-visible:focus-ring ${i === index ? 'bg-white shadow-surface ring-2 ring-foreground' : ''}`}
                 type="button"
                 onClick={() => setIndex(i)}
               >
@@ -467,7 +473,7 @@ export function VxWorkshop({
             id={textId}
             maxLength={20}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={e => setText(e.target.value)}
           />
         </div>
         <p className="text-label text-muted">
@@ -490,5 +496,5 @@ export function VxWorkshop({
         <StoryLink story={story} />
       </div>
     </section>
-  );
+  )
 }

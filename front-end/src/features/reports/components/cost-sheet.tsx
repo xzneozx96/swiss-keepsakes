@@ -1,5 +1,5 @@
-import type { CostRow } from "../hooks/use-cost-data";
-import type { CostType, CostValue } from "../types";
+import type { CostRow } from '../hooks/use-cost-data'
+import type { CostType, CostValue } from '../types'
 
 import {
   Button,
@@ -8,30 +8,31 @@ import {
   Label,
   NumberField,
   toast,
-} from "@heroui/react";
-import { useState } from "react";
+} from '@heroui/react'
+import { useState } from 'react'
 
-import { useCostActions } from "../hooks/use-cost-actions";
-import { COST_TYPES } from "../types";
+import { SheetFrame } from '@/components/sheet-frame'
+import { useLocale } from '@/contexts/locale-context'
 
-import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/components/sheet-frame";
+import { useCostActions } from '../hooks/use-cost-actions'
+import { COST_TYPES } from '../types'
 
-type Draft = Record<CostType, { amount: number; notApplicable: boolean }>;
+type Draft = Record<CostType, { amount: number, notApplicable: boolean }>
 
-const toDraft = (costs: CostRow["costs"]): Draft =>
-  Object.fromEntries(
+function toDraft(costs: CostRow['costs']): Draft {
+  return Object.fromEntries(
     COST_TYPES.map((type) => {
-      const value = costs[type];
+      const value = costs[type]
 
       return [
         type,
-        value && "amount" in value
+        value && 'amount' in value
           ? { amount: value.amount / 100, notApplicable: false }
           : { amount: Number.NaN, notApplicable: !!value },
-      ];
+      ]
     }),
-  ) as Draft;
+  ) as Draft
+}
 
 /**
  * M24 cost entry for one transaction (spec §4.13, R14) in the M08 sheet frame. Each cost is
@@ -42,57 +43,58 @@ export function CostSheet({
   row,
   onClose,
 }: {
-  row: CostRow;
-  onClose: () => void;
+  row: CostRow
+  onClose: () => void
 }) {
-  const { t } = useLocale();
-  const actions = useCostActions();
-  const [draft, setDraft] = useState<Draft>(() => toDraft(row.costs));
+  const { t } = useLocale()
+  const actions = useCostActions()
+  const [draft, setDraft] = useState<Draft>(() => toDraft(row.costs))
 
   const set = (type: CostType, next: Partial<Draft[CostType]>) =>
-    setDraft((d) => ({ ...d, [type]: { ...d[type], ...next } }));
+    setDraft(d => ({ ...d, [type]: { ...d[type], ...next } }))
   const missing = COST_TYPES.filter(
-    (type) => !draft[type].notApplicable && Number.isNaN(draft[type].amount),
-  );
+    type => !draft[type].notApplicable && Number.isNaN(draft[type].amount),
+  )
 
   const save = () => {
-    const costs: Partial<Record<CostType, CostValue>> = {};
+    const costs: Partial<Record<CostType, CostValue>> = {}
 
     for (const type of COST_TYPES) {
-      const { amount, notApplicable } = draft[type];
+      const { amount, notApplicable } = draft[type]
 
-      if (notApplicable) costs[type] = { notApplicable: true };
+      if (notApplicable)
+        costs[type] = { notApplicable: true }
       else if (!Number.isNaN(amount))
-        costs[type] = { amount: Math.round(amount * 100) };
+        costs[type] = { amount: Math.round(amount * 100) }
     }
-    actions.save(row.transaction, costs);
+    actions.save(row.transaction, costs)
     toast.success(
       missing.length
         ? t(
             missing.length === 1
-              ? "costData.saved.missingOne"
-              : "costData.saved.missingOther",
+              ? 'costData.saved.missingOne'
+              : 'costData.saved.missingOther',
             { ref: row.ref, count: missing.length },
           )
-        : t("costData.saved.complete", { ref: row.ref }),
-    );
-    onClose();
-  };
+        : t('costData.saved.complete', { ref: row.ref }),
+    )
+    onClose()
+  }
 
   return (
     <SheetFrame
       isOpen
-      footer={
+      footer={(
         <>
           <Button fullWidth isDisabled={!actions.canEdit} onPress={save}>
-            {t("costData.save")}
+            {t('costData.save')}
           </Button>
           <Button fullWidth variant="tertiary" onPress={onClose}>
-            {t("merchantOrder.sheet.back")}
+            {t('merchantOrder.sheet.back')}
           </Button>
         </>
-      }
-      title={t("costData.sheet.title", { ref: row.ref })}
+      )}
+      title={t('costData.sheet.title', { ref: row.ref })}
       onClose={onClose}
     >
       <div className="flex items-center justify-between gap-4 rounded-3xl bg-surface-secondary px-4 py-3">
@@ -106,27 +108,27 @@ export function CostSheet({
           {missing.length
             ? t(
                 missing.length === 1
-                  ? "costData.sheet.missingOne"
-                  : "costData.sheet.missingOther",
+                  ? 'costData.sheet.missingOne'
+                  : 'costData.sheet.missingOther',
                 { count: missing.length },
               )
-            : t("costData.sheet.complete")}
+            : t('costData.sheet.complete')}
         </span>
       </div>
 
       {COST_TYPES.map((type) => {
-        const { amount, notApplicable } = draft[type];
-        const isMissing = !notApplicable && Number.isNaN(amount);
+        const { amount, notApplicable } = draft[type]
+        const isMissing = !notApplicable && Number.isNaN(amount)
 
         return (
           <div key={type} className="flex flex-col gap-2">
             <NumberField
               fullWidth
-              formatOptions={{ style: "currency", currency: "CHF" }}
+              formatOptions={{ style: 'currency', currency: 'CHF' }}
               isDisabled={notApplicable}
               minValue={0}
               value={notApplicable ? 0 : amount}
-              onChange={(v) => set(type, { amount: v })}
+              onChange={v => set(type, { amount: v })}
             >
               <Label className="text-heading">
                 {t(`costData.type.${type}`)}
@@ -134,26 +136,26 @@ export function CostSheet({
               <NumberField.Group>
                 <NumberField.Input className="tabular-nums" />
               </NumberField.Group>
-              <Description className={isMissing ? "text-warning" : ""}>
+              <Description className={isMissing ? 'text-warning' : ''}>
                 {isMissing
-                  ? t("costData.sheet.empty")
+                  ? t('costData.sheet.empty')
                   : t(`costData.help.${type}`)}
               </Description>
             </NumberField>
             <Checkbox
               isSelected={notApplicable}
-              onChange={(selected) => set(type, { notApplicable: selected })}
+              onChange={selected => set(type, { notApplicable: selected })}
             >
               <Checkbox.Content className="flex-row items-center gap-2">
                 <Checkbox.Control className="size-6 rounded-lg">
                   <Checkbox.Indicator className="size-4" />
                 </Checkbox.Control>
-                <Label>{t("costData.notApplicable")}</Label>
+                <Label>{t('costData.notApplicable')}</Label>
               </Checkbox.Content>
             </Checkbox>
           </div>
-        );
+        )
       })}
     </SheetFrame>
-  );
+  )
 }

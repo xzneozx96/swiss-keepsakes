@@ -1,5 +1,5 @@
-import type { OfflineMethod } from "@/features/orders/lib/transitions";
-import type { Order } from "@/features/orders/types";
+import type { OfflineMethod } from '@/features/orders/lib/transitions'
+import type { Order } from '@/features/orders/types'
 
 import {
   Alert,
@@ -14,20 +14,20 @@ import {
   TextField,
   TimeField,
   toast,
-} from "@heroui/react";
+} from '@heroui/react'
 
+import { SheetFrame } from '@/components/sheet-frame'
+
+import { useLocale } from '@/contexts/locale-context'
 import {
   methodLabelKeys,
   offlineMethods,
   useRecordPayment,
-} from "../hooks/use-record-payment";
-
-import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/components/sheet-frame";
+} from '../hooks/use-record-payment'
 
 /** Same choice card as the M04 change and decline sheets: ink frame when selected. */
-const choiceCard =
-  "rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground";
+const choiceCard
+  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /**
  * M08 Record payment (spec §4.7, §5.5): a bottom sheet over M04 for money received
@@ -38,28 +38,28 @@ export function RecordPaymentSheet({
   order,
   onClose,
 }: {
-  order: Order;
-  onClose: () => void;
+  order: Order
+  onClose: () => void
 }) {
-  const { t } = useLocale();
-  const form = useRecordPayment(order);
+  const { t } = useLocale()
+  const form = useRecordPayment(order)
 
   const save = () => {
-    const failed = form.submit();
+    const failed = form.submit()
 
     if (failed) {
-      toast.danger(failed);
+      toast.danger(failed)
 
-      return;
+      return
     }
-    toast.success(form.recordedText);
-    onClose();
-  };
+    toast.success(form.recordedText)
+    onClose()
+  }
 
   return (
     <SheetFrame
       isOpen
-      footer={
+      footer={(
         <>
           <Button
             fullWidth
@@ -70,11 +70,11 @@ export function RecordPaymentSheet({
             {form.confirmLabel}
           </Button>
           <Button fullWidth variant="tertiary" onPress={onClose}>
-            {t("merchantOrder.sheet.back")}
+            {t('merchantOrder.sheet.back')}
           </Button>
         </>
-      }
-      title={t("recordPayment.title", { ref: order.ref })}
+      )}
+      title={t('recordPayment.title', { ref: order.ref })}
       onClose={onClose}
     >
       {/* Compact on purpose: the amount field takes focus on open and must not push
@@ -82,10 +82,10 @@ export function RecordPaymentSheet({
       <div className="flex items-center justify-between gap-4 rounded-3xl bg-surface-secondary px-4 py-3">
         <div className="flex min-w-0 flex-col">
           <span className="text-xs text-muted">
-            {t("recordPayment.summary.owed")}
+            {t('recordPayment.summary.owed')}
           </span>
           <span className="sr-only">
-            {t("recordPayment.owed", { amount: form.owed })}
+            {t('recordPayment.owed', { amount: form.owed })}
           </span>
           <span aria-hidden className="text-title text-foreground tabular-nums">
             {form.owed}
@@ -93,11 +93,11 @@ export function RecordPaymentSheet({
         </div>
         <dl className="flex shrink-0 flex-col gap-0.5 text-end text-xs tabular-nums">
           <div className="flex justify-end gap-1.5">
-            <dt className="text-muted">{t("merchantOrder.amounts.total")}</dt>
+            <dt className="text-muted">{t('merchantOrder.amounts.total')}</dt>
             <dd className="font-medium">{form.total}</dd>
           </div>
           <div className="flex justify-end gap-1.5">
-            <dt className="text-muted">{t("merchantOrder.amounts.paid")}</dt>
+            <dt className="text-muted">{t('merchantOrder.amounts.paid')}</dt>
             <dd className="font-medium">{form.paid}</dd>
           </div>
         </dl>
@@ -105,17 +105,17 @@ export function RecordPaymentSheet({
 
       <NumberField
         fullWidth
-        formatOptions={{ style: "currency", currency: "CHF" }}
+        formatOptions={{ style: 'currency', currency: 'CHF' }}
         isInvalid={form.amountError !== undefined}
         minValue={0}
         value={form.amount}
         onChange={form.setAmount}
       >
-        <Label className="text-heading">{t("recordPayment.amount")}</Label>
+        <Label className="text-heading">{t('recordPayment.amount')}</Label>
         <NumberField.Group>
           <NumberField.Input className="tabular-nums" />
         </NumberField.Group>
-        <Description>{t("recordPayment.amountHelp")}</Description>
+        <Description>{t('recordPayment.amountHelp')}</Description>
         <FieldError>{form.amountError}</FieldError>
       </NumberField>
 
@@ -123,7 +123,7 @@ export function RecordPaymentSheet({
         <Alert status="warning">
           <Alert.Indicator />
           <Alert.Content>
-            <Alert.Title>{t("recordPayment.duplicate.title")}</Alert.Title>
+            <Alert.Title>{t('recordPayment.duplicate.title')}</Alert.Title>
             <Alert.Description>{form.duplicateWarning}</Alert.Description>
           </Alert.Content>
         </Alert>
@@ -131,10 +131,10 @@ export function RecordPaymentSheet({
 
       <RadioGroup
         value={form.method}
-        onChange={(v) => form.setMethod(v as OfflineMethod)}
+        onChange={v => form.setMethod(v as OfflineMethod)}
       >
-        <Label className="text-heading">{t("recordPayment.method")}</Label>
-        {offlineMethods.map((m) => (
+        <Label className="text-heading">{t('recordPayment.method')}</Label>
+        {offlineMethods.map(m => (
           <Radio key={m} className={choiceCard} value={m}>
             <Radio.Content>
               <Radio.Control>
@@ -152,25 +152,25 @@ export function RecordPaymentSheet({
         hourCycle={24}
         maxValue={form.maxTime}
         value={form.time}
-        onChange={(v) => v && form.setTime(v)}
+        onChange={v => v && form.setTime(v)}
       >
-        <Label className="text-heading">{t("recordPayment.time")}</Label>
+        <Label className="text-heading">{t('recordPayment.time')}</Label>
         <TimeField.Group>
           <TimeField.Input>
-            {(segment) => <TimeField.Segment segment={segment} />}
+            {segment => <TimeField.Segment segment={segment} />}
           </TimeField.Input>
         </TimeField.Group>
         <Description>
-          {t("recordPayment.timeHelp", { date: form.today })}
+          {t('recordPayment.timeHelp', { date: form.today })}
         </Description>
-        <FieldError>{t("recordPayment.timeFuture")}</FieldError>
+        <FieldError>{t('recordPayment.timeFuture')}</FieldError>
       </TimeField>
 
       <TextField fullWidth value={form.note} onChange={form.setNote}>
-        <Label className="text-heading">{t("recordPayment.note")}</Label>
+        <Label className="text-heading">{t('recordPayment.note')}</Label>
         <TextArea rows={2} />
-        <Description>{t("recordPayment.noteHelp")}</Description>
+        <Description>{t('recordPayment.noteHelp')}</Description>
       </TextField>
     </SheetFrame>
-  );
+  )
 }

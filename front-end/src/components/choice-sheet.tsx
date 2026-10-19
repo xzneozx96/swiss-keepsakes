@@ -1,9 +1,9 @@
-import type { ButtonProps } from "@heroui/react";
-import type { ReactNode } from "react";
+import type { ButtonProps } from '@heroui/react'
+import type { ReactNode } from 'react'
 
-import { Button, Drawer } from "@heroui/react";
+import { Button, Drawer } from '@heroui/react'
 
-import { useSheetExit } from "@/components/sheet-exit";
+import { useSheetExit } from '@/components/sheet-exit'
 
 /**
  * The bottom sheet where a guest makes a listing's choices and commits them with one full-width
@@ -17,18 +17,18 @@ export function ChoiceSheet({
   onOpenChange,
   children,
 }: {
-  title: string;
-  closeLabel: string;
+  title: string
+  closeLabel: string
   action: {
-    label: string;
-    isDisabled?: boolean;
-    onPress: ButtonProps["onPress"];
-  };
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  children: ReactNode;
+    label: string
+    isDisabled?: boolean
+    onPress: ButtonProps['onPress']
+  }
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  children: ReactNode
 }) {
-  const exitRef = useSheetExit();
+  const exitRef = useSheetExit()
 
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -59,5 +59,5 @@ export function ChoiceSheet({
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>
-  );
+  )
 }

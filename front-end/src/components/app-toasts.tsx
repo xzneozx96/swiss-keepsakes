@@ -1,7 +1,7 @@
-import { Toast, toast } from "@heroui/react";
-import { useEffect, useEffectEvent } from "react";
+import { Toast, toast } from '@heroui/react'
+import { useEffect, useEffectEvent } from 'react'
 
-import { useLocale } from "@/contexts/locale-context";
+import { useLocale } from '@/contexts/locale-context'
 
 /**
  * The one toast region, mounted at the app root. Bottom placement, lifted above the
@@ -11,22 +11,23 @@ import { useLocale } from "@/contexts/locale-context";
  * latest changes could not be kept in this browser.
  */
 export function AppToasts({ storageFull }: { storageFull: boolean }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
-  const warn = useEffectEvent(() => toast.danger(t("demo.storageFull")));
+  const warn = useEffectEvent(() => toast.danger(t('demo.storageFull')))
 
   useEffect(() => {
-    if (storageFull) warn();
-  }, [storageFull]);
+    if (storageFull)
+      warn()
+  }, [storageFull])
 
   return (
     <Toast.Provider
-      aria-label={t("cartToast.region")}
+      aria-label={t('cartToast.region')}
       className="bottom-[calc(env(safe-area-inset-bottom,0px)+96px)] w-[min(398px,calc(100vw-2rem))] sm:min-w-0"
       placement="bottom"
     >
       {({ toast: item }) => {
-        const { title, description, actionProps, variant } = item.content;
+        const { title, description, actionProps, variant } = item.content
 
         return (
           <Toast placement="bottom" toast={item} variant={variant}>
@@ -38,10 +39,10 @@ export function AppToasts({ storageFull }: { storageFull: boolean }) {
               )}
               {actionProps?.children && <Toast.ActionButton {...actionProps} />}
             </Toast.Content>
-            <Toast.CloseButton aria-label={t("cartToast.close")} />
+            <Toast.CloseButton aria-label={t('cartToast.close')} />
           </Toast>
-        );
+        )
       }}
     </Toast.Provider>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-import type { QuantityOptionProps } from "@/features/lab/quantity-options";
+import type { QuantityOptionProps } from '@/features/lab/quantity-options'
 
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from '@tanstack/react-router'
 
 import {
   QuantityBoxed,
@@ -9,58 +9,58 @@ import {
   QuantityPill,
   QuantityRow,
   QuantitySelect,
-} from "@/features/lab/quantity-options";
+} from '@/features/lab/quantity-options'
 
 /** Lab: compare quantity pickers for the C03 add-to-cart sheet. Not part of the product. */
-export const Route = createFileRoute("/lab/quantity")({
+export const Route = createFileRoute('/lab/quantity')({
   component: QuantityLab,
-});
+})
 
 const options = [
   {
-    id: "A",
-    title: "A · Boxed stepper (previous)",
-    note: "HeroUI NumberField as built: label above, − value + in a bordered field.",
+    id: 'A',
+    title: 'A · Boxed stepper (previous)',
+    note: 'HeroUI NumberField as built: label above, − value + in a bordered field.',
     Option: QuantityBoxed,
   },
   {
-    id: "B",
-    title: "B · Guest row (Airbnb) · chosen",
-    note: "Label and 'up to 4' on the left, round outlined − and + with the number between, on the right. Same as Airbnb's guests picker.",
+    id: 'B',
+    title: 'B · Guest row (Airbnb) · chosen',
+    note: 'Label and \'up to 4\' on the left, round outlined − and + with the number between, on the right. Same as Airbnb\'s guests picker.',
     Option: QuantityRow,
   },
   {
-    id: "C",
-    title: "C · Soft pill (Klook)",
-    note: "One grey pill holding − n +, beside the label; no borders.",
+    id: 'C',
+    title: 'C · Soft pill (Klook)',
+    note: 'One grey pill holding − n +, beside the label; no borders.',
     Option: QuantityPill,
   },
   {
-    id: "D",
-    title: "D · Quick chips (Booking.com)",
-    note: "Tap 1, 2, 3 or 4 directly. One tap, no counting; works because stock per gift is small.",
+    id: 'D',
+    title: 'D · Quick chips (Booking.com)',
+    note: 'Tap 1, 2, 3 or 4 directly. One tap, no counting; works because stock per gift is small.',
     Option: QuantityChips,
   },
   {
-    id: "E",
-    title: "E · Big centred stepper (Apple Store)",
-    note: "Large round buttons and a large number in the middle; most visible, takes the most room.",
+    id: 'E',
+    title: 'E · Big centred stepper (Apple Store)',
+    note: 'Large round buttons and a large number in the middle; most visible, takes the most room.',
     Option: QuantityLarge,
   },
   {
-    id: "F",
-    title: "F · Dropdown (Amazon)",
-    note: "'1 ▾' opens a list. Most compact, but one extra tap and less native-feeling.",
+    id: 'F',
+    title: 'F · Dropdown (Amazon)',
+    note: '\'1 ▾\' opens a list. Most compact, but one extra tap and less native-feeling.',
     Option: QuantitySelect,
   },
-];
+]
 
 function QuantityLab() {
   const props: QuantityOptionProps = {
-    label: "Quantity",
+    label: 'Quantity',
     max: 4,
-    hint: "Up to 4 available",
-  };
+    hint: 'Up to 4 available',
+  }
 
   return (
     <div className="flex flex-1 justify-center bg-default/40 py-6">
@@ -91,5 +91,5 @@ function QuantityLab() {
         ))}
       </div>
     </div>
-  );
+  )
 }

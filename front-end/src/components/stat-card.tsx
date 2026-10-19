@@ -1,5 +1,5 @@
-import type { IconComponent } from "@/components/icons";
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from 'react'
+import type { IconComponent } from '@/components/icons'
 
 import {
   Bar,
@@ -8,16 +8,16 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-} from "recharts";
+} from 'recharts'
 
 import {
   ArrowUpRightIcon,
   TrendDownIcon,
   TrendUpIcon,
-} from "@/components/icons";
+} from '@/components/icons'
 
-const cardSurface =
-  "relative min-w-0 rounded-3xl bg-surface p-4 shadow-surface";
+const cardSurface
+  = 'relative min-w-0 rounded-3xl bg-surface p-4 shadow-surface'
 
 /**
  * The link affordance on dashboard cards (owner review 1.9t): a small circle with an arrow
@@ -31,68 +31,68 @@ export function ArrowButton() {
     >
       <ArrowUpRightIcon size={16} />
     </span>
-  );
+  )
 }
 
 export interface DeltaView {
   /** "+12%", "−4%", "±0%", or "" when there is nothing to compare with. */
-  text: string;
-  tone: "good" | "bad" | "neutral";
-  direction: "up" | "down" | "flat" | "none";
+  text: string
+  tone: 'good' | 'bad' | 'neutral'
+  direction: 'up' | 'down' | 'flat' | 'none'
   /** Screen-reader sentence: "+12% compared with 14 Aug – 12 Sept". */
-  label: string;
+  label: string
 }
 
 /** Change against the previous period: trend icon and percent; colour = direction × polarity. */
 export function DeltaChip({ text, tone, direction, label }: DeltaView) {
   const toneClass = {
-    good: "bg-success-soft text-success-soft-foreground",
-    bad: "bg-danger-soft text-danger-soft-foreground",
-    neutral: "bg-default text-muted",
-  }[tone];
-  const Icon =
-    direction === "up"
+    good: 'bg-success-soft text-success-soft-foreground',
+    bad: 'bg-danger-soft text-danger-soft-foreground',
+    neutral: 'bg-default text-muted',
+  }[tone]
+  const Icon
+    = direction === 'up'
       ? TrendUpIcon
-      : direction === "down"
+      : direction === 'down'
         ? TrendDownIcon
-        : null;
+        : null
 
   return (
     <span
       className={`inline-flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-xs font-medium tabular-nums ${toneClass}`}
     >
       {Icon && <Icon aria-hidden size={14} />}
-      <span aria-hidden>{text || "–"}</span>
+      <span aria-hidden>{text || '–'}</span>
       <span className="sr-only">{label}</span>
     </span>
-  );
+  )
 }
 
 export interface StatCardProps {
-  label: ReactNode;
-  value: ReactNode;
-  icon?: IconComponent;
+  label: ReactNode
+  value: ReactNode
+  icon?: IconComponent
   /** Next to the value, e.g. a DeltaChip. */
-  badge?: ReactNode;
+  badge?: ReactNode
   /** Under the value: a hint or a sparkline. Inside a `dl`, wrap it in a `dd`. */
-  children?: ReactNode;
+  children?: ReactNode
   /** A larger value: the hero KPI, or a count that is the whole message. */
-  isLarge?: boolean;
+  isLarge?: boolean
   /** Muted value, e.g. a count of 0. */
-  isMuted?: boolean;
-  className?: string;
+  isMuted?: boolean
+  className?: string
   /**
    * Renders the card as something else, e.g. a router link with an accessible name. The
    * inner text is then aria-hidden spans; without it the card is `dt`/`dd` inside a `dl`.
    */
-  as?: (props: { className: string; children: ReactNode }) => ReactElement;
+  as?: (props: { className: string, children: ReactNode }) => ReactElement
   /** Shows the round arrow button (only with `as` rendering a link). */
-  isLink?: boolean;
+  isLink?: boolean
   /**
    * Spans three rows of the parent grid's subgrid (label, value, one child), so values line
    * up along a row even when labels or hints wrap to different heights (P02).
    */
-  isSubgrid?: boolean;
+  isSubgrid?: boolean
 }
 
 /**
@@ -109,13 +109,13 @@ export function StatCard({
   children,
   isLarge = false,
   isMuted = false,
-  className = "",
+  className = '',
   as,
   isLink = false,
   isSubgrid = false,
 }: StatCardProps) {
-  const Term = as ? "span" : "dt";
-  const Detail = as ? "span" : "dd";
+  const Term = as ? 'span' : 'dt'
+  const Detail = as ? 'span' : 'dd'
   const body = (
     <>
       <Term
@@ -143,14 +143,14 @@ export function StatCard({
         // A small card puts the badge under the value, so values line up along a row.
         className={
           isLarge
-            ? "flex flex-wrap items-center gap-x-2 gap-y-1"
-            : "flex flex-col items-start gap-1"
+            ? 'flex flex-wrap items-center gap-x-2 gap-y-1'
+            : 'flex flex-col items-start gap-1'
         }
       >
         <span
           className={`font-semibold tracking-tight ${
-            isLarge ? "text-3xl" : "text-xl xl:text-2xl"
-          } ${isMuted ? "text-muted" : ""}`}
+            isLarge ? 'text-3xl' : 'text-xl xl:text-2xl'
+          } ${isMuted ? 'text-muted' : ''}`}
         >
           {value}
         </span>
@@ -158,57 +158,59 @@ export function StatCard({
       </Detail>
       {children}
     </>
-  );
+  )
   const layout = isSubgrid
-    ? "row-span-3 grid grid-rows-subgrid content-start gap-1"
-    : "flex flex-col gap-1";
-  const cardClass = `${cardSurface} ${layout} ${isLink ? "group outline-none transition-colors hover:bg-surface-secondary/50 focus-visible:focus-ring" : ""} ${className}`;
+    ? 'row-span-3 grid grid-rows-subgrid content-start gap-1'
+    : 'flex flex-col gap-1'
+  const cardClass = `${cardSurface} ${layout} ${isLink ? 'group outline-none transition-colors hover:bg-surface-secondary/50 focus-visible:focus-ring' : ''} ${className}`
 
-  return as ? (
-    as({ className: cardClass, children: body })
-  ) : (
-    <div className={cardClass}>{body}</div>
-  );
+  return as
+    ? (
+        as({ className: cardClass, children: body })
+      )
+    : (
+        <div className={cardClass}>{body}</div>
+      )
 }
 
 export interface AllTimeBar {
-  id: string;
+  id: string
   /** Axis label: "31/8", "Sept". */
-  tick: string;
+  tick: string
   /** Tooltip and table heading: "Week of 31 Aug", "This week". */
-  label: string;
+  label: string
   /** null: no data yet (before the first order), so no bar is drawn. */
-  value: number | null;
-  valueText: string;
-  isCurrent: boolean;
+  value: number | null
+  valueText: string
+  isCurrent: boolean
 }
 
 export interface AllTimeMetric {
-  id: string;
-  icon: IconComponent;
-  label: string;
-  value: string;
+  id: string
+  icon: IconComponent
+  label: string
+  value: string
   /** The bar's reference in words: "81% of CHF 9,431.00 requested". */
-  caption: string;
+  caption: string
   /** 0–1. */
-  share: number;
+  share: number
 }
 
 export interface AllTimeCardProps {
-  id: string;
-  title: string;
-  description: string;
-  value: string;
-  delta: DeltaView;
-  sentence: string;
+  id: string
+  title: string
+  description: string
+  value: string
+  delta: DeltaView
+  sentence: string
   chart: {
-    title: string;
-    bars: AllTimeBar[];
-    tableLabels: { item: string; value: string };
-  };
-  metricsLabel: string;
-  metrics: AllTimeMetric[];
-  footer?: ReactNode;
+    title: string
+    bars: AllTimeBar[]
+    tableLabels: { item: string, value: string }
+  }
+  metricsLabel: string
+  metrics: AllTimeMetric[]
+  footer?: ReactNode
 }
 
 /**
@@ -234,20 +236,21 @@ export function AllTimeCard({
     active,
     payload,
   }: {
-    active?: boolean;
-    payload?: readonly { payload?: AllTimeBar }[];
+    active?: boolean
+    payload?: readonly { payload?: AllTimeBar }[]
   }) => {
-    const bar = payload?.[0]?.payload;
+    const bar = payload?.[0]?.payload
 
-    if (!active || !bar) return null;
+    if (!active || !bar)
+      return null
 
     return (
       <div className="rounded-xl bg-overlay px-3 py-2 text-xs shadow-overlay">
         <p className="font-medium text-muted">{bar.label}</p>
         <p className="font-semibold tabular-nums">{bar.valueText}</p>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <section
@@ -286,12 +289,12 @@ export function AllTimeCard({
                   axisLine={false}
                   dataKey="tick"
                   interval={0}
-                  tick={{ fill: "var(--muted)", fontSize: 11 }}
+                  tick={{ fill: 'var(--muted)', fontSize: 11 }}
                   tickLine={false}
                 />
                 <Tooltip
                   content={tooltip}
-                  cursor={{ fill: "var(--surface-secondary)", radius: 8 }}
+                  cursor={{ fill: 'var(--surface-secondary)', radius: 8 }}
                 />
                 <Bar
                   dataKey="value"
@@ -299,11 +302,11 @@ export function AllTimeCard({
                   minPointSize={3}
                   radius={[8, 8, 8, 8]}
                 >
-                  {chart.bars.map((b) => (
+                  {chart.bars.map(b => (
                     <Cell
                       key={b.id}
                       fill={
-                        b.isCurrent ? "var(--chart-1)" : "var(--chart-1-light)"
+                        b.isCurrent ? 'var(--chart-1)' : 'var(--chart-1-light)'
                       }
                     />
                   ))}
@@ -321,7 +324,7 @@ export function AllTimeCard({
                 </tr>
               </thead>
               <tbody>
-                {chart.bars.map((b) => (
+                {chart.bars.map(b => (
                   <tr key={b.id}>
                     <th scope="row">{b.label}</th>
                     <td>{b.valueText}</td>
@@ -337,7 +340,7 @@ export function AllTimeCard({
         className="grid gap-4 rounded-2xl bg-surface-secondary p-4 sm:grid-cols-3"
       >
         {metrics.map((m) => {
-          const Icon = m.icon;
+          const Icon = m.icon
 
           return (
             <div key={m.id} className="flex min-w-0 flex-col gap-2">
@@ -357,12 +360,12 @@ export function AllTimeCard({
                 <span
                   aria-hidden
                   className="block h-1.5 overflow-hidden rounded-full"
-                  style={{ background: "var(--chart-track)" }}
+                  style={{ background: 'var(--chart-track)' }}
                 >
                   <span
                     className="block h-full rounded-full"
                     style={{
-                      background: "var(--chart-1)",
+                      background: 'var(--chart-1)',
                       width: `${Math.min(1, Math.max(0, m.share)) * 100}%`,
                     }}
                   />
@@ -372,10 +375,10 @@ export function AllTimeCard({
                 </span>
               </dd>
             </div>
-          );
+          )
         })}
       </dl>
       {footer}
     </section>
-  );
+  )
 }

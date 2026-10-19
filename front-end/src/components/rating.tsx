@@ -1,4 +1,4 @@
-import { RatingIcon } from "@/components/icons";
+import { RatingIcon } from '@/components/icons'
 
 /** Five stars, filled up to the whole-number rating; the label carries the exact value. */
 export function Stars({
@@ -6,9 +6,9 @@ export function Stars({
   label,
   size = 12,
 }: {
-  rating: number;
-  label: string;
-  size?: number;
+  rating: number
+  label: string
+  size?: number
 }) {
   return (
     <span aria-label={label} className="flex gap-0.5" role="img">
@@ -16,17 +16,17 @@ export function Stars({
         <RatingIcon
           key={i}
           aria-hidden
-          className={i < Math.floor(rating) ? "" : "opacity-25"}
+          className={i < Math.floor(rating) ? '' : 'opacity-25'}
           size={size}
           weight="Filled"
         />
       ))}
     </span>
-  );
+  )
 }
 
 /** Almond-shaped leaf centred on 0,0, pointing up (rotated into place per leaf). */
-const leaf = "M0 -13 C 9.5 -7 9.5 7 0 13 C -9.5 7 -9.5 -7 0 -13 Z";
+const leaf = 'M0 -13 C 9.5 -7 9.5 7 0 13 C -9.5 7 -9.5 -7 0 -13 Z'
 
 /**
  * Four big leaves on the outer side of the stem, fanning outwards, a top leaf, and
@@ -38,7 +38,7 @@ const leaves = [
   { x: 8, y: 47, r: -58 },
   { x: 11, y: 64, r: -72 },
   { x: 25, y: 75, r: 78 },
-];
+]
 
 /**
  * Golden laurel branch (Airbnb "Guest favorite" pattern): glossy almond leaves on the
@@ -47,15 +47,15 @@ const leaves = [
  */
 export function Laurel({
   side,
-  className = "",
+  className = '',
 }: {
-  side: "start" | "end";
-  className?: string;
+  side: 'start' | 'end'
+  className?: string
 }) {
   return (
     <svg
       aria-hidden
-      className={`drop-shadow-[0_3px_3px_rgba(120,80,0,0.28)] ${side === "end" ? "-scale-x-100" : ""} ${className}`}
+      className={`drop-shadow-[0_3px_3px_rgba(120,80,0,0.28)] ${side === 'end' ? '-scale-x-100' : ''} ${className}`}
       fill="none"
       viewBox="-2 0 44 92"
     >
@@ -87,5 +87,5 @@ export function Laurel({
         />
       ))}
     </svg>
-  );
+  )
 }

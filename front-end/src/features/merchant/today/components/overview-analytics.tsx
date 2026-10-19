@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
 
 /**
  * A dashboard widget after HeroUI Pro's Widget: a tinted shell with a header (title,
@@ -10,16 +10,16 @@ export function Widget({
   description,
   actions,
   footer,
-  className = "",
+  className = '',
   children,
 }: {
-  id: string;
-  title: string;
-  description?: string;
-  actions?: ReactNode;
-  footer?: ReactNode;
-  className?: string;
-  children: ReactNode;
+  id: string
+  title: string
+  description?: string
+  actions?: ReactNode
+  footer?: ReactNode
+  className?: string
+  children: ReactNode
 }) {
   return (
     <section
@@ -44,7 +44,7 @@ export function Widget({
         <div className="px-3.5 pt-2 pb-1 text-xs text-muted">{footer}</div>
       )}
     </section>
-  );
+  )
 }
 
 /** A tooltip card: the value leads in ink, the series name follows in muted text. */
@@ -52,13 +52,13 @@ export function TooltipCard({
   heading,
   rows,
 }: {
-  heading: string;
-  rows: { key: string; colour: string; label: string; value: string }[];
+  heading: string
+  rows: { key: string, colour: string, label: string, value: string }[]
 }) {
   return (
     <div className="min-w-36 rounded-xl bg-overlay px-3 py-2 text-xs shadow-overlay">
       <p className="mb-1 font-medium text-muted">{heading}</p>
-      {rows.map((r) => (
+      {rows.map(r => (
         <p key={r.key} className="flex items-center gap-2">
           <span
             aria-hidden
@@ -70,5 +70,5 @@ export function TooltipCard({
         </p>
       ))}
     </div>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-import { Button } from "@heroui/react";
-import { useNavigate } from "@tanstack/react-router";
+import { Button } from '@heroui/react'
+import { useNavigate } from '@tanstack/react-router'
 
-import { useDemoActions } from "@/features/demo";
-import { useTours } from "@/features/tours/hooks/use-tours";
+import { useDemoActions } from '@/features/demo'
+import { useTours } from '@/features/tours/hooks/use-tours'
 
 /**
  * Prototype-bar control (English, outside the product UI): removes every tour with its
@@ -10,9 +10,9 @@ import { useTours } from "@/features/tours/hooks/use-tours";
  * Reset restores the fixtures.
  */
 export function ToursDemoControl({ onDone }: { onDone: () => void }) {
-  const { update } = useDemoActions();
-  const { tours } = useTours();
-  const navigate = useNavigate();
+  const { update } = useDemoActions()
+  const { tours } = useTours()
+  const navigate = useNavigate()
 
   return (
     <div className="flex flex-col gap-2">
@@ -23,7 +23,7 @@ export function ToursDemoControl({ onDone }: { onDone: () => void }) {
         size="sm"
         variant="tertiary"
         onPress={() => {
-          update((s) =>
+          update(s =>
             s.data.tours
               ? {
                   ...s,
@@ -38,9 +38,9 @@ export function ToursDemoControl({ onDone }: { onDone: () => void }) {
                   },
                 }
               : s,
-          );
-          onDone();
-          void navigate({ to: "/tours" });
+          )
+          onDone()
+          void navigate({ to: '/tours' })
         }}
       >
         Empty the tour list
@@ -50,5 +50,5 @@ export function ToursDemoControl({ onDone }: { onDone: () => void }) {
         shows its empty state. Reset restores them.
       </p>
     </div>
-  );
+  )
 }

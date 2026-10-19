@@ -1,14 +1,14 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router'
 
-import { ChevronRightIcon } from "@/components/icons";
-import { Media } from "@/components/media";
+import { ChevronRightIcon } from '@/components/icons'
+import { Media } from '@/components/media'
 
 interface StoryRowProps {
   /** Opens C20; both language versions share the slug. */
-  slug: string;
-  photo: string;
-  title: string;
-  meta: string;
+  slug: string
+  photo: string
+  title: string
+  meta: string
 }
 
 /**
@@ -29,5 +29,5 @@ export function StoryRow({ slug, photo, title, meta }: StoryRowProps) {
       </div>
       <ChevronRightIcon className="shrink-0 text-muted" size={18} />
     </Link>
-  );
+  )
 }

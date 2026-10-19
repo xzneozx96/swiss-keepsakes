@@ -1,24 +1,24 @@
-import type { Order } from "@/features/orders/types";
+import type { Order } from '@/features/orders/types'
 
-import { Skeleton } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { Skeleton } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
-import { isClosedOrder, useTransactionRow } from "../hooks/use-transaction-row";
+import { DateTile } from '@/components/date-tile'
 
-import { DateTile } from "@/components/date-tile";
-import { EmptyState } from "@/components/empty-state";
-import { ChevronRightIcon, OrdersIcon, PickupIcon } from "@/components/icons";
-import { Media } from "@/components/media";
-import { StatusChip } from "@/components/status-chip";
+import { EmptyState } from '@/components/empty-state'
+import { ChevronRightIcon, OrdersIcon, PickupIcon } from '@/components/icons'
+import { Media } from '@/components/media'
+import { StatusChip } from '@/components/status-chip'
 import {
-  TicketGroups,
   pastRowClass,
   ticketClass,
-} from "@/components/ticket-groups";
-import { useLocale } from "@/contexts/locale-context";
-import { ProposalMark } from "@/features/demo/components/proposal-mark";
-import { useGuestOrders } from "@/features/orders/hooks/use-orders";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+  TicketGroups,
+} from '@/components/ticket-groups'
+import { useLocale } from '@/contexts/locale-context'
+import { ProposalMark } from '@/features/demo/components/proposal-mark'
+import { useGuestOrders } from '@/features/orders/hooks/use-orders'
+import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { isClosedOrder, useTransactionRow } from '../hooks/use-transaction-row'
 
 /**
  * C14 My orders, the Orders tab of the account hub (1.12r). Open orders come first as pickup
@@ -26,13 +26,13 @@ import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
  * order opens C15.
  */
 export function TransactionList() {
-  const { t } = useLocale();
-  const isLoading = useSimulatedLoading();
-  const orders = useGuestOrders();
+  const { t } = useLocale()
+  const isLoading = useSimulatedLoading()
+  const orders = useGuestOrders()
   const open = orders
-    .filter((o) => !isClosedOrder(o))
-    .sort((a, b) => a.pickupDate.localeCompare(b.pickupDate));
-  const past = orders.filter(isClosedOrder);
+    .filter(o => !isClosedOrder(o))
+    .sort((a, b) => a.pickupDate.localeCompare(b.pickupDate))
+  const past = orders.filter(isClosedOrder)
 
   if (isLoading) {
     return (
@@ -41,38 +41,38 @@ export function TransactionList() {
         <Skeleton className="h-44 w-full rounded-2xl" />
         <Skeleton className="h-44 w-full rounded-2xl" />
       </div>
-    );
+    )
   }
 
   if (orders.length === 0) {
     return (
       <EmptyState
-        action={{ label: t("transactions.empty.action"), to: "/" }}
+        action={{ label: t('transactions.empty.action'), to: '/' }}
         icon={OrdersIcon}
-        message={t("transactions.empty.message")}
+        message={t('transactions.empty.message')}
       />
-    );
+    )
   }
 
   return (
     <TicketGroups
       id="orders"
-      open={open.map((order) => (
+      open={open.map(order => (
         <OrderTicket key={order.id} order={order} />
       ))}
-      openTitle={t("transactions.open.title")}
-      past={past.map((order) => (
+      openTitle={t('transactions.open.title')}
+      past={past.map(order => (
         <PastRow key={order.id} order={order} />
       ))}
-      pastTitle={t("transactions.past.title")}
+      pastTitle={t('transactions.past.title')}
     />
-  );
+  )
 }
 
 /** Open order: the C15 pickup ticket in small (date tile, gift, place, then both labels). */
 function OrderTicket({ order }: { order: Order }) {
-  const { t } = useLocale();
-  const row = useTransactionRow(order);
+  const { t } = useLocale()
+  const row = useTransactionRow(order)
 
   return (
     <li>
@@ -106,7 +106,7 @@ function OrderTicket({ order }: { order: Order }) {
             <StatusChip tone={row.payment.tone}>{row.payment.text}</StatusChip>
           </div>
           {row.changedNote && (
-            <ProposalMark name={t("transactions.proposal.freeCancel")}>
+            <ProposalMark name={t('transactions.proposal.freeCancel')}>
               <p className="text-sm text-muted">{row.changedNote}</p>
             </ProposalMark>
           )}
@@ -122,12 +122,12 @@ function OrderTicket({ order }: { order: Order }) {
         </div>
       </Link>
     </li>
-  );
+  )
 }
 
 /** Closed order: one quiet row with both labels, so the history stays scannable. */
 function PastRow({ order }: { order: Order }) {
-  const row = useTransactionRow(order);
+  const row = useTransactionRow(order)
 
   return (
     <li>
@@ -167,5 +167,5 @@ function PastRow({ order }: { order: Order }) {
         />
       </Link>
     </li>
-  );
+  )
 }

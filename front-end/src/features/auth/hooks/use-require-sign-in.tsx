@@ -1,12 +1,12 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { useCallback } from "react";
+import { useNavigate, useRouterState } from '@tanstack/react-router'
+import { useCallback } from 'react'
 
-import { useDemoSelector } from "@/features/demo";
+import { useDemoSelector } from '@/features/demo'
 
-declare module "@tanstack/history" {
+declare module '@tanstack/history' {
   interface HistoryState {
     /** Sign-in opened over its own return screen: on success it steps back, not forward. */
-    signInOverReturnTo?: boolean;
+    signInOverReturnTo?: boolean
   }
 }
 
@@ -22,25 +22,25 @@ declare module "@tanstack/history" {
  * `signInSheet` is always null since C05 became a screen (1.6r); callers can drop it.
  */
 export function useRequireSignIn() {
-  const signedIn = useDemoSelector((s) => s.data.signedInGuestId !== null);
-  const navigate = useNavigate();
-  const here = useRouterState({ select: (s) => s.location.href });
+  const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)
+  const navigate = useNavigate()
+  const here = useRouterState({ select: s => s.location.href })
 
   const requireSignIn = useCallback(
     (onDone: () => void = () => {}, returnTo: string = here) => {
       if (signedIn) {
-        onDone();
+        onDone()
 
-        return;
+        return
       }
       void navigate({
-        to: "/sign-in",
+        to: '/sign-in',
         search: { returnTo },
         state: { signInOverReturnTo: returnTo === here },
-      });
+      })
     },
     [signedIn, navigate, here],
-  );
+  )
 
-  return { signedIn, requireSignIn, signInSheet: null };
+  return { signedIn, requireSignIn, signInSheet: null }
 }

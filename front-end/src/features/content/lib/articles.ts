@@ -1,8 +1,9 @@
-import type { Article } from "../types";
-import type { Language } from "@/contexts/locale-context";
+import type { Article } from '../types'
+import type { Language } from '@/contexts/locale-context'
 
-const publishedAt = (a: Article) =>
-  a.publication.status === "published" ? a.publication.publishedAt : "";
+function publishedAt(a: Article) {
+  return a.publication.status === 'published' ? a.publication.publishedAt : ''
+}
 
 /**
  * Published articles in one language, newest first. Stories are published per language and
@@ -13,6 +14,6 @@ export function publishedArticles(
   language: Language,
 ): Article[] {
   return articles
-    .filter((a) => a.language === language && publishedAt(a))
-    .sort((a, b) => publishedAt(b).localeCompare(publishedAt(a)));
+    .filter(a => a.language === language && publishedAt(a))
+    .sort((a, b) => publishedAt(b).localeCompare(publishedAt(a)))
 }

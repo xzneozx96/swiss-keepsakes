@@ -1,25 +1,25 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Skeleton } from "@heroui/react";
+import { Skeleton } from '@heroui/react'
+import { createFileRoute } from '@tanstack/react-router'
 
-import { RequestSent } from "@/features/checkout/components/request-sent";
-import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { RequestSent } from '@/features/checkout/components/request-sent'
+import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 
 /**
  * C07 Request sent. C06 opens it with `replace`; `?orders=` holds the new order ids,
  * comma-separated (e.g. "sk-1043,sk-1044").
  */
-export const Route = createFileRoute("/_guest/cart_/sent")({
+export const Route = createFileRoute('/_guest/cart_/sent')({
   validateSearch: (search: Record<string, unknown>): { orders: string } => ({
-    orders: typeof search.orders === "string" ? search.orders : "",
+    orders: typeof search.orders === 'string' ? search.orders : '',
   }),
   // The bottom bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   component: SentPage,
-});
+})
 
 function SentPage() {
-  const { orders } = Route.useSearch();
-  const isLoading = useSimulatedLoading();
+  const { orders } = Route.useSearch()
+  const isLoading = useSimulatedLoading()
 
   if (isLoading) {
     return (
@@ -31,8 +31,8 @@ function SentPage() {
         <Skeleton className="h-72 w-full rounded-3xl" />
         <Skeleton className="h-72 w-full rounded-3xl" />
       </div>
-    );
+    )
   }
 
-  return <RequestSent orderIds={orders.split(",").filter(Boolean)} />;
+  return <RequestSent orderIds={orders.split(',').filter(Boolean)} />
 }

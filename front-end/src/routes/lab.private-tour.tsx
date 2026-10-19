@@ -1,7 +1,15 @@
-import type { PrivateTourOptionProps } from "@/features/lab/private-tour-options";
+import type { PrivateTourOptionProps } from '@/features/lab/private-tour-options'
 
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from '@tanstack/react-router'
 
+import { useLocale } from '@/contexts/locale-context'
+import {
+  PrivateHeadcount,
+  PrivatePass,
+  PrivatePolaroids,
+  PrivatePostcard,
+  PrivateStickyNote,
+} from '@/features/lab/private-tour-options'
 import {
   PrivateChecklist,
   PrivatePinboard,
@@ -9,106 +17,98 @@ import {
   PrivateSideBySide,
   PrivateTapedCorners,
   PrivateTwoPolaroids,
-} from "@/features/lab/private-tour-options-v2";
-import { useLocale } from "@/contexts/locale-context";
-import {
-  PrivateHeadcount,
-  PrivatePass,
-  PrivatePolaroids,
-  PrivatePostcard,
-  PrivateStickyNote,
-} from "@/features/lab/private-tour-options";
+} from '@/features/lab/private-tour-options-v2'
 
 /** Lab: private-tour call-to-action options at phone width. Not part of the product. */
-export const Route = createFileRoute("/lab/private-tour")({
+export const Route = createFileRoute('/lab/private-tour')({
   component: PrivateTourLab,
-});
+})
 
 const round2 = [
   {
-    id: "C1",
-    title: "C1 · Two polaroids, note between",
-    note: "Two snapshots and the sticky note pinned in the middle.",
+    id: 'C1',
+    title: 'C1 · Two polaroids, note between',
+    note: 'Two snapshots and the sticky note pinned in the middle.',
     Option: PrivateTwoPolaroids,
   },
   {
-    id: "C2",
-    title: "C2 · Pinned note",
-    note: "A bigger photo; the note held by a red push-pin, one handwritten sentence.",
+    id: 'C2',
+    title: 'C2 · Pinned note',
+    note: 'A bigger photo; the note held by a red push-pin, one handwritten sentence.',
     Option: PrivatePinnedNote,
   },
   {
-    id: "C3",
-    title: "C3 · Side by side",
-    note: "Text left, polaroid and note right; full-width button below.",
+    id: 'C3',
+    title: 'C3 · Side by side',
+    note: 'Text left, polaroid and note right; full-width button below.',
     Option: PrivateSideBySide,
   },
   {
-    id: "C4",
-    title: "C4 · Checklist note",
-    note: "The note as a little list: group size and dates ticked, the plan left to the team.",
+    id: 'C4',
+    title: 'C4 · Checklist note',
+    note: 'The note as a little list: group size and dates ticked, the plan left to the team.',
     Option: PrivateChecklist,
   },
   {
-    id: "C5",
-    title: "C5 · Taped corners, pink note",
-    note: "Tape on the photo's corners and a pink note, a little looser.",
+    id: 'C5',
+    title: 'C5 · Taped corners, pink note',
+    note: 'Tape on the photo\'s corners and a pink note, a little looser.',
     Option: PrivateTapedCorners,
   },
   {
-    id: "C6",
-    title: "C6 · Pinboard",
-    note: "A small cork-coloured board: polaroid, note and a private-tour ticket stub.",
+    id: 'C6',
+    title: 'C6 · Pinboard',
+    note: 'A small cork-coloured board: polaroid, note and a private-tour ticket stub.',
     Option: PrivatePinboard,
   },
-];
+]
 
 const options = [
   {
-    id: "A",
-    title: "A · Group polaroids",
-    note: "The home banner's three snapshots, captioned your group, your dates, your pace.",
+    id: 'A',
+    title: 'A · Group polaroids',
+    note: 'The home banner\'s three snapshots, captioned your group, your dates, your pace.',
     Option: PrivatePolaroids,
   },
   {
-    id: "B",
-    title: "B · Group pass",
-    note: "A ticket made out to the guest's group, with blanks and a tear-off stub.",
+    id: 'B',
+    title: 'B · Group pass',
+    note: 'A ticket made out to the guest\'s group, with blanks and a tear-off stub.',
     Option: PrivatePass,
   },
   {
-    id: "C",
-    title: "C · Polaroid with a sticky note",
-    note: "One big snapshot, “just your group”, with the three facts on a taped note.",
+    id: 'C',
+    title: 'C · Polaroid with a sticky note',
+    note: 'One big snapshot, “just your group”, with the three facts on a taped note.',
     Option: PrivateStickyNote,
   },
   {
-    id: "D",
-    title: "D · Headcount",
-    note: "Overlapping round photos ending in a red +50 bubble; the facts in one line.",
+    id: 'D',
+    title: 'D · Headcount',
+    note: 'Overlapping round photos ending in a red +50 bubble; the facts in one line.',
     Option: PrivateHeadcount,
   },
   {
-    id: "E",
-    title: "E · Postcard to the team",
-    note: "The request half-written on a Luzerne postcard, with a photo stamp.",
+    id: 'E',
+    title: 'E · Postcard to the team',
+    note: 'The request half-written on a Luzerne postcard, with a photo stamp.',
     Option: PrivatePostcard,
   },
-];
+]
 
 function PrivateTourLab() {
-  const { t, language } = useLocale();
+  const { t, language } = useLocale()
   const props: PrivateTourOptionProps = {
-    title: t("privateTour.entry.title"),
-    body: t("privateTour.entry.body"),
-    action: t("privateTour.entry.action"),
+    title: t('privateTour.entry.title'),
+    body: t('privateTour.entry.body'),
+    action: t('privateTour.entry.action'),
     facts: [
-      t("privateTour.entry.size"),
-      t("privateTour.entry.dates"),
-      t("privateTour.entry.planned"),
+      t('privateTour.entry.size'),
+      t('privateTour.entry.dates'),
+      t('privateTour.entry.planned'),
     ],
     language,
-  };
+  }
 
   return (
     <div className="flex flex-1 justify-center bg-default/40 py-6">
@@ -152,5 +152,5 @@ function PrivateTourLab() {
         ))}
       </div>
     </div>
-  );
+  )
 }

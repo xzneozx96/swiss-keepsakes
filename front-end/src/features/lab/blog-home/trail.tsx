@@ -1,15 +1,15 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router'
 
-import { Media } from "@/components/media";
+import { Media } from '@/components/media'
 
 export interface TrailStop {
-  key: string;
-  photo: string;
-  color: string;
-  eyebrow: React.ReactNode;
-  title: string;
-  meta?: string;
-  action: { slug: string } | { onClick: () => void };
+  key: string
+  photo: string
+  color: string
+  eyebrow: React.ReactNode
+  title: string
+  meta?: string
+  action: { slug: string } | { onClick: () => void }
 }
 
 /** Numbered round photos on a dotted path that zigzags down the page. */
@@ -17,8 +17,8 @@ export function TrailList({ stops }: { stops: TrailStop[] }) {
   return (
     <ol className="flex flex-col">
       {stops.map((stop, i) => {
-        const left = i % 2 === 0;
-        const className = `flex w-full items-center gap-4 rounded-3xl outline-none focus-visible:focus-ring active:opacity-80 ${left ? "text-left" : "flex-row-reverse text-right"}`;
+        const left = i % 2 === 0
+        const className = `flex w-full items-center gap-4 rounded-3xl outline-none focus-visible:focus-ring active:opacity-80 ${left ? 'text-left' : 'flex-row-reverse text-right'}`
         const body = (
           <>
             <span className="relative shrink-0">
@@ -28,14 +28,14 @@ export function TrailList({ stops }: { stops: TrailStop[] }) {
                 photo={stop.photo}
               />
               <span
-                className={`absolute -top-1 flex size-8 items-center justify-center rounded-full font-serif text-[15px] font-medium text-white ring-[3px] ring-background ${left ? "-left-1" : "-right-1"}`}
+                className={`absolute -top-1 flex size-8 items-center justify-center rounded-full font-serif text-[15px] font-medium text-white ring-[3px] ring-background ${left ? '-left-1' : '-right-1'}`}
                 style={{ backgroundColor: stop.color }}
               >
                 {i + 1}
               </span>
             </span>
             <span
-              className={`flex min-w-0 flex-1 flex-col gap-1 ${left ? "items-start" : "items-end"}`}
+              className={`flex min-w-0 flex-1 flex-col gap-1 ${left ? 'items-start' : 'items-end'}`}
             >
               <span
                 className="flex items-center gap-1 text-[12px] font-semibold"
@@ -51,27 +51,29 @@ export function TrailList({ stops }: { stops: TrailStop[] }) {
               )}
             </span>
           </>
-        );
+        )
 
         return (
           <li key={stop.key} className="flex flex-col">
-            {"slug" in stop.action ? (
-              <Link
-                className={className}
-                params={{ slug: stop.action.slug }}
-                to="/stories/$slug"
-              >
-                {body}
-              </Link>
-            ) : (
-              <button
-                className={className}
-                type="button"
-                onClick={stop.action.onClick}
-              >
-                {body}
-              </button>
-            )}
+            {'slug' in stop.action
+              ? (
+                  <Link
+                    className={className}
+                    params={{ slug: stop.action.slug }}
+                    to="/stories/$slug"
+                  >
+                    {body}
+                  </Link>
+                )
+              : (
+                  <button
+                    className={className}
+                    type="button"
+                    onClick={stop.action.onClick}
+                  >
+                    {body}
+                  </button>
+                )}
             {i < stops.length - 1 && (
               <svg
                 aria-hidden
@@ -82,8 +84,8 @@ export function TrailList({ stops }: { stops: TrailStop[] }) {
                 <path
                   d={
                     left
-                      ? "M15.6 0 C15.6 26 84.4 14 84.4 40"
-                      : "M84.4 0 C84.4 26 15.6 14 15.6 40"
+                      ? 'M15.6 0 C15.6 26 84.4 14 84.4 40'
+                      : 'M84.4 0 C84.4 26 15.6 14 15.6 40'
                   }
                   fill="none"
                   stroke="var(--accent)"
@@ -95,8 +97,8 @@ export function TrailList({ stops }: { stops: TrailStop[] }) {
               </svg>
             )}
           </li>
-        );
+        )
       })}
     </ol>
-  );
+  )
 }

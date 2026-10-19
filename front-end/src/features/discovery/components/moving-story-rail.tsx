@@ -1,19 +1,19 @@
-import { ScrollShadow } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { ScrollShadow } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
-import { PickupIcon } from "@/components/icons";
-import { avatarUrl } from "@/lib/avatars";
-import { photoUrl } from "@/lib/photos";
+import { PickupIcon } from '@/components/icons'
+import { avatarUrl } from '@/lib/avatars'
+import { photoUrl } from '@/lib/photos'
 
 export interface MovingStory {
-  slug: string;
-  photo: string;
-  title: string;
-  category: string;
-  place: string;
-  author: string;
+  slug: string
+  photo: string
+  title: string
+  category: string
+  place: string
+  author: string
   /** e.g. "4 min read". */
-  meta: string;
+  meta: string
 }
 
 /**
@@ -24,8 +24,8 @@ export function MovingStoryRail({
   label,
   stories,
 }: {
-  label: string;
-  stories: MovingStory[];
+  label: string
+  stories: MovingStory[]
 }) {
   return (
     <ScrollShadow
@@ -90,5 +90,5 @@ export function MovingStoryRail({
         ))}
       </ul>
     </ScrollShadow>
-  );
+  )
 }

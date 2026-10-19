@@ -1,14 +1,14 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
 
-import { Button, Spinner } from "@heroui/react";
+import { Button, Spinner } from '@heroui/react'
 
 import {
   ChevronRightIcon,
   DirectionsIcon,
   ExploreIcon,
-} from "@/components/icons";
+} from '@/components/icons'
 
-import "@/features/tours/map/tour-itinerary-map.css";
+import '@/features/tours/map/tour-itinerary-map.css'
 
 /** The map frame as it looks while the next stop's tiles load: the old view stays on screen. */
 function MockMap({
@@ -16,9 +16,9 @@ function MockMap({
   cardLoading = false,
   children,
 }: {
-  background: string;
-  cardLoading?: boolean;
-  children?: ReactNode;
+  background: string
+  cardLoading?: boolean
+  children?: ReactNode
 }) {
   return (
     <div className="tour-map-frame relative overflow-hidden rounded-3xl bg-surface-secondary">
@@ -56,7 +56,7 @@ function MockMap({
             </p>
           </div>
           <div
-            className={`size-[76px] shrink-0 rounded-xl bg-default ${cardLoading ? "animate-pulse" : ""}`}
+            className={`size-[76px] shrink-0 rounded-xl bg-default ${cardLoading ? 'animate-pulse' : ''}`}
           />
         </div>
         <div className="flex items-center gap-1">
@@ -65,11 +65,13 @@ function MockMap({
           </Button>
           <span className="px-2 text-sm text-muted">3 of 3</span>
           <Button isIconOnly size="sm" variant="secondary">
-            {cardLoading ? (
-              <Spinner size="sm" />
-            ) : (
-              <ChevronRightIcon size={18} />
-            )}
+            {cardLoading
+              ? (
+                  <Spinner size="sm" />
+                )
+              : (
+                  <ChevronRightIcon size={18} />
+                )}
           </Button>
           <span className="flex-1" />
           <Button size="sm" variant="secondary">
@@ -78,10 +80,10 @@ function MockMap({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-type Props = { background: string };
+interface Props { background: string }
 
 export function LoadingPill({ background }: Props) {
   return (
@@ -93,7 +95,7 @@ export function LoadingPill({ background }: Props) {
         </span>
       </div>
     </MockMap>
-  );
+  )
 }
 
 export function LoadingTopBar({ background }: Props) {
@@ -103,11 +105,11 @@ export function LoadingTopBar({ background }: Props) {
         <span className="lab-slide block h-full w-1/3 bg-accent" />
       </span>
     </MockMap>
-  );
+  )
 }
 
 export function LoadingInCard({ background }: Props) {
-  return <MockMap cardLoading background={background} />;
+  return <MockMap cardLoading background={background} />
 }
 
 export function LoadingDestination({ background }: Props) {
@@ -125,7 +127,7 @@ export function LoadingDestination({ background }: Props) {
         </span>
       </div>
     </MockMap>
-  );
+  )
 }
 
 export function LoadingDimmed({ background }: Props) {
@@ -137,5 +139,5 @@ export function LoadingDimmed({ background }: Props) {
         </span>
       </div>
     </MockMap>
-  );
+  )
 }

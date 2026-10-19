@@ -1,5 +1,8 @@
-import type { Language } from "@/contexts/locale-context";
-import type { LocalizedText } from "@/features/catalog/types";
+import type { TextFieldId } from '../lib/completeness'
+import type { Issue, Level, StepStatus, TextErrors } from '../lib/validation'
+import type { Language } from '@/contexts/locale-context'
+import type { LocalizedText } from '@/features/catalog/types'
+import type { TourStep } from '@/features/merchant/products/lib/search-params'
 import type {
   Departure,
   Tour,
@@ -7,87 +10,86 @@ import type {
   TourSection,
   TourSectionItem,
   TourStop,
-} from "@/features/tours/types";
-import type { LocalizedRich, RichNode } from "@/lib/rich-text";
-import type { TextFieldId } from "../lib/completeness";
-import type { Issue, Level, StepStatus, TextErrors } from "../lib/validation";
+} from '@/features/tours/types'
 
-import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import type { LocalizedRich, RichNode } from '@/lib/rich-text'
+import { useNavigate } from '@tanstack/react-router'
 
-import { useFieldList, useRangeError } from "../components/editor-parts";
+import { useEffect, useState } from 'react'
+import { useLocale } from '@/contexts/locale-context'
+import { useDemo, useDemoActions, useDemoNow } from '@/features/demo'
 import {
-  LANGUAGES,
+  TOUR_STEPS,
+
+} from '@/features/merchant/products/lib/search-params'
+import { createTourSeed } from '@/features/tours/seed'
+import { safeHref } from '@/lib/rich-text'
+import { useFieldList, useRangeError } from '../components/editor-parts'
+
+import {
   cleanText,
   hasText,
+  LANGUAGES,
   missingText,
   tourText,
-} from "../lib/completeness";
-import { textErrors, textFieldError } from "../lib/validation";
-import { markJustCreated, takeJustCreated } from "../lib/just-created";
-import { STORAGE_BUDGET } from "../lib/photo-upload";
+} from '../lib/completeness'
+
+import { markJustCreated, takeJustCreated } from '../lib/just-created'
+import { STORAGE_BUDGET } from '../lib/photo-upload'
 import {
   hasAnyText,
   newId,
   storyNeedsTitle,
   toStory,
   uniqueSlug,
-} from "../lib/records";
-
-import { useProductArchive } from "./use-merchant-products";
-
-import { safeHref } from "@/lib/rich-text";
-import { useLocale } from "@/contexts/locale-context";
-import { useDemo, useDemoActions, useDemoNow } from "@/features/demo";
-import { createTourSeed } from "@/features/tours/seed";
-import {
-  TOUR_STEPS,
-  type TourStep,
-} from "@/features/merchant/products/lib/search-params";
+} from '../lib/records'
+import { textErrors, textFieldError } from '../lib/validation'
+import { useProductArchive } from './use-merchant-products'
 
 export interface TourEdit {
-  name: LocalizedText;
-  summary: LocalizedText;
-  description: LocalizedText;
-  meetingPoint: LocalizedText;
+  name: LocalizedText
+  summary: LocalizedText
+  description: LocalizedText
+  meetingPoint: LocalizedText
   /** The stops in guest order (the guest map numbers them by position); the whole stop is edited. */
-  itinerary: TourStop[];
+  itinerary: TourStop[]
   /** `key` keeps React rows stable while items are added. */
-  included: { key: string; text: LocalizedText }[];
-  excluded: LocalizedText;
-  conditions: LocalizedText;
-  cancellationPolicy: LocalizedText;
+  included: { key: string, text: LocalizedText }[]
+  excluded: LocalizedText
+  conditions: LocalizedText
+  cancellationPolicy: LocalizedText
   /** Long story ("About this tour"), rich text per language; optional. */
-  storyTitle: LocalizedText;
-  storyBody: LocalizedRich;
+  storyTitle: LocalizedText
+  storyBody: LocalizedRich
   /** Free-form sections (practical info, timetable, notices); the whole section is edited. */
-  sections: TourSection[];
+  sections: TourSection[]
   /** ISO date the practical information was last verified; "" when not given. */
-  checkedOn: string;
+  checkedOn: string
   /** Linked keepsakes (`Product.id`), in the order guests see them. */
-  keepsakeIds: string[];
+  keepsakeIds: string[]
   /** Under maintenance (R21): the reason guests read, an optional notice link and expected-back date. */
   maintenance: {
-    active: boolean;
-    reason: LocalizedText;
-    url: string;
-    expectedBack: string;
-  };
+    active: boolean
+    reason: LocalizedText
+    url: string
+    expectedBack: string
+  }
   /** Main photo (`photos[0]`): a library slug or an uploaded data URL. */
-  photo?: string;
-  durationHours: number;
+  photo?: string
+  durationHours: number
   /** CHF for the number fields (NaN = empty); stored in Rappen. */
-  adultPrice: number;
-  childPrice: number;
-  infantPrice: number;
-  childFrom: number;
-  adultFrom: number;
-  commissionRate: number;
-  published: boolean;
+  adultPrice: number
+  childPrice: number
+  infantPrice: number
+  childFrom: number
+  adultFrom: number
+  commissionRate: number
+  published: boolean
 }
 
-const hasAny = (text: LocalizedText) =>
-  LANGUAGES.some((language) => hasText(text, language));
+function hasAny(text: LocalizedText) {
+  return LANGUAGES.some(language => hasText(text, language))
+}
 
 /** "Add tour": a draft with the shop's usual age groups and commission. */
 function blankEdit(): TourEdit {
@@ -104,9 +106,9 @@ function blankEdit(): TourEdit {
     storyTitle: {},
     storyBody: {},
     sections: [],
-    checkedOn: "",
+    checkedOn: '',
     keepsakeIds: [],
-    maintenance: { active: false, reason: {}, url: "", expectedBack: "" },
+    maintenance: { active: false, reason: {}, url: '', expectedBack: '' },
     durationHours: 2,
     adultPrice: Number.NaN,
     childPrice: Number.NaN,
@@ -115,7 +117,7 @@ function blankEdit(): TourEdit {
     adultFrom: 16,
     commissionRate: 0.1,
     published: false,
-  };
+  }
 }
 
 function toEdit(tour: Tour): TourEdit {
@@ -124,7 +126,7 @@ function toEdit(tour: Tour): TourEdit {
     summary: { ...tour.summary },
     description: { ...tour.description },
     meetingPoint: { ...tour.meetingPoint },
-    itinerary: tour.itinerary.map((stop) => ({
+    itinerary: tour.itinerary.map(stop => ({
       ...stop,
       name: { ...stop.name },
       description: { ...stop.description },
@@ -141,13 +143,13 @@ function toEdit(tour: Tour): TourEdit {
     storyTitle: { ...tour.longStory?.title },
     storyBody: { ...tour.longStory?.body },
     sections: structuredClone(tour.sections ?? []),
-    checkedOn: tour.checkedOn ?? "",
+    checkedOn: tour.checkedOn ?? '',
     keepsakeIds: [...(tour.keepsakeIds ?? [])],
     maintenance: {
       active: tour.maintenance?.active ?? false,
       reason: { ...tour.maintenance?.reason },
-      url: tour.maintenance?.url ?? "",
-      expectedBack: tour.maintenance?.expectedBack ?? "",
+      url: tour.maintenance?.url ?? '',
+      expectedBack: tour.maintenance?.expectedBack ?? '',
     },
     photo: tour.photos[0],
     durationHours: tour.durationMinutes / 60,
@@ -158,18 +160,18 @@ function toEdit(tour: Tour): TourEdit {
     adultFrom: tour.ageBands.adultFrom,
     commissionRate: tour.commissionRate,
     published: tour.published,
-  };
+  }
 }
 
-const cleanContact = (contact: TourSectionItem["contact"]) => {
+function cleanContact(contact: TourSectionItem['contact']) {
   const entries = Object.entries(contact ?? {})
     .map(([key, value]) => [key, value?.trim()] as const)
-    .filter(([, value]) => value);
+    .filter(([, value]) => value)
 
   return entries.length
-    ? (Object.fromEntries(entries) as TourSectionItem["contact"])
-    : undefined;
-};
+    ? (Object.fromEntries(entries) as TourSectionItem['contact'])
+    : undefined
+}
 
 /**
  * The sections as saved: text trimmed per language, a row with nothing in it removed, and a
@@ -180,10 +182,10 @@ function cleanSections(sections: TourSection[]): TourSection[] {
     .map((section) => {
       const items = (section.items ?? [])
         .filter(
-          (item) =>
-            hasAny(item.text) ||
-            hasAny(item.label ?? {}) ||
-            hasAny(item.detail ?? {}),
+          item =>
+            hasAny(item.text)
+            || hasAny(item.label ?? {})
+            || hasAny(item.detail ?? {}),
         )
         .map((item): TourSectionItem => ({
           id: item.id,
@@ -200,7 +202,7 @@ function cleanSections(sections: TourSection[]): TourSection[] {
             ? { contact: cleanContact(item.contact) }
             : {}),
           ...(item.optional ? { optional: true } : {}),
-        }));
+        }))
 
       return {
         id: section.id,
@@ -210,47 +212,49 @@ function cleanSections(sections: TourSection[]): TourSection[] {
           ? { body: cleanText(section.body) }
           : {}),
         ...(items.length ? { items } : {}),
-      } satisfies TourSection;
+      } satisfies TourSection
     })
     .filter(
-      (section) =>
+      section =>
         hasAny(section.title) || section.body !== undefined || section.items,
-    );
+    )
 }
 
 /** The text as guests will get it: an item cleared in both languages is removed. */
 function textOf(edit: TourEdit) {
   return {
     ...edit,
-    included: edit.included.map((item) => item.text).filter(hasAny),
+    included: edit.included.map(item => item.text).filter(hasAny),
     sections: cleanSections(edit.sections),
-  };
+  }
 }
 
 /** Kept while it is on, or while it still holds a reason: turning it off keeps the text for next time. */
 function toMaintenance(
-  edit: TourEdit["maintenance"],
-): Tour["maintenance"] | undefined {
-  const reason = cleanText(edit.reason);
+  edit: TourEdit['maintenance'],
+): Tour['maintenance'] | undefined {
+  const reason = cleanText(edit.reason)
 
-  if (!edit.active && !hasAnyText(reason)) return undefined;
+  if (!edit.active && !hasAnyText(reason))
+    return undefined
 
   return {
     active: edit.active,
     reason,
     ...(edit.url.trim() ? { url: edit.url.trim() } : {}),
     ...(edit.expectedBack ? { expectedBack: edit.expectedBack } : {}),
-  };
+  }
 }
 
-const rappen = (chf: number) =>
-  Math.round((Number.isFinite(chf) ? chf : 0) * 100);
+function rappen(chf: number) {
+  return Math.round((Number.isFinite(chf) ? chf : 0) * 100)
+}
 
 /**
  * The saved tour: id, slug and the gallery after the main photo never change. A tour stays off C08 (`unannounced`) until it is first published.
  */
 function toTour(edit: TourEdit, base: Tour): Tour {
-  const text = textOf(edit);
+  const text = textOf(edit)
 
   return {
     ...base,
@@ -259,14 +263,14 @@ function toTour(edit: TourEdit, base: Tour): Tour {
     description: cleanText(edit.description),
     meetingPoint: cleanText(edit.meetingPoint),
     itinerary: edit.itinerary.map((stop) => {
-      const note = stop.note && cleanText(stop.note);
+      const note = stop.note && cleanText(stop.note)
 
       return {
         ...stop,
         name: cleanText(stop.name),
         description: cleanText(stop.description),
         note: note && hasAnyText(note) ? note : undefined,
-      };
+      }
     }),
     included: text.included.map(cleanText),
     excluded: cleanText(edit.excluded),
@@ -286,7 +290,7 @@ function toTour(edit: TourEdit, base: Tour): Tour {
     commissionRate: Math.round(edit.commissionRate * 10_000) / 10_000,
     published: edit.published,
     unannounced: edit.published ? undefined : base.unannounced,
-  };
+  }
 }
 
 /** A tour with nothing in it yet: the base "Add tour" and the preview of an unsaved tour start from. */
@@ -313,99 +317,101 @@ function emptyTour(id: string, slug: string): Tour {
     itinerary: [],
     ageBands: { childFrom: 6, adultFrom: 16 },
     participantFields: [],
-  };
+  }
 }
 
 /** Tour writes as `useTourActions` makes them: stored tour data, or the seed. */
 export function useTourWrite() {
-  const { update } = useDemoActions();
+  const { update } = useDemoActions()
 
   return (recipe: (data: TourData) => TourData) =>
-    update((s) => ({
+    update(s => ({
       ...s,
       data: { ...s.data, tours: recipe(s.data.tours ?? createTourSeed()) },
-    }));
+    }))
 }
 
 export function useDepartureActions() {
-  const write = useTourWrite();
+  const write = useTourWrite()
 
   return {
     add: (departure: Departure) =>
-      write((data) => ({
+      write(data => ({
         ...data,
         departures: [...data.departures, departure],
       })),
     setCapacity: (id: string, capacity: number) =>
-      write((data) => ({
+      write(data => ({
         ...data,
-        departures: data.departures.map((d) =>
+        departures: data.departures.map(d =>
           d.id === id ? { ...d, capacity } : d,
         ),
       })),
-  };
+  }
 }
 
 /** Which step holds each required text. */
 export const TOUR_TEXT_STEP: Partial<Record<TextFieldId, TourStep>> = {
-  name: "basics",
-  summary: "basics",
-  description: "basics",
-  itinerary: "details",
-  included: "details",
-  excluded: "details",
-  meetingPoint: "details",
-  conditions: "details",
-  cancellation: "policies",
-  longStory: "story",
-  sections: "sections",
-};
-const textIdsOf = (step: TourStep) =>
-  (Object.keys(TOUR_TEXT_STEP) as TextFieldId[]).filter(
-    (id) => TOUR_TEXT_STEP[id] === step,
-  );
-
-type FieldKey =
-  | "name"
-  | "photo"
-  | "duration"
-  | "adultPrice"
-  | "childPrice"
-  | "infantPrice"
-  | "childFrom"
-  | "adultFrom"
-  | "departure"
-  | "commission"
-  | "maintenanceReason"
-  | "maintenanceUrl"
-  | "storyTitle";
-
-const FIELD_STEP: Record<FieldKey, TourStep> = {
-  name: "basics",
-  photo: "basics",
-  duration: "basics",
-  adultPrice: "prices",
-  childPrice: "prices",
-  infantPrice: "prices",
-  childFrom: "prices",
-  adultFrom: "prices",
-  departure: "departures",
-  commission: "policies",
-  maintenanceReason: "departures",
-  maintenanceUrl: "departures",
-  storyTitle: "story",
-};
-
-interface TourErrors {
-  fields: Partial<Record<FieldKey, string>>;
-  text: TextErrors;
+  name: 'basics',
+  summary: 'basics',
+  description: 'basics',
+  itinerary: 'details',
+  included: 'details',
+  excluded: 'details',
+  meetingPoint: 'details',
+  conditions: 'details',
+  cancellation: 'policies',
+  longStory: 'story',
+  sections: 'sections',
+}
+function textIdsOf(step: TourStep) {
+  return (Object.keys(TOUR_TEXT_STEP) as TextFieldId[]).filter(
+    id => TOUR_TEXT_STEP[id] === step,
+  )
 }
 
-const editText = (edit: TourEdit) =>
-  tourText({
+type FieldKey
+  = | 'name'
+    | 'photo'
+    | 'duration'
+    | 'adultPrice'
+    | 'childPrice'
+    | 'infantPrice'
+    | 'childFrom'
+    | 'adultFrom'
+    | 'departure'
+    | 'commission'
+    | 'maintenanceReason'
+    | 'maintenanceUrl'
+    | 'storyTitle'
+
+const FIELD_STEP: Record<FieldKey, TourStep> = {
+  name: 'basics',
+  photo: 'basics',
+  duration: 'basics',
+  adultPrice: 'prices',
+  childPrice: 'prices',
+  infantPrice: 'prices',
+  childFrom: 'prices',
+  adultFrom: 'prices',
+  departure: 'departures',
+  commission: 'policies',
+  maintenanceReason: 'departures',
+  maintenanceUrl: 'departures',
+  storyTitle: 'story',
+}
+
+interface TourErrors {
+  fields: Partial<Record<FieldKey, string>>
+  text: TextErrors
+}
+
+function editText(edit: TourEdit) {
+  return tourText({
     ...textOf(edit),
     longStory: { title: edit.storyTitle, body: edit.storyBody },
-  });
+  })
+}
 
 /**
  * M13 Edit tour as a stepper (owner, revision 2), and "Add tour" when `tour` is null. Text,
@@ -418,97 +424,98 @@ export function useTourEditor(
   step: TourStep,
   go: (step: TourStep) => void,
 ) {
-  const { t, language: interfaceLanguage } = useLocale();
-  const { state } = useDemo();
-  const now = useDemoNow();
-  const navigate = useNavigate();
-  const write = useTourWrite();
-  const rangeError = useRangeError();
-  const fieldList = useFieldList();
-  const archive = useProductArchive();
-  const [edit, setEdit] = useState(() => (tour ? toEdit(tour) : blankEdit()));
-  const [saved, setSaved] = useState(edit);
+  const { t, language: interfaceLanguage } = useLocale()
+  const { state } = useDemo()
+  const now = useDemoNow()
+  const navigate = useNavigate()
+  const write = useTourWrite()
+  const rangeError = useRangeError()
+  const fieldList = useFieldList()
+  const archive = useProductArchive()
+  const [edit, setEdit] = useState(() => (tour ? toEdit(tour) : blankEdit()))
+  const [saved, setSaved] = useState(edit)
   // The step language switch opens on the interface language (owner, 15.10.2026).
-  const [language, setLanguage] = useState<Language>(interfaceLanguage);
+  const [language, setLanguage] = useState<Language>(interfaceLanguage)
   const [attempt, setAttempt] = useState<{
-    level: Level;
-    step?: TourStep;
-    n: number;
-  } | null>(null);
-  const [focusCount, setFocusCount] = useState(0);
+    level: Level
+    step?: TourStep
+    n: number
+  } | null>(null)
+  const [focusCount, setFocusCount] = useState(0)
   const [furthest, setFurthest] = useState(() =>
     tour ? TOUR_STEPS.length - 1 : 0,
-  );
+  )
   /** The save bar confirms a save itself: a toast would cover it on phones. */
   const [justSaved, setJustSaved] = useState(() => {
-    return !!tour && takeJustCreated(tour.id);
-  });
-  const [storageFull, setStorageFull] = useState(false);
+    return !!tour && takeJustCreated(tour.id)
+  })
+  const [storageFull, setStorageFull] = useState(false)
   /** The itinerary's selected stop, kept here so a language switch (which remounts the step) keeps it. */
-  const [stopId, setStopId] = useState<string | null>(null);
-  const isNew = !tour;
-  const archived = !!tour?.archivedAt;
-  const live = !!tour && tour.published && !tour.archivedAt;
+  const [stopId, setStopId] = useState<string | null>(null)
+  const isNew = !tour
+  const archived = !!tour?.archivedAt
+  const live = !!tour && tour.published && !tour.archivedAt
 
   // Creating walks the steps in order: an address that skips ahead starts again at the
   // furthest step reached.
   useEffect(() => {
-    if (isNew && TOUR_STEPS.indexOf(step) > furthest) go(TOUR_STEPS[furthest]);
-  }, [isNew, step, furthest, go]);
+    if (isNew && TOUR_STEPS.indexOf(step) > furthest)
+      go(TOUR_STEPS[furthest])
+  }, [isNew, step, furthest, go])
 
   const change = (patch: Partial<TourEdit>) =>
-    setEdit((e) => ({ ...e, ...patch }));
+    setEdit(e => ({ ...e, ...patch }))
   const changeStory = (lang: Language, doc: RichNode | undefined) =>
-    setEdit((e) => ({ ...e, storyBody: { ...e.storyBody, [lang]: doc } }));
+    setEdit(e => ({ ...e, storyBody: { ...e.storyBody, [lang]: doc } }))
 
-  const data = state.data.tours ?? createTourSeed();
-  const hasUpcoming =
-    !!tour &&
-    data.departures.some(
-      (d) =>
-        d.tourId === tour.id &&
-        !d.closed &&
-        !d.cancelledAt &&
-        Date.parse(d.startsAt) > now.getTime(),
-    );
-  const missing = missingText(editText(edit));
+  const data = state.data.tours ?? createTourSeed()
+  const hasUpcoming
+    = !!tour
+      && data.departures.some(
+        d =>
+          d.tourId === tour.id
+          && !d.closed
+          && !d.cancelledAt
+          && Date.parse(d.startsAt) > now.getTime(),
+      )
+  const missing = missingText(editText(edit))
   /** The draft as guests would see it once published: M13's preview. */
   const previewTour = (): Tour =>
     toTour(
       { ...edit, published: true },
-      tour ?? emptyTour("preview", "preview"),
-    );
+      tour ?? emptyTour('preview', 'preview'),
+    )
 
   const validate = (level: Level): TourErrors => {
-    const strict = level !== "draft";
-    const transition = level === "publish" || level === "step";
+    const strict = level !== 'draft'
+    const transition = level === 'publish' || level === 'step'
     // A draft may keep empty prices (saved as 0); a published tour may not.
     const price = (value: number, min: number) =>
       strict
         ? Number.isFinite(value) && value >= min
           ? rangeError(value, min, 10_000)
-          : t("products.stock.priceError")
-        : undefined;
+          : t('products.stock.priceError')
+        : undefined
 
     return {
       fields: {
         name:
-          level === "draft" && !hasAnyText(edit.name)
-            ? t("products.draftName")
+          level === 'draft' && !hasAnyText(edit.name)
+            ? t('products.draftName')
             : undefined,
         photo:
-          transition && !edit.photo ? t("products.photo.required") : undefined,
+          transition && !edit.photo ? t('products.photo.required') : undefined,
         // Departures need the tour stored first, so Next while creating does not ask.
         departure:
-          level === "publish" && !hasUpcoming
+          level === 'publish' && !hasUpcoming
             ? t(
                 tour
-                  ? "products.departures.publishError"
-                  : "products.departures.saveFirst",
+                  ? 'products.departures.publishError'
+                  : 'products.departures.saveFirst',
               )
             : undefined,
         storyTitle: storyNeedsTitle(edit.storyTitle, edit.storyBody)
-          ? t("products.story.titleError")
+          ? t('products.story.titleError')
           : undefined,
         duration: rangeError(edit.durationHours, 0.5, 12),
         adultPrice: price(edit.adultPrice, 0.01),
@@ -516,28 +523,28 @@ export function useTourEditor(
         infantPrice: price(edit.infantPrice, 0),
         childFrom: rangeError(edit.childFrom, 1, 17),
         adultFrom:
-          rangeError(edit.adultFrom, 2, 25) ??
-          (edit.adultFrom > edit.childFrom
+          rangeError(edit.adultFrom, 2, 25)
+          ?? (edit.adultFrom > edit.childFrom
             ? undefined
-            : t("products.prices.adultAgeError")),
+            : t('products.prices.adultAgeError')),
         commission: rangeError(Math.round(edit.commissionRate * 100), 0, 50),
         // A draft may keep half-written maintenance text; saving a tour that guests see may not.
         maintenanceReason:
-          strict &&
-          edit.maintenance.active &&
-          !hasAnyText(edit.maintenance.reason)
-            ? t("products.maintenance.reasonError")
+          strict
+          && edit.maintenance.active
+          && !hasAnyText(edit.maintenance.reason)
+            ? t('products.maintenance.reasonError')
             : undefined,
         maintenanceUrl:
-          strict &&
-          edit.maintenance.url.trim() &&
-          !safeHref(edit.maintenance.url.trim())
-            ? t("products.maintenance.urlError")
+          strict
+          && edit.maintenance.url.trim()
+          && !safeHref(edit.maintenance.url.trim())
+            ? t('products.maintenance.urlError')
             : undefined,
       },
       text: textErrors(editText(edit), level),
-    };
-  };
+    }
+  }
 
   /** Only one step's errors, for Next. */
   const only = (errors: TourErrors, keep: TourStep): TourErrors => ({
@@ -547,118 +554,123 @@ export function useTourEditor(
       ),
     ),
     text: {
-      any: errors.text.any.filter((id) => TOUR_TEXT_STEP[id] === keep),
+      any: errors.text.any.filter(id => TOUR_TEXT_STEP[id] === keep),
       language: errors.text.language,
     },
-  });
+  })
 
   const issuesIn = (errors: TourErrors, of: TourStep): string[] => {
     const out = Object.entries(errors.fields)
       .filter(([key, value]) => value && FIELD_STEP[key as FieldKey] === of)
       .map(([, value]) => value as string)
-      .filter((value, i, all) => all.indexOf(value) === i);
-    const ids = textIdsOf(of);
-    const any = errors.text.any.filter((id) => ids.includes(id));
+      .filter((value, i, all) => all.indexOf(value) === i)
+    const ids = textIdsOf(of)
+    const any = errors.text.any.filter(id => ids.includes(id))
     const inLanguage = errors.text.language
       ? missing[errors.text.language].filter(
-          (id) => ids.includes(id) && !any.includes(id),
+          id => ids.includes(id) && !any.includes(id),
         )
-      : [];
+      : []
 
     if (any.length)
-      out.push(t("products.review.emptyAny", { fields: fieldList(any) }));
-    if (errors.text.language && inLanguage.length)
+      out.push(t('products.review.emptyAny', { fields: fieldList(any) }))
+    if (errors.text.language && inLanguage.length) {
       out.push(
-        t("products.review.emptyIn", {
+        t('products.review.emptyIn', {
           language: t(`products.lang.${errors.text.language}`),
           fields: fieldList(inLanguage),
         }),
-      );
+      )
+    }
 
-    return out;
-  };
+    return out
+  }
 
   const firstStepWith = (errors: TourErrors) =>
-    TOUR_STEPS.find((s) => issuesIn(errors, s).length > 0);
+    TOUR_STEPS.find(s => issuesIn(errors, s).length > 0)
   const hasIssues = (errors: TourErrors) =>
-    TOUR_STEPS.some((s) => issuesIn(errors, s).length > 0);
+    TOUR_STEPS.some(s => issuesIn(errors, s).length > 0)
 
   /** Translation gaps: text one language has and the other does not. */
   const gapsIn = (of: TourStep): Issue[] => {
-    const ids = textIdsOf(of);
+    const ids = textIdsOf(of)
 
     return LANGUAGES.flatMap((lang) => {
-      const other = lang === "en" ? "de" : "en";
+      const other = lang === 'en' ? 'de' : 'en'
       const gaps = missing[lang].filter(
-        (id) => ids.includes(id) && !missing[other].includes(id),
-      );
+        id => ids.includes(id) && !missing[other].includes(id),
+      )
 
       return gaps.length
         ? [
             {
-              tone: "warning" as const,
-              text: t("products.lang.line.missing", {
+              tone: 'warning' as const,
+              text: t('products.lang.line.missing', {
                 language: t(`products.lang.${lang}`),
                 fields: fieldList(gaps),
               }),
             },
           ]
-        : [];
-    });
-  };
+        : []
+    })
+  }
 
-  const shown =
-    attempt &&
-    (attempt.step
-      ? only(validate(attempt.level), attempt.step)
-      : validate(attempt.level));
+  const shown
+    = attempt
+      && (attempt.step
+        ? only(validate(attempt.level), attempt.step)
+        : validate(attempt.level))
   // What publishing (or keeping it live) still needs, before anyone presses a button.
-  const needs = validate(live ? "live" : "publish");
+  const needs = validate(live ? 'live' : 'publish')
 
   const statusOf = (of: TourStep): StepStatus => {
-    const index = TOUR_STEPS.indexOf(of);
+    const index = TOUR_STEPS.indexOf(of)
 
-    if (shown && issuesIn(shown, of).length) return "error";
-    if (isNew && index > furthest) return "todo";
-    if (of === "review") return index <= furthest ? "done" : "todo";
-    if (issuesIn(needs, of).length || gapsIn(of).length) return "warning";
+    if (shown && issuesIn(shown, of).length)
+      return 'error'
+    if (isNew && index > furthest)
+      return 'todo'
+    if (of === 'review')
+      return index <= furthest ? 'done' : 'todo'
+    if (issuesIn(needs, of).length || gapsIn(of).length)
+      return 'warning'
 
-    return isNew && index >= furthest ? "todo" : "done";
-  };
+    return isNew && index >= furthest ? 'todo' : 'done'
+  }
 
   const issuesOf = (of: TourStep): Issue[] => {
-    const errors = shown && issuesIn(shown, of);
+    const errors = shown && issuesIn(shown, of)
 
     if (errors && errors.length)
-      return errors.map((text) => ({ tone: "danger", text }));
+      return errors.map(text => ({ tone: 'danger', text }))
 
     return [
-      ...issuesIn(needs, of).map((text) => ({
-        tone: "warning" as const,
+      ...issuesIn(needs, of).map(text => ({
+        tone: 'warning' as const,
         text,
       })),
       ...gapsIn(of),
-    ];
-  };
+    ]
+  }
 
   const commit = (published: boolean) => {
-    setStorageFull(false);
-    const base: Tour =
-      tour ??
-      emptyTour(
-        newId("tour"),
-        // C22 owns /tours/private-tour, so no tour may take that slug.
-        uniqueSlug(
-          edit.name,
-          [...data.tours.map((item) => item.slug), "private-tour"],
-          "tour",
-        ),
-      );
+    setStorageFull(false)
+    const base: Tour
+      = tour
+        ?? emptyTour(
+          newId('tour'),
+          // C22 owns /tours/private-tour, so no tour may take that slug.
+          uniqueSlug(
+            edit.name,
+            [...data.tours.map(item => item.slug), 'private-tour'],
+            'tour',
+          ),
+        )
     // An archived tour is never published from here; "Restore as draft" comes first.
-    const next = toTour({ ...edit, published: published && !archived }, base);
+    const next = toTour({ ...edit, published: published && !archived }, base)
     const nextTours = tour
-      ? data.tours.map((item) => (item.id === tour.id ? next : item))
-      : [...data.tours, next];
+      ? data.tours.map(item => (item.id === tour.id ? next : item))
+      : [...data.tours, next]
 
     // Demo state lives in localStorage; refuse a save that would not fit, rather than
     // keeping it only until the next reload.
@@ -668,49 +680,50 @@ export function useTourEditor(
         data: { ...state.data, tours: { ...data, tours: nextTours } },
       }).length > STORAGE_BUDGET
     ) {
-      setStorageFull(true);
+      setStorageFull(true)
 
-      return;
+      return
     }
-    write((current) => ({
+    write(current => ({
       ...current,
       tours: tour
-        ? current.tours.map((item) => (item.id === tour.id ? next : item))
+        ? current.tours.map(item => (item.id === tour.id ? next : item))
         : [...current.tours, next],
-    }));
-    setAttempt(null);
+    }))
+    setAttempt(null)
     if (!tour) {
-      markJustCreated(next.id);
+      markJustCreated(next.id)
       void navigate({
-        to: "/store/products/tours/$tourId",
+        to: '/store/products/tours/$tourId',
         params: { tourId: next.id },
         search: { step },
         replace: true,
-      });
+      })
 
-      return;
+      return
     }
-    const kept = { ...edit, published: next.published };
+    const kept = { ...edit, published: next.published }
 
-    setEdit(kept);
-    setSaved(kept);
-    setJustSaved(true);
-  };
+    setEdit(kept)
+    setSaved(kept)
+    setJustSaved(true)
+  }
 
   const run = (level: Level, published: boolean, stay = false) => {
-    const errors = validate(level);
+    const errors = validate(level)
 
     if (hasIssues(errors)) {
-      setAttempt((a) => ({ level, n: (a?.n ?? 0) + 1 }));
-      const first = firstStepWith(errors);
+      setAttempt(a => ({ level, n: (a?.n ?? 0) + 1 }))
+      const first = firstStepWith(errors)
 
-      if (!stay && first && issuesIn(errors, step).length === 0) go(first);
-      setFocusCount((n) => n + 1);
+      if (!stay && first && issuesIn(errors, step).length === 0)
+        go(first)
+      setFocusCount(n => n + 1)
 
-      return;
+      return
     }
-    commit(published);
-  };
+    commit(published)
+  }
 
   return {
     isNew,
@@ -724,21 +737,21 @@ export function useTourEditor(
     language,
     setLanguage,
     errors: (shown?.fields ?? {}) as Partial<Record<FieldKey, string>>,
-    publishRefused: !!shown && attempt?.level === "publish",
+    publishRefused: !!shown && attempt?.level === 'publish',
     textError: (id: TextFieldId, lang: Language, value: LocalizedText) =>
       textFieldError(shown?.text, missing, id, lang, value, {
-        any: t("products.text.neededAny"),
-        needed: (l) => t(`products.text.needed.${l}`),
+        any: t('products.text.neededAny'),
+        needed: l => t(`products.text.needed.${l}`),
       }),
     stepMissing: (of: TourStep) => {
-      const ids = textIdsOf(of);
+      const ids = textIdsOf(of)
 
       return ids.length
         ? {
-            en: missing.en.filter((id) => ids.includes(id)),
-            de: missing.de.filter((id) => ids.includes(id)),
+            en: missing.en.filter(id => ids.includes(id)),
+            de: missing.de.filter(id => ids.includes(id)),
           }
-        : undefined;
+        : undefined
     },
     statusOf,
     issuesOf,
@@ -746,36 +759,39 @@ export function useTourEditor(
     go,
     /** Next while creating: this step's publish rules; when editing, just the next step. */
     next: () => {
-      const index = TOUR_STEPS.indexOf(step);
-      const to = TOUR_STEPS[index + 1];
+      const index = TOUR_STEPS.indexOf(step)
+      const to = TOUR_STEPS[index + 1]
 
-      if (!to) return;
+      if (!to)
+        return
       if (isNew) {
-        const errors = only(validate("step"), step);
+        const errors = only(validate('step'), step)
 
         if (hasIssues(errors)) {
-          setAttempt((a) => ({ level: "step", step, n: (a?.n ?? 0) + 1 }));
-          setFocusCount((n) => n + 1);
+          setAttempt(a => ({ level: 'step', step, n: (a?.n ?? 0) + 1 }))
+          setFocusCount(n => n + 1)
 
-          return;
+          return
         }
-        setAttempt(null);
-        setFurthest((f) => Math.max(f, index + 1));
+        setAttempt(null)
+        setFurthest(f => Math.max(f, index + 1))
       }
-      go(to);
+      go(to)
     },
     back: () => {
-      const index = TOUR_STEPS.indexOf(step);
+      const index = TOUR_STEPS.indexOf(step)
 
-      if (index > 0) go(TOUR_STEPS[index - 1]);
+      if (index > 0)
+        go(TOUR_STEPS[index - 1])
     },
-    saveDraft: () => run("draft", false),
-    saveChanges: () => run(live ? "live" : "draft", live),
-    publish: () => run("publish", true, true),
-    unpublish: () => run("draft", false),
+    saveDraft: () => run('draft', false),
+    saveChanges: () => run(live ? 'live' : 'draft', live),
+    publish: () => run('publish', true, true),
+    unpublish: () => run('draft', false),
     restore: () => {
-      if (tour) archive.restore("tour", tour.id);
-      setEdit((e) => ({ ...e, published: false }));
+      if (tour)
+        archive.restore('tour', tour.id)
+      setEdit(e => ({ ...e, published: false }))
     },
     stopId,
     selectStop: setStopId,
@@ -784,5 +800,5 @@ export function useTourEditor(
     storageFull,
     justSaved,
     focusCount,
-  };
+  }
 }

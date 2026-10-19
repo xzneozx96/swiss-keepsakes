@@ -1,5 +1,3 @@
-import type { Language } from "@/contexts/locale-context";
-import type { MailParams } from "@/features/notifications/types";
 import type {
   Departure,
   Tour,
@@ -7,26 +5,30 @@ import type {
   TourData,
   TourDraft,
   TourParticipants,
-} from "../types";
+} from '../types'
+import type { Language } from '@/contexts/locale-context'
+import type { MailParams } from '@/features/notifications/types'
 
 import {
   availableSeats,
   bookingPaid,
   firstPaymentAmount,
   tourTotal,
-} from "../lib/selectors";
+} from '../lib/selectors'
 
 /** R06: the first full or deposit payment holds the seats for 15 minutes from creation. */
-export const HOLD_MINUTES = 15;
+export const HOLD_MINUTES = 15
 
-export type ProviderOutcome = "succeeded" | "failed";
+export type ProviderOutcome = 'succeeded' | 'failed'
 
-const holdLapsed = (booking: TourBooking, now: Date) =>
-  booking.status === "pending_payment" &&
-  Date.parse(booking.holdUntil) <= now.getTime();
+function holdLapsed(booking: TourBooking, now: Date) {
+  return booking.status === 'pending_payment'
+    && Date.parse(booking.holdUntil) <= now.getTime()
+}
 
-export const openPayment = (booking: TourBooking) =>
-  booking.payments.find((payment) => payment.status === "processing");
+export function openPayment(booking: TourBooking) {
+  return booking.payments.find(payment => payment.status === 'processing')
+}
 
 /**
  * A new booking with its prices, policies, referral source and hold deadline snapshotted at
@@ -42,21 +44,21 @@ export function newBooking({
   language,
   now,
 }: {
-  id: string;
-  tour: Tour;
-  departure: Departure;
-  draft: TourParticipants &
-    Pick<
+  id: string
+  tour: Tour
+  departure: Departure
+  draft: TourParticipants
+    & Pick<
       TourDraft,
-      "contactName" | "phone" | "childName" | "participantAnswers"
-    >;
-  guestId: string;
-  partnerId: string | null;
-  language: Language;
-  now: Date;
+      'contactName' | 'phone' | 'childName' | 'participantAnswers'
+    >
+  guestId: string
+  partnerId: string | null
+  language: Language
+  now: Date
 }): TourBooking {
-  const at = now.toISOString();
-  const total = tourTotal(tour, draft);
+  const at = now.toISOString()
+  const total = tourTotal(tour, draft)
   const record = {
     id,
     ref: `SK-T${id.slice(0, 6).toUpperCase()}`,
@@ -71,11 +73,11 @@ export function newBooking({
     phone: draft.phone.trim(),
     childName: draft.childName,
     participantInfo: tour.participantFields
-      .map((field) => ({
+      .map(field => ({
         label: structuredClone(field.label),
-        value: draft.participantAnswers?.[field.id]?.trim() ?? "",
+        value: draft.participantAnswers?.[field.id]?.trim() ?? '',
       }))
-      .filter((answer) => answer.value),
+      .filter(answer => answer.value),
     tourName: structuredClone(tour.name),
     meetingPoint: structuredClone(tour.meetingPoint),
     startsAt: departure.startsAt,
@@ -95,17 +97,17 @@ export function newBooking({
     commissionRate: tour.commissionRate,
     createdAt: at,
     payments: [],
-    activity: [{ at, event: "created", actor: "guest" }],
+    activity: [{ at, event: 'created', actor: 'guest' }],
     commissionRecordedAt: null,
-  };
+  }
 
-  return departure.policy === "later"
-    ? { ...record, status: "confirmed", holdUntil: null }
+  return departure.policy === 'later'
+    ? { ...record, status: 'confirmed', holdUntil: null }
     : {
         ...record,
-        status: "pending_payment",
+        status: 'pending_payment',
         holdUntil: new Date(now.getTime() + HOLD_MINUTES * 60000).toISOString(),
-      };
+      }
 }
 
 /** Adds the booking only if its seats still fit when the change is applied (AC05). */
@@ -114,10 +116,10 @@ export function addBooking(
   booking: TourBooking,
   now: Date,
 ): TourData {
-  return booking.adults + booking.children >
-    availableSeats(data, booking.departureId, now)
+  return booking.adults + booking.children
+    > availableSeats(data, booking.departureId, now)
     ? data
-    : { ...data, bookings: [...data.bookings, booking] };
+    : { ...data, bookings: [...data.bookings, booking] }
 }
 
 /** Required participant questions of the tour that the draft leaves empty. */
@@ -126,8 +128,8 @@ export function missingParticipantInfo(
   answers: Record<string, string> = {},
 ): string[] {
   return tour.participantFields
-    .filter((field) => field.required && !answers[field.id]?.trim())
-    .map((field) => field.id);
+    .filter(field => field.required && !answers[field.id]?.trim())
+    .map(field => field.id)
 }
 
 /** The guest's own hold on this departure that is still running, if any. */
@@ -138,12 +140,12 @@ export function activeHold(
   now: Date,
 ): TourBooking | undefined {
   return data.bookings.find(
-    (b) =>
-      b.guestId === guestId &&
-      b.departureId === departureId &&
-      b.status === "pending_payment" &&
-      !holdLapsed(b, now),
-  );
+    b =>
+      b.guestId === guestId
+      && b.departureId === departureId
+      && b.status === 'pending_payment'
+      && !holdLapsed(b, now),
+  )
 }
 
 /**
@@ -152,27 +154,28 @@ export function activeHold(
  * deadline; a provider result for it can still arrive and is handled as late.
  */
 export function expireLapsedHolds(data: TourData, now: Date): TourData {
-  let changed = false;
+  let changed = false
   const bookings = data.bookings.map((b): TourBooking => {
-    if (b.status !== "pending_payment" || !holdLapsed(b, now)) return b;
-    changed = true;
-    const at = b.holdUntil;
+    if (b.status !== 'pending_payment' || !holdLapsed(b, now))
+      return b
+    changed = true
+    const at = b.holdUntil
 
     return {
       ...b,
-      status: "expired",
+      status: 'expired',
       holdUntil: null,
       activity: [
         ...b.activity,
-        { at, event: "expired", actor: "system" },
+        { at, event: 'expired', actor: 'system' },
         ...(openPayment(b)
-          ? [{ at, event: "session-closed", actor: "system" }]
+          ? [{ at, event: 'session-closed', actor: 'system' }]
           : []),
       ],
-    };
-  });
+    }
+  })
 
-  return changed ? { ...data, bookings } : data;
+  return changed ? { ...data, bookings } : data
 }
 
 /**
@@ -189,23 +192,24 @@ export function applyProviderResult(
   paidAt: string,
   now: Date,
 ): TourData {
-  const current = expireLapsedHolds(data, now);
-  const booking = current.bookings.find((b) => b.id === bookingId);
+  const current = expireLapsedHolds(data, now)
+  const booking = current.bookings.find(b => b.id === bookingId)
   const payment = booking?.payments.find(
-    (p) => p.id === paymentId && p.status === "processing",
-  );
+    p => p.id === paymentId && p.status === 'processing',
+  )
 
-  if (!booking || !payment) return current;
-  const receivedAt = now.toISOString();
-  const late = booking.status === "expired";
+  if (!booking || !payment)
+    return current
+  const receivedAt = now.toISOString()
+  const late = booking.status === 'expired'
   const next = {
     ...booking,
-    payments: booking.payments.map((p) =>
+    payments: booking.payments.map(p =>
       p.id === paymentId
         ? {
             ...p,
             status: outcome,
-            at: outcome === "succeeded" ? paidAt : receivedAt,
+            at: outcome === 'succeeded' ? paidAt : receivedAt,
           }
         : p,
     ),
@@ -214,7 +218,7 @@ export function applyProviderResult(
           ...(booking.lateResults ?? []),
           {
             paymentId,
-            paidAt: outcome === "succeeded" ? paidAt : null,
+            paidAt: outcome === 'succeeded' ? paidAt : null,
             receivedAt,
           },
         ]
@@ -224,21 +228,21 @@ export function applyProviderResult(
       {
         at: receivedAt,
         event: late ? `payment-late-${outcome}` : `payment-${outcome}`,
-        actor: "provider",
+        actor: 'provider',
       },
     ],
-  };
-  const confirmed: TourBooking =
-    next.status === "pending_payment" &&
-    outcome === "succeeded" &&
-    bookingPaid(next) >= next.firstAmount
-      ? { ...next, status: "confirmed", holdUntil: null }
-      : next;
+  }
+  const confirmed: TourBooking
+    = next.status === 'pending_payment'
+      && outcome === 'succeeded'
+      && bookingPaid(next) >= next.firstAmount
+      ? { ...next, status: 'confirmed', holdUntil: null }
+      : next
 
   return {
     ...current,
-    bookings: current.bookings.map((b) => (b.id === bookingId ? confirmed : b)),
-  };
+    bookings: current.bookings.map(b => (b.id === bookingId ? confirmed : b)),
+  }
 }
 
 /**
@@ -251,38 +255,42 @@ export function bookingMails(
   before: TourBooking | undefined,
   after: TourBooking,
 ): {
-  to: "guest" | "staff";
-  template: "N07" | "N08" | "N09" | "N22";
-  params: MailParams;
+  to: 'guest' | 'staff'
+  template: 'N07' | 'N08' | 'N09' | 'N22'
+  params: MailParams
 }[] {
-  const was = new Map(before?.payments.map((p) => [p.id, p.status]));
-  const mails: ReturnType<typeof bookingMails> = [];
+  const was = new Map(before?.payments.map(p => [p.id, p.status]))
+  const mails: ReturnType<typeof bookingMails> = []
 
   for (const p of after.payments) {
-    if (was.get(p.id) === p.status) continue;
-    const amount = { amount: p.amount };
+    if (was.get(p.id) === p.status)
+      continue
+    const amount = { amount: p.amount }
 
-    if (p.status === "succeeded" && after.status === "expired")
+    if (p.status === 'succeeded' && after.status === 'expired') {
       mails.push(
-        { to: "guest", template: "N22", params: amount },
-        { to: "staff", template: "N22", params: amount },
-      );
-    else if (p.status === "succeeded")
-      mails.push({ to: "guest", template: "N07", params: amount });
-    else if (p.status === "failed" && after.status !== "expired")
+        { to: 'guest', template: 'N22', params: amount },
+        { to: 'staff', template: 'N22', params: amount },
+      )
+    }
+    else if (p.status === 'succeeded') {
+      mails.push({ to: 'guest', template: 'N07', params: amount })
+    }
+    else if (p.status === 'failed' && after.status !== 'expired') {
       mails.push({
-        to: "guest",
-        template: "N08",
+        to: 'guest',
+        template: 'N08',
         params:
-          after.status === "pending_payment"
+          after.status === 'pending_payment'
             ? { ...amount, holdUntil: after.holdUntil }
             : amount,
-      });
+      })
+    }
   }
-  if (after.status === "confirmed" && before?.status !== "confirmed")
-    mails.push({ to: "guest", template: "N09", params: {} });
+  if (after.status === 'confirmed' && before?.status !== 'confirmed')
+    mails.push({ to: 'guest', template: 'N09', params: {} })
 
-  return mails;
+  return mails
 }
 
 /** Prototype only: another guest holds enough seats that this group no longer fits (AC05). */
@@ -293,10 +301,11 @@ export function competingHold(
   groupSeats: number,
   now: Date,
 ): TourData {
-  const left = availableSeats(data, departure.id, now);
-  const seats = Math.max(1, left - Math.max(0, groupSeats - 1));
+  const left = availableSeats(data, departure.id, now)
+  const seats = Math.max(1, left - Math.max(0, groupSeats - 1))
 
-  if (left < 1) return data;
+  if (left < 1)
+    return data
 
   return addBooking(
     data,
@@ -308,15 +317,15 @@ export function competingHold(
         adults: seats,
         children: 0,
         infants: 0,
-        contactName: "Tom Becker",
-        phone: "+49 151 555 0143",
-        childName: "",
+        contactName: 'Tom Becker',
+        phone: '+49 151 555 0143',
+        childName: '',
       },
-      guestId: "g-tom",
+      guestId: 'g-tom',
       partnerId: null,
-      language: "de",
+      language: 'de',
       now,
     }),
     now,
-  );
+  )
 }

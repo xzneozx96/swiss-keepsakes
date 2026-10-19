@@ -1,19 +1,19 @@
 import {
-  RouterProvider,
   createHashHistory,
   createRouter,
-} from "@tanstack/react-router";
-import { StrictMode } from "react";
-import ReactDOM from "react-dom/client";
+  RouterProvider,
+} from '@tanstack/react-router'
+import { StrictMode } from 'react'
+import ReactDOM from 'react-dom/client'
 
 import {
-  LocaleProvider,
   loadDictionary,
+  LocaleProvider,
   storedLanguage,
-} from "@/contexts/locale-context";
-import { DemoProvider } from "@/features/demo";
-import { routeTree } from "@/routeTree.gen";
-import "@/styles/globals.css";
+} from '@/contexts/locale-context'
+import { DemoProvider } from '@/features/demo'
+import { routeTree } from '@/routeTree.gen'
+import '@/styles/globals.css'
 
 // Hash history: the prototype is served as static files with no server rewrites,
 // so deep links and reloads (e.g. #/merchant/orders) must not hit the server.
@@ -21,22 +21,22 @@ const router = createRouter({
   routeTree,
   history: createHashHistory(),
   scrollRestoration: true,
-  defaultPreload: "intent",
-});
+  defaultPreload: 'intent',
+})
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface Register {
-    router: typeof router;
+    router: typeof router
   }
   interface StaticDataRouteOption {
     /** Detail screens with their own bottom action bar hide the guest tab bar (native pattern). */
-    hideTabBar?: boolean;
+    hideTabBar?: boolean
     /** The screen reserves room for its own bottom bar; the guest shell adds no bottom padding. */
-    ownsBottomSpace?: boolean;
+    ownsBottomSpace?: boolean
   }
 }
 
-const rootElement = document.getElementById("root")!;
+const rootElement = document.getElementById('root')!
 
 if (!rootElement.innerHTML) {
   // Whoever saved German waits for its chunk before the first paint; everyone else already has English.
@@ -52,6 +52,6 @@ if (!rootElement.innerHTML) {
             </DemoProvider>
           </LocaleProvider>
         </StrictMode>,
-      );
-    });
+      )
+    })
 }

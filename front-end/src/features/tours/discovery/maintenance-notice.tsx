@@ -1,10 +1,10 @@
-import type { TourMaintenance } from "../types";
+import type { TourMaintenance } from '../types'
 
-import { InfoIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { formatDate, calendarDay } from "@/lib/format";
-import { pickText } from "@/lib/localized";
-import { safeHref } from "@/lib/rich-text";
+import { InfoIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
+import { calendarDay, formatDate } from '@/lib/format'
+import { pickText } from '@/lib/localized'
+import { safeHref } from '@/lib/rich-text'
 
 /**
  * The reason a tour cannot be booked right now (C09): the merchant's text in the guest's
@@ -13,11 +13,11 @@ import { safeHref } from "@/lib/rich-text";
 export function MaintenanceNotice({
   maintenance,
 }: {
-  maintenance: TourMaintenance;
+  maintenance: TourMaintenance
 }) {
-  const { t, language, intlLocale } = useLocale();
-  const reason = pickText(maintenance.reason, language).text;
-  const url = maintenance.url && safeHref(maintenance.url);
+  const { t, language, intlLocale } = useLocale()
+  const reason = pickText(maintenance.reason, language).text
+  const url = maintenance.url && safeHref(maintenance.url)
 
   return (
     <section
@@ -30,14 +30,14 @@ export function MaintenanceNotice({
         id="tour-maintenance"
       >
         <InfoIcon aria-hidden className="shrink-0" size={18} />
-        {t("tourDiscovery.maintenance.title")}
+        {t('tourDiscovery.maintenance.title')}
       </h2>
       <p className="text-pretty">
-        {reason || t("tourDiscovery.maintenance.noReason")}
+        {reason || t('tourDiscovery.maintenance.noReason')}
       </p>
       {maintenance.expectedBack && (
         <p className="font-medium">
-          {t("tourDiscovery.maintenance.until", {
+          {t('tourDiscovery.maintenance.until', {
             date: formatDate(calendarDay(maintenance.expectedBack), intlLocale),
           })}
         </p>
@@ -49,12 +49,12 @@ export function MaintenanceNotice({
           rel="noreferrer"
           target="_blank"
         >
-          {t("tourDiscovery.maintenance.link")}
+          {t('tourDiscovery.maintenance.link')}
         </a>
       )}
       <p className="text-xs opacity-80">
-        {t("tourDiscovery.maintenance.existing")}
+        {t('tourDiscovery.maintenance.existing')}
       </p>
     </section>
-  );
+  )
 }

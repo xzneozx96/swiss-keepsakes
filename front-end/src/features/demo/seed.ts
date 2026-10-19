@@ -1,38 +1,38 @@
-import type { DemoState } from "./types";
+import type { DemoState } from './types'
 
 import {
   pickupPlaceSeed,
   products,
   reviews,
   subcategories,
-} from "@/features/catalog/seed";
-import { articleSeed, commentSeed } from "@/features/content/seed";
-import { demoGuest, otherGuests, seedOrders } from "@/features/orders/seed";
-import {
-  adviceQuestionSeed,
-  adviceRequestSeed,
-  privateTourRequestSeed,
-} from "@/features/requests/seed";
+} from '@/features/catalog/seed'
+import { articleSeed, commentSeed } from '@/features/content/seed'
+import { demoGuest, otherGuests, seedOrders } from '@/features/orders/seed'
 import {
   adjustmentSeed,
   partnerSeed,
   payoutSeed,
-} from "@/features/partners/seed";
-import { costSeed } from "@/features/reports/seed";
-import { sampleTourReviews } from "@/features/tours/reviews/seed";
-import { createTourSeed } from "@/features/tours/seed";
+} from '@/features/partners/seed'
+import { costSeed } from '@/features/reports/seed'
+import {
+  adviceQuestionSeed,
+  adviceRequestSeed,
+  privateTourRequestSeed,
+} from '@/features/requests/seed'
+import { sampleTourReviews } from '@/features/tours/reviews/seed'
+import { createTourSeed } from '@/features/tours/seed'
 
 /** Bump when the stored shape changes, so old browser data is replaced by the seed. */
-export const DEMO_VERSION = 17;
+export const DEMO_VERSION = 17
 
 export function createSeedState(realNow: number = Date.now()): DemoState {
-  const orders = seedOrders();
-  const tours = createTourSeed();
-  const ledgerSource = { orders, tours };
+  const orders = seedOrders()
+  const tours = createTourSeed()
+  const ledgerSource = { orders, tours }
 
   return {
     version: DEMO_VERSION,
-    role: "guest",
+    role: 'guest',
     clockStartedAt: realNow,
     data: {
       // Deep copies so the module-level seed is never mutated.
@@ -60,5 +60,5 @@ export function createSeedState(realNow: number = Date.now()): DemoState {
       costs: costSeed(ledgerSource),
       partnerSessions: [],
     },
-  };
+  }
 }

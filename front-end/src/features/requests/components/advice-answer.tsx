@@ -1,5 +1,5 @@
-import type { AdviceQuestion, AdviceValue } from "../types";
-import type { CalendarDate } from "@internationalized/date";
+import type { CalendarDate } from '@internationalized/date'
+import type { AdviceQuestion, AdviceValue } from '../types'
 
 import {
   Button,
@@ -10,19 +10,19 @@ import {
   TagGroup,
   TextArea,
   TextField,
-} from "@heroui/react";
-import { parseDate } from "@internationalized/date";
-import { useState } from "react";
+} from '@heroui/react'
+import { parseDate } from '@internationalized/date'
+import { useState } from 'react'
 
-import { NUMBER_MAX, numberStart } from "../lib/answers";
+import { PickupDateIcon, SelectedIcon } from '@/components/icons'
 
-import { PickupDateIcon, SelectedIcon } from "@/components/icons";
-import { QuantityLarge } from "@/components/quantity-stepper";
-import { useLocale } from "@/contexts/locale-context";
-import { zurichDate } from "@/features/catalog/lib/pickup";
-import { useDemoNow } from "@/features/demo";
-import { formatDate, calendarDay } from "@/lib/format";
-import { pickText } from "@/lib/localized";
+import { QuantityLarge } from '@/components/quantity-stepper'
+import { useLocale } from '@/contexts/locale-context'
+import { zurichDate } from '@/features/catalog/lib/pickup'
+import { useDemoNow } from '@/features/demo'
+import { calendarDay, formatDate } from '@/lib/format'
+import { pickText } from '@/lib/localized'
+import { NUMBER_MAX, numberStart } from '../lib/answers'
 
 /**
  * The input for one C21 question (R19). Choices are offered in the conversation, under the
@@ -38,20 +38,20 @@ export function AdviceAnswer({
   onChange,
   onAnswer,
 }: {
-  question: AdviceQuestion;
+  question: AdviceQuestion
   /** The question as shown, the control's accessible name. */
-  label: string;
-  value: AdviceValue | undefined;
-  onChange: (value: AdviceValue | undefined) => void;
+  label: string
+  value: AdviceValue | undefined
+  onChange: (value: AdviceValue | undefined) => void
   /** A single choice answers at once. */
-  onAnswer: (value: AdviceValue) => void;
+  onAnswer: (value: AdviceValue) => void
 }) {
-  const { t, language } = useLocale();
-  const optionText = (o: NonNullable<AdviceQuestion["options"]>[number]) =>
-    pickText(o.label, language);
+  const { t, language } = useLocale()
+  const optionText = (o: NonNullable<AdviceQuestion['options']>[number]) =>
+    pickText(o.label, language)
 
   switch (question.type) {
-    case "number":
+    case 'number':
       return (
         <QuantityLarge
           label={label}
@@ -60,34 +60,38 @@ export function AdviceAnswer({
           value={(value as number | undefined) ?? numberStart(question)}
           onChange={onChange}
         />
-      );
-    case "single":
-    case "multi": {
-      const multi = question.type === "multi";
+      )
+    case 'single':
+    case 'multi': {
+      const multi = question.type === 'multi'
       const chosen = multi
         ? ((value as string[] | undefined) ?? [])
         : value
           ? [value as string]
-          : [];
+          : []
 
       return (
         <TagGroup
           aria-label={label}
           selectedKeys={new Set(chosen)}
-          selectionMode={multi ? "multiple" : "single"}
+          selectionMode={multi ? 'multiple' : 'single'}
           size="lg"
           onSelectionChange={(keys) => {
-            const ids = keys === "all" ? [] : [...keys].map(String);
+            const ids = keys === 'all' ? [] : Array.from(keys, String)
 
             if (!multi) {
-              if (ids[0]) onAnswer(ids[0]);
-            } else onChange(ids.length ? ids : undefined);
+              if (ids[0])
+                onAnswer(ids[0])
+            }
+            else {
+              onChange(ids.length ? ids : undefined)
+            }
           }}
         >
           {/* The gift option style (C03): chosen = red border and a check on the top edge. */}
           <TagGroup.List className="flex flex-wrap gap-2 pt-1.5">
             {question.options?.map((o) => {
-              const text = optionText(o);
+              const text = optionText(o)
 
               return (
                 <Tag
@@ -103,32 +107,32 @@ export function AdviceAnswer({
                     weight="Filled"
                   />
                 </Tag>
-              );
+              )
             })}
           </TagGroup.List>
         </TagGroup>
-      );
+      )
     }
-    case "date":
+    case 'date':
       return (
         <DateAnswer
           label={label}
           value={value as string | undefined}
           onChange={onChange}
         />
-      );
-    case "text":
+      )
+    case 'text':
       return (
         <TextField
           fullWidth
           maxLength={1000}
-          value={(value as string | undefined) ?? ""}
-          onChange={(v) => onChange(v.trim() ? v : undefined)}
+          value={(value as string | undefined) ?? ''}
+          onChange={v => onChange(v.trim() ? v : undefined)}
         >
           <Label className="sr-only">{label}</Label>
-          <TextArea placeholder={t("advice.textPlaceholder")} rows={3} />
+          <TextArea placeholder={t('advice.textPlaceholder')} rows={3} />
         </TextField>
-      );
+      )
   }
 }
 
@@ -141,19 +145,18 @@ function DateAnswer({
   value,
   onChange,
 }: {
-  label: string;
-  value?: string;
-  onChange: (value: AdviceValue | undefined) => void;
+  label: string
+  value?: string
+  onChange: (value: AdviceValue | undefined) => void
 }) {
-  const { t, intlLocale } = useLocale();
-  const today = parseDate(zurichDate(useDemoNow()));
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState<CalendarDate | null>(
-    value ? parseDate(value) : null,
-  );
+  const { t, intlLocale } = useLocale()
+  const today = parseDate(zurichDate(useDemoNow()))
+  const [open, setOpen] = useState(false)
+  const [date, setDate] = useState<CalendarDate | null>(() =>
+    value ? parseDate(value) : null)
   const shown = value
     ? formatDate(calendarDay(value), intlLocale)
-    : t("advice.date.choose");
+    : t('advice.date.choose')
 
   return (
     <>
@@ -164,7 +167,7 @@ function DateAnswer({
         onClick={() => setOpen(true)}
       >
         <PickupDateIcon aria-hidden className="shrink-0" size={20} />
-        <span className={value ? "font-medium tabular-nums" : "text-muted"}>
+        <span className={value ? 'font-medium tabular-nums' : 'text-muted'}>
           {shown}
         </span>
       </button>
@@ -174,7 +177,7 @@ function DateAnswer({
             <Drawer.Handle />
             <Drawer.Header className="flex items-center justify-between">
               <Drawer.Heading className="text-title">{label}</Drawer.Heading>
-              <Drawer.CloseTrigger aria-label={t("advice.date.close")} />
+              <Drawer.CloseTrigger aria-label={t('advice.date.close')} />
             </Drawer.Header>
             <Drawer.Body className="flex flex-col gap-3 overflow-y-auto">
               <Calendar
@@ -191,15 +194,15 @@ function DateAnswer({
                 </Calendar.Header>
                 <Calendar.Grid>
                   <Calendar.GridHeader>
-                    {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
+                    {day => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
                   </Calendar.GridHeader>
                   <Calendar.GridBody>
-                    {(d) => (
+                    {d => (
                       <Calendar.Cell
                         className={
                           d.compare(today) === 0
-                            ? "calendar__cell--demo-today"
-                            : ""
+                            ? 'calendar__cell--demo-today'
+                            : ''
                         }
                         date={d}
                       />
@@ -214,16 +217,16 @@ function DateAnswer({
                 className="h-14 text-base"
                 isDisabled={!date}
                 onPress={() => {
-                  onChange(date?.toString());
-                  setOpen(false);
+                  onChange(date?.toString())
+                  setOpen(false)
                 }}
               >
-                {t("advice.date.done")}
+                {t('advice.date.done')}
               </Button>
             </Drawer.Footer>
           </Drawer.Dialog>
         </Drawer.Content>
       </Drawer.Backdrop>
     </>
-  );
+  )
 }

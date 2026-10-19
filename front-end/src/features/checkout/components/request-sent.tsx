@@ -1,16 +1,10 @@
-import type { SentOrderView } from "../hooks/use-request-sent";
-import type { IconComponent } from "@/components/icons";
+import type { SentOrderView } from '../hooks/use-request-sent'
+import type { IconComponent } from '@/components/icons'
 
-import { Alert, buttonVariants } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { Alert, buttonVariants } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
-import { useRequestSent } from "../hooks/use-request-sent";
-import { useTripProfile } from "../hooks/use-trip-profile";
-
-import { OrderCard } from "./order-card";
-import { TripProfile } from "./trip-profile";
-
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from '@/components/empty-state'
 import {
   ChevronRightIcon,
   GiftIcon,
@@ -19,10 +13,16 @@ import {
   PayLaterIcon,
   StatusInfoIcon,
   StatusSuccessIcon,
-} from "@/components/icons";
-import { RouterLink } from "@/components/router-link";
-import { StatusChip } from "@/components/status-chip";
-import { useLocale } from "@/contexts/locale-context";
+} from '@/components/icons'
+
+import { RouterLink } from '@/components/router-link'
+import { StatusChip } from '@/components/status-chip'
+
+import { useLocale } from '@/contexts/locale-context'
+import { useRequestSent } from '../hooks/use-request-sent'
+import { useTripProfile } from '../hooks/use-trip-profile'
+import { OrderCard } from './order-card'
+import { TripProfile } from './trip-profile'
 
 /**
  * C07 Request sent (AC25, R03, R09): the orders just created, in the same cards as C06
@@ -30,25 +30,26 @@ import { useLocale } from "@/contexts/locale-context";
  * at the current step, and the optional trip profile. No response time is promised.
  */
 export function RequestSent({ orderIds }: { orderIds: string[] }) {
-  const { t } = useLocale();
-  const { orders, languageNotice } = useRequestSent(orderIds);
+  const { t } = useLocale()
+  const { orders, languageNotice } = useRequestSent(orderIds)
   // One answer for the whole send: saved on every order it created (2.17).
   const trip = useTripProfile({
-    kind: "gift",
-    orderIds: orders.map((order) => order.id),
-  });
+    kind: 'gift',
+    orderIds: orders.map(order => order.id),
+  })
 
-  if (orders.length === 0)
+  if (orders.length === 0) {
     return (
       <div className="flex flex-col gap-6 px-6 pt-[calc(env(safe-area-inset-top,0px)+24px)]">
-        <h1 className="font-serif text-display">{t("requestSent.title")}</h1>
+        <h1 className="font-serif text-display">{t('requestSent.title')}</h1>
         <EmptyState
-          action={{ label: t("requestSent.explore"), to: "/" }}
+          action={{ label: t('requestSent.explore'), to: '/' }}
           icon={OrdersIcon}
-          message={t("requestSent.empty")}
+          message={t('requestSent.empty')}
         />
       </div>
-    );
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -57,12 +58,12 @@ export function RequestSent({ orderIds }: { orderIds: string[] }) {
           <span className="flex size-14 items-center justify-center rounded-full bg-success-soft text-success-soft-foreground">
             <StatusSuccessIcon aria-hidden size={30} />
           </span>
-          <h1 className="font-serif text-display">{t("requestSent.title")}</h1>
+          <h1 className="font-serif text-display">{t('requestSent.title')}</h1>
           <p className="text-muted">
             {t(
               orders.length === 1
-                ? "requestSent.intro.one"
-                : "requestSent.intro.other",
+                ? 'requestSent.intro.one'
+                : 'requestSent.intro.other',
               { count: orders.length },
             )}
           </p>
@@ -73,7 +74,7 @@ export function RequestSent({ orderIds }: { orderIds: string[] }) {
           className="flex flex-col gap-4"
         >
           <h2 className="text-heading" id="sent-orders-title">
-            {t("requestSent.orders.title")}
+            {t('requestSent.orders.title')}
           </h2>
           {languageNotice && (
             <Alert className="alert--soft alert--info w-full">
@@ -85,14 +86,14 @@ export function RequestSent({ orderIds }: { orderIds: string[] }) {
               </Alert.Content>
             </Alert>
           )}
-          {orders.map((order) => (
+          {orders.map(order => (
             <SentOrder key={order.id} order={order} />
           ))}
           <RouterLink
             className="self-start text-sm underline decoration-muted decoration-[1.5px] underline-offset-4 hover:decoration-foreground"
             to="/account"
           >
-            {t("requestSent.transactions")}
+            {t('requestSent.transactions')}
           </RouterLink>
         </section>
 
@@ -109,38 +110,38 @@ export function RequestSent({ orderIds }: { orderIds: string[] }) {
 
       <div className="sticky bottom-0 z-30 flex border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
         <Link
-          className={buttonVariants({ fullWidth: true, size: "lg" })}
+          className={buttonVariants({ fullWidth: true, size: 'lg' })}
           to="/"
         >
-          {t("requestSent.explore")}
+          {t('requestSent.explore')}
         </Link>
       </div>
     </div>
-  );
+  )
 }
 
 /** C06's order card, with the order's reference and status under the title and a link to C15. */
 function SentOrder({ order }: { order: SentOrderView }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <OrderCard
-      footer={
+      footer={(
         <Link
           className="flex min-h-12 items-center justify-between gap-3 rounded-b-3xl px-5 text-sm font-medium outline-none focus-visible:focus-ring hover:bg-surface-secondary"
           params={{ orderId: order.id }}
           to="/account/orders/$orderId"
         >
-          {t("requestSent.order.open", { ref: order.ref })}
+          {t('requestSent.order.open', { ref: order.ref })}
           <ChevronRightIcon aria-hidden className="shrink-0" size={18} />
         </Link>
-      }
+      )}
       headingLevel={3}
       order={order.card}
-      status={
+      status={(
         <div className="flex flex-col items-start gap-2">
           <span className="text-sm text-muted tabular-nums">
-            {t("requestSent.order.ref", { ref: order.ref })}
+            {t('requestSent.order.ref', { ref: order.ref })}
           </span>
           <div className="flex flex-wrap gap-2">
             <StatusChip tone={order.progress.tone}>
@@ -151,9 +152,9 @@ function SentOrder({ order }: { order: SentOrderView }) {
             </StatusChip>
           </div>
         </div>
-      }
+      )}
     />
-  );
+  )
 }
 
 /**
@@ -161,35 +162,35 @@ function SentOrder({ order }: { order: SentOrderView }) {
  * where every new order is now (awaiting the seller); the others are still ahead.
  */
 function NextSteps() {
-  const { t } = useLocale();
-  const steps: { key: "confirm" | "pay" | "pickup"; icon: IconComponent }[] = [
-    { key: "confirm", icon: StatusInfoIcon },
-    { key: "pay", icon: PayLaterIcon },
-    { key: "pickup", icon: GiftIcon },
-  ];
+  const { t } = useLocale()
+  const steps: { key: 'confirm' | 'pay' | 'pickup', icon: IconComponent }[] = [
+    { key: 'confirm', icon: StatusInfoIcon },
+    { key: 'pay', icon: PayLaterIcon },
+    { key: 'pickup', icon: GiftIcon },
+  ]
 
   return (
     <section aria-labelledby="sent-next-title" className="flex flex-col gap-4">
       <h2 className="text-heading" id="sent-next-title">
-        {t("requestSent.next.title")}
+        {t('requestSent.next.title')}
       </h2>
       <ol className="flex flex-col rounded-3xl bg-surface p-5 shadow-surface">
         {steps.map(({ key, icon: Icon }, i) => {
-          const isNow = i === 0;
-          const isLast = i === steps.length - 1;
+          const isNow = i === 0
+          const isLast = i === steps.length - 1
 
           return (
             <li
               key={key}
-              aria-current={isNow ? "step" : undefined}
+              aria-current={isNow ? 'step' : undefined}
               className="flex gap-4"
             >
               <div className="flex flex-col items-center">
                 <span
                   className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
                     isNow
-                      ? "bg-info-soft text-info-soft-foreground"
-                      : "bg-surface-secondary text-muted"
+                      ? 'bg-info-soft text-info-soft-foreground'
+                      : 'bg-surface-secondary text-muted'
                   }`}
                 >
                   <Icon aria-hidden size={20} />
@@ -199,7 +200,7 @@ function NextSteps() {
                 )}
               </div>
               <div
-                className={`flex min-w-0 flex-1 flex-col gap-1 pt-2 ${isLast ? "" : "pb-6"}`}
+                className={`flex min-w-0 flex-1 flex-col gap-1 pt-2 ${isLast ? '' : 'pb-6'}`}
               >
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <h3 className="font-semibold leading-snug">
@@ -207,7 +208,7 @@ function NextSteps() {
                   </h3>
                   {isNow && (
                     <span className="rounded-full bg-info-soft px-2 py-0.5 text-xs font-medium text-info-soft-foreground">
-                      {t("requestSent.next.now")}
+                      {t('requestSent.next.now')}
                     </span>
                   )}
                 </div>
@@ -216,9 +217,9 @@ function NextSteps() {
                 </p>
               </div>
             </li>
-          );
+          )
         })}
       </ol>
     </section>
-  );
+  )
 }

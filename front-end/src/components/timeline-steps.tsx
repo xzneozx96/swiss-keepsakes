@@ -1,4 +1,4 @@
-import { StatusSuccessIcon } from "@/components/icons";
+import { StatusSuccessIcon } from '@/components/icons'
 
 /**
  * The C15 Progress stepper (1.13r) on the shared card surface: logged steps with a filled check
@@ -11,11 +11,11 @@ export function TimelineSteps({
   upcomingLabel,
 }: {
   /** `time` is set for steps that happened; upcoming steps have none. */
-  steps: { text: string; time?: string }[];
-  label: string;
-  upcomingLabel?: string;
+  steps: { text: string, time?: string }[]
+  label: string
+  upcomingLabel?: string
 }) {
-  const lastDone = steps.filter((step) => step.time).length - 1;
+  const lastDone = steps.filter(step => step.time).length - 1
 
   return (
     <ol
@@ -23,8 +23,8 @@ export function TimelineSteps({
       className="flex flex-col rounded-3xl bg-surface p-4 shadow-surface"
     >
       {steps.map((step, i) => {
-        const done = Boolean(step.time);
-        const next = steps[i + 1];
+        const done = Boolean(step.time)
+        const next = steps[i + 1]
 
         return (
           <li
@@ -34,26 +34,28 @@ export function TimelineSteps({
             {next && (
               <span
                 aria-hidden
-                className={`absolute start-[11px] top-7 bottom-1 border-s-2 ${next.time ? "border-success" : "border-dashed border-separator"}`}
+                className={`absolute start-[11px] top-7 bottom-1 border-s-2 ${next.time ? 'border-success' : 'border-dashed border-separator'}`}
               />
             )}
-            {done ? (
-              <StatusSuccessIcon
-                aria-hidden
-                className="shrink-0 text-success"
-                size={24}
-                weight="Filled"
-              />
-            ) : (
-              <span
-                aria-hidden
-                className="m-1 size-4 shrink-0 rounded-full border-2 border-separator bg-surface"
-              />
-            )}
+            {done
+              ? (
+                  <StatusSuccessIcon
+                    aria-hidden
+                    className="shrink-0 text-success"
+                    size={24}
+                    weight="Filled"
+                  />
+                )
+              : (
+                  <span
+                    aria-hidden
+                    className="m-1 size-4 shrink-0 rounded-full border-2 border-separator bg-surface"
+                  />
+                )}
             <div className="flex min-w-0 flex-col">
               <span
                 className={
-                  i === lastDone ? "font-semibold" : done ? "" : "text-muted"
+                  i === lastDone ? 'font-semibold' : done ? '' : 'text-muted'
                 }
               >
                 {step.text}
@@ -63,8 +65,8 @@ export function TimelineSteps({
               </span>
             </div>
           </li>
-        );
+        )
       })}
     </ol>
-  );
+  )
 }

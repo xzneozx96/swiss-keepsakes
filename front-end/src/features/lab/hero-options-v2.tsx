@@ -4,51 +4,51 @@
  * signed in, so the greeting is "Grüezi" instead of a name and the cart takes the avatar
  * slot. Search fields, tabs and chips are inert here.
  */
-import { BookingsIcon, PickupIcon, SearchIcon } from "@/components/icons";
-import { CartButton } from "@/components/layout/cart-button";
-import { photoUrl } from "@/lib/photos";
+import { BookingsIcon, PickupIcon, SearchIcon } from '@/components/icons'
+import { CartButton } from '@/components/layout/cart-button'
+import { photoUrl } from '@/lib/photos'
 
 export interface HeroV2Props {
-  language: "en" | "de";
-  photoAlt: string;
+  language: 'en' | 'de'
+  photoAlt: string
 }
 
 const copy = {
   en: {
-    hello: "Grüezi!",
-    place: "Luzerne",
-    letsStart: "Let's find your Luzerne keepsake",
-    searchPlaceholder: "Search gifts, tours, stories",
-    what: "Looking for",
-    pickup: "Pickup date",
-    pickupValue: "Tomorrow, 14 Oct",
-    search: "Search",
-    explore: "Explore",
-    titleStart: "A place you always",
-    titleAccent: "want to return to.",
-    sub: "Keepsakes from Luzerne makers, picked up in town.",
-    plainTitle: "Explore Luzerne like a local",
-    types: ["Gifts", "Tours", "Stays", "Experiences"],
+    hello: 'Grüezi!',
+    place: 'Luzerne',
+    letsStart: 'Let\'s find your Luzerne keepsake',
+    searchPlaceholder: 'Search gifts, tours, stories',
+    what: 'Looking for',
+    pickup: 'Pickup date',
+    pickupValue: 'Tomorrow, 14 Oct',
+    search: 'Search',
+    explore: 'Explore',
+    titleStart: 'A place you always',
+    titleAccent: 'want to return to.',
+    sub: 'Keepsakes from Luzerne makers, picked up in town.',
+    plainTitle: 'Explore Luzerne like a local',
+    types: ['Gifts', 'Tours', 'Stays', 'Experiences'],
   },
   de: {
-    hello: "Grüezi!",
-    place: "Luzern",
-    letsStart: "Finden Sie Ihr Andenken aus Luzern",
-    searchPlaceholder: "Geschenke und Touren suchen",
-    what: "Gesucht",
-    pickup: "Abholdatum",
-    pickupValue: "Morgen, 14. Okt.",
-    search: "Suchen",
-    explore: "Entdecken Sie",
-    titleStart: "Ein Ort, an den man",
-    titleAccent: "immer zurückkehren möchte.",
-    sub: "Andenken von Handwerkern aus Luzern, in der Stadt abgeholt.",
-    plainTitle: "Luzern entdecken wie die Einheimischen",
-    types: ["Geschenke", "Touren", "Unterkünfte", "Erlebnisse"],
+    hello: 'Grüezi!',
+    place: 'Luzern',
+    letsStart: 'Finden Sie Ihr Andenken aus Luzern',
+    searchPlaceholder: 'Geschenke und Touren suchen',
+    what: 'Gesucht',
+    pickup: 'Abholdatum',
+    pickupValue: 'Morgen, 14. Okt.',
+    search: 'Suchen',
+    explore: 'Entdecken Sie',
+    titleStart: 'Ein Ort, an den man',
+    titleAccent: 'immer zurückkehren möchte.',
+    sub: 'Andenken von Handwerkern aus Luzern, in der Stadt abgeholt.',
+    plainTitle: 'Luzern entdecken wie die Einheimischen',
+    types: ['Geschenke', 'Touren', 'Unterkünfte', 'Erlebnisse'],
   },
-};
+}
 
-const typePhotos = ["gift-box", "lucerne-old-town", "stay", "artisan-workshop"];
+const typePhotos = ['gift-box', 'lucerne-old-town', 'stay', 'artisan-workshop']
 
 function PlaceLine({ place }: { place: string }) {
   return (
@@ -56,15 +56,15 @@ function PlaceLine({ place }: { place: string }) {
       <PickupIcon size={14} />
       {place}
     </span>
-  );
+  )
 }
 
 function SearchField({
   placeholder,
   trailing,
 }: {
-  placeholder: string;
-  trailing?: React.ReactNode;
+  placeholder: string
+  trailing?: React.ReactNode
 }) {
   return (
     <div className="flex h-14 items-center gap-3 rounded-full bg-surface ps-5 pe-1.5 shadow-overlay">
@@ -74,12 +74,12 @@ function SearchField({
       </span>
       {trailing}
     </div>
-  );
+  )
 }
 
 /** F · Greeting and search card (reference 1): coloured band, white card with tabs and a date. */
 export function HeroSearchCard({ language }: HeroV2Props) {
-  const c = copy[language];
+  const c = copy[language]
 
   return (
     <section className="relative flex flex-col">
@@ -99,7 +99,7 @@ export function HeroSearchCard({ language }: HeroV2Props) {
           {c.types.slice(0, 3).map((type, i) => (
             <span
               key={type}
-              className={`flex h-9 items-center justify-center rounded-full truncate px-2 ${i === 0 ? "bg-surface font-medium shadow-surface" : "text-muted"}`}
+              className={`flex h-9 items-center justify-center rounded-full truncate px-2 ${i === 0 ? 'bg-surface font-medium shadow-surface' : 'text-muted'}`}
             >
               {type}
             </span>
@@ -117,12 +117,12 @@ export function HeroSearchCard({ language }: HeroV2Props) {
         </span>
       </div>
     </section>
-  );
+  )
 }
 
 /** G · Two-weight title and tabs (reference 2): place line, "Explore / Luzerne", tab row. */
 export function HeroTwoWeight({ language }: HeroV2Props) {
-  const c = copy[language];
+  const c = copy[language]
 
   return (
     <section className="flex flex-col gap-5 px-4 pt-3">
@@ -143,19 +143,19 @@ export function HeroTwoWeight({ language }: HeroV2Props) {
         {c.types.map((type, i) => (
           <li
             key={type}
-            className={`shrink-0 pb-2.5 text-sm ${i === 0 ? "border-b-2 border-foreground font-medium" : "text-muted"}`}
+            className={`shrink-0 pb-2.5 text-sm ${i === 0 ? 'border-b-2 border-foreground font-medium' : 'text-muted'}`}
           >
             {type}
           </li>
         ))}
       </ul>
     </section>
-  );
+  )
 }
 
 /** H · Serif title over a soft photo (reference 3): two-tone title, faded photo, search pill. */
 export function HeroSoftPhoto({ language, photoAlt }: HeroV2Props) {
-  const c = copy[language];
+  const c = copy[language]
 
   return (
     <section className="relative flex flex-col">
@@ -165,7 +165,8 @@ export function HeroSoftPhoto({ language, photoAlt }: HeroV2Props) {
       </div>
       <div className="flex flex-col gap-2 px-4 pt-3">
         <h1 className="font-serif text-display text-balance">
-          {c.titleStart}{" "}
+          {c.titleStart}
+          {' '}
           <span className="text-info italic">{c.titleAccent}</span>
         </h1>
         <p className="max-w-[30ch] text-sm text-muted">{c.sub}</p>
@@ -174,26 +175,26 @@ export function HeroSoftPhoto({ language, photoAlt }: HeroV2Props) {
         <img
           alt={photoAlt}
           className="absolute inset-0 size-full object-cover object-[62%_60%] [mask-image:linear-gradient(to_bottom,transparent,black_35%,black_70%,transparent)]"
-          src={photoUrl("lucerne-kapellbruecke-1200")}
+          src={photoUrl('lucerne-kapellbruecke-1200')}
         />
       </div>
       <div className="relative z-10 -mt-10 px-4">
         <SearchField
           placeholder={c.searchPlaceholder}
-          trailing={
+          trailing={(
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
               <SearchIcon size={18} />
             </span>
-          }
+          )}
         />
       </div>
     </section>
-  );
+  )
 }
 
 /** I · Greeting, search and photo chips (reference 4): bold title, search field, type chips. */
 export function HeroChips({ language }: HeroV2Props) {
-  const c = copy[language];
+  const c = copy[language]
 
   return (
     <section className="flex flex-col gap-5 pt-3">
@@ -214,7 +215,7 @@ export function HeroChips({ language }: HeroV2Props) {
         {c.types.map((type, i) => (
           <li
             key={type}
-            className={`flex h-11 shrink-0 items-center gap-2 rounded-full ps-1.5 pe-4 text-sm ${i === 0 ? "bg-foreground font-medium text-background" : "bg-surface shadow-surface"}`}
+            className={`flex h-11 shrink-0 items-center gap-2 rounded-full ps-1.5 pe-4 text-sm ${i === 0 ? 'bg-foreground font-medium text-background' : 'bg-surface shadow-surface'}`}
           >
             <img
               alt=""
@@ -226,5 +227,5 @@ export function HeroChips({ language }: HeroV2Props) {
         ))}
       </ul>
     </section>
-  );
+  )
 }

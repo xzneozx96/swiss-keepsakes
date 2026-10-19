@@ -1,17 +1,17 @@
-import type { CartViewProps } from "../components/cart-view";
-import type { PaymentPolicy, Product } from "@/features/catalog/types";
+import type { CartViewProps } from '../components/cart-view'
+import type { PaymentPolicy, Product } from '@/features/catalog/types'
 
-import { priceCartLines } from "../lib/group-cart";
+import { useLocale } from '@/contexts/locale-context'
 
-import { useCart } from "./use-cart";
+import { zurichDate } from '@/features/catalog/lib/pickup'
 
-import { useLocale } from "@/contexts/locale-context";
-import { zurichDate } from "@/features/catalog/lib/pickup";
-import { availableUnits } from "@/features/catalog/lib/stock";
-import { shop } from "@/features/catalog/seed";
-import { useDemoNow, useDemoSelector } from "@/features/demo";
-import { formatMoney, formatShortDate } from "@/lib/format";
-import { pickText } from "@/lib/localized";
+import { availableUnits } from '@/features/catalog/lib/stock'
+import { shop } from '@/features/catalog/seed'
+import { useDemoNow, useDemoSelector } from '@/features/demo'
+import { formatMoney, formatShortDate } from '@/lib/format'
+import { pickText } from '@/lib/localized'
+import { priceCartLines } from '../lib/group-cart'
+import { useCart } from './use-cart'
 
 /**
  * C04 Cart: one flat list of cart lines, each with its store, price, requested pickup date,
@@ -22,48 +22,49 @@ import { pickText } from "@/lib/localized";
  */
 export function useCartView(): Omit<
   CartViewProps,
-  "onBack" | "onContinue"
+  'onBack' | 'onContinue'
 > | null {
-  const { t, language, intlLocale } = useLocale();
-  const demoOrders = useDemoSelector((s) => s.data.orders);
-  const pickupPlaces = useDemoSelector((s) => s.data.pickupPlaces);
-  const products = useDemoSelector((s) => s.data.products);
-  const now = useDemoNow();
-  const cart = useCart();
+  const { t, language, intlLocale } = useLocale()
+  const demoOrders = useDemoSelector(s => s.data.orders)
+  const pickupPlaces = useDemoSelector(s => s.data.pickupPlaces)
+  const products = useDemoSelector(s => s.data.products)
+  const now = useDemoNow()
+  const cart = useCart()
 
-  if (cart.lines.length === 0) return null;
+  if (cart.lines.length === 0)
+    return null
 
-  const priced = priceCartLines(cart.lines, products, now);
-  const chosen = priced.filter((p) => p.line.selected);
-  const today = zurichDate(now);
-  const short = (iso: string) => formatShortDate(iso, today, intlLocale);
-  const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
+  const priced = priceCartLines(cart.lines, products, now)
+  const chosen = priced.filter(p => p.line.selected)
+  const today = zurichDate(now)
+  const short = (iso: string) => formatShortDate(iso, today, intlLocale)
+  const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const plural = (count: number) =>
-    new Intl.PluralRules(intlLocale).select(count) === "one" ? "one" : "other";
-  const pick = (text: Partial<Record<"en" | "de", string>>) =>
-    pickText(text, language).text;
+    new Intl.PluralRules(intlLocale).select(count) === 'one' ? 'one' : 'other'
+  const pick = (text: Partial<Record<'en' | 'de', string>>) =>
+    pickText(text, language).text
 
   // Same reason wording as the C03 calendar.
   const prepReason = (product: Product) => {
     const kind = product.engraving
-      ? "engrave"
-      : product.dayMode === "working-days"
-        ? "working"
-        : "calendar";
+      ? 'engrave'
+      : product.dayMode === 'working-days'
+        ? 'working'
+        : 'calendar'
 
     return t(`detail.prep.${kind}.${plural(product.preparationDays)}`, {
       count: product.preparationDays,
-    });
-  };
+    })
+  }
 
   const policyText = (policy: PaymentPolicy) =>
-    policy.kind === "deposit"
-      ? t("cart.policy.deposit", { percent: policy.depositPercent })
-      : t(`cart.policy.${policy.kind}`);
+    policy.kind === 'deposit'
+      ? t('cart.policy.deposit', { percent: policy.depositPercent })
+      : t(`cart.policy.${policy.kind}`)
 
-  const total = chosen.reduce((sum, p) => sum + p.total, 0);
-  const chosenInvalid = chosen.filter((p) => p.invalidDate);
-  const allIds = priced.map((p) => p.line.id);
+  const total = chosen.reduce((sum, p) => sum + p.total, 0)
+  const chosenInvalid = chosen.filter(p => p.invalidDate)
+  const allIds = priced.map(p => p.line.id)
   // "Pocket knife · Medium"; one-variant gifts carry a "Standard" label that says nothing.
   const itemName = ({ product, variant }: (typeof priced)[number]) =>
     [
@@ -71,12 +72,12 @@ export function useCartView(): Omit<
       product.variants.length > 1 ? pick(variant.label) : undefined,
     ]
       .filter(Boolean)
-      .join(" · ");
+      .join(' · ')
 
   return {
-    title: t("cart.title"),
-    backLabel: t("cart.back"),
-    note: { title: t("cart.noteTitle"), body: t("cart.note") },
+    title: t('cart.title'),
+    backLabel: t('cart.back'),
+    note: { title: t('cart.noteTitle'), body: t('cart.note') },
     lines: priced.map(
       ({
         line,
@@ -86,18 +87,18 @@ export function useCartView(): Omit<
         total: lineTotal,
         invalidDate,
       }) => {
-        const name = pick(product.name);
+        const name = pick(product.name)
         // One-variant gifts carry a "Standard" label; it says nothing, so it is left out.
-        const variantLabel =
-          product.variants.length > 1 ? pick(variant.label) : undefined;
+        const variantLabel
+          = product.variants.length > 1 ? pick(variant.label) : undefined
         const engraving = line.engraving
-          ? t("cart.line.engraving", { text: line.engraving })
-          : undefined;
+          ? t('cart.line.engraving', { text: line.engraving })
+          : undefined
         const meta = [variantLabel, engraving].filter((part): part is string =>
           Boolean(part),
-        );
-        const place = pickupPlaces.find((p) => p.id === line.pickupPlaceId);
-        const item = [name, variantLabel].filter(Boolean).join(" · ");
+        )
+        const place = pickupPlaces.find(p => p.id === line.pickupPlaceId)
+        const item = [name, variantLabel].filter(Boolean).join(' · ')
 
         return {
           id: line.id,
@@ -107,72 +108,72 @@ export function useCartView(): Omit<
           engraving,
           store: shop.name,
           price: money(unitPrice),
-          each: t("cart.line.each"),
+          each: t('cart.line.each'),
           policy: policyText(product.paymentPolicy),
-          requestDate: t("cart.line.requestDate", {
+          requestDate: t('cart.line.requestDate', {
             date: short(line.pickupDate),
           }),
-          place: place ? pick(place.name) : "",
+          place: place ? pick(place.name) : '',
           select: {
             // Two lines can be the same gift, so the date is part of the name.
-            label: t("cart.line.select", {
+            label: t('cart.line.select', {
               item: `${item}, ${short(line.pickupDate)}`,
             }),
             isSelected: Boolean(line.selected),
             onChange: (on: boolean) => cart.select([line.id], on),
           },
           quantity: {
-            label: t("cart.line.quantityAria", { name }),
+            label: t('cart.line.quantityAria', { name }),
             value: line.quantity,
             max: Math.max(1, availableUnits(product, variant, demoOrders)),
             onChange: (q: number) => cart.setQuantity(line.id, q),
           },
-          removeAria: t("cart.line.removeAria", { name }),
+          removeAria: t('cart.line.removeAria', { name }),
           removeConfirm: {
-            title: t("cart.remove.title", { item }),
-            body: t("cart.remove.body", {
-              summary: `${line.quantity} × ${[name, ...meta].join(" · ")} (${money(lineTotal)})`,
+            title: t('cart.remove.title', { item }),
+            body: t('cart.remove.body', {
+              summary: `${line.quantity} × ${[name, ...meta].join(' · ')} (${money(lineTotal)})`,
             }),
-            confirmLabel: t("cart.remove.confirm"),
+            confirmLabel: t('cart.remove.confirm'),
           },
           onRemove: () => cart.remove(line.id),
           invalid: invalidDate
             ? {
-                title: t("cart.invalid.title", {
+                title: t('cart.invalid.title', {
                   date: short(line.pickupDate),
                 }),
                 message: `${
-                  invalidDate.reason === "closed"
-                    ? t("detail.legend.closed")
+                  invalidDate.reason === 'closed'
+                    ? t('detail.legend.closed')
                     : prepReason(product)
-                }. ${t("cart.invalid.earliest", { date: short(invalidDate.earliest) })}`,
-                fixLabel: t("cart.invalid.fix", {
+                }. ${t('cart.invalid.earliest', { date: short(invalidDate.earliest) })}`,
+                fixLabel: t('cart.invalid.fix', {
                   date: short(invalidDate.earliest),
                 }),
                 onFix: () => cart.changeDate(line.id, invalidDate.earliest),
               }
             : undefined,
-        };
+        }
       },
     ),
     bar: {
       selectAll: {
-        label: t("cart.selectAll"),
+        label: t('cart.selectAll'),
         isSelected: chosen.length === priced.length,
         isIndeterminate: chosen.length > 0 && chosen.length < priced.length,
         onChange: (on: boolean) => cart.select(allIds, on),
       },
-      selectedCount: t("cart.bar.selectedCount", {
+      selectedCount: t('cart.bar.selectedCount', {
         selected: chosen.length,
         total: priced.length,
       }),
-      totalLabel: t("cart.bar.total"),
+      totalLabel: t('cart.bar.total'),
       total: money(total),
-      detailsLabel: t("cart.bar.details"),
-      continueLabel: t("cart.bar.continue"),
+      detailsLabel: t('cart.bar.details'),
+      continueLabel: t('cart.bar.continue'),
       blocked:
         chosen.length === 0
-          ? { message: t("cart.bar.noneSelected") }
+          ? { message: t('cart.bar.noneSelected') }
           : chosenInvalid.length
             ? {
                 message: t(`cart.bar.blocked.${plural(chosenInvalid.length)}`, {
@@ -183,20 +184,20 @@ export function useCartView(): Omit<
             : undefined,
     },
     breakdown: {
-      title: t("cart.sheet.title"),
-      closeLabel: t("cart.sheet.close"),
-      items: chosen.map((p) => ({
+      title: t('cart.sheet.title'),
+      closeLabel: t('cart.sheet.close'),
+      items: chosen.map(p => ({
         id: p.line.id,
         label: `${p.line.quantity} × ${itemName(p)}`,
         pickup: short(p.line.pickupDate),
         total: money(p.total),
       })),
-      emptyMessage: t("cart.bar.noneSelected"),
-      subtotalLabel: t("cart.order.subtotal"),
+      emptyMessage: t('cart.bar.noneSelected'),
+      subtotalLabel: t('cart.order.subtotal'),
       subtotal: money(total),
-      totalLabel: t("cart.bar.total"),
+      totalLabel: t('cart.bar.total'),
       total: money(total),
-      chip: t("cart.bar.nothingNow"),
+      chip: t('cart.bar.nothingNow'),
     },
-  };
+  }
 }

@@ -1,43 +1,43 @@
-import type { CommentView } from "../hooks/use-article";
+import type { CommentView } from '../hooks/use-article'
 
-import { Button } from "@heroui/react";
-import { useEffect, useRef, useState } from "react";
+import { Button } from '@heroui/react'
+import { useEffect, useRef, useState } from 'react'
 
-import { useArticle } from "../hooks/use-article";
+import { EmptyState } from '@/components/empty-state'
 
-import { ArticleBlocks } from "./article-blocks";
-import {
-  ArticleComments,
-  CommentSheet,
-  commentAnchor,
-} from "./article-comments";
-import { ArticleContents, sectionAnchor } from "./article-contents";
-
-import { EmptyState } from "@/components/empty-state";
-import { ContentIcon, InfoIcon } from "@/components/icons";
+import { ContentIcon, InfoIcon } from '@/components/icons'
 import {
   BackButton,
   CartButton,
   CompactBar,
-} from "@/components/layout/cart-button";
-import { Media } from "@/components/media";
-import { useLocale } from "@/contexts/locale-context";
-import { useRequireSignIn } from "@/features/auth/hooks/use-require-sign-in";
-import { ProductCard } from "@/features/catalog/components/product-card";
-import { Rail } from "@/features/discovery/components/section";
-import { StoryRow } from "@/features/discovery/components/story-row";
-import { TripAdviceButton } from "@/features/discovery/components/trip-advice-button";
-import { TourCard } from "@/features/tours/discovery/tour-card";
-import { useScrolledPast } from "@/hooks/use-scrolled-past";
-import { readStored, writeStored } from "@/lib/storage";
+} from '@/components/layout/cart-button'
+import { Media } from '@/components/media'
+
+import { useLocale } from '@/contexts/locale-context'
+import { useRequireSignIn } from '@/features/auth/hooks/use-require-sign-in'
+import { ProductCard } from '@/features/catalog/components/product-card'
+import { Rail } from '@/features/discovery/components/section'
+import { StoryRow } from '@/features/discovery/components/story-row'
+import { TripAdviceButton } from '@/features/discovery/components/trip-advice-button'
+import { TourCard } from '@/features/tours/discovery/tour-card'
+import { useScrolledPast } from '@/hooks/use-scrolled-past'
+import { readStored, writeStored } from '@/lib/storage'
+import { useArticle } from '../hooks/use-article'
+import { ArticleBlocks } from './article-blocks'
+import {
+  ArticleComments,
+  commentAnchor,
+  CommentSheet,
+} from './article-comments'
+import { ArticleContents, sectionAnchor } from './article-contents'
 
 /**
  * A comment started while signed out. C05 steps back to this screen after sign-in (no new
  * history entry), and the sheet reopens for the same story and, for a reply, the same comment.
  */
-const PENDING_KEY = "sk.pendingComment";
+const PENDING_KEY = 'sk.pendingComment'
 
-type PendingComment = { slug: string; replyTo: string | null };
+interface PendingComment { slug: string, replyTo: string | null }
 
 /**
  * C20 Article (spec §4.11; blog layout per owner 14.10.2026): a tall cover with the title,
@@ -49,77 +49,81 @@ export function ArticlePage({
   slug,
   onBack,
 }: {
-  slug: string;
-  onBack: () => void;
+  slug: string
+  onBack: () => void
 }) {
-  const { t } = useLocale();
-  const view = useArticle(slug);
-  const { signedIn, requireSignIn } = useRequireSignIn();
-  const [coverEnd, scrolledPast] = useScrolledPast<HTMLDivElement>();
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [replyTo, setReplyTo] = useState<CommentView>();
-  const [announcement, setAnnouncement] = useState("");
+  const { t } = useLocale()
+  const view = useArticle(slug)
+  const { signedIn, requireSignIn } = useRequireSignIn()
+  const [coverEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
+  const bodyRef = useRef<HTMLDivElement>(null)
+  const comments = view?.comments
+  // The comment the guest started before signing in comes back from storage, read once when the page opens.
+  const [resume] = useState(() => {
+    const pending = readStored<PendingComment | null>(PENDING_KEY, null)
+
+    return signedIn && comments && pending?.slug === slug
+      ? { replyTo: comments.find(c => c.id === pending.replyTo) }
+      : null
+  })
+  const [sheetOpen, setSheetOpen] = useState(resume !== null)
+  const [replyTo, setReplyTo] = useState<CommentView | undefined>(resume?.replyTo)
+  const [announcement, setAnnouncement] = useState('')
 
   const openSheet = (comment?: CommentView) => {
-    setReplyTo(comment);
-    setSheetOpen(true);
-  };
+    setReplyTo(comment)
+    setSheetOpen(true)
+  }
 
   const startComment = (comment?: CommentView) => {
-    if (!signedIn)
+    if (!signedIn) {
       writeStored(PENDING_KEY, {
         slug,
         replyTo: comment?.id ?? null,
-      } satisfies PendingComment);
-    requireSignIn(() => openSheet(comment));
-  };
-
-  const comments = view?.comments;
+      } satisfies PendingComment)
+    }
+    requireSignIn(() => openSheet(comment))
+  }
 
   useEffect(() => {
-    const pending = readStored<PendingComment | null>(PENDING_KEY, null);
-
-    if (!signedIn || !comments || pending?.slug !== slug) return;
-    writeStored(PENDING_KEY, null);
-    // The comment the guest started before signing in comes back from storage, an outside source.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    openSheet(comments.find((c) => c.id === pending.replyTo));
-  }, [signedIn, comments, slug]);
+    if (resume)
+      writeStored(PENDING_KEY, null)
+  }, [resume])
 
   if (!view) {
     return (
       <div className="pt-16">
         <EmptyState
-          action={{ label: t("article.allStories"), to: "/stories" }}
+          action={{ label: t('article.allStories'), to: '/stories' }}
           icon={ContentIcon}
-          message={t("article.notFound")}
+          message={t('article.notFound')}
         />
       </div>
-    );
+    )
   }
 
-  const { article } = view;
+  const { article } = view
 
   const post = (text: string) => {
-    const id = view.addComment(text, replyTo?.id);
+    const id = view.addComment(text, replyTo?.id)
 
-    setSheetOpen(false);
-    if (!id) return;
-    setAnnouncement(t("article.posted"));
+    setSheetOpen(false)
+    if (!id)
+      return
+    setAnnouncement(t('article.posted'))
     // After the sheet closes and the new comment renders.
     window.setTimeout(() => {
-      const el = document.getElementById(commentAnchor(id));
+      const el = document.getElementById(commentAnchor(id))
 
-      el?.scrollIntoView({ block: "center" });
-      el?.focus({ preventScroll: true });
-    }, 350);
-  };
+      el?.scrollIntoView({ block: 'center' })
+      el?.focus({ preventScroll: true })
+    }, 350)
+  }
 
   return (
     <div className="flex flex-1 flex-col">
       <CompactBar
-        leading={<BackButton label={t("detail.back")} onPress={onBack} />}
+        leading={<BackButton label={t('detail.back')} onPress={onBack} />}
         title={article.title}
         visible={scrolledPast}
       >
@@ -132,7 +136,7 @@ export function ArticlePage({
           className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/5 to-black/75"
         />
         <div className="absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center gap-2">
-          <BackButton label={t("detail.back")} tone="pill" onPress={onBack} />
+          <BackButton label={t('detail.back')} tone="pill" onPress={onBack} />
           <span className="flex-1" />
           <CartButton tone="pill" />
         </div>
@@ -153,9 +157,9 @@ export function ArticlePage({
           <p className="mb-6 flex items-start gap-2 text-sm">
             <InfoIcon aria-hidden className="mt-0.5 shrink-0" size={16} />
             {t(
-              article.language === "en"
-                ? "article.onlyIn.en"
-                : "article.onlyIn.de",
+              article.language === 'en'
+                ? 'article.onlyIn.en'
+                : 'article.onlyIn.de',
             )}
           </p>
         )}
@@ -181,11 +185,11 @@ export function ArticlePage({
         <div className="mt-6 flex flex-col">
           <ArticleContents
             bodyRef={bodyRef}
-            label={t("article.contents")}
+            label={t('article.contents')}
             sections={article.sections}
           />
           <div ref={bodyRef} className="flex flex-col" lang={article.language}>
-            {article.sections.map((section) => (
+            {article.sections.map(section => (
               <section
                 key={section.id}
                 aria-labelledby={`${sectionAnchor(section.id)}-heading`}
@@ -210,20 +214,22 @@ export function ArticlePage({
             className="mt-10 flex flex-col gap-4 border-t border-separator pt-7"
           >
             <h2 className="font-serif text-title" id="article-linked">
-              {t("article.linked")}
+              {t('article.linked')}
             </h2>
             <div className="-mx-2">
-              <Rail label={t("article.linked")}>
-                {view.links.map((link) =>
-                  link.kind === "tour" ? (
-                    <li key={`tour-${link.tour.id}`}>
-                      <TourCard layout="carousel" tour={link.tour} />
-                    </li>
-                  ) : (
-                    <li key={`gift-${link.card.slug}`} className="flex">
-                      <ProductCard {...link.card} layout="carousel" />
-                    </li>
-                  ),
+              <Rail label={t('article.linked')}>
+                {view.links.map(link =>
+                  link.kind === 'tour'
+                    ? (
+                        <li key={`tour-${link.tour.id}`}>
+                          <TourCard layout="carousel" tour={link.tour} />
+                        </li>
+                      )
+                    : (
+                        <li key={`gift-${link.card.slug}`} className="flex">
+                          <ProductCard {...link.card} layout="carousel" />
+                        </li>
+                      ),
                 )}
               </Rail>
             </div>
@@ -236,10 +242,10 @@ export function ArticlePage({
             className="mt-10 flex flex-col gap-4 border-t border-separator pt-7"
           >
             <h2 className="font-serif text-title" id="article-more">
-              {t("article.more")}
+              {t('article.more')}
             </h2>
             <ul className="flex flex-col gap-3">
-              {view.related.map((story) => (
+              {view.related.map(story => (
                 <li key={story.slug}>
                   <StoryRow {...story} />
                 </li>
@@ -263,17 +269,17 @@ export function ArticlePage({
       <TripAdviceButton above="actionBar" />
       <div className="sticky bottom-0 z-30 border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
         <Button fullWidth size="lg" onPress={() => startComment()}>
-          {t(signedIn ? "article.write" : "article.signInToComment")}
+          {t(signedIn ? 'article.write' : 'article.signInToComment')}
         </Button>
       </div>
 
       <CommentSheet
-        authorName={view.commenterName ?? ""}
+        authorName={view.commenterName ?? ''}
         isOpen={sheetOpen}
         replyTo={replyTo}
         onOpenChange={setSheetOpen}
         onPost={post}
       />
     </div>
-  );
+  )
 }

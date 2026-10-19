@@ -1,26 +1,26 @@
-import type { TourBooking } from "../types";
+import type { TourBooking } from '../types'
 
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router'
 
+import { EmptyState } from '@/components/empty-state'
+
+import { ChevronRightIcon, TourIcon } from '@/components/icons'
+import { Media } from '@/components/media'
 import {
-  TourTicketHead,
-  isClosedBooking,
-  useBookingFormat,
-  useTourPhoto,
-} from "./booking-summary";
-
-import { EmptyState } from "@/components/empty-state";
-import { ChevronRightIcon, TourIcon } from "@/components/icons";
-import { Media } from "@/components/media";
-import {
-  TicketGroups,
   pastRowClass,
   ticketClass,
-} from "@/components/ticket-groups";
-import { useLocale } from "@/contexts/locale-context";
-import { BookingStatusLabels } from "@/features/tours/components/booking-status";
-import { useTours } from "@/features/tours/hooks/use-tours";
-import { pickText } from "@/lib/localized";
+  TicketGroups,
+} from '@/components/ticket-groups'
+import { useLocale } from '@/contexts/locale-context'
+import { BookingStatusLabels } from '@/features/tours/components/booking-status'
+import { useTours } from '@/features/tours/hooks/use-tours'
+import { pickText } from '@/lib/localized'
+import {
+  isClosedBooking,
+  TourTicketHead,
+  useBookingFormat,
+  useTourPhoto,
+} from './booking-summary'
 
 /**
  * C14 Tour bookings, grouped as gift C14 (owner, round 3): open bookings come first as tickets,
@@ -28,43 +28,44 @@ import { pickText } from "@/lib/localized";
  * shows its total and opens C16.
  */
 export function TourBookingList() {
-  const { bookings, guestId } = useTours();
-  const { t } = useLocale();
+  const { bookings, guestId } = useTours()
+  const { t } = useLocale()
   const owned = bookings
-    .filter((booking) => booking.guestId === guestId)
-    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+    .filter(booking => booking.guestId === guestId)
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
   const open = owned
-    .filter((booking) => !isClosedBooking(booking))
-    .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt));
-  const past = owned.filter(isClosedBooking);
+    .filter(booking => !isClosedBooking(booking))
+    .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))
+  const past = owned.filter(isClosedBooking)
 
-  if (!owned.length)
+  if (!owned.length) {
     return (
       <EmptyState
-        action={{ label: t("tourBooking.explore"), to: "/tours" }}
+        action={{ label: t('tourBooking.explore'), to: '/tours' }}
         icon={TourIcon}
-        message={t("tourBooking.empty")}
+        message={t('tourBooking.empty')}
       />
-    );
+    )
+  }
 
   return (
     <TicketGroups
       id="bookings"
-      open={open.map((booking) => (
+      open={open.map(booking => (
         <BookingTicket key={booking.id} booking={booking} />
       ))}
-      openTitle={t("transactions.open.title")}
-      past={past.map((booking) => (
+      openTitle={t('transactions.open.title')}
+      past={past.map(booking => (
         <PastRow key={booking.id} booking={booking} />
       ))}
-      pastTitle={t("tourBooking.past")}
+      pastTitle={t('tourBooking.past')}
     />
-  );
+  )
 }
 
 /** Open booking: the gift C14 ticket (date tile, tour, time, group, photo, then both labels). */
 function BookingTicket({ booking }: { booking: TourBooking }) {
-  const { money } = useBookingFormat();
+  const { money } = useBookingFormat()
 
   return (
     <li>
@@ -92,15 +93,15 @@ function BookingTicket({ booking }: { booking: TourBooking }) {
         </div>
       </Link>
     </li>
-  );
+  )
 }
 
 /** Closed booking: gift C14's quiet past row with both labels. */
 function PastRow({ booking }: { booking: TourBooking }) {
-  const { language } = useLocale();
-  const { money, date } = useBookingFormat();
-  const name = pickText(booking.tourName, language);
-  const photo = useTourPhoto(booking);
+  const { language } = useLocale()
+  const { money, date } = useBookingFormat()
+  const name = pickText(booking.tourName, language)
+  const photo = useTourPhoto(booking)
 
   return (
     <li>
@@ -136,5 +137,5 @@ function PastRow({ booking }: { booking: TourBooking }) {
         />
       </Link>
     </li>
-  );
+  )
 }

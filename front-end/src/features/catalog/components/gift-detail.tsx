@@ -1,14 +1,15 @@
-import type { PickupDateFieldProps } from "./pickup-date-field";
-import type { ListingReviewsProps } from "@/components/listings/listing-reviews";
-import type { SellerRowProps } from "./seller-row";
-import type { StoryView } from "./story-sheet";
-import type { IconComponent } from "@/components/icons";
-import type { PhotoGalleryLabels } from "@/components/photo-gallery";
-import type { Key } from "@heroui/react";
+import type { Key } from '@heroui/react'
+import type { PickupDateFieldProps } from './pickup-date-field'
+import type { SellerRowProps } from './seller-row'
+import type { StoryView } from './story-sheet'
+import type { IconComponent } from '@/components/icons'
+import type { ListingReviewsProps } from '@/components/listings/listing-reviews'
+import type { PhotoGalleryLabels } from '@/components/photo-gallery'
 
 import {
   Accordion,
   Button,
+  buttonVariants,
   Description,
   FieldError,
   InputGroup,
@@ -18,16 +19,12 @@ import {
   Tag,
   TagGroup,
   TextField,
-  buttonVariants,
-} from "@heroui/react";
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+} from '@heroui/react'
+import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
 
-import { PickupDateField } from "./pickup-date-field";
-import { SellerRow } from "./seller-row";
-import { StorySheet } from "./story-sheet";
-
-import { ChoiceSheet } from "@/components/choice-sheet";
+import { ChoiceSheet } from '@/components/choice-sheet'
+import { flyToCart } from '@/components/fly-to-cart'
 import {
   EngraveIcon,
   InfoIcon,
@@ -35,134 +32,137 @@ import {
   PickupIcon,
   SelectedIcon,
   StatusSuccessIcon,
-} from "@/components/icons";
+} from '@/components/icons'
+
 import {
   BackButton,
   CartButton,
   CompactBar,
-} from "@/components/layout/cart-button";
-import { flyToCart } from "@/components/fly-to-cart";
+} from '@/components/layout/cart-button'
 import {
   ListingDetailHeader,
   ListingFavouriteButton,
-} from "@/components/listings/listing-detail-header";
-import { ListingReviews } from "@/components/listings/listing-reviews";
-import { Media } from "@/components/media";
-import { PhotoGallery } from "@/components/photo-gallery";
-import { QuantityStepper } from "@/components/quantity-stepper";
-import { StatusChip } from "@/components/status-chip";
-import { useScrolledPast } from "@/hooks/use-scrolled-past";
-import { photoUrl } from "@/lib/photos";
-import { firstPhoto, openingText } from "@/lib/rich-text";
+} from '@/components/listings/listing-detail-header'
+import { ListingReviews } from '@/components/listings/listing-reviews'
+import { Media } from '@/components/media'
+import { PhotoGallery } from '@/components/photo-gallery'
+import { QuantityStepper } from '@/components/quantity-stepper'
+import { StatusChip } from '@/components/status-chip'
+import { useScrolledPast } from '@/hooks/use-scrolled-past'
+import { photoUrl } from '@/lib/photos'
+import { firstPhoto, openingText } from '@/lib/rich-text'
+import { PickupDateField } from './pickup-date-field'
+import { SellerRow } from './seller-row'
+import { StorySheet } from './story-sheet'
 
-type Stat = { value: string; label: string };
+interface Stat { value: string, label: string }
 
 export interface GiftDetailProps {
-  name: string;
-  photos: string[];
-  galleryLabels: PhotoGalleryLabels;
+  name: string
+  photos: string[]
+  galleryLabels: PhotoGalleryLabels
   /** Muted line under the title: category, then the option names, joined by " · ". */
-  subtitle: string;
-  story: string;
+  subtitle: string
+  story: string
   /** The long, illustrated story behind the gift, when it has one. */
-  longStory?: StoryView & { readLabel: string; closeLabel: string };
+  longStory?: StoryView & { readLabel: string, closeLabel: string }
   /** Shown when the product text is only in the other language (R02, AC30). */
-  languageNotice?: string;
+  languageNotice?: string
   stats: {
     /** Earliest pickup, or "Sold out". */
-    pickup: Stat;
+    pickup: Stat
     /** Average rating, or "New" when there are no reviews yet. */
-    rating: Stat;
-    ratingValue: number;
-    hasRating: boolean;
-    reviews: Stat;
-  };
-  seller: SellerRowProps;
+    rating: Stat
+    ratingValue: number
+    hasRating: boolean
+    reviews: Stat
+  }
+  seller: SellerRowProps
   highlights: {
-    icon: "engrave" | "pickup" | "pay";
-    title: string;
-    body: string;
-  }[];
-  favourite: { isSaved: boolean; onToggle: () => void; label: string };
+    icon: 'engrave' | 'pickup' | 'pay'
+    title: string
+    body: string
+  }[]
+  favourite: { isSaved: boolean, onToggle: () => void, label: string }
   soldOut?: {
-    label: string;
-    message: string;
-    actionLabel: string;
-    subcategory?: string;
-  };
-  sheet: { title: string; closeLabel: string; addLabel: string };
+    label: string
+    message: string
+    actionLabel: string
+    subcategory?: string
+  }
+  sheet: { title: string, closeLabel: string, addLabel: string }
   variant: {
-    label: string;
+    label: string
     /** `reason` set = cannot be chosen (sold out or not on sale), shown in words. */
-    options: { id: string; label: string; price: string; reason?: string }[];
-    value: string | null;
-    onChange: (id: string) => void;
-    error?: string;
-  };
+    options: { id: string, label: string, price: string, reason?: string }[]
+    value: string | null
+    onChange: (id: string) => void
+    error?: string
+  }
   quantity: {
-    label: string;
-    value: number;
-    max: number;
+    label: string
+    value: number
+    max: number
     /** "4 available". */
-    hint?: string;
-    onChange: (value: number) => void;
-  };
+    hint?: string
+    onChange: (value: number) => void
+  }
   engraving?: {
-    label: string;
-    description: string;
-    maxLength: number;
-    counterLabel: string;
-    value: string;
-    onChange: (value: string) => void;
-  };
-  date: PickupDateFieldProps;
+    label: string
+    description: string
+    maxLength: number
+    counterLabel: string
+    value: string
+    onChange: (value: string) => void
+  }
+  date: PickupDateFieldProps
   /** "This is the date you request. The seller confirms before you pay." */
-  note: string;
+  note: string
   place: {
-    label: string;
-    options: { id: string; name: string; address: string; hours: string }[];
-    value: string | null;
-    onChange: (id: string) => void;
-    error?: string;
-  };
+    label: string
+    options: { id: string, name: string, address: string, hours: string }[]
+    value: string | null
+    onChange: (id: string) => void
+    error?: string
+  }
   sections: {
-    aboutTitle: string;
-    placesTitle: string;
+    aboutTitle: string
+    placesTitle: string
     /** "Pickup date" row: earliest date, or the chosen date and place. */
-    dateRow: { title: string; value: string; action: string };
-    paymentTitle: string;
-    payment: string;
-    cancellationTitle: string;
-    cancellation: string;
-    cancellationNote?: string;
-  };
-  reviews: ListingReviewsProps;
+    dateRow: { title: string, value: string, action: string }
+    paymentTitle: string
+    payment: string
+    cancellationTitle: string
+    cancellation: string
+    cancellationNote?: string
+  }
+  reviews: ListingReviewsProps
   bar: {
-    price: string;
+    price: string
     /** Chosen date and place, or a prompt to choose them. */
-    summary: string;
-    chip: string;
-    addLabel: string;
+    summary: string
+    chip: string
+    addLabel: string
     /** Set right after adding; the bar then also offers "View cart". */
-    addedLabel?: string;
-    viewCartLabel: string;
-  };
+    addedLabel?: string
+    viewCartLabel: string
+  }
   /** Adds the line; false when a choice is missing (errors are then shown in the sheet). */
-  onAdd: () => boolean;
+  onAdd: () => boolean
   /** Called when the sheet opens: clears the "added" confirmation. */
-  onSheetOpen: () => void;
-  backLabel: string;
-  onBack: () => void;
+  onSheetOpen: () => void
+  backLabel: string
+  onBack: () => void
 }
 
 const highlightIcon: Record<
-  GiftDetailProps["highlights"][number]["icon"],
+  GiftDetailProps['highlights'][number]['icon'],
   IconComponent
 > = {
   engrave: EngraveIcon,
   pickup: PickupIcon,
   pay: PayLaterIcon,
-};
+}
 
 /**
  * C03 Gift detail in the order of the Airbnb listing page (owner references, Airbnb iOS
@@ -193,19 +193,19 @@ export function GiftDetail(props: GiftDetailProps) {
     backLabel,
     onBack,
     onSheetOpen,
-  } = props;
-  const [photoEnd, scrolledPast] = useScrolledPast<HTMLDivElement>();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [storyOpen, setStoryOpen] = useState(false);
+  } = props
+  const [photoEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [storyOpen, setStoryOpen] = useState(false)
 
   const openSheet = () => {
-    onSheetOpen();
-    setSheetOpen(true);
-  };
+    onSheetOpen()
+    setSheetOpen(true)
+  }
 
-  const heart = (tone: "pill" | "bar") => (
+  const heart = (tone: 'pill' | 'bar') => (
     <ListingFavouriteButton favourite={favourite} tone={tone} />
-  );
+  )
 
   return (
     <div className="flex flex-1 flex-col">
@@ -214,7 +214,7 @@ export function GiftDetail(props: GiftDetailProps) {
         visible={scrolledPast}
       >
         <span className="flex-1" />
-        {heart("bar")}
+        {heart('bar')}
         <CartButton tone="bar" />
       </CompactBar>
 
@@ -226,7 +226,7 @@ export function GiftDetail(props: GiftDetailProps) {
         <div className="pointer-events-none absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] z-10 flex items-center gap-2 [&>*]:pointer-events-auto">
           <BackButton label={backLabel} tone="pill" onPress={onBack} />
           <span className="flex-1" />
-          {heart("pill")}
+          {heart('pill')}
           <CartButton tone="pill" />
         </div>
       </PhotoGallery>
@@ -248,7 +248,7 @@ export function GiftDetail(props: GiftDetailProps) {
         {/* 4. Highlights (screen 38) */}
         <ul className="flex flex-col gap-5 border-t border-separator py-7">
           {highlights.map((h) => {
-            const Icon = highlightIcon[h.icon];
+            const Icon = highlightIcon[h.icon]
 
             return (
               <li key={h.icon} className="flex gap-4">
@@ -258,7 +258,7 @@ export function GiftDetail(props: GiftDetailProps) {
                   <span className="text-sm text-muted">{h.body}</span>
                 </div>
               </li>
-            );
+            )
           })}
         </ul>
 
@@ -270,7 +270,7 @@ export function GiftDetail(props: GiftDetailProps) {
           </p>
         )}
         <section
-          className={`flex flex-col gap-3 py-7 ${languageNotice ? "" : "border-t border-separator"}`}
+          className={`flex flex-col gap-3 py-7 ${languageNotice ? '' : 'border-t border-separator'}`}
         >
           <h2 className="font-serif text-title">{sections.aboutTitle}</h2>
           <p className="text-body">{story}</p>
@@ -336,7 +336,7 @@ export function GiftDetail(props: GiftDetailProps) {
             <Accordion.Panel>
               <Accordion.Body>
                 <ul className="flex flex-col gap-4">
-                  {place.options.map((p) => (
+                  {place.options.map(p => (
                     <li key={p.id} className="flex flex-col">
                       <span className="font-semibold text-foreground">
                         {p.name}
@@ -414,69 +414,73 @@ export function GiftDetail(props: GiftDetailProps) {
       </div>
 
       <div className="sticky bottom-0 z-30 flex items-center gap-3 border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
-        {soldOut ? (
-          <>
-            <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
-              <StatusChip tone="neutral">{soldOut.label}</StatusChip>
-              <span className="text-xs text-muted">{soldOut.message}</span>
-            </div>
-            <Link
-              className={buttonVariants({ size: "lg", variant: "secondary" })}
-              search={
-                soldOut.subcategory ? { subcategory: soldOut.subcategory } : {}
-              }
-              to="/gifts"
-            >
-              {soldOut.actionLabel}
-            </Link>
-          </>
-        ) : (
-          <>
-            <div
-              aria-live="polite"
-              className="flex min-w-0 flex-1 flex-col items-start"
-            >
-              {bar.addedLabel ? (
-                <>
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-success">
-                    <StatusSuccessIcon aria-hidden size={18} />
-                    {bar.addedLabel}
-                  </span>
-                  <Link
-                    className="rounded text-sm font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring"
-                    to="/cart"
-                  >
-                    {bar.viewCartLabel}
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <span className="text-lg font-semibold underline underline-offset-4 tabular-nums">
-                    {bar.price}
-                  </span>
-                  <span className="truncate text-xs text-muted">
-                    {bar.summary}
-                  </span>
-                  <span className="mt-1 flex items-center gap-1 rounded-full bg-surface-secondary px-2 py-0.5 text-xs whitespace-nowrap">
-                    <StatusSuccessIcon aria-hidden size={12} />
-                    {bar.chip}
-                  </span>
-                </>
-              )}
-            </div>
-            {/* Stays available after adding, for another engraving, date or quantity. */}
-            <Button size="lg" onPress={openSheet}>
-              {bar.addLabel}
-            </Button>
-          </>
-        )}
+        {soldOut
+          ? (
+              <>
+                <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+                  <StatusChip tone="neutral">{soldOut.label}</StatusChip>
+                  <span className="text-xs text-muted">{soldOut.message}</span>
+                </div>
+                <Link
+                  className={buttonVariants({ size: 'lg', variant: 'secondary' })}
+                  search={
+                    soldOut.subcategory ? { subcategory: soldOut.subcategory } : {}
+                  }
+                  to="/gifts"
+                >
+                  {soldOut.actionLabel}
+                </Link>
+              </>
+            )
+          : (
+              <>
+                <div
+                  aria-live="polite"
+                  className="flex min-w-0 flex-1 flex-col items-start"
+                >
+                  {bar.addedLabel
+                    ? (
+                        <>
+                          <span className="flex items-center gap-1.5 text-sm font-semibold text-success">
+                            <StatusSuccessIcon aria-hidden size={18} />
+                            {bar.addedLabel}
+                          </span>
+                          <Link
+                            className="rounded text-sm font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring"
+                            to="/cart"
+                          >
+                            {bar.viewCartLabel}
+                          </Link>
+                        </>
+                      )
+                    : (
+                        <>
+                          <span className="text-lg font-semibold underline underline-offset-4 tabular-nums">
+                            {bar.price}
+                          </span>
+                          <span className="truncate text-xs text-muted">
+                            {bar.summary}
+                          </span>
+                          <span className="mt-1 flex items-center gap-1 rounded-full bg-surface-secondary px-2 py-0.5 text-xs whitespace-nowrap">
+                            <StatusSuccessIcon aria-hidden size={12} />
+                            {bar.chip}
+                          </span>
+                        </>
+                      )}
+                </div>
+                {/* Stays available after adding, for another engraving, date or quantity. */}
+                <Button size="lg" onPress={openSheet}>
+                  {bar.addLabel}
+                </Button>
+              </>
+            )}
       </div>
 
       {!soldOut && (
         <GiftSheet {...props} isOpen={sheetOpen} onOpenChange={setSheetOpen} />
       )}
     </div>
-  );
+  )
 }
 
 /** Add-to-cart sheet: option, quantity, engraving, pickup date and place. */
@@ -493,25 +497,27 @@ function GiftSheet({
   isOpen,
   onOpenChange,
 }: GiftDetailProps & {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
 }) {
-  const onVariant = (keys: "all" | Set<Key>) => {
-    const [first] = keys === "all" ? [] : [...keys];
+  const onVariant = (keys: 'all' | Set<Key>) => {
+    const [first] = keys === 'all' ? [] : [...keys]
 
-    if (first !== undefined) variant.onChange(String(first));
-  };
-  const blocked = variant.options.filter((o) => o.reason);
+    if (first !== undefined)
+      variant.onChange(String(first))
+  }
+  const blocked = variant.options.filter(o => o.reason)
 
   return (
     <ChoiceSheet
       action={{
         label: sheet.addLabel,
         onPress: (e) => {
-          if (!onAdd()) return;
+          if (!onAdd())
+            return
           // Read the button's place before the sheet starts closing.
-          flyToCart(e.target, photoUrl(photos[0]));
-          onOpenChange(false);
+          flyToCart(e.target, photoUrl(photos[0]))
+          onOpenChange(false)
         },
       }}
       closeLabel={sheet.closeLabel}
@@ -521,7 +527,7 @@ function GiftSheet({
     >
       {variant.options.length > 1 && (
         <TagGroup
-          disabledKeys={blocked.map((o) => o.id)}
+          disabledKeys={blocked.map(o => o.id)}
           id="gift-variant"
           selectedKeys={variant.value ? new Set([variant.value]) : new Set()}
           selectionMode="single"
@@ -532,10 +538,10 @@ function GiftSheet({
           {/* Option cards: name over price, three to a row. Chosen = red border and a
               check on the top edge, clear of long names (owner, round 3); the fill stays. */}
           <TagGroup.List className="grid grid-cols-3 gap-2 pt-2">
-            {variant.options.map((o) => (
+            {variant.options.map(o => (
               <Tag
                 key={o.id}
-                className={`group relative h-auto items-start justify-start rounded-2xl border-2 border-transparent px-2.5 py-2 before:hidden data-[selected=true]:border-accent data-[selected=true]:bg-default data-[selected=true]:hover:bg-default-hover ${o.reason ? "line-through" : ""}`}
+                className={`group relative h-auto items-start justify-start rounded-2xl border-2 border-transparent px-2.5 py-2 before:hidden data-[selected=true]:border-accent data-[selected=true]:bg-default data-[selected=true]:hover:bg-default-hover ${o.reason ? 'line-through' : ''}`}
                 id={o.id}
                 textValue={`${o.label}, ${o.price}`}
               >
@@ -553,7 +559,7 @@ function GiftSheet({
               </Tag>
             ))}
           </TagGroup.List>
-          {blocked.map((o) => (
+          {blocked.map(o => (
             <Description key={o.id}>
               {o.label}: {o.reason}
             </Description>
@@ -610,7 +616,7 @@ function GiftSheet({
         onChange={place.onChange}
       >
         <Label className="text-heading">{place.label}</Label>
-        {place.options.map((p) => (
+        {place.options.map(p => (
           <Radio key={p.id} value={p.id}>
             <Radio.Content>
               <Radio.Control>
@@ -635,5 +641,5 @@ function GiftSheet({
         {note}
       </p>
     </ChoiceSheet>
-  );
+  )
 }

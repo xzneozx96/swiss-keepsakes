@@ -1,27 +1,27 @@
-import type { CartSelectLabels } from "./cart-select-options";
+import type { CartSelectLabels } from './cart-select-options'
 
-import { Button } from "@heroui/react";
+import { Button } from '@heroui/react'
 
-import { StatusSuccessIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
+import { StatusSuccessIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
 
 export function CartSummarySheet({
   orders,
   labels,
 }: {
-  orders: { id: string; title: string; gifts: number; subtotal: number }[];
-  labels: CartSelectLabels;
+  orders: { id: string, title: string, gifts: number, subtotal: number }[]
+  labels: CartSelectLabels
 }) {
-  const { language } = useLocale();
-  const total = orders.reduce((sum, order) => sum + order.subtotal, 0);
+  const { language } = useLocale()
+  const total = orders.reduce((sum, order) => sum + order.subtotal, 0)
 
   return (
     <section
-      aria-label={language === "de" ? "Bestellübersicht" : "Order summary"}
+      aria-label={language === 'de' ? 'Bestellübersicht' : 'Order summary'}
       className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 rounded-t-3xl bg-surface px-5 pt-4 pb-5 shadow-overlay"
     >
       <dl className="flex flex-col gap-1.5 text-sm">
-        {orders.map((order) => (
+        {orders.map(order => (
           <div key={order.id} className="flex justify-between gap-2">
             <dt className="text-muted">
               {order.title} · {labels.gifts(order.gifts)}
@@ -50,5 +50,5 @@ export function CartSummarySheet({
         {labels.continueLabel(orders.length)}
       </Button>
     </section>
-  );
+  )
 }

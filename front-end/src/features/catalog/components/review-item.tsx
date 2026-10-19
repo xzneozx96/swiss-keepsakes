@@ -1,35 +1,35 @@
-import type { PhotoGalleryLabels } from "@/components/photo-gallery";
+import type { PhotoGalleryLabels } from '@/components/photo-gallery'
 
-import { useState } from "react";
+import { useState } from 'react'
 
-import { StatusSuccessIcon } from "@/components/icons";
-import { PhotoViewer } from "@/components/photo-gallery";
-import { Stars } from "@/components/rating";
-import { photoUrl } from "@/lib/photos";
+import { StatusSuccessIcon } from '@/components/icons'
+import { PhotoViewer } from '@/components/photo-gallery'
+import { Stars } from '@/components/rating'
+import { photoUrl } from '@/lib/photos'
 
 export interface ReviewView {
-  id: string;
-  guestName: string;
+  id: string
+  guestName: string
   /** Avatar image URL. */
-  avatar: string;
-  verifiedLabel: string;
-  rating: number;
-  ratingLabel: string;
-  date: string;
-  text: string;
-  languageNote?: string;
+  avatar: string
+  verifiedLabel: string
+  rating: number
+  ratingLabel: string
+  date: string
+  text: string
+  languageNote?: string
   /** Guest photos: thumbnails that open the fullscreen viewer. */
-  photos?: { slugs: string[]; labels: PhotoGalleryLabels };
+  photos?: { slugs: string[], labels: PhotoGalleryLabels }
   /** The shop's public reply (M23), in the language it was written in. */
   reply?: {
     /** "Reply from Sonja". */
-    title: string;
-    date: string;
-    text: string;
-    lang: string;
+    title: string
+    date: string
+    text: string
+    lang: string
     /** "Text in German" when the reply is not in the guest's language (AC30). */
-    languageNote?: string;
-  };
+    languageNote?: string
+  }
 }
 
 /** The shop's reply under a review, indented like a reply on C20; clamped on the swipe card. */
@@ -37,8 +37,8 @@ function ShopReply({
   reply,
   clamp = false,
 }: {
-  reply: NonNullable<ReviewView["reply"]>;
-  clamp?: boolean;
+  reply: NonNullable<ReviewView['reply']>
+  clamp?: boolean
 }) {
   return (
     <div className="flex flex-col gap-1 border-s border-separator ps-4">
@@ -47,21 +47,21 @@ function ShopReply({
         {reply.date}
         {reply.languageNote && ` · ${reply.languageNote}`}
       </span>
-      <p className={`text-sm ${clamp ? "line-clamp-3" : ""}`} lang={reply.lang}>
+      <p className={`text-sm ${clamp ? 'line-clamp-3' : ''}`} lang={reply.lang}>
         {reply.text}
       </p>
     </div>
-  );
+  )
 }
 
 /** Guest photos under a review: square thumbnails, tap to view fullscreen. */
 function ReviewPhotos({
   photos,
 }: {
-  photos: NonNullable<ReviewView["photos"]>;
+  photos: NonNullable<ReviewView['photos']>
 }) {
-  const [viewerAt, setViewerAt] = useState<number | null>(null);
-  const count = photos.slugs.length;
+  const [viewerAt, setViewerAt] = useState<number | null>(null)
+  const count = photos.slugs.length
 
   return (
     <>
@@ -92,7 +92,7 @@ function ReviewPhotos({
         onClose={() => setViewerAt(null)}
       />
     </>
-  );
+  )
 }
 
 function Reviewer({ review }: { review: ReviewView }) {
@@ -113,7 +113,7 @@ function Reviewer({ review }: { review: ReviewView }) {
         </span>
       </div>
     </div>
-  );
+  )
 }
 
 function RatingLine({ review }: { review: ReviewView }) {
@@ -123,7 +123,7 @@ function RatingLine({ review }: { review: ReviewView }) {
       <span aria-hidden>·</span>
       <span className="font-semibold">{review.date}</span>
     </div>
-  );
+  )
 }
 
 /**
@@ -137,12 +137,12 @@ export function ReviewItem({
   layout,
   showMore,
 }: {
-  review: ReviewView;
-  layout: "card" | "full";
+  review: ReviewView
+  layout: 'card' | 'full'
   /** Card only: link to the full list, e.g. "Show more". */
-  showMore?: React.ReactNode;
+  showMore?: React.ReactNode
 }) {
-  if (layout === "full") {
+  if (layout === 'full') {
     return (
       <article className="flex flex-col gap-3">
         <Reviewer review={review} />
@@ -154,7 +154,7 @@ export function ReviewItem({
         {review.photos && <ReviewPhotos photos={review.photos} />}
         {review.reply && <ShopReply reply={review.reply} />}
       </article>
-    );
+    )
   }
 
   return (
@@ -171,5 +171,5 @@ export function ReviewItem({
         <Reviewer review={review} />
       </div>
     </article>
-  );
+  )
 }

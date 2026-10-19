@@ -1,23 +1,23 @@
-import type { ReviewView } from "./review-item";
-import type { ReviewSummaryProps } from "./review-summary";
+import type { ReviewView } from './review-item'
+import type { ReviewSummaryProps } from './review-summary'
 
-import { Drawer } from "@heroui/react";
+import { Drawer } from '@heroui/react'
 
-import { ReviewItem } from "./review-item";
-import { ReviewSummary } from "./review-summary";
+import { useSheetExit } from '@/components/sheet-exit'
+import { ReviewItem } from './review-item'
 
-import { useSheetExit } from "@/components/sheet-exit";
+import { ReviewSummary } from './review-summary'
 
 export interface ReviewsSheetProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
   /** Accessible name, e.g. "Reviews of Kapellbrücke pocket knife". */
-  title: string;
-  closeLabel: string;
-  summary: ReviewSummaryProps;
+  title: string
+  closeLabel: string
+  summary: ReviewSummaryProps
   /** "Overall rating" and the share per star, 5 down to 1. */
-  overall: { label: string; rows: { stars: number; share: number }[] };
-  items: ReviewView[];
+  overall: { label: string, rows: { stars: number, share: number }[] }
+  items: ReviewView[]
 }
 
 /**
@@ -35,7 +35,7 @@ export function ReviewsSheet({
   overall,
   items,
 }: ReviewsSheetProps) {
-  const exitRef = useSheetExit();
+  const exitRef = useSheetExit()
 
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -70,7 +70,7 @@ export function ReviewsSheet({
             </div>
 
             <ul className="flex flex-col gap-10">
-              {items.map((r) => (
+              {items.map(r => (
                 <li key={r.id}>
                   <ReviewItem layout="full" review={r} />
                 </li>
@@ -80,5 +80,5 @@ export function ReviewsSheet({
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>
-  );
+  )
 }

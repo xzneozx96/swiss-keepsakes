@@ -1,41 +1,41 @@
-import type { MessageKey } from "@/i18n/en";
-import type { ShownLabel } from "@/features/orders/hooks/use-orders";
-import type { Order, Payment } from "@/features/orders/types";
+import type { ShownLabel } from '@/features/orders/hooks/use-orders'
+import type { Order, Payment } from '@/features/orders/types'
+import type { MessageKey } from '@/i18n/en'
 
-import { useLocale } from "@/contexts/locale-context";
-import { useGuestOrders } from "@/features/orders/hooks/use-orders";
-import { formatOrderDateTime } from "@/features/orders/lib/format";
+import { useLocale } from '@/contexts/locale-context'
+import { useGuestOrders } from '@/features/orders/hooks/use-orders'
+import { formatOrderDateTime } from '@/features/orders/lib/format'
 import {
   amountDueNow,
   paymentsAfterCancellation,
-} from "@/features/orders/lib/selectors";
-import { isClosedOrder } from "@/features/transactions/hooks/use-transaction-row";
-import { formatMoney, dateTimeFormat } from "@/lib/format";
-import { pickText } from "@/lib/localized";
+} from '@/features/orders/lib/selectors'
+import { isClosedOrder } from '@/features/transactions/hooks/use-transaction-row'
+import { dateTimeFormat, formatMoney } from '@/lib/format'
+import { pickText } from '@/lib/localized'
 
-const methodKey: Record<Payment["method"], MessageKey> = {
-  online: "guestOrder.method.online",
-  cash: "guestOrder.method.cash",
-  "bank-transfer": "guestOrder.method.bankTransfer",
-  other: "guestOrder.method.other",
-};
+const methodKey: Record<Payment['method'], MessageKey> = {
+  'online': 'guestOrder.method.online',
+  'cash': 'guestOrder.method.cash',
+  'bank-transfer': 'guestOrder.method.bankTransfer',
+  'other': 'guestOrder.method.other',
+}
 
 export interface AccountPaymentRow {
-  id: string;
-  orderId: string;
-  method: Payment["method"];
-  amount: string;
-  ref: string;
-  gift: string;
+  id: string
+  orderId: string
+  method: Payment['method']
+  amount: string
+  ref: string
+  gift: string
   /** "Cash · 09.10.2026, 16:20" (payments keep the full numeric date). */
-  meta: string;
-  status: ShownLabel;
+  meta: string
+  status: ShownLabel
 }
 
 export interface AccountPaymentMonth {
   /** "October 2026" / "Oktober 2026". */
-  label: string;
-  rows: AccountPaymentRow[];
+  label: string
+  rows: AccountPaymentRow[]
 }
 
 /**
@@ -44,31 +44,31 @@ export interface AccountPaymentMonth {
  * cards, so there is no saved-method data to read.
  */
 export function useAccountPayments() {
-  const { t, language, intlLocale } = useLocale();
-  const orders = useGuestOrders();
+  const { t, language, intlLocale } = useLocale()
+  const orders = useGuestOrders()
 
   const status = (order: Order, p: Payment): ShownLabel =>
     paymentsAfterCancellation(order).includes(p)
-      ? { text: t("guestOrder.paymentStatus.late"), tone: "warning" }
-      : p.status === "succeeded"
-        ? { text: t("guestOrder.paymentStatus.succeeded"), tone: "success" }
-        : p.status === "processing"
-          ? { text: t("guestOrder.paymentStatus.processing"), tone: "info" }
-          : { text: t("guestOrder.paymentStatus.failed"), tone: "danger" };
+      ? { text: t('guestOrder.paymentStatus.late'), tone: 'warning' }
+      : p.status === 'succeeded'
+        ? { text: t('guestOrder.paymentStatus.succeeded'), tone: 'success' }
+        : p.status === 'processing'
+          ? { text: t('guestOrder.paymentStatus.processing'), tone: 'info' }
+          : { text: t('guestOrder.paymentStatus.failed'), tone: 'danger' }
 
   const monthLabel = dateTimeFormat(intlLocale, {
-    month: "long",
-    year: "numeric",
-    timeZone: "Europe/Zurich",
-  });
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Europe/Zurich',
+  })
 
-  const months: AccountPaymentMonth[] = [];
+  const months: AccountPaymentMonth[] = []
 
   orders
-    .flatMap((order) => order.payments.map((p) => ({ order, p })))
+    .flatMap(order => order.payments.map(p => ({ order, p })))
     .sort((a, b) => b.p.at.localeCompare(a.p.at))
     .forEach(({ order, p }) => {
-      const label = monthLabel.format(new Date(p.at));
+      const label = monthLabel.format(new Date(p.at))
       const row: AccountPaymentRow = {
         id: p.id,
         orderId: order.id,
@@ -78,15 +78,16 @@ export function useAccountPayments() {
         gift: pickText(order.lines[0].productName, language).text,
         meta: `${t(methodKey[p.method])} · ${formatOrderDateTime(p.at, intlLocale)}`,
         status: status(order, p),
-      };
-      const last = months[months.length - 1];
+      }
+      const last = months.at(-1)
 
-      if (last?.label === label) last.rows.push(row);
-      else months.push({ label, rows: [row] });
-    });
+      if (last?.label === label)
+        last.rows.push(row)
+      else months.push({ label, rows: [row] })
+    })
 
   return {
-    due: orders.filter((o) => !isClosedOrder(o) && amountDueNow(o) > 0),
+    due: orders.filter(o => !isClosedOrder(o) && amountDueNow(o) > 0),
     months,
-  };
+  }
 }

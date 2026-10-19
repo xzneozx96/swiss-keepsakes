@@ -1,18 +1,18 @@
-import type { IconComponent } from "@/components/icons";
+import type { IconComponent } from '@/components/icons'
 
-import { Button, Dropdown, Label } from "@heroui/react";
+import { Button, Dropdown, Label } from '@heroui/react'
 
-import { MoreIcon } from "@/components/icons";
+import { MoreIcon } from '@/components/icons'
 
 export interface RowAction<Id extends string = string> {
-  id: Id;
-  label: string;
-  icon: IconComponent;
+  id: Id
+  label: string
+  icon: IconComponent
   /** Opens a page instead of calling `onAction`. */
-  href?: string;
-  isDisabled?: boolean;
+  href?: string
+  isDisabled?: boolean
   /** Turns the icon upside down, e.g. one chevron for both "up" and "down". */
-  flip?: boolean;
+  flip?: boolean
 }
 
 /**
@@ -25,9 +25,9 @@ export function RowActions<Id extends string>({
   onAction,
 }: {
   /** Accessible name of the button and the menu, e.g. "Actions for Hotel am See". */
-  label: string;
-  actions: RowAction<Id>[];
-  onAction?: (id: Id) => void;
+  label: string
+  actions: RowAction<Id>[]
+  onAction?: (id: Id) => void
 }) {
   return (
     <Dropdown>
@@ -37,10 +37,10 @@ export function RowActions<Id extends string>({
       <Dropdown.Popover placement="bottom end">
         <Dropdown.Menu
           aria-label={label}
-          disabledKeys={actions.filter((a) => a.isDisabled).map((a) => a.id)}
-          onAction={(key) => onAction?.(key as Id)}
+          disabledKeys={actions.filter(a => a.isDisabled).map(a => a.id)}
+          onAction={key => onAction?.(key as Id)}
         >
-          {actions.map((action) => (
+          {actions.map(action => (
             <Dropdown.Item
               key={action.id}
               href={action.href}
@@ -49,7 +49,7 @@ export function RowActions<Id extends string>({
             >
               <action.icon
                 aria-hidden
-                className={action.flip ? "rotate-180" : ""}
+                className={action.flip ? 'rotate-180' : ''}
                 size={16}
               />
               <Label>{action.label}</Label>
@@ -58,5 +58,5 @@ export function RowActions<Id extends string>({
         </Dropdown.Menu>
       </Dropdown.Popover>
     </Dropdown>
-  );
+  )
 }

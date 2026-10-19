@@ -1,44 +1,45 @@
-import type { DemoState } from "@/features/demo/types";
+import type { DemoState } from '@/features/demo/types'
 
-import { Button } from "@heroui/react";
+import { Button } from '@heroui/react'
 
-import { selectedCartLines } from "@/features/cart/lib/group-cart";
-import { variantAvailable } from "@/features/orders/lib/selectors";
-import { useDemoActions, useDemoSelector } from "@/features/demo";
+import { selectedCartLines } from '@/features/cart/lib/group-cart'
+import { useDemoActions, useDemoSelector } from '@/features/demo'
+import { variantAvailable } from '@/features/orders/lib/selectors'
 
 /**
  * Lowers the on-hand stock of the first ticked cart gift's option to the units accepted orders
  * already hold, so nothing is left to request: C06 then shows "stock changed on send".
  */
 function sellOutFirstCartItem(s: DemoState): DemoState {
-  const line = selectedCartLines(s.data.cart)[0];
+  const line = selectedCartLines(s.data.cart)[0]
 
-  if (!line) return s;
+  if (!line)
+    return s
 
-  const free = variantAvailable(s.data, line.productId, line.variantId);
+  const free = variantAvailable(s.data, line.productId, line.variantId)
 
   return {
     ...s,
     data: {
       ...s.data,
-      products: s.data.products.map((p) =>
+      products: s.data.products.map(p =>
         p.id !== line.productId
           ? p
           : {
               ...p,
-              variants: p.variants.map((v) =>
+              variants: p.variants.map(v =>
                 v.id === line.variantId ? { ...v, stock: v.stock - free } : v,
               ),
             },
       ),
     },
-  };
+  }
 }
 
 /** Prototype-bar control (English, outside the product UI) for the C06 stock error. */
 export function CheckoutDemoControl({ onDone }: { onDone: () => void }) {
-  const { update } = useDemoActions();
-  const demoCart = useDemoSelector((s) => s.data.cart);
+  const { update } = useDemoActions()
+  const demoCart = useDemoSelector(s => s.data.cart)
 
   return (
     <div className="flex flex-col gap-2">
@@ -49,8 +50,8 @@ export function CheckoutDemoControl({ onDone }: { onDone: () => void }) {
         size="sm"
         variant="tertiary"
         onPress={() => {
-          update(sellOutFirstCartItem);
-          onDone();
+          update(sellOutFirstCartItem)
+          onDone()
         }}
       >
         Make an item sell out
@@ -61,5 +62,5 @@ export function CheckoutDemoControl({ onDone }: { onDone: () => void }) {
         the stock.
       </p>
     </div>
-  );
+  )
 }

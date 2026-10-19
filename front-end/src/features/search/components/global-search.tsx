@@ -1,42 +1,42 @@
-import type { LinkProps } from "@tanstack/react-router";
+import type { LinkProps } from '@tanstack/react-router'
 
-import { SearchField } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { SearchField } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
-import { ChevronRightIcon } from "@/components/icons";
-import { BackButton } from "@/components/layout/cart-button";
-import { Media } from "@/components/media";
+import { ChevronRightIcon } from '@/components/icons'
+import { BackButton } from '@/components/layout/cart-button'
+import { Media } from '@/components/media'
 import {
   CategoryThumb,
   categoryThumbItemClass,
-} from "@/features/catalog/components/category-thumb";
+} from '@/features/catalog/components/category-thumb'
 
 export interface SearchResultRow {
-  key: string;
-  title: string;
-  meta: string;
-  photo?: string;
-  link: LinkProps;
+  key: string
+  title: string
+  meta: string
+  photo?: string
+  link: LinkProps
 }
 
 export interface SearchResultGroup {
-  title: string;
-  rows: SearchResultRow[];
+  title: string
+  rows: SearchResultRow[]
 }
 
 interface GlobalSearchProps {
-  label: string;
-  placeholder: string;
-  backLabel: string;
-  query: string;
-  onQueryChange: (q: string) => void;
-  onBack: () => void;
+  label: string
+  placeholder: string
+  backLabel: string
+  query: string
+  onQueryChange: (q: string) => void
+  onBack: () => void
   browse: {
-    title: string;
-    items: { id: string; name: string; photo?: string; link: LinkProps }[];
-  };
-  groups: SearchResultGroup[];
-  noResults: string | null;
+    title: string
+    items: { id: string, name: string, photo?: string, link: LinkProps }[]
+  }
+  groups: SearchResultGroup[]
+  noResults: string | null
 }
 
 /**
@@ -81,7 +81,7 @@ export function GlobalSearch({
           <section className="flex flex-col gap-3">
             <h2 className="text-heading">{browse.title}</h2>
             <ul className="grid grid-cols-4 gap-y-4">
-              {browse.items.map((item) => (
+              {browse.items.map(item => (
                 <li key={item.id} className="flex justify-center">
                   <Link
                     {...item.link}
@@ -99,11 +99,11 @@ export function GlobalSearch({
           <p className="py-8 text-center text-sm text-muted">{noResults}</p>
         )}
 
-        {groups.map((group) => (
+        {groups.map(group => (
           <section key={group.title} className="flex flex-col gap-1">
             <h2 className="pb-1 text-heading">{group.title}</h2>
             <ul className="flex flex-col">
-              {group.rows.map((row) => (
+              {group.rows.map(row => (
                 <li key={row.key}>
                   <Link
                     {...row.link}
@@ -134,5 +134,5 @@ export function GlobalSearch({
         ))}
       </div>
     </div>
-  );
+  )
 }

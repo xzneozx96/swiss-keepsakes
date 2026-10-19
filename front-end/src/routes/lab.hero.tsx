@@ -1,145 +1,145 @@
-import type { HeroOptionProps } from "@/features/lab/hero-options";
+import type { HeroOptionProps } from '@/features/lab/hero-options'
 
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from '@tanstack/react-router'
 
-import {
-  HeroChips,
-  HeroSearchCard,
-  HeroSoftPhoto,
-  HeroTwoWeight,
-} from "@/features/lab/hero-options-v2";
-import {
-  HeroF1PhotoBand,
-  HeroF2LakeBlue,
-  HeroF3SkyFade,
-  HeroF4PhotoTabs,
-  HeroF5CardPhoto,
-} from "@/features/lab/hero-options-v3";
-import { useLocale } from "@/contexts/locale-context";
-import { useDemoNow } from "@/features/demo";
-import { Hero } from "@/features/discovery/components/hero";
+import { useLocale } from '@/contexts/locale-context'
+import { useDemoNow } from '@/features/demo'
+import { Hero } from '@/features/discovery/components/hero'
 import {
   HeroCollage,
   HeroGallery,
   HeroPhotoCard,
   HeroPlanner,
   HeroSkyGlass,
-} from "@/features/lab/hero-options";
-import { dateTimeFormat } from "@/lib/format";
+} from '@/features/lab/hero-options'
+import {
+  HeroChips,
+  HeroSearchCard,
+  HeroSoftPhoto,
+  HeroTwoWeight,
+} from '@/features/lab/hero-options-v2'
+import {
+  HeroF1PhotoBand,
+  HeroF2LakeBlue,
+  HeroF3SkyFade,
+  HeroF4PhotoTabs,
+  HeroF5CardPhoto,
+} from '@/features/lab/hero-options-v3'
+import { dateTimeFormat } from '@/lib/format'
 
 /** Lab: compare discovery-home hero layouts at phone width. Not part of the product. */
-export const Route = createFileRoute("/lab/hero")({ component: HeroLab });
+export const Route = createFileRoute('/lab/hero')({ component: HeroLab })
 
 const round3 = [
   {
-    id: "F1",
-    title: "F1 · Photo band",
-    note: "The Chapel Bridge photo is the band; white greeting on a dark top fade, the search card overlaps the water.",
+    id: 'F1',
+    title: 'F1 · Photo band',
+    note: 'The Chapel Bridge photo is the band; white greeting on a dark top fade, the search card overlaps the water.',
     Option: HeroF1PhotoBand,
   },
   {
-    id: "F2",
-    title: "F2 · Lake blue",
-    note: "Closest to your reference: a deep lake-blue band with the Chapel Bridge faint in it, white greeting.",
+    id: 'F2',
+    title: 'F2 · Lake blue',
+    note: 'Closest to your reference: a deep lake-blue band with the Chapel Bridge faint in it, white greeting.',
     Option: HeroF2LakeBlue,
   },
   {
-    id: "F3",
-    title: "F3 · Sky fade (chosen)",
-    note: "The sky band from F; the Luzerne skyline fades in under the greeting and the card sits on the water.",
+    id: 'F3',
+    title: 'F3 · Sky fade (chosen)',
+    note: 'The sky band from F; the Luzerne skyline fades in under the greeting and the card sits on the water.',
     Option: HeroF3SkyFade,
   },
   {
-    id: "F4",
-    title: "F4 · Photo tabs",
-    note: "Plain sky band; Gifts / Tours / Stays become photo tiles, pickup date and place side by side.",
+    id: 'F4',
+    title: 'F4 · Photo tabs',
+    note: 'Plain sky band; Gifts / Tours / Stays become photo tiles, pickup date and place side by side.',
     Option: HeroF4PhotoTabs,
   },
   {
-    id: "F5",
-    title: "F5 · Photo in the card",
-    note: "Plain sky band; the card opens with a Luzerne photo and a place chip, then tabs, date and Search.",
+    id: 'F5',
+    title: 'F5 · Photo in the card',
+    note: 'Plain sky band; the card opens with a Luzerne photo and a place chip, then tabs, date and Search.',
     Option: HeroF5CardPhoto,
   },
-];
+]
 
 const round2 = [
   {
-    id: "F",
-    title: "F · Greeting and search card",
-    note: "Reference 1: soft sky band with a greeting, a white card with tabs, pickup date and a Search button.",
+    id: 'F',
+    title: 'F · Greeting and search card',
+    note: 'Reference 1: soft sky band with a greeting, a white card with tabs, pickup date and a Search button.',
     Option: HeroSearchCard,
   },
   {
-    id: "G",
-    title: "G · Explore Luzerne",
-    note: "Reference 2: place line, two-weight title, tab row. No photo in the hero; the rails below carry the pictures.",
+    id: 'G',
+    title: 'G · Explore Luzerne',
+    note: 'Reference 2: place line, two-weight title, tab row. No photo in the hero; the rails below carry the pictures.',
     Option: HeroTwoWeight,
   },
   {
-    id: "H",
-    title: "H · Serif title, soft photo",
-    note: "Reference 3: two-tone serif title, the Luzerne photo fading in and out, a search pill on top.",
+    id: 'H',
+    title: 'H · Serif title, soft photo',
+    note: 'Reference 3: two-tone serif title, the Luzerne photo fading in and out, a search pill on top.',
     Option: HeroSoftPhoto,
   },
   {
-    id: "I",
-    title: "I · Greeting, search, chips",
-    note: "Reference 4: greeting with place, bold title, search field, category chips with small photos (would replace the category rail).",
+    id: 'I',
+    title: 'I · Greeting, search, chips',
+    note: 'Reference 4: greeting with place, bold title, search field, category chips with small photos (would replace the category rail).',
     Option: HeroChips,
   },
-];
+]
 
 const options = [
   {
-    id: "A",
-    title: "A · Sky glass",
-    note: "Full-bleed photo; title, intro and Luzerne clock on a frosted panel at the bottom (the sky-glass direction from the moodboard review).",
+    id: 'A',
+    title: 'A · Sky glass',
+    note: 'Full-bleed photo; title, intro and Luzerne clock on a frosted panel at the bottom (the sky-glass direction from the moodboard review).',
     Option: HeroSkyGlass,
   },
   {
-    id: "B",
-    title: "B · Photo card (Klook, GetYourGuide)",
-    note: "Rounded photo card with the title on a dark fade, place chip on top, and a 3-step 'how it works' strip below.",
+    id: 'B',
+    title: 'B · Photo card (Klook, GetYourGuide)',
+    note: 'Rounded photo card with the title on a dark fade, place chip on top, and a 3-step \'how it works\' strip below.',
     Option: HeroPhotoCard,
   },
   {
-    id: "C",
-    title: "C · Swipe gallery (Airbnb Experiences)",
-    note: "Title first, then four Luzerne places to swipe through; the place sells the trip.",
+    id: 'C',
+    title: 'C · Swipe gallery (Airbnb Experiences)',
+    note: 'Title first, then four Luzerne places to swipe through; the place sells the trip.',
     Option: HeroGallery,
   },
   {
-    id: "D",
-    title: "D · Journal collage",
-    note: "Sky-to-cream ground, three-photo collage with labels and one red action. Closest to the storybook journal direction.",
+    id: 'D',
+    title: 'D · Journal collage',
+    note: 'Sky-to-cream ground, three-photo collage with labels and one red action. Closest to the storybook journal direction.',
     Option: HeroCollage,
   },
   {
-    id: "E",
-    title: "E · Trip planner (Booking.com)",
-    note: "Short photo; a white card asks how long you stay. 'A few hours' would scroll to quick-pickup gifts, 'A few days' to tours. Most task-first.",
+    id: 'E',
+    title: 'E · Trip planner (Booking.com)',
+    note: 'Short photo; a white card asks how long you stay. \'A few hours\' would scroll to quick-pickup gifts, \'A few days\' to tours. Most task-first.',
     Option: HeroPlanner,
   },
-];
+]
 
 function HeroLab() {
-  const { t, language, intlLocale } = useLocale();
-  const now = useDemoNow();
+  const { t, language, intlLocale } = useLocale()
+  const now = useDemoNow()
 
   const props: HeroOptionProps = {
     language,
-    appName: t("app.name"),
-    title: t("home.title"),
-    intro: t("home.intro"),
-    photoAlt: t("home.photoAlt"),
-    searchLabel: t("search.open"),
+    appName: t('app.name'),
+    title: t('home.title'),
+    intro: t('home.intro'),
+    photoAlt: t('home.photoAlt'),
+    searchLabel: t('search.open'),
     localTime: dateTimeFormat(intlLocale, {
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Europe/Zurich",
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Europe/Zurich',
     }).format(now),
-  };
+  }
 
   return (
     <div className="flex flex-1 justify-center bg-default/40 py-6">
@@ -179,11 +179,11 @@ function HeroLab() {
           <div className="px-4">
             <Hero
               appName={props.appName}
-              hello={t("home.hello")}
+              hello={t('home.hello')}
               photoAlt={props.photoAlt}
               searchLabel={props.searchLabel}
-              searchPrompt={t("home.searchPrompt")}
-              title={t("home.heroTitle")}
+              searchPrompt={t('home.searchPrompt')}
+              title={t('home.heroTitle')}
             />
           </div>
         </section>
@@ -213,5 +213,5 @@ function HeroLab() {
         ))}
       </div>
     </div>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-import type { IntlLocale } from "@/lib/format";
+import type { IntlLocale } from '@/lib/format'
 
-import { dateTimeFormat, calendarDay } from "@/lib/format";
+import { calendarDay, dateTimeFormat } from '@/lib/format'
 
 /**
  * Full numeric dates for orders, payments and receipts (owner decision 13.10.2026), always in
@@ -8,11 +8,11 @@ import { dateTimeFormat, calendarDay } from "@/lib/format";
  */
 export function formatOrderDate(isoDate: string, locale: IntlLocale): string {
   return dateTimeFormat(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(calendarDay(isoDate));
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(calendarDay(isoDate))
 }
 
 /** "14.10.2026, 10:30" for a timestamp such as a payment deadline. */
@@ -21,11 +21,11 @@ export function formatOrderDateTime(
   locale: IntlLocale,
 ): string {
   return dateTimeFormat(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Europe/Zurich",
-  }).format(new Date(isoTime));
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Europe/Zurich',
+  }).format(new Date(isoTime))
 }

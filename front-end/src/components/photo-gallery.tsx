@@ -1,37 +1,38 @@
-import { Modal } from "@heroui/react";
-import { useCallback, useRef, useState } from "react";
+import { Modal } from '@heroui/react'
+import { useCallback, useRef, useState } from 'react'
 
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CloseIcon,
-} from "@/components/icons";
-import { photoUrl } from "@/lib/photos";
+} from '@/components/icons'
+import { photoUrl } from '@/lib/photos'
 
 export interface PhotoGalleryLabels {
   /** Carousel name, e.g. "Photos of Kapellbrücke pocket knife". */
-  gallery: string;
+  gallery: string
   /** "Photo {n} of {count}" for each slide; also opens the viewer. */
-  photo: (n: number, count: number) => string;
-  previous: string;
-  next: string;
-  close: string;
+  photo: (n: number, count: number) => string
+  previous: string
+  next: string
+  close: string
 }
 
 interface PhotoGalleryProps {
-  photos: string[];
-  labels: PhotoGalleryLabels;
-  className?: string;
+  photos: string[]
+  labels: PhotoGalleryLabels
+  className?: string
   /** Overlays on the top of the gallery (back, heart, cart); positioned by the caller. */
-  children?: React.ReactNode;
+  children?: React.ReactNode
 }
 
-const trackClass =
-  "flex size-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+const trackClass
+  = 'flex size-full snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
 /** Index of the slide that fills the scroller, from its scroll position. */
-const slideIndex = (el: HTMLElement) =>
-  Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+function slideIndex(el: HTMLElement) {
+  return Math.round(el.scrollLeft / Math.max(1, el.clientWidth))
+}
 
 /**
  * Detail-page photo gallery for every kind of listing (gifts, tours, stays): swipe
@@ -41,12 +42,12 @@ const slideIndex = (el: HTMLElement) =>
 export function PhotoGallery({
   photos,
   labels,
-  className = "",
+  className = '',
   children,
 }: PhotoGalleryProps) {
-  const [index, setIndex] = useState(0);
-  const [viewerAt, setViewerAt] = useState<number | null>(null);
-  const count = photos.length;
+  const [index, setIndex] = useState(0)
+  const [viewerAt, setViewerAt] = useState<number | null>(null)
+  const count = photos.length
 
   return (
     <div
@@ -59,7 +60,7 @@ export function PhotoGallery({
       {children}
       <div
         className={trackClass}
-        onScroll={(e) => setIndex(slideIndex(e.currentTarget))}
+        onScroll={e => setIndex(slideIndex(e.currentTarget))}
       >
         {photos.map((slug, i) => (
           <button
@@ -73,7 +74,7 @@ export function PhotoGallery({
               alt=""
               className="absolute inset-0 size-full object-cover"
               decoding="async"
-              loading={i === 0 ? "eager" : "lazy"}
+              loading={i === 0 ? 'eager' : 'lazy'}
               src={photoUrl(slug)}
             />
           </button>
@@ -95,7 +96,7 @@ export function PhotoGallery({
         onClose={() => setViewerAt(null)}
       />
     </div>
-  );
+  )
 }
 
 /**
@@ -108,42 +109,42 @@ export function PhotoViewer({
   startAt,
   onClose,
 }: {
-  photos: string[];
-  labels: PhotoGalleryLabels;
-  startAt: number | null;
-  onClose: () => void;
+  photos: string[]
+  labels: PhotoGalleryLabels
+  startAt: number | null
+  onClose: () => void
 }) {
-  const [index, setIndex] = useState(startAt ?? 0);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const count = photos.length;
+  const [index, setIndex] = useState(startAt ?? 0)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const count = photos.length
 
   const goTo = (i: number) =>
     trackRef.current?.scrollTo({
       left: i * trackRef.current.clientWidth,
-      behavior: "smooth",
-    });
+      behavior: 'smooth',
+    })
 
   // Jump to the tapped photo once the track is in the DOM. Stable per opening, so
   // re-renders while swiping never pull the track back.
   const attachTrack = useCallback(
     (el: HTMLDivElement | null) => {
-      trackRef.current = el;
+      trackRef.current = el
       if (el && startAt !== null) {
-        el.scrollLeft = startAt * el.clientWidth;
-        setIndex(startAt);
+        el.scrollLeft = startAt * el.clientWidth
+        setIndex(startAt)
       }
     },
     [startAt],
-  );
+  )
 
-  const arrow =
-    "glass absolute top-1/2 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full outline-none focus-visible:focus-ring disabled:opacity-0 sm:flex";
+  const arrow
+    = 'glass absolute top-1/2 hidden size-11 -translate-y-1/2 items-center justify-center rounded-full outline-none focus-visible:focus-ring disabled:opacity-0 sm:flex'
 
   return (
     <Modal.Backdrop
       className="bg-black"
       isOpen={startAt !== null}
-      onOpenChange={(open) => !open && onClose()}
+      onOpenChange={open => !open && onClose()}
     >
       <Modal.Container size="full">
         <Modal.Dialog
@@ -171,9 +172,9 @@ export function PhotoViewer({
             <div
               ref={attachTrack}
               className={trackClass}
-              onScroll={(e) => setIndex(slideIndex(e.currentTarget))}
+              onScroll={e => setIndex(slideIndex(e.currentTarget))}
             >
-              {photos.map((slug) => (
+              {photos.map(slug => (
                 <div
                   key={slug}
                   className="flex size-full shrink-0 snap-center items-center justify-center"
@@ -210,5 +211,5 @@ export function PhotoViewer({
         </Modal.Dialog>
       </Modal.Container>
     </Modal.Backdrop>
-  );
+  )
 }

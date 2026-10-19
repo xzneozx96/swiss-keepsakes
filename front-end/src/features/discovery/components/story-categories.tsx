@@ -1,18 +1,18 @@
-import type { StoryCategory } from "@/features/content/types";
+import type { StoryCategory } from '@/features/content/types'
 
-import { ScrollShadow } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { ScrollShadow } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
 import {
   CategoryThumb,
   categoryThumbItemClass,
-} from "@/features/catalog/components/category-thumb";
+} from '@/features/catalog/components/category-thumb'
 
 export interface StoryCategoryLink {
   /** Absent = all stories. */
-  id?: StoryCategory;
-  name: string;
-  photo: string;
+  id?: StoryCategory
+  name: string
+  photo: string
 }
 
 /**
@@ -23,8 +23,8 @@ export function StoryCategories({
   label,
   items,
 }: {
-  label: string;
-  items: StoryCategoryLink[];
+  label: string
+  items: StoryCategoryLink[]
 }) {
   return (
     <nav aria-label={label}>
@@ -36,7 +36,7 @@ export function StoryCategories({
       >
         <ul className="flex w-max gap-1 px-4 pt-2 pb-1">
           {items.map(({ id, name, photo }) => (
-            <li key={id ?? "all"}>
+            <li key={id ?? 'all'}>
               <Link
                 className={`${categoryThumbItemClass} text-foreground`}
                 search={id ? { category: id } : {}}
@@ -49,5 +49,5 @@ export function StoryCategories({
         </ul>
       </ScrollShadow>
     </nav>
-  );
+  )
 }

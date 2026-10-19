@@ -5,38 +5,38 @@ import {
   Dropdown,
   Header,
   Label,
-} from "@heroui/react";
-import { useState } from "react";
+} from '@heroui/react'
+import { useState } from 'react'
 
-import { CloseIcon, FilterIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/components/sheet-frame";
-import { useIsWide } from "@/hooks/use-is-wide";
+import { CloseIcon, FilterIcon } from '@/components/icons'
+import { SheetFrame } from '@/components/sheet-frame'
+import { useLocale } from '@/contexts/locale-context'
+import { useIsWide } from '@/hooks/use-is-wide'
 
 export interface FilterOption {
-  id: string;
-  label: string;
-  count?: number;
+  id: string
+  label: string
+  count?: number
 }
 
 /** One question the list can be narrowed by, with the options ticked now. */
 export interface FilterGroup {
-  id: string;
-  label: string;
-  options: FilterOption[];
-  selected: string[];
-  onChange: (selected: string[]) => void;
+  id: string
+  label: string
+  options: FilterOption[]
+  selected: string[]
+  onChange: (selected: string[]) => void
 }
 
 /** A group whose option ids are a union type, so callers keep their types. */
 export function filterGroup<Id extends string>(group: {
-  id: string;
-  label: string;
-  options: (FilterOption & { id: Id })[];
-  selected: Id[];
-  onChange: (selected: Id[]) => void;
+  id: string
+  label: string
+  options: (FilterOption & { id: Id })[]
+  selected: Id[]
+  onChange: (selected: Id[]) => void
 }): FilterGroup {
-  return group as unknown as FilterGroup;
+  return group as unknown as FilterGroup
 }
 
 /** The ticked options' labels, or the "all" wording when nothing is ticked. */
@@ -47,59 +47,60 @@ export function selectedLabels(
 ) {
   return selected.length
     ? options
-        .filter((o) => selected.includes(o.id))
-        .map((o) => o.label)
-        .join(", ")
-    : allLabel;
+        .filter(o => selected.includes(o.id))
+        .map(o => o.label)
+        .join(', ')
+    : allLabel
 }
 
-const key = (group: FilterGroup, option: FilterOption) =>
-  `${group.id}:${option.id}`;
+function key(group: FilterGroup, option: FilterOption) {
+  return `${group.id}:${option.id}`
+}
 
-const choiceCard =
-  "rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground";
+const choiceCard
+  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /** Phones: the same choices in a bottom sheet, ticked live; "Show" closes it. */
 function FilterSheet({
   groups,
   onClose,
 }: {
-  groups: FilterGroup[];
-  onClose: () => void;
+  groups: FilterGroup[]
+  onClose: () => void
 }) {
-  const { t } = useLocale();
-  const active = groups.reduce((sum, g) => sum + g.selected.length, 0);
+  const { t } = useLocale()
+  const active = groups.reduce((sum, g) => sum + g.selected.length, 0)
 
   return (
     <SheetFrame
       isOpen
-      footer={
+      footer={(
         <>
           <Button fullWidth onPress={onClose}>
-            {t("reports.filter.apply")}
+            {t('reports.filter.apply')}
           </Button>
           <Button
             fullWidth
             isDisabled={!active}
             variant="tertiary"
-            onPress={() => groups.forEach((g) => g.onChange([]))}
+            onPress={() => groups.forEach(g => g.onChange([]))}
           >
-            {t("reports.filter.clear")}
+            {t('reports.filter.clear')}
           </Button>
         </>
-      }
-      title={t("filter.title")}
+      )}
+      title={t('filter.title')}
       onClose={onClose}
     >
-      {groups.map((g) => (
+      {groups.map(g => (
         <CheckboxGroup
           key={g.id}
           className="gap-2"
           value={g.selected}
-          onChange={(ids) => g.onChange(ids)}
+          onChange={ids => g.onChange(ids)}
         >
           <Label className="text-heading">{g.label}</Label>
-          {g.options.map((o) => (
+          {g.options.map(o => (
             <Checkbox key={o.id} className={choiceCard} value={o.id}>
               <Checkbox.Content className="w-full flex-row items-center gap-3">
                 <Checkbox.Control className="size-6 shrink-0 rounded-lg">
@@ -117,7 +118,7 @@ function FilterSheet({
         </CheckboxGroup>
       ))}
     </SheetFrame>
-  );
+  )
 }
 
 /**
@@ -128,13 +129,13 @@ function FilterSheet({
  * `FilterChips`.
  */
 export function FilterButton({ groups }: { groups: FilterGroup[] }) {
-  const { t } = useLocale();
-  const isWide = useIsWide();
-  const [isSheetOpen, setSheetOpen] = useState(false);
-  const active = groups.reduce((sum, g) => sum + g.selected.length, 0);
+  const { t } = useLocale()
+  const isWide = useIsWide()
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const active = groups.reduce((sum, g) => sum + g.selected.length, 0)
   const label = active
-    ? t("reports.filter.buttonCount", { count: active })
-    : t("reports.filter.button");
+    ? t('reports.filter.buttonCount', { count: active })
+    : t('reports.filter.button')
 
   const trigger = (
     <div className="relative shrink-0">
@@ -142,8 +143,8 @@ export function FilterButton({ groups }: { groups: FilterGroup[] }) {
         isIconOnly
         aria-label={label}
         className="rounded-full"
-        variant={active ? "secondary" : "tertiary"}
-        onPress={isWide ? undefined : () => setSheetOpen(true)}
+        variant={active ? 'secondary' : 'tertiary'}
+        onPress={isWide ? undefined : () => setIsSheetOpen(true)}
       >
         <FilterIcon aria-hidden size={18} />
       </Button>
@@ -156,17 +157,17 @@ export function FilterButton({ groups }: { groups: FilterGroup[] }) {
         </span>
       )}
     </div>
-  );
+  )
 
   if (!isWide) {
     return (
       <>
         {trigger}
         {isSheetOpen && (
-          <FilterSheet groups={groups} onClose={() => setSheetOpen(false)} />
+          <FilterSheet groups={groups} onClose={() => setIsSheetOpen(false)} />
         )}
       </>
-    );
+    )
   }
 
   return (
@@ -174,33 +175,34 @@ export function FilterButton({ groups }: { groups: FilterGroup[] }) {
       {trigger}
       <Dropdown.Popover placement="bottom end">
         <Dropdown.Menu
-          aria-label={t("reports.filter.button")}
+          aria-label={t('reports.filter.button')}
           selectedKeys={
             new Set(
-              groups.flatMap((g) =>
+              groups.flatMap(g =>
                 g.options
-                  .filter((o) => g.selected.includes(o.id))
-                  .map((o) => key(g, o)),
+                  .filter(o => g.selected.includes(o.id))
+                  .map(o => key(g, o)),
               ),
             )
           }
           selectionMode="multiple"
           onSelectionChange={(keys) => {
-            const ticked = keys === "all" ? null : keys;
+            const ticked = keys === 'all' ? null : keys
 
             for (const g of groups) {
               const next = g.options
-                .filter((o) => (ticked ? ticked.has(key(g, o)) : true))
-                .map((o) => o.id);
+                .filter(o => (ticked ? ticked.has(key(g, o)) : true))
+                .map(o => o.id)
 
-              if (next.join() !== g.selected.join()) g.onChange(next);
+              if (next.join() !== g.selected.join())
+                g.onChange(next)
             }
           }}
         >
-          {groups.map((g) => (
+          {groups.map(g => (
             <Dropdown.Section key={g.id}>
               <Header>{g.label}</Header>
-              {g.options.map((o) => (
+              {g.options.map(o => (
                 <Dropdown.Item
                   key={key(g, o)}
                   id={key(g, o)}
@@ -220,7 +222,7 @@ export function FilterButton({ groups }: { groups: FilterGroup[] }) {
         </Dropdown.Menu>
       </Dropdown.Popover>
     </Dropdown>
-  );
+  )
 }
 
 /**
@@ -235,7 +237,7 @@ export function FilterToolbar({ groups }: { groups: FilterGroup[] }) {
       </div>
       <FilterButton groups={groups} />
     </div>
-  );
+  )
 }
 
 /**
@@ -243,14 +245,15 @@ export function FilterToolbar({ groups }: { groups: FilterGroup[] }) {
  * clearing with a tap. Nothing is drawn while nothing is ticked.
  */
 export function FilterChips({ groups }: { groups: FilterGroup[] }) {
-  const { t } = useLocale();
-  const chips = groups.flatMap((g) =>
+  const { t } = useLocale()
+  const chips = groups.flatMap(g =>
     g.options
-      .filter((o) => g.selected.includes(o.id))
-      .map((o) => ({ group: g, option: o })),
-  );
+      .filter(o => g.selected.includes(o.id))
+      .map(o => ({ group: g, option: o })),
+  )
 
-  if (!chips.length) return null;
+  if (!chips.length)
+    return null
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -260,16 +263,15 @@ export function FilterChips({ groups }: { groups: FilterGroup[] }) {
           size="sm"
           variant="secondary"
           onPress={() =>
-            group.onChange(group.selected.filter((id) => id !== option.id))
-          }
+            group.onChange(group.selected.filter(id => id !== option.id))}
         >
           {option.label}
           <CloseIcon
-            aria-label={t("reports.filter.remove", { filter: option.label })}
+            aria-label={t('reports.filter.remove', { filter: option.label })}
             size={14}
           />
         </Button>
       ))}
     </div>
-  );
+  )
 }

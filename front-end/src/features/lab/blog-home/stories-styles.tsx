@@ -1,21 +1,21 @@
-import type { Article } from "@/features/content/types";
-import type { ReelsStyle } from "./reels";
+import type { ReelsStyle } from './reels'
+import type { Article } from '@/features/content/types'
 
-import { ScrollShadow } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { ScrollShadow } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
-import { CategoryPill, tint } from "./chips";
-import { categoryPhoto, useBlogData } from "./data";
-import { Reels } from "./reels";
-import { TrailList } from "./trail";
+import { PickupIcon } from '@/components/icons'
+import { Media } from '@/components/media'
+import { CategoryPill, tint } from './chips'
+import { categoryPhoto, useBlogData } from './data'
 
-import { PickupIcon } from "@/components/icons";
-import { Media } from "@/components/media";
+import { Reels } from './reels'
+import { TrailList } from './trail'
 
-export type StoriesStyle =
-  `reels-${ReelsStyle}` | "postcards" | "bento" | "trail" | "scrapbook";
+export type StoriesStyle
+  = `reels-${ReelsStyle}` | 'postcards' | 'bento' | 'trail' | 'scrapbook'
 
-const greetings = { en: "Greetings from", de: "Grüsse aus" };
+const greetings = { en: 'Greetings from', de: 'Grüsse aus' }
 
 function StoryLink({
   article,
@@ -23,27 +23,27 @@ function StoryLink({
   style,
   children,
 }: {
-  article: Article;
-  className?: string;
-  style?: React.CSSProperties;
-  children: React.ReactNode;
+  article: Article
+  className?: string
+  style?: React.CSSProperties
+  children: React.ReactNode
 }) {
   return (
     <Link
-      className={`block outline-none focus-visible:focus-ring ${className ?? ""}`}
+      className={`block outline-none focus-visible:focus-ring ${className ?? ''}`}
       params={{ slug: article.slug }}
       style={style}
       to="/stories/$slug"
     >
       {children}
     </Link>
-  );
+  )
 }
 
 /** 2 · Postcards: each story is a Luzerne postcard with a stamp and a postmark, slightly tilted. */
 function Postcards({ articles }: { articles: Article[] }) {
-  const { areaOf, categoryOf, language } = useBlogData();
-  const tilt = [-2, 1.5, -1, 2, -1.5, 1];
+  const { areaOf, categoryOf, language } = useBlogData()
+  const tilt = [-2, 1.5, -1, 2, -1.5, 1]
 
   return (
     <ScrollShadow
@@ -100,24 +100,24 @@ function Postcards({ articles }: { articles: Article[] }) {
         ))}
       </ul>
     </ScrollShadow>
-  );
+  )
 }
 
 /** 3 · Bento: a mosaic of different-sized photo tiles, text on the photo, a colour per category. */
 function Bento({ articles }: { articles: Article[] }) {
-  const { c } = useBlogData();
+  const { c } = useBlogData()
   const shapes = [
-    "col-span-2 aspect-[16/11]",
-    "row-span-2",
-    "aspect-square",
-    "aspect-square",
-    "col-span-2 aspect-[2/1]",
-  ];
+    'col-span-2 aspect-[16/11]',
+    'row-span-2',
+    'aspect-square',
+    'aspect-square',
+    'col-span-2 aspect-[2/1]',
+  ]
 
   return (
     <ul className="grid auto-rows-auto grid-cols-2 gap-2.5">
       {articles.slice(0, shapes.length).map((article, i) => {
-        const big = i === 0;
+        const big = i === 0
 
         return (
           <li key={article.id} className={shapes[i]}>
@@ -136,7 +136,7 @@ function Bento({ articles }: { articles: Article[] }) {
                 </div>
                 <div className="absolute inset-x-3 bottom-3 flex flex-col gap-1">
                   <h3
-                    className={`font-serif font-medium text-balance text-white ${big ? "text-[24px] leading-[30px]" : "line-clamp-4 text-[15px] leading-5"}`}
+                    className={`font-serif font-medium text-balance text-white ${big ? 'text-[24px] leading-[30px]' : 'line-clamp-4 text-[15px] leading-5'}`}
                   >
                     {article.title}
                   </h3>
@@ -149,19 +149,19 @@ function Bento({ articles }: { articles: Article[] }) {
               </Media>
             </StoryLink>
           </li>
-        );
+        )
       })}
     </ul>
-  );
+  )
 }
 
 /** 4 · Trail: stories as numbered stops on a dotted walk that zigzags down the page. */
 function Trail({ articles }: { articles: Article[] }) {
-  const { c, areaOf, categoryOf } = useBlogData();
+  const { c, areaOf, categoryOf } = useBlogData()
 
   return (
     <TrailList
-      stops={articles.slice(0, 5).map((article) => ({
+      stops={articles.slice(0, 5).map(article => ({
         key: article.id,
         photo: article.photo,
         color: tint[categoryOf(article)],
@@ -176,28 +176,28 @@ function Trail({ articles }: { articles: Article[] }) {
         action: { slug: article.slug },
       }))}
     />
-  );
+  )
 }
 
 /** 5 · Scrapbook: taped polaroids in two staggered columns, each at its own angle. */
 function Scrapbook({ articles }: { articles: Article[] }) {
-  const { areaOf, categoryOf } = useBlogData();
-  const tilt = [-3, 2.5, 1.5, -2, -1.5, 3];
-  const items = articles.slice(0, 6);
+  const { areaOf, categoryOf } = useBlogData()
+  const tilt = [-3, 2.5, 1.5, -2, -1.5, 3]
+  const items = articles.slice(0, 6)
   const columns = [
     items.filter((_, i) => i % 2 === 0),
     items.filter((_, i) => i % 2 === 1),
-  ];
+  ]
 
   return (
     <div className="grid grid-cols-2 gap-4 px-1 pt-2">
       {columns.map((column, col) => (
         <ul
           key={col}
-          className={`flex flex-col gap-6 ${col === 1 ? "pt-10" : ""}`}
+          className={`flex flex-col gap-6 ${col === 1 ? 'pt-10' : ''}`}
         >
           {column.map((article) => {
-            const index = items.indexOf(article);
+            const index = items.indexOf(article)
 
             return (
               <li key={article.id} className="relative">
@@ -227,33 +227,37 @@ function Scrapbook({ articles }: { articles: Article[] }) {
                   </p>
                 </StoryLink>
               </li>
-            );
+            )
           })}
         </ul>
       ))}
     </div>
-  );
+  )
 }
 
 export function StoriesBlock({
   style,
   articles,
 }: {
-  style: StoriesStyle;
-  articles: Article[];
+  style: StoriesStyle
+  articles: Article[]
 }) {
-  const stories = articles.slice(0, 6);
+  const stories = articles.slice(0, 6)
 
-  if (style.startsWith("reels-"))
+  if (style.startsWith('reels-')) {
     return (
       <Reels
         articles={stories}
-        style={style.slice("reels-".length) as ReelsStyle}
+        style={style.slice('reels-'.length) as ReelsStyle}
       />
-    );
-  if (style === "postcards") return <Postcards articles={stories} />;
-  if (style === "bento") return <Bento articles={stories} />;
-  if (style === "trail") return <Trail articles={stories} />;
+    )
+  }
+  if (style === 'postcards')
+    return <Postcards articles={stories} />
+  if (style === 'bento')
+    return <Bento articles={stories} />
+  if (style === 'trail')
+    return <Trail articles={stories} />
 
-  return <Scrapbook articles={stories} />;
+  return <Scrapbook articles={stories} />
 }

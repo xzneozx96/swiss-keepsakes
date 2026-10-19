@@ -1,15 +1,15 @@
-import type { AvatarCrop } from "../lib/avatar";
+import type { AvatarCrop } from '../lib/avatar'
 
-import { Button, Drawer, Label, Slider } from "@heroui/react";
-import { useRef, useState } from "react";
+import { Button, Drawer, Label, Slider } from '@heroui/react'
+import { useRef, useState } from 'react'
 
-import { clampCrop, cropLimits, renderAvatar } from "../lib/avatar";
+import { useSheetExit } from '@/components/sheet-exit'
 
-import { useLocale } from "@/contexts/locale-context";
-import { useSheetExit } from "@/components/sheet-exit";
+import { useLocale } from '@/contexts/locale-context'
+import { clampCrop, cropLimits, renderAvatar } from '../lib/avatar'
 
-const VIEW = 248;
-const KEY_STEP = 0.04;
+const VIEW = 248
+const KEY_STEP = 0.04
 
 /**
  * Position and zoom a picked photo inside the round frame (1.12s), then save it as the 256px
@@ -21,34 +21,34 @@ export function AvatarCropSheet({
   onCancel,
   onSave,
 }: {
-  image: HTMLImageElement;
-  onCancel: () => void;
-  onSave: (dataUrl: string) => void;
+  image: HTMLImageElement
+  onCancel: () => void
+  onSave: (dataUrl: string) => void
 }) {
-  const exitRef = useSheetExit();
-  const { t } = useLocale();
-  const [crop, setCrop] = useState<AvatarCrop>({ zoom: 1, x: 0, y: 0 });
-  const drag = useRef<{ px: number; py: number; x: number; y: number } | null>(
+  const exitRef = useSheetExit()
+  const { t } = useLocale()
+  const [crop, setCrop] = useState<AvatarCrop>({ zoom: 1, x: 0, y: 0 })
+  const dragRef = useRef<{ px: number, py: number, x: number, y: number } | null>(
     null,
-  );
-  const { w, h } = cropLimits(image, crop.zoom);
-  const move = (next: AvatarCrop) => setCrop(clampCrop(image, next));
+  )
+  const { w, h } = cropLimits(image, crop.zoom)
+  const move = (next: AvatarCrop) => setCrop(clampCrop(image, next))
 
   return (
-    <Drawer.Backdrop isOpen onOpenChange={(open) => !open && onCancel()}>
+    <Drawer.Backdrop isOpen onOpenChange={open => !open && onCancel()}>
       <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
         <Drawer.Dialog className="flex max-h-[92dvh] flex-col">
           <span ref={exitRef} hidden />
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-between">
             <Drawer.Heading className="text-title">
-              {t("account.edit.crop.title")}
+              {t('account.edit.crop.title')}
             </Drawer.Heading>
-            <Drawer.CloseTrigger aria-label={t("account.edit.crop.cancel")} />
+            <Drawer.CloseTrigger aria-label={t('account.edit.crop.cancel')} />
           </Drawer.Header>
           <Drawer.Body className="flex flex-col items-center gap-6 overflow-y-auto py-2">
             <button
-              aria-label={t("account.edit.crop.frame")}
+              aria-label={t('account.edit.crop.frame')}
               className="relative shrink-0 cursor-grab touch-none overflow-hidden rounded-full bg-default shadow-surface ring-4 ring-surface outline-none select-none focus-visible:focus-ring active:cursor-grabbing"
               style={{ width: VIEW, height: VIEW }}
               type="button"
@@ -58,32 +58,34 @@ export function AvatarCropSheet({
                   ArrowRight: [KEY_STEP, 0],
                   ArrowUp: [0, -KEY_STEP],
                   ArrowDown: [0, KEY_STEP],
-                }[e.key];
+                }[e.key]
 
-                if (!step) return;
-                e.preventDefault();
-                move({ ...crop, x: crop.x + step[0], y: crop.y + step[1] });
+                if (!step)
+                  return
+                e.preventDefault()
+                move({ ...crop, x: crop.x + step[0], y: crop.y + step[1] })
               }}
               onPointerDown={(e) => {
-                e.currentTarget.setPointerCapture(e.pointerId);
-                drag.current = {
+                e.currentTarget.setPointerCapture(e.pointerId)
+                dragRef.current = {
                   px: e.clientX,
                   py: e.clientY,
                   x: crop.x,
                   y: crop.y,
-                };
+                }
               }}
               onPointerMove={(e) => {
-                const from = drag.current;
+                const from = dragRef.current
 
-                if (!from) return;
+                if (!from)
+                  return
                 move({
                   ...crop,
                   x: from.x + (e.clientX - from.px) / VIEW,
                   y: from.y + (e.clientY - from.py) / VIEW,
-                });
+                })
               }}
-              onPointerUp={() => (drag.current = null)}
+              onPointerUp={() => (dragRef.current = null)}
             >
               <img
                 alt=""
@@ -100,7 +102,7 @@ export function AvatarCropSheet({
               />
             </button>
             <p className="text-center text-sm text-muted">
-              {t("account.edit.crop.hint")}
+              {t('account.edit.crop.hint')}
             </p>
             <Slider
               className="w-full"
@@ -108,9 +110,9 @@ export function AvatarCropSheet({
               minValue={1}
               step={0.01}
               value={crop.zoom}
-              onChange={(v) => move({ ...crop, zoom: v as number })}
+              onChange={v => move({ ...crop, zoom: v as number })}
             >
-              <Label>{t("account.edit.crop.zoom")}</Label>
+              <Label>{t('account.edit.crop.zoom')}</Label>
               <Slider.Track>
                 <Slider.Fill />
                 <Slider.Thumb />
@@ -123,14 +125,14 @@ export function AvatarCropSheet({
               className="h-14 text-base"
               onPress={() => onSave(renderAvatar(image, crop))}
             >
-              {t("account.edit.crop.save")}
+              {t('account.edit.crop.save')}
             </Button>
             <Button fullWidth variant="tertiary" onPress={onCancel}>
-              {t("account.edit.crop.cancel")}
+              {t('account.edit.crop.cancel')}
             </Button>
           </Drawer.Footer>
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>
-  );
+  )
 }

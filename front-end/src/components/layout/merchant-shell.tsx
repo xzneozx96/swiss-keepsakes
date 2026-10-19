@@ -1,11 +1,12 @@
-import type { IconComponent } from "@/components/icons";
-import type { MessageKey } from "@/i18n/en";
-import type { LinkProps } from "@tanstack/react-router";
+import type { LinkProps } from '@tanstack/react-router'
+import type { IconComponent } from '@/components/icons'
+import type { MessageKey } from '@/i18n/en'
 
-import { Button, Drawer } from "@heroui/react";
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { Button, Drawer } from '@heroui/react'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 
+import brandMark from '@/assets/brand/swiss-keepsakes-mark.png'
 import {
   BookingsIcon,
   ChevronDownIcon,
@@ -20,47 +21,47 @@ import {
   RequestsIcon,
   SettingsIcon,
   TodayIcon,
-} from "@/components/icons";
-import brandMark from "@/assets/brand/swiss-keepsakes-mark.png";
-import { MerchantBarSlot } from "@/components/layout/merchant-back-bar";
-import { useLocale } from "@/contexts/locale-context";
-import { shop } from "@/features/catalog/seed";
-import { SECTION_PAGES } from "@/components/layout/section-pages";
-import { useDemoActions, useDemoSelector } from "@/features/demo";
-import { avatarUrl } from "@/lib/avatars";
+} from '@/components/icons'
+import { MerchantBarSlotContext } from '@/components/layout/merchant-back-bar'
+import { SECTION_PAGES } from '@/components/layout/section-pages'
+import { useLocale } from '@/contexts/locale-context'
+import { shop } from '@/features/catalog/seed'
+import { useDemoActions, useDemoSelector } from '@/features/demo'
+import { avatarUrl } from '@/lib/avatars'
 
-export type MerchantSection =
-  | "bookings"
-  | "products"
-  | "partners"
-  | "content"
-  | "requests"
-  | "reports"
-  | "settings";
+export type MerchantSection
+  = | 'bookings'
+    | 'products'
+    | 'partners'
+    | 'content'
+    | 'requests'
+    | 'reports'
+    | 'settings'
 
 /** A page listed under its group in the sidebar. `exact: false` keeps it active on its tabs and detail screens. */
 interface NavPage {
-  label: MessageKey;
-  to: LinkProps["to"];
-  exact?: boolean;
+  label: MessageKey
+  to: LinkProps['to']
+  exact?: boolean
 }
 
 interface NavItem {
-  label: MessageKey;
-  icon: IconComponent;
+  label: MessageKey
+  icon: IconComponent
   /** Where the item lives; "/store" itself matches only the exact path. */
-  paths: string[];
+  paths: string[]
   /** A single page. Items with `pages` are groups that fold open in the sidebar. */
-  to?: LinkProps["to"];
-  exact?: boolean;
-  pages?: NavPage[];
-  settings?: true;
+  to?: LinkProps['to']
+  exact?: boolean
+  pages?: NavPage[]
+  settings?: true
 }
 
-const pagesOf = (section: keyof typeof SECTION_PAGES): NavPage[] =>
-  SECTION_PAGES[section].map(({ label, to }) => ({ label, to }));
+function pagesOf(section: keyof typeof SECTION_PAGES): NavPage[] {
+  return SECTION_PAGES[section].map(({ label, to }) => ({ label, to }))
+}
 
-const contentPages = pagesOf("content");
+const contentPages = pagesOf('content')
 
 /**
  * The sidebar (owner review 15.10.2026): six items, four of them folding groups. Dashboard holds
@@ -69,57 +70,57 @@ const contentPages = pagesOf("content");
  */
 const sidebarItems: NavItem[] = [
   {
-    label: "nav.today",
+    label: 'nav.today',
     icon: TodayIcon,
-    paths: ["/store", "/store/sales", "/store/reports"],
+    paths: ['/store', '/store/sales', '/store/reports'],
     pages: [
-      { label: "overviewPages.today", to: "/store" },
-      { label: "overviewPages.sales", to: "/store/sales" },
-      { label: "sectionPages.sales", to: "/store/reports/sales" },
-      { label: "sectionPages.money", to: "/store/reports" },
-      { label: "sectionPages.guests", to: "/store/reports/guests" },
-      { label: "sectionPages.margin", to: "/store/reports/margin" },
+      { label: 'overviewPages.today', to: '/store' },
+      { label: 'overviewPages.sales', to: '/store/sales' },
+      { label: 'sectionPages.sales', to: '/store/reports/sales' },
+      { label: 'sectionPages.money', to: '/store/reports' },
+      { label: 'sectionPages.guests', to: '/store/reports/guests' },
+      { label: 'sectionPages.margin', to: '/store/reports/margin' },
     ],
   },
   {
-    label: "nav.operations",
+    label: 'nav.operations',
     icon: OrdersIcon,
-    paths: ["/store/orders", "/store/bookings", "/store/calendar"],
+    paths: ['/store/orders', '/store/bookings', '/store/calendar'],
     pages: [
-      { label: "nav.orders", to: "/store/orders", exact: false },
-      { label: "nav.bookings", to: "/store/bookings", exact: false },
-      { label: "nav.calendar", to: "/store/calendar", exact: false },
+      { label: 'nav.orders', to: '/store/orders', exact: false },
+      { label: 'nav.bookings', to: '/store/bookings', exact: false },
+      { label: 'nav.calendar', to: '/store/calendar', exact: false },
     ],
   },
   {
-    label: "nav.products",
+    label: 'nav.products',
     icon: ProductsIcon,
-    paths: ["/store/products"],
-    to: "/store/products",
+    paths: ['/store/products'],
+    to: '/store/products',
   },
   {
-    label: "nav.partners",
+    label: 'nav.partners',
     icon: PartnersIcon,
-    paths: ["/store/partners"],
-    pages: pagesOf("partners"),
+    paths: ['/store/partners'],
+    pages: pagesOf('partners'),
   },
   {
-    label: "nav.content",
+    label: 'nav.content',
     icon: ContentIcon,
-    paths: ["/store/content", "/store/requests"],
+    paths: ['/store/content', '/store/requests'],
     pages: [
-      ...contentPages.filter((page) => page.to !== "/store/content/analytics"),
-      { label: "nav.requests", to: "/store/requests", exact: false },
-      ...contentPages.filter((page) => page.to === "/store/content/analytics"),
+      ...contentPages.filter(page => page.to !== '/store/content/analytics'),
+      { label: 'nav.requests', to: '/store/requests', exact: false },
+      ...contentPages.filter(page => page.to === '/store/content/analytics'),
     ],
   },
   {
-    label: "nav.settings",
+    label: 'nav.settings',
     icon: SettingsIcon,
-    paths: ["/store/settings"],
+    paths: ['/store/settings'],
     settings: true,
   },
-];
+]
 
 /**
  * Phones keep the bottom bar they had: Today, Orders and Bookings, plus Calendar, with the other sections in
@@ -127,78 +128,80 @@ const sidebarItems: NavItem[] = [
  */
 const phoneItems: NavItem[] = [
   {
-    label: "nav.today",
+    label: 'nav.today',
     icon: TodayIcon,
-    paths: ["/store", "/store/sales"],
-    to: "/store",
+    paths: ['/store', '/store/sales'],
+    to: '/store',
     exact: true,
   },
   {
-    label: "nav.orders",
+    label: 'nav.orders',
     icon: OrdersIcon,
-    paths: ["/store/orders"],
-    to: "/store/orders",
+    paths: ['/store/orders'],
+    to: '/store/orders',
   },
   {
-    label: "nav.bookings",
+    label: 'nav.bookings',
     icon: BookingsIcon,
-    paths: ["/store/bookings"],
-    to: "/store/bookings",
+    paths: ['/store/bookings'],
+    to: '/store/bookings',
   },
   {
-    label: "nav.calendar",
+    label: 'nav.calendar',
     icon: PickupDateIcon,
-    paths: ["/store/calendar"],
-    to: "/store/calendar",
+    paths: ['/store/calendar'],
+    to: '/store/calendar',
   },
   {
-    label: "nav.products",
+    label: 'nav.products',
     icon: ProductsIcon,
-    paths: ["/store/products"],
-    to: "/store/products",
+    paths: ['/store/products'],
+    to: '/store/products',
   },
   {
-    label: "nav.partners",
+    label: 'nav.partners',
     icon: PartnersIcon,
-    paths: ["/store/partners"],
-    to: "/store/partners",
+    paths: ['/store/partners'],
+    to: '/store/partners',
   },
   {
-    label: "nav.content",
+    label: 'nav.content',
     icon: ContentIcon,
-    paths: ["/store/content"],
-    to: "/store/content",
+    paths: ['/store/content'],
+    to: '/store/content',
   },
   {
-    label: "nav.requests",
+    label: 'nav.requests',
     icon: RequestsIcon,
-    paths: ["/store/requests"],
-    to: "/store/requests",
+    paths: ['/store/requests'],
+    to: '/store/requests',
   },
   {
-    label: "nav.reports",
+    label: 'nav.reports',
     icon: ReportsIcon,
-    paths: ["/store/reports"],
-    to: "/store/reports",
+    paths: ['/store/reports'],
+    to: '/store/reports',
   },
   {
-    label: "nav.settings",
+    label: 'nav.settings',
     icon: SettingsIcon,
-    paths: ["/store/settings"],
+    paths: ['/store/settings'],
     settings: true,
   },
-];
+]
 
-const phonePrimary = phoneItems.slice(0, 4);
-const phoneMore = phoneItems.slice(4);
+const phonePrimary = phoneItems.slice(0, 4)
+const phoneMore = phoneItems.slice(4)
 
-const isUnder = (pathname: string, base: string) =>
-  base === "/store"
+function isUnder(pathname: string, base: string) {
+  return base === '/store'
     ? pathname === base
-    : pathname === base || pathname.startsWith(`${base}/`);
+    : pathname === base || pathname.startsWith(`${base}/`)
+}
 
-const isInside = (pathname: string, item: NavItem) =>
-  item.paths.some((base) => isUnder(pathname, base));
+function isInside(pathname: string, item: NavItem) {
+  return item.paths.some(base => isUnder(pathname, base))
+}
 
 function NavLink({
   item,
@@ -206,28 +209,28 @@ function NavLink({
   children,
   onClick,
 }: {
-  item: NavItem;
-  className: string;
-  children: React.ReactNode;
-  onClick?: () => void;
+  item: NavItem
+  className: string
+  children: React.ReactNode
+  onClick?: () => void
 }) {
-  const { pathname } = useLocation();
+  const { pathname } = useLocation()
   // The item is active anywhere inside its paths (Today also on Sales, Analytics on its costs
   // screen); Settings is still a placeholder.
-  const status = isInside(pathname, item) ? "active" : undefined;
+  const status = isInside(pathname, item) ? 'active' : undefined
 
   if (item.settings) {
     return (
       <Link
         className={className}
         data-status={status}
-        params={{ section: "settings" }}
+        params={{ section: 'settings' }}
         to="/store/$section"
         onClick={onClick}
       >
         {children}
       </Link>
-    );
+    )
   }
 
   return (
@@ -240,40 +243,40 @@ function NavLink({
     >
       {children}
     </Link>
-  );
+  )
 }
 
-const sideLink =
-  "flex h-10 items-center gap-3 rounded-2xl px-3 text-sm text-muted outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-foreground";
+const sideLink
+  = 'flex h-10 items-center gap-3 rounded-2xl px-3 text-sm text-muted outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-foreground'
 
 /** A parent row: no active fill of its own, the open page below carries it. */
-const parentLink =
-  "flex h-10 items-center gap-3 rounded-2xl px-3 text-sm text-foreground outline-none hover:bg-default focus-visible:focus-ring";
+const parentLink
+  = 'flex h-10 items-center gap-3 rounded-2xl px-3 text-sm text-foreground outline-none hover:bg-default focus-visible:focus-ring'
 
-const subLink =
-  "flex h-9 items-center rounded-xl ps-11 pe-3 text-sm text-muted outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-foreground";
+const subLink
+  = 'flex h-9 items-center rounded-xl ps-11 pe-3 text-sm text-muted outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-foreground'
 
-const tabLink =
-  "group relative flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent";
+const tabLink
+  = 'group relative flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent'
 
 /**
  * Merchant dashboard frame (UX spec §3.2). Phones: bottom navigation with Today,
  * Orders, Bookings and More (a sheet with the other sections). From 1024px: a sidebar.
  */
 export function MerchantShell({ children }: { children: React.ReactNode }) {
-  const { t } = useLocale();
-  const { setRole } = useDemoActions();
-  const demoRole = useDemoSelector((s) => s.role);
-  const staffName = demoRole === "manager" ? "Lukas" : shop.ownerName;
-  const staffRole =
-    demoRole === "manager" ? t("staff.manager") : t("staff.owner");
-  const [moreOpen, setMoreOpen] = useState(false);
+  const { t } = useLocale()
+  const { setRole } = useDemoActions()
+  const demoRole = useDemoSelector(s => s.role)
+  const staffName = demoRole === 'manager' ? 'Lukas' : shop.ownerName
+  const staffRole
+    = demoRole === 'manager' ? t('staff.manager') : t('staff.owner')
+  const [moreOpen, setMoreOpen] = useState(false)
   // Groups start unfolded; the set holds the ones the user folded.
-  const [folded, setFolded] = useState<Set<string>>(new Set());
-  const [barSlot, setBarSlot] = useState<HTMLElement | null>(null);
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const labelOf = (item: NavItem) => t(item.label);
+  const [folded, setFolded] = useState<Set<string>>(() => new Set())
+  const [barSlot, setBarSlot] = useState<HTMLElement | null>(null)
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const labelOf = (item: NavItem) => t(item.label)
 
   return (
     <div className="flex flex-1">
@@ -302,55 +305,59 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
               {shop.name}
             </span>
           </Link>
-          <nav aria-label={t("nav.merchant.label")}>
+          <nav aria-label={t('nav.merchant.label')}>
             <ul className="flex flex-col gap-1">
               {sidebarItems.map((item) => {
-                const pages = item.pages ?? [];
-                const id = `nav-pages-${item.label.replace(".", "-")}`;
-                const inside = isInside(pathname, item);
-                const isOpen = !folded.has(item.label);
+                const pages = item.pages ?? []
+                const id = `nav-pages-${item.label.replace('.', '-')}`
+                const inside = isInside(pathname, item)
+                const isOpen = !folded.has(item.label)
 
                 return (
                   <li key={item.label}>
-                    {pages.length ? (
-                      // A group. Inside it the row folds or unfolds its pages; from another
-                      // group it unfolds them and opens the first page. Folded while one of its
-                      // pages is open, it shows where you are.
-                      <button
-                        aria-controls={id}
-                        aria-expanded={isOpen}
-                        className={`${parentLink} w-full text-start ${
-                          !isOpen && inside ? "bg-default font-semibold" : ""
-                        }`}
-                        type="button"
-                        onClick={() => {
-                          const next = new Set(folded);
+                    {pages.length
+                      ? (
+                    // A group. Inside it the row folds or unfolds its pages; from another
+                    // group it unfolds them and opens the first page. Folded while one of its
+                    // pages is open, it shows where you are.
+                          <button
+                            aria-controls={id}
+                            aria-expanded={isOpen}
+                            className={`${parentLink} w-full text-start ${
+                              !isOpen && inside ? 'bg-default font-semibold' : ''
+                            }`}
+                            type="button"
+                            onClick={() => {
+                              const next = new Set(folded)
 
-                          if (isOpen && inside) next.add(item.label);
-                          else {
-                            next.delete(item.label);
-                            void navigate({ to: pages[0].to });
-                          }
-                          setFolded(next);
-                        }}
-                      >
-                        <item.icon size={20} />
-                        <span className="flex-1">{labelOf(item)}</span>
-                        <ChevronDownIcon
-                          aria-hidden
-                          className={`text-muted transition-transform ${isOpen ? "" : "-rotate-90"}`}
-                          size={16}
-                        />
-                      </button>
-                    ) : (
-                      <NavLink className={sideLink} item={item}>
-                        <item.icon size={20} />
-                        {labelOf(item)}
-                      </NavLink>
-                    )}
+                              if (isOpen && inside) {
+                                next.add(item.label)
+                              }
+                              else {
+                                next.delete(item.label)
+                                void navigate({ to: pages[0].to })
+                              }
+                              setFolded(next)
+                            }}
+                          >
+                            <item.icon size={20} />
+                            <span className="flex-1">{labelOf(item)}</span>
+                            <ChevronDownIcon
+                              aria-hidden
+                              className={`text-muted transition-transform ${isOpen ? '' : '-rotate-90'}`}
+                              size={16}
+                            />
+                          </button>
+                        )
+                      : (
+                          <NavLink className={sideLink} item={item}>
+                            <item.icon size={20} />
+                            {labelOf(item)}
+                          </NavLink>
+                        )}
                     {pages.length > 0 && isOpen && (
                       <ul className="mt-1 flex flex-col gap-0.5" id={id}>
-                        {pages.map((page) => (
+                        {pages.map(page => (
                           <li key={page.label}>
                             <Link
                               activeOptions={{ exact: page.exact ?? true }}
@@ -364,7 +371,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
                       </ul>
                     )}
                   </li>
-                );
+                )
               })}
             </ul>
           </nav>
@@ -386,13 +393,13 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
               side, as the prototype bar's guest role does. */}
           <Button
             isIconOnly
-            aria-label={t("account.signOut")}
+            aria-label={t('account.signOut')}
             className="text-danger"
             size="sm"
             variant="ghost"
             onPress={() => {
-              setRole("guest");
-              void navigate({ to: "/" });
+              setRole('guest')
+              void navigate({ to: '/' })
             }}
           >
             <LogoutIcon aria-hidden size={18} />
@@ -410,20 +417,20 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
         {/* The calendar fills the content area edge to edge (owner, 15.10.2026). */}
         <main
           className={
-            pathname === "/store/calendar"
-              ? "flex w-full flex-1 flex-col"
-              : "mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8"
+            pathname === '/store/calendar'
+              ? 'flex w-full flex-1 flex-col'
+              : 'mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8'
           }
         >
-          <MerchantBarSlot value={barSlot}>{children}</MerchantBarSlot>
+          <MerchantBarSlotContext value={barSlot}>{children}</MerchantBarSlotContext>
         </main>
 
         <nav
-          aria-label={t("nav.merchant.label")}
+          aria-label={t('nav.merchant.label')}
           className="fixed inset-x-0 bottom-0 z-20 border-t border-separator bg-surface pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
         >
           <ul className="grid grid-cols-5">
-            {phonePrimary.map((item) => (
+            {phonePrimary.map(item => (
               <li key={item.label}>
                 <NavLink className={tabLink} item={item}>
                   {/* The guest tab pattern: the active tab fills its icon and takes the accent tint. */}
@@ -445,27 +452,27 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
                 <Drawer.Trigger
                   className="flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent"
                   data-status={
-                    phoneMore.some((item) => isInside(pathname, item))
-                      ? "active"
+                    phoneMore.some(item => isInside(pathname, item))
+                      ? 'active'
                       : undefined
                   }
                 >
                   <MoreIcon size={24} />
-                  {t("nav.more")}
+                  {t('nav.more')}
                 </Drawer.Trigger>
                 <Drawer.Backdrop>
                   <Drawer.Content placement="bottom">
                     <Drawer.Dialog>
                       <Drawer.Handle />
                       <Drawer.Header>
-                        <Drawer.Heading>{t("nav.moreTitle")}</Drawer.Heading>
+                        <Drawer.Heading>{t('nav.moreTitle')}</Drawer.Heading>
                         <p className="text-label text-muted">
                           {shop.name} · {staffName} · {staffRole}
                         </p>
                       </Drawer.Header>
                       <Drawer.Body>
                         <ul className="flex flex-col gap-1 pb-4">
-                          {phoneMore.map((item) => (
+                          {phoneMore.map(item => (
                             <li key={item.label}>
                               <NavLink
                                 className="group flex h-12 items-center gap-3 rounded-2xl px-3 text-base outline-none hover:bg-default focus-visible:focus-ring data-[status=active]:bg-default data-[status=active]:font-semibold data-[status=active]:text-accent"
@@ -496,5 +503,5 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
         </nav>
       </div>
     </div>
-  );
+  )
 }

@@ -5,74 +5,74 @@
  * Rules: Swiss red only for actions; no live data except the Luzerne clock; EN + DE.
  * Stay-length chips are inert here; in the product they scroll to #quick and #tours.
  */
-import { ArrowRightIcon, ClockIcon, PickupIcon } from "@/components/icons";
-import { BrandLogo } from "@/components/layout/brand-logo";
-import { CartButton, SearchButton } from "@/components/layout/cart-button";
-import { photoUrl } from "@/lib/photos";
+import { ArrowRightIcon, ClockIcon, PickupIcon } from '@/components/icons'
+import { BrandLogo } from '@/components/layout/brand-logo'
+import { CartButton, SearchButton } from '@/components/layout/cart-button'
+import { photoUrl } from '@/lib/photos'
 
 export interface HeroOptionProps {
-  language: "en" | "de";
-  appName: string;
-  title: string;
-  intro: string;
-  photoAlt: string;
-  searchLabel: string;
+  language: 'en' | 'de'
+  appName: string
+  title: string
+  intro: string
+  photoAlt: string
+  searchLabel: string
   /** Local time in Luzerne, already formatted, e.g. "14:32". */
-  localTime: string;
+  localTime: string
 }
 
 const copy = {
   en: {
-    place: "Luzerne, Switzerland",
-    localTime: "local time",
-    kicker: "Welcome to Luzerne",
-    stayQuestion: "How long are you in Luzerne?",
+    place: 'Luzerne, Switzerland',
+    localTime: 'local time',
+    kicker: 'Welcome to Luzerne',
+    stayQuestion: 'How long are you in Luzerne?',
     stays: [
-      { label: "A few hours", note: "Gifts ready today or tomorrow" },
-      { label: "A few days", note: "Walks and day trips" },
+      { label: 'A few hours', note: 'Gifts ready today or tomorrow' },
+      { label: 'A few days', note: 'Walks and day trips' },
     ],
-    steps: ["Choose a pickup date", "The shop confirms", "Then you pay"],
-    short: "Keepsakes from local makers, picked up in town.",
+    steps: ['Choose a pickup date', 'The shop confirms', 'Then you pay'],
+    short: 'Keepsakes from local makers, picked up in town.',
     gallery: [
-      { photo: "lucerne-kapellbruecke-1200", caption: "Chapel Bridge" },
-      { photo: "lake-steamboat", caption: "Lake Luzerne by steamboat" },
-      { photo: "pilatus", caption: "Mount Pilatus" },
-      { photo: "lucerne-old-town", caption: "The old town" },
+      { photo: 'lucerne-kapellbruecke-1200', caption: 'Chapel Bridge' },
+      { photo: 'lake-steamboat', caption: 'Lake Luzerne by steamboat' },
+      { photo: 'pilatus', caption: 'Mount Pilatus' },
+      { photo: 'lucerne-old-town', caption: 'The old town' },
     ],
-    collage: ["Chapel Bridge", "The lake", "Pilatus"],
-    browse: "Browse gifts",
+    collage: ['Chapel Bridge', 'The lake', 'Pilatus'],
+    browse: 'Browse gifts',
   },
   de: {
-    place: "Luzern, Schweiz",
-    localTime: "Ortszeit",
-    kicker: "Willkommen in Luzern",
-    stayQuestion: "Wie lange sind Sie in Luzern?",
+    place: 'Luzern, Schweiz',
+    localTime: 'Ortszeit',
+    kicker: 'Willkommen in Luzern',
+    stayQuestion: 'Wie lange sind Sie in Luzern?',
     stays: [
-      { label: "Ein paar Stunden", note: "Geschenke heute oder morgen" },
-      { label: "Ein paar Tage", note: "Spaziergänge und Tagesausflüge" },
+      { label: 'Ein paar Stunden', note: 'Geschenke heute oder morgen' },
+      { label: 'Ein paar Tage', note: 'Spaziergänge und Tagesausflüge' },
     ],
-    steps: ["Abholdatum wählen", "Der Laden bestätigt", "Dann zahlen Sie"],
-    short: "Andenken von Handwerkern aus Luzern, in der Stadt abgeholt.",
+    steps: ['Abholdatum wählen', 'Der Laden bestätigt', 'Dann zahlen Sie'],
+    short: 'Andenken von Handwerkern aus Luzern, in der Stadt abgeholt.',
     gallery: [
-      { photo: "lucerne-kapellbruecke-1200", caption: "Kapellbrücke" },
-      { photo: "lake-steamboat", caption: "Mit dem Dampfschiff über den See" },
-      { photo: "pilatus", caption: "Pilatus" },
-      { photo: "lucerne-old-town", caption: "Die Altstadt" },
+      { photo: 'lucerne-kapellbruecke-1200', caption: 'Kapellbrücke' },
+      { photo: 'lake-steamboat', caption: 'Mit dem Dampfschiff über den See' },
+      { photo: 'pilatus', caption: 'Pilatus' },
+      { photo: 'lucerne-old-town', caption: 'Die Altstadt' },
     ],
-    collage: ["Kapellbrücke", "Der See", "Pilatus"],
-    browse: "Geschenke ansehen",
+    collage: ['Kapellbrücke', 'Der See', 'Pilatus'],
+    browse: 'Geschenke ansehen',
   },
-};
+}
 
 /** Hero photo filling its positioned parent; eager, since it is above the fold. */
 function Photo({
   photo,
   alt,
-  className = "",
+  className = '',
 }: {
-  photo: string;
-  alt: string;
-  className?: string;
+  photo: string
+  alt: string
+  className?: string
 }) {
   return (
     <img
@@ -80,7 +80,7 @@ function Photo({
       className={`absolute inset-0 size-full bg-hero-sky object-cover ${className}`}
       src={photoUrl(photo)}
     />
-  );
+  )
 }
 
 function TopRow({
@@ -88,9 +88,9 @@ function TopRow({
   searchLabel,
   tone,
 }: {
-  appName: string;
-  searchLabel: string;
-  tone: "floating" | "glass";
+  appName: string
+  searchLabel: string
+  tone: 'floating' | 'glass'
 }) {
   return (
     <div className="flex h-12 items-center gap-2">
@@ -100,19 +100,19 @@ function TopRow({
       <SearchButton label={searchLabel} to="/search" tone={tone} />
       <CartButton tone={tone} />
     </div>
-  );
+  )
 }
 
 function PlaceChip({
   place,
   time,
   timeLabel,
-  className = "glass",
+  className = 'glass',
 }: {
-  place: string;
-  time: string;
-  timeLabel: string;
-  className?: string;
+  place: string
+  time: string
+  timeLabel: string
+  className?: string
 }) {
   return (
     <p
@@ -124,7 +124,7 @@ function PlaceChip({
       <span className="tabular-nums">{time}</span>
       <span className="sr-only">{timeLabel}</span>
     </p>
-  );
+  )
 }
 
 function StepStrip({ steps }: { steps: string[] }) {
@@ -139,12 +139,12 @@ function StepStrip({ steps }: { steps: string[] }) {
         </li>
       ))}
     </ol>
-  );
+  )
 }
 
 /** A · Sky glass: full-bleed photo, logo over the sky, title and intro on a glass panel. */
 export function HeroSkyGlass(p: HeroOptionProps) {
-  const c = copy[p.language];
+  const c = copy[p.language]
 
   return (
     <section className="relative h-[560px] overflow-hidden">
@@ -180,12 +180,12 @@ export function HeroSkyGlass(p: HeroOptionProps) {
         </div>
       </div>
     </section>
-  );
+  )
 }
 
 /** B · Photo card: logo row on the page ground, a rounded photo card with the title on it. */
 export function HeroPhotoCard(p: HeroOptionProps) {
-  const c = copy[p.language];
+  const c = copy[p.language]
 
   return (
     <section className="flex flex-col gap-4 px-4 pt-2">
@@ -214,12 +214,12 @@ export function HeroPhotoCard(p: HeroOptionProps) {
       </div>
       <StepStrip steps={c.steps} />
     </section>
-  );
+  )
 }
 
 /** C · Swipe gallery: title on the page ground, then a sideways gallery of Luzerne places. */
 export function HeroGallery(p: HeroOptionProps) {
-  const c = copy[p.language];
+  const c = copy[p.language]
 
   return (
     <section className="flex flex-col gap-4 pt-2">
@@ -255,17 +255,17 @@ export function HeroGallery(p: HeroOptionProps) {
       </ul>
       <p className="px-4 text-body text-foreground/80">{p.intro}</p>
     </section>
-  );
+  )
 }
 
 /** D · Collage: headline on the page ground over a three-photo collage (journal feel). */
 export function HeroCollage(p: HeroOptionProps) {
-  const c = copy[p.language];
+  const c = copy[p.language]
   const tiles = [
-    { photo: "lucerne-kapellbruecke-1200", label: c.collage[0] },
-    { photo: "lake-steamboat", label: c.collage[1] },
-    { photo: "pilatus", label: c.collage[2] },
-  ];
+    { photo: 'lucerne-kapellbruecke-1200', label: c.collage[0] },
+    { photo: 'lake-steamboat', label: c.collage[1] },
+    { photo: 'pilatus', label: c.collage[2] },
+  ]
 
   return (
     <section className="flex flex-col gap-4 bg-gradient-to-b from-hero-sky/60 via-hero-cream/60 to-background px-4 pt-2 pb-2">
@@ -275,7 +275,7 @@ export function HeroCollage(p: HeroOptionProps) {
         {tiles.map((tile, i) => (
           <div
             key={tile.photo}
-            className={`relative overflow-hidden rounded-2xl ${i === 0 ? "row-span-2" : ""}`}
+            className={`relative overflow-hidden rounded-2xl ${i === 0 ? 'row-span-2' : ''}`}
           >
             <Photo
               alt={i === 0 ? p.photoAlt : tile.label}
@@ -294,12 +294,12 @@ export function HeroCollage(p: HeroOptionProps) {
         <ArrowRightIcon size={16} />
       </span>
     </section>
-  );
+  )
 }
 
 /** E · Trip planner: short photo, a white card overlapping it that asks about the stay. */
 export function HeroPlanner(p: HeroOptionProps) {
-  const c = copy[p.language];
+  const c = copy[p.language]
 
   return (
     <section className="flex flex-col">
@@ -337,7 +337,7 @@ export function HeroPlanner(p: HeroOptionProps) {
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {c.stays.map((stay) => (
+          {c.stays.map(stay => (
             <button
               key={stay.label}
               className="flex min-h-11 flex-col items-start gap-0.5 rounded-2xl border border-border p-3 text-start outline-none focus-visible:focus-ring active:scale-[0.98]"
@@ -355,5 +355,5 @@ export function HeroPlanner(p: HeroOptionProps) {
         </div>
       </div>
     </section>
-  );
+  )
 }

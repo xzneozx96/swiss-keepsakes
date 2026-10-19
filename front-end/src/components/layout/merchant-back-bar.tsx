@@ -1,13 +1,13 @@
-import type { LinkProps } from "@tanstack/react-router";
+import type { LinkProps } from '@tanstack/react-router'
 
-import { Link } from "@tanstack/react-router";
-import { createContext, useContext } from "react";
-import { createPortal } from "react-dom";
+import { Link } from '@tanstack/react-router'
+import { createContext, use } from 'react'
+import { createPortal } from 'react-dom'
 
-import { BackIcon } from "@/components/icons";
+import { BackIcon } from '@/components/icons'
 
 /** The sticky phone slot above the merchant page; the shell provides it, detail screens fill it. */
-export const MerchantBarSlot = createContext<HTMLElement | null>(null);
+export const MerchantBarSlotContext = createContext<HTMLElement | null>(null)
 
 /**
  * Phone top bar for merchant detail screens, the guest pattern (← round back + title).
@@ -19,10 +19,11 @@ export function MerchantBackBar({
   label,
   title,
   ...link
-}: LinkProps & { label: string; title: string }) {
-  const slot = useContext(MerchantBarSlot);
+}: LinkProps & { label: string, title: string }) {
+  const slot = use(MerchantBarSlotContext)
 
-  if (!slot) return null;
+  if (!slot)
+    return null
 
   return createPortal(
     <div className="flex h-14 items-center gap-2 px-4 pt-[env(safe-area-inset-top,0px)]">
@@ -38,5 +39,5 @@ export function MerchantBackBar({
       </span>
     </div>,
     slot,
-  );
+  )
 }

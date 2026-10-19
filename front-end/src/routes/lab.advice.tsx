@@ -1,111 +1,111 @@
-import type { AdviceOptionProps } from "@/features/lab/advice-options";
+import type { AdviceOptionProps } from '@/features/lab/advice-options'
 
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from '@tanstack/react-router'
 
-import { useLocale } from "@/contexts/locale-context";
-import { shop } from "@/features/catalog/seed";
+import { useLocale } from '@/contexts/locale-context'
+import { shop } from '@/features/catalog/seed'
 import {
   AdvicePhotoBanner,
   AdviceRow,
   AdviceShopNote,
   AdviceSideImage,
   AdviceSplitCard,
-} from "@/features/lab/advice-options";
+} from '@/features/lab/advice-options'
 import {
   AdviceFirstQuestion,
   AdvicePolaroids,
   AdvicePostcard,
   AdviceRouteSketch,
   AdviceTicket,
-} from "@/features/lab/advice-options-v2";
+} from '@/features/lab/advice-options-v2'
 
 const round2 = [
   {
-    id: "F",
-    title: "F · Postcard from the shop",
-    note: "A handwritten-style postcard with a Luzerne photo stamp and a postmark.",
+    id: 'F',
+    title: 'F · Postcard from the shop',
+    note: 'A handwritten-style postcard with a Luzerne photo stamp and a postmark.',
     Option: AdvicePostcard,
   },
   {
-    id: "G",
-    title: "G · Travel ticket",
-    note: "A boat/train ticket LUZ → ? with blanks to fill and a tear-off stub.",
+    id: 'G',
+    title: 'G · Travel ticket',
+    note: 'A boat/train ticket LUZ → ? with blanks to fill and a tear-off stub.',
     Option: AdviceTicket,
   },
   {
-    id: "H",
-    title: "H · First question, right here",
-    note: "Question 1 of 7 inline; one tap answers it and opens the rest.",
+    id: 'H',
+    title: 'H · First question, right here',
+    note: 'Question 1 of 7 inline; one tap answers it and opens the rest.',
     Option: AdviceFirstQuestion,
   },
   {
-    id: "I",
-    title: "I · Route sketch",
-    note: "Three photo pins joined by a dashed route, like a local's hand-drawn map.",
+    id: 'I',
+    title: 'I · Route sketch',
+    note: 'Three photo pins joined by a dashed route, like a local\'s hand-drawn map.',
     Option: AdviceRouteSketch,
   },
   {
-    id: "J",
-    title: "J · Polaroid stack",
-    note: "Three tilted snapshots with handwritten captions.",
+    id: 'J',
+    title: 'J · Polaroid stack',
+    note: 'Three tilted snapshots with handwritten captions.',
     Option: AdvicePolaroids,
   },
-];
+]
 
 /** Lab: compare trip-advice call-to-action layouts at phone width. Not part of the product. */
-export const Route = createFileRoute("/lab/advice")({ component: AdviceLab });
+export const Route = createFileRoute('/lab/advice')({ component: AdviceLab })
 
 const options = [
   {
-    id: "A",
-    title: "A · Photo banner",
-    note: "Lake photo, white serif title and a white button.",
+    id: 'A',
+    title: 'A · Photo banner',
+    note: 'Lake photo, white serif title and a white button.',
     Option: AdvicePhotoBanner,
   },
   {
-    id: "B",
-    title: "B · Note from the shop",
-    note: "A short personal note from the owner; warm, human, no AI feel.",
+    id: 'B',
+    title: 'B · Note from the shop',
+    note: 'A short personal note from the owner; warm, human, no AI feel.',
     Option: AdviceShopNote,
   },
   {
-    id: "C",
-    title: "C · Split card",
-    note: "Photo on top, text and a full-width button below.",
+    id: 'C',
+    title: 'C · Split card',
+    note: 'Photo on top, text and a full-width button below.',
     Option: AdviceSplitCard,
   },
   {
-    id: "D",
-    title: "D · Soft card with picture",
-    note: "Text left, round photo right, like your first reference.",
+    id: 'D',
+    title: 'D · Soft card with picture',
+    note: 'Text left, round photo right, like your first reference.',
     Option: AdviceSideImage,
   },
   {
-    id: "E",
-    title: "E · List row",
-    note: "One quiet tappable row; the least visual weight.",
+    id: 'E',
+    title: 'E · List row',
+    note: 'One quiet tappable row; the least visual weight.',
     Option: AdviceRow,
   },
-];
+]
 
 function AdviceLab() {
-  const { t, language } = useLocale();
+  const { t, language } = useLocale()
 
   const props: AdviceOptionProps = {
-    title: t("home.advice.title"),
-    body: t("home.advice.body"),
-    action: t("home.advice.action"),
+    title: t('home.advice.title'),
+    body: t('home.advice.body'),
+    action: t('home.advice.action'),
     short:
-      language === "de"
-        ? "Ein paar Fragen, Antwort per E-Mail"
-        : "A few questions, a reply by email",
+      language === 'de'
+        ? 'Ein paar Fragen, Antwort per E-Mail'
+        : 'A few questions, a reply by email',
     shopName: shop.name,
     ownerName: shop.ownerName,
     greeting:
-      language === "de"
-        ? "Erzählen Sie mir von Ihrer Reise, ich schlage Ihnen ein paar Dinge vor."
-        : "Tell me about your trip and I will suggest a few things.",
-  };
+      language === 'de'
+        ? 'Erzählen Sie mir von Ihrer Reise, ich schlage Ihnen ein paar Dinge vor.'
+        : 'Tell me about your trip and I will suggest a few things.',
+  }
 
   return (
     <div className="flex flex-1 justify-center bg-default/40 py-6">
@@ -146,5 +146,5 @@ function AdviceLab() {
         ))}
       </div>
     </div>
-  );
+  )
 }

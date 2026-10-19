@@ -1,63 +1,65 @@
-import type { Map as MapLibreMap } from "maplibre-gl";
+import type { Map as MapLibreMap } from 'maplibre-gl'
 
-import { Link, createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
-import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import { createFileRoute, Link } from '@tanstack/react-router'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
+import { useEffect, useRef } from 'react'
 
-import { demSource, loadAerialStyle } from "@/features/tours/map/aerial-style";
-import { tourSeed } from "@/features/tours/seed";
+import { demSource, loadAerialStyle } from '@/features/tours/map/aerial-style'
+import { tourSeed } from '@/features/tours/seed'
 
 /** Lab: simple ways to make the 3D tour map look less like blocks. Not part of the product. */
-export const Route = createFileRoute("/lab/map")({ component: MapLab });
+export const Route = createFileRoute('/lab/map')({ component: MapLab })
 
-const LIBERTY = "https://tiles.openfreemap.org/styles/liberty";
+const LIBERTY = 'https://tiles.openfreemap.org/styles/liberty'
 const options = [
   {
-    id: "A",
-    title: "A · Current",
-    note: "OpenFreeMap Liberty: drawn map with extruded OSM building boxes.",
+    id: 'A',
+    title: 'A · Current',
+    note: 'OpenFreeMap Liberty: drawn map with extruded OSM building boxes.',
     style: LIBERTY,
     terrain: false,
   },
   {
-    id: "B",
-    title: "B · Aerial photo with terrain",
-    note: "swisstopo SWISSIMAGE draped over real relief, with place, road and water names on top. Chosen on 15.10.2026.",
-    style: "aerial",
+    id: 'B',
+    title: 'B · Aerial photo with terrain',
+    note: 'swisstopo SWISSIMAGE draped over real relief, with place, road and water names on top. Chosen on 15.10.2026.',
+    style: 'aerial',
     terrain: true,
   },
   {
-    id: "C",
-    title: "C · Current style with terrain",
-    note: "Same drawn map, plus real relief. Buildings stay boxes.",
+    id: 'C',
+    title: 'C · Current style with terrain',
+    note: 'Same drawn map, plus real relief. Buildings stay boxes.',
     style: LIBERTY,
     terrain: true,
   },
-];
+]
 
-const tour = tourSeed.find((item) => item.itinerary.length > 1) ?? tourSeed[0];
+const tour = tourSeed.find(item => item.itinerary.length > 1) ?? tourSeed[0]
 
 function LabMap({
   style,
   terrain,
-}: Pick<(typeof options)[number], "style" | "terrain">) {
-  const ref = useRef<HTMLDivElement>(null);
+}: Pick<(typeof options)[number], 'style' | 'terrain'>) {
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const container = ref.current;
+    const container = ref.current
 
-    if (!container) return;
-    let map: MapLibreMap | undefined;
-    let disposed = false;
+    if (!container)
+      return
+    let map: MapLibreMap | undefined
+    let disposed = false
 
     void Promise.all([
-      import("maplibre-gl"),
-      import("maplibre-gl/dist/maplibre-gl.css"),
-      style === "aerial" ? loadAerialStyle() : style,
+      import('maplibre-gl'),
+      import('maplibre-gl/dist/maplibre-gl.css'),
+      style === 'aerial' ? loadAerialStyle() : style,
     ]).then(([{ Map, setWorkerUrl }, , resolved]) => {
-      if (disposed) return;
-      setWorkerUrl(workerUrl);
-      const first = tour.itinerary[0].coordinates;
+      if (disposed)
+        return
+      setWorkerUrl(workerUrl)
+      const first = tour.itinerary[0].coordinates
 
       map = new Map({
         container,
@@ -68,42 +70,44 @@ function LabMap({
         bearing: -25,
         maxPitch: 75,
         cooperativeGestures: true,
-      });
-      map.on("load", () => {
-        if (!map) return;
+      })
+      map.on('load', () => {
+        if (!map)
+          return
         if (terrain) {
-          if (!map.getSource("dem")) map.addSource("dem", demSource);
-          map.setTerrain({ source: "dem", exaggeration: 1.3 });
+          if (!map.getSource('dem'))
+            map.addSource('dem', demSource)
+          map.setTerrain({ source: 'dem', exaggeration: 1.3 })
         }
-        map.addSource("route", {
-          type: "geojson",
+        map.addSource('route', {
+          type: 'geojson',
           data: {
-            type: "Feature",
+            type: 'Feature',
             properties: {},
             geometry: {
-              type: "LineString",
-              coordinates: tour.itinerary.map((stop) => stop.coordinates),
+              type: 'LineString',
+              coordinates: tour.itinerary.map(stop => stop.coordinates),
             },
           },
-        });
+        })
         map.addLayer({
-          id: "route",
-          type: "line",
-          source: "route",
-          paint: { "line-color": "#d52b1e", "line-width": 4 },
-        });
-      });
-    });
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          paint: { 'line-color': '#d52b1e', 'line-width': 4 },
+        })
+      })
+    })
 
     return () => {
-      disposed = true;
-      map?.remove();
-    };
-  }, [style, terrain]);
+      disposed = true
+      map?.remove()
+    }
+  }, [style, terrain])
 
   return (
     <div ref={ref} className="h-[420px] w-full overflow-hidden rounded-2xl" />
-  );
+  )
 }
 
 function MapLab() {
@@ -119,7 +123,9 @@ function MapLab() {
           </Link>
           <h1 className="text-heading">3D map look</h1>
           <p className="text-sm text-muted">
-            Same stop and route ({tour.id}), three basemaps. Drag with two
+            Same stop and route (
+            {tour.id}
+            ), three basemaps. Drag with two
             fingers to tilt.
           </p>
         </header>
@@ -134,5 +140,5 @@ function MapLab() {
         ))}
       </div>
     </div>
-  );
+  )
 }

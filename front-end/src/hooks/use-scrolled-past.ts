@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react'
 
 /**
  * True once the element behind the returned ref has scrolled out above the viewport.
@@ -6,21 +6,22 @@ import { useEffect, useRef, useState } from "react";
  * collapsing header.
  */
 export function useScrolledPast<T extends Element>() {
-  const ref = useRef<T>(null);
-  const [past, setPast] = useState(false);
+  const ref = useRef<T>(null)
+  const [past, setPast] = useState(false)
 
   useEffect(() => {
-    const el = ref.current;
+    const el = ref.current
 
-    if (!el) return;
+    if (!el)
+      return
     const observer = new IntersectionObserver(([entry]) =>
       setPast(!entry.isIntersecting && entry.boundingClientRect.top < 0),
-    );
+    )
 
-    observer.observe(el);
+    observer.observe(el)
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
-  return [ref, past] as const;
+  return [ref, past] as const
 }

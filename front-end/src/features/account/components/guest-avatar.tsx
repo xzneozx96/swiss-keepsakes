@@ -1,13 +1,14 @@
-import type { Guest } from "@/features/orders/types";
+import type { Guest } from '@/features/orders/types'
 
-import { avatarUrl } from "@/lib/avatars";
+import { avatarUrl } from '@/lib/avatars'
 
 /**
  * A stored photo as an image URL: "sample:anna-k" is a bundled avatar resolved here, so the
  * seed stays free of build-hashed asset URLs; anything else is an uploaded data URL.
  */
-const photoSrc = (avatar: string) =>
-  avatar.startsWith("sample:") ? avatarUrl(avatar.slice(7)) : avatar;
+function photoSrc(avatar: string) {
+  return avatar.startsWith('sample:') ? avatarUrl(avatar.slice(7)) : avatar
+}
 
 /**
  * The guest's round photo, or a sample avatar picked from their name when there is none. Decorative:
@@ -16,15 +17,15 @@ const photoSrc = (avatar: string) =>
 export function GuestAvatar({
   guest,
   photo = guest.avatar,
-  className = "size-12 text-base",
+  className = 'size-12 text-base',
 }: {
-  guest: Pick<Guest, "name" | "avatar">;
+  guest: Pick<Guest, 'name' | 'avatar'>
   /** A draft photo to show instead of the saved one (Edit profile preview). */
-  photo?: string;
+  photo?: string
   /** Size. */
-  className?: string;
+  className?: string
 }) {
-  const src = (photo && photoSrc(photo)) || avatarUrl(guest.name);
+  const src = (photo && photoSrc(photo)) || avatarUrl(guest.name)
 
   return (
     <img
@@ -33,5 +34,5 @@ export function GuestAvatar({
       decoding="async"
       src={src}
     />
-  );
+  )
 }

@@ -1,184 +1,180 @@
-import type { CalendarItem, CalendarOverlay } from "./calendar-core";
+import type { CalendarRef, DatesSetInfo } from '@fullcalendar/react'
 
-import FullCalendar, {
-  type CalendarRef,
-  type DatesSetInfo,
-} from "@fullcalendar/react";
-import deLocale from "@fullcalendar/react/locales/de";
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import type { CalendarItem, CalendarOverlay } from './calendar-core'
+import FullCalendar from '@fullcalendar/react'
+import deLocale from '@fullcalendar/react/locales/de'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 
-import { CalendarOverlays } from "./calendar-overlays";
-import { MOBILE_QUERY, calendarPlugins, swissDate } from "./calendar-core";
-import { useCalendarItems } from "./use-calendar-items";
+import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
+import { dateTimeFormat } from '@/lib/format'
 
-import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import "@fullcalendar/react/skeleton.css";
-import "@fullcalendar/react/themes/monarch/theme.css";
-import "./calendar.css";
-import { dateTimeFormat } from "@/lib/format";
+import { calendarPlugins, MOBILE_QUERY, swissDate } from './calendar-core'
+import { CalendarOverlays } from './calendar-overlays'
+import { useCalendarItems } from './use-calendar-items'
+import '@fullcalendar/react/skeleton.css'
+import '@fullcalendar/react/themes/monarch/theme.css'
+import './calendar.css'
 
 const views = {
-  day: "timeGridDay",
-  week: "timeGridWeek",
-  month: "dayGridMonth",
-} as const;
+  day: 'timeGridDay',
+  week: 'timeGridWeek',
+  month: 'dayGridMonth',
+} as const
 
-type CalendarView = keyof typeof views;
-
-/** M-Calendar: every tour departure and keepsake pickup, by day, week or month. */
-export function CalendarPage() {
-  const { items, today, now } = useCalendarItems();
-
-  return <CalendarScreen items={items} now={now} today={today} />;
-}
+type CalendarView = keyof typeof views
 
 const CalendarScreen = memo(function CalendarScreen({
   items,
   today,
   now,
 }: {
-  items: CalendarItem[];
-  today: string;
-  now: string;
+  items: CalendarItem[]
+  today: string
+  now: string
 }) {
-  const { t, language, intlLocale } = useLocale();
-  const de = language === "de";
-  const calendar = useRef<CalendarRef>(null);
-  const [view, setView] = useState<CalendarView>("month");
-  const [activeDate, setActiveDate] = useState(today);
-  const [monthTitle, setMonthTitle] = useState("");
-  const [yearTitle, setYearTitle] = useState("");
-  const [overlay, setOverlay] = useState<CalendarOverlay>(null);
+  const { t, language, intlLocale } = useLocale()
+  const de = language === 'de'
+  const calendarRef = useRef<CalendarRef>(null)
+  const [view, setView] = useState<CalendarView>('month')
+  const [activeDate, setActiveDate] = useState(today)
+  const [monthTitle, setMonthTitle] = useState('')
+  const [yearTitle, setYearTitle] = useState('')
+  const [overlay, setOverlay] = useState<CalendarOverlay>(null)
   const [mobile, setMobile] = useState(
     () => window.matchMedia(MOBILE_QUERY).matches,
-  );
-  const swipeStart = useRef<{ x: number; y: number; tracking: boolean } | null>(
+  )
+  const swipeStartRef = useRef<{ x: number, y: number, tracking: boolean } | null>(
     null,
-  );
-  const swipeAt = useRef(0);
-  const surface = useRef<HTMLDivElement>(null);
+  )
+  const swipeAtRef = useRef(0)
+  const surfaceRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const media = window.matchMedia(MOBILE_QUERY);
-    const update = () => setMobile(media.matches);
+    const media = window.matchMedia(MOBILE_QUERY)
+    const update = () => setMobile(media.matches)
 
-    media.addEventListener("change", update);
+    media.addEventListener('change', update)
 
-    return () => media.removeEventListener("change", update);
-  }, []);
+    return () => media.removeEventListener('change', update)
+  }, [])
 
   useEffect(() => {
-    if (!mobile || view !== "week") return;
+    if (!mobile || view !== 'week')
+      return
     const frame = requestAnimationFrame(() => {
-      const viewport = surface.current?.parentElement;
-      const day = surface.current?.querySelector<HTMLElement>(
+      const viewport = surfaceRef.current?.parentElement
+      const day = surfaceRef.current?.querySelector<HTMLElement>(
         `.mc-day-header[data-date="${activeDate}"]`,
-      );
+      )
 
-      if (!viewport || !day) return;
-      const left =
-        day.getBoundingClientRect().left -
-        viewport.getBoundingClientRect().left +
-        viewport.scrollLeft;
+      if (!viewport || !day)
+        return
+      const left
+        = day.getBoundingClientRect().left
+          - viewport.getBoundingClientRect().left
+          + viewport.scrollLeft
 
-      viewport.scrollLeft = Math.max(0, left - 62);
-      viewport.style.setProperty("--week-scroll", `${viewport.scrollLeft}px`);
-    });
+      viewport.scrollLeft = Math.max(0, left - 62)
+      viewport.style.setProperty('--week-scroll', `${viewport.scrollLeft}px`)
+    })
 
-    return () => cancelAnimationFrame(frame);
-  }, [activeDate, mobile, view]);
+    return () => cancelAnimationFrame(frame)
+  }, [activeDate, mobile, view])
 
   const byId = useMemo(
-    () => new Map(items.map((item) => [item.id, item])),
+    () => new Map(items.map(item => [item.id, item])),
     [items],
-  );
+  )
   const events = useMemo(
     () =>
-      items.map((item) => ({
+      items.map(item => ({
         id: item.id,
         title: item.title,
-        start: item.kind === "tour" ? item.start : item.date,
-        end: item.kind === "tour" ? item.stop : undefined,
-        allDay: item.kind === "pickup",
-        extendedProps: { kindOrder: item.kind === "tour" ? 0 : 1 },
+        start: item.kind === 'tour' ? item.start : item.date,
+        end: item.kind === 'tour' ? item.stop : undefined,
+        allDay: item.kind === 'pickup',
+        extendedProps: { kindOrder: item.kind === 'tour' ? 0 : 1 },
       })),
     [items],
-  );
+  )
   const person = (item: CalendarItem) =>
-    item.kind === "tour" && item.lead
+    item.kind === 'tour' && item.lead
       ? item.more
-        ? t("calendar.plusMore", { name: item.lead, count: item.more })
+        ? t('calendar.plusMore', { name: item.lead, count: item.more })
         : item.lead
-      : "";
+      : ''
 
   function updatePeriod(info: DatesSetInfo) {
-    const date = info.view.calendar.getDate();
+    const date = info.view.calendar.getDate()
 
-    setActiveDate(swissDate(date));
+    setActiveDate(swissDate(date))
     setMonthTitle(
       dateTimeFormat(intlLocale, {
-        month: "long",
-        timeZone: "Europe/Zurich",
+        month: 'long',
+        timeZone: 'Europe/Zurich',
       }).format(date),
-    );
+    )
     setYearTitle(
       dateTimeFormat(intlLocale, {
-        year: "numeric",
-        timeZone: "Europe/Zurich",
+        year: 'numeric',
+        timeZone: 'Europe/Zurich',
       }).format(date),
-    );
+    )
   }
   function changeView(next: CalendarView, date = activeDate) {
-    setView(next);
-    calendar.current?.getApi().changeView(views[next], date);
+    setView(next)
+    calendarRef.current?.getApi().changeView(views[next], date)
   }
   function navigate(delta: number) {
-    const api = calendar.current?.getApi();
+    const api = calendarRef.current?.getApi()
 
-    if (delta < 0) api?.prev();
-    else api?.next();
+    if (delta < 0)
+      api?.prev()
+    else api?.next()
   }
   function settleSwipe() {
-    const element = surface.current;
+    const element = surfaceRef.current
 
-    if (!element) return;
-    const start =
-      Number(
-        element.style.getPropertyValue("--calendar-drag").replace("px", ""),
-      ) || 0;
-    let position = start;
-    let velocity = 0;
+    if (!element)
+      return
+    const start
+      = Number(
+        element.style.getPropertyValue('--calendar-drag').replace('px', ''),
+      ) || 0
+    let position = start
+    let velocity = 0
     const tick = () => {
-      if (swipeStart.current?.tracking) return;
-      velocity = (velocity - position * 0.18) * 0.68;
-      position += velocity;
-      element.style.setProperty("--calendar-drag", `${position}px`);
+      if (swipeStartRef.current?.tracking)
+        return
+      velocity = (velocity - position * 0.18) * 0.68
+      position += velocity
+      element.style.setProperty('--calendar-drag', `${position}px`)
       if (Math.abs(position) > 0.2 || Math.abs(velocity) > 0.2)
-        requestAnimationFrame(tick);
-      else element.style.setProperty("--calendar-drag", "0px");
-    };
+        requestAnimationFrame(tick)
+      else element.style.setProperty('--calendar-drag', '0px')
+    }
 
-    requestAnimationFrame(tick);
+    requestAnimationFrame(tick)
   }
   const weekdayLabel = (date: Date, short = false) =>
     dateTimeFormat(intlLocale, {
-      weekday: short ? "narrow" : "short",
-      timeZone: "Europe/Zurich",
-    }).format(date);
+      weekday: short ? 'narrow' : 'short',
+      timeZone: 'Europe/Zurich',
+    }).format(date)
 
   return (
     <section
-      aria-label={t("calendar.title")}
+      aria-label={t('calendar.title')}
       className={`merchant-calendar mc-view-${view}`}
     >
-      <h1 className="sr-only">{t("calendar.title")}</h1>
+      <h1 className="sr-only">{t('calendar.title')}</h1>
       <button
         aria-haspopup="dialog"
-        aria-label={t("calendar.pickDate")}
+        aria-label={t('calendar.pickDate')}
         className="mc-date-trigger"
         type="button"
-        onClick={() => setOverlay({ kind: "date" })}
+        onClick={() => setOverlay({ kind: 'date' })}
       >
         <span className="mc-date-title">
           {monthTitle}
@@ -188,7 +184,7 @@ const CalendarScreen = memo(function CalendarScreen({
       </button>
       <div className="mc-period-controls">
         <button
-          aria-label={t("calendar.prevPeriod")}
+          aria-label={t('calendar.prevPeriod')}
           className="mc-icon-button"
           type="button"
           onClick={() => navigate(-1)}
@@ -198,12 +194,12 @@ const CalendarScreen = memo(function CalendarScreen({
         <button
           className="mc-today"
           type="button"
-          onClick={() => calendar.current?.getApi().gotoDate(today)}
+          onClick={() => calendarRef.current?.getApi().gotoDate(today)}
         >
-          {t("calendar.today")}
+          {t('calendar.today')}
         </button>
         <button
-          aria-label={t("calendar.nextPeriod")}
+          aria-label={t('calendar.nextPeriod')}
           className="mc-icon-button"
           type="button"
           onClick={() => navigate(1)}
@@ -211,9 +207,9 @@ const CalendarScreen = memo(function CalendarScreen({
           <ChevronRightIcon aria-hidden="true" />
         </button>
       </div>
-      <nav aria-label={t("calendar.viewLabel")} className="mc-view-nav">
+      <nav aria-label={t('calendar.viewLabel')} className="mc-view-nav">
         <div className="mc-view-switch">
-          {(["day", "week", "month"] as const).map((mode) => (
+          {(['day', 'week', 'month'] as const).map(mode => (
             <button
               key={mode}
               aria-pressed={mode === view}
@@ -229,164 +225,168 @@ const CalendarScreen = memo(function CalendarScreen({
         className="mc-calendar-viewport"
         onScroll={(event) => {
           event.currentTarget.style.setProperty(
-            "--week-scroll",
+            '--week-scroll',
             `${event.currentTarget.scrollLeft}px`,
-          );
+          )
         }}
       >
         <div
-          ref={surface}
+          ref={surfaceRef}
           className="mc-calendar-surface"
           onClickCapture={(e) => {
-            if (performance.now() - swipeAt.current < 350) {
-              e.preventDefault();
-              e.stopPropagation();
+            if (performance.now() - swipeAtRef.current < 350) {
+              e.preventDefault()
+              e.stopPropagation()
             }
           }}
           onPointerCancel={() => {
-            swipeStart.current = null;
-            settleSwipe();
+            swipeStartRef.current = null
+            settleSwipe()
           }}
           onPointerDown={(e) => {
             if (
-              view === "week" ||
-              e.pointerType !== "touch" ||
-              (e.target instanceof Element &&
-                e.target.closest("button,a,[role=link]"))
-            )
-              return;
-            swipeStart.current = {
+              view === 'week'
+              || e.pointerType !== 'touch'
+              || (e.target instanceof Element
+                && e.target.closest('button,a,[role=link]'))
+            ) {
+              return
+            }
+            swipeStartRef.current = {
               x: e.clientX,
               y: e.clientY,
               tracking: false,
-            };
+            }
           }}
           onPointerMove={(e) => {
-            const start = swipeStart.current;
+            const start = swipeStartRef.current
 
-            if (!start) return;
-            const dx = e.clientX - start.x;
-            const dy = e.clientY - start.y;
+            if (!start)
+              return
+            const dx = e.clientX - start.x
+            const dy = e.clientY - start.y
 
             if (
-              !start.tracking &&
-              Math.abs(dy) > 12 &&
-              Math.abs(dy) > Math.abs(dx)
+              !start.tracking
+              && Math.abs(dy) > 12
+              && Math.abs(dy) > Math.abs(dx)
             ) {
-              swipeStart.current = null;
+              swipeStartRef.current = null
 
-              return;
+              return
             }
             if (Math.abs(dx) > 12 && Math.abs(dx) > Math.abs(dy) * 1.3) {
-              start.tracking = true;
-              e.currentTarget.setPointerCapture(e.pointerId);
+              start.tracking = true
+              e.currentTarget.setPointerCapture(e.pointerId)
               e.currentTarget.style.setProperty(
-                "--calendar-drag",
+                '--calendar-drag',
                 `${Math.max(-160, Math.min(160, dx * 0.65))}px`,
-              );
+              )
             }
           }}
           onPointerUp={(e) => {
-            const start = swipeStart.current;
+            const start = swipeStartRef.current
 
-            swipeStart.current = null;
+            swipeStartRef.current = null
             if (start?.tracking) {
-              swipeAt.current = performance.now();
+              swipeAtRef.current = performance.now()
               if (Math.abs(e.clientX - start.x) > 65)
-                navigate(e.clientX < start.x ? 1 : -1);
-              settleSwipe();
+                navigate(e.clientX < start.x ? 1 : -1)
+              settleSwipe()
             }
           }}
         >
           <FullCalendar
-            ref={calendar}
+            ref={calendarRef}
             allDaySlot
             eventInteractive
             fixedWeekCount
             navLinks
-            allDayText={t("calendar.pickup")}
+            allDayText={t('calendar.pickup')}
             blockEventBeforeClass="mc-no-marker"
             dateClick={(info) => {
-              if (performance.now() - swipeAt.current > 350 && view === "month")
-                changeView("day", info.dateStr.slice(0, 10));
+              if (performance.now() - swipeAtRef.current > 350 && view === 'month')
+                changeView('day', info.dateStr.slice(0, 10))
             }}
             datesSet={updatePeriod}
             dayCellBottomClass="mc-day-bottom"
-            dayCellClass={(info) =>
-              `mc-day-cell ${info.isOther ? "mc-other-month" : ""}`
-            }
+            dayCellClass={info =>
+              `mc-day-cell ${info.isOther ? 'mc-other-month' : ''}`}
             dayCellInnerClass="mc-day-events"
             dayCellTopClass="mc-day-top"
-            dayCellTopContent={(info) => (
+            dayCellTopContent={info => (
               <span
-                className={`mc-date-number ${swissDate(info.date) === today ? "mc-is-today" : ""}`}
+                className={`mc-date-number ${swissDate(info.date) === today ? 'mc-is-today' : ''}`}
               >
                 {info.dayNumberText}
               </span>
             )}
             dayCellTopInnerClass="mc-day-top-inner"
             dayHeaderClass="mc-day-header"
-            dayHeaderContent={(info) =>
-              view === "month" ? (
-                <span>{weekdayLabel(info.date, mobile)}</span>
-              ) : (
-                <span
-                  className={`mc-column-date ${swissDate(info.date) === today ? "mc-is-today" : ""}`}
-                >
-                  <span>{weekdayLabel(info.date)}</span>
-                  <strong>
-                    {dateTimeFormat(intlLocale, {
-                      day: "numeric",
-                      timeZone: "Europe/Zurich",
-                    }).format(info.date)}
-                  </strong>
-                </span>
-              )
-            }
+            dayHeaderContent={info =>
+              view === 'month'
+                ? (
+                    <span>{weekdayLabel(info.date, mobile)}</span>
+                  )
+                : (
+                    <span
+                      className={`mc-column-date ${swissDate(info.date) === today ? 'mc-is-today' : ''}`}
+                    >
+                      <span>{weekdayLabel(info.date)}</span>
+                      <strong>
+                        {dateTimeFormat(intlLocale, {
+                          day: 'numeric',
+                          timeZone: 'Europe/Zurich',
+                        }).format(info.date)}
+                      </strong>
+                    </span>
+                  )}
             dayHeaderInnerClass="mc-day-header-inner"
             dayLaneClass="mc-day-lane"
-            dayMaxEvents={view === "month" ? (mobile ? 2 : 4) : false}
+            dayMaxEvents={view === 'month' ? (mobile ? 2 : 4) : false}
             dayMinWidth={0}
             editable={false}
             eventBeforeClass="mc-no-marker"
             eventClass="mc-event-shell"
             eventClick={(info) => {
-              const item = byId.get(info.event.id);
+              const item = byId.get(info.event.id)
 
-              if (item) setOverlay({ kind: "event", item });
+              if (item)
+                setOverlay({ kind: 'event', item })
             }}
             eventContent={(info) => {
-              const item = byId.get(info.event.id);
+              const item = byId.get(info.event.id)
 
-              if (!item) return null;
+              if (!item)
+                return null
 
               return (
                 <div
-                  className={`mc-event mc-event-${item.kind} ${item.kind === "pickup" ? "mc-all-day-event" : ""}`}
+                  className={`mc-event mc-event-${item.kind} ${item.kind === 'pickup' ? 'mc-all-day-event' : ''}`}
                   title={[
                     item.title,
-                    person(item) ||
-                      (item.kind === "pickup" ? item.customer : ""),
+                    person(item)
+                    || (item.kind === 'pickup' ? item.customer : ''),
                   ]
                     .filter(Boolean)
-                    .join(" · ")}
+                    .join(' · ')}
                 >
                   <span className="mc-event-time">
-                    {item.kind === "tour" ? item.time : t("calendar.pickup")}
+                    {item.kind === 'tour' ? item.time : t('calendar.pickup')}
                   </span>
                   <strong>{item.title}</strong>
-                  {view !== "month" && person(item) && (
+                  {view !== 'month' && person(item) && (
                     <span className="mc-event-person">{person(item)}</span>
                   )}
                 </div>
-              );
+              )
             }}
             eventInnerClass="mc-event-inner"
             eventMinHeight={54}
             eventOrder="kindOrder,start"
             eventTimeFormat={{
-              hour: "2-digit",
-              minute: "2-digit",
+              hour: '2-digit',
+              minute: '2-digit',
               hour12: false,
             }}
             events={events}
@@ -395,19 +395,19 @@ const CalendarScreen = memo(function CalendarScreen({
             height="100%"
             initialDate={today}
             initialView="dayGridMonth"
-            locale={de ? deLocale : "en-gb"}
+            locale={de ? deLocale : 'en-gb'}
             moreLinkClass="mc-more"
             moreLinkClick={(info) => {
-              changeView("day", swissDate(info.date));
+              changeView('day', swissDate(info.date))
 
-              return "none";
+              return 'none'
             }}
-            moreLinkContent={(info) => (
-              <span>{t("calendar.more", { count: info.num })}</span>
+            moreLinkContent={info => (
+              <span>{t('calendar.more', { count: info.num })}</span>
             )}
-            navLinkDayClick={(date) => changeView("day", swissDate(date))}
+            navLinkDayClick={date => changeView('day', swissDate(date))}
             now={now}
-            nowIndicator={view !== "month"}
+            nowIndicator={view !== 'month'}
             plugins={calendarPlugins}
             rowEventBeforeClass="mc-no-marker"
             rowEventBeforeContent={() => null}
@@ -416,8 +416,8 @@ const CalendarScreen = memo(function CalendarScreen({
             slotDuration="00:30:00"
             slotHeaderClass="mc-time-label"
             slotHeaderFormat={{
-              hour: "2-digit",
-              minute: "2-digit",
+              hour: '2-digit',
+              minute: '2-digit',
               hour12: false,
             }}
             slotLaneClass="mc-time-line"
@@ -436,10 +436,17 @@ const CalendarScreen = memo(function CalendarScreen({
         today={today}
         onClose={() => setOverlay(null)}
         onPickDate={(date) => {
-          calendar.current?.getApi().gotoDate(date);
-          setOverlay(null);
+          calendarRef.current?.getApi().gotoDate(date)
+          setOverlay(null)
         }}
       />
     </section>
-  );
-});
+  )
+})
+
+/** M-Calendar: every tour departure and keepsake pickup, by day, week or month. */
+export function CalendarPage() {
+  const { items, today, now } = useCalendarItems()
+
+  return <CalendarScreen items={items} now={now} today={today} />
+}

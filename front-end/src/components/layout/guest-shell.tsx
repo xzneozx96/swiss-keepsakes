@@ -1,35 +1,35 @@
-import type { IconComponent } from "@/components/icons";
+import type { IconComponent } from '@/components/icons'
 
-import { Link, useMatches } from "@tanstack/react-router";
+import { Link, useMatches } from '@tanstack/react-router'
 
-import { BackgroundMusic } from "@/components/background-music";
+import { BackgroundMusic } from '@/components/background-music'
 import {
   AccountIcon,
   ExploreIcon,
   GiftIcon,
   SparkleIcon,
   TourIcon,
-} from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { GuestAvatar } from "@/features/account/components/guest-avatar";
-import { useDemoSelector } from "@/features/demo";
+} from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
+import { GuestAvatar } from '@/features/account/components/guest-avatar'
+import { useDemoSelector } from '@/features/demo'
 
-type GuestNavTarget = "/" | "/gifts" | "/tours" | "/account";
+type GuestNavTarget = '/' | '/gifts' | '/tours' | '/account'
 
-type NavItem = {
-  to: GuestNavTarget;
-  label: "nav.explore" | "nav.gifts" | "nav.tours" | "nav.account";
-  icon: IconComponent;
-};
+interface NavItem {
+  to: GuestNavTarget
+  label: 'nav.explore' | 'nav.gifts' | 'nav.tours' | 'nav.account'
+  icon: IconComponent
+}
 
 const leftItems: NavItem[] = [
-  { to: "/", label: "nav.explore", icon: ExploreIcon },
-  { to: "/gifts", label: "nav.gifts", icon: GiftIcon },
-];
+  { to: '/', label: 'nav.explore', icon: ExploreIcon },
+  { to: '/gifts', label: 'nav.gifts', icon: GiftIcon },
+]
 const rightItems: NavItem[] = [
-  { to: "/tours", label: "nav.tours", icon: TourIcon },
-  { to: "/account", label: "nav.account", icon: AccountIcon },
-];
+  { to: '/tours', label: 'nav.tours', icon: TourIcon },
+  { to: '/account', label: 'nav.account', icon: AccountIcon },
+]
 
 /**
  * Guest app frame (UX spec §3.1), built to feel like a native app (owner request):
@@ -38,17 +38,17 @@ const rightItems: NavItem[] = [
  * Detail screens (route staticData `hideTabBar`) hide the tab bar for their own action bar.
  */
 export function GuestShell({ children }: { children: React.ReactNode }) {
-  const { t } = useLocale();
-  const guests = useDemoSelector((s) => s.data.guests);
-  const signedInGuestId = useDemoSelector((s) => s.data.signedInGuestId);
+  const { t } = useLocale()
+  const guests = useDemoSelector(s => s.data.guests)
+  const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   // 1.12s: a signed-in guest with a profile photo sees it on the Account tab (Instagram pattern).
-  const photoGuest = guests.find((g) => g.id === signedInGuestId && g.avatar);
+  const photoGuest = guests.find(g => g.id === signedInGuestId && g.avatar)
   const hideTabBar = useMatches({
-    select: (matches) => matches.some((m) => m.staticData.hideTabBar),
-  });
+    select: matches => matches.some(m => m.staticData.hideTabBar),
+  })
   const ownsBottomSpace = useMatches({
-    select: (matches) => matches.some((m) => m.staticData.ownsBottomSpace),
-  });
+    select: matches => matches.some(m => m.staticData.ownsBottomSpace),
+  })
 
   return (
     <div className="flex flex-1 justify-center bg-default/60">
@@ -56,8 +56,8 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
         <main
           className={
             ownsBottomSpace
-              ? "flex flex-1 flex-col"
-              : "flex-1 pb-[calc(env(safe-area-inset-bottom,0px)+88px)]"
+              ? 'flex flex-1 flex-col'
+              : 'flex-1 pb-[calc(env(safe-area-inset-bottom,0px)+88px)]'
           }
         >
           {children}
@@ -67,7 +67,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
 
         {!hideTabBar && (
           <nav
-            aria-label={t("nav.guest.label")}
+            aria-label={t('nav.guest.label')}
             className="fixed bottom-0 z-30 w-full max-w-[430px]"
           >
             <div
@@ -90,7 +90,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
               <div className="flex-1 bg-surface" />
             </div>
             <ul className="relative grid grid-cols-5 pb-[env(safe-area-inset-bottom,0px)]">
-              {leftItems.map((item) => (
+              {leftItems.map(item => (
                 <TabItem key={item.to} item={item} photoGuest={photoGuest} />
               ))}
               <li className="relative">
@@ -108,10 +108,10 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
                       weight="Filled"
                     />
                   </span>
-                  {t("nav.assistant")}
+                  {t('nav.assistant')}
                 </Link>
               </li>
-              {rightItems.map((item) => (
+              {rightItems.map(item => (
                 <TabItem key={item.to} item={item} photoGuest={photoGuest} />
               ))}
             </ul>
@@ -119,40 +119,42 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
         )}
       </div>
     </div>
-  );
+  )
 }
 
 function TabItem({
   item: { to, label, icon: Icon },
   photoGuest,
 }: {
-  item: NavItem;
-  photoGuest: React.ComponentProps<typeof GuestAvatar>["guest"] | undefined;
+  item: NavItem
+  photoGuest: React.ComponentProps<typeof GuestAvatar>['guest'] | undefined
 }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <li>
       <Link
-        activeOptions={{ exact: to === "/" }}
+        activeOptions={{ exact: to === '/' }}
         className="flex h-[60px] flex-col items-center justify-center gap-0.5 text-[11px] leading-4 font-medium text-muted select-none outline-none focus-visible:focus-ring active:opacity-70 data-[status=active]:text-accent"
         to={to}
       >
         {({ isActive }) => (
           <>
             {/* Native tab pattern: the active tab's icon fills and takes the tint (accent = selection). */}
-            {to === "/account" && photoGuest ? (
-              <GuestAvatar
-                className={`size-[26px] ${isActive ? "ring-2 ring-accent ring-offset-1 ring-offset-surface" : ""}`}
-                guest={photoGuest}
-              />
-            ) : (
-              <Icon size={26} weight={isActive ? "Filled" : "Outline"} />
-            )}
+            {to === '/account' && photoGuest
+              ? (
+                  <GuestAvatar
+                    className={`size-[26px] ${isActive ? 'ring-2 ring-accent ring-offset-1 ring-offset-surface' : ''}`}
+                    guest={photoGuest}
+                  />
+                )
+              : (
+                  <Icon size={26} weight={isActive ? 'Filled' : 'Outline'} />
+                )}
             {t(label)}
           </>
         )}
       </Link>
     </li>
-  );
+  )
 }

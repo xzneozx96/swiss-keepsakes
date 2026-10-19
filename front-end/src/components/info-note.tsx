@@ -1,6 +1,6 @@
-import { Alert } from "@heroui/react";
+import { Alert } from '@heroui/react'
 
-import { InfoIcon } from "@/components/icons";
+import { InfoIcon } from '@/components/icons'
 
 /**
  * Tinted info Alert (alert--soft, as on C04) with the info icon and one line of text.
@@ -16,5 +16,5 @@ export function InfoNote({ text }: { text: string }) {
         <Alert.Description>{text}</Alert.Description>
       </Alert.Content>
     </Alert>
-  );
+  )
 }

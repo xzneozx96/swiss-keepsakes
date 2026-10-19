@@ -1,14 +1,14 @@
-import type { DisclosureRootProps } from "@heroui/react";
+import type { DisclosureRootProps } from '@heroui/react'
 
-import { Disclosure } from "@heroui/react";
+import { Disclosure } from '@heroui/react'
 
 interface CollapsibleProps extends Omit<
   DisclosureRootProps,
-  "isExpanded" | "defaultExpanded" | "onExpandedChange"
+  'isExpanded' | 'defaultExpanded' | 'onExpandedChange'
 > {
-  open?: boolean;
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  open?: boolean
+  defaultOpen?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function Collapsible({
@@ -25,17 +25,17 @@ export function Collapsible({
       onExpandedChange={onOpenChange}
       {...props}
     />
-  );
+  )
 }
 
 export function CollapsibleTrigger(
   props: React.ComponentProps<typeof Disclosure.Trigger>,
 ) {
-  return <Disclosure.Trigger data-slot="collapsible-trigger" {...props} />;
+  return <Disclosure.Trigger data-slot="collapsible-trigger" {...props} />
 }
 
 export function CollapsibleContent(
   props: React.ComponentProps<typeof Disclosure.Content>,
 ) {
-  return <Disclosure.Content data-slot="collapsible-content" {...props} />;
+  return <Disclosure.Content data-slot="collapsible-content" {...props} />
 }

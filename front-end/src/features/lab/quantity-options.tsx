@@ -1,4 +1,4 @@
-import type { Key } from "@heroui/react";
+import type { Key } from '@heroui/react'
 
 import {
   Description,
@@ -8,27 +8,27 @@ import {
   Select,
   Tag,
   TagGroup,
-} from "@heroui/react";
-import { useState } from "react";
+} from '@heroui/react'
+import { useState } from 'react'
 
-import { QuantityStepper } from "@/components/quantity-stepper";
+import { QuantityStepper } from '@/components/quantity-stepper'
 
 /** Lab only: quantity pickers for the C03 sheet. Each option keeps its own value. */
 export interface QuantityOptionProps {
-  label: string;
+  label: string
   /** Units the guest can request, e.g. 4. */
-  max: number;
+  max: number
   /** "Up to 4 available". */
-  hint: string;
+  hint: string
 }
 
 function useQuantity() {
-  return useState(1);
+  return useState(1)
 }
 
 /** A · Current: HeroUI NumberField, boxed, label above. */
 export function QuantityBoxed({ label, max, hint }: QuantityOptionProps) {
-  const [value, setValue] = useQuantity();
+  const [value, setValue] = useQuantity()
 
   return (
     <NumberField
@@ -46,12 +46,12 @@ export function QuantityBoxed({ label, max, hint }: QuantityOptionProps) {
       </NumberField.Group>
       <Description>{hint}</Description>
     </NumberField>
-  );
+  )
 }
 
 /** B · Airbnb guest row (chosen 13.10.2026): the shared QuantityStepper. */
 export function QuantityRow({ label, max, hint }: QuantityOptionProps) {
-  const [value, setValue] = useQuantity();
+  const [value, setValue] = useQuantity()
 
   return (
     <QuantityStepper
@@ -61,14 +61,14 @@ export function QuantityRow({ label, max, hint }: QuantityOptionProps) {
       value={value}
       onChange={setValue}
     />
-  );
+  )
 }
 
 /** C · Klook pill: one soft pill holding − n +, next to the label. */
 export function QuantityPill({ label, max, hint }: QuantityOptionProps) {
-  const [value, setValue] = useQuantity();
-  const step =
-    "size-10 rounded-full border-0 bg-transparent text-foreground disabled:opacity-30";
+  const [value, setValue] = useQuantity()
+  const step
+    = 'size-10 rounded-full border-0 bg-transparent text-foreground disabled:opacity-30'
 
   return (
     <NumberField
@@ -86,17 +86,18 @@ export function QuantityPill({ label, max, hint }: QuantityOptionProps) {
       </NumberField.Group>
       <Description className="w-full px-0 text-end">{hint}</Description>
     </NumberField>
-  );
+  )
 }
 
 /** D · Quick chips (Booking.com rooms): tap 1, 2, 3 or 4; fits small stock. */
 export function QuantityChips({ label, max, hint }: QuantityOptionProps) {
-  const [value, setValue] = useQuantity();
-  const onChange = (keys: "all" | Set<Key>) => {
-    const [first] = keys === "all" ? [] : [...keys];
+  const [value, setValue] = useQuantity()
+  const onChange = (keys: 'all' | Set<Key>) => {
+    const [first] = keys === 'all' ? [] : [...keys]
 
-    if (first !== undefined) setValue(Number(first));
-  };
+    if (first !== undefined)
+      setValue(Number(first))
+  }
 
   return (
     <TagGroup
@@ -107,7 +108,7 @@ export function QuantityChips({ label, max, hint }: QuantityOptionProps) {
     >
       <Label className="text-base font-semibold">{label}</Label>
       <TagGroup.List className="grid grid-cols-4 gap-2 pt-2">
-        {Array.from({ length: max }, (_, i) => String(i + 1)).map((n) => (
+        {Array.from({ length: max }, (_, i) => String(i + 1)).map(n => (
           <Tag
             key={n}
             className="h-11 justify-center rounded-2xl text-base"
@@ -120,14 +121,14 @@ export function QuantityChips({ label, max, hint }: QuantityOptionProps) {
       </TagGroup.List>
       <Description>{hint}</Description>
     </TagGroup>
-  );
+  )
 }
 
 /** E · Big centred stepper (Apple Store bag): large round buttons, large number. */
 export function QuantityLarge({ label, max, hint }: QuantityOptionProps) {
-  const [value, setValue] = useQuantity();
-  const round =
-    "size-12 rounded-full border-0 bg-surface-secondary text-foreground disabled:opacity-30";
+  const [value, setValue] = useQuantity()
+  const round
+    = 'size-12 rounded-full border-0 bg-surface-secondary text-foreground disabled:opacity-30'
 
   return (
     <NumberField
@@ -145,18 +146,18 @@ export function QuantityLarge({ label, max, hint }: QuantityOptionProps) {
       </NumberField.Group>
       <Description>{hint}</Description>
     </NumberField>
-  );
+  )
 }
 
 /** F · Dropdown (Amazon): "Quantity 1 ▾", compact; one more tap to change. */
 export function QuantitySelect({ label, max, hint }: QuantityOptionProps) {
-  const [value, setValue] = useQuantity();
+  const [value, setValue] = useQuantity()
 
   return (
     <Select
       className="w-40"
       selectedKey={String(value)}
-      onSelectionChange={(key) => key !== null && setValue(Number(key))}
+      onSelectionChange={key => key !== null && setValue(Number(key))}
     >
       <Label>{label}</Label>
       <Select.Trigger>
@@ -166,7 +167,7 @@ export function QuantitySelect({ label, max, hint }: QuantityOptionProps) {
       <Description>{hint}</Description>
       <Select.Popover>
         <ListBox>
-          {Array.from({ length: max }, (_, i) => String(i + 1)).map((n) => (
+          {Array.from({ length: max }, (_, i) => String(i + 1)).map(n => (
             <ListBox.Item key={n} id={n} textValue={n}>
               {n}
               <ListBox.ItemIndicator />
@@ -175,5 +176,5 @@ export function QuantitySelect({ label, max, hint }: QuantityOptionProps) {
         </ListBox>
       </Select.Popover>
     </Select>
-  );
+  )
 }

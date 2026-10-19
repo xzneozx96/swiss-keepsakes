@@ -1,28 +1,29 @@
+const TRAILING_DOT = /\.$/
 /**
  * Swiss formats from the design system: money as "CHF 1’249.00", full dates as "14.10.2026".
  * Both en-CH and de-CH produce these, so the language switch does not change them.
  */
-export type IntlLocale = "en-CH" | "de-CH";
+export type IntlLocale = 'en-CH' | 'de-CH'
 
-const numberFormats = new Map<string, Intl.NumberFormat>();
-const dateTimeFormats = new Map<string, Intl.DateTimeFormat>();
-const pluralRules = new Map<string, Intl.PluralRules>();
-const APOSTROPHE = /'/g;
+const numberFormats = new Map<string, Intl.NumberFormat>()
+const dateTimeFormats = new Map<string, Intl.DateTimeFormat>()
+const pluralRules = new Map<string, Intl.PluralRules>()
+const APOSTROPHE = /'/g
 
 /** Building an Intl formatter costs far more than calling one, so each locale and options pair is built once. */
 export function numberFormat(
   locale: string,
   options?: Intl.NumberFormatOptions,
 ): Intl.NumberFormat {
-  const key = `${locale}|${JSON.stringify(options)}`;
-  let format = numberFormats.get(key);
+  const key = `${locale}|${JSON.stringify(options)}`
+  let format = numberFormats.get(key)
 
   if (!format) {
-    format = new Intl.NumberFormat(locale, options);
-    numberFormats.set(key, format);
+    format = new Intl.NumberFormat(locale, options)
+    numberFormats.set(key, format)
   }
 
-  return format;
+  return format
 }
 
 /** The plural category ("one", "other", ...) of a count; the rules are built once per locale. */
@@ -30,49 +31,49 @@ export function pluralCategory(
   locale: string,
   count: number,
 ): Intl.LDMLPluralRule {
-  let rules = pluralRules.get(locale);
+  let rules = pluralRules.get(locale)
 
   if (!rules) {
-    rules = new Intl.PluralRules(locale);
-    pluralRules.set(locale, rules);
+    rules = new Intl.PluralRules(locale)
+    pluralRules.set(locale, rules)
   }
 
-  return rules.select(count);
+  return rules.select(count)
 }
 
 export function dateTimeFormat(
   locale: string,
   options?: Intl.DateTimeFormatOptions,
 ): Intl.DateTimeFormat {
-  const key = `${locale}|${JSON.stringify(options)}`;
-  let format = dateTimeFormats.get(key);
+  const key = `${locale}|${JSON.stringify(options)}`
+  let format = dateTimeFormats.get(key)
 
   if (!format) {
-    format = new Intl.DateTimeFormat(locale, options);
-    dateTimeFormats.set(key, format);
+    format = new Intl.DateTimeFormat(locale, options)
+    dateTimeFormats.set(key, format)
   }
 
-  return format;
+  return format
 }
 
 /** A Zurich calendar day (YYYY-MM-DD) as a Date at noon UTC, so UTC getters and formatters never shift the day. */
 export function calendarDay(isoDate: string): Date {
-  return new Date(`${isoDate}T12:00:00Z`);
+  return new Date(`${isoDate}T12:00:00Z`)
 }
 
 /** Short calendar parts for a date tile, read as a plain date (no time zone shift). */
 export function pickupDay(isoDate: string, locale: IntlLocale) {
-  const at = calendarDay(isoDate);
+  const at = calendarDay(isoDate)
   const part = (options: Intl.DateTimeFormatOptions) =>
-    dateTimeFormat(locale, { ...options, timeZone: "UTC" })
+    dateTimeFormat(locale, { ...options, timeZone: 'UTC' })
       .format(at)
-      .replace(/\.$/, "");
+      .replace(TRAILING_DOT, '')
 
   return {
-    weekday: part({ weekday: "short" }),
-    day: part({ day: "numeric" }),
-    month: part({ month: "short" }),
-  };
+    weekday: part({ weekday: 'short' }),
+    day: part({ day: 'numeric' }),
+    month: part({ month: 'short' }),
+  }
 }
 
 /** `part` as a share of `whole` ("42%"); an empty `whole` reads as 0%. */
@@ -85,22 +86,22 @@ export function percentOf(
   return numberFormat(
     locale,
     fractionDigits
-      ? { style: "percent", maximumFractionDigits: fractionDigits }
-      : { style: "percent" },
-  ).format(whole ? part / whole : 0);
+      ? { style: 'percent', maximumFractionDigits: fractionDigits }
+      : { style: 'percent' },
+  ).format(whole ? part / whole : 0)
 }
 
 export function formatMoney(amount: number, locale: IntlLocale): string {
   return (
     numberFormat(locale, {
-      style: "currency",
-      currency: "CHF",
-      currencyDisplay: "code",
+      style: 'currency',
+      currency: 'CHF',
+      currencyDisplay: 'code',
     })
       .format(amount)
       // Chrome's ICU groups Swiss numbers with "'" while Node uses "’"; the design system specifies "’".
-      .replace(APOSTROPHE, "’")
-  );
+      .replace(APOSTROPHE, '’')
+  )
 }
 
 /**
@@ -114,28 +115,28 @@ export function formatShortDate(
   today: string,
   locale: IntlLocale,
 ): string {
-  const date = calendarDay(isoDate);
+  const date = calendarDay(isoDate)
   const parts = dateTimeFormat(locale, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).formatToParts(date);
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  }).formatToParts(date)
   const part = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-  const year =
-    isoDate.slice(0, 4) === today.slice(0, 4) ? "" : ` ${isoDate.slice(0, 4)}`;
+    parts.find(p => p.type === type)?.value ?? ''
+  const year
+    = isoDate.slice(0, 4) === today.slice(0, 4) ? '' : ` ${isoDate.slice(0, 4)}`
 
   // Joined by hand: browsers disagree on commas for en-CH ("Wed, 14 Oct" vs "Wed 14 Oct").
-  return locale === "de-CH"
-    ? `${part("weekday")}, ${part("day")}. ${part("month")}${year}`
-    : `${part("weekday")} ${part("day")} ${part("month")}${year}`;
+  return locale === 'de-CH'
+    ? `${part('weekday')}, ${part('day')}. ${part('month')}${year}`
+    : `${part('weekday')} ${part('day')} ${part('month')}${year}`
 }
 
 export function formatDate(date: Date, locale: IntlLocale): string {
   return dateTimeFormat(locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date)
 }

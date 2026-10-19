@@ -1,24 +1,24 @@
-import type { LabOrderRow, OrderCardOptionProps } from "./order-card-options";
+import type { LabOrderRow, OrderCardOptionProps } from './order-card-options'
 
-import { ChevronRightIcon, PickupIcon } from "@/components/icons";
-import { Media } from "@/components/media";
-import { useLocale } from "@/contexts/locale-context";
+import { ChevronRightIcon, PickupIcon } from '@/components/icons'
+import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 
 const toneText = {
-  neutral: "text-muted",
-  info: "text-info",
-  success: "text-success",
-  warning: "text-warning",
-  danger: "text-danger",
-};
+  neutral: 'text-muted',
+  info: 'text-info',
+  success: 'text-success',
+  warning: 'text-warning',
+  danger: 'text-danger',
+}
 
 const paymentText = {
-  neutral: "text-muted",
-  info: "text-muted",
-  success: "text-muted",
-  warning: "text-warning",
-  danger: "text-danger",
-};
+  neutral: 'text-muted',
+  info: 'text-muted',
+  success: 'text-muted',
+  warning: 'text-warning',
+  danger: 'text-danger',
+}
 
 function Progress({ row }: { row: LabOrderRow }) {
   return (
@@ -31,7 +31,7 @@ function Progress({ row }: { row: LabOrderRow }) {
       />
       {row.progress.text}
     </span>
-  );
+  )
 }
 
 function Payment({ row }: { row: LabOrderRow }) {
@@ -39,7 +39,7 @@ function Payment({ row }: { row: LabOrderRow }) {
     <p className={`text-sm leading-relaxed ${paymentText[row.payment.tone]}`}>
       {row.payment.text}
     </p>
-  );
+  )
 }
 
 function Gifts({ row }: { row: LabOrderRow }) {
@@ -57,12 +57,13 @@ function Gifts({ row }: { row: LabOrderRow }) {
             {gift.meta && <p className="mt-1 text-muted">{gift.meta}</p>}
           </div>
           <span className="shrink-0 text-sm font-medium tabular-nums">
-            ×{gift.quantity}
+            ×
+            {gift.quantity}
           </span>
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
 function Pickup({ row }: { row: LabOrderRow }) {
@@ -83,13 +84,13 @@ function Pickup({ row }: { row: LabOrderRow }) {
         size={18}
       />
     </div>
-  );
+  )
 }
 
 export function OrderSheets({ rows }: OrderCardOptionProps) {
   return (
     <ul className="flex flex-col gap-4">
-      {rows.map((row) => (
+      {rows.map(row => (
         <li key={row.id}>
           <a
             className="group flex flex-col gap-4 rounded-2xl bg-surface p-5 shadow-surface outline-none transition-shadow hover:shadow-overlay focus-visible:focus-ring"
@@ -116,15 +117,15 @@ export function OrderSheets({ rows }: OrderCardOptionProps) {
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
 export function OrderTickets({ rows }: OrderCardOptionProps) {
-  const { language } = useLocale();
+  const { language } = useLocale()
 
   return (
     <ul className="flex flex-col gap-5">
-      {rows.map((row) => (
+      {rows.map(row => (
         <li key={row.id}>
           <a
             className="flex flex-col overflow-hidden rounded-2xl border border-separator bg-surface outline-none transition-colors hover:border-foreground focus-visible:focus-ring"
@@ -170,18 +171,18 @@ export function OrderTickets({ rows }: OrderCardOptionProps) {
             <div className="flex flex-col gap-2 border-t border-dashed border-separator px-4 py-3.5">
               <div className="flex items-baseline justify-between gap-2 text-sm">
                 <span className="text-muted">
-                  {language === "de" ? "Gesamt" : "Order total"}
+                  {language === 'de' ? 'Gesamt' : 'Order total'}
                 </span>
                 <span className="font-semibold tabular-nums">{row.total}</span>
               </div>
               <dl className="flex flex-col gap-2 text-sm">
                 {[
                   {
-                    label: language === "de" ? "Zahlung" : "Payment",
+                    label: language === 'de' ? 'Zahlung' : 'Payment',
                     value: row.paymentDetails.status,
                   },
                   ...row.paymentDetails.facts,
-                ].map((fact) => (
+                ].map(fact => (
                   <div
                     key={fact.label}
                     className="flex items-baseline justify-between gap-4"
@@ -200,26 +201,26 @@ export function OrderTickets({ rows }: OrderCardOptionProps) {
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
 export function OrderLedger({ rows }: OrderCardOptionProps) {
-  const dates = [...new Set(rows.map((row) => row.pickupDate))];
+  const dates = [...new Set(rows.map(row => row.pickupDate))]
 
   return (
     <div className="flex flex-col gap-8">
-      {dates.map((date) => (
+      {dates.map(date => (
         <section key={date}>
           <h3 className="flex items-baseline justify-between gap-3 border-b border-foreground pb-3 text-lg font-semibold">
             {date}
             <span className="text-sm font-normal text-muted tabular-nums">
-              {rows.filter((row) => row.pickupDate === date).length}
+              {rows.filter(row => row.pickupDate === date).length}
             </span>
           </h3>
           <ul className="divide-y divide-separator">
             {rows
-              .filter((row) => row.pickupDate === date)
-              .map((row) => (
+              .filter(row => row.pickupDate === date)
+              .map(row => (
                 <li key={row.id}>
                   <a
                     className="flex flex-col gap-3 py-5 outline-none transition-colors hover:bg-surface-secondary focus-visible:focus-ring"
@@ -255,5 +256,5 @@ export function OrderLedger({ rows }: OrderCardOptionProps) {
         </section>
       ))}
     </div>
-  );
+  )
 }

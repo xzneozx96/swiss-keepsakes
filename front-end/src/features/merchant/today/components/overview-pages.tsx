@@ -1,16 +1,16 @@
-import { Skeleton, Tabs } from "@heroui/react";
-import { useNavigate } from "@tanstack/react-router";
+import { Skeleton, Tabs } from '@heroui/react'
+import { useNavigate } from '@tanstack/react-router'
 
-import { STICKY_TABS } from "@/components/layout/sticky-tabs";
-import { MerchantPageHeader } from "@/components/layout/merchant-page-header";
-import { useLocale } from "@/contexts/locale-context";
+import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
+import { STICKY_TABS } from '@/components/layout/sticky-tabs'
+import { useLocale } from '@/contexts/locale-context'
 
 /** M02 Overview's two pages, each its own route (owner review 15.10.2026). */
 export const OVERVIEW_PAGES = [
-  { id: "today", to: "/store" },
-  { id: "sales", to: "/store/sales" },
-] as const;
-export type OverviewPage = (typeof OVERVIEW_PAGES)[number]["id"];
+  { id: 'today', to: '/store' },
+  { id: 'sales', to: '/store/sales' },
+] as const
+export type OverviewPage = (typeof OVERVIEW_PAGES)[number]['id']
 
 /**
  * The Overview pages' frame: a hidden page title and, on phones, the Today | Sales tabs (from
@@ -20,33 +20,32 @@ export function OverviewFrame({
   page,
   children,
 }: {
-  page: OverviewPage;
-  children: React.ReactNode;
+  page: OverviewPage
+  children: React.ReactNode
 }) {
-  const { t } = useLocale();
-  const navigate = useNavigate();
+  const { t } = useLocale()
+  const navigate = useNavigate()
 
   return (
     <div className="flex flex-col gap-6">
       {/* From 1024px the sidebar lists the pages, so the title stays for screen readers only. */}
       <MerchantPageHeader
         className="lg:sr-only"
-        description={t("merchantToday.intro")}
-        title={t("merchantToday.title")}
+        description={t('merchantToday.intro')}
+        title={t('merchantToday.title')}
       />
       <Tabs
         className="w-full"
         selectedKey={page}
         variant="secondary"
-        onSelectionChange={(key) =>
+        onSelectionChange={key =>
           void navigate({
-            to: OVERVIEW_PAGES.find((p) => p.id === key)?.to ?? "/store",
-          })
-        }
+            to: OVERVIEW_PAGES.find(p => p.id === key)?.to ?? '/store',
+          })}
       >
         <Tabs.ListContainer className={`lg:hidden ${STICKY_TABS}`}>
-          <Tabs.List aria-label={t("overviewPages.label")} className="w-full">
-            {OVERVIEW_PAGES.map((p) => (
+          <Tabs.List aria-label={t('overviewPages.label')} className="w-full">
+            {OVERVIEW_PAGES.map(p => (
               <Tabs.Tab
                 key={p.id}
                 className="h-11 min-w-0 flex-1 px-1.5 whitespace-nowrap"
@@ -63,16 +62,16 @@ export function OverviewFrame({
         </Tabs.Panel>
       </Tabs>
     </div>
-  );
+  )
 }
 
 /** Loading: the widget frame (title and note in the tinted shell, a white card inside). */
 export function WidgetSkeleton({
-  className = "",
+  className = '',
   children,
 }: {
-  className?: string;
-  children: React.ReactNode;
+  className?: string
+  children: React.ReactNode
 }) {
   return (
     <div
@@ -88,5 +87,5 @@ export function WidgetSkeleton({
         {children}
       </div>
     </div>
-  );
+  )
 }

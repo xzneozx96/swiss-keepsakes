@@ -1,29 +1,29 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
 
-import { Chip, ToggleButton } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
-import { memo } from "react";
+import { Chip, ToggleButton } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
+import { memo } from 'react'
 
-import { ClockIcon, FavouriteIcon, RatingIcon } from "@/components/icons";
-import { Media } from "@/components/media";
-import { StatusChip } from "@/components/status-chip";
+import { ClockIcon, FavouriteIcon, RatingIcon } from '@/components/icons'
+import { Media } from '@/components/media'
+import { StatusChip } from '@/components/status-chip'
 
 export interface ListingCardProps {
-  to: "/gifts/$slug" | "/tours/$slug";
-  slug: string;
-  name: string;
-  photo?: string;
-  fromLabel: string;
-  price: string;
-  metadata: string;
-  supplementaryMetadata?: ReactNode;
-  badge?: string;
-  statusLabel?: string;
-  languageNote?: string;
-  rating?: { value: string; count: string; label: string };
-  favourite?: { isSaved: boolean; onToggle: () => void; label: string };
-  layout?: "carousel" | "grid";
-  disabled?: boolean;
+  to: '/gifts/$slug' | '/tours/$slug'
+  slug: string
+  name: string
+  photo?: string
+  fromLabel: string
+  price: string
+  metadata: string
+  supplementaryMetadata?: ReactNode
+  badge?: string
+  statusLabel?: string
+  languageNote?: string
+  rating?: { value: string, count: string, label: string }
+  favourite?: { isSaved: boolean, onToggle: () => void, label: string }
+  layout?: 'carousel' | 'grid'
+  disabled?: boolean
 }
 
 /**
@@ -35,33 +35,39 @@ export function sameListing(
   prev: Record<string, unknown>,
   next: Record<string, unknown>,
 ): boolean {
-  const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
+  const keys = new Set([...Object.keys(prev), ...Object.keys(next)])
 
   for (const key of keys) {
-    if (key === "favourite") {
-      const a = prev.favourite as ListingCardProps["favourite"];
-      const b = next.favourite as ListingCardProps["favourite"];
+    if (key === 'favourite') {
+      const a = prev.favourite as ListingCardProps['favourite']
+      const b = next.favourite as ListingCardProps['favourite']
 
       if (
-        !a !== !b ||
-        (a && b && (a.isSaved !== b.isSaved || a.label !== b.label))
-      )
-        return false;
-    } else if (key === "rating") {
-      const a = prev.rating as ListingCardProps["rating"];
-      const b = next.rating as ListingCardProps["rating"];
+        !a !== !b
+        || (a && b && (a.isSaved !== b.isSaved || a.label !== b.label))
+      ) {
+        return false
+      }
+    }
+    else if (key === 'rating') {
+      const a = prev.rating as ListingCardProps['rating']
+      const b = next.rating as ListingCardProps['rating']
 
       if (
-        !a !== !b ||
-        (a &&
-          b &&
-          (a.value !== b.value || a.count !== b.count || a.label !== b.label))
-      )
-        return false;
-    } else if (!Object.is(prev[key], next[key])) return false;
+        !a !== !b
+        || (a
+          && b
+          && (a.value !== b.value || a.count !== b.count || a.label !== b.label))
+      ) {
+        return false
+      }
+    }
+    else if (!Object.is(prev[key], next[key])) {
+      return false
+    }
   }
 
-  return true;
+  return true
 }
 
 /** The shared photo, price, typography and heart treatment for gifts and tours. */
@@ -79,11 +85,11 @@ export const ListingCard = memo(function ListingCard({
   languageNote,
   rating,
   favourite,
-  layout = "grid",
+  layout = 'grid',
   disabled = false,
 }: ListingCardProps) {
-  const contentClass =
-    "flex h-full flex-col gap-2.5 rounded-3xl outline-none focus-visible:focus-ring transition-transform active:scale-[0.98]";
+  const contentClass
+    = 'flex h-full flex-col gap-2.5 rounded-3xl outline-none focus-visible:focus-ring transition-transform active:scale-[0.98]'
   const content = (
     <>
       <Media alt="" className="aspect-[4/3] rounded-3xl" photo={photo}>
@@ -97,7 +103,10 @@ export const ListingCard = memo(function ListingCard({
           </Chip>
         )}
         <span className="pill absolute start-2.5 bottom-2.5 rounded-full px-3 py-1 text-sm">
-          <span className="text-muted">{fromLabel} </span>
+          <span className="text-muted">
+            {fromLabel}
+            {' '}
+          </span>
           <span className="font-semibold tabular-nums">{price}</span>
         </span>
       </Media>
@@ -114,38 +123,44 @@ export const ListingCard = memo(function ListingCard({
               {rating.value}
             </span>
             <span aria-hidden className="text-muted tabular-nums">
-              ({rating.count})
+              (
+              {rating.count}
+              )
             </span>
           </p>
         )}
-        {statusLabel ? (
-          <div className="pt-1">
-            <StatusChip tone="neutral">{statusLabel}</StatusChip>
-          </div>
-        ) : (
-          <p className="flex items-start gap-1.5 text-label text-muted">
-            <ClockIcon className="mt-0.5 shrink-0" size={14} />
-            {metadata}
-          </p>
-        )}
+        {statusLabel
+          ? (
+              <div className="pt-1">
+                <StatusChip tone="neutral">{statusLabel}</StatusChip>
+              </div>
+            )
+          : (
+              <p className="flex items-start gap-1.5 text-label text-muted">
+                <ClockIcon className="mt-0.5 shrink-0" size={14} />
+                {metadata}
+              </p>
+            )}
         {supplementaryMetadata}
       </div>
     </>
-  );
+  )
 
   return (
     <div
-      className={`relative ${layout === "carousel" ? "w-60 shrink-0 snap-start" : "h-full"}`}
+      className={`relative ${layout === 'carousel' ? 'w-60 shrink-0 snap-start' : 'h-full'}`}
     >
-      {disabled ? (
-        <div aria-disabled="true" className={contentClass}>
-          {content}
-        </div>
-      ) : (
-        <Link className={contentClass} params={{ slug }} to={to}>
-          {content}
-        </Link>
-      )}
+      {disabled
+        ? (
+            <div aria-disabled="true" className={contentClass}>
+              {content}
+            </div>
+          )
+        : (
+            <Link className={contentClass} params={{ slug }} to={to}>
+              {content}
+            </Link>
+          )}
 
       {favourite && (
         <ToggleButton
@@ -158,10 +173,10 @@ export const ListingCard = memo(function ListingCard({
         >
           <FavouriteIcon
             size={22}
-            weight={favourite.isSaved ? "Filled" : "Outline"}
+            weight={favourite.isSaved ? 'Filled' : 'Outline'}
           />
         </ToggleButton>
       )}
     </div>
-  );
-}, sameListing);
+  )
+}, sameListing)

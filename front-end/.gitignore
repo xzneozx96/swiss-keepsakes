@@ -22,3 +22,9 @@ dist-ssr
 *.sln
 *.sw?
 
+
+# Playwright output
+test-results/
+playwright-report/
+playwright-results.xml
+blob-report/

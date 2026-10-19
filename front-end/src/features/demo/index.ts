@@ -1,3 +1,4 @@
+export { PrototypeBar } from './components/prototype-bar'
 export {
   DemoProvider,
   useDemo,
@@ -5,6 +6,5 @@ export {
   useDemoNow,
   useDemoSelector,
   useStorageFull,
-} from "./demo-store";
-export { PrototypeBar } from "./components/prototype-bar";
-export type { Role } from "./types";
+} from './demo-store'
+export type { Role } from './types'

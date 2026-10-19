@@ -1,9 +1,9 @@
+import type { CalendarDate, Time } from '@internationalized/date'
 import type {
   Departure,
   Tour,
   TourPaymentPolicy,
-} from "@/features/tours/types";
-import type { CalendarDate, Time } from "@internationalized/date";
+} from '@/features/tours/types'
 
 import {
   Button,
@@ -18,57 +18,57 @@ import {
   RadioGroup,
   TimeField,
   toast,
-} from "@heroui/react";
+} from '@heroui/react'
 import {
   CalendarDateTime,
   parseDate,
   parseTime,
   toZoned,
-} from "@internationalized/date";
-import { useState } from "react";
+} from '@internationalized/date'
+import { useState } from 'react'
 
-import { useDepartureActions } from "../hooks/use-tour-editor";
+import { SheetFrame } from '@/components/sheet-frame'
 
-import { useLocale } from "@/contexts/locale-context";
-import { zurichDate } from "@/features/catalog/lib/pickup";
-import { SheetFrame } from "@/components/sheet-frame";
-import { useTourFormatting } from "@/features/tours/merchant/shared";
-import { dateTimeFormat } from "@/lib/format";
+import { useLocale } from '@/contexts/locale-context'
+import { zurichDate } from '@/features/catalog/lib/pickup'
+import { useTourFormatting } from '@/features/tours/merchant/shared'
+import { dateTimeFormat } from '@/lib/format'
+import { useDepartureActions } from '../hooks/use-tour-editor'
 
-const ZONE = "Europe/Zurich";
+const ZONE = 'Europe/Zurich'
 
 /** Same choice card as M08 and the M04 sheets: ink frame when selected. */
-const choiceCard =
-  "rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground";
+const choiceCard
+  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
-const policies: TourPaymentPolicy[] = ["full", "deposit", "later"];
+const policies: TourPaymentPolicy[] = ['full', 'deposit', 'later']
 
 /** Zurich wall-clock time as an ISO instant; the offset follows summer time (ends 25.10.2026). */
 function zurichInstant(date: CalendarDate, hour: number, minute: number) {
   return toZoned(
     new CalendarDateTime(date.year, date.month, date.day, hour, minute),
     ZONE,
-  ).toAbsoluteString();
+  ).toAbsoluteString()
 }
 
 /** "Price per person: Adults CHF 89.00 · Children CHF 45.00." with the tour's prices. */
 function PriceNote({ tour }: { tour: Tour }) {
-  const { t } = useLocale();
-  const { money } = useTourFormatting();
+  const { t } = useLocale()
+  const { money } = useTourFormatting()
 
   return (
     <div className="flex flex-col gap-1 rounded-2xl bg-surface-secondary p-3 text-sm">
       <p className="tabular-nums">
-        {t("products.departure.prices", {
-          prices: t("products.departures.price", {
+        {t('products.departure.prices', {
+          prices: t('products.departures.price', {
             adult: money(tour.adultPrice),
             child: money(tour.childPrice),
           }),
         })}
       </p>
-      <p className="text-xs text-muted">{t("products.departure.pricesHelp")}</p>
+      <p className="text-xs text-muted">{t('products.departure.pricesHelp')}</p>
     </div>
-  );
+  )
 }
 
 /**
@@ -83,60 +83,60 @@ export function NewDepartureSheet({
   now,
   onClose,
 }: {
-  tour: Tour;
-  departures: Departure[];
-  now: Date;
-  onClose: () => void;
+  tour: Tour
+  departures: Departure[]
+  now: Date
+  onClose: () => void
 }) {
-  const { t } = useLocale();
-  const { add } = useDepartureActions();
+  const { t } = useLocale()
+  const { add } = useDepartureActions()
   const latest = [...departures]
-    .filter((d) => d.tourId === tour.id)
-    .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt))[0];
-  const today = parseDate(zurichDate(now));
-  const [date, setDate] = useState<CalendarDate | null>(null);
+    .filter(d => d.tourId === tour.id)
+    .sort((a, b) => Date.parse(b.startsAt) - Date.parse(a.startsAt))[0]
+  const today = parseDate(zurichDate(now))
+  const [date, setDate] = useState<CalendarDate | null>(null)
   const [time, setTime] = useState<Time>(() =>
     parseTime(
       latest
-        ? dateTimeFormat("en-GB", {
+        ? dateTimeFormat('en-GB', {
             timeZone: ZONE,
-            hour: "2-digit",
-            minute: "2-digit",
-            hourCycle: "h23",
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23',
           }).format(new Date(latest.startsAt))
-        : "10:00",
+        : '10:00',
     ),
-  );
-  const [capacity, setCapacity] = useState(latest?.capacity ?? 12);
+  )
+  const [capacity, setCapacity] = useState(latest?.capacity ?? 12)
   const [policy, setPolicy] = useState<TourPaymentPolicy>(
-    latest?.policy ?? "full",
-  );
-  const [tried, setTried] = useState(false);
+    latest?.policy ?? 'full',
+  )
+  const [tried, setTried] = useState(false)
 
-  const startsAt = date ? zurichInstant(date, time.hour, time.minute) : null;
+  const startsAt = date ? zurichInstant(date, time.hour, time.minute) : null
   const errors = {
     date: !date
-      ? t("products.departure.dateError")
+      ? t('products.departure.dateError')
       : startsAt && Date.parse(startsAt) <= now.getTime()
-        ? t("products.departure.past")
+        ? t('products.departure.past')
         : undefined,
     capacity:
       Number.isInteger(capacity) && capacity >= 1 && capacity <= 200
         ? undefined
-        : t("products.range", { min: 1, max: 200 }),
-  };
+        : t('products.range', { min: 1, max: 200 }),
+  }
 
   const save = () => {
     if (!date || !startsAt || errors.date || errors.capacity) {
-      setTried(true);
+      setTried(true)
 
-      return;
+      return
     }
-    const dayBefore = zurichInstant(date.subtract({ days: 1 }), 18, 0);
-    const balanceDueAt =
-      policy === "full" || Date.parse(dayBefore) <= now.getTime()
+    const dayBefore = zurichInstant(date.subtract({ days: 1 }), 18, 0)
+    const balanceDueAt
+      = policy === 'full' || Date.parse(dayBefore) <= now.getTime()
         ? startsAt
-        : dayBefore;
+        : dayBefore
 
     add({
       id: `${tour.id}-${Date.now().toString(36)}`,
@@ -146,25 +146,25 @@ export function NewDepartureSheet({
       policy,
       balanceDueAt,
       closed: false,
-    });
-    toast.success(t("products.departure.added"));
-    onClose();
-  };
+    })
+    toast.success(t('products.departure.added'))
+    onClose()
+  }
 
   return (
     <SheetFrame
       isOpen
-      footer={
+      footer={(
         <>
           <Button fullWidth onPress={save}>
-            {t("products.departure.add")}
+            {t('products.departure.add')}
           </Button>
           <Button fullWidth variant="tertiary" onPress={onClose}>
-            {t("merchantOrder.sheet.back")}
+            {t('merchantOrder.sheet.back')}
           </Button>
         </>
-      }
-      title={t("products.departure.newTitle")}
+      )}
+      title={t('products.departure.newTitle')}
       onClose={onClose}
     >
       <DatePicker
@@ -174,20 +174,20 @@ export function NewDepartureSheet({
         value={date}
         onChange={setDate}
       >
-        <Label className="text-heading">{t("products.departure.date")}</Label>
+        <Label className="text-heading">{t('products.departure.date')}</Label>
         <DateField.Group fullWidth>
           <DateField.Input>
-            {(segment) => <DateField.Segment segment={segment} />}
+            {segment => <DateField.Segment segment={segment} />}
           </DateField.Input>
           <DateField.Suffix>
-            <DatePicker.Trigger aria-label={t("products.departure.datePick")}>
+            <DatePicker.Trigger aria-label={t('products.departure.datePick')}>
               <DatePicker.TriggerIndicator />
             </DatePicker.Trigger>
           </DateField.Suffix>
         </DateField.Group>
         <FieldError>{errors.date}</FieldError>
         <DatePicker.Popover>
-          <Calendar aria-label={t("products.departure.date")} minValue={today}>
+          <Calendar aria-label={t('products.departure.date')} minValue={today}>
             <Calendar.Header>
               <Calendar.Heading />
               <Calendar.NavButton slot="previous" />
@@ -195,10 +195,10 @@ export function NewDepartureSheet({
             </Calendar.Header>
             <Calendar.Grid>
               <Calendar.GridHeader>
-                {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
+                {day => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
               </Calendar.GridHeader>
               <Calendar.GridBody>
-                {(day) => <Calendar.Cell date={day} />}
+                {day => <Calendar.Cell date={day} />}
               </Calendar.GridBody>
             </Calendar.Grid>
           </Calendar>
@@ -209,12 +209,12 @@ export function NewDepartureSheet({
         fullWidth
         hourCycle={24}
         value={time}
-        onChange={(v) => v && setTime(v)}
+        onChange={v => v && setTime(v)}
       >
-        <Label className="text-heading">{t("products.departure.time")}</Label>
+        <Label className="text-heading">{t('products.departure.time')}</Label>
         <TimeField.Group>
           <TimeField.Input>
-            {(segment) => <TimeField.Segment segment={segment} />}
+            {segment => <TimeField.Segment segment={segment} />}
           </TimeField.Input>
         </TimeField.Group>
       </TimeField>
@@ -228,7 +228,7 @@ export function NewDepartureSheet({
         value={capacity}
         onChange={setCapacity}
       >
-        <Label className="text-heading">{t("products.departure.seats")}</Label>
+        <Label className="text-heading">{t('products.departure.seats')}</Label>
         <NumberField.Group>
           <NumberField.Input className="tabular-nums" />
         </NumberField.Group>
@@ -237,12 +237,12 @@ export function NewDepartureSheet({
 
       <RadioGroup
         value={policy}
-        onChange={(v) => setPolicy(v as TourPaymentPolicy)}
+        onChange={v => setPolicy(v as TourPaymentPolicy)}
       >
         <Label className="text-heading">
-          {t("products.departure.payment")}
+          {t('products.departure.payment')}
         </Label>
-        {policies.map((p) => (
+        {policies.map(p => (
           <Radio key={p} className={choiceCard} value={p}>
             <Radio.Content>
               <Radio.Control>
@@ -261,7 +261,7 @@ export function NewDepartureSheet({
 
       <PriceNote tour={tour} />
     </SheetFrame>
-  );
+  )
 }
 
 /**
@@ -273,57 +273,57 @@ export function SeatsSheet({
   seats,
   onClose,
 }: {
-  departure: Departure;
-  seats: { confirmed: number; held: number; available: number };
-  onClose: () => void;
+  departure: Departure
+  seats: { confirmed: number, held: number, available: number }
+  onClose: () => void
 }) {
-  const { t } = useLocale();
-  const { date } = useTourFormatting();
-  const { setCapacity } = useDepartureActions();
-  const [capacity, setValue] = useState(departure.capacity);
-  const [tried, setTried] = useState(false);
-  const taken = seats.confirmed + seats.held;
-  const error =
-    !Number.isInteger(capacity) || capacity < 1 || capacity > 200
-      ? t("products.range", { min: 1, max: 200 })
+  const { t } = useLocale()
+  const { date } = useTourFormatting()
+  const { setCapacity: saveCapacity } = useDepartureActions()
+  const [capacity, setCapacity] = useState(departure.capacity)
+  const [tried, setTried] = useState(false)
+  const taken = seats.confirmed + seats.held
+  const error
+    = !Number.isInteger(capacity) || capacity < 1 || capacity > 200
+      ? t('products.range', { min: 1, max: 200 })
       : capacity < taken
-        ? t("products.departure.belowTaken", { taken })
-        : undefined;
+        ? t('products.departure.belowTaken', { taken })
+        : undefined
 
   const save = () => {
     if (error) {
-      setTried(true);
+      setTried(true)
 
-      return;
+      return
     }
-    setCapacity(departure.id, capacity);
-    toast.success(t("products.departure.updated"));
-    onClose();
-  };
+    saveCapacity(departure.id, capacity)
+    toast.success(t('products.departure.updated'))
+    onClose()
+  }
 
   return (
     <SheetFrame
       isOpen
-      footer={
+      footer={(
         <>
           <Button fullWidth onPress={save}>
-            {t("products.departure.saveSeats")}
+            {t('products.departure.saveSeats')}
           </Button>
           <Button fullWidth variant="tertiary" onPress={onClose}>
-            {t("merchantOrder.sheet.back")}
+            {t('merchantOrder.sheet.back')}
           </Button>
         </>
-      }
-      title={t("products.departure.seatsTitle")}
+      )}
+      title={t('products.departure.seatsTitle')}
       onClose={onClose}
     >
       <div className="flex flex-col gap-3">
         <p className="font-medium tabular-nums">{date(departure.startsAt)}</p>
         <dl className="flex flex-col gap-2 rounded-2xl bg-surface-secondary p-3 text-sm">
           {[
-            [t("tourMerchant.booked"), seats.confirmed],
-            [t("tourMerchant.holds"), seats.held],
-            [t("tourMerchant.available"), seats.available],
+            [t('tourMerchant.booked'), seats.confirmed],
+            [t('tourMerchant.holds'), seats.held],
+            [t('tourMerchant.available'), seats.available],
           ].map(([label, value]) => (
             <div
               key={label}
@@ -342,15 +342,15 @@ export function SeatsSheet({
         maxValue={200}
         minValue={1}
         value={capacity}
-        onChange={setValue}
+        onChange={setCapacity}
       >
-        <Label className="text-heading">{t("products.departure.seats")}</Label>
+        <Label className="text-heading">{t('products.departure.seats')}</Label>
         <NumberField.Group>
           <NumberField.Input className="tabular-nums" />
         </NumberField.Group>
-        <Description>{t("products.departure.taken", { taken })}</Description>
+        <Description>{t('products.departure.taken', { taken })}</Description>
         <FieldError>{error}</FieldError>
       </NumberField>
     </SheetFrame>
-  );
+  )
 }

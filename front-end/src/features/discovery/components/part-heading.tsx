@@ -1,8 +1,8 @@
-import type { LinkProps } from "@tanstack/react-router";
+import type { LinkProps } from '@tanstack/react-router'
 
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router'
 
-import { ChevronRightIcon } from "@/components/icons";
+import { ChevronRightIcon } from '@/components/icons'
 
 /**
  * Heading of one home part (owner, 17.10.2026): a short label in the step's colour (the
@@ -16,12 +16,12 @@ export function PartHeading({
   subtitle,
   seeAll,
 }: {
-  id: string;
-  eyebrow: string;
-  color: string;
-  title: string;
-  subtitle: string;
-  seeAll?: { label: string; to: LinkProps["to"] };
+  id: string
+  eyebrow: string
+  color: string
+  title: string
+  subtitle: string
+  seeAll?: { label: string, to: LinkProps['to'] }
 }) {
   return (
     <div className="flex items-end justify-between gap-4">
@@ -47,5 +47,5 @@ export function PartHeading({
         </Link>
       )}
     </div>
-  );
+  )
 }

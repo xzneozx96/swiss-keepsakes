@@ -3,87 +3,87 @@
  * paper, a shop owner who writes back). Compared on #/lab/advice. Copy rules (spec §4.10):
  * no "AI", no promised reply time; the shop replies by email.
  */
-import { ArrowRightIcon } from "@/components/icons";
-import { Media } from "@/components/media";
+import { ArrowRightIcon } from '@/components/icons'
+import { Media } from '@/components/media'
 
 export interface AdviceV2Props {
-  language: "en" | "de";
-  ownerName: string;
+  language: 'en' | 'de'
+  ownerName: string
 }
 
 const copy = {
   en: {
-    postcardTo: "To: you, somewhere in Luzerne",
+    postcardTo: 'To: you, somewhere in Luzerne',
     postcardNote:
-      "Tell me how long you are staying and what you like. I will write back with a few ideas for your days here.",
-    postcardSign: "Sonja, from the shop in the old town",
-    postcardAction: "Write to the shop",
-    stamp: "LUZERN",
-    ticketTitle: "Your days in Luzerne",
-    ticketFrom: "From",
-    ticketTo: "To",
-    ticketArrive: "Arrive",
-    ticketLeave: "Leave",
-    ticketInterests: "You like",
-    ticketBlank: "—",
-    ticketAction: "Fill in with the shop",
-    ticketFoot: "The shop replies by email",
-    questionKicker: "Question 1 of 7 · from the shop",
-    question: "How long are you in Luzerne?",
-    answers: ["A few hours", "1–2 days", "3 days or more", "Not sure yet"],
-    questionFoot: "Answer a few short questions; the shop replies by email.",
-    mapTitle: "Your route, drawn by a local",
+      'Tell me how long you are staying and what you like. I will write back with a few ideas for your days here.',
+    postcardSign: 'Sonja, from the shop in the old town',
+    postcardAction: 'Write to the shop',
+    stamp: 'LUZERN',
+    ticketTitle: 'Your days in Luzerne',
+    ticketFrom: 'From',
+    ticketTo: 'To',
+    ticketArrive: 'Arrive',
+    ticketLeave: 'Leave',
+    ticketInterests: 'You like',
+    ticketBlank: '—',
+    ticketAction: 'Fill in with the shop',
+    ticketFoot: 'The shop replies by email',
+    questionKicker: 'Question 1 of 7 · from the shop',
+    question: 'How long are you in Luzerne?',
+    answers: ['A few hours', '1–2 days', '3 days or more', 'Not sure yet'],
+    questionFoot: 'Answer a few short questions; the shop replies by email.',
+    mapTitle: 'Your route, drawn by a local',
     mapBody:
-      "Tell the shop what you like. You get a short list of places, walks and gifts by email.",
-    mapAction: "Start",
-    pins: ["Old town", "Lake", "Pilatus"],
-    polaroidTitle: "Not sure where to start?",
+      'Tell the shop what you like. You get a short list of places, walks and gifts by email.',
+    mapAction: 'Start',
+    pins: ['Old town', 'Lake', 'Pilatus'],
+    polaroidTitle: 'Not sure where to start?',
     polaroidBody:
-      "The shop has lived here for years. Ask, and get a few personal tips by email.",
-    polaroidAction: "Ask Sonja",
-    captions: ["the lake", "Pilatus", "old town"],
+      'The shop has lived here for years. Ask, and get a few personal tips by email.',
+    polaroidAction: 'Ask Sonja',
+    captions: ['the lake', 'Pilatus', 'old town'],
   },
   de: {
-    postcardTo: "An: Sie, irgendwo in Luzern",
+    postcardTo: 'An: Sie, irgendwo in Luzern',
     postcardNote:
-      "Erzählen Sie mir, wie lange Sie bleiben und was Ihnen gefällt. Ich schreibe Ihnen ein paar Ideen für Ihre Tage hier.",
-    postcardSign: "Sonja, vom Laden in der Altstadt",
-    postcardAction: "Dem Laden schreiben",
-    stamp: "LUZERN",
-    ticketTitle: "Ihre Tage in Luzern",
-    ticketFrom: "Von",
-    ticketTo: "Nach",
-    ticketArrive: "Ankunft",
-    ticketLeave: "Abreise",
-    ticketInterests: "Sie mögen",
-    ticketBlank: "—",
-    ticketAction: "Mit dem Laden ausfüllen",
-    ticketFoot: "Der Laden antwortet per E-Mail",
-    questionKicker: "Frage 1 von 7 · vom Laden",
-    question: "Wie lange sind Sie in Luzern?",
+      'Erzählen Sie mir, wie lange Sie bleiben und was Ihnen gefällt. Ich schreibe Ihnen ein paar Ideen für Ihre Tage hier.',
+    postcardSign: 'Sonja, vom Laden in der Altstadt',
+    postcardAction: 'Dem Laden schreiben',
+    stamp: 'LUZERN',
+    ticketTitle: 'Ihre Tage in Luzern',
+    ticketFrom: 'Von',
+    ticketTo: 'Nach',
+    ticketArrive: 'Ankunft',
+    ticketLeave: 'Abreise',
+    ticketInterests: 'Sie mögen',
+    ticketBlank: '—',
+    ticketAction: 'Mit dem Laden ausfüllen',
+    ticketFoot: 'Der Laden antwortet per E-Mail',
+    questionKicker: 'Frage 1 von 7 · vom Laden',
+    question: 'Wie lange sind Sie in Luzern?',
     answers: [
-      "Ein paar Stunden",
-      "1–2 Tage",
-      "3 Tage oder mehr",
-      "Noch unklar",
+      'Ein paar Stunden',
+      '1–2 Tage',
+      '3 Tage oder mehr',
+      'Noch unklar',
     ],
-    questionFoot: "Ein paar kurze Fragen; der Laden antwortet per E-Mail.",
-    mapTitle: "Ihre Route, von hier gezeichnet",
+    questionFoot: 'Ein paar kurze Fragen; der Laden antwortet per E-Mail.',
+    mapTitle: 'Ihre Route, von hier gezeichnet',
     mapBody:
-      "Sagen Sie dem Laden, was Ihnen gefällt. Sie erhalten per E-Mail eine kurze Liste mit Orten, Spaziergängen und Geschenken.",
-    mapAction: "Starten",
-    pins: ["Altstadt", "See", "Pilatus"],
-    polaroidTitle: "Wissen Sie nicht, wo anfangen?",
+      'Sagen Sie dem Laden, was Ihnen gefällt. Sie erhalten per E-Mail eine kurze Liste mit Orten, Spaziergängen und Geschenken.',
+    mapAction: 'Starten',
+    pins: ['Altstadt', 'See', 'Pilatus'],
+    polaroidTitle: 'Wissen Sie nicht, wo anfangen?',
     polaroidBody:
-      "Der Laden ist seit Jahren hier. Fragen Sie und erhalten Sie persönliche Tipps per E-Mail.",
-    polaroidAction: "Sonja fragen",
-    captions: ["der See", "Pilatus", "Altstadt"],
+      'Der Laden ist seit Jahren hier. Fragen Sie und erhalten Sie persönliche Tipps per E-Mail.',
+    polaroidAction: 'Sonja fragen',
+    captions: ['der See', 'Pilatus', 'Altstadt'],
   },
-};
+}
 
 /** F · Postcard: the CTA is a postcard from the owner, with a photo stamp and a postmark. */
 export function AdvicePostcard({ language }: AdviceV2Props) {
-  const c = copy[language];
+  const c = copy[language]
 
   return (
     <section className="relative rotate-[-1.2deg] rounded-xl bg-[#fffdf7] p-5 shadow-overlay">
@@ -123,12 +123,12 @@ export function AdvicePostcard({ language }: AdviceV2Props) {
         <ArrowRightIcon size={16} />
       </span>
     </section>
-  );
+  )
 }
 
 /** G · Travel ticket: a boat/train ticket with blanks to fill and a tear-off stub. */
 export function AdviceTicket({ language }: AdviceV2Props) {
-  const c = copy[language];
+  const c = copy[language]
 
   return (
     <section className="relative flex overflow-hidden rounded-2xl bg-surface shadow-overlay">
@@ -155,7 +155,7 @@ export function AdviceTicket({ language }: AdviceV2Props) {
           </div>
         </div>
         <dl className="grid grid-cols-3 gap-2 text-xs">
-          {[c.ticketArrive, c.ticketLeave, c.ticketInterests].map((label) => (
+          {[c.ticketArrive, c.ticketLeave, c.ticketInterests].map(label => (
             <div key={label} className="flex flex-col gap-1">
               <dt className="text-[10px] text-muted uppercase">{label}</dt>
               <dd className="border-b border-dotted border-muted/60 pb-1 text-muted">
@@ -177,12 +177,12 @@ export function AdviceTicket({ language }: AdviceV2Props) {
         </span>
       </div>
     </section>
-  );
+  )
 }
 
 /** H · First question inline: the questionnaire starts right here; one tap answers question 1. */
 export function AdviceFirstQuestion({ language, ownerName }: AdviceV2Props) {
-  const c = copy[language];
+  const c = copy[language]
 
   return (
     <section className="flex flex-col gap-4 rounded-3xl bg-foreground p-5 text-background">
@@ -196,7 +196,7 @@ export function AdviceFirstQuestion({ language, ownerName }: AdviceV2Props) {
       </div>
       <h2 className="font-serif text-title">{c.question}</h2>
       <div className="grid grid-cols-2 gap-2">
-        {c.answers.map((a) => (
+        {c.answers.map(a => (
           <span
             key={a}
             className="flex h-12 items-center justify-center rounded-2xl bg-background/10 px-3 text-center text-sm font-medium"
@@ -210,23 +210,23 @@ export function AdviceFirstQuestion({ language, ownerName }: AdviceV2Props) {
         {Array.from({ length: 7 }, (_, i) => (
           <span
             key={i}
-            className={`h-1 flex-1 rounded-full ${i === 0 ? "bg-background" : "bg-background/20"}`}
+            className={`h-1 flex-1 rounded-full ${i === 0 ? 'bg-background' : 'bg-background/20'}`}
           />
         ))}
       </div>
       <p className="text-label text-background/70">{c.questionFoot}</p>
     </section>
-  );
+  )
 }
 
 /** I · Route sketch: three photo pins on a dashed route over a lake-blue ground. */
 export function AdviceRouteSketch({ language }: AdviceV2Props) {
-  const c = copy[language];
+  const c = copy[language]
   const pins = [
-    { photo: "lucerne-old-town", x: "12%", y: "18%" },
-    { photo: "lake-steamboat", x: "46%", y: "50%" },
-    { photo: "pilatus", x: "76%", y: "14%" },
-  ];
+    { photo: 'lucerne-old-town', x: '12%', y: '18%' },
+    { photo: 'lake-steamboat', x: '46%', y: '50%' },
+    { photo: 'pilatus', x: '76%', y: '14%' },
+  ]
 
   return (
     <section className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface">
@@ -274,22 +274,22 @@ export function AdviceRouteSketch({ language }: AdviceV2Props) {
         </span>
       </div>
     </section>
-  );
+  )
 }
 
 /** J · Polaroid stack: three tilted snapshots with handwritten-style captions. */
 export function AdvicePolaroids({ language }: AdviceV2Props) {
-  const c = copy[language];
+  const c = copy[language]
   const shots = [
-    { photo: "lake-steamboat", tilt: "-rotate-6", z: "z-0", x: "start-2" },
-    { photo: "pilatus", tilt: "rotate-3", z: "z-10", x: "start-[30%]" },
+    { photo: 'lake-steamboat', tilt: '-rotate-6', z: 'z-0', x: 'start-2' },
+    { photo: 'pilatus', tilt: 'rotate-3', z: 'z-10', x: 'start-[30%]' },
     {
-      photo: "lucerne-old-town",
-      tilt: "-rotate-2",
-      z: "z-20",
-      x: "start-[58%]",
+      photo: 'lucerne-old-town',
+      tilt: '-rotate-2',
+      z: 'z-20',
+      x: 'start-[58%]',
     },
-  ];
+  ]
 
   return (
     <section className="flex flex-col gap-5 rounded-3xl bg-hero-cream px-5 pt-6 pb-5">
@@ -315,5 +315,5 @@ export function AdvicePolaroids({ language }: AdviceV2Props) {
         <ArrowRightIcon size={16} />
       </span>
     </section>
-  );
+  )
 }

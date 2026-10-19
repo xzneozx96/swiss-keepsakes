@@ -1,6 +1,6 @@
-import type { IconComponent } from "@/components/icons";
-import type { Language } from "@/contexts/locale-context";
-import type { MessageKey } from "@/i18n/en";
+import type { IconComponent } from '@/components/icons'
+import type { Language } from '@/contexts/locale-context'
+import type { MessageKey } from '@/i18n/en'
 
 import {
   Button,
@@ -10,20 +10,20 @@ import {
   Label,
   TextArea,
   TextField,
-} from "@heroui/react";
-import { useId } from "react";
+} from '@heroui/react'
+import { useId } from 'react'
 
 import {
   ChevronDownIcon,
   StatusDangerIcon,
   TrashIcon,
-} from "@/components/icons";
-import { Media } from "@/components/media";
-import { useLocale } from "@/contexts/locale-context";
+} from '@/components/icons'
+import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 
 /** Marks a custom control with an error, so the editor can move focus to the first one. */
-export const ERROR_SELECTOR =
-  'input[aria-invalid="true"], textarea[aria-invalid="true"], [data-error="true"]';
+export const ERROR_SELECTOR
+  = 'input[aria-invalid="true"], textarea[aria-invalid="true"], [data-error="true"]'
 
 /** One text field of the M17 editor, with its inline error after a save attempt. */
 export function Field({
@@ -35,25 +35,25 @@ export function Field({
   rows,
   lang,
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  error?: MessageKey;
-  description?: string;
+  label: string
+  value: string
+  onChange: (value: string) => void
+  error?: MessageKey
+  description?: string
   /** Multi-line when set. */
-  rows?: number;
-  lang?: Language;
+  rows?: number
+  lang?: Language
 }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <TextField fullWidth isInvalid={!!error} value={value} onChange={onChange}>
       <Label>{label}</Label>
       {rows ? <TextArea lang={lang} rows={rows} /> : <Input lang={lang} />}
       {description && <Description>{description}</Description>}
-      <FieldError>{error ? t(error) : ""}</FieldError>
+      <FieldError>{error ? t(error) : ''}</FieldError>
     </TextField>
-  );
+  )
 }
 
 /** A photo or recording chosen from the library: a preview, the choose button, the error. */
@@ -67,25 +67,25 @@ export function PickerField({
   error,
   onChoose,
 }: {
-  label: string;
+  label: string
   /** Photo preview; omitted for audio. */
-  photo?: string;
+  photo?: string
   /** The chosen file, shown as text (audio) or under the preview. */
-  fileName?: string;
-  emptyLabel: string;
-  chooseLabel: string;
-  changeLabel: string;
-  error?: MessageKey;
-  onChoose: () => void;
+  fileName?: string
+  emptyLabel: string
+  chooseLabel: string
+  changeLabel: string
+  error?: MessageKey
+  onChoose: () => void
 }) {
-  const { t } = useLocale();
-  const id = useId();
-  const chosen = photo ?? fileName;
+  const { t } = useLocale()
+  const id = useId()
+  const chosen = photo ?? fileName
 
   return (
     <div className="flex flex-col gap-2" data-error={error ? true : undefined}>
       <span
-        className={`text-sm font-medium ${error ? "text-danger" : ""}`}
+        className={`text-sm font-medium ${error ? 'text-danger' : ''}`}
         id={`${id}-label`}
       >
         {label}
@@ -123,7 +123,7 @@ export function PickerField({
         </p>
       )}
     </div>
-  );
+  )
 }
 
 /** Small ink icon button for move and remove. */
@@ -135,13 +135,13 @@ export function IconAction({
   buttonProps,
   onPress,
 }: {
-  label: string;
-  icon: IconComponent;
-  isDisabled?: boolean;
-  className?: string;
+  label: string
+  icon: IconComponent
+  isDisabled?: boolean
+  className?: string
   /** Extra class (a tone, a taller hit area) and data attribute for the button itself. */
-  buttonProps?: { className?: string; "data-move"?: "up" | "down" };
-  onPress: () => void;
+  buttonProps?: { 'className'?: string, 'data-move'?: 'up' | 'down' }
+  onPress: () => void
 }) {
   return (
     <Button
@@ -155,7 +155,7 @@ export function IconAction({
     >
       <Icon aria-hidden className={className} size={18} />
     </Button>
-  );
+  )
 }
 
 /** Up, down and remove for one item of an ordered list (sections, blocks, links, stories). */
@@ -166,13 +166,13 @@ export function OrderActions({
   onMove,
   onRemove,
 }: {
-  name: string;
-  index: number;
-  count: number;
-  onMove: (by: -1 | 1) => void;
-  onRemove: () => void;
+  name: string
+  index: number
+  count: number
+  onMove: (by: -1 | 1) => void
+  onRemove: () => void
 }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <div className="flex shrink-0 items-center">
@@ -180,20 +180,20 @@ export function OrderActions({
         className="rotate-180"
         icon={ChevronDownIcon}
         isDisabled={index === 0}
-        label={t("merchantArticles.moveUp", { name })}
+        label={t('merchantArticles.moveUp', { name })}
         onPress={() => onMove(-1)}
       />
       <IconAction
         icon={ChevronDownIcon}
         isDisabled={index === count - 1}
-        label={t("merchantArticles.moveDown", { name })}
+        label={t('merchantArticles.moveDown', { name })}
         onPress={() => onMove(1)}
       />
       <IconAction
         icon={TrashIcon}
-        label={t("merchantArticles.remove", { name })}
+        label={t('merchantArticles.remove', { name })}
         onPress={onRemove}
       />
     </div>
-  );
+  )
 }

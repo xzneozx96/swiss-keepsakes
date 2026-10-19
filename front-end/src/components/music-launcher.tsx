@@ -1,12 +1,12 @@
-import { useEffect } from "react";
+import { useEffect } from 'react'
 
 import {
   getMusic,
   setMusic,
   useMusic,
-} from "@/components/background-music-store";
-import { MusicIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
+} from '@/components/background-music-store'
+import { MusicIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
 
 /**
  * Round trigger that opens the music player sheet. Stacked on the trip assistant button
@@ -15,22 +15,23 @@ import { useLocale } from "@/contexts/locale-context";
  * there is nothing to animate and nothing for prefers-reduced-motion to switch off.
  */
 export function MusicLauncher({ stacked = false }: { stacked?: boolean }) {
-  const { t } = useLocale();
-  const { playing, sheetOpen } = useMusic();
+  const { t } = useLocale()
+  const { playing, sheetOpen } = useMusic()
 
   useEffect(() => {
-    if (!stacked) return;
-    setMusic({ stacked: getMusic().stacked + 1 });
+    if (!stacked)
+      return
+    setMusic({ stacked: getMusic().stacked + 1 })
 
-    return () => setMusic({ stacked: getMusic().stacked - 1 });
-  }, [stacked]);
+    return () => setMusic({ stacked: getMusic().stacked - 1 })
+  }, [stacked])
 
   return (
     <button
       data-music-ui
       aria-expanded={sheetOpen}
       aria-haspopup="dialog"
-      aria-label={t("music.title")}
+      aria-label={t('music.title')}
       className="pointer-events-auto mr-1 flex size-12 items-center justify-center rounded-full bg-foreground text-background shadow-overlay outline-none transition-transform focus-visible:focus-ring active:scale-95"
       type="button"
       onClick={() => setMusic({ sheetOpen: true })}
@@ -38,8 +39,8 @@ export function MusicLauncher({ stacked = false }: { stacked?: boolean }) {
       <MusicIcon
         aria-hidden
         size={22}
-        weight={playing ? "Filled" : "Outline"}
+        weight={playing ? 'Filled' : 'Outline'}
       />
     </button>
-  );
+  )
 }

@@ -1,14 +1,14 @@
-import { Laurel, Stars } from "@/components/rating";
+import { Laurel, Stars } from '@/components/rating'
 
 export interface ReviewSummaryProps {
-  average: number;
+  average: number
   /** "4.5" in the locale's number format. */
-  averageText: string;
-  averageLabel: string;
+  averageText: string
+  averageLabel: string
   /** "2 reviews". */
-  countLabel: string;
+  countLabel: string
   /** Laurel badge (Airbnb "Guest favorite") when earned. */
-  favourite?: { title: string; body: string };
+  favourite?: { title: string, body: string }
 }
 
 /**
@@ -32,19 +32,21 @@ export function ReviewSummary({
         </span>
         <Laurel className="h-[88px] w-10" side="end" />
       </div>
-      {favourite ? (
-        <>
-          <span className="text-[22px] leading-7 font-semibold">
-            {favourite.title}
-          </span>
-          <span className="max-w-xs text-sm text-muted">{favourite.body}</span>
-        </>
-      ) : (
-        <>
-          <Stars label={averageLabel} rating={average} size={14} />
-          <span className="text-sm text-muted">{countLabel}</span>
-        </>
-      )}
+      {favourite
+        ? (
+            <>
+              <span className="text-[22px] leading-7 font-semibold">
+                {favourite.title}
+              </span>
+              <span className="max-w-xs text-sm text-muted">{favourite.body}</span>
+            </>
+          )
+        : (
+            <>
+              <Stars label={averageLabel} rating={average} size={14} />
+              <span className="text-sm text-muted">{countLabel}</span>
+            </>
+          )}
     </div>
-  );
+  )
 }

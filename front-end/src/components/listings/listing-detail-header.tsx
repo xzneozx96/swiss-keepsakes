@@ -1,14 +1,14 @@
-import { ToggleButton } from "@heroui/react";
+import { ToggleButton } from '@heroui/react'
 
-import { FavouriteIcon } from "@/components/icons";
-import { Laurel, Stars } from "@/components/rating";
+import { FavouriteIcon } from '@/components/icons'
+import { Laurel, Stars } from '@/components/rating'
 
 export interface ListingDetailStats {
-  primary: { value: string; label: string };
-  rating: { value: string; label: string };
-  ratingValue: number;
-  hasRating: boolean;
-  reviews: { value: string; label: string };
+  primary: { value: string, label: string }
+  rating: { value: string, label: string }
+  ratingValue: number
+  hasRating: boolean
+  reviews: { value: string, label: string }
 }
 
 export function ListingDetailHeader({
@@ -16,9 +16,9 @@ export function ListingDetailHeader({
   subtitle,
   stats,
 }: {
-  name: string;
-  subtitle: string;
-  stats: ListingDetailStats;
+  name: string
+  subtitle: string
+  stats: ListingDetailStats
 }) {
   return (
     <>
@@ -64,32 +64,32 @@ export function ListingDetailHeader({
         </div>
       </dl>
     </>
-  );
+  )
 }
 
 export function ListingFavouriteButton({
   favourite,
   tone,
 }: {
-  favourite: { isSaved: boolean; onToggle: () => void; label: string };
-  tone: "pill" | "bar";
+  favourite: { isSaved: boolean, onToggle: () => void, label: string }
+  tone: 'pill' | 'bar'
 }) {
   return (
     <ToggleButton
       isIconOnly
       aria-label={favourite.label}
       className={
-        tone === "pill"
-          ? "pill size-11 data-[hovered=true]:bg-white data-[pressed=true]:bg-white data-[selected=true]:bg-white/80 data-[selected=true]:text-accent"
-          : "size-11 bg-transparent text-foreground data-[selected=true]:bg-transparent data-[selected=true]:text-accent"
+        tone === 'pill'
+          ? 'pill size-11 data-[hovered=true]:bg-white data-[pressed=true]:bg-white data-[selected=true]:bg-white/80 data-[selected=true]:text-accent'
+          : 'size-11 bg-transparent text-foreground data-[selected=true]:bg-transparent data-[selected=true]:text-accent'
       }
       isSelected={favourite.isSaved}
       onChange={favourite.onToggle}
     >
       <FavouriteIcon
         size={22}
-        weight={favourite.isSaved ? "Filled" : "Outline"}
+        weight={favourite.isSaved ? 'Filled' : 'Outline'}
       />
     </ToggleButton>
-  );
+  )
 }

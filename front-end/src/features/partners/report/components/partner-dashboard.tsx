@@ -1,15 +1,15 @@
-import type { DashRow } from "../hooks/use-partner-dashboard";
+import type { DashRow } from '../hooks/use-partner-dashboard'
 import type {
   PartnerOverviewView,
   SingleFigure,
-} from "../hooks/use-partner-overview";
-import type { SalesPeriodId } from "@/features/merchant/sales/lib/periods";
-import type { DataTableColumn } from "@/components/data-table";
-import type { FilterGroup } from "@/components/filter-bar";
-import type { DayRange } from "@/lib/analytics";
+} from '../hooks/use-partner-overview'
+import type { DataTableColumn } from '@/components/data-table'
+import type { FilterGroup } from '@/components/filter-bar'
+import type { SalesPeriodId } from '@/features/merchant/sales/lib/periods'
+import type { DayRange } from '@/lib/analytics'
 
-import { Skeleton } from "@heroui/react";
-import { useState } from "react";
+import { Skeleton } from '@heroui/react'
+import { useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -19,43 +19,44 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
+} from 'recharts'
 
-import { BalanceHero, MixWidget, MonthsWidget } from "./dashboard-widgets";
-import { PaymentsWidget } from "./payments-widget";
+import { DataTable } from '@/components/data-table'
+import { EmptyState } from '@/components/empty-state'
 
-import { DataTable } from "@/components/data-table";
-import { EmptyState } from "@/components/empty-state";
-import { FilterToolbar, filterGroup } from "@/components/filter-bar";
-import { ReportsIcon } from "@/components/icons";
-import { StatusChip } from "@/components/status-chip";
-import { DeltaChip } from "@/components/stat-card";
-import { useLocale } from "@/contexts/locale-context";
+import { filterGroup, FilterToolbar } from '@/components/filter-bar'
+import { ReportsIcon } from '@/components/icons'
+import { DeltaChip } from '@/components/stat-card'
+import { StatusChip } from '@/components/status-chip'
+import { useLocale } from '@/contexts/locale-context'
 import {
   FigureChart,
-  PeriodPicker,
   noAnimation,
-} from "@/features/merchant/sales/components/sales-overview";
+  PeriodPicker,
+} from '@/features/merchant/sales/components/sales-overview'
 import {
   TooltipCard,
   Widget,
-} from "@/features/merchant/today/components/overview-analytics";
-import { WidgetSkeleton } from "@/features/merchant/today/components/overview-pages";
-import { avatarUrl } from "@/lib/avatars";
-import { numberFormat } from "@/lib/format";
+} from '@/features/merchant/today/components/overview-analytics'
+import { WidgetSkeleton } from '@/features/merchant/today/components/overview-pages'
+import { avatarUrl } from '@/lib/avatars'
+import { numberFormat } from '@/lib/format'
+import { BalanceHero, MixWidget, MonthsWidget } from './dashboard-widgets'
+import { PaymentsWidget } from './payments-widget'
 
-type CommissionFilter = "recorded" | "estimated" | "none";
+type CommissionFilter = 'recorded' | 'estimated' | 'none'
 
-const tick = { fill: "var(--muted)", fontSize: 11 };
+const tick = { fill: 'var(--muted)', fontSize: 11 }
 /** Paid out and still owed are one amount per bar: the red ramp of the other analytics screens. */
 const SINGLE_COLOUR = {
-  paid: "var(--chart-1)",
-  "to-pay": "var(--chart-1-mid)",
-} as const;
+  'paid': 'var(--chart-1)',
+  'to-pay': 'var(--chart-1-mid)',
+} as const
 
 /** "none" covers both orders that earn nothing yet and orders that never will. */
-const filterOf = (row: DashRow): CommissionFilter =>
-  row.state === "recorded" || row.state === "estimated" ? row.state : "none";
+function filterOf(row: DashRow): CommissionFilter {
+  return row.state === 'recorded' || row.state === 'estimated' ? row.state : 'none'
+}
 
 /**
  * A figure that is one amount per bar (paid out, still owed), in the frame of the stacked
@@ -65,44 +66,45 @@ function SingleFigureChart({
   figure,
   bucketLabel,
 }: {
-  figure: SingleFigure;
-  bucketLabel: string;
+  figure: SingleFigure
+  bucketLabel: string
 }) {
-  const { t, intlLocale } = useLocale();
+  const { t, intlLocale } = useLocale()
   const compact = numberFormat(intlLocale, {
-    notation: "compact",
+    notation: 'compact',
     maximumFractionDigits: 1,
-  });
-  const colour = SINGLE_COLOUR[figure.id];
+  })
+  const colour = SINGLE_COLOUR[figure.id]
   const tooltip = ({
     active,
     payload,
   }: {
-    active?: boolean;
-    payload?: readonly { payload?: SingleFigure["bars"][number] }[];
+    active?: boolean
+    payload?: readonly { payload?: SingleFigure['bars'][number] }[]
   }) => {
-    const bar = payload?.[0]?.payload;
+    const bar = payload?.[0]?.payload
 
-    if (!active || !bar) return null;
+    if (!active || !bar)
+      return null
 
     return (
       <TooltipCard
         heading={bar.heading}
         rows={[
           {
-            key: "value",
+            key: 'value',
             colour,
             label: t(
-              figure.id === "paid"
-                ? "partnerDash.fig.amount"
-                : "partnerDash.fig.balance",
+              figure.id === 'paid'
+                ? 'partnerDash.fig.amount'
+                : 'partnerDash.fig.balance',
             ),
             value: bar.valueText,
           },
         ]}
       />
-    );
-  };
+    )
+  }
 
   return (
     <Widget
@@ -150,7 +152,7 @@ function SingleFigureChart({
               maxBarSize={24}
               radius={[6, 6, 6, 6]}
             >
-              {figure.bars.map((b) => (
+              {figure.bars.map(b => (
                 <Cell
                   key={b.key}
                   fill={colour}
@@ -162,12 +164,12 @@ function SingleFigureChart({
         </ResponsiveContainer>
       </div>
     </Widget>
-  );
+  )
 }
 
 /** A transaction as a card, on phones: guest photo and name, what they bought, value, commission. */
 function GuestCard({ row }: { row: DashRow }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <li className="flex min-w-0 flex-col gap-3 rounded-2xl border border-separator p-4">
@@ -186,15 +188,15 @@ function GuestCard({ row }: { row: DashRow }) {
           </span>
         </div>
         <span
-          className={`shrink-0 text-lg font-semibold tabular-nums ${row.commission.amount ? "" : "text-muted"}`}
+          className={`shrink-0 text-lg font-semibold tabular-nums ${row.commission.amount ? '' : 'text-muted'}`}
         >
-          {row.commission.amount ?? "–"}
+          {row.commission.amount ?? '–'}
         </span>
       </div>
       <div className="flex items-baseline justify-between gap-3 rounded-xl bg-surface-secondary px-3 py-2 text-sm">
         <span className="min-w-0 truncate">{row.gifts}</span>
         <span className="shrink-0 tabular-nums">
-          <span className="sr-only">{t("partnerDash.guests.value")}: </span>
+          <span className="sr-only">{t('partnerDash.guests.value')}: </span>
           {row.value}
         </span>
       </div>
@@ -205,7 +207,7 @@ function GuestCard({ row }: { row: DashRow }) {
         </StatusChip>
       </div>
     </li>
-  );
+  )
 }
 
 /**
@@ -217,22 +219,22 @@ function TransactionsWidget({
   resetKey,
   className,
 }: {
-  rows: DashRow[];
-  resetKey: string;
-  className: string;
+  rows: DashRow[]
+  resetKey: string
+  className: string
 }) {
-  const { t } = useLocale();
-  const [filter, setFilter] = useState<CommissionFilter[]>([]);
+  const { t } = useLocale()
+  const [filter, setFilter] = useState<CommissionFilter[]>([])
   const shown = filter.length
-    ? rows.filter((r) => filter.includes(filterOf(r)))
-    : rows;
+    ? rows.filter(r => filter.includes(filterOf(r)))
+    : rows
   const count = (id: CommissionFilter) =>
-    rows.filter((r) => filterOf(r) === id).length;
+    rows.filter(r => filterOf(r) === id).length
   const groups: FilterGroup[] = [
     filterGroup<CommissionFilter>({
-      id: "commission",
-      label: t("partnerDash.filter.label"),
-      options: (["recorded", "estimated", "none"] as const).map((id) => ({
+      id: 'commission',
+      label: t('partnerDash.filter.label'),
+      options: (['recorded', 'estimated', 'none'] as const).map(id => ({
         id,
         label: t(`partnerDash.filter.${id}`),
         count: count(id),
@@ -240,13 +242,13 @@ function TransactionsWidget({
       selected: filter,
       onChange: setFilter,
     }),
-  ];
+  ]
   const columns: DataTableColumn<DashRow>[] = [
     {
-      id: "order",
-      header: t("partnerReport.column.order"),
+      id: 'order',
+      header: t('partnerReport.column.order'),
       isRowHeader: true,
-      render: (r) => (
+      render: r => (
         <div className="flex items-start gap-3 py-1">
           <img
             alt=""
@@ -271,23 +273,23 @@ function TransactionsWidget({
       ),
     },
     {
-      id: "value",
-      header: t("partnerReport.column.value"),
-      headerClassName: "text-end",
-      cellClassName: "text-end align-top whitespace-nowrap tabular-nums",
-      render: (r) => r.value,
+      id: 'value',
+      header: t('partnerReport.column.value'),
+      headerClassName: 'text-end',
+      cellClassName: 'text-end align-top whitespace-nowrap tabular-nums',
+      render: r => r.value,
     },
     {
-      id: "commission",
-      header: t("partnerReport.column.commission"),
-      headerClassName: "text-end",
-      cellClassName: "text-end align-top",
-      render: (r) => (
+      id: 'commission',
+      header: t('partnerReport.column.commission'),
+      headerClassName: 'text-end',
+      cellClassName: 'text-end align-top',
+      render: r => (
         <div className="flex flex-col items-end gap-1 [&_*]:whitespace-nowrap [&_svg]:shrink-0">
           <span
-            className={`font-semibold tabular-nums ${r.commission.amount ? "" : "text-muted"}`}
+            className={`font-semibold tabular-nums ${r.commission.amount ? '' : 'text-muted'}`}
           >
-            {r.commission.amount ?? "–"}
+            {r.commission.amount ?? '–'}
           </span>
           <StatusChip tone={r.commission.label.tone}>
             {r.commission.label.text}
@@ -295,34 +297,34 @@ function TransactionsWidget({
         </div>
       ),
     },
-  ];
+  ]
 
   return (
     <Widget
       actions={<FilterToolbar groups={groups} />}
       className={className}
-      description={t("partnerDash.transactions.description")}
+      description={t('partnerDash.transactions.description')}
       id="partner-transactions"
-      title={t("partnerDash.transactions.title")}
+      title={t('partnerDash.transactions.title')}
     >
       <DataTable
-        cards={(pageRows) => (
+        cards={pageRows => (
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:hidden">
-            {pageRows.map((row) => (
+            {pageRows.map(row => (
               <GuestCard key={row.id} row={row} />
             ))}
           </ul>
         )}
         columns={columns}
-        empty={{ icon: ReportsIcon, message: t("partnerDash.guests.empty") }}
-        getRowId={(r) => r.id}
-        label={t("partnerDash.transactions.title")}
+        empty={{ icon: ReportsIcon, message: t('partnerDash.guests.empty') }}
+        getRowId={r => r.id}
+        label={t('partnerDash.transactions.title')}
         resetKey={`${resetKey}|${filter.join()}`}
         rows={shown}
         variant="card"
       />
     </Widget>
-  );
+  )
 }
 
 /** The payments log; the same bento box, with its own empty state, when nothing was paid. */
@@ -330,28 +332,29 @@ function PaymentsPanel({
   payments,
   className,
 }: {
-  payments: PartnerOverviewView["payments"];
-  className: string;
+  payments: PartnerOverviewView['payments']
+  className: string
 }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
-  if (payments) return <PaymentsWidget className={className} view={payments} />;
+  if (payments)
+    return <PaymentsWidget className={className} view={payments} />
 
   return (
     <Widget
       className={className}
       id="partner-payments-empty"
-      title={t("partnerReport.payments.heading")}
+      title={t('partnerReport.payments.heading')}
     >
       <EmptyState
         icon={ReportsIcon}
-        message={t("partnerDash.payments.empty")}
+        message={t('partnerDash.payments.empty')}
       />
     </Widget>
-  );
+  )
 }
 
-const BARS = [30, 55, 40, 70, 45, 85, 60];
+const BARS = [30, 55, 40, 70, 45, 85, 60]
 
 /** The dashboard while loading: the header, four chart cards, the two bento boxes. */
 function DashboardSkeleton() {
@@ -364,7 +367,7 @@ function DashboardSkeleton() {
           <div className="flex items-center gap-4">
             <Skeleton className="size-36 shrink-0 rounded-full" />
             <div className="flex flex-1 flex-col gap-3">
-              {[0, 1, 2].map((i) => (
+              {[0, 1, 2].map(i => (
                 <Skeleton key={i} className="h-8 w-full rounded-xl" />
               ))}
             </div>
@@ -391,7 +394,7 @@ function DashboardSkeleton() {
           <Skeleton className="h-10 w-32 rounded-full" />
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {[0, 1, 2, 3].map((i) => (
+          {[0, 1, 2, 3].map(i => (
             <WidgetSkeleton key={i}>
               <div className="flex items-center gap-3">
                 <Skeleton className="h-7 w-36 rounded-lg" />
@@ -412,7 +415,7 @@ function DashboardSkeleton() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           <WidgetSkeleton className="lg:col-span-5">
             <div className="flex flex-col gap-5">
-              {[0, 1, 2, 3].map((i) => (
+              {[0, 1, 2, 3].map(i => (
                 <div key={i} className="flex items-center gap-3">
                   <Skeleton className="size-9 shrink-0 rounded-full" />
                   <div className="flex flex-1 flex-col gap-2">
@@ -426,7 +429,7 @@ function DashboardSkeleton() {
           </WidgetSkeleton>
           <WidgetSkeleton className="lg:col-span-7">
             <div className="flex flex-col gap-4">
-              {[0, 1, 2, 3, 4].map((i) => (
+              {[0, 1, 2, 3, 4].map(i => (
                 <div key={i} className="flex items-center gap-4">
                   <Skeleton className="size-10 shrink-0 rounded-full" />
                   <Skeleton className="h-4 flex-1 rounded-lg" />
@@ -438,18 +441,18 @@ function DashboardSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export interface PartnerDashboardProps {
-  view: PartnerOverviewView;
-  period: SalesPeriodId;
-  custom: DayRange | null;
-  isLoading: boolean;
-  onPeriodChange: (period: SalesPeriodId) => void;
-  onCustomChange: (range: DayRange) => void;
+  view: PartnerOverviewView
+  period: SalesPeriodId
+  custom: DayRange | null
+  isLoading: boolean
+  onPeriodChange: (period: SalesPeriodId) => void
+  onCustomChange: (range: DayRange) => void
   /** Opens a month from the months chart (its first day, YYYY-MM-DD). */
-  onMonthSelect: (monthStart: string) => void;
+  onMonthSelect: (monthStart: string) => void
 }
 
 /**
@@ -468,10 +471,11 @@ export function PartnerDashboard({
   onCustomChange,
   onMonthSelect,
 }: PartnerDashboardProps) {
-  const { t } = useLocale();
-  const { sales } = view;
+  const { t } = useLocale()
+  const { sales } = view
 
-  if (isLoading) return <DashboardSkeleton />;
+  if (isLoading)
+    return <DashboardSkeleton />
 
   return (
     <div className="flex flex-col gap-6">
@@ -481,7 +485,7 @@ export function PartnerDashboard({
           <MonthsWidget
             className="lg:col-span-7"
             months={view.months}
-            title={t("partnerReport.allTime.chart")}
+            title={t('partnerReport.allTime.chart')}
             onSelect={onMonthSelect}
           />
         </div>
@@ -493,7 +497,7 @@ export function PartnerDashboard({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex min-w-0 flex-col">
             <h2 className="text-heading" id="partner-heading">
-              {t("partnerDash.heading")}
+              {t('partnerDash.heading')}
             </h2>
             <p className="text-sm text-muted">
               {sales.rangeText} · {sales.comparison}
@@ -509,45 +513,47 @@ export function PartnerDashboard({
             />
           </div>
         </div>
-        {view.isEmpty ? (
-          <div className="rounded-3xl bg-surface shadow-surface">
-            <EmptyState icon={ReportsIcon} message={t("partnerReport.empty")} />
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <FigureChart kpi={view.commission} view={sales} />
-              <SingleFigureChart
-                bucketLabel={sales.bucketLabel}
-                figure={view.paid}
-              />
-              <SingleFigureChart
-                bucketLabel={sales.bucketLabel}
-                figure={view.toPay}
-              />
-              <FigureChart kpi={view.orders} view={sales} />
-            </div>
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
-              <MixWidget
-                className="h-full lg:col-span-7"
-                groups={view.groups}
-                groupsHeading={t("partnerReport.groupsHeading")}
-                mix={view.mix}
-              />
-              <PaymentsPanel
-                className="h-full lg:col-span-5"
-                payments={view.payments}
-              />
-            </div>
-            <TransactionsWidget
-              className=""
-              resetKey={`${period}|${sales.rangeText}`}
-              rows={view.rows}
-            />
-          </>
-        )}
+        {view.isEmpty
+          ? (
+              <div className="rounded-3xl bg-surface shadow-surface">
+                <EmptyState icon={ReportsIcon} message={t('partnerReport.empty')} />
+              </div>
+            )
+          : (
+              <>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <FigureChart kpi={view.commission} view={sales} />
+                  <SingleFigureChart
+                    bucketLabel={sales.bucketLabel}
+                    figure={view.paid}
+                  />
+                  <SingleFigureChart
+                    bucketLabel={sales.bucketLabel}
+                    figure={view.toPay}
+                  />
+                  <FigureChart kpi={view.orders} view={sales} />
+                </div>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
+                  <MixWidget
+                    className="h-full lg:col-span-7"
+                    groups={view.groups}
+                    groupsHeading={t('partnerReport.groupsHeading')}
+                    mix={view.mix}
+                  />
+                  <PaymentsPanel
+                    className="h-full lg:col-span-5"
+                    payments={view.payments}
+                  />
+                </div>
+                <TransactionsWidget
+                  className=""
+                  resetKey={`${period}|${sales.rangeText}`}
+                  rows={view.rows}
+                />
+              </>
+            )}
         {view.demoNote && <p className="text-xs text-muted">{view.demoNote}</p>}
       </section>
     </div>
-  );
+  )
 }

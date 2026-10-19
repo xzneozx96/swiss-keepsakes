@@ -3,6 +3,6 @@
  * language: a lake day under Tours, the brand story under Victorinox.
  */
 export const timeBlockStories = {
-  fewDays: "lake-steamboat",
-  victorinox: "victorinox-story",
-} as const;
+  fewDays: 'lake-steamboat',
+  victorinox: 'victorinox-story',
+} as const

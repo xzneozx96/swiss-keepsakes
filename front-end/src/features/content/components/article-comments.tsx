@@ -1,4 +1,4 @@
-import type { CommentView } from "../hooks/use-article";
+import type { CommentView } from '../hooks/use-article'
 
 import {
   Button,
@@ -10,14 +10,14 @@ import {
   Label,
   TextArea,
   TextField,
-} from "@heroui/react";
-import { useState } from "react";
+} from '@heroui/react'
+import { useState } from 'react'
 
-import { useLocale } from "@/contexts/locale-context";
+import { useLocale } from '@/contexts/locale-context'
 
-const MAX_TEXT = 1000;
+const MAX_TEXT = 1000
 
-export const commentAnchor = (id: string) => `comment-${id}`;
+export const commentAnchor = (id: string) => `comment-${id}`
 
 /** One comment, laid out like the "full" review card (C03): person first, then the text. */
 function CommentItem({
@@ -26,13 +26,13 @@ function CommentItem({
   anchored,
   onReply,
 }: {
-  comment: CommentView;
-  reply?: boolean;
+  comment: CommentView
+  reply?: boolean
   /** The page copy carries the id posting scrolls to; the sheet copy does not. */
-  anchored: boolean;
-  onReply?: () => void;
+  anchored: boolean
+  onReply?: () => void
 }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <article
@@ -43,7 +43,7 @@ function CommentItem({
       <div className="flex items-center gap-3">
         <img
           alt=""
-          className={`shrink-0 rounded-full bg-surface-secondary object-cover ${reply ? "size-9" : "size-12"}`}
+          className={`shrink-0 rounded-full bg-surface-secondary object-cover ${reply ? 'size-9' : 'size-12'}`}
           decoding="async"
           loading="lazy"
           src={comment.avatar}
@@ -53,7 +53,7 @@ function CommentItem({
             <span className="truncate">{comment.name}</span>
             {comment.isShop && (
               <Chip size="sm" variant="secondary">
-                <Chip.Label>{t("article.shop")}</Chip.Label>
+                <Chip.Label>{t('article.shop')}</Chip.Label>
               </Chip>
             )}
           </span>
@@ -69,31 +69,31 @@ function CommentItem({
           type="button"
           onClick={onReply}
         >
-          {t("article.reply")}
+          {t('article.reply')}
         </button>
       )}
     </article>
-  );
+  )
 }
 
 /** Threads on the page before "Show all" (owner, 14.10.2026), as reviews show a few first. */
-const PREVIEW_THREADS = 3;
+const PREVIEW_THREADS = 3
 
 function Thread({
   comment,
   anchored,
   onReply,
 }: {
-  comment: CommentView;
-  anchored: boolean;
-  onReply: () => void;
+  comment: CommentView
+  anchored: boolean
+  onReply: () => void
 }) {
   return (
     <li className="flex flex-col gap-5">
       <CommentItem anchored={anchored} comment={comment} onReply={onReply} />
       {comment.replies.length > 0 && (
         <ul className="ms-6 flex flex-col gap-5 border-s border-separator ps-4">
-          {comment.replies.map((r) => (
+          {comment.replies.map(r => (
             <li key={r.id}>
               <CommentItem reply anchored={anchored} comment={r} />
             </li>
@@ -101,7 +101,7 @@ function Thread({
         </ul>
       )}
     </li>
-  );
+  )
 }
 
 /**
@@ -113,22 +113,22 @@ export function ArticleComments({
   count,
   onReply,
 }: {
-  comments: CommentView[];
-  count: number;
-  onReply: (comment: CommentView) => void;
+  comments: CommentView[]
+  count: number
+  onReply: (comment: CommentView) => void
 }) {
-  const { t, intlLocale } = useLocale();
-  const [allOpen, setAllOpen] = useState(false);
+  const { t, intlLocale } = useLocale()
+  const [allOpen, setAllOpen] = useState(false)
   const heading = (
     <>
-      {t("article.comments")}
+      {t('article.comments')}
       {count > 0 && (
         <span className="ms-2 font-sans text-base text-muted tabular-nums">
           {count}
         </span>
       )}
     </>
-  );
+  )
 
   return (
     <section
@@ -138,20 +138,22 @@ export function ArticleComments({
       <h2 className="font-serif text-title" id="article-comments">
         {heading}
       </h2>
-      {comments.length === 0 ? (
-        <p className="text-sm text-muted">{t("article.noComments")}</p>
-      ) : (
-        <ul className="flex flex-col gap-7">
-          {comments.slice(0, PREVIEW_THREADS).map((c) => (
-            <Thread
-              key={c.id}
-              anchored
-              comment={c}
-              onReply={() => onReply(c)}
-            />
-          ))}
-        </ul>
-      )}
+      {comments.length === 0
+        ? (
+            <p className="text-sm text-muted">{t('article.noComments')}</p>
+          )
+        : (
+            <ul className="flex flex-col gap-7">
+              {comments.slice(0, PREVIEW_THREADS).map(c => (
+                <Thread
+                  key={c.id}
+                  anchored
+                  comment={c}
+                  onReply={() => onReply(c)}
+                />
+              ))}
+            </ul>
+          )}
       {comments.length > PREVIEW_THREADS && (
         <Button
           fullWidth
@@ -160,9 +162,9 @@ export function ArticleComments({
           onPress={() => setAllOpen(true)}
         >
           {t(
-            new Intl.PluralRules(intlLocale).select(count) === "one"
-              ? "article.showAll.one"
-              : "article.showAll.other",
+            new Intl.PluralRules(intlLocale).select(count) === 'one'
+              ? 'article.showAll.one'
+              : 'article.showAll.other',
             { count },
           )}
         </Button>
@@ -170,25 +172,25 @@ export function ArticleComments({
       <Drawer.Backdrop isOpen={allOpen} onOpenChange={setAllOpen}>
         <Drawer.Content className="mx-auto max-w-[430px]" placement="bottom">
           <Drawer.Dialog
-            aria-label={t("article.comments")}
+            aria-label={t('article.comments')}
             className="flex sheet-tall flex-col"
           >
             <Drawer.Handle />
             <Drawer.Header className="flex items-center justify-start">
-              <Drawer.CloseTrigger aria-label={t("article.close")} />
+              <Drawer.CloseTrigger aria-label={t('article.close')} />
             </Drawer.Header>
             <Drawer.Body className="flex flex-col gap-8 overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+24px)] text-foreground">
               <h2 className="font-serif text-title">{heading}</h2>
               <ul className="flex flex-col gap-7">
-                {comments.map((c) => (
+                {comments.map(c => (
                   <Thread
                     key={c.id}
                     anchored={false}
                     comment={c}
                     onReply={() => {
                       // The comment sheet opens instead of stacking on this one.
-                      setAllOpen(false);
-                      onReply(c);
+                      setAllOpen(false)
+                      onReply(c)
                     }}
                   />
                 ))}
@@ -198,7 +200,7 @@ export function ArticleComments({
         </Drawer.Content>
       </Drawer.Backdrop>
     </section>
-  );
+  )
 }
 
 /** The comment sheet (same build as the C18 review sheet); a reply names its comment. */
@@ -209,13 +211,13 @@ export function CommentSheet({
   onOpenChange,
   onPost,
 }: {
-  isOpen: boolean;
-  replyTo?: CommentView;
-  authorName: string;
-  onOpenChange: (open: boolean) => void;
-  onPost: (text: string) => void;
+  isOpen: boolean
+  replyTo?: CommentView
+  authorName: string
+  onOpenChange: (open: boolean) => void
+  onPost: (text: string) => void
 }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -225,10 +227,10 @@ export function CommentSheet({
           <Drawer.Header className="flex flex-row items-center justify-between gap-2">
             <Drawer.Heading className="font-serif text-title">
               {replyTo
-                ? t("article.replyTo", { name: replyTo.name })
-                : t("article.write")}
+                ? t('article.replyTo', { name: replyTo.name })
+                : t('article.write')}
             </Drawer.Heading>
-            <Drawer.CloseTrigger aria-label={t("article.close")} />
+            <Drawer.CloseTrigger aria-label={t('article.close')} />
           </Drawer.Header>
           <Drawer.Body className="flex flex-col gap-6 overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+24px)] text-foreground">
             {replyTo && (
@@ -237,7 +239,7 @@ export function CommentSheet({
               </blockquote>
             )}
             <CommentForm
-              key={replyTo?.id ?? "new"}
+              key={replyTo?.id ?? 'new'}
               authorName={authorName}
               onPost={onPost}
             />
@@ -245,52 +247,52 @@ export function CommentSheet({
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>
-  );
+  )
 }
 
 function CommentForm({
   authorName,
   onPost,
 }: {
-  authorName: string;
-  onPost: (text: string) => void;
+  authorName: string
+  onPost: (text: string) => void
 }) {
-  const { t } = useLocale();
-  const [text, setText] = useState("");
-  const [showError, setShowError] = useState(false);
+  const { t } = useLocale()
+  const [text, setText] = useState('')
+  const [showError, setShowError] = useState(false)
 
   return (
     <Form
       className="flex flex-col gap-6"
       validationBehavior="aria"
       onSubmit={(e) => {
-        e.preventDefault();
-        if (text.trim() === "") {
-          setShowError(true);
+        e.preventDefault()
+        if (text.trim() === '') {
+          setShowError(true)
 
-          return;
+          return
         }
-        onPost(text);
+        onPost(text)
       }}
     >
       <TextField
         fullWidth
-        isInvalid={showError && text.trim() === ""}
+        isInvalid={showError && text.trim() === ''}
         maxLength={MAX_TEXT}
         name="comment"
         value={text}
         onChange={setText}
       >
-        <Label className="text-heading">{t("article.composer.label")}</Label>
+        <Label className="text-heading">{t('article.composer.label')}</Label>
         <TextArea rows={5} />
         <Description>
-          {t("article.composer.help", { name: authorName })}
+          {t('article.composer.help', { name: authorName })}
         </Description>
-        <FieldError>{t("article.composer.error")}</FieldError>
+        <FieldError>{t('article.composer.error')}</FieldError>
       </TextField>
       <Button fullWidth size="lg" type="submit">
-        {t("article.post")}
+        {t('article.post')}
       </Button>
     </Form>
-  );
+  )
 }

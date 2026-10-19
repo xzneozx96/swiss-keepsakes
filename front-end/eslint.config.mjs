@@ -1,198 +1,79 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import antfu from '@antfu/eslint-config'
+import boundaries from 'eslint-plugin-boundaries'
 
-import { defineConfig, globalIgnores } from "eslint/config";
-import { fixupConfigRules, fixupPluginRules } from "@eslint/compat";
-import react from "eslint-plugin-react";
-import unusedImports from "eslint-plugin-unused-imports";
-import _import from "eslint-plugin-import";
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import jsxA11Y from "eslint-plugin-jsx-a11y";
-import prettier from "eslint-plugin-prettier";
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
-
-export default defineConfig([
-  globalIgnores([
-    ".now/*",
-    "**/*.css",
-    "**/.changeset",
-    "**/dist",
-    "esm/*",
-    "public/*",
-    "tests/*",
-    "scripts/*",
-    "**/*.config.js",
-    "**/.DS_Store",
-    "src/routeTree.gen.ts",
-    "**/node_modules",
-    "**/coverage",
-    "**/.next",
-    "**/build",
-    "!**/.commitlintrc.cjs",
-    "!**/.lintstagedrc.cjs",
-    "!**/jest.config.js",
-    "!**/plopfile.js",
-    "!**/react-shim.js",
-    "!**/tsup.config.ts",
-  ]),
+export default antfu(
   {
-    extends: fixupConfigRules(
-      compat.extends(
-        "plugin:react/recommended",
-        "plugin:prettier/recommended",
-        "plugin:react-hooks/recommended",
-        "plugin:jsx-a11y/recommended",
-      ),
-    ),
-
-    plugins: {
-      react: fixupPluginRules(react),
-      "unused-imports": unusedImports,
-      import: fixupPluginRules(_import),
-      "@typescript-eslint": typescriptEslint,
-      "jsx-a11y": fixupPluginRules(jsxA11Y),
-      prettier: fixupPluginRules(prettier),
-    },
-
-    languageOptions: {
-      globals: {
-        ...Object.fromEntries(
-          Object.entries(globals.browser).map(([key]) => [key, "off"]),
-        ),
-        ...globals.node,
-      },
-
-      parser: tsParser,
-      ecmaVersion: 12,
-      sourceType: "module",
-
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
+    react: true,
+    typescript: true,
+    jsx: {
+      a11y: {
+        overrides: {
+          // Kept as warnings, as in the config this one replaced.
+          'jsx-a11y/click-events-have-key-events': 'warn',
+          'jsx-a11y/interactive-supports-focus': 'warn',
         },
       },
     },
-
-    settings: {
-      react: {
-        version: "detect",
-      },
-    },
-
-    files: ["**/*.ts", "**/*.tsx"],
-
-    rules: {
-      "no-console": "warn",
-      "react/prop-types": "off",
-      "react/jsx-uses-react": "off",
-      "react/react-in-jsx-scope": "off",
-      "react-hooks/exhaustive-deps": "warn",
-      "jsx-a11y/click-events-have-key-events": "warn",
-      "jsx-a11y/interactive-supports-focus": "warn",
-      "prettier/prettier": "warn",
-      "no-unused-vars": "off",
-      "unused-imports/no-unused-vars": "off",
-      "unused-imports/no-unused-imports": "warn",
-
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        {
-          args: "after-used",
-          ignoreRestSiblings: false,
-          argsIgnorePattern: "^_.*?$",
-        },
-      ],
-
-      "import/order": [
-        "warn",
-        {
-          groups: [
-            "type",
-            "builtin",
-            "object",
-            "external",
-            "internal",
-            "parent",
-            "sibling",
-            "index",
-          ],
-
-          pathGroups: [
-            {
-              pattern: "~/**",
-              group: "external",
-              position: "after",
-            },
-          ],
-
-          "newlines-between": "always",
-        },
-      ],
-
-      "react/self-closing-comp": "warn",
-
-      "react/jsx-sort-props": [
-        "warn",
-        {
-          callbacksLast: true,
-          shorthandFirst: true,
-          noSortAlphabetically: false,
-          reservedFirst: true,
-        },
-      ],
-
-      "padding-line-between-statements": [
-        "warn",
-        {
-          blankLine: "always",
-          prev: "*",
-          next: "return",
-        },
-        {
-          blankLine: "always",
-          prev: ["const", "let", "var"],
-          next: "*",
-        },
-        {
-          blankLine: "any",
-          prev: ["const", "let", "var"],
-          next: ["const", "let", "var"],
-        },
-      ],
-    },
-  },
-  {
-    // Shared layers sit below the features. A feature may use them, never the other way round.
-    files: [
-      "src/lib/**/*.{ts,tsx}",
-      "src/hooks/**/*.{ts,tsx}",
-      "src/contexts/**/*.{ts,tsx}",
-      "src/components/*.{ts,tsx}",
+    ignores: [
+      'src/routeTree.gen.ts',
+      'public/**',
+      '.tanstack/**',
+      'playwright-report/**',
+      'test-results/**',
+      '*.prototype.html',
     ],
+  },
+  {
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          patterns: [
-            {
-              group: ["@/features", "@/features/**"],
-              message:
-                "Shared code must not import from a feature. Move what it needs into the shared layer.",
-            },
-          ],
-        },
-      ],
+      'style/max-statements-per-line': 'off',
+      'react/no-array-index-key': 'off',
+      // Its autofix turns Array.from({ length }, () => make()) into .fill(make()), which calls make once and shares one object.
+      'e18e/prefer-array-fill': 'off',
+      // Named function expressions keep component names in React DevTools: memo(function ListingCard() {}).
+      'prefer-arrow-callback': ['error', { allowNamedFunctions: true, allowUnboundThis: true }],
+      'style/jsx-one-expression-per-line': ['error', { allow: 'non-jsx' }],
     },
   },
-]);
+  {
+    // Hooks, helpers and contexts share files with components in many features. Editing such a file
+    // reloads the page instead of hot-swapping, which costs only developer time. Splitting them is its own refactor.
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
+  },
+  {
+    // A TanStack file route exports `Route` next to its page component. The router's code splitter
+    // moves that component into its own module, so Fast Refresh works and this rule has nothing to protect.
+    files: ['src/routes/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    // Shared code never imports a feature or a route.
+    files: ['src/**/*.{ts,tsx}'],
+    plugins: { boundaries },
+    settings: {
+      'import/resolver': { typescript: { project: './tsconfig.eslint.json' } },
+      'boundaries/elements': [
+        { type: 'shared', pattern: 'src/{lib,hooks,contexts}/**' },
+        { type: 'shared-ui', pattern: 'src/components/*.{ts,tsx}', mode: 'file' },
+        { type: 'feature', pattern: 'src/features/**' },
+        { type: 'route', pattern: 'src/routes/**' },
+      ],
+    },
+    rules: {
+      'boundaries/dependencies': ['error', {
+        default: 'allow',
+        rules: [
+          {
+            from: { type: ['shared', 'shared-ui'] },
+            disallow: { to: { type: ['feature', 'route'] } },
+            message: 'Shared code must not import a feature or a route',
+          },
+        ],
+      }],
+    },
+  },
+)

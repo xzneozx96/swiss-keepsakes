@@ -1,6 +1,6 @@
-import type { TourData } from "../types";
+import type { TourData } from '../types'
 
-import { createTourSeed } from "../seed";
+import { createTourSeed } from '../seed'
 
 /**
  * Tour data stored by an earlier build of the same DEMO_VERSION lacks Tour fields added since
@@ -8,13 +8,13 @@ import { createTourSeed } from "../seed";
  * New or changed fixtures still appear only after Reset.
  */
 export function upgradeTourData(stored: TourData): TourData {
-  const seed = createTourSeed().tours;
+  const seed = createTourSeed().tours
 
   return {
     ...stored,
-    tours: stored.tours.map((tour) => ({
-      ...seed.find((s) => s.id === tour.id),
+    tours: stored.tours.map(tour => ({
+      ...seed.find(s => s.id === tour.id),
       ...tour,
     })),
-  };
+  }
 }

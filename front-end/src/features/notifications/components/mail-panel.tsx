@@ -1,12 +1,12 @@
-import { Button, Drawer, Tabs } from "@heroui/react";
-import { Suspense, lazy, useState } from "react";
+import { Button, Drawer, Tabs } from '@heroui/react'
+import { lazy, Suspense, useState } from 'react'
 
-import { EmailIcon } from "@/components/icons";
-import { useDemo } from "@/features/demo";
+import { EmailIcon } from '@/components/icons'
+import { useDemo } from '@/features/demo'
 
 const MailList = lazy(() =>
-  import("./mail-list").then((module) => ({ default: module.MailList })),
-);
+  import('./mail-list').then(module => ({ default: module.MailList })),
+)
 
 /**
  * Prototype Mail panel (outline §3): emails are never sent; each one the demo "sends"
@@ -14,12 +14,12 @@ const MailList = lazy(() =>
  * stays in English like the rest of the prototype bar; the emails themselves do not.
  */
 export function MailPanel() {
-  const { state } = useDemo();
-  const [open, setOpen] = useState(false);
-  const mail = state.data.mail;
-  const guestMail = mail.filter((m) => m.to === "guest").reverse();
-  const staffMail = mail.filter((m) => m.to === "staff").reverse();
-  const partnerMail = mail.filter((m) => m.to === "partner").reverse();
+  const { state } = useDemo()
+  const [open, setOpen] = useState(false)
+  const mail = state.data.mail
+  const guestMail = mail.filter(m => m.to === 'guest').reverse()
+  const staffMail = mail.filter(m => m.to === 'staff').reverse()
+  const partnerMail = mail.filter(m => m.to === 'partner').reverse()
 
   return (
     <Drawer isOpen={open} onOpenChange={setOpen}>
@@ -55,15 +55,21 @@ export function MailPanel() {
                   <Tabs.ListContainer>
                     <Tabs.List aria-label="Recipient">
                       <Tabs.Tab id="guest">
-                        Guest ({guestMail.length})
+                        Guest (
+                        {guestMail.length}
+                        )
                         <Tabs.Indicator />
                       </Tabs.Tab>
                       <Tabs.Tab id="staff">
-                        Staff ({staffMail.length})
+                        Staff (
+                        {staffMail.length}
+                        )
                         <Tabs.Indicator />
                       </Tabs.Tab>
                       <Tabs.Tab id="partner">
-                        Partner ({partnerMail.length})
+                        Partner (
+                        {partnerMail.length}
+                        )
                         <Tabs.Indicator />
                       </Tabs.Tab>
                     </Tabs.List>
@@ -87,5 +93,5 @@ export function MailPanel() {
         </Drawer.Content>
       </Drawer.Backdrop>
     </Drawer>
-  );
+  )
 }

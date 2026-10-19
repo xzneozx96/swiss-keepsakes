@@ -1,26 +1,27 @@
-import type { CalendarDate } from "@internationalized/date";
+import type { CalendarDate } from '@internationalized/date'
 
-import { Button, Calendar, Drawer } from "@heroui/react";
-import { parseDate } from "@internationalized/date";
-import clsx from "clsx";
-import { useId, useState } from "react";
+import type { Interest } from '../data/places'
+import { Button, Calendar, Drawer } from '@heroui/react'
+import { parseDate } from '@internationalized/date'
+import clsx from 'clsx'
 
-import { INTERESTS, type Interest } from "../data/places";
-import { WINDOW_FROM, WINDOW_TO, shortDay } from "../lib/hours";
-
+import { useId, useState } from 'react'
 import {
   ArrowUpRightIcon,
   PickupDateIcon,
   SelectedIcon,
-} from "@/components/icons";
-import { QuantityStepper } from "@/components/quantity-stepper";
+} from '@/components/icons'
 
-type Submit = (output: Record<string, unknown>) => void;
+import { QuantityStepper } from '@/components/quantity-stepper'
+import { INTERESTS } from '../data/places'
+import { shortDay, WINDOW_FROM, WINDOW_TO } from '../lib/hours'
+
+type Submit = (output: Record<string, unknown>) => void
 
 interface PickerProps {
-  input: Record<string, unknown>;
-  disabled: boolean;
-  onSubmit: Submit;
+  input: Record<string, unknown>
+  disabled: boolean
+  onSubmit: Submit
 }
 
 /**
@@ -28,23 +29,24 @@ interface PickerProps {
  * They fill one even grid. A chosen one follows the gift option style (C03): a red ring and
  * a check on the top edge, so nothing shifts when it is picked.
  */
-const optionBase =
-  "animate-rise card-hover min-h-12 rounded-2xl bg-surface text-[15px] text-foreground shadow-surface outline-none transition-[background-color,box-shadow,scale] duration-150 focus-visible:focus-ring disabled:pointer-events-none disabled:text-muted motion-safe:active:scale-[0.98]";
+const optionBase
+  = 'animate-rise card-hover min-h-12 rounded-2xl bg-surface text-[15px] text-foreground shadow-surface outline-none transition-[background-color,box-shadow,scale] duration-150 focus-visible:focus-ring disabled:pointer-events-none disabled:text-muted motion-safe:active:scale-[0.98]'
 
-const chosen = "ring-2 ring-accent";
+const chosen = 'ring-2 ring-accent'
 
-const delay = (i = 0) =>
-  ({ "--d": `${Math.min(i, 8) * 45}ms` }) as React.CSSProperties;
+function delay(i = 0) {
+  return ({ '--d': `${Math.min(i, 8) * 45}ms` }) as React.CSSProperties
+}
 
 /** Options sit on the right, under the question, as one block of equal width. */
 export function Group({
   label,
   children,
 }: {
-  label: string;
-  children: React.ReactNode;
+  label: string
+  children: React.ReactNode
 }) {
-  const id = useId();
+  const id = useId()
 
   return (
     <div className="ms-auto flex w-full max-w-[92%] flex-col gap-2">
@@ -55,22 +57,24 @@ export function Group({
         {children}
       </div>
     </div>
-  );
+  )
 }
 
-const Grid = ({
+function Grid({
   cols,
   children,
 }: {
-  cols: 2 | 4;
-  children: React.ReactNode;
-}) => (
-  <div
-    className={clsx("grid gap-2", cols === 4 ? "grid-cols-4" : "grid-cols-2")}
-  >
-    {children}
-  </div>
-);
+  cols: 2 | 4
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className={clsx('grid gap-2', cols === 4 ? 'grid-cols-4' : 'grid-cols-2')}
+    >
+      {children}
+    </div>
+  )
+}
 
 /** A centred cell for a grid of choices. */
 export function Chip({
@@ -81,17 +85,17 @@ export function Chip({
   children,
   ...props
 }: {
-  selected?: boolean;
-  hint?: string;
-  index?: number;
-  children: React.ReactNode;
-} & React.ComponentProps<"button">) {
+  selected?: boolean
+  hint?: string
+  index?: number
+  children: React.ReactNode
+} & React.ComponentProps<'button'>) {
   return (
     <button
       aria-pressed={selected || undefined}
       className={clsx(
         optionBase,
-        "relative flex flex-col items-center justify-center gap-0.5 px-2 py-2.5 text-center font-medium tabular-nums",
+        'relative flex flex-col items-center justify-center gap-0.5 px-2 py-2.5 text-center font-medium tabular-nums',
         selected && chosen,
         className,
       )}
@@ -109,7 +113,7 @@ export function Chip({
       )}
       {hint && <span className="text-xs font-normal text-muted">{hint}</span>}
     </button>
-  );
+  )
 }
 
 /** A full-width choice with a trailing arrow, for lists of unequal text. */
@@ -119,15 +123,15 @@ export function Row({
   children,
   ...props
 }: {
-  hint?: string;
-  index?: number;
-  children: React.ReactNode;
-} & React.ComponentProps<"button">) {
+  hint?: string
+  index?: number
+  children: React.ReactNode
+} & React.ComponentProps<'button'>) {
   return (
     <button
       className={clsx(
         optionBase,
-        "group flex w-full items-center gap-3 px-4 py-2.5 text-start",
+        'group flex w-full items-center gap-3 px-4 py-2.5 text-start',
       )}
       style={delay(index)}
       type="button"
@@ -144,35 +148,37 @@ export function Row({
         className="size-4 shrink-0 text-muted transition-transform group-hover:translate-x-px group-hover:-translate-y-px"
       />
     </button>
-  );
+  )
 }
 
-const Continue = ({
+function Continue({
   disabled,
   onPress,
-  children = "Continue",
+  children = 'Continue',
 }: {
-  disabled?: boolean;
-  onPress: () => void;
-  children?: React.ReactNode;
-}) => (
-  <Button
-    fullWidth
-    className="animate-rise min-h-12"
-    isDisabled={disabled}
-    size="lg"
-    onPress={onPress}
-  >
-    {children}
-  </Button>
-);
+  disabled?: boolean
+  onPress: () => void
+  children?: React.ReactNode
+}) {
+  return (
+    <Button
+      fullWidth
+      className="animate-rise min-h-12"
+      isDisabled={disabled}
+      size="lg"
+      onPress={onPress}
+    >
+      {children}
+    </Button>
+  )
+}
 
 export function StayPicker({ input, disabled, onSubmit }: PickerProps) {
   const options = input.options as {
-    id: string;
-    label: string;
-    hint: string;
-  }[];
+    id: string
+    label: string
+    hint: string
+  }[]
 
   return (
     <Group label="Choose one">
@@ -188,15 +194,15 @@ export function StayPicker({ input, disabled, onSubmit }: PickerProps) {
         </Row>
       ))}
     </Group>
-  );
+  )
 }
 
 export function PartyPicker({ disabled, onSubmit }: PickerProps) {
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const label = `${adults} adult${adults === 1 ? "" : "s"}${
-    children ? `, ${children} child${children === 1 ? "" : "ren"}` : ""
-  }`;
+  const [adults, setAdults] = useState(2)
+  const [children, setChildren] = useState(0)
+  const label = `${adults} adult${adults === 1 ? '' : 's'}${
+    children ? `, ${children} child${children === 1 ? '' : 'ren'}` : ''
+  }`
 
   return (
     <Group label="Set the numbers">
@@ -223,20 +229,20 @@ export function PartyPicker({ disabled, onSubmit }: PickerProps) {
         Continue · {label}
       </Continue>
     </Group>
-  );
+  )
 }
 
 const SUGGESTED = [
-  { date: "2026-10-17", hint: "Today" },
-  { date: "2026-10-31", hint: "Last day of the Zytturm" },
-  { date: "2026-11-21", hint: "Advent opens" },
-  { date: "2026-12-15", hint: "Pilatus is open" },
-];
+  { date: '2026-10-17', hint: 'Today' },
+  { date: '2026-10-31', hint: 'Last day of the Zytturm' },
+  { date: '2026-11-21', hint: 'Advent opens' },
+  { date: '2026-12-15', hint: 'Pilatus is open' },
+]
 
 export function DatePicker({ disabled, onSubmit }: PickerProps) {
-  const [open, setOpen] = useState(false);
-  const [date, setDate] = useState<CalendarDate | null>(null);
-  const pick = (iso: string) => onSubmit({ date: iso, label: shortDay(iso) });
+  const [open, setOpen] = useState(false)
+  const [date, setDate] = useState<CalendarDate | null>(null)
+  const pick = (iso: string) => onSubmit({ date: iso, label: shortDay(iso) })
 
   return (
     <Group label="Choose one">
@@ -292,10 +298,10 @@ export function DatePicker({ disabled, onSubmit }: PickerProps) {
                 </Calendar.Header>
                 <Calendar.Grid>
                   <Calendar.GridHeader>
-                    {(day) => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
+                    {day => <Calendar.HeaderCell>{day}</Calendar.HeaderCell>}
                   </Calendar.GridHeader>
                   <Calendar.GridBody>
-                    {(d) => <Calendar.Cell date={d} />}
+                    {d => <Calendar.Cell date={d} />}
                   </Calendar.GridBody>
                 </Calendar.Grid>
               </Calendar>
@@ -307,8 +313,8 @@ export function DatePicker({ disabled, onSubmit }: PickerProps) {
                 isDisabled={!date}
                 onPress={() => {
                   if (date) {
-                    setOpen(false);
-                    pick(date.toString());
+                    setOpen(false)
+                    pick(date.toString())
                   }
                 }}
               >
@@ -319,18 +325,18 @@ export function DatePicker({ disabled, onSubmit }: PickerProps) {
         </Drawer.Content>
       </Drawer.Backdrop>
     </Group>
-  );
+  )
 }
 
-const STARTS = ["08:30", "10:00", "12:00", "14:00"];
+const STARTS = ['08:30', '10:00', '12:00', '14:00']
 const LENGTHS = [
-  { id: "half", label: "Half day", hint: "about 4 hours" },
-  { id: "full", label: "Full day", hint: "about 7 hours" },
-];
+  { id: 'half', label: 'Half day', hint: 'about 4 hours' },
+  { id: 'full', label: 'Full day', hint: 'about 7 hours' },
+]
 
 export function TimePicker({ disabled, onSubmit }: PickerProps) {
-  const [start, setStart] = useState<string | null>(null);
-  const [length, setLength] = useState<string | null>(null);
+  const [start, setStart] = useState<string | null>(null)
+  const [length, setLength] = useState<string | null>(null)
 
   return (
     <Group label="Pick a start time and a length">
@@ -368,19 +374,18 @@ export function TimePicker({ disabled, onSubmit }: PickerProps) {
             onSubmit({
               start,
               length,
-              label: `${start}, ${length === "full" ? "full day" : "half day"}`,
-            })
-          }
+              label: `${start}, ${length === 'full' ? 'full day' : 'half day'}`,
+            })}
         />
       )}
     </Group>
-  );
+  )
 }
 
 export function InterestsPicker({ disabled, onSubmit }: PickerProps) {
-  const [picked, setPicked] = useState<Interest[]>([]);
+  const [picked, setPicked] = useState<Interest[]>([])
   const toggle = (id: Interest) =>
-    setPicked((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
+    setPicked(c => (c.includes(id) ? c.filter(x => x !== id) : [...c, id]))
 
   return (
     <Group label="Choose any">
@@ -390,7 +395,7 @@ export function InterestsPicker({ disabled, onSubmit }: PickerProps) {
             key={it.id}
             className={
               n === INTERESTS.length - 1 && INTERESTS.length % 2
-                ? "col-span-2"
+                ? 'col-span-2'
                 : undefined
             }
             disabled={disabled}
@@ -409,16 +414,15 @@ export function InterestsPicker({ disabled, onSubmit }: PickerProps) {
             onSubmit({
               interests: picked,
               label: picked
-                .map((c) => INTERESTS.find((i) => i.id === c)?.label)
-                .join(", "),
-            })
-          }
+                .map(c => INTERESTS.find(i => i.id === c)?.label)
+                .join(', '),
+            })}
         >
           Continue · {picked.length}
         </Continue>
       )}
     </Group>
-  );
+  )
 }
 
 export function DietPicker({ disabled, onSubmit }: PickerProps) {
@@ -426,8 +430,8 @@ export function DietPicker({ disabled, onSubmit }: PickerProps) {
     <Group label="Choose one">
       <Grid cols={2}>
         {[
-          { id: "any", label: "No preference" },
-          { id: "veg", label: "Vegetarian" },
+          { id: 'any', label: 'No preference' },
+          { id: 'veg', label: 'Vegetarian' },
         ].map((d, i) => (
           <Chip
             key={d.id}
@@ -440,23 +444,23 @@ export function DietPicker({ disabled, onSubmit }: PickerProps) {
         ))}
       </Grid>
     </Group>
-  );
+  )
 }
 
 export function NextPicker({ input, disabled, onSubmit }: PickerProps) {
   const options = input.options as {
-    id: string;
-    label: string;
-    group: string;
-  }[];
-  const groups = [...new Set(options.map((o) => o.group))];
+    id: string
+    label: string
+    group: string
+  }[]
+  const groups = [...new Set(options.map(o => o.group))]
 
   return (
     <div className="flex flex-col gap-4">
-      {groups.map((g) => (
-        <Group key={g} label={g === "Adjust" ? "Adjust the plan" : "Next step"}>
+      {groups.map(g => (
+        <Group key={g} label={g === 'Adjust' ? 'Adjust the plan' : 'Next step'}>
           {options
-            .filter((o) => o.group === g)
+            .filter(o => o.group === g)
             .map((o, n) => (
               <Row
                 key={o.id}
@@ -470,5 +474,5 @@ export function NextPicker({ input, disabled, onSubmit }: PickerProps) {
         </Group>
       ))}
     </div>
-  );
+  )
 }

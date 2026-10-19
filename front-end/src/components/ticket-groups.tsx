@@ -1,12 +1,12 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react'
 
 /** C14's open-item ticket, a link: the shared light shadow, no border (owner, round 3). */
-export const ticketClass =
-  "flex flex-col overflow-hidden rounded-2xl bg-surface shadow-surface outline-none transition-transform focus-visible:focus-ring active:scale-[0.98]";
+export const ticketClass
+  = 'flex flex-col overflow-hidden rounded-2xl bg-surface shadow-surface outline-none transition-transform focus-visible:focus-ring active:scale-[0.98]'
 
 /** C14's closed-item row, a link inside the Past box. */
-export const pastRowClass =
-  "-mx-2 flex gap-3 rounded-2xl px-2 py-4 outline-none transition-transform focus-visible:focus-ring active:scale-[0.98]";
+export const pastRowClass
+  = '-mx-2 flex gap-3 rounded-2xl px-2 py-4 outline-none transition-transform focus-visible:focus-ring active:scale-[0.98]'
 
 /**
  * C14's two groups (1.12r): open items as tickets under "Coming up", then closed items as quiet
@@ -20,11 +20,11 @@ export function TicketGroups({
   past,
 }: {
   /** Prefix of the heading ids: `${id}-open` and `${id}-past`. */
-  id: string;
-  openTitle: string;
-  pastTitle: string;
-  open: ReactNode[];
-  past: ReactNode[];
+  id: string
+  openTitle: string
+  pastTitle: string
+  open: ReactNode[]
+  past: ReactNode[]
 }) {
   return (
     <div className="flex flex-col gap-8">
@@ -47,5 +47,5 @@ export function TicketGroups({
         </section>
       )}
     </div>
-  );
+  )
 }

@@ -1,10 +1,10 @@
-import { Media } from "@/components/media";
+import { Media } from '@/components/media'
 
 interface CategoryThumbProps {
-  name: string;
-  photo?: string;
+  name: string
+  photo?: string
   /** Small note on the photo, e.g. "Soon" for tours until Phase 2. */
-  note?: string;
+  note?: string
 }
 
 /**
@@ -46,9 +46,9 @@ export function CategoryThumb({ name, photo, note }: CategoryThumbProps) {
         {name}
       </span>
     </>
-  );
+  )
 }
 
 /** Classes for the element that wraps a CategoryThumb (link or tag). */
-export const categoryThumbItemClass =
-  "group flex w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-2xl text-xs font-medium text-muted select-none outline-none transition-transform focus-visible:focus-ring active:scale-95";
+export const categoryThumbItemClass
+  = 'group flex w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-2xl text-xs font-medium text-muted select-none outline-none transition-transform focus-visible:focus-ring active:scale-95'

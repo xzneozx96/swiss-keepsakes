@@ -1,7 +1,7 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router'
 
-import brandLogo from "@/assets/brand/swiss-keepsakes-logo.png";
-import brandMark from "@/assets/brand/swiss-keepsakes-mark.png";
+import brandLogo from '@/assets/brand/swiss-keepsakes-logo.png'
+import brandMark from '@/assets/brand/swiss-keepsakes-mark.png'
 
 /** The app logo, linking to the discovery home: the mark on phones, the wordmark wider. */
 export function BrandLogo({ label }: { label: string }) {
@@ -28,5 +28,5 @@ export function BrandLogo({ label }: { label: string }) {
         width={2016}
       />
     </Link>
-  );
+  )
 }

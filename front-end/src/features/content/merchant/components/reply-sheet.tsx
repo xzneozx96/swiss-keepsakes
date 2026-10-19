@@ -1,4 +1,4 @@
-import type { Language } from "@/contexts/locale-context";
+import type { Language } from '@/contexts/locale-context'
 
 import {
   Button,
@@ -10,17 +10,17 @@ import {
   RadioGroup,
   TextArea,
   TextField,
-} from "@heroui/react";
-import { useState } from "react";
+} from '@heroui/react'
+import { useState } from 'react'
 
-import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/components/sheet-frame";
+import { SheetFrame } from '@/components/sheet-frame'
+import { useLocale } from '@/contexts/locale-context'
 
-const MAX_TEXT = 1000;
+const MAX_TEXT = 1000
 
 /** Same choice card as M08, M15 and the M04 sheets: ink frame when selected. */
-const choiceCard =
-  "rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground";
+const choiceCard
+  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /**
  * The shop's public reply, in the M04 sheet frame (M18 comments, M23 reviews): the text it
@@ -32,47 +32,48 @@ export function ReplySheet({
   quoteLanguage,
   help,
   submitLabel,
-  initialText = "",
+  initialText = '',
   language,
   onSubmit,
   onClose,
 }: {
-  title: string;
-  quote: string;
-  quoteLanguage: Language;
-  help: string;
-  submitLabel: string;
-  initialText?: string;
+  title: string
+  quote: string
+  quoteLanguage: Language
+  help: string
+  submitLabel: string
+  initialText?: string
   /** Review replies record their language, so C03 and C09 can show the language note. */
-  language?: Language;
-  onSubmit: (text: string, language?: Language) => void;
-  onClose: () => void;
+  language?: Language
+  onSubmit: (text: string, language?: Language) => void
+  onClose: () => void
 }) {
-  const { t } = useLocale();
-  const [text, setText] = useState(initialText);
-  const [replyLanguage, setReplyLanguage] = useState(language);
-  const [tried, setTried] = useState(false);
-  const invalid = tried && text.trim() === "";
+  const { t } = useLocale()
+  const [text, setText] = useState(initialText)
+  const [replyLanguage, setReplyLanguage] = useState(language)
+  const [tried, setTried] = useState(false)
+  const invalid = tried && text.trim() === ''
 
   const submit = () => {
-    setTried(true);
-    if (text.trim() === "") return;
-    onSubmit(text, replyLanguage);
-  };
+    setTried(true)
+    if (text.trim() === '')
+      return
+    onSubmit(text, replyLanguage)
+  }
 
   return (
     <SheetFrame
       isOpen
-      footer={
+      footer={(
         <>
           <Button fullWidth onPress={submit}>
             {submitLabel}
           </Button>
           <Button fullWidth variant="tertiary" onPress={onClose}>
-            {t("merchantContent.back")}
+            {t('merchantContent.back')}
           </Button>
         </>
-      }
+      )}
       title={title}
       onClose={onClose}
     >
@@ -86,21 +87,21 @@ export function ReplySheet({
         className="flex flex-col gap-6"
         validationBehavior="aria"
         onSubmit={(e) => {
-          e.preventDefault();
-          submit();
+          e.preventDefault()
+          submit()
         }}
       >
         {replyLanguage && (
           <RadioGroup
             value={replyLanguage}
-            onChange={(v) => setReplyLanguage(v as Language)}
+            onChange={v => setReplyLanguage(v as Language)}
           >
             <Label className="text-heading">
-              {t("merchantReviews.sheet.language")}
+              {t('merchantReviews.sheet.language')}
             </Label>
-            <Description>{t("merchantReviews.sheet.languageHelp")}</Description>
+            <Description>{t('merchantReviews.sheet.languageHelp')}</Description>
             <div className="grid grid-cols-2 gap-2">
-              {(["en", "de"] as const).map((lang) => (
+              {(['en', 'de'] as const).map(lang => (
                 <Radio key={lang} className={choiceCard} value={lang}>
                   <Radio.Content>
                     <Radio.Control>
@@ -122,13 +123,13 @@ export function ReplySheet({
           onChange={setText}
         >
           <Label className="text-heading">
-            {t("merchantComments.sheet.label")}
+            {t('merchantComments.sheet.label')}
           </Label>
           <TextArea lang={replyLanguage ?? quoteLanguage} rows={5} />
           <Description>{help}</Description>
-          <FieldError>{t("merchantComments.sheet.error")}</FieldError>
+          <FieldError>{t('merchantComments.sheet.error')}</FieldError>
         </TextField>
       </Form>
     </SheetFrame>
-  );
+  )
 }

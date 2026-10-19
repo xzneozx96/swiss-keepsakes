@@ -1,10 +1,10 @@
-import type { AdviceRequest, PrivateTourRequest } from "../types";
-import type { Language } from "@/contexts/locale-context";
-import type { DemoState, Role } from "@/features/demo/types";
-import type { MailParams } from "@/features/notifications/types";
+import type { AdviceRequest, PrivateTourRequest } from '../types'
+import type { Language } from '@/contexts/locale-context'
+import type { DemoState, Role } from '@/features/demo/types'
+import type { MailParams } from '@/features/notifications/types'
 
-import { shop } from "@/features/catalog/seed";
-import { sendMail } from "@/features/notifications/mail";
+import { shop } from '@/features/catalog/seed'
+import { sendMail } from '@/features/notifications/mail'
 
 /**
  * Who gets N17 and the language each one's interface is set to (spec §6: internal mail uses
@@ -12,28 +12,28 @@ import { sendMail } from "@/features/notifications/mail";
  * prototype assumption: the Owner works in English, the Store Manager in German.
  */
 export const requestStaff: {
-  role: Extract<Role, "owner" | "manager">;
-  name: string;
+  role: Extract<Role, 'owner' | 'manager'>
+  name: string
   /** The To line in the Mail panel (presenter chrome, English). */
-  label: string;
-  language: Language;
+  label: string
+  language: Language
 }[] = [
   {
-    role: "owner",
+    role: 'owner',
     name: shop.ownerName,
     label: `${shop.ownerName} (Owner)`,
-    language: "en",
+    language: 'en',
   },
   {
-    role: "manager",
-    name: "Lukas",
-    label: "Lukas (Store Manager)",
-    language: "de",
+    role: 'manager',
+    name: 'Lukas',
+    label: 'Lukas (Store Manager)',
+    language: 'de',
   },
-];
+]
 
 /** N16 goes out in the shop's default language (outline D10). */
-const SHOP_LANGUAGE: Language = "en";
+const SHOP_LANGUAGE: Language = 'en'
 
 /**
  * N16 new advice request (spec §6, step 4.17) to the M19 recipient address, in English (D10).
@@ -51,21 +51,21 @@ export function mailAdviceRequest(
     guestLanguage: request.language,
     sentAt: request.sentAt,
     count: request.answers.length,
-  };
+  }
 
   request.answers.forEach((a, i) => {
-    params[`q${i}`] = a.question;
-    params[`a${i}`] = a.answer;
-  });
+    params[`q${i}`] = a.question
+    params[`a${i}`] = a.answer
+  })
 
   return sendMail(state, {
     at: request.sentAt,
-    to: "staff",
+    to: 'staff',
     recipient: recipientEmail,
     language: SHOP_LANGUAGE,
-    template: "N16",
+    template: 'N16',
     params,
-  });
+  })
 }
 
 /**
@@ -80,10 +80,10 @@ export function mailPrivateTourRequest(
     (next, staff) =>
       sendMail(next, {
         at: request.sentAt,
-        to: "staff",
+        to: 'staff',
         recipient: staff.label,
         language: staff.language,
-        template: "N17",
+        template: 'N17',
         params: {
           requestId: request.id,
           staffName: staff.name,
@@ -98,5 +98,5 @@ export function mailPrivateTourRequest(
         },
       }),
     state,
-  );
+  )
 }

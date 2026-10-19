@@ -1,9 +1,9 @@
-import { Button } from "@heroui/react";
-import { useParams } from "@tanstack/react-router";
+import { Button } from '@heroui/react'
+import { useParams } from '@tanstack/react-router'
 
-import { useDemoSelector } from "@/features/demo";
-import { useOrderActions } from "@/features/orders/hooks/use-orders";
-import { processingPayment } from "@/features/orders/lib/selectors";
+import { useDemoSelector } from '@/features/demo'
+import { useOrderActions } from '@/features/orders/hooks/use-orders'
+import { processingPayment } from '@/features/orders/lib/selectors'
 
 /**
  * Prototype-bar control for C12 (English, outside the product UI): the provider answers a
@@ -11,16 +11,17 @@ import { processingPayment } from "@/features/orders/lib/selectors";
  * deadline" this shows the late provider result (S3, R05): the order stays cancelled.
  */
 export function PaymentDemoControl({ onDone }: { onDone: () => void }) {
-  const demoOrders = useDemoSelector((s) => s.data.orders);
-  const actions = useOrderActions();
-  const { orderId } = useParams({ strict: false });
-  const order = demoOrders.find((o) => o.id === orderId);
-  const pending = !!order && !!processingPayment(order);
+  const demoOrders = useDemoSelector(s => s.data.orders)
+  const actions = useOrderActions()
+  const { orderId } = useParams({ strict: false })
+  const order = demoOrders.find(o => o.id === orderId)
+  const pending = !!order && !!processingPayment(order)
 
-  const answer = (outcome: "succeeded" | "failed") => {
-    if (order) actions.resolveOnlinePayment(order.id, outcome);
-    onDone();
-  };
+  const answer = (outcome: 'succeeded' | 'failed') => {
+    if (order)
+      actions.resolveOnlinePayment(order.id, outcome)
+    onDone()
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -30,7 +31,7 @@ export function PaymentDemoControl({ onDone }: { onDone: () => void }) {
           isDisabled={!pending}
           size="sm"
           variant="tertiary"
-          onPress={() => answer("succeeded")}
+          onPress={() => answer('succeeded')}
         >
           Provider confirms the payment
         </Button>
@@ -38,17 +39,18 @@ export function PaymentDemoControl({ onDone }: { onDone: () => void }) {
           isDisabled={!pending}
           size="sm"
           variant="tertiary"
-          onPress={() => answer("failed")}
+          onPress={() => answer('failed')}
         >
           Provider rejects the payment
         </Button>
       </div>
       <p className="text-sm text-muted">
         Works on an order whose payment is processing
-        {order ? ` (on screen: ${order.ref})` : ""}. To show a late result,
+        {order ? ` (on screen: ${order.ref})` : ''}
+        . To show a late result,
         choose Processing on the payment page, expire the deadline, then confirm
         here: the order stays cancelled.
       </p>
     </div>
-  );
+  )
 }

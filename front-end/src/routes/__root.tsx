@@ -1,25 +1,25 @@
 import {
-  Outlet,
   createRootRoute,
+  Outlet,
   useRouterState,
-} from "@tanstack/react-router";
+} from '@tanstack/react-router'
 
-import { AppToasts } from "@/components/app-toasts";
-import { EmptyState } from "@/components/empty-state";
-import { InfoIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { PrototypeBar, useStorageFull } from "@/features/demo";
+import { AppToasts } from '@/components/app-toasts'
+import { EmptyState } from '@/components/empty-state'
+import { InfoIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
+import { PrototypeBar, useStorageFull } from '@/features/demo'
 
 export const Route = createRootRoute({
   component: RootLayout,
   notFoundComponent: NotFound,
-});
+})
 
 function RootLayout() {
-  const storageFull = useStorageFull();
+  const storageFull = useStorageFull()
   const isCalendarLab = useRouterState({
-    select: (state) => state.location.pathname === "/lab/calendar",
-  });
+    select: state => state.location.pathname === '/lab/calendar',
+  })
 
   return (
     // The prototype bar takes its own height; each shell fills the rest of the screen.
@@ -28,19 +28,19 @@ function RootLayout() {
       <Outlet />
       <AppToasts storageFull={storageFull} />
     </div>
-  );
+  )
 }
 
 function NotFound() {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <div className="px-4 py-12">
       <EmptyState
-        action={{ label: t("placeholder.backHome"), to: "/" }}
+        action={{ label: t('placeholder.backHome'), to: '/' }}
         icon={InfoIcon}
-        message={t("notFound.message")}
+        message={t('notFound.message')}
       />
     </div>
-  );
+  )
 }

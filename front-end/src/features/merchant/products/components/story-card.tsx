@@ -1,19 +1,19 @@
-import type { Language } from "@/contexts/locale-context";
-import type { LocalizedText } from "@/features/catalog/types";
-import type { LocalizedRich, RichNode } from "@/lib/rich-text";
+import type { Language } from '@/contexts/locale-context'
+import type { LocalizedText } from '@/features/catalog/types'
+import type { LocalizedRich, RichNode } from '@/lib/rich-text'
 
-import { Skeleton } from "@heroui/react";
-import { Suspense, lazy } from "react";
+import { Skeleton } from '@heroui/react'
+import { lazy, Suspense } from 'react'
 
-import { LocalizedField } from "./editor-parts";
+import { StoryIcon } from '@/components/icons'
 
-import { StoryIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { DetailCard } from "@/features/merchant/order-detail/components/detail-card";
-import { isEmptyDoc } from "@/lib/rich-text";
+import { useLocale } from '@/contexts/locale-context'
+import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
+import { isEmptyDoc } from '@/lib/rich-text'
+import { LocalizedField } from './editor-parts'
 
 // Tiptap loads only when an editor opens a story.
-const StoryEditor = lazy(() => import("./story-editor"));
+const StoryEditor = lazy(() => import('./story-editor'))
 
 /**
  * The long story (C03 "About this gift", C09 "About this tour") in one language, inside the
@@ -31,32 +31,32 @@ export function StoryCard({
   titleError,
   bodyError,
 }: {
-  kind: "gift" | "tour";
-  language: Language;
-  title: LocalizedText;
-  body: LocalizedRich;
-  onTitle: (title: LocalizedText) => void;
+  kind: 'gift' | 'tour'
+  language: Language
+  title: LocalizedText
+  body: LocalizedRich
+  onTitle: (title: LocalizedText) => void
   /** Per language, so a fast typist's updates never overwrite each other. */
-  onBody: (language: Language, doc: RichNode | undefined) => void;
-  titleError?: string;
-  bodyError?: string;
+  onBody: (language: Language, doc: RichNode | undefined) => void
+  titleError?: string
+  bodyError?: string
 }) {
-  const { t } = useLocale();
-  const other: Language = language === "en" ? "de" : "en";
-  const has = (lang: Language) => !!body[lang] && !isEmptyDoc(body[lang]);
+  const { t } = useLocale()
+  const other: Language = language === 'en' ? 'de' : 'en'
+  const has = (lang: Language) => !!body[lang] && !isEmptyDoc(body[lang])
 
   return (
     <DetailCard
       icon={StoryIcon}
       id="long-story"
-      title={t("products.story.title")}
+      title={t('products.story.title')}
     >
       <p className="text-sm text-pretty text-muted">
         {t(`products.story.help.${kind}`)}
       </p>
       <LocalizedField
         error={titleError}
-        label={t("products.story.storyTitle")}
+        label={t('products.story.storyTitle')}
         language={language}
         value={title}
         onChange={onTitle}
@@ -64,9 +64,9 @@ export function StoryCard({
       <Suspense fallback={<Skeleton className="h-60 w-full rounded-2xl" />}>
         <StoryEditor
           key={language}
-          label={t("products.story.body")}
+          label={t('products.story.body')}
           value={body[language]}
-          onChange={(doc) => onBody(language, doc)}
+          onChange={doc => onBody(language, doc)}
         />
       </Suspense>
       {bodyError && (
@@ -76,12 +76,12 @@ export function StoryCard({
       )}
       {!has(language) && has(other) && (
         <p className="text-xs text-pretty text-muted">
-          {t("products.story.fallback", {
+          {t('products.story.fallback', {
             language: t(`products.lang.${language}`),
             other: t(`products.lang.${other}`),
           })}
         </p>
       )}
     </DetailCard>
-  );
+  )
 }

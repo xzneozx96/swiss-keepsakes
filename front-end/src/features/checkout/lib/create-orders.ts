@@ -1,40 +1,40 @@
-import type { LocalizedText } from "@/features/catalog/types";
-import type { Language } from "@/contexts/locale-context";
-import type { DemoState } from "@/features/demo/types";
-import type { Order, OrderLine } from "@/features/orders/types";
+import type { Language } from '@/contexts/locale-context'
+import type { LocalizedText } from '@/features/catalog/types'
+import type { DemoState } from '@/features/demo/types'
+import type { Order, OrderLine } from '@/features/orders/types'
 
 import {
   groupCartIntoOrders,
   selectedCartLines,
-} from "@/features/cart/lib/group-cart";
-import { variantAvailable } from "@/features/orders/lib/selectors";
-import { sendMail } from "@/features/notifications/mail";
-import { attributedPartnerId } from "@/features/partners/referral";
+} from '@/features/cart/lib/group-cart'
+import { sendMail } from '@/features/notifications/mail'
+import { variantAvailable } from '@/features/orders/lib/selectors'
+import { attributedPartnerId } from '@/features/partners/referral'
 
 export interface CheckoutContext {
   /** Demo time (features/demo/clock.ts). */
-  now: Date;
+  now: Date
   /** The guest's UI language: stored on the order, so guest emails use it (spec §6). */
-  language: Language;
+  language: Language
   /** Staff emails use the staff UI language (T0 convention). */
-  staffLanguage: Language;
+  staffLanguage: Language
 }
 
 /** A cart line the shop can no longer supply in the requested quantity (stock changed). */
 export interface SoldOutLine {
-  productName: LocalizedText;
-  variantLabel: LocalizedText;
+  productName: LocalizedText
+  variantLabel: LocalizedText
   /** False for a one-option gift, whose "Standard" label says nothing. */
-  hasOptions: boolean;
-  requested: number;
-  available: number;
+  hasOptions: boolean
+  requested: number
+  available: number
 }
 
-export type SendBlock =
-  | { code: "empty" }
-  | { code: "signed-out" }
-  | { code: "invalid-date"; count: number }
-  | { code: "stock-changed"; lines: SoldOutLine[] };
+export type SendBlock
+  = | { code: 'empty' }
+    | { code: 'signed-out' }
+    | { code: 'invalid-date', count: number }
+    | { code: 'stock-changed', lines: SoldOutLine[] }
 
 /**
  * Policies are snapshotted once per order (AC15), but the cart groups by payment policy,
@@ -42,17 +42,18 @@ export type SendBlock =
  * Then the order keeps every distinct text, one paragraph each, so none is lost.
  */
 function joinedPolicy(texts: LocalizedText[]): LocalizedText {
-  const out: LocalizedText = {};
+  const out: LocalizedText = {}
 
-  for (const language of ["en", "de"] as const) {
+  for (const language of ['en', 'de'] as const) {
     const distinct = [
-      ...new Set(texts.map((t) => t[language]).filter(Boolean)),
-    ];
+      ...new Set(texts.map(t => t[language]).filter(Boolean)),
+    ]
 
-    if (distinct.length) out[language] = distinct.join("\n\n");
+    if (distinct.length)
+      out[language] = distinct.join('\n\n')
   }
 
-  return out;
+  return out
 }
 
 /**
@@ -64,19 +65,19 @@ function joinedPolicy(texts: LocalizedText[]): LocalizedText {
  */
 export function buildOrderDrafts(
   state: DemoState,
-  ctx: Pick<CheckoutContext, "now" | "language">,
+  ctx: Pick<CheckoutContext, 'now' | 'language'>,
 ): Order[] {
-  const { data } = state;
-  const at = ctx.now.toISOString();
-  const partnerId = attributedPartnerId(data.referralVisits, ctx.now);
+  const { data } = state
+  const at = ctx.now.toISOString()
+  const partnerId = attributedPartnerId(data.referralVisits, ctx.now)
 
   return groupCartIntoOrders(
     selectedCartLines(data.cart),
     data.products,
     ctx.now,
   ).map((group, i) => {
-    const ref = `SK-${data.nextOrderNumber + i}`;
-    const id = ref.toLowerCase();
+    const ref = `SK-${data.nextOrderNumber + i}`
+    const id = ref.toLowerCase()
     const lines: OrderLine[] = group.lines.map(
       ({ line, product, variant, unitPrice }, n) => ({
         id: `${id}-${n + 1}`,
@@ -89,12 +90,12 @@ export function buildOrderDrafts(
         engraving: line.engraving,
         commissionRate: product.commissionRate,
       }),
-    );
+    )
 
     return {
       id,
       ref,
-      guestId: data.signedInGuestId ?? "",
+      guestId: data.signedInGuestId ?? '',
       language: ctx.language,
       createdAt: at,
       lines,
@@ -102,14 +103,14 @@ export function buildOrderDrafts(
       pickupPlaceId: group.pickupPlaceId,
       paymentPolicy: group.paymentPolicy,
       cancellationPolicy: joinedPolicy(
-        group.lines.map((l) => l.product.cancellationPolicy),
+        group.lines.map(l => l.product.cancellationPolicy),
       ),
-      status: "requested",
+      status: 'requested',
       partnerId,
       payments: [],
-      log: [{ type: "requested", at, actor: "guest" }],
-    };
-  });
+      log: [{ type: 'requested', at, actor: 'guest' }],
+    }
+  })
 }
 
 /**
@@ -118,31 +119,37 @@ export function buildOrderDrafts(
  * sit in two orders) with the units not yet held by accepted orders.
  */
 export function sendBlock(state: DemoState, now: Date): SendBlock | null {
-  const { data } = state;
+  const { data } = state
 
-  const chosen = selectedCartLines(data.cart);
+  const chosen = selectedCartLines(data.cart)
 
-  if (chosen.length === 0) return { code: "empty" };
-  if (!data.signedInGuestId) return { code: "signed-out" };
+  if (chosen.length === 0)
+    return { code: 'empty' }
+  if (!data.signedInGuestId)
+    return { code: 'signed-out' }
 
-  const groups = groupCartIntoOrders(chosen, data.products, now);
+  const groups = groupCartIntoOrders(chosen, data.products, now)
   const invalid = groups
-    .flatMap((g) => g.lines)
-    .filter((l) => l.invalidDate).length;
+    .flatMap(g => g.lines)
+    .filter(l => l.invalidDate)
+    .length
 
-  if (invalid) return { code: "invalid-date", count: invalid };
+  if (invalid)
+    return { code: 'invalid-date', count: invalid }
 
   const wanted = new Map<
     string,
-    SoldOutLine & { productId: string; variantId: string }
-  >();
+    SoldOutLine & { productId: string, variantId: string }
+  >()
 
-  for (const { line, product, variant } of groups.flatMap((g) => g.lines)) {
-    const key = `${product.id}/${variant.id}`;
-    const entry = wanted.get(key);
+  for (const { line, product, variant } of groups.flatMap(g => g.lines)) {
+    const key = `${product.id}/${variant.id}`
+    const entry = wanted.get(key)
 
-    if (entry) entry.requested += line.quantity;
-    else
+    if (entry) {
+      entry.requested += line.quantity
+    }
+    else {
       wanted.set(key, {
         productId: product.id,
         variantId: variant.id,
@@ -151,14 +158,15 @@ export function sendBlock(state: DemoState, now: Date): SendBlock | null {
         hasOptions: product.variants.length > 1,
         requested: line.quantity,
         available: variantAvailable(data, product.id, variant.id),
-      });
+      })
+    }
   }
 
   const short = [...wanted.values()]
-    .filter((w) => w.requested > w.available)
-    .map(({ productId: _p, variantId: _v, ...rest }) => rest);
+    .filter(w => w.requested > w.available)
+    .map(({ productId: _p, variantId: _v, ...rest }) => rest)
 
-  return short.length ? { code: "stock-changed", lines: short } : null;
+  return short.length ? { code: 'stock-changed', lines: short } : null
 }
 
 /**
@@ -171,43 +179,44 @@ export function createOrdersFromCart(
   state: DemoState,
   ctx: CheckoutContext,
 ): DemoState {
-  if (sendBlock(state, ctx.now)) return state;
+  if (sendBlock(state, ctx.now))
+    return state
 
-  const orders = buildOrderDrafts(state, ctx);
-  const at = ctx.now.toISOString();
+  const orders = buildOrderDrafts(state, ctx)
+  const at = ctx.now.toISOString()
   let next: DemoState = {
     ...state,
     data: {
       ...state.data,
       orders: [...state.data.orders, ...orders],
       nextOrderNumber: state.data.nextOrderNumber + orders.length,
-      cart: state.data.cart.filter((l) => !l.selected),
+      cart: state.data.cart.filter(l => !l.selected),
     },
-  };
+  }
 
   for (const order of orders) {
     next = sendMail(next, {
       at,
-      to: "guest",
+      to: 'guest',
       guestId: order.guestId,
       language: order.language,
-      template: "N02",
+      template: 'N02',
       orderId: order.id,
       params: {
         orderRef: order.ref,
         pickupDate: order.pickupDate,
         pickupPlaceId: order.pickupPlaceId,
       },
-    });
+    })
     next = sendMail(next, {
       at,
-      to: "staff",
+      to: 'staff',
       language: ctx.staffLanguage,
-      template: "N03",
+      template: 'N03',
       orderId: order.id,
       params: { orderRef: order.ref },
-    });
+    })
   }
 
-  return next;
+  return next
 }

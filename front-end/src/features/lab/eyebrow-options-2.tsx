@@ -1,19 +1,19 @@
-import type { Part } from "./eyebrow-options";
+import type { Part } from './eyebrow-options'
 
-import { PickupIcon } from "@/components/icons";
-import { Media } from "@/components/media";
+import { PickupIcon } from '@/components/icons'
+import { Media } from '@/components/media'
 
-const title = "font-serif text-[24px] leading-[30px] font-medium text-balance";
-const sub = "text-sm text-muted";
-const hand = { fontFamily: "Caveat, cursive" };
+const title = 'font-serif text-[24px] leading-[30px] font-medium text-balance'
+const sub = 'text-sm text-muted'
+const hand = { fontFamily: 'Caveat, cursive' }
 
-function Text({ part, className = "" }: { part: Part; className?: string }) {
+function Text({ part, className = '' }: { part: Part, className?: string }) {
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
       <h2 className={title}>{part.title}</h2>
       <p className={sub}>{part.subtitle}</p>
     </div>
-  );
+  )
 }
 
 /** F1 · Handwritten: the label in a handwriting font with a drawn swoosh, like the client's card. */
@@ -24,7 +24,7 @@ export function EyebrowHandwritten({ part }: { part: Part }) {
         className="relative inline-flex -rotate-2 self-start text-[28px] leading-8 font-semibold"
         style={{ ...hand, color: part.color }}
       >
-        {part.number}. {part.label}
+        {`${part.number}. ${part.label}`}
         <svg
           aria-hidden
           className="absolute -bottom-1.5 left-0 h-2.5 w-full"
@@ -43,7 +43,7 @@ export function EyebrowHandwritten({ part }: { part: Part }) {
       </p>
       <Text part={part} />
     </div>
-  );
+  )
 }
 
 /** F2 · Washi tape: the label on a strip of coloured paper tape, as if taped into a travel journal. */
@@ -55,14 +55,14 @@ export function EyebrowTape({ part }: { part: Part }) {
         style={{
           ...hand,
           backgroundColor: `color-mix(in oklab, ${part.color} 28%, transparent)`,
-          clipPath: "polygon(2% 0, 98% 4%, 100% 50%, 97% 100%, 3% 96%, 0 52%)",
+          clipPath: 'polygon(2% 0, 98% 4%, 100% 50%, 97% 100%, 3% 96%, 0 52%)',
         }}
       >
         {part.label}
       </span>
       <Text part={part} />
     </div>
-  );
+  )
 }
 
 /** F3 · Postage stamp: a small perforated stamp with the part's photo and number beside the title. */
@@ -86,12 +86,12 @@ export function EyebrowStamp({ part }: { part: Part }) {
       </span>
       <Text className="min-w-0" part={part} />
     </div>
-  );
+  )
 }
 
 /** F4 · Postmark: a round ink postmark "LUZERN" with the step number, stamped over the corner. */
 export function EyebrowPostmark({ part }: { part: Part }) {
-  const id = `pm-${part.number}`;
+  const id = `pm-${part.number}`
 
   return (
     <div className="relative">
@@ -153,7 +153,7 @@ export function EyebrowPostmark({ part }: { part: Part }) {
         <Text part={part} />
       </div>
     </div>
-  );
+  )
 }
 
 /** F5 · Trail pin: the dotted path from "How I'll show you Luzerne" arrives at a map pin for each stop. */
@@ -191,7 +191,7 @@ export function EyebrowTrailPin({ part }: { part: Part }) {
         <Text part={part} />
       </div>
     </div>
-  );
+  )
 }
 
 /** F6 · Photo band: a short panorama of the part's place with the number and label on it. */
@@ -211,7 +211,7 @@ export function EyebrowPhotoBand({ part }: { part: Part }) {
       </Media>
       <Text part={part} />
     </div>
-  );
+  )
 }
 
 /** F7 · Ribbon: the label on a small notched ribbon in the step's colour, like a gift tag. */
@@ -223,7 +223,7 @@ export function EyebrowRibbon({ part }: { part: Part }) {
         style={{
           backgroundColor: part.color,
           clipPath:
-            "polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%)",
+            'polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%)',
         }}
       >
         <span className="font-serif text-[15px]">{part.number}</span>
@@ -232,5 +232,5 @@ export function EyebrowRibbon({ part }: { part: Part }) {
       </span>
       <Text part={part} />
     </div>
-  );
+  )
 }

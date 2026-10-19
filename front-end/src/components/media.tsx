@@ -1,10 +1,10 @@
-import { photoUrl } from "@/lib/photos";
+import { photoUrl } from '@/lib/photos'
 
 interface MediaProps {
-  photo?: string;
-  alt: string;
-  className?: string;
-  children?: React.ReactNode;
+  photo?: string
+  alt: string
+  className?: string
+  children?: React.ReactNode
 }
 
 /**
@@ -12,8 +12,8 @@ interface MediaProps {
  * top when it exists. The gradient also shows while a lazy photo is still loading.
  * Children (e.g. a Chip) sit on top, positioned by the caller.
  */
-export function Media({ photo, alt, className = "", children }: MediaProps) {
-  const src = photoUrl(photo);
+export function Media({ photo, alt, className = '', children }: MediaProps) {
+  const src = photoUrl(photo)
 
   return (
     <div
@@ -30,5 +30,5 @@ export function Media({ photo, alt, className = "", children }: MediaProps) {
       )}
       {children}
     </div>
-  );
+  )
 }

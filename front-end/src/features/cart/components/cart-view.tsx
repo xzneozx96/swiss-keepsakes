@@ -1,9 +1,9 @@
-import type { ConfirmOptions } from "@/components/confirm-dialog";
+import type { ConfirmOptions } from '@/components/confirm-dialog'
 
-import { Alert, Button, Checkbox, Drawer, Label } from "@heroui/react";
-import { useState } from "react";
+import { Alert, Button, Checkbox, Drawer, Label } from '@heroui/react'
+import { useState } from 'react'
 
-import { useConfirm } from "@/components/confirm-dialog";
+import { useConfirm } from '@/components/confirm-dialog'
 import {
   CartRemoveIcon,
   ChevronDownIcon,
@@ -15,101 +15,101 @@ import {
   PickupIcon,
   ShopIcon,
   StatusSuccessIcon,
-} from "@/components/icons";
-import { BackButton } from "@/components/layout/cart-button";
-import { Media } from "@/components/media";
-import { QuantityBox } from "@/components/quantity-stepper";
-import { useSheetExit } from "@/components/sheet-exit";
+} from '@/components/icons'
+import { BackButton } from '@/components/layout/cart-button'
+import { Media } from '@/components/media'
+import { QuantityBox } from '@/components/quantity-stepper'
+import { useSheetExit } from '@/components/sheet-exit'
 
 export interface CartLineView {
-  id: string;
-  name: string;
-  photo?: string;
+  id: string
+  name: string
+  photo?: string
   /** Chosen option ("Small"); undefined for a one-option ("Standard") gift. */
-  option?: string;
+  option?: string
   /** "Engraving “Anna”"; undefined without engraving. */
-  engraving?: string;
+  engraving?: string
   /** Seller shop name. */
-  store: string;
+  store: string
   /** Unit price, the line's highlighted price: "CHF 89.00". */
-  price: string;
+  price: string
   /** "each", after the price. */
-  each: string;
+  each: string
   /** Payment rule in short: "30% deposit after confirmation". */
-  policy: string;
+  policy: string
   /** "Request to receive on Wed 21 Oct". */
-  requestDate: string;
+  requestDate: string
   /** Pickup place: "Shop Altstadt". */
-  place: string;
+  place: string
   select: {
     /** "Select Pocket knife · Medium, Wed 21 Oct". */
-    label: string;
-    isSelected: boolean;
-    onChange: (selected: boolean) => void;
-  };
+    label: string
+    isSelected: boolean
+    onChange: (selected: boolean) => void
+  }
   quantity: {
     /** "Quantity, Pocket knife". */
-    label: string;
-    value: number;
-    max: number;
-    onChange: (value: number) => void;
-  };
-  removeAria: string;
+    label: string
+    value: number
+    max: number
+    onChange: (value: number) => void
+  }
+  removeAria: string
   /** Asked first (owner rule): "Remove Pocket knife · M?". */
-  removeConfirm: ConfirmOptions;
-  onRemove: () => void;
+  removeConfirm: ConfirmOptions
+  onRemove: () => void
   /** The requested date can no longer be requested (AC04); `onFix` moves it to the earliest. */
   invalid?: {
-    title: string;
-    message: string;
-    fixLabel: string;
-    onFix: () => void;
-  };
+    title: string
+    message: string
+    fixLabel: string
+    onFix: () => void
+  }
 }
 
 export interface CartViewProps {
-  title: string;
-  backLabel: string;
+  title: string
+  backLabel: string
   /** Dates are requests; different dates, places or payment rules become separate orders. */
-  note: { title: string; body: string };
-  lines: CartLineView[];
+  note: { title: string, body: string }
+  lines: CartLineView[]
   bar: {
     /** Always visible, so it stays reachable while the list scrolls. */
     selectAll: {
-      label: string;
-      isSelected: boolean;
-      isIndeterminate: boolean;
-      onChange: (selected: boolean) => void;
-    };
+      label: string
+      isSelected: boolean
+      isIndeterminate: boolean
+      onChange: (selected: boolean) => void
+    }
     /** "2 of 3 selected". */
-    selectedCount: string;
-    totalLabel: string;
-    total: string;
+    selectedCount: string
+    totalLabel: string
+    total: string
     /** Accessible name of the total, which opens the breakdown sheet. */
-    detailsLabel: string;
-    continueLabel: string;
+    detailsLabel: string
+    continueLabel: string
     /**
      * Why Continue cannot go on yet: nothing is ticked, or a ticked line has a date that
      * can no longer be requested (`fixLineId`, whose fix button gets focus).
      */
-    blocked?: { message: string; fixLineId?: string };
-  };
+    blocked?: { message: string, fixLineId?: string }
+  }
   /** Bottom sheet opened from the bar total: each ticked gift with its total, then the totals. */
   breakdown: {
-    title: string;
-    closeLabel: string;
-    items: { id: string; label: string; pickup: string; total: string }[];
+    title: string
+    closeLabel: string
+    items: { id: string, label: string, pickup: string, total: string }[]
     /** Shown instead of the items when nothing is ticked. */
-    emptyMessage: string;
-    subtotalLabel: string;
-    subtotal: string;
-    totalLabel: string;
-    total: string;
-    chip: string;
-  };
-  onBack: () => void;
+    emptyMessage: string
+    subtotalLabel: string
+    subtotal: string
+    totalLabel: string
+    total: string
+    chip: string
+  }
+  onBack: () => void
   /** Hand-off to sign-in (C05) and review (C06) with the ticked lines; only when not blocked. */
-  onContinue: () => void;
+  onContinue: () => void
 }
 
 /**
@@ -128,42 +128,44 @@ export function CartView({
   onBack,
   onContinue,
 }: CartViewProps) {
-  const [showBlocked, setShowBlocked] = useState(false);
-  const [showBreakdown, setShowBreakdown] = useState(false);
-  const { confirm, dialog } = useConfirm();
+  const [showBlocked, setShowBlocked] = useState(false)
+  const [showBreakdown, setShowBreakdown] = useState(false)
+  const { confirm, dialog } = useConfirm()
 
   const handleRemove = async (line: CartLineView) => {
-    if (!(await confirm(line.removeConfirm))) return;
-    line.onRemove();
+    if (!(await confirm(line.removeConfirm)))
+      return
+    line.onRemove()
     // The pressed button is gone; keep keyboard focus in the cart instead of on <body>.
     // After the last line the route's empty state renders, so look the heading up after paint.
     requestAnimationFrame(() =>
-      document.querySelector<HTMLElement>("[data-cart-title]")?.focus(),
-    );
-  };
+      document.querySelector<HTMLElement>('[data-cart-title]')?.focus(),
+    )
+  }
 
   const handleContinue = () => {
     if (!bar.blocked) {
-      onContinue();
+      onContinue()
 
-      return;
+      return
     }
-    setShowBlocked(true);
+    setShowBlocked(true)
     // Pressing explains (as on C03): take the guest to what needs attention. Select all is
     // in the always-visible bar, so only a line's fix button needs scrolling to.
     if (bar.blocked.fixLineId) {
       const fix = document.querySelector<HTMLElement>(
         `[data-date-fix="${bar.blocked.fixLineId}"]`,
-      );
+      )
 
-      fix?.scrollIntoView({ behavior: "smooth", block: "center" });
-      fix?.focus({ preventScroll: true });
-    } else {
-      document
-        .querySelector<HTMLElement>("[data-select-all] input")
-        ?.focus({ preventScroll: true });
+      fix?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      fix?.focus({ preventScroll: true })
     }
-  };
+    else {
+      document
+        .querySelector<HTMLElement>('[data-select-all] input')
+        ?.focus({ preventScroll: true })
+    }
+  }
 
   return (
     <div className="flex flex-1 flex-col">
@@ -191,7 +193,7 @@ export function CartView({
         </Alert>
 
         <ul className="flex flex-col gap-3">
-          {lines.map((line) => (
+          {lines.map(line => (
             <GiftSlip key={line.id} line={line} onRemove={handleRemove} />
           ))}
         </ul>
@@ -202,7 +204,7 @@ export function CartView({
         className="sticky bottom-0 z-30 flex flex-col gap-2 border-t border-separator bg-background px-6 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]"
       >
         <p aria-live="polite" className="text-sm text-danger empty:hidden">
-          {showBlocked && bar.blocked ? bar.blocked.message : ""}
+          {showBlocked && bar.blocked ? bar.blocked.message : ''}
         </p>
         <div className="flex min-h-11 items-center justify-between gap-3">
           <div data-select-all>
@@ -243,7 +245,7 @@ export function CartView({
       />
       {dialog}
     </div>
-  );
+  )
 }
 
 /** Price breakdown as a bottom sheet (Drawer card; sheets instead of new screens). */
@@ -252,11 +254,11 @@ function BreakdownSheet({
   isOpen,
   onOpenChange,
 }: {
-  breakdown: CartViewProps["breakdown"];
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  breakdown: CartViewProps['breakdown']
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
 }) {
-  const exitRef = useSheetExit();
+  const exitRef = useSheetExit()
 
   return (
     <Drawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -271,21 +273,23 @@ function BreakdownSheet({
             </Drawer.Heading>
           </Drawer.Header>
           <Drawer.Body className="flex flex-col gap-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] text-foreground">
-            {breakdown.items.length ? (
-              <ul className="flex flex-col gap-3">
-                {breakdown.items.map((item) => (
-                  <li key={item.id} className="flex items-start gap-3">
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span>{item.label}</span>
-                      <span className="text-sm text-muted">{item.pickup}</span>
-                    </span>
-                    <span className="tabular-nums">{item.total}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-muted">{breakdown.emptyMessage}</p>
-            )}
+            {breakdown.items.length
+              ? (
+                  <ul className="flex flex-col gap-3">
+                    {breakdown.items.map(item => (
+                      <li key={item.id} className="flex items-start gap-3">
+                        <span className="flex min-w-0 flex-1 flex-col">
+                          <span>{item.label}</span>
+                          <span className="text-sm text-muted">{item.pickup}</span>
+                        </span>
+                        <span className="tabular-nums">{item.total}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              : (
+                  <p className="text-muted">{breakdown.emptyMessage}</p>
+                )}
             <dl className="flex flex-col gap-2 border-t border-separator pt-4">
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-muted">{breakdown.subtotalLabel}</dt>
@@ -304,7 +308,7 @@ function BreakdownSheet({
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>
-  );
+  )
 }
 
 /** HeroUI Checkbox, 24px box (lab CartSelectDemo); the label is visible or only for screen readers. */
@@ -315,11 +319,11 @@ function Check({
   isIndeterminate,
   onChange,
 }: {
-  label: string;
-  hideLabel?: boolean;
-  isSelected: boolean;
-  isIndeterminate?: boolean;
-  onChange: (selected: boolean) => void;
+  label: string
+  hideLabel?: boolean
+  isSelected: boolean
+  isIndeterminate?: boolean
+  onChange: (selected: boolean) => void
 }) {
   return (
     <Checkbox
@@ -336,7 +340,7 @@ function Check({
         {!hideLabel && <Label>{label}</Label>}
       </Checkbox.Content>
     </Checkbox>
-  );
+  )
 }
 
 /** One gift as a white card (Lab L "Gift slip", owner choice 13.10.2026), M02 card surface. */
@@ -344,8 +348,8 @@ function GiftSlip({
   line,
   onRemove,
 }: {
-  line: CartLineView;
-  onRemove: (line: CartLineView) => void;
+  line: CartLineView
+  onRemove: (line: CartLineView) => void
 }) {
   return (
     <li className="flex flex-col gap-4 rounded-3xl bg-surface p-4 shadow-surface">
@@ -443,5 +447,5 @@ function GiftSlip({
         </Alert>
       )}
     </li>
-  );
+  )
 }

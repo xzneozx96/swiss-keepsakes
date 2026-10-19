@@ -3,27 +3,26 @@ import {
   useCanGoBack,
   useNavigate,
   useRouter,
-} from "@tanstack/react-router";
+} from '@tanstack/react-router'
 
-import { PlannerChat } from "@/features/planner/components/planner-chat";
+import { PlannerChat } from '@/features/planner/components/planner-chat'
 
 // C21 Trip planner demo (R19): the floating button and the C01 banner open it (D1).
-export const Route = createFileRoute("/_guest/plan")({
+export const Route = createFileRoute('/_guest/plan')({
   // The composer is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   component: PlanPage,
-});
+})
 
 function PlanPage() {
-  const router = useRouter();
-  const navigate = useNavigate();
-  const canGoBack = useCanGoBack();
+  const router = useRouter()
+  const navigate = useNavigate()
+  const canGoBack = useCanGoBack()
 
   return (
     <PlannerChat
       onLeave={() =>
-        canGoBack ? router.history.back() : void navigate({ to: "/" })
-      }
+        canGoBack ? router.history.back() : void navigate({ to: '/' })}
     />
-  );
+  )
 }

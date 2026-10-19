@@ -1,27 +1,27 @@
-import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
+import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
 
-import { useCallback, useEffect, useRef } from "react";
-import { flushSync } from "react-dom";
+import { useCallback, useEffect, useRef } from 'react'
+import { flushSync } from 'react-dom'
 
-import { reducedMotion } from "./map-shared";
+import { useLatest } from '@/hooks/use-latest'
 
-import { useLatest } from "@/hooks/use-latest";
+import { reducedMotion } from './map-shared'
 
-const THRESHOLD = 4;
-const EDGE = 72;
-const SCROLL_STEP = 14;
+const THRESHOLD = 4
+const EDGE = 72
+const SCROLL_STEP = 14
 
-type Drag = {
-  pointerId: number;
-  from: number;
-  to: number;
-  startY: number;
-  y: number;
-  active: boolean;
-  tops: number[];
-  heights: number[];
-  gap: number;
-};
+interface Drag {
+  pointerId: number
+  from: number
+  to: number
+  startY: number
+  y: number
+  active: boolean
+  tops: number[]
+  heights: number[]
+  gap: number
+}
 
 /**
  * Reorder the stops by dragging a card's handle: pointer events (mouse, touch and pen alike),
@@ -37,124 +37,133 @@ export function useStopDrag({
   onStart,
   onDrop,
 }: {
-  listRef: RefObject<HTMLOListElement | null>;
-  placeholderRef: RefObject<HTMLDivElement | null>;
-  onStart: (index: number) => void;
-  onDrop: (from: number, to: number) => void;
+  listRef: RefObject<HTMLOListElement | null>
+  placeholderRef: RefObject<HTMLDivElement | null>
+  onStart: (index: number) => void
+  onDrop: (from: number, to: number) => void
 }) {
-  const drag = useRef<Drag | null>(null);
-  const frame = useRef(0);
-  const callbacks = useLatest({ onStart, onDrop });
+  const dragRef = useRef<Drag | null>(null)
+  const frameRef = useRef(0)
+  const callbacks = useLatest({ onStart, onDrop })
 
   const items = useCallback(
     () => Array.from(listRef.current?.children ?? []) as HTMLElement[],
     [listRef],
-  );
+  )
 
   const finish = useCallback(
     (commit: boolean) => {
-      const current = drag.current;
+      const current = dragRef.current
 
-      drag.current = null;
-      cancelAnimationFrame(frame.current);
-      document.body.style.userSelect = "";
-      document.body.style.cursor = "";
+      dragRef.current = null
+      cancelAnimationFrame(frameRef.current)
+      document.body.style.userSelect = ''
+      document.body.style.cursor = ''
       for (const item of items()) {
-        item.style.transform = "";
-        item.style.transition = "";
-        item.style.zIndex = "";
-        item.removeAttribute("data-lifted");
+        item.style.transform = ''
+        item.style.transition = ''
+        item.style.zIndex = ''
+        item.removeAttribute('data-lifted')
       }
-      if (placeholderRef.current) placeholderRef.current.hidden = true;
+      if (placeholderRef.current)
+        placeholderRef.current.hidden = true
       if (current?.active && commit && current.to !== current.from)
-        callbacks.current.onDrop(current.from, current.to);
+        callbacks.current.onDrop(current.from, current.to)
     },
     [items, placeholderRef, callbacks],
-  );
+  )
 
-  useEffect(() => () => finish(false), [finish]);
+  useEffect(() => () => finish(false), [finish])
 
   const layout = () => {
-    const current = drag.current;
-    const nodes = items();
+    const current = dragRef.current
+    const nodes = items()
 
-    if (!current?.active || !nodes.length) return;
-    const { from, tops, heights, gap } = current;
-    const lift = heights[from] + gap;
-    const dy = current.y + window.scrollY - current.startY;
-    const center = tops[from] + heights[from] / 2 + dy;
-    let to = from;
+    if (!current?.active || !nodes.length)
+      return
+    const { from, tops, heights, gap } = current
+    const lift = heights[from] + gap
+    const dy = current.y + window.scrollY - current.startY
+    const center = tops[from] + heights[from] / 2 + dy
+    let to = from
 
     // Where the dragged card's middle sits among the others' middles decides the slot.
     for (let i = 0; i < nodes.length; i++) {
-      if (i === from) continue;
-      const middle = tops[i] + heights[i] / 2;
+      if (i === from)
+        continue
+      const middle = tops[i] + heights[i] / 2
 
-      if (i < from && center < middle) to = Math.min(to, i);
-      if (i > from && center > middle) to = Math.max(to, i);
+      if (i < from && center < middle)
+        to = Math.min(to, i)
+      if (i > from && center > middle)
+        to = Math.max(to, i)
     }
-    current.to = to;
+    current.to = to
     nodes.forEach((node, i) => {
-      node.style.transition = reducedMotion() ? "" : "transform 150ms ease-out";
+      node.style.transition = reducedMotion() ? '' : 'transform 150ms ease-out'
       if (i === from) {
-        node.style.transition = "";
-        node.style.transform = `translateY(${dy}px)`;
+        node.style.transition = ''
+        node.style.transform = `translateY(${dy}px)`
 
-        return;
+        return
       }
-      const shift =
-        to > from && i > from && i <= to
+      const shift
+        = to > from && i > from && i <= to
           ? -lift
           : to < from && i >= to && i < from
             ? lift
-            : 0;
+            : 0
 
-      node.style.transform = shift ? `translateY(${shift}px)` : "";
-    });
-    const slot =
-      to < from
+      node.style.transform = shift ? `translateY(${shift}px)` : ''
+    })
+    const slot
+      = to < from
         ? tops[to]
         : to > from
           ? tops[to] + heights[to] - heights[from]
-          : tops[from];
-    const placeholder = placeholderRef.current;
+          : tops[from]
+    const placeholder = placeholderRef.current
 
     if (placeholder) {
-      placeholder.hidden = false;
-      placeholder.style.top = `${slot}px`;
-      placeholder.style.height = `${heights[from]}px`;
+      placeholder.hidden = false
+      placeholder.style.top = `${slot}px`
+      placeholder.style.height = `${heights[from]}px`
     }
-  };
+  }
 
   // Near the top or bottom of the screen the page scrolls and the card follows.
   const autoScroll = () => {
-    const current = drag.current;
+    const current = dragRef.current
 
-    if (!current?.active) return;
-    const before = window.scrollY;
+    if (!current?.active)
+      return
+    const before = window.scrollY
 
-    if (current.y < EDGE) window.scrollBy(0, -SCROLL_STEP);
+    if (current.y < EDGE)
+      window.scrollBy(0, -SCROLL_STEP)
     else if (current.y > window.innerHeight - EDGE)
-      window.scrollBy(0, SCROLL_STEP);
-    if (window.scrollY !== before) layout();
-    frame.current = requestAnimationFrame(autoScroll);
-  };
+      window.scrollBy(0, SCROLL_STEP)
+    if (window.scrollY !== before)
+      layout()
+    frameRef.current = requestAnimationFrame(autoScroll)
+  }
 
   const measure = (current: Drag) => {
-    const nodes = items();
+    const nodes = items()
 
-    current.tops = nodes.map((n) => n.offsetTop);
-    current.heights = nodes.map((n) => n.offsetHeight);
-    current.gap =
-      nodes.length > 1
+    current.tops = nodes.map(n => n.offsetTop)
+    current.heights = nodes.map(n => n.offsetHeight)
+    current.gap
+      = nodes.length > 1
         ? current.tops[1] - current.tops[0] - current.heights[0]
-        : 0;
-  };
+        : 0
+  }
 
   const press = (index: number) => (event: ReactPointerEvent<HTMLElement>) => {
-    if (event.button !== 0 && event.pointerType === "mouse") return;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    drag.current = {
+    if (event.button !== 0 && event.pointerType === 'mouse')
+      return
+    event.currentTarget.setPointerCapture(event.pointerId)
+    dragRef.current = {
       pointerId: event.pointerId,
       from: index,
       to: index,
@@ -164,43 +173,48 @@ export function useStopDrag({
       tops: [],
       heights: [],
       gap: 0,
-    };
-  };
+    }
+  }
 
   const move = (event: ReactPointerEvent<HTMLElement>) => {
-    const current = drag.current;
+    const current = dragRef.current
 
-    if (!current || current.pointerId !== event.pointerId) return;
-    current.y = event.clientY;
+    if (!current || current.pointerId !== event.pointerId)
+      return
+    current.y = event.clientY
     if (!current.active) {
       if (Math.abs(event.clientY + window.scrollY - current.startY) < THRESHOLD)
-        return;
-      current.active = true;
-      document.body.style.userSelect = "none";
-      document.body.style.cursor = "grabbing";
+        return
+      current.active = true
+      document.body.style.userSelect = 'none'
+      document.body.style.cursor = 'grabbing'
       // The open card folds first (rendered now, so it is measured folded), and the drag is
       // measured from where the pointer is.
-      flushSync(() => callbacks.current.onStart(current.from));
-      measure(current);
-      current.startY = current.y + window.scrollY;
-      const node = items()[current.from];
+      // eslint-disable-next-line react-dom/no-flush-sync -- the folded card has to be rendered before the drag is measured
+      flushSync(() => callbacks.current.onStart(current.from))
+      measure(current)
+      current.startY = current.y + window.scrollY
+      const node = items()[current.from]
 
-      node?.setAttribute("data-lifted", "");
-      if (node) node.style.zIndex = "20";
-      layout();
-      frame.current = requestAnimationFrame(autoScroll);
+      node?.setAttribute('data-lifted', '')
+      if (node)
+        node.style.zIndex = '20'
+      layout()
+      frameRef.current = requestAnimationFrame(autoScroll)
 
-      return;
+      return
     }
-    if (current.tops.length) layout();
-  };
+    if (current.tops.length)
+      layout()
+  }
 
   const release = (event: ReactPointerEvent<HTMLElement>) => {
-    if (drag.current?.pointerId !== event.pointerId) return;
-    finish(event.type === "pointerup");
-  };
+    if (dragRef.current?.pointerId !== event.pointerId)
+      return
+    finish(event.type === 'pointerup')
+  }
 
-  const cancel = () => finish(false);
+  const cancel = () => finish(false)
 
   const handleProps = (index: number) => ({
     onPointerDown: press(index),
@@ -209,9 +223,10 @@ export function useStopDrag({
     onPointerCancel: release,
     onLostPointerCapture: cancel,
     onKeyDown: (event: React.KeyboardEvent) => {
-      if (event.key === "Escape") finish(false);
+      if (event.key === 'Escape')
+        finish(false)
     },
-  });
+  })
 
-  return { handleProps };
+  return { handleProps }
 }

@@ -1,13 +1,13 @@
-import { ProductCard } from "@/features/catalog/components/product-card";
-import { useProductCard } from "@/features/catalog/hooks/use-product-card";
-import { isPublished } from "@/features/catalog/lib/publish";
-import { isSoldOut } from "@/features/catalog/lib/stock";
-import { Rail } from "@/features/discovery/components/section";
-import { useLocale } from "@/contexts/locale-context";
-import { useDemoSelector } from "@/features/demo";
+import { useLocale } from '@/contexts/locale-context'
+import { ProductCard } from '@/features/catalog/components/product-card'
+import { useProductCard } from '@/features/catalog/hooks/use-product-card'
+import { isPublished } from '@/features/catalog/lib/publish'
+import { isSoldOut } from '@/features/catalog/lib/stock'
+import { useDemoSelector } from '@/features/demo'
+import { Rail } from '@/features/discovery/components/section'
 
 /** Guests see at most this many linked keepsakes. */
-export const MAX_TOUR_KEEPSAKES = 3;
+export const MAX_TOUR_KEEPSAKES = 3
 
 /**
  * The keepsakes the merchant linked to a tour (R21), as ordinary gift cards that open the gift
@@ -17,56 +17,57 @@ export const MAX_TOUR_KEEPSAKES = 3;
  */
 export function TourKeepsakes({
   ids,
-  variant = "page",
+  variant = 'page',
 }: {
-  ids: string[] | undefined;
+  ids: string[] | undefined
   /** "page" is C09's block near the end; "confirmation" is the light reminder on C13. */
-  variant?: "page" | "confirmation";
+  variant?: 'page' | 'confirmation'
 }) {
-  const { t } = useLocale();
-  const orders = useDemoSelector((s) => s.data.orders);
-  const demoProducts = useDemoSelector((s) => s.data.products);
-  const toCard = useProductCard();
+  const { t } = useLocale()
+  const orders = useDemoSelector(s => s.data.orders)
+  const demoProducts = useDemoSelector(s => s.data.products)
+  const toCard = useProductCard()
   const products = (ids ?? [])
-    .map((id) => demoProducts.find((p) => p.id === id))
+    .map(id => demoProducts.find(p => p.id === id))
     .filter(
       (p): p is NonNullable<typeof p> =>
         !!p && isPublished(p) && !isSoldOut(p, orders),
     )
-    .slice(0, MAX_TOUR_KEEPSAKES);
+    .slice(0, MAX_TOUR_KEEPSAKES)
 
-  if (!products.length) return null;
-  const confirmation = variant === "confirmation";
+  if (!products.length)
+    return null
+  const confirmation = variant === 'confirmation'
 
   return (
     <section
       aria-labelledby={`tour-keepsakes-${variant}`}
-      className={`flex flex-col gap-3 ${confirmation ? "" : "border-t border-separator py-7"}`}
+      className={`flex flex-col gap-3 ${confirmation ? '' : 'border-t border-separator py-7'}`}
     >
       <h2
-        className={confirmation ? "text-heading" : "font-serif text-title"}
+        className={confirmation ? 'text-heading' : 'font-serif text-title'}
         id={`tour-keepsakes-${variant}`}
       >
         {t(
           confirmation
-            ? "tourDiscovery.keepsakes.confirmedTitle"
-            : "tourDiscovery.keepsakes.title",
+            ? 'tourDiscovery.keepsakes.confirmedTitle'
+            : 'tourDiscovery.keepsakes.title',
         )}
       </h2>
       <p className="text-sm text-pretty text-muted">
         {t(
           confirmation
-            ? "tourDiscovery.keepsakes.confirmedIntro"
-            : "tourDiscovery.keepsakes.intro",
+            ? 'tourDiscovery.keepsakes.confirmedIntro'
+            : 'tourDiscovery.keepsakes.intro',
         )}
       </p>
-      <Rail label={t("tourDiscovery.keepsakes.title")}>
-        {products.map((product) => (
+      <Rail label={t('tourDiscovery.keepsakes.title')}>
+        {products.map(product => (
           <li key={product.id} className="flex">
             <ProductCard {...toCard(product)} layout="carousel" />
           </li>
         ))}
       </Rail>
     </section>
-  );
+  )
 }

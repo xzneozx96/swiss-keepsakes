@@ -1,29 +1,32 @@
-import type { CartLine } from "../types";
-import type { DemoState } from "@/features/demo/types";
+import type { CartLine } from '../types'
+import type { DemoState } from '@/features/demo/types'
 
-import { productEarliestPickup } from "@/features/catalog/lib/pickup";
-import { useDemoActions, useDemoSelector } from "@/features/demo";
-import { demoNow } from "@/features/demo/clock";
-import { calendarDay } from "@/lib/format";
+import { productEarliestPickup } from '@/features/catalog/lib/pickup'
+import { useDemoActions, useDemoSelector } from '@/features/demo'
+import { demoNow } from '@/features/demo/clock'
+import { calendarDay } from '@/lib/format'
 
-const sameChoice = (a: Omit<CartLine, "id">, b: Omit<CartLine, "id">) =>
-  a.productId === b.productId &&
-  a.variantId === b.variantId &&
-  (a.engraving ?? "") === (b.engraving ?? "") &&
-  a.pickupDate === b.pickupDate &&
-  a.pickupPlaceId === b.pickupPlaceId;
+function sameChoice(a: Omit<CartLine, 'id'>, b: Omit<CartLine, 'id'>) {
+  return a.productId === b.productId
+    && a.variantId === b.variantId
+    && (a.engraving ?? '') === (b.engraving ?? '')
+    && a.pickupDate === b.pickupDate
+    && a.pickupPlaceId === b.pickupPlaceId
+}
 
-const withCart = (s: DemoState, cart: CartLine[]): DemoState => ({
-  ...s,
-  data: { ...s.data, cart },
-});
+function withCart(s: DemoState, cart: CartLine[]): DemoState {
+  return {
+    ...s,
+    data: { ...s.data, cart },
+  }
+}
 
 function dayBefore(isoDate: string): string {
-  const d = calendarDay(isoDate);
+  const d = calendarDay(isoDate)
 
-  d.setUTCDate(d.getUTCDate() - 1);
+  d.setUTCDate(d.getUTCDate() - 1)
 
-  return d.toISOString().slice(0, 10);
+  return d.toISOString().slice(0, 10)
 }
 
 /**
@@ -31,55 +34,56 @@ function dayBefore(isoDate: string): string {
  * New lines start unticked (owner rule: nothing is pre-selected).
  */
 export function useCart() {
-  const { update } = useDemoActions();
-  const lines = useDemoSelector((s) => s.data.cart);
+  const { update } = useDemoActions()
+  const lines = useDemoSelector(s => s.data.cart)
 
-  const add = (line: Omit<CartLine, "id">) =>
+  const add = (line: Omit<CartLine, 'id'>) =>
     update((s) => {
-      const cart = s.data.cart;
-      const match = cart.find((l) => sameChoice(l, line));
+      const cart = s.data.cart
+      const match = cart.find(l => sameChoice(l, line))
       const next = match
-        ? cart.map((l) =>
+        ? cart.map(l =>
             l === match ? { ...l, quantity: l.quantity + line.quantity } : l,
           )
-        : [...cart, { ...line, id: crypto.randomUUID() }];
+        : [...cart, { ...line, id: crypto.randomUUID() }]
 
-      return withCart(s, next);
-    });
+      return withCart(s, next)
+    })
 
   const setQuantity = (id: string, quantity: number) =>
-    update((s) =>
+    update(s =>
       withCart(
         s,
-        s.data.cart.map((l) =>
+        s.data.cart.map(l =>
           l.id === id ? { ...l, quantity: Math.max(1, quantity) } : l,
         ),
       ),
-    );
+    )
 
   const remove = (id: string) =>
-    update((s) =>
+    update(s =>
       withCart(
         s,
-        s.data.cart.filter((l) => l.id !== id),
+        s.data.cart.filter(l => l.id !== id),
       ),
-    );
+    )
 
   /** Moves a line to another requested date; joins an identical line if there is one. */
   const changeDate = (id: string, pickupDate: string) =>
     update((s) => {
-      const line = s.data.cart.find((l) => l.id === id);
+      const line = s.data.cart.find(l => l.id === id)
 
-      if (!line) return s;
+      if (!line)
+        return s
 
-      const moved = { ...line, pickupDate };
+      const moved = { ...line, pickupDate }
       const match = s.data.cart.find(
-        (l) => l.id !== id && sameChoice(l, moved),
-      );
+        l => l.id !== id && sameChoice(l, moved),
+      )
       const next = match
         ? s.data.cart
-            .filter((l) => l.id !== id)
-            .map((l) =>
+            .filter(l => l.id !== id)
+            .map(l =>
               l === match
                 ? {
                     ...l,
@@ -89,19 +93,19 @@ export function useCart() {
                   }
                 : l,
             )
-        : s.data.cart.map((l) => (l.id === id ? moved : l));
+        : s.data.cart.map(l => (l.id === id ? moved : l))
 
-      return withCart(s, next);
-    });
+      return withCart(s, next)
+    })
 
   /** Ticks or unticks the given lines (C04 selection); only ticked lines go to C06. */
   const select = (ids: string[], selected: boolean) =>
-    update((s) =>
+    update(s =>
       withCart(
         s,
-        s.data.cart.map((l) => (ids.includes(l.id) ? { ...l, selected } : l)),
+        s.data.cart.map(l => (ids.includes(l.id) ? { ...l, selected } : l)),
       ),
-    );
+    )
 
   /**
    * Prototype control: moves the first line to the day before its earliest pickup, as if
@@ -110,21 +114,22 @@ export function useCart() {
    */
   const makeDateTooEarly = () =>
     update((s) => {
-      const [first, ...rest] = s.data.cart;
-      const product = s.data.products.find((p) => p.id === first?.productId);
+      const [first, ...rest] = s.data.cart
+      const product = s.data.products.find(p => p.id === first?.productId)
 
-      if (!first || !product) return s;
+      if (!first || !product)
+        return s
 
       const earliest = productEarliestPickup(
         product,
         demoNow(s.clockStartedAt),
-      );
+      )
 
       return withCart(s, [
         { ...first, pickupDate: dayBefore(earliest) },
         ...rest,
-      ]);
-    });
+      ])
+    })
 
   return {
     lines,
@@ -135,5 +140,5 @@ export function useCart() {
     changeDate,
     select,
     makeDateTooEarly,
-  };
+  }
 }

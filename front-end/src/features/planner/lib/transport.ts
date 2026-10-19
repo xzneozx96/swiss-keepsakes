@@ -1,22 +1,27 @@
-import type { ChatTransport, UIMessage, UIMessageChunk } from "ai";
+import type { ChatTransport, UIMessage, UIMessageChunk } from 'ai'
 
-import { nextTurn, type AgentHooks, type Step } from "./agent";
+import type { AgentHooks, Step } from './agent'
+import { nextTurn } from './agent'
 
-const sleep = (ms: number, signal?: AbortSignal) =>
-  new Promise<void>((resolve) => {
-    const timer = setTimeout(resolve, ms);
+const WORD_WITH_SPACE = /\S+\s*/g
 
-    signal?.addEventListener("abort", () => {
-      clearTimeout(timer);
-      resolve();
-    });
-  });
+function sleep(ms: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, ms)
 
-const words = (text: string) => text.match(/\S+\s*/g) ?? [];
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timer)
+      resolve()
+    })
+  })
+}
 
-let counter = 0;
-const uid = (prefix: string) =>
-  `${prefix}-${Date.now().toString(36)}-${counter++}`;
+const words = (text: string) => text.match(WORD_WITH_SPACE) ?? []
+
+let counter = 0
+function uid(prefix: string) {
+  return `${prefix}-${Date.now().toString(36)}-${counter++}`
+}
 
 /**
  * Streams scripted turns in the exact chunk format a model-backed endpoint would send
@@ -29,80 +34,90 @@ export class ScriptedChatTransport implements ChatTransport<UIMessage> {
   async sendMessages({
     messages,
     abortSignal,
-  }: Parameters<ChatTransport<UIMessage>["sendMessages"]>[0]) {
-    const turn = nextTurn(messages, this.hooks);
+  }: Parameters<ChatTransport<UIMessage>['sendMessages']>[0]) {
+    const turn = nextTurn(messages, this.hooks)
 
     return new ReadableStream<UIMessageChunk>({
       start: async (controller) => {
-        const send = (chunk: UIMessageChunk) => controller.enqueue(chunk);
-        const aborted = () => abortSignal?.aborted ?? false;
-        let stepOpen = false;
-        let previous: Step["kind"] | null = null;
+        const send = (chunk: UIMessageChunk) => controller.enqueue(chunk)
+        const aborted = () => abortSignal?.aborted ?? false
+        let stepOpen = false
+        let previous: Step['kind'] | null = null
 
         const openStep = () => {
-          if (!stepOpen) send({ type: "start-step" });
-          stepOpen = true;
-        };
+          if (!stepOpen)
+            send({ type: 'start-step' })
+          stepOpen = true
+        }
         const closeStep = () => {
-          if (stepOpen) send({ type: "finish-step" });
-          stepOpen = false;
-        };
+          if (stepOpen)
+            send({ type: 'finish-step' })
+          stepOpen = false
+        }
 
-        send({ type: "start" });
+        send({ type: 'start' })
         for (const step of turn) {
-          if (aborted()) break;
-          if (previous === "tool" && step.kind !== "tool") closeStep();
-          openStep();
-          previous = step.kind;
+          if (aborted())
+            break
+          if (previous === 'tool' && step.kind !== 'tool')
+            closeStep()
+          openStep()
+          previous = step.kind
 
-          if (step.kind === "reasoning" || step.kind === "text") {
-            const id = uid(step.kind);
-            const [start, delta, end] =
-              step.kind === "reasoning"
+          if (step.kind === 'reasoning' || step.kind === 'text') {
+            const id = uid(step.kind)
+            const [start, delta, end]
+              = step.kind === 'reasoning'
                 ? ([
-                    "reasoning-start",
-                    "reasoning-delta",
-                    "reasoning-end",
+                    'reasoning-start',
+                    'reasoning-delta',
+                    'reasoning-end',
                   ] as const)
-                : (["text-start", "text-delta", "text-end"] as const);
+                : (['text-start', 'text-delta', 'text-end'] as const)
 
-            await sleep(step.kind === "reasoning" ? 350 : 250, abortSignal);
-            send({ type: start, id });
+            await sleep(step.kind === 'reasoning' ? 350 : 250, abortSignal)
+            send({ type: start, id })
             for (const w of words(step.text)) {
-              if (aborted()) break;
-              send({ type: delta, id, delta: w });
-              await sleep(step.kind === "reasoning" ? 32 : 24, abortSignal);
+              if (aborted())
+                break
+              send({ type: delta, id, delta: w })
+              await sleep(step.kind === 'reasoning' ? 32 : 24, abortSignal)
             }
-            send({ type: end, id });
-          } else {
-            const toolCallId = uid("call");
+            send({ type: end, id })
+          }
+          else {
+            const toolCallId = uid('call')
 
-            send({ type: "tool-input-start", toolCallId, toolName: step.name });
-            await sleep(step.kind === "ask" ? 200 : 350, abortSignal);
+            send({ type: 'tool-input-start', toolCallId, toolName: step.name })
+            await sleep(step.kind === 'ask' ? 200 : 350, abortSignal)
             send({
-              type: "tool-input-available",
+              type: 'tool-input-available',
               toolCallId,
               toolName: step.name,
               input: step.input,
-            });
-            if (step.kind === "tool") {
-              await sleep(step.ms ?? 800, abortSignal);
+              // How long the call takes on screen: the input phase above plus the tool's own time.
+              ...(step.kind === 'tool' && {
+                providerMetadata: { planner: { ms: 350 + (step.ms ?? 800) } },
+              }),
+            })
+            if (step.kind === 'tool') {
+              await sleep(step.ms ?? 800, abortSignal)
               send({
-                type: "tool-output-available",
+                type: 'tool-output-available',
                 toolCallId,
                 output: step.output,
-              });
+              })
             }
           }
         }
-        closeStep();
-        send({ type: "finish" });
-        controller.close();
+        closeStep()
+        send({ type: 'finish' })
+        controller.close()
       },
-    });
+    })
   }
 
   async reconnectToStream() {
-    return null;
+    return null
   }
 }

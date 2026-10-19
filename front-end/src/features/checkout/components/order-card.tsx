@@ -1,4 +1,4 @@
-import { Accordion } from "@heroui/react";
+import { Accordion } from '@heroui/react'
 
 import {
   EngraveIcon,
@@ -7,48 +7,48 @@ import {
   PickupDateIcon,
   PickupIcon,
   ShopIcon,
-} from "@/components/icons";
-import { Media } from "@/components/media";
+} from '@/components/icons'
+import { Media } from '@/components/media'
 
 export interface ReviewItemView {
-  id: string;
-  name: string;
-  photo?: string;
+  id: string
+  name: string
+  photo?: string
   /** Seller shop name. */
-  store: string;
+  store: string
   /** Chosen option ("Small"); undefined for a one-option ("Standard") gift. */
-  option?: string;
+  option?: string
   /** "Engraving “Anna”"; undefined without engraving. */
-  engraving?: string;
+  engraving?: string
   /** "1 × CHF 54.00". */
-  quantity: string;
-  total: string;
+  quantity: string
+  total: string
 }
 
 export interface ReviewOrderView {
-  key: string;
+  key: string
   /** "Order 1". */
-  title: string;
+  title: string
   /** "Full payment after confirmation". */
-  policy: string;
-  items: ReviewItemView[];
+  policy: string
+  items: ReviewItemView[]
   /** "Request to receive on Wed 21 Oct". */
-  requestDate: string;
+  requestDate: string
   /** Pickup place: "Shop Altstadt". */
-  place: string;
-  totalLabel: string;
-  total: string;
+  place: string
+  totalLabel: string
+  total: string
   /** "Due after the seller confirms". */
-  dueLabel: string;
-  due: string;
+  dueLabel: string
+  due: string
   /** Payment deadline rule, including the automatic cancel. */
-  rule: string;
-  cancellationTitle: string;
-  cancellation: string;
+  rule: string
+  cancellationTitle: string
+  cancellation: string
 }
 
-const row = "flex items-start gap-2 text-sm";
-const rowIcon = "mt-0.5 shrink-0";
+const row = 'flex items-start gap-2 text-sm'
+const rowIcon = 'mt-0.5 shrink-0'
 
 /**
  * One order as a single white card, split by lines into pickup facts, gift rows, payment
@@ -62,16 +62,16 @@ export function OrderCard({
   footer,
   headingLevel = 2,
 }: {
-  order: ReviewOrderView;
+  order: ReviewOrderView
   /** 2 on C06; 3 on C07, where the cards sit under "Your orders". Gift names are one below. */
-  headingLevel?: 2 | 3;
+  headingLevel?: 2 | 3
   /** Under the title (C07: reference and status chips). */
-  status?: React.ReactNode;
+  status?: React.ReactNode
   /** Last row of the card (C07: link to the order). */
-  footer?: React.ReactNode;
+  footer?: React.ReactNode
 }) {
-  const headingId = `review-${order.key}`;
-  const Heading = `h${headingLevel}` as const;
+  const headingId = `review-${order.key}`
+  const Heading = `h${headingLevel}` as const
 
   return (
     <section
@@ -100,7 +100,7 @@ export function OrderCard({
       </div>
 
       <ul className="flex flex-col divide-y divide-separator px-5">
-        {order.items.map((item) => (
+        {order.items.map(item => (
           <OrderItem
             key={item.id}
             headingLevel={headingLevel === 2 ? 3 : 4}
@@ -147,7 +147,7 @@ export function OrderCard({
 
       {footer}
     </section>
-  );
+  )
 }
 
 /** A gift as a read-only row in the order card (no checkbox, stepper or remove). */
@@ -155,10 +155,10 @@ function OrderItem({
   item,
   headingLevel,
 }: {
-  item: ReviewItemView;
-  headingLevel: 3 | 4;
+  item: ReviewItemView
+  headingLevel: 3 | 4
 }) {
-  const Heading = `h${headingLevel}` as const;
+  const Heading = `h${headingLevel}` as const
 
   return (
     <li className="flex items-start gap-3 py-4">
@@ -199,5 +199,5 @@ function OrderItem({
         </div>
       </div>
     </li>
-  );
+  )
 }

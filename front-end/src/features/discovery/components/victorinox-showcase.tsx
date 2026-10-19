@@ -1,39 +1,42 @@
-import type { ProductCardProps } from "@/features/catalog/components/product-card";
-import type { StoryView } from "./discovery-home";
+import type { StoryView } from './discovery-home'
+import type { ProductCardProps } from '@/features/catalog/components/product-card'
 
-import { buttonVariants } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { buttonVariants } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
-import { ChevronRightIcon } from "@/components/icons";
-import { Media } from "@/components/media";
-import { useInView } from "@/hooks/use-in-view";
-import { knifeArt } from "@/lib/victorinox-art";
+import { ChevronRightIcon } from '@/components/icons'
+import { Media } from '@/components/media'
+import { useInView } from '@/hooks/use-in-view'
+import { knifeArt } from '@/lib/victorinox-art'
+
+const VICTORINOX_NAME_PREFIX = /^Victorinox /
+const VICTORINOX_SLUG_PREFIX = /^victorinox-/
 
 export interface VictorinoxShowcaseProps {
-  eyebrow: string;
-  since: string;
-  title: string;
-  subtitle: string;
-  intro: string;
-  seeAll: string;
-  items: ProductCardProps[];
-  story?: StoryView;
-  isLoading: boolean;
+  eyebrow: string
+  since: string
+  title: string
+  subtitle: string
+  intro: string
+  seeAll: string
+  items: ProductCardProps[]
+  story?: StoryView
+  isLoading: boolean
 }
 
 /** The ground of the section: a deep lake blue, so the cream tiles stand out without a harsh edge. */
-const ground = "bg-[#173f52]";
+const ground = 'bg-[#173f52]'
 
 const fan = [
-  { key: "steamboat", rotate: -26 },
-  { key: "furka", rotate: -13 },
-  { key: "chapel-bridge", rotate: 0 },
-  { key: "finsterwald", rotate: 13 },
-  { key: "pilatus", rotate: 26 },
-];
+  { key: 'steamboat', rotate: -26 },
+  { key: 'furka', rotate: -13 },
+  { key: 'chapel-bridge', rotate: 0 },
+  { key: 'finsterwald', rotate: 13 },
+  { key: 'pilatus', rotate: 26 },
+]
 
 /** "victorinox-swan" is the product slug; the art is keyed by "swan". */
-const artKey = (slug: string) => slug.replace(/^victorinox-/, "");
+const artKey = (slug: string) => slug.replace(VICTORINOX_SLUG_PREFIX, '')
 
 /**
  * The Victorinox section on C01: the shop's partner as the page's one full-bleed showpiece.
@@ -51,7 +54,7 @@ export function VictorinoxShowcase({
   story,
   isLoading,
 }: VictorinoxShowcaseProps) {
-  const [fanRef, fanSeen] = useInView<HTMLDivElement>();
+  const [fanRef, fanSeen] = useInView<HTMLDivElement>()
 
   return (
     <section
@@ -94,8 +97,8 @@ export function VictorinoxShowcase({
               alt=""
               className={`absolute top-0 left-1/2 h-[230px] origin-[50%_150%] drop-shadow-[0_10px_14px_rgba(0,20,30,0.5)] ${
                 fanSeen
-                  ? "motion-safe:animate-[vx-rise_700ms_cubic-bezier(0.2,0.8,0.2,1)_both]"
-                  : "motion-safe:opacity-0"
+                  ? 'motion-safe:animate-[vx-rise_700ms_cubic-bezier(0.2,0.8,0.2,1)_both]'
+                  : 'motion-safe:opacity-0'
               }`}
               decoding="async"
               loading="lazy"
@@ -122,13 +125,13 @@ export function VictorinoxShowcase({
       >
         <ul className="flex snap-x snap-mandatory scroll-px-4 gap-3 px-4 pt-1 pb-2">
           {isLoading
-            ? [0, 1, 2].map((i) => (
+            ? [0, 1, 2].map(i => (
                 <li
                   key={i}
                   className="h-[17.5rem] w-36 shrink-0 animate-pulse rounded-2xl bg-white/10"
                 />
               ))
-            : items.map((item) => (
+            : items.map(item => (
                 <li key={item.slug} className="flex w-36 shrink-0 snap-start">
                   <Link
                     className="flex w-full flex-col gap-2 rounded-2xl bg-white p-2 pb-3 text-foreground outline-none select-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173f52] active:opacity-85"
@@ -146,10 +149,11 @@ export function VictorinoxShowcase({
                     </span>
                     <span className="flex flex-1 flex-col gap-0.5 px-1">
                       <span className="line-clamp-2 min-h-[2.5em] text-sm leading-tight font-semibold">
-                        {item.name.replace(/^Victorinox /, "")}
+                        {item.name.replace(VICTORINOX_NAME_PREFIX, '')}
                       </span>
                       <span className="mt-auto pt-0.5 text-label text-muted">
-                        {item.fromLabel}{" "}
+                        {item.fromLabel}
+                        {' '}
                         <span className="font-semibold text-foreground">
                           {item.price}
                         </span>
@@ -164,8 +168,8 @@ export function VictorinoxShowcase({
       <div className="mt-5 flex flex-col gap-4 px-4">
         {/* Same treatment as the home's "Show all {count} stories" and "Show all {count} reviews". */}
         <Link
-          className={`${buttonVariants({ variant: "secondary", size: "lg", fullWidth: true })} transition-transform focus-visible:ring-offset-[#173f52] active:scale-[0.98]`}
-          search={{ subcategory: "victorinox" }}
+          className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform focus-visible:ring-offset-[#173f52] active:scale-[0.98]`}
+          search={{ subcategory: 'victorinox' }}
           to="/gifts"
         >
           {seeAll}
@@ -193,5 +197,5 @@ export function VictorinoxShowcase({
         )}
       </div>
     </section>
-  );
+  )
 }

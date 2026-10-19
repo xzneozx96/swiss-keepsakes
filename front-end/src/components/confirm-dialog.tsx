@@ -1,26 +1,26 @@
-import { AlertDialog, Button } from "@heroui/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertDialog, Button } from '@heroui/react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { useLocale } from "@/contexts/locale-context";
+import { useLocale } from '@/contexts/locale-context'
 
 export interface ConfirmOptions {
   /** A question naming the thing: "Remove Pocket knife · M?". */
-  title: string;
+  title: string
   /** One sentence saying what happens, with the money consequence if there is one. */
-  body: string;
+  body: string
   /** Names the action, never "OK" or "Yes": "Remove from cart", "Cancel order". */
-  confirmLabel: string;
+  confirmLabel: string
   /** Defaults to "Cancel" (`confirm.cancel`). */
-  cancelLabel?: string;
+  cancelLabel?: string
   /** `danger` (default): soft brick icon and the ink destructive button. */
-  tone?: "danger";
+  tone?: 'danger'
 }
 
 export interface ConfirmDialogProps extends ConfirmOptions {
-  isOpen: boolean;
-  onConfirm: () => void;
+  isOpen: boolean
+  onConfirm: () => void
   /** Cancel button, Esc or a backdrop tap. */
-  onCancel: () => void;
+  onCancel: () => void
 }
 
 /**
@@ -49,18 +49,18 @@ export function ConfirmDialog({
   body,
   confirmLabel,
   cancelLabel,
-  tone = "danger",
+  tone = 'danger',
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <AlertDialog.Backdrop
       isDismissable
       isKeyboardDismissDisabled={false}
       isOpen={isOpen}
-      onOpenChange={(open) => !open && onCancel()}
+      onOpenChange={open => !open && onCancel()}
     >
       <AlertDialog.Container size="sm">
         <AlertDialog.Dialog>
@@ -80,7 +80,7 @@ export function ConfirmDialog({
               variant="tertiary"
               onPress={onCancel}
             >
-              {cancelLabel ?? t("confirm.cancel")}
+              {cancelLabel ?? t('confirm.cancel')}
             </Button>
             <Button
               className="w-full sm:w-auto"
@@ -93,7 +93,7 @@ export function ConfirmDialog({
         </AlertDialog.Dialog>
       </AlertDialog.Container>
     </AlertDialog.Backdrop>
-  );
+  )
 }
 
 /**
@@ -112,38 +112,40 @@ export function ConfirmDialog({
  * ```
  */
 export function useConfirm() {
-  const [options, setOptions] = useState<ConfirmOptions | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const resolveRef = useRef<((confirmed: boolean) => void) | null>(null);
+  const [options, setOptions] = useState<ConfirmOptions | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const resolveRef = useRef<((confirmed: boolean) => void) | null>(null)
 
   const settle = useCallback((confirmed: boolean) => {
-    resolveRef.current?.(confirmed);
-    resolveRef.current = null;
-    setIsOpen(false);
-  }, []);
+    resolveRef.current?.(confirmed)
+    resolveRef.current = null
+    setIsOpen(false)
+  }, [])
 
   const confirm = useCallback(
     (next: ConfirmOptions) =>
       new Promise<boolean>((resolve) => {
-        resolveRef.current?.(false);
-        resolveRef.current = resolve;
-        setOptions(next);
-        setIsOpen(true);
+        resolveRef.current?.(false)
+        resolveRef.current = resolve
+        setOptions(next)
+        setIsOpen(true)
       }),
     [],
-  );
+  )
 
-  useEffect(() => () => resolveRef.current?.(false), []);
+  useEffect(() => () => resolveRef.current?.(false), [])
 
   // The options stay after closing so the text does not vanish during the exit animation.
-  const dialog = options ? (
-    <ConfirmDialog
-      {...options}
-      isOpen={isOpen}
-      onCancel={() => settle(false)}
-      onConfirm={() => settle(true)}
-    />
-  ) : null;
+  const dialog = options
+    ? (
+        <ConfirmDialog
+          {...options}
+          isOpen={isOpen}
+          onCancel={() => settle(false)}
+          onConfirm={() => settle(true)}
+        />
+      )
+    : null
 
-  return { confirm, dialog };
+  return { confirm, dialog }
 }

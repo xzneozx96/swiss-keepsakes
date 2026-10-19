@@ -1,7 +1,7 @@
-import { Drawer } from "@heroui/react";
+import { Drawer } from '@heroui/react'
 
-import { useSheetExit } from "@/components/sheet-exit";
-import { useLocale } from "@/contexts/locale-context";
+import { useSheetExit } from '@/components/sheet-exit'
+import { useLocale } from '@/contexts/locale-context'
 
 export function SheetFrame({
   title,
@@ -10,19 +10,19 @@ export function SheetFrame({
   children,
   footer,
 }: {
-  title: string;
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-  footer: React.ReactNode;
+  title: string
+  isOpen: boolean
+  onClose: () => void
+  children: React.ReactNode
+  footer: React.ReactNode
 }) {
-  const { t } = useLocale();
-  const markerRef = useSheetExit();
+  const { t } = useLocale()
+  const markerRef = useSheetExit()
 
   return (
     <Drawer.Backdrop
       isOpen={isOpen}
-      onOpenChange={(open) => !open && onClose()}
+      onOpenChange={open => !open && onClose()}
     >
       <Drawer.Content className="mx-auto max-w-[560px]" placement="bottom">
         <Drawer.Dialog className="flex sheet-max flex-col">
@@ -30,7 +30,7 @@ export function SheetFrame({
           <Drawer.Handle />
           <Drawer.Header className="flex items-center justify-between">
             <Drawer.Heading className="text-title">{title}</Drawer.Heading>
-            <Drawer.CloseTrigger aria-label={t("merchantOrder.sheet.close")} />
+            <Drawer.CloseTrigger aria-label={t('merchantOrder.sheet.close')} />
           </Drawer.Header>
           <Drawer.Body className="flex flex-col gap-6 overflow-y-auto">
             {children}
@@ -41,5 +41,5 @@ export function SheetFrame({
         </Drawer.Dialog>
       </Drawer.Content>
     </Drawer.Backdrop>
-  );
+  )
 }

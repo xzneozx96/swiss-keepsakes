@@ -1,23 +1,23 @@
-import type { ArticleRowProps } from "../hooks/use-merchant-articles";
-import type { DataTableColumn } from "@/components/data-table";
-import type { EmptyStateProps } from "@/components/empty-state";
+import type { ArticleRowProps } from '../hooks/use-merchant-articles'
+import type { DataTableColumn } from '@/components/data-table'
+import type { EmptyStateProps } from '@/components/empty-state'
 
-import { DataTable } from "@/components/data-table";
-import { RowActions } from "@/components/row-actions";
-import { ChevronRightIcon, EditIcon } from "@/components/icons";
-import { Media } from "@/components/media";
-import { StatusChip } from "@/components/status-chip";
-import { useLocale } from "@/contexts/locale-context";
+import { DataTable } from '@/components/data-table'
+import { ChevronRightIcon, EditIcon } from '@/components/icons'
+import { Media } from '@/components/media'
+import { RowActions } from '@/components/row-actions'
+import { StatusChip } from '@/components/status-chip'
+import { useLocale } from '@/contexts/locale-context'
 
 interface ArticleRowsProps {
-  rows: ArticleRowProps[];
+  rows: ArticleRowProps[]
   /** Accessible name of the list or table, e.g. the selected filter. */
-  label: string;
+  label: string
   /** Shown inside the table (a card on phones) when `rows` is empty. */
-  empty?: EmptyStateProps;
+  empty?: EmptyStateProps
   /** Back to page 1 when this changes. */
-  resetKey?: string;
-  isLoading?: boolean;
+  resetKey?: string
+  isLoading?: boolean
 }
 
 function Flags({ row }: { row: ArticleRowProps }) {
@@ -31,7 +31,7 @@ function Flags({ row }: { row: ArticleRowProps }) {
         <StatusChip tone="neutral">{row.missingVersion}</StatusChip>
       )}
     </>
-  );
+  )
 }
 
 /**
@@ -40,11 +40,11 @@ function Flags({ row }: { row: ArticleRowProps }) {
  * whole card opens the editor.
  */
 function StackedRows({ rows, label }: ArticleRowsProps) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <ul aria-label={label} className="flex flex-col gap-5 lg:hidden">
-      {rows.map((row) => (
+      {rows.map(row => (
         <li key={row.id}>
           <a
             className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface outline-none card-hover focus-visible:focus-ring"
@@ -89,15 +89,15 @@ function StackedRows({ rows, label }: ArticleRowsProps) {
             <dl className="flex flex-col gap-2 border-t border-dashed border-separator px-4 py-3.5 text-sm">
               {[
                 {
-                  label: t("merchantArticles.column.updated"),
+                  label: t('merchantArticles.column.updated'),
                   value: row.changed,
                 },
-                { label: t("merchantArticles.links"), value: row.links },
+                { label: t('merchantArticles.links'), value: row.links },
                 {
-                  label: t("merchantArticles.comments"),
+                  label: t('merchantArticles.comments'),
                   value: String(row.comments),
                 },
-              ].map((fact) => (
+              ].map(fact => (
                 <div
                   key={fact.label}
                   className="flex items-baseline justify-between gap-4"
@@ -113,19 +113,19 @@ function StackedRows({ rows, label }: ArticleRowsProps) {
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
 /** From 1024px: a Table, as M03. */
 export function ArticleRows(props: ArticleRowsProps) {
-  const { t } = useLocale();
+  const { t } = useLocale()
   const columns: DataTableColumn<ArticleRowProps>[] = [
     {
-      id: "article",
-      header: t("merchantArticles.column.article"),
-      skeleton: "lead",
+      id: 'article',
+      header: t('merchantArticles.column.article'),
+      skeleton: 'lead',
       isRowHeader: true,
-      render: (row) => (
+      render: row => (
         <div className="flex items-center gap-3">
           <Media
             alt=""
@@ -144,58 +144,58 @@ export function ArticleRows(props: ArticleRowsProps) {
       ),
     },
     {
-      id: "status",
-      header: t("merchantArticles.column.status"),
-      skeleton: "chip",
-      cellClassName: "py-2",
-      render: (row) => (
+      id: 'status',
+      header: t('merchantArticles.column.status'),
+      skeleton: 'chip',
+      cellClassName: 'py-2',
+      render: row => (
         <div className="flex flex-col items-start gap-1.5 [&_svg]:shrink-0">
           <Flags row={row} />
         </div>
       ),
     },
     {
-      id: "links",
-      header: t("merchantArticles.column.links"),
-      skeleton: "line",
-      cellClassName: "whitespace-nowrap tabular-nums",
-      render: (row) => row.links,
+      id: 'links',
+      header: t('merchantArticles.column.links'),
+      skeleton: 'line',
+      cellClassName: 'whitespace-nowrap tabular-nums',
+      render: row => row.links,
     },
     {
-      id: "updated",
-      header: t("merchantArticles.column.updated"),
-      skeleton: "line",
-      cellClassName: "whitespace-nowrap tabular-nums",
-      render: (row) => row.changed,
+      id: 'updated',
+      header: t('merchantArticles.column.updated'),
+      skeleton: 'line',
+      cellClassName: 'whitespace-nowrap tabular-nums',
+      render: row => row.changed,
     },
-  ];
+  ]
 
   return (
     <DataTable
-      cards={(page) => <StackedRows {...props} rows={page} />}
+      cards={page => <StackedRows {...props} rows={page} />}
       columns={columns}
       empty={props.empty}
-      getRowHref={(row) => row.href}
-      getRowId={(row) => row.id}
+      getRowHref={row => row.href}
+      getRowId={row => row.id}
       isLoading={props.isLoading}
       label={props.label}
       resetKey={props.resetKey}
       rowActions={{
-        render: (row) => (
+        render: row => (
           <RowActions
             actions={[
               {
-                id: "edit",
-                label: t("rowAction.editArticle"),
+                id: 'edit',
+                label: t('rowAction.editArticle'),
                 icon: EditIcon,
                 href: row.href,
               },
             ]}
-            label={t("table.rowActions", { name: row.title })}
+            label={t('table.rowActions', { name: row.title })}
           />
         ),
       }}
       rows={props.rows}
     />
-  );
+  )
 }

@@ -1,23 +1,23 @@
-import type { SignInView } from "../hooks/use-sign-in";
+import type { SignInView } from '../hooks/use-sign-in'
 
 import {
   Button,
   Description,
   FieldError,
   Form,
+  Input,
   InputOTP,
   Label,
   Separator,
   TextField,
-  Input,
-} from "@heroui/react";
-import { useEffect, useRef } from "react";
+} from '@heroui/react'
+import { useEffect, useRef } from 'react'
 
-import { CODE_LENGTH } from "../hooks/use-sign-in";
+import { BackIcon } from '@/components/icons'
 
-import { BackIcon } from "@/components/icons";
-import { useLocale } from "@/contexts/locale-context";
-import { ProposalMark } from "@/features/demo/components/proposal-mark";
+import { useLocale } from '@/contexts/locale-context'
+import { ProposalMark } from '@/features/demo/components/proposal-mark'
+import { CODE_LENGTH } from '../hooks/use-sign-in'
 
 /**
  * C05 sign-in form: Google or an emailed 6-digit code, no password and no sign-up (one
@@ -25,16 +25,16 @@ import { ProposalMark } from "@/features/demo/components/proposal-mark";
  * returns to the start step, not out of the screen.
  */
 export function SignInForm({ view }: { view: SignInView }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <div className="flex flex-col gap-7">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-1">
-          {view.step === "code" && (
+          {view.step === 'code' && (
             <Button
               isIconOnly
-              aria-label={t("auth.changeEmail")}
+              aria-label={t('auth.changeEmail')}
               className="-ms-2.5"
               size="sm"
               variant="ghost"
@@ -44,26 +44,28 @@ export function SignInForm({ view }: { view: SignInView }) {
             </Button>
           )}
           <h1 className="font-serif text-display text-balance">
-            {view.step === "code" ? t("auth.code.title") : t("auth.title")}
+            {view.step === 'code' ? t('auth.code.title') : t('auth.title')}
           </h1>
         </div>
         <p className="text-body text-pretty text-muted">
-          {view.step === "code"
-            ? t("auth.code.sent", { email: view.sentTo })
-            : t("auth.intro")}
+          {view.step === 'code'
+            ? t('auth.code.sent', { email: view.sentTo })
+            : t('auth.intro')}
         </p>
       </div>
-      {view.step === "start" ? (
-        <StartStep view={view} />
-      ) : (
-        <CodeStep view={view} />
-      )}
+      {view.step === 'start'
+        ? (
+            <StartStep view={view} />
+          )
+        : (
+            <CodeStep view={view} />
+          )}
     </div>
-  );
+  )
 }
 
 function StartStep({ view }: { view: SignInView }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
   return (
     <div className="flex flex-col gap-5">
@@ -75,19 +77,19 @@ function StartStep({ view }: { view: SignInView }) {
         onPress={view.continueWithGoogle}
       >
         <GoogleMark />
-        {t("auth.google")}
+        {t('auth.google')}
       </Button>
       <div className="flex items-center gap-3 text-xs text-muted">
         <Separator className="flex-1" />
-        {t("auth.or")}
+        {t('auth.or')}
         <Separator className="flex-1" />
       </div>
       <Form
         className="flex flex-col gap-4"
         validationBehavior="aria"
         onSubmit={(e) => {
-          e.preventDefault();
-          view.submitEmail();
+          e.preventDefault()
+          view.submitEmail()
         }}
       >
         <TextField
@@ -99,62 +101,62 @@ function StartStep({ view }: { view: SignInView }) {
           value={view.email}
           onChange={view.onEmailChange}
         >
-          <Label>{t("auth.email.label")}</Label>
+          <Label>{t('auth.email.label')}</Label>
           <Input inputMode="email" />
-          <FieldError>{t("auth.email.invalid")}</FieldError>
+          <FieldError>{t('auth.email.invalid')}</FieldError>
         </TextField>
         <Button fullWidth size="lg" type="submit">
-          {t("auth.email.send")}
+          {t('auth.email.send')}
         </Button>
       </Form>
     </div>
-  );
+  )
 }
 
 /** What the code step needs; P01 (partner access) reuses it with a fixed email (step 5.6). */
 export type CodeStepView = Pick<
   SignInView,
-  | "status"
-  | "codeSentAt"
-  | "resendIn"
-  | "code"
-  | "onCodeChange"
-  | "verify"
-  | "resend"
-  | "attemptsLeft"
+  | 'status'
+  | 'codeSentAt'
+  | 'resendIn'
+  | 'code'
+  | 'onCodeChange'
+  | 'verify'
+  | 'resend'
+  | 'attemptsLeft'
 > & {
   /** Absent when the email cannot be changed (P01). */
-  changeEmail?: () => void;
-};
+  changeEmail?: () => void
+}
 
 export function CodeStep({ view }: { view: CodeStepView }) {
-  const { t } = useLocale();
-  const needsNewCode = view.status === "expired" || view.status === "locked";
-  const codeInput = useRef<HTMLInputElement>(null);
+  const { t } = useLocale()
+  const needsNewCode = view.status === 'expired' || view.status === 'locked'
+  const codeInputRef = useRef<HTMLInputElement>(null)
 
   // Each new code (first send or resend) puts the cursor in the code field.
-  useEffect(() => codeInput.current?.focus(), [view.codeSentAt]);
-  const resendLabel =
-    view.resendIn > 0
-      ? t("auth.code.resendIn", {
-          time: `0:${String(view.resendIn).padStart(2, "0")}`,
+  useEffect(() => codeInputRef.current?.focus(), [view.codeSentAt])
+  const resendLabel
+    = view.resendIn > 0
+      ? t('auth.code.resendIn', {
+          time: `0:${String(view.resendIn).padStart(2, '0')}`,
         })
-      : t("auth.code.resend");
+      : t('auth.code.resend')
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="sign-in-code">{t("auth.code.label")}</Label>
+        <Label htmlFor="sign-in-code">{t('auth.code.label')}</Label>
         <Description id="sign-in-code-hint">
-          {t("auth.code.hint", { length: CODE_LENGTH })}
+          {t('auth.code.hint', { length: CODE_LENGTH })}
         </Description>
         <InputOTP
-          ref={codeInput}
+          ref={codeInputRef}
           aria-describedby="sign-in-code-hint sign-in-code-error"
           id="sign-in-code"
           inputMode="numeric"
           isDisabled={needsNewCode}
-          isInvalid={view.status !== "idle"}
+          isInvalid={view.status !== 'idle'}
           maxLength={CODE_LENGTH}
           pattern="^\d+$"
           value={view.code}
@@ -178,25 +180,27 @@ export function CodeStep({ view }: { view: CodeStepView }) {
         </div>
       </div>
 
-      {needsNewCode ? (
-        <Button fullWidth size="lg" onPress={view.resend}>
-          {t("auth.code.sendNew")}
-        </Button>
-      ) : (
-        <Button
-          fullWidth
-          isDisabled={view.code.length !== CODE_LENGTH}
-          size="lg"
-          onPress={() => view.verify(view.code)}
-        >
-          {t("auth.code.submit")}
-        </Button>
-      )}
+      {needsNewCode
+        ? (
+            <Button fullWidth size="lg" onPress={view.resend}>
+              {t('auth.code.sendNew')}
+            </Button>
+          )
+        : (
+            <Button
+              fullWidth
+              isDisabled={view.code.length !== CODE_LENGTH}
+              size="lg"
+              onPress={() => view.verify(view.code)}
+            >
+              {t('auth.code.submit')}
+            </Button>
+          )}
 
       <div className="flex flex-col items-center gap-1 text-sm">
         {!needsNewCode && (
           <p className="flex items-center gap-1 text-muted">
-            {t("auth.code.noEmail")}
+            {t('auth.code.noEmail')}
             <Button
               className="h-auto min-w-0 px-1 underline underline-offset-4"
               isDisabled={view.resendIn > 0}
@@ -215,54 +219,54 @@ export function CodeStep({ view }: { view: CodeStepView }) {
             variant="ghost"
             onPress={view.changeEmail}
           >
-            {t("auth.changeEmail")}
+            {t('auth.changeEmail')}
           </Button>
         )}
       </div>
     </div>
-  );
+  )
 }
 
 function CodeMessage({ view }: { view: CodeStepView }) {
-  const { t } = useLocale();
+  const { t } = useLocale()
 
-  if (view.status === "wrong") {
+  if (view.status === 'wrong') {
     return (
       <div className="flex flex-col gap-2">
         <p data-visible className="field-error">
-          {t("auth.code.wrong")}
+          {t('auth.code.wrong')}
         </p>
-        <ProposalMark name={t("auth.proposal.attempts")}>
+        <ProposalMark name={t('auth.proposal.attempts')}>
           <p className="text-sm text-muted">
             {t(
               view.attemptsLeft === 1
-                ? "auth.code.attemptsLeft.one"
-                : "auth.code.attemptsLeft.other",
+                ? 'auth.code.attemptsLeft.one'
+                : 'auth.code.attemptsLeft.other',
               { count: view.attemptsLeft },
             )}
           </p>
         </ProposalMark>
       </div>
-    );
+    )
   }
-  if (view.status === "expired") {
+  if (view.status === 'expired') {
     return (
       <p data-visible className="field-error">
-        {t("auth.code.expired")}
+        {t('auth.code.expired')}
       </p>
-    );
+    )
   }
-  if (view.status === "locked") {
+  if (view.status === 'locked') {
     return (
-      <ProposalMark name={t("auth.proposal.attempts")}>
+      <ProposalMark name={t('auth.proposal.attempts')}>
         <p data-visible className="field-error">
-          {t("auth.code.locked")}
+          {t('auth.code.locked')}
         </p>
       </ProposalMark>
-    );
+    )
   }
 
-  return null;
+  return null
 }
 
 /** Google's "G" mark, as its sign-in branding guidelines ask for on the button. */
@@ -286,5 +290,5 @@ function GoogleMark() {
         fill="#1976D2"
       />
     </svg>
-  );
+  )
 }

@@ -1,146 +1,146 @@
-import type { Language } from "@/contexts/locale-context";
-import type { Article } from "@/features/content/types";
-import type { CategoryFilter } from "./data";
-import type { Effect } from "./effects";
-import type { BlogHomeOptionProps } from "./options";
+import type { CategoryFilter } from './data'
+import type { Effect } from './effects'
+import type { BlogHomeOptionProps } from './options'
+import type { Language } from '@/contexts/locale-context'
+import type { Article } from '@/features/content/types'
 
-import { ScrollShadow } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { ScrollShadow } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
 
-import { categories, categoryPhoto, useBlogData } from "./data";
-import { CoverEffects } from "./effects";
-import { CompactRow, FeedCard, StoryMeta } from "./shared";
+import { ChevronRightIcon } from '@/components/icons'
+import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 
-import { ChevronRightIcon } from "@/components/icons";
-import { Media } from "@/components/media";
-import { useLocale } from "@/contexts/locale-context";
-import { ProductCard } from "@/features/catalog/components/product-card";
-import { AdviceBanner } from "@/features/discovery/components/advice-banner";
-import { Hero } from "@/features/discovery/components/hero";
-import { Rail } from "@/features/discovery/components/section";
-import { StoryRow } from "@/features/discovery/components/story-row";
-import { VictorinoxShowcase } from "@/features/discovery/components/victorinox-showcase";
-import { useDiscoveryView } from "@/features/discovery/hooks/use-discovery-view";
-import { TourCard } from "@/features/tours/discovery/tour-card";
+import { ProductCard } from '@/features/catalog/components/product-card'
+import { AdviceBanner } from '@/features/discovery/components/advice-banner'
+import { Hero } from '@/features/discovery/components/hero'
+import { Rail } from '@/features/discovery/components/section'
+import { StoryRow } from '@/features/discovery/components/story-row'
+import { VictorinoxShowcase } from '@/features/discovery/components/victorinox-showcase'
+import { useDiscoveryView } from '@/features/discovery/hooks/use-discovery-view'
+import { TourCard } from '@/features/tours/discovery/tour-card'
+import { categories, categoryPhoto, useBlogData } from './data'
+import { CoverEffects } from './effects'
+import { CompactRow, FeedCard, StoryMeta } from './shared'
 
-type StoryHomeProps = BlogHomeOptionProps;
+type StoryHomeProps = BlogHomeOptionProps
 
-type Chapter = "stories" | "tours" | "victorinox" | "keepsakes";
+type Chapter = 'stories' | 'tours' | 'victorinox' | 'keepsakes'
 
 const chapterCopy: Record<
   Language,
-  Record<Chapter, { eyebrow: string; title: string; line: string }>
+  Record<Chapter, { eyebrow: string, title: string, line: string }>
 > = {
   en: {
     stories: {
-      eyebrow: "Start with a story",
-      title: "Luzerne, told by locals",
-      line: "The places we love, where we eat and the views worth the climb.",
+      eyebrow: 'Start with a story',
+      title: 'Luzerne, told by locals',
+      line: 'The places we love, where we eat and the views worth the climb.',
     },
     tours: {
-      eyebrow: "Then go and see it",
-      title: "Walk the stories with us",
-      line: "Small guided walks and day trips to the places behind the stories.",
+      eyebrow: 'Then go and see it',
+      title: 'Walk the stories with us',
+      line: 'Small guided walks and day trips to the places behind the stories.',
     },
     victorinox: {
-      eyebrow: "Swiss craft, made nearby",
-      title: "A knife with a story",
-      line: "Born in Ibach, a short trip up the lake, and engraved with your name.",
+      eyebrow: 'Swiss craft, made nearby',
+      title: 'A knife with a story',
+      line: 'Born in Ibach, a short trip up the lake, and engraved with your name.',
     },
     keepsakes: {
-      eyebrow: "And bring it home",
-      title: "Keepsakes from Luzerne",
-      line: "Little things from local makers that carry the trip home.",
+      eyebrow: 'And bring it home',
+      title: 'Keepsakes from Luzerne',
+      line: 'Little things from local makers that carry the trip home.',
     },
   },
   de: {
     stories: {
-      eyebrow: "Beginne mit einer Geschichte",
-      title: "Luzern, von Einheimischen erzählt",
-      line: "Orte, die wir lieben, wo wir essen und welche Aussicht sich lohnt.",
+      eyebrow: 'Beginne mit einer Geschichte',
+      title: 'Luzern, von Einheimischen erzählt',
+      line: 'Orte, die wir lieben, wo wir essen und welche Aussicht sich lohnt.',
     },
     tours: {
-      eyebrow: "Dann sieh es dir an",
-      title: "Erlebe die Geschichten mit uns",
-      line: "Kleine Führungen und Tagesausflüge zu den Orten hinter den Geschichten.",
+      eyebrow: 'Dann sieh es dir an',
+      title: 'Erlebe die Geschichten mit uns',
+      line: 'Kleine Führungen und Tagesausflüge zu den Orten hinter den Geschichten.',
     },
     victorinox: {
-      eyebrow: "Schweizer Handwerk aus der Nähe",
-      title: "Ein Messer mit Geschichte",
-      line: "Entstanden in Ibach, nur eine kurze Fahrt den See hinauf, und mit deinem Namen graviert.",
+      eyebrow: 'Schweizer Handwerk aus der Nähe',
+      title: 'Ein Messer mit Geschichte',
+      line: 'Entstanden in Ibach, nur eine kurze Fahrt den See hinauf, und mit deinem Namen graviert.',
     },
     keepsakes: {
-      eyebrow: "Und nimm es mit nach Hause",
-      title: "Andenken aus Luzern",
-      line: "Kleine Dinge von lokalen Herstellern, die die Reise nach Hause tragen.",
+      eyebrow: 'Und nimm es mit nach Hause',
+      title: 'Andenken aus Luzern',
+      line: 'Kleine Dinge von lokalen Herstellern, die die Reise nach Hause tragen.',
     },
   },
-};
+}
 
 /** Three wordings for the tiles section, one per option, so they can be compared. */
 const bridgeCopy: Record<
   Language,
   Record<
-    "discover" | "bring" | "streets",
-    { title: string; subtitle: string }
-  > & { tours: string; victorinox: string; keepsakes: string }
+    'discover' | 'bring' | 'streets',
+    { title: string, subtitle: string }
+  > & { tours: string, victorinox: string, keepsakes: string }
 > = {
   en: {
     discover: {
-      title: "Discover Luzerne, bring it home",
-      subtitle: "See the places for yourself, then keep a piece of them.",
+      title: 'Discover Luzerne, bring it home',
+      subtitle: 'See the places for yourself, then keep a piece of them.',
     },
     bring: {
-      title: "Bring Luzerne home",
+      title: 'Bring Luzerne home',
       subtitle:
-        "Discover it on foot, keep it in your pocket, give it as a gift.",
+        'Discover it on foot, keep it in your pocket, give it as a gift.',
     },
     streets: {
-      title: "From the stories to the streets",
-      subtitle: "Go and find the places, then take a little Luzerne home.",
+      title: 'From the stories to the streets',
+      subtitle: 'Go and find the places, then take a little Luzerne home.',
     },
-    tours: "Go and see it",
-    victorinox: "Swiss craft",
-    keepsakes: "Take it home",
+    tours: 'Go and see it',
+    victorinox: 'Swiss craft',
+    keepsakes: 'Take it home',
   },
   de: {
     discover: {
-      title: "Luzern entdecken, mit nach Hause nehmen",
-      subtitle: "Erlebe die Orte selbst und behalte ein Stück davon.",
+      title: 'Luzern entdecken, mit nach Hause nehmen',
+      subtitle: 'Erlebe die Orte selbst und behalte ein Stück davon.',
     },
     bring: {
-      title: "Ein Stück Luzern für zu Hause",
-      subtitle: "Zu Fuss entdecken, in der Tasche tragen, verschenken.",
+      title: 'Ein Stück Luzern für zu Hause',
+      subtitle: 'Zu Fuss entdecken, in der Tasche tragen, verschenken.',
     },
     streets: {
-      title: "Von den Geschichten auf die Strassen",
-      subtitle: "Finde die Orte und nimm ein wenig Luzern mit nach Hause.",
+      title: 'Von den Geschichten auf die Strassen',
+      subtitle: 'Finde die Orte und nimm ein wenig Luzern mit nach Hause.',
     },
-    tours: "Selbst erleben",
-    victorinox: "Schweizer Handwerk",
-    keepsakes: "Mitnehmen",
+    tours: 'Selbst erleben',
+    victorinox: 'Schweizer Handwerk',
+    keepsakes: 'Mitnehmen',
   },
-};
+}
 
 function ChapterHeading({
   chapter,
   number,
   seeAll,
 }: {
-  chapter: Chapter;
-  number: number;
-  seeAll?: { label: string; to: "/stories" | "/tours" | "/gifts" };
+  chapter: Chapter
+  number: number
+  seeAll?: { label: string, to: '/stories' | '/tours' | '/gifts' }
 }) {
-  const { language } = useBlogData();
-  const c = chapterCopy[language][chapter];
+  const { language } = useBlogData()
+  const c = chapterCopy[language][chapter]
 
   return (
     <div className="flex items-end justify-between gap-4">
       <div className="flex min-w-0 flex-col gap-1">
         <p className="flex items-center gap-2 text-[12px] font-semibold tracking-[0.14em] text-accent-soft-foreground uppercase">
           <span className="font-serif text-[15px] tracking-normal text-accent">
-            {String(number).padStart(2, "0")}
+            {String(number).padStart(2, '0')}
           </span>
           {c.eyebrow}
         </p>
@@ -159,7 +159,7 @@ function ChapterHeading({
         </Link>
       )}
     </div>
-  );
+  )
 }
 
 /** Story categories as Instagram-style circles; tapping one filters the stories, tapping again clears it. */
@@ -167,10 +167,10 @@ function StoryCircles({
   value,
   onChange,
 }: {
-  value: CategoryFilter;
-  onChange: (value: CategoryFilter) => void;
+  value: CategoryFilter
+  onChange: (value: CategoryFilter) => void
 }) {
-  const { c } = useBlogData();
+  const { c } = useBlogData()
 
   return (
     <ScrollShadow
@@ -185,14 +185,14 @@ function StoryCircles({
         role="group"
       >
         {categories
-          .filter((item) => item !== "all")
-          .map((item) => (
+          .filter(item => item !== 'all')
+          .map(item => (
             <button
               key={item}
               aria-pressed={value === item}
               className="group flex w-[68px] shrink-0 flex-col items-center gap-1.5 rounded-xl outline-none focus-visible:focus-ring"
               type="button"
-              onClick={() => onChange(value === item ? "all" : item)}
+              onClick={() => onChange(value === item ? 'all' : item)}
             >
               <span className="rounded-full bg-gradient-to-tr from-[#f4b860] via-accent to-[#a3241a] p-[2.5px] group-aria-pressed:from-foreground group-aria-pressed:via-foreground group-aria-pressed:to-foreground">
                 <span className="block rounded-full bg-background p-[2px]">
@@ -210,7 +210,7 @@ function StoryCircles({
           ))}
       </div>
     </ScrollShadow>
-  );
+  )
 }
 
 /** The tiles the owner liked, with discovery wording. Tiles jump to their chapter when it is on the page. */
@@ -218,33 +218,33 @@ function DiscoverTiles({
   wording,
   jump,
 }: {
-  wording: "discover" | "bring" | "streets";
-  jump: boolean;
+  wording: 'discover' | 'bring' | 'streets'
+  jump: boolean
 }) {
-  const { language } = useBlogData();
-  const b = bridgeCopy[language];
+  const { language } = useBlogData()
+  const b = bridgeCopy[language]
   const tiles = [
     {
-      id: "tours",
-      label: language === "de" ? "Touren" : "Tours",
+      id: 'tours',
+      label: language === 'de' ? 'Touren' : 'Tours',
       caption: b.tours,
-      photo: "rigi-vitznau-train",
+      photo: 'rigi-vitznau-train',
     },
     {
-      id: "victorinox",
-      label: "Victorinox",
+      id: 'victorinox',
+      label: 'Victorinox',
       caption: b.victorinox,
-      photo: "victorinox-spartan",
+      photo: 'victorinox-spartan',
     },
     {
-      id: "keepsakes",
-      label: language === "de" ? "Andenken" : "Keepsakes",
+      id: 'keepsakes',
+      label: language === 'de' ? 'Andenken' : 'Keepsakes',
       caption: b.keepsakes,
-      photo: "postcards",
+      photo: 'postcards',
     },
-  ] as const;
-  const tileClass =
-    "relative block overflow-hidden rounded-3xl text-left outline-none focus-visible:focus-ring active:scale-[0.98]";
+  ] as const
+  const tileClass
+    = 'relative block overflow-hidden rounded-3xl text-left outline-none focus-visible:focus-ring active:scale-[0.98]'
   const face = (t: (typeof tiles)[number]) => (
     <Media alt="" className="aspect-[3/4]" photo={t.photo}>
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
@@ -253,7 +253,7 @@ function DiscoverTiles({
         <span className="text-sm font-medium">{t.label}</span>
       </span>
     </Media>
-  );
+  )
 
   return (
     <section className="flex flex-col gap-3">
@@ -262,60 +262,63 @@ function DiscoverTiles({
         <p className="text-label text-muted">{b[wording].subtitle}</p>
       </div>
       <div className="grid grid-cols-3 gap-2.5">
-        {tiles.map((t) =>
-          jump ? (
-            <button
-              key={t.id}
-              className={tileClass}
-              type="button"
-              onClick={() =>
-                document
-                  .getElementById(`chapter-${t.id}`)
-                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
-              }
-            >
-              {face(t)}
-            </button>
-          ) : t.id === "tours" ? (
-            <Link key={t.id} className={tileClass} to="/tours">
-              {face(t)}
-            </Link>
-          ) : (
-            <Link
-              key={t.id}
-              className={tileClass}
-              search={
-                t.id === "victorinox" ? { subcategory: "victorinox" } : {}
-              }
-              to="/gifts"
-            >
-              {face(t)}
-            </Link>
-          ),
+        {tiles.map(t =>
+          jump
+            ? (
+                <button
+                  key={t.id}
+                  className={tileClass}
+                  type="button"
+                  onClick={() =>
+                    document
+                      .getElementById(`chapter-${t.id}`)
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                >
+                  {face(t)}
+                </button>
+              )
+            : t.id === 'tours'
+              ? (
+                  <Link key={t.id} className={tileClass} to="/tours">
+                    {face(t)}
+                  </Link>
+                )
+              : (
+                  <Link
+                    key={t.id}
+                    className={tileClass}
+                    search={
+                      t.id === 'victorinox' ? { subcategory: 'victorinox' } : {}
+                    }
+                    to="/gifts"
+                  >
+                    {face(t)}
+                  </Link>
+                ),
         )}
       </div>
     </section>
-  );
+  )
 }
 
 function useStories(filter: CategoryFilter) {
-  const { articles, categoryOf } = useBlogData();
+  const { articles, categoryOf } = useBlogData()
 
-  return articles.filter((a) => filter === "all" || categoryOf(a) === filter);
+  return articles.filter(a => filter === 'all' || categoryOf(a) === filter)
 }
 
 function EmptyStories() {
-  const { c } = useBlogData();
+  const { c } = useBlogData()
 
   return (
     <p className="rounded-3xl bg-surface p-5 text-sm text-muted shadow-surface">
       {c.empty}
     </p>
-  );
+  )
 }
 
 function HeroWithEffect({ effect }: { effect: Effect }) {
-  const view = useDiscoveryView();
+  const view = useDiscoveryView()
 
   return (
     <div className="relative -mx-4 px-4">
@@ -323,39 +326,39 @@ function HeroWithEffect({ effect }: { effect: Effect }) {
       {/* The lights hang across the Chapel Bridge photo, clear of the top row and the greeting. */}
       <CoverEffects effect={effect} lightsClassName="bottom-[148px]" />
     </div>
-  );
+  )
 }
 
 function ToursChapter({
   number,
   withStory,
 }: {
-  number: number;
-  withStory?: boolean;
+  number: number
+  withStory?: boolean
 }) {
-  const view = useDiscoveryView();
+  const view = useDiscoveryView()
 
   return (
     <section className="flex scroll-mt-4 flex-col gap-4" id="chapter-tours">
       <ChapterHeading
         chapter="tours"
         number={number}
-        seeAll={{ label: view.tours.seeAll, to: "/tours" }}
+        seeAll={{ label: view.tours.seeAll, to: '/tours' }}
       />
       {withStory && view.tours.story && <StoryRow {...view.tours.story} />}
       <Rail label={view.tours.title}>
-        {view.tours.items.map((tour) => (
+        {view.tours.items.map(tour => (
           <li key={tour.id}>
             <TourCard layout="carousel" tour={tour} />
           </li>
         ))}
       </Rail>
     </section>
-  );
+  )
 }
 
 function VictorinoxChapter({ number }: { number: number }) {
-  const view = useDiscoveryView();
+  const view = useDiscoveryView()
 
   return (
     <section
@@ -365,66 +368,66 @@ function VictorinoxChapter({ number }: { number: number }) {
       <ChapterHeading chapter="victorinox" number={number} />
       <VictorinoxShowcase isLoading={false} {...view.victorinox} />
     </section>
-  );
+  )
 }
 
 function KeepsakesChapter({
   number,
   withStory,
 }: {
-  number: number;
-  withStory?: boolean;
+  number: number
+  withStory?: boolean
 }) {
-  const view = useDiscoveryView();
-  const { t } = useLocale();
-  const { articles, linkOf } = useBlogData();
+  const view = useDiscoveryView()
+  const { t } = useLocale()
+  const { articles, linkOf } = useBlogData()
   const giftStory = articles.find(
-    (a) => a.slug !== "victorinox-story" && linkOf(a)?.kind === "gift",
-  );
+    a => a.slug !== 'victorinox-story' && linkOf(a)?.kind === 'gift',
+  )
 
   return (
     <section className="flex scroll-mt-4 flex-col gap-4" id="chapter-keepsakes">
       <ChapterHeading
         chapter="keepsakes"
         number={number}
-        seeAll={{ label: view.keepsakes.seeAll, to: "/gifts" }}
+        seeAll={{ label: view.keepsakes.seeAll, to: '/gifts' }}
       />
       {withStory && giftStory && (
         <StoryRow
-          meta={t("home.storyRow", { minutes: giftStory.readMinutes })}
+          meta={t('home.storyRow', { minutes: giftStory.readMinutes })}
           photo={giftStory.photo}
           slug={giftStory.slug}
           title={giftStory.title}
         />
       )}
       <Rail label={view.keepsakes.title}>
-        {view.keepsakes.items.map((item) => (
+        {view.keepsakes.items.map(item => (
           <li key={item.slug} className="flex">
             <ProductCard {...item} layout="carousel" />
           </li>
         ))}
       </Rail>
     </section>
-  );
+  )
 }
 
 function Closing() {
-  const view = useDiscoveryView();
+  const view = useDiscoveryView()
 
-  return <AdviceBanner {...view.advice} />;
+  return <AdviceBanner {...view.advice} />
 }
 
-const page = "flex flex-col gap-10 px-4 pb-10";
+const page = 'flex flex-col gap-10 px-4 pb-10'
 
 /**
  * R2-A · Chapters: hero, then the story chapter (circles, a lead story, three more),
  * the tiles as a bridge that jumps to the next chapters, then Tours, Victorinox and Keepsakes.
  */
 export function ChaptersHome({ effect }: StoryHomeProps) {
-  const { c } = useBlogData();
-  const [filter, setFilter] = useState<CategoryFilter>("all");
-  const stories = useStories(filter);
-  const [lead, ...more] = stories;
+  const { c } = useBlogData()
+  const [filter, setFilter] = useState<CategoryFilter>('all')
+  const stories = useStories(filter)
+  const [lead, ...more] = stories
 
   return (
     <div className={page}>
@@ -434,12 +437,12 @@ export function ChaptersHome({ effect }: StoryHomeProps) {
         <ChapterHeading
           chapter="stories"
           number={1}
-          seeAll={{ label: c.allStories, to: "/stories" }}
+          seeAll={{ label: c.allStories, to: '/stories' }}
         />
         <StoryCircles value={filter} onChange={setFilter} />
         <div aria-live="polite" className="flex flex-col gap-5">
           {lead ? <FeedCard article={lead} /> : <EmptyStories />}
-          {more.slice(0, 3).map((article) => (
+          {more.slice(0, 3).map(article => (
             <CompactRow key={article.id} article={article} />
           ))}
         </div>
@@ -451,7 +454,7 @@ export function ChaptersHome({ effect }: StoryHomeProps) {
       <KeepsakesChapter number={4} />
       <Closing />
     </div>
-  );
+  )
 }
 
 function PortraitStory({ article }: { article: Article }) {
@@ -471,7 +474,7 @@ function PortraitStory({ article }: { article: Article }) {
         </div>
       </Media>
     </Link>
-  );
+  )
 }
 
 /**
@@ -479,9 +482,9 @@ function PortraitStory({ article }: { article: Article }) {
  * of large portrait cards, and the tiles close the page as "Bring Luzerne home".
  */
 export function StorybookHome({ effect }: StoryHomeProps) {
-  const { c } = useBlogData();
-  const [filter, setFilter] = useState<CategoryFilter>("all");
-  const stories = useStories(filter);
+  const { c } = useBlogData()
+  const [filter, setFilter] = useState<CategoryFilter>('all')
+  const stories = useStories(filter)
 
   return (
     <div className={page}>
@@ -494,29 +497,31 @@ export function StorybookHome({ effect }: StoryHomeProps) {
         <ChapterHeading
           chapter="stories"
           number={1}
-          seeAll={{ label: c.allStories, to: "/stories" }}
+          seeAll={{ label: c.allStories, to: '/stories' }}
         />
-        {stories.length > 0 ? (
-          <ScrollShadow
-            hideScrollBar
-            className="-mx-4"
-            orientation="horizontal"
-            size={0}
-          >
-            <ul
-              aria-live="polite"
-              className="flex snap-x snap-mandatory gap-3 px-4 pb-1"
-            >
-              {stories.slice(0, 6).map((article) => (
-                <li key={article.id} className="w-[80%] shrink-0 snap-center">
-                  <PortraitStory article={article} />
-                </li>
-              ))}
-            </ul>
-          </ScrollShadow>
-        ) : (
-          <EmptyStories />
-        )}
+        {stories.length > 0
+          ? (
+              <ScrollShadow
+                hideScrollBar
+                className="-mx-4"
+                orientation="horizontal"
+                size={0}
+              >
+                <ul
+                  aria-live="polite"
+                  className="flex snap-x snap-mandatory gap-3 px-4 pb-1"
+                >
+                  {stories.slice(0, 6).map(article => (
+                    <li key={article.id} className="w-[80%] shrink-0 snap-center">
+                      <PortraitStory article={article} />
+                    </li>
+                  ))}
+                </ul>
+              </ScrollShadow>
+            )
+          : (
+              <EmptyStories />
+            )}
       </section>
 
       <ToursChapter number={2} />
@@ -525,7 +530,7 @@ export function StorybookHome({ effect }: StoryHomeProps) {
       <DiscoverTiles jump={false} wording="bring" />
       <Closing />
     </div>
-  );
+  )
 }
 
 /**
@@ -533,9 +538,9 @@ export function StorybookHome({ effect }: StoryHomeProps) {
  * so the page reads as one walk from the stories to the shop.
  */
 export function ThreadsHome({ effect }: StoryHomeProps) {
-  const { c } = useBlogData();
-  const [filter, setFilter] = useState<CategoryFilter>("all");
-  const stories = useStories(filter).slice(0, 4);
+  const { c } = useBlogData()
+  const [filter, setFilter] = useState<CategoryFilter>('all')
+  const stories = useStories(filter).slice(0, 4)
 
   return (
     <div className={page}>
@@ -545,11 +550,11 @@ export function ThreadsHome({ effect }: StoryHomeProps) {
         <ChapterHeading
           chapter="stories"
           number={1}
-          seeAll={{ label: c.allStories, to: "/stories" }}
+          seeAll={{ label: c.allStories, to: '/stories' }}
         />
         <StoryCircles value={filter} onChange={setFilter} />
         <div aria-live="polite" className="grid grid-cols-2 gap-x-3 gap-y-5">
-          {stories.map((article) => (
+          {stories.map(article => (
             <Link
               key={article.id}
               className="flex flex-col gap-2 rounded-3xl outline-none focus-visible:focus-ring"
@@ -581,5 +586,5 @@ export function ThreadsHome({ effect }: StoryHomeProps) {
       <KeepsakesChapter withStory number={4} />
       <Closing />
     </div>
-  );
+  )
 }

@@ -814,7 +814,7 @@ export const WALK_MINUTES: Record<string, Record<string, number>> = {
     balances: 9,
     radisson: 9,
   },
-};
+}
 
-export const WALK_SOURCE =
-  "OpenStreetMap pedestrian routing (Valhalla), 16 Oct 2026";
+export const WALK_SOURCE
+  = 'OpenStreetMap pedestrian routing (Valhalla), 16 Oct 2026'

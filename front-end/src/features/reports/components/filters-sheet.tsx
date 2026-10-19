@@ -1,17 +1,17 @@
-import type { ReportsView } from "../hooks/use-reports";
-import type { ReportFilters } from "../lib/money";
+import type { ReportsView } from '../hooks/use-reports'
+import type { ReportFilters } from '../lib/money'
 
-import { Button, Label, ListBox, Select } from "@heroui/react";
-import { useState } from "react";
+import { Button, Label, ListBox, Select } from '@heroui/react'
+import { useState } from 'react'
 
-import { NO_FILTERS } from "../lib/money";
+import { SheetFrame } from '@/components/sheet-frame'
 
-import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/components/sheet-frame";
+import { useLocale } from '@/contexts/locale-context'
+import { NO_FILTERS } from '../lib/money'
 
-type FilterKey = "source" | "type" | "group" | "item";
+type FilterKey = 'source' | 'type' | 'group' | 'item'
 
-const FILTER_KEYS: FilterKey[] = ["source", "type", "group", "item"];
+const FILTER_KEYS: FilterKey[] = ['source', 'type', 'group', 'item']
 
 /** The four filters in the M08 sheet frame; applied when the sheet closes with "Show". */
 export function FiltersSheet({
@@ -20,42 +20,41 @@ export function FiltersSheet({
   onApply,
   onClose,
 }: {
-  view: ReportsView;
-  filters: ReportFilters;
-  onApply: (filters: ReportFilters) => void;
-  onClose: () => void;
+  view: ReportsView
+  filters: ReportFilters
+  onApply: (filters: ReportFilters) => void
+  onClose: () => void
 }) {
-  const { t } = useLocale();
-  const [draft, setDraft] = useState(filters);
+  const { t } = useLocale()
+  const [draft, setDraft] = useState(filters)
 
   return (
     <SheetFrame
       isOpen
-      footer={
+      footer={(
         <>
           <Button fullWidth onPress={() => onApply(draft)}>
-            {t("reports.filter.apply")}
+            {t('reports.filter.apply')}
           </Button>
           <Button
             fullWidth
             variant="tertiary"
             onPress={() => setDraft(NO_FILTERS)}
           >
-            {t("reports.filter.clear")}
+            {t('reports.filter.clear')}
           </Button>
         </>
-      }
-      title={t("reports.filter.title")}
+      )}
+      title={t('reports.filter.title')}
       onClose={onClose}
     >
-      {FILTER_KEYS.map((key) => (
+      {FILTER_KEYS.map(key => (
         <Select
           key={key}
           className="w-full"
           selectedKey={draft[key]}
-          onSelectionChange={(k) =>
-            k !== null && setDraft((d) => ({ ...d, [key]: String(k) }))
-          }
+          onSelectionChange={k =>
+            k !== null && setDraft(d => ({ ...d, [key]: String(k) }))}
         >
           <Label className="text-heading">{t(`reports.filter.${key}`)}</Label>
           <Select.Trigger>
@@ -64,7 +63,7 @@ export function FiltersSheet({
           </Select.Trigger>
           <Select.Popover>
             <ListBox>
-              {view.filterOptions[key].map((o) => (
+              {view.filterOptions[key].map(o => (
                 <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
                   {o.label}
                   <ListBox.ItemIndicator />
@@ -75,5 +74,5 @@ export function FiltersSheet({
         </Select>
       ))}
     </SheetFrame>
-  );
+  )
 }

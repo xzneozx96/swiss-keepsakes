@@ -1,100 +1,100 @@
-import type { JourneyStep } from "./journey-steps";
-import type { MovingStory } from "./moving-story-rail";
-import type { StoryCategoryLink } from "./story-categories";
-import type { ProductCardProps } from "@/features/catalog/components/product-card";
-import type { Tour } from "@/features/tours/types";
+import type { JourneyStep } from './journey-steps'
+import type { MovingStory } from './moving-story-rail'
+import type { StoryCategoryLink } from './story-categories'
+import type { ProductCardProps } from '@/features/catalog/components/product-card'
+import type { Tour } from '@/features/tours/types'
 
-import { Skeleton, buttonVariants } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
+import { buttonVariants, Skeleton } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
 
-import { AdviceBanner } from "./advice-banner";
-import { Hero } from "./hero";
-import { JourneySteps } from "./journey-steps";
-import { MovingStoryRail } from "./moving-story-rail";
-import { PartHeading } from "./part-heading";
-import { Rail } from "./section";
-import { Snowfall } from "./snowfall";
-import { StoryCategories } from "./story-categories";
-import { TripAdviceButton } from "./trip-advice-button";
-import { VictorinoxShowcase } from "./victorinox-showcase";
-
-import { TourCard } from "@/features/tours/discovery/tour-card";
-import brandLogo from "@/assets/brand/swiss-keepsakes-logo.png";
-import { ChevronRightIcon, StoryIcon } from "@/components/icons";
+import brandLogo from '@/assets/brand/swiss-keepsakes-logo.png'
+import { ChevronRightIcon, StoryIcon } from '@/components/icons'
 import {
   CartButton,
   CompactBar,
   SearchButton,
-} from "@/components/layout/cart-button";
-import { ProductCard } from "@/features/catalog/components/product-card";
-import { useScrolledPast } from "@/hooks/use-scrolled-past";
+} from '@/components/layout/cart-button'
+import { ProductCard } from '@/features/catalog/components/product-card'
+import { TourCard } from '@/features/tours/discovery/tour-card'
+import { useScrolledPast } from '@/hooks/use-scrolled-past'
+import { AdviceBanner } from './advice-banner'
+import { Hero } from './hero'
+import { JourneySteps } from './journey-steps'
+import { MovingStoryRail } from './moving-story-rail'
+
+import { PartHeading } from './part-heading'
+import { Rail } from './section'
+import { Snowfall } from './snowfall'
+import { StoryCategories } from './story-categories'
+import { TripAdviceButton } from './trip-advice-button'
+import { VictorinoxShowcase } from './victorinox-showcase'
 
 export interface StoryView {
-  slug: string;
-  photo: string;
-  title: string;
-  meta: string;
+  slug: string
+  photo: string
+  title: string
+  meta: string
 }
 
 interface PartView {
-  eyebrow: string;
-  title: string;
-  subtitle: string;
+  eyebrow: string
+  title: string
+  subtitle: string
 }
 
 export interface DiscoveryHomeView {
   hero: {
-    appName: string;
-    hello: string;
-    title: string;
-    photoAlt: string;
-    searchLabel: string;
-    searchPrompt: string;
-  };
-  journey: { title: string; subtitle: string; steps: JourneyStep[] };
+    appName: string
+    hello: string
+    title: string
+    photoAlt: string
+    searchLabel: string
+    searchPrompt: string
+  }
+  journey: { title: string, subtitle: string, steps: JourneyStep[] }
   stories: PartView & {
-    categoriesLabel: string;
-    categories: StoryCategoryLink[];
-    items: MovingStory[];
-    showAll: string;
-  };
+    categoriesLabel: string
+    categories: StoryCategoryLink[]
+    items: MovingStory[]
+    showAll: string
+  }
   tours: PartView & {
-    seeAll: string;
-    items: Tour[];
-    fromStory: string;
-    storyFor: (tourId: string) => { slug: string; title: string } | undefined;
+    seeAll: string
+    items: Tour[]
+    fromStory: string
+    storyFor: (tourId: string) => { slug: string, title: string } | undefined
     /** The tours' story for the lab's earlier layouts. */
-    story?: StoryView;
-  };
-  keep: PartView;
+    story?: StoryView
+  }
+  keep: PartView
   victorinox: {
-    title: string;
-    subtitle: string;
-    eyebrow: string;
-    since: string;
-    seeAll: string;
-    intro: string;
-    items: ProductCardProps[];
-    story?: StoryView;
-  };
+    title: string
+    subtitle: string
+    eyebrow: string
+    since: string
+    seeAll: string
+    intro: string
+    items: ProductCardProps[]
+    story?: StoryView
+  }
   keepsakes: {
-    title: string;
-    subtitle: string;
-    seeAll: string;
-    items: ProductCardProps[];
-  };
+    title: string
+    subtitle: string
+    seeAll: string
+    items: ProductCardProps[]
+  }
   advice: {
-    title: string;
-    body: string;
-    action: string;
-    captions: [string, string, string];
-  };
+    title: string
+    body: string
+    action: string
+    captions: [string, string, string]
+  }
 }
 
 function RailSkeleton() {
   return (
     <div className="-mx-4 flex gap-3 overflow-hidden px-4">
-      {[0, 1, 2].map((i) => (
+      {[0, 1, 2].map(i => (
         <div key={i} className="flex w-60 shrink-0 flex-col gap-3">
           <Skeleton className="aspect-[4/3] rounded-3xl" />
           <Skeleton className="h-5 w-3/4 rounded-lg" />
@@ -102,7 +102,7 @@ function RailSkeleton() {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 /**
@@ -117,14 +117,14 @@ export function DiscoveryHome({
   isLoading,
   snowing,
 }: {
-  view: DiscoveryHomeView;
-  isLoading: boolean;
-  snowing: boolean;
+  view: DiscoveryHomeView
+  isLoading: boolean
+  snowing: boolean
 }) {
-  const { hero, journey, stories, tours, keep, victorinox, keepsakes, advice } =
-    view;
+  const { hero, journey, stories, tours, keep, victorinox, keepsakes, advice }
+    = view
 
-  const [heroEnd, scrolledPast] = useScrolledPast<HTMLDivElement>();
+  const [heroEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
 
   return (
     <>
@@ -161,7 +161,7 @@ export function DiscoveryHome({
           id="read"
         >
           <PartHeading
-            color={journey.steps[0]?.color ?? "var(--accent)"}
+            color={journey.steps[0]?.color ?? 'var(--accent)'}
             eyebrow={stories.eyebrow}
             id="read-title"
             subtitle={stories.subtitle}
@@ -171,14 +171,16 @@ export function DiscoveryHome({
             items={stories.categories}
             label={stories.categoriesLabel}
           />
-          {isLoading ? (
-            <RailSkeleton />
-          ) : (
-            <MovingStoryRail label={stories.title} stories={stories.items} />
-          )}
+          {isLoading
+            ? (
+                <RailSkeleton />
+              )
+            : (
+                <MovingStoryRail label={stories.title} stories={stories.items} />
+              )}
           {/* Same treatment as "Show all {count} reviews" and the comments' show-all. */}
           <Link
-            className={`${buttonVariants({ variant: "secondary", size: "lg", fullWidth: true })} transition-transform active:scale-[0.98]`}
+            className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`}
             to="/stories"
           >
             {stories.showAll}
@@ -191,48 +193,52 @@ export function DiscoveryHome({
           id="walk"
         >
           <PartHeading
-            color={journey.steps[1]?.color ?? "var(--accent)"}
+            color={journey.steps[1]?.color ?? 'var(--accent)'}
             eyebrow={tours.eyebrow}
             id="walk-title"
-            seeAll={{ label: tours.seeAll, to: "/tours" }}
+            seeAll={{ label: tours.seeAll, to: '/tours' }}
             subtitle={tours.subtitle}
             title={tours.title}
           />
-          {isLoading ? (
-            <RailSkeleton />
-          ) : (
-            <Rail label={tours.title}>
-              {tours.items.map((tour) => {
-                const story = tours.storyFor(tour.id);
+          {isLoading
+            ? (
+                <RailSkeleton />
+              )
+            : (
+                <Rail label={tours.title}>
+                  {tours.items.map((tour) => {
+                    const story = tours.storyFor(tour.id)
 
-                return (
-                  <li key={tour.id} className="flex flex-col gap-2">
-                    <TourCard layout="carousel" tour={tour} />
-                    {story && (
-                      <Link
-                        className="flex w-60 items-start gap-2 rounded-xl px-1 text-label outline-none focus-visible:focus-ring"
-                        params={{ slug: story.slug }}
-                        to="/stories/$slug"
-                      >
-                        <StoryIcon
-                          className="mt-0.5 shrink-0 text-accent"
-                          size={16}
-                        />
-                        <span className="min-w-0">
-                          <span className="text-muted">
-                            {tours.fromStory}:{" "}
-                          </span>
-                          <span className="underline decoration-separator underline-offset-4">
-                            {story.title}
-                          </span>
-                        </span>
-                      </Link>
-                    )}
-                  </li>
-                );
-              })}
-            </Rail>
-          )}
+                    return (
+                      <li key={tour.id} className="flex flex-col gap-2">
+                        <TourCard layout="carousel" tour={tour} />
+                        {story && (
+                          <Link
+                            className="flex w-60 items-start gap-2 rounded-xl px-1 text-label outline-none focus-visible:focus-ring"
+                            params={{ slug: story.slug }}
+                            to="/stories/$slug"
+                          >
+                            <StoryIcon
+                              className="mt-0.5 shrink-0 text-accent"
+                              size={16}
+                            />
+                            <span className="min-w-0">
+                              <span className="text-muted">
+                                {tours.fromStory}
+                                :
+                                {' '}
+                              </span>
+                              <span className="underline decoration-separator underline-offset-4">
+                                {story.title}
+                              </span>
+                            </span>
+                          </Link>
+                        )}
+                      </li>
+                    )
+                  })}
+                </Rail>
+              )}
         </section>
 
         <section
@@ -241,7 +247,7 @@ export function DiscoveryHome({
           id="keep"
         >
           <PartHeading
-            color={journey.steps[2]?.color ?? "var(--accent)"}
+            color={journey.steps[2]?.color ?? 'var(--accent)'}
             id="keep-title"
             {...keep}
           />
@@ -259,22 +265,24 @@ export function DiscoveryHome({
               <ChevronRightIcon size={16} />
             </Link>
           </div>
-          {isLoading ? (
-            <RailSkeleton />
-          ) : (
-            <Rail label={keepsakes.title}>
-              {keepsakes.items.map((item) => (
-                <li key={item.slug} className="flex">
-                  <ProductCard {...item} layout="carousel" />
-                </li>
-              ))}
-            </Rail>
-          )}
+          {isLoading
+            ? (
+                <RailSkeleton />
+              )
+            : (
+                <Rail label={keepsakes.title}>
+                  {keepsakes.items.map(item => (
+                    <li key={item.slug} className="flex">
+                      <ProductCard {...item} layout="carousel" />
+                    </li>
+                  ))}
+                </Rail>
+              )}
         </section>
 
         <AdviceBanner {...advice} />
       </div>
       <TripAdviceButton above="tabBar" />
     </>
-  );
+  )
 }

@@ -1,5 +1,5 @@
-import type { IconComponent } from "@/components/icons";
-import type { StatusTone } from "@/components/status-chip";
+import type { IconComponent } from '@/components/icons'
+import type { StatusTone } from '@/components/status-chip'
 
 /**
  * M04 card (same surface as the M02/M03 cards): white, 24px radius, the soft surface
@@ -12,13 +12,13 @@ export function DetailCard({
   children,
   id,
 }: {
-  icon: IconComponent;
-  title: string;
-  trailing?: React.ReactNode;
-  children: React.ReactNode;
-  id?: string;
+  icon: IconComponent
+  title: string
+  trailing?: React.ReactNode
+  children: React.ReactNode
+  id?: string
 }) {
-  const titleId = id ? `${id}-title` : undefined;
+  const titleId = id ? `${id}-title` : undefined
 
   return (
     <section
@@ -36,16 +36,16 @@ export function DetailCard({
       </div>
       {children}
     </section>
-  );
+  )
 }
 
 const bandClass: Record<StatusTone, string> = {
-  info: "bg-info-soft text-info-soft-foreground",
-  success: "bg-success-soft text-success-soft-foreground",
-  warning: "bg-warning-soft text-warning-soft-foreground",
-  danger: "bg-danger-soft text-danger-soft-foreground",
-  neutral: "bg-surface-secondary text-foreground",
-};
+  info: 'bg-info-soft text-info-soft-foreground',
+  success: 'bg-success-soft text-success-soft-foreground',
+  warning: 'bg-warning-soft text-warning-soft-foreground',
+  danger: 'bg-danger-soft text-danger-soft-foreground',
+  neutral: 'bg-surface-secondary text-foreground',
+}
 
 /**
  * M04 primary action area: the one card that asks the staff member to do something.
@@ -61,12 +61,12 @@ export function ActionPanel({
   headingRef,
   children,
 }: {
-  tone: StatusTone;
-  eyebrow: string;
-  title: string;
-  icon: IconComponent;
-  headingRef?: React.RefObject<HTMLHeadingElement | null>;
-  children: React.ReactNode;
+  tone: StatusTone
+  eyebrow: string
+  title: string
+  icon: IconComponent
+  headingRef?: React.RefObject<HTMLHeadingElement | null>
+  children: React.ReactNode
 }) {
   return (
     <section
@@ -95,5 +95,5 @@ export function ActionPanel({
       </div>
       <div className="flex flex-col gap-4 p-4 lg:p-5">{children}</div>
     </section>
-  );
+  )
 }

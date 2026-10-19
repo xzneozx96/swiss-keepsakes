@@ -1,18 +1,21 @@
-import type { Article } from "@/features/content/types";
-import type { CategoryFilter } from "./data";
-import type { Effect } from "./effects";
+import type { CategoryFilter } from './data'
+import type { Effect } from './effects'
+import type { Article } from '@/features/content/types'
 
-import { ScrollShadow } from "@heroui/react";
-import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { ScrollShadow } from '@heroui/react'
+import { Link } from '@tanstack/react-router'
+import { useState } from 'react'
 
-import { categories, categoryPhoto, useBlogData } from "./data";
-import { CoverEffects } from "./effects";
+import { Media } from '@/components/media'
+import { useDemoNow } from '@/features/demo'
+import { categories, categoryPhoto, useBlogData } from './data'
+
+import { CoverEffects } from './effects'
 import {
   AuthorsCard,
+  CategoryChips,
   ChristmasRail,
   CompactRow,
-  CategoryChips,
   EmptyFeed,
   FeedCard,
   GentleLinkLine,
@@ -20,33 +23,30 @@ import {
   ShopStrip,
   StoryMeta,
   TopBar,
-} from "./shared";
-
-import { Media } from "@/components/media";
-import { useDemoNow } from "@/features/demo";
+} from './shared'
 
 export interface BlogHomeOptionProps {
-  effect: Effect;
+  effect: Effect
   /** Advent edition only: the December day to preview. */
-  today?: number;
+  today?: number
 }
 
 function useFeed(cover: Article | undefined, filter: CategoryFilter) {
-  const { articles, categoryOf } = useBlogData();
+  const { articles, categoryOf } = useBlogData()
 
   return articles.filter(
-    (a) => a.id !== cover?.id && (filter === "all" || categoryOf(a) === filter),
-  );
+    a => a.id !== cover?.id && (filter === 'all' || categoryOf(a) === filter),
+  )
 }
 
 /** A · Cover story: one full-bleed story, category chips, a vertical feed, then the shop. */
 export function CoverHome({ effect }: BlogHomeOptionProps) {
-  const { c, articles, linkOf } = useBlogData();
-  const [filter, setFilter] = useState<CategoryFilter>("all");
-  const cover =
-    articles.find((a) => a.slug === "musegg-morning") ?? articles[0];
-  const feed = useFeed(cover, filter).slice(0, 5);
-  const coverLink = cover && linkOf(cover);
+  const { c, articles, linkOf } = useBlogData()
+  const [filter, setFilter] = useState<CategoryFilter>('all')
+  const cover
+    = articles.find(a => a.slug === 'musegg-morning') ?? articles[0]
+  const feed = useFeed(cover, filter).slice(0, 5)
+  const coverLink = cover && linkOf(cover)
 
   return (
     <div className="flex flex-col gap-9 pb-10">
@@ -91,7 +91,7 @@ export function CoverHome({ effect }: BlogHomeOptionProps) {
         <SectionHeading seeAll={c.allStories} title={c.latest} />
         <CategoryChips value={filter} onChange={setFilter} />
         <div aria-live="polite" className="flex flex-col gap-7 px-4">
-          {feed.map((article) => (
+          {feed.map(article => (
             <FeedCard key={article.id} article={article} />
           ))}
         </div>
@@ -102,17 +102,17 @@ export function CoverHome({ effect }: BlogHomeOptionProps) {
       <ShopStrip />
       <AuthorsCard />
     </div>
-  );
+  )
 }
 
 /** B · Story circles: category circles like Instagram, a swipeable featured deck, then a compact list. */
 export function CirclesHome({ effect }: BlogHomeOptionProps) {
-  const { c, articles } = useBlogData();
-  const [filter, setFilter] = useState<CategoryFilter>("all");
-  const featured = articles.slice(0, 4);
+  const { c, articles } = useBlogData()
+  const [filter, setFilter] = useState<CategoryFilter>('all')
+  const featured = articles.slice(0, 4)
   const list = useFeed(undefined, filter).filter(
-    (a) => filter !== "all" || !featured.includes(a),
-  );
+    a => filter !== 'all' || !featured.includes(a),
+  )
 
   return (
     <div className="flex flex-col gap-8 pb-10">
@@ -125,14 +125,14 @@ export function CirclesHome({ effect }: BlogHomeOptionProps) {
             role="group"
           >
             {categories
-              .filter((item) => item !== "all")
-              .map((item) => (
+              .filter(item => item !== 'all')
+              .map(item => (
                 <button
                   key={item}
                   aria-pressed={filter === item}
                   className="group flex w-[68px] shrink-0 flex-col items-center gap-1.5 rounded-xl outline-none focus-visible:focus-ring"
                   type="button"
-                  onClick={() => setFilter(filter === item ? "all" : item)}
+                  onClick={() => setFilter(filter === item ? 'all' : item)}
                 >
                   <span className="rounded-full bg-gradient-to-tr from-[#f4b860] via-accent to-[#a3241a] p-[2.5px] group-aria-pressed:from-foreground group-aria-pressed:via-foreground group-aria-pressed:to-foreground">
                     <span className="block rounded-full bg-background p-[2px]">
@@ -152,13 +152,13 @@ export function CirclesHome({ effect }: BlogHomeOptionProps) {
         </ScrollShadow>
       </div>
 
-      {filter === "all" && (
+      {filter === 'all' && (
         <section className="flex flex-col gap-3">
           <SectionHeading title={c.featured} />
           <div className="relative">
             <ScrollShadow hideScrollBar orientation="horizontal" size={0}>
               <ul className="flex snap-x snap-mandatory gap-3 px-4 pb-1">
-                {featured.map((article) => (
+                {featured.map(article => (
                   <li key={article.id} className="w-[82%] shrink-0 snap-center">
                     <Link
                       className="block overflow-hidden rounded-[28px] outline-none focus-visible:focus-ring"
@@ -193,10 +193,10 @@ export function CirclesHome({ effect }: BlogHomeOptionProps) {
       <section className="flex flex-col gap-3">
         <SectionHeading
           seeAll={c.allStories}
-          title={filter === "all" ? c.latest : c.category[filter]}
+          title={filter === 'all' ? c.latest : c.category[filter]}
         />
         <div aria-live="polite" className="flex flex-col gap-4 px-4">
-          {list.map((article) => (
+          {list.map(article => (
             <CompactRow key={article.id} article={article} />
           ))}
         </div>
@@ -207,31 +207,31 @@ export function CirclesHome({ effect }: BlogHomeOptionProps) {
       <ShopStrip />
       <AuthorsCard />
     </div>
-  );
+  )
 }
 
 /** C · Today's edition: a dated masthead, one lead story, numbered short reads, the writers' picks. */
 export function EditionHome({ effect }: BlogHomeOptionProps) {
-  const { c, articles, authors, language, linkOf } = useBlogData();
-  const now = useDemoNow();
-  const lead = articles[0];
-  const short = articles.slice(1, 6);
+  const { c, articles, authors, language, linkOf } = useBlogData()
+  const now = useDemoNow()
+  const lead = articles[0]
+  const short = articles.slice(1, 6)
   const picks = authors
-    .map((author) => ({
+    .map(author => ({
       author,
       article: articles.find(
-        (a) => a.author.name === author.name && a.id !== lead?.id,
+        a => a.author.name === author.name && a.id !== lead?.id,
       ),
     }))
-    .filter((p): p is { author: Article["author"]; article: Article } =>
+    .filter((p): p is { author: Article['author'], article: Article } =>
       Boolean(p.article),
-    );
-  const leadLink = lead && linkOf(lead);
-  const date = new Intl.DateTimeFormat(language === "de" ? "de-CH" : "en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(now);
+    )
+  const leadLink = lead && linkOf(lead)
+  const date = new Intl.DateTimeFormat(language === 'de' ? 'de-CH' : 'en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(now)
 
   return (
     <div className="flex flex-col gap-9 pb-10">
@@ -325,15 +325,15 @@ export function EditionHome({ effect }: BlogHomeOptionProps) {
       <ShopStrip />
       <AuthorsCard />
     </div>
-  );
+  )
 }
 
 /** D · Advent edition: December only. The calendar is the hero; one door opens per day. */
 export function AdventHome({ effect, today = 1 }: BlogHomeOptionProps) {
-  const { c, articles } = useBlogData();
-  const doorStory = (day: number) => articles[(day - 1) % articles.length];
-  const todays = doorStory(today);
-  const rest = articles.filter((a) => a.id !== todays?.id).slice(0, 4);
+  const { c, articles } = useBlogData()
+  const doorStory = (day: number) => articles[(day - 1) % articles.length]
+  const todays = doorStory(today)
+  const rest = articles.filter(a => a.id !== todays?.id).slice(0, 4)
 
   return (
     <div className="flex flex-col gap-8 pb-10">
@@ -350,40 +350,42 @@ export function AdventHome({ effect, today = 1 }: BlogHomeOptionProps) {
           </Media>
           <ol className="grid grid-cols-6 gap-1.5 p-4 pt-3">
             {Array.from({ length: 24 }, (_, i) => i + 1).map((day) => {
-              const story = doorStory(day);
-              const open = day <= today && story;
+              const story = doorStory(day)
+              const open = day <= today && story
 
               return (
                 <li key={day}>
-                  {open ? (
-                    <Link
-                      aria-label={`${c.door(day)}: ${story.title}`}
-                      className={`block overflow-hidden rounded-xl outline-none focus-visible:focus-ring ${day === today ? "ring-2 ring-[#ffd27a] ring-offset-2 ring-offset-[#1d2433]" : ""}`}
-                      params={{ slug: story.slug }}
-                      to="/stories/$slug"
-                    >
-                      <Media
-                        alt=""
-                        className="aspect-square"
-                        photo={story.photo}
-                      >
-                        <div className="absolute inset-0 bg-black/30" />
-                        <span className="absolute bottom-0.5 left-1.5 font-serif text-[15px] font-medium text-white">
+                  {open
+                    ? (
+                        <Link
+                          aria-label={`${c.door(day)}: ${story.title}`}
+                          className={`block overflow-hidden rounded-xl outline-none focus-visible:focus-ring ${day === today ? 'ring-2 ring-[#ffd27a] ring-offset-2 ring-offset-[#1d2433]' : ''}`}
+                          params={{ slug: story.slug }}
+                          to="/stories/$slug"
+                        >
+                          <Media
+                            alt=""
+                            className="aspect-square"
+                            photo={story.photo}
+                          >
+                            <div className="absolute inset-0 bg-black/30" />
+                            <span className="absolute bottom-0.5 left-1.5 font-serif text-[15px] font-medium text-white">
+                              {day}
+                            </span>
+                          </Media>
+                        </Link>
+                      )
+                    : (
+                        <span
+                          aria-label={c.opensOn(day)}
+                          className="flex aspect-square items-center justify-center rounded-xl border border-white/15 bg-white/5 font-serif text-[15px] text-white/70"
+                          role="img"
+                        >
                           {day}
                         </span>
-                      </Media>
-                    </Link>
-                  ) : (
-                    <span
-                      aria-label={c.opensOn(day)}
-                      className="flex aspect-square items-center justify-center rounded-xl border border-white/15 bg-white/5 font-serif text-[15px] text-white/70"
-                      role="img"
-                    >
-                      {day}
-                    </span>
-                  )}
+                      )}
                 </li>
-              );
+              )
             })}
           </ol>
         </section>
@@ -401,7 +403,7 @@ export function AdventHome({ effect, today = 1 }: BlogHomeOptionProps) {
       <section className="flex flex-col gap-3">
         <SectionHeading seeAll={c.allStories} title={c.moreStories} />
         <div className="flex flex-col gap-4 px-4">
-          {rest.map((article) => (
+          {rest.map(article => (
             <CompactRow key={article.id} article={article} />
           ))}
         </div>
@@ -410,5 +412,5 @@ export function AdventHome({ effect, today = 1 }: BlogHomeOptionProps) {
       <ShopStrip />
       <AuthorsCard />
     </div>
-  );
+  )
 }

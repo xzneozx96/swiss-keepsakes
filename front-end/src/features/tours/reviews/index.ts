@@ -1,1 +1,1 @@
-export { TourBookingReview } from "./tour-booking-review";
+export { TourBookingReview } from './tour-booking-review'

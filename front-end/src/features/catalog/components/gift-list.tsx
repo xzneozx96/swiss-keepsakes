@@ -1,55 +1,55 @@
-import type { ProductCardProps } from "./product-card";
-import type { Key } from "@heroui/react";
+import type { Key } from '@heroui/react'
+import type { ProductCardProps } from './product-card'
 
-import { useState } from "react";
 import {
   ScrollShadow,
   SearchField,
   Skeleton,
   Tag,
   TagGroup,
-} from "@heroui/react";
+} from '@heroui/react'
+import { useState } from 'react'
 
-import { CategoryThumb, categoryThumbItemClass } from "./category-thumb";
-import { ProductCard } from "./product-card";
+import { EmptyState } from '@/components/empty-state'
+import { GiftIcon } from '@/components/icons'
 
-import { EmptyState } from "@/components/empty-state";
-import { GiftIcon } from "@/components/icons";
 import {
   BackButton,
   CartButton,
   CompactBar,
   SearchButton,
-} from "@/components/layout/cart-button";
-import { Media } from "@/components/media";
-import { useScrolledPast } from "@/hooks/use-scrolled-past";
+} from '@/components/layout/cart-button'
+import { Media } from '@/components/media'
+import { useScrolledPast } from '@/hooks/use-scrolled-past'
+import { CategoryThumb, categoryThumbItemClass } from './category-thumb'
+import { ProductCard } from './product-card'
 
-export const ALL_CATEGORIES = "all";
+export const ALL_CATEGORIES = 'all'
 
 interface GiftListProps {
   banner: {
-    title: string;
-    tagline: string;
-    countLabel: string;
-    photo?: string;
-  };
+    title: string
+    tagline: string
+    countLabel: string
+    photo?: string
+  }
   search: {
     /** Scope label, e.g. "Search in Gift boxes"; also the field's accessible name. */
-    label: string;
-    openLabel: string;
-    backLabel: string;
-    value: string;
-    onChange: (v: string) => void;
-  };
+    label: string
+    openLabel: string
+    backLabel: string
+    value: string
+    onChange: (v: string) => void
+  }
   filter: {
-    label: string;
-    items: { id: string; name: string; photo?: string }[];
-    selected: string;
-    onChange: (id: string) => void;
-  };
-  cards: ProductCardProps[];
-  empty: { message: string; actionLabel: string } | null;
-  isLoading: boolean;
+    label: string
+    items: { id: string, name: string, photo?: string }[]
+    selected: string
+    onChange: (id: string) => void
+  }
+  cards: ProductCardProps[]
+  empty: { message: string, actionLabel: string } | null
+  isLoading: boolean
 }
 
 /**
@@ -69,57 +69,60 @@ export function GiftList({
   empty,
   isLoading,
 }: GiftListProps) {
-  const [searchOpen, setSearchOpen] = useState(search.value !== "");
-  const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>();
+  const [searchOpen, setSearchOpen] = useState(search.value !== '')
+  const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
 
-  const openSearch = () => setSearchOpen(true);
+  const openSearch = () => setSearchOpen(true)
 
   const closeSearch = () => {
-    search.onChange("");
-    setSearchOpen(false);
-  };
+    search.onChange('')
+    setSearchOpen(false)
+  }
 
-  const onSelectionChange = (keys: "all" | Set<Key>) => {
-    const [first] = keys === "all" ? [] : [...keys];
+  const onSelectionChange = (keys: 'all' | Set<Key>) => {
+    const [first] = keys === 'all' ? [] : [...keys]
 
     // Single selection never clears: tapping the selected tile keeps it selected.
-    if (first !== undefined) filter.onChange(String(first));
-  };
+    if (first !== undefined)
+      filter.onChange(String(first))
+  }
 
   return (
     <div className="flex flex-col">
-      {searchOpen ? (
-        <CompactBar visible>
-          <BackButton label={search.backLabel} onPress={closeSearch} />
-          <SearchField
-            // Opened on purpose by the 🔍 action, so the keyboard comes up.
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-            aria-label={search.label}
-            className="flex-1"
-            value={search.value}
-            onChange={search.onChange}
-          >
-            <SearchField.Group>
-              <SearchField.SearchIcon />
-              <SearchField.Input
-                className="w-full"
-                placeholder={search.label}
+      {searchOpen
+        ? (
+            <CompactBar visible>
+              <BackButton label={search.backLabel} onPress={closeSearch} />
+              <SearchField
+                // Opened on purpose by the 🔍 action, so the keyboard comes up.
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+                aria-label={search.label}
+                className="flex-1"
+                value={search.value}
+                onChange={search.onChange}
+              >
+                <SearchField.Group>
+                  <SearchField.SearchIcon />
+                  <SearchField.Input
+                    className="w-full"
+                    placeholder={search.label}
+                  />
+                  <SearchField.ClearButton />
+                </SearchField.Group>
+              </SearchField>
+            </CompactBar>
+          )
+        : (
+            <CompactBar title={banner.title} visible={scrolledPast}>
+              <SearchButton
+                label={search.openLabel}
+                tone="bar"
+                onPress={openSearch}
               />
-              <SearchField.ClearButton />
-            </SearchField.Group>
-          </SearchField>
-        </CompactBar>
-      ) : (
-        <CompactBar title={banner.title} visible={scrolledPast}>
-          <SearchButton
-            label={search.openLabel}
-            tone="bar"
-            onPress={openSearch}
-          />
-          <CartButton tone="bar" />
-        </CompactBar>
-      )}
+              <CartButton tone="bar" />
+            </CompactBar>
+          )}
       <Media alt="" className="h-[260px]" photo={banner.photo}>
         <div
           aria-hidden
@@ -157,7 +160,7 @@ export function GiftList({
             size={40}
           >
             <TagGroup.List className="flex-nowrap gap-1 px-4 pt-2 pb-1">
-              {filter.items.map((item) => (
+              {filter.items.map(item => (
                 <Tag
                   key={item.id}
                   className={`${categoryThumbItemClass} bg-transparent p-0 before:hidden hover:bg-transparent data-[selected=true]:bg-transparent data-[selected=true]:font-semibold data-[selected=true]:text-foreground`}
@@ -171,32 +174,36 @@ export function GiftList({
           </ScrollShadow>
         </TagGroup>
 
-        {isLoading ? (
-          <ul className="flex flex-col gap-7">
-            {Array.from({ length: 3 }, (_, i) => (
-              <li key={i} className="flex flex-col gap-2.5">
-                <Skeleton className="aspect-[4/3] rounded-3xl" />
-                <Skeleton className="h-5 w-4/5 rounded-lg" />
-                <Skeleton className="h-4 w-3/5 rounded-lg" />
-              </li>
-            ))}
-          </ul>
-        ) : empty ? (
-          <EmptyState
-            action={{ label: empty.actionLabel, to: "/gifts" }}
-            icon={GiftIcon}
-            message={empty.message}
-          />
-        ) : (
-          <ul className="flex flex-col gap-7">
-            {cards.map((card) => (
-              <li key={card.slug}>
-                <ProductCard {...card} layout="grid" />
-              </li>
-            ))}
-          </ul>
-        )}
+        {isLoading
+          ? (
+              <ul className="flex flex-col gap-7">
+                {Array.from({ length: 3 }, (_, i) => (
+                  <li key={i} className="flex flex-col gap-2.5">
+                    <Skeleton className="aspect-[4/3] rounded-3xl" />
+                    <Skeleton className="h-5 w-4/5 rounded-lg" />
+                    <Skeleton className="h-4 w-3/5 rounded-lg" />
+                  </li>
+                ))}
+              </ul>
+            )
+          : empty
+            ? (
+                <EmptyState
+                  action={{ label: empty.actionLabel, to: '/gifts' }}
+                  icon={GiftIcon}
+                  message={empty.message}
+                />
+              )
+            : (
+                <ul className="flex flex-col gap-7">
+                  {cards.map(card => (
+                    <li key={card.slug}>
+                      <ProductCard {...card} layout="grid" />
+                    </li>
+                  ))}
+                </ul>
+              )}
       </div>
     </div>
-  );
+  )
 }

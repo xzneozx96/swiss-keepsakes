@@ -1,5 +1,5 @@
-import { Button, Drawer, Dropdown, Label, NumberField } from "@heroui/react";
-import { useState } from "react";
+import { Button, Drawer, Dropdown, Label, NumberField } from '@heroui/react'
+import { useState } from 'react'
 
 import {
   ChevronDownIcon,
@@ -7,32 +7,32 @@ import {
   MinusIcon,
   PlusIcon,
   TrashIcon,
-} from "@/components/icons";
-import { Media } from "@/components/media";
-import { QuantityStepper } from "@/components/quantity-stepper";
+} from '@/components/icons'
+import { Media } from '@/components/media'
+import { QuantityStepper } from '@/components/quantity-stepper'
 
 /** Lab only: one cart line, the same data the built C04 line shows. */
 export interface LabCartLine {
-  id: string;
-  name: string;
-  photo?: string;
+  id: string
+  name: string
+  photo?: string
   /** Option and engraving, e.g. "Medium · Engraving “Anna”". */
-  meta: string;
-  quantity: number;
-  max: number;
+  meta: string
+  quantity: number
+  max: number
   /** Line total and unit price, already formatted. */
-  total: string;
-  unit: string;
+  total: string
+  unit: string
 }
 
 export interface CartLineOptionProps {
-  line: LabCartLine;
-  onQuantity: (value: number) => void;
-  onRemove: () => void;
+  line: LabCartLine
+  onQuantity: (value: number) => void
+  onRemove: () => void
 }
 
-const removeLink =
-  "rounded text-sm font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring";
+const removeLink
+  = 'rounded text-sm font-semibold underline underline-offset-4 outline-none focus-visible:focus-ring'
 
 /** Small outlined − n + pill (HeroUI NumberField), 32px buttons. */
 function MiniStepper({
@@ -41,10 +41,10 @@ function MiniStepper({
   max,
   onChange,
 }: {
-  name: string;
-  value: number;
-  max: number;
-  onChange: (value: number) => void;
+  name: string
+  value: number
+  max: number
+  onChange: (value: number) => void
 }) {
   return (
     <NumberField
@@ -53,7 +53,7 @@ function MiniStepper({
       maxValue={max}
       minValue={1}
       value={value}
-      onChange={(v) => onChange(Number.isNaN(v) ? 1 : v)}
+      onChange={v => onChange(Number.isNaN(v) ? 1 : v)}
     >
       <NumberField.Group className="flex h-8 w-auto items-center rounded-full border border-field-border bg-transparent shadow-none">
         <NumberField.DecrementButton className="size-8 border-0 bg-transparent disabled:opacity-30" />
@@ -61,7 +61,7 @@ function MiniStepper({
         <NumberField.IncrementButton className="size-8 border-0 bg-transparent disabled:opacity-30" />
       </NumberField.Group>
     </NumberField>
-  );
+  )
 }
 
 /** A · Compact row (Shopify / Etsy): price beside the name, small stepper and Remove below. */
@@ -102,7 +102,7 @@ export function LineCompactRow({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -114,9 +114,9 @@ export function LineBinStepper({
   onQuantity,
   onRemove,
 }: CartLineOptionProps) {
-  const button =
-    "flex size-8 items-center justify-center rounded-full outline-none focus-visible:focus-ring active:scale-95 disabled:opacity-30";
-  const atOne = line.quantity <= 1;
+  const button
+    = 'flex size-8 items-center justify-center rounded-full outline-none focus-visible:focus-ring active:scale-95 disabled:opacity-30'
+  const atOne = line.quantity <= 1
 
   return (
     <div className="flex gap-3 py-3">
@@ -137,12 +137,11 @@ export function LineBinStepper({
             role="group"
           >
             <button
-              aria-label={atOne ? `Remove ${line.name}` : "Decrease"}
+              aria-label={atOne ? `Remove ${line.name}` : 'Decrease'}
               className={button}
               type="button"
               onClick={() =>
-                atOne ? onRemove() : onQuantity(line.quantity - 1)
-              }
+                atOne ? onRemove() : onQuantity(line.quantity - 1)}
             >
               {atOne ? <TrashIcon size={16} /> : <MinusIcon size={16} />}
             </button>
@@ -166,7 +165,7 @@ export function LineBinStepper({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 /** C · Qty menu (Etsy / Zalando): a "Qty 3" chip opens a short list; a bin on the right. */
@@ -175,7 +174,7 @@ export function LineQtyMenu({
   onQuantity,
   onRemove,
 }: CartLineOptionProps) {
-  const counts = Array.from({ length: line.max }, (_, i) => i + 1);
+  const counts = Array.from({ length: line.max }, (_, i) => i + 1)
 
   return (
     <div className="flex gap-3 py-3">
@@ -209,7 +208,9 @@ export function LineQtyMenu({
               size="sm"
               variant="outline"
             >
-              Qty {line.quantity}
+              Qty
+              {' '}
+              {line.quantity}
               <ChevronDownIcon aria-hidden size={14} />
             </Button>
             <Dropdown.Popover placement="bottom start">
@@ -217,9 +218,9 @@ export function LineQtyMenu({
                 aria-label="Quantity"
                 selectedKeys={new Set([String(line.quantity)])}
                 selectionMode="single"
-                onAction={(key) => onQuantity(Number(key))}
+                onAction={key => onQuantity(Number(key))}
               >
-                {counts.map((n) => (
+                {counts.map(n => (
                   <Dropdown.Item key={n} id={String(n)} textValue={String(n)}>
                     <Label>{n}</Label>
                   </Dropdown.Item>
@@ -231,7 +232,7 @@ export function LineQtyMenu({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -272,7 +273,7 @@ export function LinePriceColumn({
         </button>
       </div>
     </div>
-  );
+  )
 }
 
 /**
@@ -285,7 +286,7 @@ export function LineEditSheet({
   onQuantity,
   onRemove,
 }: CartLineOptionProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   return (
     <>
@@ -348,8 +349,8 @@ export function LineEditSheet({
                 className="w-full"
                 variant="secondary"
                 onPress={() => {
-                  setOpen(false);
-                  onRemove();
+                  setOpen(false)
+                  onRemove()
                 }}
               >
                 Remove from cart
@@ -359,7 +360,7 @@ export function LineEditSheet({
         </Drawer.Content>
       </Drawer.Backdrop>
     </>
-  );
+  )
 }
 
 /* ---------------------------------------------------------------------- Round 2 */
@@ -375,22 +376,22 @@ function RoundStepper({
   onChange,
   filled = true,
 }: {
-  name: string;
-  value: number;
-  max: number;
-  onChange: (value: number) => void;
+  name: string
+  value: number
+  max: number
+  onChange: (value: number) => void
   /** false: both buttons outlined, as in the C03 quantity row. */
-  filled?: boolean;
+  filled?: boolean
 }) {
-  const round =
-    "size-8 shrink-0 rounded-full disabled:opacity-30 data-[pressed=true]:scale-95";
-  const outlined = `${round} border border-field-border bg-transparent text-foreground`;
+  const round
+    = 'size-8 shrink-0 rounded-full disabled:opacity-30 data-[pressed=true]:scale-95'
+  const outlined = `${round} border border-field-border bg-transparent text-foreground`
   const minus = filled
     ? `${round} border-0 bg-surface-secondary text-foreground`
-    : outlined;
+    : outlined
   const plus = filled
     ? `${round} border-0 bg-foreground text-background`
-    : outlined;
+    : outlined
 
   return (
     <NumberField
@@ -399,7 +400,7 @@ function RoundStepper({
       maxValue={max}
       minValue={1}
       value={value}
-      onChange={(v) => onChange(Number.isNaN(v) ? 1 : v)}
+      onChange={v => onChange(Number.isNaN(v) ? 1 : v)}
     >
       <NumberField.Group className="flex h-auto w-auto items-center gap-1 overflow-visible border-0 bg-transparent shadow-none">
         <NumberField.DecrementButton className={minus} />
@@ -407,10 +408,10 @@ function RoundStepper({
         <NumberField.IncrementButton className={plus} />
       </NumberField.Group>
     </NumberField>
-  );
+  )
 }
 
-function BinButton({ name, onRemove }: { name: string; onRemove: () => void }) {
+function BinButton({ name, onRemove }: { name: string, onRemove: () => void }) {
   return (
     <button
       aria-label={`Remove ${name}`}
@@ -420,7 +421,7 @@ function BinButton({ name, onRemove }: { name: string; onRemove: () => void }) {
     >
       <TrashIcon size={16} />
     </button>
-  );
+  )
 }
 
 /**
@@ -431,13 +432,13 @@ export function RoomyItem({
   line,
   onQuantity,
   onRemove,
-  photoSize = "size-[88px]",
+  photoSize = 'size-[88px]',
   filled = true,
   showUnit = false,
 }: CartLineOptionProps & {
-  photoSize?: string;
-  filled?: boolean;
-  showUnit?: boolean;
+  photoSize?: string
+  filled?: boolean
+  showUnit?: boolean
 }) {
   return (
     <div className="flex gap-4">
@@ -473,7 +474,7 @@ export function RoomyItem({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 /** F · Item cards (owner reference): each gift is its own white card under the order heading. */
@@ -482,7 +483,7 @@ export function LineItemCard(props: CartLineOptionProps) {
     <div className="rounded-3xl bg-surface p-3 shadow-surface">
       <RoomyItem {...props} />
     </div>
-  );
+  )
 }
 
 /** G · Tiles in the order card: each gift on a soft grey tile inside the order card. */
@@ -491,7 +492,7 @@ export function LineItemTile(props: CartLineOptionProps) {
     <div className="rounded-2xl bg-surface-secondary p-3">
       <RoomyItem {...props} />
     </div>
-  );
+  )
 }
 
 /** H · Roomy rows: the reference layout as rows split by lines, no inner cards. */
@@ -500,7 +501,7 @@ export function LineRoomyRow(props: CartLineOptionProps) {
     <div className="py-4">
       <RoomyItem {...props} />
     </div>
-  );
+  )
 }
 
 /**
@@ -512,5 +513,5 @@ export function LineLargePhoto(props: CartLineOptionProps) {
     <div className="py-4">
       <RoomyItem {...props} showUnit filled={false} photoSize="size-26" />
     </div>
-  );
+  )
 }

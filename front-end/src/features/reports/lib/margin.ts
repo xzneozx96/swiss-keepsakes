@@ -1,29 +1,29 @@
-import type { ReportTx } from "./transactions";
-import type { CostRecord, CostType } from "../types";
-import type { Rappen } from "@/features/catalog/types";
-import type { DayRange } from "@/lib/analytics";
-import type { CommissionAdjustment } from "@/features/partners/types";
+import type { CostRecord, CostType } from '../types'
+import type { ReportTx } from './transactions'
+import type { Rappen } from '@/features/catalog/types'
+import type { CommissionAdjustment } from '@/features/partners/types'
+import type { DayRange } from '@/lib/analytics'
 
-import { COST_TYPES } from "../types";
+import { transactionKey } from '@/features/partners/lib/ledger'
 
-import { transactionKey } from "@/features/partners/lib/ledger";
+import { COST_TYPES } from '../types'
 
 export interface MarginPart {
   /** Completed sales in the period. */
-  sales: number;
+  sales: number
   /** Of those, sales with every cost entered (R14). */
-  complete: number;
+  complete: number
   /** Collected minus refunds, for the complete sales only (D8: before tax, demo assumption). */
-  revenue: Rappen;
-  costs: Rappen;
-  margin: Rappen;
+  revenue: Rappen
+  costs: Rappen
+  margin: Rappen
 }
 
 export interface MarginResult {
-  goods: MarginPart;
-  tours: MarginPart;
+  goods: MarginPart
+  tours: MarginPart
   /** Completed sales still missing costs, newest first. */
-  missing: { tx: ReportTx; types: CostType[] }[];
+  missing: { tx: ReportTx, types: CostType[] }[]
 }
 
 /**
@@ -37,13 +37,13 @@ export function margin(
   adjustments: CommissionAdjustment[],
   range: DayRange,
 ): MarginResult {
-  const records = new Map(costs.map((r) => [transactionKey(r.transaction), r]));
-  const refunded = new Map<string, Rappen>();
+  const records = new Map(costs.map(r => [transactionKey(r.transaction), r]))
+  const refunded = new Map<string, Rappen>()
 
   for (const a of adjustments) {
-    const key = transactionKey(a.transaction);
+    const key = transactionKey(a.transaction)
 
-    refunded.set(key, (refunded.get(key) ?? 0) + a.refunded);
+    refunded.set(key, (refunded.get(key) ?? 0) + a.refunded)
   }
 
   const empty = (): MarginPart => ({
@@ -52,43 +52,44 @@ export function margin(
     revenue: 0,
     costs: 0,
     margin: 0,
-  });
-  const result: MarginResult = { goods: empty(), tours: empty(), missing: [] };
+  })
+  const result: MarginResult = { goods: empty(), tours: empty(), missing: [] }
 
   for (const tx of txs) {
     if (
-      tx.status !== "completed" ||
-      !tx.completedDay ||
-      tx.completedDay < range.start ||
-      tx.completedDay > range.end
-    )
-      continue;
-    const part = result[tx.kind];
-    const record = records.get(tx.key);
-    const missing = COST_TYPES.filter((type) => !record?.costs[type]);
-
-    part.sales++;
-    if (missing.length) {
-      result.missing.push({ tx, types: missing });
-      continue;
+      tx.status !== 'completed'
+      || !tx.completedDay
+      || tx.completedDay < range.start
+      || tx.completedDay > range.end
+    ) {
+      continue
     }
-    const revenue =
-      tx.payments.reduce((sum, p) => sum + p.amount, 0) -
-      (refunded.get(tx.key) ?? 0);
+    const part = result[tx.kind]
+    const record = records.get(tx.key)
+    const missing = COST_TYPES.filter(type => !record?.costs[type])
+
+    part.sales++
+    if (missing.length) {
+      result.missing.push({ tx, types: missing })
+      continue
+    }
+    const revenue
+      = tx.payments.reduce((sum, p) => sum + p.amount, 0)
+        - (refunded.get(tx.key) ?? 0)
     const cost = COST_TYPES.reduce((sum, type) => {
-      const value = record?.costs[type];
+      const value = record?.costs[type]
 
-      return sum + (value && "amount" in value ? value.amount : 0);
-    }, 0);
+      return sum + (value && 'amount' in value ? value.amount : 0)
+    }, 0)
 
-    part.complete++;
-    part.revenue += revenue;
-    part.costs += cost;
-    part.margin += revenue - cost;
+    part.complete++
+    part.revenue += revenue
+    part.costs += cost
+    part.margin += revenue - cost
   }
   result.missing.sort((a, b) =>
-    (b.tx.completedDay ?? "").localeCompare(a.tx.completedDay ?? ""),
-  );
+    (b.tx.completedDay ?? '').localeCompare(a.tx.completedDay ?? ''),
+  )
 
-  return result;
+  return result
 }

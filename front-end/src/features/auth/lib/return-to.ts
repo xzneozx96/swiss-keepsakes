@@ -4,13 +4,13 @@
  */
 export function safeReturnTo(value: string | undefined): string {
   if (
-    !value ||
-    !value.startsWith("/") ||
-    value.startsWith("//") ||
-    value.startsWith("/sign-in")
+    !value
+    || !value.startsWith('/')
+    || value.startsWith('//')
+    || value.startsWith('/sign-in')
   ) {
-    return "/account";
+    return '/account'
   }
 
-  return value;
+  return value
 }

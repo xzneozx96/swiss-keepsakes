@@ -1,23 +1,22 @@
-import type { AdviceRow } from "../hooks/use-merchant-requests";
-import type { DataTableColumn } from "@/components/data-table";
-import type { EmptyStateProps } from "@/components/empty-state";
+import type { AdviceRow } from '../hooks/use-merchant-requests'
+import type { DataTableColumn } from '@/components/data-table'
+import type { EmptyStateProps } from '@/components/empty-state'
 
-import { DataTable } from "@/components/data-table";
-import { ArrowUpRightIcon } from "@/components/icons";
-import { RowActions } from "@/components/row-actions";
-import { ChevronRightIcon } from "@/components/icons";
-import { StatusChip } from "@/components/status-chip";
-import { useLocale } from "@/contexts/locale-context";
+import { DataTable } from '@/components/data-table'
+import { ArrowUpRightIcon, ChevronRightIcon } from '@/components/icons'
+import { RowActions } from '@/components/row-actions'
+import { StatusChip } from '@/components/status-chip'
+import { useLocale } from '@/contexts/locale-context'
 
 interface AdviceRowsProps {
-  rows: AdviceRow[];
+  rows: AdviceRow[]
   /** Accessible name of the list or table: the tab. */
-  label: string;
+  label: string
   /** Shown inside the table (a card on phones) when `rows` is empty. */
-  empty?: EmptyStateProps;
+  empty?: EmptyStateProps
   /** Back to page 1 when this changes. */
-  resetKey?: string;
-  isLoading?: boolean;
+  resetKey?: string
+  isLoading?: boolean
 }
 
 /**
@@ -28,7 +27,7 @@ interface AdviceRowsProps {
 function StackedRows({ rows, label }: AdviceRowsProps) {
   return (
     <ul aria-label={label} className="flex flex-col gap-5 lg:hidden">
-      {rows.map((row) => (
+      {rows.map(row => (
         <li key={row.id}>
           <a
             className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface outline-none card-hover focus-visible:focus-ring"
@@ -75,21 +74,21 @@ function StackedRows({ rows, label }: AdviceRowsProps) {
         </li>
       ))}
     </ul>
-  );
+  )
 }
 
 /** From 1024px: a Table; each row opens the request. */
 /** M19 inbox: phone cards, or the table from 1024px. */
 export function AdviceRows(props: AdviceRowsProps) {
-  const { t } = useLocale();
+  const { t } = useLocale()
   const columns: DataTableColumn<AdviceRow>[] = [
     {
-      id: "guest",
-      header: t("merchantRequests.column.guest"),
-      skeleton: "two-line",
+      id: 'guest',
+      header: t('merchantRequests.column.guest'),
+      skeleton: 'two-line',
       isRowHeader: true,
-      cellClassName: "whitespace-nowrap",
-      render: (row) => (
+      cellClassName: 'whitespace-nowrap',
+      render: row => (
         <div className="flex flex-col">
           <span className="font-semibold">{row.email}</span>
           <span className="text-label text-muted">{row.languageName}</span>
@@ -97,16 +96,17 @@ export function AdviceRows(props: AdviceRowsProps) {
       ),
     },
     {
-      id: "answers",
-      header: t("merchantRequests.column.answers"),
-      skeleton: "two-line",
-      render: (row) => (
+      id: 'answers',
+      header: t('merchantRequests.column.answers'),
+      skeleton: 'two-line',
+      render: row => (
         <div className="flex max-w-md flex-col">
           {row.preview.slice(0, 2).map((item, i) => (
             <span key={i} className="truncate">
               <span className="text-muted" lang={item.language}>
                 {item.question}
-              </span>{" "}
+              </span>
+              {' '}
               {item.answer}
             </span>
           ))}
@@ -115,48 +115,48 @@ export function AdviceRows(props: AdviceRowsProps) {
       ),
     },
     {
-      id: "sent",
-      header: t("merchantRequests.column.sent"),
-      skeleton: "line",
-      cellClassName: "whitespace-nowrap tabular-nums",
-      render: (row) => row.sentAt,
+      id: 'sent',
+      header: t('merchantRequests.column.sent'),
+      skeleton: 'line',
+      cellClassName: 'whitespace-nowrap tabular-nums',
+      render: row => row.sentAt,
     },
     {
-      id: "status",
-      header: t("merchantRequests.column.status"),
-      skeleton: "chip",
-      render: (row) => (
+      id: 'status',
+      header: t('merchantRequests.column.status'),
+      skeleton: 'chip',
+      render: row => (
         <StatusChip tone={row.status.tone}>{row.status.text}</StatusChip>
       ),
     },
-  ];
+  ]
 
   return (
     <DataTable
-      cards={(page) => <StackedRows {...props} rows={page} />}
+      cards={page => <StackedRows {...props} rows={page} />}
       columns={columns}
       empty={props.empty}
-      getRowHref={(row) => row.href}
-      getRowId={(row) => row.id}
+      getRowHref={row => row.href}
+      getRowId={row => row.id}
       isLoading={props.isLoading}
       label={props.label}
       resetKey={props.resetKey}
       rowActions={{
-        render: (row) => (
+        render: row => (
           <RowActions
             actions={[
               {
-                id: "open",
-                label: t("rowAction.openRequest"),
+                id: 'open',
+                label: t('rowAction.openRequest'),
                 icon: ArrowUpRightIcon,
                 href: row.href,
               },
             ]}
-            label={t("table.rowActions", { name: row.email })}
+            label={t('table.rowActions', { name: row.email })}
           />
         ),
       }}
       rows={props.rows}
     />
-  );
+  )
 }

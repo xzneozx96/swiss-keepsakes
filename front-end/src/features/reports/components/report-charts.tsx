@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -11,29 +11,29 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from "recharts";
+} from 'recharts'
 
-import { TooltipCard } from "@/features/merchant/today/components/overview-analytics";
+import { TooltipCard } from '@/features/merchant/today/components/overview-analytics'
 
-const noAnimation = { isAnimationActive: false } as const;
+const noAnimation = { isAnimationActive: false } as const
 
 /** Below 640px the charts switch to a stacked, label-on-top layout. */
 function useIsNarrow() {
-  const query = "(max-width: 639px)";
-  const [isNarrow, setNarrow] = useState(
-    () => typeof window !== "undefined" && window.matchMedia(query).matches,
-  );
+  const query = '(max-width: 639px)'
+  const [isNarrow, setIsNarrow] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(query).matches,
+  )
 
   useEffect(() => {
-    const list = window.matchMedia(query);
-    const onChange = () => setNarrow(list.matches);
+    const list = window.matchMedia(query)
+    const onChange = () => setIsNarrow(list.matches)
 
-    list.addEventListener("change", onChange);
+    list.addEventListener('change', onChange)
 
-    return () => list.removeEventListener("change", onChange);
-  }, []);
+    return () => list.removeEventListener('change', onChange)
+  }, [])
 
-  return isNarrow;
+  return isNarrow
 }
 
 /**
@@ -44,16 +44,16 @@ function StackedRows({
   rows,
 }: {
   rows: {
-    id: string;
-    label: string;
-    totalText: string;
-    note?: string | null;
-    parts: { key: string; share: number; colour: string }[];
-  }[];
+    id: string
+    label: string
+    totalText: string
+    note?: string | null
+    parts: { key: string, share: number, colour: string }[]
+  }[]
 }) {
   return (
     <ul className="flex flex-col gap-3.5">
-      {rows.map((r) => (
+      {rows.map(r => (
         <li key={r.id} className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between gap-3 text-sm">
             <span className="min-w-0">{r.label}</span>
@@ -66,8 +66,8 @@ function StackedRows({
             className="flex h-2.5 gap-px rounded-full bg-(--chart-track)"
           >
             {r.parts
-              .filter((p) => p.share > 0)
-              .map((p) => (
+              .filter(p => p.share > 0)
+              .map(p => (
                 <span
                   key={p.key}
                   className="block h-full first:rounded-s-full last:rounded-e-full"
@@ -82,19 +82,19 @@ function StackedRows({
         </li>
       ))}
     </ul>
-  );
+  )
 }
-const tick = { fill: "var(--muted)", fontSize: 11 };
+const tick = { fill: 'var(--muted)', fontSize: 11 }
 
 export interface Slice {
-  id: string;
-  label: string;
-  value: number;
-  colour: string;
+  id: string
+  label: string
+  value: number
+  colour: string
   /** The figure as shown, e.g. "CHF 1’153.00" or "17". */
-  text: string;
+  text: string
   /** Its share in words, e.g. "73% of keepsake sales". */
-  share: string;
+  share: string
 }
 
 /** A donut with the total in the middle and a legend that names every slice and its share. */
@@ -103,11 +103,11 @@ export function Donut({
   centerLabel,
   centerValue,
 }: {
-  slices: Slice[];
-  centerLabel: string;
-  centerValue: string;
+  slices: Slice[]
+  centerLabel: string
+  centerValue: string
 }) {
-  const shown = slices.filter((s) => s.value > 0);
+  const shown = slices.filter(s => s.value > 0)
 
   return (
     <div className="flex flex-1 flex-col gap-5">
@@ -126,7 +126,7 @@ export function Donut({
               startAngle={90}
               stroke="none"
             >
-              {shown.map((s) => (
+              {shown.map(s => (
                 <Cell key={s.id} fill={s.colour} />
               ))}
             </Pie>
@@ -141,7 +141,7 @@ export function Donut({
       </div>
       {/* One full-width row per slice: name and amount on one line, the share under it. */}
       <ul className="flex flex-col divide-y divide-separator">
-        {slices.map((s) => (
+        {slices.map(s => (
           <li
             key={s.id}
             className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
@@ -162,26 +162,26 @@ export function Donut({
         ))}
       </ul>
     </div>
-  );
+  )
 }
 
 export interface BarPart {
-  key: string;
-  label: string;
-  colour: string;
+  key: string
+  label: string
+  colour: string
   /** A colour per row instead (e.g. margin: keepsakes red, tours teal). */
-  colourOf?: (rowIndex: number) => string;
+  colourOf?: (rowIndex: number) => string
 }
 
 export interface BarRow {
-  id: string;
-  label: string;
+  id: string
+  label: string
   /** One value per part, in the parts' order (Rappen or a count). */
-  values: number[];
+  values: number[]
   /** Each value as shown, for the tooltip. */
-  texts: string[];
+  texts: string[]
   /** The row's total as shown at the end of the bar. */
-  totalText: string;
+  totalText: string
 }
 
 /** Horizontal bars, one per row, stacked by part, the total written at the end of each bar. */
@@ -192,35 +192,36 @@ export function HBars({
   labelWidth = 132,
   totalWidth = 104,
 }: {
-  rows: BarRow[];
-  parts: BarPart[];
-  label: string;
+  rows: BarRow[]
+  parts: BarPart[]
+  label: string
   /** Room for the row names and for the totals, in px (long names: wider). */
-  labelWidth?: number;
-  totalWidth?: number;
+  labelWidth?: number
+  totalWidth?: number
 }) {
-  const isNarrow = useIsNarrow();
+  const isNarrow = useIsNarrow()
   const max = Math.max(
     1,
-    ...rows.map((r) => r.values.reduce((a, v) => a + Math.max(0, v), 0)),
-  );
-  const data = rows.map((r) => ({
+    ...rows.map(r => r.values.reduce((a, v) => a + Math.max(0, v), 0)),
+  )
+  const data = rows.map(r => ({
     ...Object.fromEntries(parts.map((p, i) => [p.key, r.values[i] ?? 0])),
     id: r.id,
     label: r.label,
     totalText: r.totalText,
     texts: r.texts,
-  }));
+  }))
   const tooltip = ({
     active,
     payload,
   }: {
-    active?: boolean;
-    payload?: readonly { payload?: (typeof data)[number] }[];
+    active?: boolean
+    payload?: readonly { payload?: (typeof data)[number] }[]
   }) => {
-    const row = payload?.[0]?.payload;
+    const row = payload?.[0]?.payload
 
-    if (!active || !row) return null;
+    if (!active || !row)
+      return null
 
     return (
       <TooltipCard
@@ -229,18 +230,18 @@ export function HBars({
           key: p.key,
           colour: p.colour,
           label: p.label,
-          value: row.texts[i] ?? "",
+          value: row.texts[i] ?? '',
         }))}
       />
-    );
-  };
+    )
+  }
 
   return (
     // Fills the card: in a bento row next to a taller card the rows grow, never the gaps.
     <div className="flex flex-1 flex-col gap-3">
       {parts.length > 1 && (
         <ul className="flex gap-4 text-xs text-muted">
-          {parts.map((p) => (
+          {parts.map(p => (
             <li key={p.key} className="flex items-center gap-1.5">
               <span
                 aria-hidden
@@ -252,98 +253,100 @@ export function HBars({
           ))}
         </ul>
       )}
-      {isNarrow ? (
-        <StackedRows
-          rows={rows.map((r, ri) => ({
-            id: r.id,
-            label: r.label,
-            totalText: r.totalText,
-            parts: parts.map((p, i) => ({
-              key: p.key,
-              share: Math.max(0, r.values[i] ?? 0) / max,
-              colour: p.colourOf?.(ri) ?? p.colour,
-            })),
-          }))}
-        />
-      ) : (
-        <div
-          className="min-w-0 flex-1"
-          style={{ minHeight: rows.length * 44 + 8 }}
-        >
-          {/* minHeight: a min-height parent alone leaves "100%" nothing to resolve. */}
-          <ResponsiveContainer
-            height="100%"
-            minHeight={rows.length * 44 + 8}
-            width="100%"
-          >
-            <BarChart
-              barCategoryGap={10}
-              data={data}
-              layout="vertical"
-              margin={{ top: 4, right: 0, bottom: 4, left: 0 }}
-              title={label}
+      {isNarrow
+        ? (
+            <StackedRows
+              rows={rows.map((r, ri) => ({
+                id: r.id,
+                label: r.label,
+                totalText: r.totalText,
+                parts: parts.map((p, i) => ({
+                  key: p.key,
+                  share: Math.max(0, r.values[i] ?? 0) / max,
+                  colour: p.colourOf?.(ri) ?? p.colour,
+                })),
+              }))}
+            />
+          )
+        : (
+            <div
+              className="min-w-0 flex-1"
+              style={{ minHeight: rows.length * 44 + 8 }}
             >
-              <XAxis hide type="number" />
-              <YAxis
-                axisLine={false}
-                dataKey="label"
-                interval={0}
-                tick={{ ...tick, fontSize: 12, fill: "var(--foreground)" }}
-                tickLine={false}
-                type="category"
-                width={labelWidth}
-                yAxisId="label"
-              />
-              {/* Every row's total in its own column, so a part at 0 never hides it. */}
-              <YAxis
-                axisLine={false}
-                dataKey="totalText"
-                interval={0}
-                orientation="right"
-                tick={{
-                  ...tick,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  fill: "var(--foreground)",
-                }}
-                tickLine={false}
-                type="category"
-                width={totalWidth}
-                yAxisId="total"
-              />
-              <Tooltip content={tooltip} cursor={false} />
-              {parts.map((p, i) => (
-                <Bar
-                  key={p.key}
-                  {...noAnimation}
-                  dataKey={p.key}
-                  fill={p.colour}
-                  maxBarSize={22}
-                  radius={i === parts.length - 1 ? [0, 6, 6, 0] : 0}
-                  stackId="row"
-                  yAxisId="label"
+              {/* minHeight: a min-height parent alone leaves "100%" nothing to resolve. */}
+              <ResponsiveContainer
+                height="100%"
+                minHeight={rows.length * 44 + 8}
+                width="100%"
+              >
+                <BarChart
+                  barCategoryGap={10}
+                  data={data}
+                  layout="vertical"
+                  margin={{ top: 4, right: 0, bottom: 4, left: 0 }}
+                  title={label}
                 >
-                  {p.colourOf &&
-                    data.map((row, r) => (
-                      <Cell key={row.id} fill={p.colourOf?.(r)} />
-                    ))}
-                </Bar>
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+                  <XAxis hide type="number" />
+                  <YAxis
+                    axisLine={false}
+                    dataKey="label"
+                    interval={0}
+                    tick={{ ...tick, fontSize: 12, fill: 'var(--foreground)' }}
+                    tickLine={false}
+                    type="category"
+                    width={labelWidth}
+                    yAxisId="label"
+                  />
+                  {/* Every row's total in its own column, so a part at 0 never hides it. */}
+                  <YAxis
+                    axisLine={false}
+                    dataKey="totalText"
+                    interval={0}
+                    orientation="right"
+                    tick={{
+                      ...tick,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      fill: 'var(--foreground)',
+                    }}
+                    tickLine={false}
+                    type="category"
+                    width={totalWidth}
+                    yAxisId="total"
+                  />
+                  <Tooltip content={tooltip} cursor={false} />
+                  {parts.map((p, i) => (
+                    <Bar
+                      key={p.key}
+                      {...noAnimation}
+                      dataKey={p.key}
+                      fill={p.colour}
+                      maxBarSize={22}
+                      radius={i === parts.length - 1 ? [0, 6, 6, 0] : 0}
+                      stackId="row"
+                      yAxisId="label"
+                    >
+                      {p.colourOf
+                        && data.map((row, r) => (
+                          <Cell key={row.id} fill={p.colourOf?.(r)} />
+                        ))}
+                    </Bar>
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
     </div>
-  );
+  )
 }
 
 export interface Step {
-  id: string;
-  label: string;
-  value: number;
-  text: string;
+  id: string
+  label: string
+  value: number
+  text: string
   /** Under the label: e.g. "33% dropped off". */
-  note: string | null;
+  note: string | null
 }
 
 /** Columns that step down from left to right (a funnel), the count on top of each. */
@@ -352,20 +355,20 @@ export function StepColumns({
   colour,
   label,
 }: {
-  steps: Step[];
-  colour: string;
-  label: string;
+  steps: Step[]
+  colour: string
+  label: string
 }) {
   const stepTick = ({
     x,
     y,
     payload,
   }: {
-    x?: number | string;
-    y?: number | string;
-    payload?: { index?: number };
+    x?: number | string
+    y?: number | string
+    payload?: { index?: number }
   }) => {
-    const step = steps[payload?.index ?? 0];
+    const step = steps[payload?.index ?? 0]
 
     return (
       <g transform={`translate(${x ?? 0},${y ?? 0})`}>
@@ -378,24 +381,25 @@ export function StepColumns({
           </text>
         )}
       </g>
-    );
-  };
+    )
+  }
 
-  const isNarrow = useIsNarrow();
-  const first = Math.max(1, steps[0]?.value ?? 1);
+  const isNarrow = useIsNarrow()
+  const first = Math.max(1, steps[0]?.value ?? 1)
 
-  if (isNarrow)
+  if (isNarrow) {
     return (
       <StackedRows
-        rows={steps.map((s) => ({
+        rows={steps.map(s => ({
           id: s.id,
           label: s.label,
           totalText: s.text,
           note: s.note,
-          parts: [{ key: "value", share: s.value / first, colour }],
+          parts: [{ key: 'value', share: s.value / first, colour }],
         }))}
       />
-    );
+    )
+  }
 
   return (
     <div className="h-64 min-w-0">
@@ -433,22 +437,22 @@ export function StepColumns({
         </BarChart>
       </ResponsiveContainer>
     </div>
-  );
+  )
 }
 
 export interface SplitRow {
-  id: string;
-  label: string;
-  colour: string;
+  id: string
+  label: string
+  colour: string
   /** "CHF 1'609.00 revenue". */
-  totalText: string;
+  totalText: string
   /** Rappen: costs and margin (a loss counts as 0 here; say it in `marginText`). */
-  costs: number;
-  margin: number;
-  costsText: string;
-  marginText: string;
+  costs: number
+  margin: number
+  costsText: string
+  marginText: string
   /** Shown instead of a bar, e.g. "No completed tour bookings in this period." */
-  empty?: string;
+  empty?: string
 }
 
 /** Per row: the total on one line, a full-width bar split in costs and margin, both named below. */
@@ -457,14 +461,14 @@ export function SplitBars({
   costsLabel,
   marginLabel,
 }: {
-  rows: SplitRow[];
-  costsLabel: string;
-  marginLabel: string;
+  rows: SplitRow[]
+  costsLabel: string
+  marginLabel: string
 }) {
   return (
     <ul className="flex flex-col gap-6">
       {rows.map((r) => {
-        const whole = Math.max(1, r.costs + r.margin);
+        const whole = Math.max(1, r.costs + r.margin)
 
         return (
           <li key={r.id} className="flex flex-col gap-2.5">
@@ -483,42 +487,44 @@ export function SplitBars({
                 </span>
               )}
             </div>
-            {r.empty ? (
-              <p className="text-sm text-muted">{r.empty}</p>
-            ) : (
-              <>
-                <span aria-hidden className="flex h-4 gap-0.5">
-                  <span
-                    className="block h-full rounded-s-full bg-(--chart-3)"
-                    style={{ width: `${(r.costs / whole) * 100}%` }}
-                  />
-                  <span
-                    className="block h-full rounded-e-full"
-                    style={{
-                      width: `${(r.margin / whole) * 100}%`,
-                      background: r.colour,
-                    }}
-                  />
-                </span>
-                <dl className="flex justify-between gap-3 text-sm">
-                  <div className="flex flex-col">
-                    <dt className="text-xs text-muted">{costsLabel}</dt>
-                    <dd className="font-semibold tabular-nums">
-                      {r.costsText}
-                    </dd>
-                  </div>
-                  <div className="flex flex-col items-end text-end">
-                    <dt className="text-xs text-muted">{marginLabel}</dt>
-                    <dd className="font-semibold tabular-nums">
-                      {r.marginText}
-                    </dd>
-                  </div>
-                </dl>
-              </>
-            )}
+            {r.empty
+              ? (
+                  <p className="text-sm text-muted">{r.empty}</p>
+                )
+              : (
+                  <>
+                    <span aria-hidden className="flex h-4 gap-0.5">
+                      <span
+                        className="block h-full rounded-s-full bg-(--chart-3)"
+                        style={{ width: `${(r.costs / whole) * 100}%` }}
+                      />
+                      <span
+                        className="block h-full rounded-e-full"
+                        style={{
+                          width: `${(r.margin / whole) * 100}%`,
+                          background: r.colour,
+                        }}
+                      />
+                    </span>
+                    <dl className="flex justify-between gap-3 text-sm">
+                      <div className="flex flex-col">
+                        <dt className="text-xs text-muted">{costsLabel}</dt>
+                        <dd className="font-semibold tabular-nums">
+                          {r.costsText}
+                        </dd>
+                      </div>
+                      <div className="flex flex-col items-end text-end">
+                        <dt className="text-xs text-muted">{marginLabel}</dt>
+                        <dd className="font-semibold tabular-nums">
+                          {r.marginText}
+                        </dd>
+                      </div>
+                    </dl>
+                  </>
+                )}
           </li>
-        );
+        )
       })}
     </ul>
-  );
+  )
 }

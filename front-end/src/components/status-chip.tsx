@@ -1,6 +1,6 @@
-import type { IconComponent } from "@/components/icons";
+import type { IconComponent } from '@/components/icons'
 
-import { Chip } from "@heroui/react";
+import { Chip } from '@heroui/react'
 
 import {
   StatusDangerIcon,
@@ -8,9 +8,9 @@ import {
   StatusNeutralIcon,
   StatusSuccessIcon,
   StatusWarningIcon,
-} from "@/components/icons";
+} from '@/components/icons'
 
-export type StatusTone = "info" | "success" | "warning" | "danger" | "neutral";
+export type StatusTone = 'info' | 'success' | 'warning' | 'danger' | 'neutral'
 
 const toneIcon: Record<StatusTone, IconComponent> = {
   info: StatusInfoIcon,
@@ -18,10 +18,10 @@ const toneIcon: Record<StatusTone, IconComponent> = {
   warning: StatusWarningIcon,
   danger: StatusDangerIcon,
   neutral: StatusNeutralIcon,
-};
+}
 
 // HeroUI has no info colour; info uses our info-soft tokens (Chip card).
-const infoClass = "bg-info-soft text-info-soft-foreground";
+const infoClass = 'bg-info-soft text-info-soft-foreground'
 
 /**
  * The one status label (Chip card): soft tint, size lg (28px), a 14px icon and words.
@@ -31,15 +31,15 @@ export function StatusChip({
   tone,
   children,
 }: {
-  tone: StatusTone;
-  children: React.ReactNode;
+  tone: StatusTone
+  children: React.ReactNode
 }) {
-  const Icon = toneIcon[tone];
-  const color = tone === "neutral" || tone === "info" ? "default" : tone;
+  const Icon = toneIcon[tone]
+  const color = tone === 'neutral' || tone === 'info' ? 'default' : tone
 
   return (
     <Chip
-      className={tone === "info" ? infoClass : undefined}
+      className={tone === 'info' ? infoClass : undefined}
       color={color}
       size="lg"
       variant="soft"
@@ -47,5 +47,5 @@ export function StatusChip({
       <Icon className="shrink-0" size={14} />
       <Chip.Label>{children}</Chip.Label>
     </Chip>
-  );
+  )
 }

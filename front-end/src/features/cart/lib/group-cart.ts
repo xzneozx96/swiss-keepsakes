@@ -1,49 +1,49 @@
-import type { CartLine } from "../types";
+import type { CartLine } from '../types'
 import type {
   PaymentPolicy,
   Product,
   Rappen,
   Variant,
-} from "@/features/catalog/types";
+} from '@/features/catalog/types'
 
 import {
   isPickupClosed,
   productEarliestPickup,
-} from "@/features/catalog/lib/pickup";
+} from '@/features/catalog/lib/pickup'
 
 /** A cart line with its product, current price and date check. */
 export interface CartOrderLine {
-  line: CartLine;
-  product: Product;
-  variant: Variant;
-  unitPrice: Rappen;
-  total: Rappen;
+  line: CartLine
+  product: Product
+  variant: Variant
+  unitPrice: Rappen
+  total: Rappen
   /**
    * Set when the requested date can no longer be requested for this product (too soon
    * for its preparation days, or a closed day). AC04: the line is marked, not dropped.
    */
-  invalidDate?: { earliest: string; reason: "too-early" | "closed" };
+  invalidDate?: { earliest: string, reason: 'too-early' | 'closed' }
 }
 
 /** One future order: lines that share a payment policy, pickup date and place (R12). */
 export interface CartOrder {
-  key: string;
-  paymentPolicy: PaymentPolicy;
-  pickupDate: string;
-  pickupPlaceId: string;
-  lines: CartOrderLine[];
-  subtotal: Rappen;
+  key: string
+  paymentPolicy: PaymentPolicy
+  pickupDate: string
+  pickupPlaceId: string
+  lines: CartOrderLine[]
+  subtotal: Rappen
 }
 
 /** Same policy = same kind and the same numbers; an order snapshots exactly one policy. */
 function policyKey(policy: PaymentPolicy): string {
   switch (policy.kind) {
-    case "full":
-      return `full:${policy.firstDueHours}`;
-    case "deposit":
-      return `deposit:${policy.depositPercent}:${policy.firstDueHours}:${policy.balanceDueDaysAfterPickup}`;
-    case "later":
-      return `later:${policy.dueDaysAfterPickup}`;
+    case 'full':
+      return `full:${policy.firstDueHours}`
+    case 'deposit':
+      return `deposit:${policy.depositPercent}:${policy.firstDueHours}:${policy.balanceDueDaysAfterPickup}`
+    case 'later':
+      return `later:${policy.dueDaysAfterPickup}`
   }
 }
 
@@ -51,13 +51,15 @@ function checkDate(
   product: Product,
   date: string,
   now: Date,
-): CartOrderLine["invalidDate"] {
-  const earliest = productEarliestPickup(product, now);
+): CartOrderLine['invalidDate'] {
+  const earliest = productEarliestPickup(product, now)
 
-  if (date < earliest) return { earliest, reason: "too-early" };
-  if (isPickupClosed(date)) return { earliest, reason: "closed" };
+  if (date < earliest)
+    return { earliest, reason: 'too-early' }
+  if (isPickupClosed(date))
+    return { earliest, reason: 'closed' }
 
-  return undefined;
+  return undefined
 }
 
 /**
@@ -71,10 +73,11 @@ export function priceCartLines(
   now: Date,
 ): CartOrderLine[] {
   return lines.flatMap((line) => {
-    const product = products.find((p) => p.id === line.productId);
-    const variant = product?.variants.find((v) => v.id === line.variantId);
+    const product = products.find(p => p.id === line.productId)
+    const variant = product?.variants.find(v => v.id === line.variantId)
 
-    if (!product || !variant) return [];
+    if (!product || !variant)
+      return []
 
     return [
       {
@@ -85,13 +88,14 @@ export function priceCartLines(
         total: variant.price * line.quantity,
         invalidDate: checkDate(product, line.pickupDate, now),
       },
-    ];
-  });
+    ]
+  })
 }
 
 /** The lines the guest ticked on C04; only these go to C06 and are sent. */
-export const selectedCartLines = (lines: CartLine[]) =>
-  lines.filter((l) => l.selected);
+export function selectedCartLines(lines: CartLine[]) {
+  return lines.filter(l => l.selected)
+}
 
 /**
  * Groups cart lines into the orders a request will create (R12, AC28): one order per
@@ -105,11 +109,11 @@ export function groupCartIntoOrders(
   products: Product[],
   now: Date,
 ): CartOrder[] {
-  const orders = new Map<string, CartOrder>();
+  const orders = new Map<string, CartOrder>()
 
   for (const priced of priceCartLines(lines, products, now)) {
-    const { line, product } = priced;
-    const key = `${policyKey(product.paymentPolicy)}|${line.pickupDate}|${line.pickupPlaceId}`;
+    const { line, product } = priced
+    const key = `${policyKey(product.paymentPolicy)}|${line.pickupDate}|${line.pickupPlaceId}`
     const order = orders.get(key) ?? {
       key,
       paymentPolicy: product.paymentPolicy,
@@ -117,12 +121,12 @@ export function groupCartIntoOrders(
       pickupPlaceId: line.pickupPlaceId,
       lines: [],
       subtotal: 0,
-    };
+    }
 
-    order.lines.push(priced);
-    order.subtotal += priced.total;
-    orders.set(key, order);
+    order.lines.push(priced)
+    order.subtotal += priced.total
+    orders.set(key, order)
   }
 
-  return [...orders.values()];
+  return [...orders.values()]
 }
