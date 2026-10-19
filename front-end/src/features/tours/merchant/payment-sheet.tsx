@@ -26,7 +26,9 @@ import { externalPaymentBlock } from "./lib/transitions";
 import { useBlockText, useTourFormatting } from "./shared";
 
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
+import { useDemoSelector } from "@/features/demo";
+import { demoNow } from "@/features/demo/clock";
 import {
   methodLabelKeys,
   offlineMethods,
@@ -64,12 +66,15 @@ export function TourPaymentSheet({
   onClose: () => void;
 }) {
   const { t, intlLocale } = useLocale();
-  const { now, role } = useTours();
+  const { role } = useTours();
+  const clockStartedAt = useDemoSelector((s) => s.clockStartedAt);
+  // Read live, not from the minute clock: the sheet's latest time must never trail now.
+  const now = () => demoNow(clockStartedAt);
   const { recordPayment } = useTourActions();
   const { money } = useTourFormatting();
   const blockText = useBlockText();
   const balance = bookingBalance(booking);
-  const [openedAt] = useState(() => fromDate(now, ZURICH));
+  const [openedAt] = useState(() => fromDate(now(), ZURICH));
   const [amount, setAmount] = useState(balance / 100);
   const [method, setMethod] = useState<ExternalPaymentInput["method"]>("cash");
   const [time, setTime] = useState<ZonedDateTime>(openedAt);
@@ -81,7 +86,7 @@ export function TourPaymentSheet({
     note,
     at: time.toDate().toISOString(),
   };
-  const block = externalPaymentBlock(booking, input, role, now);
+  const block = externalPaymentBlock(booking, input, role, now());
   const isDuplicate = block?.code === "duplicate";
   const isFuture = time.compare(openedAt) > 0;
   const amountError =

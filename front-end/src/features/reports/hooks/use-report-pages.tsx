@@ -1,5 +1,5 @@
 import type { SalesPeriodId } from "@/features/merchant/sales/lib/periods";
-import type { DayRange } from "@/features/merchant/today/lib/analytics";
+import type { DayRange } from "@/lib/analytics";
 import type { ReportFilters } from "@/features/reports/lib/money";
 import type { ReactNode } from "react";
 
@@ -12,7 +12,7 @@ import { useSalesOverview } from "@/features/merchant/sales/hooks/use-sales-over
 import { allOrders, transactionKey } from "@/features/partners/lib/ledger";
 import { useReports } from "@/features/reports/hooks/use-reports";
 import { NO_FILTERS } from "@/features/reports/lib/money";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, percentOf } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 /** A previous range that holds nothing, for "All time" (no comparison). */
@@ -52,9 +52,7 @@ function useReportPagesState() {
   const { products, subcategories, pickupPlaces, orders } = state.data;
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
   const pct = (part: number, whole: number) =>
-    new Intl.NumberFormat(intlLocale, { style: "percent" }).format(
-      whole ? part / whole : 0,
-    );
+    percentOf(part, whole, intlLocale);
 
   // The sales of the period (declined and cancelled left out), as the Sales figures count them.
   const placed = report.txs.filter(

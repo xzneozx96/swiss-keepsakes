@@ -1,7 +1,7 @@
 import type { Bucket, SalesPeriodId, SalesRange } from "../lib/periods";
 import type { DeltaView } from "@/components/stat-card";
 import type { PaymentMethod } from "@/features/orders/types";
-import type { DayRange } from "@/features/merchant/today/lib/analytics";
+import type { DayRange } from "@/lib/analytics";
 import type { ReportFilters } from "@/features/reports/lib/money";
 import type { ReportTx } from "@/features/reports/lib/transactions";
 
@@ -20,11 +20,17 @@ import {
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate, zurichDayOf } from "@/features/catalog/lib/pickup";
 import { useDemo, useDemoNow } from "@/features/demo";
-import { deltaOf } from "@/features/merchant/today/lib/analytics";
+import { deltaOf } from "@/lib/analytics";
 import { allOrders, transactionKey } from "@/features/partners/lib/ledger";
 import { NO_FILTERS, matchesFilters } from "@/features/reports/lib/money";
 import { reportTransactions } from "@/features/reports/lib/transactions";
-import { formatMoney } from "@/lib/format";
+import {
+  formatMoney,
+  numberFormat,
+  dateTimeFormat,
+  calendarDay,
+  percentOf,
+} from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 /** A change smaller than this either way counts as stable: grey line, no arrow. */
@@ -37,7 +43,7 @@ const methodLabel = {
   other: "merchantOrder.method.other",
 } as const satisfies Record<PaymentMethod, string>;
 
-const zurichTime = new Intl.DateTimeFormat("en-GB", {
+const zurichTime = dateTimeFormat("en-GB", {
   timeZone: "Europe/Zurich",
   hour: "2-digit",
   minute: "2-digit",
@@ -247,7 +253,7 @@ export function useSalesOverview(
   const bucket = bucketOf(current);
 
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
-  const count = (n: number) => new Intl.NumberFormat(intlLocale).format(n);
+  const count = (n: number) => numberFormat(intlLocale).format(n);
   const giftOrders = (n: number) =>
     t(
       n === 1
@@ -263,9 +269,7 @@ export function useSalesOverview(
       { count: n },
     );
   const pct = (part: number, whole: number) =>
-    new Intl.NumberFormat(intlLocale, { style: "percent" }).format(
-      whole ? part / whole : 0,
-    );
+    percentOf(part, whole, intlLocale);
 
   const shown = (x: { tx: ReportTx }) => matchesFilters(x.tx, filters);
   const placedIn = (r: SalesRange) =>
@@ -347,15 +351,12 @@ export function useSalesOverview(
 
   const range = (r: DayRange) =>
     (
-      new Intl.DateTimeFormat(intlLocale, {
+      dateTimeFormat(intlLocale, {
         day: "numeric",
         month: "short",
         timeZone: "UTC",
       }) as Intl.DateTimeFormat & { formatRange(a: Date, b: Date): string }
-    ).formatRange(
-      new Date(`${r.start}T12:00:00Z`),
-      new Date(`${r.end}T12:00:00Z`),
-    );
+    ).formatRange(calendarDay(r.start), calendarDay(r.end));
   const rangeText = (r: SalesRange) =>
     r.until
       ? t("salesOverview.until", { range: range(r), time: r.until })
@@ -408,8 +409,8 @@ export function useSalesOverview(
   const slots = bucketSlots(current, bucket);
 
   const fmt = (o: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, { ...o, timeZone: "UTC" });
-  const at = (k: string) => new Date(`${k}T12:00:00Z`);
+    dateTimeFormat(intlLocale, { ...o, timeZone: "UTC" });
+  const at = (k: string) => calendarDay(k);
   const label = (
     k: string,
     b: Bucket,
@@ -664,8 +665,8 @@ export function useSalesOverview(
     return d.toISOString().slice(0, 10);
   };
   const monthFmt = (o: Intl.DateTimeFormatOptions, iso: string) =>
-    new Intl.DateTimeFormat(intlLocale, { ...o, timeZone: "UTC" }).format(
-      new Date(`${iso}T12:00:00Z`),
+    dateTimeFormat(intlLocale, { ...o, timeZone: "UTC" }).format(
+      calendarDay(iso),
     );
   const months = Array.from({ length: 7 }, (_, i) => {
     const id = monthStart(6 - i);

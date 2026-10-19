@@ -7,7 +7,7 @@ import {
   upsertQuestion,
 } from "../lib/question-set";
 
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 
 /**
@@ -17,8 +17,9 @@ import { demoNow } from "@/features/demo/clock";
  * (AC18).
  */
 export function useQuestionSet() {
-  const { state, update } = useDemo();
-  const set = state.data.adviceQuestions;
+  const { update } = useDemoActions();
+  const adviceQuestions = useDemoSelector((s) => s.data.adviceQuestions);
+  const set = adviceQuestions;
 
   const change = (recipe: (set: AdviceQuestionSet) => AdviceQuestionSet) =>
     update((s) => ({

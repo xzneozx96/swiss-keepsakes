@@ -231,6 +231,8 @@ export function GuestCard({ view }: { view: MerchantOrderView }) {
         <img
           alt=""
           className="size-11 shrink-0 rounded-full bg-hero-sky object-cover"
+          decoding="async"
+          loading="lazy"
           src={avatarUrl(view.guest.name)}
         />
         <div className="flex min-w-0 flex-col">

@@ -9,6 +9,7 @@ import { useProductCard } from "@/features/catalog/hooks/use-product-card";
 import { isPublished } from "@/features/catalog/lib/publish";
 import { useDemo } from "@/features/demo";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { useUrlInput } from "@/hooks/use-url-input";
 import { pickText } from "@/lib/localized";
 
 interface GiftsSearch {
@@ -41,6 +42,14 @@ function GiftsPage() {
   const navigate = useNavigate({ from: "/gifts/" });
   const toCard = useProductCard();
   const isLoading = useSimulatedLoading();
+  const { value, setValue, deferred } = useUrlInput(
+    q,
+    (next) =>
+      void navigate({
+        search: (prev) => ({ ...prev, q: next || undefined }),
+        replace: true,
+      }),
+  );
 
   // Only sub-categories a guest can buy from: at least one published keepsake in them.
   const giftCategories = state.data.subcategories.filter(
@@ -51,7 +60,7 @@ function GiftsPage() {
       ),
   );
   const selected = giftCategories.find((c) => c.id === subcategory);
-  const query = q.trim().toLocaleLowerCase(intlLocale);
+  const query = deferred.trim().toLocaleLowerCase(intlLocale);
   const cards = state.data.products
     // A draft from M12 is hidden from guests (4.9).
     .filter(
@@ -83,7 +92,7 @@ function GiftsPage() {
       ? null
       : {
           message: query
-            ? t("gifts.noResults", { query: q.trim() })
+            ? t("gifts.noResults", { query: deferred.trim() })
             : t("gifts.emptyCategory"),
           actionLabel: t("gifts.showAll"),
         };
@@ -135,12 +144,8 @@ function GiftsPage() {
           : t("search.inGifts"),
         openLabel: t("search.open"),
         backLabel: t("search.back"),
-        value: q,
-        onChange: (value) =>
-          void navigate({
-            search: (prev) => ({ ...prev, q: value || undefined }),
-            replace: true,
-          }),
+        value,
+        onChange: setValue,
       }}
     />
   );

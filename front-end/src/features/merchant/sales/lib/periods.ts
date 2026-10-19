@@ -1,4 +1,6 @@
-import type { DayRange } from "@/features/merchant/today/lib/analytics";
+import type { DayRange } from "@/lib/analytics";
+
+import { calendarDay } from "@/lib/format";
 
 /** The Sales period picker: fixed periods ending today, all time, or a custom range. */
 export const SALES_PERIODS = [
@@ -26,7 +28,7 @@ export interface SalesRange extends DayRange {
 }
 
 export function addDays(isoDate: string, days: number): string {
-  const d = new Date(`${isoDate}T12:00:00Z`);
+  const d = calendarDay(isoDate);
 
   d.setUTCDate(d.getUTCDate() + days);
 
@@ -34,7 +36,7 @@ export function addDays(isoDate: string, days: number): string {
 }
 
 function addMonths(isoDate: string, months: number): string {
-  const d = new Date(`${isoDate}T12:00:00Z`);
+  const d = calendarDay(isoDate);
   const day = d.getUTCDate();
 
   d.setUTCDate(1);

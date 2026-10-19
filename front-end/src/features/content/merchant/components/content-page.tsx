@@ -1,5 +1,4 @@
 import type { CommentAction } from "./comment-rows";
-import type { ArticleFilter } from "../hooks/use-merchant-articles";
 import type {
   CommentFilter,
   CommentRowProps,
@@ -10,6 +9,7 @@ import type {
 } from "../hooks/use-merchant-reviews";
 import type { Language } from "@/contexts/locale-context";
 import type { MessageKey } from "@/i18n/en";
+import type { ArticleFilter } from "@/features/content/merchant/lib/search-params";
 
 import { buttonVariants, toast } from "@heroui/react";
 import { Link } from "@tanstack/react-router";

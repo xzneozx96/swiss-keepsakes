@@ -1,6 +1,6 @@
 import type { GuestGroup, ReportTx } from "./transactions";
 import type { Rappen } from "@/features/catalog/types";
-import type { DayRange } from "@/features/merchant/today/lib/analytics";
+import type { DayRange } from "@/lib/analytics";
 import type { CommissionAdjustment } from "@/features/partners/types";
 
 import { zurichDayOf } from "@/features/catalog/lib/pickup";

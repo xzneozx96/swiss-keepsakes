@@ -1,10 +1,6 @@
 import type { MoneyMetric, ReportFilters } from "../lib/money";
 import type { DeltaView } from "@/components/stat-card";
-import type {
-  DayRange,
-  PeriodId,
-  Polarity,
-} from "@/features/merchant/today/lib/analytics";
+import type { DayRange, PeriodId, Polarity } from "@/lib/analytics";
 
 import { useMemo } from "react";
 
@@ -26,14 +22,17 @@ import { GUEST_GROUPS, reportTransactions } from "../lib/transactions";
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { useDemo, useDemoNow } from "@/features/demo";
-import {
-  PERIODS,
-  deltaOf,
-  periodRanges,
-} from "@/features/merchant/today/lib/analytics";
+import { PERIODS, deltaOf, periodRanges } from "@/lib/analytics";
 import { variantAvailable } from "@/features/orders/lib/selectors";
 import { departureSeats } from "@/features/tours/lib/selectors";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import {
+  formatMoney,
+  formatShortDate,
+  numberFormat,
+  dateTimeFormat,
+  calendarDay,
+  percentOf,
+} from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 const periodLabel = {
@@ -63,7 +62,7 @@ const polarity: Record<MoneyMetric, Polarity> = {
 
 function daysOf(r: DayRange): string[] {
   const days: string[] = [];
-  const d = new Date(`${r.start}T12:00:00Z`);
+  const d = calendarDay(r.start);
 
   while (d.toISOString().slice(0, 10) <= r.end) {
     days.push(d.toISOString().slice(0, 10));
@@ -108,41 +107,41 @@ export function useReports(
     () => all.filter((tx) => matchesFilters(tx, filters)),
     [all, filters],
   );
+  // The override is compared by its days, so a new object with the same days keeps the memo.
+  const currentStart = override?.current.start;
+  const currentEnd = override?.current.end;
+  const previousStart = override?.previous.start;
+  const previousEnd = override?.previous.end;
   const ranges = useMemo(
-    () => override ?? periodRanges(period, today),
-    // The override is compared by its days, so a new object with the same days keeps the memo.
-    [
-      period,
-      today,
-      override?.current.start,
-      override?.current.end,
-      override?.previous.start,
-      override?.previous.end,
-    ],
+    () =>
+      currentStart && currentEnd && previousStart && previousEnd
+        ? {
+            current: { start: currentStart, end: currentEnd },
+            previous: { start: previousStart, end: previousEnd },
+          }
+        : periodRanges(period, today),
+    [period, today, currentStart, currentEnd, previousStart, previousEnd],
   );
   const { current, previous } = ranges;
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
   const range = (r: DayRange) =>
     (
-      new Intl.DateTimeFormat(intlLocale, {
+      dateTimeFormat(intlLocale, {
         day: "numeric",
         month: "short",
         timeZone: "UTC",
       }) as Intl.DateTimeFormat & { formatRange(a: Date, b: Date): string }
-    ).formatRange(
-      new Date(`${r.start}T12:00:00Z`),
-      new Date(`${r.end}T12:00:00Z`),
-    );
+    ).formatRange(calendarDay(r.start), calendarDay(r.end));
 
   const summary = useMemo(() => {
-    const cur = moneySummary(txs, commissionAdjustments, ranges.current);
-    const prev = moneySummary(txs, commissionAdjustments, ranges.previous);
-    const daily = daysOf(ranges.current).map((day) =>
+    const cur = moneySummary(txs, commissionAdjustments, current);
+    const prev = moneySummary(txs, commissionAdjustments, previous);
+    const daily = daysOf(current).map((day) =>
       moneySummary(txs, commissionAdjustments, { start: day, end: day }),
     );
 
     return { cur, prev, daily };
-  }, [txs, commissionAdjustments, ranges]);
+  }, [txs, commissionAdjustments, current, previous]);
 
   const cards: MoneyCardView[] = MONEY_METRICS.map((id) => {
     const value = total(summary.cur[id]);
@@ -172,42 +171,31 @@ export function useReports(
   });
 
   // Step 5.10: funnel, sources and guest groups.
-  const count = (n: number) => new Intl.NumberFormat(intlLocale).format(n);
+  const count = (n: number) => numberFormat(intlLocale).format(n);
   const pct = (part: number, whole: number) =>
-    new Intl.NumberFormat(intlLocale, {
-      style: "percent",
-      maximumFractionDigits: 1,
-    }).format(whole ? part / whole : 0);
+    percentOf(part, whole, intlLocale, 1);
   const { referralVisits } = state.data;
   /** Visits, views and starts happen before a guest has a group or a basket. */
   const businessOnly =
     filters.type !== "all" || filters.group !== "all" || filters.item !== "all";
   const funnelData = useMemo(() => {
-    const main = funnel(
-      { referralVisits },
-      txs,
-      ranges.current,
-      filters.source,
-    );
+    const main = funnel({ referralVisits }, txs, current, filters.source);
     const sources = ["direct", ...partners.map((p) => p.id)]
       .filter((id) => filters.source === "all" || filters.source === id)
       .map((id) => {
         const sourceTxs = txs.filter((tx) =>
           id === "direct" ? !tx.partnerId : tx.partnerId === id,
         );
-        const f = funnel({ referralVisits }, sourceTxs, ranges.current, id);
+        const f = funnel({ referralVisits }, sourceTxs, current, id);
         const value = sourceTxs
-          .filter(
-            (tx) =>
-              tx.day >= ranges.current.start && tx.day <= ranges.current.end,
-          )
+          .filter((tx) => tx.day >= current.start && tx.day <= current.end)
           .reduce((sum, tx) => sum + tx.value, 0);
 
         return { id, steps: f.steps, value };
       });
 
     return { main, sources };
-  }, [referralVisits, txs, ranges, filters.source, partners]);
+  }, [referralVisits, txs, current, filters.source, partners]);
 
   const shownSteps = FUNNEL_STEPS.filter(
     (step) => !businessOnly || ["sent", "paid", "completed"].includes(step),
@@ -231,7 +219,7 @@ export function useReports(
     };
   });
   const inPeriod = txs.filter(
-    (tx) => tx.day >= ranges.current.start && tx.day <= ranges.current.end,
+    (tx) => tx.day >= current.start && tx.day <= current.end,
   );
   const periodValue = inPeriod.reduce((sum, tx) => sum + tx.value, 0);
   const groups = GUEST_GROUPS.map((g) => {
@@ -338,7 +326,7 @@ export function useReports(
   const articles = state.data.articles
     .filter((a) => a.publication.status === "published")
     .map((a) => {
-      const stats = articleStats(a.id, ranges.current);
+      const stats = articleStats(a.id, current);
 
       return {
         id: a.id,
@@ -355,15 +343,15 @@ export function useReports(
   const adviceSent = state.data.adviceRequests.filter((r) => {
     const day = zurichDate(new Date(r.sentAt));
 
-    return day >= ranges.current.start && day <= ranges.current.end;
+    return day >= current.start && day <= current.end;
   }).length;
-  const widget = widgetStats(ranges.current, adviceSent);
+  const widget = widgetStats(current, adviceSent);
 
   // Step 5.12: contribution margin, only from complete actual costs (R14).
   const { costs } = state.data;
   const marginData = useMemo(
-    () => margin(txs, costs, commissionAdjustments, ranges.current),
-    [txs, costs, commissionAdjustments, ranges],
+    () => margin(txs, costs, commissionAdjustments, current),
+    [txs, costs, commissionAdjustments, current],
   );
   const marginPart = (kind: "goods" | "tours") => {
     const m = marginData[kind];

@@ -16,16 +16,8 @@ import { availableUnits, fromPrice } from "@/features/catalog/lib/stock";
 import { useDemo, useDemoNow } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { createTourSeed } from "@/features/tours/seed";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, numberFormat } from "@/lib/format";
 import { pickText } from "@/lib/localized";
-
-/** The M11 tabs (D3); the ids are the `tab` search param of /store/products. */
-export const PRODUCT_TABS = ["gifts", "tours", "pickup"] as const;
-export type ProductTab = (typeof PRODUCT_TABS)[number];
-
-export function isProductTab(value: unknown): value is ProductTab {
-  return PRODUCT_TABS.includes(value as ProductTab);
-}
 
 export interface ProductRow {
   id: string;
@@ -78,7 +70,7 @@ export function useMerchantProducts() {
   const { products, subcategories, orders, pickupPlaces } = state.data;
   const tourData = state.data.tours ?? createTourSeed();
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
-  const percent = new Intl.NumberFormat(intlLocale, {
+  const percent = numberFormat(intlLocale, {
     style: "percent",
     maximumFractionDigits: 1,
   });
@@ -131,7 +123,7 @@ export function useMerchantProducts() {
     name: pick(tour.name),
     photo: tour.photos[0],
     meta: t("products.duration", {
-      hours: new Intl.NumberFormat(intlLocale, {
+      hours: numberFormat(intlLocale, {
         maximumFractionDigits: 1,
       }).format(tour.durationMinutes / 60),
     }),

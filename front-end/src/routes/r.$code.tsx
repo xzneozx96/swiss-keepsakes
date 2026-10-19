@@ -1,7 +1,7 @@
 import { Navigate, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { partnerByCode } from "@/features/partners/referral";
 
@@ -13,14 +13,15 @@ export const Route = createFileRoute("/r/$code")({ component: ReferralLink });
 
 function ReferralLink() {
   const { code } = Route.useParams();
-  const { state, update } = useDemo();
+  const { update } = useDemoActions();
+  const demoPartners = useDemoSelector((s) => s.data.partners);
   const recorded = useRef(false);
 
   useEffect(() => {
     if (recorded.current) return;
     recorded.current = true;
 
-    const partner = partnerByCode(state.data.partners, code);
+    const partner = partnerByCode(demoPartners, code);
 
     // An archived partner's QR still opens the shop, but no longer credits the visit (D17).
     if (!partner || partner.archivedAt) return;
@@ -37,7 +38,7 @@ function ReferralLink() {
         ],
       },
     }));
-  }, [code, state.data.partners, update]);
+  }, [code, demoPartners, update]);
 
   return <Navigate replace to="/" />;
 }

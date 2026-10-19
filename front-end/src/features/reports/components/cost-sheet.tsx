@@ -15,7 +15,7 @@ import { useCostActions } from "../hooks/use-cost-actions";
 import { COST_TYPES } from "../types";
 
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 
 type Draft = Record<CostType, { amount: number; notApplicable: boolean }>;
 

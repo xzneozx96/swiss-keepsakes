@@ -2,7 +2,7 @@ import type { TourSection, TourSectionItem } from "../types";
 
 import { CallIcon, EmailIcon, InfoIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { formatDate } from "@/lib/format";
+import { formatDate, calendarDay } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 import { safeHref } from "@/lib/rich-text";
 
@@ -194,7 +194,7 @@ export function TourSections({
       {checkedOn && (
         <p className="border-t border-separator pt-5 pb-2 text-xs text-muted">
           {t("tourDiscovery.sections.checkedOn", {
-            date: formatDate(new Date(`${checkedOn}T12:00:00Z`), intlLocale),
+            date: formatDate(calendarDay(checkedOn), intlLocale),
           })}
         </p>
       )}

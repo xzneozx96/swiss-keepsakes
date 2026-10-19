@@ -1,3 +1,5 @@
+import { numberFormat, calendarDay } from "@/lib/format";
+
 /** The Overview analytics periods. "month" runs from the 1st to today. */
 export const PERIODS = ["7d", "30d", "month"] as const;
 export type PeriodId = (typeof PERIODS)[number];
@@ -9,7 +11,7 @@ export interface DayRange {
 }
 
 function addDays(isoDate: string, days: number): string {
-  const d = new Date(`${isoDate}T12:00:00Z`);
+  const d = calendarDay(isoDate);
 
   d.setUTCDate(d.getUTCDate() + days);
 
@@ -84,7 +86,7 @@ export function deltaOf(
   const delta =
     change === null
       ? ""
-      : new Intl.NumberFormat(locale, {
+      : numberFormat(locale, {
           style: "percent",
           signDisplay: "exceptZero",
         })
@@ -96,7 +98,7 @@ export function deltaOf(
 
 /** Monday of the week that contains `day` (YYYY-MM-DD). */
 export function mondayOf(day: string): string {
-  const fromMonday = (new Date(`${day}T12:00:00Z`).getUTCDay() + 6) % 7;
+  const fromMonday = (calendarDay(day).getUTCDay() + 6) % 7;
 
   return addDays(day, -fromMonday);
 }

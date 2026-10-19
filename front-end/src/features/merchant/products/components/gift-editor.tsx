@@ -1,4 +1,3 @@
-import type { GiftStep } from "../hooks/use-gift-editor";
 import type { StepView } from "./step-shell";
 import type { Language } from "@/contexts/locale-context";
 import type { Product } from "@/features/catalog/types";
@@ -22,7 +21,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useRef } from "react";
 
-import { GIFT_STEPS, useGiftEditor } from "../hooks/use-gift-editor";
+import { useGiftEditor } from "../hooks/use-gift-editor";
 import { languageStatus, storyText } from "../lib/completeness";
 
 import {
@@ -60,9 +59,13 @@ import { earliestPickupDate, zurichDate } from "@/features/catalog/lib/pickup";
 import { categories } from "@/features/catalog/categories";
 import { useDemo, useDemoNow } from "@/features/demo";
 import { DetailCard } from "@/features/merchant/order-detail/components/detail-card";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import { formatMoney, formatShortDate, numberFormat } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 import { firstPhoto, isEmptyDoc } from "@/lib/rich-text";
+import {
+  type GiftStep,
+  GIFT_STEPS,
+} from "@/features/merchant/products/lib/search-params";
 
 /** Same choice card as M08 and the M04 sheets: ink frame when selected. */
 const choiceCard =
@@ -757,7 +760,7 @@ function GiftReview({ editor, steps }: { editor: Editor; steps: StepView[] }) {
             </ReviewRow>
           )}
           <ReviewRow label={t("products.commission.rate")}>
-            {new Intl.NumberFormat(intlLocale, {
+            {numberFormat(intlLocale, {
               style: "percent",
               maximumFractionDigits: 1,
             }).format(draft.commissionRate)}

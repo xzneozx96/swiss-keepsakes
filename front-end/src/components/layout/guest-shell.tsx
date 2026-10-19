@@ -12,7 +12,7 @@ import {
 } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { GuestAvatar } from "@/features/account/components/guest-avatar";
-import { useDemo } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
 
 type GuestNavTarget = "/" | "/gifts" | "/tours" | "/account";
 
@@ -39,11 +39,10 @@ const rightItems: NavItem[] = [
  */
 export function GuestShell({ children }: { children: React.ReactNode }) {
   const { t } = useLocale();
-  const { state } = useDemo();
+  const guests = useDemoSelector((s) => s.data.guests);
+  const signedInGuestId = useDemoSelector((s) => s.data.signedInGuestId);
   // 1.12s: a signed-in guest with a profile photo sees it on the Account tab (Instagram pattern).
-  const photoGuest = state.data.guests.find(
-    (g) => g.id === state.data.signedInGuestId && g.avatar,
-  );
+  const photoGuest = guests.find((g) => g.id === signedInGuestId && g.avatar);
   const hideTabBar = useMatches({
     select: (matches) => matches.some((m) => m.staticData.hideTabBar),
   });

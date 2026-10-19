@@ -9,6 +9,7 @@ import { addRoute, pinElement, reducedMotion, setRoute } from "./map-shared";
 import { CloseIcon, PlusIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { loadAerialStyle } from "@/features/tours/map/aerial-style";
+import { useLatest } from "@/hooks/use-latest";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import "@/features/tours/map/tour-itinerary-map.css";
@@ -57,7 +58,7 @@ export function ItineraryMap({
   const [attempt, setAttempt] = useState(0);
   const [dropping, setDropping] = useState(false);
 
-  const live = useRef({
+  const live = useLatest({
     stops,
     selectedId,
     onSelect,
@@ -65,11 +66,7 @@ export function ItineraryMap({
     onDrop,
     dropping,
   });
-
-  live.current = { stops, selectedId, onSelect, onMove, onDrop, dropping };
-  const translations = useRef(t);
-
-  translations.current = t;
+  const translations = useLatest(t);
 
   useEffect(() => {
     const container = canvasRef.current;
@@ -184,7 +181,7 @@ export function ItineraryMap({
       map?.remove();
       mapRef.current = null;
     };
-  }, [attempt]);
+  }, [attempt, live, translations]);
 
   // Pins and route follow the stops (position = number); only changed pins are touched.
   const signature = stops
@@ -255,7 +252,7 @@ export function ItineraryMap({
       cancelled = true;
     };
     // `signature` stands for the stops' ids, order and positions; names only relabel (below).
-  }, [signature, mapState]);
+  }, [signature, mapState, live, translations]);
 
   const names = stops.map((stop) => stop.name).join("|");
 
@@ -269,7 +266,7 @@ export function ItineraryMap({
           `${t("products.itinerary.stop.number", { n: index + 1 })}: ${stop.name}`,
         );
     });
-  }, [names, t]);
+  }, [names, t, live]);
 
   // Selection: the selected pin turns red and the camera goes to it.
   useEffect(() => {
@@ -287,7 +284,7 @@ export function ItineraryMap({
       zoom: Math.max(map.getZoom(), 15.5),
       duration: reducedMotion() ? 0 : 800,
     });
-  }, [selectedId, mapState]);
+  }, [selectedId, mapState, live]);
 
   useEffect(() => {
     const canvas = mapRef.current?.getCanvas();

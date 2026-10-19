@@ -16,6 +16,7 @@ import { useLocale } from "@/contexts/locale-context";
 import "@fullcalendar/react/skeleton.css";
 import "@fullcalendar/react/themes/monarch/theme.css";
 import "./calendar.css";
+import { dateTimeFormat } from "@/lib/format";
 
 const views = {
   day: "timeGridDay",
@@ -116,13 +117,13 @@ const CalendarScreen = memo(function CalendarScreen({
 
     setActiveDate(swissDate(date));
     setMonthTitle(
-      new Intl.DateTimeFormat(intlLocale, {
+      dateTimeFormat(intlLocale, {
         month: "long",
         timeZone: "Europe/Zurich",
       }).format(date),
     );
     setYearTitle(
-      new Intl.DateTimeFormat(intlLocale, {
+      dateTimeFormat(intlLocale, {
         year: "numeric",
         timeZone: "Europe/Zurich",
       }).format(date),
@@ -161,7 +162,7 @@ const CalendarScreen = memo(function CalendarScreen({
     requestAnimationFrame(tick);
   }
   const weekdayLabel = (date: Date, short = false) =>
-    new Intl.DateTimeFormat(intlLocale, {
+    dateTimeFormat(intlLocale, {
       weekday: short ? "narrow" : "short",
       timeZone: "Europe/Zurich",
     }).format(date);
@@ -334,7 +335,7 @@ const CalendarScreen = memo(function CalendarScreen({
                 >
                   <span>{weekdayLabel(info.date)}</span>
                   <strong>
-                    {new Intl.DateTimeFormat(intlLocale, {
+                    {dateTimeFormat(intlLocale, {
                       day: "numeric",
                       timeZone: "Europe/Zurich",
                     }).format(info.date)}

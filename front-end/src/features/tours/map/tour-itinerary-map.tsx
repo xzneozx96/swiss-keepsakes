@@ -18,7 +18,8 @@ import {
 } from "@/components/icons";
 import { Media } from "@/components/media";
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
+import { useLatest } from "@/hooks/use-latest";
 import { pickText } from "@/lib/localized";
 
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -46,7 +47,6 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
-  const selectRef = useRef<(id: string) => void>(() => {});
   const [selectedId, setSelectedId] = useState<string | null>(
     stops[0]?.id ?? null,
   );
@@ -58,7 +58,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
   const [attempt, setAttempt] = useState(0);
   const index = stops.findIndex((stop) => stop.id === selectedId);
   const active = index >= 0 ? stops[index] : undefined;
-  const translationsRef = useRef({ t, language });
+  const translationsRef = useLatest({ t, language });
   const text = (value: Tour["name"]) => pickText(value, language).text;
   const when = (minutes: number) =>
     minutes === 0 ? t("tourMap.start") : t("tourMap.minute", { minutes });
@@ -69,9 +69,6 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
     bottom: (cardRef.current?.offsetHeight ?? 0) + 52,
     left: 24,
   });
-
-  translationsRef.current = { t, language };
-  selectRef.current = setSelectedId;
 
   useEffect(() => {
     const container = canvasRef.current;
@@ -200,7 +197,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
             `${copy("tourMap.stop", { number: index + 1 })}: ${pickText(stop.name, translationsRef.current.language).text}`,
           );
           button.setAttribute("aria-pressed", String(index === 0));
-          button.addEventListener("click", () => selectRef.current(stop.id));
+          button.addEventListener("click", () => setSelectedId(stop.id));
 
           return new Marker({ element: button, anchor: "center" })
             .setLngLat(stop.coordinates)
@@ -234,7 +231,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
       map?.remove();
       mapRef.current = null;
     };
-  }, [tour.id, tour.itinerary, attempt]);
+  }, [tour.id, tour.itinerary, attempt, translationsRef]);
 
   useEffect(() => {
     markersRef.current.forEach((marker, index) => {

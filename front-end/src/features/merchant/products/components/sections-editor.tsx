@@ -42,10 +42,10 @@ import { Media } from "@/components/media";
 import { useLocale } from "@/contexts/locale-context";
 import { isPublished } from "@/features/catalog/lib/publish";
 import { fromPrice, isSoldOut } from "@/features/catalog/lib/stock";
-import { useDemo } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
 import { MAX_TOUR_KEEPSAKES } from "@/features/tours/discovery/tour-keepsakes";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
-import { formatDate, formatMoney } from "@/lib/format";
+import { SheetFrame } from "@/components/sheet-frame";
+import { formatDate, formatMoney, calendarDay } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 export interface SectionsEditor {
@@ -436,8 +436,9 @@ function CheckedOnSheet({
 /** Names, prices and visibility of the linked keepsakes, shared by the row, the list and the picker. */
 function useKeepsakeInfo() {
   const { t, language, intlLocale } = useLocale();
-  const { state } = useDemo();
-  const products = state.data.products;
+  const orders = useDemoSelector((s) => s.data.orders);
+  const demoProducts = useDemoSelector((s) => s.data.products);
+  const products = demoProducts;
   const find = (id: string) => products.find((p) => p.id === id);
 
   return {
@@ -460,11 +461,7 @@ function useKeepsakeInfo() {
     shown: (id: string) => {
       const product = find(id);
 
-      return (
-        !!product &&
-        isPublished(product) &&
-        !isSoldOut(product, state.data.orders)
-      );
+      return !!product && isPublished(product) && !isSoldOut(product, orders);
     },
   };
 }
@@ -904,7 +901,7 @@ export function PracticalInfoStep({
         <NavRow
           description={
             edit.checkedOn
-              ? formatDate(new Date(`${edit.checkedOn}T12:00:00Z`), intlLocale)
+              ? formatDate(calendarDay(edit.checkedOn), intlLocale)
               : t("products.sections.checkedOnNone")
           }
           icon={ClockIcon}

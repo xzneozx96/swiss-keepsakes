@@ -37,7 +37,7 @@ import {
   ActionPanel,
   DetailCard,
 } from "@/features/merchant/order-detail/components/detail-card";
-import { useIsWide } from "@/features/merchant/order-detail/hooks/use-is-wide";
+import { useIsWide } from "@/hooks/use-is-wide";
 import { formatDate } from "@/lib/format";
 
 /** Same choice card as M08, M15 and the M04 sheets: ink frame when selected. */

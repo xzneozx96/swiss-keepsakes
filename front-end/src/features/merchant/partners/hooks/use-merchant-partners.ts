@@ -5,7 +5,7 @@ import { useDemo, useDemoNow } from "@/features/demo";
 import { canDeletePartner } from "@/features/partners/hooks/use-partner-actions";
 import { partnerLedger } from "@/features/partners/lib/ledger";
 import { linkOpens } from "@/features/partners/lib/link-opens";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, numberFormat } from "@/lib/format";
 
 const WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
@@ -30,7 +30,7 @@ export function useMerchantPartners(filter: PartnerFilter[], query: string) {
   const { state } = useDemo();
   const now = useDemoNow();
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
-  const percent = new Intl.NumberFormat(intlLocale, {
+  const percent = numberFormat(intlLocale, {
     style: "percent",
     maximumFractionDigits: 1,
   });

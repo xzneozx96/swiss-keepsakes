@@ -33,7 +33,7 @@ import {
 } from "@/features/orders/lib/transitions";
 import { de } from "@/i18n/de";
 import { en } from "@/i18n/en";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, numberFormat } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 export type DeclineReason = "outOfStock" | "date" | "other";
@@ -158,7 +158,7 @@ export function useMerchantOrderDetail(order: Order): {
   const pick = (text: Partial<Record<Language, string>>) =>
     pickText(text, language).text;
   const percent = (rate: number) =>
-    new Intl.NumberFormat(intlLocale, {
+    numberFormat(intlLocale, {
       style: "percent",
       maximumFractionDigits: 1,
     }).format(rate);

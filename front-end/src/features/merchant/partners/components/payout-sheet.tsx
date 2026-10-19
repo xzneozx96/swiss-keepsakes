@@ -23,7 +23,7 @@ import { useState } from "react";
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { useDemoNow } from "@/features/demo";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 import {
   methodLabelKeys,
   offlineMethods,

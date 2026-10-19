@@ -77,6 +77,7 @@ function ReviewPhotos({
               <img
                 alt=""
                 className="size-full object-cover"
+                decoding="async"
                 loading="lazy"
                 src={photoUrl(slug)}
               />
@@ -100,6 +101,8 @@ function Reviewer({ review }: { review: ReviewView }) {
       <img
         alt=""
         className="size-12 shrink-0 rounded-full bg-surface-secondary object-cover"
+        decoding="async"
+        loading="lazy"
         src={review.avatar}
       />
       <div className="flex flex-col">

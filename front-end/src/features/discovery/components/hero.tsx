@@ -49,6 +49,8 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(function Hero(
         <img
           alt={photoAlt}
           className="-mt-6 h-[220px] w-full object-cover object-[62%_60%] [mask-image:linear-gradient(to_bottom,transparent,black_45%)]"
+          decoding="async"
+          fetchPriority="high"
           height={799}
           src={heroPhoto}
           width={1200}

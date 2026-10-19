@@ -1,11 +1,12 @@
-import type { TourStep } from "@/features/merchant/products/hooks/use-tour-editor";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { EditorSkeleton } from "@/features/merchant/products/components/editor-parts";
 import { TourEditor } from "@/features/merchant/products/components/tour-editor";
-import { TOUR_STEPS } from "@/features/merchant/products/hooks/use-tour-editor";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import {
+  type TourStep,
+  TOUR_STEPS,
+} from "@/features/merchant/products/lib/search-params";
 
 // "Add tour" on M11 (owner, 15.10.2026): the M13 stepper with a blank draft, walked with
 // Back and Next. It is stored at its first save and then opens at

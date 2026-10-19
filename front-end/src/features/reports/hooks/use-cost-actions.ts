@@ -1,22 +1,23 @@
 import type { CostType, CostValue } from "../types";
 import type { TransactionRef } from "@/features/partners/types";
 
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { transactionKey } from "@/features/partners/lib/ledger";
 
 /** M24 save (R14, D7): Owner and Manager enter or correct a transaction's actual costs. */
 export function useCostActions() {
-  const { state, update } = useDemo();
+  const { update } = useDemoActions();
+  const role = useDemoSelector((s) => s.role);
 
   return {
-    canEdit: state.role === "owner" || state.role === "manager",
+    canEdit: role === "owner" || role === "manager",
     save(
       transaction: TransactionRef,
       costs: Partial<Record<CostType, CostValue>>,
     ) {
-      if (state.role !== "owner" && state.role !== "manager") return;
-      const updatedBy = state.role;
+      if (role !== "owner" && role !== "manager") return;
+      const updatedBy = role;
       const key = transactionKey(transaction);
 
       update((s) => ({

@@ -30,7 +30,7 @@ import {
   DetailCard,
 } from "@/features/merchant/order-detail/components/detail-card";
 import { CopyText } from "@/components/copy-text";
-import { useIsWide } from "@/features/merchant/order-detail/hooks/use-is-wide";
+import { useIsWide } from "@/hooks/use-is-wide";
 import { usePartnerActions } from "@/features/partners/hooks/use-partner-actions";
 
 type TabId = "ledger" | "transactions" | "links";

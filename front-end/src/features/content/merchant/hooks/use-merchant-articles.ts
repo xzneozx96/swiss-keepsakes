@@ -9,9 +9,10 @@ import { useLocale } from "@/contexts/locale-context";
 import { isPublished } from "@/features/catalog/lib/publish";
 import { useDemo } from "@/features/demo";
 import { formatDate } from "@/lib/format";
-
-export const ARTICLE_FILTERS = ["en", "de"] as const;
-export type ArticleFilter = (typeof ARTICLE_FILTERS)[number];
+import {
+  ARTICLE_FILTERS,
+  type ArticleFilter,
+} from "@/features/content/merchant/lib/search-params";
 
 export interface ArticleRowProps {
   id: string;

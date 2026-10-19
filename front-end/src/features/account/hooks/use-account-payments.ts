@@ -10,7 +10,7 @@ import {
   paymentsAfterCancellation,
 } from "@/features/orders/lib/selectors";
 import { isClosedOrder } from "@/features/transactions/hooks/use-transaction-row";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, dateTimeFormat } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 const methodKey: Record<Payment["method"], MessageKey> = {
@@ -56,7 +56,7 @@ export function useAccountPayments() {
           ? { text: t("guestOrder.paymentStatus.processing"), tone: "info" }
           : { text: t("guestOrder.paymentStatus.failed"), tone: "danger" };
 
-  const monthLabel = new Intl.DateTimeFormat(intlLocale, {
+  const monthLabel = dateTimeFormat(intlLocale, {
     month: "long",
     year: "numeric",
     timeZone: "Europe/Zurich",

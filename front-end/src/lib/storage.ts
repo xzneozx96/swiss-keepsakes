@@ -12,10 +12,17 @@ export function readStored<T>(key: string, fallback: T): T {
   }
 }
 
-export function writeStored(key: string, value: unknown): void {
+export type WriteResult = "kept" | "full" | "unavailable";
+
+/** "full" is a quota failure worth telling the user about. "unavailable" (blocked or missing storage) stays silent: the prototype keeps working for this session only. */
+export function writeStored(key: string, value: unknown): WriteResult {
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage unavailable: the prototype keeps working for this session only.
+
+    return "kept";
+  } catch (error) {
+    return error instanceof DOMException && error.name === "QuotaExceededError"
+      ? "full"
+      : "unavailable";
   }
 }

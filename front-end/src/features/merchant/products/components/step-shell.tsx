@@ -20,7 +20,7 @@ import {
   StatusWarningIcon,
 } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 import { ToneLine } from "@/features/tours/merchant/shared";
 
 export interface StepView {

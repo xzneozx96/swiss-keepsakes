@@ -21,7 +21,7 @@ import { QuantityLarge } from "@/components/quantity-stepper";
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { useDemoNow } from "@/features/demo";
-import { formatDate } from "@/lib/format";
+import { formatDate, calendarDay } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 /**
@@ -152,7 +152,7 @@ function DateAnswer({
     value ? parseDate(value) : null,
   );
   const shown = value
-    ? formatDate(new Date(`${value}T12:00:00Z`), intlLocale)
+    ? formatDate(calendarDay(value), intlLocale)
     : t("advice.date.choose");
 
   return (

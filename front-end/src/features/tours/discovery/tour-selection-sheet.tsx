@@ -26,7 +26,7 @@ import {
   useSlotChoice,
   useSlotModel,
 } from "@/features/tours/discovery/departure-picker/model";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import { formatMoney, formatShortDate, dateTimeFormat } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 declare module "@tanstack/history" {
@@ -83,7 +83,7 @@ export function TourSelectionSheet({
   const date = (iso: string) =>
     formatShortDate(zurichDate(new Date(iso)), zurichDate(now), intlLocale);
   const time = (iso: string) =>
-    new Intl.DateTimeFormat(intlLocale, {
+    dateTimeFormat(intlLocale, {
       hour: "2-digit",
       minute: "2-digit",
       timeZone: "Europe/Zurich",

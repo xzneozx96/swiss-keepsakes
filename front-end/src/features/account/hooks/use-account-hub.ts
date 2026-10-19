@@ -2,7 +2,7 @@ import { useAccountPayments } from "./use-account-payments";
 
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
-import { useDemo, useDemoNow } from "@/features/demo";
+import { useDemoNow, useDemoSelector } from "@/features/demo";
 import { renderMail } from "@/features/notifications/components/render-mail";
 import { useGuestOrders } from "@/features/orders/hooks/use-orders";
 import { amountDueNow } from "@/features/orders/lib/selectors";
@@ -18,7 +18,9 @@ const liveBooking = ["pending_payment", "confirmed"];
  */
 export function useAccountHub(guestId: string) {
   const { t, language, intlLocale } = useLocale();
-  const { state } = useDemo();
+  const demoMail = useDemoSelector((s) => s.data.mail);
+  const pickupPlaces = useDemoSelector((s) => s.data.pickupPlaces);
+  const tours = useDemoSelector((s) => s.data.tours);
   const now = useDemoNow();
   const today = zurichDate(now);
   const orders = useGuestOrders();
@@ -28,9 +30,7 @@ export function useAccountHub(guestId: string) {
     .filter((o) => !isClosedOrder(o))
     .sort((a, b) => a.pickupDate.localeCompare(b.pickupDate))[0];
 
-  const bookings = (state.data.tours?.bookings ?? []).filter(
-    (b) => b.guestId === guestId,
-  );
+  const bookings = (tours?.bookings ?? []).filter((b) => b.guestId === guestId);
   const nextTour = bookings
     .filter(
       (b) => liveBooking.includes(b.status) && Date.parse(b.startsAt) > +now,
@@ -38,7 +38,7 @@ export function useAccountHub(guestId: string) {
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0];
 
   const dueTotal = due.reduce((sum, o) => sum + amountDueNow(o), 0);
-  const lastMail = state.data.mail
+  const lastMail = demoMail
     .filter((m) => m.to === "guest" && m.guestId === guestId)
     .pop();
 
@@ -74,7 +74,7 @@ export function useAccountHub(guestId: string) {
     /** The latest email's subject, in that email's own language. */
     mail: lastMail
       ? {
-          text: renderMail(lastMail, state.data.pickupPlaces).subject,
+          text: renderMail(lastMail, pickupPlaces).subject,
           lang: lastMail.language,
         }
       : { text: t("account.hub.mail.none") },

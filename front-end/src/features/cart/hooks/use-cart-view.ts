@@ -9,7 +9,7 @@ import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { availableUnits } from "@/features/catalog/lib/stock";
 import { shop } from "@/features/catalog/seed";
-import { useDemo, useDemoNow } from "@/features/demo";
+import { useDemoNow, useDemoSelector } from "@/features/demo";
 import { formatMoney, formatShortDate } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
@@ -25,13 +25,15 @@ export function useCartView(): Omit<
   "onBack" | "onContinue"
 > | null {
   const { t, language, intlLocale } = useLocale();
-  const { state } = useDemo();
+  const demoOrders = useDemoSelector((s) => s.data.orders);
+  const pickupPlaces = useDemoSelector((s) => s.data.pickupPlaces);
+  const products = useDemoSelector((s) => s.data.products);
   const now = useDemoNow();
   const cart = useCart();
 
   if (cart.lines.length === 0) return null;
 
-  const priced = priceCartLines(cart.lines, state.data.products, now);
+  const priced = priceCartLines(cart.lines, products, now);
   const chosen = priced.filter((p) => p.line.selected);
   const today = zurichDate(now);
   const short = (iso: string) => formatShortDate(iso, today, intlLocale);
@@ -94,9 +96,7 @@ export function useCartView(): Omit<
         const meta = [variantLabel, engraving].filter((part): part is string =>
           Boolean(part),
         );
-        const place = state.data.pickupPlaces.find(
-          (p) => p.id === line.pickupPlaceId,
-        );
+        const place = pickupPlaces.find((p) => p.id === line.pickupPlaceId);
         const item = [name, variantLabel].filter(Boolean).join(" · ");
 
         return {
@@ -124,10 +124,7 @@ export function useCartView(): Omit<
           quantity: {
             label: t("cart.line.quantityAria", { name }),
             value: line.quantity,
-            max: Math.max(
-              1,
-              availableUnits(product, variant, state.data.orders),
-            ),
+            max: Math.max(1, availableUnits(product, variant, demoOrders)),
             onChange: (q: number) => cart.setQuantity(line.id, q),
           },
           removeAria: t("cart.line.removeAria", { name }),

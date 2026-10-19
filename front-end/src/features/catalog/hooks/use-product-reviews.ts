@@ -3,9 +3,9 @@ import type { ReviewView } from "../components/review-item";
 import { zurichDate } from "../lib/pickup";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo, useDemoNow } from "@/features/demo";
+import { useDemoNow, useDemoSelector } from "@/features/demo";
 import { avatarUrl } from "@/lib/avatars";
-import { formatShortDate } from "@/lib/format";
+import { formatShortDate, numberFormat, dateTimeFormat } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 /**
@@ -48,7 +48,7 @@ function reviewDate(at: Date, now: Date, locale: string): string {
   if (days < 7) return relative.format(-Math.max(days, 0), "day");
   if (days < 29) return relative.format(-Math.floor(days / 7), "week");
 
-  return new Intl.DateTimeFormat(locale, {
+  return dateTimeFormat(locale, {
     month: "long",
     year: "numeric",
     timeZone: "Europe/Zurich",
@@ -61,15 +61,15 @@ export function useProductReviews(
   options: { kind: "gift" | "tour" } = { kind: "gift" },
 ): ProductReviews {
   const { t, language, intlLocale } = useLocale();
-  const { state } = useDemo();
+  const demoReviews = useDemoSelector((s) => s.data.reviews);
   const now = useDemoNow();
 
-  const reviews = state.data.reviews
+  const reviews = demoReviews
     .filter((r) => r.productId === productId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const count = reviews.length;
   const average = reviews.reduce((sum, r) => sum + r.rating, 0) / (count || 1);
-  const averageText = new Intl.NumberFormat(intlLocale, {
+  const averageText = numberFormat(intlLocale, {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).format(average);

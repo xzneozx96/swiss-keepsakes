@@ -10,7 +10,8 @@ import { fromDate, toCalendarDate } from "@internationalized/date";
 import { useState } from "react";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemoNow } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
+import { demoNow } from "@/features/demo/clock";
 import {
   useBlockText,
   useOrderActions,
@@ -57,14 +58,14 @@ const ZURICH = "Europe/Zurich";
  */
 export function useRecordPayment(order: Order) {
   const { t, intlLocale } = useLocale();
-  const now = useDemoNow();
+  const clockStartedAt = useDemoSelector((s) => s.clockStartedAt);
   const actions = useOrderActions();
   const blockText = useBlockText();
   const owed = balance(order);
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
 
   // Fixed when the sheet opens: the latest time the money can have arrived.
-  const [openedAt] = useState(() => fromDate(now, ZURICH));
+  const [openedAt] = useState(() => fromDate(demoNow(clockStartedAt), ZURICH));
   const [amount, setAmount] = useState(owed / 100);
   const [method, setMethod] = useState<OfflineMethod>("cash");
   const [time, setTime] = useState<ZonedDateTime>(openedAt);

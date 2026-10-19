@@ -97,6 +97,8 @@ export function VictorinoxShowcase({
                   ? "motion-safe:animate-[vx-rise_700ms_cubic-bezier(0.2,0.8,0.2,1)_both]"
                   : "motion-safe:opacity-0"
               }`}
+              decoding="async"
+              loading="lazy"
               src={knifeArt[key]}
               style={{
                 transform: `translateX(-50%) rotate(${rotate}deg)`,
@@ -137,6 +139,8 @@ export function VictorinoxShowcase({
                       <img
                         alt=""
                         className="h-40 -rotate-6 drop-shadow-[0_8px_10px_rgba(0,0,0,0.25)]"
+                        decoding="async"
+                        loading="lazy"
                         src={knifeArt[artKey(item.slug)]}
                       />
                     </span>

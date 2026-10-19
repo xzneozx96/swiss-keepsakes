@@ -8,6 +8,7 @@ import { useDemo } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { reviewerName } from "@/features/reviews/lib/review";
 import { avatarUrl } from "@/lib/avatars";
+import { dateTimeFormat } from "@/lib/format";
 
 export const COMMENT_FILTERS = ["notReplied", "hidden"] as const;
 export type CommentFilter = (typeof COMMENT_FILTERS)[number];
@@ -41,7 +42,7 @@ export function useMerchantComments(filter: CommentFilter[]) {
   const { t, intlLocale } = useLocale();
   const { state, update } = useDemo();
   const { comments, articles, guests } = state.data;
-  const time = new Intl.DateTimeFormat(intlLocale, {
+  const time = dateTimeFormat(intlLocale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

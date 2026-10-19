@@ -28,7 +28,7 @@ import { Widget } from "@/features/merchant/today/components/overview-analytics"
 import { WidgetSkeleton } from "@/features/merchant/today/components/overview-pages";
 import { FiltersSheet } from "@/features/reports/components/filters-sheet";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, percentOf } from "@/lib/format";
 
 const FILTER_KEYS = ["source", "type", "group", "item"] as const;
 
@@ -340,9 +340,7 @@ export function ReportsSalesPage() {
   const { t, intlLocale } = useLocale();
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
   const pct = (part: number, whole: number) =>
-    new Intl.NumberFormat(intlLocale, { style: "percent" }).format(
-      whole ? part / whole : 0,
-    );
+    percentOf(part, whole, intlLocale);
   const placedCount =
     outcomes.completed + outcomes.open + outcomes.lost + outcomes.noShow;
 
@@ -639,9 +637,7 @@ export function ReportsMarginPage() {
   const completed = m.parts.reduce((a, p) => a + p.sales, 0);
   const complete = m.parts.reduce((a, p) => a + p.complete, 0);
   const pct = (part: number, whole: number) =>
-    new Intl.NumberFormat(intlLocale, { style: "percent" }).format(
-      whole ? part / whole : 0,
-    );
+    percentOf(part, whole, intlLocale);
 
   return (
     <>
@@ -847,9 +843,7 @@ export function InquiriesAnalyticsPage() {
   const { report, inquiries } = useReportPages();
   const { t, intlLocale } = useLocale();
   const pct = (part: number, whole: number) =>
-    new Intl.NumberFormat(intlLocale, { style: "percent" }).format(
-      whole ? part / whole : 0,
-    );
+    percentOf(part, whole, intlLocale);
   const advice = inquiries.advice;
   const privateTours = inquiries.privateTours;
 

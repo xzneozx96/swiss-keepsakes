@@ -1,6 +1,6 @@
 import { Navigate, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Skeleton } from "@heroui/react";
-import { useRef } from "react";
+import { useState } from "react";
 
 import { useBack } from "@/hooks/use-back";
 import { useRequireSignIn } from "@/features/auth/hooks/use-require-sign-in";
@@ -37,11 +37,11 @@ function ReviewScreen() {
   const navigate = useNavigate();
   const { view, send } = useReview();
   const { requireSignIn, signInSheet, signedIn } = useRequireSignIn();
-  const sent = useRef(false);
+  const [sent, setSent] = useState(false);
   const toCart = useBack(() => void navigate({ to: "/cart", replace: true }));
 
   // Sending empties the cart; stay blank until C07 opens.
-  if (!view && sent.current) return null;
+  if (!view && sent) return null;
   // Nothing to review (empty cart, or Back after sending): the cart shows its empty state.
   if (!view) return <Navigate replace to="/cart" />;
 
@@ -61,7 +61,7 @@ function ReviewScreen() {
           const ids = send();
 
           if (!ids) return;
-          sent.current = true;
+          setSent(true);
           void navigate({
             to: "/cart/sent",
             search: { orders: ids.join(",") },

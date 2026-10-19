@@ -14,6 +14,7 @@ export function BrandLogo({ label }: { label: string }) {
       <img
         alt=""
         className="h-11 w-auto sm:hidden"
+        decoding="async"
         height={459}
         src={brandMark}
         width={628}
@@ -21,6 +22,7 @@ export function BrandLogo({ label }: { label: string }) {
       <img
         alt=""
         className="hidden h-auto max-h-11 w-[232px] max-w-full object-contain object-left sm:block"
+        decoding="async"
         height={467}
         src={brandLogo}
         width={2016}

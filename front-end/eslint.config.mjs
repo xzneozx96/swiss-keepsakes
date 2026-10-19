@@ -90,7 +90,6 @@ export default defineConfig([
       },
     },
 
-
     files: ["**/*.ts", "**/*.tsx"],
 
     rules: {
@@ -98,7 +97,7 @@ export default defineConfig([
       "react/prop-types": "off",
       "react/jsx-uses-react": "off",
       "react/react-in-jsx-scope": "off",
-      "react-hooks/exhaustive-deps": "off",
+      "react-hooks/exhaustive-deps": "warn",
       "jsx-a11y/click-events-have-key-events": "warn",
       "jsx-a11y/interactive-supports-focus": "warn",
       "prettier/prettier": "warn",
@@ -169,6 +168,29 @@ export default defineConfig([
           blankLine: "any",
           prev: ["const", "let", "var"],
           next: ["const", "let", "var"],
+        },
+      ],
+    },
+  },
+  {
+    // Shared layers sit below the features. A feature may use them, never the other way round.
+    files: [
+      "src/lib/**/*.{ts,tsx}",
+      "src/hooks/**/*.{ts,tsx}",
+      "src/contexts/**/*.{ts,tsx}",
+      "src/components/*.{ts,tsx}",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/features", "@/features/**"],
+              message:
+                "Shared code must not import from a feature. Move what it needs into the shared layer.",
+            },
+          ],
         },
       ],
     },

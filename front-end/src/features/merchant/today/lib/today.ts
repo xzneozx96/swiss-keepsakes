@@ -10,6 +10,7 @@ import {
   isOverdue,
   orderTotal,
 } from "@/features/orders/lib/selectors";
+import { calendarDay } from "@/lib/format";
 
 /** M02 task cards, in priority order (spec §3.2 M02; tours come in Phase 2). */
 export const TODAY_TASKS = [
@@ -90,7 +91,7 @@ export function todayTasks(orders: Order[], now: Date): TodayTask[] {
 
 /** Monday to Sunday of the Zurich week that contains `now`, as YYYY-MM-DD. */
 export function zurichWeek(now: Date): { start: string; end: string } {
-  const today = new Date(`${zurichDate(now)}T12:00:00Z`);
+  const today = calendarDay(zurichDate(now));
   const fromMonday = (today.getUTCDay() + 6) % 7;
   const day = (offset: number) => {
     const d = new Date(today);

@@ -9,9 +9,9 @@ import { displayAnswer, isAnswered, looksLikeEmail } from "../lib/answers";
 import { mailAdviceRequest } from "../lib/request-mail";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
-import { formatDate } from "@/lib/format";
+import { formatDate, calendarDay } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 export type SendResult =
@@ -27,17 +27,20 @@ export type SendResult =
  */
 export function useAdvice() {
   const { language, intlLocale } = useLocale();
-  const { state, update } = useDemo();
-  const guest = state.data.guests.find(
-    (g) => g.id === state.data.signedInGuestId,
-  );
+  const { update } = useDemoActions();
+  const clockStartedAt = useDemoSelector((s) => s.clockStartedAt);
+  const adviceDraft = useDemoSelector((s) => s.data.adviceDraft);
+  const adviceQuestions = useDemoSelector((s) => s.data.adviceQuestions);
+  const guests = useDemoSelector((s) => s.data.guests);
+  const signedInGuestId = useDemoSelector((s) => s.data.signedInGuestId);
+  const guest = guests.find((g) => g.id === signedInGuestId);
 
-  const draft: AdviceDraft = state.data.adviceDraft ?? {
-    set: state.data.adviceQuestions,
+  const draft: AdviceDraft = adviceDraft ?? {
+    set: adviceQuestions,
     step: 0,
     values: {},
     email: guest?.email ?? "",
-    startedAt: demoNow(state.clockStartedAt).toISOString(),
+    startedAt: demoNow(clockStartedAt).toISOString(),
   };
   const questions = draft.set.questions;
   // Steps: one per question, then the email, then the summary card.
@@ -57,7 +60,7 @@ export function useAdvice() {
   const questionText = (q: AdviceQuestion) => pickText(q.text, language);
   const answerText = (q: AdviceQuestion) =>
     displayAnswer(q, draft.values[q.id], language, (iso) =>
-      formatDate(new Date(`${iso}T12:00:00Z`), intlLocale),
+      formatDate(calendarDay(iso), intlLocale),
     );
 
   return {

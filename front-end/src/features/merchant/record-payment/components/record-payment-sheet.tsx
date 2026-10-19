@@ -23,7 +23,7 @@ import {
 } from "../hooks/use-record-payment";
 
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 
 /** Same choice card as the M04 change and decline sheets: ink frame when selected. */
 const choiceCard =

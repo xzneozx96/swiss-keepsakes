@@ -6,12 +6,12 @@ import type { MessageKey } from "@/i18n/en";
 
 import { StatusDangerIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, dateTimeFormat } from "@/lib/format";
 
 export function useTourFormatting() {
   const { intlLocale } = useLocale();
   const format = (iso: string, options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, {
+    dateTimeFormat(intlLocale, {
       ...options,
       timeZone: "Europe/Zurich",
     }).format(new Date(iso));

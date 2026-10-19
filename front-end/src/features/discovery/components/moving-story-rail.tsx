@@ -59,6 +59,8 @@ export function MovingStoryRail({
                   <img
                     alt=""
                     className="size-8 rounded-full bg-accent-soft ring-2 ring-white"
+                    decoding="async"
+                    loading="lazy"
                     src={avatarUrl(story.author)}
                   />
                   {story.author}

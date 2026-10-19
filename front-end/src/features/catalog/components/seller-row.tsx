@@ -82,6 +82,8 @@ export function SellerRow({
             <img
               alt=""
               className="size-full object-cover"
+              decoding="async"
+              loading="lazy"
               src={photoUrl(photo)}
             />
           ) : (

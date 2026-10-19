@@ -17,7 +17,9 @@ const pick = (pattern, label) => {
 };
 
 const title = pick(/<title>[\s\S]*?<\/title>/, "title")[0];
-const fonts = pick(/<link[^>]+fonts\.googleapis\.com\/css2[^>]*>/, "font stylesheet")[0];
+// A plain blocking stylesheet link: the page's own preload link needs an inline onload, which a host may block.
+const fontsHref = pick(/<link[^>]+href="(https:\/\/fonts\.googleapis\.com\/css2[^"]*)"/, "font stylesheet")[1];
+const fonts = `<link rel="stylesheet" href="${fontsHref}" />`;
 const assetTags = [
   ...html.matchAll(/<script type="module"[^>]*><\/script>|<link rel="(?:stylesheet|modulepreload)"[^>]*href="\.\/assets\/[^"]+"[^>]*>/g),
 ].map((m) => m[0]);

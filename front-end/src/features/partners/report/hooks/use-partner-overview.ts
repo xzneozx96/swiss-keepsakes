@@ -2,7 +2,7 @@ import type { MixPart } from "./use-partner-dashboard";
 import type { SalesKpi } from "@/features/merchant/sales/hooks/use-sales-overview";
 import type { SalesPeriodId } from "@/features/merchant/sales/lib/periods";
 import type { DeltaView } from "@/components/stat-card";
-import type { DayRange } from "@/features/merchant/today/lib/analytics";
+import type { DayRange } from "@/lib/analytics";
 
 import { useMemo } from "react";
 
@@ -16,10 +16,10 @@ import { zurichDate } from "@/features/catalog/lib/pickup";
 import { useDemo, useDemoNow } from "@/features/demo";
 import { useSalesOverview } from "@/features/merchant/sales/hooks/use-sales-overview";
 import { bucketOf, bucketSlots } from "@/features/merchant/sales/lib/periods";
-import { deltaOf } from "@/features/merchant/today/lib/analytics";
+import { deltaOf } from "@/lib/analytics";
 import { partnerLedger } from "@/features/partners/lib/ledger";
 import { NO_FILTERS } from "@/features/reports/lib/money";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, dateTimeFormat, calendarDay } from "@/lib/format";
 
 /** A change smaller than this either way counts as stable, as on the Sales overview. */
 const STABLE = 0.05;
@@ -103,14 +103,14 @@ export function usePartnerOverview(
 
   const previousRange = sales.previous
     ? (
-        new Intl.DateTimeFormat(intlLocale, {
+        dateTimeFormat(intlLocale, {
           day: "numeric",
           month: "short",
           timeZone: "UTC",
         }) as Intl.DateTimeFormat & { formatRange(a: Date, b: Date): string }
       ).formatRange(
-        new Date(`${sales.previous.start}T12:00:00Z`),
-        new Date(`${sales.previous.end}T12:00:00Z`),
+        calendarDay(sales.previous.start),
+        calendarDay(sales.previous.end),
       )
     : "";
   const delta = (value: number, before: number): DeltaView | null => {
@@ -133,7 +133,7 @@ export function usePartnerOverview(
   const frame = sales.kpis[0].bars;
   const isHours = bucketOf(sales.current) === "hour";
   const hourNow = Number(
-    new Intl.DateTimeFormat("en-GB", {
+    dateTimeFormat("en-GB", {
       timeZone: "Europe/Zurich",
       hour: "2-digit",
       hourCycle: "h23",

@@ -88,6 +88,7 @@ export function AvatarCropSheet({
               <img
                 alt=""
                 className="pointer-events-none absolute max-w-none"
+                decoding="async"
                 draggable={false}
                 src={image.src}
                 style={{

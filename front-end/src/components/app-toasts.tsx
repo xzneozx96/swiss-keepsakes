@@ -1,4 +1,5 @@
-import { Toast } from "@heroui/react";
+import { Toast, toast } from "@heroui/react";
+import { useEffect, useEffectEvent } from "react";
 
 import { useLocale } from "@/contexts/locale-context";
 
@@ -6,10 +7,17 @@ import { useLocale } from "@/contexts/locale-context";
  * The one toast region, mounted at the app root. Bottom placement, lifted above the
  * guest bottom bar and tab bar, and no wider than the 430px guest frame. Renders the
  * HeroUI default toast with translated labels (HeroUI's close label is English only).
- * Action sits under the text, as on phones.
+ * Action sits under the text, as on phones. `storageFull` raises the one warning that the
+ * latest changes could not be kept in this browser.
  */
-export function AppToasts() {
+export function AppToasts({ storageFull }: { storageFull: boolean }) {
   const { t } = useLocale();
+
+  const warn = useEffectEvent(() => toast.danger(t("demo.storageFull")));
+
+  useEffect(() => {
+    if (storageFull) warn();
+  }, [storageFull]);
 
   return (
     <Toast.Provider

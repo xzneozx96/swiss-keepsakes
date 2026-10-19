@@ -16,6 +16,7 @@ import {
   partnerTourBookings,
   tourReportRow,
 } from "@/features/tours/merchant/lib/report";
+import { dateTimeFormat, calendarDay } from "@/lib/format";
 
 export type ReportPeriod = "day" | "week" | "month";
 
@@ -33,7 +34,7 @@ export interface DateRange {
 }
 
 function addDays(isoDate: string, days: number): string {
-  const d = new Date(`${isoDate}T12:00:00Z`);
+  const d = calendarDay(isoDate);
 
   d.setUTCDate(d.getUTCDate() + days);
 
@@ -43,9 +44,9 @@ function addDays(isoDate: string, days: number): string {
 /** The day, Monday-to-Sunday week or calendar month that contains `anchor`. */
 export function periodRange(period: ReportPeriod, anchor: string): DateRange {
   if (period === "day") return { start: anchor, end: anchor };
-  if (period === "week") return zurichWeek(new Date(`${anchor}T12:00:00Z`));
+  if (period === "week") return zurichWeek(calendarDay(anchor));
   const start = `${anchor.slice(0, 7)}-01`;
-  const nextMonth = new Date(`${start}T12:00:00Z`);
+  const nextMonth = calendarDay(start);
 
   nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
 
@@ -130,7 +131,7 @@ export interface PartnerReport {
 }
 
 // Built once, as zurichDate's: the "day" period asks for the hour of every row per bucket.
-const zurichHourFormat = new Intl.DateTimeFormat("en-GB", {
+const zurichHourFormat = dateTimeFormat("en-GB", {
   timeZone: "Europe/Zurich",
   hour: "2-digit",
   hourCycle: "h23",
@@ -165,8 +166,7 @@ function emptyBuckets(
   const buckets: ReportBucket[] = [];
 
   for (let day = range.start; day <= range.end;) {
-    const weekEnd =
-      period === "week" ? day : zurichWeek(new Date(`${day}T12:00:00Z`)).end;
+    const weekEnd = period === "week" ? day : zurichWeek(calendarDay(day)).end;
     const end = weekEnd < range.end ? weekEnd : range.end;
 
     buckets.push({

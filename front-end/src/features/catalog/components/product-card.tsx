@@ -1,4 +1,6 @@
-import { ListingCard } from "@/components/listing-card";
+import { memo } from "react";
+
+import { ListingCard, sameListing } from "@/components/listing-card";
 
 export interface ProductCardProps {
   slug: string;
@@ -24,7 +26,7 @@ export interface ProductCardProps {
 }
 
 /** Gift adapter for the shared gift and tour card treatment. */
-export function ProductCard({
+export const ProductCard = memo(function ProductCard({
   pickupLine,
   soldOutLabel,
   ...props
@@ -37,4 +39,4 @@ export function ProductCard({
       to="/gifts/$slug"
     />
   );
-}
+}, sameListing);

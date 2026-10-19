@@ -14,9 +14,10 @@ import {
   participantSeats,
 } from "@/features/tours/lib/selectors";
 import { createTourSeed } from "@/features/tours/seed";
+import { dateTimeFormat } from "@/lib/format";
 
 const time = (iso: string) =>
-  new Intl.DateTimeFormat("en-GB", {
+  dateTimeFormat("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "Europe/Zurich",

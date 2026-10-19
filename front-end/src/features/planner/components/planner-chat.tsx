@@ -40,7 +40,7 @@ import {
   ConversationContent,
 } from "@/components/ai-elements/conversation";
 import { ToolInput, ToolOutput } from "@/components/ai-elements/tool";
-import { useDemo } from "@/features/demo";
+import { useDemoActions } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { AssistantHeader } from "@/features/requests/components/advice-chat";
 import { mailAdviceRequest } from "@/features/requests/lib/request-mail";
@@ -150,27 +150,36 @@ function TracePanel({
   timings: Map<string, number>;
 }) {
   const [open, setOpen] = useState(streaming);
-  const startedAt = useRef(Date.now());
-  const sawStreaming = useRef(streaming);
+  const [startedAt] = useState(() => Date.now());
+  const [sawStreaming, setSawStreaming] = useState(streaming);
+  const [wasStreaming, setWasStreaming] = useState(streaming);
   const [elapsed, setElapsed] = useState(0);
   const tools = steps.filter((s) => s.kind === "tool").length;
 
-  useEffect(() => {
+  // A new run of thinking opens the panel again, whatever the guest did with it before.
+  if (streaming !== wasStreaming) {
+    setWasStreaming(streaming);
     if (streaming) {
-      sawStreaming.current = true;
+      setSawStreaming(true);
       setOpen(true);
-
-      return;
     }
-    setElapsed(
-      Math.max(1, Math.round((Date.now() - startedAt.current) / 1000)),
+  }
+
+  useEffect(() => {
+    if (streaming) return;
+    const ended = Date.now();
+    const frame = requestAnimationFrame(() =>
+      setElapsed(Math.max(1, Math.round((ended - startedAt) / 1000))),
     );
     const timer = window.setTimeout(() => setOpen(false), 600);
 
-    return () => window.clearTimeout(timer);
-  }, [streaming]);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [streaming, startedAt]);
 
-  const done = sawStreaming.current ? `Thought for ${elapsed}s` : "Thought";
+  const done = sawStreaming ? `Thought for ${elapsed}s` : "Thought";
   const label = streaming
     ? "Thinking…"
     : `${done}${tools ? ` · ${tools} tool call${tools === 1 ? "" : "s"}` : ""}`;
@@ -224,51 +233,53 @@ function TracePanel({
  */
 export function PlannerChat({ onLeave }: { onLeave: () => void }) {
   const navigate = useNavigate();
-  const { update, setRole } = useDemo();
-  const updateRef = useRef(update);
+  const { update, setRole } = useDemoActions();
 
-  updateRef.current = update;
-  hooks.createInquiry = ({ answers }) => {
-    const requestId = `adv-${Date.now().toString(36)}`;
+  // The scripted chat lives outside this component and calls back into it, so the handler is
+  // registered after render. `update` never changes, so the handler is never stale.
+  useEffect(() => {
+    hooks.createInquiry = ({ answers }) => {
+      const requestId = `adv-${Date.now().toString(36)}`;
 
-    updateRef.current((s) => {
-      const request: AdviceRequest = {
-        id: requestId,
-        sentAt: demoNow(s.clockStartedAt).toISOString(),
-        language: "en",
-        email: "demo.guest@example.com",
-        answers: answers.map((a, i) => ({
-          questionId: `planner-${i}`,
-          question: a.question,
-          questionLanguage: "en",
-          answer: a.answer,
-        })),
-      };
+      update((s) => {
+        const request: AdviceRequest = {
+          id: requestId,
+          sentAt: demoNow(s.clockStartedAt).toISOString(),
+          language: "en",
+          email: "demo.guest@example.com",
+          answers: answers.map((a, i) => ({
+            questionId: `planner-${i}`,
+            question: a.question,
+            questionLanguage: "en",
+            answer: a.answer,
+          })),
+        };
 
-      return mailAdviceRequest(
-        {
-          ...s,
-          data: {
-            ...s.data,
-            adviceRequests: [...s.data.adviceRequests, request],
+        return mailAdviceRequest(
+          {
+            ...s,
+            data: {
+              ...s.data,
+              adviceRequests: [...s.data.adviceRequests, request],
+            },
           },
-        },
-        request,
-        s.data.adviceQuestions.recipientEmail,
-      );
-    });
+          request,
+          s.data.adviceQuestions.recipientEmail,
+        );
+      });
 
-    return requestId;
-  };
+      return requestId;
+    };
+  }, [update]);
 
   const [chat, setChat] = useState(getChat);
   const { messages, sendMessage, addToolOutput, status } = useChat({ chat });
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [top, setTop] = useState(0);
-  const timings = useRef(new Map<string, number>());
+  const [timings, setTimings] = useState(() => new Map<string, number>());
   const started = useRef(new Map<string, number>());
-  const [, setTick] = useState(0);
+  const recorded = useRef(new Set<string>());
 
   useLayoutEffect(() => {
     const measure = () =>
@@ -282,7 +293,7 @@ export function PlannerChat({ onLeave }: { onLeave: () => void }) {
   }, []);
 
   useEffect(() => {
-    let changed = false;
+    const finished: [string, number][] = [];
 
     for (const part of messages.flatMap((m) => m.parts)) {
       if (!part.type.startsWith("tool-")) continue;
@@ -292,16 +303,18 @@ export function PlannerChat({ onLeave }: { onLeave: () => void }) {
         started.current.set(p.toolCallId, Date.now());
       if (
         p.state === "output-available" &&
-        !timings.current.has(p.toolCallId)
+        !recorded.current.has(p.toolCallId)
       ) {
-        timings.current.set(
+        recorded.current.add(p.toolCallId);
+        finished.push([
           p.toolCallId,
           Date.now() - started.current.get(p.toolCallId)!,
-        );
-        changed = true;
+        ]);
       }
     }
-    if (changed) setTick((t) => t + 1);
+    // Tool times are measured as the stream arrives, so they can only be stored from here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (finished.length) setTimings((prev) => new Map([...prev, ...finished]));
   }, [messages]);
 
   useEffect(() => {
@@ -433,7 +446,7 @@ export function PlannerChat({ onLeave }: { onLeave: () => void }) {
             key={`trace-${steps[0].key}`}
             steps={steps}
             streaming={active || (tail && isLast && busy)}
-            timings={timings.current}
+            timings={timings}
           />,
         );
       }
@@ -535,8 +548,9 @@ export function PlannerChat({ onLeave }: { onLeave: () => void }) {
             className="min-h-11 rounded-full px-2 font-medium text-foreground underline underline-offset-2 outline-none focus-visible:focus-ring"
             type="button"
             onClick={() => {
-              timings.current.clear();
+              setTimings(new Map());
               started.current.clear();
+              recorded.current.clear();
               setChat(resetChat());
             }}
           >

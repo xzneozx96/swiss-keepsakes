@@ -1,19 +1,19 @@
 import type { MessageKey } from "./en";
 
-import { tourDetailDe } from "@/features/tours/detail/messages";
-import { tourReviewsDe } from "@/features/tours/reviews/messages";
-import { toursCommonDe } from "@/features/tours/messages";
-import { tourDiscoveryDe } from "@/features/tours/discovery/messages";
-import { tourBookingDe } from "@/features/tours/booking/messages";
-import { tourMerchantDe } from "@/features/tours/merchant/messages";
-import { tourMapDe } from "@/features/tours/map/messages";
-import { contentDe } from "@/features/content/messages";
-import { contentMerchantDe } from "@/features/content/merchant/messages";
-import { requestsDe } from "@/features/requests/messages";
-import { partnerDashboardDe } from "@/features/partners/report/messages";
-import { productsDe } from "@/features/merchant/products/messages";
-import { salesOverviewDe } from "@/features/merchant/sales/messages";
-import { reportPagesDe } from "@/features/reports/pages-messages";
+import { tourDetailDe } from "@/features/tours/detail/messages.de";
+import { tourReviewsDe } from "@/features/tours/reviews/messages.de";
+import { toursCommonDe } from "@/features/tours/messages.de";
+import { tourDiscoveryDe } from "@/features/tours/discovery/messages.de";
+import { tourBookingDe } from "@/features/tours/booking/messages.de";
+import { tourMerchantDe } from "@/features/tours/merchant/messages.de";
+import { tourMapDe } from "@/features/tours/map/messages.de";
+import { contentDe } from "@/features/content/messages.de";
+import { contentMerchantDe } from "@/features/content/merchant/messages.de";
+import { requestsDe } from "@/features/requests/messages.de";
+import { partnerDashboardDe } from "@/features/partners/report/messages.de";
+import { productsDe } from "@/features/merchant/products/messages.de";
+import { salesOverviewDe } from "@/features/merchant/sales/messages.de";
+import { reportPagesDe } from "@/features/reports/pages-messages.de";
 
 /** German copy as used in Switzerland: "ss", never "ß". A missing key fails type-checking. */
 export const de: Record<MessageKey, string> = {
@@ -412,6 +412,8 @@ export const de: Record<MessageKey, string> = {
   "mail.N23.stock": "Die reservierten Artikel sind wieder an Lager.",
 
   "proto.proposal": "UX-Vorschlag: {name}",
+  "demo.storageFull":
+    "Ihre letzten Änderungen konnten in diesem Browser nicht gespeichert werden. Sie bleiben in diesem Tab, bis Sie ihn schliessen.",
 
   "order.status.requested": "Wartet auf Bestätigung",
   "order.status.accepted": "Angenommen, Zahlung fällig",

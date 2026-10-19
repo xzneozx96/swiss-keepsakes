@@ -1,7 +1,7 @@
 import type { ReportTx } from "./transactions";
 import type { CostRecord, CostType } from "../types";
 import type { Rappen } from "@/features/catalog/types";
-import type { DayRange } from "@/features/merchant/today/lib/analytics";
+import type { DayRange } from "@/lib/analytics";
 import type { CommissionAdjustment } from "@/features/partners/types";
 
 import { COST_TYPES } from "../types";

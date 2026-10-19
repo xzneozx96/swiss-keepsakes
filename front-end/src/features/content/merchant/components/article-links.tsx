@@ -19,7 +19,7 @@ import { Media } from "@/components/media";
 import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
 import { DetailCard } from "@/features/merchant/order-detail/components/detail-card";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 
 const count = "text-sm text-muted tabular-nums";
 

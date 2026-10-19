@@ -1,14 +1,14 @@
 import { useCallback } from "react";
 
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 
 /**
  * Saved gifts (UX proposal: favourites are not in the PRD). Kept in the demo data,
  * so they work without signing in and survive reloads in this browser.
  */
 export function useFavourites() {
-  const { state, update } = useDemo();
-  const ids = state.data.favouriteProductIds;
+  const { update } = useDemoActions();
+  const ids = useDemoSelector((s) => s.data.favouriteProductIds);
 
   const toggle = useCallback(
     (productId: string) =>

@@ -12,7 +12,6 @@ import {
   Button,
   Calendar,
   Description,
-  Drawer,
   FieldError,
   Label,
   Radio,
@@ -28,7 +27,7 @@ import { declineReasons } from "../hooks/use-merchant-order-detail";
 import { ActionPanel } from "./detail-card";
 
 import { useConfirm } from "@/components/confirm-dialog";
-import { useSheetExit } from "@/components/sheet-exit";
+import { SheetFrame } from "@/components/sheet-frame";
 import {
   GiftIcon,
   InfoIcon,
@@ -41,7 +40,7 @@ import {
 } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { isPickupClosed, zurichDate } from "@/features/catalog/lib/pickup";
-import { useDemo, useDemoNow } from "@/features/demo";
+import { useDemoNow, useDemoSelector } from "@/features/demo";
 import { pickText } from "@/lib/localized";
 
 type Sheet = "accept" | "change" | "decline" | null;
@@ -223,47 +222,6 @@ export function DecisionBlock({
   );
 }
 
-export function SheetFrame({
-  title,
-  isOpen,
-  onClose,
-  children,
-  footer,
-}: {
-  title: string;
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-  footer: React.ReactNode;
-}) {
-  const { t } = useLocale();
-  const markerRef = useSheetExit();
-
-  return (
-    <Drawer.Backdrop
-      isOpen={isOpen}
-      onOpenChange={(open) => !open && onClose()}
-    >
-      <Drawer.Content className="mx-auto max-w-[560px]" placement="bottom">
-        <Drawer.Dialog className="flex sheet-max flex-col">
-          <span ref={markerRef} hidden />
-          <Drawer.Handle />
-          <Drawer.Header className="flex items-center justify-between">
-            <Drawer.Heading className="text-title">{title}</Drawer.Heading>
-            <Drawer.CloseTrigger aria-label={t("merchantOrder.sheet.close")} />
-          </Drawer.Header>
-          <Drawer.Body className="flex flex-col gap-6 overflow-y-auto">
-            {children}
-          </Drawer.Body>
-          <Drawer.Footer className="flex flex-col gap-2 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
-            {footer}
-          </Drawer.Footer>
-        </Drawer.Dialog>
-      </Drawer.Content>
-    </Drawer.Backdrop>
-  );
-}
-
 /** Money action confirmed in a sheet (spec §5.5): what is promised, how much, by when. */
 function AcceptSheet({
   isOpen,
@@ -365,7 +323,7 @@ function ChangeSheet({
   onClose: () => void;
 }) {
   const { t, language } = useLocale();
-  const { state } = useDemo();
+  const pickupPlaces = useDemoSelector((s) => s.data.pickupPlaces);
   const now = useDemoNow();
   const [date, setDate] = useState<CalendarDate>(parseDate(initialDate));
   const [placeId, setPlaceId] = useState(initialPlaceId);
@@ -462,7 +420,7 @@ function ChangeSheet({
         <Label className="text-heading">
           {t("merchantOrder.change.place")}
         </Label>
-        {state.data.pickupPlaces.map((p) => (
+        {pickupPlaces.map((p) => (
           <Radio key={p.id} className={choiceCard} value={p.id}>
             <Radio.Content>
               <Radio.Control>

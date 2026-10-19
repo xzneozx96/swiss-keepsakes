@@ -9,6 +9,7 @@ import {
 } from "@/components/background-music-store";
 import { PauseIcon, PlayIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
+import { numberFormat } from "@/lib/format";
 
 const SEEK_STEP = 5;
 
@@ -115,7 +116,9 @@ export function MusicSheet() {
               <img
                 alt=""
                 className="size-16 shrink-0 rounded-xl object-cover shadow-sm"
+                decoding="async"
                 height={64}
+                loading="lazy"
                 src={coverUrl}
                 width={64}
               />
@@ -186,7 +189,7 @@ function SeekBar() {
   const known = Number.isFinite(duration) && duration > 0;
   const spoken = (seconds: number) => {
     const unit = (n: number, u: "minute" | "second") =>
-      new Intl.NumberFormat(intlLocale, {
+      numberFormat(intlLocale, {
         style: "unit",
         unit: u,
         unitDisplay: "long",

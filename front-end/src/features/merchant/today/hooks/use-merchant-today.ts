@@ -17,7 +17,12 @@ import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { useDemo, useDemoNow } from "@/features/demo";
 import { formatLabel, progressLabel } from "@/features/orders/lib/labels";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import {
+  formatMoney,
+  formatShortDate,
+  dateTimeFormat,
+  calendarDay,
+} from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 const taskTitle: Record<TodayTaskId, MessageKey> = {
@@ -63,8 +68,8 @@ export function useMerchantToday() {
       },
     );
   const datePart = (iso: string, option: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, { ...option, timeZone: "UTC" }).format(
-      new Date(`${iso}T12:00:00Z`),
+    dateTimeFormat(intlLocale, { ...option, timeZone: "UTC" }).format(
+      calendarDay(iso),
     );
 
   const found = new Map(todayTasks(orders, now).map((task) => [task.id, task]));

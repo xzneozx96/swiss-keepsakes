@@ -1,22 +1,20 @@
-import type {
-  DayRange,
-  DeltaTone,
-  PeriodId,
-} from "@/features/merchant/today/lib/analytics";
+import type { DayRange, DeltaTone, PeriodId } from "@/lib/analytics";
 
 import { useState } from "react";
 
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate, zurichDayOf } from "@/features/catalog/lib/pickup";
 import { useDemo, useDemoNow } from "@/features/demo";
-import {
-  PERIODS,
-  deltaOf,
-  periodRanges,
-} from "@/features/merchant/today/lib/analytics";
+import { PERIODS, deltaOf, periodRanges } from "@/lib/analytics";
 import { commissionItems } from "@/features/partners/lib/ledger";
 import { linkOpens } from "@/features/partners/lib/link-opens";
-import { formatMoney } from "@/lib/format";
+import {
+  formatMoney,
+  numberFormat,
+  dateTimeFormat,
+  calendarDay,
+  percentOf,
+} from "@/lib/format";
 
 /** Fixed per partner, in list order; partners beyond three share the muted colour. */
 const PARTNER_COLOURS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"];
@@ -31,7 +29,7 @@ const dayOf = zurichDayOf;
 
 function daysOf(range: DayRange): string[] {
   const days: string[] = [];
-  const d = new Date(`${range.start}T12:00:00Z`);
+  const d = calendarDay(range.start);
 
   while (d.toISOString().slice(0, 10) <= range.end) {
     days.push(d.toISOString().slice(0, 10));
@@ -70,23 +68,17 @@ export function usePartnerAnalytics(
   const nowMs = now.getTime();
 
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
-  const count = (n: number) => new Intl.NumberFormat(intlLocale).format(n);
+  const count = (n: number) => numberFormat(intlLocale).format(n);
   const percent = (part: number, whole: number) =>
-    new Intl.NumberFormat(intlLocale, {
-      style: "percent",
-      maximumFractionDigits: 1,
-    }).format(whole ? part / whole : 0);
+    percentOf(part, whole, intlLocale, 1);
   const range = (r: DayRange) =>
     (
-      new Intl.DateTimeFormat(intlLocale, {
+      dateTimeFormat(intlLocale, {
         day: "numeric",
         month: "short",
         timeZone: "UTC",
       }) as Intl.DateTimeFormat & { formatRange(a: Date, b: Date): string }
-    ).formatRange(
-      new Date(`${r.start}T12:00:00Z`),
-      new Date(`${r.end}T12:00:00Z`),
-    );
+    ).formatRange(calendarDay(r.start), calendarDay(r.end));
 
   const inRange = (at: string, r: DayRange) => {
     if (Date.parse(at) > nowMs) return false;

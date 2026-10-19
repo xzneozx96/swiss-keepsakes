@@ -1,7 +1,7 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useCallback } from "react";
 
-import { useDemo } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
 
 declare module "@tanstack/history" {
   interface HistoryState {
@@ -22,10 +22,9 @@ declare module "@tanstack/history" {
  * `signInSheet` is always null since C05 became a screen (1.6r); callers can drop it.
  */
 export function useRequireSignIn() {
-  const { state } = useDemo();
+  const signedIn = useDemoSelector((s) => s.data.signedInGuestId !== null);
   const navigate = useNavigate();
   const here = useRouterState({ select: (s) => s.location.href });
-  const signedIn = state.data.signedInGuestId !== null;
 
   const requireSignIn = useCallback(
     (onDone: () => void = () => {}, returnTo: string = here) => {

@@ -6,7 +6,7 @@ import type { Order } from "@/features/orders/types";
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { shop } from "@/features/catalog/seed";
-import { useDemo, useDemoNow } from "@/features/demo";
+import { useDemoNow, useDemoSelector } from "@/features/demo";
 import {
   formatLabel,
   paymentLabel,
@@ -41,7 +41,10 @@ export function useRequestSent(orderIds: string[]): {
   languageNotice?: string;
 } {
   const { t, language, intlLocale } = useLocale();
-  const { state } = useDemo();
+  const demoOrders = useDemoSelector((s) => s.data.orders);
+  const pickupPlaces = useDemoSelector((s) => s.data.pickupPlaces);
+  const products = useDemoSelector((s) => s.data.products);
+  const signedInGuestId = useDemoSelector((s) => s.data.signedInGuestId);
   const now = useDemoNow();
   const today = zurichDate(now);
   const short = (iso: string) => formatShortDate(iso, today, intlLocale);
@@ -60,8 +63,8 @@ export function useRequestSent(orderIds: string[]): {
   });
 
   const orders = orderIds
-    .map((id) => state.data.orders.find((o) => o.id === id))
-    .filter((o): o is Order => !!o && o.guestId === state.data.signedInGuestId);
+    .map((id) => demoOrders.find((o) => o.id === id))
+    .filter((o): o is Order => !!o && o.guestId === signedInGuestId);
 
   const rule = (order: Order) => {
     const policy = order.paymentPolicy;
@@ -85,9 +88,7 @@ export function useRequestSent(orderIds: string[]): {
   };
 
   const card = (order: Order, index: number): ReviewOrderView => {
-    const place = state.data.pickupPlaces.find(
-      (p) => p.id === order.pickupPlaceId,
-    );
+    const place = pickupPlaces.find((p) => p.id === order.pickupPlaceId);
     const policy = order.paymentPolicy;
 
     return {
@@ -99,9 +100,7 @@ export function useRequestSent(orderIds: string[]): {
           ? t("cart.policy.deposit", { percent: policy.depositPercent })
           : t(`cart.policy.${policy.kind}`),
       items: order.lines.map((line) => {
-        const product = state.data.products.find(
-          (p) => p.id === line.productId,
-        );
+        const product = products.find((p) => p.id === line.productId);
 
         return {
           id: line.id,

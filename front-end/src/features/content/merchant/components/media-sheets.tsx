@@ -7,7 +7,7 @@ import { SelectedIcon } from "@/components/icons";
 import { InfoNote } from "@/components/info-note";
 import { Media } from "@/components/media";
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 
 /** Same choice card as M08, M15 and the M04 sheets: ink frame when selected. */
 const choiceCard =

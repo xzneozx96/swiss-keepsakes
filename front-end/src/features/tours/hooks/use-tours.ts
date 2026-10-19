@@ -12,8 +12,6 @@ import type {
   TourOutcome,
 } from "../merchant/lib/transitions";
 
-import { useEffect, useState } from "react";
-
 import { availableSeats, bookingAmountDue } from "../lib/selectors";
 import { mailTourGuest, mailTourStaff } from "../merchant/lib/mail";
 import { createTourSeed } from "../seed";
@@ -38,37 +36,41 @@ import {
 } from "../merchant/lib/transitions";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { attributedPartnerId } from "@/features/partners/referral";
+import { useSharedClock } from "@/hooks/use-shared-clock";
 
 const fallback = createTourSeed();
 
-export function useTours() {
-  const { state } = useDemo();
-  const [tick, setTick] = useState(Date.now());
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setTick(Date.now()), 1000);
-
-    return () => window.clearInterval(timer);
-  }, []);
-  const data = state.data.tours ?? fallback;
+/** Only a countdown needs "second"; every other screen reads the clock to the minute. */
+export function useTours(precision: "minute" | "second" = "minute") {
+  const tours = useDemoSelector((s) => s.data.tours);
+  const clockStartedAt = useDemoSelector((s) => s.clockStartedAt);
+  const guestId = useDemoSelector((s) => s.data.signedInGuestId);
+  const role = useDemoSelector((s) => s.role);
+  const tick = useSharedClock(precision === "second" ? 1_000 : 60_000);
+  const data = tours ?? fallback;
 
   return {
     data,
     ...data,
-    now: demoNow(state.clockStartedAt, tick),
-    guestId: state.data.signedInGuestId,
-    role: state.role,
+    now: demoNow(clockStartedAt, tick),
+    guestId,
+    role,
   };
 }
 
 export function useTourActions() {
-  const { state, update } = useDemo();
+  const { update } = useDemoActions();
+  const tours = useDemoSelector((s) => s.data.tours);
+  const clockStartedAt = useDemoSelector((s) => s.clockStartedAt);
+  const signedInGuestId = useDemoSelector((s) => s.data.signedInGuestId);
+  const referralVisits = useDemoSelector((s) => s.data.referralVisits);
+  const staffRole = useDemoSelector((s) => s.role);
   const { language } = useLocale();
-  const currentData = state.data.tours ?? fallback;
-  const now = () => demoNow(state.clockStartedAt);
+  const currentData = tours ?? fallback;
+  const now = () => demoNow(clockStartedAt);
   const change = (recipe: (data: typeof currentData) => typeof currentData) =>
     update((s) => ({
       ...s,
@@ -79,7 +81,7 @@ export function useTourActions() {
   const createBooking = ():
     { bookingId: string } | { error: string; bookingId?: string } => {
     const draft = currentData.draft;
-    const guestId = state.data.signedInGuestId;
+    const guestId = signedInGuestId;
     const tour = currentData.tours.find((t) => t.id === draft.tourId);
     const departure = currentData.departures.find(
       (d) => d.id === draft.departureId && d.tourId === draft.tourId,
@@ -118,7 +120,7 @@ export function useTourActions() {
       departure,
       draft,
       guestId,
-      partnerId: attributedPartnerId(state.data.referralVisits, now()),
+      partnerId: attributedPartnerId(referralVisits, now()),
       language,
       now: now(),
     });
@@ -167,7 +169,7 @@ export function useTourActions() {
 
     if (
       !booking ||
-      booking.guestId !== state.data.signedInGuestId ||
+      booking.guestId !== signedInGuestId ||
       ["expired", "cancelled", "completed", "no_show"].includes(booking.status)
     )
       return { ok: false, reason: "blocked" };
@@ -263,7 +265,7 @@ export function useTourActions() {
   };
   // Merchant actions (steps 2.11–2.14): guard on the screen's state, then the pure
   // transition re-checks inside `update`, so a stale screen or double tap changes nothing.
-  const staffContext = (s: typeof state): StaffContext => ({
+  const staffContext = (s: DemoState): StaffContext => ({
     now: demoNow(s.clockStartedAt),
     role: s.role,
     language,
@@ -274,7 +276,7 @@ export function useTourActions() {
   ): TourActionResult => {
     const booking = currentData.bookings.find((b) => b.id === id);
     const block = booking
-      ? externalPaymentBlock(booking, input, state.role, now())
+      ? externalPaymentBlock(booking, input, staffRole, now())
       : { code: "unavailable" };
 
     if (block) return { ok: false, reason: block.code };
@@ -285,7 +287,7 @@ export function useTourActions() {
   const outcome = (id: string, result: TourOutcome): TourActionResult => {
     const booking = currentData.bookings.find((b) => b.id === id);
     const block = booking
-      ? outcomeBlock(booking, result, state.role, now())
+      ? outcomeBlock(booking, result, staffRole, now())
       : { code: "unavailable" };
 
     if (block) return { ok: false, reason: block.code };

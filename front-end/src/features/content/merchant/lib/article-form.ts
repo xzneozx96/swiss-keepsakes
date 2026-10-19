@@ -274,20 +274,6 @@ export function validate(
   return errors;
 }
 
-/** "Luzern bei Nacht" → "luzern-bei-nacht"; umlauts and accents drop their marks. */
-export function slugify(title: string): string {
-  return (
-    title
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 60)
-      .replace(/-+$/, "") || "story"
-  );
-}
-
 /** The first of `base`, `base-2`, `base-3`… that is not taken. */
 export function uniqueValue(base: string, taken: Set<string>): string {
   if (!taken.has(base)) return base;

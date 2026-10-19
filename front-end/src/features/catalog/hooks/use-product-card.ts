@@ -7,8 +7,8 @@ import { fromPrice, isSoldOut } from "../lib/stock";
 import { useFavourites } from "./use-favourites";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo, useDemoNow } from "@/features/demo";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import { useDemoNow, useDemoSelector } from "@/features/demo";
+import { formatMoney, formatShortDate, numberFormat } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 export type ProductCardView = ProductCardProps & {
@@ -22,9 +22,10 @@ export function useProductCard(): (product: Product) => ProductCardView {
   const { t, language, intlLocale } = useLocale();
   const now = useDemoNow();
   const today = zurichDate(now);
-  const { state } = useDemo();
+  const orders = useDemoSelector((s) => s.data.orders);
+  const demoReviews = useDemoSelector((s) => s.data.reviews);
   const { isFavourite, toggle } = useFavourites();
-  const number = new Intl.NumberFormat(intlLocale, {
+  const number = numberFormat(intlLocale, {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
@@ -32,8 +33,8 @@ export function useProductCard(): (product: Product) => ProductCardView {
   return (p) => {
     const pickup = productEarliestPickup(p, now);
     const name = pickText(p.name, language);
-    const soldOut = isSoldOut(p, state.data.orders);
-    const reviews = state.data.reviews.filter((r) => r.productId === p.id);
+    const soldOut = isSoldOut(p, orders);
+    const reviews = demoReviews.filter((r) => r.productId === p.id);
     const average =
       reviews.reduce((sum, r) => sum + r.rating, 0) / (reviews.length || 1);
     const saved = isFavourite(p.id);

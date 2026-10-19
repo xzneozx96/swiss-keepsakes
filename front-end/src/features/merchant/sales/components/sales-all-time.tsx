@@ -8,6 +8,7 @@ import { DeltaChip } from "@/components/stat-card";
 import { useLocale } from "@/contexts/locale-context";
 import { Widget } from "@/features/merchant/today/components/overview-analytics";
 import { Donut } from "@/features/partners/report/components/dashboard-widgets";
+import { numberFormat } from "@/lib/format";
 
 type AllTime = SalesOverviewView["allTime"];
 
@@ -27,7 +28,7 @@ function TotalHero({
   const [active, setActive] = useState<number | null>(null);
   const total = allTime.parts.reduce((sum, p) => sum + p.amount, 0);
   const shown = active === null ? null : allTime.parts[active];
-  const percent = new Intl.NumberFormat(intlLocale, { style: "percent" });
+  const percent = numberFormat(intlLocale, { style: "percent" });
 
   return (
     <section
@@ -131,7 +132,7 @@ function MonthlySales({
   onSelect: (monthStart: string) => void;
 }) {
   const { t, intlLocale } = useLocale();
-  const amount = new Intl.NumberFormat(intlLocale, {
+  const amount = numberFormat(intlLocale, {
     maximumFractionDigits: 0,
   });
   // The tallest bar stops short of the top, so its value label stays inside the card.

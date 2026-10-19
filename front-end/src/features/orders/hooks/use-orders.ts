@@ -21,7 +21,7 @@ import {
 import * as tr from "../lib/transitions";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo, useDemoNow } from "@/features/demo";
+import { useDemo, useDemoNow, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { allOrders } from "@/features/partners/lib/ledger";
 
@@ -202,17 +202,17 @@ export function useOrderSummary(
 
 /** M04: any order of the shop, the generated history included (outline D15). */
 export function useOrder(orderId: string): Order | undefined {
-  const { state } = useDemo();
+  const data = useDemoSelector((s) => s.data);
 
-  return allOrders(state.data).find((o) => o.id === orderId);
+  return allOrders(data).find((o) => o.id === orderId);
 }
 
 /** The signed-in guest's orders, newest first (C14). */
 export function useGuestOrders(): Order[] {
-  const { state } = useDemo();
-  const guestId = state.data.signedInGuestId;
+  const guestId = useDemoSelector((s) => s.data.signedInGuestId);
+  const orders = useDemoSelector((s) => s.data.orders);
 
-  return state.data.orders
+  return orders
     .filter((o) => o.guestId === guestId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

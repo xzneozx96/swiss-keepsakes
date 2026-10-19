@@ -4,21 +4,7 @@ import type { LocalizedRich } from "@/lib/rich-text";
 import { LANGUAGES, cleanText, hasText } from "./completeness";
 
 import { isEmptyDoc } from "@/lib/rich-text";
-
-/** "Kapellbrücke Taschenmesser" → "kapellbruecke-taschenmesser", as the seeded slugs. */
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/ä/g, "ae")
-    .replace(/ö/g, "oe")
-    .replace(/ü/g, "ue")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60)
-    .replace(/-+$/, "");
-}
+import { slugify } from "@/lib/slug";
 
 /** A slug from the name (English first), unique among `taken`; set once, at the first save. */
 export function uniqueSlug(

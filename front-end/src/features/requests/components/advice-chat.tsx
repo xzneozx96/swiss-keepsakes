@@ -159,6 +159,13 @@ export function AdviceChat({ onLeave }: { onLeave: () => void }) {
   // Changing an answer from the summary: answering goes straight back to it.
   const [changing, setChanging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorStep, setErrorStep] = useState(step);
+
+  // An error belongs to the question it was raised on.
+  if (errorStep !== step) {
+    setErrorStep(step);
+    setError(null);
+  }
   // The assistant "types" after the guest moves forward; Back, Change and reload skip it.
   const [typing, setTyping] = useState(false);
   const lastStep = useRef(step);
@@ -180,7 +187,6 @@ export function AdviceChat({ onLeave }: { onLeave: () => void }) {
   }, []);
 
   useEffect(() => {
-    setError(null);
     const forward = step > lastStep.current;
 
     lastStep.current = step;

@@ -69,6 +69,7 @@ function VideoBlock({
             <img
               alt=""
               className="size-full object-cover opacity-90"
+              decoding="async"
               loading="lazy"
               src={`https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`}
             />

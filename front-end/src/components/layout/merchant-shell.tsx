@@ -26,7 +26,7 @@ import { MerchantBarSlot } from "@/components/layout/merchant-back-bar";
 import { useLocale } from "@/contexts/locale-context";
 import { shop } from "@/features/catalog/seed";
 import { SECTION_PAGES } from "@/components/layout/section-pages";
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { avatarUrl } from "@/lib/avatars";
 
 export type MerchantSection =
@@ -262,10 +262,11 @@ const tabLink =
  */
 export function MerchantShell({ children }: { children: React.ReactNode }) {
   const { t } = useLocale();
-  const { state, setRole } = useDemo();
-  const staffName = state.role === "manager" ? "Lukas" : shop.ownerName;
+  const { setRole } = useDemoActions();
+  const demoRole = useDemoSelector((s) => s.role);
+  const staffName = demoRole === "manager" ? "Lukas" : shop.ownerName;
   const staffRole =
-    state.role === "manager" ? t("staff.manager") : t("staff.owner");
+    demoRole === "manager" ? t("staff.manager") : t("staff.owner");
   const [moreOpen, setMoreOpen] = useState(false);
   // Groups start unfolded; the set holds the ones the user folded.
   const [folded, setFolded] = useState<Set<string>>(new Set());
@@ -373,6 +374,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
             <img
               alt=""
               className="size-9 shrink-0 rounded-full bg-default object-cover"
+              decoding="async"
               src={avatarUrl(staffName)}
             />
             <span className="flex min-w-0 flex-col">

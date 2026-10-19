@@ -4,7 +4,7 @@ import { isPublished } from "@/features/catalog/lib/publish";
 import { isSoldOut } from "@/features/catalog/lib/stock";
 import { Rail } from "@/features/discovery/components/section";
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
 
 /** Guests see at most this many linked keepsakes. */
 export const MAX_TOUR_KEEPSAKES = 3;
@@ -24,13 +24,14 @@ export function TourKeepsakes({
   variant?: "page" | "confirmation";
 }) {
   const { t } = useLocale();
-  const { state } = useDemo();
+  const orders = useDemoSelector((s) => s.data.orders);
+  const demoProducts = useDemoSelector((s) => s.data.products);
   const toCard = useProductCard();
   const products = (ids ?? [])
-    .map((id) => state.data.products.find((p) => p.id === id))
+    .map((id) => demoProducts.find((p) => p.id === id))
     .filter(
       (p): p is NonNullable<typeof p> =>
-        !!p && isPublished(p) && !isSoldOut(p, state.data.orders),
+        !!p && isPublished(p) && !isSoldOut(p, orders),
     )
     .slice(0, MAX_TOUR_KEEPSAKES);
 

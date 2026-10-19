@@ -2,7 +2,6 @@ import type { PickupPlace } from "@/features/catalog/types";
 import type { ShownLabel } from "@/features/orders/hooks/use-orders";
 import type { MessageKey } from "@/i18n/en";
 import type { LogEntry, Order, Payment } from "@/features/orders/types";
-import type { IntlLocale } from "@/lib/format";
 
 import { useNavigate } from "@tanstack/react-router";
 
@@ -30,7 +29,7 @@ import {
   cancelBlock,
   startOnlinePaymentBlock,
 } from "@/features/orders/lib/transitions";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, pickupDay } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 export interface OrderNotice {
@@ -92,21 +91,6 @@ export interface OrderDetailView {
     cancellationNotice?: string;
   };
   contact: { emailHref: string; callHref: string };
-}
-
-/** Short calendar parts for the header's date tile, read as a plain date (no time zone shift). */
-function pickupDay(isoDate: string, locale: IntlLocale) {
-  const at = new Date(`${isoDate}T12:00:00Z`);
-  const part = (options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(locale, { ...options, timeZone: "UTC" })
-      .format(at)
-      .replace(/\.$/, "");
-
-  return {
-    weekday: part({ weekday: "short" }),
-    day: part({ day: "numeric" }),
-    month: part({ month: "short" }),
-  };
 }
 
 const placeName = (

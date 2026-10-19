@@ -181,6 +181,8 @@ export function PhotoViewer({
                   <img
                     alt=""
                     className="max-h-full max-w-full object-contain"
+                    decoding="async"
+                    loading="lazy"
                     src={photoUrl(slug)}
                   />
                 </div>

@@ -4,9 +4,78 @@
  */
 export type IntlLocale = "en-CH" | "de-CH";
 
+const numberFormats = new Map<string, Intl.NumberFormat>();
+const dateTimeFormats = new Map<string, Intl.DateTimeFormat>();
+
+/** Building an Intl formatter costs far more than calling one, so each locale and options pair is built once. */
+export function numberFormat(
+  locale: string,
+  options?: Intl.NumberFormatOptions,
+): Intl.NumberFormat {
+  const key = `${locale}|${JSON.stringify(options)}`;
+  let format = numberFormats.get(key);
+
+  if (!format) {
+    format = new Intl.NumberFormat(locale, options);
+    numberFormats.set(key, format);
+  }
+
+  return format;
+}
+
+export function dateTimeFormat(
+  locale: string,
+  options?: Intl.DateTimeFormatOptions,
+): Intl.DateTimeFormat {
+  const key = `${locale}|${JSON.stringify(options)}`;
+  let format = dateTimeFormats.get(key);
+
+  if (!format) {
+    format = new Intl.DateTimeFormat(locale, options);
+    dateTimeFormats.set(key, format);
+  }
+
+  return format;
+}
+
+/** A Zurich calendar day (YYYY-MM-DD) as a Date at noon UTC, so UTC getters and formatters never shift the day. */
+export function calendarDay(isoDate: string): Date {
+  return new Date(`${isoDate}T12:00:00Z`);
+}
+
+/** Short calendar parts for a date tile, read as a plain date (no time zone shift). */
+export function pickupDay(isoDate: string, locale: IntlLocale) {
+  const at = calendarDay(isoDate);
+  const part = (options: Intl.DateTimeFormatOptions) =>
+    dateTimeFormat(locale, { ...options, timeZone: "UTC" })
+      .format(at)
+      .replace(/\.$/, "");
+
+  return {
+    weekday: part({ weekday: "short" }),
+    day: part({ day: "numeric" }),
+    month: part({ month: "short" }),
+  };
+}
+
+/** `part` as a share of `whole` ("42%"); an empty `whole` reads as 0%. */
+export function percentOf(
+  part: number,
+  whole: number,
+  locale: string,
+  fractionDigits = 0,
+): string {
+  return numberFormat(
+    locale,
+    fractionDigits
+      ? { style: "percent", maximumFractionDigits: fractionDigits }
+      : { style: "percent" },
+  ).format(whole ? part / whole : 0);
+}
+
 export function formatMoney(amount: number, locale: IntlLocale): string {
   return (
-    new Intl.NumberFormat(locale, {
+    numberFormat(locale, {
       style: "currency",
       currency: "CHF",
       currencyDisplay: "code",
@@ -28,8 +97,8 @@ export function formatShortDate(
   today: string,
   locale: IntlLocale,
 ): string {
-  const date = new Date(`${isoDate}T12:00:00Z`);
-  const parts = new Intl.DateTimeFormat(locale, {
+  const date = calendarDay(isoDate);
+  const parts = dateTimeFormat(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -47,7 +116,7 @@ export function formatShortDate(
 }
 
 export function formatDate(date: Date, locale: IntlLocale): string {
-  return new Intl.DateTimeFormat(locale, {
+  return dateTimeFormat(locale, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

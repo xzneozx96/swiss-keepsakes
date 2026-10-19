@@ -1,9 +1,10 @@
-import type { ProductTab } from "@/features/merchant/products/hooks/use-merchant-products";
-
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { MerchantProducts } from "@/features/merchant/products/components/merchant-products";
-import { isProductTab } from "@/features/merchant/products/hooks/use-merchant-products";
+import {
+  type ProductTab,
+  isProductTab,
+} from "@/features/merchant/products/lib/search-params";
 
 const TAB_PAGES = {
   tours: "/store/products/tours",

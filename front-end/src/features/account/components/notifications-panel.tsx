@@ -10,7 +10,7 @@ import {
 
 import { ChevronRightIcon, EmailIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
 import { renderMail } from "@/features/notifications/components/render-mail";
 import { formatOrderDateTime } from "@/features/orders/lib/format";
 
@@ -26,8 +26,9 @@ export function NotificationsPanel({
   email: string;
 }) {
   const { t, intlLocale } = useLocale();
-  const { state } = useDemo();
-  const mails = state.data.mail
+  const demoMail = useDemoSelector((s) => s.data.mail);
+  const pickupPlaces = useDemoSelector((s) => s.data.pickupPlaces);
+  const mails = demoMail
     .filter((m) => m.to === "guest" && m.guestId === guestId)
     .reverse();
 
@@ -56,7 +57,7 @@ export function NotificationsPanel({
               <>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-medium" lang={mail.language}>
-                    {renderMail(mail, state.data.pickupPlaces).subject}
+                    {renderMail(mail, pickupPlaces).subject}
                   </span>
                   <span className="text-sm text-muted tabular-nums">
                     {formatOrderDateTime(mail.at, intlLocale)}

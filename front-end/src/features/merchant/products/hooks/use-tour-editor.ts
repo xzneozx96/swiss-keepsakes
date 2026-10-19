@@ -24,6 +24,7 @@ import {
   tourText,
 } from "../lib/completeness";
 import { textErrors, textFieldError } from "../lib/validation";
+import { markJustCreated, takeJustCreated } from "../lib/just-created";
 import { STORAGE_BUDGET } from "../lib/photo-upload";
 import {
   hasAnyText,
@@ -39,6 +40,10 @@ import { safeHref } from "@/lib/rich-text";
 import { useLocale } from "@/contexts/locale-context";
 import { useDemo, useDemoNow } from "@/features/demo";
 import { createTourSeed } from "@/features/tours/seed";
+import {
+  TOUR_STEPS,
+  type TourStep,
+} from "@/features/merchant/products/lib/search-params";
 
 export interface TourEdit {
   name: LocalizedText;
@@ -341,22 +346,6 @@ export function useDepartureActions() {
   };
 }
 
-/** The tour just created by "Add tour": its editor opens with "Saved" in the bar. */
-let justCreated: string | null = null;
-
-/** M13's steps (owner, revision 2), in order; the ids are the `step` search param. */
-export const TOUR_STEPS = [
-  "basics",
-  "details",
-  "sections",
-  "prices",
-  "departures",
-  "policies",
-  "story",
-  "review",
-] as const;
-export type TourStep = (typeof TOUR_STEPS)[number];
-
 /** Which step holds each required text. */
 export const TOUR_TEXT_STEP: Partial<Record<TextFieldId, TourStep>> = {
   name: "basics",
@@ -452,11 +441,7 @@ export function useTourEditor(
   );
   /** The save bar confirms a save itself: a toast would cover it on phones. */
   const [justSaved, setJustSaved] = useState(() => {
-    const created = !!tour && justCreated === tour.id;
-
-    if (created) justCreated = null;
-
-    return created;
+    return !!tour && takeJustCreated(tour.id);
   });
   const [storageFull, setStorageFull] = useState(false);
   /** The itinerary's selected stop, kept here so a language switch (which remounts the step) keeps it. */
@@ -695,7 +680,7 @@ export function useTourEditor(
     }));
     setAttempt(null);
     if (!tour) {
-      justCreated = next.id;
+      markJustCreated(next.id);
       void navigate({
         to: "/store/products/tours/$tourId",
         params: { tourId: next.id },

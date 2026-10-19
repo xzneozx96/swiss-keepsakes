@@ -17,15 +17,16 @@ import {
 } from "@/components/icons";
 import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
+import { dateTimeFormat, calendarDay } from "@/lib/format";
 
 function EventDetail({ item }: { item: CalendarItem }) {
   const { t, intlLocale } = useLocale();
-  const date = new Intl.DateTimeFormat(intlLocale, {
+  const date = dateTimeFormat(intlLocale, {
     weekday: "long",
     day: "numeric",
     month: "long",
     timeZone: "UTC",
-  }).format(new Date(`${item.date}T12:00:00Z`));
+  }).format(calendarDay(item.date));
   const openClass = `${buttonVariants({ variant: "secondary" })} mt-6 w-full`;
 
   if (item.kind === "pickup")

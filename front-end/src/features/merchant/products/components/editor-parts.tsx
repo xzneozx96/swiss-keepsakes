@@ -1,4 +1,3 @@
-import type { ProductTab } from "../hooks/use-merchant-products";
 import type {
   LanguageStatus,
   MissingText,
@@ -7,6 +6,7 @@ import type {
 import type { Language } from "@/contexts/locale-context";
 import type { LocalizedText } from "@/features/catalog/types";
 import type { MessageKey } from "@/i18n/en";
+import type { ProductTab } from "@/features/merchant/products/lib/search-params";
 
 import {
   Alert,

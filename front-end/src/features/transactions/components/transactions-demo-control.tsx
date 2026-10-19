@@ -1,7 +1,7 @@
 import { Button } from "@heroui/react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { useDemo } from "@/features/demo";
+import { useDemoActions } from "@/features/demo";
 import { useGuestOrders } from "@/features/orders/hooks/use-orders";
 
 /**
@@ -9,7 +9,7 @@ import { useGuestOrders } from "@/features/orders/hooks/use-orders";
  * orders so C14 shows its empty state, then opens the Account tab. Reset brings them back.
  */
 export function TransactionsDemoControl({ onDone }: { onDone: () => void }) {
-  const { update } = useDemo();
+  const { update } = useDemoActions();
   const orders = useGuestOrders();
   const navigate = useNavigate();
 

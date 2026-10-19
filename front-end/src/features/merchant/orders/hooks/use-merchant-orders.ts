@@ -19,7 +19,12 @@ import {
   progressLabel,
 } from "@/features/orders/lib/labels";
 import { orderTotal } from "@/features/orders/lib/selectors";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import {
+  formatMoney,
+  formatShortDate,
+  dateTimeFormat,
+  calendarDay,
+} from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 const tabLabels: Record<OrderTabId, MessageKey> = {
@@ -81,8 +86,8 @@ export function useMerchantOrders(selected: OrderTabId) {
     tone: label.tone,
   });
   const datePart = (iso: string, option: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, { ...option, timeZone: "UTC" }).format(
-      new Date(`${iso}T12:00:00Z`),
+    dateTimeFormat(intlLocale, { ...option, timeZone: "UTC" }).format(
+      calendarDay(iso),
     );
   const factValue = (value: NonNullable<OrderLabel["vars"]>[string]) =>
     typeof value !== "object"

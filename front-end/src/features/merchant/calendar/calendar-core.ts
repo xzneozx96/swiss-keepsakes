@@ -6,6 +6,7 @@ import interactionPlugin from "@fullcalendar/react/interaction";
 import themePlugin from "@fullcalendar/react/themes/monarch";
 
 import { zurichDate } from "@/features/catalog/lib/pickup";
+import { dateTimeFormat } from "@/lib/format";
 
 export const calendarPlugins = [
   themePlugin,
@@ -68,7 +69,7 @@ export type CalendarOverlay =
 
 export const swissDate = zurichDate;
 
-const zurichParts = new Intl.DateTimeFormat("en-GB", {
+const zurichParts = dateTimeFormat("en-GB", {
   timeZone: "Europe/Zurich",
   year: "numeric",
   month: "2-digit",

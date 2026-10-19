@@ -13,7 +13,7 @@ import { ProviderPage } from "@/features/payment/components/provider-page";
 import { useTourActions, useTours } from "@/features/tours/hooks/use-tours";
 
 export function useOwnedBooking(bookingId: string) {
-  const { bookings, guestId, now } = useTours();
+  const { bookings, guestId, now } = useTours("second");
   const { expireHolds } = useTourActions();
   const booking = bookings.find(
     (item) => item.id === bookingId && item.guestId === guestId,

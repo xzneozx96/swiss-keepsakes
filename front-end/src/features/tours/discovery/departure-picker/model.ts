@@ -13,12 +13,12 @@ import {
   participantSeats,
   upcomingDepartures,
 } from "@/features/tours/lib/selectors";
-import { formatShortDate } from "@/lib/format";
+import { formatShortDate, dateTimeFormat } from "@/lib/format";
 
 /** At or below this many free seats a day or slot reads as "few left". */
 export const LOW_SEATS = 2;
 
-const zurichTime = new Intl.DateTimeFormat("en-GB", {
+const zurichTime = dateTimeFormat("en-GB", {
   hour: "2-digit",
   minute: "2-digit",
   hourCycle: "h23",
@@ -205,7 +205,7 @@ export function usePickerFormat(today: CalendarDate) {
   const { t: translate, intlLocale: locale } = useLocale();
   const t = (key: PickerKey, vars?: Record<string, string | number>) =>
     translate(`tourDiscovery.picker.${key}` as MessageKey, vars);
-  const full = new Intl.DateTimeFormat(locale, {
+  const full = dateTimeFormat(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",

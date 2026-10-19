@@ -4,7 +4,7 @@ import { looksLikeEmail } from "../lib/answers";
 import { mailPrivateTourRequest } from "../lib/request-mail";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 
 export interface PrivateTourInput {
@@ -34,10 +34,10 @@ export const GROUP_MAX = 50;
  */
 export function usePrivateTour() {
   const { language } = useLocale();
-  const { state, update } = useDemo();
-  const guest = state.data.guests.find(
-    (g) => g.id === state.data.signedInGuestId,
-  );
+  const { update } = useDemoActions();
+  const guests = useDemoSelector((s) => s.data.guests);
+  const signedInGuestId = useDemoSelector((s) => s.data.signedInGuestId);
+  const guest = guests.find((g) => g.id === signedInGuestId);
 
   return {
     defaultEmail: guest?.email ?? "",

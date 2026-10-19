@@ -9,8 +9,14 @@ import { usePartnerReport } from "./use-partner-report";
 
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
-import { deltaOf } from "@/features/merchant/today/lib/analytics";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import { deltaOf } from "@/lib/analytics";
+import {
+  formatMoney,
+  formatShortDate,
+  dateTimeFormat,
+  calendarDay,
+  percentOf,
+} from "@/lib/format";
 
 export interface DashKpi {
   id: "earned" | "paid" | "to-pay" | "orders";
@@ -97,20 +103,18 @@ export function usePartnerDashboard(
     base.raw;
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
   const percent = (part: number, whole: number) =>
-    new Intl.NumberFormat(intlLocale, { style: "percent" }).format(
-      whole ? part / whole : 0,
-    );
+    percentOf(part, whole, intlLocale);
 
   const rangeText = ({ start, end }: DateRange) =>
     period === "day"
       ? formatShortDate(start, today, intlLocale)
       : period === "week"
         ? `${formatShortDate(start, today, intlLocale)} – ${formatShortDate(end, today, intlLocale)}`
-        : new Intl.DateTimeFormat(intlLocale, {
+        : dateTimeFormat(intlLocale, {
             month: "long",
             year: "numeric",
             timeZone: "UTC",
-          }).format(new Date(`${start}T12:00:00Z`));
+          }).format(calendarDay(start));
   const previousRange = rangeText(previousReport.range);
 
   const delta = (value: number, previous: number): DeltaView => {
@@ -227,8 +231,8 @@ export function usePartnerDashboard(
   };
 
   const monthName = (iso: string, opts: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, { ...opts, timeZone: "UTC" }).format(
-      new Date(`${iso}T12:00:00Z`),
+    dateTimeFormat(intlLocale, { ...opts, timeZone: "UTC" }).format(
+      calendarDay(iso),
     );
   const months: MonthBar[] = (allTimeData?.months ?? []).map((m, i, all) => {
     const label = monthName(m.start, { month: "long", year: "numeric" });

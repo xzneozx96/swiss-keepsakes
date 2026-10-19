@@ -16,20 +16,23 @@ import {
   storyCategoryPhoto,
 } from "@/features/content/lib/categories";
 import { STORY_CATEGORIES } from "@/features/content/types";
-import { useDemo } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
 
 const STORIES_ON_HOME = 6;
 
 /** Builds the discovery home from the catalogue, the stories, the tours and the language. */
 export function useDiscoveryView(): DiscoveryHomeView {
   const { t, language, intlLocale } = useLocale();
-  const { state } = useDemo();
+  const demoArticles = useDemoSelector((s) => s.data.articles);
+  const orders = useDemoSelector((s) => s.data.orders);
+  const products = useDemoSelector((s) => s.data.products);
+  const demoTours = useDemoSelector((s) => s.data.tours);
 
-  const available = state.data.products.filter(
-    (p) => isPublished(p) && !isSoldOut(p, state.data.orders),
+  const available = products.filter(
+    (p) => isPublished(p) && !isSoldOut(p, orders),
   );
 
-  const articles = publishedArticles(state.data.articles, language);
+  const articles = publishedArticles(demoArticles, language);
   const blockStory = (slug: string): StoryView | undefined => {
     const article = articles.find((a) => a.slug === slug);
 
@@ -51,9 +54,7 @@ export function useDiscoveryView(): DiscoveryHomeView {
   const keepsakes = available.filter((p) => !isVictorinox(p)).map(toCard);
 
   // Published tours from the tour data, shown on the same card as the C08 list.
-  const tours = (state.data.tours?.tours ?? []).filter(
-    (tour) => tour.published,
-  );
+  const tours = (demoTours?.tours ?? []).filter((tour) => tour.published);
   // The story a tour comes from: the newest story in this language that links to it (R16).
   const storyFor = (tourId: string): Article | undefined =>
     articles.find((a) =>

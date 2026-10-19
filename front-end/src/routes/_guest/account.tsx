@@ -13,7 +13,7 @@ import { ProfilePanel } from "@/features/account/components/profile-panel";
 import { accountSections } from "@/features/account/lib/sections";
 import { SignInPrompt } from "@/features/auth/components/account-profile";
 import { useRequireSignIn } from "@/features/auth/hooks/use-require-sign-in";
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { TourBookingList } from "@/features/tours/booking";
 import { TransactionList } from "@/features/transactions/components/transaction-list";
 
@@ -44,12 +44,12 @@ const sectionTitle: Record<AccountSection, MessageKey> = {
 
 function AccountPage() {
   const { t } = useLocale();
-  const { state, update } = useDemo();
+  const { update } = useDemoActions();
+  const guests = useDemoSelector((s) => s.data.guests);
+  const signedInGuestId = useDemoSelector((s) => s.data.signedInGuestId);
   const { tab } = Route.useSearch();
   const { requireSignIn } = useRequireSignIn();
-  const guest = state.data.guests.find(
-    (g) => g.id === state.data.signedInGuestId,
-  );
+  const guest = guests.find((g) => g.id === signedInGuestId);
 
   const signOut = () =>
     update((s) => ({ ...s, data: { ...s.data, signedInGuestId: null } }));

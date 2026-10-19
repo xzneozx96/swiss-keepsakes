@@ -6,7 +6,7 @@ import type {
 import type { SalesPeriodId } from "@/features/merchant/sales/lib/periods";
 import type { DataTableColumn } from "@/components/data-table";
 import type { FilterGroup } from "@/components/filter-bar";
-import type { DayRange } from "@/features/merchant/today/lib/analytics";
+import type { DayRange } from "@/lib/analytics";
 
 import { Skeleton } from "@heroui/react";
 import { useState } from "react";
@@ -42,6 +42,7 @@ import {
 } from "@/features/merchant/today/components/overview-analytics";
 import { WidgetSkeleton } from "@/features/merchant/today/components/overview-pages";
 import { avatarUrl } from "@/lib/avatars";
+import { numberFormat } from "@/lib/format";
 
 type CommissionFilter = "recorded" | "estimated" | "none";
 
@@ -68,7 +69,7 @@ function SingleFigureChart({
   bucketLabel: string;
 }) {
   const { t, intlLocale } = useLocale();
-  const compact = new Intl.NumberFormat(intlLocale, {
+  const compact = numberFormat(intlLocale, {
     notation: "compact",
     maximumFractionDigits: 1,
   });
@@ -174,6 +175,8 @@ function GuestCard({ row }: { row: DashRow }) {
         <img
           alt=""
           className="size-10 shrink-0 rounded-full bg-default object-cover"
+          decoding="async"
+          loading="lazy"
           src={avatarUrl(row.guestName)}
         />
         <div className="flex min-w-0 flex-1 flex-col">
@@ -248,6 +251,8 @@ function TransactionsWidget({
           <img
             alt=""
             className="size-10 shrink-0 rounded-full bg-default object-cover"
+            decoding="async"
+            loading="lazy"
             src={avatarUrl(r.guestName)}
           />
           <div className="flex min-w-0 flex-col gap-0.5">

@@ -5,7 +5,7 @@ import type {
 } from "../hooks/use-sales-overview";
 import type { SalesPeriodId } from "../lib/periods";
 import type { DataTableColumn } from "@/components/data-table";
-import type { DayRange } from "@/features/merchant/today/lib/analytics";
+import type { DayRange } from "@/lib/analytics";
 
 import {
   Button,
@@ -47,14 +47,15 @@ import {
 } from "@/components/icons";
 import { DeltaChip } from "@/components/stat-card";
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
-import { useIsWide } from "@/features/merchant/order-detail/hooks/use-is-wide";
+import { SheetFrame } from "@/components/sheet-frame";
+import { useIsWide } from "@/hooks/use-is-wide";
 import {
   TooltipCard,
   Widget,
 } from "@/features/merchant/today/components/overview-analytics";
 import { WidgetSkeleton } from "@/features/merchant/today/components/overview-pages";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import { numberFormat } from "@/lib/format";
 
 export const noAnimation = { isAnimationActive: false } as const;
 /** Gifts red, tours teal (owner 15.10.2026), in every chart of the page. */
@@ -301,7 +302,7 @@ export function FigureChart({
   view: SalesOverviewView;
 }) {
   const { t, intlLocale } = useLocale();
-  const compact = new Intl.NumberFormat(intlLocale, {
+  const compact = numberFormat(intlLocale, {
     notation: "compact",
     maximumFractionDigits: 1,
   });

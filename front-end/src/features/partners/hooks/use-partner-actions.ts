@@ -4,7 +4,7 @@ import type { DemoData } from "@/features/demo/types";
 import { commissionItems } from "../lib/ledger";
 import { linkOpens } from "../lib/link-opens";
 
-import { useDemo, useDemoNow } from "@/features/demo";
+import { useDemoNow, useDemoActions, useDemoSelector } from "@/features/demo";
 
 export interface NewPartner {
   name: string;
@@ -50,7 +50,9 @@ export function canDeletePartner(
 
 /** M15 and M16 partner management: add, archive, restore, delete (D17), payouts, report link. */
 export function usePartnerActions() {
-  const { state, update } = useDemo();
+  const { update } = useDemoActions();
+  const demoPartners = useDemoSelector((s) => s.data.partners);
+  const role = useDemoSelector((s) => s.role);
   const now = useDemoNow();
 
   const setPartners = (change: (partners: Partner[]) => Partner[]) =>
@@ -65,7 +67,7 @@ export function usePartnerActions() {
       const base = suggestCode(input.name).toLowerCase() || "partner";
       let id = base;
 
-      for (let n = 2; state.data.partners.some((p) => p.id === id); n++) {
+      for (let n = 2; demoPartners.some((p) => p.id === id); n++) {
         id = `${base}-${n}`;
       }
       update((s) => ({
@@ -110,8 +112,8 @@ export function usePartnerActions() {
     recordPayout(
       payout: Omit<PartnerPayout, "id" | "recordedAt" | "recordedBy">,
     ) {
-      if (state.role !== "owner" && state.role !== "manager") return;
-      const recordedBy = state.role;
+      if (role !== "owner" && role !== "manager") return;
+      const recordedBy = role;
 
       update((s) => ({
         ...s,
@@ -131,7 +133,7 @@ export function usePartnerActions() {
     },
     /** M16, Owner only (R10, Q5): the current report link stops working at once. */
     revokeReportLink(partnerId: string) {
-      if (state.role !== "owner") return;
+      if (role !== "owner") return;
       setPartners((partners) =>
         partners.map((p) =>
           p.id === partnerId && p.reportToken
@@ -146,7 +148,7 @@ export function usePartnerActions() {
     },
     /** M16, Owner only (R10): a new private report link after a revoke. */
     issueReportLink(partnerId: string) {
-      if (state.role !== "owner") return;
+      if (role !== "owner") return;
       setPartners((partners) =>
         partners.map((p) =>
           p.id === partnerId && !p.reportToken

@@ -6,7 +6,7 @@ import { AlertRow, CollectWidget, PickupsWidget, Tile } from "./merchant-today";
 import { WidgetSkeleton } from "./overview-pages";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
 import {
   NextDeparturesWidget,
   TourCollectWidget,
@@ -110,8 +110,8 @@ function ColumnHeading({ id, title }: { id: string; title: string }) {
 export function TodayOverview() {
   const { t } = useLocale();
   const today = useMerchantToday();
-  const { state } = useDemo();
-  const hasTours = (state.data.tours?.tours.length ?? 0) > 0;
+  const demoTours = useDemoSelector((s) => s.data.tours);
+  const hasTours = (demoTours?.tours.length ?? 0) > 0;
   const isLoading = useSimulatedLoading();
   const alerts = today.tiles.filter(
     (tile) => (tile.id === "overdue" || tile.id === "owing") && tile.count > 0,

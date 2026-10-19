@@ -30,11 +30,18 @@ import { ClockIcon, PartnersIcon, PayLaterIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { useDemo, useDemoNow } from "@/features/demo";
-import { deltaOf } from "@/features/merchant/today/lib/analytics";
+import { deltaOf } from "@/lib/analytics";
 import { DEMO_HISTORY } from "@/features/merchant/today/lib/demo-history";
 import { formatLabel } from "@/features/orders/lib/labels";
 import { formatOrderDate } from "@/features/orders/lib/format";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import {
+  formatMoney,
+  formatShortDate,
+  numberFormat,
+  dateTimeFormat,
+  calendarDay,
+  percentOf,
+} from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 const periodLabels: Record<ReportPeriod, MessageKey> = {
@@ -67,8 +74,8 @@ const hourLabel = (hour: number) => `${String(hour).padStart(2, "0")}:00`;
 /** "12–18 Oct" for a week inside one month. */
 function dayRange(b: ReportBucket, locale: IntlLocale): string {
   const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(locale, { ...opts, timeZone: "UTC" }).format(
-      new Date(`${iso}T12:00:00Z`),
+    dateTimeFormat(locale, { ...opts, timeZone: "UTC" }).format(
+      calendarDay(iso),
     );
   const month = fmt(b.end, { day: "numeric", month: "short" });
 
@@ -105,6 +112,8 @@ export function usePartnerReport(
     [orders],
   );
   const nowMs = now.getTime();
+  const rangeStart = range?.start;
+  const rangeEnd = range?.end;
   const report = useMemo(
     () =>
       partnerReport(
@@ -113,7 +122,9 @@ export function usePartnerReport(
         period,
         day,
         new Date(nowMs),
-        range && { start: range.start, end: range.end },
+        rangeStart && rangeEnd
+          ? { start: rangeStart, end: rangeEnd }
+          : undefined,
       ),
     [
       withHistory,
@@ -125,8 +136,8 @@ export function usePartnerReport(
       period,
       day,
       nowMs,
-      range?.start,
-      range?.end,
+      rangeStart,
+      rangeEnd,
     ],
   );
   const allTimeData = useMemo(
@@ -197,9 +208,7 @@ export function usePartnerReport(
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale);
   const plural = new Intl.PluralRules(intlLocale);
   const share = (part: number, whole: number) =>
-    new Intl.NumberFormat(intlLocale, { style: "percent" }).format(
-      whole ? part / whole : 0,
-    );
+    percentOf(part, whole, intlLocale);
   const { start, end } = report.range;
 
   const rangeLabel =
@@ -207,11 +216,11 @@ export function usePartnerReport(
       ? formatShortDate(start, today, intlLocale)
       : period === "week"
         ? `${formatShortDate(start, today, intlLocale)} – ${formatShortDate(end, today, intlLocale)}`
-        : new Intl.DateTimeFormat(intlLocale, {
+        : dateTimeFormat(intlLocale, {
             month: "long",
             year: "numeric",
             timeZone: "UTC",
-          }).format(new Date(`${start}T12:00:00Z`));
+          }).format(calendarDay(start));
 
   const ordersText = (count: number) =>
     t(
@@ -292,11 +301,11 @@ export function usePartnerReport(
   const { top, step } = chartScale(
     Math.max(...report.buckets.map((b) => b.recorded + b.estimated)),
   );
-  const francs = new Intl.NumberFormat(intlLocale, {
+  const francs = numberFormat(intlLocale, {
     maximumFractionDigits: 0,
   });
   // Caps and gridlines drop "CHF": the chart subtitle names the unit once.
-  const amount = new Intl.NumberFormat(intlLocale, {
+  const amount = numberFormat(intlLocale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -314,10 +323,10 @@ export function usePartnerReport(
       return `${Number(b.start.slice(8))}–${Number(b.end.slice(8))}`;
     if (b.start === today) return t("partnerReport.chart.today");
 
-    return new Intl.DateTimeFormat(intlLocale, {
+    return dateTimeFormat(intlLocale, {
       weekday: "short",
       timeZone: "UTC",
-    }).format(new Date(`${b.start}T12:00:00Z`));
+    }).format(calendarDay(b.start));
   };
   const columns = report.buckets.map((b) => {
     const label = columnLabel(b);
@@ -436,8 +445,8 @@ export function usePartnerReport(
   ];
 
   const monthName = (iso: string, opts: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, { ...opts, timeZone: "UTC" }).format(
-      new Date(`${iso}T12:00:00Z`),
+    dateTimeFormat(intlLocale, { ...opts, timeZone: "UTC" }).format(
+      calendarDay(iso),
     );
   const allTime: AllTimeCardProps | null = allTimeData && {
     id: "report-alltime",

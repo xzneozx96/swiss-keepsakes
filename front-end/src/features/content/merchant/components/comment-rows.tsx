@@ -68,6 +68,8 @@ function Author({ row }: { row: CommentRowProps }) {
       <img
         alt=""
         className="size-10 shrink-0 rounded-full bg-surface-secondary object-cover"
+        decoding="async"
+        loading="lazy"
         src={row.avatar}
       />
       <div className="flex min-w-0 flex-col">

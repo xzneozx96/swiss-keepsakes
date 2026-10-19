@@ -21,6 +21,7 @@ import {
   missingText,
 } from "../lib/completeness";
 import { textErrors, textFieldError } from "../lib/validation";
+import { markJustCreated, takeJustCreated } from "../lib/just-created";
 import { STORAGE_BUDGET } from "../lib/photo-upload";
 import {
   hasAnyText,
@@ -35,6 +36,10 @@ import { useProductArchive } from "./use-merchant-products";
 import { useLocale } from "@/contexts/locale-context";
 import { isPublished } from "@/features/catalog/lib/publish";
 import { useDemo } from "@/features/demo";
+import {
+  GIFT_STEPS,
+  type GiftStep,
+} from "@/features/merchant/products/lib/search-params";
 
 export interface GiftDraft {
   name: LocalizedText;
@@ -211,20 +216,6 @@ function toProduct(
   };
 }
 
-/** The gift just created by "Add gift": its editor opens with "Saved" in the bar. */
-let justCreated: string | null = null;
-
-/** M12's steps (owner, revision 2), in order; the ids are the `step` search param. */
-export const GIFT_STEPS = [
-  "basics",
-  "options",
-  "pickup",
-  "payment",
-  "story",
-  "review",
-] as const;
-export type GiftStep = (typeof GIFT_STEPS)[number];
-
 /** Which step holds each required text. */
 export const GIFT_TEXT_STEP: Partial<Record<TextFieldId, GiftStep>> = {
   name: "basics",
@@ -315,11 +306,7 @@ export function useGiftEditor(
   );
   /** The save bar confirms a save itself: a toast would cover it on phones. */
   const [justSaved, setJustSaved] = useState(() => {
-    const created = !!product && justCreated === product.id;
-
-    if (created) justCreated = null;
-
-    return created;
+    return !!product && takeJustCreated(product.id);
   });
   const [storageFull, setStorageFull] = useState(false);
   const isNew = !product;
@@ -597,7 +584,7 @@ export function useGiftEditor(
     }));
     setAttempt(null);
     if (!product) {
-      justCreated = next.id;
+      markJustCreated(next.id);
       void navigate({
         to: "/store/products/gifts/$productId",
         params: { productId: next.id },

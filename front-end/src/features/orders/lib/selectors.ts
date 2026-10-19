@@ -4,6 +4,7 @@ import type { DemoData } from "@/features/demo/types";
 
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { availableUnits } from "@/features/catalog/lib/stock";
+import { calendarDay } from "@/lib/format";
 
 const HOUR_MS = 3_600_000;
 
@@ -55,7 +56,7 @@ export function amountDueNow(order: Order): Rappen {
 }
 
 function addDays(isoDate: string, days: number): string {
-  const d = new Date(`${isoDate}T12:00:00Z`);
+  const d = calendarDay(isoDate);
 
   d.setUTCDate(d.getUTCDate() + days);
 

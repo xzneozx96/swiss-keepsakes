@@ -31,8 +31,9 @@ import { useDepartureActions } from "../hooks/use-tour-editor";
 
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDate } from "@/features/catalog/lib/pickup";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 import { useTourFormatting } from "@/features/tours/merchant/shared";
+import { dateTimeFormat } from "@/lib/format";
 
 const ZONE = "Europe/Zurich";
 
@@ -97,7 +98,7 @@ export function NewDepartureSheet({
   const [time, setTime] = useState<Time>(() =>
     parseTime(
       latest
-        ? new Intl.DateTimeFormat("en-GB", {
+        ? dateTimeFormat("en-GB", {
             timeZone: ZONE,
             hour: "2-digit",
             minute: "2-digit",

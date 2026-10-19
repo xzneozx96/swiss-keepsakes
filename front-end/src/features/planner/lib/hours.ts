@@ -1,5 +1,7 @@
 import { PLACES, RESTAURANTS, type Place } from "../data/places";
 
+import { dateTimeFormat, calendarDay } from "@/lib/format";
+
 export const WINDOW_FROM = "2026-10-17";
 export const WINDOW_TO = "2027-03-31";
 
@@ -13,26 +15,26 @@ export const fmt = (min: number) =>
   `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`;
 
 /** Day of week for an ISO date, 0 = Sunday. */
-export const dow = (iso: string) => new Date(`${iso}T12:00:00Z`).getUTCDay();
+export const dow = (iso: string) => calendarDay(iso).getUTCDay();
 
 const between = (iso: string, from: string, to: string) =>
   iso >= from && iso <= to;
 
 export const dayLabel = (iso: string) =>
-  new Intl.DateTimeFormat("en-GB", {
+  dateTimeFormat("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long",
     timeZone: "UTC",
-  }).format(new Date(`${iso}T12:00:00Z`));
+  }).format(calendarDay(iso));
 
 export const shortDay = (iso: string) =>
-  new Intl.DateTimeFormat("en-GB", {
+  dateTimeFormat("en-GB", {
     weekday: "short",
     day: "numeric",
     month: "short",
     timeZone: "UTC",
-  }).format(new Date(`${iso}T12:00:00Z`));
+  }).format(calendarDay(iso));
 
 /** Earliest and latest minute a visit can start, or why the place is closed that day. */
 export type Hours = { open: number; last: number } | { closed: string };

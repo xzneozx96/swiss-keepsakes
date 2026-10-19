@@ -14,6 +14,7 @@ import { mailTourGuest, mailTourStaff } from "./mail";
 
 import { zurichDate } from "@/features/catalog/lib/pickup";
 import { demoNow } from "@/features/demo/clock";
+import { findDuplicatePayment } from "@/lib/payments";
 
 /**
  * Merchant-side tour transitions (steps 2.11–2.14) as pure functions over the demo state.
@@ -27,8 +28,6 @@ export interface StaffContext {
   language: Language;
 }
 
-/** Same window as the gift M08 duplicate check. */
-const DUPLICATE_WINDOW_MS = 10 * 60_000;
 const DAY_MS = 86_400_000;
 
 export type ExternalPaymentInput = ExternalTourPayment & {
@@ -96,11 +95,10 @@ export function externalPaymentBlock(
 
   if (input.amount > owed) return { code: "above-balance", balance: owed };
   if (Date.parse(input.at) > now.getTime()) return { code: "future-time" };
-  const duplicate = booking.payments.find(
-    (p) =>
-      p.status === "succeeded" &&
-      p.amount === input.amount &&
-      Math.abs(Date.parse(p.at) - Date.parse(input.at)) <= DUPLICATE_WINDOW_MS,
+  const duplicate = findDuplicatePayment(
+    booking.payments,
+    input.amount,
+    input.at,
   );
 
   return duplicate && !input.allowDuplicate

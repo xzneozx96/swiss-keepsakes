@@ -7,7 +7,7 @@ import { useState } from "react";
 import { NO_FILTERS } from "../lib/money";
 
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 
 type FilterKey = "source" | "type" | "group" | "item";
 

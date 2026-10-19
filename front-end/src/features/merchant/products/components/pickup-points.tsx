@@ -31,7 +31,7 @@ import { LanguageChip } from "./status-chips";
 import { ChevronRightIcon, ClockIcon, PickupIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { useDemo } from "@/features/demo";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 import { pickText } from "@/lib/localized";
 
 type PlaceDraft = Pick<

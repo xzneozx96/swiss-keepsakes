@@ -5,6 +5,8 @@ import { flushSync } from "react-dom";
 
 import { reducedMotion } from "./map-shared";
 
+import { useLatest } from "@/hooks/use-latest";
+
 const THRESHOLD = 4;
 const EDGE = 72;
 const SCROLL_STEP = 14;
@@ -42,30 +44,33 @@ export function useStopDrag({
 }) {
   const drag = useRef<Drag | null>(null);
   const frame = useRef(0);
-  const callbacks = useRef({ onStart, onDrop });
+  const callbacks = useLatest({ onStart, onDrop });
 
-  callbacks.current = { onStart, onDrop };
+  const items = useCallback(
+    () => Array.from(listRef.current?.children ?? []) as HTMLElement[],
+    [listRef],
+  );
 
-  const items = () =>
-    Array.from(listRef.current?.children ?? []) as HTMLElement[];
+  const finish = useCallback(
+    (commit: boolean) => {
+      const current = drag.current;
 
-  const finish = useCallback((commit: boolean) => {
-    const current = drag.current;
-
-    drag.current = null;
-    cancelAnimationFrame(frame.current);
-    document.body.style.userSelect = "";
-    document.body.style.cursor = "";
-    for (const item of items()) {
-      item.style.transform = "";
-      item.style.transition = "";
-      item.style.zIndex = "";
-      item.removeAttribute("data-lifted");
-    }
-    if (placeholderRef.current) placeholderRef.current.hidden = true;
-    if (current?.active && commit && current.to !== current.from)
-      callbacks.current.onDrop(current.from, current.to);
-  }, []);
+      drag.current = null;
+      cancelAnimationFrame(frame.current);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+      for (const item of items()) {
+        item.style.transform = "";
+        item.style.transition = "";
+        item.style.zIndex = "";
+        item.removeAttribute("data-lifted");
+      }
+      if (placeholderRef.current) placeholderRef.current.hidden = true;
+      if (current?.active && commit && current.to !== current.from)
+        callbacks.current.onDrop(current.from, current.to);
+    },
+    [items, placeholderRef, callbacks],
+  );
 
   useEffect(() => () => finish(false), [finish]);
 

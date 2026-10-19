@@ -1,5 +1,6 @@
 import type { ProductAction } from "./product-rows";
-import type { ProductRow, ProductTab } from "../hooks/use-merchant-products";
+import type { ProductRow } from "../hooks/use-merchant-products";
+import type { ProductTab } from "@/features/merchant/products/lib/search-params";
 
 import { Skeleton, buttonVariants, toast } from "@heroui/react";
 import { Link, useNavigate } from "@tanstack/react-router";

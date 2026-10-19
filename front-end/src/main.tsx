@@ -6,7 +6,11 @@ import {
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 
-import { LocaleProvider } from "@/contexts/locale-context";
+import {
+  LocaleProvider,
+  loadDictionary,
+  storedLanguage,
+} from "@/contexts/locale-context";
 import { DemoProvider } from "@/features/demo";
 import { routeTree } from "@/routeTree.gen";
 import "@/styles/globals.css";
@@ -34,13 +38,19 @@ declare module "@tanstack/react-router" {
 const rootElement = document.getElementById("root")!;
 
 if (!rootElement.innerHTML) {
-  ReactDOM.createRoot(rootElement).render(
-    <StrictMode>
-      <LocaleProvider>
-        <DemoProvider>
-          <RouterProvider router={router} />
-        </DemoProvider>
-      </LocaleProvider>
-    </StrictMode>,
-  );
+  // Whoever saved German waits for its chunk before the first paint; everyone else already has English.
+  // If German cannot be fetched the app still starts, in English.
+  void loadDictionary(storedLanguage())
+    .catch(() => undefined)
+    .then(() => {
+      ReactDOM.createRoot(rootElement).render(
+        <StrictMode>
+          <LocaleProvider>
+            <DemoProvider>
+              <RouterProvider router={router} />
+            </DemoProvider>
+          </LocaleProvider>
+        </StrictMode>,
+      );
+    });
 }

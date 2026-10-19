@@ -16,7 +16,6 @@ import {
   move,
   newBlock,
   newSection,
-  slugify,
   toForm,
   uniqueValue,
   validate,
@@ -32,6 +31,7 @@ import { isSoldOut } from "@/features/catalog/lib/stock";
 import { useDemo } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { pickText } from "@/lib/localized";
+import { slugify } from "@/lib/slug";
 
 export type SaveMode = "draft" | "publish";
 
@@ -268,7 +268,7 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       }));
     } else {
       const slug = uniqueValue(
-        slugify(content.title),
+        slugify(content.title) || "story",
         new Set(articles.map((a) => a.slug)),
       );
 

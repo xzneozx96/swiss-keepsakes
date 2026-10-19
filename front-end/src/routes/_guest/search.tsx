@@ -11,8 +11,9 @@ import { useProductCard } from "@/features/catalog/hooks/use-product-card";
 import { isPublished } from "@/features/catalog/lib/publish";
 import { categories } from "@/features/catalog/categories";
 import { publishedArticles } from "@/features/content/lib/articles";
-import { useDemo } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
 import { GlobalSearch } from "@/features/search/components/global-search";
+import { useUrlInput } from "@/hooks/use-url-input";
 import { formatMoney } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
@@ -25,20 +26,28 @@ export const Route = createFileRoute("/_guest/search")({
 
 function SearchPage() {
   const { t, language, intlLocale } = useLocale();
-  const { state } = useDemo();
+  const demoArticles = useDemoSelector((s) => s.data.articles);
+  const products = useDemoSelector((s) => s.data.products);
+  const subcategories = useDemoSelector((s) => s.data.subcategories);
+  const demoTours = useDemoSelector((s) => s.data.tours);
   const { q = "" } = Route.useSearch();
   const navigate = useNavigate({ from: "/search" });
   const router = useRouter();
   const toCard = useProductCard();
+  const { value, setValue, deferred } = useUrlInput(
+    q,
+    (next) =>
+      void navigate({ search: { q: next || undefined }, replace: true }),
+  );
 
-  const query = q.trim().toLocaleLowerCase(intlLocale);
+  const query = deferred.trim().toLocaleLowerCase(intlLocale);
   const matches = (...texts: (string | undefined)[]) =>
     texts.some((text) => text?.toLocaleLowerCase(intlLocale).includes(query));
 
   const groups: SearchResultGroup[] = [];
 
   if (query) {
-    const gifts = state.data.products
+    const gifts = products
       .filter(
         (p) =>
           isPublished(p) &&
@@ -48,7 +57,7 @@ function SearchPage() {
           ),
       )
       .map(toCard);
-    const tours = (state.data.tours?.tours ?? []).filter(
+    const tours = (demoTours?.tours ?? []).filter(
       (tour) =>
         tour.published &&
         matches(
@@ -56,8 +65,8 @@ function SearchPage() {
           pickText(tour.summary, language).text,
         ),
     );
-    const stories = publishedArticles(state.data.articles, language).filter(
-      (story) => matches(story.title, story.excerpt),
+    const stories = publishedArticles(demoArticles, language).filter((story) =>
+      matches(story.title, story.excerpt),
     );
 
     if (gifts.length)
@@ -102,11 +111,11 @@ function SearchPage() {
         title: t("search.browse"),
         // The store's keepsake sub-categories that have something to buy, then tours.
         items: [
-          ...state.data.subcategories
+          ...subcategories
             .filter(
               (c) =>
                 c.categoryId === "keepsakes" &&
-                state.data.products.some(
+                products.some(
                   (p) => p.subcategoryId === c.id && isPublished(p),
                 ),
             )
@@ -130,15 +139,13 @@ function SearchPage() {
       label={t("search.label")}
       noResults={
         query && groups.length === 0
-          ? t("search.noResults", { query: q.trim() })
+          ? t("search.noResults", { query: deferred.trim() })
           : null
       }
       placeholder={t("search.placeholder")}
-      query={q}
+      query={value}
       onBack={() => router.history.back()}
-      onQueryChange={(value) =>
-        void navigate({ search: { q: value || undefined }, replace: true })
-      }
+      onQueryChange={setValue}
     />
   );
 }

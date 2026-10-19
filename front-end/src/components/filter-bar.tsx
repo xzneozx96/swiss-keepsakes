@@ -10,8 +10,8 @@ import { useState } from "react";
 
 import { CloseIcon, FilterIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
-import { useIsWide } from "@/features/merchant/order-detail/hooks/use-is-wide";
+import { SheetFrame } from "@/components/sheet-frame";
+import { useIsWide } from "@/hooks/use-is-wide";
 
 export interface FilterOption {
   id: string;

@@ -1,7 +1,9 @@
 import type { DayMode, Product } from "../types";
 
+import { dateTimeFormat, calendarDay } from "@/lib/format";
+
 // Built once: a new Intl formatter costs about 50 µs, and analytics ask for thousands of days.
-const zurichDay = new Intl.DateTimeFormat("en-CA", {
+const zurichDay = dateTimeFormat("en-CA", {
   timeZone: "Europe/Zurich",
   year: "numeric",
   month: "2-digit",
@@ -28,7 +30,7 @@ export function zurichDayOf(iso: string): string {
 }
 
 function addDays(isoDate: string, days: number): string {
-  const d = new Date(`${isoDate}T12:00:00Z`);
+  const d = calendarDay(isoDate);
 
   d.setUTCDate(d.getUTCDate() + days);
 
@@ -36,7 +38,7 @@ function addDays(isoDate: string, days: number): string {
 }
 
 function weekday(isoDate: string): number {
-  return new Date(`${isoDate}T12:00:00Z`).getUTCDay();
+  return calendarDay(isoDate).getUTCDay();
 }
 
 function isWeekend(isoDate: string): boolean {

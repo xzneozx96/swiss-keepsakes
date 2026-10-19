@@ -138,6 +138,8 @@ export function DiscoveryHome({
             <img
               alt=""
               className="h-auto max-h-11 w-full max-w-[232px] object-contain object-left"
+              decoding="async"
+              loading="lazy"
               src={brandLogo}
             />
           </Link>

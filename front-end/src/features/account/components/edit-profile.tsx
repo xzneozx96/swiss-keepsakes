@@ -18,7 +18,8 @@ import { GuestAvatar } from "./guest-avatar";
 import { useConfirm } from "@/components/confirm-dialog";
 import { CameraIcon, StatusDangerIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoActions } from "@/features/demo";
+import { numberFormat } from "@/lib/format";
 
 const errorKey = {
   type: "account.edit.photo.errorType",
@@ -33,7 +34,7 @@ const errorKey = {
  */
 export function EditProfile({ guest }: { guest: Guest }) {
   const { t, intlLocale } = useLocale();
-  const { update } = useDemo();
+  const { update } = useDemoActions();
   const router = useRouter();
   const navigate = useNavigate();
   const canGoBack = useCanGoBack();
@@ -62,7 +63,7 @@ export function EditProfile({ guest }: { guest: Guest }) {
   const pick = async (file: File | undefined) => {
     if (!file) return;
     const megabytes = (bytes: number) =>
-      new Intl.NumberFormat(intlLocale, { maximumFractionDigits: 1 }).format(
+      numberFormat(intlLocale, { maximumFractionDigits: 1 }).format(
         bytes / 1024 / 1024,
       );
     const fail = (kind: AvatarPickError) =>

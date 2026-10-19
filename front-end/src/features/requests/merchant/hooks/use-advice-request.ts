@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { replyHref } from "./use-merchant-requests";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { formatOrderDateTime } from "@/features/orders/lib/format";
 
@@ -31,8 +31,9 @@ export interface AdviceRequestView {
  */
 export function useAdviceRequest(id: string): AdviceRequestView | null {
   const { t, intlLocale } = useLocale();
-  const { state, update } = useDemo();
-  const request = state.data.adviceRequests.find((r) => r.id === id);
+  const { update } = useDemoActions();
+  const adviceRequests = useDemoSelector((s) => s.data.adviceRequests);
+  const request = adviceRequests.find((r) => r.id === id);
   const isUnread = !!request && !request.readAt;
 
   useEffect(() => {

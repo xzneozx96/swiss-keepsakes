@@ -30,6 +30,7 @@ export function GuestAvatar({
     <img
       alt=""
       className={`shrink-0 rounded-full bg-default object-cover ${className}`}
+      decoding="async"
       src={src}
     />
   );

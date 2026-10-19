@@ -90,15 +90,17 @@ export function TourReviewPage({ slug }: { slug: string }) {
 
       return;
     }
-    // The seats went between the check and the save: nothing was created.
-    setCreated(undefined);
-    setError({ code: "capacity" });
+    // The seats went between the check and the save: nothing was created. The capacity error
+    // below shows it, and the next tap may submit again.
     submitting.current = false;
   }, [created, createdBooking, navigate]);
 
+  const savedNothing = !!created && !createdBooking;
+
   useEffect(() => {
-    if (error) alertRef.current?.scrollIntoView({ block: "center" });
-  }, [error]);
+    if (error || savedNothing)
+      alertRef.current?.scrollIntoView({ block: "center" });
+  }, [error, savedNothing]);
 
   if (!tour || !departure)
     return (
@@ -122,13 +124,15 @@ export function TourReviewPage({ slug }: { slug: string }) {
   // true, and rechecked on submit.
   const shownError =
     error ??
-    (created
-      ? undefined
-      : held
-        ? { code: "held", bookingId: held.id }
-        : participantSeats(draft) > availableSeats(data, departure.id, now)
-          ? { code: "capacity" }
-          : undefined);
+    (savedNothing
+      ? { code: "capacity" }
+      : created
+        ? undefined
+        : held
+          ? { code: "held", bookingId: held.id }
+          : participantSeats(draft) > availableSeats(data, departure.id, now)
+            ? { code: "capacity" }
+            : undefined);
   const submit = () =>
     requireSignIn(() => {
       if (submitting.current) return;
@@ -440,7 +444,12 @@ export function TourReviewPage({ slug }: { slug: string }) {
               </p>
             </section>
           )}
-          <Button fullWidth isDisabled={!!created} size="lg" type="submit">
+          <Button
+            fullWidth
+            isDisabled={!!createdBooking}
+            size="lg"
+            type="submit"
+          >
             {!signedIn
               ? t("auth.account.signIn")
               : departure.policy === "later"

@@ -32,7 +32,12 @@ import {
   progressLabel,
 } from "@/features/orders/lib/labels";
 import { orderTotal } from "@/features/orders/lib/selectors";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import {
+  formatMoney,
+  formatShortDate,
+  dateTimeFormat,
+  calendarDay,
+} from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 /** Lab: roomier M03 order cards with a gift photo. Not part of the product. */
@@ -148,8 +153,8 @@ function useLabRows(): LabOrderRow[] {
   const pick = (text: Partial<Record<"en" | "de", string>>) =>
     pickText(text, language).text;
   const part = (iso: string, option: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, { ...option, timeZone: "UTC" }).format(
-      new Date(`${iso}T12:00:00Z`),
+    dateTimeFormat(intlLocale, { ...option, timeZone: "UTC" }).format(
+      calendarDay(iso),
     );
 
   const open = orders

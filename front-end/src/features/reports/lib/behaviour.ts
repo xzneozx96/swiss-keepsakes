@@ -1,10 +1,11 @@
 import type { ReportTx } from "./transactions";
 import type { DemoData } from "@/features/demo/types";
-import type { DayRange } from "@/features/merchant/today/lib/analytics";
+import type { DayRange } from "@/lib/analytics";
 
 import { zurichDayOf } from "@/features/catalog/lib/pickup";
 import { prng } from "@/features/merchant/today/lib/demo-history";
 import { linkOpens } from "@/features/partners/lib/link-opens";
+import { calendarDay } from "@/lib/format";
 
 export const FUNNEL_STEPS = [
   "visits",
@@ -70,7 +71,7 @@ export function funnel(
   const days: string[] = [];
 
   for (
-    let d = new Date(`${range.start}T12:00:00Z`);
+    let d = calendarDay(range.start);
     d.toISOString().slice(0, 10) <= range.end;
     d.setUTCDate(d.getUTCDate() + 1)
   )
@@ -118,7 +119,7 @@ function sumDays(range: DayRange, perDay: (day: string) => number): number {
   let sum = 0;
 
   for (
-    let d = new Date(`${range.start}T12:00:00Z`);
+    let d = calendarDay(range.start);
     d.toISOString().slice(0, 10) <= range.end;
     d.setUTCDate(d.getUTCDate() + 1)
   ) {

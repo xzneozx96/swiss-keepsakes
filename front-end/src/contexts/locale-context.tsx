@@ -8,18 +8,72 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
-import { de } from "@/i18n/de";
 import { en } from "@/i18n/en";
 import { readStored, writeStored } from "@/lib/storage";
 
 export type Language = "en" | "de";
 
-const messages: Record<Language, Record<MessageKey, string>> = { en, de };
+type Dictionary = Record<MessageKey, string>;
+
+const loaded: Partial<Record<Language, Dictionary>> = { en };
+const loaders: Record<Language, () => Promise<Dictionary>> = {
+  en: () => Promise.resolve(en),
+  de: () => import("@/i18n/de").then((module) => module.de),
+};
 const intlLocales: Record<Language, IntlLocale> = { en: "en-CH", de: "de-CH" };
 const STORAGE_KEY = "sk.language";
+
+/** Only English ships in the first load. German is its own chunk, fetched once it is needed. */
+export function loadDictionary(language: Language): Promise<Dictionary> {
+  return loaders[language]().then((dictionary) => {
+    loaded[language] = dictionary;
+
+    return dictionary;
+  });
+}
+
+export function storedLanguage(): Language {
+  return readStored<unknown>(STORAGE_KEY, "en") === "de" ? "de" : "en";
+}
+
+/** The saved language, or English when its messages could not be loaded (offline, a stale page). The saved choice stays, so the next visit tries again. */
+function initialLanguage(): Language {
+  const saved = storedLanguage();
+
+  return loaded[saved] ? saved : "en";
+}
+
+function dictionaryOf(language: Language): Dictionary {
+  const dictionary = loaded[language];
+
+  if (!dictionary) throw new Error(`The ${language} messages are not loaded`);
+
+  return dictionary;
+}
+
+function useDictionary(language: Language): Dictionary | undefined {
+  const [, setLoadedCount] = useState(0);
+
+  useEffect(() => {
+    if (loaded[language]) return;
+    let live = true;
+
+    loadDictionary(language).then(
+      () => live && setLoadedCount((count) => count + 1),
+      () => undefined,
+    );
+
+    return () => {
+      live = false;
+    };
+  }, [language]);
+
+  return loaded[language];
+}
 
 interface LocaleContextValue {
   language: Language;
@@ -41,13 +95,22 @@ function fill(text: string, vars?: Record<string, string | number>): string {
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() =>
-    readStored<unknown>(STORAGE_KEY, "en") === "de" ? "de" : "en",
-  );
+  const [language, setLanguageState] = useState<Language>(initialLanguage);
+  const latestRequest = useRef(0);
 
   const setLanguage = useCallback((next: Language) => {
-    setLanguageState(next);
-    writeStored(STORAGE_KEY, next);
+    // The last tap wins, even if an earlier language arrives after it. If the messages cannot
+    // be loaded the guest stays in the current language.
+    const request = ++latestRequest.current;
+
+    loadDictionary(next).then(
+      () => {
+        if (request !== latestRequest.current) return;
+        setLanguageState(next);
+        writeStored(STORAGE_KEY, next);
+      },
+      () => undefined,
+    );
   }, []);
 
   useEffect(() => {
@@ -59,7 +122,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       language,
       intlLocale: intlLocales[language],
       setLanguage,
-      t: (key, vars) => fill(messages[language][key], vars),
+      t: (key, vars) => fill(dictionaryOf(language)[key], vars),
     }),
     [language, setLanguage],
   );
@@ -83,15 +146,19 @@ export function LocaleOverride({
   language: Language;
   children: React.ReactNode;
 }) {
-  const value = useMemo<LocaleContextValue>(
-    () => ({
-      language,
-      intlLocale: intlLocales[language],
-      setLanguage: () => undefined,
-      t: (key, vars) => fill(messages[language][key], vars),
-    }),
-    [language],
+  const messages = useDictionary(language);
+  const value = useMemo<LocaleContextValue | undefined>(
+    () =>
+      messages && {
+        language,
+        intlLocale: intlLocales[language],
+        setLanguage: () => undefined,
+        t: (key, vars) => fill(messages[key], vars),
+      },
+    [language, messages],
   );
+
+  if (!value) return null;
 
   return (
     <LocaleContext.Provider value={value}>

@@ -1,5 +1,7 @@
 import type { Tour } from "../types";
 
+import { memo } from "react";
+
 import { ListingCard } from "@/components/listing-card";
 import { StatusChip } from "@/components/status-chip";
 import { useLocale } from "@/contexts/locale-context";
@@ -15,7 +17,7 @@ import { formatMoney, formatShortDate } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 /** A tour on the shared gift and tour card: C08 list (grid) and the home Tours rail (carousel). */
-export function TourCard({
+export const TourCard = memo(function TourCard({
   tour,
   layout,
 }: {
@@ -101,4 +103,4 @@ export function TourCard({
       to="/tours/$slug"
     />
   );
-}
+});

@@ -9,6 +9,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { DeltaChip } from "@/components/stat-card";
 import { useLocale } from "@/contexts/locale-context";
 import { Widget } from "@/features/merchant/today/components/overview-analytics";
+import { numberFormat } from "@/lib/format";
 
 const noAnimation = { isAnimationActive: false } as const;
 const pct = (share: number) => `${(share * 100).toFixed(2)}%`;
@@ -97,7 +98,7 @@ export function BalanceHero({
   const [active, setActive] = useState<number | null>(null);
   const total = balance.parts.reduce((sum, p) => sum + p.amount, 0);
   const shown = active === null ? null : balance.parts[active];
-  const percent = new Intl.NumberFormat(intlLocale, { style: "percent" });
+  const percent = numberFormat(intlLocale, { style: "percent" });
 
   return (
     <section
@@ -199,7 +200,7 @@ export function MonthsWidget({
   onSelect: (monthStart: string) => void;
 }) {
   const { t, intlLocale } = useLocale();
-  const amount = new Intl.NumberFormat(intlLocale, {
+  const amount = numberFormat(intlLocale, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

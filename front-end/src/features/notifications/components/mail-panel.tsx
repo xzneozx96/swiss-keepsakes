@@ -1,12 +1,12 @@
-import type { Mail } from "../types";
-
-import { Button, Drawer, Tabs, buttonVariants } from "@heroui/react";
-import { useState } from "react";
-
-import { renderMail } from "./render-mail";
+import { Button, Drawer, Tabs } from "@heroui/react";
+import { Suspense, lazy, useState } from "react";
 
 import { EmailIcon } from "@/components/icons";
 import { useDemo } from "@/features/demo";
+
+const MailList = lazy(() =>
+  import("./mail-list").then((module) => ({ default: module.MailList })),
+);
 
 /**
  * Prototype Mail panel (outline §3): emails are never sent; each one the demo "sends"
@@ -50,131 +50,42 @@ export function MailPanel() {
                 Emails are not sent in the prototype. Each one appears here, in
                 the recipient’s language, newest first.
               </p>
-              <Tabs className="w-full">
-                <Tabs.ListContainer>
-                  <Tabs.List aria-label="Recipient">
-                    <Tabs.Tab id="guest">
-                      Guest ({guestMail.length})
-                      <Tabs.Indicator />
-                    </Tabs.Tab>
-                    <Tabs.Tab id="staff">
-                      Staff ({staffMail.length})
-                      <Tabs.Indicator />
-                    </Tabs.Tab>
-                    <Tabs.Tab id="partner">
-                      Partner ({partnerMail.length})
-                      <Tabs.Indicator />
-                    </Tabs.Tab>
-                  </Tabs.List>
-                </Tabs.ListContainer>
-                <Tabs.Panel className="pt-3" id="guest">
-                  <MailList items={guestMail} />
-                </Tabs.Panel>
-                <Tabs.Panel className="pt-3" id="staff">
-                  <MailList
-                    items={staffMail}
-                    onOpenLink={() => setOpen(false)}
-                  />
-                </Tabs.Panel>
-                <Tabs.Panel className="pt-3" id="partner">
-                  <MailList items={partnerMail} />
-                </Tabs.Panel>
-              </Tabs>
+              <Suspense fallback={null}>
+                <Tabs className="w-full">
+                  <Tabs.ListContainer>
+                    <Tabs.List aria-label="Recipient">
+                      <Tabs.Tab id="guest">
+                        Guest ({guestMail.length})
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                      <Tabs.Tab id="staff">
+                        Staff ({staffMail.length})
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                      <Tabs.Tab id="partner">
+                        Partner ({partnerMail.length})
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                    </Tabs.List>
+                  </Tabs.ListContainer>
+                  <Tabs.Panel className="pt-3" id="guest">
+                    <MailList items={guestMail} />
+                  </Tabs.Panel>
+                  <Tabs.Panel className="pt-3" id="staff">
+                    <MailList
+                      items={staffMail}
+                      onOpenLink={() => setOpen(false)}
+                    />
+                  </Tabs.Panel>
+                  <Tabs.Panel className="pt-3" id="partner">
+                    <MailList items={partnerMail} />
+                  </Tabs.Panel>
+                </Tabs>
+              </Suspense>
             </Drawer.Body>
           </Drawer.Dialog>
         </Drawer.Content>
       </Drawer.Backdrop>
     </Drawer>
   );
-}
-
-function MailList({
-  items,
-  onOpenLink,
-}: {
-  items: Mail[];
-  /** A mail's link was followed (N16, N17): close the panel. */
-  onOpenLink?: () => void;
-}) {
-  const { state, setRole } = useDemo();
-
-  if (items.length === 0) {
-    return (
-      <p className="py-6 text-center text-sm text-muted">No emails yet.</p>
-    );
-  }
-
-  return (
-    <ul className="flex flex-col gap-2">
-      {items.map((mail, i) => {
-        const { subject, body, link } = renderMail(
-          mail,
-          state.data.pickupPlaces,
-        );
-        const guest = state.data.guests.find((g) => g.id === mail.guestId);
-        const partner = state.data.partners.find(
-          (p) => p.id === mail.partnerId,
-        );
-        const to = mail.recipient
-          ? mail.recipient
-          : mail.to === "staff"
-            ? "Shop staff (Chị Ngọc, Lukas)"
-            : partner
-              ? `${partner.name} <${partner.email}>`
-              : guest
-                ? `${guest.name} <${String(mail.params.email ?? guest.email)}>`
-                : "Guest";
-
-        return (
-          <li key={mail.id}>
-            <details
-              className="group rounded-2xl border border-separator bg-surface"
-              open={i === 0}
-            >
-              <summary className="flex cursor-pointer list-none flex-col gap-0.5 rounded-2xl px-4 py-3 outline-none focus-visible:focus-ring">
-                <span className="flex items-center gap-2 font-mono text-[11px] text-muted">
-                  <span className="rounded bg-surface-secondary px-1.5">
-                    {mail.template}
-                  </span>
-                  {mail.language.toUpperCase()} · {formatSentAt(mail.at)}
-                </span>
-                <span className="text-sm font-semibold">{subject}</span>
-              </summary>
-              <div className="flex flex-col gap-3 border-t border-separator px-4 py-3 text-sm">
-                <p className="text-xs text-muted">To: {to}</p>
-                {body.map((paragraph, n) => (
-                  <p key={n}>{paragraph}</p>
-                ))}
-                {link && (
-                  // Opens the shop as the recipient when the presenter is not a merchant yet.
-                  <a
-                    className={`${buttonVariants({ variant: "secondary", size: "sm" })} w-fit`}
-                    href={link.href}
-                    onClick={() => {
-                      if (state.role !== "owner" && state.role !== "manager")
-                        setRole(link.role);
-                      onOpenLink?.();
-                    }}
-                  >
-                    {link.label}
-                  </a>
-                )}
-              </div>
-            </details>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function formatSentAt(iso: string): string {
-  return new Intl.DateTimeFormat("de-CH", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Europe/Zurich",
-  }).format(new Date(iso));
 }

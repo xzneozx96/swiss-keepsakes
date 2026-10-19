@@ -8,7 +8,7 @@ import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from "../types";
 import { useProductCard } from "@/features/catalog/hooks/use-product-card";
 import { isPublished } from "@/features/catalog/lib/publish";
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
 import { avatarUrl } from "@/lib/avatars";
 import { formatDate } from "@/lib/format";
@@ -58,17 +58,21 @@ const published = (a: Article) => a.publication.status === "published";
  */
 export function useArticle(slug: string): ArticleView | null {
   const { t, language, intlLocale } = useLocale();
-  const { state, update } = useDemo();
+  const { update } = useDemoActions();
+  const demoArticles = useDemoSelector((s) => s.data.articles);
+  const demoComments = useDemoSelector((s) => s.data.comments);
+  const demoGuests = useDemoSelector((s) => s.data.guests);
+  const products = useDemoSelector((s) => s.data.products);
+  const signedInGuestId = useDemoSelector((s) => s.data.signedInGuestId);
+  const demoTours = useDemoSelector((s) => s.data.tours);
   const toCard = useProductCard();
 
-  const versions = state.data.articles.filter(
-    (a) => a.slug === slug && published(a),
-  );
+  const versions = demoArticles.filter((a) => a.slug === slug && published(a));
   const article = versions.find((a) => a.language === language) ?? versions[0];
 
   if (!article) return null;
 
-  const guests = new Map(state.data.guests.map((g) => [g.id, g]));
+  const guests = new Map(demoGuests.map((g) => [g.id, g]));
   const date = (iso: string) => formatDate(new Date(iso), intlLocale);
   const toView = (c: ArticleComment): CommentView => {
     const isShop = c.author.kind === "shop";
@@ -88,7 +92,7 @@ export function useArticle(slug: string): ArticleView | null {
     };
   };
 
-  const shown = state.data.comments.filter(
+  const shown = demoComments.filter(
     (c) => c.articleId === article.id && !c.hidden,
   );
   const shownIds = new Set(shown.map((c) => c.id));
@@ -110,7 +114,7 @@ export function useArticle(slug: string): ArticleView | null {
     }));
 
   const relatedStories = () => {
-    const others = publishedArticles(state.data.articles, language).filter(
+    const others = publishedArticles(demoArticles, language).filter(
       (a) => a.slug !== article.slug,
     );
     const picked = article.related.flatMap(
@@ -127,7 +131,7 @@ export function useArticle(slug: string): ArticleView | null {
       }));
   };
 
-  const guestId = state.data.signedInGuestId;
+  const guestId = signedInGuestId;
   const guest = guestId ? guests.get(guestId) : undefined;
   const publishedAt =
     article.publication.status === "published"
@@ -146,11 +150,11 @@ export function useArticle(slug: string): ArticleView | null {
       .slice(0, MAX_ARTICLE_LINKS)
       .flatMap<ArticleView["links"][number]>((link) => {
         if (link.kind === "tour") {
-          const tour = state.data.tours?.tours.find((x) => x.id === link.id);
+          const tour = demoTours?.tours.find((x) => x.id === link.id);
 
           return tour?.published ? [{ kind: "tour" as const, tour }] : [];
         }
-        const product = state.data.products.find((p) => p.id === link.id);
+        const product = products.find((p) => p.id === link.id);
 
         return product && isPublished(product)
           ? [{ kind: "gift" as const, card: toCard(product) }]

@@ -9,7 +9,7 @@ import { LANGUAGES } from "../lib/completeness";
 import { ChevronRightIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
 import { RowIcon, rowClass } from "@/features/account/components/settings-list";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 
 /** A hairline above every row but the first, inset past the icon tile (as on the account screen). */
 export const rowHairline =

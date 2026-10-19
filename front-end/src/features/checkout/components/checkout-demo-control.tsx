@@ -4,7 +4,7 @@ import { Button } from "@heroui/react";
 
 import { selectedCartLines } from "@/features/cart/lib/group-cart";
 import { variantAvailable } from "@/features/orders/lib/selectors";
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 
 /**
  * Lowers the on-hand stock of the first ticked cart gift's option to the units accepted orders
@@ -37,14 +37,15 @@ function sellOutFirstCartItem(s: DemoState): DemoState {
 
 /** Prototype-bar control (English, outside the product UI) for the C06 stock error. */
 export function CheckoutDemoControl({ onDone }: { onDone: () => void }) {
-  const { state, update } = useDemo();
+  const { update } = useDemoActions();
+  const demoCart = useDemoSelector((s) => s.data.cart);
 
   return (
     <div className="flex flex-col gap-2">
       <p className="text-sm font-medium">Review and send</p>
       <Button
         className="self-start"
-        isDisabled={selectedCartLines(state.data.cart).length === 0}
+        isDisabled={selectedCartLines(demoCart).length === 0}
         size="sm"
         variant="tertiary"
         onPress={() => {

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { Chip, ToggleButton } from "@heroui/react";
 import { Link } from "@tanstack/react-router";
+import { memo } from "react";
 
 import { ClockIcon, FavouriteIcon, RatingIcon } from "@/components/icons";
 import { Media } from "@/components/media";
@@ -25,8 +26,46 @@ export interface ListingCardProps {
   disabled?: boolean;
 }
 
+/**
+ * Card builders make `rating` and `favourite` as new objects on every render, and `onToggle` as a
+ * new closure that only ever toggles this one listing. Comparing them by what they show keeps a
+ * list of cards from re-rendering when one heart is tapped or the page above changes.
+ */
+export function sameListing(
+  prev: Record<string, unknown>,
+  next: Record<string, unknown>,
+): boolean {
+  const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
+
+  for (const key of keys) {
+    if (key === "favourite") {
+      const a = prev.favourite as ListingCardProps["favourite"];
+      const b = next.favourite as ListingCardProps["favourite"];
+
+      if (
+        !a !== !b ||
+        (a && b && (a.isSaved !== b.isSaved || a.label !== b.label))
+      )
+        return false;
+    } else if (key === "rating") {
+      const a = prev.rating as ListingCardProps["rating"];
+      const b = next.rating as ListingCardProps["rating"];
+
+      if (
+        !a !== !b ||
+        (a &&
+          b &&
+          (a.value !== b.value || a.count !== b.count || a.label !== b.label))
+      )
+        return false;
+    } else if (!Object.is(prev[key], next[key])) return false;
+  }
+
+  return true;
+}
+
 /** The shared photo, price, typography and heart treatment for gifts and tours. */
-export function ListingCard({
+export const ListingCard = memo(function ListingCard({
   to,
   slug,
   name,
@@ -125,4 +164,4 @@ export function ListingCard({
       )}
     </div>
   );
-}
+}, sameListing);

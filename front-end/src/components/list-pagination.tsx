@@ -2,6 +2,7 @@ import { Pagination } from "@heroui/react";
 import { useState } from "react";
 
 import { useLocale } from "@/contexts/locale-context";
+import { numberFormat } from "@/lib/format";
 
 /** Rows per page on every list screen (owner request 15.10.2026). */
 export const PAGE_SIZE = 10;
@@ -63,7 +64,7 @@ export function Pager({
 }) {
   const { t, intlLocale } = useLocale();
   const { page, pages, total, from, to, go } = pager;
-  const count = (n: number) => new Intl.NumberFormat(intlLocale).format(n);
+  const count = (n: number) => numberFormat(intlLocale).format(n);
 
   if (pages < 2) return null;
 

@@ -1,5 +1,5 @@
-import type { RequestsTab } from "../hooks/use-merchant-requests";
 import type { MessageKey } from "@/i18n/en";
+import type { RequestsTab } from "@/features/requests/merchant/lib/search-params";
 
 import { Skeleton, toast } from "@heroui/react";
 

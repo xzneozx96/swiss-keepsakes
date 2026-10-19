@@ -2,8 +2,9 @@ import type { CartLine } from "../types";
 import type { DemoState } from "@/features/demo/types";
 
 import { productEarliestPickup } from "@/features/catalog/lib/pickup";
-import { useDemo } from "@/features/demo";
+import { useDemoActions, useDemoSelector } from "@/features/demo";
 import { demoNow } from "@/features/demo/clock";
+import { calendarDay } from "@/lib/format";
 
 const sameChoice = (a: Omit<CartLine, "id">, b: Omit<CartLine, "id">) =>
   a.productId === b.productId &&
@@ -18,7 +19,7 @@ const withCart = (s: DemoState, cart: CartLine[]): DemoState => ({
 });
 
 function dayBefore(isoDate: string): string {
-  const d = new Date(`${isoDate}T12:00:00Z`);
+  const d = calendarDay(isoDate);
 
   d.setUTCDate(d.getUTCDate() - 1);
 
@@ -30,8 +31,8 @@ function dayBefore(isoDate: string): string {
  * New lines start unticked (owner rule: nothing is pre-selected).
  */
 export function useCart() {
-  const { state, update } = useDemo();
-  const lines = state.data.cart;
+  const { update } = useDemoActions();
+  const lines = useDemoSelector((s) => s.data.cart);
 
   const add = (line: Omit<CartLine, "id">) =>
     update((s) => {

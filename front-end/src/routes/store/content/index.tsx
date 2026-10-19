@@ -6,7 +6,7 @@ import { ContentPage } from "@/features/content/merchant/components/content-page
 import {
   ARTICLE_FILTERS,
   type ArticleFilter,
-} from "@/features/content/merchant/hooks/use-merchant-articles";
+} from "@/features/content/merchant/lib/search-params";
 
 interface ContentSearch {
   /** Articles in the ticked languages; absent = both. */

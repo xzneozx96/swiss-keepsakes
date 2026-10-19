@@ -54,6 +54,8 @@ export function SignInScreen({ returnTo }: { returnTo: string }) {
           <img
             alt={t("auth.hero.alt")}
             className="absolute inset-0 size-full object-cover object-[50%_14%] lg:object-[50%_45%]"
+            decoding="async"
+            fetchPriority="high"
             height={1600}
             src={heroPhoto}
             width={1200}

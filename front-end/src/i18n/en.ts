@@ -389,6 +389,8 @@ export const en = {
   "mail.N23.stock": "The items it held are back in stock.",
 
   "proto.proposal": "UX proposal: {name}",
+  "demo.storageFull":
+    "Your latest changes could not be saved in this browser. They stay in this tab until you close it.",
 
   "order.status.requested": "Awaiting seller confirmation",
   "order.status.accepted": "Accepted, payment due",

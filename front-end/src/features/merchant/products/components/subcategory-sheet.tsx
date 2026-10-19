@@ -4,7 +4,7 @@ import { Button, FieldError, Input, Label, TextField } from "@heroui/react";
 import { useState } from "react";
 
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 
 /**
  * M26 add or rename a sub-category in the M08 sheet frame: its name in English and German, at

@@ -82,6 +82,8 @@ export function ArticlePage({
 
     if (!signedIn || !comments || pending?.slug !== slug) return;
     writeStored(PENDING_KEY, null);
+    // The comment the guest started before signing in comes back from storage, an outside source.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     openSheet(comments.find((c) => c.id === pending.replyTo));
   }, [signedIn, comments, slug]);
 
@@ -162,6 +164,7 @@ export function ArticlePage({
           <img
             alt=""
             className="size-12 shrink-0 rounded-full bg-surface-secondary object-cover"
+            decoding="async"
             src={view.authorAvatar}
           />
           <div className="flex min-w-0 flex-col" lang={article.language}>

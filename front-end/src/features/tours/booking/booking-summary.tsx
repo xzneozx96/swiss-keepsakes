@@ -12,13 +12,13 @@ import { SurfaceCardBlock, SurfaceCardTitle } from "@/components/surface-card";
 import { useLocale } from "@/contexts/locale-context";
 import { BookingStatusLabels } from "@/features/tours/components/booking-status";
 import { useTours } from "@/features/tours/hooks/use-tours";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, dateTimeFormat } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 export function useBookingFormat() {
   const { intlLocale } = useLocale();
   const zurich = (iso: string, options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, {
+    dateTimeFormat(intlLocale, {
       ...options,
       timeZone: "Europe/Zurich",
     }).format(new Date(iso));

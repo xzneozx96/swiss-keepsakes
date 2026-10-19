@@ -2,7 +2,7 @@ import type { TourMaintenance } from "../types";
 
 import { InfoIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { formatDate } from "@/lib/format";
+import { formatDate, calendarDay } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 import { safeHref } from "@/lib/rich-text";
 
@@ -38,10 +38,7 @@ export function MaintenanceNotice({
       {maintenance.expectedBack && (
         <p className="font-medium">
           {t("tourDiscovery.maintenance.until", {
-            date: formatDate(
-              new Date(`${maintenance.expectedBack}T12:00:00Z`),
-              intlLocale,
-            ),
+            date: formatDate(calendarDay(maintenance.expectedBack), intlLocale),
           })}
         </p>
       )}

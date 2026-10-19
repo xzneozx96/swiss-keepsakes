@@ -1,7 +1,7 @@
 import { Button } from "@heroui/react";
 import { useNavigate } from "@tanstack/react-router";
 
-import { useDemo } from "@/features/demo";
+import { useDemoActions } from "@/features/demo";
 import { useTours } from "@/features/tours/hooks/use-tours";
 
 /**
@@ -10,7 +10,7 @@ import { useTours } from "@/features/tours/hooks/use-tours";
  * Reset restores the fixtures.
  */
 export function ToursDemoControl({ onDone }: { onDone: () => void }) {
-  const { update } = useDemo();
+  const { update } = useDemoActions();
   const { tours } = useTours();
   const navigate = useNavigate();
 

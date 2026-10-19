@@ -8,7 +8,7 @@ import { AppToasts } from "@/components/app-toasts";
 import { EmptyState } from "@/components/empty-state";
 import { InfoIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { PrototypeBar } from "@/features/demo";
+import { PrototypeBar, useStorageFull } from "@/features/demo";
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -16,6 +16,7 @@ export const Route = createRootRoute({
 });
 
 function RootLayout() {
+  const storageFull = useStorageFull();
   const isCalendarLab = useRouterState({
     select: (state) => state.location.pathname === "/lab/calendar",
   });
@@ -25,7 +26,7 @@ function RootLayout() {
     <div className="flex min-h-dvh flex-col">
       {!isCalendarLab && <PrototypeBar />}
       <Outlet />
-      <AppToasts />
+      <AppToasts storageFull={storageFull} />
     </div>
   );
 }

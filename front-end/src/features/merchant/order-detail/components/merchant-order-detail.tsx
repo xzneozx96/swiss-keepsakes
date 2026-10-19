@@ -7,8 +7,6 @@ import type { Order } from "@/features/orders/types";
 import { Tabs } from "@heroui/react";
 import { useState } from "react";
 
-import { useIsWide } from "../hooks/use-is-wide";
-
 import { DecisionBlock } from "./decision-block";
 import { FulfilmentActions } from "./fulfilment-actions";
 import {
@@ -24,6 +22,7 @@ import {
 
 import { STICKY_TABS_BELOW_BAR } from "@/components/layout/sticky-tabs";
 import { useLocale } from "@/contexts/locale-context";
+import { useIsWide } from "@/hooks/use-is-wide";
 
 type TabId = "details" | "money" | "activity";
 

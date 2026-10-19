@@ -20,7 +20,7 @@ import { isChoice, newId } from "../lib/question-set";
 import { useConfirm } from "@/components/confirm-dialog";
 import { PlusIcon, TrashIcon } from "@/components/icons";
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 
 const TYPES: AdviceAnswerType[] = ["number", "single", "multi", "date", "text"];
 

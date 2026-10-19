@@ -7,11 +7,11 @@ import { COST_TYPES } from "../types";
 import { useLocale } from "@/contexts/locale-context";
 import { zurichDayOf } from "@/features/catalog/lib/pickup";
 import { useDemo, useDemoNow } from "@/features/demo";
-import { mondayOf } from "@/features/merchant/today/lib/analytics";
+import { mondayOf } from "@/lib/analytics";
 import { formatOrderDate } from "@/features/orders/lib/format";
 import { orderTotal } from "@/features/orders/lib/selectors";
 import { allOrders, transactionKey } from "@/features/partners/lib/ledger";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, dateTimeFormat, calendarDay } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 export const COST_FILTERS = ["missing", "complete", "all"] as const;
@@ -58,7 +58,7 @@ export const missingCosts = (record?: CostRecord): CostType[] =>
   COST_TYPES.filter((type) => !record?.costs[type]);
 
 const addDays = (iso: string, days: number) => {
-  const d = new Date(`${iso}T12:00:00Z`);
+  const d = calendarDay(iso);
 
   d.setUTCDate(d.getUTCDate() + days);
 
@@ -154,11 +154,11 @@ export function useCostData(filter: CostFilter, week: string | null) {
 
   const thisWeek = mondayOf(zurichDayOf(now.toISOString()));
   const weekLabel = (monday: string) =>
-    new Intl.DateTimeFormat(intlLocale, {
+    dateTimeFormat(intlLocale, {
       day: "numeric",
       month: "short",
       timeZone: "UTC",
-    }).format(new Date(`${monday}T12:00:00Z`));
+    }).format(calendarDay(monday));
   const weeks: CostWeek[] = Array.from({ length: CHART_WEEKS }, (_, i) => {
     const monday = addDays(thisWeek, -7 * (CHART_WEEKS - 1 - i));
     const inWeek = all.filter((row) => row.week === monday);

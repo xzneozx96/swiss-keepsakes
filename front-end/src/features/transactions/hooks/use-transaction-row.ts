@@ -1,14 +1,13 @@
-import type { IntlLocale } from "@/lib/format";
 import type { ShownLabel } from "@/features/orders/hooks/use-orders";
 import type { Order } from "@/features/orders/types";
 
 import { useLocale } from "@/contexts/locale-context";
-import { useDemo } from "@/features/demo";
+import { useDemoSelector } from "@/features/demo";
 import { useOrderSummary } from "@/features/orders/hooks/use-orders";
 import { formatOrderDate } from "@/features/orders/lib/format";
 import { pickupChangedBySeller } from "@/features/orders/lib/selectors";
 import { cancelBlock } from "@/features/orders/lib/transitions";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, pickupDay } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 
 /** Orders that need nothing more from the guest or the shop: C14 lists them under "Past". */
@@ -35,31 +34,16 @@ export interface TransactionRowView {
   changedNote?: string;
 }
 
-function pickupDay(isoDate: string, locale: IntlLocale) {
-  const at = new Date(`${isoDate}T12:00:00Z`);
-  const part = (options: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(locale, { ...options, timeZone: "UTC" })
-      .format(at)
-      .replace(/\.$/, "");
-
-  return {
-    weekday: part({ weekday: "short" }),
-    day: part({ day: "numeric" }),
-    month: part({ month: "short" }),
-  };
-}
-
 /** One C14 row: product, amount, reference, pickup date and place, and both labels from T0. */
 export function useTransactionRow(order: Order): TransactionRowView {
   const { t, language, intlLocale } = useLocale();
-  const { state } = useDemo();
+  const pickupPlaces = useDemoSelector((s) => s.data.pickupPlaces);
+  const products = useDemoSelector((s) => s.data.products);
   const summary = useOrderSummary(order, "guest");
   const [first, ...rest] = order.lines;
-  const product = state.data.products.find((p) => p.id === first.productId);
+  const product = products.find((p) => p.id === first.productId);
   const name = pickText(first.productName, language).text;
-  const place = state.data.pickupPlaces.find(
-    (p) => p.id === order.pickupPlaceId,
-  );
+  const place = pickupPlaces.find((p) => p.id === order.pickupPlaceId);
 
   return {
     id: order.id,

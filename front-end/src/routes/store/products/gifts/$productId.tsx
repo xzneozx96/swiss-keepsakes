@@ -1,5 +1,3 @@
-import type { GiftStep } from "@/features/merchant/products/hooks/use-gift-editor";
-
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 
 import { EmptyState } from "@/components/empty-state";
@@ -8,8 +6,11 @@ import { useLocale } from "@/contexts/locale-context";
 import { useDemo } from "@/features/demo";
 import { EditorSkeleton } from "@/features/merchant/products/components/editor-parts";
 import { GiftEditor } from "@/features/merchant/products/components/gift-editor";
-import { GIFT_STEPS } from "@/features/merchant/products/hooks/use-gift-editor";
 import { useSimulatedLoading } from "@/hooks/use-simulated-loading";
+import {
+  type GiftStep,
+  GIFT_STEPS,
+} from "@/features/merchant/products/lib/search-params";
 
 interface GiftEditorSearch {
   /** The stepper's step (revision 2); absent = Basics. */

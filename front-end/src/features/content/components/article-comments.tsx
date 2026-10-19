@@ -44,6 +44,8 @@ function CommentItem({
         <img
           alt=""
           className={`shrink-0 rounded-full bg-surface-secondary object-cover ${reply ? "size-9" : "size-12"}`}
+          decoding="async"
+          loading="lazy"
           src={comment.avatar}
         />
         <div className="flex min-w-0 flex-col">

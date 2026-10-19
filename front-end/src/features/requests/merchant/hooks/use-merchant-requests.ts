@@ -10,12 +10,7 @@ import { demoNow } from "@/features/demo/clock";
 import { formatOrderDateTime } from "@/features/orders/lib/format";
 import { de } from "@/i18n/de";
 import { en } from "@/i18n/en";
-
-/** The tabs of `#/store/requests` (outline §3), kept in `?tab=`; absent = advice. */
-export type RequestsTab = "advice" | "private" | "questions";
-export const REQUEST_TABS: RequestsTab[] = ["advice", "private", "questions"];
-export const isRequestsTab = (value: unknown): value is RequestsTab =>
-  REQUEST_TABS.includes(value as RequestsTab);
+import { dateTimeFormat, calendarDay } from "@/lib/format";
 
 /** How many answers an M19 card shows before "+n more". */
 const PREVIEW = 3;
@@ -102,8 +97,8 @@ export function useMerchantRequests() {
     );
   const time = (iso: string) => formatOrderDateTime(iso, intlLocale);
   const datePart = (iso: string, option: Intl.DateTimeFormatOptions) =>
-    new Intl.DateTimeFormat(intlLocale, { ...option, timeZone: "UTC" }).format(
-      new Date(`${iso}T12:00:00Z`),
+    dateTimeFormat(intlLocale, { ...option, timeZone: "UTC" }).format(
+      calendarDay(iso),
     );
 
   const adviceRow = (r: AdviceRequest): AdviceRow => {

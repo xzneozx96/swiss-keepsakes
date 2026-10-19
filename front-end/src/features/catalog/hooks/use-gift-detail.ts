@@ -11,6 +11,11 @@ import {
   productEarliestPickup,
   zurichDate,
 } from "../lib/pickup";
+import {
+  closeCartToast,
+  forgetCartToast,
+  trackCartToast,
+} from "../lib/cart-toast";
 import { availableUnits, fromPrice, isSoldOut } from "../lib/stock";
 import { shop } from "../seed";
 
@@ -25,9 +30,6 @@ import { pickText } from "@/lib/localized";
 import { pickDoc } from "@/lib/rich-text";
 
 type Field = "variant" | "date" | "place";
-
-/** The open "Added to cart" toast; a new add replaces it instead of stacking. */
-let cartToastId: string | undefined;
 
 /**
  * C03 Gift detail: the product as the guest sees it plus the choices made in the
@@ -194,7 +196,7 @@ export function useGiftDetail(
     setAdded(true);
 
     // Auto-dismisses although it has an action: "View cart" is repeated in the bar.
-    if (cartToastId) toast.close(cartToastId);
+    closeCartToast();
     const id = toast.success(t("cartToast.title"), {
       description: t("cartToast.item", {
         name: name.text,
@@ -212,11 +214,11 @@ export function useGiftDetail(
       },
       timeout: 6000,
       onClose: () => {
-        if (cartToastId === id) cartToastId = undefined;
+        forgetCartToast(id);
       },
     });
 
-    cartToastId = id;
+    trackCartToast(id);
 
     return true;
   };

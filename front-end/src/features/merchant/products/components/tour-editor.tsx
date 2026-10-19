@@ -1,4 +1,3 @@
-import type { TourStep } from "../hooks/use-tour-editor";
 import type { StepView } from "./step-shell";
 import type { Language } from "@/contexts/locale-context";
 import type { LocalizedText } from "@/features/catalog/types";
@@ -17,7 +16,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useId, useRef, useState } from "react";
 
-import { TOUR_STEPS, useTourEditor } from "../hooks/use-tour-editor";
+import { useTourEditor } from "../hooks/use-tour-editor";
 import { hasText, languageStatus, storyText } from "../lib/completeness";
 
 import { NewDepartureSheet, SeatsSheet } from "./departure-sheets";
@@ -56,7 +55,7 @@ import {
 } from "@/components/icons";
 import { Media } from "@/components/media";
 import { RowIcon, rowClass } from "@/features/account/components/settings-list";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 import { useLocale } from "@/contexts/locale-context";
 import { DetailCard } from "@/features/merchant/order-detail/components/detail-card";
 import { useTours } from "@/features/tours/hooks/use-tours";
@@ -67,9 +66,13 @@ import {
   phaseChip,
   useTourFormatting,
 } from "@/features/tours/merchant/shared";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, numberFormat } from "@/lib/format";
 import { pickText } from "@/lib/localized";
 import { isEmptyDoc } from "@/lib/rich-text";
+import {
+  type TourStep,
+  TOUR_STEPS,
+} from "@/features/merchant/products/lib/search-params";
 
 type Editor = ReturnType<typeof useTourEditor>;
 type TextKey =
@@ -806,7 +809,7 @@ function TourReview({
         "policies",
         <>
           <ReviewRow label={t("products.commission.rate")}>
-            {new Intl.NumberFormat(intlLocale, {
+            {numberFormat(intlLocale, {
               style: "percent",
               maximumFractionDigits: 1,
             }).format(edit.commissionRate)}
@@ -864,7 +867,7 @@ export function TourEditor({
     missing: editor.stepMissing(id),
   }));
   const current = steps[TOUR_STEPS.indexOf(step)];
-  const hours = new Intl.NumberFormat(intlLocale, {
+  const hours = numberFormat(intlLocale, {
     maximumFractionDigits: 1,
   }).format(
     Number.isFinite(edit.durationHours)

@@ -25,6 +25,7 @@ import {
 } from "./selectors";
 
 import { sendMail } from "@/features/notifications/mail";
+import { findDuplicatePayment } from "@/lib/payments";
 
 /**
  * Order transitions (UX spec §2.1, §2.3). Each one is DemoState → DemoState and returns the
@@ -72,8 +73,6 @@ export interface OfflinePaymentInput {
 export type PickupChange =
   | { field: "date"; to: string; note: string }
   | { field: "place"; to: string; note: string };
-
-const DUPLICATE_WINDOW_MS = 10 * 60_000;
 
 // --- helpers ---------------------------------------------------------------
 
@@ -218,11 +217,10 @@ export function recordOfflinePaymentBlock(
   if (input.amount > balance(order))
     return { code: "above-balance", balance: balance(order) };
 
-  const duplicate = order.payments.find(
-    (p) =>
-      p.status === "succeeded" &&
-      p.amount === input.amount &&
-      Math.abs(Date.parse(p.at) - Date.parse(input.at)) <= DUPLICATE_WINDOW_MS,
+  const duplicate = findDuplicatePayment(
+    order.payments,
+    input.amount,
+    input.at,
   );
 
   return duplicate && !input.allowDuplicate

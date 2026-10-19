@@ -14,7 +14,7 @@ import {
 import { useState } from "react";
 
 import { useLocale } from "@/contexts/locale-context";
-import { SheetFrame } from "@/features/merchant/order-detail/components/decision-block";
+import { SheetFrame } from "@/components/sheet-frame";
 import {
   isValidCode,
   suggestCode,

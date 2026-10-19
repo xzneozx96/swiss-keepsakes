@@ -71,13 +71,17 @@ function unique(places: Place[]) {
 export function usePlaceSearch(query: string, attempt = 0): SearchState {
   const text = query.trim();
   const [state, setState] = useState<SearchState>({ status: "idle" });
+  const tooShort = text.length < MIN_LENGTH;
+  const [wasTooShort, setWasTooShort] = useState(tooShort);
+
+  // Clearing the field (or typing less than the minimum) drops the results at once.
+  if (tooShort !== wasTooShort) {
+    setWasTooShort(tooShort);
+    if (tooShort) setState({ status: "idle" });
+  }
 
   useEffect(() => {
-    if (text.length < MIN_LENGTH) {
-      setState({ status: "idle" });
-
-      return;
-    }
+    if (tooShort) return;
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       setState({ status: "loading" });
@@ -110,7 +114,7 @@ export function usePlaceSearch(query: string, attempt = 0): SearchState {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [text, attempt]);
+  }, [text, tooShort, attempt]);
 
   return state;
 }

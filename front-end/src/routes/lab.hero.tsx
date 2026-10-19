@@ -25,6 +25,7 @@ import {
   HeroPlanner,
   HeroSkyGlass,
 } from "@/features/lab/hero-options";
+import { dateTimeFormat } from "@/lib/format";
 
 /** Lab: compare discovery-home hero layouts at phone width. Not part of the product. */
 export const Route = createFileRoute("/lab/hero")({ component: HeroLab });
@@ -133,7 +134,7 @@ function HeroLab() {
     intro: t("home.intro"),
     photoAlt: t("home.photoAlt"),
     searchLabel: t("search.open"),
-    localTime: new Intl.DateTimeFormat(intlLocale, {
+    localTime: dateTimeFormat(intlLocale, {
       hour: "2-digit",
       minute: "2-digit",
       timeZone: "Europe/Zurich",
