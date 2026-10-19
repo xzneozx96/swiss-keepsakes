@@ -53,7 +53,7 @@ function start(env: Record<string, string>, preload?: string) {
   return { child, exited, logs, messages, find, waitFor, output: () => stdout + stderr }
 }
 
-const env = (role: string) => ({ ROLE: role, PORT: '0', DATABASE_URL })
+const env = (role: string) => ({ ROLE: role, PORT: '0', DATABASE_URL, DATABASE_URL_UNPOOLED: DATABASE_URL })
 
 describe('[E1.8] main: the ROLE switch and process lifecycle', () => {
   it('[E1.8] ROLE=api serves /healthz on HOST and starts no worker, and SIGTERM stops it with exit code 0', async () => {
