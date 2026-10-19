@@ -7,12 +7,18 @@ const sameModule = '{{ from.captured.module }}'
 const sourceExtensions = '{ts,tsx,mts,cts,js,jsx,mjs,cjs}'
 
 export const zones = {
-  files: [`**/packages/domain/src/**/*.${sourceExtensions}`, `**/api/src/**/*.${sourceExtensions}`],
+  files: [
+    `**/packages/domain/src/**/*.${sourceExtensions}`,
+    `**/packages/api-contract/src/**/*.${sourceExtensions}`,
+    `**/api/src/**/*.${sourceExtensions}`,
+  ],
   plugins: { boundaries },
   settings: {
     'import/resolver': { typescript: { project: './tsconfig.eslint.json' } },
     'boundaries/elements': [
       { type: 'domain', pattern: '**/packages/domain/src', mode: 'folder' },
+      // The whole package, because src/client.ts imports the generated types beside src/.
+      { type: 'api-contract', pattern: '**/packages/api-contract', mode: 'folder' },
       { type: 'module-index', pattern: '**/api/src/modules/*/index.*', mode: 'file', capture: ['prefix', 'module'] },
       { type: 'application', pattern: '**/api/src/modules/*/application', mode: 'folder', capture: ['prefix', 'module'] },
       { type: 'ports', pattern: '**/api/src/modules/*/ports.*', mode: 'file', capture: ['prefix', 'module'] },
@@ -30,11 +36,22 @@ export const zones = {
         {
           from: { type: 'domain' },
           disallow: [
-            { to: { type: ['application', 'adapters', 'ports', 'platform', 'composition', 'module-index'] } },
+            { to: { type: ['api-contract', 'application', 'adapters', 'ports', 'platform', 'composition', 'module-index'] } },
             { to: { origin: ['external', 'core'] } },
             { to: { isUnknown: true } },
           ],
           message: 'The domain may import only packages/domain',
+        },
+        {
+          from: { type: 'api-contract' },
+          disallow: [
+            { to: { type: ['domain', 'application', 'adapters', 'ports', 'platform', 'composition', 'module-index'] } },
+            { to: { origin: 'core' } },
+            { to: { origin: 'external' }, dependency: { module: '!{zod,openapi-fetch}' } },
+            // A package import is unknown too, so only a local file outside every zone is meant here.
+            { to: { origin: 'local', isUnknown: true } },
+          ],
+          message: 'The API contract may import only itself, zod and openapi-fetch',
         },
         {
           from: { type: 'application' },
@@ -42,8 +59,13 @@ export const zones = {
           message: 'The application layer must not import adapters or platform code',
         },
         {
+          from: { type: 'application' },
+          disallow: { to: { type: 'api-contract' } },
+          message: 'Only adapters and platform code may import the API contract',
+        },
+        {
           from: { type: 'ports' },
-          disallow: { to: { type: ['application', 'adapters', 'platform', 'composition', 'module-index'] } },
+          disallow: { to: { type: ['api-contract', 'application', 'adapters', 'platform', 'composition', 'module-index'] } },
           message: 'A ports file may import only the domain',
         },
         {

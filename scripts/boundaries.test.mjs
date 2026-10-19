@@ -14,6 +14,8 @@ const APPLICATION = 'The application layer must not import adapters or platform 
 const PORTS = 'A ports file may import only the domain'
 const COMPOSITION = 'Adapters must not import the composition root'
 const MODULE = 'A module may import another module only through its index.ts'
+const CONTRACT = 'The API contract may import only itself, zod and openapi-fetch'
+const CONTRACT_USERS = 'Only adapters and platform code may import the API contract'
 
 let byFile
 
@@ -112,5 +114,34 @@ describe('[E1.7] layer boundary lint zones', () => {
     ]))
     for (const [file, messages] of others)
       expect(messages, file).toEqual([])
+  })
+})
+
+describe('[E1.10] the API contract zone', () => {
+  it.each([
+    ['another package', 'packages/api-contract/src/violates-contract-hono.ts'],
+    ['a Node built-in', 'packages/api-contract/src/violates-contract-node.ts'],
+    ['api code', 'packages/api-contract/src/violates-contract-api.ts'],
+    ['the domain', 'packages/api-contract/src/violates-contract-domain.ts'],
+    ['a front-end path', 'packages/api-contract/src/violates-contract-front-end.ts'],
+  ])('[E1.10] the contract importing %s is one error', (_, file) => {
+    expectOneError(file, CONTRACT)
+  })
+
+  it('[E1.10] the domain importing the contract is one error', () => {
+    expectOneError('packages/domain/src/orders/violates-domain-api-contract.ts', DOMAIN)
+  })
+
+  it('[E1.10] an application file importing the contract is one error', () => {
+    expectOneError('api/src/modules/orders/application/violates-application-api-contract.ts', CONTRACT_USERS)
+  })
+
+  it('[E1.10] a ports file importing the contract is one error', () => {
+    expectOneError('api/src/modules/violates-ports-api-contract/ports.ts', PORTS)
+  })
+
+  it('[E1.10] the contract importing zod, openapi-fetch, its own files and generated/, and an adapter importing the contract, have zero errors', () => {
+    for (const file of ['packages/api-contract/src/clean-contract.ts', 'packages/api-contract/src/support.ts', 'api/src/modules/orders/adapters/clean-contract-route.ts'])
+      expect(byFile.get(file), file).toEqual([])
   })
 })
