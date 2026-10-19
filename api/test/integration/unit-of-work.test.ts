@@ -3,11 +3,15 @@ import type { Clock } from '../../src/platform/clock.ts'
 import type { UnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import type { JobQueue } from '../../src/platform/jobs/queue.ts'
 import { randomUUID } from 'node:crypto'
+import { setTimeout as sleep } from 'node:timers/promises'
+import { sql } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
 import { createAuditLog } from '../../src/platform/audit.ts'
+import { createDatabase, createPool } from '../../src/platform/db/client.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { startJobs } from '../../src/platform/jobs/boss.ts'
 import { createJobQueue } from '../../src/platform/jobs/queue.ts'
+import { createLogger } from '../../src/platform/logger.ts'
 import { createWebhookEvents } from '../../src/platform/webhooks.ts'
 import { createManualClock } from '../support/manual-clock.ts'
 import { count, openTestDatabase, silentLogger } from './support.ts'
@@ -69,6 +73,31 @@ describe('[E1.9] unit of work: the business write, the audit row and the job com
     expect(audit).toEqual({ actor: 'system', action: 'recorded', after: { probeId }, at: clock.now() })
     const { rows: [job] } = await pool.query(`select start_after from pgboss.job where data->>'probeId' = $1`, [probeId])
     expect(job.start_after).toEqual(new Date('2026-10-20T08:01:00Z'))
+  })
+})
+
+describe('[E1.9] a lost database connection', () => {
+  it('[E1.9] a connection killed in the middle of a unit of work rejects uow.run and is logged, and the process carries on', async () => {
+    const logs: { level: number, msg: string }[] = []
+    const lossyPool = createPool(inject('databaseUrl'), createLogger('info', { write: line => logs.push(JSON.parse(line)) }))
+    const uow = createUnitOfWork(createDatabase(lossyPool))
+    try {
+      const run = uow.run(async (tx) => {
+        const { rows } = await tx.execute<{ pid: number }>(sql`select pg_backend_pid() as pid`)
+        await pool.query('select pg_terminate_backend($1)', [rows[0]?.pid])
+        // The client sees the termination while it is checked out and idle in the transaction.
+        await sleep(200)
+        await tx.execute(sql`select 1`)
+      })
+
+      await expect(run).rejects.toThrow()
+      expect(logs).toContainEqual(expect.objectContaining({ level: 50, msg: 'database connection error' }))
+      // An unhandled 'error' event would have failed this run. The pool also replaced the dead connection.
+      expect(await uow.run(async tx => (await tx.execute(sql`select 1 as one`)).rows)).toEqual([{ one: 1 }])
+    }
+    finally {
+      await lossyPool.end()
+    }
   })
 })
 
