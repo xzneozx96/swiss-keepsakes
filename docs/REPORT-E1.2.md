@@ -80,10 +80,10 @@ Checked in a fresh `git clone` of this branch: `pnpm install --frozen-lockfile` 
 | `partners/lib/ledger.ts`, `link-opens.ts`, `partners/report/lib/*`, `reports/lib/*`, `merchant/today/lib/*` | Read `DemoData`, `DEMO_HISTORY`, `prng` and the demo clock (`@/features/demo/*`). They are rules over mock data. E1.5 takes commission math. |
 | `demo/types.ts`, `demo/clock.ts` | The browser-held mock store and clock. They stay in the prototype. |
 | `checkout/lib/create-orders.ts`, `checkout/lib/trip.ts` | `create-orders` calls `sendMail` and takes `DemoState`. `trip.ts` reads `DemoData`. |
-| `lib/storage.ts`, `lib/audio.ts`, `lib/avatars.ts`, `lib/photos.ts`, `lib/victorinox-art.ts`, `lib/payments` callers | Browser APIs (localStorage, Audio, `import.meta.glob` assets) or assets. |
+| `lib/storage.ts`, `lib/audio.ts`, `lib/avatars.ts`, `lib/photos.ts`, `lib/victorinox-art.ts` | Browser APIs (localStorage, Audio, `import.meta.glob` assets) or assets. |
 | `catalog/lib/cart-toast.ts`, `*/seed.ts`, `*/messages*.ts` | HeroUI toast, seed data, i18n. |
 | `contexts/locale-context.tsx` | React. It re-exports `Language` from the domain. |
-| Other `lib/*` such as `planner/lib/*`, `content/merchant/lib/*`, `merchant/products/lib/{records,photo-upload,...}`, `tours/lib/{selectors→moved, upgrade}`, `tours/merchant/lib/{mail,render-mail,...}` | I did not move them. They read the store, the clock or i18n, or I judged them not purely domain (mail rendering, photo upload with `FileReader`). A later story can split them. |
+| Other `lib/*` such as `planner/lib/*`, `content/merchant/lib/*`, `merchant/products/lib/{records,photo-upload,...}`, `tours/lib/upgrade`, `tours/merchant/lib/{mail,render-mail,...}` | I did not move them. They read the store, the clock or i18n, or I judged them not purely domain (mail rendering, photo upload with `FileReader`). A later story can split them. |
 
 I did not rewrite any moved function, so behaviour is the prototype's. `format.ts` creates `Intl` formatters, cached in module-level maps, not in render, so it stays inside the rule. It needs the `Intl` global only.
 
