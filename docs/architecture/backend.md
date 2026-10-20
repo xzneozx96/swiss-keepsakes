@@ -133,7 +133,7 @@ The code follows clean architecture in four layers. Each layer may import only f
 | Layer | Where | Contains | May import |
 |---|---|---|---|
 | Domain | `packages/domain/src/<module>/` | Entities, value objects, transition tables, pure policies such as seat availability, `moneyState` and commission math | Only `packages/domain` |
-| Application | `api/src/modules/<module>/application/` | One file per use case, either a command or a query. `ports.ts` declares the interfaces the use cases need. | Domain, its own ports, and other modules' `index.ts` |
+| Application | `api/src/modules/<module>/application/` | One file per use case, either a command or a query. The module's `ports.ts`, beside its `index.ts`, declares the interfaces the use cases need and imports only the domain. | Domain, its own ports, and other modules' `index.ts` |
 | Adapters | `api/src/modules/<module>/adapters/` | Driving adapters (HTTP routes, job handlers) that call use cases. Driven adapters (Drizzle repositories, the Stripe gateway) that implement the ports. | Application, domain, `api/src/platform/`, `packages/api-contract` |
 | Platform and composition | `api/src/platform/`, `api/src/main.ts` | Database pool and transactions, pg-boss, the Hono app and middleware, the Stripe, SMTP and storage clients, config, logger, clock. `main.ts` is the only file that connects concrete adapters to use cases. | Everything |
 
@@ -173,8 +173,8 @@ swiss-keepsakes/
       modules/
         bookings/
           index.ts                public use cases and types
+          ports.ts                BookingRepository, JobQueue, Clock
           application/
-            ports.ts              BookingRepository, JobQueue, Clock
             create-hold.ts
             expire-hold.ts
             confirm-first-payment.ts

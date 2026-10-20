@@ -8,7 +8,7 @@ These files tell people and AI coding agents how to build in this repo. `AGENTS.
 | `shared/` | Front-end and back-end | write any TypeScript, share a rule or a type across both sides, or write a test |
 | `frontend/` | Front-end only (`front-end/`) | build UI, routes, forms, client data access, styling or lint config |
 | `reference/` | Lookup only | want the full text of a React best-practice rule that another file cites by id. Do not read it end to end |
-| `backend/` | Back-end only (`api/`, `packages/domain`, `packages/api-contract`) | build the API, data layer, jobs or security. **Mostly design**: the platform layer is built, no module yet |
+| `backend/` | Back-end only (`api/`, `packages/domain`, `packages/api-contract`) | build the API, data layer, jobs or security. **Mostly design**: the platform layer and the `notifications` module are built |
 
 ## Files
 

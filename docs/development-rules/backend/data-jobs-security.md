@@ -1,6 +1,6 @@
 # Data, jobs and security
 
-**Mostly design.** Configuration and logging are built (E1.8), and so is the platform layer for data and jobs (E1.9). No module and no business table exists yet. Source: `docs/architecture/backend.md` (the section is in brackets after each rule). Rules about money, Stripe holds and the commission ledger are specific to this product. They are in `docs/architecture/backend.md` sections 6 and 7 and are not repeated here.
+**Mostly design.** Configuration and logging are built (E1.8), and so is the platform layer for data and jobs (E1.9). The first module, `notifications`, and its `sent_mail` table are built (E2.8). No business module exists yet. Source: `docs/architecture/backend.md` (the section is in brackets after each rule). Rules about money, Stripe holds and the commission ledger are specific to this product. They are in `docs/architecture/backend.md` sections 6 and 7 and are not repeated here.
 
 ## Data
 
@@ -22,11 +22,13 @@
 - **Create a job inside the business transaction** (`boss.send(..., { db: tx })`). There is no separate outbox table and no event bus. (D4)
   - Built: `jobs.send(tx, queue, data, { startAfter })` (`api/src/platform/jobs/queue.ts`). Every role starts pg-boss (`api/src/platform/jobs/boss.ts`), because sending needs a started instance. Only `worker` and `all` supervise. Create a queue with `boss.createQueue` at startup before the first send. Proof that a rollback leaves no job: `api/test/integration/unit-of-work.test.ts`.
 - **Cross-module work that must be atomic is a direct call in the same transaction.** Only effects outside the system become jobs. (D4)
+- **Mail is a job** (section 8). Built (E2.8): a command calls the function `makeQueueMail` returns (`notifications/index.ts`) inside its `uow.run`. It writes the `notifications.sent_mail` row and the `mail` job, whose id is the mail id and the `Message-ID`'s local part. The worker retries a failed send 5 times with exponential backoff. pg-boss then moves the job to `mail-failed`, whose handler marks the row failed and logs the `mail.failed` alert. Runbook: `docs/ops/mail.md`.
 
 ## Configuration
 
 - Configuration comes from environment variables, checked at startup against one Zod schema. The service refuses to start on a bad value. Secrets live in Fly secrets. (11)
   - Built: add a variable to the schema in `api/src/platform/config.ts` and to `api/.env.example`. The startup message names the variable and never prints its value. Tests: `api/test/platform/config.test.ts`.
+  - `SMTP_*` is all six variables or none (E2.8). A partial setting stops startup. With none, the service starts and warns, and mail fails and alerts until they are set, because no variable tells production from development.
 
 ## Security and privacy (both sides follow these)
 

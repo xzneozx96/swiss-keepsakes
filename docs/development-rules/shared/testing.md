@@ -36,9 +36,11 @@ Gaps:
 
 ## Levels (from `docs/architecture/backend.md` section 12)
 
-The front-end has unit tests and an end-to-end smoke test today. The rows about use cases, the API and load wait for the backend modules.
+The front-end has unit tests and an end-to-end smoke test today. Use-case tests start with E2.8 in `api/test/application/`. The rows about the API and load wait for the backend modules.
 
 Database tests are built (E1.9). They live in `api/test/integration/` and run with `pnpm test:integration` from the repo root, with `DATABASE_URL` and `DATABASE_URL_UNPOOLED` set, for example to the compose Postgres (`docker compose up -d --wait postgres`, then both `postgres://postgres@127.0.0.1:5433/swiss_keepsakes`). Each run creates its own database, migrates it and drops it. It refuses a host other than this machine unless `INTEGRATION_ALLOW_REMOTE_DATABASE=1`, which only a throwaway server may get. `pnpm test` never runs them, so it needs no Docker. CI runs them on the pull request's Neon branch, with `DATABASE_URL` through Neon's pooler (`docs/ops/ci.md`). Count rows by a marker your test made, not by table totals, because test files run in parallel on one database.
+
+Mail tests are built (E2.8). Use the in-memory `Mailer` in `api/test/support/memory-mailer.ts`. It records each message, and `failWith` makes every send fail like an SMTP server. Render tests check each template in EN and DE with its data and recipient (`api/test/application/notifications/`). `api/test/integration/mail.test.ts` runs the `mail` job on real pg-boss, each test on its own queues with fast retries. The live suite, `pnpm --filter @sk/api test:smtp-live`, sends to the test inbox only. Its files end in `.live.ts`, so `pnpm test` and CI never run it (`docs/ops/mail.md`).
 
 The contract gate is built (E1.10). `api/test/contract.test.ts` builds `packages/api-contract/generated/` in memory from the API routes and fails when the committed files differ, so `pnpm test` runs it. After you change a route or a schema, run `pnpm contract:build` and commit the result. The gate is `pnpm test` plus `pnpm typecheck`: the test compares the files, lists the routes and checks the problem bodies, and the type check proves that the generated client's types equal the Zod types and that `problem()` refuses an unknown code or a status under 400.
 
