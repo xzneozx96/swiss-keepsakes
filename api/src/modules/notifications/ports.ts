@@ -11,8 +11,19 @@ export interface UnitOfWork<T> {
   run: <R>(work: (tx: T) => Promise<R>) => Promise<R>
 }
 
+// The per-job options the mail job sets. They override the queue's own.
+export interface SendOptions {
+  id?: string
+  retryLimit?: number
+  retryDelay?: number
+  retryBackoff?: boolean
+  expireInSeconds?: number
+  retentionSeconds?: number
+  deleteAfterSeconds?: number
+}
+
 export interface JobQueue<T> {
-  send: (tx: T, queue: string, data: object, options?: { id?: string, retentionSeconds?: number, deleteAfterSeconds?: number }) => Promise<void>
+  send: (tx: T, queue: string, data: object, options?: SendOptions) => Promise<void>
 }
 
 export interface Clock {
