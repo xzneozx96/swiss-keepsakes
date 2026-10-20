@@ -38,7 +38,7 @@ export function useSignOut() {
 
         return
       }
-      update(s => (apiEnabled ? clearGuestData(s, true) : { ...s, data: { ...s.data, signedInGuestId: null } }))
+      update(s => (apiEnabled ? clearGuestData(s) : { ...s, data: { ...s.data, signedInGuestId: null } }))
     }
     finally {
       setPending(false)

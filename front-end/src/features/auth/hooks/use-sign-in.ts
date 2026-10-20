@@ -57,7 +57,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
   const [codeStep, setCodeStep] = useState<CodeStep | null>(null)
   const [pending, setPending] = useState<'google' | 'send' | 'verify' | null>(null)
   const [problem, setProblem] = useState<SignInProblem | null>(
-    googleFailed || googleReturnFailed() ? 'google' : null,
+    () => (googleFailed || googleReturnFailed() ? 'google' : null),
   )
   // Seconds Better Auth's rate limiter asked the guest to wait, for the rate limited message.
   const [retryAfter, setRetryAfter] = useState(60)

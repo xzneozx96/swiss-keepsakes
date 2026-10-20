@@ -32,26 +32,23 @@ const accountKeys = [
   'nextOrderNumber',
 ] as const
 
-/** What a guest keeps while signed out (AC01): the cart, saved gifts and the open advice request. */
+/** What a guest builds up while browsing (AC01): the cart, saved gifts and the open advice request. A sign-out clears them too. */
 const browsingKeys = ['cart', 'favouriteProductIds', 'adviceDraft'] as const
 
 /**
  * With the API, every account is still the one demo guest, so what one guest created must not reach the next on a
  * shared device. This puts the account data back to the seed (orders, the guest profile, reviews, comments, advice and
- * private tour requests, tour bookings, the Mail panel, the order counter) and signs out. `browsing` also resets the cart,
- * saved gifts and the open advice request: a sign-out does, a session found missing at start does not. The catalogue,
+ * private tour requests, tour bookings, the Mail panel, the order counter) and signs out. The cart, saved gifts and the open advice request go too. The catalogue,
  * stories, partners, costs, the role and the clock stay.
  */
-export function clearGuestData(state: DemoState, browsing: boolean): DemoState {
+export function clearGuestData(state: DemoState): DemoState {
   const seed = createSeedState().data
   const data = { ...state.data, signedInGuestId: null }
 
   for (const key of accountKeys)
     Object.assign(data, { [key]: seed[key] })
-  if (browsing) {
-    for (const key of browsingKeys)
-      Object.assign(data, { [key]: seed[key] })
-  }
+  for (const key of browsingKeys)
+    Object.assign(data, { [key]: seed[key] })
 
   return { ...state, data }
 }
