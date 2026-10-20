@@ -32,7 +32,7 @@ The code follows clean architecture in four layers. Each layer imports only from
 | Workflow that loads, decides and saves | `api/src/modules/<module>/application/<use-case>.ts` |
 | SQL and Drizzle | `api/src/modules/<module>/adapters/*-repository.ts` and `schema.ts` |
 | Request parsing and response shape | `packages/api-contract/src/` schemas, used by `adapters/routes.ts` |
-| Talking to Stripe, Resend or storage | A port in the owning module, an adapter in that module, a client in `api/src/platform/` |
+| Talking to Stripe, the SMTP server or storage | A port in the owning module, an adapter in that module, a client in `api/src/platform/` |
 | Audit, idempotency, webhook deduplication, rate limits | `api/src/platform/` |
 | Configuration | `api/src/platform/config.ts`, one Zod schema over the environment |
 | Wiring | `api/src/main.ts` only |

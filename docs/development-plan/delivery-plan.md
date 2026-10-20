@@ -74,7 +74,7 @@ The harness is how we know the app works the way it should. It is built in E0 an
 | Payments | Every late-payment case in architecture section 6.4, webhook replay, the expiry job racing a webhook | A scriptable fake `PaymentGateway` timeline (succeed at t, processing, fail, cancel refused). A small live Stripe sandbox suite runs on demand | Every pull request, sandbox suite nightly |
 | API | Route contracts, permissions per role, partner data limits | Vitest over the Hono app. The permission matrix is generated from the OpenAPI document, so a new route is tested without anyone writing a test for it | Every pull request |
 | Contract | The front-end and the API agree | A regenerated OpenAPI client must match the committed one | Every pull request |
-| Mail | Each of the 23 templates renders in EN and DE with the right data and recipients | Mailpit locally and in CI, read through its API | Every pull request |
+| Mail | Each of the 23 templates renders in EN and DE with the right data and recipients | Render tests, plus an in-memory `Mailer` that records each message. A short live suite sends to the test SMTP inbox on demand | Every pull request (render and in-memory), on demand (live SMTP) |
 | End to end | UX scenarios S1 to S12 on a phone-sized screen in both languages | Playwright in `e2e/`, 375 px, EN and DE, against the local stack and against staging after each deploy | Every pull request (local stack), every deploy (staging) |
 | Load | 50 concurrent guests on one departure never confirm more than capacity. Two staff accepting orders for the last unit give one success | k6 against staging | Before E4 and E7 sign-off, then monthly |
 | Front-end budgets | First load size, render counts, 100-route EN and DE text diff | The existing `.check/drv` scripts (`compare-builds.mjs`, `render-count.mjs`, `docs/audit/measure-initial-load.mjs`), moved into `e2e/budgets/` | Every pull request that touches `front-end/` |
@@ -130,7 +130,7 @@ Each spike is a throwaway branch with a written answer in `docs/spikes/SPn.md`. 
 | E1.5 | Commission basis, adjustments and offsets, and the discount split (Q9) | Both | 3 | Medium | E1.2 | CHF 100 + 10 − 10 with delivery 5 gives a basis of 100. The S9 offset figures come out exactly. A discount splits by line value to the Rappen, and the last line takes the remainder. Tests `[E1.5][S9]` |
 | E1.6 | Zurich date rules, pickup windows and reminder times (Q5) | Both | 2 | Medium | E1.2 | The reminder set from Q5 lands at the right Zurich times across both DST changes. Tests `[E1.6]` |
 | E1.7 | Layer boundary lint zones | Both | 2 | Medium | E1.2 | A fixture file that breaks each rule fails lint. The real code passes. Test `[E1.7]` |
-| E1.8 | API skeleton. Hono app, Zod config, logger, RFC 9457 errors, request id, `/healthz`, `ROLE` switch, Docker Compose with Postgres and Mailpit | BE | 5 | High | E1.1, E0.1 | `pnpm dev` starts the API and the worker. A bad env value stops startup with a clear message. Tests `[E1.8]` |
+| E1.8 | API skeleton. Hono app, Zod config, logger, RFC 9457 errors, request id, `/healthz`, `ROLE` switch, Docker Compose with Postgres and Mailpit (Mailpit is removed in E2.8, D12) | BE | 5 | High | E1.1, E0.1 | `pnpm dev` starts the API and the worker. A bad env value stops startup with a clear message. Tests `[E1.8]` |
 | E1.9 | Platform layer. Unit of work, `audit_log`, `idempotency_keys`, `webhook_events`, pg-boss inside the transaction, `Clock` port | BE | 5 | High | E1.8, E0.2 | A rolled-back command leaves no audit row and no job. A repeated idempotency key replays the first response, and a different body gets 422. Integration tests `[E1.9]` |
 | E1.10 | `packages/api-contract` with the generated client and the contract diff gate | Both | 3 | Medium | E1.8 | CI fails when the committed client differs from a fresh build. Test `[E1.10]` |
 | E1.11 | TanStack Query in the front-end, with a `DataClient` interface under the query functions and the demo store behind it (D19) | FE | 5 | Medium | E1.2 | Demo mode works as before. Each feature's hooks use `useQuery` and `useMutation` over `DataClient`, so a feature can switch to the API alone. The E0.8 tests pass |
@@ -148,7 +148,7 @@ Each spike is a throwaway branch with a written answer in `docs/spikes/SPn.md`. 
 | E2.5 | Catalogue schema and public reads. Products, variants, sub-categories, pickup places, tours, departures. C01 to C03 and C08 to C10 read from the API | Both | 8 | High | E1.13, E1.11 | The guest pages show seeded data from the database. The catalogue demo seed and its mock code are deleted. Playwright `[E2.5]` |
 | E2.6 | Merchant catalogue edits M11 to M14 and M26, with `If-Match` and the publish rule | Both | 8 | Medium | E2.5, E2.2 | A stale edit gets 412. A tour complete in only EN or only DE can be published (S11). Tests `[E2.6][S11]` |
 | E2.7 | Media. Signed upload URLs, `sharp` variants in the worker, the public bucket | Both | 5 | Medium | E0.5, E2.6 | A merchant uploads a photo and the guest page shows the resized image. Tests `[E2.7]` |
-| E2.8 | Notifications module. Resend adapter, Mailpit locally, EN and DE templates, the `mail` job with retries | BE | 5 | Medium | E1.9, E1.12 | N18 and N20 render in both languages and arrive in Mailpit. A failing send retries and then alerts. Tests `[E2.8]` |
+| E2.8 | Notifications module. SMTP adapter behind the `Mailer` port with the `SMTP_*` config, an in-memory `Mailer` for tests, Mailpit removed from Docker Compose, EN and DE templates, the `mail` job with retries | BE | 5 | Medium | E1.9, E1.12 | N18 and N20 render in both languages and the SMTP adapter delivers them to the test inbox. A failing send retries and then alerts. Tests `[E2.8]` |
 | E2.9 | Staging. Fly `sk-staging`, Neon `staging` branch, Sentry EU, deploy on merge, smoke tests after each deploy | Ops | 5 | High | E1.13, E0.7 | A merge to `main` reaches staging, and the E0.8 and E2 Playwright tests pass there. Proof is the deploy log and the run link |
 
 ### E3. Keepsake orders
@@ -253,7 +253,8 @@ This is a guess for one developer with Claude agents. It is rebuilt from measure
 | Decision | Blocks | Needed by |
 |---|---|---|
 | Q2. Pilot merchant's Swiss business status, CHF account, TWINT legal notice | E4.12, the TWINT half of E4.13, E7.5 | Sprint 8 for the test account, Sprint 17 for live |
-| Q6. Lawyer confirms Frankfurt hosting and Resend | E7.6 | Sprint 16 |
+| Q6. Lawyer confirms Frankfurt hosting and the SMTP provider | E7.6 | Sprint 16 |
+| Q15. Production SMTP provider and sending domain | E2.9 for real guests, E7.6 | Before staging mail leaves the test account |
 | Q1. Stripe platform entity | Nothing in Phase 1. It matters before a second merchant | After launch |
 | PRD open items for tours (minimum group size, cutoffs, rescheduling, weather and merchant cancellation, PRD L255) | E4.2 and E4.9 rules. Each rule is a pure function, so a late answer changes one function and its test | Sprint 8 |
 

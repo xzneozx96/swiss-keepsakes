@@ -42,7 +42,7 @@ The source is `docs/architecture/backend.md` section 1 and the decision numbers 
 | Service | One TypeScript service on Node, Hono 4.13 on `@hono/node-server` 2.1. It runs the API, the worker or both, chosen by `ROLE`. `tsx watch` runs it in development | In use. The worker runs pg-boss with no job handler yet | D1 |
 | Configuration | One Zod 4 schema over the environment, checked at startup (`api/src/platform/config.ts`) | In use | Section 11 |
 | Logging | pino 10, JSON lines with the request id (`api/src/platform/logger.ts`). Errors under `err` keep only type, code, constraint, table and stack frames. A fixed list of keys (email, phone, token, engraving, auth header and similar) is redacted at the top level, one and two levels down, and in arrays of objects up to one level down. Deeper fields and other key names are not covered | In use | Section 13 |
-| Local services | `docker-compose.yml`: Postgres 18.6, Mailpit | In use | Section 11 |
+| Local services | `docker-compose.yml`: Postgres 18.6, Mailpit | In use. E2.8 removes Mailpit, because mail goes over SMTP (D12) | Section 11 |
 | Lint | `@antfu/eslint-config` for `api/` (`pnpm --filter @sk/api lint`). Layer rules come from the root `pnpm lint:zones` | In use | `frontend/linting.md` |
 | Database | Neon Postgres 18, AWS Frankfurt, branches `production`, `staging`, `development`. `pg` 8.23 pools: `DATABASE_URL` (pooled) for requests, `DATABASE_URL_UNPOOLED` (direct) for pg-boss and migrations (`api/src/platform/db/client.ts`) | The pools are in use against the compose Postgres. Neon is not connected yet | D2 |
 | ORM and migrations | Drizzle ORM 0.45 and drizzle-kit 0.31. SQL migrations in `api/migrations/` that only move forward (expand and contract), applied by `pnpm --filter @sk/api db:migrate` (`api/src/platform/db/migrate.ts`) | In use for the `platform` schema | Section 1, 11 |
@@ -51,7 +51,7 @@ The source is `docs/architecture/backend.md` section 1 and the decision numbers 
 | API contract | REST with `@hono/zod-openapi`, committed generated client, RFC 9457 errors | In use. `packages/api-contract` holds the Zod schemas, `generated/openapi.json` and `generated/schema.ts` (`pnpm contract:build`) and the client. The `[E1.10]` test in `pnpm test` fails when the committed files differ from a fresh build. See `backend/api-contract.md` | D11 |
 | File storage | Neon Object Storage through the S3 API | Planned | D14 |
 | Payments | Stripe Payment Element with PaymentIntents, per store account | Planned | D6, D7 |
-| Email | Resend, EU sending region | Planned | D12 |
+| Email | SMTP through one `Mailer` port, configured by `SMTP_*` variables. The production provider is open (Q15) | Planned | D12 |
 | Errors and analytics | Sentry EU, Plausible EU, Google Analytics 4 after consent | Planned | D13 |
 | Hosting | Fly.io, region `fra`, one image that also serves the SPA | Planned. The image exists: the root `Dockerfile` builds the API (no SPA yet), and CI builds and smoke-tests it without pushing it. No Fly app yet | D3 |
 | Architecture | Clean architecture in four layers, modules with their own Postgres schemas | Platform layer in use. No module yet | Section 4 |
