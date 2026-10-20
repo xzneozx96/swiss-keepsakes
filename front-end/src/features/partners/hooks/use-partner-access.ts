@@ -6,9 +6,7 @@ import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import {
   CODE_LENGTH,
-  CODE_LIFETIME_MS,
   EXPIRED_CODE,
-  MAX_ATTEMPTS,
   RESEND_AFTER_MS,
   WRONG_CODE,
 } from '@/features/auth/hooks/use-sign-in'
@@ -19,6 +17,10 @@ import { usePartners } from '@/features/partners/api/queries'
 
 /** R10: once the code is entered, the report opens on this browser for 30 days. */
 const SESSION_MS = 30 * 24 * 60 * 60 * 1000
+
+/** Q8: partner codes are our own, not Neon Auth's, and keep 10 minutes and 5 tries. */
+export const PARTNER_CODE_LIFETIME_MS = 10 * 60_000
+export const PARTNER_MAX_ATTEMPTS = 5
 
 /** "g***@hotel-am-see.example": enough to recognise, not enough to copy (spec §4.8). */
 export function maskEmail(email: string): string {
@@ -96,7 +98,7 @@ function useCodeStep(partner: Partner | undefined, token: string) {
 
     if (
       value === EXPIRED_CODE
-      || now.getTime() - step.sentAt > CODE_LIFETIME_MS
+      || now.getTime() - step.sentAt > PARTNER_CODE_LIFETIME_MS
     ) {
       setStep({ ...step, status: 'expired' })
       setCode('')
@@ -109,7 +111,7 @@ function useCodeStep(partner: Partner | undefined, token: string) {
       setStep({
         ...step,
         attempts,
-        status: attempts >= MAX_ATTEMPTS ? 'locked' : 'wrong',
+        status: attempts >= PARTNER_MAX_ATTEMPTS ? 'locked' : 'wrong',
       })
       setCode('')
 
@@ -142,7 +144,8 @@ function useCodeStep(partner: Partner | undefined, token: string) {
     },
     verify,
     resend: send,
-    attemptsLeft: MAX_ATTEMPTS - (step?.attempts ?? 0),
+    attemptsLeft: PARTNER_MAX_ATTEMPTS - (step?.attempts ?? 0),
+    codeMinutes: PARTNER_CODE_LIFETIME_MS / 60_000,
   }
 }
 

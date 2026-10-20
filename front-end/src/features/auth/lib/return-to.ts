@@ -14,3 +14,16 @@ export function safeReturnTo(value: string | undefined): string {
 
   return value
 }
+
+/**
+ * The sign-in screen's full address, where Neon Auth sends the browser back after Google. The
+ * screen then replaces itself with `returnTo`. `failed` marks a Google sign-in that did not finish.
+ */
+export function signInUrl(returnTo: string, google?: 'failed'): string {
+  const search = new URLSearchParams({ returnTo })
+
+  if (google)
+    search.set('google', google)
+
+  return `${window.location.origin}${window.location.pathname}#/sign-in?${search}`
+}

@@ -36,7 +36,7 @@ const partnerTemplates: Partial<Record<Mail['template'], Template>> = {
     body: [
       'mail.N19.greeting',
       'mail.N19.code',
-      'mail.N01.expiry',
+      'mail.N19.expiry',
       'mail.N19.ignore',
     ],
   },

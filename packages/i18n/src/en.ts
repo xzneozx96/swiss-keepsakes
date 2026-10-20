@@ -4,11 +4,12 @@ export const mailEn = {
   'mail.N19.subject': 'Your code for the {shop} commission report: {code}',
   'mail.N19.greeting': 'Hello {partner},',
   'mail.N19.code': 'Your code for the commission report from {shop} is {code}.',
+  'mail.N19.expiry': 'Enter it in the sign-in window. It works for 10 minutes.',
   'mail.N19.ignore':
     'If you didn\'t open the report link, you can ignore this email. Nobody can open your report without this code.',
   'mail.N01.subject': 'Your {shop} sign-in code: {code}',
   'mail.N01.code': 'Your sign-in code is {code}.',
-  'mail.N01.expiry': 'Enter it in the sign-in window. It works for 10 minutes.',
+  'mail.N01.expiry': 'Enter it in the sign-in window. It works for 5 minutes.',
   'mail.N01.ignore': 'If you didn’t try to sign in, you can ignore this email.',
   'mail.pickup': 'Pickup: {pickupDate} at {place}.',
   'mail.N02.subject': 'We received your request {orderRef}',

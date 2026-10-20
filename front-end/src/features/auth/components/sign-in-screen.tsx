@@ -13,22 +13,26 @@ import { useDemoSelector } from '@/features/demo'
 import { useSignIn } from '../hooks/use-sign-in'
 import { SignInForm } from './sign-in-form'
 
-// Leaving happens through the signed-in redirect below, so the hook needs no callback.
-function noop() {}
-
 /**
  * C05 sign-in screen (owner review 1.6r). Phones, inside the 430px guest frame: the Luzerne
  * photo on top and the form on a sheet that overlaps it, so the code slots and errors sit on
  * a plain surface. From 1024px: two columns, form on the left, the photo filling the right.
- * Once signed in (or when opened signed in) it replaces itself with `returnTo`.
+ * Once signed in (or when opened signed in) it replaces itself with `returnTo`. `googleFailed`: Neon
+ * Auth sent the guest back here because Google sign-in did not finish.
  */
-export function SignInScreen({ returnTo }: { returnTo: string }) {
+export function SignInScreen({
+  returnTo,
+  googleFailed,
+}: {
+  returnTo: string
+  googleFailed: boolean
+}) {
   const { t } = useLocale()
   const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
-  const view = useSignIn(noop)
+  const view = useSignIn(returnTo, googleFailed)
 
   // Leave sign-in out of history. Opened over its own return screen (C06, C11, Account), step
   // back to that entry: replacing would leave a second copy, so Back there seemed to do nothing.

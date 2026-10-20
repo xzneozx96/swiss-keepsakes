@@ -16,7 +16,6 @@ import { useEffect, useRef } from 'react'
 import { BackIcon } from '@/components/icons'
 
 import { useLocale } from '@/contexts/locale-context'
-import { ProposalMark } from '@/features/demo/components/proposal-mark'
 import { CODE_LENGTH } from '../hooks/use-sign-in'
 
 /**
@@ -69,6 +68,11 @@ function StartStep({ view }: { view: SignInView }) {
 
   return (
     <div className="flex flex-col gap-5">
+      {view.problem && (
+        <p data-visible className="field-error" role="alert">
+          {t(view.problem === 'google' ? 'auth.google.failed' : 'auth.unavailable')}
+        </p>
+      )}
       <Button
         fullWidth
         isPending={view.googlePending}
@@ -105,7 +109,7 @@ function StartStep({ view }: { view: SignInView }) {
           <Input inputMode="email" />
           <FieldError>{t('auth.email.invalid')}</FieldError>
         </TextField>
-        <Button fullWidth size="lg" type="submit">
+        <Button fullWidth isPending={view.sending} size="lg" type="submit">
           {t('auth.email.send')}
         </Button>
       </Form>
@@ -124,10 +128,11 @@ export type CodeStepView = Pick<
   | 'verify'
   | 'resend'
   | 'attemptsLeft'
+  | 'codeMinutes'
 > & {
   /** Absent when the email cannot be changed (P01). */
   changeEmail?: () => void
-}
+} & Partial<Pick<SignInView, 'sending' | 'verifying' | 'problem'>>
 
 export function CodeStep({ view }: { view: CodeStepView }) {
   const { t } = useLocale()
@@ -148,7 +153,10 @@ export function CodeStep({ view }: { view: CodeStepView }) {
       <div className="flex flex-col gap-2">
         <Label htmlFor="sign-in-code">{t('auth.code.label')}</Label>
         <Description id="sign-in-code-hint">
-          {t('auth.code.hint', { length: CODE_LENGTH })}
+          {t('auth.code.hint', {
+            length: CODE_LENGTH,
+            minutes: view.codeMinutes,
+          })}
         </Description>
         <InputOTP
           ref={codeInputRef}
@@ -182,7 +190,12 @@ export function CodeStep({ view }: { view: CodeStepView }) {
 
       {needsNewCode
         ? (
-            <Button fullWidth size="lg" onPress={view.resend}>
+            <Button
+              fullWidth
+              isPending={view.sending}
+              size="lg"
+              onPress={view.resend}
+            >
               {t('auth.code.sendNew')}
             </Button>
           )
@@ -190,6 +203,7 @@ export function CodeStep({ view }: { view: CodeStepView }) {
             <Button
               fullWidth
               isDisabled={view.code.length !== CODE_LENGTH}
+              isPending={view.verifying}
               size="lg"
               onPress={() => view.verify(view.code)}
             >
@@ -203,7 +217,7 @@ export function CodeStep({ view }: { view: CodeStepView }) {
             {t('auth.code.noEmail')}
             <Button
               className="h-auto min-w-0 px-1 underline underline-offset-4"
-              isDisabled={view.resendIn > 0}
+              isDisabled={view.resendIn > 0 || view.sending}
               size="sm"
               variant="ghost"
               onPress={view.resend}
@@ -236,33 +250,36 @@ function CodeMessage({ view }: { view: CodeStepView }) {
         <p data-visible className="field-error">
           {t('auth.code.wrong')}
         </p>
-        <ProposalMark name={t('auth.proposal.attempts')}>
-          <p className="text-sm text-muted">
-            {t(
-              view.attemptsLeft === 1
-                ? 'auth.code.attemptsLeft.one'
-                : 'auth.code.attemptsLeft.other',
-              { count: view.attemptsLeft },
-            )}
-          </p>
-        </ProposalMark>
+        <p className="text-sm text-muted">
+          {t(
+            view.attemptsLeft === 1
+              ? 'auth.code.attemptsLeft.one'
+              : 'auth.code.attemptsLeft.other',
+            { count: view.attemptsLeft },
+          )}
+        </p>
       </div>
     )
   }
   if (view.status === 'expired') {
     return (
       <p data-visible className="field-error">
-        {t('auth.code.expired')}
+        {t('auth.code.expired', { minutes: view.codeMinutes })}
       </p>
     )
   }
   if (view.status === 'locked') {
     return (
-      <ProposalMark name={t('auth.proposal.attempts')}>
-        <p data-visible className="field-error">
-          {t('auth.code.locked')}
-        </p>
-      </ProposalMark>
+      <p data-visible className="field-error">
+        {t('auth.code.locked')}
+      </p>
+    )
+  }
+  if (view.problem === 'unavailable') {
+    return (
+      <p data-visible className="field-error">
+        {t('auth.unavailable')}
+      </p>
     )
   }
 
