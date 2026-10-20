@@ -6,9 +6,14 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
+    "./identity": {
+      "sk-compiled": "./dist/src/identity/index.js",
+      "default": "./src/identity/index.ts"
+    },
     "./*": "./src/*/index.ts"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc"
   },
   "devDependencies": {
