@@ -22,6 +22,8 @@ Every spike declares its keys with zod (`lib/env.ts`). A missing key prints `SKI
 | SP6 Neon Auth | nothing | `NEON_AUTH_BASE_URL`, `NEON_AUTH_JWKS_URL` (a throwaway user supplies the JWT; deleted afterwards with the Neon CLI), plus a manual iOS Safari checklist |
 | SP7 Fly release command | nothing | `FLY_API_TOKEN`, `FLY_APP_STAGING`, `DATABASE_URL_DDL` (a separate role, later), `DATABASE_URL` |
 
+SP6 is history since 20.10.2026. D8 moved from Neon Auth to Better Auth inside our API, and `docs/spikes/SP6.md` has the result.
+
 Docker is needed for the local SP2 and SP3 runs. Without it they print `SKIP ...: missing docker`. The container name is fixed (`sk-spike-pg`), so run SP2 and SP3 one after the other, which `run-all.ts` does. The container is removed when the spike ends, and on Ctrl+C.
 
 Vendor guidance followed: the Neon skills (`neon`, `neon-postgres`, `neon-postgres-branches`, `neon-auth`, `neon-object-storage`) and the Stripe skills (`stripe-best-practices`, `stripe-docs`). Each spike README says which one guided which choice.

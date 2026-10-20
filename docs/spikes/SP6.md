@@ -1,5 +1,17 @@
 # SP6. Neon Auth in the SPA served by our API on Fly
 
+## Result, 20.10.2026
+
+Neon Auth failed the session check on WebKit, and the owner moved D8 to Better Auth inside our API on 20.10.2026. The sections after this one are the earlier status and measurements, kept as they were.
+
+- **E2.1 WebKit run.** The E2.1 Playwright specs (PR #19, commit 34ce106, `front-end/tests/e2e/neon-sign-in.spec.ts`) run the sign-in sheet against a stub of Neon Auth on another site. The stub sets the session cookie the way SP6 observed it below (`SameSite=None`, `Partitioned`), so the cookie is third-party on our origin. WebKit refused it with or without `Partitioned`, and the session specs carry a `test.fail` mark on WebKit. Chromium kept the cookie and passed.
+- **Neon's docs.** Neon's JWT plugin page says "Cross-domain setups have further limitations, notably Safari ITP blocking third-party cookies, with reverse-proxy or shared-parent-domain workarounds", and links to Better Auth's cookies page. It names no fix for an SPA. Neon's proxy toolkit for other frameworks (`handleAuthProxyRequest` in `@neondatabase/auth/server`) is marked beta in its changelog. neon-js issue 234, opened 5.10.2026 and still open, says that proxy drops the renewed session cookie, so active users are signed out 7 days after sign-in.
+- **Decision.** Our API already serves the SPA on one origin (D3), so a cookie that our own API sets is first-party. Better Auth runs inside the API at `/api/auth/*` (architecture D8 and section 9). The code limits become our own `emailOTP` settings (F16), and N01 goes out through our `mail` job in EN and DE.
+- **Unchanged.** Neon Auth stays provisioned on `production`, `staging` and `development` (`auth: true` in `api/neon.ts`). The owner decides later whether to switch it off.
+- **Still open.** The real iPhone check in Safari moves to E2.1 and runs against Better Auth.
+
+## Earlier status
+
 **Status: Scripted part answered on Neon; manual iOS Safari checklist still open.** The JWKS fetch, a real JWT and its verification ran against the operator's project. The iOS Safari checks need a real iPhone or BrowserStack and cannot be scripted. D8 stays open. On 20.10.2026 the owner told us to assume Safari sessions work and to build E2.1 and E2.2, so the checklist is still outstanding.
 
 **Pass condition (architecture section 16).** On iOS Safari with default settings, the guest stays signed in across reloads and a day later. The API resolves the actor from the JWT, and `can()` resolves the memberships. Each limit and the email are configurable or listed as gaps for D8. If sessions don't survive on Safari, D8 moves to Better Auth inside the API before Phase 2.
