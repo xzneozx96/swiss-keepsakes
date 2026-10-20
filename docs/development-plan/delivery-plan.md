@@ -255,6 +255,8 @@ This is a guess for one developer with Claude agents. It is rebuilt from measure
 | Q2. Pilot merchant's Swiss business status, CHF account, TWINT legal notice | E4.12, the TWINT half of E4.13, E7.5 | Sprint 8 for the test account, Sprint 17 for live |
 | Q6. Lawyer confirms Frankfurt hosting and the SMTP provider | E7.6 | Sprint 16 |
 | Q15. The store's own mail host: SMTP host, credentials and sending domain | E2.9 for real guests, E7.6 | Before staging mail leaves the test account |
+| Better Auth details, raised 20.10.2026. How E2.2's 8 points split, the SPA's client for `/api/auth/*`, the language N01 is sent in, and whether sending codes gets a per-email limit | E2.2, E2.1 | Sprint 3 planning |
+| Deleting an account without a password. How a guest confirms (a fresh session or a confirmation mail), and how order, ledger and membership rows keep their reference when Better Auth deletes the user | E6.7 | Sprint 16 |
 | Q1. Stripe platform entity | Nothing in Phase 1. It matters before a second merchant | After launch |
 | PRD open items for tours (minimum group size, cutoffs, rescheduling, weather and merchant cancellation, PRD L255) | E4.2 and E4.9 rules. Each rule is a pure function, so a late answer changes one function and its test | Sprint 8 |
 
