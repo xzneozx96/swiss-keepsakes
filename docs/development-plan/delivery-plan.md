@@ -193,7 +193,7 @@ Q2 (the pilot merchant's Swiss business status, CHF account and TWINT legal noti
 |---|---|---|---|---|---|---|
 | E5.1 | Partners M15 and M16. QR and link, `/r/{code}` records a visit and attributes later orders and bookings | Both | 5 | Medium | E3.1, E4.1 | An order placed inside the attribution window carries the partner. Tests `[E5.1]` |
 | E5.2 | Commission. Recorded once at completion (unique index), adjusted on refund, offset against later commission | BE | 5 | High | E5.1, E3.6, E4.9, E1.5 | The S9 figures come out exactly. A second recorded row fails. Tests `[E5.2][S9]` |
-| E5.3 | Partner access P01 and report P02. Token link, emailed code (N19), session cookie | Both | 5 | High | E5.2 | S5. No `/api/partner/*` response contains email, phone, address, engraving or notes, checked against the response schemas. Tests `[E5.3][S5]` |
+| E5.3 | Partner access P01 and report P02. Token link, emailed code (N19), session cookie | Both | 5 | High | E5.2 | S5. No `/api/partner/*` response contains email, phone, address, engraving or notes, checked against the response schemas. Every partner mutation route is under `/api/partner/`, so the `Origin` rule covers it, and a test sends one from a foreign origin and gets 403. Tests `[E5.3][S5]` |
 | E5.4 | Partner payouts recorded in M16 by Owner or Manager. Revoke a leaked link | Both | 3 | Medium | E5.3 | S5, payout part. The report updates and keeps who recorded it. Tests `[E5.4][S5]` |
 | E5.5 | Partner screens on the API. The partner demo seed and its mock code are deleted. The S5 staging run | FE | 2 | Medium | E5.4 | Playwright `[E5.5][S5]` on staging |
 
