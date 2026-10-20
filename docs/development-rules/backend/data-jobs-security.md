@@ -6,7 +6,8 @@
 
 - **Every tenant row has `store_id`.** Child rows use composite foreign keys `(store_id, parent_id)`, so a child cannot point at another store's parent. (D9)
 - **Every repository function requires a `StoreScope` argument.** Row-level security arrives with the second merchant. (D9)
-  - The one exception is the `notifications.sent_mail` repository (E2.8). It takes no `StoreScope`, because the mail job runs without an actor and finds the row by the mail id it carries. No route reads the table yet. The row keeps `store_id`. A read by store, such as a resend list (UX R13), takes a `StoreScope`.
+  - The identity module's access read (E2.10, `createAccessRepository`) is an exception too. It loads one user's `store_memberships` and `platform_admins` rows across every store, because the store check needs them.
+  - The other exception is the `notifications.sent_mail` repository (E2.8). It takes no `StoreScope`, because the mail job runs without an actor and finds the row by the mail id it carries. No route reads the table yet. The row keeps `store_id`. A read by store, such as a resend list (UX R13), takes a `StoreScope`.
 - **Postgres row locks decide every seat and every unit of stock.** Nothing else holds a lock. (1)
 - **Money history is append-only.** Balances and payment labels are computed from ledger rows and never stored. (D5)
 - **One `audit_log` records every money and status change** with before, after, actor, reason and request id. (D10)
@@ -36,6 +37,7 @@
 
 - **The guest and staff session is an HttpOnly first-party cookie** that Better Auth sets, `SameSite=Lax`, and `Secure` on staging and production. The SPA holds no auth token, in memory or in `localStorage`. (D8, 13)
 - **One rule checks `Origin` on every POST, PUT, PATCH and DELETE under `/api/`**, whatever its content type, `/api/auth/*` included, because a cookie session needs CSRF protection. `/webhooks/stripe` is excluded by name, because Stripe signs its events. Better Auth also checks `/api/auth/*` itself. (9, 13)
+  - Built (E2.10): `requireOwnOrigin` in `api/src/platform/http/origin.ts`, mounted first on `/api/*` in `createApp`, before the body limit, Better Auth and `authenticate`. A foreign origin, `null` and a missing header get a 403 problem with the code `origin-refused`. A non-browser client sends `Origin` too. The path scope leaves `/webhooks/stripe` out. A future CORS middleware must come before `authenticate`. Tests: `api/test/platform/http/origin.test.ts`.
 - **No table of ours has a foreign key to Better Auth's `user` row.** Guest-owned rows point at the guest profile, so deleting an account anonymises the profile and keeps the ledger. (5, 13)
 - **`better-auth` stays at 1.7.7 or later**, and its security advisories are watched. (R13) Built (E2.2): `api/package.json` pins 1.7.11 exactly. Better Auth is `createAuth` in `api/src/platform/auth.ts`. It skips its origin and CSRF checks under `NODE_ENV=test`, so `createAuth` sets both checks on explicitly. The rate limiter reads the client address from `Fly-Client-IP` only.
 - **The partner session cookie is `httpOnly` and `SameSite=Lax`**, scoped to `/partner` and `/api/partner`, with an `Origin` check on mutations. (13)
