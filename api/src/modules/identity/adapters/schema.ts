@@ -2,11 +2,13 @@ import { relations, sql } from 'drizzle-orm'
 import {
   bigint,
   boolean,
+  check,
   index,
   integer,
   pgSchema,
   text,
   timestamp,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core'
 
@@ -131,4 +133,25 @@ export const guestProfiles = identitySchema.table('guest_profiles', {
     .default(sql`uuidv7()`)
     .primaryKey(),
   authUserId: uuid('auth_user_id').unique(),
+})
+
+// Roles live in our own table, not in Better Auth (D8). `user_id` is Better Auth's user id as a plain value,
+// like the guest profile's (section 5). `store_id` has no foreign key yet, because `stores` comes with E2.3,
+// which adds it. The unique key is also the index that loads one user's memberships on every signed-in request.
+export const storeMemberships = identitySchema.table('store_memberships', {
+  id: uuid('id')
+    .default(sql`uuidv7()`)
+    .primaryKey(),
+  userId: uuid('user_id').notNull(),
+  storeId: uuid('store_id').notNull(),
+  role: text('role', { enum: ['owner', 'manager'] }).notNull(),
+  acceptedAt: timestamp('accepted_at', { withTimezone: true }).notNull(),
+}, table => [
+  unique('store_memberships_user_id_store_id_unique').on(table.userId, table.storeId),
+  check('store_memberships_role_check', sql`${table.role} in ('owner', 'manager')`),
+])
+
+// One row per Super Admin (D8). No screen writes it, so a Super Admin is added with an insert (architecture section 9).
+export const platformAdmins = identitySchema.table('platform_admins', {
+  userId: uuid('user_id').primaryKey(),
 })
