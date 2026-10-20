@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
@@ -58,6 +58,9 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
     googleFailed ? 'google' : null,
   )
   const [realNow, setRealNow] = useState(() => Date.now())
+  // A repeat tap or a second `onComplete` in the same tick must not send a second call: `pending` is state
+  // and still reads null until the next render.
+  const calling = useRef(false)
 
   const resendIn = codeStep
     ? Math.max(0, Math.ceil((codeStep.resendAt - realNow) / 1000))
@@ -122,9 +125,16 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
     setCode('')
   }
 
-  const refuseCall = (error: unknown) => {
+  // Better Auth deletes every expired code whenever anyone looks one up, so a code that expired a while ago
+  // reads as unknown (INVALID_OTP), not as expired. The guest knows when this code was sent.
+  const refuseCall = (error: unknown, sentAt: number) => {
     const failure = codeFailure(error)
 
+    if (failure === 'wrong' && Date.now() - sentAt > CODE_LIFETIME_MS) {
+      refuseCode('expired')
+
+      return
+    }
     if (failure === 'wrong' || failure === 'expired' || failure === 'locked') {
       refuseCode(failure)
 
@@ -155,6 +165,9 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
 
       return
     }
+    if (calling.current)
+      return
+    calling.current = true
     setPending('send')
     try {
       const auth = await loadAuthClient()
@@ -173,6 +186,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
       setProblem('unavailable')
     }
     finally {
+      calling.current = false
       setPending(null)
     }
   }
@@ -189,7 +203,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
   }
 
   const verify = async (value: string) => {
-    if (!codeStep || codeStep.status === 'locked' || pending)
+    if (!codeStep || codeStep.status === 'locked' || codeStep.status === 'expired')
       return
     if (value.length !== CODE_LENGTH)
       return
@@ -205,6 +219,9 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
 
       return
     }
+    if (calling.current)
+      return
+    calling.current = true
     setPending('verify')
     setProblem(null)
     try {
@@ -216,13 +233,14 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
       })
 
       if (error)
-        refuseCall(error)
+        refuseCall(error, codeStep.sentAt)
       else finish()
     }
     catch (error) {
-      refuseCall(error)
+      refuseCall(error, codeStep.sentAt)
     }
     finally {
+      calling.current = false
       setPending(null)
     }
   }

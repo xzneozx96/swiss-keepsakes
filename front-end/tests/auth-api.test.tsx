@@ -116,6 +116,35 @@ describe('[E2.1][AC01] sign-in through the real Better Auth client', () => {
     await waitFor(() => expect(result.current.status).toBe('locked'))
   })
 
+  it('sends one call for a code that completes twice in the same tick, and ignores an expired code', async () => {
+    const { result } = await codeStep()
+    const before = calls.length
+
+    answer = () => problem(400, 'OTP_EXPIRED')
+    act(() => {
+      result.current.verify('123456')
+      result.current.verify('123456')
+    })
+    await waitFor(() => expect(result.current.status).toBe('expired'))
+    act(() => result.current.verify('123456'))
+
+    expect(calls.length - before).toBe(1)
+    expect(result.current.status).toBe('expired')
+  })
+
+  it('reads an unknown code as expired once 5 minutes have passed since it was sent', async () => {
+    const { result } = await codeStep()
+    const now = Date.now()
+
+    answer = () => problem(400, 'INVALID_OTP')
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now + 5 * 60_000 + 1000)
+    act(() => result.current.verify('123456'))
+    await waitFor(() => expect(result.current.status).toBe('expired'))
+    clock.mockRestore()
+
+    expect(result.current.attemptsLeft).toBe(3)
+  })
+
   it('maps 429 to rate limited and a failure without a code to unavailable', async () => {
     const { result } = await codeStep()
 
