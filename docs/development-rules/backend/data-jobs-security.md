@@ -6,6 +6,7 @@
 
 - **Every tenant row has `store_id`.** Child rows use composite foreign keys `(store_id, parent_id)`, so a child cannot point at another store's parent. (D9)
 - **Every repository function requires a `StoreScope` argument.** Row-level security arrives with the second merchant. (D9)
+  - Exception (E2.8): the `notifications.sent_mail` repository takes no `StoreScope`. The mail job runs without an actor and finds the row by the mail id it carries, and no route reads the table yet. The row keeps `store_id`. A read by store, such as a resend list (UX R13), takes a `StoreScope`.
 - **Postgres row locks decide every seat and every unit of stock.** Nothing else holds a lock. (1)
 - **Money history is append-only.** Balances and payment labels are computed from ledger rows and never stored. (D5)
 - **One `audit_log` records every money and status change** with before, after, actor, reason and request id. (D10)

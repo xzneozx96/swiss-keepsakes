@@ -149,7 +149,7 @@ Each spike is a throwaway branch with a written answer in `docs/spikes/SPn.md`. 
 | E2.6 | Merchant catalogue edits M11 to M14 and M26, with `If-Match` and the publish rule | Both | 8 | Medium | E2.5, E2.2 | A stale edit gets 412. A tour complete in only EN or only DE can be published (S11). Tests `[E2.6][S11]` |
 | E2.7 | Media. Signed upload URLs, `sharp` variants in the worker, the public bucket | Both | 5 | Medium | E0.5, E2.6 | A merchant uploads a photo and the guest page shows the resized image. Tests `[E2.7]` |
 | E2.8 | Notifications module. SMTP adapter behind the `Mailer` port with the `SMTP_*` config, an in-memory `Mailer` for tests, Mailpit removed from Docker Compose, EN and DE templates, the `mail` job with retries | BE | 5 | Medium | E1.9, E1.12 | N18 and N20 render in both languages and the SMTP adapter delivers them to the test inbox. A failing send retries and then alerts. Tests `[E2.8]` |
-| E2.9 | Staging. Fly `sk-staging`, Neon `staging` branch, Sentry EU, deploy on merge, smoke tests after each deploy | Ops | 5 | High | E1.13, E0.7 | A merge to `main` reaches staging, and the E0.8 and E2 Playwright tests pass there. Proof is the deploy log and the run link |
+| E2.9 | Staging. Fly `sk-staging`, Neon `staging` branch, Sentry EU, deploy on merge, smoke tests after each deploy. Sentry receives the `mail.failed` error log lines, which are the mail alert until then (`docs/ops/mail.md`) | Ops | 5 | High | E1.13, E0.7 | A merge to `main` reaches staging, and the E0.8 and E2 Playwright tests pass there. Proof is the deploy log and the run link |
 
 ### E3. Keepsake orders
 
