@@ -6,6 +6,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { Client } from 'pg'
 import { mailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
+import { renderMail } from '../../src/modules/notifications/application/render-mail.ts'
 import { migrateDatabase } from '../../src/platform/db/migrate.ts'
 import { createLogger } from '../../src/platform/logger.ts'
 import { refusedDatabaseTarget } from './database-target.ts'
@@ -17,7 +18,7 @@ import { refusedDatabaseTarget } from './database-target.ts'
 //
 // A second, test-only server on E2E_INBOX_PORT stands in for the inbox and for the database access a browser
 // cannot have: GET /code reads the sign-in code from the queued N01 job (no worker runs, so no mail goes out),
-// POST /expire ages that code, and POST /end-sessions deletes a guest's sessions.
+// POST /expire ages that code, POST /age-limits lifts the rate limits, and POST /end-sessions deletes a guest's sessions.
 const { DATABASE_URL: pooledEnv, DATABASE_URL_UNPOOLED: directEnv } = process.env
 const apiPort = process.env.E2E_API_PORT ?? '5394'
 const inboxPort = Number(process.env.E2E_INBOX_PORT ?? '5393')
@@ -133,15 +134,23 @@ async function main() {
       if (url.pathname === '/ready')
         return json(response, ready ? 200 : 503, { ready })
       if (url.pathname === '/code' && request.method === 'GET') {
-        const { rows } = await pool.query<{ data: { code?: string, params: { code: string }, language: string, template: string } }>(
+        const { rows } = await pool.query<{ data: Parameters<typeof renderMail>[0] }>(
           `select data from pgboss.job where name = $1 and data->>'to' = $2 order by created_on desc limit 1`,
           [mailQueues.send, email],
         )
         const data = rows[0]?.data
-        return data ? json(response, 200, { code: data.params.code, language: data.language, template: data.template }) : json(response, 404, {})
+        if (!data)
+          return json(response, 404, {})
+        const { subject, text } = renderMail(data, undefined)
+        return json(response, 200, { code: (data.params as { code: string }).code, language: data.language, template: data.template, subject, text })
       }
       if (url.pathname === '/expire' && request.method === 'POST') {
         await pool.query(`update identity.verification set expires_at = now() - interval '1 second' where identifier = $1`, [`sign-in-otp-${email}`])
+        return json(response, 200, {})
+      }
+      if (url.pathname === '/age-limits' && request.method === 'POST') {
+        // As if a minute had passed since the last counted call, so a rate limit lifts without waiting.
+        await pool.query(`update identity.rate_limit set last_request = last_request - 61000`)
         return json(response, 200, {})
       }
       if (url.pathname === '/end-sessions' && request.method === 'POST') {

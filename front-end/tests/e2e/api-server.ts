@@ -6,7 +6,7 @@ export const API_PORT = 5394
 export const SPA_ORIGIN = `http://localhost:${SPA_PORT}`
 const inbox = `http://127.0.0.1:${INBOX_PORT}`
 
-export interface SignInCode { code: string, language: string, template: string }
+export interface SignInCode { code: string, language: string, template: string, subject: string, text: string }
 
 /** The sign-in code of the latest N01 job for this address. No worker runs, so no mail goes out. */
 export async function latestCode(email: string): Promise<SignInCode> {
@@ -21,6 +21,11 @@ export async function latestCode(email: string): Promise<SignInCode> {
 /** Ages the address's code past its 5 minutes. */
 export async function expireCode(email: string) {
   await fetch(`${inbox}/expire?email=${encodeURIComponent(email)}`, { method: 'POST' })
+}
+
+/** Moves every rate-limit counter a minute into the past, so a limit lifts without waiting. */
+export async function ageRateLimits() {
+  await fetch(`${inbox}/age-limits`, { method: 'POST' })
 }
 
 /** Deletes the address's sessions on the server, as a revoked or expired session would be. */

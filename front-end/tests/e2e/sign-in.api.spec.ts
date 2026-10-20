@@ -1,12 +1,12 @@
 import type { BrowserContext, Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
-import { endSessions, expireCode, latestCode, newEmail, SPA_ORIGIN } from './api-server'
+import { ageRateLimits, endSessions, expireCode, latestCode, newEmail, SPA_ORIGIN } from './api-server'
 
 // [E2.1][AC01] The sign-in sheet C05 against the real API (Better Auth, its own database) on one origin.
 // Only Google's side is stubbed. Run on WebKit and Chromium, EN and DE, at 375x812 (playwright.config.ts).
 const words = {
-  en: { signOut: 'Sign out', send: 'Email me a code', newCode: 'Send a new code', google: 'Continue with Google', wrong: 'That code isn’t right', expired: 'This code has expired', locked: 'Too many wrong codes', googleFailed: 'Google sign-in didn’t finish', prompt: 'Sign in to see your orders', twoLeft: '2 tries left', oneLeft: '1 try left' },
-  de: { signOut: 'Abmelden', send: 'Code per E-Mail senden', newCode: 'Neuen Code senden', google: 'Weiter mit Google', wrong: 'Dieser Code stimmt nicht', expired: 'Dieser Code ist abgelaufen', locked: 'Zu viele falsche Codes', googleFailed: 'Die Anmeldung mit Google wurde nicht abgeschlossen', prompt: 'Anmelden und Bestellungen sehen', twoLeft: 'Noch 2 Versuche', oneLeft: 'Noch 1 Versuch' },
+  en: { signOut: 'Sign out', send: 'Email me a code', newCode: 'Send a new code', google: 'Continue with Google', wrong: 'That code isn’t right', expired: 'This code has expired', locked: 'Too many wrong codes', googleFailed: 'Google sign-in didn’t finish', prompt: 'Sign in to see your orders', twoLeft: '2 tries left', oneLeft: '1 try left', waitMessage: /Try again in \d+ seconds/, submit: 'Continue', mailSubject: /sign-in code/, mailText: /works for 5 minutes/ },
+  de: { signOut: 'Abmelden', send: 'Code per E-Mail senden', newCode: 'Neuen Code senden', google: 'Weiter mit Google', wrong: 'Dieser Code stimmt nicht', expired: 'Dieser Code ist abgelaufen', locked: 'Zu viele falsche Codes', googleFailed: 'Die Anmeldung mit Google wurde nicht abgeschlossen', prompt: 'Anmelden und Bestellungen sehen', twoLeft: 'Noch 2 Versuche', oneLeft: 'Noch 1 Versuch', waitMessage: /in \d+ Sekunden/, submit: 'Weiter', mailSubject: /Anmeldecode/, mailText: /5 Minuten gültig/ },
 }
 
 type Language = keyof typeof words
@@ -61,10 +61,15 @@ function wrongCodeFor(real: string) {
 test('[E2.1][AC01] signs in with the emailed code, stays signed in across a reload, and no token reaches JavaScript', async ({ page, context }, testInfo) => {
   const language = languageOf(testInfo)
   const authorized: string[] = []
+  const bodies: Promise<string>[] = []
 
   page.on('request', (request) => {
     if (request.headers().authorization)
       authorized.push(request.url())
+  })
+  page.on('response', (response) => {
+    if (new URL(response.url()).pathname.startsWith('/api/auth/'))
+      bodies.push(response.text().catch(() => ''))
   })
   const email = await signIn(page, language)
 
@@ -90,6 +95,11 @@ test('[E2.1][AC01] signs in with the emailed code, stays signed in across a relo
   expect(visible.local).not.toContain(token)
   expect(visible.session).not.toContain(token)
   expect(authorized).toEqual([])
+  expect(bodies.length).toBeGreaterThan(2)
+  for (const body of await Promise.all(bodies)) {
+    expect(body).not.toContain(token)
+    expect(body).not.toMatch(/"token"\s*:/)
+  }
   expect(email).toContain('@example.ch')
 })
 
@@ -99,7 +109,11 @@ test('[E2.1][AC01] a code requested in the SPA\'s language is the N01 in that la
 
   await requestCode(page, language, email)
 
-  expect(await latestCode(email)).toMatchObject({ template: 'N01', language })
+  const mail = await latestCode(email)
+
+  expect(mail).toMatchObject({ template: 'N01', language })
+  expect(mail.subject).toMatch(words[language].mailSubject)
+  expect(mail.text).toMatch(words[language].mailText)
 })
 
 test('[E2.1][AC01] sign out ends the session, also across a reload', async ({ page }, testInfo) => {
@@ -117,7 +131,7 @@ test('[E2.1][AC01] sign out ends the session, also across a reload', async ({ pa
   expect(await response.json()).toBeNull()
 })
 
-test('[E2.1][AC01] a wrong code shows the tries left and the third wrong code locks it', async ({ page, context }, testInfo) => {
+test('[E2.1][AC01] a wrong code shows the tries left and the third wrong code locks it', async ({ page }, testInfo) => {
   const language = languageOf(testInfo)
   const t = words[language]
   const email = newEmail()
@@ -139,10 +153,16 @@ test('[E2.1][AC01] a wrong code shows the tries left and the third wrong code lo
   await expect(page.getByText(t.locked)).toBeVisible()
   await expect(page.getByRole('button', { name: t.newCode })).toBeVisible()
 
-  await newClientAddress(context)
+  // Same address: the three wrong tries used the sign-in route's 3 calls a minute, so the right code is refused.
   await page.getByRole('button', { name: t.newCode }).click()
   await expect(page.getByText(t.locked)).toBeHidden()
   await typeCode(page, (await latestCode(email)).code)
+  await expect(page.getByText(t.waitMessage)).toBeVisible()
+  await expect(page.locator('#sign-in-code')).toHaveValue(/\d{6}/)
+
+  // A minute later the same code, still in the field, signs in.
+  await ageRateLimits()
+  await page.getByRole('button', { name: t.submit }).click()
   await expect(page.getByRole('button', { name: t.signOut })).toBeVisible()
 })
 
@@ -193,7 +213,7 @@ test('[E2.1][AC01] a failed Google return shows an error and cleans the address'
   await expect(page.getByRole('button', { name: t.google })).toBeEnabled()
 })
 
-test('[E2.1][AC01] the Google button is not stuck pending when Back restores the page from the cache', async ({ page }, testInfo) => {
+test('[E2.1][AC01] the Google button is not stuck pending after a synthetic pageshow with persisted set (a real bfcache restore is not driven)', async ({ page }, testInfo) => {
   const t = words[languageOf(testInfo)]
 
   await page.goto('/#/sign-in')
