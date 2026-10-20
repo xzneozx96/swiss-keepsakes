@@ -6,6 +6,8 @@ import { mailEn } from '@sk/i18n/en'
 // The values each template's job stores. An invitation mail stores the invitation id, never the link: the link
 // holds the invitation's token, so it is built when the mail is sent (InvitationLink) and fills `{link}`.
 export interface MailParams {
+  // The sign-in code is the one secret a job holds: it is useless after 5 minutes, and the job is deleted soon after.
+  N01: { shop: string, code: string }
   N18: { inviter: string, store: string, invitationId: string }
   N20: { store: string, invitationId: string }
 }
@@ -17,6 +19,11 @@ export type MailRequest = {
 
 // UX spec section 6. The copy lives in packages/i18n, shared with the prototype's mail log.
 const templates: Record<MailTemplate, { subject: MailKey, body: MailKey[] }> = {
+  // Sign-in code, to the guest or staff member who asked for it. The SPA's language, or EN.
+  N01: {
+    subject: 'mail.N01.subject',
+    body: ['mail.N01.code', 'mail.N01.expiry', 'mail.N01.ignore'],
+  },
   // Store Manager invitation, to the invitee, with the M01 link.
   N18: {
     subject: 'mail.N18.subject',

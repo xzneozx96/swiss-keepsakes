@@ -1,7 +1,9 @@
 // What the notifications use cases need. The platform's unit of work, job queue and clock fit the generic
 // shapes structurally (backend/architecture.md).
 
-export type MailTemplate = 'N18' | 'N20'
+export type MailTemplate = 'N01' | 'N18' | 'N20'
+
+export type InvitationTemplate = 'N18' | 'N20'
 
 export type MailLanguage = 'en' | 'de'
 
@@ -10,7 +12,7 @@ export interface UnitOfWork<T> {
 }
 
 export interface JobQueue<T> {
-  send: (tx: T, queue: string, data: object, options?: { id?: string }) => Promise<void>
+  send: (tx: T, queue: string, data: object, options?: { id?: string, retentionSeconds?: number, deleteAfterSeconds?: number }) => Promise<void>
 }
 
 export interface Clock {
@@ -33,7 +35,7 @@ export interface Mailer {
 // Builds an invitation mail's link when the mail is sent, inside the attempt's transaction, so the job data
 // holds the invitation id and never its token (architecture section 8). The identity module implements it
 // (E2.3). Undefined means the invitation is no longer open, and the mail fails like a missing template value.
-export type InvitationLink<T> = (tx: T, template: MailTemplate, invitationId: string) => Promise<string | undefined>
+export type InvitationLink<T> = (tx: T, template: InvitationTemplate, invitationId: string) => Promise<string | undefined>
 
 export interface QueuedMail {
   storeId: string | null

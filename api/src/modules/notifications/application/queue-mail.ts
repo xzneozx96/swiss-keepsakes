@@ -16,6 +16,10 @@ export interface QueueMailDeps<T> {
 // as more recipients, and the body can carry an invitation link.
 const singleAddress = z.email()
 
+// pg-boss keeps an unsent job's data for 14 days and a finished job's for 7. A sign-in code is useless after
+// 5 minutes, so its job is dropped if unsent after 1 hour, and deleted 1 hour after it finishes.
+const shortLived = { retentionSeconds: 3600, deleteAfterSeconds: 3600 }
+
 // A business command calls this inside its own uow.run, so the mail row and its job commit or roll back with
 // the business change (D4). The mail id is also the job id and the Message-ID's local part (section 8).
 export function makeQueueMail<T>({ sentMail, jobs, clock, queue }: QueueMailDeps<T>) {
@@ -30,7 +34,7 @@ export function makeQueueMail<T>({ sentMail, jobs, clock, queue }: QueueMailDeps
       queuedAt: clock.now(),
     })
     const job: MailJob = { ...request, mailId }
-    await jobs.send(tx, queue, job, { id: mailId })
+    await jobs.send(tx, queue, job, request.template === 'N01' ? { id: mailId, ...shortLived } : { id: mailId })
     return mailId
   }
 }
