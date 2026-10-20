@@ -294,6 +294,7 @@ describe('[E2.1][AC01] sign-in through the real Better Auth client', () => {
     expect(calls.some(call => call.path === '/api/auth/get-session')).toBe(true)
     const stored = JSON.stringify({ ...localStorage }) + JSON.stringify({ ...sessionStorage })
 
+    expect(stored).not.toMatch(/"token"/)
     const saved = JSON.parse(localStorage.getItem('sk.demo') ?? '{}')
 
     expect(saved.data?.signedInGuestId ?? null).toBeNull()
