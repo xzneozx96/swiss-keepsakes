@@ -1,0 +1,18 @@
+{
+  "name": "@sk/i18n",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./en": "./src/en.ts",
+    "./de": "./src/de.ts",
+    "./key-drift": "./src/key-drift.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}

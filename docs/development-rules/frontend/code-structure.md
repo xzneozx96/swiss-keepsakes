@@ -19,6 +19,7 @@ Example: `front-end/src/features/catalog/` has `components/`, `hooks/`, `lib/`, 
 - Logic that holds state or reads the store goes in a hook.
 - Shared UI goes in `front-end/src/components` only when several features use it and it is not tied to one feature's data.
 - Copy and labels go in the feature's message files, never inline. See `stack-notes.md`.
+- Email copy goes in `packages/i18n`, not in the feature's message files.
 
 ## Routes are thin
 

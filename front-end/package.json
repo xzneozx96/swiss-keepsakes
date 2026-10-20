@@ -25,6 +25,7 @@
     "@heroui/styles": "3.2.6",
     "@internationalized/date": "3.12.4",
     "@sk/domain": "workspace:*",
+    "@sk/i18n": "workspace:*",
     "@tanstack/history": "^1.162.5",
     "@tanstack/react-router": "^1.170.44",
     "@tiptap/pm": "^3.32.0",

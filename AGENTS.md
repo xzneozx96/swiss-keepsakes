@@ -52,7 +52,7 @@ Always read `docs/development-rules/shared/code-style.md`. Then read by task.
 3. **Per-frame updates.** Do use a ref or a throttle for scroll, pointer and stream updates. Don't call `setState` on every frame or streamed word.
 4. **Store reads.** Do use `useDemoSelector` with the narrowest selector and `useDemoActions` for actions. Don't call `useDemo()` unless you read most of the state.
 5. **Layer direction.** Don't import `@/features` from `front-end/src/lib`, `hooks`, `contexts` or top-level `components`. ESLint enforces this.
-6. **German dictionary.** Don't import `@/i18n/de` from code on the first-load path. It is a lazy chunk.
+6. **German dictionary.** Don't import `@/i18n/de` or `@sk/i18n/de` from code on the first-load path. German is a lazy chunk.
 7. **Formatters.** Do use the cached helpers in `packages/domain/src/shared/format.ts`. Don't create `new Intl.*` or long regexes inside render.
 8. **Hooks rules.** Don't read or write refs during render or call `setState` synchronously in an effect. ESLint enforces this.
 9. **Heavy libraries.** Do load maps, charts, calendar, editor and QR code with a dynamic `import()` and their CSS. Don't import them from route files or shared modules.
