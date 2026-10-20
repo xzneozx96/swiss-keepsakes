@@ -21,8 +21,9 @@ describe('[E1.9] migrations', () => {
 
     await migrateDatabase(inject('databaseUrlUnpooled'), silentLogger)
 
-    expect(before).toBe(1)
-    expect(await applied()).toBe(1)
+    const files = readMigrationFiles({ migrationsFolder }).length
+    expect(before).toBe(files)
+    expect(await applied()).toBe(files)
   })
 })
 

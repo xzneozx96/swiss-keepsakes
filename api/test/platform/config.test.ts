@@ -84,3 +84,69 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
     expect(message).not.toContain('s3cret-pw')
   })
 })
+
+describe('[E2.8] config: SMTP_* is all six variables or none', () => {
+  const smtp = {
+    SMTP_HOST: 'smtp.gmail.com',
+    SMTP_PORT: '465',
+    SMTP_SECURE: 'true',
+    SMTP_USER: 'keepsakes.test@gmail.com',
+    SMTP_PASSWORD: 'abcd efgh ijkl mnop',
+    SMTP_FROM: 'keepsakes.test@gmail.com',
+  }
+
+  it('[E2.8] turns all six into one smtp setting, with the port a number and SMTP_SECURE a boolean', () => {
+    expect(loadConfig({ ...urls, ...smtp })).toEqual({
+      ok: true,
+      config: {
+        ROLE: 'all',
+        HOST: '0.0.0.0',
+        PORT: 3000,
+        LOG_LEVEL: 'info',
+        ...urls,
+        smtp: { host: 'smtp.gmail.com', port: 465, secure: true, user: 'keepsakes.test@gmail.com', password: 'abcd efgh ijkl mnop', from: 'keepsakes.test@gmail.com' },
+      },
+    })
+  })
+
+  it('[E2.8] starts without SMTP when none of the six is set, blank values included', () => {
+    const result = loadConfig({ ...urls, SMTP_HOST: '', SMTP_PASSWORD: ' ' })
+
+    expect(result).toMatchObject({ ok: true })
+    expect(result.ok && result.config.smtp).toBeUndefined()
+  })
+
+  it('[E2.8] refuses a partial setting and names each missing variable, without printing the ones that are set', () => {
+    const message = failure({ ...urls, SMTP_HOST: 'smtp.gmail.com', SMTP_USER: 'keepsakes.test@gmail.com', SMTP_PASSWORD: 'abcd efgh ijkl mnop' })
+
+    expect(message).toBe([
+      'Invalid environment, the service did not start:',
+      '  SMTP_PORT: Required when any SMTP_* variable is set',
+      '  SMTP_SECURE: Required when any SMTP_* variable is set',
+      '  SMTP_FROM: Required when any SMTP_* variable is set',
+      'Values are never printed.',
+    ].join('\n'))
+  })
+
+  it('[E2.8] rejects a bad port, a SMTP_SECURE other than true or false, and a sender that is not an address', () => {
+    const message = failure({ ...urls, ...smtp, SMTP_PORT: '465x', SMTP_SECURE: 'True', SMTP_FROM: 'Keepsakes <keepsakes.test@gmail.com>' })
+
+    expect(message).toContain('  SMTP_PORT: Expected a whole number from 0 to 65535')
+    expect(message).toMatch(/^ {2}SMTP_SECURE: .*"true"\|"false"/m)
+    expect(message).toContain('  SMTP_FROM: Expected an email address')
+    expect(message).not.toContain('keepsakes.test')
+    expect(message).not.toContain('abcd efgh')
+  })
+
+  it.each([
+    ['465', 'false', '  SMTP_SECURE: Port 465 starts with TLS. Expected true'],
+    ['587', 'true', '  SMTP_SECURE: Port 587 upgrades with STARTTLS. Expected false'],
+  ])('[E2.8] rejects SMTP_PORT=%s with SMTP_SECURE=%s', (port, secure, line) => {
+    expect(failure({ ...urls, ...smtp, SMTP_PORT: port, SMTP_SECURE: secure })).toContain(line)
+  })
+
+  it('[E2.8] accepts STARTTLS on 587 and another port with either setting', () => {
+    expect(loadConfig({ ...urls, ...smtp, SMTP_PORT: '587', SMTP_SECURE: 'false' })).toMatchObject({ ok: true, config: { smtp: { port: 587, secure: false } } })
+    expect(loadConfig({ ...urls, ...smtp, SMTP_PORT: '2465', SMTP_SECURE: 'true' })).toMatchObject({ ok: true, config: { smtp: { port: 2465, secure: true } } })
+  })
+})

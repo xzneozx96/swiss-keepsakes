@@ -4,7 +4,8 @@ import { sql } from 'drizzle-orm'
 import { fromDrizzle } from 'pg-boss'
 
 export interface JobQueue<T> {
-  send: (tx: T, queue: string, data: object, options?: { startAfter?: Date }) => Promise<void>
+  // `id` (a UUID) lets the caller name the job, as the mail job does for its Message-ID.
+  send: (tx: T, queue: string, data: object, options?: { startAfter?: Date, id?: string }) => Promise<void>
 }
 
 // The job row is written through the caller's transaction, so a rollback removes it with the business
