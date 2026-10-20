@@ -232,6 +232,16 @@ describe('[E2.8] a failing send retries, then alerts', () => {
     await createMailQueues(jobs.boss)
 
     expect(await jobs.boss.getQueue(mailQueues.send)).toMatchObject({ retryLimit: 5, retryDelay: 30, retryBackoff: true, deadLetter: mailQueues.failed })
-    expect(await jobs.boss.getQueue(mailQueues.failed)).toMatchObject({ name: 'mail-failed' })
+  })
+
+  it('[E2.8] the real mail-failed queue retries its handler 5 times with exponential backoff, also when it already existed', async () => {
+    const existing: MailQueues = { send: `mail-e2-8-${randomUUID().slice(0, 8)}`, failed: `mail-failed-e2-8-${randomUUID().slice(0, 8)}` }
+    await jobs.boss.createQueue(existing.failed)
+
+    await createMailQueues(jobs.boss)
+    await createMailQueues(jobs.boss, existing)
+
+    for (const name of [mailQueues.failed, existing.failed])
+      expect(await jobs.boss.getQueue(name)).toMatchObject({ name, retryLimit: 5, retryDelay: 30, retryBackoff: true })
   })
 })

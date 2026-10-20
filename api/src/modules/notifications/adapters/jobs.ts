@@ -14,10 +14,13 @@ export const mailQueues: MailQueues = { send: 'mail', failed: 'mail-failed' }
 // attempt runs about 15 to 30 minutes after the first.
 export const mailRetry = { retryLimit: 5, retryDelay: 30, retryBackoff: true }
 
-// Every role creates the queues at startup, because a send to an unknown queue fails.
+// Every role creates the queues at startup, because a send to an unknown queue fails. mail-failed retries its
+// handler with the same backoff: the handler only marks the row and logs, so it fails while the database does.
+// After its last attempt the row stays queued, which the runbook's stale list shows (docs/ops/mail.md).
 export async function createMailQueues(boss: PgBoss, queues = mailQueues, retry = mailRetry): Promise<void> {
-  await boss.createQueue(queues.failed)
-  // createQueue leaves an existing queue as it is, so the update applies a changed retry policy on the next start.
+  // createQueue leaves an existing queue as it is, so each update applies a changed retry policy on the next start.
+  await boss.createQueue(queues.failed, retry)
+  await boss.updateQueue(queues.failed, retry)
   await boss.createQueue(queues.send, { ...retry, deadLetter: queues.failed })
   await boss.updateQueue(queues.send, { ...retry, deadLetter: queues.failed })
 }

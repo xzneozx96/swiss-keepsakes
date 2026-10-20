@@ -15,6 +15,7 @@ Mail goes over SMTP (architecture D12). A business command queues a `mail` job a
 - A failure that a retry cannot fix skips the retries and goes to the alert at once. These are an SMTP 5xx reply (RFC 5321), such as `EAUTH 535` or `EENVELOPE 550`, and `MailRenderError`. A 4xx reply, a lost connection and `ESMTPUNSET` retry.
 - Each failed attempt adds 1 to `attempts` and sets `last_error` to the error code and the SMTP reply code, for example `EAUTH 535`. The job throws a `MailAttemptError` that holds only the same two values, so pg-boss's `output` and the dead-letter copy's `source_output` hold them too. The server's reply text is never stored, because it can quote the address.
 - After the last attempt, or after a failure that skips the retries, pg-boss moves the job to the `mail-failed` queue. Its handler sets the row to `failed` and logs one error line with `"event":"mail.failed"`, the mail id, the template, the number of attempts and the last error. Until Sentry arrives (E2.9), that line is the alert. It never holds the address or the link.
+- The `mail-failed` queue retries its handler 5 times with the same backoff. The handler only writes the row and logs, so it fails only while the database does. If it fails every time, no alert fires and the row stays `queued`. The stale list below finds it.
 
 ## The ops list
 
@@ -27,7 +28,14 @@ where status = 'failed'
 order by failed_at desc;
 ```
 
-Mail that is waiting or retrying has `status = 'queued'`.
+Mail that is waiting or retrying has `status = 'queued'`. The `mail` retries and then the `mail-failed` retries take about an hour at most, so a mail still `queued` after 2 hours is stuck. The worker is down, or the `mail-failed` handler failed every time. Check the worker's log, then look for its jobs in `pgboss.job` by the mail id.
+
+```sql
+select id, store_id, template, attempts, last_error, queued_at
+from notifications.sent_mail
+where status = 'queued' and queued_at < now() - interval '2 hours'
+order by queued_at;
+```
 
 There is no resend command yet. UX R13 lets the Owner send an invitation again, and E2.3 and E2.4 build the invitations (N20, N18).
 
