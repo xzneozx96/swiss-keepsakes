@@ -60,7 +60,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
   const [realNow, setRealNow] = useState(() => Date.now())
   // A repeat tap or a second `onComplete` in the same tick must not send a second call: `pending` is state
   // and still reads null until the next render.
-  const calling = useRef(false)
+  const callingRef = useRef(false)
 
   const resendIn = codeStep
     ? Math.max(0, Math.ceil((codeStep.resendAt - realNow) / 1000))
@@ -165,9 +165,9 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
 
       return
     }
-    if (calling.current)
+    if (callingRef.current)
       return
-    calling.current = true
+    callingRef.current = true
     setPending('send')
     try {
       const auth = await loadAuthClient()
@@ -186,7 +186,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
       setProblem('unavailable')
     }
     finally {
-      calling.current = false
+      callingRef.current = false
       setPending(null)
     }
   }
@@ -219,9 +219,9 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
 
       return
     }
-    if (calling.current)
+    if (callingRef.current)
       return
-    calling.current = true
+    callingRef.current = true
     setPending('verify')
     setProblem(null)
     try {
@@ -240,7 +240,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
       refuseCall(error, codeStep.sentAt)
     }
     finally {
-      calling.current = false
+      callingRef.current = false
       setPending(null)
     }
   }
