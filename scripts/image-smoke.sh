@@ -9,7 +9,8 @@ image=$1
 url=$2
 port=${3:-3000}
 name=sk-api-smoke-$$
-env=(-e "DATABASE_URL=$url" -e "DATABASE_URL_UNPOOLED=$url")
+# BETTER_AUTH_* are required. The secret is generated for this run and never printed.
+env=(-e "DATABASE_URL=$url" -e "DATABASE_URL_UNPOOLED=$url" -e "BETTER_AUTH_URL=http://localhost:$port" -e "BETTER_AUTH_SECRET=$(head -c 32 /dev/urandom | base64)")
 
 trap 'docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
 

@@ -15,7 +15,12 @@ const header = `// Generated from the API routes by \`pnpm contract:build\`. Do 
 
 // The real routes. Building the document calls neither the logger nor the health check.
 export function contractApp(): OpenAPIHono<AppEnv> {
-  return createApp(createLogger('silent'), async () => ({ database: true, jobs: true }))
+  // Building the document runs no handler, so the identity stand-ins are never called.
+  return createApp(createLogger('silent'), async () => ({ database: true, jobs: true }), {
+    authHandler: async () => new Response(null, { status: 404 }),
+    readSession: async () => ({ headers: new Headers(), response: null }),
+    ensureGuestProfile: async () => '',
+  })
 }
 
 // Sorted by code unit, not by locale, so every machine writes the same bytes.

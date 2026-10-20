@@ -1,10 +1,14 @@
 import process from 'node:process'
-import { createMailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
+import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
+import { makeEnsureGuestProfile } from './modules/identity/index.ts'
+import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
 import { createSentMailRepository } from './modules/notifications/adapters/sent-mail-repository.ts'
 import { createSmtpMailer, createUnconfiguredMailer } from './modules/notifications/adapters/smtp-mailer.ts'
 import { makeFailMail } from './modules/notifications/application/fail-mail.ts'
+import { makeQueueMail } from './modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from './modules/notifications/application/send-mail.ts'
+import { createAuth } from './platform/auth.ts'
 import { systemClock } from './platform/clock.ts'
 import { loadConfig } from './platform/config.ts'
 import { createDatabase, createPool } from './platform/db/client.ts'
@@ -13,8 +17,12 @@ import { createHealthCheck } from './platform/health.ts'
 import { createApp } from './platform/http/app.ts'
 import { startHttpServer } from './platform/http/server.ts'
 import { startJobs } from './platform/jobs/boss.ts'
+import { createJobQueue } from './platform/jobs/queue.ts'
 import { createLogger } from './platform/logger.ts'
 import { createSmtpTransport } from './platform/mail.ts'
+
+// The shop name in the N01 subject, the sign-in code mail.
+const appName = 'Swiss Keepsakes'
 
 const loaded = loadConfig(process.env)
 if (!loaded.ok) {
@@ -76,7 +84,24 @@ async function main() {
   }
   if (config.ROLE !== 'worker') {
     const checkHealth = createHealthCheck({ pool, boss: jobs.boss, logger })
-    const server = await startHttpServer(createApp(logger, checkHealth).fetch, config.HOST, config.PORT, logger)
+    const queueMail = makeQueueMail({ sentMail: createSentMailRepository(), jobs: createJobQueue(jobs.boss), clock: systemClock, queue: mailQueues.send })
+    const auth = createAuth({
+      db: createDatabase(pool),
+      baseUrl: config.BETTER_AUTH_URL,
+      secret: config.BETTER_AUTH_SECRET,
+      google: config.google,
+      // Queues the N01 job inside a transaction and returns. The worker sends it, so no request waits for SMTP.
+      sendSignInCode: async ({ email, code, language }) => {
+        await uow.run(tx => queueMail(tx, { template: 'N01', to: email, language, storeId: null, params: { shop: appName, code } }))
+      },
+      logger,
+    })
+    const identity = {
+      authHandler: auth.handler,
+      readSession: (headers: Headers) => auth.api.getSession({ headers, returnHeaders: true }),
+      ensureGuestProfile: makeEnsureGuestProfile({ uow, profiles: createGuestProfileRepository() }),
+    }
+    const server = await startHttpServer(createApp(logger, checkHealth, identity).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)
   }
   logger.info({ role: config.ROLE }, 'started')

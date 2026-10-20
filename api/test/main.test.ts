@@ -22,6 +22,14 @@ describe('[E1.8] main: startup failures', () => {
     expect(run.output()).toContain('DATABASE_URL: Required')
   })
 
+  it('[E2.2] a missing BETTER_AUTH_SECRET stops startup with exit code 1, naming the variable', async () => {
+    const run = startMain({ ROLE: 'all', DATABASE_URL, DATABASE_URL_UNPOOLED: DATABASE_URL, BETTER_AUTH_SECRET: '' })
+
+    expect(await run.exited).toBe(1)
+    expect(run.output()).toContain('BETTER_AUTH_SECRET: Required')
+    expect(run.messages()).toEqual([])
+  })
+
   it('[E1.9] a database that refuses connections stops startup with exit code 1, logged through pino without the URL', async () => {
     // Port 1 on this machine: nothing listens there.
     const unreachable = 'postgres://postgres:s3cret-pw@127.0.0.1:1/swiss_keepsakes'

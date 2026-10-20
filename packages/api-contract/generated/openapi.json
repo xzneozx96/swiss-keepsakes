@@ -25,6 +25,19 @@
         ],
         "type": "object"
       },
+      "Me": {
+        "properties": {
+          "guestId": {
+            "description": "The guest profile that the guest's orders and bookings point at",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "guestId"
+        ],
+        "type": "object"
+      },
       "Problem": {
         "description": "RFC 9457 problem details, sent as application/problem+json",
         "properties": {
@@ -77,7 +90,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -98,6 +111,57 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/me": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "The signed-in guest",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No session, or the session expired or was revoked",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/healthz": {
       "get": {
         "responses": {

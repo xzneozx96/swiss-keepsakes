@@ -11,6 +11,7 @@ import { idempotency } from '../../src/platform/http/idempotency.ts'
 import { startJobs } from '../../src/platform/jobs/boss.ts'
 import { createJobQueue } from '../../src/platform/jobs/queue.ts'
 import { createLogger } from '../../src/platform/logger.ts'
+import { noSessions } from '../support/identity.ts'
 import { createManualClock } from '../support/manual-clock.ts'
 import { count, openTestDatabase, silentLogger } from './support.ts'
 
@@ -99,7 +100,7 @@ function setup({ storeFails = false } = {}) {
   }
 
   const logs: { level: number, msg: string }[] = []
-  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }))
+  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }), noSessions)
   app.use('/api/*', idempotency({ db: storeFails ? storingFails : db, clock, actorId: c => c.req.header('X-Test-Actor') ?? 'anonymous' }))
   app.get('/api/probes', c => c.json({ ok: true }))
   app.openapi(probeRoute, async (c) => {
