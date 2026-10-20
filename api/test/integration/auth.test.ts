@@ -197,6 +197,27 @@ describe('[E2.2] sessions and the actor', () => {
     expect(await me.json()).toEqual({ guestId: expect.stringMatching(/^[0-9a-f-]{36}$/) })
   })
 
+  it('[E2.1] no response body of sign-in, get-session or sign-out holds the session token, and the cookie still carries it', async () => {
+    const { call, email, requestCode } = await setup()
+    const address = email()
+    const { job } = await requestCode(address)
+    const signedIn = await call('/api/auth/sign-in/email-otp', { method: 'POST', body: { email: address, otp: job?.data.params.code } })
+    const cookie = signedIn.headers.getSetCookie().map(line => line.split(';')[0]).join('; ')
+    const token = decodeURIComponent(cookie.split('=')[1] ?? '').split('.')[0] ?? ''
+    const signInBody = await signedIn.text()
+    const sessionBody = await (await call('/api/auth/get-session', { headers: { Cookie: cookie } })).text()
+    const signOutBody = await (await call('/api/auth/sign-out', { method: 'POST', headers: { Cookie: cookie } })).text()
+
+    expect(token.length).toBeGreaterThan(10)
+    for (const body of [signInBody, sessionBody, signOutBody]) {
+      expect(body).not.toContain(token)
+      expect(body).not.toMatch(/"token"\s*:/)
+    }
+    expect(JSON.parse(signInBody)).toMatchObject({ user: { email: address } })
+    expect(JSON.parse(sessionBody)).toMatchObject({ user: { email: address }, session: { userId: expect.any(String) } })
+    expect(signedIn.headers.getSetCookie().join('\n')).toMatch(/session_token=/)
+  })
+
   it('[E2.2] on an https base URL the cookie is Secure', async () => {
     const { email, signIn } = await setup({ baseUrl: 'https://keepsakes.example' })
     const { response } = await signIn(email())

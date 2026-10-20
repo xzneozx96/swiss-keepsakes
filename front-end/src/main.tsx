@@ -13,11 +13,19 @@ import {
   LocaleProvider,
   storedLanguage,
 } from '@/contexts/locale-context'
+import { takeGoogleReturn } from '@/features/auth/lib/google-return'
+import { followSession } from '@/features/auth/lib/session-sync'
 import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
+import { apiEnabled } from '@/lib/api-mode'
 import { routeTree } from '@/routeTree.gen'
 import '@/styles/globals.css'
+
+// Better Auth sends a failed Google sign-in to `/sign-in?error=<code>`, which hash history cannot read. The
+// address moves into the hash first, before the router starts.
+if (apiEnabled)
+  takeGoogleReturn()
 
 // Hash history: the prototype is served as static files with no server rewrites,
 // so deep links and reloads (e.g. #/merchant/orders) must not hit the server.
@@ -59,6 +67,10 @@ if (!rootElement.innerHTML) {
       console.error('A demo collection could not be read', error),
     ),
   ]).then(() => {
+    // The first paint never waits for the session: the app renders signed out, and the store changes when
+    // the API answers.
+    if (apiEnabled)
+      followSession(demo.store)
     ReactDOM.createRoot(rootElement).render(
       <StrictMode>
         <QueryClientProvider client={demo.queryClient}>

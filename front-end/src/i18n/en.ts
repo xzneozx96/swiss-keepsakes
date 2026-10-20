@@ -300,6 +300,11 @@ export const en = {
   'auth.intro': 'No password needed. Anything in your cart stays there.',
   'auth.close': 'Close',
   'auth.google': 'Continue with Google',
+  'auth.google.failed':
+    'Google sign-in didn’t finish. Try again, or get a code by email.',
+  'auth.unavailable': 'Sign-in isn’t working right now. Try again in a moment.',
+  'auth.rateLimited':
+    'Too many tries. Try again in {seconds} seconds.',
   'auth.or': 'or',
   'auth.email.label': 'Email',
   'auth.email.invalid': 'Enter an email address like name@example.com.',
@@ -307,26 +312,27 @@ export const en = {
   'auth.code.title': 'Check your email',
   'auth.code.sent': 'We sent a 6-digit code to {email}.',
   'auth.code.label': 'Code from the email',
-  'auth.code.hint': 'Enter the {length} digits. The code works for 10 minutes.',
+  'auth.code.hint': 'Enter the {length} digits. The code works for {minutes} minutes.',
   'auth.code.submit': 'Continue',
   'auth.code.wrong': 'That code isn’t right. Check the email and try again.',
   'auth.code.attemptsLeft.one': '1 try left for this code.',
   'auth.code.attemptsLeft.other': '{count} tries left for this code.',
   'auth.code.expired':
-    'This code has expired. Codes work for 10 minutes. Send a new code to continue.',
+    'This code has expired. Codes work for {minutes} minutes. Send a new code to continue.',
   'auth.code.locked': 'Too many wrong codes. Send a new code to try again.',
   'auth.code.sendNew': 'Send a new code',
   'auth.code.noEmail': 'No email?',
   'auth.code.resend': 'Resend code',
   'auth.code.resendIn': 'Resend in {time}',
   'auth.changeEmail': 'Use a different email',
-  'auth.proposal.attempts': '5 code tries',
   'auth.account.title': 'Account',
   'auth.account.signedOutTitle': 'Sign in to see your orders',
   'auth.account.signedOutText':
     'You can browse and fill your cart without an account. Sign in when you send a request, then follow your orders here.',
   'auth.account.signIn': 'Sign in',
   'auth.account.signOut': 'Sign out',
+  'auth.account.signOutFailed':
+    'You’re still signed in. Check your connection and try again.',
 
   'proto.proposal': 'UX proposal: {name}',
   'demo.storageFull':

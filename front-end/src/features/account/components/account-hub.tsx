@@ -33,9 +33,11 @@ import {
 export function AccountHub({
   guest,
   onSignOut,
+  signingOut = false,
 }: {
   guest: Guest
   onSignOut: () => void
+  signingOut?: boolean
 }) {
   const { t, language } = useLocale()
   const hub = useAccountHub(guest.id)
@@ -113,7 +115,9 @@ export function AccountHub({
       <SettingsGroup id="hub-session">
         <li className={itemClass}>
           <button
-            className={`${rowClass} min-h-14 text-danger`}
+            aria-busy={signingOut}
+            className={`${rowClass} min-h-14 text-danger disabled:opacity-60`}
+            disabled={signingOut}
             type="button"
             onClick={onSignOut}
           >

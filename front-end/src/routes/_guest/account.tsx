@@ -14,7 +14,8 @@ import { ProfilePanel } from '@/features/account/components/profile-panel'
 import { accountSections } from '@/features/account/lib/sections'
 import { SignInPrompt } from '@/features/auth/components/account-profile'
 import { useRequireSignIn } from '@/features/auth/hooks/use-require-sign-in'
-import { useDemoActions, useDemoSelector } from '@/features/demo'
+import { useSignOut } from '@/features/auth/hooks/use-sign-out'
+import { useDemoSelector } from '@/features/demo'
 import { TourBookingList } from '@/features/tours/booking'
 import { TransactionList } from '@/features/transactions/components/transaction-list'
 
@@ -45,15 +46,12 @@ const sectionTitle: Record<AccountSection, MessageKey> = {
 
 function AccountPage() {
   const { t } = useLocale()
-  const { update } = useDemoActions()
+  const { signOut, pending: signingOut } = useSignOut()
   const guests = useGuests()
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   const { tab } = Route.useSearch()
   const { requireSignIn } = useRequireSignIn()
   const guest = guests.find(g => g.id === signedInGuestId)
-
-  const signOut = () =>
-    update(s => ({ ...s, data: { ...s.data, signedInGuestId: null } }))
 
   if (!guest) {
     return (
@@ -68,8 +66,15 @@ function AccountPage() {
     )
   }
 
-  if (!tab)
-    return <AccountHub guest={guest} onSignOut={signOut} />
+  if (!tab) {
+    return (
+      <AccountHub
+        guest={guest}
+        signingOut={signingOut}
+        onSignOut={signOut}
+      />
+    )
+  }
 
   return (
     <AccountScreen title={t(sectionTitle[tab])}>

@@ -33,6 +33,7 @@
     "@tiptap/react": "^3.32.0",
     "@tiptap/starter-kit": "^3.32.0",
     "ai": "^6.0.309",
+    "better-auth": "1.7.11",
     "clsx": "2.1.1",
     "maplibre-gl": "^6.14.0",
     "qrcode.react": "4.2.0",

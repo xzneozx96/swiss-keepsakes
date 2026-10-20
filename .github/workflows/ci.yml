@@ -89,7 +89,7 @@ jobs:
     name: integration (Neon)
     if: github.event_name == 'pull_request' && github.event.action != 'closed'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
     steps:
@@ -165,6 +165,27 @@ jobs:
         env:
           INTEGRATION_ALLOW_REMOTE_DATABASE: '1'
         run: pnpm test:integration
+      # The sign-in specs run the real API against its own sk_test_* database on the same branch (docs/ops/ci.md),
+      # on WebKit and Chromium. The harness starts the API and drops the database when Playwright stops it.
+      - name: Install Playwright browsers
+        if: ${{ !cancelled() && steps.neon.outputs.available == 'true' }}
+        run: pnpm exec playwright install --with-deps chromium webkit
+        working-directory: front-end
+      - name: Sign-in end to end
+        if: ${{ !cancelled() && steps.neon.outputs.available == 'true' }}
+        env:
+          INTEGRATION_ALLOW_REMOTE_DATABASE: '1'
+          CI: 'true'
+        run: pnpm test:e2e
+        working-directory: front-end
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure() && steps.neon.outputs.available == 'true'
+        with:
+          name: sign-in-playwright-report
+          path: |
+            front-end/playwright-report
+            front-end/test-results
+          retention-days: 14
       - name: The run dropped its test database
         if: always() && steps.connect.outcome == 'success'
         run: |

@@ -14,3 +14,21 @@ export function safeReturnTo(value: string | undefined): string {
 
   return value
 }
+
+/**
+ * The sign-in screen's address on our own origin, where Better Auth sends the browser back after
+ * Google. The screen then replaces itself with `returnTo`.
+ */
+export function signInUrl(returnTo: string): string {
+  const search = new URLSearchParams({ returnTo })
+
+  return `${window.location.origin}${window.location.pathname}#/sign-in?${search}`
+}
+
+/**
+ * Where Better Auth sends the browser when Google sign-in fails, on our own origin. It adds `error=<code>`. The
+ * path, not the hash, is what the API's `errorCallbackURL` can carry, so `takeGoogleReturn` moves it into the hash.
+ */
+export function signInErrorUrl(returnTo: string): string {
+  return `${window.location.origin}/sign-in?${new URLSearchParams({ returnTo })}`
+}
