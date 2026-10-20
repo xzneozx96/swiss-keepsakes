@@ -118,6 +118,21 @@ describe('[E2.8] queueing mail in the business transaction', () => {
     expect(rows.get(mailId)).toMatchObject({ status: 'queued', template: 'N20', language: 'de', recipient: 'ngoc.tran@example.ch', attempts: 0, queuedAt: new Date('2026-10-20T08:00:00Z') })
     expect(jobs).toEqual([{ queue: 'mail', data: { ...n20, mailId }, id: mailId }])
   })
+
+  it.each([
+    'ngoc.tran@example.ch, other@example.org',
+    'ngoc.tran@example.ch;other@example.org',
+    'Ngoc Tran <ngoc.tran@example.ch>',
+    'ngoc.tran@example.ch\nBcc: other@example.org',
+    '',
+  ])('[E2.8] a recipient that is not one plain address (%j) is refused, and no row or job is written', async (to) => {
+    const { rows, jobs, queued } = setup()
+
+    await expect(queued({ ...n20, to })).rejects.toThrow('A mail goes to one address only')
+
+    expect(rows.size).toBe(0)
+    expect(jobs).toEqual([])
+  })
 })
 
 describe('[E2.8] the mail job sends through the Mailer port', () => {
