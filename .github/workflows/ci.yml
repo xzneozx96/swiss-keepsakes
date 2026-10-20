@@ -146,6 +146,9 @@ jobs:
       - name: Migrate the branch
         if: steps.neon.outputs.available == 'true'
         run: pnpm --filter @sk/api db:migrate
+        env:
+          # The release command reads the whole config schema. It never fetches from this URL.
+          NEON_AUTH_BASE_URL: https://auth.example.test/neondb/auth
       - name: Drop test databases left by a cancelled run
         if: steps.neon.outputs.available == 'true'
         run: |
