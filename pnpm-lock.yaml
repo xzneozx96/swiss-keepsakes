@@ -46,6 +46,9 @@ importers:
       '@sk/api-contract':
         specifier: workspace:*
         version: link:../packages/api-contract
+      '@sk/domain':
+        specifier: workspace:*
+        version: link:../packages/domain
       '@sk/i18n':
         specifier: workspace:*
         version: link:../packages/i18n

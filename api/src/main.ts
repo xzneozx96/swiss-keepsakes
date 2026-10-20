@@ -1,6 +1,7 @@
 import process from 'node:process'
+import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
-import { makeEnsureGuestProfile } from './modules/identity/index.ts'
+import { makeLoadIdentity } from './modules/identity/index.ts'
 import { createMailJobScrubber } from './modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
@@ -9,7 +10,7 @@ import { createSmtpMailer, createUnconfiguredMailer } from './modules/notificati
 import { makeFailMail } from './modules/notifications/application/fail-mail.ts'
 import { makeQueueMail } from './modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from './modules/notifications/application/send-mail.ts'
-import { createAuth, createSessionReader } from './platform/auth.ts'
+import { createAuth, createSessionReader, ownOrigin } from './platform/auth.ts'
 import { systemClock } from './platform/clock.ts'
 import { loadConfig } from './platform/config.ts'
 import { createDatabase, createPool } from './platform/db/client.ts'
@@ -99,8 +100,9 @@ async function main() {
     })
     const identity = {
       authHandler: auth.handler,
+      origin: ownOrigin(config.BETTER_AUTH_URL),
       readSession: createSessionReader(auth),
-      ensureGuestProfile: makeEnsureGuestProfile({ uow, profiles: createGuestProfileRepository() }),
+      loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)

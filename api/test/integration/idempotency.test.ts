@@ -144,7 +144,7 @@ function setup({ storeFails = false } = {}) {
 
   const send = (key: string | undefined, body: object, headers: Record<string, string> = {}) => app.request('/api/probes', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(key ? { 'Idempotency-Key': key } : {}), ...headers },
+    headers: { 'Origin': 'http://localhost', 'Content-Type': 'application/json', ...(key ? { 'Idempotency-Key': key } : {}), ...headers },
     body: JSON.stringify(body),
   })
   const pauseNext = (at: PausePoint) => {

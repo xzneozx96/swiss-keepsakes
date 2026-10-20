@@ -1,16 +1,19 @@
-import type { SessionReader } from '../../../src/platform/http/authenticate.ts'
+import type { AuthenticateDeps, SessionReader } from '../../../src/platform/http/authenticate.ts'
 import { Hono } from 'hono'
 import { describe, expect, it } from 'vitest'
 import { authenticate, requireGuest } from '../../../src/platform/http/authenticate.ts'
 
-function setup(readSession: SessionReader) {
+type Access = Awaited<ReturnType<AuthenticateDeps['loadIdentity']>>['access']
+const noAccess: Access = { platformAdmin: false, memberships: [] }
+
+function setup(readSession: SessionReader, loadAccess: (userId: string) => Promise<Access> = async () => noAccess) {
   const ensured: string[] = []
   const app = new Hono<{ Variables: { actor: unknown } }>()
   app.use('/api/*', authenticate({
     readSession,
-    ensureGuestProfile: async (userId) => {
+    loadIdentity: async (userId) => {
       ensured.push(userId)
-      return `guest-of-${userId}`
+      return { guestId: `guest-of-${userId}`, access: await loadAccess(userId) }
     },
   }) as never)
   app.get('/api/who', c => c.json(c.get('actor') ?? null))
@@ -88,7 +91,7 @@ describe('[E2.2] authenticate: stale cookies and the default deny', () => {
         c.set('requestId', 'req-1')
         await next()
       })
-      app.use('/api/*', authenticate({ readSession, ensureGuestProfile: async userId => `guest-of-${userId}` }) as never)
+      app.use('/api/*', authenticate({ readSession, loadIdentity: async userId => ({ guestId: `guest-of-${userId}`, access: noAccess }) }) as never)
       app.use('/api/private', requireGuest as never)
       app.get('/api/private', (c) => {
         handled++
@@ -104,5 +107,54 @@ describe('[E2.2] authenticate: stale cookies and the default deny', () => {
     expect(await anonymous.json()).toMatchObject({ type: 'unauthenticated', status: 401, instance: '/api/private', requestId: 'req-1' })
     expect(guest.status).toBe(200)
     expect(handled).toBe(1)
+  })
+})
+
+describe('[E2.10] authenticate: the actor gains its roles', () => {
+  const signedIn: SessionReader = async () => ({ headers: new Headers(), response: { user: { id: 'user-1' } } })
+  const lucerne = '0190f0c2-0000-7000-8000-00000000000a'
+
+  it('[E2.10] a user with memberships is staff, and keeps the guest profile id', async () => {
+    const { app } = setup(signedIn, async () => ({ platformAdmin: false, memberships: [{ storeId: lucerne, role: 'manager' }] }))
+
+    expect(await (await app.request('/api/who')).json()).toMatchObject({ kind: 'staff', userId: 'user-1', guestId: 'guest-of-user-1' })
+  })
+
+  it('[E2.10] a platform_admins row makes the Super Admin', async () => {
+    const { app } = setup(signedIn, async () => ({ platformAdmin: true, memberships: [] }))
+
+    expect(await (await app.request('/api/who')).json()).toEqual({ kind: 'super_admin', userId: 'user-1', guestId: 'guest-of-user-1' })
+  })
+
+  it('[E2.10] the roles are read for the session\'s user, and not for an anonymous request or a Better Auth route', async () => {
+    const asked: string[] = []
+    const loadAccess = async (userId: string) => {
+      asked.push(userId)
+      return { platformAdmin: false, memberships: [] }
+    }
+
+    await setup(signedIn, loadAccess).app.request('/api/who')
+    await setup(signedOut, loadAccess).app.request('/api/who')
+    await setup(signedIn, loadAccess).app.request('/api/auth/ping')
+
+    expect(asked).toEqual(['user-1'])
+  })
+
+  it('[E2.10] requireGuest lets staff and the Super Admin through, as the signed-in users they are', async () => {
+    for (const access of [{ platformAdmin: false, memberships: [{ storeId: lucerne, role: 'owner' as const }] }, { platformAdmin: true, memberships: [] }]) {
+      const app = new Hono<{ Variables: { actor: unknown, requestId: string, guest: unknown } }>()
+      app.use('/api/*', async (c, next) => {
+        c.set('requestId', 'req-1')
+        await next()
+      })
+      app.use('/api/*', authenticate({ readSession: signedIn, loadIdentity: async userId => ({ guestId: `guest-of-${userId}`, access }) }) as never)
+      app.use('/api/private', requireGuest as never)
+      app.get('/api/private', c => c.json(c.get('guest')))
+
+      const response = await app.request('/api/private')
+
+      expect(response.status).toBe(200)
+      expect(await response.json()).toEqual({ userId: 'user-1', guestId: 'guest-of-user-1' })
+    }
   })
 })

@@ -1,11 +1,8 @@
-import type { MiddlewareHandler } from 'hono'
+import type { Access } from '@sk/domain/identity'
+import type { Context, MiddlewareHandler } from 'hono'
 import type { AppEnv } from './app.ts'
+import { actorFor, anonymous } from '@sk/domain/identity'
 import { problem } from './problem.ts'
-
-// The actor of a request. E2.10 adds staff, partner and super admin beside these two (architecture section 9).
-export type Actor
-  = | { kind: 'anonymous' }
-    | { kind: 'guest', userId: string, guestId: string }
 
 // What the middleware needs from Better Auth. `auth.api.getSession` fits it. With returnHeaders the answer
 // carries the Set-Cookie header of a session that Better Auth refreshed (`updateAge`), which has to reach the
@@ -16,12 +13,14 @@ export interface SessionReader {
 
 export interface AuthenticateDeps {
   readSession: SessionReader
-  ensureGuestProfile: (authUserId: string) => Promise<string>
+  // The guest profile id, created on the first call, and the user's roles, read in one transaction.
+  loadIdentity: (authUserId: string) => Promise<{ guestId: string, access: Access }>
 }
 
-// Reads the session on every /api/* request except Better Auth's own routes and sets the actor. No session,
-// and an expired or revoked one, is anonymous. A route that needs a session refuses an anonymous actor.
-export function authenticate({ readSession, ensureGuestProfile }: AuthenticateDeps): MiddlewareHandler<AppEnv> {
+// Reads the session on every /api/* request except Better Auth's own routes and sets the actor: a guest, staff
+// with a role per store, or the Super Admin. No session, and an expired or revoked one, is anonymous. A route
+// that needs a session refuses an anonymous actor.
+export function authenticate({ readSession, loadIdentity }: AuthenticateDeps): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     if (c.req.path.startsWith('/api/auth/')) {
       await next()
@@ -33,23 +32,35 @@ export function authenticate({ readSession, ensureGuestProfile }: AuthenticateDe
     for (const cookie of headers.getSetCookie())
       c.header('Set-Cookie', cookie, { append: true })
     if (!response) {
-      c.set('actor', { kind: 'anonymous' })
+      c.set('actor', anonymous)
       await next()
       return
     }
-    c.set('actor', { kind: 'guest', userId: response.user.id, guestId: await ensureGuestProfile(response.user.id) })
+    const userId = response.user.id
+    // One transaction, before the request's own unit of work and its Idempotency-Key claim. The roles are read
+    // on every request, with no cache, so a removed membership closes the store on the next one.
+    const { guestId, access } = await loadIdentity(userId)
+    c.set('actor', actorFor({ userId, guestId }, access))
     await next()
   }
 }
 
-export type GuestActor = Extract<Actor, { kind: 'guest' }>
+export interface Guest {
+  userId: string
+  guestId: string
+}
+
+export function unauthenticated(c: Context<AppEnv>) {
+  return problem(c, { type: 'unauthenticated', status: 401, title: 'Sign in to continue' })
+}
 
 // Default deny for a guarded route: mount it on the route's path, and an anonymous request gets the 401 problem
-// before the handler runs. The handler reads the guest with `c.get('guest')`.
+// before the handler runs. Staff and the Super Admin are signed-in users with a guest profile too. The handler
+// reads the guest with `c.get('guest')`.
 export const requireGuest: MiddlewareHandler<AppEnv> = async (c, next) => {
   const actor = c.get('actor')
-  if (actor.kind !== 'guest')
-    return problem(c, { type: 'unauthenticated', status: 401, title: 'Sign in to continue' })
-  c.set('guest', actor)
+  if (actor.kind === 'anonymous')
+    return unauthenticated(c)
+  c.set('guest', { userId: actor.userId, guestId: actor.guestId })
   await next()
 }
