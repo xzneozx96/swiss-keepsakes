@@ -25,6 +25,7 @@
     "@neon/env": "^1.6.3",
     "@sk/api-contract": "workspace:*",
     "@sk/i18n": "workspace:*",
+    "better-auth": "1.7.11",
     "drizzle-orm": "^0.45.4",
     "hono": "^4.13.13",
     "nodemailer": "^10.1.7",
