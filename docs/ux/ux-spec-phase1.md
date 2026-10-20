@@ -325,7 +325,7 @@ Từ email nhắc hoặc từ C14, khách mở C15 hoặc C16, bấm "Thanh toá
 
 ### 4.5 Đăng nhập
 
-- Khách: Google hoặc mã 6 số qua email. Mã hết hạn sau 5 phút, tối đa 3 lần thử (giới hạn mặc định của Neon Auth, chủ sở hữu chấp nhận ngày 20.10.2026, thay cho đề xuất UX cũ là 10 phút và 5 lần). Không có mật khẩu.
+- Khách: Google hoặc mã 6 số qua email. Mã hết hạn sau 5 phút, tối đa 3 lần thử (giới hạn do chúng ta cấu hình trong Better Auth, chủ sở hữu chấp nhận ngày 20.10.2026, thay cho đề xuất UX cũ là 10 phút và 5 lần). Không có mật khẩu.
 - Nhân sự: cùng cơ chế Google hoặc mã email (**Đề xuất UX**, vì O07 còn mở). Lời mời Manager mở M01: "Chị Ngọc mời bạn làm Store Manager của cửa hàng ...". Sau khi đăng nhập, bấm "Chấp nhận lời mời".
 
 ### 4.6 Merchant xử lý yêu cầu đơn quà (AC25, AC26)
@@ -494,6 +494,7 @@ Email gửi khách dùng ngôn ngữ khách đã chọn lúc đặt. Email nội
 | N21 | Thanh toán của khách thành công | Owner, Manager | Đơn chuyển "Đang chuẩn bị" |
 | N22 | Có khoản thu bất thường cho booking đã hết hiệu lực | Khách; Owner, Manager | Thông báo tình trạng đối soát/hoàn tiền theo kết quả provider; không báo booking đã xác nhận hay mặc định yêu cầu merchant tìm chỗ |
 | N23 | Đơn hàng hóa tự hủy vì quá hạn trả khoản đầu | Khách; Owner, Manager | Mã đơn, lý do và hạn đã hết; khách có thể gửi yêu cầu mới để xác nhận lại ngày nhận, các đơn khác không bị ảnh hưởng |
+| N24 | Xác nhận xóa tài khoản (thêm ngày 20.10.2026) | Khách chưa có mật khẩu | Link xác nhận yêu cầu xóa tài khoản. Khách chưa đăng nhập thì mở C05, đăng nhập xong quay lại bước xác nhận xóa. Nội dung EN và DE sẽ viết sau |
 
 ---
 
