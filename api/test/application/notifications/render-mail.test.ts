@@ -98,3 +98,35 @@ describe('[E2.8] a template value that is missing never reaches the recipient', 
     expect(() => renderMail(request, link)).toThrow('N20 has no value for {store}')
   })
 })
+
+describe('[E2.2] N01 renders the sign-in code in the language the SPA sent', () => {
+  const n01 = (language: 'en' | 'de'): Extract<MailRequest, { template: 'N01' }> => ({ template: 'N01', to: 'anna.keller@example.ch', language, storeId: null, params: { shop: 'Swiss Keepsakes', code: '482913' } })
+
+  it('[E2.2] N01 in English names the code and says it works for 5 minutes', () => {
+    expect(renderMail(n01('en'), undefined)).toEqual({
+      to: 'anna.keller@example.ch',
+      subject: 'Your Swiss Keepsakes sign-in code: 482913',
+      text: [
+        'Your sign-in code is 482913.',
+        'Enter it in the sign-in window. It works for 5 minutes.',
+        'If you didn’t try to sign in, you can ignore this email.',
+      ].join('\n\n'),
+    })
+  })
+
+  it('[E2.2] N01 in German says 5 Minuten', () => {
+    expect(renderMail(n01('de'), undefined)).toEqual({
+      to: 'anna.keller@example.ch',
+      subject: 'Ihr Anmeldecode für Swiss Keepsakes: 482913',
+      text: [
+        'Ihr Anmeldecode lautet 482913.',
+        'Geben Sie ihn im Anmeldefenster ein. Er ist 5 Minuten gültig.',
+        'Wenn Sie sich nicht anmelden wollten, können Sie diese E-Mail ignorieren.',
+      ].join('\n\n'),
+    })
+  })
+
+  it('[E2.2] N01 without a code throws instead of mailing a raw {code}', () => {
+    expect(() => renderMail({ ...n01('en'), params: { shop: 'Swiss Keepsakes', code: ' ' } }, undefined)).toThrow(MailRenderError)
+  })
+})

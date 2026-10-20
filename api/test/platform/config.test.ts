@@ -3,7 +3,9 @@ import { loadConfig } from '../../src/platform/config.ts'
 
 const DATABASE_URL = 'postgres://postgres@127.0.0.1:5433/swiss_keepsakes'
 const DATABASE_URL_UNPOOLED = 'postgres://postgres@127.0.0.1:5433/swiss_keepsakes?direct'
-const urls = { DATABASE_URL, DATABASE_URL_UNPOOLED }
+// A placeholder of the right length, not a secret.
+const BETTER_AUTH_SECRET = 'test-only-secret-0123456789-abcdefghij'
+const urls = { DATABASE_URL, DATABASE_URL_UNPOOLED, BETTER_AUTH_URL: 'http://localhost:5173', BETTER_AUTH_SECRET }
 
 function failure(env: Record<string, string | undefined>): string {
   const result = loadConfig(env)
@@ -40,6 +42,8 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
       'Invalid environment, the service did not start:',
       '  DATABASE_URL: Required',
       '  DATABASE_URL_UNPOOLED: Required',
+      '  BETTER_AUTH_URL: Required',
+      '  BETTER_AUTH_SECRET: Required',
       'Values are never printed.',
     ].join('\n'))
   })
@@ -148,5 +152,60 @@ describe('[E2.8] config: SMTP_* is all six variables or none', () => {
   it('[E2.8] accepts STARTTLS on 587 and another port with either setting', () => {
     expect(loadConfig({ ...urls, ...smtp, SMTP_PORT: '587', SMTP_SECURE: 'false' })).toMatchObject({ ok: true, config: { smtp: { port: 587, secure: false } } })
     expect(loadConfig({ ...urls, ...smtp, SMTP_PORT: '2465', SMTP_SECURE: 'true' })).toMatchObject({ ok: true, config: { smtp: { port: 2465, secure: true } } })
+  })
+})
+
+describe('[E2.2] config: Better Auth variables', () => {
+  it('[E2.2] requires BETTER_AUTH_URL and BETTER_AUTH_SECRET in every environment, so a missing secret never falls back to a default', () => {
+    expect(failure({ DATABASE_URL, DATABASE_URL_UNPOOLED })).toBe([
+      'Invalid environment, the service did not start:',
+      '  BETTER_AUTH_URL: Required',
+      '  BETTER_AUTH_SECRET: Required',
+      'Values are never printed.',
+    ].join('\n'))
+  })
+
+  it('[E2.2] rejects a short secret and a URL that is not http or https, without printing either', () => {
+    const message = failure({ ...urls, BETTER_AUTH_SECRET: 'short-secret', BETTER_AUTH_URL: 'ftp://app.example' })
+
+    expect(message).toContain('  BETTER_AUTH_URL: Expected an http:// or https:// URL')
+    expect(message).toContain('  BETTER_AUTH_SECRET: Expected at least 32 characters')
+    expect(message).not.toContain('short-secret')
+    expect(message).not.toContain('ftp://')
+  })
+
+  it('[E2.2] starts without Google credentials, and leaves google unset', () => {
+    const result = loadConfig(urls)
+
+    expect(result).toMatchObject({ ok: true })
+    expect(result.ok && result.config.google).toBeUndefined()
+  })
+
+  it('[E2.2] turns both Google variables into one google setting', () => {
+    expect(loadConfig({ ...urls, GOOGLE_CLIENT_ID: 'id.apps.googleusercontent.com', GOOGLE_CLIENT_SECRET: 'google-secret' })).toMatchObject({
+      ok: true,
+      config: { google: { clientId: 'id.apps.googleusercontent.com', clientSecret: 'google-secret' } },
+    })
+  })
+
+  it('[E2.2] refuses one Google variable without the other, and blank counts as unset', () => {
+    expect(failure({ ...urls, GOOGLE_CLIENT_ID: 'id.apps.googleusercontent.com' })).toContain('  GOOGLE_CLIENT_SECRET: Required when any GOOGLE_* variable is set')
+    expect(loadConfig({ ...urls, GOOGLE_CLIENT_ID: '', GOOGLE_CLIENT_SECRET: ' ' })).toMatchObject({ ok: true })
+  })
+})
+
+describe('[E2.2] config: the trusted origin is BETTER_AUTH_URL and no other', () => {
+  it('[E2.2] refuses BETTER_AUTH_TRUSTED_ORIGINS, which Better Auth would read outside our schema, without printing its value', () => {
+    const message = failure({ ...urls, BETTER_AUTH_TRUSTED_ORIGINS: 'https://evil.example' })
+
+    expect(message).toContain('  BETTER_AUTH_TRUSTED_ORIGINS: Not supported')
+    expect(message).not.toContain('evil.example')
+  })
+
+  it('[E2.2] refuses an http BETTER_AUTH_URL when NODE_ENV is production, and accepts https there and http elsewhere', () => {
+    expect(failure({ ...urls, NODE_ENV: 'production' })).toContain('  BETTER_AUTH_URL: Expected an https:// URL when NODE_ENV is production')
+    expect(loadConfig({ ...urls, NODE_ENV: 'production', BETTER_AUTH_URL: 'https://keepsakes.example' })).toMatchObject({ ok: true })
+    expect(loadConfig({ ...urls, NODE_ENV: 'development' })).toMatchObject({ ok: true })
+    expect(loadConfig(urls)).toMatchObject({ ok: true })
   })
 })

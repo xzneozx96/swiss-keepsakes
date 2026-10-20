@@ -55,7 +55,7 @@ export function makeSendMail<T>({ uow, sentMail, mailer, invitationLink, clock }
       await uow.run(async (tx) => {
         if (await sentMail.lockForSend(tx, job.mailId) !== 'queued')
           return
-        const link = await invitationLink(tx, job.template, job.params.invitationId)
+        const link = job.template === 'N01' ? undefined : await invitationLink(tx, job.template, job.params.invitationId)
         const { to, subject, text } = renderMail(job, link)
         const { response } = await mailer.send({ id: job.mailId, to, subject, text })
         await sentMail.recordSent(tx, job.mailId, { at: clock.now(), response })

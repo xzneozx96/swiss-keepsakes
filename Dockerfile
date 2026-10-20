@@ -3,7 +3,7 @@
 
 FROM node:22.23.3-trixie-slim@sha256:154ba2f4d6fec323d28e4f4bb86bba4677f1223391a1979cf521304e03a98dfa AS base
 WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .pnpmfile.cjs ./
 COPY api/package.json api/
 COPY packages/api-contract/package.json packages/api-contract/
 COPY packages/i18n/package.json packages/i18n/

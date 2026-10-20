@@ -5,6 +5,7 @@ import type { Tx } from '../../src/platform/db/client.ts'
 import { randomUUID } from 'node:crypto'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
+import { createMailJobScrubber } from '../../src/modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeFailMail } from '../../src/modules/notifications/application/fail-mail.ts'
@@ -53,7 +54,7 @@ async function setup(retry = { retryLimit: 2, retryDelay: 0, retryBackoff: false
   const alerts: MailFailure[] = []
   const queueMail = makeQueueMail({ sentMail, jobs: createJobQueue(jobs.boss), clock, queue: queues.send })
   const sendMail = makeSendMail({ uow, sentMail, mailer: memory.mailer, invitationLink, clock })
-  const failMail = makeFailMail({ uow, sentMail, clock, alert: failure => alerts.push(failure) })
+  const failMail = makeFailMail({ uow, sentMail, clock, alert: failure => alerts.push(failure), scrub: createMailJobScrubber(queues) })
   const startWorkers = () => startMailWorkers(jobs.boss, { sendMail, failMail }, queues)
   const row = async (mailId: string) => (await pool.query('select status, template, language, recipient, attempts, last_error, smtp_response, queued_at, sent_at, failed_at from notifications.sent_mail where id = $1', [mailId])).rows[0]
   return { queues, clock, uow, memory, alerts, queueMail, sendMail, startWorkers, row }
@@ -210,6 +211,24 @@ describe('[E2.8] a failing send retries, then alerts', () => {
       expect(JSON.stringify(stored)).not.toContain(quotedAddress)
       expect(JSON.stringify(stored)).not.toContain('Recipient address rejected')
     }
+  })
+
+  it('[E2.2] a failed N01 job and its mail-failed copy hold no sign-in code, and the rest of the job stays for the ops list', async () => {
+    const { queues, uow, queueMail, memory, alerts, startWorkers } = await setup()
+    memory.failWith(smtpError('EENVELOPE', 550))
+    await startWorkers()
+    const code = '482913'
+
+    const mailId = await uow.run(tx => queueMail(tx, { template: 'N01', to: 'anna.keller@example.ch', language: 'de', storeId: null, params: { shop: 'Swiss Keepsakes', code } }))
+    await until(() => alerts.length > 0)
+
+    const { rows } = await pool.query<{ name: string, row: string }>(`select name, to_jsonb(job)::text as row from pgboss.job where name in ($1, $2) and data->>'mailId' = $3`, [queues.send, queues.failed, mailId])
+    expect(rows.map(row => row.name).sort()).toEqual([queues.failed, queues.send].sort())
+    for (const { row } of rows) {
+      expect(row).not.toContain(code)
+      expect(row).toContain(mailId)
+    }
+    expect(rows.find(row => row.name === queues.failed)?.row).toContain('Swiss Keepsakes')
   })
 
   it('[E2.8] a permanent refusal (550) skips the retries: one attempt, then mail-failed, the row turns failed and one alert is raised', async () => {

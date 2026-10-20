@@ -1,19 +1,26 @@
 import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
+import type { Actor, AuthenticateDeps, GuestActor } from './authenticate.ts'
 import { STATUS_CODES } from 'node:http'
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
-import { healthSchema } from '@sk/api-contract'
+import { healthSchema, meSchema } from '@sk/api-contract'
 import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
 import { IdempotencyKeyTaken } from '../idempotency.ts'
+import { authenticate, requireGuest } from './authenticate.ts'
 import { idempotencyKeyInUse } from './idempotency.ts'
 import { isErrorStatus, problem } from './problem.ts'
 import { problemResponses, requestIdHeader } from './responses.ts'
 
 export interface AppEnv {
-  Variables: RequestIdVariables & { logger: Logger }
+  Variables: RequestIdVariables & { logger: Logger, actor: Actor, guest: GuestActor }
+}
+
+// Better Auth's handler for /api/auth/* (D8) and what the actor needs from its session.
+export interface IdentityDeps extends AuthenticateDeps {
+  authHandler: (request: Request) => Promise<Response>
 }
 
 const clientRequestIdPattern = /^[\w=-]{1,255}$/
@@ -35,7 +42,21 @@ const healthRoute = createRoute({
   },
 })
 
-export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono<AppEnv> {
+const meRoute = createRoute({
+  method: 'get',
+  path: '/api/me',
+  responses: {
+    200: {
+      description: 'The signed-in guest',
+      headers: requestIdHeader,
+      content: { 'application/json': { schema: meSchema } },
+    },
+    401: { ...problemResponses.default, description: 'No session, or the session expired or was revoked' },
+    ...problemResponses,
+  },
+})
+
+export function createApp(logger: Logger, checkHealth: HealthCheck, identity: IdentityDeps): OpenAPIHono<AppEnv> {
   const app = new OpenAPIHono<AppEnv>({
     defaultHook: (result, c) => {
       if (!result.success) {
@@ -76,12 +97,21 @@ export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono
     onError: c => problem(c, { type: 'body-too-large', status: 413, title: `The request body is over ${apiBodyLimit} bytes` }),
   }))
 
+  // Better Auth serves /api/auth/* in its own error shape (D8), outside the contract.
+  app.all('/api/auth/*', c => identity.authHandler(c.req.raw))
+  app.use('/api/*', authenticate(identity))
+  app.use('/api/me', requireGuest)
+
   app.openapi(healthRoute, async (c) => {
     const report = await checkHealth()
     if (report.database && report.jobs)
       return c.json({ status: 'ok' as const }, 200)
     const checks = Object.fromEntries(Object.entries(report).map(([name, ok]) => [name, ok ? 'ok' as const : 'failed' as const]))
     return problem(c, { type: 'unhealthy', status: 503, title: 'A dependency is not available', checks })
+  })
+
+  app.openapi(meRoute, async (c) => {
+    return c.json({ guestId: c.get('guest').guestId }, 200)
   })
 
   app.notFound(c => problem(c, { type: 'not-found', status: 404, title: 'Not found' }))

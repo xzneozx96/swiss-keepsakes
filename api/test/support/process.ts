@@ -17,9 +17,12 @@ afterEach(() => {
   children.clear()
 })
 
+// Better Auth's variables are required, so every child gets placeholders. A test passes its own to override them.
+const authEnv = { BETTER_AUTH_URL: 'http://localhost:5173', BETTER_AUTH_SECRET: 'test-only-secret-0123456789-abcdefghij' }
+
 export function startMain(env: Record<string, string>, preload?: string) {
   const args = ['--import', 'tsx', ...(preload ? ['--import', `./test/fixtures/${preload}`] : []), 'src/main.ts']
-  const child = spawn(process.execPath, args, { cwd: apiDir, env: { PATH: process.env.PATH ?? '', ...env } })
+  const child = spawn(process.execPath, args, { cwd: apiDir, env: { PATH: process.env.PATH ?? '', ...authEnv, ...env } })
   children.add(child)
   let stdout = ''
   let stderr = ''

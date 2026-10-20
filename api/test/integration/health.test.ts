@@ -5,6 +5,7 @@ import { createPool } from '../../src/platform/db/client.ts'
 import { createHealthCheck } from '../../src/platform/health.ts'
 import { createApp } from '../../src/platform/http/app.ts'
 import { startJobs } from '../../src/platform/jobs/boss.ts'
+import { noSessions } from '../support/identity.ts'
 import { openTestDatabase, silentLogger } from './support.ts'
 
 const { pool } = openTestDatabase()
@@ -17,7 +18,7 @@ async function healthz(target: { pool: typeof pool, jobsStopped?: boolean }) {
   try {
     if (target.jobsStopped)
       await jobs.boss.stop({ close: false })
-    const app = createApp(silentLogger, createHealthCheck({ pool: target.pool, boss: jobs.boss, logger: silentLogger }))
+    const app = createApp(silentLogger, createHealthCheck({ pool: target.pool, boss: jobs.boss, logger: silentLogger }), noSessions)
     const response = await app.request('/healthz')
     return { status: response.status, body: await response.json() }
   }

@@ -16,6 +16,12 @@ export interface QueueMailDeps<T> {
 // as more recipients, and the body can carry an invitation link.
 const singleAddress = z.email()
 
+// A sign-in code lives 5 minutes. The mail queue's own policy (5 retries, backoff, 14 days, then 7) could deliver
+// it half an hour late and keeps the code for days, so N01 sets its own. Two retries 20 seconds apart put the
+// last attempt at about 40 seconds, an attempt may run 60 seconds, and a job still unsent after 300 seconds is
+// dropped, so no attempt starts after the code expired. A finished job is deleted after 1 hour.
+const shortLived = { retryLimit: 2, retryDelay: 20, retryBackoff: false, expireInSeconds: 60, retentionSeconds: 300, deleteAfterSeconds: 3600 }
+
 // A business command calls this inside its own uow.run, so the mail row and its job commit or roll back with
 // the business change (D4). The mail id is also the job id and the Message-ID's local part (section 8).
 export function makeQueueMail<T>({ sentMail, jobs, clock, queue }: QueueMailDeps<T>) {
@@ -30,7 +36,7 @@ export function makeQueueMail<T>({ sentMail, jobs, clock, queue }: QueueMailDeps
       queuedAt: clock.now(),
     })
     const job: MailJob = { ...request, mailId }
-    await jobs.send(tx, queue, job, { id: mailId })
+    await jobs.send(tx, queue, job, request.template === 'N01' ? { id: mailId, ...shortLived } : { id: mailId })
     return mailId
   }
 }

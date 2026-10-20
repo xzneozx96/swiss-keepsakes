@@ -2,6 +2,62 @@
 /* eslint-disable */
 
 export interface paths {
+    "/api/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The signed-in guest */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Me"];
+                    };
+                };
+                /** @description No session, or the session expired or was revoked */
+                401: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -66,6 +122,13 @@ export interface components {
             /** @enum {string} */
             status: "ok";
         };
+        Me: {
+            /**
+             * Format: uuid
+             * @description The guest profile that the guest's orders and bookings point at
+             */
+            guestId: string;
+        };
         /** @description RFC 9457 problem details, sent as application/problem+json */
         Problem: {
             checks?: {
@@ -82,7 +145,7 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated. Show generic copy for any other */
             type: string;
         };
     };

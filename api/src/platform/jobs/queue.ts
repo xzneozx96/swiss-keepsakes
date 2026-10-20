@@ -5,7 +5,7 @@ import { fromDrizzle } from 'pg-boss'
 
 export interface JobQueue<T> {
   // `id` (a UUID) lets the caller name the job, as the mail job does for its Message-ID.
-  send: (tx: T, queue: string, data: object, options?: { startAfter?: Date, id?: string }) => Promise<void>
+  send: (tx: T, queue: string, data: object, options?: { startAfter?: Date, id?: string, retryLimit?: number, retryDelay?: number, retryBackoff?: boolean, expireInSeconds?: number, retentionSeconds?: number, deleteAfterSeconds?: number }) => Promise<void>
 }
 
 // The job row is written through the caller's transaction, so a rollback removes it with the business
