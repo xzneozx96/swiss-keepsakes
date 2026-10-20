@@ -29,13 +29,29 @@ export function googleReturnAddress(location: Pick<Location, 'pathname' | 'searc
   return `${base || '/'}#${sign}${params.size > 0 ? `?${params}` : ''}`
 }
 
+// The error is also taken out of the address once the screen has read it. If the screen mounts again after that (the
+// router shows its pending screen while a chunk loads), the message must not vanish with the address, so the first read
+// is kept here until the guest starts something else.
+let googleFailed = false
+
+/** True from a failed Google return until the guest sends a code, starts Google again or changes the email. */
+export function googleReturnFailed(): boolean {
+  return googleFailed
+}
+
+export function clearGoogleReturnFailure() {
+  googleFailed = false
+}
+
 /** Moves the address once, before the router reads it. The app starts either way. */
 export function takeGoogleReturn() {
   try {
     const address = googleReturnAddress(window.location)
 
-    if (address)
+    if (address) {
       window.history.replaceState(null, '', address)
+      googleFailed = new URLSearchParams(window.location.hash.split('?')[1]).has('error')
+    }
   }
   catch (error) {
     console.error('The sign-in address could not be moved', error)

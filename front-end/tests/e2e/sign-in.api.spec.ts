@@ -203,13 +203,14 @@ test('[E2.1][AC01] a failed Google return shows an error and cleans the address'
       body: `<script>location.replace(${JSON.stringify(callback.toString())})</script>`,
     })
   })
-  await page.goto('/#/sign-in')
+  await page.goto('/#/sign-in?returnTo=%2Fcart%2Freview')
   await page.getByRole('button', { name: t.google }).click()
 
   await expect(page.getByText(t.googleFailed)).toBeVisible()
   expect(consent?.searchParams.get('redirect_uri')).toBe(`${SPA_ORIGIN}/api/auth/callback/google`)
   expect(consent?.searchParams.get('client_id')).toContain('e2e-google-client-id')
-  await expect(page).toHaveURL(`${SPA_ORIGIN}/#/sign-in`)
+  // The error is gone from the address and the return path stays, so a second try still comes back to the cart.
+  await expect(page).toHaveURL(`${SPA_ORIGIN}/#/sign-in?returnTo=%2Fcart%2Freview`)
   await expect(page.getByRole('button', { name: t.google })).toBeEnabled()
 })
 

@@ -8,6 +8,7 @@ import { demoGuest } from '@/features/orders/seed'
 import { apiEnabled } from '@/lib/api-mode'
 import { authFetchOptions, loadAuthClient } from '../lib/auth-api'
 import { codeFailure } from '../lib/code-errors'
+import { clearGoogleReturnFailure, googleReturnFailed } from '../lib/google-return'
 import { signInErrorUrl, signInUrl } from '../lib/return-to'
 
 /** The API's rule (Zod's `z.email()`, which Better Auth applies): no empty or doubled dots, no dot before the @, a TLD of 2 letters or more. */
@@ -56,7 +57,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
   const [codeStep, setCodeStep] = useState<CodeStep | null>(null)
   const [pending, setPending] = useState<'google' | 'send' | 'verify' | null>(null)
   const [problem, setProblem] = useState<SignInProblem | null>(
-    googleFailed ? 'google' : null,
+    googleFailed || googleReturnFailed() ? 'google' : null,
   )
   // Seconds Better Auth's rate limiter asked the guest to wait, for the rate limited message.
   const [retryAfter, setRetryAfter] = useState(60)
@@ -150,6 +151,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
   }
 
   const sendCode = async (to: string) => {
+    clearGoogleReturnFailure()
     setProblem(null)
     if (!apiEnabled) {
       const sentAt = demoNow(clockStartedAt)
@@ -264,6 +266,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
   }
 
   const continueWithGoogle = async () => {
+    clearGoogleReturnFailure()
     setPending('google')
     setProblem(null)
     if (!apiEnabled) {
@@ -335,6 +338,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
         void sendCode(codeStep.email)
     },
     changeEmail: () => {
+      clearGoogleReturnFailure()
       setCodeStep(null)
       setCode('')
       setProblem(null)

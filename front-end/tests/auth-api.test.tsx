@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
 import { useSignIn } from '@/features/auth/hooks/use-sign-in'
+import { takeGoogleReturn } from '@/features/auth/lib/google-return'
 import { followSession } from '@/features/auth/lib/session-sync'
 import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
@@ -217,6 +218,19 @@ describe('[E2.1][AC01] sign-in through the real Better Auth client', () => {
     expect(result.current.code).toBe('123456')
     expect(result.current.attemptsLeft).toBe(3)
     expect(result.current.status).toBe('idle')
+  })
+
+  it('still shows the Google failure when the screen mounts again after the error left the address', () => {
+    window.history.pushState(null, '', '/sign-in?error=access_denied')
+    takeGoogleReturn()
+    const hook = renderHook(() => useSignIn('/account', false), { wrapper: Providers })
+
+    expect(hook.result.current.problem).toBe('google')
+    act(() => hook.result.current.onEmailChange('guest@example.ch'))
+    answer = () => problem(500)
+    act(() => hook.result.current.submitEmail())
+    expect(hook.result.current.problem).toBeNull()
+    window.history.pushState(null, '', '/')
   })
 
   it('sends a Google failure back to /sign-in with the return path', async () => {

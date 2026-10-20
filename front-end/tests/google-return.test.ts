@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { googleReturnAddress, takeGoogleReturn } from '@/features/auth/lib/google-return'
+import { clearGoogleReturnFailure, googleReturnAddress, googleReturnFailed, takeGoogleReturn } from '@/features/auth/lib/google-return'
 
 describe('[E2.1] a failed Google sign-in comes back to /sign-in?error=<code>', () => {
   it('moves the error into the hash, where hash history reads it', () => {
@@ -43,6 +43,17 @@ describe('[E2.1] a failed Google sign-in comes back to /sign-in?error=<code>', (
 
     expect(() => takeGoogleReturn()).not.toThrow()
     vi.restoreAllMocks()
+    window.history.pushState(null, '', '/')
+  })
+
+  it('remembers a failed return after the error has left the address, until the guest acts', () => {
+    window.history.pushState(null, '', '/sign-in?returnTo=%2Fcart&error=access_denied')
+    takeGoogleReturn()
+
+    expect(window.location.hash).toBe('#/sign-in?returnTo=%2Fcart&error=access_denied')
+    expect(googleReturnFailed()).toBe(true)
+    clearGoogleReturnFailure()
+    expect(googleReturnFailed()).toBe(false)
     window.history.pushState(null, '', '/')
   })
 
