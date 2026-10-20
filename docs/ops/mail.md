@@ -44,7 +44,11 @@ There is no resend command yet. UX R13 lets the Owner send an invitation again, 
 
 ## Duplicates
 
-SMTP has no idempotency key. When the server accepted a message but its reply was lost, the retry sends the message again with the same `Message-ID`, which is `<mail id@domain of SMTP_FROM>`. A mail recorded as `sent` is never sent again.
+Each attempt locks the mail's `sent_mail` row from before the send until it records the result, and sends only a `queued` mail.
+
+- Two runs of the same job never both send. The second waits for the lock, then finds the mail `sent` and stops.
+- A mail recorded as `sent` is never sent again, and a mail marked `failed` after its alert is never sent and never turns `sent`.
+- Not preventable. SMTP has no idempotency key. When the server accepted a message but the attempt never committed, the retry sends the message again with the same `Message-ID`, which is `<mail id@domain of SMTP_FROM>`. This happens when the reply was lost, when the worker crashed, or when a shutdown cut the attempt after the 10 s limit in `main.ts`.
 
 ## The live check
 

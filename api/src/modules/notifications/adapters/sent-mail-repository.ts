@@ -12,15 +12,15 @@ export function createSentMailRepository(): SentMailRepository<Tx> {
       return row.id
     },
 
-    async status(tx, mailId) {
-      const [row] = await tx.select({ status: sentMail.status }).from(sentMail).where(eq(sentMail.id, mailId))
+    async lockForSend(tx, mailId) {
+      const [row] = await tx.select({ status: sentMail.status }).from(sentMail).where(eq(sentMail.id, mailId)).for('update')
       return row?.status
     },
 
     async recordSent(tx, mailId, { at, response }) {
       await tx.update(sentMail)
         .set({ status: 'sent', attempts: sql`${sentMail.attempts} + 1`, sentAt: at, smtpResponse: response })
-        .where(eq(sentMail.id, mailId))
+        .where(and(eq(sentMail.id, mailId), eq(sentMail.status, 'queued')))
     },
 
     async recordAttemptFailed(tx, mailId, error) {

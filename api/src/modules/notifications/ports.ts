@@ -50,7 +50,9 @@ export interface MailFailure {
 export interface SentMailRepository<T> {
   // Returns the new mail id.
   queue: (tx: T, mail: QueuedMail) => Promise<string>
-  status: (tx: T, mailId: string) => Promise<MailStatus | undefined>
+  // Locks the mail's row until the transaction ends and returns its status.
+  lockForSend: (tx: T, mailId: string) => Promise<MailStatus | undefined>
+  // Records a queued mail as sent. A mail that is no longer queued keeps its status.
   recordSent: (tx: T, mailId: string, sent: { at: Date, response: string }) => Promise<void>
   recordAttemptFailed: (tx: T, mailId: string, error: string) => Promise<void>
   // Marks a queued mail failed and returns it, or returns undefined when it is no longer queued.

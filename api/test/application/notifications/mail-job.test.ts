@@ -53,14 +53,15 @@ function createFakes() {
       rows.set(id, { ...mail, status: 'queued', attempts: 0, lastError: null, response: null, sentAt: null, failedAt: null })
       return id
     },
-    async status(tx, mailId) {
+    async lockForSend(tx, mailId) {
       inTx(tx)
       return rows.get(mailId)?.status
     },
     async recordSent(tx, mailId, { at, response }) {
       inTx(tx)
-      const row = rows.get(mailId)!
-      Object.assign(row, { status: 'sent', attempts: row.attempts + 1, sentAt: at, response })
+      const row = rows.get(mailId)
+      if (row?.status === 'queued')
+        Object.assign(row, { status: 'sent', attempts: row.attempts + 1, sentAt: at, response })
     },
     async recordAttemptFailed(tx, mailId, error) {
       inTx(tx)
@@ -235,5 +236,17 @@ describe('[E2.8] after the last attempt the mail fails and alerts', () => {
 
     expect(rows.get(mailId)?.status).toBe('sent')
     expect(alerts).toEqual([])
+  })
+
+  it('[E2.8] a mail marked failed after its alert is never sent and never turns sent', async () => {
+    const { rows, alerts, memory, sendMail, failMail, queued } = setup()
+    const { mailId, job } = await queued(n20)
+    await failMail(mailId)
+
+    await sendMail(job)
+
+    expect(memory.attempts).toEqual([])
+    expect(rows.get(mailId)).toMatchObject({ status: 'failed', attempts: 0, sentAt: null })
+    expect(alerts).toHaveLength(1)
   })
 })

@@ -1,6 +1,6 @@
 import type { MailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import type { MailRequest } from '../../src/modules/notifications/application/render-mail.ts'
-import type { MailFailure } from '../../src/modules/notifications/ports.ts'
+import type { Mailer, MailFailure } from '../../src/modules/notifications/ports.ts'
 import { randomUUID } from 'node:crypto'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
@@ -52,6 +52,23 @@ async function setup(retry = { retryLimit: 2, retryDelay: 0, retryBackoff: false
   const startWorkers = () => startMailWorkers(jobs.boss, { sendMail, failMail }, queues)
   const row = async (mailId: string) => (await pool.query('select status, template, language, recipient, attempts, last_error, smtp_response, queued_at, sent_at, failed_at from notifications.sent_mail where id = $1', [mailId])).rows[0]
   return { queues, clock, uow, memory, alerts, queueMail, sendMail, startWorkers, row }
+}
+
+// A Mailer whose sends wait until `release` is called, so a test can hold an attempt in the middle of its send.
+function createHeldMailer() {
+  const attempts: string[] = []
+  let release = () => {}
+  const released = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  const mailer: Mailer = {
+    async send(mail) {
+      attempts.push(mail.id)
+      await released
+      return { response: '250 2.0.0 OK' }
+    },
+  }
+  return { mailer, attempts, release: () => release() }
 }
 
 async function until(done: () => Promise<boolean> | boolean, timeoutMs = 25_000) {
@@ -111,6 +128,34 @@ describe('[E2.8] the worker sends queued mail', () => {
 
     expect(memory.attempts).toHaveLength(1)
     expect(await row(mailId)).toEqual(sent)
+  })
+
+  it('[E2.8] two runs of the same job at once send it once, because the second waits on the row lock', async () => {
+    const { uow, queueMail, clock, row } = await setup()
+    const held = createHeldMailer()
+    const sendMail = makeSendMail({ uow, sentMail: createSentMailRepository(), mailer: held.mailer, clock })
+    const mailId = await uow.run(tx => queueMail(tx, n18))
+
+    const first = sendMail({ ...n18, mailId })
+    await until(() => held.attempts.length === 1)
+    const second = sendMail({ ...n18, mailId })
+    await sleep(500)
+    held.release()
+    await Promise.all([first, second])
+
+    expect(held.attempts).toEqual([mailId])
+    expect(await row(mailId)).toMatchObject({ status: 'sent', attempts: 1 })
+  })
+
+  it('[E2.8] recording a send leaves a mail that was marked failed as failed', async () => {
+    const { uow, queueMail, row } = await setup()
+    const sentMail = createSentMailRepository()
+    const mailId = await uow.run(tx => queueMail(tx, n18))
+    await uow.run(tx => sentMail.markFailed(tx, mailId, new Date('2026-10-20T08:30:00Z')))
+
+    await uow.run(tx => sentMail.recordSent(tx, mailId, { at: new Date('2026-10-20T08:31:00Z'), response: '250 2.0.0 OK' }))
+
+    expect(await row(mailId)).toMatchObject({ status: 'failed', attempts: 0, sent_at: null, smtp_response: null })
   })
 })
 

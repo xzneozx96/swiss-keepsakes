@@ -41,23 +41,27 @@ export function toAttemptError(error: unknown): MailAttemptError {
   return new MailAttemptError(typeof code === 'string' ? code : error.name, reply, reply !== undefined && reply >= 500 && reply < 600)
 }
 
-// One attempt of the mail job. A failed attempt is counted and thrown again as a MailAttemptError, so pg-boss
-// retries it. A mail already recorded as sent is not sent again. SMTP has no idempotency key, so a send whose
-// reply was lost goes out again, with the same Message-ID (architecture section 8).
+// One attempt of the mail job, under the mail's row lock (architecture section 8). Only a queued mail is sent:
+// a second run of the same job waits for the lock, then finds the mail sent and stops, and a mail marked failed
+// after its alert is never sent. A failed attempt rolls back, is counted in a transaction of its own, and is
+// thrown again as a MailAttemptError, so pg-boss retries it. SMTP has no idempotency key: when the server
+// accepted the message but the commit never happened (a crash, a shutdown, a lost connection), the retry sends
+// it again with the same Message-ID.
 export function makeSendMail<T>({ uow, sentMail, mailer, clock }: SendMailDeps<T>) {
   return async (job: MailJob): Promise<void> => {
-    if (await uow.run(tx => sentMail.status(tx, job.mailId)) === 'sent')
-      return
-    let response: string
     try {
-      const { to, subject, text } = renderMail(job)
-      response = (await mailer.send({ id: job.mailId, to, subject, text })).response
+      await uow.run(async (tx) => {
+        if (await sentMail.lockForSend(tx, job.mailId) !== 'queued')
+          return
+        const { to, subject, text } = renderMail(job)
+        const { response } = await mailer.send({ id: job.mailId, to, subject, text })
+        await sentMail.recordSent(tx, job.mailId, { at: clock.now(), response })
+      })
     }
     catch (error) {
       const failure = toAttemptError(error)
       await uow.run(tx => sentMail.recordAttemptFailed(tx, job.mailId, failure.message))
       throw failure
     }
-    await uow.run(tx => sentMail.recordSent(tx, job.mailId, { at: clock.now(), response }))
   }
 }
