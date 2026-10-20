@@ -46,12 +46,12 @@ beforeAll(async () => {
 afterAll(() => pool.end())
 
 describe('[E2.2] the identity tables', () => {
-  it('[E2.2] the migration creates identity.store_memberships and identity.platform_admins without any foreign key, and this database has no neon_auth schema', async () => {
+  // No foreign key into neon_auth, which the compose Postgres does not have, so the migration runs on both.
+  it('[E2.2] the migration creates identity.store_memberships and identity.platform_admins without any foreign key', async () => {
     const { rows } = await pool.query<{ table_name: string }>(`select table_name from information_schema.tables where table_schema = 'identity' order by table_name`)
 
     expect(rows.map(row => row.table_name)).toEqual(['platform_admins', 'store_memberships'])
     expect(await count(pool, `select count(*) from information_schema.table_constraints where table_schema = 'identity' and constraint_type = 'FOREIGN KEY'`)).toBe(0)
-    expect(await count(pool, `select count(*) from information_schema.schemata where schema_name = 'neon_auth'`)).toBe(0)
   })
 
   it('[E2.2] a membership role is owner or manager, and one user has one role per store', async () => {
