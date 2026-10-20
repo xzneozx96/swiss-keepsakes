@@ -22,7 +22,7 @@ The backend is one TypeScript service. It runs the HTTP API and the background j
 | Markdown rendering | Streamdown |
 | Hosting | Fly.io, region `fra` |
 | Payments | Stripe Payment Element with PaymentIntents, cards, TWINT, Apple Pay and Google Pay |
-| Email | Resend, EU sending region |
+| Email | SMTP through one `Mailer` port. The server and credentials come from environment variables |
 | Errors and analytics | Sentry EU, Plausible EU, and Google Analytics 4 after cookie consent |
 | Repository | Monorepo with `front-end/`, `api/`, `packages/domain`, `packages/api-contract` and `packages/i18n` |
 
@@ -49,7 +49,7 @@ Five choices carry the design:
 | D9 | Every tenant row has `store_id`. Child rows use composite foreign keys `(store_id, parent_id)`, so a child can't point at another store's parent. Every repository function requires a `StoreScope` argument. Row-level security comes with the second merchant. | Row-level security from day one: policies on every table and `SET LOCAL` on every request, for one store. Scoping in application code without composite keys: one missed filter leaks data. | A second merchant onboards. Add policies and `SET LOCAL app.store_ids`. The schema already has the columns they need. |
 | D10 | One `audit_log` for every money and status change, with before, after, actor, reason and request id. Order and booking timelines are a view over it. | A separate timeline table next to the audit log: two sources for one history. The prototype's `Order.log` and `BookingRecord.activity` arrays become audit rows. | None expected. |
 | D11 | REST with `@hono/zod-openapi`. The generated client is committed under `packages/api-contract/generated/`, and CI fails if it differs from a fresh build. Errors follow RFC 9457 problem details with stable `type` codes. Lists use cursor pagination. Merchant edits send `If-Match`. Every state-changing request carries an `Idempotency-Key`, stored with a request hash and replayed for 24 hours. A reused key with a different body returns 422. | tRPC: webhooks, redirects and partner links stay REST anyway. GraphQL: one client doesn't need it. | A second client wants typed RPC. |
-| D12 | Resend, EU sending region. Resend stores account data and email metadata in the US whatever the sending region (F17). All 23 templates (UX L471 to L495) are rendered on the server in the language stored on the transaction. | Amazon SES in Frankfurt: full EU residency, more setup. Postmark: US. | The data-protection review rejects US-held mail metadata. Move to SES Frankfurt with the same template code. |
+| D12 | SMTP, decided by the owner on 20.10.2026. One `Mailer` port with one SMTP adapter. `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` and `SMTP_FROM` come from the environment. Local and staging use a test SMTP account. The production SMTP provider is open (Q15). All 23 templates (UX L471 to L495) are rendered on the server in the language stored on the transaction. | Resend, the earlier choice: HTTP API, but it holds account and mail metadata in the US (F17). Amazon SES in Frankfurt: full EU residency, and it also speaks SMTP. | The data-protection review rejects the provider's data location. Point the same adapter at another SMTP server, or add an HTTP adapter behind the port. |
 | D13 | Sentry EU (F18) for errors. Plausible EU (F19) for cookie-free behaviour analytics on every visit. Google Analytics 4 for marketing, loaded only after the visitor accepts cookies in a consent banner, with no personal data, engraving or chat text sent (PRD L473). Every money, status, source and traveller-group figure is SQL over our own tables (PRD L471). | GA4 alone: it sees only visitors who consent. Self-hosted Umami or Matomo: more to run. | The data-protection review rejects GA4. Drop it and keep Plausible. |
 | D14 | Neon Object Storage in the same Neon project, through its S3-compatible API. A private bucket takes uploads through signed URLs that the API issues after an authorization check. A public bucket serves published media. The worker makes resized variants with `sharp` when an upload completes. | Cloudflare R2 or S3: a second vendor for a few gigabytes. | Neon Object Storage can't issue the signed URLs spike SP5 needs. Switch to Cloudflare R2 with the same S3 client. |
 | D15 | The Phase 1 planner makes no model call. PRD R19 (PRD L402) says the Phase 1 assistant asks the store's fixed, ordered questions, gives no free answers and makes no plan. The scripted chat stays in the browser. One endpoint stores the request with the question set and language as asked (AC18) and queues mail N16. | A model-backed planner route now: against R19 and PRD L95. | O19 is approved. Then add a route on the AI SDK with read-only catalogue tools, a server-side key, a per-user rate limit and a spend cap. |
@@ -76,7 +76,7 @@ flowchart TB
         AUTH["Neon Auth<br/>managed Better Auth"]
     end
     STRIPE["Stripe<br/>PaymentIntents, Refunds, TWINT, cards"]
-    MAIL["Resend (EU send)"]
+    MAIL["SMTP server"]
     SENTRY["Sentry EU"]
     PLAUSIBLE["Plausible EU<br/>GA4 after consent"]
 
@@ -135,7 +135,7 @@ The code follows clean architecture in four layers. Each layer may import only f
 | Domain | `packages/domain/src/<module>/` | Entities, value objects, transition tables, pure policies such as seat availability, `moneyState` and commission math | Only `packages/domain` |
 | Application | `api/src/modules/<module>/application/` | One file per use case, either a command or a query. `ports.ts` declares the interfaces the use cases need. | Domain, its own ports, and other modules' `index.ts` |
 | Adapters | `api/src/modules/<module>/adapters/` | Driving adapters (HTTP routes, job handlers) that call use cases. Driven adapters (Drizzle repositories, the Stripe gateway) that implement the ports. | Application, domain, `api/src/platform/`, `packages/api-contract` |
-| Platform and composition | `api/src/platform/`, `api/src/main.ts` | Database pool and transactions, pg-boss, the Hono app and middleware, the Stripe, Resend and storage clients, config, logger, clock. `main.ts` is the only file that connects concrete adapters to use cases. | Everything |
+| Platform and composition | `api/src/platform/`, `api/src/main.ts` | Database pool and transactions, pg-boss, the Hono app and middleware, the Stripe, SMTP and storage clients, config, logger, clock. `main.ts` is the only file that connects concrete adapters to use cases. | Everything |
 
 These rules keep the layers honest without adding framework weight:
 
@@ -166,7 +166,7 @@ swiss-keepsakes/
         audit.ts                  AuditLog adapter over platform.audit_log
         webhooks.ts               webhook_events deduplication
         stripe.ts                 Stripe client factory (stripeFor(store))
-        mail.ts                   Resend client
+        mail.ts                   SMTP client
         storage.ts                S3 client for Neon Object Storage
         clock.ts                  Clock port and the system clock
         logger.ts
@@ -194,7 +194,7 @@ swiss-keepsakes/
         identity/                 adapters/neon-auth-users.ts reads neon_auth.user
         content/
         requests/
-        notifications/            adapters/resend-mailer.ts implements Mailer
+        notifications/            adapters/smtp-mailer.ts implements Mailer
         reporting/                adapters/views.sql
     migrations/                   generated SQL from drizzle-kit, all schemas in one sequence
     test/
@@ -228,7 +228,7 @@ The front-end keeps its feature folders. Each feature's `types.ts` and its pure 
 | SQL and Drizzle | `api/src/modules/<module>/adapters/*-repository.ts` and `schema.ts` |
 | Request parsing and response shape | `packages/api-contract/src/` schemas, used by `adapters/routes.ts` |
 | Permission check | `can()` in `packages/domain/src/identity/`, called by the use case |
-| Talking to Stripe, Resend or storage | A port in the owning module, an adapter in that module, a client in `api/src/platform/` |
+| Talking to Stripe, the SMTP server or storage | A port in the owning module, an adapter in that module, a client in `api/src/platform/` |
 | Audit, idempotency, webhook deduplication, rate limits | `api/src/platform/` |
 | Wiring | `api/src/main.ts` only |
 
@@ -502,7 +502,7 @@ All jobs are pg-boss jobs in the `pgboss` schema of the application database. A 
 | `provider-event` | Webhook endpoint | Apply one Stripe event under the transaction's row lock |
 | `provider-sync` | Return-page poll, nightly | Retrieve a PaymentIntent or refund and apply the same rules |
 | `refund` | Money exception, online refund in M10 | Create the Stripe refund, then insert or update the ledger row |
-| `mail` | Every business command | Render the template in the stored language and send it through Resend, with the job id as the idempotency key. Record it in `sent_mail`. Failures stay in an ops list so staff can resend (PRD L408). |
+| `mail` | Every business command | Render the template in the stored language and send it through the `Mailer` port over SMTP. SMTP has no idempotency key, so the job id goes in the `Message-ID` header and a retry after a lost response can send a duplicate. Record it in `sent_mail`. Failures stay in an ops list so staff can resend (PRD L408). |
 | `balance-overdue` | Hourly | Apply each booking's `overdue_policy`. Send N10 balance reminders 3 days before the due date (Q5). |
 | `reminders` | Hourly | First-payment reminders 24 hours and 2 hours before the deadline. Pickup reminders (N12) and tour reminders (N13) the day before at 18:00 Zurich time. These are defaults that the merchant can change (Q5). |
 | `sweeper` | Every minute | Find any `pending_payment` booking past `hold_until`, or `accepted` order past `first_payment_due_at`, whose job hasn't settled it, and queue the job now |
@@ -562,7 +562,7 @@ The conventions are in D11. Commands are sub-resources, for example `POST /api/s
 | Database | Docker Compose Postgres 18.6 (the version Neon runs), or the Neon branch `development`. Integration tests use a throwaway database on either, and CI uses a Neon branch per pull request | Neon branch `staging`, Frankfurt | Neon branch `production`, Frankfurt, 0.5 CU or more, scale to zero off, restore history of 7 days or more |
 | Storage | Neon Object Storage, the `development` branch's `uploads` and `media` buckets | Neon Object Storage, staging bucket | Neon Object Storage |
 | Stripe | Stripe CLI `listen --forward-to` against the sandbox, plus a scriptable fake for tests | Sandbox on the pilot store's test account | Live |
-| Mail | Mailpit | Resend test domain with allow-listed recipients | Resend, store domain |
+| Mail | The test SMTP account. Tests use an in-memory `Mailer` | The test SMTP account | The production SMTP provider (Q15), store domain |
 | Errors and analytics | Off | Sentry EU staging | Sentry EU, Plausible, GA4 after consent |
 
 Configuration comes from environment variables, checked at startup against one Zod schema. Secrets live in Fly secrets.
@@ -646,11 +646,11 @@ Each feature moves in full. When it moves, its seed file becomes a database seed
 | R6 | One developer | All knowledge sits with one person | Runbooks and tests written with the code. This document is the handover. |
 | R7 | Owner decisions still open: reminder timings, cutoffs, cancellation formulas, rounding | Rules change after the build | Each rule is a pure function in `packages/domain` with a test. The schema doesn't encode the open choice. |
 | R8 | Neon restore history is too short, or Neon changes direction after the Databricks acquisition | A data-loss window, or a forced move | Restore history of 7 days or more is a go-live gate. The database is plain Postgres 18, and the Supabase Zurich fallback (D2) needs only new connection strings. |
-| R9 | Data residency: compute in Germany, mail metadata in the US (F17) | A data-protection finding | Q6. SES Frankfurt and Exoscale can replace Resend and Fly without code changes beyond the adapters. |
+| R9 | Data residency: compute in Germany, mail metadata wherever the SMTP provider keeps it (Q15) | A data-protection finding | Q6. SES Frankfurt SMTP and Exoscale can replace the SMTP provider and Fly without code changes beyond configuration and the platform adapters. |
 | R10 | Stripe changes the Connect API (Accounts v2 is now the documented default) | Rework at the Connect switch | The adapter is small, and account creation is one function. The v1 controller settings remain supported. |
 | R11 | The merchant finds the full Stripe Dashboard confusing (PRD L27) | Support load | M22 shows payout status in our own words. An Express-style account is the fallback at the Connect switch. |
 | R12 | The operator holds a restricted key to the merchant's own account in Phase 1 | Trust and key rotation burden | Minimum permissions, a rotation runbook, and the platform key replaces it at the Connect switch. |
-| R13 | Neon Auth lacks something launch needs, such as Safari session support or the code limits in UX L327 (F2, F16) | Auth falls short of the UX spec | SP6 checks it in week one. The fallback is Better Auth inside the API on the same tables (D8). |
+| R13 | Neon Auth lacks something launch needs, such as Safari session support (F2). The code limits are settled in F16. | Auth falls short of the UX spec | The owner told us on 20.10.2026 to assume Safari sessions work, so the iPhone checklist is still open and stays under Not verified. The fallback is Better Auth inside the API on the same tables (D8). |
 
 ## 16. Spike items
 
@@ -675,7 +675,7 @@ The owner answered these questions on 19.10.2026. Q2 and Q6 still need follow-up
 | Q3 | What happens to a payment that succeeds after its seats are gone? | Prevent it with server-side confirmation, cancel at expiry and card manual capture. Refund the rare remainder automatically (section 6.4). |
 | Q4 | Is staff MFA required? | No, it is never needed. |
 | Q5 | Default reminder timings | First payment 24 hours and 2 hours before the deadline. Balance 3 days before the due date, at 09:00 Zurich time. Pickup and tour the day before at 18:00 Zurich time. The merchant can change them. |
-| Q6 | Is Frankfurt for data and compute, with mail metadata in the US, acceptable? | Acceptable. The lawyer confirms before go-live, together with retention periods for requests and visitor ids (PRD L412, L475). |
+| Q6 | Is Frankfurt for data and compute acceptable, and is the production SMTP provider's data location acceptable (Q15)? | Frankfurt for data and compute is acceptable. The owner chose SMTP over Resend on 20.10.2026, so the answer for mail metadata waits on Q15. The lawyer confirms before go-live, together with retention periods for requests and visitor ids (PRD L412, L475). |
 | Q7 | Analytics tools | Plausible plus GA4. GA4 loads only after cookie consent (D13). |
 | Q8 | Partner report sessions: 6-digit code, 10 minutes, 5 attempts, 30 days on the device (R10) | Confirmed. |
 | Q9 | How is an order-level discount split across lines? | In proportion to line value, rounded to the Rappen, with the rounding difference on the last line. |
@@ -684,6 +684,7 @@ The owner answered these questions on 19.10.2026. Q2 and Q6 still need follow-up
 | Q12 | How long do ledger and order rows stay after a guest deletes their account? | 10 years. |
 | Q13 | How does a guest pay for a cart that spans several stores? | One payment per store. |
 | Q14 | Should seats stay counted for 2 minutes after a hold ends? | No. Seats are released at exactly 15 minutes, as PRD L161 says. |
+| Q15 | Which SMTP provider sends production mail, and from which domain? Local and staging use the owner's test SMTP account. Gmail SMTP suits tests only (sending limits, the sender must be the signed-in account). | The store's own mail host (owner, 20.10.2026). Its host, credentials and sending domain are still to come from the store. Needed before staging mail goes to real guests (E2.9) and before E7.6. |
 
 ## 18. Verified facts and sources
 
@@ -706,12 +707,12 @@ Checked 18.10.2026 unless another date is shown.
 | F13 | Stripe doesn't guarantee webhook order, duplicates happen, and live retries continue for up to three days. Stripe says not to use `created` to order events. It recommends tracking event ids, returning 2xx quickly, and combining IP allow-listing with signature checks. The default signature tolerance is 5 minutes. | docs.stripe.com/webhooks |
 | F14 | pg-boss needs PostgreSQL 13 or later and Node 22.12 or later. It supports cron and RRULE schedules, deferred jobs, retries with exponential backoff, creating jobs in an existing transaction, and a Drizzle adapter. MIT licence. | github.com/timgit/pg-boss |
 | F15 | Fly.io's European regions are `ams`, `arn`, `cdg`, `fra` and `lhr`. It has no Swiss region. | docs.fly.io/reference/regions |
-| F16 | Better Auth's email code plugin defaults to `expiresIn` 300 seconds, `allowedAttempts` 3 and `otpLength` 6. UX L327 asks for 10 minutes and 5 attempts, so SP6 checks whether Neon Auth lets us change them. | better-auth.com/docs/plugins/email-otp |
-| F17 | Resend's sending region sets where mail is sent from. All account data, including email metadata, logs and API records, is stored in the United States whatever the sending region. | resend.com/docs/dashboard/domains/regions |
+| F16 | Better Auth's email code plugin defaults to `expiresIn` 300 seconds, `allowedAttempts` 3 and `otpLength` 6. SP6 measured that Neon Auth keeps them (a code died before 8.5 minutes, the 4th wrong try was refused) and its CLI cannot change them. The owner accepted 5 minutes and 3 attempts for guest and staff sign-in on 20.10.2026, and UX L328 and N01 now say so. Partner codes (Q8) are our own and keep 10 minutes and 5 attempts. | better-auth.com/docs/plugins/email-otp |
+| F17 | Resend, the choice before 20.10.2026, set where mail is sent from by region. All account data, including email metadata, logs and API records, is stored in the United States whatever the sending region. | resend.com/docs/dashboard/domains/regions |
 | F18 | Sentry offers EU data storage in Frankfurt. The location is fixed when the organisation is created. | docs.sentry.io/organization/data-storage-location |
 | F19 | Plausible stores visitor data in the EU, uses no cookies, and stores no raw IP addresses or user agents, per its own data policy. | plausible.io/data-policy |
 | F20 | Annex 1 of the Swiss Data Protection Ordinance is the binding list of countries with adequate protection. Summaries list all EU member states. The official annex itself wasn't retrieved, so the lawyer confirms it (Q6). | bj.admin.ch/bj/en/home/staat/datenschutz/internationales/anerkennung-staaten.html |
 | F22 | Neon's React and Hono guide signs in with `@neondatabase/neon-js/auth` in the SPA and sends the session token as a Bearer JWT to a separate Hono server. The server verifies it with `jose` against `${NEON_AUTH_URL}/.well-known/jwks.json` and checks the issuer. The `sub` claim is the `neon_auth.user.id`. Neon's Functions guide says these tokens are EdDSA-signed and last 15 minutes. Checked 19.10.2026. | neon.com/guides/react-neon-auth-hono, neon.com/docs/auth/guides/plugins/jwt, neon.com/docs/compute/functions/authentication |
 | F23 | A ConfirmationToken carries the data the Payment Element collects to the server, which passes it as `confirmation_token` when it confirms the PaymentIntent. Tokens are single-use and expire 15 minutes after creation. Checked 19.10.2026. | docs.stripe.com/api/confirmation_tokens, docs.stripe.com/js/confirmation_tokens |
 | F21 | Hono's request API exposes `c.req.text()`, `c.req.arrayBuffer()` and `c.req.raw`, which Stripe signature checks need. | hono.dev/docs/api/request |
-| F24 | Neon Auth on project `plain-resonance-94662542` was checked on all three branches on 19.10.2026. With `neon neon-auth config email-password update --enabled false`, `POST /sign-up/email` returns 400 `EMAIL_PASSWORD_SIGN_UP_DISABLED`, and `POST /email-otp/send-verification-otp` still returns 200, so the emailed code works without passwords. Magic links are off by default and need custom SMTP in production. Google uses Neon's shared development credentials, which show Neon branding, so production needs our own Google OAuth app. The JWT is EdDSA with a 15-minute lifetime. The branches run PostgreSQL 18.6. | `neon neon-auth` CLI, neon.com/docs/auth/guides/plugins/email-otp, neon.com/docs/auth/guides/plugins/magic-link, neon-auth agent skill |
+| F24 | Neon Auth on project `plain-resonance-94662542` was checked on all three branches on 19.10.2026. With `neon neon-auth config email-password update --enabled false`, `POST /sign-up/email` returns 400 `EMAIL_PASSWORD_SIGN_UP_DISABLED`, and `POST /email-otp/send-verification-otp` still returns 200, so the emailed code works without passwords. Magic links are off by default and need custom SMTP in production. `neon neon-auth config email-provider update --type standard` takes an SMTP host, port, user, password and sender for Neon Auth's own mails (CLI help, 20.10.2026), so the owner's SMTP choice (D12) can also send the sign-in codes. It was not run. Google uses Neon's shared development credentials, which show Neon branding, so production needs our own Google OAuth app. The JWT is EdDSA with a 15-minute lifetime. The branches run PostgreSQL 18.6. | `neon neon-auth` CLI, neon.com/docs/auth/guides/plugins/email-otp, neon.com/docs/auth/guides/plugins/magic-link, neon-auth agent skill |

@@ -1,6 +1,6 @@
 # SP6. Neon Auth in the SPA served by our API on Fly
 
-**Status: Scripted part answered on Neon; manual iOS Safari checklist still open.** The JWKS fetch, a real JWT and its verification ran against the operator's project. The iOS Safari checks need a real iPhone or BrowserStack and cannot be scripted. D8 stays open.
+**Status: Scripted part answered on Neon; manual iOS Safari checklist still open.** The JWKS fetch, a real JWT and its verification ran against the operator's project. The iOS Safari checks need a real iPhone or BrowserStack and cannot be scripted. D8 stays open. On 20.10.2026 the owner told us to assume Safari sessions work and to build E2.1 and E2.2, so the checklist is still outstanding.
 
 **Pass condition (architecture section 16).** On iOS Safari with default settings, the guest stays signed in across reloads and a day later. The API resolves the actor from the JWT, and `can()` resolves the memberships. Each limit and the email are configurable or listed as gaps for D8. If sessions don't survive on Safari, D8 moves to Better Auth inside the API before Phase 2.
 
