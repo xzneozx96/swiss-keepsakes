@@ -1,6 +1,7 @@
 import process from 'node:process'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { makeEnsureGuestProfile } from './modules/identity/index.ts'
+import { createMailJobScrubber } from './modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
 import { createSentMailRepository } from './modules/notifications/adapters/sent-mail-repository.ts'
@@ -79,7 +80,7 @@ async function main() {
     await startMailWorkers(jobs.boss, {
       // No invitation exists before E2.3, which passes the identity module's InvitationLink here.
       sendMail: makeSendMail({ uow, sentMail, mailer, invitationLink: async () => undefined, clock: systemClock }),
-      failMail: makeFailMail({ uow, sentMail, clock: systemClock, alert: createLogAlert(logger) }),
+      failMail: makeFailMail({ uow, sentMail, clock: systemClock, alert: createLogAlert(logger), scrub: createMailJobScrubber() }),
     })
   }
   if (config.ROLE !== 'worker') {

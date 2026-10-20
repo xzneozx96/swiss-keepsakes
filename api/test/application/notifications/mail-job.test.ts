@@ -111,7 +111,7 @@ function setup() {
   const memory = createMemoryMailer()
   const queueMail = makeQueueMail({ sentMail: fakes.sentMail, jobs: fakes.jobQueue, clock, queue: 'mail' })
   const sendMail = makeSendMail({ uow: fakes.uow, sentMail: fakes.sentMail, mailer: memory.mailer, invitationLink: fakes.invitationLink, clock })
-  const failMail = makeFailMail({ uow: fakes.uow, sentMail: fakes.sentMail, clock, alert: failure => fakes.alerts.push(failure) })
+  const failMail = makeFailMail({ uow: fakes.uow, sentMail: fakes.sentMail, clock, alert: failure => fakes.alerts.push(failure), scrub: { scrubSecrets: async () => {} } })
   // A business command that queues one mail in its own transaction, then the job pg-boss would hand over.
   const queued = async <R extends MailRequest>(request: R) => {
     const mailId = await fakes.uow.run(tx => queueMail(tx, request))

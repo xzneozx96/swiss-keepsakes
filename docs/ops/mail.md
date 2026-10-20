@@ -11,7 +11,7 @@ Mail goes over SMTP (architecture D12). A business command queues a `mail` job a
 
 ## The sign-in code mail (N01)
 
-Better Auth queues N01 for each emailed sign-in code, in the language the SPA sent in `Accept-Language`, or English (`api/src/platform/auth.ts`). The request does not wait for SMTP. The job holds the plain code, because the worker renders it later. A job that is still unsent after 1 hour is dropped, and a finished job is deleted after 1 hour. The code itself is useless after 5 minutes. pg-boss's dead-letter copy of a failed N01 job keeps the code for that queue's own retention, so never paste `pgboss.job` data into a ticket.
+Better Auth queues N01 for each emailed sign-in code, in the language the SPA sent in `Accept-Language`, or English (`api/src/platform/auth.ts`). The request does not wait for SMTP. The job holds the plain code, because the worker renders it later. A job that is still unsent after 1 hour is dropped, and a finished job is deleted after 1 hour. The code itself is useless after 5 minutes. When an N01 mail fails for good, the `mail-failed` handler removes `params.code` from the job and from its dead-letter copy before it marks the row failed.
 
 ## Retries and the alert
 

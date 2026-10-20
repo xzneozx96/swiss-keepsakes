@@ -37,6 +37,11 @@ export interface Mailer {
 // (E2.3). Undefined means the invitation is no longer open, and the mail fails like a missing template value.
 export type InvitationLink<T> = (tx: T, template: InvitationTemplate, invitationId: string) => Promise<string | undefined>
 
+// Removes the secret a job's data holds (the N01 sign-in code) from the mail job and its dead-letter copy.
+export interface MailJobScrubber<T> {
+  scrubSecrets: (tx: T, mailId: string) => Promise<void>
+}
+
 export interface QueuedMail {
   storeId: string | null
   template: MailTemplate
