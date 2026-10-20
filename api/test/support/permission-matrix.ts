@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto'
 
 const httpMethods = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'])
 const pathParameter = /\{[^}]+\}/g
+const storeLikeParameter = /\{[^}]*store[^}]*\}/i
 const routeParameter = /:(\w+)(\{[^}]*\})?/g
 const storeRoutePrefix = '/api/store/'
 
@@ -23,14 +24,40 @@ export function storeOperations(document: { paths?: Record<string, object> }): S
     .flatMap(([path, item]) => Object.keys(item).filter(method => httpMethods.has(method)).map(method => ({ method: method.toUpperCase(), path })))
 }
 
+// The one middleware that is meant to sit under /api/store/: the guard mounted in createApp.
+const storeGuardPath = '/api/store/:storeId/*'
+
+const toDocumentPath = (path: string) => path.replace(routeParameter, '{$1}')
+
 // Routes the app serves under /api/store/ that the document lacks. A route registered with a plain `app.get`
-// instead of `app.openapi` is one. The matrix would never call it, so the test fails on it and says why.
+// instead of `app.openapi` is one. A route registered with `app.all` is one too: it answers every method, and
+// the document has no operation for it. The matrix would never call them, so the test fails and says why.
+// Any other middleware under /api/store/ is reported as well, and the test names it so it can be allowed on purpose.
 export function unlistedStoreRoutes(app: Pick<OpenAPIHono<AppEnv>, 'routes'>, document: { paths?: Record<string, object> }): string[] {
   const listed = new Set(storeOperations(document).map(({ method, path }) => `${method} ${path}`))
   const served = app.routes
-    .filter(route => route.method !== 'ALL' && route.path.startsWith(storeRoutePrefix))
-    .map(route => `${route.method} ${route.path.replace(routeParameter, '{$1}')}`)
+    .filter(route => route.path.startsWith(storeRoutePrefix) && route.path !== storeGuardPath)
+    .map(route => `${route.method} ${toDocumentPath(route.path)}`)
   return [...new Set(served)].filter(route => !listed.has(route)).sort()
+}
+
+// Public routes of a store are `/api/stores/{slug}/*` (architecture section 10). They carry a slug, not a store id,
+// and no store guard. This is the only path family allowed to mention a store outside /api/store/{storeId}.
+const publicStorePrefix = '/api/stores/{slug}/'
+
+// Every path of the document or the app with a store-like parameter (`{storeId}`, `{store_id}`, `{store}`) that
+// is not under /api/store/{storeId}, so the store guard would never see it.
+export function storeParametersOutsideGuard(app: Pick<OpenAPIHono<AppEnv>, 'routes'>, document: { paths?: Record<string, object> }): string[] {
+  const paths = [...Object.keys(document.paths ?? {}), ...app.routes.map(route => toDocumentPath(route.path))]
+  return [...new Set(paths)]
+    .filter(path => !path.startsWith(publicStorePrefix) && !path.startsWith('/api/store/{storeId}') && storeLikeParameter.test(path))
+    .sort()
+}
+
+// Store operations in the contract that the matrix inventory lacks.
+export function missingFromMatrix(contract: StoreOperation[], matrix: StoreOperation[]): string[] {
+  const inMatrix = new Set(matrix.map(({ method, path }) => `${method} ${path}`))
+  return contract.map(({ method, path }) => `${method} ${path}`).filter(route => !inMatrix.has(route))
 }
 
 // Paths under /api/store/ whose first parameter is not the store id, so the store guard would not cover them.

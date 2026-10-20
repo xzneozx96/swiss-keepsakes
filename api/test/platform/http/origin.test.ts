@@ -110,6 +110,32 @@ describe('[E2.10] the Origin rule on every POST, PUT, PATCH and DELETE under /ap
   })
 })
 
+describe('[E2.10] every method but GET, HEAD and OPTIONS is checked', () => {
+  it.each(['PROPFIND', 'PURGE', 'LOCK', 'MKCOL'])('[E2.10] %s from a foreign origin gets a 403 problem, and so does one without Origin', async (method) => {
+    const { app } = setup()
+
+    for (const headers of [{ Origin: foreign }, {}] as Record<string, string>[]) {
+      const response = await app.request('/api/probe', { method, headers })
+      expect(response.status, method).toBe(403)
+      expect(await response.json()).toMatchObject({ type: 'origin-refused' })
+    }
+  })
+
+  it('[E2.10] a route registered with app.all is checked too, and passes from our own origin', async () => {
+    const { app } = setup()
+    app.all('/api/anything', c => c.json({ method: c.req.method }, 200))
+
+    expect((await app.request('/api/anything', { method: 'PURGE', headers: { Origin: foreign } })).status).toBe(403)
+    expect((await app.request('/api/anything', { method: 'PURGE', headers: { Origin: shopOrigin } })).status).toBe(200)
+  })
+
+  it.each(['GET', 'HEAD', 'OPTIONS'])('[E2.10] %s is not checked', async (method) => {
+    const { app } = setup()
+
+    expect((await app.request('/api/probe', { method, headers: { Origin: foreign } })).status).not.toBe(403)
+  })
+})
+
 describe('[E2.10] our own origin comes from BETTER_AUTH_URL, the value that sets Better Auth\'s trustedOrigins', () => {
   it.each([
     ['https://shop.example', 'https://shop.example'],

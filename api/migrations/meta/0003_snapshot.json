@@ -1,5 +1,5 @@
 {
-  "id": "c50e498b-960b-48f4-b112-8feae41df554",
+  "id": "9210f960-dbd9-4612-b03b-b9fe5e109e79",
   "prevId": "5959ee5b-9509-47d1-8e30-2ed4d22ef279",
   "version": "7",
   "dialect": "postgresql",
@@ -171,6 +171,19 @@
           "type": "uuid",
           "primaryKey": true,
           "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "granted_by": {
+          "name": "granted_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},

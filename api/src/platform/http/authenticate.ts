@@ -13,14 +13,14 @@ export interface SessionReader {
 
 export interface AuthenticateDeps {
   readSession: SessionReader
-  ensureGuestProfile: (authUserId: string) => Promise<string>
-  loadAccess: (authUserId: string) => Promise<Access>
+  // The guest profile id, created on the first call, and the user's roles, read in one transaction.
+  loadIdentity: (authUserId: string) => Promise<{ guestId: string, access: Access }>
 }
 
 // Reads the session on every /api/* request except Better Auth's own routes and sets the actor: a guest, staff
 // with a role per store, or the Super Admin. No session, and an expired or revoked one, is anonymous. A route
 // that needs a session refuses an anonymous actor.
-export function authenticate({ readSession, ensureGuestProfile, loadAccess }: AuthenticateDeps): MiddlewareHandler<AppEnv> {
+export function authenticate({ readSession, loadIdentity }: AuthenticateDeps): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     if (c.req.path.startsWith('/api/auth/')) {
       await next()
@@ -37,8 +37,9 @@ export function authenticate({ readSession, ensureGuestProfile, loadAccess }: Au
       return
     }
     const userId = response.user.id
-    // Two separate transactions, both before the request's own unit of work and its Idempotency-Key claim.
-    const [guestId, access] = await Promise.all([ensureGuestProfile(userId), loadAccess(userId)])
+    // One transaction, before the request's own unit of work and its Idempotency-Key claim. The roles are read
+    // on every request, with no cache, so a removed membership closes the store on the next one.
+    const { guestId, access } = await loadIdentity(userId)
     c.set('actor', actorFor({ userId, guestId }, access))
     await next()
   }

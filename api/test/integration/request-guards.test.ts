@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
 import { openApiDocument } from '../../scripts/contract.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
-import { makeEnsureGuestProfile, makeLoadAccess } from '../../src/modules/identity/index.ts'
+import { makeLoadIdentity } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
@@ -65,8 +65,7 @@ async function setup() {
     authHandler: auth.handler,
     origin: ownOrigin(baseUrl),
     readSession: createSessionReader(auth),
-    ensureGuestProfile: makeEnsureGuestProfile({ uow, profiles: createGuestProfileRepository() }),
-    loadAccess: makeLoadAccess({ uow, access: createAccessRepository() }),
+    loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
   })
   app.openapi(createRoute({ method: 'get', path: '/api/store/{storeId}/probe', request: { params: z.object({ storeId: z.uuid() }) }, responses: ok }), c => c.json({ ok: true }, 200))
   app.openapi(createRoute({ method: 'delete', path: '/api/store/{storeId}', request: { params: z.object({ storeId: z.uuid() }) }, responses: ok }), c => c.json({ ok: true }, 200))
@@ -132,9 +131,27 @@ describe('[E2.10] the identity tables of migration 0003', () => {
     await expect(pool.query('insert into identity.platform_admins (user_id) values ($1)', [userId])).rejects.toMatchObject({ code: '23505' })
   })
 
+  it('[E2.10] a Super Admin row records when it was made and who granted it, which is null for the first grant', async () => {
+    const first = randomUUID()
+    const second = randomUUID()
+    await pool.query('insert into identity.platform_admins (user_id) values ($1)', [first])
+    await pool.query('insert into identity.platform_admins (user_id, granted_by) values ($1, $2)', [second, first])
+    const { rows } = await pool.query<{ user_id: string, granted_by: string | null, recent: boolean }>(`select user_id, granted_by, created_at > now() - interval '1 minute' as recent from identity.platform_admins where user_id in ($1, $2)`, [first, second])
+    const { rows: columns } = await pool.query<{ column_name: string, data_type: string, is_nullable: string }>(`select column_name, data_type, is_nullable from information_schema.columns where table_schema = 'identity' and table_name = 'platform_admins' order by column_name`)
+
+    expect(rows.find(row => row.user_id === first)).toMatchObject({ granted_by: null, recent: true })
+    expect(rows.find(row => row.user_id === second)).toMatchObject({ granted_by: first, recent: true })
+    expect(columns).toEqual([
+      { column_name: 'created_at', data_type: 'timestamp with time zone', is_nullable: 'NO' },
+      { column_name: 'granted_by', data_type: 'uuid', is_nullable: 'YES' },
+      { column_name: 'user_id', data_type: 'uuid', is_nullable: 'NO' },
+    ])
+  })
+
   it('[E2.10] the access repository reads one user\'s roles across stores', async () => {
     const uow = createUnitOfWork(db)
-    const loadAccess = makeLoadAccess({ uow, access: createAccessRepository() })
+    const loadIdentity = makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() })
+    const loadAccess = async (userId: string) => (await loadIdentity(userId)).access
     const both = randomUUID()
     const admin = randomUUID()
     await addMembership(pool, both, lucerne, 'owner')

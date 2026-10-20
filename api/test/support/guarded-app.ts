@@ -25,8 +25,7 @@ export function createGuardedApp(people: Record<string, Access> = {}, logger: Lo
       const userId = userCookie.exec(headers.get('cookie') ?? '')?.[1]
       return { headers: new Headers(), response: userId ? { user: { id: userId } } : null }
     },
-    ensureGuestProfile: async userId => `guest-of-${userId}`,
-    loadAccess: async userId => people[userId] ?? noAccess,
+    loadIdentity: async userId => ({ guestId: `guest-of-${userId}`, access: people[userId] ?? noAccess }),
   })
   return { app, calls }
 }

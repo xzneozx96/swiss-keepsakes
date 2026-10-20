@@ -151,7 +151,12 @@ export const storeMemberships = identitySchema.table('store_memberships', {
   check('store_memberships_role_check', sql`${table.role} in ('owner', 'manager')`),
 ])
 
-// One row per Super Admin (D8). No screen writes it, so a Super Admin is added with an insert (architecture section 9).
+// One row per Super Admin (D8). The admin-only rule is an owner decision of 20.10.2026: a Super Admin holds no
+// store role, so the operator uses a second account for store work. No screen writes this table, so a Super Admin
+// is added with an insert (architecture section 9). `granted_by` is the granting user's id as a plain value, and
+// stays null for the first grant, made by hand.
 export const platformAdmins = identitySchema.table('platform_admins', {
   userId: uuid('user_id').primaryKey(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  grantedBy: uuid('granted_by'),
 })

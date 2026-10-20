@@ -5,10 +5,7 @@ export const noSessions: IdentityDeps = {
   authHandler: async () => new Response(null, { status: 404 }),
   origin: 'http://localhost',
   readSession: async () => ({ headers: new Headers(), response: null }),
-  ensureGuestProfile: async () => {
-    throw new Error('no session, so no guest profile')
-  },
-  loadAccess: async () => {
-    throw new Error('no session, so no access')
+  loadIdentity: async () => {
+    throw new Error('no session, so no identity')
   },
 }

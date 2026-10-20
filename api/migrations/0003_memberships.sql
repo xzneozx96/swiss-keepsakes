@@ -1,5 +1,7 @@
 CREATE TABLE "identity"."platform_admins" (
-	"user_id" uuid PRIMARY KEY NOT NULL
+	"user_id" uuid PRIMARY KEY NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"granted_by" uuid
 );
 --> statement-breakpoint
 CREATE TABLE "identity"."store_memberships" (

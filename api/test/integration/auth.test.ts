@@ -5,7 +5,7 @@ import { linkOAuthAccount } from 'better-auth/oauth2'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
-import { makeEnsureGuestProfile, makeLoadAccess } from '../../src/modules/identity/index.ts'
+import { makeLoadIdentity } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
@@ -54,8 +54,7 @@ async function setup({ google, baseUrl = origin }: { google?: GoogleConfig, base
     authHandler: auth.handler,
     origin: ownOrigin(baseUrl),
     readSession: createSessionReader(auth),
-    ensureGuestProfile: makeEnsureGuestProfile({ uow, profiles: createGuestProfileRepository() }),
-    loadAccess: makeLoadAccess({ uow, access: createAccessRepository() }),
+    loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
   })
 
   // Each call gets its own client address unless it names one, because the code routes allow 3 calls a minute per address.
@@ -277,7 +276,8 @@ describe('[E2.2] sessions and the actor', () => {
     const everyoneMissed = new Promise<void>((resolve) => {
       release = resolve
     })
-    const ensure = makeEnsureGuestProfile({
+    const loadIdentity = makeLoadIdentity({
+      access: createAccessRepository(),
       uow,
       profiles: {
         ...real,
@@ -292,6 +292,7 @@ describe('[E2.2] sessions and the actor', () => {
         },
       },
     })
+    const ensure = async (id: string) => (await loadIdentity(id)).guestId
     const authUserId = randomUUID()
     const ids = await Promise.all([ensure(authUserId), ensure(authUserId), ensure(authUserId), ensure(authUserId), ensure(authUserId)])
 

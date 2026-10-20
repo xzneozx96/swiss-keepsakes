@@ -20,8 +20,7 @@ export function contractApp(): OpenAPIHono<AppEnv> {
     authHandler: async () => new Response(null, { status: 404 }),
     origin: 'http://localhost',
     readSession: async () => ({ headers: new Headers(), response: null }),
-    ensureGuestProfile: async () => '',
-    loadAccess: async () => ({ platformAdmin: false, memberships: [] }),
+    loadIdentity: async () => ({ guestId: '', access: { platformAdmin: false, memberships: [] } }),
   })
 }
 

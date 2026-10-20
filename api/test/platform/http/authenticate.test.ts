@@ -3,16 +3,18 @@ import { Hono } from 'hono'
 import { describe, expect, it } from 'vitest'
 import { authenticate, requireGuest } from '../../../src/platform/http/authenticate.ts'
 
-function setup(readSession: SessionReader, loadAccess: AuthenticateDeps['loadAccess'] = async () => ({ platformAdmin: false, memberships: [] })) {
+type Access = Awaited<ReturnType<AuthenticateDeps['loadIdentity']>>['access']
+const noAccess: Access = { platformAdmin: false, memberships: [] }
+
+function setup(readSession: SessionReader, loadAccess: (userId: string) => Promise<Access> = async () => noAccess) {
   const ensured: string[] = []
   const app = new Hono<{ Variables: { actor: unknown } }>()
   app.use('/api/*', authenticate({
     readSession,
-    ensureGuestProfile: async (userId) => {
+    loadIdentity: async (userId) => {
       ensured.push(userId)
-      return `guest-of-${userId}`
+      return { guestId: `guest-of-${userId}`, access: await loadAccess(userId) }
     },
-    loadAccess,
   }) as never)
   app.get('/api/who', c => c.json(c.get('actor') ?? null))
   app.get('/api/auth/ping', c => c.json(c.get('actor') ?? null))
@@ -89,7 +91,7 @@ describe('[E2.2] authenticate: stale cookies and the default deny', () => {
         c.set('requestId', 'req-1')
         await next()
       })
-      app.use('/api/*', authenticate({ readSession, ensureGuestProfile: async userId => `guest-of-${userId}`, loadAccess: async () => ({ platformAdmin: false, memberships: [] }) }) as never)
+      app.use('/api/*', authenticate({ readSession, loadIdentity: async userId => ({ guestId: `guest-of-${userId}`, access: noAccess }) }) as never)
       app.use('/api/private', requireGuest as never)
       app.get('/api/private', (c) => {
         handled++
@@ -145,7 +147,7 @@ describe('[E2.10] authenticate: the actor gains its roles', () => {
         c.set('requestId', 'req-1')
         await next()
       })
-      app.use('/api/*', authenticate({ readSession: signedIn, ensureGuestProfile: async userId => `guest-of-${userId}`, loadAccess: async () => access }) as never)
+      app.use('/api/*', authenticate({ readSession: signedIn, loadIdentity: async userId => ({ guestId: `guest-of-${userId}`, access }) }) as never)
       app.use('/api/private', requireGuest as never)
       app.get('/api/private', c => c.json(c.get('guest')))
 

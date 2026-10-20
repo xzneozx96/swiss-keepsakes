@@ -1,4 +1,4 @@
-import type { Actor } from '@sk/domain/identity'
+import type { Actor, StoreRole } from '@sk/domain/identity'
 import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
@@ -18,7 +18,7 @@ import { isErrorStatus, problem } from './problem.ts'
 import { problemResponses, requestIdHeader } from './responses.ts'
 
 export interface AppEnv {
-  Variables: RequestIdVariables & { logger: Logger, actor: Actor, guest: Guest }
+  Variables: RequestIdVariables & { logger: Logger, actor: Actor, guest: Guest, store: { storeId: string, role: StoreRole } }
 }
 
 // Better Auth's handler for /api/auth/* (D8), what the actor needs from its session, and our own origin
@@ -107,7 +107,7 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
   // Better Auth serves /api/auth/* in its own error shape (D8), outside the contract.
   app.all('/api/auth/*', c => identity.authHandler(c.req.raw))
   app.use('/api/*', authenticate(identity))
-  app.use('/api/me', requireGuest)
+  app.use('/api/me/*', requireGuest)
   // Default deny by path, before any route handler or body parser: a route registered later is guarded too.
   app.use('/api/store/:storeId/*', requireStoreMember)
   app.use('/api/admin/*', requireSuperAdmin)
