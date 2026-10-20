@@ -30,6 +30,11 @@ export interface Mailer {
   send: (mail: OutgoingMail) => Promise<{ response: string }>
 }
 
+// Builds an invitation mail's link when the mail is sent, inside the attempt's transaction, so the job data
+// holds the invitation id and never its token (architecture section 8). The identity module implements it
+// (E2.3). Undefined means the invitation is no longer open, and the mail fails like a missing template value.
+export type InvitationLink<T> = (tx: T, template: MailTemplate, invitationId: string) => Promise<string | undefined>
+
 export interface QueuedMail {
   storeId: string | null
   template: MailTemplate

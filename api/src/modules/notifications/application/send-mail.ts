@@ -1,4 +1,4 @@
-import type { Clock, Mailer, SentMailRepository, UnitOfWork } from '../ports.ts'
+import type { Clock, InvitationLink, Mailer, SentMailRepository, UnitOfWork } from '../ports.ts'
 import type { MailJob } from './queue-mail.ts'
 import { MailRenderError, renderMail } from './render-mail.ts'
 
@@ -6,6 +6,7 @@ export interface SendMailDeps<T> {
   uow: UnitOfWork<T>
   sentMail: SentMailRepository<T>
   mailer: Mailer
+  invitationLink: InvitationLink<T>
   clock: Clock
 }
 
@@ -46,14 +47,16 @@ export function toAttemptError(error: unknown): MailAttemptError {
 // after its alert is never sent. A failed attempt rolls back, is counted in a transaction of its own, and is
 // thrown again as a MailAttemptError, so pg-boss retries it. SMTP has no idempotency key: when the server
 // accepted the message but the commit never happened (a crash, a shutdown, a lost connection), the retry sends
-// it again with the same Message-ID.
-export function makeSendMail<T>({ uow, sentMail, mailer, clock }: SendMailDeps<T>) {
+// it again with the same Message-ID. The invitation link is built in the same transaction, so a token it
+// stores commits only with a sent mail.
+export function makeSendMail<T>({ uow, sentMail, mailer, invitationLink, clock }: SendMailDeps<T>) {
   return async (job: MailJob): Promise<void> => {
     try {
       await uow.run(async (tx) => {
         if (await sentMail.lockForSend(tx, job.mailId) !== 'queued')
           return
-        const { to, subject, text } = renderMail(job)
+        const link = await invitationLink(tx, job.template, job.params.invitationId)
+        const { to, subject, text } = renderMail(job, link)
         const { response } = await mailer.send({ id: job.mailId, to, subject, text })
         await sentMail.recordSent(tx, job.mailId, { at: clock.now(), response })
       })

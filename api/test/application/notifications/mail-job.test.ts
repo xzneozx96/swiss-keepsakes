@@ -1,5 +1,5 @@
 import type { MailRequest } from '../../../src/modules/notifications/application/render-mail.ts'
-import type { JobQueue, MailFailure, MailStatus, QueuedMail, SentMailRepository, UnitOfWork } from '../../../src/modules/notifications/ports.ts'
+import type { InvitationLink, JobQueue, MailFailure, MailStatus, MailTemplate, QueuedMail, SentMailRepository, UnitOfWork } from '../../../src/modules/notifications/ports.ts'
 import { describe, expect, it } from 'vitest'
 import { makeFailMail } from '../../../src/modules/notifications/application/fail-mail.ts'
 import { makeQueueMail } from '../../../src/modules/notifications/application/queue-mail.ts'
@@ -14,6 +14,16 @@ function storedByPgBoss(error: unknown): string {
   const keys = new Set([...Object.keys(fields), 'name', 'message', 'stack', 'code', 'cause', 'errors'])
   return JSON.stringify(Object.fromEntries(Array.from(keys, key => [key, fields[key]])))
 }
+
+const n20: Extract<MailRequest, { template: 'N20' }> = {
+  template: 'N20',
+  to: 'ngoc.tran@example.ch',
+  language: 'de',
+  storeId: '0192f3a0-0000-7000-8000-0000000000aa',
+  params: { store: 'Zürich Andenken', invitationId: '0192f3a0-0000-7000-8000-0000000000ee' },
+}
+
+const n20Link = 'https://swiss-keepsakes.example/store/onboarding/tok_7f3c9a'
 
 // In-memory fakes of the module's ports. The transaction is a token the fakes check they were given.
 interface FakeTx { open: boolean }
@@ -83,15 +93,24 @@ function createFakes() {
       jobs.push({ queue, data, id: options?.id })
     },
   }
-  return { rows, jobs, alerts, uow, sentMail, jobQueue }
+  // Open invitations and the link each one's mail gets. The link holds a token the job data must never hold.
+  const invitations = new Map<string, string>()
+  const linkRequests: { template: MailTemplate, invitationId: string }[] = []
+  const invitationLink: InvitationLink<FakeTx> = async (tx, template, invitationId) => {
+    inTx(tx)
+    linkRequests.push({ template, invitationId })
+    return invitations.get(invitationId)
+  }
+  return { rows, jobs, alerts, invitations, linkRequests, uow, sentMail, jobQueue, invitationLink }
 }
 
 function setup() {
   const fakes = createFakes()
+  fakes.invitations.set(n20.params.invitationId, n20Link)
   const clock = createManualClock(new Date('2026-10-20T08:00:00Z'))
   const memory = createMemoryMailer()
   const queueMail = makeQueueMail({ sentMail: fakes.sentMail, jobs: fakes.jobQueue, clock, queue: 'mail' })
-  const sendMail = makeSendMail({ uow: fakes.uow, sentMail: fakes.sentMail, mailer: memory.mailer, clock })
+  const sendMail = makeSendMail({ uow: fakes.uow, sentMail: fakes.sentMail, mailer: memory.mailer, invitationLink: fakes.invitationLink, clock })
   const failMail = makeFailMail({ uow: fakes.uow, sentMail: fakes.sentMail, clock, alert: failure => fakes.alerts.push(failure) })
   // A business command that queues one mail in its own transaction, then the job pg-boss would hand over.
   const queued = async <R extends MailRequest>(request: R) => {
@@ -99,14 +118,6 @@ function setup() {
     return { mailId, job: { ...request, mailId } }
   }
   return { ...fakes, clock, memory, sendMail, failMail, queued }
-}
-
-const n20: Extract<MailRequest, { template: 'N20' }> = {
-  template: 'N20',
-  to: 'ngoc.tran@example.ch',
-  language: 'de',
-  storeId: '0192f3a0-0000-7000-8000-0000000000aa',
-  params: { store: 'Zürich Andenken', link: 'https://swiss-keepsakes.example/store/onboarding/7f3c' },
 }
 
 describe('[E2.8] queueing mail in the business transaction', () => {
@@ -144,8 +155,33 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
     await sendMail(job)
 
     expect(memory.sent).toEqual([expect.objectContaining({ id: mailId, to: 'ngoc.tran@example.ch', subject: 'Einladung: Eröffnen Sie Zürich Andenken' })])
-    expect(memory.sent[0]?.text).toContain('https://swiss-keepsakes.example/store/onboarding/7f3c')
+    expect(memory.sent[0]?.text).toContain(n20Link)
     expect(rows.get(mailId)).toMatchObject({ status: 'sent', attempts: 1, response: `250 2.0.0 OK queued as ${mailId}`, sentAt: new Date('2026-10-20T08:00:02Z') })
+  })
+
+  it('[E2.8] the job stores the invitation id and no link, and the link is built when the mail is sent, inside the attempt\'s transaction', async () => {
+    const { jobs, memory, linkRequests, sendMail, queued } = setup()
+    const { job } = await queued(n20)
+
+    expect(jobs[0]?.data).toMatchObject({ params: { invitationId: n20.params.invitationId } })
+    expect(JSON.stringify(jobs)).not.toMatch(/https:|tok_/)
+    expect(linkRequests).toEqual([])
+
+    await sendMail(job)
+
+    expect(linkRequests).toEqual([{ template: 'N20', invitationId: n20.params.invitationId }])
+    expect(memory.sent[0]?.text).toContain(n20Link)
+  })
+
+  it('[E2.8] an invitation that is no longer open sends nothing and fails at once', async () => {
+    const { rows, memory, invitations, sendMail, queued } = setup()
+    const { mailId, job } = await queued(n20)
+    invitations.clear()
+
+    await expect(sendMail(job)).rejects.toMatchObject({ message: 'MailRenderError', permanent: true })
+
+    expect(memory.attempts).toEqual([])
+    expect(rows.get(mailId)).toMatchObject({ status: 'queued', attempts: 1, lastError: 'MailRenderError' })
   })
 
   it('[E2.8] a job that runs again after its mail was sent sends nothing and changes nothing', async () => {
@@ -205,7 +241,7 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
     const { rows, memory, sendMail, queued } = setup()
     const { mailId, job } = await queued(n20)
 
-    await expect(sendMail({ ...job, params: { store: 'Zürich Andenken', link: '' } })).rejects.toMatchObject({ name: 'MailAttemptError', message: 'MailRenderError', permanent: true })
+    await expect(sendMail({ ...job, params: { ...job.params, store: '' } })).rejects.toMatchObject({ name: 'MailAttemptError', message: 'MailRenderError', permanent: true })
 
     expect(memory.attempts).toEqual([])
     expect(rows.get(mailId)).toMatchObject({ status: 'queued', attempts: 1, lastError: 'MailRenderError' })

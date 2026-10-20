@@ -1,6 +1,7 @@
 import type { MailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import type { MailRequest } from '../../src/modules/notifications/application/render-mail.ts'
-import type { Mailer, MailFailure } from '../../src/modules/notifications/ports.ts'
+import type { InvitationLink, Mailer, MailFailure } from '../../src/modules/notifications/ports.ts'
+import type { Tx } from '../../src/platform/db/client.ts'
 import { randomUUID } from 'node:crypto'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
@@ -33,8 +34,12 @@ const n18: MailRequest = {
   to: 'lena.meier@example.ch',
   language: 'en',
   storeId: '0192f3a0-0000-7000-8000-0000000000cc',
-  params: { inviter: 'Ngoc Tran', store: 'Zürich Andenken', link: 'https://swiss-keepsakes.example/store/invitations/7f3c' },
+  params: { inviter: 'Ngoc Tran', store: 'Zürich Andenken', invitationId: '0192f3a0-0000-7000-8000-0000000000dd' },
 }
+
+// The identity module builds the real link (E2.3). This one holds a token the job data must never hold.
+const n18Link = 'https://swiss-keepsakes.example/store/invitations/tok_5b2e1d'
+const invitationLink: InvitationLink<Tx> = async (_tx, _template, invitationId) => (invitationId === n18.params.invitationId ? n18Link : undefined)
 
 // Each test runs on its own queues, so its worker sees only its own jobs.
 async function setup(retry = { retryLimit: 2, retryDelay: 0, retryBackoff: false }) {
@@ -47,7 +52,7 @@ async function setup(retry = { retryLimit: 2, retryDelay: 0, retryBackoff: false
   const memory = createMemoryMailer()
   const alerts: MailFailure[] = []
   const queueMail = makeQueueMail({ sentMail, jobs: createJobQueue(jobs.boss), clock, queue: queues.send })
-  const sendMail = makeSendMail({ uow, sentMail, mailer: memory.mailer, clock })
+  const sendMail = makeSendMail({ uow, sentMail, mailer: memory.mailer, invitationLink, clock })
   const failMail = makeFailMail({ uow, sentMail, clock, alert: failure => alerts.push(failure) })
   const startWorkers = () => startMailWorkers(jobs.boss, { sendMail, failMail }, queues)
   const row = async (mailId: string) => (await pool.query('select status, template, language, recipient, attempts, last_error, smtp_response, queued_at, sent_at, failed_at from notifications.sent_mail where id = $1', [mailId])).rows[0]
@@ -118,6 +123,19 @@ describe('[E2.8] the worker sends queued mail', () => {
     expect(await row(mailId)).toMatchObject({ attempts: 1, last_error: null, smtp_response: `250 2.0.0 OK queued as ${mailId}`, sent_at: new Date('2026-10-20T08:00:00Z') })
   })
 
+  it('[E2.8] the job data in pgboss.job holds the invitation id and no link, and the sent mail carries the link built at send time', async () => {
+    const { uow, queueMail, memory, startWorkers, row } = await setup()
+    await startWorkers()
+
+    const mailId = await uow.run(tx => queueMail(tx, n18))
+    await until(async () => (await row(mailId))?.status === 'sent')
+
+    const { rows: [job] } = await pool.query('select data from pgboss.job where id = $1', [mailId])
+    expect(job.data).toMatchObject({ params: { invitationId: n18.params.invitationId } })
+    expect(JSON.stringify(job.data)).not.toMatch(/https:|tok_/)
+    expect(memory.sent[0]?.text).toContain(n18Link)
+  })
+
   it('[E2.8] a job that runs again after its mail was sent sends nothing', async () => {
     const { uow, queueMail, memory, sendMail, row } = await setup()
     const mailId = await uow.run(tx => queueMail(tx, n18))
@@ -133,7 +151,7 @@ describe('[E2.8] the worker sends queued mail', () => {
   it('[E2.8] two runs of the same job at once send it once, because the second waits on the row lock', async () => {
     const { uow, queueMail, clock, row } = await setup()
     const held = createHeldMailer()
-    const sendMail = makeSendMail({ uow, sentMail: createSentMailRepository(), mailer: held.mailer, clock })
+    const sendMail = makeSendMail({ uow, sentMail: createSentMailRepository(), mailer: held.mailer, invitationLink, clock })
     const mailId = await uow.run(tx => queueMail(tx, n18))
 
     const first = sendMail({ ...n18, mailId })

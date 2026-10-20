@@ -268,7 +268,7 @@ The columns below carry rules.
 |---|---|
 | `stores` | `slug`, `name`, `status` (`invited`, `onboarding`, `live`, `suspended`), `stripe_account_id` (nullable, D6), `stripe_charges_enabled`, `stripe_payouts_enabled`, `twint_capability`, `default_language` |
 | `store_memberships` | `(user_id, store_id)` unique, `role` (`owner` or `manager`), `accepted_at` |
-| `store_invitations` | `email`, `role`, `token_hash`, `expires_at` (7 days, UX L518), `accepted_by` |
+| `store_invitations` | `email`, `role`, `token_hash` (set when the invitation mail is sent, section 8), `expires_at` (7 days, UX L518), `accepted_by` |
 | `subcategories` | `category` (one of the fixed four), localized `name`, `position`. Deletion is refused while products exist, through `ON DELETE RESTRICT` (PRD L199). |
 | `products` | `subcategory_id`, names, story, `payment_policy` jsonb (the prototype's `PaymentPolicy`), `cancellation_policy`, `preparation_days`, `day_mode`, `commission_rate`, engraving settings, `published_at`, `archived_at`, `row_version` |
 | `product_variants` | `label`, `price`, `stock_on_hand`, `not_for_sale`. Available stock is `stock_on_hand` minus the quantity in `held` holds. |
@@ -502,13 +502,15 @@ All jobs are pg-boss jobs in the `pgboss` schema of the application database. A 
 | `provider-event` | Webhook endpoint | Apply one Stripe event under the transaction's row lock |
 | `provider-sync` | Return-page poll, nightly | Retrieve a PaymentIntent or refund and apply the same rules |
 | `refund` | Money exception, online refund in M10 | Create the Stripe refund, then insert or update the ledger row |
-| `mail` | Every business command | Render the template in the stored language and send it through the `Mailer` port over SMTP. SMTP has no idempotency key, so the job id goes in the `Message-ID` header and a retry after a lost response can send a duplicate. Record it in `sent_mail`. Failures stay in an ops list so staff can resend (PRD L408). |
+| `mail` | Every business command | Render the template in the stored language and send it through the `Mailer` port over SMTP, under the `sent_mail` row lock. SMTP has no idempotency key, so the job id goes in the `Message-ID` header and a retry after a lost response can send a duplicate. Record it in `sent_mail`. Failures stay in an ops list so staff can resend (PRD L408). The job data holds ids and never a token, as the next paragraph says for invitations. |
 | `balance-overdue` | Hourly | Apply each booking's `overdue_policy`. Send N10 balance reminders 3 days before the due date (Q5). |
 | `reminders` | Hourly | First-payment reminders 24 hours and 2 hours before the deadline. Pickup reminders (N12) and tour reminders (N13) the day before at 18:00 Zurich time. These are defaults that the merchant can change (Q5). |
 | `sweeper` | Every minute | Find any `pending_payment` booking past `hold_until`, or `accepted` order past `first_payment_due_at`, whose job hasn't settled it, and queue the job now |
 | `nightly-reconcile` | 02:00 Europe/Zurich | Open attempts, pending refunds, account status, job backlog report |
 | `media` | Upload completed | Resized variants with `sharp` |
 | `cleanup` | Daily | Delete expired idempotency keys, partner codes and sessions, and visitor ids past retention |
+
+Invitation links in mail. pg-boss keeps job data for days, keeps a dead-letter copy longer, and every Neon branch copies it. So an invitation mail (N18, N20) stores the invitation id and never the link or its token (owner, 20.10.2026). The mail job builds the link when it sends, through the `InvitationLink` port of `notifications`, which the identity module implements (E2.3). Inside the mail attempt's transaction, under the `sent_mail` row lock, it mints a new random token, stores the token's hash in `store_invitations.token_hash`, and returns the M01 (N18) or A02 (N20) link with the raw token. The raw token exists only in memory and in the mail. It returns nothing when the invitation is no longer open, and the mail then fails at once and alerts. A failed attempt rolls the hash back. Each retry and each resend mints a new token, so only the newest mail's link works.
 
 No rule depends on a job running on time. The availability query reads `hold_until` directly, every guard checks its own deadline again, and every job is safe to run twice under its row lock. Merchant screens poll with TanStack Query every 15 to 30 seconds. A realtime channel can come later, fed by the same jobs.
 

@@ -12,11 +12,13 @@ const testInbox = 'tuananhngyen218@gmail.com'
 
 const link = 'https://swiss-keepsakes.example/live-check/e2-8'
 
+const invitationId = '00000000-0000-7000-8000-00000000e208'
+
 const accepted = /^250 /
 
 const requests: Record<'N18' | 'N20', (language: 'en' | 'de') => MailRequest> = {
-  N18: language => ({ template: 'N18', to: testInbox, language, storeId: null, params: { inviter: 'E2.8 live check', store: 'Swiss Keepsakes test store', link } }),
-  N20: language => ({ template: 'N20', to: testInbox, language, storeId: null, params: { store: 'Swiss Keepsakes test store', link } }),
+  N18: language => ({ template: 'N18', to: testInbox, language, storeId: null, params: { inviter: 'E2.8 live check', store: 'Swiss Keepsakes test store', invitationId } }),
+  N20: language => ({ template: 'N20', to: testInbox, language, storeId: null, params: { store: 'Swiss Keepsakes test store', invitationId } }),
 }
 
 function smtpConfig() {
@@ -31,7 +33,7 @@ function smtpConfig() {
 describe('[E2.8] live SMTP: the adapter delivers N18 and N20 to the test inbox', () => {
   it.each([['N18', 'en'], ['N18', 'de'], ['N20', 'en'], ['N20', 'de']] as const)('[E2.8] %s in %s is accepted by the SMTP server', async (template, language) => {
     const smtp = smtpConfig()
-    const mail = renderMail(requests[template](language))
+    const mail = renderMail(requests[template](language), link)
     if (mail.to !== testInbox)
       throw new Error('The live suite sends only to the test inbox.')
     const id = randomUUID()

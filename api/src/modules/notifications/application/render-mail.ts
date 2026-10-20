@@ -3,11 +3,11 @@ import type { MailLanguage, MailTemplate } from '../ports.ts'
 import { mailDe } from '@sk/i18n/de'
 import { mailEn } from '@sk/i18n/en'
 
-// The values each template fills in. The caller builds the link, because the page it opens belongs to the
-// caller's module.
+// The values each template's job stores. An invitation mail stores the invitation id, never the link: the link
+// holds the invitation's token, so it is built when the mail is sent (InvitationLink) and fills `{link}`.
 export interface MailParams {
-  N18: { inviter: string, store: string, link: string }
-  N20: { store: string, link: string }
+  N18: { inviter: string, store: string, invitationId: string }
+  N20: { store: string, invitationId: string }
 }
 
 // `language` is the one stored with the business record, never the server's (D12).
@@ -44,10 +44,10 @@ export interface RenderedMail {
 }
 
 // Plain text only. An empty or missing value throws, so a mail never goes out with a raw `{link}` in it.
-export function renderMail(request: MailRequest): RenderedMail {
+export function renderMail(request: MailRequest, link: string | undefined): RenderedMail {
   const { subject, body } = templates[request.template]
   const words = copy[request.language]
-  const params: Record<string, string | undefined> = request.params
+  const params: Record<string, string | undefined> = { ...request.params, link }
   const fill = (key: MailKey) => words[key].replace(placeholder, (_, name: string) => {
     const value = params[name]
     if (!value?.trim())

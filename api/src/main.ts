@@ -69,7 +69,8 @@ async function main() {
       logger.warn({ event: 'mail.smtp-unset' }, 'SMTP_* is not set: every mail fails and retries until it is')
     const mailer = config.smtp ? createSmtpMailer(createSmtpTransport(config.smtp), config.smtp.from) : createUnconfiguredMailer(logger)
     await startMailWorkers(jobs.boss, {
-      sendMail: makeSendMail({ uow, sentMail, mailer, clock: systemClock }),
+      // No invitation exists before E2.3, which passes the identity module's InvitationLink here.
+      sendMail: makeSendMail({ uow, sentMail, mailer, invitationLink: async () => undefined, clock: systemClock }),
       failMail: makeFailMail({ uow, sentMail, clock: systemClock, alert: createLogAlert(logger) }),
     })
   }

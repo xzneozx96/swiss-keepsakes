@@ -1,6 +1,6 @@
 # Mail
 
-Mail goes over SMTP (architecture D12). A business command queues a `mail` job and a `notifications.sent_mail` row in its own transaction. Each mail goes to one plain address: a list, a display name or a header line in `to` is refused, and the command rolls back. The worker renders the template in the language stored with the job and sends it to the SMTP server that `SMTP_*` names. The code is in `api/src/modules/notifications/` and `api/src/platform/mail.ts`.
+Mail goes over SMTP (architecture D12). A business command queues a `mail` job and a `notifications.sent_mail` row in its own transaction. Each mail goes to one plain address: a list, a display name or a header line in `to` is refused, and the command rolls back. An invitation mail's job holds the invitation id, never the link or its token. The worker builds the link when it sends (architecture section 8). The worker renders the template in the language stored with the job and sends it to the SMTP server that `SMTP_*` names. The code is in `api/src/modules/notifications/` and `api/src/platform/mail.ts`.
 
 ## Settings
 
@@ -40,7 +40,7 @@ There is no resend command yet. UX R13 lets the Owner send an invitation again, 
 | `ETLS` | No TLS. The server offers no STARTTLS, or `SMTP_SECURE` does not match the port | Use 465 with `true`, or 587 with `false` |
 | `ECONNECTION`, `ETIMEDOUT` | The server cannot be reached | Check `SMTP_HOST` and `SMTP_PORT`. Retries cover a short outage |
 | `EENVELOPE` with a code | The server refused the sender or the recipient. A 5xx code fails at once | Check the address in the row and `SMTP_FROM` |
-| `MailRenderError` | The job's data lacks a template value. It fails at once | A bug in the command that queued the mail |
+| `MailRenderError` | The job's data lacks a template value, or the invitation is no longer open, so there is no link. It fails at once | Check whether the invitation was accepted, revoked or expired. Otherwise it is a bug in the command that queued the mail |
 
 ## Duplicates
 

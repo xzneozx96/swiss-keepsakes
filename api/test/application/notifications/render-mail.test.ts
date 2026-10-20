@@ -3,19 +3,20 @@ import { describe, expect, it } from 'vitest'
 import { MailRenderError, renderMail } from '../../../src/modules/notifications/application/render-mail.ts'
 
 const storeId = '0192f3a0-0000-7000-8000-000000000001'
+const invitationId = '0192f3a0-0000-7000-8000-000000000002'
 const link = 'https://swiss-keepsakes.example/store/invitations/7f3c'
 
 function n18(language: 'en' | 'de'): Extract<MailRequest, { template: 'N18' }> {
-  return { template: 'N18', to: 'lena.meier@example.ch', language, storeId, params: { inviter: 'Ngoc Tran', store: 'Zürich Andenken', link } }
+  return { template: 'N18', to: 'lena.meier@example.ch', language, storeId, params: { inviter: 'Ngoc Tran', store: 'Zürich Andenken', invitationId } }
 }
 
 function n20(language: 'en' | 'de'): Extract<MailRequest, { template: 'N20' }> {
-  return { template: 'N20', to: 'ngoc.tran@example.ch', language, storeId, params: { store: 'Zürich Andenken', link } }
+  return { template: 'N20', to: 'ngoc.tran@example.ch', language, storeId, params: { store: 'Zürich Andenken', invitationId } }
 }
 
 describe('[E2.8] N18 and N20 render in the stored language, with their data and recipient', () => {
   it('[E2.8] N18 in English goes to the invitee, names the inviter, the store and the role, and carries the M01 link', () => {
-    expect(renderMail(n18('en'))).toEqual({
+    expect(renderMail(n18('en'), link)).toEqual({
       to: 'lena.meier@example.ch',
       subject: 'Ngoc Tran invited you to Zürich Andenken',
       text: [
@@ -29,7 +30,7 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
   })
 
   it('[E2.8] N18 in German says the same in Swiss German spelling', () => {
-    expect(renderMail(n18('de'))).toEqual({
+    expect(renderMail(n18('de'), link)).toEqual({
       to: 'lena.meier@example.ch',
       subject: 'Ngoc Tran hat Sie zu Zürich Andenken eingeladen',
       text: [
@@ -43,7 +44,7 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
   })
 
   it('[E2.8] N20 in English goes to the new Owner, names the store, and carries the A02 link', () => {
-    expect(renderMail(n20('en'))).toEqual({
+    expect(renderMail(n20('en'), link)).toEqual({
       to: 'ngoc.tran@example.ch',
       subject: 'You’re invited to open Zürich Andenken',
       text: [
@@ -57,7 +58,7 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
   })
 
   it('[E2.8] N20 in German says the same in Swiss German spelling', () => {
-    expect(renderMail(n20('de'))).toEqual({
+    expect(renderMail(n20('de'), link)).toEqual({
       to: 'ngoc.tran@example.ch',
       subject: 'Einladung: Eröffnen Sie Zürich Andenken',
       text: [
@@ -72,7 +73,7 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
 
   it.each([['N18', n18], ['N20', n20]] as const)('[E2.8] %s fills every placeholder in both languages and German uses no ß', (_, request) => {
     for (const language of ['en', 'de'] as const) {
-      const { subject, text } = renderMail(request(language))
+      const { subject, text } = renderMail(request(language), link)
       expect(`${subject}\n${text}`).not.toMatch(/[{}]/)
       expect(`${subject}\n${text}`).not.toContain('ß')
     }
@@ -81,15 +82,19 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
 
 describe('[E2.8] a template value that is missing never reaches the recipient', () => {
   it('[E2.8] a missing value throws and names the template and the placeholder, not the other values', () => {
-    const request = { ...n18('en'), params: { inviter: 'Ngoc Tran', store: 'Zürich Andenken' } } as unknown as MailRequest
+    const request = { ...n18('en'), params: { store: 'Zürich Andenken', invitationId } } as unknown as MailRequest
 
-    expect(() => renderMail(request)).toThrow(new MailRenderError('N18 has no value for {link}'))
+    expect(() => renderMail(request, link)).toThrow(new MailRenderError('N18 has no value for {inviter}'))
+  })
+
+  it('[E2.8] an invitation without a link throws, so the mail never goes out with a raw {link}', () => {
+    expect(() => renderMail(n18('de'), undefined)).toThrow(new MailRenderError('N18 has no value for {link}'))
   })
 
   it.each(['', '   '])('[E2.8] a blank value (%j) counts as missing', (store) => {
-    const request = { ...n20('de'), params: { store, link } }
+    const request = { ...n20('de'), params: { store, invitationId } }
 
-    expect(() => renderMail(request)).toThrow(MailRenderError)
-    expect(() => renderMail(request)).toThrow('N20 has no value for {store}')
+    expect(() => renderMail(request, link)).toThrow(MailRenderError)
+    expect(() => renderMail(request, link)).toThrow('N20 has no value for {store}')
   })
 })
