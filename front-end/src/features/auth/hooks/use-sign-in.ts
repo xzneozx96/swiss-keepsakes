@@ -6,11 +6,12 @@ import { demoNow } from '@/features/demo/clock'
 import { sendMail } from '@/features/notifications/mail'
 import { demoGuest } from '@/features/orders/seed'
 import { apiEnabled } from '@/lib/api-mode'
-import { loadAuthClient } from '../lib/auth-api'
+import { authFetchOptions, loadAuthClient } from '../lib/auth-api'
 import { codeFailure } from '../lib/code-errors'
-import { signInUrl } from '../lib/return-to'
+import { signInErrorUrl, signInUrl } from '../lib/return-to'
 
-const EMAIL_SHAPE = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
+/** The API's rule (Zod's `z.email()`, which Better Auth applies): no empty or doubled dots, no dot before the @, a TLD of 2 letters or more. */
+const EMAIL_SHAPE = /^(?:[\w'+-]+\.)*[\w'+-]*[\w+-]@(?:[A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i
 
 /** Spec §4.5 and §6 N01: a code works for 5 minutes (the API's `emailOTP` setting); resend unlocks after 30 seconds. */
 export const CODE_LENGTH = 6
@@ -57,6 +58,8 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
   const [problem, setProblem] = useState<SignInProblem | null>(
     googleFailed ? 'google' : null,
   )
+  // Seconds Better Auth's rate limiter asked the guest to wait, for the rate limited message.
+  const [retryAfter, setRetryAfter] = useState(60)
   const [realNow, setRealNow] = useState(() => Date.now())
   // A repeat tap or a second `onComplete` in the same tick must not send a second call: `pending` is state
   // and still reads null until the next render.
@@ -127,7 +130,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
 
   // Better Auth deletes every expired code whenever anyone looks one up, so a code that expired a while ago
   // reads as unknown (INVALID_OTP), not as expired. The guest knows when this code was sent.
-  const refuseCall = (error: unknown, sentAt: number) => {
+  const refuseCall = (error: unknown, sentAt: number, waitSeconds?: number) => {
     const failure = codeFailure(error)
 
     if (failure === 'wrong' && Date.now() - sentAt > CODE_LIFETIME_MS) {
@@ -140,8 +143,10 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
 
       return
     }
-    setProblem(failure)
-    setCode('')
+    // The code stays in the field: a refused call says nothing against it, and Continue sends it again.
+    if (failure === 'rateLimited' && waitSeconds)
+      setRetryAfter(waitSeconds)
+    setProblem(failure === 'invalidEmail' ? 'unavailable' : failure)
   }
 
   const sendCode = async (to: string) => {
@@ -175,12 +180,21 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
       const { error } = await auth.emailOtp.sendVerificationOtp({
         email: to,
         type: 'sign-in',
-        fetchOptions: { headers: { 'Accept-Language': language } },
+        fetchOptions: authFetchOptions({ 'Accept-Language': language }, setRetryAfter),
       })
 
-      if (error)
-        setProblem(codeFailure(error) === 'rateLimited' ? 'rateLimited' : 'unavailable')
-      else startCodeStep(to, Date.now())
+      if (!error) {
+        startCodeStep(to, Date.now())
+      }
+      else if (codeFailure(error) === 'invalidEmail') {
+        setEmailError(true)
+        setCodeStep(null)
+      }
+      else {
+        const failure = codeFailure(error)
+
+        setProblem(failure === 'rateLimited' ? 'rateLimited' : 'unavailable')
+      }
     }
     catch {
       setProblem('unavailable')
@@ -227,13 +241,17 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
     try {
       const auth = await loadAuthClient()
       // The only way in is signIn.emailOtp. The check-only routes are off in the API.
+      let waitSeconds: number | undefined
       const { error } = await auth.signIn.emailOtp({
         email: codeStep.email,
         otp: value,
+        fetchOptions: authFetchOptions(undefined, (seconds) => {
+          waitSeconds = seconds
+        }),
       })
 
       if (error)
-        refuseCall(error, codeStep.sentAt)
+        refuseCall(error, codeStep.sentAt, waitSeconds)
       else finish()
     }
     catch (error) {
@@ -262,6 +280,8 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
       const { error } = await auth.signIn.social({
         provider: 'google',
         callbackURL: signInUrl(returnTo),
+        errorCallbackURL: signInErrorUrl(returnTo),
+        fetchOptions: authFetchOptions(),
       })
 
       if (error) {
@@ -291,6 +311,7 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
       void continueWithGoogle()
     },
     problem,
+    retryAfter,
     sentTo: codeStep?.email ?? '',
     /** Changes with every code sent, so the sheet can refocus the code field. */
     codeSentAt: codeStep?.sentAt ?? 0,

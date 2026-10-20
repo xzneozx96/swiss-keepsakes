@@ -303,7 +303,8 @@ export const en = {
   'auth.google.failed':
     'Google sign-in didn’t finish. Try again, or get a code by email.',
   'auth.unavailable': 'Sign-in isn’t working right now. Try again in a moment.',
-  'auth.rateLimited': 'Too many tries. Wait a minute, then try again.',
+  'auth.rateLimited':
+    'Too many tries. Try again in {seconds} seconds.',
   'auth.or': 'or',
   'auth.email.label': 'Email',
   'auth.email.invalid': 'Enter an email address like name@example.com.',

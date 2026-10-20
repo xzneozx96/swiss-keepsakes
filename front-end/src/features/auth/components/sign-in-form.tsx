@@ -68,7 +68,7 @@ function StartStep({ view }: { view: SignInView }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <ProblemMessage problem={view.problem} />
+      <ProblemMessage problem={view.problem} retryAfter={view.retryAfter} />
       <Button
         fullWidth
         isPending={view.googlePending}
@@ -128,7 +128,7 @@ export type CodeStepView = Pick<
 > & {
   /** Absent when the email cannot be changed (P01). */
   changeEmail?: () => void
-} & Partial<Pick<SignInView, 'sending' | 'verifying' | 'problem'>>
+} & Partial<Pick<SignInView, 'sending' | 'verifying' | 'problem' | 'retryAfter'>>
 
 export function CodeStep({ view }: { view: CodeStepView }) {
   const { t } = useLocale()
@@ -181,7 +181,7 @@ export function CodeStep({ view }: { view: CodeStepView }) {
         </InputOTP>
         <div id="sign-in-code-error" role="alert">
           <CodeMessage view={view} />
-          <ProblemMessage problem={view.problem ?? null} />
+          <ProblemMessage problem={view.problem ?? null} retryAfter={view.retryAfter ?? 60} />
         </div>
       </div>
 
@@ -283,7 +283,13 @@ const problemMessage = {
 } as const
 
 /** A failed call to the API or a Google sign-in that did not finish. It shows next to the code message, so a failed resend is never hidden by an expired or locked code. */
-function ProblemMessage({ problem }: { problem: SignInView['problem'] }) {
+function ProblemMessage({
+  problem,
+  retryAfter,
+}: {
+  problem: SignInView['problem']
+  retryAfter: number
+}) {
   const { t } = useLocale()
 
   if (!problem)
@@ -291,7 +297,7 @@ function ProblemMessage({ problem }: { problem: SignInView['problem'] }) {
 
   return (
     <p data-visible className="field-error" role="alert">
-      {t(problemMessage[problem])}
+      {t(problemMessage[problem], { seconds: retryAfter })}
     </p>
   )
 }

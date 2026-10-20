@@ -316,7 +316,7 @@ export const de: Record<MessageKey, string> = {
   'auth.unavailable':
     'Die Anmeldung funktioniert gerade nicht. Versuchen Sie es gleich noch einmal.',
   'auth.rateLimited':
-    'Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es dann erneut.',
+    'Zu viele Versuche. Versuchen Sie es in {seconds} Sekunden erneut.',
   'auth.or': 'oder',
   'auth.email.label': 'E-Mail',
   'auth.email.invalid':

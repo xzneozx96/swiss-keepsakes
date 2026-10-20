@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
-import { googleReturnAddress } from '@/features/auth/lib/google-return'
+import { googleReturnAddress, takeGoogleReturn } from '@/features/auth/lib/google-return'
 
 describe('[E2.1] a failed Google sign-in comes back to /sign-in?error=<code>', () => {
   it('moves the error into the hash, where hash history reads it', () => {
@@ -17,6 +17,33 @@ describe('[E2.1] a failed Google sign-in comes back to /sign-in?error=<code>', (
 
   it('moves a /sign-in without an error to the sign-in screen', () => {
     expect(googleReturnAddress({ pathname: '/sign-in', search: '' })).toBe('/#/sign-in')
+  })
+
+  it('carries the return path through, and only an in-app one', () => {
+    expect(
+      googleReturnAddress({ pathname: '/sign-in', search: '?returnTo=%2Fcart%2Freview&error=access_denied' }),
+    ).toBe('/#/sign-in?returnTo=%2Fcart%2Freview&error=access_denied')
+    expect(
+      googleReturnAddress({ pathname: '/sign-in', search: '?returnTo=%2F%2Fevil.example&error=x' }),
+    ).toBe('/#/sign-in?returnTo=%2Faccount&error=x')
+  })
+
+  it('refuses a path that replaceState would take for another origin', () => {
+    expect(
+      googleReturnAddress({ pathname: '//evil.example/sign-in', search: '?error=x' }),
+    ).toBeUndefined()
+  })
+
+  it('starts the app even when replaceState throws', () => {
+    window.history.pushState(null, '', '/sign-in?error=access_denied')
+    vi.spyOn(window.history, 'replaceState').mockImplementation(() => {
+      throw new DOMException('refused', 'SecurityError')
+    })
+    vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    expect(() => takeGoogleReturn()).not.toThrow()
+    vi.restoreAllMocks()
+    window.history.pushState(null, '', '/')
   })
 
   it('leaves every other address alone', () => {

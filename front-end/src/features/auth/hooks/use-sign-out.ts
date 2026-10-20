@@ -3,13 +3,14 @@ import { useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoActions } from '@/features/demo'
+import { clearGuestData } from '@/features/demo/store'
 import { apiEnabled } from '@/lib/api-mode'
-import { loadAuthClient } from '../lib/auth-api'
+import { authFetchOptions, loadAuthClient } from '../lib/auth-api'
 
 async function endSession(): Promise<boolean> {
   try {
     const auth = await loadAuthClient()
-    const { error } = await auth.signOut()
+    const { error } = await auth.signOut({ fetchOptions: authFetchOptions() })
 
     return !error
   }
@@ -37,7 +38,7 @@ export function useSignOut() {
 
         return
       }
-      update(s => ({ ...s, data: { ...s.data, signedInGuestId: null } }))
+      update(s => (apiEnabled ? clearGuestData(s, true) : { ...s, data: { ...s.data, signedInGuestId: null } }))
     }
     finally {
       setPending(false)
