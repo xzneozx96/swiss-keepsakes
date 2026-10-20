@@ -1,5 +1,7 @@
 # SP6. Neon Auth in the SPA served by our API on Fly
 
+**Superseded on 20.10.2026.** The E2.1 WebKit run refused Neon Auth's third-party session cookie, and D8 moved to Better Auth inside our API. This spike and its checklist stay as history. `docs/spikes/SP6.md` has the result.
+
 **What it proves.** The JWT field, its verification in the API with `jose` against the JWKS, token lifetime and renewal. The iOS Safari, Google, invitation and configuration questions are manual.
 
 **Pass condition (architecture section 16).** On iOS Safari with default settings, the guest stays signed in across reloads and a day later. The API resolves the actor from the JWT, and `can()` resolves the memberships. Each limit and the email are configurable or listed as gaps for D8. If sessions don't survive on Safari, D8 moves to Better Auth inside the API before Phase 2.

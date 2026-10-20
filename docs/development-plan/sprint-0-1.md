@@ -468,7 +468,7 @@ No prototype has run yet. The seven spikes below are open and run in Sprint 0 be
 - SP3. 50 concurrent holds on one seat against Neon Frankfurt from Fly. Unproven.
 - SP4. Stripe sandbox behaviour for cancel after success, TWINT and account capabilities. Unproven.
 - SP5. Neon Object Storage signed uploads and public reads. Unproven.
-- SP6. Neon Auth sessions on iOS Safari, the JWT field and the code limits. Unproven, and it decides D8 before E2 starts.
+- SP6. Neon Auth sessions on iOS Safari, the JWT field and the code limits. Unproven, and it decides D8 before E2 starts. On 20.10.2026 the E2.1 WebKit run refused Neon Auth's session cookie, and D8 moved to Better Auth inside the API.
 - SP7. Fly release-command migrations and a rollback drill. Unproven.
 
 ## Appendix B. Alternatives rejected
@@ -484,7 +484,7 @@ No prototype has run yet. The seven spikes below are open and run in Sprint 0 be
 - **Hidden behaviour in moved rules** (E1.2, E1.3+E1.4, E1.5+E1.6). A label or date can drift when scattered logic becomes one function. The 100-route EN and DE diff and the flow parity lanes catch it.
 - **Shared working tree.** A parallel session edits the operator's tree. Every owner works in its own worktree and never stashes, checks out shared files or runs `eslint --fix` there.
 - **Hash routing today.** The prototype uses hash URLs. History routing arrives with the API in E2, not here, so these pull requests keep hash URLs.
-- **SP6 fails.** If Neon Auth can't keep a Safari session, D8 moves to Better Auth inside the API, and Sprint 3 grows.
+- **SP6 fails.** If Neon Auth can't keep a Safari session, D8 moves to Better Auth inside the API, and Sprint 3 grows. This happened on 20.10.2026 (delivery plan section 7).
 
 ## Appendix D. Links and reading list
 
