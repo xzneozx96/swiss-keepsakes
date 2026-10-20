@@ -22,7 +22,7 @@
 - **Webhooks keep the raw body**, because signature checks need it. They are deduplicated in `webhook_events`. (D1, 4.2)
   - Built: `createWebhookEvents(clock).record(tx, event)` (`api/src/platform/webhooks.ts`) returns `'duplicate'` for a repeated `(provider, event_id)`. Queue the `provider-event` job in the same transaction.
 - **Permissions are checked per role and per store.** A store route returns 403 to a member of another store. A partner response never contains email, phone, address, engraving or notes. (12)
-- **The API reads the session from Better Auth on every request** with `auth.api.getSession({ headers })` and builds the actor from it. Every state-changing request under `/api/` passes an `Origin` check. (D8, 9, 13)
+- **The API reads the session from Better Auth on every request** with `auth.api.getSession({ headers })` and builds the actor from it. One rule checks `Origin` on every POST, PUT, PATCH and DELETE under `/api/`, `/api/auth/*` included, and excludes `/webhooks/stripe` by name (E2.10). (D8, 9, 13)
 
 ## Not covered yet
 

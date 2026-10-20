@@ -31,7 +31,8 @@
 ## Security and privacy (both sides follow these)
 
 - **The guest and staff session is an HttpOnly first-party cookie** that Better Auth sets, `SameSite=Lax`, and `Secure` on staging and production. The SPA holds no auth token, in memory or in `localStorage`. (D8, 13)
-- **Every state-changing request under `/api/` checks `Origin`**, whatever its content type, because a cookie session needs CSRF protection. Better Auth checks `/api/auth/*` itself. (9, 13)
+- **One rule checks `Origin` on every POST, PUT, PATCH and DELETE under `/api/`**, whatever its content type, `/api/auth/*` included, because a cookie session needs CSRF protection. `/webhooks/stripe` is excluded by name, because Stripe signs its events. Better Auth also checks `/api/auth/*` itself. (9, 13)
+- **No table of ours has a foreign key to Better Auth's `user` row.** Guest-owned rows point at the guest profile, so deleting an account anonymises the profile and keeps the ledger. (5, 13)
 - **`better-auth` stays at 1.7.7 or later**, and its security advisories are watched. (R13)
 - **The partner session cookie is `httpOnly` and `SameSite=Lax`**, scoped to `/partner` and `/api/partner`, with an `Origin` check on mutations. (13)
 - **A Content Security Policy** protects the SPA. **Webhook signatures** are verified, plus the Stripe IP allow-list. No card data touches our servers. (13)
