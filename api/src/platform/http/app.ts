@@ -1,6 +1,8 @@
+import type { Actor } from '@sk/domain/identity'
 import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
+import type { Authentication } from './auth.ts'
 import { STATUS_CODES } from 'node:http'
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { healthSchema } from '@sk/api-contract'
@@ -8,12 +10,14 @@ import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
 import { IdempotencyKeyTaken } from '../idempotency.ts'
+import { authenticate, requireStoreMember } from './auth.ts'
 import { idempotencyKeyInUse } from './idempotency.ts'
 import { isErrorStatus, problem } from './problem.ts'
 import { problemResponses, requestIdHeader } from './responses.ts'
 
 export interface AppEnv {
-  Variables: RequestIdVariables & { logger: Logger }
+  // `actor` is set on /api/* only.
+  Variables: RequestIdVariables & { logger: Logger, actor: Actor }
 }
 
 const clientRequestIdPattern = /^[\w=-]{1,255}$/
@@ -35,7 +39,7 @@ const healthRoute = createRoute({
   },
 })
 
-export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono<AppEnv> {
+export function createApp(logger: Logger, checkHealth: HealthCheck, auth: Authentication): OpenAPIHono<AppEnv> {
   const app = new OpenAPIHono<AppEnv>({
     defaultHook: (result, c) => {
       if (!result.success) {
@@ -68,13 +72,18 @@ export function createApp(logger: Logger, checkHealth: HealthCheck): OpenAPIHono
     c.set('logger', requestLogger)
     await next()
     // The pattern of the route that ran, not the URL: a path such as /partner/{token} carries a secret.
-    requestLogger.info({ method: c.req.method, route: routePath(c), status: c.res.status, ms: Math.round(performance.now() - started) }, 'request')
+    // Through c.get, because the auth middleware adds the user id and the store id to this logger.
+    c.get('logger').info({ method: c.req.method, route: routePath(c), status: c.res.status, ms: Math.round(performance.now() - started) }, 'request')
   })
   // Before anything under /api/* reads the body, such as the Idempotency-Key middleware mounted after this.
   app.use('/api/*', bodyLimit({
     maxSize: apiBodyLimit,
     onError: c => problem(c, { type: 'body-too-large', status: 413, title: `The request body is over ${apiBodyLimit} bytes` }),
   }))
+  // Before every route under /api/*, and before anything that parses a body, so a stranger to the store gets
+  // 403 and not a validation problem.
+  app.use('/api/*', authenticate(auth))
+  app.use('/api/store/:storeId/*', requireStoreMember)
 
   app.openapi(healthRoute, async (c) => {
     const report = await checkHealth()

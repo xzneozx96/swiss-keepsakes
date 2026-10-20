@@ -3,7 +3,8 @@ import { loadConfig } from '../../src/platform/config.ts'
 
 const DATABASE_URL = 'postgres://postgres@127.0.0.1:5433/swiss_keepsakes'
 const DATABASE_URL_UNPOOLED = 'postgres://postgres@127.0.0.1:5433/swiss_keepsakes?direct'
-const urls = { DATABASE_URL, DATABASE_URL_UNPOOLED }
+const NEON_AUTH_BASE_URL = 'https://ep-example.neonauth.eu-central-1.aws.neon.tech/neondb/auth'
+const urls = { DATABASE_URL, DATABASE_URL_UNPOOLED, NEON_AUTH_BASE_URL }
 
 function failure(env: Record<string, string | undefined>): string {
   const result = loadConfig(env)
@@ -36,7 +37,7 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
   })
 
   it('[E1.9] reports a missing DATABASE_URL and DATABASE_URL_UNPOOLED as required', () => {
-    expect(failure({ ROLE: 'api' })).toBe([
+    expect(failure({ ROLE: 'api', NEON_AUTH_BASE_URL })).toBe([
       'Invalid environment, the service did not start:',
       '  DATABASE_URL: Required',
       '  DATABASE_URL_UNPOOLED: Required',
@@ -46,7 +47,7 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
 
   it('[E1.9] requires DATABASE_URL_UNPOOLED in every role, because every role starts pg-boss', () => {
     for (const ROLE of ['api', 'worker', 'all'])
-      expect(failure({ ROLE, DATABASE_URL })).toContain('  DATABASE_URL_UNPOOLED: Required')
+      expect(failure({ ROLE, DATABASE_URL, NEON_AUTH_BASE_URL })).toContain('  DATABASE_URL_UNPOOLED: Required')
   })
 
   it('[E1.8] lists every bad variable in one message', () => {
@@ -64,7 +65,7 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
   })
 
   it('[E1.8] rejects a DATABASE_URL that is not postgres without printing the value', () => {
-    const message = failure({ DATABASE_URL: 'mysql://admin:s3cret-pw@db.example/sk', DATABASE_URL_UNPOOLED, ROLE: 'hunter2' })
+    const message = failure({ DATABASE_URL: 'mysql://admin:s3cret-pw@db.example/sk', DATABASE_URL_UNPOOLED, NEON_AUTH_BASE_URL, ROLE: 'hunter2' })
 
     expect(message).toContain('  DATABASE_URL: Expected a postgres:// or postgresql:// URL with a host')
     expect(message).toMatch(/^ {2}ROLE: /m)
@@ -74,13 +75,40 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
   })
 
   it('[E1.8] rejects a DATABASE_URL with no host', () => {
-    expect(failure({ DATABASE_URL: 'postgres:///swiss_keepsakes', DATABASE_URL_UNPOOLED })).toContain('  DATABASE_URL: Expected a postgres:// or postgresql:// URL with a host')
+    expect(failure({ DATABASE_URL: 'postgres:///swiss_keepsakes', DATABASE_URL_UNPOOLED, NEON_AUTH_BASE_URL })).toContain('  DATABASE_URL: Expected a postgres:// or postgresql:// URL with a host')
   })
 
   it('[E1.9] checks DATABASE_URL_UNPOOLED like DATABASE_URL, without printing the value', () => {
-    const message = failure({ DATABASE_URL, DATABASE_URL_UNPOOLED: 'mysql://admin:s3cret-pw@db.example/sk' })
+    const message = failure({ DATABASE_URL, DATABASE_URL_UNPOOLED: 'mysql://admin:s3cret-pw@db.example/sk', NEON_AUTH_BASE_URL })
 
     expect(message).toContain('  DATABASE_URL_UNPOOLED: Expected a postgres:// or postgresql:// URL with a host')
     expect(message).not.toContain('s3cret-pw')
+  })
+})
+
+describe('[E2.2] config: the Neon Auth URL', () => {
+  it('[E2.2] requires NEON_AUTH_BASE_URL in every role', () => {
+    for (const ROLE of ['api', 'worker', 'all'])
+      expect(failure({ ROLE, DATABASE_URL, DATABASE_URL_UNPOOLED })).toBe(['Invalid environment, the service did not start:', '  NEON_AUTH_BASE_URL: Required', 'Values are never printed.'].join('\n'))
+  })
+
+  it.each([
+    NEON_AUTH_BASE_URL,
+    'http://127.0.0.1:4010/neondb/auth',
+    'http://localhost:4010/neondb/auth',
+    'http://[::1]:4010/neondb/auth',
+  ])('[E2.2] accepts NEON_AUTH_BASE_URL=%s', (url) => {
+    expect(loadConfig({ ...urls, NEON_AUTH_BASE_URL: url })).toMatchObject({ ok: true, config: { NEON_AUTH_BASE_URL: url } })
+  })
+
+  it.each([
+    'http://ep-example.neonauth.eu-central-1.aws.neon.tech/neondb/auth',
+    'ftp://auth.example.ch/neondb/auth',
+    'neondb/auth',
+  ])('[E2.2] refuses NEON_AUTH_BASE_URL=%s without printing it, because the signing keys come from there', (url) => {
+    const message = failure({ ...urls, NEON_AUTH_BASE_URL: url })
+
+    expect(message).toContain('  NEON_AUTH_BASE_URL: Expected an https:// URL, or http:// on this machine')
+    expect(message).not.toContain(url)
   })
 })

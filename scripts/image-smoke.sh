@@ -9,7 +9,8 @@ image=$1
 url=$2
 port=${3:-3000}
 name=sk-api-smoke-$$
-env=(-e "DATABASE_URL=$url" -e "DATABASE_URL_UNPOOLED=$url")
+# The service fetches the Neon Auth keys on the first token only, so a placeholder URL is enough here.
+env=(-e "DATABASE_URL=$url" -e "DATABASE_URL_UNPOOLED=$url" -e "NEON_AUTH_BASE_URL=https://auth.example.test/neondb/auth")
 
 trap 'docker rm -f "$name" >/dev/null 2>&1 || true' EXIT
 
@@ -24,6 +25,7 @@ docker run --rm "$image" sh -ec '
   done
   test -z "$(find /app -name ".env*" -not -path "*/node_modules/*")"
   test -f packages/api-contract/dist/src/index.js
+  test -f packages/domain/dist/identity/index.js
   echo "uid $(id -u), no dev dependency, no env file"'
 
 echo '== release command'

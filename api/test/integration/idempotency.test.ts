@@ -4,6 +4,7 @@ import { setTimeout as sleep } from 'node:timers/promises'
 import { createRoute, z } from '@hono/zod-openapi'
 import { sql } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
+import { noAuthentication } from '../../scripts/contract.ts'
 import { createAuditLog } from '../../src/platform/audit.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createApp } from '../../src/platform/http/app.ts'
@@ -99,7 +100,7 @@ function setup({ storeFails = false } = {}) {
   }
 
   const logs: { level: number, msg: string }[] = []
-  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }))
+  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }), noAuthentication)
   app.use('/api/*', idempotency({ db: storeFails ? storingFails : db, clock, actorId: c => c.req.header('X-Test-Actor') ?? 'anonymous' }))
   app.get('/api/probes', c => c.json({ ok: true }))
   app.openapi(probeRoute, async (c) => {

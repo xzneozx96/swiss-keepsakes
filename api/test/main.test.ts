@@ -4,6 +4,8 @@ import { startMain } from './support/process.ts'
 // The process tests that need Postgres are in integration/main.test.ts. These stop before any connection
 // succeeds, so `pnpm test` runs them without a database.
 const DATABASE_URL = 'postgres://postgres@127.0.0.1:5433/swiss_keepsakes'
+// Never fetched: the key set is loaded on the first token.
+const NEON_AUTH_BASE_URL = 'https://auth.example.test/neondb/auth'
 
 describe('[E1.8] main: startup failures', () => {
   it('[E1.8] a bad env value stops startup with exit code 1 and a message that names the variable but not the value', async () => {
@@ -22,10 +24,18 @@ describe('[E1.8] main: startup failures', () => {
     expect(run.output()).toContain('DATABASE_URL: Required')
   })
 
+  it('[E2.2] a missing NEON_AUTH_BASE_URL stops startup with exit code 1 before any connection', async () => {
+    const run = startMain({ ROLE: 'api', DATABASE_URL, DATABASE_URL_UNPOOLED: DATABASE_URL })
+
+    expect(await run.exited).toBe(1)
+    expect(run.output()).toContain('NEON_AUTH_BASE_URL: Required')
+    expect(run.messages()).toEqual([])
+  })
+
   it('[E1.9] a database that refuses connections stops startup with exit code 1, logged through pino without the URL', async () => {
     // Port 1 on this machine: nothing listens there.
     const unreachable = 'postgres://postgres:s3cret-pw@127.0.0.1:1/swiss_keepsakes'
-    const run = startMain({ ROLE: 'all', PORT: '0', DATABASE_URL: unreachable, DATABASE_URL_UNPOOLED: unreachable })
+    const run = startMain({ ROLE: 'all', PORT: '0', DATABASE_URL: unreachable, DATABASE_URL_UNPOOLED: unreachable, NEON_AUTH_BASE_URL })
 
     expect(await run.exited).toBe(1)
     expect(run.find('startup failed')).toMatchObject({ level: 60, err: { code: 'ECONNREFUSED' } })

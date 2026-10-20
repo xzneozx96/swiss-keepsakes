@@ -3,6 +3,7 @@ import { createRoute, z } from '@hono/zod-openapi'
 import { problemSchema } from '@sk/api-contract'
 import { HTTPException } from 'hono/http-exception'
 import { describe, expect, it } from 'vitest'
+import { noAuthentication } from '../../../scripts/contract.ts'
 import { createApp } from '../../../src/platform/http/app.ts'
 import { createLogger } from '../../../src/platform/logger.ts'
 
@@ -37,7 +38,7 @@ const probeRoute = createRoute({
 
 function setup(health: HealthReport = { database: true, jobs: true }) {
   const logs: Record<string, unknown>[] = []
-  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => health)
+  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => health, noAuthentication)
   app.openapi(probeRoute, c => c.json({ ok: true }, 200))
   app.openapi(partnerRoute, c => c.json({ ok: true }, 200))
   app.get('/boom', () => {

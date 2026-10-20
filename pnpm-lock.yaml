@@ -44,12 +44,18 @@ importers:
       '@sk/api-contract':
         specifier: workspace:*
         version: link:../packages/api-contract
+      '@sk/domain':
+        specifier: workspace:*
+        version: link:../packages/domain
       drizzle-orm:
         specifier: ^0.45.4
         version: 0.45.4(@opentelemetry/api@1.9.1)(@types/pg@8.23.1)(pg@8.23.1)
       hono:
         specifier: ^4.13.13
         version: 4.13.13
+      jose:
+        specifier: ^6.2.12
+        version: 6.2.12
       pg:
         specifier: ^8.23.1
         version: 8.23.1

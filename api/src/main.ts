@@ -1,8 +1,11 @@
 import process from 'node:process'
+import { createActorLoader } from './modules/identity/adapters/actor-repository.ts'
+import { systemClock } from './platform/clock.ts'
 import { loadConfig } from './platform/config.ts'
-import { createPool } from './platform/db/client.ts'
+import { createDatabase, createPool } from './platform/db/client.ts'
 import { createHealthCheck } from './platform/health.ts'
 import { createApp } from './platform/http/app.ts'
+import { neonAuthVerifier } from './platform/http/auth.ts'
 import { startHttpServer } from './platform/http/server.ts'
 import { startJobs } from './platform/jobs/boss.ts'
 import { createLogger } from './platform/logger.ts'
@@ -54,7 +57,8 @@ async function main() {
   stops.unshift(jobs.stop)
   if (config.ROLE !== 'worker') {
     const checkHealth = createHealthCheck({ pool, boss: jobs.boss, logger })
-    const server = await startHttpServer(createApp(logger, checkHealth).fetch, config.HOST, config.PORT, logger)
+    const auth = { verifyToken: neonAuthVerifier(config.NEON_AUTH_BASE_URL, systemClock), loadActor: createActorLoader(createDatabase(pool)) }
+    const server = await startHttpServer(createApp(logger, checkHealth, auth).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)
   }
   logger.info({ role: config.ROLE }, 'started')

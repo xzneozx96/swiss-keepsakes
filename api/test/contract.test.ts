@@ -6,7 +6,7 @@ import { join } from 'node:path'
 import { createRoute, z } from '@hono/zod-openapi'
 import { createApiClient, problemSchema, problemTypes } from '@sk/api-contract'
 import { afterEach, describe, expect, expectTypeOf, it } from 'vitest'
-import { contractApp, generateContract, generatedDir, openApiDocument } from '../scripts/contract.ts'
+import { contractApp, generateContract, generatedDir, noAuthentication, openApiDocument } from '../scripts/contract.ts'
 import { createApp } from '../src/platform/http/app.ts'
 import { startHttpServer } from '../src/platform/http/server.ts'
 import { createLogger } from '../src/platform/logger.ts'
@@ -21,7 +21,7 @@ afterEach(async () => {
 async function serve(health: HealthReport) {
   const logs: Record<string, unknown>[] = []
   const logger = createLogger('info', { write: line => logs.push(JSON.parse(line)) })
-  servers.push(await startHttpServer(createApp(logger, async () => health).fetch, '127.0.0.1', 0, logger))
+  servers.push(await startHttpServer(createApp(logger, async () => health, noAuthentication).fetch, '127.0.0.1', 0, logger))
   const listening = logs.find(line => line.msg === 'api listening')
   return `http://127.0.0.1:${listening?.port}`
 }

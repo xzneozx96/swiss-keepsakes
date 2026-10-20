@@ -18,11 +18,12 @@ describe('[E1.9] migrations', () => {
     expect((await tables()).rows.map(row => row.table_name)).toEqual(['audit_log', 'idempotency_keys', 'webhook_events'])
     expect(await count(pool, `select count(*) from information_schema.tables where table_schema = 'pgboss' and table_name = 'job'`)).toBe(1)
     const before = await applied()
+    const files = readMigrationFiles({ migrationsFolder }).length
 
     await migrateDatabase(inject('databaseUrlUnpooled'), silentLogger)
 
-    expect(before).toBe(1)
-    expect(await applied()).toBe(1)
+    expect(before).toBe(files)
+    expect(await applied()).toBe(files)
   })
 })
 

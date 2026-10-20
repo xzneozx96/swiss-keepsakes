@@ -10,7 +10,8 @@ afterEach(() => {
   blockers.clear()
 })
 
-const env = (role: string) => ({ ROLE: role, PORT: '0', DATABASE_URL: inject('databaseUrl'), DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled') })
+// The key set is loaded on the first token, so this URL is never fetched.
+const env = (role: string) => ({ ROLE: role, PORT: '0', DATABASE_URL: inject('databaseUrl'), DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled'), NEON_AUTH_BASE_URL: 'https://auth.example.test/neondb/auth' })
 
 describe('[E1.8] main: the ROLE switch and process lifecycle', () => {
   it('[E1.8] ROLE=api serves /healthz on HOST and runs pg-boss without a worker, and SIGTERM stops it with exit code 0', async () => {

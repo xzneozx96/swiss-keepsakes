@@ -5,6 +5,7 @@
 !pnpm-workspace.yaml
 !api/
 !packages/api-contract/
+!packages/domain/
 
 # Never send installs, build output, tests or local env files, even from the allowed folders.
 **/node_modules
@@ -12,3 +13,4 @@
 **/.env*
 **/*.local
 api/test
+packages/domain/tests
