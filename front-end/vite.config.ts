@@ -1,10 +1,14 @@
 /// <reference types="vitest/config" />
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+
+// The API's address for the dev and preview servers. The browser only ever calls /api on its own origin.
+const apiProxy = { '/api': process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:3000' }
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -13,6 +17,8 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  server: { proxy: apiProxy },
+  preview: { proxy: apiProxy },
   plugins: [
     // TanStack Router's plugin must come before @vitejs/plugin-react.
     tanstackRouter({ target: 'react', autoCodeSplitting: true }),

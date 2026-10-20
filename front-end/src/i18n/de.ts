@@ -311,6 +311,12 @@ export const de: Record<MessageKey, string> = {
   'auth.intro': 'Kein Passwort nötig. Ihr Warenkorb bleibt, wie er ist.',
   'auth.close': 'Schliessen',
   'auth.google': 'Weiter mit Google',
+  'auth.google.failed':
+    'Die Anmeldung mit Google wurde nicht abgeschlossen. Versuchen Sie es erneut oder lassen Sie sich einen Code per E-Mail senden.',
+  'auth.unavailable':
+    'Die Anmeldung funktioniert gerade nicht. Versuchen Sie es gleich noch einmal.',
+  'auth.rateLimited':
+    'Zu viele Versuche. Warten Sie eine Minute und versuchen Sie es dann erneut.',
   'auth.or': 'oder',
   'auth.email.label': 'E-Mail',
   'auth.email.invalid':
@@ -320,14 +326,14 @@ export const de: Record<MessageKey, string> = {
   'auth.code.sent': 'Wir haben einen 6-stelligen Code an {email} gesendet.',
   'auth.code.label': 'Code aus der E-Mail',
   'auth.code.hint':
-    'Geben Sie die {length} Ziffern ein. Der Code ist 10 Minuten gültig.',
+    'Geben Sie die {length} Ziffern ein. Der Code ist {minutes} Minuten gültig.',
   'auth.code.submit': 'Weiter',
   'auth.code.wrong':
     'Dieser Code stimmt nicht. Prüfen Sie die E-Mail und versuchen Sie es erneut.',
   'auth.code.attemptsLeft.one': 'Noch 1 Versuch für diesen Code.',
   'auth.code.attemptsLeft.other': 'Noch {count} Versuche für diesen Code.',
   'auth.code.expired':
-    'Dieser Code ist abgelaufen. Codes sind 10 Minuten gültig. Fordern Sie einen neuen Code an.',
+    'Dieser Code ist abgelaufen. Codes sind {minutes} Minuten gültig. Fordern Sie einen neuen Code an.',
   'auth.code.locked':
     'Zu viele falsche Codes. Fordern Sie einen neuen Code an.',
   'auth.code.sendNew': 'Neuen Code senden',
@@ -335,13 +341,14 @@ export const de: Record<MessageKey, string> = {
   'auth.code.resend': 'Code erneut senden',
   'auth.code.resendIn': 'Erneut senden in {time}',
   'auth.changeEmail': 'Andere E-Mail verwenden',
-  'auth.proposal.attempts': '5 Code-Versuche',
   'auth.account.title': 'Konto',
   'auth.account.signedOutTitle': 'Anmelden und Bestellungen sehen',
   'auth.account.signedOutText':
     'Stöbern und den Warenkorb füllen geht ohne Konto. Melden Sie sich beim Senden einer Anfrage an und verfolgen Sie Ihre Bestellungen hier.',
   'auth.account.signIn': 'Anmelden',
   'auth.account.signOut': 'Abmelden',
+  'auth.account.signOutFailed':
+    'Sie sind noch angemeldet. Prüfen Sie die Verbindung und versuchen Sie es erneut.',
 
   'proto.proposal': 'UX-Vorschlag: {name}',
   'demo.storageFull':

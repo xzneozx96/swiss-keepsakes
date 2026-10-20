@@ -1,12 +1,23 @@
 import type { DemoData, DemoState, Role } from './types'
 
 import { StorageFullError } from '@/features/data-client/errors'
+import { apiEnabled } from '@/lib/api-mode'
 import { readStored, writeStored } from '@/lib/storage'
 
 import { createSeedState, DEMO_VERSION } from './seed'
 import { upgradeDemoData } from './upgrade'
 
 const STORAGE_KEY = 'sk.demo'
+
+/**
+ * With the API, the session cookie decides who is signed in, so the browser neither keeps nor trusts a
+ * saved copy of it.
+ */
+function withoutSession(state: DemoState): DemoState {
+  return apiEnabled
+    ? { ...state, data: { ...state.data, signedInGuestId: null } }
+    : state
+}
 
 /** The saved demo data, or the seed when there is none or it was saved by another version. */
 export function loadDemoState(): DemoState {
@@ -15,7 +26,7 @@ export function loadDemoState(): DemoState {
   if (stored?.version !== DEMO_VERSION)
     return createSeedState()
 
-  return { ...stored, data: upgradeDemoData(stored.data) }
+  return withoutSession({ ...stored, data: upgradeDemoData(stored.data) })
 }
 
 /** Replace the data with an updated copy; later steps add their actions on top of this. */
@@ -40,7 +51,7 @@ export function createDemoStore(initial: DemoState): DemoStore {
   let storageFull = false
 
   const save = () => {
-    const full = writeStored(STORAGE_KEY, state) === 'full'
+    const full = writeStored(STORAGE_KEY, withoutSession(state)) === 'full'
 
     if (full === storageFull)
       return
