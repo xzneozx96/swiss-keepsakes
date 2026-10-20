@@ -650,7 +650,7 @@ Each feature moves in full. When it moves, its seed file becomes a database seed
 | R10 | Stripe changes the Connect API (Accounts v2 is now the documented default) | Rework at the Connect switch | The adapter is small, and account creation is one function. The v1 controller settings remain supported. |
 | R11 | The merchant finds the full Stripe Dashboard confusing (PRD L27) | Support load | M22 shows payout status in our own words. An Express-style account is the fallback at the Connect switch. |
 | R12 | The operator holds a restricted key to the merchant's own account in Phase 1 | Trust and key rotation burden | Minimum permissions, a rotation runbook, and the platform key replaces it at the Connect switch. |
-| R13 | Neon Auth lacks something launch needs, such as Safari session support or the code limits in UX L327 (F2, F16) | Auth falls short of the UX spec | SP6 checks it in week one. The fallback is Better Auth inside the API on the same tables (D8). |
+| R13 | Neon Auth lacks something launch needs, such as Safari session support (F2). The code limits are settled in F16. | Auth falls short of the UX spec | The owner told us on 20.10.2026 to assume Safari sessions work, so the iPhone checklist is still open and stays under Not verified. The fallback is Better Auth inside the API on the same tables (D8). |
 
 ## 16. Spike items
 
@@ -684,7 +684,7 @@ The owner answered these questions on 19.10.2026. Q2 and Q6 still need follow-up
 | Q12 | How long do ledger and order rows stay after a guest deletes their account? | 10 years. |
 | Q13 | How does a guest pay for a cart that spans several stores? | One payment per store. |
 | Q14 | Should seats stay counted for 2 minutes after a hold ends? | No. Seats are released at exactly 15 minutes, as PRD L161 says. |
-| Q15 | Which SMTP provider sends production mail, and from which domain? Local and staging use the owner's test SMTP account. Gmail SMTP suits tests only (sending limits, the sender must be the signed-in account). | Open. Needed before staging mail goes to real guests (E2.9) and before E7.6. Recommended: Amazon SES Frankfurt over SMTP, or the store's own mail host. |
+| Q15 | Which SMTP provider sends production mail, and from which domain? Local and staging use the owner's test SMTP account. Gmail SMTP suits tests only (sending limits, the sender must be the signed-in account). | The store's own mail host (owner, 20.10.2026). Its host, credentials and sending domain are still to come from the store. Needed before staging mail goes to real guests (E2.9) and before E7.6. |
 
 ## 18. Verified facts and sources
 
@@ -707,7 +707,7 @@ Checked 18.10.2026 unless another date is shown.
 | F13 | Stripe doesn't guarantee webhook order, duplicates happen, and live retries continue for up to three days. Stripe says not to use `created` to order events. It recommends tracking event ids, returning 2xx quickly, and combining IP allow-listing with signature checks. The default signature tolerance is 5 minutes. | docs.stripe.com/webhooks |
 | F14 | pg-boss needs PostgreSQL 13 or later and Node 22.12 or later. It supports cron and RRULE schedules, deferred jobs, retries with exponential backoff, creating jobs in an existing transaction, and a Drizzle adapter. MIT licence. | github.com/timgit/pg-boss |
 | F15 | Fly.io's European regions are `ams`, `arn`, `cdg`, `fra` and `lhr`. It has no Swiss region. | docs.fly.io/reference/regions |
-| F16 | Better Auth's email code plugin defaults to `expiresIn` 300 seconds, `allowedAttempts` 3 and `otpLength` 6. UX L327 asks for 10 minutes and 5 attempts, so SP6 checks whether Neon Auth lets us change them. | better-auth.com/docs/plugins/email-otp |
+| F16 | Better Auth's email code plugin defaults to `expiresIn` 300 seconds, `allowedAttempts` 3 and `otpLength` 6. SP6 measured that Neon Auth keeps them (a code died before 8.5 minutes, the 4th wrong try was refused) and its CLI cannot change them. The owner accepted 5 minutes and 3 attempts for guest and staff sign-in on 20.10.2026, and UX L328 and N01 now say so. Partner codes (Q8) are our own and keep 10 minutes and 5 attempts. | better-auth.com/docs/plugins/email-otp |
 | F17 | Resend, the choice before 20.10.2026, set where mail is sent from by region. All account data, including email metadata, logs and API records, is stored in the United States whatever the sending region. | resend.com/docs/dashboard/domains/regions |
 | F18 | Sentry offers EU data storage in Frankfurt. The location is fixed when the organisation is created. | docs.sentry.io/organization/data-storage-location |
 | F19 | Plausible stores visitor data in the EU, uses no cookies, and stores no raw IP addresses or user agents, per its own data policy. | plausible.io/data-policy |

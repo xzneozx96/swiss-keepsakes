@@ -143,8 +143,8 @@ Each spike is a throwaway branch with a written answer in `docs/spikes/SPn.md`. 
 |---|---|---|---|---|---|---|
 | E2.1 | Sign-in sheet C05 on Neon Auth. Google and email code, the token kept in memory, the client sending the Bearer token | FE | 5 | High | E0.6, E1.11 | A guest signs in and stays signed in across reloads on Playwright WebKit and on a real iPhone in Safari, since WebKit in Playwright doesn't reproduce Safari's tracking prevention. The token never appears in `localStorage`. Google sign-in completes on localhost and staging and creates the user, and the consent screen shows our own Google OAuth app, not Neon's shared keys. Playwright `[E2.1][AC01]` |
 | E2.2 | JWT verification, actor, memberships and `can()` | BE | 3 | High | E1.9, E0.6 | A bad issuer or an expired token gets 401. Every `/api/store/*` route returns 403 to a member of another store, checked by the generated permission matrix. Tests `[E2.2][AC02]` |
-| E2.3 | Stores and the first Owner. Super Admin invites the Owner (A01, N20). The store can't sell until A02's conditions are met | Both | 5 | Medium | E2.2, E2.8 | S8. A staff invitation is sent, accepted after sign-in, and adds the `store_memberships` row. Playwright `[E2.3][S8]` |
-| E2.4 | Owner invites a Store Manager (M22 members, N18, M01) | Both | 3 | Medium | E2.3 | The invitee signs in, accepts and sees only that store. Playwright `[E2.4][AC02]` |
+| E2.3 | Stores and the first Owner. Super Admin invites the Owner (A01, N20). The store can't sell until A02's conditions are met | Both | 5 | Medium | E2.1, E2.2, E2.8 | S8. A staff invitation is sent, accepted after sign-in, and adds the `store_memberships` row. Playwright `[E2.3][S8]` |
+| E2.4 | Owner invites a Store Manager (M22 members, N18, M01) | Both | 3 | Medium | E2.1, E2.3 | The invitee signs in, accepts and sees only that store. Playwright `[E2.4][AC02]` |
 | E2.5 | Catalogue schema and public reads. Products, variants, sub-categories, pickup places, tours, departures. C01 to C03 and C08 to C10 read from the API | Both | 8 | High | E1.13, E1.11 | The guest pages show seeded data from the database. The catalogue demo seed and its mock code are deleted. Playwright `[E2.5]` |
 | E2.6 | Merchant catalogue edits M11 to M14 and M26, with `If-Match` and the publish rule | Both | 8 | Medium | E2.5, E2.2 | A stale edit gets 412. A tour complete in only EN or only DE can be published (S11). Tests `[E2.6][S11]` |
 | E2.7 | Media. Signed upload URLs, `sharp` variants in the worker, the public bucket | Both | 5 | Medium | E0.5, E2.6 | A merchant uploads a photo and the guest page shows the resized image. Tests `[E2.7]` |
@@ -254,7 +254,7 @@ This is a guess for one developer with Claude agents. It is rebuilt from measure
 |---|---|---|
 | Q2. Pilot merchant's Swiss business status, CHF account, TWINT legal notice | E4.12, the TWINT half of E4.13, E7.5 | Sprint 8 for the test account, Sprint 17 for live |
 | Q6. Lawyer confirms Frankfurt hosting and the SMTP provider | E7.6 | Sprint 16 |
-| Q15. Production SMTP provider and sending domain | E2.9 for real guests, E7.6 | Before staging mail leaves the test account |
+| Q15. The store's own mail host: SMTP host, credentials and sending domain | E2.9 for real guests, E7.6 | Before staging mail leaves the test account |
 | Q1. Stripe platform entity | Nothing in Phase 1. It matters before a second merchant | After launch |
 | PRD open items for tours (minimum group size, cutoffs, rescheduling, weather and merchant cancellation, PRD L255) | E4.2 and E4.9 rules. Each rule is a pure function, so a late answer changes one function and its test | Sprint 8 |
 
@@ -262,6 +262,7 @@ This is a guess for one developer with Claude agents. It is rebuilt from measure
 
 The full list is architecture section 15. These are the ones that change the plan.
 
+- **SP6 is assumed to pass on Safari.** The owner said on 20.10.2026 to build E2.1 and E2.2 without the iPhone checklist, so E0.6 stays Blocked and E2.1's real iPhone proof is listed as not verified until the checklist runs.
 - **SP6 fails on Safari.** Auth moves to Better Auth inside the API. E2.1 and E2.2 grow by about one sprint. Known at the end of Sprint 0.
 - **The sprint map is a guess.** It is rebuilt after Sprint 2. Until then no date is promised.
 - **Payments are the hardest part.** E4 has the most points and the most tests. If it slips, E5 and E6 move, not the E4 tests.
