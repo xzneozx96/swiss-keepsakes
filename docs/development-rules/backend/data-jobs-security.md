@@ -30,7 +30,9 @@
 
 ## Security and privacy (both sides follow these)
 
-- **The SPA keeps the access token in memory.** Never in `localStorage`. (13)
+- **The guest and staff session is an HttpOnly first-party cookie** that Better Auth sets, `SameSite=Lax`, and `Secure` on staging and production. The SPA holds no auth token, in memory or in `localStorage`. (D8, 13)
+- **Every state-changing request under `/api/` checks `Origin`**, whatever its content type, because a cookie session needs CSRF protection. Better Auth checks `/api/auth/*` itself. (9, 13)
+- **`better-auth` stays at 1.7.7 or later**, and its security advisories are watched. (R13)
 - **The partner session cookie is `httpOnly` and `SameSite=Lax`**, scoped to `/partner` and `/api/partner`, with an `Origin` check on mutations. (13)
 - **A Content Security Policy** protects the SPA. **Webhook signatures** are verified, plus the Stripe IP allow-list. No card data touches our servers. (13)
 - **Logs are JSON** with request id, actor and store id. They never contain emails, phone numbers, tokens or engraving text. (13)

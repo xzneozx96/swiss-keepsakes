@@ -325,7 +325,7 @@ Từ email nhắc hoặc từ C14, khách mở C15 hoặc C16, bấm "Thanh toá
 
 ### 4.5 Đăng nhập
 
-- Khách: Google hoặc mã 6 số qua email. Mã hết hạn sau 5 phút, tối đa 3 lần thử (giới hạn mặc định của Neon Auth, chủ sở hữu chấp nhận ngày 20.10.2026, thay cho đề xuất UX cũ là 10 phút và 5 lần). Không có mật khẩu.
+- Khách: Google hoặc mã 6 số qua email. Mã hết hạn sau 5 phút, tối đa 3 lần thử (giới hạn do chúng ta cấu hình trong Better Auth, chủ sở hữu chấp nhận ngày 20.10.2026, thay cho đề xuất UX cũ là 10 phút và 5 lần). Không có mật khẩu.
 - Nhân sự: cùng cơ chế Google hoặc mã email (**Đề xuất UX**, vì O07 còn mở). Lời mời Manager mở M01: "Chị Ngọc mời bạn làm Store Manager của cửa hàng ...". Sau khi đăng nhập, bấm "Chấp nhận lời mời".
 
 ### 4.6 Merchant xử lý yêu cầu đơn quà (AC25, AC26)
