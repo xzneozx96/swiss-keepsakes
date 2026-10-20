@@ -5,11 +5,21 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    "./en": "./src/en.ts",
-    "./de": "./src/de.ts",
-    "./key-drift": "./src/key-drift.ts"
+    "./en": {
+      "sk-compiled": "./dist/src/en.js",
+      "default": "./src/en.ts"
+    },
+    "./de": {
+      "sk-compiled": "./dist/src/de.js",
+      "default": "./src/de.ts"
+    },
+    "./key-drift": {
+      "sk-compiled": "./dist/src/key-drift.js",
+      "default": "./src/key-drift.ts"
+    }
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import type { MailKey } from './en'
+import type { MailKey } from './en.ts'
 
 /** German email copy as used in Switzerland: "ss", never "ß". */
 export const mailDe: Record<MailKey, string> = {
@@ -73,6 +73,18 @@ export const mailDe: Record<MailKey, string> = {
   'mail.N23.staff':
     'Bestellung {orderRef} wurde automatisch storniert: Die erste Zahlung ist nicht bis {dueAt} eingegangen.',
   'mail.N23.stock': 'Die reservierten Artikel sind wieder an Lager.',
+  'mail.invitation.expiry': 'Der Link ist 7 Tage gültig.',
+  'mail.invitation.ignore':
+    'Wenn Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren.',
+  'mail.N18.subject': '{inviter} hat Sie zu {store} eingeladen',
+  'mail.N18.invited':
+    '{inviter} hat Sie eingeladen, bei {store} als Store Manager mitzuarbeiten.',
+  'mail.N18.accept':
+    'Öffnen Sie die Einladung, melden Sie sich an und nehmen Sie sie an: {link}',
+  'mail.N20.subject': 'Einladung: Eröffnen Sie {store}',
+  'mail.N20.invited': 'Sie sind eingeladen, {store} als Inhaber:in zu führen.',
+  'mail.N20.setup':
+    'Öffnen Sie die Einladung, melden Sie sich an und erledigen Sie die Schritte, die Ihr Laden vor dem Verkaufsstart braucht: {link}',
 
   'tourMail.greeting': 'Grüezi {guest}',
   'tourMail.seller': 'Verkäufer: {seller}',

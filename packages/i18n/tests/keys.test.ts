@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { mailDe } from '../src/de'
-import { mailEn } from '../src/en'
-import { keyDrift } from '../src/key-drift'
-import { deExtraKey, deMissingKey, en } from './fixtures'
+import { mailDe } from '../src/de.ts'
+import { mailEn } from '../src/en.ts'
+import { keyDrift } from '../src/key-drift.ts'
+import { deExtraKey, deMissingKey, en } from './fixtures.ts'
 
 describe('[E1.12][S11] EN and DE have the same keys', () => {
   it('names a key that EN has and DE lacks', () => {

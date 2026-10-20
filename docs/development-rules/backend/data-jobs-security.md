@@ -1,11 +1,12 @@
 # Data, jobs and security
 
-**Mostly design.** Configuration and logging are built (E1.8), and so is the platform layer for data and jobs (E1.9). No module and no business table exists yet. Source: `docs/architecture/backend.md` (the section is in brackets after each rule). Rules about money, Stripe holds and the commission ledger are specific to this product. They are in `docs/architecture/backend.md` sections 6 and 7 and are not repeated here.
+**Mostly design.** Configuration and logging are built (E1.8), and so is the platform layer for data and jobs (E1.9). The first module, `notifications`, and its `sent_mail` table are built (E2.8). No business module exists yet. Source: `docs/architecture/backend.md` (the section is in brackets after each rule). Rules about money, Stripe holds and the commission ledger are specific to this product. They are in `docs/architecture/backend.md` sections 6 and 7 and are not repeated here.
 
 ## Data
 
 - **Every tenant row has `store_id`.** Child rows use composite foreign keys `(store_id, parent_id)`, so a child cannot point at another store's parent. (D9)
 - **Every repository function requires a `StoreScope` argument.** Row-level security arrives with the second merchant. (D9)
+  - The one exception is the `notifications.sent_mail` repository (E2.8). It takes no `StoreScope`, because the mail job runs without an actor and finds the row by the mail id it carries. No route reads the table yet. The row keeps `store_id`. A read by store, such as a resend list (UX R13), takes a `StoreScope`.
 - **Postgres row locks decide every seat and every unit of stock.** Nothing else holds a lock. (1)
 - **Money history is append-only.** Balances and payment labels are computed from ledger rows and never stored. (D5)
 - **One `audit_log` records every money and status change** with before, after, actor, reason and request id. (D10)
@@ -22,11 +23,13 @@
 - **Create a job inside the business transaction** (`boss.send(..., { db: tx })`). There is no separate outbox table and no event bus. (D4)
   - Built: `jobs.send(tx, queue, data, { startAfter })` (`api/src/platform/jobs/queue.ts`). Every role starts pg-boss (`api/src/platform/jobs/boss.ts`), because sending needs a started instance. Only `worker` and `all` supervise. Create a queue with `boss.createQueue` at startup before the first send. Proof that a rollback leaves no job: `api/test/integration/unit-of-work.test.ts`.
 - **Cross-module work that must be atomic is a direct call in the same transaction.** Only effects outside the system become jobs. (D4)
+- **Mail is a job** (section 8). Built (E2.8): a command calls the function `makeQueueMail` returns (`notifications/index.ts`) inside its `uow.run`. It writes the `notifications.sent_mail` row and the `mail` job, whose id is the mail id and the `Message-ID`'s local part. It refuses a `to` that is not one plain address. Job data holds ids, never a token. An invitation mail stores the invitation id, and the `InvitationLink` port builds the link when the mail is sent (architecture section 8). The worker retries a failed send 5 times with exponential backoff. An SMTP 5xx reply or a render error skips the retries. pg-boss then moves the job to `mail-failed`, whose handler marks the row failed and logs the `mail.failed` alert. A failed attempt throws only its error code and SMTP reply code, because pg-boss stores what the job throws. Runbook: `docs/ops/mail.md`.
 
 ## Configuration
 
 - Configuration comes from environment variables, checked at startup against one Zod schema. The service refuses to start on a bad value. Secrets live in Fly secrets. (11)
   - Built: add a variable to the schema in `api/src/platform/config.ts` and to `api/.env.example`. The startup message names the variable and never prints its value. Tests: `api/test/platform/config.test.ts`.
+  - `SMTP_*` is all six variables or none (E2.8). A partial setting stops startup. With none, the service starts and warns, and mail fails and alerts until they are set, because no variable tells production from development.
 
 ## Security and privacy (both sides follow these)
 
