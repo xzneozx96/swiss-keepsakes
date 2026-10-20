@@ -14,6 +14,8 @@ const postgresUrl = z.url({
 })
 
 const configSchema = z.object({
+  // Only `production` changes anything here: BETTER_AUTH_URL must then be https.
+  NODE_ENV: z.string().optional(),
   ROLE: z.enum(['api', 'worker', 'all']).default('all'),
   HOST: host.default('0.0.0.0'),
   PORT: port.default(3000),
@@ -80,6 +82,16 @@ function smtpProblems(present: Record<string, string>, parsed: Parsed | undefine
   return []
 }
 
+// Better Auth reads this variable itself, outside our schema, and would trust more origins than our own (D8).
+const refusedAuthKeys = ['BETTER_AUTH_TRUSTED_ORIGINS'] as const
+
+function authProblems(present: Record<string, string>, parsed: Parsed | undefined): string[] {
+  return [
+    ...refusedAuthKeys.filter(key => key in present).map(key => `  ${key}: Not supported. The only trusted origin is BETTER_AUTH_URL's`),
+    ...(parsed?.NODE_ENV === 'production' && !parsed.BETTER_AUTH_URL.startsWith('https:') ? ['  BETTER_AUTH_URL: Expected an https:// URL when NODE_ENV is production'] : []),
+  ]
+}
+
 function googleProblems(present: Record<string, string>): string[] {
   const set = googleKeys.filter(key => key in present)
   return set.length === 0 || set.length === googleKeys.length
@@ -96,6 +108,7 @@ export function loadConfig(env: Record<string, string | undefined>): ConfigResul
     ...(result.success ? [] : result.error.issues.map(issue => `  ${issue.path.join('.')}: ${issue.message}`)),
     ...smtpProblems(present, result.data),
     ...googleProblems(present),
+    ...authProblems(present, result.data),
   ]
   if (!result.success || lines.length > 0)
     return { ok: false, message: ['Invalid environment, the service did not start:', ...lines, 'Values are never printed.'].join('\n') }

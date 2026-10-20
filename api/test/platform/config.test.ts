@@ -193,3 +193,19 @@ describe('[E2.2] config: Better Auth variables', () => {
     expect(loadConfig({ ...urls, GOOGLE_CLIENT_ID: '', GOOGLE_CLIENT_SECRET: ' ' })).toMatchObject({ ok: true })
   })
 })
+
+describe('[E2.2] config: the trusted origin is BETTER_AUTH_URL and no other', () => {
+  it('[E2.2] refuses BETTER_AUTH_TRUSTED_ORIGINS, which Better Auth would read outside our schema, without printing its value', () => {
+    const message = failure({ ...urls, BETTER_AUTH_TRUSTED_ORIGINS: 'https://evil.example' })
+
+    expect(message).toContain('  BETTER_AUTH_TRUSTED_ORIGINS: Not supported')
+    expect(message).not.toContain('evil.example')
+  })
+
+  it('[E2.2] refuses an http BETTER_AUTH_URL when NODE_ENV is production, and accepts https there and http elsewhere', () => {
+    expect(failure({ ...urls, NODE_ENV: 'production' })).toContain('  BETTER_AUTH_URL: Expected an https:// URL when NODE_ENV is production')
+    expect(loadConfig({ ...urls, NODE_ENV: 'production', BETTER_AUTH_URL: 'https://keepsakes.example' })).toMatchObject({ ok: true })
+    expect(loadConfig({ ...urls, NODE_ENV: 'development' })).toMatchObject({ ok: true })
+    expect(loadConfig(urls)).toMatchObject({ ok: true })
+  })
+})

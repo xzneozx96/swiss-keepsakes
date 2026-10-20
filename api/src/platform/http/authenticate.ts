@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from 'hono'
 import type { AppEnv } from './app.ts'
+import { problem } from './problem.ts'
 
 // The actor of a request. E2.10 adds staff, partner and super admin beside these two (architecture section 9).
 export type Actor
@@ -27,14 +28,28 @@ export function authenticate({ readSession, ensureGuestProfile }: AuthenticateDe
       return
     }
     const { headers, response } = await readSession(c.req.raw.headers)
+    // Better Auth's header that clears the cookie of an expired or deleted session passes on with the response, so
+    // the browser stops sending it. A renewed cookie goes the same way.
+    for (const cookie of headers.getSetCookie())
+      c.header('Set-Cookie', cookie, { append: true })
     if (!response) {
       c.set('actor', { kind: 'anonymous' })
       await next()
       return
     }
     c.set('actor', { kind: 'guest', userId: response.user.id, guestId: await ensureGuestProfile(response.user.id) })
-    for (const cookie of headers.getSetCookie())
-      c.header('Set-Cookie', cookie, { append: true })
     await next()
   }
+}
+
+export type GuestActor = Extract<Actor, { kind: 'guest' }>
+
+// Default deny for a guarded route: mount it on the route's path, and an anonymous request gets the 401 problem
+// before the handler runs. The handler reads the guest with `c.get('guest')`.
+export const requireGuest: MiddlewareHandler<AppEnv> = async (c, next) => {
+  const actor = c.get('actor')
+  if (actor.kind !== 'guest')
+    return problem(c, { type: 'unauthenticated', status: 401, title: 'Sign in to continue' })
+  c.set('guest', actor)
+  await next()
 }

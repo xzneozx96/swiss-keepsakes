@@ -9,7 +9,7 @@ import { createSmtpMailer, createUnconfiguredMailer } from './modules/notificati
 import { makeFailMail } from './modules/notifications/application/fail-mail.ts'
 import { makeQueueMail } from './modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from './modules/notifications/application/send-mail.ts'
-import { createAuth } from './platform/auth.ts'
+import { createAuth, createSessionReader } from './platform/auth.ts'
 import { systemClock } from './platform/clock.ts'
 import { loadConfig } from './platform/config.ts'
 import { createDatabase, createPool } from './platform/db/client.ts'
@@ -99,7 +99,7 @@ async function main() {
     })
     const identity = {
       authHandler: auth.handler,
-      readSession: (headers: Headers) => auth.api.getSession({ headers, returnHeaders: true }),
+      readSession: createSessionReader(auth),
       ensureGuestProfile: makeEnsureGuestProfile({ uow, profiles: createGuestProfileRepository() }),
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity).fetch, config.HOST, config.PORT, logger)

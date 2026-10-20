@@ -3,6 +3,7 @@ import type { GoogleConfig } from './config.ts'
 import type { Database } from './db/client.ts'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { APIError } from 'better-auth/api'
 import { emailOTP } from 'better-auth/plugins'
 import { account, rateLimit, session, user, verification } from '../modules/identity/adapters/schema.ts'
 
@@ -33,6 +34,19 @@ export function signInCodeLanguage(acceptLanguage: string | null | undefined): S
   return first === 'de' || first.startsWith('de-') ? 'de' : 'en'
 }
 
+// The emailOTP plugin mounts all of these. Only send and sign-in are ours. check-verification-otp reads the try
+// count, compares and then writes count + 1 without a lock, so concurrent guesses race past allowedAttempts,
+// while sign-in consumes the try atomically. The rest belong to password and email-change flows that stay off.
+export const disabledAuthPaths = [
+  '/email-otp/check-verification-otp',
+  '/email-otp/verify-email',
+  '/email-otp/request-password-reset',
+  '/forget-password/email-otp',
+  '/email-otp/reset-password',
+  '/email-otp/request-email-change',
+  '/email-otp/change-email',
+]
+
 const sessionSeconds = 7 * 24 * 60 * 60
 const sessionRefreshSeconds = 24 * 60 * 60
 
@@ -55,6 +69,9 @@ export function createAuth({ db, baseUrl, secret, google, sendSignInCode, logger
       },
     },
     telemetry: { enabled: false },
+    disabledPaths: disabledAuthPaths,
+    // An OAuth error sends the browser to the SPA's sign-in page with ?error=<code>, not to Better Auth's HTML page.
+    onAPIError: { errorURL: `${origin}/sign-in` },
     advanced: {
       database: { generateId: 'uuid' },
       // Better Auth skips both checks when NODE_ENV is test, so they are set rather than left to the default.
@@ -72,7 +89,7 @@ export function createAuth({ db, baseUrl, secret, google, sendSignInCode, logger
       cookieCache: { enabled: false },
     },
     // trustedProviders stays empty: Google joins an existing user only when it reports the email as verified.
-    account: { accountLinking: { trustedProviders: [] } },
+    account: { accountLinking: { trustedProviders: [] }, encryptOAuthTokens: true },
     // Off outside production by default, and two Fly machines need the counters in Postgres, per IP.
     rateLimit: { enabled: true, storage: 'database' },
     socialProviders: google ? { google: { clientId: google.clientId, clientSecret: google.clientSecret } } : {},
@@ -95,3 +112,18 @@ export function createAuth({ db, baseUrl, secret, google, sendSignInCode, logger
 }
 
 export type Auth = ReturnType<typeof createAuth>
+
+// What `authenticate` reads sessions with. Better Auth throws a 401 when a refresh finds the session deleted
+// meanwhile, and its error carries the header that clears the cookie. That is a signed-out request, not a 500.
+export function createSessionReader(auth: Pick<Auth, 'api'>) {
+  return async (headers: Headers) => {
+    try {
+      return await auth.api.getSession({ headers, returnHeaders: true })
+    }
+    catch (error) {
+      if (error instanceof APIError && error.statusCode === 401)
+        return { headers: new Headers(error.headers as ConstructorParameters<typeof Headers>[0]), response: null }
+      throw error
+    }
+  }
+}

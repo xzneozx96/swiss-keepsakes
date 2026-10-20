@@ -1,7 +1,7 @@
 import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
-import type { Actor, AuthenticateDeps } from './authenticate.ts'
+import type { Actor, AuthenticateDeps, GuestActor } from './authenticate.ts'
 import { STATUS_CODES } from 'node:http'
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { healthSchema, meSchema } from '@sk/api-contract'
@@ -9,13 +9,13 @@ import { bodyLimit } from 'hono/body-limit'
 import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
 import { IdempotencyKeyTaken } from '../idempotency.ts'
-import { authenticate } from './authenticate.ts'
+import { authenticate, requireGuest } from './authenticate.ts'
 import { idempotencyKeyInUse } from './idempotency.ts'
 import { isErrorStatus, problem } from './problem.ts'
 import { problemResponses, requestIdHeader } from './responses.ts'
 
 export interface AppEnv {
-  Variables: RequestIdVariables & { logger: Logger, actor: Actor }
+  Variables: RequestIdVariables & { logger: Logger, actor: Actor, guest: GuestActor }
 }
 
 // Better Auth's handler for /api/auth/* (D8) and what the actor needs from its session.
@@ -100,6 +100,7 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
   // Better Auth serves /api/auth/* in its own error shape (D8), outside the contract.
   app.all('/api/auth/*', c => identity.authHandler(c.req.raw))
   app.use('/api/*', authenticate(identity))
+  app.use('/api/me', requireGuest)
 
   app.openapi(healthRoute, async (c) => {
     const report = await checkHealth()
@@ -110,10 +111,7 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
   })
 
   app.openapi(meRoute, async (c) => {
-    const actor = c.get('actor')
-    if (actor.kind !== 'guest')
-      return problem(c, { type: 'unauthenticated', status: 401, title: 'Sign in to continue' })
-    return c.json({ guestId: actor.guestId }, 200)
+    return c.json({ guestId: c.get('guest').guestId }, 200)
   })
 
   app.notFound(c => problem(c, { type: 'not-found', status: 404, title: 'Not found' }))

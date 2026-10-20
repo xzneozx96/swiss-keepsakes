@@ -1,18 +1,20 @@
 import type { MailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import type { GoogleConfig } from '../../src/platform/config.ts'
 import { randomUUID } from 'node:crypto'
+import { linkOAuthAccount } from 'better-auth/oauth2'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { makeEnsureGuestProfile } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
-import { createAuth } from '../../src/platform/auth.ts'
+import { createAuth, createSessionReader, disabledAuthPaths } from '../../src/platform/auth.ts'
 import { systemClock } from '../../src/platform/clock.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createApp } from '../../src/platform/http/app.ts'
 import { startJobs } from '../../src/platform/jobs/boss.ts'
 import { createJobQueue } from '../../src/platform/jobs/queue.ts'
+import { startMain } from '../support/process.ts'
 import { count, openTestDatabase, silentLogger } from './support.ts'
 
 const { pool, db } = openTestDatabase()
@@ -49,13 +51,13 @@ async function setup({ google, baseUrl = origin }: { google?: GoogleConfig, base
   })
   const app = createApp(silentLogger, async () => ({ database: true, jobs: true }), {
     authHandler: auth.handler,
-    readSession: headers => auth.api.getSession({ headers, returnHeaders: true }),
+    readSession: createSessionReader(auth),
     ensureGuestProfile: makeEnsureGuestProfile({ uow, profiles: createGuestProfileRepository() }),
   })
 
   // Each call gets its own client address unless it names one, because the code routes allow 3 calls a minute per address.
-  async function call(path: string, init: { method?: string, body?: object, headers?: Record<string, string>, ip?: string } = {}) {
-    const headers: Record<string, string> = { 'fly-client-ip': init.ip ?? randomIp(), ...init.headers }
+  async function call(path: string, init: { method?: string, body?: object, headers?: Record<string, string>, ip?: string | null } = {}) {
+    const headers: Record<string, string> = { ...(init.ip === null ? {} : { 'fly-client-ip': init.ip ?? randomIp() }), ...init.headers }
     if (init.method && init.method !== 'GET')
       headers.Origin = headers.Origin ?? baseUrl
     if (init.body)
@@ -81,7 +83,7 @@ async function setup({ google, baseUrl = origin }: { google?: GoogleConfig, base
     return { response, cookie }
   }
 
-  return { auth, call, email, requestCode, signIn, queues }
+  return { auth, call, email, requestCode, signIn, queues, uow }
 }
 
 function randomIp() {
@@ -116,11 +118,16 @@ describe('[E2.2] sign-in with an emailed code, on the real Better Auth handler',
     expect(french.job?.data.language).toBe('en')
   })
 
-  it('[E2.2] the N01 job is dropped after an hour if unsent, and deleted an hour after it finishes', async () => {
-    const { email, requestCode } = await setup()
-    const { job } = await requestCode(email())
+  it('[E2.2] the N01 job cannot outlive its code: 2 retries 20 seconds apart, dropped after 5 minutes, deleted an hour after it finishes', async () => {
+    const { email, requestCode, queues } = await setup()
+    const address = email()
+    await requestCode(address)
+    const { rows } = await pool.query(
+      `select retry_limit, retry_delay, retry_backoff, expire_seconds, deletion_seconds, extract(epoch from keep_until - created_on)::int as retention_seconds from pgboss.job where name = $1 and data->>'to' = $2`,
+      [queues.send, address],
+    )
 
-    expect(job).toMatchObject({ deletion_seconds: 3600, retention_seconds: 3600 })
+    expect(rows).toEqual([{ retry_limit: 2, retry_delay: 20, retry_backoff: false, expire_seconds: 60, deletion_seconds: 3600, retention_seconds: 300 }])
   })
 
   it('[E2.2] only a sign-in code is mailed: the other code types of a known user queue nothing', async () => {
@@ -237,8 +244,10 @@ describe('[E2.2] sessions and the actor', () => {
 
     expect(me.status).toBe(200)
     expect(me.headers.getSetCookie().join('\n')).toMatch(/Max-Age=604800/i)
-    const { rows } = await pool.query<{ days: number }>(`select extract(epoch from expires_at - now())::int / 86400 as days from identity.session where user_id = (select id from identity."user" where email = $1)`, [address])
-    expect(rows[0]?.days).toBe(7)
+    const { rows } = await pool.query<{ seconds: number }>(`select extract(epoch from expires_at - now())::int as seconds from identity.session where user_id = (select id from identity."user" where email = $1)`, [address])
+    // Renewed from 5 days left to 7, less the time the request took, which is longer against a remote database.
+    expect(rows[0]?.seconds).toBeGreaterThan(6 * 86400 + 86000)
+    expect(rows[0]?.seconds).toBeLessThanOrEqual(7 * 86400)
   })
 
   it('[E2.2] the guest profile is created on the first authenticated call, and ten parallel first calls create one', async () => {
@@ -366,5 +375,96 @@ describe('[E2.2] rate limits keep their counters in Postgres, per client address
       statuses.push((await call('/api/auth/email-otp/send-verification-otp', { method: 'POST', body: { email: email(), type: 'sign-in' } })).status)
 
     expect(statuses).toEqual([200, 200, 200, 200])
+  })
+})
+
+describe('[E2.2] review fixes', () => {
+  it.each(disabledAuthPaths)('[E2.2] POST %s answers 404, so only sign-in can consume a code and its 3 tries hold', async (path) => {
+    const { call } = await setup()
+    const response = await call(`/api/auth/${path.slice(1)}`, { method: 'POST', body: { email: 'a@example.ch', otp: '123456', type: 'sign-in' } })
+
+    expect(response.status).toBe(404)
+  })
+
+  it('[E2.2] concurrent wrong guesses are never counted past 3, and the code is dead after them', async () => {
+    const { call, email, requestCode } = await setup()
+    const address = email()
+    const { job } = await requestCode(address)
+    const wrong = job?.data.params.code === '000000' ? '111111' : '000000'
+    const guesses: Promise<Response>[] = []
+    for (let i = 0; i < 8; i++)
+      guesses.push(call('/api/auth/sign-in/email-otp', { method: 'POST', body: { email: address, otp: wrong } }))
+    const answers = await Promise.all(guesses)
+    const { rows } = await pool.query<{ value: string }>('select value from identity.verification where identifier = $1', [`sign-in-otp-${address}`])
+    // A row that is gone means the code was used up: the fourth look at a spent code consumes it for good.
+    const counted = rows[0] ? Number(rows[0].value.split(':').pop()) : 3
+    const right = await call('/api/auth/sign-in/email-otp', { method: 'POST', body: { email: address, otp: job?.data.params.code } })
+
+    expect(answers.every(answer => answer.status === 400 || answer.status === 403)).toBe(true)
+    expect(counted).toBeLessThanOrEqual(3)
+    if (counted === 3)
+      expect([400, 403]).toContain(right.status)
+  })
+
+  it('[E2.2] an expired session gets 401 and the response clears its cookie', async () => {
+    const { call, email, signIn } = await setup()
+    const address = email()
+    const { cookie } = await signIn(address)
+    await pool.query(`update identity.session set expires_at = now() - interval '1 second' where user_id = (select id from identity."user" where email = $1)`, [address])
+    const response = await call('/api/me', { headers: { Cookie: cookie } })
+
+    expect(response.status).toBe(401)
+    expect(response.headers.getSetCookie().join('\n')).toMatch(/session_token=;.*Max-Age=0/i)
+  })
+
+  it('[E2.2] in production without Fly-Client-IP every caller shares one rate limit bucket, so the header must be present on Fly (E2.9)', async () => {
+    const productionUrl = 'https://keepsakes.example'
+    const run = startMain({ ROLE: 'api', HOST: '127.0.0.1', PORT: '0', DATABASE_URL: inject('databaseUrl'), DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled'), NODE_ENV: 'production', BETTER_AUTH_URL: productionUrl })
+    await run.waitFor('started')
+    const port = run.find('api listening')?.port
+    const statuses = []
+    const addresses = []
+    for (let i = 0; i < 4; i++) {
+      const address = `shared-bucket-${randomUUID().slice(0, 8)}@example.ch`
+      addresses.push(address)
+      const response = await fetch(`http://127.0.0.1:${port}/api/auth/email-otp/send-verification-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Origin': productionUrl }, body: JSON.stringify({ email: address, type: 'sign-in' }) })
+      statuses.push(response.status)
+    }
+    const { rows } = await pool.query(`select key, count from identity.rate_limit where key like 'no-trusted-ip%'`)
+    run.child.kill('SIGTERM')
+    await run.exited
+
+    expect(statuses).toEqual([200, 200, 200, 429])
+    expect(rows).toEqual([{ key: 'no-trusted-ip|/email-otp/send-verification-otp', count: 3 }])
+  }, 60_000)
+
+  it('[E2.2] a stored Google token is encrypted', async () => {
+    const { auth, email, signIn } = await setup()
+    const address = email()
+    await signIn(address)
+    const { rows: [found] } = await pool.query<{ id: string }>('select id from identity."user" where email = $1', [address])
+    const linked = await linkOAuthAccount({ context: await auth.$context } as never, {
+      link: { userId: found?.id ?? '', email: address },
+      userInfo: { id: 'google-account-1', email: address, name: 'Anna', emailVerified: true },
+      account: { providerId: 'google', accountId: 'google-account-1', accessToken: 'plain-access-token', refreshToken: 'plain-refresh-token' },
+      profile: {},
+      scopes: ['openid'],
+    } as never)
+    const { rows: [stored] } = await pool.query<{ access_token: string, refresh_token: string }>('select access_token, refresh_token from identity.account where account_id = $1', ['google-account-1'])
+
+    expect(linked).toEqual({ linked: true })
+    expect(stored?.access_token).toBeTruthy()
+    expect(stored?.access_token).not.toBe('plain-access-token')
+    expect(stored?.refresh_token).not.toBe('plain-refresh-token')
+  })
+
+  it('[E2.2] an OAuth error redirects to the SPA sign-in page with the error code, not to Better Auth\'s error page', async () => {
+    const { call } = await setup({ google: { clientId: 'client-id.apps.googleusercontent.com', clientSecret: 'client-secret-for-tests' } })
+    const response = await call('/api/auth/callback/google?error=access_denied&state=x')
+
+    expect(response.status).toBe(302)
+    const location = new URL(response.headers.get('location') ?? '')
+    expect(`${location.origin}${location.pathname}`).toBe(`${origin}/sign-in`)
+    expect(location.searchParams.get('error')).toBeTruthy()
   })
 })
