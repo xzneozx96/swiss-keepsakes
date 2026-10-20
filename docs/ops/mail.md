@@ -9,6 +9,10 @@ Mail goes over SMTP (architecture D12). A business command queues a `mail` job a
 - `SMTP_SECURE=true` uses TLS from the first byte (port 465). `SMTP_SECURE=false` upgrades with STARTTLS (port 587), and the service refuses a server that does not offer it, so the password never travels in clear.
 - Local and staging use the owner's test SMTP account (Gmail). Gmail sends only from the signed-in account and limits daily sending, so it suits tests only. Production uses the store's own mail host, which is still open (Q15).
 
+## The sign-in code mail (N01)
+
+Better Auth queues N01 for each emailed sign-in code, in the language the SPA sent in `Accept-Language`, or English (`api/src/platform/auth.ts`). The request does not wait for SMTP. The job holds the plain code, because the worker renders it later. A job that is still unsent after 1 hour is dropped, and a finished job is deleted after 1 hour. The code itself is useless after 5 minutes. pg-boss's dead-letter copy of a failed N01 job keeps the code for that queue's own retention, so never paste `pgboss.job` data into a ticket.
+
 ## Retries and the alert
 
 - The `mail` queue retries a failed attempt 5 times with exponential backoff from 30 s. The last attempt runs about 15 to 30 minutes after the first.

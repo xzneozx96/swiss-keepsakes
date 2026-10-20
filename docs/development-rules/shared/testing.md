@@ -42,6 +42,8 @@ Database tests are built (E1.9). They live in `api/test/integration/` and run wi
 
 Mail tests are built (E2.8). Use the in-memory `Mailer` in `api/test/support/memory-mailer.ts`. It records each message, and `failWith` makes every send fail like an SMTP server. Render tests check each template in EN and DE with its data and recipient (`api/test/application/notifications/`). `api/test/integration/mail.test.ts` runs the `mail` job on real pg-boss, each test on its own queues with fast retries. The live suite, `pnpm --filter @sk/api test:smtp-live`, sends to the test inbox only. Its files end in `.live.ts`, so `pnpm test` and CI never run it (`docs/ops/mail.md`).
 
+Auth tests are built (E2.2). `api/test/integration/auth.test.ts` runs the real Better Auth handler through `createApp` on real Postgres. It reads each sign-in code from the queued N01 job and gives every call its own `Fly-Client-IP`, because the code routes allow 3 calls a minute per address. Better Auth skips its origin check under `NODE_ENV=test`, which Vitest sets, so `createAuth` turns it on explicitly and a test proves it.
+
 The contract gate is built (E1.10). `api/test/contract.test.ts` builds `packages/api-contract/generated/` in memory from the API routes and fails when the committed files differ, so `pnpm test` runs it. After you change a route or a schema, run `pnpm contract:build` and commit the result. The gate is `pnpm test` plus `pnpm typecheck`: the test compares the files, lists the routes and checks the problem bodies, and the type check proves that the generated client's types equal the Zod types and that `problem()` refuses an unknown code or a status under 400.
 
 | Level | Proves | Tool |
