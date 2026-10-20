@@ -3,7 +3,7 @@ import type { GoogleConfig } from './config.ts'
 import type { Database } from './db/client.ts'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { APIError } from 'better-auth/api'
+import { APIError, createAuthMiddleware, isAPIError } from 'better-auth/api'
 import { emailOTP } from 'better-auth/plugins'
 import { account, rateLimit, session, user, verification } from '../modules/identity/adapters/schema.ts'
 
@@ -47,6 +47,20 @@ export const disabledAuthPaths = [
   '/email-otp/change-email',
 ]
 
+// D8: no token reaches browser JavaScript. Better Auth puts the session token in some response bodies (`token` in the
+// sign-in answer, `session.token` in get-session) although the HttpOnly cookie already carries it, and the SPA reads
+// the cookie's session from get-session without it. Only a key named exactly `token` goes, at the top and in `session`.
+// Set-Cookie headers are not touched.
+function withoutToken(body: Record<string, unknown>): Record<string, unknown> {
+  const { token: _top, ...rest } = body
+  const session = rest.session
+  if (typeof session === 'object' && session !== null && !Array.isArray(session) && 'token' in session) {
+    const { token: _nested, ...kept } = session as Record<string, unknown>
+    return { ...rest, session: kept }
+  }
+  return rest
+}
+
 const sessionSeconds = 7 * 24 * 60 * 60
 const sessionRefreshSeconds = 24 * 60 * 60
 
@@ -70,6 +84,14 @@ export function createAuth({ db, baseUrl, secret, google, sendSignInCode, logger
     },
     telemetry: { enabled: false },
     disabledPaths: disabledAuthPaths,
+    hooks: {
+      after: createAuthMiddleware(async (ctx) => {
+        const returned = ctx.context.returned
+        const isBody = typeof returned === 'object' && returned !== null && !Array.isArray(returned) && !(returned instanceof Response) && !isAPIError(returned)
+        if (isBody && ('token' in returned || ('session' in returned && typeof returned.session === 'object' && returned.session !== null && 'token' in returned.session)))
+          return ctx.json(withoutToken(returned as Record<string, unknown>))
+      }),
+    },
     // An OAuth error sends the browser to the SPA's sign-in page with ?error=<code>, not to Better Auth's HTML page.
     onAPIError: { errorURL: `${origin}/sign-in` },
     advanced: {
