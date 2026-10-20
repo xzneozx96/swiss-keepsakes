@@ -625,7 +625,7 @@ A money or status change isn't finished until a test shows the ledger and the au
   - rotating the webhook secret
 - **Security.**
   - The guest and staff session is an HttpOnly first-party cookie, `Secure` and `SameSite=Lax`, which Better Auth checks on every request. No token reaches browser JavaScript, and nothing about the session goes into `localStorage`.
-  - Every state-changing request under `/api/` passes an `Origin` check (section 9).
+  - One rule checks `Origin` on every POST, PUT, PATCH and DELETE under `/api/`, and `/webhooks/stripe` is excluded by name (section 9).
   - `better-auth` pinned at 1.7.7 or later, with its security advisories watched (R13).
   - The partner session cookie is httpOnly and `SameSite=Lax`, scoped to `/partner` and `/api/partner`, with an `Origin` check on mutations.
   - A Content Security Policy on the SPA.
