@@ -3,14 +3,19 @@
     "target": "ES2022",
     "lib": ["ES2022"],
     "types": [],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "rewriteRelativeImportExtensions": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noEmit": true,
     "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    // The API runs this package from dist/ (sk-compiled). Node 22.18 and later strip types by default and
+    // would run this source without a word if the flag were missing.
+    "erasableSyntaxOnly": true,
     "skipLibCheck": true
   },
   "include": ["src", "tests"]

@@ -63,6 +63,16 @@ export const mailEn = {
   'mail.N23.staff':
     'Order {orderRef} was cancelled automatically: the first payment wasn’t made by {dueAt}.',
   'mail.N23.stock': 'The items it held are back in stock.',
+  'mail.invitation.expiry': 'The link works for 7 days.',
+  'mail.invitation.ignore':
+    'If you didn’t expect this invitation, you can ignore this email.',
+  'mail.N18.subject': '{inviter} invited you to {store}',
+  'mail.N18.invited': '{inviter} invited you to join {store} as Store Manager.',
+  'mail.N18.accept': 'Open the invitation, sign in and accept it: {link}',
+  'mail.N20.subject': 'You’re invited to open {store}',
+  'mail.N20.invited': 'You’re invited to run {store} as its Owner.',
+  'mail.N20.setup':
+    'Open the invitation, sign in and complete the steps your store needs before it can sell: {link}',
 
   'tourMail.greeting': 'Hello {guest},',
   'tourMail.seller': 'Seller: {seller}',
