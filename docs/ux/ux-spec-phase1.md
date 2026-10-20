@@ -494,7 +494,7 @@ Email gửi khách dùng ngôn ngữ khách đã chọn lúc đặt. Email nội
 | N21 | Thanh toán của khách thành công | Owner, Manager | Đơn chuyển "Đang chuẩn bị" |
 | N22 | Có khoản thu bất thường cho booking đã hết hiệu lực | Khách; Owner, Manager | Thông báo tình trạng đối soát/hoàn tiền theo kết quả provider; không báo booking đã xác nhận hay mặc định yêu cầu merchant tìm chỗ |
 | N23 | Đơn hàng hóa tự hủy vì quá hạn trả khoản đầu | Khách; Owner, Manager | Mã đơn, lý do và hạn đã hết; khách có thể gửi yêu cầu mới để xác nhận lại ngày nhận, các đơn khác không bị ảnh hưởng |
-| N24 | Xác nhận xóa tài khoản (thêm ngày 20.10.2026) | Khách chưa có mật khẩu | Link xác nhận yêu cầu xóa tài khoản. Nội dung EN và DE sẽ viết sau |
+| N24 | Xác nhận xóa tài khoản (thêm ngày 20.10.2026) | Khách chưa có mật khẩu | Link xác nhận yêu cầu xóa tài khoản. Khách chưa đăng nhập thì mở C05, đăng nhập xong quay lại bước xác nhận xóa. Nội dung EN và DE sẽ viết sau |
 
 ---
 
