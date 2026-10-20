@@ -26,6 +26,7 @@ docker run --rm "$image" sh -ec '
   test -z "$(find /app -name ".env*" -not -path "*/node_modules/*")"
   test -f packages/api-contract/dist/src/index.js
   test -f packages/i18n/dist/src/en.js
+  test -f packages/domain/dist/src/identity/index.js
   echo "uid $(id -u), no dev dependency, no env file"'
 
 echo '== release command'

@@ -6,6 +6,7 @@
 !.pnpmfile.cjs
 !api/
 !packages/api-contract/
+!packages/domain/
 !packages/i18n/
 
 # Never send installs, build output, tests or local env files, even from the allowed folders.
@@ -14,3 +15,4 @@
 **/.env*
 **/*.local
 api/test
+packages/domain/tests
