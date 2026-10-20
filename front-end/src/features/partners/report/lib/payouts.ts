@@ -1,6 +1,6 @@
 import type { Rappen } from '@sk/domain/catalog'
 import type { DateRange } from './report'
-import type { DemoData } from '@/features/demo/types'
+import type { QueriedData } from '@/features/demo/types'
 import type { LedgerEntry } from '@/features/partners/lib/ledger'
 
 import { zurichDate } from '@sk/domain/catalog'
@@ -32,7 +32,7 @@ export interface PeriodMoney {
  */
 export function periodMoney(
   data: Pick<
-    DemoData,
+    QueriedData,
     'orders' | 'tours' | 'commissionAdjustments' | 'partnerPayouts'
   >,
   partnerId: string,

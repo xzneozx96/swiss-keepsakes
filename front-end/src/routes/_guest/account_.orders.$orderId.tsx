@@ -15,7 +15,7 @@ import { BackButton } from '@/components/layout/cart-button'
 import { useLocale } from '@/contexts/locale-context'
 import { SignInPrompt } from '@/features/auth/components/account-profile'
 import { useRequireSignIn } from '@/features/auth/hooks/use-require-sign-in'
-import { useDemo } from '@/features/demo'
+import { useDemoSelector } from '@/features/demo'
 import { OrderDetail } from '@/features/transactions/order-detail/components/order-detail'
 import {
   useOrderDetail,
@@ -42,7 +42,7 @@ export const Route = createFileRoute('/_guest/account_/orders/$orderId')({
 function OrderDetailPage() {
   const { orderId } = Route.useParams()
   const { t } = useLocale()
-  const { state } = useDemo()
+  const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
@@ -69,7 +69,7 @@ function OrderDetailPage() {
         <header className="flex h-14 items-center pt-[env(safe-area-inset-top,0px)]">
           <BackButton label={t('guestOrder.back')} onPress={back} />
         </header>
-        {state.data.signedInGuestId
+        {signedInGuestId
           ? (
               <EmptyState
                 action={{ label: t('guestOrder.notFound.action'), to: '/account' }}

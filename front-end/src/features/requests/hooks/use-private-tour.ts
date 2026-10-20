@@ -1,11 +1,9 @@
-import type { PrivateTourRequest } from '@sk/domain/requests'
-
 import { looksLikeEmail } from '@sk/domain/requests'
 import { useLocale } from '@/contexts/locale-context'
 
-import { useDemoActions, useDemoSelector } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
-import { mailPrivateTourRequest } from '../lib/request-mail'
+import { useGuests } from '@/features/account/api/queries'
+import { useSubmit } from '@/features/data-client'
+import { useDemoSelector } from '@/features/demo'
 
 export interface PrivateTourInput {
   groupSize: number
@@ -34,14 +32,21 @@ export const GROUP_MAX = 50
  */
 export function usePrivateTour() {
   const { language } = useLocale()
-  const { update } = useDemoActions()
-  const guests = useDemoSelector(s => s.data.guests)
+  const { submit, isPending } = useSubmit('requests', 'sendPrivateTourRequest')
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
-  const guest = guests.find(g => g.id === signedInGuestId)
+  const guest = useGuests(guests => guests.find(g => g.id === signedInGuestId))
 
   return {
     defaultEmail: guest?.email ?? '',
-    send: (input: PrivateTourInput): PrivateTourResult => {
+    isSending: isPending,
+    /**
+     * Checks the input and sends it. `onSent` runs once the request is stored, so C22's sent
+     * screen can show it; a tap while one is on its way returns null and does nothing.
+     */
+    send: (
+      input: PrivateTourInput,
+      onSent: (requestId: string) => void,
+    ): PrivateTourResult | null => {
       const email = input.email.trim()
       const errors: PrivateTourErrors = {}
 
@@ -57,32 +62,21 @@ export function usePrivateTour() {
       const dateFrom = input.dateFrom as string
       const requestId = `pt-${Date.now().toString(36)}`
 
-      update((s) => {
-        const request: PrivateTourRequest = {
+      // N17 to the Owner and the Manager; the guest gets no email (A2).
+      const sent = submit(
+        {
           id: requestId,
-          sentAt: demoNow(s.clockStartedAt).toISOString(),
           language,
           email,
           groupSize: Math.min(GROUP_MAX, Math.max(GROUP_MIN, input.groupSize)),
           dateFrom,
           dateTo: input.dateTo ?? dateFrom,
           interests: input.interests.trim(),
-        }
+        },
+        { onSuccess: () => onSent(requestId) },
+      )
 
-        // N17 to the Owner and the Manager; the guest gets no email (A2).
-        return mailPrivateTourRequest(
-          {
-            ...s,
-            data: {
-              ...s.data,
-              privateTourRequests: [...s.data.privateTourRequests, request],
-            },
-          },
-          request,
-        )
-      })
-
-      return { ok: true, requestId }
+      return sent ? { ok: true, requestId } : null
     },
   }
 }

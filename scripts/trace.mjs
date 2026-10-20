@@ -3,7 +3,7 @@
 //
 //   node scripts/trace.mjs <plan.md> [--tests <dir>]... [--status <status.json>] [--verbose]
 //
-// Test titles are matched by [E<n>.<n>] on test() and it() calls under e2e, packages, api and scripts, skipping
+// Test titles are matched by [E<n>.<n>] on test() and it() calls under e2e, packages, api, scripts and front-end/tests, skipping
 // node_modules and scripts/fixtures. A tag on a describe() title counts for every test() and it() inside that block. A test in a folder with a playwright.config.ts counts once per project in that config,
 // so a test that runs in English and German counts 2. Statuses come from status.json beside the plan;
 // a missing file makes every story Backlog.
@@ -158,7 +158,7 @@ function main(argv) {
     return 2;
   }
   const plan = resolve(positional[0]);
-  const testRoots = flag("--tests").length ? flag("--tests").map((p) => resolve(p)) : ["e2e", "packages", "api", "scripts"].map((d) => join(repoRoot, d));
+  const testRoots = flag("--tests").length ? flag("--tests").map((p) => resolve(p)) : ["e2e", "packages", "api", "scripts", "front-end/tests"].map((d) => join(repoRoot, d));
   const statusPath = flag("--status")[0] ? resolve(flag("--status")[0]) : join(dirname(plan), "status.json");
 
   let result;

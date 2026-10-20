@@ -5,6 +5,7 @@ import type {
   TourData,
   TourDraft,
   TourParticipants,
+  TourRecords,
 } from '@sk/domain/bookings'
 import type { MailParams } from '@sk/domain/notifications'
 import type { Language } from '@/contexts/locale-context'
@@ -135,7 +136,7 @@ export function missingParticipantInfo(
 
 /** The guest's own hold on this departure that is still running, if any. */
 export function activeHold(
-  data: TourData,
+  data: TourRecords,
   guestId: string,
   departureId: string,
   now: Date,

@@ -1,7 +1,7 @@
 import type { LocalizedText } from '@sk/domain/catalog'
 import type { Order, OrderLine } from '@sk/domain/orders'
 import type { Language } from '@/contexts/locale-context'
-import type { DemoState } from '@/features/demo/types'
+import type { DemoData, DemoState } from '@/features/demo/types'
 
 import {
   groupCartIntoOrders,
@@ -10,6 +10,17 @@ import {
 } from '@sk/domain/orders'
 import { sendMail } from '@/features/notifications/mail'
 import { attributedPartnerId } from '@/features/partners/referral'
+
+/** What a request reads: the browser's cart and sign-in, and the shop's gifts, orders and partner visits. */
+export type CartData = Pick<
+  DemoData,
+  | 'cart'
+  | 'signedInGuestId'
+  | 'nextOrderNumber'
+  | 'products'
+  | 'orders'
+  | 'referralVisits'
+>
 
 export interface CheckoutContext {
   /** Demo time (features/demo/clock.ts). */
@@ -64,10 +75,9 @@ function joinedPolicy(texts: LocalizedText[]): LocalizedText {
  * same however often it runs.
  */
 export function buildOrderDrafts(
-  state: DemoState,
+  data: CartData,
   ctx: Pick<CheckoutContext, 'now' | 'language'>,
 ): Order[] {
-  const { data } = state
   const at = ctx.now.toISOString()
   const partnerId = attributedPartnerId(data.referralVisits, ctx.now)
 
@@ -118,9 +128,7 @@ export function buildOrderDrafts(
  * request reserves nothing (AC05), so the check compares all ticked lines (one variant can
  * sit in two orders) with the units not yet held by accepted orders.
  */
-export function sendBlock(state: DemoState, now: Date): SendBlock | null {
-  const { data } = state
-
+export function sendBlock(data: CartData, now: Date): SendBlock | null {
   const chosen = selectedCartLines(data.cart)
 
   if (chosen.length === 0)
@@ -179,10 +187,10 @@ export function createOrdersFromCart(
   state: DemoState,
   ctx: CheckoutContext,
 ): DemoState {
-  if (sendBlock(state, ctx.now))
+  if (sendBlock(state.data, ctx.now))
     return state
 
-  const orders = buildOrderDrafts(state, ctx)
+  const orders = buildOrderDrafts(state.data, ctx)
   const at = ctx.now.toISOString()
   let next: DemoState = {
     ...state,

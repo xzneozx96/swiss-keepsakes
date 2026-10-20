@@ -28,7 +28,7 @@ See `heroui-and-styling.md`.
 
 ## State and storage
 
-- Mock data lives in the demo store (`front-end/src/features/demo/demo-store.tsx`), saved to `localStorage` under keys that start with `sk.`.
+- Mock data lives in the demo store (`front-end/src/features/demo/store.ts`), saved to `localStorage` under keys that start with `sk.`. Screens read shop data through the `DataClient` and TanStack Query, not from the store (`api-integration.md`).
 - Read and write storage only through `front-end/src/lib/storage.ts`.
 
 ## Known traps

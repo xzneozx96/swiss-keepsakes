@@ -47,30 +47,33 @@ function ReviewScreen() {
   if (!view)
     return <Navigate replace to="/cart" />
 
+  // A direct visit may be signed out: sign in first; the guest then sends with a second tap.
+  const handleSend = () => {
+    if (!signedIn) {
+      requireSignIn()
+
+      return
+    }
+    const sending = send(
+      orderIds =>
+        void navigate({
+          to: '/cart/sent',
+          search: { orders: orderIds.join(',') },
+          replace: true,
+        }),
+    )
+
+    if (sending)
+      setSent(true)
+  }
+
   return (
     <>
       <ReviewView
         {...view}
         onBack={toCart}
         onEditCart={toCart}
-        // A direct visit may be signed out: sign in first; the guest then sends with a second tap.
-        onSend={() => {
-          if (!signedIn) {
-            requireSignIn()
-
-            return
-          }
-          const ids = send()
-
-          if (!ids)
-            return
-          setSent(true)
-          void navigate({
-            to: '/cart/sent',
-            search: { orders: ids.join(',') },
-            replace: true,
-          })
-        }}
+        onSend={handleSend}
       />
       {signInSheet}
     </>

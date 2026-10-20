@@ -4,7 +4,8 @@ import { zurichDate } from '@sk/domain/catalog'
 
 import { dateTimeFormat, formatShortDate, numberFormat, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoNow, useDemoSelector } from '@/features/demo'
+import { useDemoNow } from '@/features/demo'
+import { useReviews } from '@/features/reviews/api/queries'
 import { avatarUrl } from '@/lib/avatars'
 
 /**
@@ -62,7 +63,7 @@ export function useProductReviews(
   options: { kind: 'gift' | 'tour' } = { kind: 'gift' },
 ): ProductReviews {
   const { t, language, intlLocale } = useLocale()
-  const demoReviews = useDemoSelector(s => s.data.reviews)
+  const demoReviews = useReviews()
   const now = useDemoNow()
 
   const reviews = demoReviews

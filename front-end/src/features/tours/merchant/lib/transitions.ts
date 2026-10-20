@@ -1,4 +1,9 @@
-import type { ExternalTourPayment, TourBooking, TourData } from '@sk/domain/bookings'
+import type {
+  ExternalTourPayment,
+  TourBooking,
+  TourData,
+  TourRecords,
+} from '@sk/domain/bookings'
 import type { Language } from '@/contexts/locale-context'
 import type { DemoState, Role } from '@/features/demo/types'
 
@@ -254,7 +259,7 @@ export function cancelOverdueBookings(
 }
 
 /** True when the overdue check would cancel something; lets screens skip a no-op update. */
-export function hasOverdueToCancel(data: TourData, now: Date): boolean {
+export function hasOverdueToCancel(data: TourRecords, now: Date): boolean {
   return data.bookings.some(b => balanceOverdue(b, now)?.stage === 'cancel')
 }
 

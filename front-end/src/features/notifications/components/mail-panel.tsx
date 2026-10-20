@@ -2,7 +2,7 @@ import { Button, Drawer, Tabs } from '@heroui/react'
 import { lazy, Suspense, useState } from 'react'
 
 import { EmailIcon } from '@/components/icons'
-import { useDemo } from '@/features/demo'
+import { useMail } from '@/features/notifications/api/queries'
 
 const MailList = lazy(() =>
   import('./mail-list').then(module => ({ default: module.MailList })),
@@ -14,9 +14,8 @@ const MailList = lazy(() =>
  * stays in English like the rest of the prototype bar; the emails themselves do not.
  */
 export function MailPanel() {
-  const { state } = useDemo()
+  const mail = useMail()
   const [open, setOpen] = useState(false)
-  const mail = state.data.mail
   const guestMail = mail.filter(m => m.to === 'guest').reverse()
   const staffMail = mail.filter(m => m.to === 'staff').reverse()
   const partnerMail = mail.filter(m => m.to === 'partner').reverse()

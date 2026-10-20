@@ -1,9 +1,10 @@
 import { isPublished, isSoldOut } from '@sk/domain/catalog'
 import { useLocale } from '@/contexts/locale-context'
+import { useProducts } from '@/features/catalog/api/queries'
 import { ProductCard } from '@/features/catalog/components/product-card'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { useDemoSelector } from '@/features/demo'
 import { Rail } from '@/features/discovery/components/section'
+import { useOrders } from '@/features/orders/api/queries'
 
 /** Guests see at most this many linked keepsakes. */
 export const MAX_TOUR_KEEPSAKES = 3
@@ -23,8 +24,8 @@ export function TourKeepsakes({
   variant?: 'page' | 'confirmation'
 }) {
   const { t } = useLocale()
-  const orders = useDemoSelector(s => s.data.orders)
-  const demoProducts = useDemoSelector(s => s.data.products)
+  const orders = useOrders()
+  const demoProducts = useProducts()
   const toCard = useProductCard()
   const products = (ids ?? [])
     .map(id => demoProducts.find(p => p.id === id))

@@ -3,8 +3,9 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 
 import { useLocale } from '@/contexts/locale-context'
 
-import { useDemo } from '@/features/demo'
+import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
+import { useOrders } from '@/features/orders/api/queries'
 import { useOrderActions } from '@/features/orders/hooks/use-orders'
 import { cancelBlock } from '@/features/orders/lib/transitions'
 import { addSampleOrders } from '../lib/sample-orders'
@@ -15,14 +16,14 @@ import { addSampleOrders } from '../lib/sample-orders'
  * C15 state until the request, merchant and payment steps can produce them.
  */
 export function OrderDetailDemoControl({ onDone }: { onDone: () => void }) {
-  const { state, update } = useDemo()
+  const { update } = useDemoActions()
+  const signedIn = useDemoSelector(s => !!s.data.signedInGuestId)
   const { language } = useLocale()
   const navigate = useNavigate()
   const actions = useOrderActions()
   const { orderId } = useParams({ strict: false })
-  const order = state.data.orders.find(o => o.id === orderId)
+  const order = useOrders(orders => orders.find(o => o.id === orderId))
   const canExpire = !!order && !cancelBlock(order, 'overdue')
-  const signedIn = !!state.data.signedInGuestId
 
   return (
     <div className="flex flex-col gap-2">

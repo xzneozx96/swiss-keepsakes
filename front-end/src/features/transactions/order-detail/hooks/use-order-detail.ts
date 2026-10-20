@@ -18,8 +18,10 @@ import { formatMoney, pickText, pickupDay } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
 import { useLocale } from '@/contexts/locale-context'
 import { useCart } from '@/features/cart/hooks/use-cart'
+import { usePickupPlaces, useProducts } from '@/features/catalog/api/queries'
 import { shop } from '@/features/catalog/seed'
-import { useDemo } from '@/features/demo'
+import { useDemoSelector } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
 import {
   useOrderActions,
   useOrderSummary,
@@ -131,17 +133,18 @@ function upcomingKeys(order: Order): MessageKey[] {
 
 /** The signed-in guest's own order, or undefined (other guests' orders stay private, spec §1.7). */
 export function useOwnOrder(orderId: string): Order | undefined {
-  const { state } = useDemo()
+  const guestId = useDemoSelector(s => s.data.signedInGuestId)
 
-  return state.data.orders.find(
-    o => o.id === orderId && o.guestId === state.data.signedInGuestId,
+  return useOrders(orders =>
+    orders.find(o => o.id === orderId && o.guestId === guestId),
   )
 }
 
 /** C15 Order detail: both labels, the state's notice and actions, pickup, money, log, policy. */
 export function useOrderDetail(order: Order): OrderDetailView {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const products = useProducts()
+  const places = usePickupPlaces()
   const actions = useOrderActions()
   const cart = useCart()
   const navigate = useNavigate()
@@ -152,10 +155,8 @@ export function useOrderDetail(order: Order): OrderDetailView {
   const pick = (text: Partial<Record<'en' | 'de', string>>) =>
     pickText(text, language).text
   const payment = (id: string) => order.payments.find(p => p.id === id)
-  const products = state.data.products
   const [first, ...rest] = order.lines
   const firstName = pick(first.productName)
-  const places = state.data.pickupPlaces
   const place = places.find(p => p.id === order.pickupPlaceId)
   const status = order.status
   const closed = status === 'declined' || status === 'cancelled'

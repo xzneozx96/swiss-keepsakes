@@ -6,36 +6,33 @@ import type {
 } from '@sk/domain/bookings'
 import type {
   ExternalPaymentInput,
-  StaffContext,
   TourOutcome,
 } from '../merchant/lib/transitions'
-import type { DemoState } from '@/features/demo/types'
 import type { Outcome } from '@/features/payment/hooks/use-payment'
 
 import { availableSeats, bookingAmountDue } from '@sk/domain/bookings'
 import { useLocale } from '@/contexts/locale-context'
+import { useCommand } from '@/features/data-client'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
+import { useReferralVisits } from '@/features/partners/api/queries'
 import { attributedPartnerId } from '@/features/partners/referral'
 
 import { useSharedClock } from '@/hooks/use-shared-clock'
+import { useTourRecords } from '../api/queries'
+import { changeWithMails } from '../booking/booking-changes'
 import {
   activeHold,
-  addBooking,
   applyProviderResult,
-  bookingMails,
   expireLapsedHolds,
   missingParticipantInfo,
   newBooking,
   openPayment,
 } from '../booking/transitions'
-import { mailTourGuest, mailTourStaff } from '../merchant/lib/mail'
 import {
   cancelOverdueBookings,
   externalPaymentBlock,
   outcomeBlock,
-  recordExternalPayment,
-  recordOutcome,
   sendTourReminders,
   skipPastBalanceDeadline,
 } from '../merchant/lib/transitions'
@@ -45,18 +42,24 @@ const PHONE_SHAPE = /^\+?[\d ()-]{8,}$/
 
 const fallback = createTourSeed()
 
+/** The guest's booking in progress: browser state, kept in the store so a refresh keeps it. */
+export function useTourDraft(): TourDraft {
+  return useDemoSelector(s => s.data.tours?.draft ?? fallback.draft)
+}
+
 /** Only a countdown needs "second"; every other screen reads the clock to the minute. */
 export function useTours(precision: 'minute' | 'second' = 'minute') {
-  const tours = useDemoSelector(s => s.data.tours)
+  const data = useTourRecords()
+  const draft = useTourDraft()
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const guestId = useDemoSelector(s => s.data.signedInGuestId)
   const role = useDemoSelector(s => s.role)
   const tick = useSharedClock(precision === 'second' ? 1_000 : 60_000)
-  const data = tours ?? fallback
 
   return {
     data,
     ...data,
+    draft,
     now: demoNow(clockStartedAt, tick),
     guestId,
     role,
@@ -65,55 +68,41 @@ export function useTours(precision: 'minute' | 'second' = 'minute') {
 
 export function useTourActions() {
   const { update } = useDemoActions()
-  const tours = useDemoSelector(s => s.data.tours)
+  const { mutate: addBooking } = useCommand('tours', 'createBooking')
+  const { mutate: payBooking } = useCommand('tours', 'pay')
+  const { mutate: recordBookingPayment } = useCommand('tours', 'recordPayment')
+  const { mutate: recordBookingOutcome } = useCommand('tours', 'recordOutcome')
+  const records = useTourRecords()
+  const draft = useTourDraft()
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
-  const referralVisits = useDemoSelector(s => s.data.referralVisits)
+  const referralVisits = useReferralVisits()
   const staffRole = useDemoSelector(s => s.role)
   const { language } = useLocale()
-  const currentData = tours ?? fallback
   const now = () => demoNow(clockStartedAt)
-  const change = (recipe: (data: typeof currentData) => typeof currentData) =>
+  // The draft, and the demo's provider, jobs and clock below, change the store directly; the
+  // store bridge refreshes the screens. Guest and staff actions go through the data client.
+  const change = (recipe: (data: TourData) => TourData) =>
     update(s => ({
       ...s,
       data: { ...s.data, tours: recipe(s.data.tours ?? createTourSeed()) },
     }))
   const updateDraft = (patch: Partial<TourDraft>) =>
     change(data => ({ ...data, draft: { ...data.draft, ...patch } }))
-  /** A tour change plus the emails it calls for, in one update (spec §6, worker C's helpers). */
   const changeAndMail = (id: string, recipe: (data: TourData) => TourData) =>
-    update((s) => {
-      const before = s.data.tours ?? createTourSeed()
-      const after = recipe(before)
-      const was = before.bookings.find(b => b.id === id)
-      const is = after.bookings.find(b => b.id === id)
-      const at = demoNow(s.clockStartedAt)
-      const next: DemoState = { ...s, data: { ...s.data, tours: after } }
-
-      if (!is || is === was)
-        return next
-
-      return bookingMails(was, is).reduce(
-        (mailed, mail) =>
-          mail.to === 'staff'
-            ? mailTourStaff(
-                mailed,
-                is,
-                mail.template,
-                at,
-                language,
-                mail.params,
-              )
-            : mailTourGuest(mailed, is, mail.template, at, mail.params),
-        next,
-      )
-    })
-  const createBooking = ():
-    { bookingId: string } | { error: string, bookingId?: string } => {
-    const draft = currentData.draft
+    update(s => changeWithMails(s, id, recipe, language))
+  /**
+   * Checks the draft and sends the booking. Returns why it cannot be sent, or null when it was
+   * sent; `onStored` runs once the command answered and `onFailed` if it failed, and only while
+   * the screen is still open.
+   */
+  const createBooking = (
+    onStored: (booking: { id: string, added: boolean }) => void,
+    onFailed: () => void,
+  ): { error: string, bookingId?: string } | null => {
     const guestId = signedInGuestId
-    const tour = currentData.tours.find(t => t.id === draft.tourId)
-    const departure = currentData.departures.find(
+    const tour = records.tours.find(t => t.id === draft.tourId)
+    const departure = records.departures.find(
       d => d.id === draft.departureId && d.tourId === draft.tourId,
     )
 
@@ -135,13 +124,13 @@ export function useTourActions() {
     ) {
       return { error: 'participants' }
     }
-    const held = activeHold(currentData, guestId, departure.id, now())
+    const held = activeHold(records, guestId, departure.id, now())
 
     if (held)
       return { error: 'held', bookingId: held.id }
     if (
       draft.adults + draft.children
-      > availableSeats(currentData, departure.id, now())
+      > availableSeats(records, departure.id, now())
     ) {
       return { error: 'capacity' }
     }
@@ -160,11 +149,17 @@ export function useTourActions() {
       now: now(),
     })
 
-    // Rechecked on the latest state: if the seats went meanwhile, nothing is added and the
-    // review page reports it (it waits for the booking to appear before leaving).
-    changeAndMail(booking.id, data => addBooking(data, booking, now()))
+    // Rechecked on the latest data: if the seats went meanwhile, nothing is added and the review
+    // page reports it.
+    addBooking(
+      { booking, language },
+      {
+        onSuccess: added => onStored({ id: booking.id, added }),
+        onError: onFailed,
+      },
+    )
 
-    return { bookingId: booking.id }
+    return null
   }
   const modify = (id: string, recipe: (b: TourBooking) => TourBooking) =>
     change(data => ({
@@ -172,37 +167,17 @@ export function useTourActions() {
       bookings: data.bookings.map(b => (b.id === id ? recipe(b) : b)),
     }))
   const expireHolds = () => change(data => expireLapsedHolds(data, now()))
-  const startPayment = (b: TourBooking, outcome: Outcome): TourBooking => {
-    if (
-      ['expired', 'cancelled', 'completed', 'no_show'].includes(b.status)
-      || b.payments.some(p => p.status === 'processing')
-      || bookingAmountDue(b) <= 0
-    ) {
-      return b
-    }
-    const at = now().toISOString()
-    const payment = {
-      id: crypto.randomUUID(),
-      amount: bookingAmountDue(b),
-      method: 'online',
-      status: outcome,
-      at,
-    } as const
-    const next = {
-      ...b,
-      payments: [...b.payments, payment],
-      activity: [
-        ...b.activity,
-        { at, event: `payment-${outcome}`, actor: 'guest' },
-      ],
-    }
-
-    return outcome === 'succeeded' && b.status === 'pending_payment'
-      ? { ...next, status: 'confirmed', holdUntil: null }
-      : next
-  }
-  const pay = (id: string, outcome: Outcome): TourActionResult => {
-    const booking = currentData.bookings.find(b => b.id === id)
+  /**
+   * `onPaid` runs once the payment is stored and `onFailed` if it was not, and only while the
+   * screen is still open.
+   */
+  const pay = (
+    id: string,
+    outcome: Outcome,
+    onPaid: () => void,
+    onFailed: () => void,
+  ): TourActionResult => {
+    const booking = records.bookings.find(b => b.id === id)
 
     if (
       !booking
@@ -225,12 +200,10 @@ export function useTourActions() {
 
     if (amount <= 0)
       return { ok: false, reason: 'paid' }
-    changeAndMail(id, data => ({
-      ...data,
-      bookings: data.bookings.map(b =>
-        b.id === id ? startPayment(b, outcome) : b,
-      ),
-    }))
+    payBooking(
+      { id, outcome, language },
+      { onSuccess: onPaid, onError: onFailed },
+    )
 
     return { ok: true }
   }
@@ -240,7 +213,7 @@ export function useTourActions() {
     outcome: 'succeeded' | 'failed',
     paidAt?: string,
   ): TourActionResult => {
-    const booking = currentData.bookings.find(b => b.id === id)
+    const booking = records.bookings.find(b => b.id === id)
     const payment = booking && openPayment(booking)
 
     if (!payment)
@@ -259,7 +232,7 @@ export function useTourActions() {
   }
   /** Prototype provider: sends its last answer again; an answered payment ignores it. */
   const repeatProviderResult = (id: string): TourActionResult => {
-    const booking = currentData.bookings.find(b => b.id === id)
+    const booking = records.bookings.find(b => b.id === id)
     const last = [...(booking?.payments ?? [])]
       .reverse()
       .find(p => p.method === 'online' && p.status !== 'processing')
@@ -273,37 +246,32 @@ export function useTourActions() {
 
     return { ok: false, reason: 'already-recorded' }
   }
-  // Merchant actions (steps 2.11–2.14): guard on the screen's state, then the pure
-  // transition re-checks inside `update`, so a stale screen or double tap changes nothing.
-  const staffContext = (s: DemoState): StaffContext => ({
-    now: demoNow(s.clockStartedAt),
-    role: s.role,
-    language,
-  })
+  // Merchant actions (steps 2.11–2.14): guard on the screen's data, then the command re-checks
+  // on the latest data, so a stale screen or double tap changes nothing.
   const recordPayment = (
     id: string,
     input: ExternalPaymentInput,
   ): TourActionResult => {
-    const booking = currentData.bookings.find(b => b.id === id)
+    const booking = records.bookings.find(b => b.id === id)
     const block = booking
       ? externalPaymentBlock(booking, input, staffRole, now())
       : { code: 'unavailable' }
 
     if (block)
       return { ok: false, reason: block.code }
-    update(s => recordExternalPayment(s, id, input, staffContext(s)))
+    recordBookingPayment({ id, payment: input, language })
 
     return { ok: true }
   }
   const outcome = (id: string, result: TourOutcome): TourActionResult => {
-    const booking = currentData.bookings.find(b => b.id === id)
+    const booking = records.bookings.find(b => b.id === id)
     const block = booking
       ? outcomeBlock(booking, result, staffRole, now())
       : { code: 'unavailable' }
 
     if (block)
       return { ok: false, reason: block.code }
-    update(s => recordOutcome(s, id, result, staffContext(s)))
+    recordBookingOutcome({ id, result, language })
 
     return { ok: true }
   }

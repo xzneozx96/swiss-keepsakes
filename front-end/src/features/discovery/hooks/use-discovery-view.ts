@@ -8,13 +8,16 @@ import { isPublished, isSoldOut } from '@sk/domain/catalog'
 
 import { STORY_CATEGORIES } from '@sk/domain/content'
 import { useLocale } from '@/contexts/locale-context'
+import { useProducts } from '@/features/catalog/api/queries'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
+import { useArticles } from '@/features/content/api/queries'
 import { publishedArticles } from '@/features/content/lib/articles'
 import {
   ALL_STORIES_PHOTO,
   storyCategoryPhoto,
 } from '@/features/content/lib/categories'
-import { useDemoSelector } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { timeBlockStories } from '../seed'
 
 const STORIES_ON_HOME = 6
@@ -22,10 +25,10 @@ const STORIES_ON_HOME = 6
 /** Builds the discovery home from the catalogue, the stories, the tours and the language. */
 export function useDiscoveryView(): DiscoveryHomeView {
   const { t, language, intlLocale } = useLocale()
-  const demoArticles = useDemoSelector(s => s.data.articles)
-  const orders = useDemoSelector(s => s.data.orders)
-  const products = useDemoSelector(s => s.data.products)
-  const demoTours = useDemoSelector(s => s.data.tours)
+  const demoArticles = useArticles()
+  const orders = useOrders()
+  const products = useProducts()
+  const demoTours = useTourRecords()
 
   const available = products.filter(
     p => isPublished(p) && !isSoldOut(p, orders),

@@ -19,7 +19,9 @@ import { useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 
 import { useCart } from '@/features/cart/hooks/use-cart'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { usePickupPlaces, useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
 import {
   closeCartToast,
   forgetCartToast,
@@ -41,15 +43,16 @@ export function useGiftDetail(
   slug: string,
 ): Omit<GiftDetailProps, 'onBack'> | null {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
   const now = useDemoNow()
   const cart = useCart()
   const navigate = useNavigate()
   const { isFavourite, toggle } = useFavourites()
 
-  const product = state.data.products.find(p => p.slug === slug)
+  const product = useProducts(products => products.find(p => p.slug === slug))
   const reviews = useProductReviews(product?.id)
-  const { orders, pickupPlaces } = state.data
+  const orders = useOrders()
+  const pickupPlaces = usePickupPlaces()
+  const subcategories = useStoreSubcategories()
   // The first variant that can be requested starts selected.
   const [variantId, setVariantId] = useState<string | null>(
     () =>
@@ -146,7 +149,7 @@ export function useGiftDetail(
       : undefined
 
   const saved = isFavourite(product.id)
-  const category = state.data.subcategories.find(
+  const category = subcategories.find(
     c => c.id === product.subcategoryId,
   )
   // The places M12 set for this gift; none set (or none left) means every place (4.9).

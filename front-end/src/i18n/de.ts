@@ -75,6 +75,8 @@ export const de: Record<MessageKey, string> = {
   'placeholder.backToday': 'Zurück zu Heute',
   'notFound.message':
     'Diese Seite gibt es nicht. Sie wurde im Prototyp eventuell verschoben.',
+  'routeError.message': 'Diese Ansicht konnte nicht geladen werden.',
+  'routeError.retry': 'Erneut versuchen',
 
   'home.hello': 'Grüezi und herzlich willkommen!',
   'home.heroTitle':

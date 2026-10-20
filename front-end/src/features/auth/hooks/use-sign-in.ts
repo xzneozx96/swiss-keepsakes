@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
+import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { sendMail } from '@/features/notifications/mail'
 import { demoGuest } from '@/features/orders/seed'
@@ -37,7 +37,8 @@ interface CodeStep {
  * caller, so closing the sheet to read N01 in the Mail panel keeps the code step.
  */
 export function useSignIn(onSignedIn: () => void) {
-  const { state, update } = useDemo()
+  const { update } = useDemoActions()
+  const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const { language } = useLocale()
   const [email, setEmail] = useState(demoGuest.email)
   const [emailError, setEmailError] = useState(false)
@@ -71,7 +72,7 @@ export function useSignIn(onSignedIn: () => void) {
 
   const sendCode = (to: string) => {
     const now = Date.now()
-    const sentAt = demoNow(state.clockStartedAt, now)
+    const sentAt = demoNow(clockStartedAt, now)
     // Shown only in the N01 email; any 6 digits sign in (see the codes above).
     const mailedCode = String(Math.floor(100_000 + Math.random() * 900_000))
 
@@ -113,7 +114,7 @@ export function useSignIn(onSignedIn: () => void) {
     if (value.length !== CODE_LENGTH)
       return
 
-    const age = demoNow(state.clockStartedAt).getTime() - codeStep.sentAt
+    const age = demoNow(clockStartedAt).getTime() - codeStep.sentAt
 
     if (value === EXPIRED_CODE || age > CODE_LIFETIME_MS) {
       setCodeStep({ ...codeStep, status: 'expired' })

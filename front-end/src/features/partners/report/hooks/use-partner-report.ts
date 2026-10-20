@@ -32,9 +32,14 @@ import {
 import { useMemo } from 'react'
 import { ClockIcon, PartnersIcon, PayLaterIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useGuests } from '@/features/account/api/queries'
+import { useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
+import { useDemoNow } from '@/features/demo'
 import { DEMO_HISTORY } from '@/features/merchant/today/lib/demo-history'
+import { useOrders } from '@/features/orders/api/queries'
 import { formatLabel } from '@/features/orders/lib/labels'
+import { useCommissionAdjustments, usePartnerPayouts, usePartners } from '@/features/partners/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { periodMoney } from '../lib/payouts'
 import {
   partnerAllTime,
@@ -98,15 +103,19 @@ export function usePartnerReport(
   range?: DateRange,
 ) {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const partners = usePartners()
+  const orders = useOrders()
+  const guests = useGuests()
+  const products = useProducts()
+  const subcategories = useStoreSubcategories()
+  const tours = useTourRecords()
+  const commissionAdjustments = useCommissionAdjustments()
+  const partnerPayouts = usePartnerPayouts()
   const now = useDemoNow()
   const today = zurichDate(now)
   const day = anchor ?? today
-  const partner
-    = state.data.partners.find(p => p.id === partnerId)
-      ?? state.data.partners[0]
-  const { orders, guests, products, subcategories, tours } = state.data
-  const tourBookings = state.data.tours?.bookings
+  const partner = partners.find(p => p.id === partnerId) ?? partners[0]
+  const tourBookings = tours.bookings
   // The 1.9s demo history counts here too (owner review 1.9t), so the all-time card and the
   // period report agree; only while the demo has orders, as on M02.
   const withHistory = useMemo(
@@ -146,7 +155,6 @@ export function usePartnerReport(
     () => partnerAllTime(withHistory, partner.id, today, tourBookings),
     [withHistory, partner.id, today, tourBookings],
   )
-  const { commissionAdjustments, partnerPayouts } = state.data
   // Payouts, refunds and offsets from the M15/M16 ledger (step 5.7), so P02 matches M16.
   const moneyIn = useMemo(
     () =>

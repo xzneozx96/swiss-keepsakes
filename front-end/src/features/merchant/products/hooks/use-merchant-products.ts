@@ -5,9 +5,11 @@ import { availableUnits, fromPrice, giftText, isPublished, languageStatus, missi
 
 import { formatMoney, numberFormat, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoActions, useDemoNow } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
-import { createTourSeed } from '@/features/tours/seed'
+import { usePickupPlaces, useProducts, useStoreSubcategories } from '@/features/catalog/api/queries'
+import { useCommand } from '@/features/data-client'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 
 export interface ProductRow {
   id: string
@@ -55,10 +57,12 @@ function upcomingCount(
 /** M11 rows for the three tabs, in the seed's order (the shop's own order). */
 export function useMerchantProducts() {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
   const now = useDemoNow()
-  const { products, subcategories, orders, pickupPlaces } = state.data
-  const tourData = state.data.tours ?? createTourSeed()
+  const products = useProducts()
+  const subcategories = useStoreSubcategories()
+  const orders = useOrders()
+  const pickupPlaces = usePickupPlaces()
+  const tourData = useTourRecords()
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const percent = numberFormat(intlLocale, {
     style: 'percent',
@@ -158,38 +162,13 @@ export type ProductKind = 'gift' | 'tour'
  * bookings that point at it are kept. Restoring brings it back as a draft to publish again.
  */
 export function useProductArchive() {
-  const { update } = useDemoActions()
+  const { mutate: setProductArchived } = useCommand('catalog', 'setProductArchived')
+  const { mutate: setTourArchived } = useCommand('tours', 'setTourArchived')
 
-  const set = (kind: ProductKind, id: string, archive: boolean) =>
-    update((s) => {
-      const at = archive ? demoNow(s.clockStartedAt).toISOString() : undefined
-
-      if (kind === 'gift') {
-        return {
-          ...s,
-          data: {
-            ...s.data,
-            products: s.data.products.map(p =>
-              p.id === id ? { ...p, archivedAt: at, published: false } : p,
-            ),
-          },
-        }
-      }
-      const tours = s.data.tours ?? createTourSeed()
-
-      return {
-        ...s,
-        data: {
-          ...s.data,
-          tours: {
-            ...tours,
-            tours: tours.tours.map(t =>
-              t.id === id ? { ...t, archivedAt: at, published: false } : t,
-            ),
-          },
-        },
-      }
-    })
+  const set = (kind: ProductKind, id: string, archived: boolean) =>
+    kind === 'gift'
+      ? setProductArchived({ id, archived })
+      : setTourArchived({ id, archived })
 
   return {
     archive: (kind: ProductKind, id: string) => set(kind, id, true),

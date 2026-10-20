@@ -1,7 +1,7 @@
 import type { Rappen } from '@sk/domain/catalog'
 import type { TripRecord } from '@sk/domain/orders'
 import type { TransactionRef } from '@sk/domain/partners'
-import type { DemoData } from '@/features/demo/types'
+import type { QueriedData } from '@/features/demo/types'
 
 import { bookingCommission } from '@sk/domain/bookings'
 import { zurichDayOf } from '@sk/domain/catalog'
@@ -93,7 +93,7 @@ function succeeded(payments: { status: string, amount: Rappen, at: string }[]) {
 
 /** Orders (with the generated history, D14) and tour bookings that became bookings. */
 export function reportTransactions(
-  data: Pick<DemoData, 'orders' | 'tours'>,
+  data: Pick<QueriedData, 'orders' | 'tours'>,
 ): ReportTx[] {
   const history = new Set(
     allOrders(data)

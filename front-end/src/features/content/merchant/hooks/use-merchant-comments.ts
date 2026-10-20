@@ -5,9 +5,11 @@ import { reviewerName } from '@sk/domain/catalog'
 
 import { dateTimeFormat } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
+import { useGuests } from '@/features/account/api/queries'
+import { useCommand } from '@/features/data-client'
+import { useDemoSelector } from '@/features/demo'
 import { avatarUrl } from '@/lib/avatars'
+import { useArticles, useComments } from '../../api/queries'
 import { publicStaffName } from '../lib/staff'
 
 export const COMMENT_FILTERS = ['notReplied', 'hidden'] as const
@@ -40,8 +42,13 @@ export interface CommentRowProps {
  */
 export function useMerchantComments(filter: CommentFilter[]) {
   const { t, intlLocale } = useLocale()
-  const { state, update } = useDemo()
-  const { comments, articles, guests } = state.data
+  const { mutate: setCommentHidden } = useCommand('content', 'setCommentHidden')
+  const { mutate: deleteComment } = useCommand('content', 'deleteComment')
+  const { mutate: replyAsShop } = useCommand('content', 'replyAsShop')
+  const comments = useComments()
+  const articles = useArticles()
+  const guests = useGuests()
+  const role = useDemoSelector(s => s.role)
   const time = dateTimeFormat(intlLocale, {
     day: '2-digit',
     month: '2-digit',
@@ -95,12 +102,6 @@ export function useMerchantComments(filter: CommentFilter[]) {
     return row.canReply && !row.isShop && !row.hidden && !row.shopReplied
   }
 
-  const setComments = (fn: (list: ArticleComment[]) => ArticleComment[]) =>
-    update(s => ({
-      ...s,
-      data: { ...s.data, comments: fn(s.data.comments) },
-    }))
-
   return {
     rows: all.filter(
       row => !filter.length || filter.some(id => inFilter(row, id)),
@@ -111,31 +112,16 @@ export function useMerchantComments(filter: CommentFilter[]) {
       count: all.filter(row => inFilter(row, id)).length,
     })),
     total: all.length,
-    staffName: publicStaffName(state.role),
+    staffName: publicStaffName(role),
     setHidden: (id: string, hidden: boolean) =>
-      setComments(list =>
-        list.map(c => (c.id === id ? { ...c, hidden } : c)),
-      ),
-    remove: (id: string) =>
-      setComments(list =>
-        list.filter(c => c.id !== id && c.parentId !== id),
-      ),
+      setCommentHidden({ id, hidden }),
+    remove: (id: string) => deleteComment({ id }),
     reply: (parentId: string, text: string) => {
       const parent = byId.get(parentId)
 
       if (!parent || parent.parentId || !text.trim())
         return
-      const reply: ArticleComment = {
-        id: `c-${Date.now().toString(36)}`,
-        articleId: parent.articleId,
-        author: { kind: 'shop', staffName: publicStaffName(state.role) },
-        text: text.trim(),
-        createdAt: demoNow(state.clockStartedAt).toISOString(),
-        hidden: false,
-        parentId,
-      }
-
-      setComments(list => [...list, reply])
+      replyAsShop({ id: `c-${Date.now().toString(36)}`, parentId, text })
     },
   }
 }

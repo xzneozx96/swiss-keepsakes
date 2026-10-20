@@ -73,6 +73,8 @@ export const en = {
   'placeholder.backToday': 'Back to Today',
   'notFound.message':
     'This page does not exist. It may have moved in the prototype.',
+  'routeError.message': 'This screen could not load.',
+  'routeError.retry': 'Try again',
 
   'home.hello': 'Grüezi and welcome!',
   'home.heroTitle': 'Make yourself at home. I’ll show you the Luzerne I love.',

@@ -4,7 +4,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { EmptyState } from '@/components/empty-state'
 import { GiftIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
+import { useProducts } from '@/features/catalog/api/queries'
 import { EditorSkeleton } from '@/features/merchant/products/components/editor-parts'
 import { GiftEditor } from '@/features/merchant/products/components/gift-editor'
 import {
@@ -34,9 +34,10 @@ function GiftEditorPage() {
   const { step = 'basics' } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const { t } = useLocale()
-  const { state } = useDemo()
   const isLoading = useSimulatedLoading()
-  const product = state.data.products.find(p => p.id === productId)
+  const product = useProducts(products =>
+    products.find(p => p.id === productId),
+  )
 
   if (isLoading)
     return <EditorSkeleton />

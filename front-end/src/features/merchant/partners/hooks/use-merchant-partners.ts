@@ -4,10 +4,13 @@ import type { PartnerFilter } from '../lib/search-params'
 
 import { formatMoney, numberFormat } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
+import { useCommissionAdjustments, usePartnerPayouts, usePartners, useReferralVisits } from '@/features/partners/api/queries'
 import { canDeletePartner } from '@/features/partners/hooks/use-partner-actions'
 import { partnerLedger } from '@/features/partners/lib/ledger'
 import { linkOpens } from '@/features/partners/lib/link-opens'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { PARTNER_FILTERS } from '../lib/search-params'
 
 const WINDOW_MS = 30 * 24 * 60 * 60 * 1000
@@ -30,14 +33,26 @@ function inFilter(row: PartnerRowProps, filter: PartnerFilter) {
  */
 export function useMerchantPartners(filter: PartnerFilter[], query: string) {
   const { t, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const partners = usePartners()
+  const orders = useOrders()
+  const tours = useTourRecords()
+  const commissionAdjustments = useCommissionAdjustments()
+  const partnerPayouts = usePartnerPayouts()
+  const referralVisits = useReferralVisits()
+  const ledgerData = {
+    orders,
+    tours,
+    commissionAdjustments,
+    partnerPayouts,
+    referralVisits,
+  }
   const now = useDemoNow()
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const percent = numberFormat(intlLocale, {
     style: 'percent',
     maximumFractionDigits: 1,
   })
-  const opens = linkOpens(state.data)
+  const opens = linkOpens(ledgerData)
   const to = now.getTime()
   const from = to - WINDOW_MS
   const within = (at: string) => {
@@ -46,9 +61,9 @@ export function useMerchantPartners(filter: PartnerFilter[], query: string) {
     return ms >= from && ms <= to
   }
 
-  const all: PartnerRowProps[] = state.data.partners
+  const all: PartnerRowProps[] = partners
     .map((partner) => {
-      const ledger = partnerLedger(state.data, partner.id, now)
+      const ledger = partnerLedger(ledgerData, partner.id, now)
       const opens30 = opens.filter(
         o => o.partnerId === partner.id && within(o.at),
       ).length
@@ -72,7 +87,7 @@ export function useMerchantPartners(filter: PartnerFilter[], query: string) {
         toOffset: ledger.toOffset > 0 ? money(ledger.toOffset) : null,
         linkRevoked: partner.reportToken === null,
         isArchived: !!partner.archivedAt,
-        canDelete: canDeletePartner(state.data, partner.id),
+        canDelete: canDeletePartner(ledgerData, partner.id),
       }
     })
     .sort(
@@ -100,7 +115,7 @@ export function useMerchantPartners(filter: PartnerFilter[], query: string) {
       count: all.filter(row => inFilter(row, id)).length,
     })),
     activeCount: all.filter(row => !row.isArchived).length,
-    existingCodes: state.data.partners.map(p => p.code),
+    existingCodes: partners.map(p => p.code),
     total: all.length,
   }
 }

@@ -9,8 +9,13 @@ import { formatOrderDate, orderTotal } from '@sk/domain/orders'
 import { COST_TYPES, mondayOf } from '@sk/domain/reporting'
 import { calendarDay, dateTimeFormat, formatMoney, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useGuests } from '@/features/account/api/queries'
+import { useProducts } from '@/features/catalog/api/queries'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
 import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
+import { useCosts } from '@/features/reports/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { COST_FILTERS } from '../lib/search-params'
 
 /** Weeks in the completeness chart, ending with the running week. */
@@ -69,18 +74,20 @@ function addDays(iso: string, days: number) {
  */
 export function useCostData(filter: CostFilter, week: string | null) {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const costs = useCosts()
+  const storedProducts = useProducts()
+  const tourRecords = useTourRecords()
+  const guests = useGuests()
+  const storedOrders = useOrders()
   const now = useDemoNow()
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
-  const records = new Map(
-    state.data.costs.map(r => [transactionKey(r.transaction), r]),
-  )
-  const products = new Map(state.data.products.map(p => [p.id, p]))
-  const tours = new Map((state.data.tours?.tours ?? []).map(x => [x.id, x]))
+  const records = new Map(costs.map(r => [transactionKey(r.transaction), r]))
+  const products = new Map(storedProducts.map(p => [p.id, p]))
+  const tours = new Map(tourRecords.tours.map(x => [x.id, x]))
   const guestName = (id: string) =>
-    state.data.guests.find(g => g.id === id)?.name ?? ''
+    guests.find(g => g.id === id)?.name ?? ''
 
-  const orders = allOrders(state.data)
+  const orders = allOrders({ orders: storedOrders })
     .filter(o => o.status === 'completed' && o.completedAt)
     .map(o => ({
       transaction: { kind: 'order' as const, id: o.id },
@@ -96,7 +103,7 @@ export function useCostData(filter: CostFilter, week: string | null) {
       guest: guestName(o.guestId),
       total: orderTotal(o),
     }))
-  const bookings = (state.data.tours?.bookings ?? [])
+  const bookings = tourRecords.bookings
     .filter(b => b.status === 'completed')
     .map(b => ({
       transaction: { kind: 'booking' as const, id: b.id },

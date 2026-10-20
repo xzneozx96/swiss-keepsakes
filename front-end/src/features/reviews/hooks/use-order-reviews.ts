@@ -5,7 +5,12 @@ import { buildReview, reviewId } from '@sk/domain/catalog'
 
 import { pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useGuests } from '@/features/account/api/queries'
+import { useProducts } from '@/features/catalog/api/queries'
+import { useCommand } from '@/features/data-client'
+import { useDemoNow, useDemoSelector } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
+import { useReviews } from '@/features/reviews/api/queries'
 
 export interface ReviewableProduct {
   productId: string
@@ -36,14 +41,19 @@ export interface OrderReviews {
  */
 export function useOrderReviews(order: Order): OrderReviews {
   const { language } = useLocale()
-  const { state, update } = useDemo()
+  const { mutate: addReview } = useCommand('reviews', 'addReview')
+  const storedProducts = useProducts()
+  const reviews = useReviews()
+  const orders = useOrders()
+  const guests = useGuests()
+  const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   const now = useDemoNow()
   const seen = new Set<string>()
   const products = order.lines
     .filter(line => !seen.has(line.productId) && seen.add(line.productId))
     .map((line) => {
       const id = reviewId(order.id, line.productId)
-      const product = state.data.products.find(p => p.id === line.productId)
+      const product = storedProducts.find(p => p.id === line.productId)
 
       return {
         productId: line.productId,
@@ -52,19 +62,18 @@ export function useOrderReviews(order: Order): OrderReviews {
         detail: pickText(line.variantLabel, language).text,
         photo: product?.photo,
         slug: product?.slug,
-        isReviewed: state.data.reviews.some(r => r.id === id),
+        isReviewed: reviews.some(r => r.id === id),
       }
     })
 
   const submit: OrderReviews['submit'] = (productId, rating, text) => {
-    const current = state.data
-    const latest = current.orders.find(o => o.id === order.id)
-    const guest = current.guests.find(g => g.id === latest?.guestId)
+    const latest = orders.find(o => o.id === order.id)
+    const guest = guests.find(g => g.id === latest?.guestId)
     const allowed
       = latest?.status === 'completed'
-        && latest.guestId === current.signedInGuestId
+        && latest.guestId === signedInGuestId
         && latest.lines.some(l => l.productId === productId)
-        && !current.reviews.some(r => r.id === reviewId(order.id, productId))
+        && !reviews.some(r => r.id === reviewId(order.id, productId))
 
     if (!allowed || !guest)
       return false
@@ -79,12 +88,7 @@ export function useOrderReviews(order: Order): OrderReviews {
       now,
     })
 
-    // Checked again inside the update so a double tap cannot add a second review.
-    update(s =>
-      s.data.reviews.some(r => r.id === review.id)
-        ? s
-        : { ...s, data: { ...s.data, reviews: [...s.data.reviews, review] } },
-    )
+    addReview({ review, purchase: { kind: 'order', id: order.id } })
 
     return true
   }

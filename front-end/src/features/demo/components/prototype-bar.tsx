@@ -22,9 +22,10 @@ import { useLocale } from '@/contexts/locale-context'
 // import { CartDemoControl } from "@/features/cart/components/cart-demo-control";
 // import { CheckoutDemoControl } from "@/features/checkout/components/checkout-demo-control";
 import { MailPanel } from '@/features/notifications/components/mail-panel'
+import { usePartners, useReferralVisits } from '@/features/partners/api/queries'
 import { attributedPartnerId } from '@/features/partners/referral'
 import { demoNow } from '../clock'
-import { useDemo } from '../demo-store'
+import { useDemoActions, useDemoSelector } from '../demo-store'
 // import { PaymentDemoControl } from "@/features/payment/components/payment-demo-control";
 // import { TourBookingDemoControl } from "@/features/tours/booking/booking-demo-control";
 // import { TransactionsDemoControl } from "@/features/transactions/components/transactions-demo-control";
@@ -78,11 +79,14 @@ const languages: { id: Language, label: string }[] = [
 ]
 
 export function PrototypeBar() {
-  const { state, setRole, reset } = useDemo()
-  const partners = state.data.partners
+  const { setRole, reset } = useDemoActions()
+  const role = useDemoSelector(s => s.role)
+  const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
+  const partners = usePartners()
+  const referralVisits = useReferralVisits()
   const { language, setLanguage } = useLocale()
   const navigate = useNavigate()
-  const current = roles.find(r => r.id === state.role) ?? roles[0]
+  const current = roles.find(r => r.id === role) ?? roles[0]
   const [open, setOpen] = useState(false)
   const [qrCode, setQrCode] = useState<string | null>(null)
 
@@ -107,10 +111,7 @@ export function PrototypeBar() {
     else void navigate({ to: '/' })
   }
 
-  const sourceId = attributedPartnerId(
-    state.data.referralVisits,
-    demoNow(state.clockStartedAt),
-  )
+  const sourceId = attributedPartnerId(referralVisits, demoNow(clockStartedAt))
   // Hash routing, so the scannable link is this deployment's origin plus #/r/{code}.
   const qrUrl = (code: string) =>
     `${window.location.origin}${window.location.pathname}#/r/${code}`
@@ -148,7 +149,7 @@ export function PrototypeBar() {
               <Drawer.Body className="flex flex-col gap-6">
                 <RadioGroup
                   name="role"
-                  value={state.role}
+                  value={role}
                   onChange={chooseRole}
                 >
                   <Label>View as</Label>

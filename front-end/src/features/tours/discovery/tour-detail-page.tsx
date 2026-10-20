@@ -27,12 +27,12 @@ import { ListingReviews } from '@/components/listings/listing-reviews'
 import { Media } from '@/components/media'
 import { PhotoGallery } from '@/components/photo-gallery'
 import { useLocale } from '@/contexts/locale-context'
+import { usePickupPlaces } from '@/features/catalog/api/queries'
 import { SellerRow } from '@/features/catalog/components/seller-row'
 import { StorySheet } from '@/features/catalog/components/story-sheet'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'
 import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
 import { shop } from '@/features/catalog/seed'
-import { useDemo } from '@/features/demo'
 import { ageBandLabels } from '@/features/tours/discovery/age-bands'
 import { MaintenanceNotice } from '@/features/tours/discovery/maintenance-notice'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
@@ -84,10 +84,9 @@ export function TourDetail({
   preview?: boolean
 }) {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
   const { data, now } = useTours()
   // The first pickup place is the shop itself, as on C03's seller row.
-  const shopPlace = state.data.pickupPlaces[0]
+  const shopPlace = usePickupPlaces(places => places[0])
   const navigate = useNavigate()
   const reviews = useProductReviews(`tour:${tour.id}`, { kind: 'tour' })
   const { saved, toggle } = useFavourite(`tour:${tour.id}`)

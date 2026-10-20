@@ -16,7 +16,9 @@ import {
   pickText,
 } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useGuests } from '@/features/account/api/queries'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
 import { formatLabel, progressLabel } from '@/features/orders/lib/labels'
 import {
   nextPickups,
@@ -52,9 +54,9 @@ const PICKUP_ROWS = 5
 /** M02 Today: task tiles, money widgets and next pickups, all derived from the demo orders. */
 export function useMerchantToday() {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
   const now = useDemoNow()
-  const { orders, guests } = state.data
+  const orders = useOrders()
+  const guests = useGuests()
   const today = zurichDate(now)
   const plural = new Intl.PluralRules(intlLocale)
   const isOne = (n: number) => plural.select(n) === 'one'

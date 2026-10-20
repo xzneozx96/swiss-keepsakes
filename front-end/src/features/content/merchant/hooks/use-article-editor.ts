@@ -1,4 +1,4 @@
-import type { Article, ArticleLink, ArticlePublication } from '@sk/domain/content'
+import type { ArticleLink, ArticlePublication } from '@sk/domain/content'
 import type {
   ArticleForm,
   BlockType,
@@ -15,8 +15,13 @@ import { pickText, slugify } from '@sk/domain/shared'
 
 import { useState } from 'react'
 
-import { useDemo } from '@/features/demo'
+import { useProducts } from '@/features/catalog/api/queries'
+import { useSubmit } from '@/features/data-client'
+import { useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
+import { useOrders } from '@/features/orders/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
+import { useArticles } from '../../api/queries'
 import { publishedArticles } from '../../lib/articles'
 import {
   emptyForm,
@@ -60,13 +65,25 @@ function sameLink(a: ArticleLink, b: ArticleLink) {
  * refresh drops them (outline side path "Refresh"). A new article is stored on its first save.
  */
 export function useArticleEditor(articleId: string, newLanguage: Language) {
-  const { state, update } = useDemo()
-  const { articles } = state.data
+  const role = useDemoSelector(s => s.role)
+  const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
+  const tours = useTourRecords()
+  const products = useProducts()
+  const orders = useOrders()
+  const { submit: createArticle, isPending: isCreating } = useSubmit(
+    'content',
+    'createArticle',
+  )
+  const { submit: updateArticle, isPending: isUpdating } = useSubmit(
+    'content',
+    'updateArticle',
+  )
+  const articles = useArticles()
   const stored = articles.find(a => a.id === articleId)
   const [form, setForm] = useState<ArticleForm>(() =>
     stored
       ? toForm(stored)
-      : emptyForm(newLanguage, defaultAuthor(state.role, newLanguage)),
+      : emptyForm(newLanguage, defaultAuthor(role, newLanguage)),
   )
   const [baseline, setBaseline] = useState(form)
   const [attempt, setAttempt] = useState<SaveMode | null>(null)
@@ -83,8 +100,8 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       ...f,
       language,
       author:
-        f.author.role === defaultAuthor(state.role, f.language).role
-          ? defaultAuthor(state.role, language)
+        f.author.role === defaultAuthor(role, f.language).role
+          ? defaultAuthor(role, language)
           : f.author,
       related: [],
     }))
@@ -139,31 +156,31 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
   // new ones can only be published items.
   const toOption = (link: ArticleLink): LinkOption => {
     if (link.kind === 'tour') {
-      const tour = state.data.tours?.tours.find(x => x.id === link.id)
+      const tour = tours.tours.find(x => x.id === link.id)
 
       return {
         link,
         name: tour ? pickText(tour.name, form.language).text : link.id,
         photo: tour?.photos[0],
-        hidden: isLinkHidden(state.data, link),
+        hidden: isLinkHidden({ tours, products }, link),
         soldOut: false,
       }
     }
-    const product = state.data.products.find(p => p.id === link.id)
+    const product = products.find(p => p.id === link.id)
 
     return {
       link,
       name: product ? pickText(product.name, form.language).text : link.id,
       photo: product?.photo,
-      hidden: isLinkHidden(state.data, link),
-      soldOut: product ? isSoldOut(product, state.data.orders) : false,
+      hidden: isLinkHidden({ tours, products }, link),
+      soldOut: product ? isSoldOut(product, orders) : false,
     }
   }
   const linkCandidates: LinkOption[] = [
-    ...state.data.products
+    ...products
       .filter(isPublished)
       .map(p => toOption({ kind: 'gift', id: p.id })),
-    ...(state.data.tours?.tours ?? [])
+    ...tours.tours
       .filter(x => x.published)
       .map(x => toOption({ kind: 'tour', id: x.id })),
   ]
@@ -230,96 +247,80 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       )
     : undefined
 
-  const now = () => demoNow(state.clockStartedAt).toISOString()
+  const now = () => demoNow(clockStartedAt).toISOString()
 
   /**
    * Validates for the mode, then stores the working copy with the given publication (or the
-   * current one). Returns the article id, or null when a field needs fixing.
+   * current one). Returns false when a field needs fixing. `onSaved` gets the article id once
+   * screens can read it, while the editor is still open.
    */
   const save = (
     mode: SaveMode,
     publication?: ArticlePublication,
-  ): string | null => {
+    onSaved?: (id: string) => void,
+  ): boolean => {
     setAttempt(mode)
     if (Object.keys(validate(form, mode)).length)
-      return null
+      return false
     const content = fromForm(form)
-    const at = now()
-    let id = stored?.id
+    const saved = (id: string) => {
+      setBaseline(form)
+      setAttempt(null)
+      onSaved?.(id)
+    }
 
     if (stored) {
-      update(s => ({
-        ...s,
-        data: {
-          ...s.data,
-          articles: s.data.articles.map(a =>
-            a.id === stored.id
-              ? {
-                  ...a,
-                  ...content,
-                  publication: publication ?? a.publication,
-                  updatedAt: at,
-                }
-              : a,
-          ),
-        },
-      }))
-    }
-    else {
-      const slug = uniqueValue(
-        slugify(content.title) || 'story',
-        new Set(articles.map(a => a.slug)),
+      updateArticle(
+        { id: stored.id, content, publication },
+        { onSuccess: () => saved(stored.id) },
       )
 
-      id = uniqueValue(
-        `${slug}-${content.language}`,
-        new Set(articles.map(a => a.id)),
-      )
-      const created: Article = {
+      return true
+    }
+    const slug = uniqueValue(
+      slugify(content.title) || 'story',
+      new Set(articles.map(a => a.slug)),
+    )
+    const id = uniqueValue(
+      `${slug}-${content.language}`,
+      new Set(articles.map(a => a.id)),
+    )
+
+    createArticle(
+      {
         ...content,
         id,
         slug,
         publication: publication ?? { status: 'draft' },
-        updatedAt: at,
-      }
+      },
+      { onSuccess: () => saved(id) },
+    )
 
-      update(s => ({
-        ...s,
-        data: { ...s.data, articles: [...s.data.articles, created] },
-      }))
-    }
-    setBaseline(form)
-    setAttempt(null)
-
-    return id ?? null
+    return true
   }
 
   /** The other language version as a draft copy of the saved one, to translate (R02). */
-  const addOtherVersion = (): string | null => {
+  const addOtherVersion = (onAdded: (id: string) => void) => {
     if (!stored || otherVersion)
-      return null
+      return
     const id = uniqueValue(
       `${stored.slug}-${otherLanguage}`,
       new Set(articles.map(a => a.id)),
     )
-    const copy: Article = {
-      ...structuredClone(stored),
-      id,
-      language: otherLanguage,
-      author: {
-        name: stored.author.name,
-        role: translateRole(stored.author.role, otherLanguage),
+
+    createArticle(
+      {
+        ...structuredClone(stored),
+        id,
+        language: otherLanguage,
+        author: {
+          name: stored.author.name,
+          role: translateRole(stored.author.role, otherLanguage),
+        },
+        publication: { status: 'draft' },
       },
-      publication: { status: 'draft' },
-      updatedAt: now(),
-    }
-
-    update(s => ({
-      ...s,
-      data: { ...s.data, articles: [...s.data.articles, copy] },
-    }))
-
-    return id
+      { onSuccess: () => onAdded(id) },
+    )
   }
 
   return {
@@ -342,9 +343,13 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       stored?.publication.status === 'published'
         ? stored.publication.publishedAt
         : null,
+    /** A save is on its way: the save buttons are off. */
+    isSaving: isCreating || isUpdating,
     save,
-    publish: () => save('publish', { status: 'published', publishedAt: now() }),
-    unpublish: () => save('draft', { status: 'draft' }),
+    publish: (onSaved?: (id: string) => void) =>
+      save('publish', { status: 'published', publishedAt: now() }, onSaved),
+    unpublish: (onSaved?: (id: string) => void) =>
+      save('draft', { status: 'draft' }, onSaved),
     addOtherVersion,
   }
 }

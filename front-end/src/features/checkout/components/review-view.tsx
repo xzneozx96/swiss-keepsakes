@@ -43,6 +43,8 @@ export interface ReviewViewProps {
     message: string
     actionLabel: string
   }
+  /** The request is on its way: the send button is off. */
+  isSending: boolean
   onBack: () => void
   onSend: () => void
   onEditCart: () => void
@@ -62,6 +64,7 @@ export function ReviewView({
   bar,
   breakdown,
   error,
+  isSending,
   onBack,
   onSend,
   onEditCart,
@@ -141,7 +144,7 @@ export function ReviewView({
           </button>
           <Chip>{bar.chip}</Chip>
         </div>
-        <Button fullWidth size="lg" onPress={onSend}>
+        <Button fullWidth isDisabled={isSending} size="lg" onPress={onSend}>
           {bar.sendLabel}
         </Button>
       </div>

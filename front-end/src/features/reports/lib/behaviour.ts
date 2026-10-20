@@ -1,6 +1,6 @@
 import type { DayRange } from '@sk/domain/reporting'
 import type { ReportTx } from './transactions'
-import type { DemoData } from '@/features/demo/types'
+import type { QueriedData } from '@/features/demo/types'
 
 import { zurichDayOf } from '@sk/domain/catalog'
 import { calendarDay } from '@sk/domain/shared'
@@ -50,7 +50,7 @@ export interface FunnelCounts {
  * paid and completed come from the sales themselves. Each step never exceeds the one before.
  */
 export function funnel(
-  data: Pick<DemoData, 'referralVisits'>,
+  data: Pick<QueriedData, 'referralVisits'>,
   txs: ReportTx[],
   range: DayRange,
   source: string,

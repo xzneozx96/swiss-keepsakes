@@ -3,9 +3,12 @@ import { zurichDate } from '@sk/domain/catalog'
 import { amountDueNow } from '@sk/domain/orders'
 import { formatMoney, formatShortDate, pickText } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoNow, useDemoSelector } from '@/features/demo'
+import { usePickupPlaces } from '@/features/catalog/api/queries'
+import { useDemoNow } from '@/features/demo'
+import { useMail } from '@/features/notifications/api/queries'
 import { renderMail } from '@/features/notifications/components/render-mail'
 import { useGuestOrders } from '@/features/orders/hooks/use-orders'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { isClosedOrder } from '@/features/transactions/hooks/use-transaction-row'
 import { useAccountPayments } from './use-account-payments'
 
@@ -17,9 +20,9 @@ const liveBooking = ['pending_payment', 'confirmed']
  */
 export function useAccountHub(guestId: string) {
   const { t, language, intlLocale } = useLocale()
-  const demoMail = useDemoSelector(s => s.data.mail)
-  const pickupPlaces = useDemoSelector(s => s.data.pickupPlaces)
-  const tours = useDemoSelector(s => s.data.tours)
+  const demoMail = useMail()
+  const pickupPlaces = usePickupPlaces()
+  const tours = useTourRecords()
   const now = useDemoNow()
   const today = zurichDate(now)
   const orders = useGuestOrders()

@@ -9,9 +9,11 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
+import { useGuests } from '@/features/account/api/queries'
+import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-import { useTourActions } from '@/features/tours/hooks/use-tours'
+import { useTourRecords } from '@/features/tours/api/queries'
+import { useTourActions, useTourDraft } from '@/features/tours/hooks/use-tours'
 import { createTourSeed } from '@/features/tours/seed'
 import { addSampleTourBookings } from './sample-bookings'
 import { competingHold, openPayment } from './transitions'
@@ -31,29 +33,30 @@ function time(iso: string) {
  * bookings in every C16 state. Simulations of the browser prototype, not of a real backend.
  */
 export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
-  const { state, update } = useDemo()
+  const { update } = useDemoActions()
+  const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
+  const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
+  const data = useTourRecords()
+  const draft = useTourDraft()
+  const guest = useGuests(guests => guests.find(g => g.id === signedInGuestId))
   const { language } = useLocale()
   const navigate = useNavigate()
   const { resolvePayment, repeatProviderResult } = useTourActions()
   const { bookingId, slug } = useParams({ strict: false })
   const [note, setNote] = useState('')
-  const data = state.data.tours ?? createTourSeed()
-  const now = demoNow(state.clockStartedAt)
+  const now = demoNow(clockStartedAt)
   const booking = data.bookings.find(b => b.id === bookingId)
   const open = booking && openPayment(booking)
   const answered = booking?.payments.some(
     p => p.method === 'online' && p.status !== 'processing',
   )
   const tour = data.tours.find(
-    item => item.slug === slug && item.id === data.draft.tourId,
+    item => item.slug === slug && item.id === draft.tourId,
   )
   const departure = data.departures.find(
-    item => item.id === data.draft.departureId && item.tourId === tour?.id,
+    item => item.id === draft.departureId && item.tourId === tour?.id,
   )
   const seatsLeft = departure ? availableSeats(data, departure.id, now) : 0
-  const guest = state.data.guests.find(
-    g => g.id === state.data.signedInGuestId,
-  )
 
   const done = (message = '') => {
     setNote(message)
@@ -79,7 +82,7 @@ export function TourBookingDemoControl({ onDone }: { onDone: () => void }) {
                     s.data.tours ?? createTourSeed(),
                     tour,
                     departure,
-                    participantSeats(data.draft),
+                    participantSeats(draft),
                     demoNow(s.clockStartedAt),
                   ),
                 },

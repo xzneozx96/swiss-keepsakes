@@ -507,6 +507,7 @@ export function StepBar({
   onForward,
   secondary,
   primary,
+  isSaving,
 }: {
   status: string
   tone: 'muted' | 'danger' | 'success'
@@ -514,6 +515,8 @@ export function StepBar({
   onForward?: () => void
   secondary?: BarAction
   primary: BarAction
+  /** A save is on its way: its two actions are off. */
+  isSaving: boolean
 }) {
   const { t } = useLocale()
   const keyboardOpen = useKeyboardOpen()
@@ -559,11 +562,16 @@ export function StepBar({
             </Button>
           )}
           {secondary && (
-            <Button size="sm" variant="tertiary" onPress={secondary.onPress}>
+            <Button
+              isDisabled={isSaving}
+              size="sm"
+              variant="tertiary"
+              onPress={secondary.onPress}
+            >
               {secondary.label}
             </Button>
           )}
-          <Button size="sm" onPress={primary.onPress}>
+          <Button isDisabled={isSaving} size="sm" onPress={primary.onPress}>
             {primary.label}
           </Button>
         </div>
@@ -622,6 +630,7 @@ export function useStepBar({
   publishRefused,
   storageFull,
   justSaved,
+  isSaving,
   actions,
 }: {
   isNew: boolean
@@ -634,6 +643,7 @@ export function useStepBar({
   publishRefused: boolean
   storageFull: boolean
   justSaved: boolean
+  isSaving: boolean
   actions: {
     back: () => void
     next: () => void
@@ -672,10 +682,11 @@ export function useStepBar({
             tone: 'muted',
           }
   const back = isFirst ? undefined : actions.back
+  const shown = { ...status, isSaving }
 
   if (isNew) {
     return {
-      ...status,
+      ...shown,
       onBack: back,
       secondary: { label: t('products.saveDraft'), onPress: actions.saveDraft },
       primary: isReview
@@ -685,7 +696,7 @@ export function useStepBar({
   }
   if (!isReview) {
     return {
-      ...status,
+      ...shown,
       onBack: back,
       onForward: actions.next,
       primary: { label: t('products.save'), onPress: actions.saveChanges },
@@ -693,7 +704,7 @@ export function useStepBar({
   }
   if (archived || live) {
     return {
-      ...status,
+      ...shown,
       onBack: back,
       secondary: archived
         ? undefined
@@ -703,7 +714,7 @@ export function useStepBar({
   }
 
   return {
-    ...status,
+    ...shown,
     onBack: back,
     secondary: { label: t('products.saveDraft'), onPress: actions.saveDraft },
     primary: { label: t('products.publish'), onPress: actions.publish },

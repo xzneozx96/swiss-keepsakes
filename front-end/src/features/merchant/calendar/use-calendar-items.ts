@@ -11,7 +11,9 @@ import { formatMoney, pickText } from '@sk/domain/shared'
 
 import { useMemo } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
+import { useGuests } from '@/features/account/api/queries'
+import { usePickupPlaces } from '@/features/catalog/api/queries'
+import { useOrders } from '@/features/orders/api/queries'
 import {
   formatLabel,
   paymentLabel,
@@ -34,10 +36,11 @@ import { swissDate, zurichLocal } from './calendar-core'
  */
 export function useCalendarItems() {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
   const { data, now } = useTours()
   const minute = Math.floor(now.getTime() / 60_000)
-  const { orders, guests, pickupPlaces } = state.data
+  const orders = useOrders()
+  const guests = useGuests()
+  const pickupPlaces = usePickupPlaces()
 
   const items = useMemo(() => {
     const clock = new Date(minute * 60_000)

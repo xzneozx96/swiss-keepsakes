@@ -20,9 +20,8 @@ The React Compiler is on, so do not add `useMemo`, `useCallback` or `React.memo`
 
 ## State and the store
 
-- Read the narrowest slice: `useDemoSelector((s) => s.data.favouriteProductIds.includes(id))`, not the whole state. Per-item components select a boolean or one item.
-- Call `useDemoActions()` when you only write.
-- Use `useDemo()` only when the component reads most of the state anyway.
+- Shop data comes from the feature query hooks and changes through `useCommand` (see `api-integration.md`). Read the narrowest part: `useOrders(orders => orders.find(o => o.id === id))`. Per-item components select a boolean or one item.
+- Browser-only state (role, clock, sign-in, cart, saved gifts, drafts) comes from the store: `useDemoSelector((s) => s.data.favouriteProductIds.includes(id))`, and `useDemoActions()` to write it.
 
 ## Effects
 

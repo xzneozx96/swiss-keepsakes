@@ -973,6 +973,7 @@ export function TourEditor({
     publishRefused: editor.publishRefused,
     storageFull: editor.storageFull,
     justSaved: editor.justSaved,
+    isSaving: editor.isSaving,
     actions: editor,
   })
 

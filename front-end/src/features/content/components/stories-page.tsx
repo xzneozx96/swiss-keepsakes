@@ -20,10 +20,10 @@ import {
   CategoryThumb,
   categoryThumbItemClass,
 } from '@/features/catalog/components/category-thumb'
-import { useDemo } from '@/features/demo'
 import { useBack } from '@/hooks/use-back'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { useArticles } from '../api/queries'
 import { publishedArticles } from '../lib/articles'
 import { ALL_STORIES_PHOTO, storyCategoryPhoto } from '../lib/categories'
 import { StoryCard } from './story-card'
@@ -43,13 +43,13 @@ export function StoriesPage({
   onCategoryChange: (category: StoryCategory | undefined) => void
 }) {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const articles = useArticles()
   const isLoading = useSimulatedLoading()
   const navigate = useNavigate()
   const back = useBack(() => void navigate({ to: '/', replace: true }))
   const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
 
-  const published = publishedArticles(state.data.articles, language)
+  const published = publishedArticles(articles, language)
   const stories = category
     ? published.filter(s => s.category === category)
     : published

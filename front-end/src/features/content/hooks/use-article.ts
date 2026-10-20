@@ -7,10 +7,14 @@ import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from '@sk/domain/content'
 
 import { formatDate } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
+import { useGuests } from '@/features/account/api/queries'
+import { useProducts } from '@/features/catalog/api/queries'
 import { useProductCard } from '@/features/catalog/hooks/use-product-card'
-import { useDemoActions, useDemoSelector } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
+import { useCommand } from '@/features/data-client'
+import { useDemoSelector } from '@/features/demo'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { avatarUrl } from '@/lib/avatars'
+import { useArticles, useComments } from '../api/queries'
 import { publishedArticles } from '../lib/articles'
 
 const WHITESPACE_RUN = /\s+/
@@ -60,13 +64,13 @@ const published = (a: Article) => a.publication.status === 'published'
  */
 export function useArticle(slug: string): ArticleView | null {
   const { t, language, intlLocale } = useLocale()
-  const { update } = useDemoActions()
-  const demoArticles = useDemoSelector(s => s.data.articles)
-  const demoComments = useDemoSelector(s => s.data.comments)
-  const demoGuests = useDemoSelector(s => s.data.guests)
-  const products = useDemoSelector(s => s.data.products)
+  const { mutate: postComment } = useCommand('content', 'addComment')
+  const demoArticles = useArticles()
+  const demoComments = useComments()
+  const demoGuests = useGuests()
+  const products = useProducts()
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
-  const demoTours = useDemoSelector(s => s.data.tours)
+  const demoTours = useTourRecords()
   const toCard = useProductCard()
 
   const versions = demoArticles.filter(a => a.slug === slug && published(a))
@@ -172,24 +176,7 @@ export function useArticle(slug: string): ArticleView | null {
         return null
       const id = `c-${Date.now().toString(36)}`
 
-      update(s => ({
-        ...s,
-        data: {
-          ...s.data,
-          comments: [
-            ...s.data.comments,
-            {
-              id,
-              articleId: article.id,
-              author: { kind: 'guest', guestId },
-              text: text.trim(),
-              createdAt: demoNow(s.clockStartedAt).toISOString(),
-              hidden: false,
-              ...(parentId && { parentId }),
-            },
-          ],
-        },
-      }))
+      postComment({ id, articleId: article.id, text, parentId })
 
       return id
     },

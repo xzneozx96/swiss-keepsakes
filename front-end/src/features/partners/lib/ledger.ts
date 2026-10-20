@@ -5,7 +5,7 @@ import type {
   PartnerPayout,
   TransactionRef,
 } from '@sk/domain/partners'
-import type { DemoData } from '@/features/demo/types'
+import type { QueriedData } from '@/features/demo/types'
 
 import { bookingCommission } from '@sk/domain/bookings'
 import { offsetAmount } from '@sk/domain/money'
@@ -16,7 +16,7 @@ import { DEMO_HISTORY } from '@/features/merchant/today/lib/demo-history'
  * Every order the shop has, as one source (outline D14): the generated M02 history and the
  * demo orders, as M02 and P02 already combine them; no history while the demo has no orders.
  */
-export function allOrders(data: Pick<DemoData, 'orders'>): Order[] {
+export function allOrders(data: Pick<QueriedData, 'orders'>): Order[] {
   return data.orders.length ? [...DEMO_HISTORY, ...data.orders] : []
 }
 
@@ -39,7 +39,7 @@ export interface CommissionItem {
 }
 
 export function commissionItems(
-  data: Pick<DemoData, 'orders' | 'tours' | 'commissionAdjustments'>,
+  data: Pick<QueriedData, 'orders' | 'tours' | 'commissionAdjustments'>,
   partnerId: string,
 ): CommissionItem[] {
   const adjustedBy = new Map<string, Rappen>()
@@ -169,7 +169,7 @@ function payoutAt(p: PartnerPayout) {
  */
 export function partnerLedger(
   data: Pick<
-    DemoData,
+    QueriedData,
     'orders' | 'tours' | 'commissionAdjustments' | 'partnerPayouts'
   >,
   partnerId: string,

@@ -1,7 +1,7 @@
 import type { TourBooking } from '@sk/domain/bookings'
 import type { LocalizedText, Rappen } from '@sk/domain/catalog'
 import type { CommissionState } from '@sk/domain/orders'
-import type { DemoData } from '@/features/demo/types'
+import type { QueriedData } from '@/features/demo/types'
 import type { OrderLabel } from '@/features/orders/lib/labels'
 
 import { zurichDate } from '@sk/domain/catalog'
@@ -192,7 +192,7 @@ function emptyBuckets(
  */
 export function partnerReport(
   data: Pick<
-    DemoData,
+    QueriedData,
     'orders' | 'guests' | 'products' | 'subcategories' | 'tours'
   >,
   partnerId: string,
@@ -386,7 +386,7 @@ export interface PartnerAllTime {
 
 /** All-time commission for one partner; null when the partner has no orders yet. */
 export function partnerAllTime(
-  orders: Pick<DemoData, 'orders'>['orders'],
+  orders: Pick<QueriedData, 'orders'>['orders'],
   partnerId: string,
   today: string,
   tourBookings: TourBooking[] = [],

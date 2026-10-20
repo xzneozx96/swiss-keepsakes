@@ -38,7 +38,6 @@ These come from the React team's docs (react.dev "Render and Commit" and the `us
 
 The audit found violations that were left on purpose because the code is cold, the data tiny, or the loading state is simulated. New code must not copy them.
 - About 22 production sites still build `new Intl.PluralRules` or `new Intl.RelativeTimeFormat` inside functions (rule 9).
-- About 64 `useDemo()` calls in 56 files subscribe to the whole store (rule 8). A trace found none that run per list item.
 - Two merchant pages run their heavy hooks before a simulated skeleton, and six chart tooltips are defined as inline functions.
 - The full list, with the reason for each, is `docs/front-end-audit/rule-coverage.tsv` (the `LEFT` rows).
 

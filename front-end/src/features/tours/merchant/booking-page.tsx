@@ -33,13 +33,13 @@ import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
 import { StatCard } from '@/components/stat-card'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
 
 import { ProposalMark } from '@/features/demo/components/proposal-mark'
 import {
   ActionPanel,
   DetailCard,
 } from '@/features/merchant/order-detail/components/detail-card'
+import { usePartners } from '@/features/partners/api/queries'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { BookingStatusLabels } from '../components/booking-status'
 import { useTours } from '../hooks/use-tours'
@@ -163,8 +163,9 @@ function CommissionCard({ booking }: { booking: TourBooking }) {
   const { t } = useLocale()
   const { money, date } = useTourFormatting()
   const commission = bookingCommission(booking)
-  const partners = useDemo().state.data.partners
-  const partner = partners.find(p => p.id === booking.partnerId)
+  const partner = usePartners(partners =>
+    partners.find(p => p.id === booking.partnerId),
+  )
   const tone
     = commission.state === 'recorded'
       ? 'success'

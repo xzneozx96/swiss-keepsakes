@@ -3,17 +3,19 @@ import type { StatusTone } from '@/components/status-chip'
 import type { Language } from '@/contexts/locale-context'
 import type { ArticleFilter } from '@/features/content/merchant/lib/search-params'
 
-import type { DemoData } from '@/features/demo/types'
+import type { QueriedData } from '@/features/demo/types'
 
 import { isPublished } from '@sk/domain/catalog'
 import { MAX_ARTICLE_LINKS } from '@sk/domain/content'
 import { formatDate } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
+import { useProducts } from '@/features/catalog/api/queries'
 import {
   ARTICLE_FILTERS,
 
 } from '@/features/content/merchant/lib/search-params'
-import { useDemo } from '@/features/demo'
+import { useTourRecords } from '@/features/tours/api/queries'
+import { useArticles, useComments } from '../../api/queries'
 
 export interface ArticleRowProps {
   id: string
@@ -40,7 +42,7 @@ export interface ArticleRowProps {
 
 /** A linked gift or tour that guests can't open any more (R16: it drops out of C20). */
 export function isLinkHidden(
-  data: DemoData,
+  data: Pick<QueriedData, 'tours' | 'products'>,
   link: Article['links'][number],
 ): boolean {
   if (link.kind === 'tour')
@@ -57,8 +59,10 @@ export function isLinkHidden(
  */
 export function useMerchantArticles(filter: ArticleFilter[]) {
   const { t, intlLocale } = useLocale()
-  const { state } = useDemo()
-  const { articles, comments } = state.data
+  const articles = useArticles()
+  const comments = useComments()
+  const tours = useTourRecords()
+  const products = useProducts()
   const date = (iso: string) => formatDate(new Date(iso), intlLocale)
 
   const all: ArticleRowProps[] = [...articles]
@@ -70,7 +74,7 @@ export function useMerchantArticles(filter: ArticleFilter[]) {
         a => a.slug === article.slug && a.language === other,
       )
       const hidden = article.links.filter(l =>
-        isLinkHidden(state.data, l),
+        isLinkHidden({ tours, products }, l),
       ).length
 
       return {

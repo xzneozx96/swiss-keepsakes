@@ -1,4 +1,9 @@
-import type { Departure, Tour, TourBooking, TourData } from '@sk/domain/bookings'
+import type {
+  Departure,
+  Tour,
+  TourBooking,
+  TourRecords,
+} from '@sk/domain/bookings'
 
 import {
   balanceOverdue,
@@ -72,7 +77,7 @@ export function tourWork(bookings: TourBooking[], now: Date): TourWork {
 }
 
 export function departureBookings(
-  data: TourData,
+  data: TourRecords,
   departureId: string,
 ): TourBooking[] {
   return data.bookings.filter(b => b.departureId === departureId)

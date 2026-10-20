@@ -26,7 +26,7 @@ import {
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { RouteTabs } from '@/components/route-tabs'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
+import { useStoreSubcategories } from '@/features/catalog/api/queries'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 import {
   useMerchantProducts,
@@ -76,7 +76,7 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
   const { t, language } = useLocale()
   const all = useMerchantProducts()
   const { places } = all
-  const { subcategories } = useDemo().state.data
+  const subcategories = useStoreSubcategories()
   const archive = useProductArchive()
   const navigate = useNavigate()
   const { confirm, dialog } = useConfirm()

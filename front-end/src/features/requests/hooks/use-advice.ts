@@ -1,7 +1,6 @@
 import type {
   AdviceDraft,
   AdviceQuestion,
-  AdviceRequest,
   AdviceValue,
 } from '@sk/domain/requests'
 
@@ -9,9 +8,11 @@ import { displayAnswer, isAnswered, looksLikeEmail } from '@sk/domain/requests'
 import { calendarDay, formatDate, pickText } from '@sk/domain/shared'
 
 import { useLocale } from '@/contexts/locale-context'
+import { useGuests } from '@/features/account/api/queries'
+import { useCommand } from '@/features/data-client'
 import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
-import { mailAdviceRequest } from '../lib/request-mail'
+import { useAdviceQuestions } from '@/features/requests/api/queries'
 
 export type SendResult
   = | { ok: true, requestId: string }
@@ -27,12 +28,12 @@ export type SendResult
 export function useAdvice() {
   const { language, intlLocale } = useLocale()
   const { update } = useDemoActions()
+  const { mutateAsync: sendAdviceRequest } = useCommand('requests', 'sendAdviceRequest')
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const adviceDraft = useDemoSelector(s => s.data.adviceDraft)
-  const adviceQuestions = useDemoSelector(s => s.data.adviceQuestions)
-  const guests = useDemoSelector(s => s.data.guests)
+  const adviceQuestions = useAdviceQuestions()
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
-  const guest = guests.find(g => g.id === signedInGuestId)
+  const guest = useGuests(guests => guests.find(g => g.id === signedInGuestId))
 
   const draft: AdviceDraft = adviceDraft ?? {
     set: adviceQuestions,
@@ -88,7 +89,8 @@ export function useAdvice() {
     setEmail: (email: string) => save({ email }),
     canLeave: (q: AdviceQuestion) =>
       !q.required || isAnswered(draft.values[q.id]),
-    send: (): SendResult => {
+    /** Resolves once the request is stored, so the sent screen can show it. */
+    send: async (): Promise<SendResult> => {
       const email = draft.email.trim()
 
       if (!email)
@@ -97,40 +99,24 @@ export function useAdvice() {
         return { ok: false, reason: 'email-invalid' }
       const requestId = `adv-${Date.now().toString(36)}`
 
-      update((s) => {
-        const request: AdviceRequest = {
-          id: requestId,
-          sentAt: demoNow(s.clockStartedAt).toISOString(),
-          language,
-          email,
-          answers: questions
-            .filter(q => isAnswered(draft.values[q.id]))
-            .map((q) => {
-              const shown = questionText(q)
+      await sendAdviceRequest({
+        id: requestId,
+        language,
+        email,
+        answers: questions
+          .filter(q => isAnswered(draft.values[q.id]))
+          .map((q) => {
+            const shown = questionText(q)
 
-              return {
-                questionId: q.id,
-                question: shown.text,
-                questionLanguage: shown.language,
-                answer: answerText(q),
-              }
-            }),
-        }
-
-        // N16 goes to the shop's current request address, even for a draft begun earlier.
-        return mailAdviceRequest(
-          {
-            ...s,
-            data: {
-              ...s.data,
-              adviceDraft: undefined,
-              adviceRequests: [...s.data.adviceRequests, request],
-            },
-          },
-          request,
-          s.data.adviceQuestions.recipientEmail,
-        )
+            return {
+              questionId: q.id,
+              question: shown.text,
+              questionLanguage: shown.language,
+              answer: answerText(q),
+            }
+          }),
       })
+      update(s => ({ ...s, data: { ...s.data, adviceDraft: undefined } }))
 
       return { ok: true, requestId }
     },

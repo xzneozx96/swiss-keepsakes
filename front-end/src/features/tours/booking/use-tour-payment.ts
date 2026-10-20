@@ -1,5 +1,6 @@
 import type { TourBooking } from '@sk/domain/bookings'
 import type {
+  Outcome,
   PaymentStep,
   PaymentView,
 } from '@/features/payment/hooks/use-payment'
@@ -56,6 +57,44 @@ export function useTourPayment(booking: TourBooking, now: Date): PaymentView {
       params: { bookingId: booking.id },
       replace: true,
     })
+  const choose = (outcome: Outcome) => {
+    if (pendingRef.current)
+      return
+    pendingRef.current = true
+    setIsPending(true)
+    const settle = () => {
+      pendingRef.current = false
+      setIsPending(false)
+    }
+    const result = pay(
+      booking.id,
+      outcome,
+      () => {
+        // The first payment confirms the booking (C13); a balance payment returns to C16.
+        if (outcome === 'succeeded') {
+          if (booking.status === 'pending_payment') {
+            void navigate({
+              to: '/account/bookings/$bookingId/confirmed',
+              params: { bookingId: booking.id },
+              replace: true,
+            })
+          }
+          else {
+            back()
+          }
+
+          return
+        }
+        if (outcome === 'failed')
+          setFailed(true)
+        settle()
+      },
+      settle,
+    )
+
+    if (!result.ok)
+      settle()
+  }
 
   return {
     seller: shop.name,
@@ -65,32 +104,6 @@ export function useTourPayment(booking: TourBooking, now: Date): PaymentView {
     isPending,
     back,
     retry: () => setFailed(false),
-    choose: (outcome) => {
-      if (pendingRef.current)
-        return
-      pendingRef.current = true
-      setIsPending(true)
-      const result = pay(booking.id, outcome)
-
-      // The first payment confirms the booking (C13); a balance payment returns to C16.
-      if (result.ok && outcome === 'succeeded') {
-        if (booking.status === 'pending_payment') {
-          void navigate({
-            to: '/account/bookings/$bookingId/confirmed',
-            params: { bookingId: booking.id },
-            replace: true,
-          })
-        }
-        else {
-          back()
-        }
-      }
-      else {
-        if (result.ok && outcome === 'failed')
-          setFailed(true)
-        pendingRef.current = false
-        setIsPending(false)
-      }
-    },
+    choose,
   }
 }

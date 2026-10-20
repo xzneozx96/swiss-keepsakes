@@ -103,6 +103,7 @@ function Header({ editor, status }: { editor: Editor, status: Status }) {
 function Actions({
   status,
   dirty,
+  isSaving,
   onPublish,
   onSaveDraft,
   onSaveChanges,
@@ -110,6 +111,7 @@ function Actions({
 }: {
   status: Status
   dirty: boolean
+  isSaving: boolean
   onPublish: () => void
   onSaveDraft: () => void
   onSaveChanges: () => void
@@ -120,20 +122,34 @@ function Actions({
   return status === 'published'
     ? (
         <div className="flex flex-col gap-2">
-          <Button fullWidth isDisabled={!dirty} onPress={onSaveChanges}>
+          <Button
+            fullWidth
+            isDisabled={!dirty || isSaving}
+            onPress={onSaveChanges}
+          >
             {t('merchantArticles.action.save')}
           </Button>
-          <Button fullWidth variant="tertiary" onPress={onUnpublish}>
+          <Button
+            fullWidth
+            isDisabled={isSaving}
+            variant="tertiary"
+            onPress={onUnpublish}
+          >
             {t('merchantArticles.action.unpublish')}
           </Button>
         </div>
       )
     : (
         <div className="flex flex-col gap-2">
-          <Button fullWidth onPress={onPublish}>
+          <Button fullWidth isDisabled={isSaving} onPress={onPublish}>
             {t('merchantArticles.action.publish')}
           </Button>
-          <Button fullWidth variant="tertiary" onPress={onSaveDraft}>
+          <Button
+            fullWidth
+            isDisabled={isSaving}
+            variant="tertiary"
+            onPress={onSaveDraft}
+          >
             {t('merchantArticles.action.saveDraft')}
           </Button>
         </div>
@@ -344,7 +360,12 @@ function VersionCard({ editor, onAdd }: { editor: Editor, onAdd: () => void }) {
               <p className="text-sm">
                 {t(`merchantArticles.version.missing.${otherLanguage}`)}
               </p>
-              <Button size="sm" variant="tertiary" onPress={onAdd}>
+              <Button
+                isDisabled={editor.isSaving}
+                size="sm"
+                variant="tertiary"
+                onPress={onAdd}
+              >
                 {t(`merchantArticles.version.add.${otherLanguage}`)}
               </Button>
               <p className="text-xs text-muted">
@@ -408,27 +429,31 @@ export function ArticleEditor({
   }
 
   const onSaveDraft = () => {
-    const id = editor.save('draft')
+    const valid = editor.save('draft', undefined, (id) => {
+      toast.success(t('merchantArticles.toast.saved'))
+      openSaved(id)
+    })
 
-    if (!id)
-      return focusFirstError()
-    toast.success(t('merchantArticles.toast.saved'))
-    openSaved(id)
+    if (!valid)
+      focusFirstError()
   }
   const onPublish = () => {
-    const id = editor.publish()
+    const valid = editor.publish((id) => {
+      toast.success(
+        t('merchantArticles.toast.published', { language: languageName }),
+      )
+      openSaved(id)
+    })
 
-    if (!id)
-      return focusFirstError()
-    toast.success(
-      t('merchantArticles.toast.published', { language: languageName }),
-    )
-    openSaved(id)
+    if (!valid)
+      focusFirstError()
   }
   const onSaveChanges = () => {
-    if (!editor.save('publish'))
-      return focusFirstError()
-    toast.success(t('merchantArticles.toast.savedPublished'))
+    const valid = editor.save('publish', undefined, () =>
+      toast.success(t('merchantArticles.toast.savedPublished')))
+
+    if (!valid)
+      focusFirstError()
   }
   const onUnpublish = async () => {
     const ok = await confirm({
@@ -441,27 +466,27 @@ export function ArticleEditor({
 
     if (!ok)
       return
-    if (!editor.unpublish())
-      return focusFirstError()
-    toast.success(t('merchantArticles.toast.unpublished'))
-  }
-  const onAddVersion = () => {
-    const id = editor.addOtherVersion()
+    const valid = editor.unpublish(() =>
+      toast.success(t('merchantArticles.toast.unpublished')))
 
-    if (!id)
-      return
-    toast.success(
-      t(`merchantArticles.toast.versionAdded.${editor.otherLanguage}`),
-    )
-    void navigate({
-      to: '/store/content/articles/$articleId',
-      params: { articleId: id },
-    })
+    if (!valid)
+      focusFirstError()
   }
+  const onAddVersion = () =>
+    editor.addOtherVersion((id) => {
+      toast.success(
+        t(`merchantArticles.toast.versionAdded.${editor.otherLanguage}`),
+      )
+      void navigate({
+        to: '/store/content/articles/$articleId',
+        params: { articleId: id },
+      })
+    })
 
   const actions = (
     <Actions
       dirty={editor.dirty}
+      isSaving={editor.isSaving}
       status={status}
       onPublish={onPublish}
       onSaveChanges={onSaveChanges}

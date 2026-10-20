@@ -64,25 +64,20 @@ export function PrivateTourRequest() {
   const emailRef = useRef<HTMLInputElement>(null)
 
   const submit = () => {
-    const result = request.send({
-      groupSize,
-      dateFrom,
-      dateTo,
-      interests,
-      email,
-    })
+    const result = request.send(
+      { groupSize, dateFrom, dateTo, interests, email },
+      requestId =>
+        void navigate({
+          to: '/tours/private-tour/sent',
+          search: { request: requestId },
+          replace: true,
+        }),
+    )
 
-    if (!result.ok) {
+    if (result && !result.ok) {
       setErrors(result.errors);
       (result.errors.dates ? fromRef : emailRef).current?.focus()
-
-      return
     }
-    void navigate({
-      to: '/tours/private-tour/sent',
-      search: { request: result.requestId },
-      replace: true,
-    })
   }
 
   const dateHalf = (half: DateHalf) => {
@@ -256,7 +251,12 @@ export function PrivateTourRequest() {
         </div>
 
         <div className="sticky bottom-0 z-30 flex border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
-          <Button fullWidth size="lg" type="submit">
+          <Button
+            fullWidth
+            isDisabled={request.isSending}
+            size="lg"
+            type="submit"
+          >
             {t('privateTour.send')}
           </Button>
         </div>

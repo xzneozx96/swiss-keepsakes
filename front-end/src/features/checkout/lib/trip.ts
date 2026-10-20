@@ -1,5 +1,5 @@
 import type { TripAnswers, TripRecord } from '@sk/domain/orders'
-import type { DemoData } from '@/features/demo/types'
+import type { DemoData, QueriedData } from '@/features/demo/types'
 
 import { zurichDate } from '@sk/domain/catalog'
 
@@ -35,7 +35,10 @@ interface Purchase {
   day: string
 }
 
-function guestPurchases(data: DemoData, guestId: string): Purchase[] {
+/** The guest's orders and tour bookings, which the trip questions are asked about. */
+type Purchases = Pick<QueriedData, 'orders' | 'tours'>
+
+function guestPurchases(data: Purchases, guestId: string): Purchase[] {
   return [
     ...data.orders
       .filter(o => o.guestId === guestId)
@@ -62,7 +65,7 @@ function targetKeys(target: TripTarget) {
  * departure both cover every day of this one (inclusive), or blank.
  */
 export function tripView(
-  data: DemoData,
+  data: Purchases,
   guestId: string | null,
   target: TripTarget,
 ): { status: TripStatus, answers: TripAnswers } {

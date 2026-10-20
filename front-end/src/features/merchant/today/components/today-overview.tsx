@@ -2,13 +2,13 @@ import { Skeleton } from '@heroui/react'
 
 import { useLocale } from '@/contexts/locale-context'
 
-import { useDemoSelector } from '@/features/demo'
+import { useTourRecords } from '@/features/tours/api/queries'
+
 import {
   NextDeparturesWidget,
   TourCollectWidget,
   TourTaskTiles,
 } from '@/features/tours/merchant/today-queue'
-
 import { useOverdueCheck } from '@/features/tours/merchant/use-overdue-check'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 import { useMerchantToday } from '../hooks/use-merchant-today'
@@ -110,8 +110,7 @@ function ColumnHeading({ id, title }: { id: string, title: string }) {
 export function TodayOverview() {
   const { t } = useLocale()
   const today = useMerchantToday()
-  const demoTours = useDemoSelector(s => s.data.tours)
-  const hasTours = (demoTours?.tours.length ?? 0) > 0
+  const hasTours = useTourRecords(data => data.tours.length > 0)
   const isLoading = useSimulatedLoading()
   const alerts = today.tiles.filter(
     tile => (tile.id === 'overdue' || tile.id === 'owing') && tile.count > 0,

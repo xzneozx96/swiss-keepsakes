@@ -21,7 +21,7 @@ Read this before you change lint configuration, add a rule, format code, or run 
 | `style/jsx-one-expression-per-line` with `allow: 'non-jsx'` | The default's autofix splits text and an expression onto two lines, and JSX then trims the space. It turned "Title: Name" into "Title:Name" |
 | `e18e/prefer-array-fill` off | Its autofix turns `Array.from({ length }, () => make())` into `.fill(make())`, which calls `make` once and shares one object. It broke the snowfall |
 | `prefer-arrow-callback` allows named functions | `memo(function ListingCard() {})` keeps the component name in React DevTools and in the render counter |
-| `react-refresh/only-export-components` off in `src/routes/**`, a warning elsewhere | A TanStack file route exports `Route` next to its page, and the router's code splitter moves the page into its own module. In feature files it only costs a full reload instead of a hot swap in development (47 warnings today, files that mix helpers and components) |
+| `react-refresh/only-export-components` off in `src/routes/**`, a warning elsewhere | A TanStack file route exports `Route` next to its page, and the router's code splitter moves the page into its own module. In feature files it only costs a full reload instead of a hot swap in development (46 warnings today, files that mix helpers and components) |
 | `boundaries/dependencies` layer rule | Shared code (`src/lib`, `src/hooks`, `src/contexts`, top-level `src/components`) must not import a feature or a route. The resolver reads `tsconfig.eslint.json` |
 
 Do not use `boundaries/element-types`. It is deprecated in this plugin version.
@@ -40,5 +40,5 @@ Do not use `boundaries/element-types`. It is deprecated in this plugin version.
 
 ## Open
 
-- 47 `react-refresh` warnings remain in feature files. Fixing them means splitting helpers and contexts from components, which is its own refactor.
+- 46 `react-refresh` warnings remain in feature files. Fixing them means splitting helpers and contexts from components, which is its own refactor.
 - Test files are linted now. `scripts/` is linted too.

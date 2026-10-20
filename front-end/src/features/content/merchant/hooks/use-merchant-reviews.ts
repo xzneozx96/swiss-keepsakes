@@ -3,8 +3,11 @@ import type { Language } from '@/contexts/locale-context'
 import { formatDate, pickText } from '@sk/domain/shared'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
+import { useProducts } from '@/features/catalog/api/queries'
+import { useCommand } from '@/features/data-client'
+import { useDemoSelector } from '@/features/demo'
+import { useReviews } from '@/features/reviews/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import { avatarUrl } from '@/lib/avatars'
 import { publicStaffName } from '../lib/staff'
 
@@ -41,8 +44,11 @@ export interface ReviewRowProps {
  */
 export function useMerchantReviews(filter: ReviewFilter[]) {
   const { t, language, intlLocale } = useLocale()
-  const { state, update } = useDemo()
-  const { reviews, products } = state.data
+  const { mutate: replyToReview } = useCommand('reviews', 'replyToReview')
+  const reviews = useReviews()
+  const products = useProducts()
+  const tours = useTourRecords()
+  const role = useDemoSelector(s => s.role)
   const note = (lang: Language) =>
     t(lang === 'en' ? 'gifts.textInEnglish' : 'gifts.textInGerman')
 
@@ -54,7 +60,7 @@ export function useMerchantReviews(filter: ReviewFilter[]) {
         ? r.productId.slice('tour:'.length)
         : null
       const tour = tourId
-        ? state.data.tours?.tours.find(x => x.id === tourId)
+        ? tours.tours.find(x => x.id === tourId)
         : undefined
       const product = tourId
         ? undefined
@@ -109,27 +115,9 @@ export function useMerchantReviews(filter: ReviewFilter[]) {
       count: all.filter(row => inFilter(row, id)).length,
     })),
     total: all.length,
-    staffName: publicStaffName(state.role),
+    staffName: publicStaffName(role),
     /** Adds or replaces the shop's reply; the review itself never changes. */
     saveReply: (id: string, text: string, replyLanguage: Language) =>
-      update(s => ({
-        ...s,
-        data: {
-          ...s.data,
-          reviews: s.data.reviews.map(r =>
-            r.id === id
-              ? {
-                  ...r,
-                  reply: {
-                    text: text.trim(),
-                    language: replyLanguage,
-                    by: publicStaffName(s.role),
-                    at: demoNow(s.clockStartedAt).toISOString(),
-                  },
-                }
-              : r,
-          ),
-        },
-      })),
+      replyToReview({ id, text, language: replyLanguage }),
   }
 }

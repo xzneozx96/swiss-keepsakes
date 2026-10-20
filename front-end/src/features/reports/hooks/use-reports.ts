@@ -19,7 +19,14 @@ import {
 
 import { useMemo } from 'react'
 import { useLocale } from '@/contexts/locale-context'
-import { useDemo, useDemoNow } from '@/features/demo'
+import { useProducts } from '@/features/catalog/api/queries'
+import { useArticles } from '@/features/content/api/queries'
+import { useDemoNow } from '@/features/demo'
+import { useOrders } from '@/features/orders/api/queries'
+import { useCommissionAdjustments, usePartners, useReferralVisits } from '@/features/partners/api/queries'
+import { useCosts } from '@/features/reports/api/queries'
+import { useAdviceRequests } from '@/features/requests/api/queries'
+import { useTourRecords } from '@/features/tours/api/queries'
 import {
   articleStats,
   funnel,
@@ -94,11 +101,17 @@ export function useReports(
   override?: { current: DayRange, previous: DayRange },
 ) {
   const { t, language, intlLocale } = useLocale()
-  const { state } = useDemo()
+  const storedArticles = useArticles()
+  const orders = useOrders()
+  const tours = useTourRecords()
+  const commissionAdjustments = useCommissionAdjustments()
+  const partners = usePartners()
+  const products = useProducts()
+  const referralVisits = useReferralVisits()
+  const adviceRequests = useAdviceRequests()
+  const costs = useCosts()
   const now = useDemoNow()
   const today = zurichDate(now)
-  const { orders, tours, commissionAdjustments, partners, products }
-    = state.data
   const all = useMemo(
     () => reportTransactions({ orders, tours }),
     [orders, tours],
@@ -174,7 +187,6 @@ export function useReports(
   const count = (n: number) => numberFormat(intlLocale).format(n)
   const pct = (part: number, whole: number) =>
     percentOf(part, whole, intlLocale, 1)
-  const { referralVisits } = state.data
   /** Visits, views and starts happen before a guest has a group or a basket. */
   const businessOnly
     = filters.type !== 'all' || filters.group !== 'all' || filters.item !== 'all'
@@ -295,7 +307,7 @@ export function useReports(
           p.variants.length > 1
             ? `${pickText(p.name, language).text} · ${pickText(v.label, language).text}`
             : pickText(p.name, language).text,
-        left: variantAvailable(state.data, p.id, v.id),
+        left: variantAvailable({ products, orders }, p.id, v.id),
       }))
       .filter(v => v.left <= 2),
   )
@@ -326,7 +338,7 @@ export function useReports(
     })
   const outcome = (kind: 'goods' | 'tours', status: string) =>
     inPeriod.filter(tx => tx.kind === kind && tx.status === status).length
-  const articles = state.data.articles
+  const articles = storedArticles
     .filter(a => a.publication.status === 'published')
     .map((a) => {
       const stats = articleStats(a.id, current)
@@ -343,7 +355,7 @@ export function useReports(
     })
     .sort((a, b) => b.viewsValue - a.viewsValue)
     .slice(0, 5)
-  const adviceSent = state.data.adviceRequests.filter((r) => {
+  const adviceSent = adviceRequests.filter((r) => {
     const day = zurichDate(new Date(r.sentAt))
 
     return day >= current.start && day <= current.end
@@ -351,7 +363,6 @@ export function useReports(
   const widget = widgetStats(current, adviceSent)
 
   // Step 5.12: contribution margin, only from complete actual costs (R14).
-  const { costs } = state.data
   const marginData = useMemo(
     () => margin(txs, costs, commissionAdjustments, current),
     [txs, costs, commissionAdjustments, current],

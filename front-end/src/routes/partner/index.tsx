@@ -1,16 +1,17 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 
 import { PartnerShell } from '@/components/layout/partner-shell'
-import { useDemo } from '@/features/demo'
+import { useDemoSelector } from '@/features/demo'
 import { PartnerAccessScreen } from '@/features/partners/access/partner-access-screen'
+import { usePartners } from '@/features/partners/api/queries'
 
 // /partner, the prototype bar's Partner role: the report link of the partner last verified on
 // this browser, else Hotel am See's current link (outline §3).
 export const Route = createFileRoute('/partner/')({ component: PartnerHome })
 
 function PartnerHome() {
-  const { state } = useDemo()
-  const { partners, partnerSessions } = state.data
+  const partners = usePartners()
+  const partnerSessions = useDemoSelector(s => s.data.partnerSessions)
   const latest = [...partnerSessions]
     .sort((a, b) => Date.parse(b.verifiedAt) - Date.parse(a.verifiedAt))
     .find(s =>
