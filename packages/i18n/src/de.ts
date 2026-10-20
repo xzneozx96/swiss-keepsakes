@@ -12,7 +12,7 @@ export const mailDe: Record<MailKey, string> = {
   'mail.N01.subject': 'Ihr Anmeldecode für {shop}: {code}',
   'mail.N01.code': 'Ihr Anmeldecode lautet {code}.',
   'mail.N01.expiry':
-    'Geben Sie ihn im Anmeldefenster ein. Er ist 10 Minuten gültig.',
+    'Geben Sie ihn im Anmeldefenster ein. Er ist 5 Minuten gültig.',
   'mail.N01.ignore':
     'Wenn Sie sich nicht anmelden wollten, können Sie diese E-Mail ignorieren.',
   'mail.pickup': 'Abholung: {pickupDate} in {place}.',
