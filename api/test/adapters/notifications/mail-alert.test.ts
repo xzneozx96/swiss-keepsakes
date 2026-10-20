@@ -7,15 +7,15 @@ describe('[E2.8] the mail alert', () => {
     const lines: string[] = []
     const alert = createLogAlert(createLogger('info', { write: line => lines.push(line) }))
 
-    alert({ mailId: '0192f3a0-0000-7000-8000-0000000000dd', template: 'N20', attempts: 6, lastError: 'EAUTH 535' })
+    alert({ mailId: '0192f3a0-0000-7000-8000-0000000000dd', template: 'N20', attempts: 1, lastError: 'EAUTH 535' })
 
     expect(lines.map(line => JSON.parse(line))).toEqual([expect.objectContaining({
       level: 50,
       event: 'mail.failed',
-      msg: 'mail failed after all retries',
+      msg: 'mail failed and will not be retried',
       mailId: '0192f3a0-0000-7000-8000-0000000000dd',
       template: 'N20',
-      attempts: 6,
+      attempts: 1,
       lastError: 'EAUTH 535',
     })])
   })

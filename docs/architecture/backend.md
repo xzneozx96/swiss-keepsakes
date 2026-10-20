@@ -599,7 +599,7 @@ A money or status change isn't finished until a test shows the ledger and the au
 ## 13. Operations and security
 
 - **Health.** `/healthz` checks the database and pg-boss's last heartbeat. Fly restarts unhealthy machines, and an external uptime probe watches the storefront.
-- **Alerts.** Sentry alerts on dead-lettered jobs, on any `webhook_events` row unprocessed for over 5 minutes, on any `money_exceptions` row, on `account.updated` with `requirements.currently_due`, and on mail that fails after all retries. Until E2.9 connects Sentry, the mail alert is the `mail.failed` error log line (`docs/ops/mail.md`), and E2.9 forwards those lines to Sentry.
+- **Alerts.** Sentry alerts on dead-lettered jobs, on any `webhook_events` row unprocessed for over 5 minutes, on any `money_exceptions` row, on `account.updated` with `requirements.currently_due`, and on mail that fails for good, after all retries or at once when a retry cannot help. Until E2.9 connects Sentry, the mail alert is the `mail.failed` error log line (`docs/ops/mail.md`), and E2.9 forwards those lines to Sentry.
 - **Backups.** Neon restore history of 7 days or more is on before the first live charge. A restore drill branches from a past timestamp before launch and then monthly.
 - **Runbooks.** They live in `docs/ops/` and are written with the code. They cover:
   - a webhook outage (Stripe retries for 3 days, and `stripe events resend` reaches back 30 days)

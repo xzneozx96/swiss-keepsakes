@@ -7,7 +7,8 @@ export interface FailMailDeps<T> {
   alert: MailAlert
 }
 
-// Runs for a mail job that pg-boss dead-lettered after its last attempt, including an attempt that timed out.
+// Runs for a mail job that pg-boss dead-lettered after its last attempt, including an attempt that timed out,
+// or at once after a permanent failure.
 // The row stays failed in the ops list (docs/ops/mail.md). A second run finds it failed and raises no second alert.
 export function makeFailMail<T>({ uow, sentMail, clock, alert }: FailMailDeps<T>) {
   return async (mailId: string): Promise<void> => {

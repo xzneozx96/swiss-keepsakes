@@ -64,5 +64,6 @@ export interface SentMailRepository<T> {
   markFailed: (tx: T, mailId: string, at: Date) => Promise<MailFailure | undefined>
 }
 
-// Raised once for a mail that failed after all retries.
+// Raised once for a mail that will not be retried: after its last attempt, or at once for a failure that a
+// retry cannot fix.
 export type MailAlert = (failure: MailFailure) => void
