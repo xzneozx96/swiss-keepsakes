@@ -149,6 +149,22 @@ describe('[E2.8] a failing send retries, then alerts', () => {
     }
   })
 
+  it('[E2.8] a permanent refusal (550) skips the retries: one attempt, then mail-failed, the row turns failed and one alert is raised', async () => {
+    const { queues, uow, queueMail, memory, alerts, startWorkers, row } = await setup()
+    memory.failWith(smtpError('EENVELOPE', 550))
+    await startWorkers()
+
+    const mailId = await uow.run(tx => queueMail(tx, n18))
+    await until(() => alerts.length > 0)
+
+    expect(memory.attempts.map(mail => mail.id)).toEqual([mailId])
+    expect(alerts).toEqual([{ mailId, template: 'N18', attempts: 1, lastError: 'EENVELOPE 550' }])
+    expect(await row(mailId)).toMatchObject({ status: 'failed', attempts: 1, last_error: 'EENVELOPE 550' })
+    const { rows: [job] } = await pool.query('select state, retry_count from pgboss.job where id = $1', [mailId])
+    expect(job).toEqual({ state: 'failed', retry_count: 0 })
+    expect(await count(pool, 'select count(*) from pgboss.job where name = $1 and source_id = $2', [queues.failed, mailId])).toBe(1)
+  })
+
   it('[E2.8] the real mail queue retries 5 times with exponential backoff and dead-letters to mail-failed', async () => {
     await createMailQueues(jobs.boss)
 

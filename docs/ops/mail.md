@@ -12,8 +12,9 @@ Mail goes over SMTP (architecture D12). A business command queues a `mail` job a
 ## Retries and the alert
 
 - The `mail` queue retries a failed attempt 5 times with exponential backoff from 30 s. The last attempt runs about 15 to 30 minutes after the first.
+- A failure that a retry cannot fix skips the retries and goes to the alert at once. These are an SMTP 5xx reply (RFC 5321), such as `EAUTH 535` or `EENVELOPE 550`, and `MailRenderError`. A 4xx reply, a lost connection and `ESMTPUNSET` retry.
 - Each failed attempt adds 1 to `attempts` and sets `last_error` to the error code and the SMTP reply code, for example `EAUTH 535`. The job throws a `MailAttemptError` that holds only the same two values, so pg-boss's `output` and the dead-letter copy's `source_output` hold them too. The server's reply text is never stored, because it can quote the address.
-- After the last attempt, pg-boss moves the job to the `mail-failed` queue. Its handler sets the row to `failed` and logs one error line with `"event":"mail.failed"`, the mail id, the template, the number of attempts and the last error. Until Sentry arrives (E2.9), that line is the alert. It never holds the address or the link.
+- After the last attempt, or after a failure that skips the retries, pg-boss moves the job to the `mail-failed` queue. Its handler sets the row to `failed` and logs one error line with `"event":"mail.failed"`, the mail id, the template, the number of attempts and the last error. Until Sentry arrives (E2.9), that line is the alert. It never holds the address or the link.
 
 ## The ops list
 
@@ -35,11 +36,11 @@ There is no resend command yet. UX R13 lets the Owner send an invitation again, 
 | `last_error` | Meaning | What to do |
 | :-- | :-- | :-- |
 | `ESMTPUNSET` | The worker runs without `SMTP_*` | Set all six and restart the worker |
-| `EAUTH` with a code such as 535 | The server refused the user or the password | Check `SMTP_USER` and `SMTP_PASSWORD`. For Gmail, use an app password |
+| `EAUTH` with a code such as 535 | The server refused the user or the password. A 5xx code fails at once | Check `SMTP_USER` and `SMTP_PASSWORD`. For Gmail, use an app password |
 | `ETLS` | No TLS. The server offers no STARTTLS, or `SMTP_SECURE` does not match the port | Use 465 with `true`, or 587 with `false` |
 | `ECONNECTION`, `ETIMEDOUT` | The server cannot be reached | Check `SMTP_HOST` and `SMTP_PORT`. Retries cover a short outage |
-| `EENVELOPE` with a code | The server refused the sender or the recipient | Check the address in the row and `SMTP_FROM` |
-| `MailRenderError` | The job's data lacks a template value | A bug in the command that queued the mail |
+| `EENVELOPE` with a code | The server refused the sender or the recipient. A 5xx code fails at once | Check the address in the row and `SMTP_FROM` |
+| `MailRenderError` | The job's data lacks a template value. It fails at once | A bug in the command that queued the mail |
 
 ## Duplicates
 

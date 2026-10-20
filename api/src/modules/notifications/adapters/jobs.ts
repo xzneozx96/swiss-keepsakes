@@ -1,5 +1,6 @@
-import type { PgBoss } from 'pg-boss'
+import type { JobResult, PgBoss } from 'pg-boss'
 import type { MailJob } from '../application/queue-mail.ts'
+import { toAttemptError } from '../application/send-mail.ts'
 
 export interface MailQueues {
   send: string
@@ -28,10 +29,18 @@ export interface MailHandlers {
 
 // Only the worker roles call this. pg-boss hands each handler one job at a time (batchSize 1, the default).
 export async function startMailWorkers(boss: PgBoss, { sendMail, failMail }: MailHandlers, queues = mailQueues): Promise<void> {
-  await boss.work<MailJob>(queues.send, async ([job]) => {
-    if (job)
+  // With perJobResults a permanent failure goes to mail-failed at once, past the remaining retries. pg-boss
+  // stores the output with the job, so it is always the sanitized MailAttemptError, whatever was thrown.
+  await boss.work<MailJob>(queues.send, { perJobResults: true }, async jobs => Promise.all(jobs.map(async (job): Promise<JobResult> => {
+    try {
       await sendMail(job.data)
-  })
+      return { id: job.id, status: 'completed' }
+    }
+    catch (error) {
+      const failure = toAttemptError(error)
+      return { id: job.id, status: failure.permanent ? 'deadletter' : 'failed', output: failure }
+    }
+  })))
   await boss.work<MailJob>(queues.failed, async ([job]) => {
     if (job)
       await failMail(job.data.mailId)

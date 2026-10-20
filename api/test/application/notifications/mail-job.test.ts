@@ -189,10 +189,23 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
     const { rows, memory, sendMail, queued } = setup()
     const { mailId, job } = await queued(n20)
 
-    await expect(sendMail({ ...job, params: { store: 'Zürich Andenken', link: '' } })).rejects.toMatchObject({ name: 'MailAttemptError', message: 'MailRenderError' })
+    await expect(sendMail({ ...job, params: { store: 'Zürich Andenken', link: '' } })).rejects.toMatchObject({ name: 'MailAttemptError', message: 'MailRenderError', permanent: true })
 
     expect(memory.attempts).toEqual([])
     expect(rows.get(mailId)).toMatchObject({ status: 'queued', attempts: 1, lastError: 'MailRenderError' })
+  })
+
+  it.each([
+    ['EAUTH 535', true, smtpError('EAUTH', 535)],
+    ['EENVELOPE 550', true, smtpError('EENVELOPE', 550)],
+    ['EENVELOPE 451', false, smtpError('EENVELOPE', 451)],
+    ['ETIMEDOUT', false, smtpError('ETIMEDOUT')],
+  ])('[E2.8] a failed attempt with %s is permanent: %s, because only a 5xx reply can never succeed on a retry', async (lastError, permanent, error) => {
+    const { memory, sendMail, queued } = setup()
+    const { job } = await queued(n20)
+    memory.failWith(error)
+
+    await expect(sendMail(job)).rejects.toMatchObject({ message: lastError, permanent })
   })
 })
 
