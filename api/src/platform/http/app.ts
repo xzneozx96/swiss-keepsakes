@@ -1,7 +1,8 @@
+import type { Actor } from '@sk/domain/identity'
 import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
-import type { Actor, AuthenticateDeps, GuestActor } from './authenticate.ts'
+import type { AuthenticateDeps, Guest } from './authenticate.ts'
 import { STATUS_CODES } from 'node:http'
 import { createRoute, OpenAPIHono } from '@hono/zod-openapi'
 import { healthSchema, meSchema } from '@sk/api-contract'
@@ -10,17 +11,21 @@ import { HTTPException } from 'hono/http-exception'
 import { routePath } from 'hono/route'
 import { IdempotencyKeyTaken } from '../idempotency.ts'
 import { authenticate, requireGuest } from './authenticate.ts'
+import { requireStoreMember, requireSuperAdmin } from './guards.ts'
 import { idempotencyKeyInUse } from './idempotency.ts'
+import { requireOwnOrigin } from './origin.ts'
 import { isErrorStatus, problem } from './problem.ts'
 import { problemResponses, requestIdHeader } from './responses.ts'
 
 export interface AppEnv {
-  Variables: RequestIdVariables & { logger: Logger, actor: Actor, guest: GuestActor }
+  Variables: RequestIdVariables & { logger: Logger, actor: Actor, guest: Guest }
 }
 
-// Better Auth's handler for /api/auth/* (D8) and what the actor needs from its session.
+// Better Auth's handler for /api/auth/* (D8), what the actor needs from its session, and our own origin
+// (`ownOrigin` of BETTER_AUTH_URL), the only one the Origin rule lets through.
 export interface IdentityDeps extends AuthenticateDeps {
   authHandler: (request: Request) => Promise<Response>
+  origin: string
 }
 
 const clientRequestIdPattern = /^[\w=-]{1,255}$/
@@ -91,6 +96,8 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
     // The pattern of the route that ran, not the URL: a path such as /partner/{token} carries a secret.
     requestLogger.info({ method: c.req.method, route: routePath(c), status: c.res.status, ms: Math.round(performance.now() - started) }, 'request')
   })
+  // First under /api/*, before the body limit, Better Auth and the session. /webhooks/stripe is outside it.
+  app.use('/api/*', requireOwnOrigin(identity.origin))
   // Before anything under /api/* reads the body, such as the Idempotency-Key middleware mounted after this.
   app.use('/api/*', bodyLimit({
     maxSize: apiBodyLimit,
@@ -101,6 +108,9 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
   app.all('/api/auth/*', c => identity.authHandler(c.req.raw))
   app.use('/api/*', authenticate(identity))
   app.use('/api/me', requireGuest)
+  // Default deny by path, before any route handler or body parser: a route registered later is guarded too.
+  app.use('/api/store/:storeId/*', requireStoreMember)
+  app.use('/api/admin/*', requireSuperAdmin)
 
   app.openapi(healthRoute, async (c) => {
     const report = await checkHealth()

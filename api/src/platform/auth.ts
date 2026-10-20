@@ -15,6 +15,12 @@ export interface SignInCode {
   language: SignInCodeLanguage
 }
 
+// The origin the browser sees. It is Better Auth's base URL and its one trusted origin, and the Origin rule
+// of createApp compares requests with it.
+export function ownOrigin(baseUrl: string): string {
+  return new URL(baseUrl).origin
+}
+
 export interface AuthDeps {
   db: Database
   // The origin the browser sees. It becomes the base URL and the one trusted origin.
@@ -55,7 +61,7 @@ const sessionRefreshSeconds = 24 * 60 * 60
 // Google provider are on: email and password, magic link, device flow, SSO, the OAuth proxy, the admin plugin
 // and the bearer plugin stay off.
 export function createAuth({ db, baseUrl, secret, google, sendSignInCode, logger }: AuthDeps) {
-  const origin = new URL(baseUrl).origin
+  const origin = ownOrigin(baseUrl)
   return betterAuth({
     baseURL: origin,
     secret,

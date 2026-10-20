@@ -14,6 +14,8 @@ export const problemTypes = [
   'idempotency-key-in-use',
   'body-too-large',
   'unauthenticated',
+  'forbidden',
+  'origin-refused',
 ] as const
 
 export type ProblemType = (typeof problemTypes)[number]

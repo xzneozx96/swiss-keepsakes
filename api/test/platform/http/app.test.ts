@@ -73,20 +73,22 @@ function streamed(bytes: number) {
   })
 }
 
-const postJson = (body: string) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body })
+// noSessions names http://localhost as the app's own origin, which the Origin rule of /api/* requires on a POST.
+const ownOrigin = { Origin: 'http://localhost' }
+const postJson = (body: string) => ({ method: 'POST', headers: { ...ownOrigin, 'Content-Type': 'application/json' }, body })
 
 describe('[E1.9] the /api/* body limit', () => {
   it('[E1.9] a body of exactly 1 MiB is read', async () => {
     const { app } = setup()
-    const response = await app.request('/api/size', { method: 'POST', body: new Uint8Array(mebibyte) })
+    const response = await app.request('/api/size', { method: 'POST', headers: ownOrigin, body: new Uint8Array(mebibyte) })
 
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ bytes: mebibyte })
   })
 
   it.each([
-    ['declared in Content-Length', () => ({ method: 'POST', headers: { 'Content-Length': String(mebibyte + 1) }, body: new Uint8Array(mebibyte + 1) })],
-    ['streamed without a length', () => ({ method: 'POST', body: streamed(mebibyte + 1), duplex: 'half' })],
+    ['declared in Content-Length', () => ({ method: 'POST', headers: { ...ownOrigin, 'Content-Length': String(mebibyte + 1) }, body: new Uint8Array(mebibyte + 1) })],
+    ['streamed without a length', () => ({ method: 'POST', headers: ownOrigin, body: streamed(mebibyte + 1), duplex: 'half' })],
   ])('[E1.9] a body over 1 MiB, %s, is a 413 problem+json', async (_, init) => {
     const { app } = setup()
     const response = await app.request('/api/size', init() as RequestInit)

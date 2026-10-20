@@ -18,8 +18,10 @@ export function contractApp(): OpenAPIHono<AppEnv> {
   // Building the document runs no handler, so the identity stand-ins are never called.
   return createApp(createLogger('silent'), async () => ({ database: true, jobs: true }), {
     authHandler: async () => new Response(null, { status: 404 }),
+    origin: 'http://localhost',
     readSession: async () => ({ headers: new Headers(), response: null }),
     ensureGuestProfile: async () => '',
+    loadAccess: async () => ({ platformAdmin: false, memberships: [] }),
   })
 }
 

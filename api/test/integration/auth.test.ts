@@ -3,12 +3,13 @@ import type { GoogleConfig } from '../../src/platform/config.ts'
 import { randomUUID } from 'node:crypto'
 import { linkOAuthAccount } from 'better-auth/oauth2'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
+import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
-import { makeEnsureGuestProfile } from '../../src/modules/identity/index.ts'
+import { makeEnsureGuestProfile, makeLoadAccess } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
-import { createAuth, createSessionReader, disabledAuthPaths } from '../../src/platform/auth.ts'
+import { createAuth, createSessionReader, disabledAuthPaths, ownOrigin } from '../../src/platform/auth.ts'
 import { systemClock } from '../../src/platform/clock.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createApp } from '../../src/platform/http/app.ts'
@@ -51,8 +52,10 @@ async function setup({ google, baseUrl = origin }: { google?: GoogleConfig, base
   })
   const app = createApp(silentLogger, async () => ({ database: true, jobs: true }), {
     authHandler: auth.handler,
+    origin: ownOrigin(baseUrl),
     readSession: createSessionReader(auth),
     ensureGuestProfile: makeEnsureGuestProfile({ uow, profiles: createGuestProfileRepository() }),
+    loadAccess: makeLoadAccess({ uow, access: createAccessRepository() }),
   })
 
   // Each call gets its own client address unless it names one, because the code routes allow 3 calls a minute per address.
@@ -296,10 +299,14 @@ describe('[E2.2] sessions and the actor', () => {
     expect(await count(pool, 'select count(*) from identity.guest_profiles where auth_user_id = $1', [authUserId])).toBe(1)
   })
 
-  it('[E2.2] a request from a foreign origin with a session cookie is refused by Better Auth', async () => {
-    const { call, email, signIn } = await setup()
+  it('[E2.2] a request from a foreign origin with a session cookie is refused by Better Auth itself, behind the Origin rule of createApp', async () => {
+    const { auth, email, signIn } = await setup()
     const { cookie } = await signIn(email())
-    const response = await call('/api/auth/sign-out', { method: 'POST', body: {}, headers: { Cookie: cookie, Origin: 'https://evil.example' } })
+    const response = await auth.handler(new Request(`${origin}/api/auth/sign-out`, {
+      method: 'POST',
+      headers: { 'Cookie': cookie, 'Origin': 'https://evil.example', 'Content-Type': 'application/json' },
+      body: '{}',
+    }))
 
     expect(response.status).toBe(403)
   })
