@@ -6,7 +6,7 @@
 
 ## What ran (NEON)
 
-`spikes/sp6-neon-auth/run.ts` fetched `NEON_AUTH_JWKS_URL`, then (no `SP6_JWT` given) created a throwaway user through the Better Auth REST API, took the session cookie, fetched a JWT, verified it with `jose`, and deleted the user. The manual checklist is in `spikes/sp6-neon-auth/README.md`.
+`spikes/sp6-neon-auth/run.ts` fetched `NEON_AUTH_JWKS_URL`, then (no `SP6_JWT` given) created a throwaway user through the Better Auth REST API, took the session cookie, fetched a JWT, verified it with `jose`, and deleted the user. The manual checklist is in `spikes/sp6-neon-auth/README.md`. `neon env pull` writes both `NEON_AUTH_BASE_URL` and `NEON_AUTH_JWKS_URL`, and the second is the first plus `/.well-known/jwks.json`. The API (E2.2) reads only `NEON_AUTH_BASE_URL`, because the issuer is its origin.
 
 ## Observed (NEON Auth, throwaway user)
 

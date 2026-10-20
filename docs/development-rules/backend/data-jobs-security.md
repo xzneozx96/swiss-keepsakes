@@ -1,6 +1,6 @@
 # Data, jobs and security
 
-**Mostly design.** Configuration and logging are built (E1.8), and so is the platform layer for data and jobs (E1.9). No module and no business table exists yet. Source: `docs/architecture/backend.md` (the section is in brackets after each rule). Rules about money, Stripe holds and the commission ledger are specific to this product. They are in `docs/architecture/backend.md` sections 6 and 7 and are not repeated here.
+**Mostly design.** Configuration and logging are built (E1.8), and so is the platform layer for data and jobs (E1.9). The `identity` schema holds `store_memberships` and `platform_admins` (E2.2). No business table exists yet. Source: `docs/architecture/backend.md` (the section is in brackets after each rule). Rules about money, Stripe holds and the commission ledger are specific to this product. They are in `docs/architecture/backend.md` sections 6 and 7 and are not repeated here.
 
 ## Data
 
@@ -27,6 +27,7 @@
 
 - Configuration comes from environment variables, checked at startup against one Zod schema. The service refuses to start on a bad value. Secrets live in Fly secrets. (11)
   - Built: add a variable to the schema in `api/src/platform/config.ts` and to `api/.env.example`. The startup message names the variable and never prints its value. Tests: `api/test/platform/config.test.ts`.
+  - `NEON_AUTH_BASE_URL` (E2.2) is required in every role, because the release command reads the same schema. It must be `https://`, or `http://` on this machine for a local key server. Tests and the image smoke test pass a placeholder, because the keys are fetched on the first token only.
 
 ## Security and privacy (both sides follow these)
 
@@ -34,7 +35,7 @@
 - **The partner session cookie is `httpOnly` and `SameSite=Lax`**, scoped to `/partner` and `/api/partner`, with an `Origin` check on mutations. (13)
 - **A Content Security Policy** protects the SPA. **Webhook signatures** are verified, plus the Stripe IP allow-list. No card data touches our servers. (13)
 - **Logs are JSON** with request id, actor and store id. They never contain emails, phone numbers, tokens or engraving text. (13)
-  - Built: inside a request, log through `c.get('logger')`, which carries the request id. The request line logs the route pattern, not the URL, because a path such as `/partner/{token}` holds a token. Log an error as `logger.error({ err }, 'message')`: the `err` serializer keeps only type, code, constraint, table and stack frames (and the same for `cause`), because messages and fields such as pg's `detail` quote guest data. Never pass the error as the first argument, since pino then copies its message into `msg`. Redaction in `api/src/platform/logger.ts` covers a fixed list of keys at the top level, one and two levels down, and in arrays of objects up to one level down. It is a safety net, not a licence to log personal data.
+  - Built: inside a request, log through `c.get('logger')`, which carries the request id. After the auth middleware it also carries the `userId`, and on store routes the `storeId`. The request line uses it too. The request line logs the route pattern, not the URL, because a path such as `/partner/{token}` holds a token. Log an error as `logger.error({ err }, 'message')`: the `err` serializer keeps only type, code, constraint, table and stack frames (and the same for `cause`), because messages and fields such as pg's `detail` quote guest data. Never pass the error as the first argument, since pino then copies its message into `msg`. Redaction in `api/src/platform/logger.ts` covers a fixed list of keys at the top level, one and two levels down, and in arrays of objects up to one level down. It is a safety net, not a licence to log personal data.
 - **Analytics send no personal data.** Google Analytics loads only after cookie consent. Every money, status and source figure is SQL over our own tables. (D13)
 - **Guests can export and delete their account.** Deletion anonymizes the profile, and ledger and order rows stay for 10 years for Swiss accounting retention. (13)
 - **A dependency audit runs in CI.** (13)

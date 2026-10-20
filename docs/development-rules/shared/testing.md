@@ -42,12 +42,14 @@ Database tests are built (E1.9). They live in `api/test/integration/` and run wi
 
 The contract gate is built (E1.10). `api/test/contract.test.ts` builds `packages/api-contract/generated/` in memory from the API routes and fails when the committed files differ, so `pnpm test` runs it. After you change a route or a schema, run `pnpm contract:build` and commit the result. The gate is `pnpm test` plus `pnpm typecheck`: the test compares the files, lists the routes and checks the problem bodies, and the type check proves that the generated client's types equal the Zod types and that `problem()` refuses an unknown code or a status under 400.
 
+The permission matrix is built (E2.2). `storeOperations()` in `api/test/support/permission-matrix.ts` takes every `/api/store/*` operation from the OpenAPI document, and `api/test/platform/http/store-access.test.ts` calls each one as each outsider of the store and expects 401 or 403. Tokens are signed in the test with a local Ed25519 key (`api/test/support/identity.ts`), so no test calls Neon. `api/test/integration/identity.test.ts` runs the same matrix over the real `identity` tables.
+
 | Level | Proves | Tool |
 | :-- | :-- | :-- |
 | Pure domain | Transition tables and policies | Vitest in `packages/domain` |
 | Use cases | Each use case's decisions, with in-memory fakes of its ports | Vitest in `api/test/application` |
 | Database | Locks, unique indexes and composite keys, against real Postgres | Vitest on a Neon branch |
-| API | Route contracts, per-role permissions | Vitest |
+| API | Route contracts, per-role permissions. The permission matrix is built (E2.2) | Vitest |
 | Contract | Front-end and API agree | CI fails if the regenerated client differs |
 | End to end | Whole scenarios at 375px in English and German | Playwright on staging |
 | Load | Hold and accept paths under concurrency | k6 |
