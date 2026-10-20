@@ -5,7 +5,15 @@ import { makeFailMail } from '../../../src/modules/notifications/application/fai
 import { makeQueueMail } from '../../../src/modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from '../../../src/modules/notifications/application/send-mail.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
-import { createMemoryMailer, smtpError } from '../../support/memory-mailer.ts'
+import { createMemoryMailer, quotedAddress, smtpError } from '../../support/memory-mailer.ts'
+
+// What pg-boss stores as a failed job's output and copies to its dead-letter job: serialize-error (pg-boss's
+// manager.js) keeps every own enumerable property, plus name, message, stack, code, cause and errors.
+function storedByPgBoss(error: unknown): string {
+  const fields = error as Record<string, unknown>
+  const keys = new Set([...Object.keys(fields), 'name', 'message', 'stack', 'code', 'cause', 'errors'])
+  return JSON.stringify(Object.fromEntries(Array.from(keys, key => [key, fields[key]])))
+}
 
 // In-memory fakes of the module's ports. The transaction is a token the fakes check they were given.
 interface FakeTx { open: boolean }
@@ -136,18 +144,32 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
     expect(rows.get(mailId)).toEqual(after)
   })
 
-  it('[E2.8] a failed send is counted with its code only and rethrown, so pg-boss retries it, and the mail stays queued', async () => {
+  it('[E2.8] a failed send is counted with its code only and thrown again, so pg-boss retries it, and the mail stays queued', async () => {
     const { rows, memory, sendMail, queued } = setup()
     const { mailId, job } = await queued(n20)
-    const refused = smtpError('EENVELOPE', 451)
-    memory.failWith(refused)
+    memory.failWith(smtpError('EENVELOPE', 451))
 
-    await expect(sendMail(job)).rejects.toBe(refused)
-    await expect(sendMail(job)).rejects.toBe(refused)
+    await expect(sendMail(job)).rejects.toMatchObject({ message: 'EENVELOPE 451' })
+    await expect(sendMail(job)).rejects.toMatchObject({ message: 'EENVELOPE 451' })
 
     expect(memory.attempts.map(mail => mail.id)).toEqual([mailId, mailId])
     expect(rows.get(mailId)).toMatchObject({ status: 'queued', attempts: 2, lastError: 'EENVELOPE 451' })
-    expect(JSON.stringify(rows.get(mailId))).not.toContain('refused for')
+    expect(JSON.stringify(rows.get(mailId))).not.toContain(quotedAddress)
+  })
+
+  it('[E2.8] a failed attempt throws only the error code and SMTP reply code, so pg-boss stores no address or reply text', async () => {
+    const { memory, sendMail, queued } = setup()
+    const { job } = await queued(n20)
+    memory.failWith(smtpError('EENVELOPE', 451))
+
+    const thrown: unknown = await sendMail(job).catch((error: unknown) => error)
+
+    expect(thrown).toMatchObject({ name: 'MailAttemptError', message: 'EENVELOPE 451', code: 'EENVELOPE', responseCode: 451 })
+    expect((thrown as Error).cause).toBeUndefined()
+    const stored = storedByPgBoss(thrown)
+    expect(stored).not.toContain(quotedAddress)
+    expect(stored).not.toContain('Recipient address rejected')
+    expect(stored).not.toContain('RCPT TO')
   })
 
   it('[E2.8] a retry after a failure sends with the same mail id and records it sent', async () => {
@@ -167,7 +189,7 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
     const { rows, memory, sendMail, queued } = setup()
     const { mailId, job } = await queued(n20)
 
-    await expect(sendMail({ ...job, params: { store: 'Zürich Andenken', link: '' } })).rejects.toThrow('N20 has no value for {link}')
+    await expect(sendMail({ ...job, params: { store: 'Zürich Andenken', link: '' } })).rejects.toMatchObject({ name: 'MailAttemptError', message: 'MailRenderError' })
 
     expect(memory.attempts).toEqual([])
     expect(rows.get(mailId)).toMatchObject({ status: 'queued', attempts: 1, lastError: 'MailRenderError' })

@@ -13,7 +13,7 @@ import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { startJobs } from '../../src/platform/jobs/boss.ts'
 import { createJobQueue } from '../../src/platform/jobs/queue.ts'
 import { createManualClock } from '../support/manual-clock.ts'
-import { createMemoryMailer, smtpError } from '../support/memory-mailer.ts'
+import { createMemoryMailer, quotedAddress, smtpError } from '../support/memory-mailer.ts'
 import { count, openTestDatabase, silentLogger } from './support.ts'
 
 const { pool, db } = openTestDatabase()
@@ -130,6 +130,23 @@ describe('[E2.8] a failing send retries, then alerts', () => {
     const { rows: [job] } = await pool.query('select state, retry_count from pgboss.job where id = $1', [mailId])
     expect(job).toEqual({ state: 'failed', retry_count: 2 })
     await until(async () => (await pool.query(`select 1 from pgboss.job where name = $1 and data->>'mailId' = $2 and state = 'completed'`, [queues.failed, mailId])).rowCount === 1)
+  })
+
+  it('[E2.8] pg-boss stores a failed attempt and its dead-letter copy with the error code only, never the address or the reply text', async () => {
+    const { queues, uow, queueMail, memory, alerts, startWorkers } = await setup()
+    memory.failWith(smtpError('EENVELOPE', 451))
+    await startWorkers()
+
+    const mailId = await uow.run(tx => queueMail(tx, n18))
+    await until(() => alerts.length > 0)
+
+    const { rows: [source] } = await pool.query('select output from pgboss.job where id = $1', [mailId])
+    const { rows: [copy] } = await pool.query('select source_output from pgboss.job where name = $1 and source_id = $2', [queues.failed, mailId])
+    for (const stored of [source.output, copy.source_output]) {
+      expect(stored).toMatchObject({ name: 'MailAttemptError', message: 'EENVELOPE 451', code: 'EENVELOPE', responseCode: 451 })
+      expect(JSON.stringify(stored)).not.toContain(quotedAddress)
+      expect(JSON.stringify(stored)).not.toContain('Recipient address rejected')
+    }
   })
 
   it('[E2.8] the real mail queue retries 5 times with exponential backoff and dead-letters to mail-failed', async () => {

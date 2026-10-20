@@ -12,7 +12,7 @@ Mail goes over SMTP (architecture D12). A business command queues a `mail` job a
 ## Retries and the alert
 
 - The `mail` queue retries a failed attempt 5 times with exponential backoff from 30 s. The last attempt runs about 15 to 30 minutes after the first.
-- Each failed attempt adds 1 to `attempts` and sets `last_error` to the error code and the SMTP reply code, for example `EAUTH 535`. The server's reply text is never stored, because it can quote the address.
+- Each failed attempt adds 1 to `attempts` and sets `last_error` to the error code and the SMTP reply code, for example `EAUTH 535`. The job throws a `MailAttemptError` that holds only the same two values, so pg-boss's `output` and the dead-letter copy's `source_output` hold them too. The server's reply text is never stored, because it can quote the address.
 - After the last attempt, pg-boss moves the job to the `mail-failed` queue. Its handler sets the row to `failed` and logs one error line with `"event":"mail.failed"`, the mail id, the template, the number of attempts and the last error. Until Sentry arrives (E2.9), that line is the alert. It never holds the address or the link.
 
 ## The ops list
