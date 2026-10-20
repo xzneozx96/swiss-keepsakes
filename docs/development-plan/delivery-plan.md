@@ -1,6 +1,6 @@
 # Swiss Keepsakes delivery plan
 
-Status: draft for owner review. Last updated 19.10.2026.
+Status: draft for owner review. Last updated 20.10.2026.
 
 This plan turns the front-end prototype into the production app described in `docs/architecture/backend.md`. It covers the backend and the front-end together. Work is split into eight epics, E0 to E7, which follow the phases in section 14 of the architecture doc. Each epic holds stories, and each story names the automated test that proves it.
 
@@ -59,7 +59,7 @@ The agent can't create these. The owner or the developer sets them up before Spr
 - A Neon project in AWS Frankfurt.
 - A Fly.io organisation.
 - A Stripe sandbox. SP4 also reads the pilot store's own account, which depends on Q2.
-- A real iPhone with Safari on default settings, for SP6.
+- A real iPhone with Safari on default settings, for SP6. Since 20.10.2026 it serves the sign-in check in E2.1.
 - A GitHub Actions budget for the CI runs.
 
 ## 2. The verification harness
@@ -114,7 +114,7 @@ Each spike is a throwaway branch with a written answer in `docs/spikes/SPn.md`. 
 | E0.3 | SP3. 50 concurrent hold requests for one free seat against Neon Frankfurt from Fly `fra` | BE | 3 | High | E0.1 | Exactly one `pending_payment`. p95 latency recorded in `docs/spikes/SP3.md` |
 | E0.4 | SP4. Stripe sandbox behaviour. Cancel after success, TWINT in the Payment Element, the store account's capabilities | BE | 2 | Medium | | Each behaviour observed and written in `docs/spikes/SP4.md` |
 | E0.5 | SP5. Neon Object Storage presigned upload and public read | BE | 2 | Medium | | Upload and public read both work, or the decision moves to Cloudflare R2. Proof is `docs/spikes/SP5.md` |
-| E0.6 | SP6. Neon Auth in our SPA. Email code sign-in, the JWT field, token lifetime, code limits, iOS Safari | Both | 5 | High | E0.1 | On iOS Safari with default settings the guest stays signed in across reloads and a day later. The API resolves the actor from the JWT. Each gap is listed. If Safari fails, D8 moves to Better Auth inside the API before E2. Google sign-in is tested in E2.1 and the staff invitation in E2.3. Proof is `docs/spikes/SP6.md` with screenshots |
+| E0.6 | SP6. Neon Auth in our SPA. Email code sign-in, the JWT field, token lifetime, code limits, iOS Safari | Both | 5 | High | E0.1 | On iOS Safari with default settings the guest stays signed in across reloads and a day later. The API resolves the actor from the JWT. Each gap is listed. If Safari fails, D8 moves to Better Auth inside the API before E2. Google sign-in is tested in E2.1 and the staff invitation in E2.3. Proof is `docs/spikes/SP6.md` with screenshots. Result on 20.10.2026: the E2.1 Playwright WebKit run refused Neon Auth's third-party session cookie, so D8 moved to Better Auth inside the API. The real iPhone check moved to E2.1 |
 | E0.7 | SP7. Fly release command runs Drizzle migrations, plus a rollback drill | Ops | 2 | Medium | E0.1 | A deploy with a migration and a rollback both run on a test app without downtime. Proof is `docs/spikes/SP7.md` |
 | E0.8 | Turn the prototype's demo flows into tracked Playwright tests in `e2e/` | FE | 5 | High | | The gift flow, tour flow, merchant order flow and EN/DE switch run at 375 px against the demo build and pass in CI. Tests `[E0.8]` |
 | E0.9 | Traceability check `scripts/trace.mjs` | Both | 2 | Medium | E0.8 | It lists every story with its test titles and exits non-zero when a Verified or Done story has none. Its own fixture test `[E0.9]` |
@@ -141,14 +141,14 @@ Each spike is a throwaway branch with a written answer in `docs/spikes/SPn.md`. 
 
 | ID | Story | Side | Pts | Priority | Depends | Acceptance and proof |
 |---|---|---|---|---|---|---|
-| E2.1 | Sign-in sheet C05 on Neon Auth. Google and email code, the token kept in memory, the client sending the Bearer token | FE | 5 | High | E0.6, E1.11 | A guest signs in and stays signed in across reloads on Playwright WebKit and on a real iPhone in Safari, since WebKit in Playwright doesn't reproduce Safari's tracking prevention. The token never appears in `localStorage`. Google sign-in completes on localhost and staging and creates the user, and the consent screen shows our own Google OAuth app, not Neon's shared keys. Playwright `[E2.1][AC01]` |
-| E2.2 | JWT verification, actor, memberships and `can()` | BE | 3 | High | E1.9, E0.6 | A bad issuer or an expired token gets 401. Every `/api/store/*` route returns 403 to a member of another store, checked by the generated permission matrix. Tests `[E2.2][AC02]` |
-| E2.3 | Stores and the first Owner. Super Admin invites the Owner (A01, N20). The store can't sell until A02's conditions are met | Both | 5 | Medium | E2.1, E2.2, E2.8 | S8. A staff invitation is sent, accepted after sign-in, and adds the `store_memberships` row. Playwright `[E2.3][S8]` |
-| E2.4 | Owner invites a Store Manager (M22 members, N18, M01) | Both | 3 | Medium | E2.1, E2.3 | The invitee signs in, accepts and sees only that store. Playwright `[E2.4][AC02]` |
+| E2.1 | Sign-in sheet C05 on Better Auth (D8). Google and email code on our own origin, the session in an HttpOnly cookie, no token in JavaScript, the Vite dev server proxying `/api` to the API | FE | 5 | High | E2.2, E1.11 | A guest signs in with the emailed code and stays signed in across reloads on Playwright WebKit, against the API on the same origin, with no `test.fail` mark. A real iPhone in Safari with default settings repeats the check, since Playwright WebKit doesn't reproduce Safari's tracking prevention. No token appears in JavaScript, `localStorage` or `sessionStorage`, and the session cookie is HttpOnly. Google sign-in completes on localhost and staging and creates the user, and the consent screen shows our own Google OAuth app. Playwright `[E2.1][AC01]` |
+| E2.2 | Better Auth in the API (D8). The `emailOTP` plugin and Google, the session to the actor, the guest profile on the first authenticated call, the `Origin` check, memberships, `can()` and the permission matrix | BE | 8 | High | E1.9, E2.8 | Better Auth answers at `/api/auth/*` with only the `emailOTP` plugin and Google on, and its option names are checked against the installed `better-auth` 1.7.7 or later. A request without a session is anonymous, and a revoked or expired session gets 401 on a guarded route. A code expires after 5 minutes and allows 3 tries. Requesting one queues N01 in EN or DE through the `mail` job without waiting for it. The first authenticated call creates the guest profile. A state-changing `/api/` request from a foreign `Origin` gets 403, a JSON request included. Rate limits keep their counters in Postgres. Every `/api/store/*` route returns 403 to a member of another store, checked by the generated permission matrix. At 8 points it is split at Sprint 3 planning (section 1.1). Tests `[E2.2][AC02]` |
+| E2.3 | Stores and the first Owner. Super Admin invites the Owner (A01, N20). The store can't sell until A02's conditions are met | Both | 5 | Medium | E2.1, E2.2, E2.8 | S8. A staff invitation is sent, accepted after sign-in through Better Auth (D8), and adds the `store_memberships` row. Playwright `[E2.3][S8]` |
+| E2.4 | Owner invites a Store Manager (M22 members, N18, M01) | Both | 3 | Medium | E2.1, E2.3 | The invitee signs in through Better Auth, accepts and sees only that store. Playwright `[E2.4][AC02]` |
 | E2.5 | Catalogue schema and public reads. Products, variants, sub-categories, pickup places, tours, departures. C01 to C03 and C08 to C10 read from the API | Both | 8 | High | E1.13, E1.11 | The guest pages show seeded data from the database. The catalogue demo seed and its mock code are deleted. Playwright `[E2.5]` |
 | E2.6 | Merchant catalogue edits M11 to M14 and M26, with `If-Match` and the publish rule | Both | 8 | Medium | E2.5, E2.2 | A stale edit gets 412. A tour complete in only EN or only DE can be published (S11). Tests `[E2.6][S11]` |
 | E2.7 | Media. Signed upload URLs, `sharp` variants in the worker, the public bucket | Both | 5 | Medium | E0.5, E2.6 | A merchant uploads a photo and the guest page shows the resized image. Tests `[E2.7]` |
-| E2.8 | Notifications module. SMTP adapter behind the `Mailer` port with the `SMTP_*` config, an in-memory `Mailer` for tests, Mailpit removed from Docker Compose, EN and DE templates, the `mail` job with retries | BE | 5 | Medium | E1.9, E1.12 | N18 and N20 render in both languages and the SMTP adapter delivers them to the test inbox. A failing send retries and then alerts. Tests `[E2.8]` |
+| E2.8 | Notifications module. SMTP adapter behind the `Mailer` port with the `SMTP_*` config, an in-memory `Mailer` for tests, Mailpit removed from Docker Compose, EN and DE templates, the `mail` job with retries | BE | 5 | Medium | E1.9, E1.12 | N18 and N20 render in both languages and the SMTP adapter delivers them to the test inbox. A failing send retries and then alerts. The sign-in code mail N01 goes through the same job, and E2.2 queues it (D8). Tests `[E2.8]` |
 | E2.9 | Staging. Fly `sk-staging`, Neon `staging` branch, Sentry EU, deploy on merge, smoke tests after each deploy | Ops | 5 | High | E1.13, E0.7 | A merge to `main` reaches staging, and the E0.8 and E2 Playwright tests pass there. Proof is the deploy log and the run link |
 
 ### E3. Keepsake orders
@@ -206,7 +206,7 @@ Q2 (the pilot merchant's Swiss business status, CHF account and TWINT legal noti
 | E6.4 | Reports M21 and cost data M24 as SQL views. M02 figures | Both | 8 | Medium | E3.6, E4.9, E5.2 | S12. Profit shows only when every cost is in. Tests `[E6.4][S12]` |
 | E6.5 | Plausible, the consent banner, GA4 after consent | FE | 3 | Low | E2.9 | GA4 never loads before consent. No personal data, engraving or chat text is sent. Playwright `[E6.5]` |
 | E6.6 | Ledger CSV export for the accountant (Q11) | Both | 2 | Low | E4.8 | The CSV totals match the ledger view. Tests `[E6.6]` |
-| E6.7 | Guest data export and account deletion. Retention jobs, 10 years for ledger and orders (Q12) | Both | 5 | Medium | E2.2 | Deletion anonymises the profile and the `neon_auth` user, and keeps the ledger. Tests `[E6.7]` |
+| E6.7 | Guest data export and account deletion. Retention jobs, 10 years for ledger and orders (Q12) | Both | 5 | Medium | E2.2 | Deletion runs through Better Auth's `deleteUser` (D8). Our step before it anonymises the guest profile, Better Auth removes the user and its sessions, and the ledger and order rows stay. Tests `[E6.7]` |
 | E6.8 | S10 to S12 as one staging suite | FE | 2 | Medium | E6.1 to E6.7 | The suite passes on staging in EN and DE. Proof is the run link |
 
 ### E7. Going live
@@ -232,7 +232,7 @@ This is a guess for one developer with Claude agents. It is rebuilt from measure
 | 0 | Spikes answered, regression net in place | E0.1 to E0.9 |
 | 1 | Packages and domain rules | E1.1 to E1.7 |
 | 2 | API skeleton, platform layer, CI | E1.8 to E1.13 |
-| 3 | Sign-in, stores, staff, mail | E2.1 to E2.4, E2.8 |
+| 3 | Better Auth in the API first, then sign-in, stores and staff. Mail is already built | E2.2, E2.1, E2.3, E2.4, E2.8 |
 | 4 | Catalogue, media, staging | E2.5 to E2.7, E2.9 |
 | 5 | Cart submit and merchant order screens | E3.1, E3.2 |
 | 6 | Acceptance, deadlines, external payments | E3.3 to E3.5 |
@@ -262,8 +262,8 @@ This is a guess for one developer with Claude agents. It is rebuilt from measure
 
 The full list is architecture section 15. These are the ones that change the plan.
 
-- **SP6 is assumed to pass on Safari.** The owner said on 20.10.2026 to build E2.1 and E2.2 without the iPhone checklist, so E0.6 stays Blocked and E2.1's real iPhone proof is listed as not verified until the checklist runs.
-- **SP6 fails on Safari.** Auth moves to Better Auth inside the API. E2.1 and E2.2 grow by about one sprint. Known at the end of Sprint 0.
+- **SP6 failed on WebKit, so auth moved.** On 20.10.2026 the E2.1 Playwright WebKit run refused Neon Auth's third-party session cookie, and the owner moved D8 to Better Auth inside the API. E2.2 grew from 3 to 8 points and now comes first in Sprint 3. Sprint 3 holds 26 points where it held 21. The real iPhone check stays in E2.1 and is not verified until it runs.
+- **Better Auth security advisories.** The auth code now runs in our process (R13). `better-auth` is pinned at 1.7.7 or later, and each advisory can add an unplanned upgrade.
 - **The sprint map is a guess.** It is rebuilt after Sprint 2. Until then no date is promised.
 - **Payments are the hardest part.** E4 has the most points and the most tests. If it slips, E5 and E6 move, not the E4 tests.
 - **One developer.** The harness, the runbooks and this plan are the handover.
