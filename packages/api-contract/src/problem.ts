@@ -28,6 +28,10 @@ export const problemTypes = [
   'already-a-member',
   'store-not-onboarding',
   'onboarding-incomplete',
+  'manager-is-super-admin',
+  'invitation-already-open',
+  'cannot-remove-owner',
+  'member-not-found',
 ] as const
 
 export type ProblemType = (typeof problemTypes)[number]

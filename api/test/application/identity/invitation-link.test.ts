@@ -1,8 +1,9 @@
 import type { FakeTx } from '../../support/fake-identity.ts'
 import { invitationLifetimeMs } from '@sk/domain/identity'
 import { describe, expect, it } from 'vitest'
-import { makeInvitationLink } from '../../../src/modules/identity/application/invitation-link.ts'
+import { invitationScreens, makeInvitationLink } from '../../../src/modules/identity/application/invitation-link.ts'
 import { hashInvitationToken, newInvitationToken } from '../../../src/modules/identity/application/invitation-token.ts'
+import { invitationRevoked } from '../../../src/modules/notifications/index.ts'
 import { createFakeIdentity } from '../../support/fake-identity.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
 
@@ -51,7 +52,7 @@ describe('[E2.3] the identity module\'s InvitationLink', () => {
     expect(await fake.invitations.findByTokenHashForUpdate(tx, hashInvitationToken('token-2'))).toMatchObject({ id: owner.id })
   })
 
-  it('[E2.3] returns nothing for an accepted invitation, an expired one, a revoked one and an unknown one, and stores no token', async () => {
+  it('[E2.3] returns nothing for an accepted invitation, an expired one and an unknown one, answers invitationRevoked for a revoked one, and stores no token', async () => {
     const { fake, clock, owner, link } = await setup()
 
     expect(await link(tx, 'N20', '0190f0c2-0000-7000-8000-0000000000ff')).toBeUndefined()
@@ -62,18 +63,18 @@ describe('[E2.3] the identity module\'s InvitationLink', () => {
     expect(await link(tx, 'N20', owner.id)).toBeUndefined()
     clock.advance(-invitationLifetimeMs)
     fake.state.invitations.get(owner.id)!.revokedAt = new Date(start.getTime() - 1)
-    expect(await link(tx, 'N20', owner.id)).toBeUndefined()
+    expect(await link(tx, 'N20', owner.id)).toBe(invitationRevoked)
 
     expect(fake.state.invitations.get(owner.id)?.tokenHash).toBeNull()
   })
 
   it('[E2.3] N20 is for an Owner invitation, and a template that does not match the role gets no link', async () => {
     const { fake, owner, manager, link } = await setup()
-    const withBoth = makeInvitationLink({ invitations: fake.invitations, clock: createManualClock(start), newToken: () => 'token-x', appUrl: 'https://shop.example', screens: { N20: '/store/onboarding', N18: '/store/invitation' } })
+    const withBoth = makeInvitationLink({ invitations: fake.invitations, clock: createManualClock(start), newToken: () => 'token-x', appUrl: 'https://shop.example', screens: invitationScreens })
 
     expect(await withBoth(tx, 'N18', owner.id)).toBeUndefined()
     expect(await withBoth(tx, 'N20', manager.id)).toBeUndefined()
-    expect(await withBoth(tx, 'N18', manager.id)).toBe('https://shop.example/#/store/invitation?invitation=token-x')
+    expect(await withBoth(tx, 'N18', manager.id)).toBe('https://shop.example/#/invitation?invitation=token-x')
     expect(await link(tx, 'N20', owner.id)).toContain('/store/onboarding')
   })
 

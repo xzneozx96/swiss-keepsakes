@@ -5,12 +5,17 @@ import type { AppEnv } from '../../../platform/http/app.ts'
 import type { AcceptInvitationResult } from '../application/accept-invitation.ts'
 import type { CreateStoreInput, CreateStoreResult } from '../application/create-store.ts'
 import type { OnboardingView } from '../application/get-onboarding.ts'
+import type { InviteManagerResult } from '../application/invite-manager.ts'
+import type { ListMembersResult } from '../application/list-members.ts'
 import type { StorePage } from '../application/list-stores.ts'
 import type { OpenStoreForSaleResult } from '../application/open-store-for-sale.ts'
+import type { RemoveMemberResult } from '../application/remove-member.ts'
+import type { ResendManagerInvitationResult } from '../application/resend-manager-invitation.ts'
 import type { ResendOwnerInvitationResult } from '../application/resend-owner-invitation.ts'
+import type { RevokeInvitationResult } from '../application/revoke-invitation.ts'
 import type { UpdateStoreInformationResult } from '../application/update-store-information.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { acceptedInvitationSchema, acceptInvitationBodySchema, adminStoreListQuerySchema, adminStoreListSchema, adminStoreSchema, createStoreBodySchema, onboardingSchema, resendOwnerInvitationBodySchema, storeInformationBodySchema, storeSchema } from '@sk/api-contract'
+import { acceptedInvitationSchema, acceptInvitationBodySchema, adminStoreListQuerySchema, adminStoreListSchema, adminStoreSchema, createStoreBodySchema, inviteManagerBodySchema, memberInvitationSchema, membersSchema, onboardingSchema, resendManagerInvitationBodySchema, resendOwnerInvitationBodySchema, storeInformationBodySchema, storeSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 
@@ -23,6 +28,11 @@ export interface IdentityUseCases {
   getOnboarding: (storeId: string) => Promise<OnboardingView | undefined>
   updateStoreInformation: (actor: Actor, storeId: string, changes: { name?: string, defaultLanguage?: StoreLanguage }, requestId: string | null) => Promise<UpdateStoreInformationResult>
   openStoreForSale: (actor: Actor, storeId: string, requestId: string | null) => Promise<OpenStoreForSaleResult>
+  listMembers: (actor: Actor, storeId: string) => Promise<ListMembersResult>
+  inviteManager: (actor: Actor, storeId: string, input: { email: string, language?: StoreLanguage | undefined }, requestId: string | null) => Promise<InviteManagerResult>
+  resendManagerInvitation: (actor: Actor, storeId: string, invitationId: string, language: StoreLanguage | undefined, requestId: string | null) => Promise<ResendManagerInvitationResult>
+  revokeInvitation: (actor: Actor, storeId: string, invitationId: string, requestId: string | null) => Promise<RevokeInvitationResult>
+  removeMember: (actor: Actor, storeId: string, memberId: string, requestId: string | null) => Promise<RemoveMemberResult>
 }
 
 const json = <S extends z.ZodType>(schema: S) => ({ 'application/json': { schema } })
@@ -53,7 +63,8 @@ const acceptEmptyBody: MiddlewareHandler = async (c, next) => {
   if (c.req.header('Content-Type') !== undefined && (await c.req.arrayBuffer()).byteLength === 0) {
     const headers = new Headers(c.req.raw.headers)
     headers.delete('Content-Type')
-    c.req.raw = new Request(c.req.raw, { headers })
+    // The body is read already, and a Request cannot be built from one that was, so build it from the parts.
+    c.req.raw = new Request(c.req.url, { method: c.req.method, headers })
   }
   await next()
 }
@@ -114,6 +125,65 @@ const openRoute = createRoute({
     ...problemResponses,
   },
 })
+
+const membersRoute = createRoute({
+  method: 'get',
+  path: '/api/store/{storeId}/members',
+  request: { params: z.object({ storeId: z.uuid() }) },
+  responses: {
+    200: { description: 'The store\'s members and its pending Store Manager invitations. Owner only', headers: requestIdHeader, content: json(membersSchema) },
+    ...problemResponses,
+  },
+})
+
+const inviteManagerRoute = createRoute({
+  method: 'post',
+  path: '/api/store/{storeId}/member-invitations',
+  request: {
+    params: z.object({ storeId: z.uuid() }),
+    body: { required: true, content: json(inviteManagerBodySchema) },
+  },
+  responses: {
+    201: { description: 'The Store Manager invitation. The N18 mail is queued', headers: requestIdHeader, content: json(memberInvitationSchema) },
+    ...problemResponses,
+  },
+})
+
+const resendManagerRoute = createRoute({
+  method: 'post',
+  path: '/api/store/{storeId}/member-invitations/{invitationId}/resend',
+  middleware: [acceptEmptyBody],
+  request: {
+    params: z.object({ storeId: z.uuid(), invitationId: z.uuid() }),
+    body: { required: false, content: json(resendManagerInvitationBodySchema) },
+  },
+  responses: {
+    200: { description: 'The invitation lives 7 more days and only the new mail\'s link works', headers: requestIdHeader, content: json(memberInvitationSchema) },
+    ...problemResponses,
+  },
+})
+
+const revokeInvitationRoute = createRoute({
+  method: 'post',
+  path: '/api/store/{storeId}/member-invitations/{invitationId}/revoke',
+  request: { params: z.object({ storeId: z.uuid(), invitationId: z.uuid() }) },
+  responses: {
+    200: { description: 'The invitation is revoked and its link stops working at once', headers: requestIdHeader, content: json(memberInvitationSchema) },
+    ...problemResponses,
+  },
+})
+
+const removeMemberRoute = createRoute({
+  method: 'delete',
+  path: '/api/store/{storeId}/members/{memberId}',
+  request: { params: z.object({ storeId: z.uuid(), memberId: z.uuid() }) },
+  responses: {
+    204: { description: 'The Store Manager no longer belongs to the store. Their next request is refused', headers: requestIdHeader },
+    ...problemResponses,
+  },
+})
+
+const membersForbidden = { type: 'forbidden', status: 403, title: 'Only the Owner may manage the store\'s members' } as const
 
 // Every actor but `anonymous` has a user id, and the guard of the route has already refused an anonymous one.
 function signedIn(actor: Actor): { userId: string } {
@@ -213,6 +283,81 @@ export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: Ident
         return problem(c, { type: 'store-not-onboarding', status: 409, title: 'Only a store that is onboarding can be opened for sale' })
       case 'onboarding-incomplete':
         return problem(c, { type: 'onboarding-incomplete', status: 409, title: 'The store cannot open for sale until every condition is met' })
+    }
+  })
+
+  app.openapi(membersRoute, async (c) => {
+    const result = await useCases.listMembers(c.get('actor'), c.get('store').storeId)
+    return result.ok ? c.json({ members: result.members, invitations: result.invitations }, 200) : problem(c, membersForbidden)
+  })
+
+  app.openapi(inviteManagerRoute, async (c) => {
+    const result = await useCases.inviteManager(c.get('actor'), c.get('store').storeId, c.req.valid('json'), c.get('requestId'))
+    if (result.ok)
+      return c.json(result.invitation, 201)
+    switch (result.reason) {
+      case 'forbidden':
+        return problem(c, membersForbidden)
+      case 'store-not-found':
+        return problem(c, { type: 'not-found', status: 404, title: 'There is no such store' })
+      case 'already-a-member':
+        return problem(c, { type: 'already-a-member', status: 409, title: 'This person already belongs to the store' })
+      case 'manager-is-super-admin':
+        return problem(c, { type: 'manager-is-super-admin', status: 409, title: 'This email belongs to a Super Admin, who cannot take a store role. Use another email address' })
+      case 'invitation-already-open':
+        return problem(c, { type: 'invitation-already-open', status: 409, title: 'This email already has an open invitation. Send that one again instead' })
+    }
+  })
+
+  app.openapi(resendManagerRoute, async (c) => {
+    const body = c.req.valid('json')
+    const { invitationId } = c.req.valid('param')
+    const result = await useCases.resendManagerInvitation(c.get('actor'), c.get('store').storeId, invitationId, body?.language, c.get('requestId'))
+    if (result.ok)
+      return c.json(result.invitation, 200)
+    switch (result.reason) {
+      case 'forbidden':
+        return problem(c, membersForbidden)
+      case 'store-not-found':
+        return problem(c, { type: 'not-found', status: 404, title: 'There is no such store' })
+      case 'invitation-not-found':
+        return problem(c, { type: 'invitation-not-found', status: 404, title: 'The store has no such Store Manager invitation' })
+      case 'invitation-already-accepted':
+        return problem(c, { type: 'invitation-already-accepted', status: 409, title: 'The invitation has already been accepted' })
+      case 'invitation-revoked':
+        return problem(c, { type: 'invitation-revoked', status: 409, title: 'The invitation was revoked and cannot be sent again. Invite the person anew' })
+      case 'already-a-member':
+        return problem(c, { type: 'already-a-member', status: 409, title: 'This person already belongs to the store' })
+    }
+  })
+
+  app.openapi(revokeInvitationRoute, async (c) => {
+    const result = await useCases.revokeInvitation(c.get('actor'), c.get('store').storeId, c.req.valid('param').invitationId, c.get('requestId'))
+    if (result.ok)
+      return c.json(result.invitation, 200)
+    switch (result.reason) {
+      case 'forbidden':
+        return problem(c, membersForbidden)
+      case 'invitation-not-found':
+        return problem(c, { type: 'invitation-not-found', status: 404, title: 'The store has no such Store Manager invitation' })
+      case 'invitation-already-accepted':
+        return problem(c, { type: 'invitation-already-accepted', status: 409, title: 'The invitation has already been accepted. Remove the member instead' })
+      case 'invitation-revoked':
+        return problem(c, { type: 'invitation-revoked', status: 409, title: 'The invitation is already revoked' })
+    }
+  })
+
+  app.openapi(removeMemberRoute, async (c) => {
+    const result = await useCases.removeMember(c.get('actor'), c.get('store').storeId, c.req.valid('param').memberId, c.get('requestId'))
+    if (result.ok)
+      return c.body(null, 204)
+    switch (result.reason) {
+      case 'forbidden':
+        return problem(c, membersForbidden)
+      case 'member-not-found':
+        return problem(c, { type: 'member-not-found', status: 404, title: 'The store has no such member' })
+      case 'cannot-remove-owner':
+        return problem(c, { type: 'cannot-remove-owner', status: 409, title: 'An Owner cannot be removed here' })
     }
   })
 }

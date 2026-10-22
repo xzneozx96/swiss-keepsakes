@@ -36,7 +36,7 @@ export function makeResendOwnerInvitation<T>({ uow, stores, invitations, conditi
     if (invitation.revokedAt !== null)
       return { ok: false, reason: 'invitation-revoked' }
     const expiresAt = new Date(now.getTime() + invitationLifetimeMs)
-    await invitations.renew(tx, invitation.id, expiresAt)
+    await invitations.renew(tx, storeId, invitation.id, expiresAt)
     await queueMail(tx, { template: 'N20', to: invitation.email, language: language ?? store.defaultLanguage, storeId, params: { store: store.name, invitationId: invitation.id } })
     await audit.record(tx, { storeId, actor: `super_admin:${actor.userId}`, entity: 'store_invitation', entityId: invitation.id, action: 'resent', requestId })
     return { ok: true, store: adminStoreView(store, { ...invitation, tokenHash: null, expiresAt }, await conditions.laterConditions(tx, storeId), now) }

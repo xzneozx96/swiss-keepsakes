@@ -76,20 +76,45 @@ export interface InvitationRepository<T> {
   newestOwnerInvitations: (tx: T, storeIds: string[]) => Promise<Map<string, Invitation>>
   newestOwnerInvitationForUpdate: (tx: T, storeId: string) => Promise<Invitation | undefined>
   // Resend: a new expiry, and no token until the next mail is sent, so the old link stops working now.
-  renew: (tx: T, invitationId: string, expiresAt: Date) => Promise<void>
+  renew: (tx: T, storeId: string, invitationId: string, expiresAt: Date) => Promise<void>
   setTokenHash: (tx: T, invitationId: string, tokenHash: string) => Promise<void>
   // Sets accepted_by only while it is null, the invitation is not revoked and has not expired. Returns whether it did.
   markAccepted: (tx: T, invitationId: string, userId: string, now: Date) => Promise<boolean>
+  // A Store Manager invitation of this store, locked, or undefined when the id belongs to no such invitation of this store.
+  findManagerInStoreForUpdate: (tx: T, storeId: string, invitationId: string) => Promise<Invitation | undefined>
+  // The store's Store Manager invitations that are neither accepted nor revoked, newest first.
+  listPendingManagers: (tx: T, storeId: string) => Promise<Invitation[]>
+  // The store's Store Manager invitation for this address that is neither accepted nor revoked. An expired one
+  // counts, so it blocks a new invitation and the Owner sends it again (the Owner invitation's partial index does the same).
+  findOpenManagerByEmail: (tx: T, storeId: string, email: string) => Promise<Invitation | undefined>
+  revoke: (tx: T, storeId: string, invitationId: string, now: Date) => Promise<void>
+  // Revokes every Store Manager invitation of this store for the address that is neither accepted nor revoked.
+  revokeOpenManagersByEmail: (tx: T, storeId: string, email: string, now: Date) => Promise<void>
+}
+
+export interface Member {
+  id: string
+  userId: string
+  email: string
+  role: InvitationRole
+  acceptedAt: Date
 }
 
 export interface MembershipRepository<T> {
   // Returns false when the user is already a member of the store.
   insertIfAbsent: (tx: T, membership: { userId: string, storeId: string, role: InvitationRole, acceptedAt: Date }) => Promise<boolean>
+  // The store's members with their sign-in address, oldest first.
+  list: (tx: T, storeId: string) => Promise<Member[]>
+  // Whether the user belongs to the store in any role.
+  has: (tx: T, storeId: string, userId: string) => Promise<boolean>
+  // A membership of this store, locked, or undefined when the id belongs to another store.
+  findInStoreForUpdate: (tx: T, storeId: string, memberId: string) => Promise<Member | undefined>
+  remove: (tx: T, storeId: string, memberId: string) => Promise<void>
 }
 
 // Better Auth's `user` table, which the identity module owns.
 export interface UserDirectory<T> {
-  find: (tx: T, userId: string) => Promise<{ email: string, emailVerified: boolean } | undefined>
+  find: (tx: T, userId: string) => Promise<{ email: string, name: string, emailVerified: boolean } | undefined>
   findByEmail: (tx: T, email: string) => Promise<{ id: string } | undefined>
 }
 

@@ -74,6 +74,37 @@ export const storeInformationBodySchema = z.object({
   defaultLanguage: language.optional(),
 }).refine(body => body.name !== undefined || body.defaultLanguage !== undefined, 'Send at least one field').meta({ id: 'StoreInformation' })
 
+const invitationStateSchema = z.enum(['open', 'accepted', 'revoked', 'expired'])
+
+export const memberSchema = z.object({
+  id: z.uuid().meta({ description: 'The membership id, which `DELETE /members/{memberId}` takes. It is not the user id' }),
+  email: z.string().meta({ description: 'The member\'s sign-in address, in lower case' }),
+  role: z.enum(['owner', 'manager']),
+  acceptedAt: z.iso.datetime(),
+}).meta({ id: 'Member' })
+
+export const memberInvitationSchema = z.object({
+  id: z.uuid(),
+  email: z.string().meta({ description: 'The address the Store Manager was invited at, in lower case' }),
+  state: invitationStateSchema,
+  expiresAt: z.iso.datetime(),
+}).meta({ id: 'MemberInvitation', description: 'A Store Manager invitation. It never carries the link or the token' })
+
+export const membersSchema = z.object({
+  members: z.array(memberSchema),
+  invitations: z.array(memberInvitationSchema).meta({ description: 'The Store Manager invitations that are neither accepted nor revoked, newest first. An `expired` one can be sent again' }),
+}).meta({ id: 'Members', description: 'M22\'s members tab: who belongs to the store and who was invited' })
+
+export const inviteManagerBodySchema = z.object({
+  // The pipe validates the trimmed address. The input side names the format, which a pipe would otherwise drop from the document.
+  email: z.string().trim().max(254).meta({ format: 'email' }).pipe(z.email().max(254)),
+  language: language.optional().meta({ description: 'The language of the invitation mail N18. The store\'s default language when left out' }),
+}).meta({ id: 'InviteManager' })
+
+export const resendManagerInvitationBodySchema = z.object({
+  language: language.optional().meta({ description: 'The language of the invitation mail N18. The store\'s default language when left out' }),
+}).meta({ id: 'ResendManagerInvitation' })
+
 export type AdminStore = z.infer<typeof adminStoreSchema>
 export type AdminStoreList = z.infer<typeof adminStoreListSchema>
 export type CreateStore = z.infer<typeof createStoreBodySchema>

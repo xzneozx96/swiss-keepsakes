@@ -241,7 +241,7 @@ describe(`[E2.10][AC02] the generated permission matrix over createApp's own rou
   })
   it.each(realOperations)('[E2.10][AC02] $method $path refuses each outsider and lets the store\'s owner through', async (operation) => {
     expect(await outsiderAnswers(realApp, operation, lucerne, asOutsiders, shopOrigin)).toEqual(expectedOutsiderAnswers)
-    expect(refusedToTheOwner.has((await callAs(realApp, operation, lucerne, asOwner, shopOrigin)).status)).toBe(false)
+    expect(refusedToTheOwner(await callAs(realApp, operation, lucerne, asOwner, shopOrigin))).toBe(false)
   })
 })
 
@@ -279,7 +279,7 @@ describe('[E2.10][AC02] the generated permission matrix, over the app that serve
     expect(storeOperationsOutsideGuard(operations), 'A route under /api/store/ must start with /api/store/{storeId}').toEqual([])
     for (const operation of operations) {
       expect(await outsiderAnswers(app, operation, lucerne, asOutsiders, shopOrigin), `${operation.method} ${operation.path}`).toEqual(expectedOutsiderAnswers)
-      expect(refusedToTheOwner.has((await callAs(app, operation, lucerne, asOwner, shopOrigin)).status), `${operation.method} ${operation.path} refused its own owner`).toBe(false)
+      expect(refusedToTheOwner(await callAs(app, operation, lucerne, asOwner, shopOrigin)), `${operation.method} ${operation.path} refused its own owner`).toBe(false)
     }
   })
 

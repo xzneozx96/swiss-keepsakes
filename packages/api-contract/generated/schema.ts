@@ -295,6 +295,255 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/store/{storeId}/member-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["InviteManager"];
+                };
+            };
+            responses: {
+                /** @description The Store Manager invitation. The N18 mail is queued */
+                201: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MemberInvitation"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/member-invitations/{invitationId}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    invitationId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ResendManagerInvitation"];
+                };
+            };
+            responses: {
+                /** @description The invitation lives 7 more days and only the new mail's link works */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MemberInvitation"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/member-invitations/{invitationId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    invitationId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The invitation is revoked and its link stops working at once */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MemberInvitation"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The store's members and its pending Store Manager invitations. Owner only */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Members"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/members/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    memberId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The Store Manager no longer belongs to the store. Their next request is refused */
+                204: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/onboarding": {
         parameters: {
             query?: never;
@@ -508,12 +757,51 @@ export interface components {
             /** @enum {string} */
             status: "ok";
         };
+        InviteManager: {
+            /** Format: email */
+            email: string;
+            /**
+             * @description The language of the invitation mail N18. The store's default language when left out
+             * @enum {string}
+             */
+            language?: "en" | "de";
+        };
         Me: {
             /**
              * Format: uuid
              * @description The guest profile that the guest's orders and bookings point at
              */
             guestId: string;
+        };
+        Member: {
+            /** Format: date-time */
+            acceptedAt: string;
+            /** @description The member's sign-in address, in lower case */
+            email: string;
+            /**
+             * Format: uuid
+             * @description The membership id, which `DELETE /members/{memberId}` takes. It is not the user id
+             */
+            id: string;
+            /** @enum {string} */
+            role: "owner" | "manager";
+        };
+        /** @description A Store Manager invitation. It never carries the link or the token */
+        MemberInvitation: {
+            /** @description The address the Store Manager was invited at, in lower case */
+            email: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            state: "open" | "accepted" | "revoked" | "expired";
+        };
+        /** @description M22's members tab: who belongs to the store and who was invited */
+        Members: {
+            /** @description The Store Manager invitations that are neither accepted nor revoked, newest first. An `expired` one can be sent again */
+            invitations: components["schemas"]["MemberInvitation"][];
+            members: components["schemas"]["Member"][];
         };
         Onboarding: {
             conditions: {
@@ -549,8 +837,15 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found. Show generic copy for any other */
             type: string;
+        };
+        ResendManagerInvitation: {
+            /**
+             * @description The language of the invitation mail N18. The store's default language when left out
+             * @enum {string}
+             */
+            language?: "en" | "de";
         };
         ResendOwnerInvitation: {
             /**

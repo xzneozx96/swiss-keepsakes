@@ -33,7 +33,7 @@ describe('[E2.3][S8] a signed-in user accepts an invitation', () => {
     const result = await accept({ userId: 'user-ngoc' }, token, 'request-1')
 
     expect(result).toEqual({ ok: true, storeId: store.id, role: 'owner', storeStatus: 'onboarding' })
-    expect(fake.state.memberships).toEqual([{ userId: 'user-ngoc', storeId: store.id, role: 'owner', acceptedAt: start }])
+    expect(fake.state.memberships).toEqual([{ id: expect.any(String), userId: 'user-ngoc', storeId: store.id, role: 'owner', acceptedAt: start }])
     expect(fake.state.invitations.get(invitationId)?.acceptedBy).toBe('user-ngoc')
     expect(fake.state.stores.get(store.id)?.status).toBe('onboarding')
     expect(fake.state.audit.map(({ entity, action }) => `${entity}:${action}`)).toEqual(['store_invitation:accepted', 'store:status-changed'])
@@ -139,7 +139,7 @@ describe('[E2.3][S8] a signed-in user accepts an invitation', () => {
   it('[E2.3] a user who already belongs to the store is refused, and the acceptance is undone', async () => {
     const { fake, store, accept, mint } = setup()
     const invitationId = await mint()
-    fake.state.memberships.push({ userId: 'user-ngoc', storeId: store.id, role: 'manager', acceptedAt: start })
+    fake.state.memberships.push({ id: 'membership-1', userId: 'user-ngoc', storeId: store.id, role: 'manager', acceptedAt: start })
 
     expect(await accept({ userId: 'user-ngoc' }, token, null)).toEqual({ ok: false, reason: 'already-a-member' })
     expect(fake.state.invitations.get(invitationId)?.acceptedBy).toBeNull()

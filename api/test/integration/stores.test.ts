@@ -12,7 +12,7 @@ import { createInvitationRepository } from '../../src/modules/identity/adapters/
 import { createPlatformAdminRepository } from '../../src/modules/identity/adapters/platform-admin-repository.ts'
 import { registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
 import { createUserDirectory } from '../../src/modules/identity/adapters/user-directory.ts'
-import { makeGrantSuperAdmin, makeInvitationLink, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
+import { invitationScreens, makeGrantSuperAdmin, makeInvitationLink, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
@@ -102,7 +102,7 @@ async function setup(options: SetupOptions = {}) {
     uow,
     sentMail,
     mailer: memory.mailer,
-    invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl, screens: { N20: '/store/onboarding' } }),
+    invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl, screens: invitationScreens }),
     clock: systemClock,
   })
 
@@ -405,15 +405,19 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
     expect(await storeStatus(body.id)).toBe('invited')
   })
 
-  it('[E2.3] the mail of a revoked invitation gets no link, fails at once, and stores no token', async () => {
+  it('[E2.3][E2.4] the mail of a revoked invitation gets no link, is closed without an alert, and stores no token', async () => {
     const env = shared
     const owner = await env.signIn()
     const { body } = await env.createStore(sharedAdmin, owner.email)
     await pool.query(`update identity.store_invitations set revoked_at = now() where store_id = $1`, [body.id])
 
-    await expect(env.sendNewestMail(owner.email)).rejects.toMatchObject({ permanent: true })
+    const sentBefore = env.memory.sent.length
+    await env.sendMail(await env.newestJob(owner.email))
 
+    expect(env.memory.sent).toHaveLength(sentBefore)
     expect((await invitationRow(body.id))[0]?.token_hash).toBeNull()
+    const { rows } = await pool.query<{ status: string, last_error: string }>('select status, last_error from notifications.sent_mail where recipient = $1 and template = \'N20\'', [owner.email])
+    expect(rows).toEqual([{ status: 'failed', last_error: 'InvitationRevoked' }])
   })
 
   it('[E2.3] a revoked invitation reads as revoked in A01\'s list', async () => {

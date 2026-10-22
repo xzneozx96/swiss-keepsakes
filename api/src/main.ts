@@ -10,7 +10,7 @@ import { createPlatformAdminRepository } from './modules/identity/adapters/platf
 import { registerIdentityRoutes } from './modules/identity/adapters/routes.ts'
 import { createStoreRepository } from './modules/identity/adapters/store-repository.ts'
 import { createUserDirectory } from './modules/identity/adapters/user-directory.ts'
-import { makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInvitationLink, makeListStores, makeLoadIdentity, makeOpenStoreForSale, makeResendOwnerInvitation, makeUpdateStoreInformation, newInvitationToken } from './modules/identity/index.ts'
+import { invitationScreens, makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInvitationLink, makeInviteManager, makeListMembers, makeListStores, makeLoadIdentity, makeOpenStoreForSale, makeRemoveMember, makeResendManagerInvitation, makeResendOwnerInvitation, makeRevokeInvitation, makeUpdateStoreInformation, newInvitationToken } from './modules/identity/index.ts'
 import { createMailJobScrubber } from './modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
@@ -94,8 +94,7 @@ async function main() {
         uow,
         sentMail,
         mailer,
-        // E2.4 adds the N18 screen.
-        invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl: config.APP_URL, screens: { N20: '/store/onboarding' } }),
+        invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl: config.APP_URL, screens: invitationScreens }),
         clock: systemClock,
       }),
       failMail: makeFailMail({ uow, sentMail, clock: systemClock, alert: createLogAlert(logger), scrub: createMailJobScrubber() }),
@@ -128,14 +127,20 @@ async function main() {
     const audit = createAuditLog(systemClock)
     const users = createUserDirectory()
     const admins = createPlatformAdminRepository()
+    const memberships = createMembershipRepository()
     const useCases = {
       createStore: makeCreateStore({ uow, stores, invitations, conditions, users, admins, queueMail, audit, clock: systemClock }),
       listStores: makeListStores({ uow, stores, invitations, conditions, clock: systemClock }),
       resendOwnerInvitation: makeResendOwnerInvitation({ uow, stores, invitations, conditions, queueMail, audit, clock: systemClock }),
-      acceptInvitation: makeAcceptInvitation({ uow, invitations, stores, memberships: createMembershipRepository(), users, admins, audit, clock: systemClock }),
+      acceptInvitation: makeAcceptInvitation({ uow, invitations, stores, memberships, users, admins, audit, clock: systemClock }),
       getOnboarding: makeGetOnboarding({ uow, stores, conditions }),
       updateStoreInformation: makeUpdateStoreInformation({ uow, stores, audit, clock: systemClock }),
       openStoreForSale: makeOpenStoreForSale({ uow, stores, conditions, audit, clock: systemClock }),
+      listMembers: makeListMembers({ uow, memberships, invitations, clock: systemClock }),
+      inviteManager: makeInviteManager({ uow, stores, invitations, memberships, users, admins, queueMail, audit, clock: systemClock }),
+      resendManagerInvitation: makeResendManagerInvitation({ uow, stores, invitations, memberships, users, queueMail, audit, clock: systemClock }),
+      revokeInvitation: makeRevokeInvitation({ uow, invitations, audit, clock: systemClock }),
+      removeMember: makeRemoveMember({ uow, memberships, invitations, audit, clock: systemClock }),
     }
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),

@@ -19,6 +19,7 @@ function fakes() {
     lockForSend: async () => 'queued',
     recordSent: async () => {},
     recordAttemptFailed: async () => {},
+    recordCancelled: async () => {},
     markFailed: async () => undefined,
   }
   const jobQueue: JobQueue<object> = {
