@@ -18,14 +18,14 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
   it('[E1.8] accepts a complete environment and turns PORT into a number', () => {
     expect(loadConfig({ ROLE: 'api', HOST: '127.0.0.1', PORT: '8080', LOG_LEVEL: 'debug', ...urls, UNRELATED: 'x' })).toEqual({
       ok: true,
-      config: { ROLE: 'api', HOST: '127.0.0.1', PORT: 8080, LOG_LEVEL: 'debug', ...urls },
+      config: { ROLE: 'api', HOST: '127.0.0.1', PORT: 8080, LOG_LEVEL: 'debug', ...urls, APP_URL: 'http://localhost:5173' },
     })
   })
 
   it('[E1.8] defaults ROLE to all, HOST to 0.0.0.0, PORT to 3000 and LOG_LEVEL to info, and treats blank values as unset', () => {
     expect(loadConfig({ ...urls, ROLE: ' ', PORT: '' })).toEqual({
       ok: true,
-      config: { ROLE: 'all', HOST: '0.0.0.0', PORT: 3000, LOG_LEVEL: 'info', ...urls },
+      config: { ROLE: 'all', HOST: '0.0.0.0', PORT: 3000, LOG_LEVEL: 'info', ...urls, APP_URL: 'http://localhost:5173' },
     })
   })
 
@@ -106,6 +106,7 @@ describe('[E2.8] config: SMTP_* is all six variables or none', () => {
         ROLE: 'all',
         HOST: '0.0.0.0',
         PORT: 3000,
+        APP_URL: 'http://localhost:5173',
         LOG_LEVEL: 'info',
         ...urls,
         smtp: { host: 'smtp.gmail.com', port: 465, secure: true, user: 'keepsakes.test@gmail.com', password: 'abcd efgh ijkl mnop', from: 'keepsakes.test@gmail.com' },
@@ -203,9 +204,35 @@ describe('[E2.2] config: the trusted origin is BETTER_AUTH_URL and no other', ()
   })
 
   it('[E2.2] refuses an http BETTER_AUTH_URL when NODE_ENV is production, and accepts https there and http elsewhere', () => {
-    expect(failure({ ...urls, NODE_ENV: 'production' })).toContain('  BETTER_AUTH_URL: Expected an https:// URL when NODE_ENV is production')
-    expect(loadConfig({ ...urls, NODE_ENV: 'production', BETTER_AUTH_URL: 'https://keepsakes.example' })).toMatchObject({ ok: true })
+    const appUrl = { APP_URL: 'https://keepsakes.example' }
+    expect(failure({ ...urls, ...appUrl, NODE_ENV: 'production' })).toContain('  BETTER_AUTH_URL: Expected an https:// URL when NODE_ENV is production')
+    expect(loadConfig({ ...urls, ...appUrl, NODE_ENV: 'production', BETTER_AUTH_URL: 'https://keepsakes.example' })).toMatchObject({ ok: true })
     expect(loadConfig({ ...urls, NODE_ENV: 'development' })).toMatchObject({ ok: true })
     expect(loadConfig(urls)).toMatchObject({ ok: true })
+  })
+})
+
+describe('[E2.3] config: APP_URL is the origin an invitation link opens', () => {
+  it('[E2.3] defaults to the Vite dev server outside production', () => {
+    expect(loadConfig(urls)).toMatchObject({ ok: true, config: { APP_URL: 'http://localhost:5173' } })
+    expect(loadConfig({ ...urls, NODE_ENV: 'development' })).toMatchObject({ ok: true, config: { APP_URL: 'http://localhost:5173' } })
+  })
+
+  it('[E2.3] keeps only the origin of what it is given', () => {
+    expect(loadConfig({ ...urls, APP_URL: 'http://localhost:5392/' })).toMatchObject({ ok: true, config: { APP_URL: 'http://localhost:5392' } })
+    expect(loadConfig({ ...urls, APP_URL: 'https://keepsakes.example/app?x=1' })).toMatchObject({ ok: true, config: { APP_URL: 'https://keepsakes.example' } })
+  })
+
+  it('[E2.3] is required when NODE_ENV is production, where it must be https', () => {
+    const production = { ...urls, NODE_ENV: 'production', BETTER_AUTH_URL: 'https://keepsakes.example' }
+
+    expect(failure(production)).toContain('  APP_URL: Required when NODE_ENV is production')
+    expect(failure({ ...production, APP_URL: 'http://keepsakes.example' })).toContain('  APP_URL: Expected an https:// URL when NODE_ENV is production')
+    expect(loadConfig({ ...production, APP_URL: 'https://keepsakes.example' })).toMatchObject({ ok: true, config: { APP_URL: 'https://keepsakes.example' } })
+  })
+
+  it('[E2.3] refuses a value that is not an http or https URL', () => {
+    expect(failure({ ...urls, APP_URL: 'ftp://keepsakes.example' })).toContain('  APP_URL: Expected an http:// or https:// URL')
+    expect(failure({ ...urls, APP_URL: 'not a url' })).toContain('  APP_URL: Expected an http:// or https:// URL')
   })
 })

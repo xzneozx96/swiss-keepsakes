@@ -150,6 +150,7 @@ jobs:
           # The release command reads the whole config schema. It never signs anyone in, so these are fake values.
           # The secret only has to pass the 32 character check.
           BETTER_AUTH_URL: https://app.example.test
+          APP_URL: https://app.example.test
           BETTER_AUTH_SECRET: ci-migrate-placeholder-not-a-secret-0000
       - name: Drop test databases left by a cancelled run
         if: steps.neon.outputs.available == 'true'

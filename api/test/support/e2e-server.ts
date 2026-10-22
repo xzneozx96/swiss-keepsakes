@@ -102,6 +102,8 @@ async function main() {
       DATABASE_URL: withDatabase(pooledUrl, database),
       DATABASE_URL_UNPOOLED: unpooled,
       BETTER_AUTH_URL: origin,
+      // The Owner's invitation link opens the SPA at this origin.
+      APP_URL: origin,
       // A placeholder of the right length, not a secret.
       BETTER_AUTH_SECRET: 'e2e-only-secret-0123456789-abcdefghij',
       // Google's side is stubbed in the specs, so these are placeholders too.

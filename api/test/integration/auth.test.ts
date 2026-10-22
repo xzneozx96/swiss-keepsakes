@@ -15,6 +15,7 @@ import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createApp } from '../../src/platform/http/app.ts'
 import { startJobs } from '../../src/platform/jobs/boss.ts'
 import { createJobQueue } from '../../src/platform/jobs/queue.ts'
+import { noCommands } from '../support/commands.ts'
 import { startMain } from '../support/process.ts'
 import { count, openTestDatabase, silentLogger } from './support.ts'
 
@@ -55,7 +56,7 @@ async function setup({ google, baseUrl = origin }: { google?: GoogleConfig, base
     origin: ownOrigin(baseUrl),
     readSession: createSessionReader(auth),
     loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
-  })
+  }, noCommands)
 
   // Each call gets its own client address unless it names one, because the code routes allow 3 calls a minute per address.
   async function call(path: string, init: { method?: string, body?: object, headers?: Record<string, string>, ip?: string | null } = {}) {
@@ -448,7 +449,7 @@ describe('[E2.2] review fixes', () => {
 
   it('[E2.2] in production without Fly-Client-IP every caller shares one rate limit bucket, so the header must be present on Fly (E2.9)', async () => {
     const productionUrl = 'https://keepsakes.example'
-    const run = startMain({ ROLE: 'api', HOST: '127.0.0.1', PORT: '0', DATABASE_URL: inject('databaseUrl'), DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled'), NODE_ENV: 'production', BETTER_AUTH_URL: productionUrl })
+    const run = startMain({ ROLE: 'api', HOST: '127.0.0.1', PORT: '0', DATABASE_URL: inject('databaseUrl'), DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled'), NODE_ENV: 'production', BETTER_AUTH_URL: productionUrl, APP_URL: productionUrl })
     await run.waitFor('started')
     const port = run.find('api listening')?.port
     const statuses = []
