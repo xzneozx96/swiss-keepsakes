@@ -1,6 +1,6 @@
 import type { Actor, Permission, StoreRole } from '../src/identity'
 import { describe, expect, it } from 'vitest'
-import { actorFor, anonymous, can, canonicalId, storeRole } from '../src/identity'
+import { actorFor, anonymous, can, canonicalId, invitationLifetimeMs, invitationState, mayOpenForSale, normaliseEmail, onboardingConditionKeys, storeInformationState, storeMaySell, storeRole, unmetConditions } from '../src/identity'
 
 const lucerne = '0190f0c2-0000-7000-8000-000000000001'
 const zug = '0190f0c2-0000-7000-8000-000000000002'
@@ -16,6 +16,8 @@ const expected: Record<Permission, readonly StoreRole[]> = {
   'record-partner-payout': ['owner', 'manager'],
   'reissue-partner-link': ['owner'],
   'manage-members': ['owner'],
+  'edit-store-information': ['owner'],
+  'open-store-for-sale': ['owner'],
   'manage-content': ['owner', 'manager'],
 }
 const rows = Object.entries(expected) as [Permission, readonly StoreRole[]][]
@@ -89,5 +91,82 @@ describe('[E2.10] store ids are compared in their canonical form', () => {
     expect(storeRole(actor, lucerne)).toBe('owner')
     expect(storeRole(actor, upper)).toBe('owner')
     expect(can(actor, 'manage-members', { storeId: upper })).toBe(true)
+  })
+})
+
+describe('[E2.3] the Owner\'s permissions in section 9', () => {
+  it('[E2.3] only the Owner edits the store information and opens the store for sale', () => {
+    for (const permission of ['edit-store-information', 'open-store-for-sale'] as const) {
+      expect(can(owner, permission, { storeId: lucerne })).toBe(true)
+      expect(can(manager, permission, { storeId: lucerne })).toBe(false)
+    }
+  })
+})
+
+describe('[E2.3][S8] normaliseEmail compares addresses in one form', () => {
+  it.each([
+    ['Anna.Meier@Example.CH', 'anna.meier@example.ch'],
+    ['  anna@example.ch\n', 'anna@example.ch'],
+    ['anna@example.ch', 'anna@example.ch'],
+  ])('[E2.3][S8] %j becomes %j', (input, expected) => {
+    expect(normaliseEmail(input)).toBe(expected)
+  })
+
+  it('[E2.3][S8] does not merge different addresses', () => {
+    expect(normaliseEmail('anna@example.ch')).not.toBe(normaliseEmail('anna+shop@example.ch'))
+    expect(normaliseEmail('anna@example.ch')).not.toBe(normaliseEmail('anna@example.com'))
+  })
+})
+
+describe('[E2.3][AC03] a store sells only when it is live', () => {
+  it.each([['invited', false], ['onboarding', false], ['live', true], ['suspended', false]] as const)('[E2.3][AC03] %s: %s', (status, sells) => {
+    expect(storeMaySell(status)).toBe(sells)
+  })
+})
+
+describe('[E2.3][AC03] the four conditions of A02', () => {
+  const met = { 'store-information': 'met', 'payment-account': 'met', 'catalogue': 'met', 'policies': 'met' } as const
+
+  it('[E2.3][AC03] there are four, in the order of UX L370', () => {
+    expect(onboardingConditionKeys).toEqual(['store-information', 'payment-account', 'catalogue', 'policies'])
+  })
+
+  it('[E2.3][AC03] the store opens only when all four are met', () => {
+    expect(mayOpenForSale(met)).toBe(true)
+    expect(unmetConditions(met)).toEqual([])
+  })
+
+  it.each(onboardingConditionKeys)('[E2.3][AC03] %s unmet or pending keeps the store closed', (key) => {
+    for (const state of ['unmet', 'pending'] as const) {
+      expect(mayOpenForSale({ ...met, [key]: state })).toBe(false)
+      expect(unmetConditions({ ...met, [key]: state })).toEqual([key])
+    }
+  })
+
+  it('[E2.3][AC03] the store information is met with a name and a language, and not with a blank name or an unknown language', () => {
+    expect(storeInformationState({ name: 'Zürich Andenken', defaultLanguage: 'de' })).toBe('met')
+    expect(storeInformationState({ name: '   ', defaultLanguage: 'en' })).toBe('unmet')
+    expect(storeInformationState({ name: 'Zürich Andenken', defaultLanguage: 'fr' })).toBe('unmet')
+  })
+})
+
+describe('[E2.3] an invitation is open, accepted or expired', () => {
+  const now = new Date('2026-10-20T08:00:00Z')
+  const inOneDay = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
+  it('[E2.3] it lives 7 days', () => {
+    expect(invitationLifetimeMs).toBe(7 * 24 * 60 * 60 * 1000)
+  })
+
+  it('[E2.3] it is open before its expiry and expired from the moment of it', () => {
+    expect(invitationState({ acceptedBy: null, expiresAt: inOneDay }, now)).toBe('open')
+    expect(invitationState({ acceptedBy: null, expiresAt: now }, now)).toBe('expired')
+    expect(invitationState({ acceptedBy: null, expiresAt: oneDayAgo }, now)).toBe('expired')
+  })
+
+  it('[E2.3] accepted wins over expired', () => {
+    expect(invitationState({ acceptedBy: 'user-1', expiresAt: oneDayAgo }, now)).toBe('accepted')
+    expect(invitationState({ acceptedBy: 'user-1', expiresAt: inOneDay }, now)).toBe('accepted')
   })
 })
