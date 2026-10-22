@@ -353,7 +353,7 @@ export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: Ident
       case 'forbidden':
         return problem(c, membersForbidden)
       case 'member-not-found':
-        return problem(c, { type: 'not-found', status: 404, title: 'The store has no such member' })
+        return problem(c, { type: 'member-not-found', status: 404, title: 'The store has no such member' })
       case 'cannot-remove-owner':
         return problem(c, { type: 'cannot-remove-owner', status: 409, title: 'An Owner cannot be removed here' })
     }

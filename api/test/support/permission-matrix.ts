@@ -118,5 +118,7 @@ export const guardRefusalTitle = 'Only a member of this store may do this'
 
 export const expectedOutsiderAnswers = outsiderOutcomes.map(({ who, status, type }) => ({ who, status, type }))
 
-// The store's own owner must get past the guard: any answer but 401, 403 or 404 (a route that is not served).
-export const refusedToTheOwner = new Set([401, 403, 404])
+// The store's own owner must get past the guard: any answer but 401, 403 or the router's own `not-found` (a route that
+// is not served). A route that takes the id of a row answers 404 with its own code, such as `invitation-not-found`,
+// for the random id the matrix sends, and that means the handler ran.
+export const refusedToTheOwner = ({ status, type }: { status: number, type?: string | undefined }) => status === 401 || status === 403 || (status === 404 && type === 'not-found')

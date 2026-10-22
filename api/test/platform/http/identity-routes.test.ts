@@ -417,7 +417,8 @@ describe('[E2.4][AC02] the Owner\'s member routes', () => {
     const owner = setup({ removeMember: async () => ({ ok: false, reason: 'cannot-remove-owner' }) })
     const remove = { method: 'DELETE', headers: { Origin: shopOrigin, ...asOwner } }
 
-    expect((await missing.request(`/api/store/${lucerne}/members/${memberId}`, remove)).status).toBe(404)
+    const absent = await missing.request(`/api/store/${lucerne}/members/${memberId}`, remove)
+    expect([absent.status, (await absent.json() as { type: string }).type]).toEqual([404, 'member-not-found'])
     const refusal = await owner.request(`/api/store/${lucerne}/members/${memberId}`, remove)
     expect(refusal.status).toBe(409)
     expect(await refusal.json()).toMatchObject({ type: 'cannot-remove-owner' })

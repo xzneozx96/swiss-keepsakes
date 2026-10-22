@@ -31,6 +31,7 @@ export const problemTypes = [
   'manager-is-super-admin',
   'invitation-already-open',
   'cannot-remove-owner',
+  'member-not-found',
 ] as const
 
 export type ProblemType = (typeof problemTypes)[number]

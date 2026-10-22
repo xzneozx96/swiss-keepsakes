@@ -183,8 +183,16 @@ describe('[E2.10] the identity tables of migration 0003', () => {
 })
 
 // The operations that architecture section 9 gives to the Owner alone (`edit-store-information`,
-// `open-store-for-sale`). Listed here by hand so that loosening the permission table fails the test.
-const ownerOnly = new Set(['PATCH /api/store/{storeId}/information', 'POST /api/store/{storeId}/open-for-sale'])
+// `open-store-for-sale`, `manage-members`). Listed here by hand so that loosening the permission table fails the test.
+const ownerOnly = new Set([
+  'PATCH /api/store/{storeId}/information',
+  'POST /api/store/{storeId}/open-for-sale',
+  'GET /api/store/{storeId}/members',
+  'POST /api/store/{storeId}/member-invitations',
+  'POST /api/store/{storeId}/member-invitations/{invitationId}/resend',
+  'POST /api/store/{storeId}/member-invitations/{invitationId}/revoke',
+  'DELETE /api/store/{storeId}/members/{memberId}',
+])
 
 describe('[E2.10][AC02] the guards over real Better Auth sessions and the real identity tables', () => {
   // One set of sign-ins for the whole block, because each sign-in is two round trips to the database.
@@ -212,12 +220,12 @@ describe('[E2.10][AC02] the guards over real Better Auth sessions and the real i
     const operations = storeOperations(document)
     const outsiders = { anonymous: {}, guest: env.guest.headers, superAdmin: env.superAdmin.headers, ownerElsewhere: env.ownerElsewhere.headers, managerElsewhere: env.managerElsewhere.headers }
 
-    expect(operations).toHaveLength(6)
+    expect(operations).toHaveLength(11)
     expect(unlistedStoreRoutes(env.app, document)).toEqual([])
     for (const operation of operations) {
       expect(await outsiderAnswers(env.app, operation, lucerne, outsiders, origin), `${operation.method} ${operation.path}`).toEqual(expectedOutsiderAnswers)
       const owner = await callAs(env.app, operation, lucerne, { who: 'owner', headers: env.owner.headers }, origin)
-      expect(refusedToTheOwner.has(owner.status), `owner ${operation.method} ${operation.path}`).toBe(false)
+      expect(refusedToTheOwner(owner), `owner ${operation.method} ${operation.path}`).toBe(false)
       const manager = await callAs(env.app, operation, lucerne, { who: 'manager', headers: env.manager.headers }, origin)
       if (ownerOnly.has(`${operation.method} ${operation.path}`)) {
         // The store guard let the manager in, so this 403 is the permission check's own, with its own title.
@@ -226,10 +234,10 @@ describe('[E2.10][AC02] the guards over real Better Auth sessions and the real i
         expect(manager.title).toMatch(/^Only the Owner/)
       }
       else {
-        expect(refusedToTheOwner.has(manager.status), `manager ${operation.method} ${operation.path}`).toBe(false)
+        expect(refusedToTheOwner(manager), `manager ${operation.method} ${operation.path}`).toBe(false)
       }
     }
-  // Six operations, each called by five outsiders and two members, and every call is several round trips to a Neon branch.
+  // Eleven operations, each called by five outsiders and two members, and every call is several round trips to a Neon branch.
   }, 120_000)
 
   it('[E2.10][AC02] a store id in upper case still opens the owner\'s own store', async () => {
