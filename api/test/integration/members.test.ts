@@ -426,6 +426,25 @@ describe('[E2.4] what the Owner may invite, and what the invitation may become',
     expect(await memberRows(storeId)).toHaveLength(1)
   })
 
+  it('[E2.4] the repository writes of renew and revoke carry the store id, so an invitation id of another store changes nothing', async () => {
+    const owner = await env.person()
+    const storeId = await env.storeOf(owner)
+    const elsewhere = await env.storeOf(await env.person())
+    const { id } = await (await env.invite(storeId, owner, { email: 'scoped@example.ch' })).json() as { id: string }
+    const before = (await invitationRows(storeId))[0]!
+    const repository = createInvitationRepository()
+
+    await env.uow.run(async (tx) => {
+      await repository.revoke(tx, elsewhere, id, new Date())
+      await repository.renew(tx, elsewhere, id, new Date(Date.now() + 365 * 24 * 60 * 60 * 1000))
+      await repository.revokeOpenManagersByEmail(tx, elsewhere, 'scoped@example.ch', new Date())
+    })
+
+    expect((await invitationRows(storeId))[0]).toEqual(before)
+    await env.uow.run(tx => repository.revoke(tx, storeId, id, new Date()))
+    expect((await invitationRows(storeId))[0]?.revoked_at).toBeInstanceOf(Date)
+  })
+
   it('[E2.4] a resend with the JSON Content-Type and no body is a 200 through the production middleware on the node server, and a repeat of its key replays', async () => {
     const [owner, invitee] = await Promise.all([env.person(), env.person()])
     const storeId = await env.storeOf(owner)

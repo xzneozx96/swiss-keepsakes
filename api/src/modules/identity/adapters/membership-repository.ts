@@ -1,6 +1,7 @@
 import type { Tx } from '../../../platform/db/client.ts'
 import type { MembershipRepository } from '../ports.ts'
 import { and, asc, eq } from 'drizzle-orm'
+import { alias } from 'drizzle-orm/pg-core'
 import { storeMemberships, user } from './schema.ts'
 
 const memberColumns = {
@@ -28,7 +29,9 @@ export function createMembershipRepository(): MembershipRepository<Tx> {
     },
 
     async findInStoreForUpdate(tx, storeId, memberId) {
-      const [row] = await tx.select(memberColumns).from(storeMemberships).innerJoin(user, eq(user.id, storeMemberships.userId)).where(and(eq(storeMemberships.id, memberId), eq(storeMemberships.storeId, storeId))).for('update', { of: storeMemberships })
+      // Postgres takes a bare table name or alias in `for update of`, never a schema-qualified one.
+      const membership = alias(storeMemberships, 'membership')
+      const [row] = await tx.select({ id: membership.id, userId: membership.userId, email: user.email, role: membership.role, acceptedAt: membership.acceptedAt }).from(membership).innerJoin(user, eq(user.id, membership.userId)).where(and(eq(membership.id, memberId), eq(membership.storeId, storeId))).for('update', { of: membership })
       return row
     },
 
