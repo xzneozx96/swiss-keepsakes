@@ -4,22 +4,22 @@ The Super Admin invites each Owner and sees every store. No screen adds one. The
 
 ## What the script does
 
-`pnpm --filter @sk/api admin:grant <email>`
+`pnpm --filter @sk/api admin:grant <email> --database <name>`
 
-1. It reads `DATABASE_URL_UNPOOLED` from the shell and nothing else. It loads no env file, so it never reaches a database by accident.
+1. It reads `DATABASE_URL_UNPOOLED` from the shell and nothing else. It loads no env file, so it never reaches a database by accident. It asks the server for `current_database()` and refuses, changing nothing, unless that equals `--database`. It then prints `Target database <name>, role <role>.` and goes on. It prints no host and no URL.
 2. It looks the user up by email in Better Auth's `identity.user` table. The email is trimmed and compared in lower case.
 3. It refuses when there is no such user, or when the user is already a Super Admin.
 4. It inserts the user's `identity.platform_admins` row with `granted_by` null, in one transaction.
 5. It prints `Granted Super Admin to user <id>.` and never prints a connection string, a password or a token.
 
-Exit codes: 0 granted, 1 refused or failed, 2 missing email or `DATABASE_URL_UNPOOLED`.
+Exit codes: 0 granted, 1 refused or failed, 2 a missing or misplaced argument, a missing `DATABASE_URL_UNPOOLED`, or a `--database` that does not match.
 
 ## Steps
 
 1. The person signs in once at the environment's own address, with Google or the emailed code. Better Auth makes the user row then. The script cannot make a user.
 2. A Super Admin holds no store role (section 9). Use an address that is not the Owner's, because the operator needs a separate account for store work.
 3. Set `DATABASE_URL_UNPOOLED` in your shell to the direct URL of the environment you mean. Take it from the Neon console or from `neon env pull` into a file you do not commit. Check which environment it points at before you run the script.
-4. Run `pnpm --filter @sk/api admin:grant <email>`.
+4. Run `pnpm --filter @sk/api admin:grant <email> --database <name>`, with the database name of the environment you checked in step 3. A wrong name stops the script before it writes.
 5. The person reloads. `GET /api/admin/stores` now answers 200 for them, and `/api/store/{storeId}/*` still answers 403, whatever store they belonged to.
 
 ## Rules

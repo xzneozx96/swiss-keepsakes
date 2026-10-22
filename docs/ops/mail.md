@@ -60,7 +60,7 @@ Each attempt locks the mail's `sent_mail` row from before the send until it reco
 
 - Two runs of the same job never both send. The second waits for the lock, then finds the mail `sent` and stops.
 - A mail recorded as `sent` is never sent again, and a mail marked `failed` after its alert is never sent and never turns `sent`.
-- Not preventable. SMTP has no idempotency key. When the server accepted a message but the attempt never committed, the retry sends the message again with the same `Message-ID`, which is `<mail id@domain of SMTP_FROM>`. This happens when the reply was lost, when the worker crashed, or when a shutdown cut the attempt after the 10 s limit in `main.ts`.
+- Not preventable. SMTP has no idempotency key. When the server accepted a message but the attempt never committed, the retry sends the message again with the same `Message-ID`, which is `<mail id@domain of SMTP_FROM>`. This happens when the reply was lost, when the worker crashed, or when a shutdown cut the attempt after the 10 s limit in `main.ts`. For an invitation the retry mints a new token, so the two messages carry different links and only the second works. A mailbox that drops the second message because it has the same `Message-ID`, as Gmail does, leaves the person with the dead link. Resend the invitation then: it queues a new mail with a new `Message-ID`.
 
 ## The live check
 
