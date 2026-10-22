@@ -63,7 +63,8 @@ const acceptEmptyBody: MiddlewareHandler = async (c, next) => {
   if (c.req.header('Content-Type') !== undefined && (await c.req.arrayBuffer()).byteLength === 0) {
     const headers = new Headers(c.req.raw.headers)
     headers.delete('Content-Type')
-    c.req.raw = new Request(c.req.raw, { headers })
+    // The body is read already, and a Request cannot be built from one that was, so build it from the parts.
+    c.req.raw = new Request(c.req.url, { method: c.req.method, headers })
   }
   await next()
 }
