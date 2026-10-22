@@ -257,7 +257,7 @@
             "type": "string"
           },
           "stores": {
-            "description": "The stores the user belongs to, oldest membership first. Empty for a guest and for a Super Admin, who holds no store role",
+            "description": "The stores the user belongs to, oldest membership first. Empty for a guest and for a Super Admin, who hold no store role",
             "items": {
               "$ref": "#/components/schemas/MeStore"
             },

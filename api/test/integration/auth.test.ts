@@ -197,7 +197,7 @@ describe('[E2.2] sessions and the actor', () => {
     expect(setCookie).not.toMatch(/Secure/i)
     const me = await call('/api/me', { headers: { Cookie: cookie } })
     expect(me.status).toBe(200)
-    expect(await me.json()).toEqual({ guestId: expect.stringMatching(/^[0-9a-f-]{36}$/) })
+    expect(await me.json()).toEqual({ stores: [], guestId: expect.stringMatching(/^[0-9a-f-]{36}$/) })
   })
 
   it('[E2.1] no response body of sign-in, get-session or sign-out holds the session token, and the cookie still carries it', async () => {

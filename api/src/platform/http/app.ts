@@ -27,7 +27,7 @@ export interface AppEnv {
 export interface IdentityDeps extends AuthenticateDeps {
   authHandler: (request: Request) => Promise<Response>
   origin: string
-  // The stores of one user with their role and status, one query. `GET /api/me` calls it for anyone who holds a role.
+  // The stores of one user with their role and status, one query. `GET /api/me` calls it for staff only.
   listMyStores: (userId: string) => Promise<{ storeId: string, role: StoreRole, status: StoreStatus }[]>
 }
 
@@ -140,8 +140,9 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
 
   app.openapi(meRoute, async (c) => {
     const { guestId, userId } = c.get('guest')
-    // A guest holds no role, which the actor already says, so only staff and the Super Admin need the read.
-    const stores = c.get('actor').kind === 'guest' ? [] : await identity.listMyStores(userId)
+    // Only staff hold store roles. A guest holds none, and the guards give a Super Admin none even when a stray
+    // membership row exists, so listing that store would send a screen to a store the guards refuse.
+    const stores = c.get('actor').kind === 'staff' ? await identity.listMyStores(userId) : []
     return c.json({ guestId, stores }, 200)
   })
 

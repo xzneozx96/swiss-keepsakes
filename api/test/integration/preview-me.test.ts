@@ -178,8 +178,9 @@ describe('[E2.4] GET /api/me lists the caller\'s stores', () => {
     expect((await env.me(stranger)).stores).toEqual([{ storeId: elsewhere, role: 'owner', status: 'live' }])
   })
 
-  it('[E2.4] is empty for a Super Admin who holds no membership', async () => {
+  it('[E2.4] is empty for a Super Admin, even with a stray membership row, because the guards give them no store role', async () => {
     const admin = await env.person()
+    await env.storeOf(admin)
     await pool.query('insert into identity.platform_admins (user_id) values ($1)', [admin.userId])
 
     expect((await env.me(admin)).stores).toEqual([])

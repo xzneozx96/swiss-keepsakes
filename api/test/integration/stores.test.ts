@@ -211,7 +211,7 @@ describe('[E2.3] migration 0004: stores and store_invitations', () => {
     const insert = (storeId: string, email = 'a@example.ch', role = 'owner') => pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at) values ($1, $2, $3, now())`, [storeId, email, role])
     const { rows } = await pool.query<{ id: string }>(`insert into identity.stores (slug, name) values ($1, 'Name') returning id`, [slugFor()])
 
-    expect(columns.map(column => column.column_name)).toEqual(['accepted_by', 'created_at', 'email', 'expires_at', 'id', 'revoked_at', 'role', 'store_id', 'token_hash'])
+    expect(columns.map(column => column.column_name)).toEqual(['accepted_by', 'created_at', 'email', 'expires_at', 'id', 'invited_by', 'revoked_at', 'role', 'store_id', 'token_hash'])
     await expect(insert(randomUUID())).rejects.toMatchObject({ code: '23503', constraint: 'store_invitations_store_id_stores_id_fk' })
     await expect(insert(rows[0]!.id, 'a@example.ch', 'admin')).rejects.toMatchObject({ code: '23514', constraint: 'store_invitations_role_check' })
     await expect(insert(rows[0]!.id, 'Anna@Example.ch')).rejects.toMatchObject({ code: '23514', constraint: 'store_invitations_email_check' })
@@ -226,7 +226,7 @@ describe('[E2.3] migration 0004: stores and store_invitations', () => {
     await insert('owner')
     await expect(insert('owner')).rejects.toMatchObject({ code: '23505', constraint: 'store_invitations_one_open_owner_idx' })
     await insert('manager')
-    await insert('manager')
+    await expect(insert('manager')).rejects.toMatchObject({ code: '23505', constraint: 'store_invitations_one_open_manager_idx' })
     await pool.query(`update identity.store_invitations set revoked_at = now() where store_id = $1 and role = 'owner'`, [rows[0]!.id])
     await insert('owner')
     await expect(insert('owner')).rejects.toMatchObject({ constraint: 'store_invitations_one_open_owner_idx' })
@@ -242,7 +242,7 @@ describe('[E2.3] migration 0004: stores and store_invitations', () => {
 
   it('[E2.3] two invitations never share a token hash, and many have none', async () => {
     const { rows } = await pool.query<{ id: string }>(`insert into identity.stores (slug, name) values ($1, 'Name') returning id`, [slugFor()])
-    const insert = (hash: string | null) => pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at, token_hash) values ($1, 'a@example.ch', 'manager', now(), $2)`, [rows[0]!.id, hash])
+    const insert = (hash: string | null) => pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at, token_hash) values ($1, $3, 'manager', now(), $2)`, [rows[0]!.id, hash, `${randomUUID().slice(0, 8)}@example.ch`])
 
     await insert(null)
     await insert(null)

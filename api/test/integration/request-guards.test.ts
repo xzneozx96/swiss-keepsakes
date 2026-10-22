@@ -273,10 +273,10 @@ describe('[E2.10][AC02] the guards over real Better Auth sessions and the real i
   it('[E2.10] /api/me still answers staff and the Super Admin with their guest profile', async () => {
     const env = shared
 
-    for (const who of [env.guest, env.owner, env.superAdmin]) {
+    for (const [who, stores] of [[env.guest, []], [env.owner, [{ storeId: expect.any(String), role: 'owner', status: expect.any(String) }]], [env.superAdmin, []]] as const) {
       const response = await env.call('/api/me', { headers: who.headers })
       expect(response.status).toBe(200)
-      expect(await response.json()).toEqual({ guestId: expect.any(String), stores: [] })
+      expect(await response.json()).toEqual({ guestId: expect.any(String), stores })
     }
   })
 })

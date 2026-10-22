@@ -8,5 +8,5 @@ export const meStoreSchema = z.object({
 
 export const meSchema = z.object({
   guestId: z.uuid().meta({ description: 'The guest profile that the guest\'s orders and bookings point at' }),
-  stores: z.array(meStoreSchema).meta({ description: 'The stores the user belongs to, oldest membership first. Empty for a guest and for a Super Admin, who holds no store role' }),
+  stores: z.array(meStoreSchema).meta({ description: 'The stores the user belongs to, oldest membership first. Empty for a guest and for a Super Admin, who hold no store role' }),
 }).meta({ id: 'Me' })
