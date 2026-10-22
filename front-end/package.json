@@ -24,6 +24,7 @@
     "@heroui/react": "3.2.6",
     "@heroui/styles": "3.2.6",
     "@internationalized/date": "3.12.4",
+    "@sk/api-contract": "workspace:*",
     "@sk/domain": "workspace:*",
     "@sk/i18n": "workspace:*",
     "@tanstack/history": "^1.162.5",
