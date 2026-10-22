@@ -11,6 +11,170 @@
     },
     "parameters": {},
     "schemas": {
+      "AcceptInvitation": {
+        "properties": {
+          "token": {
+            "maxLength": 256,
+            "minLength": 16,
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
+      "AcceptedInvitation": {
+        "properties": {
+          "role": {
+            "enum": [
+              "owner",
+              "manager"
+            ],
+            "type": "string"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "storeStatus": {
+            "enum": [
+              "invited",
+              "onboarding",
+              "live",
+              "suspended"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "storeId",
+          "role",
+          "storeStatus"
+        ],
+        "type": "object"
+      },
+      "AdminStore": {
+        "description": "A store as A01 lists it: its Owner invitation and whether its payment account is verified",
+        "properties": {
+          "defaultLanguage": {
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "invitation": {
+            "$ref": "#/components/schemas/OwnerInvitation"
+          },
+          "name": {
+            "type": "string"
+          },
+          "paymentAccount": {
+            "$ref": "#/components/schemas/ConditionState"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "invited",
+              "onboarding",
+              "live",
+              "suspended"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "status",
+          "defaultLanguage",
+          "invitation",
+          "paymentAccount"
+        ],
+        "type": "object"
+      },
+      "AdminStoreList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminStore"
+            },
+            "type": "array"
+          },
+          "nextCursor": {
+            "description": "Pass it as `cursor` for the next page. Null on the last page",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "type": "object"
+      },
+      "ConditionState": {
+        "description": "`pending` means the story that decides the condition is not built yet. It counts as unmet",
+        "enum": [
+          "met",
+          "unmet",
+          "pending"
+        ],
+        "type": "string"
+      },
+      "CreateStore": {
+        "properties": {
+          "defaultLanguage": {
+            "default": "en",
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          },
+          "language": {
+            "description": "The language of the invitation mail N20. The store's default language when left out",
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          },
+          "ownerEmail": {
+            "format": "email",
+            "maxLength": 254,
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 60,
+            "minLength": 2,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "ownerEmail"
+        ],
+        "type": "object"
+      },
       "Health": {
         "properties": {
           "status": {
@@ -37,6 +201,76 @@
           "guestId"
         ],
         "type": "object"
+      },
+      "Onboarding": {
+        "properties": {
+          "conditions": {
+            "items": {
+              "properties": {
+                "key": {
+                  "enum": [
+                    "store-information",
+                    "payment-account",
+                    "catalogue",
+                    "policies"
+                  ],
+                  "type": "string"
+                },
+                "state": {
+                  "$ref": "#/components/schemas/ConditionState"
+                }
+              },
+              "required": [
+                "key",
+                "state"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "mayOpenForSale": {
+            "type": "boolean"
+          },
+          "store": {
+            "$ref": "#/components/schemas/Store"
+          }
+        },
+        "required": [
+          "store",
+          "conditions",
+          "mayOpenForSale"
+        ],
+        "type": "object"
+      },
+      "OwnerInvitation": {
+        "description": "The newest Owner invitation of a store. A revoked invitation reads as expired",
+        "properties": {
+          "email": {
+            "description": "The address the Owner was invited at, in lower case",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "open",
+              "accepted",
+              "expired"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "state",
+          "expiresAt"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
       },
       "Problem": {
         "description": "RFC 9457 problem details, sent as application/problem+json",
@@ -90,7 +324,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, invitation-not-found, invitation-expired, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -102,6 +336,74 @@
           "requestId"
         ],
         "type": "object"
+      },
+      "ResendOwnerInvitation": {
+        "properties": {
+          "language": {
+            "description": "The language of the invitation mail N20. The store's default language when left out",
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Store": {
+        "properties": {
+          "defaultLanguage": {
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "invited",
+              "onboarding",
+              "live",
+              "suspended"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "status",
+          "defaultLanguage"
+        ],
+        "type": "object"
+      },
+      "StoreInformation": {
+        "properties": {
+          "defaultLanguage": {
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
       }
     }
   },
@@ -111,6 +413,165 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/admin/stores": {
+      "get": {
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStoreList"
+                }
+              }
+            },
+            "description": "A page of stores, newest first",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStore"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStore"
+                }
+              }
+            },
+            "description": "The store, as `invited`, with its Owner invitation. The N20 mail is queued",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/stores/{id}/owner-invitation/resend": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendOwnerInvitation"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStore"
+                }
+              }
+            },
+            "description": "The store. Its Owner invitation lives 7 more days and only the new mail's link works",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/me": {
       "get": {
         "responses": {
@@ -138,6 +599,203 @@
               }
             },
             "description": "No session, or the session expired or was revoked",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/invitations/accept": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInvitation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedInvitation"
+                }
+              }
+            },
+            "description": "The signed-in user now belongs to the store",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/information": {
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoreInformation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Store"
+                }
+              }
+            },
+            "description": "The store with its new information",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/onboarding": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Onboarding"
+                }
+              }
+            },
+            "description": "The store and the four conditions for opening it for sale",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/open-for-sale": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Store"
+                }
+              }
+            },
+            "description": "The store is live",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
