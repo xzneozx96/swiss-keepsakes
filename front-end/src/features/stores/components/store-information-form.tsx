@@ -6,30 +6,42 @@ import { useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
-import { useCommand } from '@/features/data-client/use-command'
+import { useSubmit } from '@/features/data-client/use-command'
+import { useIdempotencyKey } from '../hooks/use-idempotency-key'
 import { ProblemNotice } from './problem-notice'
 
-/** The editable part of the store's information: its name and default language. Only the Owner may save. */
+interface Draft { name?: string, language?: Language }
+
+/**
+ * The editable part of the store's information: its name and default language. Only the Owner may save. What the
+ * Owner typed is kept apart from what the API last said, so a read in the background never wipes an edit in
+ * progress, and a field the Owner has not touched follows the API.
+ */
 export function StoreInformationForm({ store }: { store: Store }) {
   const { t } = useLocale()
-  const [name, setName] = useState(store.name)
-  const [language, setLanguage] = useState<Language>(store.defaultLanguage)
+  const [draft, setDraft] = useState<Draft>({})
   const [nameInvalid, setNameInvalid] = useState(false)
-  const update = useCommand('stores', 'updateStoreInformation')
+  const { submit, isPending, error } = useSubmit('stores', 'updateStoreInformation')
+  const name = draft.name ?? store.name
+  const language = draft.language ?? store.defaultLanguage
   const changed = name.trim() !== store.name || language !== store.defaultLanguage
+  const input = { storeId: store.id, name: name.trim(), defaultLanguage: language }
+  const key = useIdempotencyKey(input)
 
   const save = () => {
-    const trimmed = name.trim()
-
-    if (!trimmed) {
+    if (!input.name) {
       setNameInvalid(true)
 
       return
     }
-    update.mutate(
-      { storeId: store.id, name: trimmed, defaultLanguage: language },
-      { onSuccess: () => toast.success(t('stores.info.saved')) },
-    )
+    submit({ ...input, idempotencyKey: key.next() }, {
+      onSuccess: () => {
+        key.settled()
+        setDraft({})
+        toast.success(t('stores.info.saved'))
+      },
+      onError: failure => key.settled(failure),
+    })
   }
 
   return (
@@ -45,12 +57,13 @@ export function StoreInformationForm({ store }: { store: Store }) {
       >
         <TextField
           fullWidth
+          autoComplete="organization"
           isInvalid={nameInvalid}
           maxLength={120}
           name="name"
           value={name}
           onChange={(value) => {
-            setName(value)
+            setDraft(current => ({ ...current, name: value }))
             setNameInvalid(false)
           }}
         >
@@ -58,7 +71,7 @@ export function StoreInformationForm({ store }: { store: Store }) {
           <Input />
           <FieldError>{t('stores.info.nameInvalid')}</FieldError>
         </TextField>
-        <RadioGroup name="defaultLanguage" value={language} onChange={value => setLanguage(value as Language)}>
+        <RadioGroup name="defaultLanguage" value={language} onChange={value => setDraft(current => ({ ...current, language: value as Language }))}>
           <Label>{t('stores.info.language')}</Label>
           {(['en', 'de'] as const).map(code => (
             <Radio key={code} value={code}>
@@ -71,13 +84,13 @@ export function StoreInformationForm({ store }: { store: Store }) {
             </Radio>
           ))}
         </RadioGroup>
-        {update.isError && (
+        {error && (
           <ProblemNotice
-            error={update.error}
-            message={update.error instanceof ApiProblem && update.error.type === 'forbidden' ? 'stores.info.forbidden' : undefined}
+            error={error}
+            message={error instanceof ApiProblem && error.type === 'forbidden' ? 'stores.info.forbidden' : undefined}
           />
         )}
-        <Button isDisabled={!changed} isPending={update.isPending} type="submit">
+        <Button isDisabled={!changed} isPending={isPending} type="submit">
           {t('stores.info.save')}
         </Button>
       </Form>

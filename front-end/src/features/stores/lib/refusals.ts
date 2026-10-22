@@ -24,6 +24,8 @@ const byProblemType: Record<string, AcceptRefusal> = {
   'invitation-email-mismatch': 'mismatch',
   'invitation-email-unverified': 'unverified',
   'invitation-super-admin': 'superAdmin',
+  // The route checks the token's shape first, so a cut-off link is a 400 and reads as an unknown one.
+  'validation-failed': 'notFound',
 }
 
 export function acceptRefusal(error: Error): AcceptRefusal {
@@ -32,7 +34,7 @@ export function acceptRefusal(error: Error): AcceptRefusal {
 
 /** The link can never work again, so the held token is dropped. A mismatch keeps it: the invitation stays open for the right account. */
 export function spentToken(refusal: AcceptRefusal): boolean {
-  return refusal === 'notFound' || refusal === 'expired' || refusal === 'revoked' || refusal === 'accepted'
+  return refusal === 'notFound' || refusal === 'expired' || refusal === 'revoked' || refusal === 'accepted' || refusal === 'member'
 }
 
 export function refusalKeys(refusal: AcceptRefusal): { title: MessageKey, text: MessageKey } {

@@ -1,11 +1,12 @@
 import type { Language } from '@sk/domain/shared'
 
-import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, TextField, toast } from '@heroui/react'
+import { Button, Description, FieldError, Form, Input, Label, Radio, RadioGroup, TextField, toast } from '@heroui/react'
 import { useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
-import { useCommand } from '@/features/data-client/use-command'
+import { useSubmit } from '@/features/data-client/use-command'
+import { useIdempotencyKey } from '../hooks/use-idempotency-key'
 import { slugFromName } from '../lib/slug'
 import { ProblemNotice } from './problem-notice'
 
@@ -21,28 +22,29 @@ export function CreateStoreForm() {
   const [email, setEmail] = useState('')
   const [language, setLanguage] = useState<Language>(screenLanguage)
   const [invalid, setInvalid] = useState({ name: false, email: false })
-  const create = useCommand('stores', 'createStore')
-  const problem = create.error instanceof ApiProblem ? create.error : undefined
+  const { submit: send, isPending, error, reset } = useSubmit('stores', 'createStore')
+  const slug = slugFromName(name)
+  const input = { slug, name: name.trim(), defaultLanguage: language, language, ownerEmail: email.trim() }
+  const key = useIdempotencyKey(input)
+  const problem = error instanceof ApiProblem ? error : undefined
   const slugTaken = problem?.type === 'store-slug-taken'
   const ownerIsSuperAdmin = problem?.type === 'owner-is-super-admin'
 
   const submit = () => {
-    const slug = slugFromName(name)
     const next = { name: name.trim() === '' || slug.length < 2, email: !EMAIL.test(email.trim()) }
 
     setInvalid(next)
     if (next.name || next.email)
       return
-    create.mutate(
-      { slug, name: name.trim(), defaultLanguage: language, language, ownerEmail: email.trim() },
-      {
-        onSuccess: (store) => {
-          toast.success(t('stores.create.done', { email: store.invitation?.email ?? email.trim() }))
-          setName('')
-          setEmail('')
-        },
+    send({ ...input, idempotencyKey: key.next() }, {
+      onSuccess: (store) => {
+        key.settled()
+        toast.success(t('stores.create.done', { email: store.invitation?.email ?? input.ownerEmail }))
+        setName('')
+        setEmail('')
       },
-    )
+      onError: error => key.settled(error),
+    })
   }
 
   return (
@@ -59,17 +61,19 @@ export function CreateStoreForm() {
         <TextField
           fullWidth
           isInvalid={invalid.name || slugTaken}
+          autoComplete="organization"
           maxLength={120}
           name="name"
           value={name}
           onChange={(value) => {
             setName(value)
             setInvalid(current => ({ ...current, name: false }))
-            create.reset()
+            reset()
           }}
         >
           <Label>{t('stores.create.name')}</Label>
           <Input />
+          {slug && <Description>{t('stores.create.slug', { slug })}</Description>}
           <FieldError>{slugTaken ? t('stores.create.slugTaken') : t('stores.create.nameInvalid')}</FieldError>
         </TextField>
         <TextField
@@ -82,7 +86,7 @@ export function CreateStoreForm() {
           onChange={(value) => {
             setEmail(value)
             setInvalid(current => ({ ...current, email: false }))
-            create.reset()
+            reset()
           }}
         >
           <Label>{t('stores.create.email')}</Label>
@@ -102,8 +106,8 @@ export function CreateStoreForm() {
             </Radio>
           ))}
         </RadioGroup>
-        {create.isError && !slugTaken && !ownerIsSuperAdmin && <ProblemNotice error={create.error} />}
-        <Button fullWidth isPending={create.isPending} type="submit">
+        {error && !slugTaken && !ownerIsSuperAdmin && <ProblemNotice error={error} />}
+        <Button fullWidth isPending={isPending} type="submit">
           {t('stores.create.submit')}
         </Button>
       </Form>

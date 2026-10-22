@@ -1,9 +1,11 @@
 import { toast } from '@heroui/react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoActions } from '@/features/demo'
 import { clearGuestData } from '@/features/demo/store'
+import { forgetStoresSession } from '@/features/stores/lib/forget-session'
 import { apiEnabled } from '@/lib/api-mode'
 import { authFetchOptions, loadAuthClient } from '../lib/auth-api'
 
@@ -26,6 +28,7 @@ async function endSession(): Promise<boolean> {
  */
 export function useSignOut() {
   const { update } = useDemoActions()
+  const queryClient = useQueryClient()
   const { t } = useLocale()
   const [pending, setPending] = useState(false)
 
@@ -39,6 +42,7 @@ export function useSignOut() {
 
         return
       }
+      forgetStoresSession(queryClient)
       update(s => (apiEnabled ? clearGuestData(s) : { ...s, data: { ...s.data, signedInGuestId: null } }))
       onSignedOut?.()
     }

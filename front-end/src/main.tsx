@@ -18,7 +18,7 @@ import { followSession } from '@/features/auth/lib/session-sync'
 import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
-import { takeInvitationFromAddress } from '@/features/stores/lib/invitation-token'
+import { captureInvitations } from '@/features/stores/lib/invitation-token'
 import { apiEnabled } from '@/lib/api-mode'
 import { routeTree } from '@/routeTree.gen'
 import '@/styles/globals.css'
@@ -29,11 +29,10 @@ if (apiEnabled)
   takeGoogleReturn()
 
 // An invitation link carries its token after the `#`. It moves into sessionStorage before the router starts, so no
-// redirect to sign-in, no history entry and no `returnTo` ever holds it. A link pasted into an open tab is moved too.
-if (apiEnabled) {
-  takeInvitationFromAddress()
-  window.addEventListener('hashchange', takeInvitationFromAddress)
-}
+// redirect to sign-in, no history entry and no `returnTo` ever holds it. A link pasted into an open tab is moved too,
+// by a listener added before the router's own, so the router never reads the token.
+if (apiEnabled)
+  captureInvitations()
 
 // Hash history: the prototype is served as static files with no server rewrites,
 // so deep links and reloads (e.g. #/merchant/orders) must not hit the server.
@@ -78,7 +77,7 @@ if (!rootElement.innerHTML) {
     // The first paint never waits for the session: the app renders signed out, and the store changes when
     // the API answers.
     if (apiEnabled)
-      followSession(demo.store)
+      followSession(demo.store, demo.queryClient)
     ReactDOM.createRoot(rootElement).render(
       <StrictMode>
         <QueryClientProvider client={demo.queryClient}>

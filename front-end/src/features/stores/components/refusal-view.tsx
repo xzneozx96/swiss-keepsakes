@@ -2,6 +2,7 @@ import type { AcceptRefusal } from '../lib/refusals'
 
 import { Button, buttonVariants } from '@heroui/react'
 import { Link, useNavigate } from '@tanstack/react-router'
+import { useEffect, useRef } from 'react'
 
 import { InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
@@ -19,14 +20,19 @@ export function RefusalView({ refusal, onRetry }: { refusal: AcceptRefusal, onRe
   const navigate = useNavigate()
   const { signOutThen, pending } = useSignOut()
   const keys = refusalKeys(refusal)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    headingRef.current?.focus()
+  }, [refusal])
 
   return (
     <ScreenFrame title={t('stores.onboarding.title')}>
-      <div className="flex flex-col items-start gap-3 rounded-3xl bg-surface p-5 shadow-surface" role="alert">
+      <div className="flex flex-col items-start gap-3 rounded-3xl bg-surface p-5 shadow-surface">
         <span aria-hidden className="flex size-12 items-center justify-center rounded-2xl bg-surface-secondary text-muted">
           <InfoIcon size={24} />
         </span>
-        <h2 className="text-heading">{t(keys.title)}</h2>
+        <h2 ref={headingRef} className="text-heading outline-none" tabIndex={-1}>{t(keys.title)}</h2>
         <p className="text-sm text-pretty text-muted">{t(keys.text)}</p>
         {switchesAccount(refusal) && (
           <Button
@@ -34,14 +40,14 @@ export function RefusalView({ refusal, onRetry }: { refusal: AcceptRefusal, onRe
             variant="secondary"
             onPress={() => signOutThen(() => void navigate({ to: '/sign-in', search: { returnTo: ONBOARDING_PATH }, replace: true }))}
           >
-            {t('stores.onboarding.signOut')}
+            {t(refusal === 'superAdmin' ? 'stores.onboarding.signOutOnly' : 'stores.onboarding.signOut')}
           </Button>
         )}
         {refusal === 'failed' && onRetry && (
           <Button variant="secondary" onPress={onRetry}>{t('stores.problem.retry')}</Button>
         )}
         {!switchesAccount(refusal) && refusal !== 'failed' && (
-          <Link className={buttonVariants({ variant: 'secondary', size: 'sm' })} to="/">
+          <Link className={buttonVariants({ variant: 'secondary' })} to="/">
             {t('stores.onboarding.home')}
           </Link>
         )}

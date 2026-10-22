@@ -9,9 +9,6 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
 
   'stores.admin.title': 'Shops',
   'stores.admin.intro': 'Legen Sie einen Shop an, laden Sie dessen Inhaber ein und sehen Sie, ob die Einladung angenommen wurde.',
-  'stores.admin.signIn.title': 'Als Super-Admin anmelden',
-  'stores.admin.signIn.text': 'Dieser Bildschirm braucht ein Super-Admin-Konto.',
-  'stores.admin.signIn.action': 'Anmelden',
 
   'stores.create.title': 'Inhaber einladen',
   'stores.create.name': 'Name des Shops',
@@ -23,6 +20,7 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.create.language.de': 'Deutsch',
   'stores.create.submit': 'Shop anlegen und Einladung senden',
   'stores.create.done': 'Shop angelegt. Die Einladung geht an {email}.',
+  'stores.create.slug': 'Name in der Web-Adresse: {slug}',
   'stores.create.slugTaken': 'Ein anderer Shop hat einen sehr ähnlichen Namen. Ändern Sie den Namen ein wenig.',
   'stores.create.ownerIsSuperAdmin': 'Diese E-Mail gehört einem Super-Admin, der keinen Shop besitzen kann. Verwenden Sie eine andere Adresse.',
 
@@ -55,6 +53,7 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.onboarding.title': 'Ihren Shop eröffnen',
   'stores.onboarding.accepting': 'Einladung wird angenommen…',
   'stores.onboarding.signOut': 'Abmelden und anderes Konto verwenden',
+  'stores.onboarding.signOutOnly': 'Abmelden',
   'stores.onboarding.home': 'Zurück zu Entdecken',
   'stores.onboarding.manager': 'Sie sind dem Shop als Shop-Manager beigetreten.',
 
@@ -75,9 +74,9 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.refusal.unverified.title': 'Ihre E-Mail ist nicht bestätigt',
   'stores.refusal.unverified.text': 'Melden Sie sich erneut mit einem E-Mail-Code oder mit Google an und öffnen Sie den Einladungslink noch einmal.',
   'stores.refusal.superAdmin.title': 'Verwenden Sie ein Shop-Konto',
-  'stores.refusal.superAdmin.text': 'Ein Super-Admin kann keine Shop-Rolle übernehmen. Melden Sie sich ab und mit der Adresse an, die die Einladung erhalten hat.',
+  'stores.refusal.superAdmin.text': 'Ein Super-Admin kann keine Shop-Rolle übernehmen. Melden Sie sich ab und mit der Adresse an, die die Einladung erhalten hat, oder öffnen Sie den Link in einem privaten Fenster.',
   'stores.refusal.failed.title': 'Die Einladung konnte nicht angenommen werden',
-  'stores.refusal.failed.text': 'Es wurde nichts geändert. Versuchen Sie es erneut.',
+  'stores.refusal.failed.text': 'Wir konnten nicht feststellen, ob es geklappt hat. Versuchen Sie es erneut. Eine Wiederholung ist sicher.',
 
   'stores.checklist.title': 'Vor dem Verkaufsstart',
   'stores.checklist.store-information': 'Shop-Angaben',
@@ -97,6 +96,7 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.open.action': 'Verkauf starten',
   'stores.open.locked': 'Erledigen Sie oben jeden Schritt, um den Verkauf zu starten.',
   'stores.open.live': 'Ihr Shop ist im Verkauf.',
+  'stores.open.incompleteNoList': 'Der Shop kann noch nicht öffnen. Prüfen Sie die Schritte oben.',
   'stores.open.incomplete': 'Der Shop kann noch nicht öffnen. Noch offen: {steps}.',
   'stores.open.notOnboarding': 'Nur ein Shop in der Einrichtung kann in den Verkauf gehen.',
   'stores.open.forbidden': 'Nur der Inhaber kann den Verkauf starten.',

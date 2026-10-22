@@ -65,3 +65,5 @@ The contract gate is built (E1.10). `api/test/contract.test.ts` builds `packages
 ## Front-end notes
 
 Wrap hooks and components that read shop data in a fresh `QueryClientProvider` and `DataClientProvider` per test, with retries off. To prove a mutation invalidates what a screen reads, leave the demo store bridge out (`renderWithoutBridge` in `front-end/tests/data-client.test.tsx`), or the bridge refreshes the cache and hides a missing invalidation. A hook that needs IndexedDB or another browser API gets a fake from the test setup.
+
+The stores client makes its `Idempotency-Key` with `crypto.randomUUID()`, which a browser offers only on https and on `localhost`. The Playwright specs use `http://localhost`, so they work. A test that opens the SPA on a LAN address over plain http, such as a phone on the dev server, gets no key and every command fails. Use the https preview or `localhost` there.

@@ -1,5 +1,4 @@
 import { Skeleton } from '@heroui/react'
-import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
@@ -9,6 +8,7 @@ import { ApiProblem } from '@/features/data-client/errors'
 import { apiEnabled } from '@/lib/api-mode'
 import { useOnboarding } from '../api/queries'
 import { useAcceptInvitation } from '../hooks/use-accept-invitation'
+import { useGoToSignIn } from '../hooks/use-go-to-sign-in'
 import { forgetStore, rememberedStore } from '../lib/owner-store'
 import { ONBOARDING_PATH } from '../lib/search-params'
 import { OnboardingChecklist } from './onboarding-checklist'
@@ -71,7 +71,7 @@ function InvitationFlow() {
 
 function OnboardingView({ storeId }: { storeId: string }) {
   const { t } = useLocale()
-  const navigate = useNavigate()
+  const goToSignIn = useGoToSignIn(ONBOARDING_PATH)
   const query = useOnboarding(storeId)
   const problem = query.error instanceof ApiProblem ? query.error : undefined
   const signedOut = problem?.status === 401
@@ -79,10 +79,10 @@ function OnboardingView({ storeId }: { storeId: string }) {
 
   useEffect(() => {
     if (signedOut)
-      void navigate({ to: '/sign-in', search: { returnTo: ONBOARDING_PATH }, replace: true })
+      goToSignIn()
     if (notYours)
       forgetStore()
-  }, [signedOut, notYours, navigate])
+  }, [signedOut, notYours, goToSignIn])
 
   if (notYours)
     return <RefusalView refusal="missing" />
@@ -106,7 +106,7 @@ function OnboardingView({ storeId }: { storeId: string }) {
   return (
     <ScreenFrame intro={store.name} title={t('stores.onboarding.title')}>
       <OnboardingChecklist conditions={conditions} />
-      <StoreInformationForm key={`${store.name}|${store.defaultLanguage}`} store={store} />
+      <StoreInformationForm store={store} />
       <OpenForSale onboarding={query.data} />
     </ScreenFrame>
   )

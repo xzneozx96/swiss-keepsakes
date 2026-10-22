@@ -8,9 +8,6 @@ export const storesEn = {
 
   'stores.admin.title': 'Stores',
   'stores.admin.intro': 'Create a store, invite its Owner and follow whether the invitation was accepted.',
-  'stores.admin.signIn.title': 'Sign in as Super Admin',
-  'stores.admin.signIn.text': 'This screen needs a Super Admin account.',
-  'stores.admin.signIn.action': 'Sign in',
 
   'stores.create.title': 'Invite an Owner',
   'stores.create.name': 'Store name',
@@ -22,6 +19,7 @@ export const storesEn = {
   'stores.create.language.de': 'Deutsch',
   'stores.create.submit': 'Create store and send invitation',
   'stores.create.done': 'Store created. The invitation goes to {email}.',
+  'stores.create.slug': 'Web address name: {slug}',
   'stores.create.slugTaken': 'Another store has a name too close to this one. Change the name a little.',
   'stores.create.ownerIsSuperAdmin': 'This email belongs to a Super Admin, who cannot own a store. Use another email address.',
 
@@ -54,6 +52,7 @@ export const storesEn = {
   'stores.onboarding.title': 'Open your store',
   'stores.onboarding.accepting': 'Accepting your invitation…',
   'stores.onboarding.signOut': 'Sign out and use another account',
+  'stores.onboarding.signOutOnly': 'Sign out',
   'stores.onboarding.home': 'Back to Explore',
   'stores.onboarding.manager': 'You joined the store as a Store Manager.',
 
@@ -74,9 +73,9 @@ export const storesEn = {
   'stores.refusal.unverified.title': 'Your email is not verified',
   'stores.refusal.unverified.text': 'Sign in again with an emailed code or with Google, then open the invitation link again.',
   'stores.refusal.superAdmin.title': 'Use a store account',
-  'stores.refusal.superAdmin.text': 'A Super Admin cannot take a store role. Sign out and sign in with the address that received the invitation.',
+  'stores.refusal.superAdmin.text': 'A Super Admin cannot take a store role. Sign out and sign in with the address that received the invitation, or open the link in a private window.',
   'stores.refusal.failed.title': 'The invitation could not be accepted',
-  'stores.refusal.failed.text': 'Nothing was changed. Try again.',
+  'stores.refusal.failed.text': 'We could not tell whether it worked. Try again. Repeating it is safe.',
 
   'stores.checklist.title': 'Before you open for sale',
   'stores.checklist.store-information': 'Store information',
@@ -97,6 +96,7 @@ export const storesEn = {
   'stores.open.locked': 'Finish every step above to open for sale.',
   'stores.open.live': 'Your store is open for sale.',
   'stores.open.incomplete': 'The store cannot open yet. Still open: {steps}.',
+  'stores.open.incompleteNoList': 'The store cannot open yet. Check the steps above.',
   'stores.open.notOnboarding': 'Only a store that is onboarding can be opened for sale.',
   'stores.open.forbidden': 'Only the Owner can open the store for sale.',
 } as const

@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { dropInvitationToken, heldInvitationToken, takeInvitationFromAddress, takeInvitationFromHash } from '@/features/stores/lib/invitation-token'
+import { captureInvitations, dropInvitationToken, heldInvitationToken, subscribeInvitationToken, takeInvitationFromAddress, takeInvitationFromHash } from '@/features/stores/lib/invitation-token'
 
 const token = 'abcDEF123_-abcDEF123_-abcDEF123_-abcDEF123_-xyz'
 
@@ -44,6 +44,68 @@ describe('[E2.3][S8] the invitation token leaves the address', () => {
   it('forgets the token on request', () => {
     takeInvitationFromHash(`#/store/onboarding?invitation=${token}`)
     dropInvitationToken()
+
+    expect(heldInvitationToken()).toBeUndefined()
+  })
+
+  it('captures a token on A02 only', () => {
+    expect(takeInvitationFromHash(`#/admin?invitation=${token}`)).toBeUndefined()
+    expect(takeInvitationFromHash(`#/sign-in?invitation=${token}`)).toBeUndefined()
+    expect(heldInvitationToken()).toBeUndefined()
+  })
+
+  it('drops only the token it is told to, so a newer link survives', () => {
+    takeInvitationFromHash(`#/store/onboarding?invitation=${token}-newer`)
+    dropInvitationToken(token)
+
+    expect(heldInvitationToken()).toBe(`${token}-newer`)
+    dropInvitationToken(`${token}-newer`)
+    expect(heldInvitationToken()).toBeUndefined()
+  })
+
+  it('tells a subscriber when a token is held or dropped', () => {
+    const listener = vi.fn()
+    const unsubscribe = subscribeInvitationToken(listener)
+
+    takeInvitationFromHash(`#/store/onboarding?invitation=${token}`)
+    dropInvitationToken()
+    unsubscribe()
+    dropInvitationToken()
+
+    expect(listener).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('[E2.3][S8] a link opened in a tab that is already on A02', () => {
+  it('takes the token out of the address in a popstate listener that runs before one added later, as the router\'s is', () => {
+    const stop = captureInvitations()
+    const seenByRouter: string[] = []
+    const routerListener = () => seenByRouter.push(window.location.hash)
+
+    window.addEventListener('popstate', routerListener)
+    try {
+      window.history.replaceState(null, '', `/#/store/onboarding?invitation=${token}`)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+
+      expect(seenByRouter).toEqual(['#/store/onboarding'])
+      expect(heldInvitationToken()).toBe(token)
+    }
+    finally {
+      window.removeEventListener('popstate', routerListener)
+      stop()
+    }
+  })
+
+  it('also takes it on hashchange, and stops when told to', () => {
+    const stop = captureInvitations()
+
+    window.history.replaceState(null, '', `/#/store/onboarding?invitation=${token}`)
+    window.dispatchEvent(new HashChangeEvent('hashchange'))
+    expect(window.location.hash).toBe('#/store/onboarding')
+    stop()
+    dropInvitationToken()
+    window.history.replaceState(null, '', `/#/store/onboarding?invitation=${token}`)
+    window.dispatchEvent(new PopStateEvent('popstate'))
 
     expect(heldInvitationToken()).toBeUndefined()
   })

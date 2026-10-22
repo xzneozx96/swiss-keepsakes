@@ -8,7 +8,8 @@ import { formatDate } from '@sk/domain/shared'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
-import { useCommand } from '@/features/data-client/use-command'
+import { useSubmit } from '@/features/data-client/use-command'
+import { useIdempotencyKey } from '../hooks/use-idempotency-key'
 import { genericProblemKey } from '../lib/refusals'
 
 const statusTone: Record<AdminStore['status'], StatusTone> = {
@@ -28,7 +29,9 @@ const resendRefusals: Record<string, MessageKey> = {
 /** One store of A01: its status, the state of its Owner invitation, its payment account, and a resend while the Owner has not accepted. */
 export function StoreCard({ store }: { store: AdminStore }) {
   const { t, intlLocale } = useLocale()
-  const resend = useCommand('stores', 'resendOwnerInvitation')
+  const { submit, isPending } = useSubmit('stores', 'resendOwnerInvitation')
+  const input = { id: store.id, language: store.defaultLanguage }
+  const key = useIdempotencyKey(input)
   const { invitation } = store
   const canResend = invitation?.state === 'open' || invitation?.state === 'expired'
 
@@ -41,7 +44,7 @@ export function StoreCard({ store }: { store: AdminStore }) {
         </div>
         <StatusChip tone={statusTone[store.status]}>{t(`stores.status.${store.status}`)}</StatusChip>
       </div>
-      <p className="text-sm text-pretty" data-invitation={invitation?.state ?? 'none'}>
+      <p className="text-sm break-words text-pretty" data-invitation={invitation?.state ?? 'none'}>
         {invitation
           ? t(`stores.invitation.${invitation.state}`, { email: invitation.email, date: formatDate(new Date(invitation.expiresAt), intlLocale) })
           : t('stores.list.noInvitation')}
@@ -53,12 +56,17 @@ export function StoreCard({ store }: { store: AdminStore }) {
       </p>
       {canResend && (
         <Button
-          isPending={resend.isPending}
-          size="sm"
+          isPending={isPending}
           variant="secondary"
-          onPress={() => resend.mutate({ id: store.id, language: store.defaultLanguage }, {
-            onSuccess: () => toast.success(t('stores.resend.done', { email: invitation.email })),
-            onError: error => toast.danger(t(error instanceof ApiProblem ? (resendRefusals[error.type] ?? genericProblemKey(error)) : genericProblemKey(error))),
+          onPress={() => submit({ ...input, idempotencyKey: key.next() }, {
+            onSuccess: () => {
+              key.settled()
+              toast.success(t('stores.resend.done', { email: invitation.email }))
+            },
+            onError: (error) => {
+              key.settled(error)
+              toast.danger(t(error instanceof ApiProblem ? (resendRefusals[error.type] ?? genericProblemKey(error)) : genericProblemKey(error)))
+            },
           })}
         >
           {t('stores.resend.action')}
