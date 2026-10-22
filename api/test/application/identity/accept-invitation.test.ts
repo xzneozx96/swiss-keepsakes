@@ -140,13 +140,14 @@ describe('[E2.3][S8] a signed-in user accepts an invitation', () => {
   })
 
   it('[E2.4] only the user who took the invitation gets the repeat answer, even for another account with the same address', async () => {
-    const { fake, accept, mint } = setup({ role: 'manager', status: 'onboarding' })
+    const { fake, store, accept, mint } = setup({ role: 'manager', status: 'onboarding' })
     await mint()
     await accept({ userId: 'user-ngoc' }, token, null)
     fake.addUser('user-twin', 'ngoc.tran@example.ch')
+    await fake.memberships.insertIfAbsent({ id: 0 }, { userId: 'user-twin', storeId: store.id, role: 'manager', acceptedAt: start })
 
     expect(await accept({ userId: 'user-twin' }, token, null)).toEqual({ ok: false, reason: 'invitation-already-accepted' })
-    expect(fake.state.memberships).toHaveLength(1)
+    expect(fake.state.memberships).toHaveLength(2)
   })
 
   it('[E2.3] an expired invitation is refused from the second it expires, and nothing changes', async () => {
