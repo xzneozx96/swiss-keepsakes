@@ -36,3 +36,29 @@ export async function endSessions(email: string) {
 export function newEmail(): string {
   return `guest-${Math.random().toString(36).slice(2, 10)}@example.ch`
 }
+
+/** Makes a user who has signed in once a Super Admin, through the use case `api/scripts/admin-grant.ts` runs. */
+export async function grantSuperAdmin(email: string) {
+  const response = await fetch(`${inbox}/grant-admin?email=${encodeURIComponent(email)}`, { method: 'POST' })
+
+  if (!response.ok)
+    throw new Error(`${email} could not be made a Super Admin: ${await response.text()}`)
+}
+
+export interface OwnerInvitationMail { to: string, subject: string, text: string, link: string }
+
+/** Runs the mail attempt for the newest N20 job of this address and returns the mail it would send, with its link. */
+export async function ownerInvitationMail(email: string): Promise<OwnerInvitationMail> {
+  const response = await fetch(`${inbox}/invitation-link?email=${encodeURIComponent(email)}`, { method: 'POST' })
+
+  if (!response.ok)
+    throw new Error(`No N20 link could be made for ${email}: ${await response.text()}`)
+
+  return response.json() as Promise<OwnerInvitationMail>
+}
+
+export function newStoreName(): { name: string, slug: string } {
+  const suffix = Math.random().toString(36).slice(2, 8)
+
+  return { name: `Keepsake ${suffix}`, slug: `keepsake-${suffix}` }
+}
