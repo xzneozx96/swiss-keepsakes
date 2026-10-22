@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as GuestRouteImport } from './routes/_guest'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as GuestIndexRouteImport } from './routes/_guest/index'
@@ -44,6 +45,7 @@ import { Route as StoreBookingsRouteImport } from './routes/store/bookings'
 import { Route as StoreCalendarRouteImport } from './routes/store/calendar'
 import { Route as StoreReportsRouteRouteImport } from './routes/store/reports/route'
 import { Route as StoreSalesRouteImport } from './routes/store/sales'
+import { Route as StoreOnboardingRouteImport } from './routes/store_.onboarding'
 import { Route as GuestCartReviewRouteImport } from './routes/_guest/cart_.review'
 import { Route as GuestCartSentRouteImport } from './routes/_guest/cart_.sent'
 import { Route as GuestGiftsIndexRouteImport } from './routes/_guest/gifts/index'
@@ -97,6 +99,11 @@ import { Route as GuestToursSlugBookReviewRouteImport } from './routes/_guest/to
 
 const GuestRoute = GuestRouteImport.update({
   id: '/_guest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
@@ -268,6 +275,11 @@ const StoreSalesRoute = StoreSalesRouteImport.update({
   id: '/sales',
   path: '/sales',
   getParentRoute: () => StoreRoute,
+} as any)
+const StoreOnboardingRoute = StoreOnboardingRouteImport.update({
+  id: '/store_/onboarding',
+  path: '/store/onboarding',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const GuestCartReviewRoute = GuestCartReviewRouteImport.update({
   id: '/cart_/review',
@@ -534,6 +546,7 @@ const GuestToursSlugBookReviewRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof GuestIndexRoute
+  '/admin': typeof AdminRoute
   '/sign-in': typeof SignInRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
@@ -564,6 +577,7 @@ export interface FileRoutesByFullPath {
   '/store/bookings': typeof StoreBookingsRouteWithChildren
   '/store/calendar': typeof StoreCalendarRoute
   '/store/sales': typeof StoreSalesRoute
+  '/store/onboarding': typeof StoreOnboardingRoute
   '/lab/': typeof LabIndexRoute
   '/partner/': typeof PartnerIndexRoute
   '/store/': typeof StoreIndexRoute
@@ -619,6 +633,7 @@ export interface FileRoutesByFullPath {
   '/tours/$slug/book/review': typeof GuestToursSlugBookReviewRoute
 }
 export interface FileRoutesByTo {
+  '/admin': typeof AdminRoute
   '/sign-in': typeof SignInRoute
   '/account': typeof GuestAccountRoute
   '/cart': typeof GuestCartRoute
@@ -645,6 +660,7 @@ export interface FileRoutesByTo {
   '/store/$section': typeof StoreSectionRoute
   '/store/calendar': typeof StoreCalendarRoute
   '/store/sales': typeof StoreSalesRoute
+  '/store/onboarding': typeof StoreOnboardingRoute
   '/': typeof GuestIndexRoute
   '/lab': typeof LabIndexRoute
   '/partner': typeof PartnerIndexRoute
@@ -703,6 +719,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_guest': typeof GuestRouteWithChildren
+  '/admin': typeof AdminRoute
   '/sign-in': typeof SignInRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
@@ -733,6 +750,7 @@ export interface FileRoutesById {
   '/store/bookings': typeof StoreBookingsRouteWithChildren
   '/store/calendar': typeof StoreCalendarRoute
   '/store/sales': typeof StoreSalesRoute
+  '/store_/onboarding': typeof StoreOnboardingRoute
   '/_guest/': typeof GuestIndexRoute
   '/lab/': typeof LabIndexRoute
   '/partner/': typeof PartnerIndexRoute
@@ -792,6 +810,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/sign-in'
     | '/store'
     | '/store/reports'
@@ -822,6 +841,7 @@ export interface FileRouteTypes {
     | '/store/bookings'
     | '/store/calendar'
     | '/store/sales'
+    | '/store/onboarding'
     | '/lab/'
     | '/partner/'
     | '/store/'
@@ -877,6 +897,7 @@ export interface FileRouteTypes {
     | '/tours/$slug/book/review'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/admin'
     | '/sign-in'
     | '/account'
     | '/cart'
@@ -903,6 +924,7 @@ export interface FileRouteTypes {
     | '/store/$section'
     | '/store/calendar'
     | '/store/sales'
+    | '/store/onboarding'
     | '/'
     | '/lab'
     | '/partner'
@@ -960,6 +982,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_guest'
+    | '/admin'
     | '/sign-in'
     | '/store'
     | '/store/reports'
@@ -990,6 +1013,7 @@ export interface FileRouteTypes {
     | '/store/bookings'
     | '/store/calendar'
     | '/store/sales'
+    | '/store_/onboarding'
     | '/_guest/'
     | '/lab/'
     | '/partner/'
@@ -1048,6 +1072,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   GuestRoute: typeof GuestRouteWithChildren
+  AdminRoute: typeof AdminRoute
   SignInRoute: typeof SignInRoute
   StoreRoute: typeof StoreRouteWithChildren
   LabAdviceRoute: typeof LabAdviceRoute
@@ -1067,6 +1092,7 @@ export interface RootRouteChildren {
   LabVictorinoxRoute: typeof LabVictorinoxRoute
   PartnerTokenRoute: typeof PartnerTokenRoute
   RCodeRoute: typeof RCodeRoute
+  StoreOnboardingRoute: typeof StoreOnboardingRoute
   LabIndexRoute: typeof LabIndexRoute
   PartnerIndexRoute: typeof PartnerIndexRoute
   LabBlogHomeStoriesRoute: typeof LabBlogHomeStoriesRoute
@@ -1079,6 +1105,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof GuestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-in': {
@@ -1318,6 +1351,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/store/sales'
       preLoaderRoute: typeof StoreSalesRouteImport
       parentRoute: typeof StoreRoute
+    }
+    '/store_/onboarding': {
+      id: '/store_/onboarding'
+      path: '/store/onboarding'
+      fullPath: '/store/onboarding'
+      preLoaderRoute: typeof StoreOnboardingRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_guest/cart_/review': {
       id: '/_guest/cart_/review'
@@ -1845,6 +1885,7 @@ const StoreRouteWithChildren = StoreRoute._addFileChildren(StoreRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   GuestRoute: GuestRouteWithChildren,
+  AdminRoute: AdminRoute,
   SignInRoute: SignInRoute,
   StoreRoute: StoreRouteWithChildren,
   LabAdviceRoute: LabAdviceRoute,
@@ -1864,6 +1905,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabVictorinoxRoute: LabVictorinoxRoute,
   PartnerTokenRoute: PartnerTokenRoute,
   RCodeRoute: RCodeRoute,
+  StoreOnboardingRoute: StoreOnboardingRoute,
   LabIndexRoute: LabIndexRoute,
   PartnerIndexRoute: PartnerIndexRoute,
   LabBlogHomeStoriesRoute: LabBlogHomeStoriesRoute,

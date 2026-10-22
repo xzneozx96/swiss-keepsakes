@@ -22,13 +22,14 @@ async function endSession(): Promise<boolean> {
 /**
  * Account's Sign out. With the API it ends the session first, so a reload cannot sign the guest back
  * in. If that fails the guest stays signed in and is told. `pending` disables the button meanwhile.
+ * `signOutThen` also runs a callback once the session has ended.
  */
 export function useSignOut() {
   const { update } = useDemoActions()
   const { t } = useLocale()
   const [pending, setPending] = useState(false)
 
-  const signOut = async () => {
+  const signOut = async (onSignedOut?: () => void) => {
     if (pending)
       return
     setPending(true)
@@ -39,11 +40,16 @@ export function useSignOut() {
         return
       }
       update(s => (apiEnabled ? clearGuestData(s) : { ...s, data: { ...s.data, signedInGuestId: null } }))
+      onSignedOut?.()
     }
     finally {
       setPending(false)
     }
   }
 
-  return { signOut: () => void signOut(), pending }
+  return {
+    signOut: () => void signOut(),
+    signOutThen: (onSignedOut: () => void) => void signOut(onSignedOut),
+    pending,
+  }
 }
