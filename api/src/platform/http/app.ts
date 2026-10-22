@@ -1,4 +1,5 @@
 import type { Actor, StoreRole } from '@sk/domain/identity'
+import type { MiddlewareHandler } from 'hono'
 import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
 import type { HealthCheck } from '../health.ts'
@@ -26,6 +27,14 @@ export interface AppEnv {
 export interface IdentityDeps extends AuthenticateDeps {
   authHandler: (request: Request) => Promise<Response>
   origin: string
+}
+
+// What the modules add to the app. `idempotency` is the Idempotency-Key middleware (D11). createApp mounts it after
+// the guards, so an outsider is refused before the key is read. `routes` register each module's routes with
+// `app.openapi`, after the guards and the middleware, so every one of them is guarded and checked for a key.
+export interface CommandDeps {
+  idempotency: MiddlewareHandler<AppEnv>
+  routes: ((app: OpenAPIHono<AppEnv>) => void)[]
 }
 
 const clientRequestIdPattern = /^[\w=-]{1,255}$/
@@ -61,7 +70,7 @@ const meRoute = createRoute({
   },
 })
 
-export function createApp(logger: Logger, checkHealth: HealthCheck, identity: IdentityDeps): OpenAPIHono<AppEnv> {
+export function createApp(logger: Logger, checkHealth: HealthCheck, identity: IdentityDeps, commands: CommandDeps): OpenAPIHono<AppEnv> {
   const app = new OpenAPIHono<AppEnv>({
     defaultHook: (result, c) => {
       if (!result.success) {
@@ -111,6 +120,9 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
   // Default deny by path, before any route handler or body parser: a route registered later is guarded too.
   app.use('/api/store/:storeId/*', requireStoreMember)
   app.use('/api/admin/*', requireSuperAdmin)
+  // After the guards, so an anonymous request or an outsider is refused with 401 or 403 before it needs a key.
+  // Better Auth's routes answered above and never get here.
+  app.use('/api/*', commands.idempotency)
 
   app.openapi(healthRoute, async (c) => {
     const report = await checkHealth()
@@ -123,6 +135,9 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
   app.openapi(meRoute, async (c) => {
     return c.json({ guestId: c.get('guest').guestId }, 200)
   })
+
+  for (const register of commands.routes)
+    register(app)
 
   app.notFound(c => problem(c, { type: 'not-found', status: 404, title: 'Not found' }))
 

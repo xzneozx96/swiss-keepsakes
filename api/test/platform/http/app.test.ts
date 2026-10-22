@@ -5,6 +5,7 @@ import { HTTPException } from 'hono/http-exception'
 import { describe, expect, it } from 'vitest'
 import { createApp } from '../../../src/platform/http/app.ts'
 import { createLogger } from '../../../src/platform/logger.ts'
+import { noCommands } from '../../support/commands.ts'
 import { noSessions } from '../../support/identity.ts'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
@@ -38,7 +39,7 @@ const probeRoute = createRoute({
 
 function setup(health: HealthReport = { database: true, jobs: true }) {
   const logs: Record<string, unknown>[] = []
-  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => health, noSessions)
+  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => health, noSessions, noCommands)
   app.openapi(probeRoute, c => c.json({ ok: true }, 200))
   app.openapi(partnerRoute, c => c.json({ ok: true }, 200))
   app.get('/boom', () => {

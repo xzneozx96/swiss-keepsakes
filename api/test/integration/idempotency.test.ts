@@ -100,8 +100,10 @@ function setup({ storeFails = false } = {}) {
   }
 
   const logs: { level: number, msg: string }[] = []
-  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }), noSessions)
-  app.use('/api/*', idempotency({ db: storeFails ? storingFails : db, clock, actorId: c => c.req.header('X-Test-Actor') ?? 'anonymous' }))
+  const app = createApp(createLogger('info', { write: line => logs.push(JSON.parse(line)) }), async () => ({ database: true, jobs: true }), noSessions, {
+    idempotency: idempotency({ db: storeFails ? storingFails : db, clock, actorId: c => c.req.header('X-Test-Actor') ?? 'anonymous' }),
+    routes: [],
+  })
   app.get('/api/probes', c => c.json({ ok: true }))
   app.openapi(probeRoute, async (c) => {
     const { name, fail, respond, units } = c.req.valid('json')
