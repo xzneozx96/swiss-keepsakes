@@ -1,10 +1,10 @@
 import type { MailRequest } from '../../../src/modules/notifications/application/render-mail.ts'
 import type { InvitationLink, JobQueue, MailFailure, MailStatus, MailTemplate, QueuedMail, SentMailRepository, UnitOfWork } from '../../../src/modules/notifications/ports.ts'
 import { describe, expect, it } from 'vitest'
-import { invitationRevoked } from '../../../src/modules/notifications/ports.ts'
 import { makeFailMail } from '../../../src/modules/notifications/application/fail-mail.ts'
 import { makeQueueMail } from '../../../src/modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from '../../../src/modules/notifications/application/send-mail.ts'
+import { invitationRevoked } from '../../../src/modules/notifications/ports.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
 import { createMemoryMailer, quotedAddress, smtpError } from '../../support/memory-mailer.ts'
 
