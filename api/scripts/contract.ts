@@ -1,9 +1,11 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
 import type { OpenAPI3 } from 'openapi-typescript'
+import type { IdentityUseCases } from '../src/modules/identity/adapters/routes.ts'
 import type { AppEnv } from '../src/platform/http/app.ts'
 import { fileURLToPath } from 'node:url'
 import openapiTS, { astToString } from 'openapi-typescript'
 import { z } from 'zod'
+import { registerIdentityRoutes } from '../src/modules/identity/adapters/routes.ts'
 import { createApp } from '../src/platform/http/app.ts'
 import { createLogger } from '../src/platform/logger.ts'
 
@@ -13,6 +15,13 @@ const header = `// Generated from the API routes by \`pnpm contract:build\`. Do 
 /* eslint-disable */
 `
 
+// Building the document runs no handler, so the use cases are never called.
+const unreachable = new Proxy({}, {
+  get: () => async () => {
+    throw new Error('The contract build calls no use case')
+  },
+}) as IdentityUseCases
+
 // The real routes. Building the document calls neither the logger nor the health check.
 export function contractApp(): OpenAPIHono<AppEnv> {
   // Building the document runs no handler, so the identity stand-ins are never called.
@@ -21,6 +30,11 @@ export function contractApp(): OpenAPIHono<AppEnv> {
     origin: 'http://localhost',
     readSession: async () => ({ headers: new Headers(), response: null }),
     loadIdentity: async () => ({ guestId: '', access: { platformAdmin: false, memberships: [] } }),
+  }, {
+    idempotency: async (_c, next) => {
+      await next()
+    },
+    routes: [app => registerIdentityRoutes(app, unreachable)],
   })
 }
 

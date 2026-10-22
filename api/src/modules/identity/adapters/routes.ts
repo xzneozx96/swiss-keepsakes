@@ -1,0 +1,193 @@
+import type { OpenAPIHono } from '@hono/zod-openapi'
+import type { Actor, StoreLanguage } from '@sk/domain/identity'
+import type { AppEnv } from '../../../platform/http/app.ts'
+import type { AcceptInvitationResult } from '../application/accept-invitation.ts'
+import type { CreateStoreInput, CreateStoreResult } from '../application/create-store.ts'
+import type { OnboardingView } from '../application/get-onboarding.ts'
+import type { StorePage } from '../application/list-stores.ts'
+import type { OpenStoreForSaleResult } from '../application/open-store-for-sale.ts'
+import type { ResendOwnerInvitationResult } from '../application/resend-owner-invitation.ts'
+import type { UpdateStoreInformationResult } from '../application/update-store-information.ts'
+import { createRoute, z } from '@hono/zod-openapi'
+import { acceptedInvitationSchema, acceptInvitationBodySchema, adminStoreListQuerySchema, adminStoreListSchema, adminStoreSchema, createStoreBodySchema, onboardingSchema, resendOwnerInvitationBodySchema, storeInformationBodySchema, storeSchema } from '@sk/api-contract'
+import { problem } from '../../../platform/http/problem.ts'
+import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
+
+// What the routes call. main.ts builds each from the module's use cases.
+export interface IdentityUseCases {
+  createStore: (actor: { userId: string }, input: CreateStoreInput, requestId: string | null) => Promise<CreateStoreResult>
+  listStores: (page: { limit: number, cursor?: string | undefined }) => Promise<StorePage>
+  resendOwnerInvitation: (actor: { userId: string }, storeId: string, language: StoreLanguage | undefined, requestId: string | null) => Promise<ResendOwnerInvitationResult>
+  acceptInvitation: (actor: { userId: string }, token: string, requestId: string | null) => Promise<AcceptInvitationResult>
+  getOnboarding: (storeId: string) => Promise<OnboardingView | undefined>
+  updateStoreInformation: (actor: Actor, storeId: string, changes: { name?: string, defaultLanguage?: StoreLanguage }, requestId: string | null) => Promise<UpdateStoreInformationResult>
+  openStoreForSale: (actor: Actor, storeId: string, requestId: string | null) => Promise<OpenStoreForSaleResult>
+}
+
+const json = <S extends z.ZodType>(schema: S) => ({ 'application/json': { schema } })
+
+const createStoreRoute = createRoute({
+  method: 'post',
+  path: '/api/admin/stores',
+  request: { body: { required: true, content: json(createStoreBodySchema) } },
+  responses: {
+    201: { description: 'The store, as `invited`, with its Owner invitation. The N20 mail is queued', headers: requestIdHeader, content: json(adminStoreSchema) },
+    ...problemResponses,
+  },
+})
+
+const listStoresRoute = createRoute({
+  method: 'get',
+  path: '/api/admin/stores',
+  request: { query: adminStoreListQuerySchema },
+  responses: {
+    200: { description: 'A page of stores, newest first', headers: requestIdHeader, content: json(adminStoreListSchema) },
+    ...problemResponses,
+  },
+})
+
+const resendRoute = createRoute({
+  method: 'post',
+  path: '/api/admin/stores/{id}/owner-invitation/resend',
+  request: {
+    params: z.object({ id: z.uuid() }),
+    body: { required: false, content: json(resendOwnerInvitationBodySchema) },
+  },
+  responses: {
+    200: { description: 'The store. Its Owner invitation lives 7 more days and only the new mail\'s link works', headers: requestIdHeader, content: json(adminStoreSchema) },
+    ...problemResponses,
+  },
+})
+
+const acceptRoute = createRoute({
+  method: 'post',
+  path: '/api/me/invitations/accept',
+  request: { body: { required: true, content: json(acceptInvitationBodySchema) } },
+  responses: {
+    200: { description: 'The signed-in user now belongs to the store', headers: requestIdHeader, content: json(acceptedInvitationSchema) },
+    ...problemResponses,
+  },
+})
+
+const onboardingRoute = createRoute({
+  method: 'get',
+  path: '/api/store/{storeId}/onboarding',
+  request: { params: z.object({ storeId: z.uuid() }) },
+  responses: {
+    200: { description: 'The store and the four conditions for opening it for sale', headers: requestIdHeader, content: json(onboardingSchema) },
+    ...problemResponses,
+  },
+})
+
+const informationRoute = createRoute({
+  method: 'patch',
+  path: '/api/store/{storeId}/information',
+  request: {
+    params: z.object({ storeId: z.uuid() }),
+    body: { required: true, content: json(storeInformationBodySchema) },
+  },
+  responses: {
+    200: { description: 'The store with its new information', headers: requestIdHeader, content: json(storeSchema) },
+    ...problemResponses,
+  },
+})
+
+const openRoute = createRoute({
+  method: 'post',
+  path: '/api/store/{storeId}/open-for-sale',
+  request: { params: z.object({ storeId: z.uuid() }) },
+  responses: {
+    200: { description: 'The store is live', headers: requestIdHeader, content: json(storeSchema) },
+    ...problemResponses,
+  },
+})
+
+// Every actor but `anonymous` has a user id, and the guard of the route has already refused an anonymous one.
+function signedIn(actor: Actor): { userId: string } {
+  if (actor.kind === 'anonymous')
+    throw new Error('A guarded route ran without a signed-in actor')
+  return { userId: actor.userId }
+}
+
+// The Super Admin's routes sit under /api/admin/*, the accept route under /api/me/*, and the Owner's under
+// /api/store/{storeId}/*. createApp guards each prefix before any of these runs.
+export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: IdentityUseCases): void {
+  app.openapi(createStoreRoute, async (c) => {
+    const body = c.req.valid('json')
+    const result = await useCases.createStore(signedIn(c.get('actor')), body, c.get('requestId'))
+    if (!result.ok)
+      return problem(c, { type: 'store-slug-taken', status: 409, title: 'Another store already has this slug' })
+    return c.json(result.store, 201)
+  })
+
+  app.openapi(listStoresRoute, async (c) => {
+    return c.json(await useCases.listStores(c.req.valid('query')), 200)
+  })
+
+  app.openapi(resendRoute, async (c) => {
+    const body = c.req.valid('json')
+    const result = await useCases.resendOwnerInvitation(signedIn(c.get('actor')), c.req.valid('param').id, body?.language, c.get('requestId'))
+    if (result.ok)
+      return c.json(result.store, 200)
+    switch (result.reason) {
+      case 'store-not-found':
+        return problem(c, { type: 'not-found', status: 404, title: 'There is no such store' })
+      case 'invitation-not-found':
+        return problem(c, { type: 'invitation-not-found', status: 404, title: 'The store has no Owner invitation' })
+      case 'invitation-already-accepted':
+        return problem(c, { type: 'invitation-already-accepted', status: 409, title: 'The Owner has already accepted the invitation' })
+    }
+  })
+
+  app.openapi(acceptRoute, async (c) => {
+    const result = await useCases.acceptInvitation(signedIn(c.get('actor')), c.req.valid('json').token, c.get('requestId'))
+    if (result.ok)
+      return c.json({ storeId: result.storeId, role: result.role, storeStatus: result.storeStatus }, 200)
+    switch (result.reason) {
+      case 'invitation-not-found':
+        return problem(c, { type: 'invitation-not-found', status: 404, title: 'This invitation link is not valid. Ask for a new one' })
+      case 'invitation-email-mismatch':
+        return problem(c, { type: 'invitation-email-mismatch', status: 403, title: 'This invitation was sent to a different email address. Sign in with the address that received it' })
+      case 'invitation-email-unverified':
+        return problem(c, { type: 'invitation-email-unverified', status: 403, title: 'The email address of this account is not verified' })
+      case 'invitation-already-accepted':
+        return problem(c, { type: 'invitation-already-accepted', status: 409, title: 'This invitation has already been accepted' })
+      case 'invitation-expired':
+        return problem(c, { type: 'invitation-expired', status: 410, title: 'This invitation has expired. Ask for a new one' })
+      case 'already-a-member':
+        return problem(c, { type: 'already-a-member', status: 409, title: 'You already belong to this store' })
+    }
+  })
+
+  app.openapi(onboardingRoute, async (c) => {
+    const view = await useCases.getOnboarding(c.get('store').storeId)
+    if (!view)
+      return problem(c, { type: 'not-found', status: 404, title: 'There is no such store' })
+    return c.json(view, 200)
+  })
+
+  app.openapi(informationRoute, async (c) => {
+    const result = await useCases.updateStoreInformation(c.get('actor'), c.get('store').storeId, c.req.valid('json'), c.get('requestId'))
+    if (result.ok)
+      return c.json(result.store, 200)
+    return result.reason === 'forbidden'
+      ? problem(c, { type: 'forbidden', status: 403, title: 'Only the Owner may change the store information' })
+      : problem(c, { type: 'not-found', status: 404, title: 'There is no such store' })
+  })
+
+  app.openapi(openRoute, async (c) => {
+    const result = await useCases.openStoreForSale(c.get('actor'), c.get('store').storeId, c.get('requestId'))
+    if (result.ok)
+      return c.json(result.store, 200)
+    switch (result.reason) {
+      case 'forbidden':
+        return problem(c, { type: 'forbidden', status: 403, title: 'Only the Owner may open the store for sale' })
+      case 'store-not-found':
+        return problem(c, { type: 'not-found', status: 404, title: 'There is no such store' })
+      case 'store-not-onboarding':
+        return problem(c, { type: 'store-not-onboarding', status: 409, title: 'Only a store that is onboarding can be opened for sale' })
+      case 'onboarding-incomplete':
+        return problem(c, { type: 'onboarding-incomplete', status: 409, title: 'The store cannot open for sale until every condition is met' })
+    }
+  })
+}
