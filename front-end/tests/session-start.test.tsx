@@ -22,7 +22,7 @@ describe('[E2.1] a browser that finds no session at start', () => {
     }))
     const before = demo.store.getState()
 
-    followSession(demo.store)
+    followSession(demo.store, demo.queryClient)
     await waitFor(() => expect(fetch).toHaveBeenCalled())
     await new Promise(resolve => setTimeout(resolve, 50))
 

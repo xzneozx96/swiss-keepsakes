@@ -7,11 +7,13 @@ import type { PartnersClient } from '@/features/partners/api/client'
 import type { ReportsClient } from '@/features/reports/api/client'
 import type { RequestsClient } from '@/features/requests/api/client'
 import type { ReviewsClient } from '@/features/reviews/api/client'
+import type { StoresClient } from '@/features/stores/api/client'
 import type { ToursClient } from '@/features/tours/api/client'
 
 /**
  * Everything the screens read and change, one client per feature (D19). Demo mode answers from
- * the browser-held store. A feature moves to the API by replacing only its own client.
+ * the browser-held store. A feature moves to the API by replacing only its own client. `stores`
+ * has no demo data: it is the API client in both modes, and its screens need the API.
  */
 export interface DataClient {
   account: AccountClient
@@ -23,5 +25,6 @@ export interface DataClient {
   reports: ReportsClient
   requests: RequestsClient
   reviews: ReviewsClient
+  stores: StoresClient
   tours: ToursClient
 }

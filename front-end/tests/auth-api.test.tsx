@@ -302,7 +302,7 @@ describe('[E2.1][AC01] sign-in through the real Better Auth client', () => {
             user: { id: 'u1', email: 'guest@example.ch' },
           })
         : Response.json(null)
-    followSession(demo.store)
+    followSession(demo.store, demo.queryClient)
     await waitFor(() => expect(demo.store.getState().data.signedInGuestId).toBe(demoGuest.id))
 
     expect(calls.some(call => call.path === '/api/auth/get-session')).toBe(true)
@@ -324,5 +324,40 @@ describe('[E2.1][AC01] sign-in through the real Better Auth client', () => {
 
     expect(orders.length).toBeGreaterThan(0)
     expect(favouriteProductIds).toEqual([])
+  })
+
+  it('[E2.3] forgets the stores feature when the session ends or another user takes it over, and only then', async () => {
+    let user: string | null = 'u1'
+    const sessionOf = (id: string) => Response.json({
+      session: { id: `s-${id}`, userId: id, expiresAt: new Date(Date.now() + 1e7).toISOString() },
+      user: { id, email: `${id}@example.ch` },
+    })
+    const message = () => window.dispatchEvent(new StorageEvent('storage', {
+      key: 'better-auth.message',
+      newValue: JSON.stringify({ event: 'session', data: { trigger: 'signout' } }),
+    }))
+
+    answer = path => path === '/api/auth/get-session' && user ? sessionOf(user) : Response.json(null)
+    localStorage.setItem('sk.ownerStore', JSON.stringify('store-of-u1'))
+    demo.queryClient.setQueryData(['stores', 'onboarding', 'store-of-u1'], { name: 'u1 shop' })
+    demo.queryClient.setQueryData(['orders', 'orders'], ['kept'])
+    followSession(demo.store, demo.queryClient)
+    // The client is shared with the test before this one, which left it with no session, so it reads again.
+    message()
+    await waitFor(() => expect(demo.store.getState().data.signedInGuestId).toBe(demoGuest.id))
+
+    expect(demo.queryClient.getQueryData(['stores', 'onboarding', 'store-of-u1'])).toBeDefined()
+    expect(localStorage.getItem('sk.ownerStore')).not.toBeNull()
+
+    user = 'u2'
+    message()
+    await waitFor(() => expect(demo.queryClient.getQueryData(['stores', 'onboarding', 'store-of-u1'])).toBeUndefined())
+    expect(localStorage.getItem('sk.ownerStore')).toBeNull()
+    expect(demo.queryClient.getQueryData(['orders', 'orders'])).toEqual(['kept'])
+
+    demo.queryClient.setQueryData(['stores', 'adminStores'], { pages: [] })
+    user = null
+    message()
+    await waitFor(() => expect(demo.queryClient.getQueryData(['stores', 'adminStores'])).toBeUndefined())
   })
 })

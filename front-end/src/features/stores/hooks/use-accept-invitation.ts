@@ -1,0 +1,79 @@
+import type { AcceptedInvitation } from '@sk/api-contract'
+import type { AcceptRefusal } from '../lib/refusals'
+
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+
+import { ApiProblem } from '@/features/data-client/errors'
+import { useSubmit } from '@/features/data-client/use-command'
+import { heldInvitationToken, subscribeInvitationToken } from '../lib/invitation-token'
+import { acceptRefusal } from '../lib/refusals'
+import { ONBOARDING_PATH } from '../lib/search-params'
+import { useGoToSignIn } from './use-go-to-sign-in'
+import { useIdempotencyKey } from './use-idempotency-key'
+
+export type AcceptState
+  = | { kind: 'none' }
+    | { kind: 'accepting' }
+    | { kind: 'accepted', accepted: AcceptedInvitation }
+    | { kind: 'refused', refusal: AcceptRefusal }
+
+type Outcome = { token: string } & ({ kind: 'accepted', accepted: AcceptedInvitation } | { kind: 'refused', refusal: AcceptRefusal })
+
+/**
+ * The accept half of an invitation screen, shared by A02 and the Store Manager's M01 (E2.4). It takes the
+ * token that `captureInvitations` put in `sessionStorage` and posts it once when the screen opens, and again for
+ * a link opened later in the same tab. The API answers 401 to a visitor who has not signed in, and the screen then
+ * goes to sign-in and comes back to `returnTo`, which never carries the token. What the answer means for the
+ * held token and the remembered store is done by the client, so it happens even if this screen is gone by then.
+ * A retry sends the same `Idempotency-Key` for as long as the answer is unknown.
+ */
+export function useAcceptInvitation(returnTo: string = ONBOARDING_PATH) {
+  const goToSignIn = useGoToSignIn(returnTo)
+  const { submit } = useSubmit('stores', 'acceptInvitation')
+  const token = useSyncExternalStore(subscribeInvitationToken, heldInvitationToken)
+  const key = useIdempotencyKey({ token })
+  const [outcome, setOutcome] = useState<Outcome>()
+  const startedRef = useRef<string>(undefined)
+
+  const run = (held: string): boolean =>
+    submit({ token: held, idempotencyKey: key.next() }, {
+      onSuccess: (accepted) => {
+        key.settled()
+        setOutcome({ token: held, kind: 'accepted', accepted })
+      },
+      onError: (error) => {
+        key.settled(error)
+        if (error instanceof ApiProblem && error.status === 401) {
+          goToSignIn()
+
+          return
+        }
+        setOutcome({ token: held, kind: 'refused', refusal: acceptRefusal(error) })
+      },
+    })
+
+  useEffect(() => {
+    if (!token || startedRef.current === token)
+      return
+    if (run(token))
+      startedRef.current = token
+  })
+
+  // An answer belongs to the token it was for. The accepted token is gone from storage, so it still counts.
+  const current = outcome && (token === undefined || token === outcome.token) ? outcome : undefined
+  let state: AcceptState = token ? { kind: 'accepting' } : { kind: 'none' }
+
+  if (current?.kind === 'accepted')
+    state = { kind: 'accepted', accepted: current.accepted }
+  else if (current?.kind === 'refused')
+    state = { kind: 'refused', refusal: current.refusal }
+
+  const retry = () => {
+    if (!token)
+      return
+    setOutcome(undefined)
+    run(token)
+  }
+
+  return { state, retry }
+}

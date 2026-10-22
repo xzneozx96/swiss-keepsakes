@@ -8,6 +8,7 @@ import { salesOverviewDe } from '@/features/merchant/sales/messages.de'
 import { partnerDashboardDe } from '@/features/partners/report/messages.de'
 import { reportPagesDe } from '@/features/reports/pages-messages.de'
 import { requestsDe } from '@/features/requests/messages.de'
+import { storesDe } from '@/features/stores/messages.de'
 import { tourBookingDe } from '@/features/tours/booking/messages.de'
 import { tourDetailDe } from '@/features/tours/detail/messages.de'
 import { tourDiscoveryDe } from '@/features/tours/discovery/messages.de'
@@ -33,6 +34,7 @@ export const de: Record<MessageKey, string> = {
   ...salesOverviewDe,
   ...reportPagesDe,
   ...mailDe,
+  ...storesDe,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototyp · Beispieldaten',

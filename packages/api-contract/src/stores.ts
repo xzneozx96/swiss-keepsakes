@@ -73,3 +73,10 @@ export const storeInformationBodySchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   defaultLanguage: language.optional(),
 }).refine(body => body.name !== undefined || body.defaultLanguage !== undefined, 'Send at least one field').meta({ id: 'StoreInformation' })
+
+export type AdminStore = z.infer<typeof adminStoreSchema>
+export type AdminStoreList = z.infer<typeof adminStoreListSchema>
+export type CreateStore = z.infer<typeof createStoreBodySchema>
+export type AcceptedInvitation = z.infer<typeof acceptedInvitationSchema>
+export type Onboarding = z.infer<typeof onboardingSchema>
+export type Store = z.infer<typeof storeSchema>

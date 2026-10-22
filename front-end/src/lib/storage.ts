@@ -28,3 +28,33 @@ export function writeStored(key: string, value: unknown): WriteResult {
       : 'unavailable'
   }
 }
+
+/** sessionStorage that never throws: it lives as long as the tab, and a blocked one gives the fallback. */
+export function readSessionStored(key: string): string | undefined {
+  try {
+    return window.sessionStorage.getItem(key) ?? undefined
+  }
+  catch {
+    return undefined
+  }
+}
+
+export function writeSessionStored(key: string, value: string): boolean {
+  try {
+    window.sessionStorage.setItem(key, value)
+
+    return true
+  }
+  catch {
+    return false
+  }
+}
+
+export function removeSessionStored(key: string) {
+  try {
+    window.sessionStorage.removeItem(key)
+  }
+  catch {
+    // Nothing to remove when storage is blocked.
+  }
+}

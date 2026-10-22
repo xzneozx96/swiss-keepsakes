@@ -47,7 +47,7 @@ export function useCommand<F extends Feature, C extends CommandName<F>>(
  * A repeat tap while it runs is ignored: a ref, not `isPending`, because both taps arrive before
  * React re-renders. Like any per-call callback, `onSuccess` and `onError` do not run when the
  * screen is gone by then. `submit` returns false for an ignored tap; disable the button with
- * `isPending`.
+ * `isPending`. `error` and `reset` are the mutation's, for a screen that shows a refusal next to its form.
  */
 export function useSubmit<F extends Feature, C extends CommandName<F>>(
   feature: F,
@@ -55,7 +55,7 @@ export function useSubmit<F extends Feature, C extends CommandName<F>>(
 ) {
   type TInput = Command<F, C>['input']
   type TResult = Command<F, C>['result']
-  const { mutate, isPending } = useCommand(feature, command)
+  const { mutate, isPending, error, reset } = useCommand(feature, command)
   const runningRef = useRef(false)
 
   const submit = (
@@ -79,5 +79,5 @@ export function useSubmit<F extends Feature, C extends CommandName<F>>(
     return true
   }
 
-  return { submit, isPending }
+  return { submit, isPending, error, reset }
 }
