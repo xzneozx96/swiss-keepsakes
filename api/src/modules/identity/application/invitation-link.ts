@@ -3,13 +3,16 @@ import type { Clock, InvitationRepository } from '../ports.ts'
 import { invitationState } from '@sk/domain/identity'
 import { hashInvitationToken } from './invitation-token.ts'
 
+// Where each invitation mail's link leads in the SPA's hash routes. A02 (N20) is a screen of the store area. M01
+// (N18) is outside it, because the invitee holds no store yet and the merchant shell is for members.
+export const invitationScreens = { N20: '/store/onboarding', N18: '/invitation' } as const satisfies Record<InvitationTemplate, string>
+
 export interface InvitationLinkDeps<T> {
   invitations: InvitationRepository<T>
   clock: Clock
   newToken: () => string
   // The origin of the SPA (APP_URL), with no path.
   appUrl: string
-  // Where each invitation mail's link leads. E2.4 adds N18's.
   screens: Partial<Record<InvitationTemplate, string>>
 }
 

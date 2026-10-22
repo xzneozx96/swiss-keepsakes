@@ -91,6 +91,7 @@ export type Outsider = (typeof outsiderOutcomes)[number]['who']
 // the permission check and not from a 400. Any other operation gets an empty object.
 const exampleBodies: Record<string, object> = {
   'PATCH /api/store/{storeId}/information': { name: 'Name set by the matrix' },
+  'POST /api/store/{storeId}/member-invitations': { email: 'matrix@example.ch' },
 }
 
 // Calls one operation of the store as a caller. The request carries our own origin, JSON content type, a fresh

@@ -1,5 +1,5 @@
 import type { Store } from '@sk/domain/identity'
-import type { AuditEntry, ConditionSource, Invitation, InvitationRepository, LaterConditions, MembershipRepository, PlatformAdminRepository, StoreRepository, UnitOfWork, UserDirectory } from '../../src/modules/identity/ports.ts'
+import type { AuditEntry, ConditionSource, Invitation, InvitationRepository, InvitationRole, LaterConditions, MembershipRepository, PlatformAdminRepository, StoreRepository, UnitOfWork, UserDirectory } from '../../src/modules/identity/ports.ts'
 import type { MailRequest } from '../../src/modules/notifications/index.ts'
 
 // The identity ports over memory, for use case tests. `uow.run` keeps the state when the work returns and puts
@@ -9,8 +9,8 @@ export interface FakeTx { readonly id: number }
 interface State {
   stores: Map<string, Store>
   invitations: Map<string, Invitation>
-  memberships: { userId: string, storeId: string, role: string, acceptedAt: Date }[]
-  users: Map<string, { email: string, emailVerified: boolean }>
+  memberships: { id: string, userId: string, storeId: string, role: InvitationRole, acceptedAt: Date }[]
+  users: Map<string, { email: string, name: string, emailVerified: boolean }>
   admins: { userId: string, grantedBy: null }[]
   audit: AuditEntry[]
   mail: MailRequest[]
@@ -115,6 +115,22 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
       if (row)
         row.tokenHash = tokenHash
     },
+    async findManagerInStoreForUpdate(_tx, storeId, invitationId) {
+      const row = state.invitations.get(invitationId)
+      return row && row.storeId === storeId && row.role === 'manager' ? { ...row } : undefined
+    },
+    async listPendingManagers(_tx, storeId) {
+      return [...state.invitations.values()].filter(row => row.storeId === storeId && row.role === 'manager' && row.acceptedBy === null && row.revokedAt === null).sort((a, b) => b.id.localeCompare(a.id)).map(row => ({ ...row }))
+    },
+    async findOpenManagerByEmail(_tx, storeId, email, now) {
+      const row = [...state.invitations.values()].find(candidate => candidate.storeId === storeId && candidate.role === 'manager' && candidate.email === email && candidate.acceptedBy === null && candidate.revokedAt === null && candidate.expiresAt.getTime() > now.getTime())
+      return row && { ...row }
+    },
+    async revoke(_tx, invitationId, now) {
+      const row = state.invitations.get(invitationId)
+      if (row)
+        row.revokedAt = now
+    },
     async markAccepted(_tx, invitationId, userId, now) {
       const row = state.invitations.get(invitationId)
       if (!row || row.acceptedBy !== null || row.revokedAt !== null || row.expiresAt.getTime() <= now.getTime())
@@ -128,8 +144,21 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
     async insertIfAbsent(_tx, membership) {
       if (state.memberships.some(row => row.userId === membership.userId && row.storeId === membership.storeId))
         return false
-      state.memberships.push({ ...membership })
+      state.memberships.push({ id: nextId(), ...membership })
       return true
+    },
+    async list(_tx, storeId) {
+      return state.memberships.filter(row => row.storeId === storeId).map(row => ({ id: row.id, userId: row.userId, email: state.users.get(row.userId)?.email ?? '', role: row.role, acceptedAt: row.acceptedAt }))
+    },
+    async has(_tx, storeId, userId) {
+      return state.memberships.some(row => row.storeId === storeId && row.userId === userId)
+    },
+    async findInStoreForUpdate(_tx, storeId, memberId) {
+      const row = state.memberships.find(candidate => candidate.id === memberId && candidate.storeId === storeId)
+      return row && { id: row.id, userId: row.userId, email: state.users.get(row.userId)?.email ?? '', role: row.role, acceptedAt: row.acceptedAt }
+    },
+    async remove(_tx, storeId, memberId) {
+      state.memberships = state.memberships.filter(row => !(row.id === memberId && row.storeId === storeId))
     },
   }
 
@@ -170,8 +199,8 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
     setLater(next: Partial<LaterConditions>) {
       Object.assign(later, next)
     },
-    addUser(userId: string, email: string, emailVerified = true) {
-      state.users.set(userId, { email, emailVerified })
+    addUser(userId: string, email: string, emailVerified = true, name = '') {
+      state.users.set(userId, { email, name, emailVerified })
     },
     addStore(row: Partial<Store> & { slug: string }): Store {
       const store: Store = { id: nextId(), name: 'Zürich Andenken', status: 'invited', defaultLanguage: 'en', ...row }

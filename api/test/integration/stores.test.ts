@@ -12,7 +12,7 @@ import { createInvitationRepository } from '../../src/modules/identity/adapters/
 import { createPlatformAdminRepository } from '../../src/modules/identity/adapters/platform-admin-repository.ts'
 import { registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
 import { createUserDirectory } from '../../src/modules/identity/adapters/user-directory.ts'
-import { makeGrantSuperAdmin, makeInvitationLink, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
+import { invitationScreens, makeGrantSuperAdmin, makeInvitationLink, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
@@ -102,7 +102,7 @@ async function setup(options: SetupOptions = {}) {
     uow,
     sentMail,
     mailer: memory.mailer,
-    invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl, screens: { N20: '/store/onboarding' } }),
+    invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl, screens: invitationScreens }),
     clock: systemClock,
   })
 

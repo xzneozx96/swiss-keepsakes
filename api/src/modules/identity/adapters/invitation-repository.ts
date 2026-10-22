@@ -65,5 +65,23 @@ export function createInvitationRepository(): InvitationRepository<Tx> {
       const accepted = await tx.update(storeInvitations).set({ acceptedBy: userId }).where(and(eq(storeInvitations.id, invitationId), isNull(storeInvitations.acceptedBy), isNull(storeInvitations.revokedAt), gt(storeInvitations.expiresAt, now))).returning({ id: storeInvitations.id })
       return accepted.length > 0
     },
+
+    async findManagerInStoreForUpdate(tx, storeId, invitationId) {
+      const [row] = await tx.select(columns).from(storeInvitations).where(and(eq(storeInvitations.id, invitationId), eq(storeInvitations.storeId, storeId), eq(storeInvitations.role, 'manager'))).for('update')
+      return row
+    },
+
+    async listPendingManagers(tx, storeId) {
+      return tx.select(columns).from(storeInvitations).where(and(eq(storeInvitations.storeId, storeId), eq(storeInvitations.role, 'manager'), isNull(storeInvitations.acceptedBy), isNull(storeInvitations.revokedAt))).orderBy(newestFirst)
+    },
+
+    async findOpenManagerByEmail(tx, storeId, email, now) {
+      const [row] = await tx.select(columns).from(storeInvitations).where(and(eq(storeInvitations.storeId, storeId), eq(storeInvitations.role, 'manager'), eq(storeInvitations.email, email), isNull(storeInvitations.acceptedBy), isNull(storeInvitations.revokedAt), gt(storeInvitations.expiresAt, now))).limit(1)
+      return row
+    },
+
+    async revoke(tx, invitationId, now) {
+      await tx.update(storeInvitations).set({ revokedAt: now }).where(eq(storeInvitations.id, invitationId))
+    },
   }
 }

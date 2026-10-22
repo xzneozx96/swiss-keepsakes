@@ -6,7 +6,7 @@ import { user } from './schema.ts'
 export function createUserDirectory(): UserDirectory<Tx> {
   return {
     async find(tx, userId) {
-      const [row] = await tx.select({ email: user.email, emailVerified: user.emailVerified }).from(user).where(eq(user.id, userId))
+      const [row] = await tx.select({ email: user.email, name: user.name, emailVerified: user.emailVerified }).from(user).where(eq(user.id, userId))
       return row
     },
 
