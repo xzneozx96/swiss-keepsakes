@@ -16,6 +16,18 @@ export const problemTypes = [
   'unauthenticated',
   'forbidden',
   'origin-refused',
+  'store-slug-taken',
+  'owner-is-super-admin',
+  'invitation-not-found',
+  'invitation-expired',
+  'invitation-revoked',
+  'invitation-super-admin',
+  'invitation-already-accepted',
+  'invitation-email-mismatch',
+  'invitation-email-unverified',
+  'already-a-member',
+  'store-not-onboarding',
+  'onboarding-incomplete',
 ] as const
 
 export type ProblemType = (typeof problemTypes)[number]

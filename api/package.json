@@ -11,6 +11,7 @@
     "start": "node --conditions=sk-compiled dist/main.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=.env.local src/platform/db/migrate.ts",
+    "admin:grant": "tsx scripts/admin-grant.ts",
     "db:check-branch": "tsx scripts/check-branch-migrations.ts",
     "build": "pnpm --filter @sk/api^... --if-present build && tsc -p tsconfig.build.json",
     "contract:build": "tsx scripts/build-contract.ts",

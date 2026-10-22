@@ -50,6 +50,8 @@ const rolesAllowed = {
   'record-partner-payout': ['owner', 'manager'],
   'reissue-partner-link': ['owner'],
   'manage-members': ['owner'],
+  'edit-store-information': ['owner'],
+  'open-store-for-sale': ['owner'],
   'manage-content': ['owner', 'manager'],
 } as const satisfies Record<string, readonly StoreRole[]>
 
@@ -63,4 +65,64 @@ export function storeRole(actor: Actor, storeId: string): StoreRole | undefined 
 export function can(actor: Actor, permission: Permission, scope: { storeId: string }): boolean {
   const role = storeRole(actor, scope.storeId)
   return role !== undefined && (rolesAllowed[permission] as readonly StoreRole[]).includes(role)
+}
+
+// The address as Better Auth stores it and as an invitation keeps it: trimmed and in lower case. Two addresses
+// that differ only in case or in surrounding spaces are the same person.
+export function normaliseEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
+export type StoreStatus = 'invited' | 'onboarding' | 'live' | 'suspended'
+
+export type StoreLanguage = 'en' | 'de'
+
+// Only a live store sells (UX AC03). Every checkout, hold and payment route asks this.
+export function storeMaySell(status: StoreStatus): boolean {
+  return status === 'live'
+}
+
+// A02's four conditions for opening a store for sale (UX L370). `pending` means the story that decides the
+// condition has not been built yet, which counts as unmet.
+export const onboardingConditionKeys = ['store-information', 'payment-account', 'catalogue', 'policies'] as const
+
+export type OnboardingConditionKey = (typeof onboardingConditionKeys)[number]
+
+export type ConditionState = 'met' | 'unmet' | 'pending'
+
+export type OnboardingConditions = Record<OnboardingConditionKey, ConditionState>
+
+// The store information is complete when the store has a name and a language for its mail and pages.
+export function storeInformationState(store: { name: string, defaultLanguage: string }): ConditionState {
+  return store.name.trim() !== '' && (store.defaultLanguage === 'en' || store.defaultLanguage === 'de') ? 'met' : 'unmet'
+}
+
+export function unmetConditions(conditions: OnboardingConditions): OnboardingConditionKey[] {
+  return onboardingConditionKeys.filter(key => conditions[key] !== 'met')
+}
+
+export function mayOpenForSale(conditions: OnboardingConditions): boolean {
+  return unmetConditions(conditions).length === 0
+}
+
+// A Store Manager invitation or an Owner invitation lives 7 days (UX L520), and a resend starts the 7 days again.
+export const invitationLifetimeMs = 7 * 24 * 60 * 60 * 1000
+
+export interface Store {
+  id: string
+  slug: string
+  name: string
+  status: StoreStatus
+  defaultLanguage: StoreLanguage
+}
+
+export type InvitationState = 'open' | 'accepted' | 'revoked' | 'expired'
+
+// Accepted wins over revoked, and revoked wins over expired. Only an open invitation can be accepted or get a link.
+export function invitationState(invitation: { acceptedBy: string | null, revokedAt: Date | null, expiresAt: Date }, now: Date): InvitationState {
+  if (invitation.acceptedBy !== null)
+    return 'accepted'
+  if (invitation.revokedAt !== null)
+    return 'revoked'
+  return invitation.expiresAt.getTime() <= now.getTime() ? 'expired' : 'open'
 }

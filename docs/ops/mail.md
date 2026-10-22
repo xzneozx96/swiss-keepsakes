@@ -41,7 +41,7 @@ where status = 'queued' and queued_at < now() - interval '2 hours'
 order by queued_at;
 ```
 
-There is no resend command yet. UX R13 lets the Owner send an invitation again, and E2.3 and E2.4 build the invitations (N20, N18).
+The Super Admin resends the Owner invitation (N20) with `POST /api/admin/stores/{id}/owner-invitation/resend` (E2.3, UX R13). It queues a new N20 for the same invitation, starts its 7 days again and clears the old link. There is no resend for a Store Manager invitation (N18) until E2.4. Other failed mail has no resend command yet.
 
 ## Last errors
 
@@ -52,7 +52,7 @@ There is no resend command yet. UX R13 lets the Owner send an invitation again, 
 | `ETLS` | No TLS. The server offers no STARTTLS, or `SMTP_SECURE` does not match the port | Use 465 with `true`, or 587 with `false` |
 | `ECONNECTION`, `ETIMEDOUT` | The server cannot be reached | Check `SMTP_HOST` and `SMTP_PORT`. Retries cover a short outage |
 | `EENVELOPE` with a code | The server refused the sender or the recipient. A 5xx code fails at once | Check the address in the row and `SMTP_FROM` |
-| `MailRenderError` | The job's data lacks a template value, or the invitation is no longer open, so there is no link. It fails at once | Check whether the invitation was accepted, revoked or expired. Otherwise it is a bug in the command that queued the mail |
+| `MailRenderError` | The job's data lacks a template value, or the invitation is no longer open, so there is no link. It fails at once | Check whether the invitation was accepted, revoked or expired. For an expired Owner invitation, resend it (above), which opens it again and queues a new mail. Otherwise it is a bug in the command that queued the mail |
 
 ## Duplicates
 
@@ -60,7 +60,7 @@ Each attempt locks the mail's `sent_mail` row from before the send until it reco
 
 - Two runs of the same job never both send. The second waits for the lock, then finds the mail `sent` and stops.
 - A mail recorded as `sent` is never sent again, and a mail marked `failed` after its alert is never sent and never turns `sent`.
-- Not preventable. SMTP has no idempotency key. When the server accepted a message but the attempt never committed, the retry sends the message again with the same `Message-ID`, which is `<mail id@domain of SMTP_FROM>`. This happens when the reply was lost, when the worker crashed, or when a shutdown cut the attempt after the 10 s limit in `main.ts`.
+- Not preventable. SMTP has no idempotency key. When the server accepted a message but the attempt never committed, the retry sends the message again with the same `Message-ID`, which is `<mail id@domain of SMTP_FROM>`. This happens when the reply was lost, when the worker crashed, or when a shutdown cut the attempt after the 10 s limit in `main.ts`. For an invitation the retry mints a new token, so the two messages carry different links and only the second works. A mailbox that drops the second message because it has the same `Message-ID`, as Gmail does, leaves the person with the dead link. Resend the invitation then: it queues a new mail with a new `Message-ID`.
 
 ## The live check
 

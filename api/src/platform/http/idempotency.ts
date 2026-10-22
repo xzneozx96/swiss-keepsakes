@@ -22,6 +22,13 @@ const headersStored = new Set(['content-type', 'content-language', 'location', '
 // The Response constructor refuses any body, even an empty one, with these.
 const nullBodyStatuses = new Set([204, 205, 304])
 
+// Who a key belongs to: the signed-in user, or one shared scope for anonymous requests. No anonymous command
+// route exists yet. The first one (E6.3, the advice request) must decide whether that shared scope is enough.
+export function idempotencyActor(c: Context<AppEnv>): string {
+  const actor = c.get('actor')
+  return actor.kind === 'anonymous' ? 'anonymous' : actor.userId
+}
+
 export function idempotencyKeyInUse(c: Context<AppEnv>): Response {
   const response = problem(c, { type: 'idempotency-key-in-use', status: 409, title: 'A request with this Idempotency-Key has not finished' })
   response.headers.set('Retry-After', '1')

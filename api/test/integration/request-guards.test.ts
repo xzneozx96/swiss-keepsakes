@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
 import { openApiDocument } from '../../scripts/contract.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
+import { registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
 import { makeLoadIdentity } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
@@ -13,10 +14,12 @@ import { createAuth, createSessionReader, ownOrigin } from '../../src/platform/a
 import { systemClock } from '../../src/platform/clock.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createApp } from '../../src/platform/http/app.ts'
+import { idempotency, idempotencyActor } from '../../src/platform/http/idempotency.ts'
 import { startJobs } from '../../src/platform/jobs/boss.ts'
 import { createJobQueue } from '../../src/platform/jobs/queue.ts'
-import { callAs, expectedOutsiderAnswers, outsiderAnswers, refusedToTheOwner, storeOperations, storeUrl, unlistedStoreRoutes } from '../support/permission-matrix.ts'
-import { count, openTestDatabase, silentLogger } from './support.ts'
+import { createIdentityWiring, insertStore } from '../support/identity-wiring.ts'
+import { callAs, expectedOutsiderAnswers, guardRefusalTitle, outsiderAnswers, refusedToTheOwner, storeOperations, storeUrl, unlistedStoreRoutes } from '../support/permission-matrix.ts'
+import { openTestDatabase, silentLogger } from './support.ts'
 
 const { pool, db } = openTestDatabase()
 let jobs: Awaited<ReturnType<typeof startJobs>>
@@ -61,11 +64,15 @@ async function setup() {
     },
     logger: silentLogger,
   })
+  const { useCases } = createIdentityWiring({ db, queueMail })
   const app = createApp(silentLogger, async () => ({ database: true, jobs: true }), {
     authHandler: auth.handler,
     origin: ownOrigin(baseUrl),
     readSession: createSessionReader(auth),
     loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
+  }, {
+    idempotency: idempotency({ db, clock: systemClock, actorId: idempotencyActor }),
+    routes: [routes => registerIdentityRoutes(routes, useCases)],
   })
   app.openapi(createRoute({ method: 'get', path: '/api/store/{storeId}/probe', request: { params: z.object({ storeId: z.uuid() }) }, responses: ok }), c => c.json({ ok: true }, 200))
   app.openapi(createRoute({ method: 'delete', path: '/api/store/{storeId}', request: { params: z.object({ storeId: z.uuid() }) }, responses: ok }), c => c.json({ ok: true }, 200))
@@ -75,7 +82,6 @@ async function setup() {
     request: { params: z.object({ storeId: z.uuid(), orderId: z.uuid() }), body: { required: true, content: { 'application/json': { schema: z.object({ pickupDate: z.iso.date() }) } } } },
     responses: ok,
   }), c => c.json({ ok: true }, 200))
-  app.get('/api/admin/stores', c => c.json({ ok: true }))
 
   async function call(path: string, init: { method?: string, headers?: Record<string, string>, body?: object } = {}) {
     const method = init.method ?? 'GET'
@@ -100,20 +106,28 @@ async function setup() {
 }
 
 async function addMembership(pool: Pool, userId: string, storeId: string, role: string) {
+  await insertStore(pool, storeId)
   await pool.query('insert into identity.store_memberships (user_id, store_id, role, accepted_at) values ($1, $2, $3, now())', [userId, storeId, role])
 }
 
 describe('[E2.10] the identity tables of migration 0003', () => {
-  it('[E2.10] store_memberships and platform_admins exist, with no foreign key to Better Auth\'s user row or to a store', async () => {
+  it('[E2.10][E2.3] store_memberships and platform_admins exist, with no foreign key to Better Auth\'s user row, and a membership\'s store_id points at stores', async () => {
     const { rows } = await pool.query<{ table_name: string }>(`select table_name from information_schema.tables where table_schema = 'identity' and table_name in ('store_memberships', 'platform_admins') order by table_name`)
+    const { rows: keys } = await pool.query<{ table_name: string, column_name: string, references_table: string }>(`
+      select tc.table_name, kcu.column_name, ccu.table_name as references_table
+      from information_schema.table_constraints tc
+      join information_schema.key_column_usage kcu using (constraint_schema, constraint_name)
+      join information_schema.constraint_column_usage ccu using (constraint_schema, constraint_name)
+      where tc.table_schema = 'identity' and tc.constraint_type = 'FOREIGN KEY' and tc.table_name in ('store_memberships', 'platform_admins')`)
 
     expect(rows.map(row => row.table_name)).toEqual(['platform_admins', 'store_memberships'])
-    expect(await count(pool, `select count(*) from information_schema.table_constraints where table_schema = 'identity' and table_name in ('store_memberships', 'platform_admins') and constraint_type = 'FOREIGN KEY'`)).toBe(0)
+    expect(keys).toEqual([{ table_name: 'store_memberships', column_name: 'store_id', references_table: 'stores' }])
   })
 
   it('[E2.10] a membership role is owner or manager, and one user has one role per store', async () => {
     const userId = randomUUID()
     const store = randomUUID()
+    await insertStore(pool, store)
     const insert = (role: string) => pool.query('insert into identity.store_memberships (user_id, store_id, role, accepted_at) values ($1, $2, $3, now())', [userId, store, role])
 
     await expect(insert('admin')).rejects.toMatchObject({ code: '23514', constraint: 'store_memberships_role_check' })
@@ -168,6 +182,10 @@ describe('[E2.10] the identity tables of migration 0003', () => {
   })
 })
 
+// The operations that architecture section 9 gives to the Owner alone (`edit-store-information`,
+// `open-store-for-sale`). Listed here by hand so that loosening the permission table fails the test.
+const ownerOnly = new Set(['PATCH /api/store/{storeId}/information', 'POST /api/store/{storeId}/open-for-sale'])
+
 describe('[E2.10][AC02] the guards over real Better Auth sessions and the real identity tables', () => {
   // One set of sign-ins for the whole block, because each sign-in is two round trips to the database.
   let shared: Awaited<ReturnType<typeof people>>
@@ -194,14 +212,25 @@ describe('[E2.10][AC02] the guards over real Better Auth sessions and the real i
     const operations = storeOperations(document)
     const outsiders = { anonymous: {}, guest: env.guest.headers, superAdmin: env.superAdmin.headers, ownerElsewhere: env.ownerElsewhere.headers, managerElsewhere: env.managerElsewhere.headers }
 
-    expect(operations).toHaveLength(3)
+    expect(operations).toHaveLength(6)
     expect(unlistedStoreRoutes(env.app, document)).toEqual([])
     for (const operation of operations) {
       expect(await outsiderAnswers(env.app, operation, lucerne, outsiders, origin), `${operation.method} ${operation.path}`).toEqual(expectedOutsiderAnswers)
-      for (const [who, headers] of [['owner', env.owner.headers], ['manager', env.manager.headers]] as const)
-        expect(refusedToTheOwner.has((await callAs(env.app, operation, lucerne, { who, headers }, origin)).status), `${who} ${operation.method} ${operation.path}`).toBe(false)
+      const owner = await callAs(env.app, operation, lucerne, { who: 'owner', headers: env.owner.headers }, origin)
+      expect(refusedToTheOwner.has(owner.status), `owner ${operation.method} ${operation.path}`).toBe(false)
+      const manager = await callAs(env.app, operation, lucerne, { who: 'manager', headers: env.manager.headers }, origin)
+      if (ownerOnly.has(`${operation.method} ${operation.path}`)) {
+        // The store guard let the manager in, so this 403 is the permission check's own, with its own title.
+        expect({ status: manager.status, type: manager.type }, `manager ${operation.method} ${operation.path}`).toEqual({ status: 403, type: 'forbidden' })
+        expect(manager.title).not.toBe(guardRefusalTitle)
+        expect(manager.title).toMatch(/^Only the Owner/)
+      }
+      else {
+        expect(refusedToTheOwner.has(manager.status), `manager ${operation.method} ${operation.path}`).toBe(false)
+      }
     }
-  })
+  // Six operations, each called by five outsiders and two members, and every call is several round trips to a Neon branch.
+  }, 120_000)
 
   it('[E2.10][AC02] a store id in upper case still opens the owner\'s own store', async () => {
     const env = shared

@@ -87,21 +87,33 @@ export const outsiderOutcomes = [
 
 export type Outsider = (typeof outsiderOutcomes)[number]['who']
 
-// Calls one operation of the store as a caller. The request carries our own origin and, for a method with a
-// body, JSON content type, so the Origin rule never answers in the guard's place. No body and no
-// Idempotency-Key: the guard runs before both.
+// A body that passes the validation of each operation that takes one, so the answer comes from the guards and
+// the permission check and not from a 400. Any other operation gets an empty object.
+const exampleBodies: Record<string, object> = {
+  'PATCH /api/store/{storeId}/information': { name: 'Name set by the matrix' },
+}
+
+// Calls one operation of the store as a caller. The request carries our own origin, JSON content type, a fresh
+// Idempotency-Key for a command and a body that passes validation, so the answer is the guards' or the
+// permission check's own and not the Origin rule's, the key middleware's or the validator's.
 export async function callAs(app: Pick<OpenAPIHono<AppEnv>, 'request'>, operation: StoreOperation, storeId: string, caller: Caller, origin: string) {
+  const isCommand = operation.method !== 'GET'
   const response = await app.request(storeUrl(operation.path, storeId), {
     method: operation.method,
-    headers: { 'Origin': origin, 'Content-Type': 'application/json', ...caller.headers },
+    headers: { 'Origin': origin, 'Content-Type': 'application/json', ...(isCommand ? { 'Idempotency-Key': randomUUID() } : {}), ...caller.headers },
+    body: isCommand ? JSON.stringify(exampleBodies[`${operation.method} ${operation.path}`] ?? {}) : undefined,
   })
-  const problem = response.headers.get('Content-Type') === 'application/problem+json' ? await response.json() as { type: string } : undefined
-  return { who: caller.who, status: response.status, type: problem?.type }
+  const problem = response.headers.get('Content-Type') === 'application/problem+json' ? await response.json() as { type: string, title: string } : undefined
+  return { who: caller.who, status: response.status, type: problem?.type, title: problem?.title }
 }
 
 export async function outsiderAnswers(app: Pick<OpenAPIHono<AppEnv>, 'request'>, operation: StoreOperation, storeId: string, outsiders: Record<Outsider, Record<string, string>>, origin: string) {
-  return Promise.all(outsiderOutcomes.map(({ who }) => callAs(app, operation, storeId, { who, headers: outsiders[who] }, origin)))
+  const answers = await Promise.all(outsiderOutcomes.map(({ who }) => callAs(app, operation, storeId, { who, headers: outsiders[who] }, origin)))
+  return answers.map(({ who, status, type }) => ({ who, status, type }))
 }
+
+// What the store guard says to a caller who is not a member, so a test can tell it from the permission check's 403.
+export const guardRefusalTitle = 'Only a member of this store may do this'
 
 export const expectedOutsiderAnswers = outsiderOutcomes.map(({ who, status, type }) => ({ who, status, type }))
 

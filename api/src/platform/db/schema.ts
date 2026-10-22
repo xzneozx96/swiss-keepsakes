@@ -10,7 +10,7 @@ const timestamptz = (name: string) => timestamp(name, { withTimezone: true })
 // One row per money or status change (D10). Order and booking timelines will be views over it.
 export const auditLog = platform.table('audit_log', {
   id: uuid('id').primaryKey().default(sql`uuidv7()`),
-  // Null only for an action that happens before a store exists, such as a merchant invitation.
+  // Null only for an action that belongs to no store.
   storeId: uuid('store_id'),
   actor: text('actor').notNull(),
   entity: text('entity').notNull(),

@@ -1,7 +1,16 @@
+import type { Tx } from './platform/db/client.ts'
+import type { CommandDeps } from './platform/http/app.ts'
 import process from 'node:process'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
-import { makeLoadIdentity } from './modules/identity/index.ts'
+import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
+import { createMembershipRepository } from './modules/identity/adapters/membership-repository.ts'
+import { createPendingConditions } from './modules/identity/adapters/pending-conditions.ts'
+import { createPlatformAdminRepository } from './modules/identity/adapters/platform-admin-repository.ts'
+import { registerIdentityRoutes } from './modules/identity/adapters/routes.ts'
+import { createStoreRepository } from './modules/identity/adapters/store-repository.ts'
+import { createUserDirectory } from './modules/identity/adapters/user-directory.ts'
+import { makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInvitationLink, makeListStores, makeLoadIdentity, makeOpenStoreForSale, makeResendOwnerInvitation, makeUpdateStoreInformation, newInvitationToken } from './modules/identity/index.ts'
 import { createMailJobScrubber } from './modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
@@ -10,6 +19,7 @@ import { createSmtpMailer, createUnconfiguredMailer } from './modules/notificati
 import { makeFailMail } from './modules/notifications/application/fail-mail.ts'
 import { makeQueueMail } from './modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from './modules/notifications/application/send-mail.ts'
+import { createAuditLog } from './platform/audit.ts'
 import { createAuth, createSessionReader, ownOrigin } from './platform/auth.ts'
 import { systemClock } from './platform/clock.ts'
 import { loadConfig } from './platform/config.ts'
@@ -17,6 +27,7 @@ import { createDatabase, createPool } from './platform/db/client.ts'
 import { createUnitOfWork } from './platform/db/unit-of-work.ts'
 import { createHealthCheck } from './platform/health.ts'
 import { createApp } from './platform/http/app.ts'
+import { idempotency, idempotencyActor } from './platform/http/idempotency.ts'
 import { startHttpServer } from './platform/http/server.ts'
 import { startJobs } from './platform/jobs/boss.ts'
 import { createJobQueue } from './platform/jobs/queue.ts'
@@ -79,8 +90,14 @@ async function main() {
       logger.warn({ event: 'mail.smtp-unset' }, 'SMTP_* is not set: every mail fails and retries until it is')
     const mailer = config.smtp ? createSmtpMailer(createSmtpTransport(config.smtp), config.smtp.from) : createUnconfiguredMailer(logger)
     await startMailWorkers(jobs.boss, {
-      // No invitation exists before E2.3, which passes the identity module's InvitationLink here.
-      sendMail: makeSendMail({ uow, sentMail, mailer, invitationLink: async () => undefined, clock: systemClock }),
+      sendMail: makeSendMail({
+        uow,
+        sentMail,
+        mailer,
+        // E2.4 adds the N18 screen.
+        invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl: config.APP_URL, screens: { N20: '/store/onboarding' } }),
+        clock: systemClock,
+      }),
       failMail: makeFailMail({ uow, sentMail, clock: systemClock, alert: createLogAlert(logger), scrub: createMailJobScrubber() }),
     })
   }
@@ -104,7 +121,27 @@ async function main() {
       readSession: createSessionReader(auth),
       loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
     }
-    const server = await startHttpServer(createApp(logger, checkHealth, identity).fetch, config.HOST, config.PORT, logger)
+    const database = createDatabase(pool)
+    const stores = createStoreRepository()
+    const invitations = createInvitationRepository()
+    const conditions = createPendingConditions<Tx>()
+    const audit = createAuditLog(systemClock)
+    const users = createUserDirectory()
+    const admins = createPlatformAdminRepository()
+    const useCases = {
+      createStore: makeCreateStore({ uow, stores, invitations, conditions, users, admins, queueMail, audit, clock: systemClock }),
+      listStores: makeListStores({ uow, stores, invitations, conditions, clock: systemClock }),
+      resendOwnerInvitation: makeResendOwnerInvitation({ uow, stores, invitations, conditions, queueMail, audit, clock: systemClock }),
+      acceptInvitation: makeAcceptInvitation({ uow, invitations, stores, memberships: createMembershipRepository(), users, admins, audit, clock: systemClock }),
+      getOnboarding: makeGetOnboarding({ uow, stores, conditions }),
+      updateStoreInformation: makeUpdateStoreInformation({ uow, stores, audit, clock: systemClock }),
+      openStoreForSale: makeOpenStoreForSale({ uow, stores, conditions, audit, clock: systemClock }),
+    }
+    const commands: CommandDeps = {
+      idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
+      routes: [app => registerIdentityRoutes(app, useCases)],
+    }
+    const server = await startHttpServer(createApp(logger, checkHealth, identity, commands).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)
   }
   logger.info({ role: config.ROLE }, 'started')

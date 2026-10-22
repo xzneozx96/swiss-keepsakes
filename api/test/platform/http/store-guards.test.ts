@@ -274,7 +274,7 @@ describe('[E2.10][AC02] the generated permission matrix, over the app that serve
     const document = openApiDocument(app)
     const operations = storeOperations(document)
 
-    expect(operations).toHaveLength(3)
+    expect(operations).toHaveLength(3 + realOperations.length)
     expect(unlistedStoreRoutes(app, document), 'A store route was registered without app.openapi(), so the matrix cannot call it').toEqual([])
     expect(storeOperationsOutsideGuard(operations), 'A route under /api/store/ must start with /api/store/{storeId}').toEqual([])
     for (const operation of operations) {

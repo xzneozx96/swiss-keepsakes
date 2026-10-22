@@ -10,6 +10,7 @@ import { contractApp, generateContract, generatedDir, openApiDocument } from '..
 import { createApp } from '../src/platform/http/app.ts'
 import { startHttpServer } from '../src/platform/http/server.ts'
 import { createLogger } from '../src/platform/logger.ts'
+import { noCommands } from './support/commands.ts'
 import { noSessions } from './support/identity.ts'
 
 const servers: HttpServer[] = []
@@ -22,7 +23,7 @@ afterEach(async () => {
 async function serve(health: HealthReport) {
   const logs: Record<string, unknown>[] = []
   const logger = createLogger('info', { write: line => logs.push(JSON.parse(line)) })
-  servers.push(await startHttpServer(createApp(logger, async () => health, noSessions).fetch, '127.0.0.1', 0, logger))
+  servers.push(await startHttpServer(createApp(logger, async () => health, noSessions, noCommands).fetch, '127.0.0.1', 0, logger))
   const listening = logs.find(line => line.msg === 'api listening')
   return `http://127.0.0.1:${listening?.port}`
 }

@@ -38,6 +38,9 @@ const configSchema = z.object({
   // Better Auth's built-in development secret.
   BETTER_AUTH_URL: z.url({ protocol: /^https?$/, hostname: /./, error: issue => (issue.input === undefined ? 'Required' : 'Expected an http:// or https:// URL') }),
   BETTER_AUTH_SECRET: z.string({ error: 'Required' }).min(32, 'Expected at least 32 characters. Generate one with `openssl rand -base64 32`'),
+  // The origin of the SPA, which an invitation link opens (E2.3). Required with NODE_ENV=production, where it must
+  // be https. Elsewhere it defaults to the Vite dev server's. Only its origin is used.
+  APP_URL: z.url({ protocol: /^https?$/, hostname: /./, error: 'Expected an http:// or https:// URL' }).optional(),
   // Google sign-in is on only when both are set (loadConfig takes both or neither).
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -65,7 +68,7 @@ export interface GoogleConfig {
 
 // Without `smtp` the worker still starts, and every mail fails and retries until SMTP_* is set (main.ts).
 // Without `google` Better Auth registers no Google provider.
-export type Config = Omit<Parsed, typeof smtpKeys[number] | typeof googleKeys[number]> & { smtp?: SmtpConfig, google?: GoogleConfig }
+export type Config = Omit<Parsed, typeof smtpKeys[number] | typeof googleKeys[number] | 'APP_URL'> & { APP_URL: string, smtp?: SmtpConfig, google?: GoogleConfig }
 
 export type ConfigResult = { ok: true, config: Config } | { ok: false, message: string }
 
@@ -92,6 +95,16 @@ function authProblems(present: Record<string, string>, parsed: Parsed | undefine
   ]
 }
 
+const developmentAppUrl = 'http://localhost:5173'
+
+function appUrlProblems(present: Record<string, string>, parsed: Parsed | undefined): string[] {
+  if (parsed?.NODE_ENV !== 'production')
+    return []
+  if (!('APP_URL' in present))
+    return ['  APP_URL: Required when NODE_ENV is production']
+  return parsed.APP_URL?.startsWith('https:') ? [] : ['  APP_URL: Expected an https:// URL when NODE_ENV is production']
+}
+
 function googleProblems(present: Record<string, string>): string[] {
   const set = googleKeys.filter(key => key in present)
   return set.length === 0 || set.length === googleKeys.length
@@ -109,10 +122,12 @@ export function loadConfig(env: Record<string, string | undefined>): ConfigResul
     ...smtpProblems(present, result.data),
     ...googleProblems(present),
     ...authProblems(present, result.data),
+    ...appUrlProblems(present, result.data),
   ]
   if (!result.success || lines.length > 0)
     return { ok: false, message: ['Invalid environment, the service did not start:', ...lines, 'Values are never printed.'].join('\n') }
-  const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASSWORD, SMTP_FROM, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, ...base } = result.data
+  const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASSWORD, SMTP_FROM, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_URL, ...rest } = result.data
+  const base = { ...rest, APP_URL: new URL(APP_URL ?? developmentAppUrl).origin }
   const google = GOOGLE_CLIENT_ID !== undefined && GOOGLE_CLIENT_SECRET !== undefined ? { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET } : undefined
   const config: Config = google ? { ...base, google } : base
   if (SMTP_HOST === undefined || SMTP_PORT === undefined || SMTP_SECURE === undefined || SMTP_USER === undefined || SMTP_PASSWORD === undefined || SMTP_FROM === undefined)
