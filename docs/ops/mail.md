@@ -41,7 +41,7 @@ where status = 'queued' and queued_at < now() - interval '2 hours'
 order by queued_at;
 ```
 
-The Super Admin resends the Owner invitation (N20) with `POST /api/admin/stores/{id}/owner-invitation/resend` (E2.3, UX R13). It queues a new N20 for the same invitation, starts its 7 days again and clears the old link. There is no resend for a Store Manager invitation (N18) until E2.4. Other failed mail has no resend command yet.
+The Super Admin resends the Owner invitation (N20) with `POST /api/admin/stores/{id}/owner-invitation/resend` (E2.3, UX R13). It queues a new N20 for the same invitation, starts its 7 days again and clears the old link. The Owner of a store resends a Store Manager invitation (N18) with `POST /api/store/{storeId}/member-invitations/{invitationId}/resend` (E2.4), with the same effect. Other failed mail has no resend command yet.
 
 ## Last errors
 
