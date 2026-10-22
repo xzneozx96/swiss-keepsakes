@@ -18,7 +18,7 @@ import { idempotency, idempotencyActor } from '../../src/platform/http/idempoten
 import { startJobs } from '../../src/platform/jobs/boss.ts'
 import { createJobQueue } from '../../src/platform/jobs/queue.ts'
 import { createIdentityWiring, insertStore } from '../support/identity-wiring.ts'
-import { callAs, expectedOutsiderAnswers, outsiderAnswers, refusedToTheOwner, storeOperations, storeUrl, unlistedStoreRoutes } from '../support/permission-matrix.ts'
+import { callAs, expectedOutsiderAnswers, guardRefusalTitle, outsiderAnswers, refusedToTheOwner, storeOperations, storeUrl, unlistedStoreRoutes } from '../support/permission-matrix.ts'
 import { openTestDatabase, silentLogger } from './support.ts'
 
 const { pool, db } = openTestDatabase()
@@ -182,6 +182,10 @@ describe('[E2.10] the identity tables of migration 0003', () => {
   })
 })
 
+// The operations that architecture section 9 gives to the Owner alone (`edit-store-information`,
+// `open-store-for-sale`). Listed here by hand so that loosening the permission table fails the test.
+const ownerOnly = new Set(['PATCH /api/store/{storeId}/information', 'POST /api/store/{storeId}/open-for-sale'])
+
 describe('[E2.10][AC02] the guards over real Better Auth sessions and the real identity tables', () => {
   // One set of sign-ins for the whole block, because each sign-in is two round trips to the database.
   let shared: Awaited<ReturnType<typeof people>>
@@ -212,8 +216,18 @@ describe('[E2.10][AC02] the guards over real Better Auth sessions and the real i
     expect(unlistedStoreRoutes(env.app, document)).toEqual([])
     for (const operation of operations) {
       expect(await outsiderAnswers(env.app, operation, lucerne, outsiders, origin), `${operation.method} ${operation.path}`).toEqual(expectedOutsiderAnswers)
-      for (const [who, headers] of [['owner', env.owner.headers], ['manager', env.manager.headers]] as const)
-        expect(refusedToTheOwner.has((await callAs(env.app, operation, lucerne, { who, headers }, origin)).status), `${who} ${operation.method} ${operation.path}`).toBe(false)
+      const owner = await callAs(env.app, operation, lucerne, { who: 'owner', headers: env.owner.headers }, origin)
+      expect(refusedToTheOwner.has(owner.status), `owner ${operation.method} ${operation.path}`).toBe(false)
+      const manager = await callAs(env.app, operation, lucerne, { who: 'manager', headers: env.manager.headers }, origin)
+      if (ownerOnly.has(`${operation.method} ${operation.path}`)) {
+        // The store guard let the manager in, so this 403 is the permission check's own, with its own title.
+        expect({ status: manager.status, type: manager.type }, `manager ${operation.method} ${operation.path}`).toEqual({ status: 403, type: 'forbidden' })
+        expect(manager.title).not.toBe(guardRefusalTitle)
+        expect(manager.title).toMatch(/^Only the Owner/)
+      }
+      else {
+        expect(refusedToTheOwner.has(manager.status), `manager ${operation.method} ${operation.path}`).toBe(false)
+      }
     }
   // Six operations, each called by five outsiders and two members, and every call is several round trips to a Neon branch.
   }, 120_000)
