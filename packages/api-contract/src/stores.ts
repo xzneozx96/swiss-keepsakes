@@ -104,3 +104,10 @@ export const inviteManagerBodySchema = z.object({
 export const resendManagerInvitationBodySchema = z.object({
   language: language.optional().meta({ description: 'The language of the invitation mail N18. The store\'s default language when left out' }),
 }).meta({ id: 'ResendManagerInvitation' })
+
+export type AdminStore = z.infer<typeof adminStoreSchema>
+export type AdminStoreList = z.infer<typeof adminStoreListSchema>
+export type CreateStore = z.infer<typeof createStoreBodySchema>
+export type AcceptedInvitation = z.infer<typeof acceptedInvitationSchema>
+export type Onboarding = z.infer<typeof onboardingSchema>
+export type Store = z.infer<typeof storeSchema>

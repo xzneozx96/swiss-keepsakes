@@ -6,6 +6,7 @@ import { salesOverviewEn } from '@/features/merchant/sales/messages'
 import { partnerDashboardEn } from '@/features/partners/report/messages'
 import { reportPagesEn } from '@/features/reports/pages-messages'
 import { requestsEn } from '@/features/requests/messages'
+import { storesEn } from '@/features/stores/messages'
 import { tourBookingEn } from '@/features/tours/booking/messages'
 import { tourDetailEn } from '@/features/tours/detail/messages'
 import { tourDiscoveryEn } from '@/features/tours/discovery/messages'
@@ -31,6 +32,7 @@ export const en = {
   ...salesOverviewEn,
   ...reportPagesEn,
   ...mailEn,
+  ...storesEn,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototype · mock data',

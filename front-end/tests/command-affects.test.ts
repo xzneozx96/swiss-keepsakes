@@ -54,7 +54,10 @@ function payInFull(client: DataClient, { data, now }: Context, id: string) {
   })
 }
 
-const cases: { [F in Feature]: { [C in CommandName<F>]: Case<F, C> } } = {
+/** `stores` has no demo data to write: it is the API client in both modes, and tests/stores-client.test.tsx checks its commands. */
+type DemoFeature = Exclude<Feature, 'stores'>
+
+const cases: { [F in DemoFeature]: { [C in CommandName<F>]: Case<F, C> } } = {
   account: {
     updateProfile: { inputs: () => [{ name: 'Anna Changed' }] },
     saveTrip: {
@@ -259,7 +262,7 @@ async function written<F extends Feature, C extends CommandName<F>>(
   return changed
 }
 
-const commands = (Object.keys(cases) as Feature[]).flatMap(feature =>
+const commands = (Object.keys(cases) as DemoFeature[]).flatMap(feature =>
   (Object.keys(cases[feature]) as CommandName<typeof feature>[]).map(command => ({ feature, command })),
 )
 

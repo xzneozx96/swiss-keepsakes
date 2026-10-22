@@ -35,6 +35,10 @@ export const queryKeys = {
   reviews: {
     reviews: ['reviews', 'reviews'],
   },
+  stores: {
+    adminStores: ['stores', 'adminStores'],
+    onboarding: ['stores', 'onboarding'],
+  },
   tours: {
     records: ['tours', 'records'],
   },

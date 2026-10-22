@@ -6,11 +6,19 @@ import { queryKeys } from './query-keys'
 export type Feature = keyof DataClient
 
 /** A client method that changes data. It takes an input; a read takes none. */
-export type CommandName<F extends Feature> = {
-  [K in keyof DataClient[F]]: DataClient[F][K] extends () => Promise<unknown>
-    ? never
-    : K
-}[keyof DataClient[F]]
+export type CommandName<F extends Feature> = Exclude<
+  {
+    [K in keyof DataClient[F]]: DataClient[F][K] extends () => Promise<unknown>
+      ? never
+      : K
+  }[keyof DataClient[F]],
+  F extends keyof ReadsWithInput ? ReadsWithInput[F] : never
+>
+
+/** Reads that take a parameter, such as a cursor or a store id. They are not commands, whatever their signature. */
+interface ReadsWithInput {
+  stores: 'onboarding'
+}
 
 /**
  * The queries each command changes. `useCommand` refreshes exactly these, so a command that
@@ -95,6 +103,13 @@ export const commandAffects: {
   reviews: {
     addReview: [queryKeys.reviews.reviews],
     replyToReview: [queryKeys.reviews.reviews],
+  },
+  stores: {
+    createStore: [queryKeys.stores.adminStores],
+    resendOwnerInvitation: [queryKeys.stores.adminStores],
+    acceptInvitation: [queryKeys.stores.onboarding],
+    updateStoreInformation: [queryKeys.stores.onboarding],
+    openForSale: [queryKeys.stores.onboarding],
   },
   tours: {
     createBooking: [queryKeys.tours.records, queryKeys.notifications.mail],
