@@ -160,13 +160,19 @@ describe('[E2.3] an invitation is open, accepted or expired', () => {
   })
 
   it('[E2.3] it is open before its expiry and expired from the moment of it', () => {
-    expect(invitationState({ acceptedBy: null, expiresAt: inOneDay }, now)).toBe('open')
-    expect(invitationState({ acceptedBy: null, expiresAt: now }, now)).toBe('expired')
-    expect(invitationState({ acceptedBy: null, expiresAt: oneDayAgo }, now)).toBe('expired')
+    expect(invitationState({ acceptedBy: null, revokedAt: null, expiresAt: inOneDay }, now)).toBe('open')
+    expect(invitationState({ acceptedBy: null, revokedAt: null, expiresAt: now }, now)).toBe('expired')
+    expect(invitationState({ acceptedBy: null, revokedAt: null, expiresAt: oneDayAgo }, now)).toBe('expired')
+  })
+
+  it('[E2.3] a revoked invitation is revoked whatever its expiry, and accepted wins over revoked', () => {
+    expect(invitationState({ acceptedBy: null, revokedAt: oneDayAgo, expiresAt: inOneDay }, now)).toBe('revoked')
+    expect(invitationState({ acceptedBy: null, revokedAt: oneDayAgo, expiresAt: oneDayAgo }, now)).toBe('revoked')
+    expect(invitationState({ acceptedBy: 'user-1', revokedAt: oneDayAgo, expiresAt: inOneDay }, now)).toBe('accepted')
   })
 
   it('[E2.3] accepted wins over expired', () => {
-    expect(invitationState({ acceptedBy: 'user-1', expiresAt: oneDayAgo }, now)).toBe('accepted')
-    expect(invitationState({ acceptedBy: 'user-1', expiresAt: inOneDay }, now)).toBe('accepted')
+    expect(invitationState({ acceptedBy: 'user-1', revokedAt: null, expiresAt: oneDayAgo }, now)).toBe('accepted')
+    expect(invitationState({ acceptedBy: 'user-1', revokedAt: null, expiresAt: inOneDay }, now)).toBe('accepted')
   })
 })

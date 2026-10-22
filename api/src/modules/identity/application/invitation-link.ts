@@ -16,8 +16,7 @@ export interface InvitationLinkDeps<T> {
 // The identity module's side of the notifications port (section 8). The mail attempt calls it inside its own
 // transaction, under the `sent_mail` row lock. It mints a new random token, stores only the token's hash with
 // that `tx`, and returns the link with the raw token. The raw token exists only in memory and in the mail. It
-// returns nothing for an invitation that is accepted or expired (a revoked one is expired), so the mail then
-// fails at once. A failed attempt rolls the hash back. It never opens a unit of work, because it runs inside one.
+// returns nothing for an invitation that is accepted, revoked or expired, so the mail then fails at once. A failed attempt rolls the hash back. It never opens a unit of work, because it runs inside one.
 //
 // The SPA uses hash routing, so the screen path and the token go after the `#`. A browser sends nothing after
 // `#` to the server, so the token reaches no access log, proxy or `Referer` header.

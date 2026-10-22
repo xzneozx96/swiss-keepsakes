@@ -9,6 +9,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
 
@@ -174,14 +175,16 @@ export const storeMemberships = identitySchema.table('store_memberships', {
   acceptedAt: timestamp('accepted_at', { withTimezone: true }).notNull(),
 }, table => [
   unique('store_memberships_user_id_store_id_unique').on(table.userId, table.storeId),
+  index('store_memberships_store_id_idx').on(table.storeId),
   check('store_memberships_role_check', sql`${table.role} in ('owner', 'manager')`),
 ])
 
 // A staff invitation, for an Owner or a Store Manager (section 8). The email is kept trimmed and in lower case,
 // which a CHECK enforces, so the comparison at acceptance is an equality. `token_hash` is the SHA-256 of the
 // newest link's token, null until the first mail is sent and again after a resend. The raw token is never stored.
-// There is no revoked state: an invitation is revoked by moving `expires_at` into the past. `accepted_by` is
-// the accepting user's id as a plain value, like `store_memberships.user_id`.
+// `revoked_at` marks a revoked invitation, which is not open: no link is minted, accepting and resending are
+// refused. `accepted_by` is the accepting user's id as a plain value, like `store_memberships.user_id`. A store has
+// at most one open Owner invitation, which a partial unique index enforces.
 export const storeInvitations = identitySchema.table('store_invitations', {
   id: uuid('id')
     .default(sql`uuidv7()`)
@@ -192,9 +195,11 @@ export const storeInvitations = identitySchema.table('store_invitations', {
   tokenHash: text('token_hash').unique(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   acceptedBy: uuid('accepted_by'),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, table => [
   index('store_invitations_store_id_idx').on(table.storeId),
+  uniqueIndex('store_invitations_one_open_owner_idx').on(table.storeId).where(sql`${table.role} = 'owner' and ${table.acceptedBy} is null and ${table.revokedAt} is null`),
   check('store_invitations_role_check', sql`${table.role} in ('owner', 'manager')`),
   check('store_invitations_email_check', sql`${table.email} = lower(btrim(${table.email})) and ${table.email} <> ''`),
 ])

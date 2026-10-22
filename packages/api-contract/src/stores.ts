@@ -19,9 +19,9 @@ export const storeSchema = z.object({
 
 const invitationSchema = z.object({
   email: z.string().meta({ description: 'The address the Owner was invited at, in lower case' }),
-  state: z.enum(['open', 'accepted', 'expired']),
+  state: z.enum(['open', 'accepted', 'revoked', 'expired']),
   expiresAt: z.iso.datetime(),
-}).meta({ id: 'OwnerInvitation', description: 'The newest Owner invitation of a store. A revoked invitation reads as expired' })
+}).meta({ id: 'OwnerInvitation', description: 'The newest Owner invitation of a store' })
 
 export const adminStoreSchema = storeSchema.extend({
   invitation: invitationSchema.nullable(),

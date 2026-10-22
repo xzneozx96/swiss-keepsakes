@@ -6,6 +6,7 @@ CREATE TABLE "identity"."store_invitations" (
 	"token_hash" text,
 	"expires_at" timestamp with time zone NOT NULL,
 	"accepted_by" uuid,
+	"revoked_at" timestamp with time zone,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "store_invitations_token_hash_unique" UNIQUE("token_hash"),
 	CONSTRAINT "store_invitations_role_check" CHECK ("identity"."store_invitations"."role" in ('owner', 'manager')),
@@ -33,4 +34,6 @@ CREATE TABLE "identity"."stores" (
 --> statement-breakpoint
 ALTER TABLE "identity"."store_invitations" ADD CONSTRAINT "store_invitations_store_id_stores_id_fk" FOREIGN KEY ("store_id") REFERENCES "identity"."stores"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "store_invitations_store_id_idx" ON "identity"."store_invitations" USING btree ("store_id");--> statement-breakpoint
-ALTER TABLE "identity"."store_memberships" ADD CONSTRAINT "store_memberships_store_id_stores_id_fk" FOREIGN KEY ("store_id") REFERENCES "identity"."stores"("id") ON DELETE no action ON UPDATE no action;
+CREATE UNIQUE INDEX "store_invitations_one_open_owner_idx" ON "identity"."store_invitations" USING btree ("store_id") WHERE "identity"."store_invitations"."role" = 'owner' and "identity"."store_invitations"."accepted_by" is null and "identity"."store_invitations"."revoked_at" is null;--> statement-breakpoint
+ALTER TABLE "identity"."store_memberships" ADD CONSTRAINT "store_memberships_store_id_stores_id_fk" FOREIGN KEY ("store_id") REFERENCES "identity"."stores"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "store_memberships_store_id_idx" ON "identity"."store_memberships" USING btree ("store_id");

@@ -524,14 +524,14 @@ export interface components {
             mayOpenForSale: boolean;
             store: components["schemas"]["Store"];
         };
-        /** @description The newest Owner invitation of a store. A revoked invitation reads as expired */
+        /** @description The newest Owner invitation of a store */
         OwnerInvitation: {
             /** @description The address the Owner was invited at, in lower case */
             email: string;
             /** Format: date-time */
             expiresAt: string;
             /** @enum {string} */
-            state: "open" | "accepted" | "expired";
+            state: "open" | "accepted" | "revoked" | "expired";
         } | null;
         /** @description RFC 9457 problem details, sent as application/problem+json */
         Problem: {
@@ -549,7 +549,7 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, invitation-not-found, invitation-expired, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete. Show generic copy for any other */
             type: string;
         };
         ResendOwnerInvitation: {

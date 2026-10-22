@@ -1,10 +1,10 @@
-import type { ConditionState, Store } from '@sk/domain/identity'
+import type { ConditionState, InvitationState, Store } from '@sk/domain/identity'
 import type { Invitation, LaterConditions } from '../ports.ts'
 import { invitationState } from '@sk/domain/identity'
 
 // A store as A01 lists it.
 export interface AdminStoreView extends Store {
-  invitation: { email: string, state: 'open' | 'accepted' | 'expired', expiresAt: string } | null
+  invitation: { email: string, state: InvitationState, expiresAt: string } | null
   paymentAccount: ConditionState
 }
 

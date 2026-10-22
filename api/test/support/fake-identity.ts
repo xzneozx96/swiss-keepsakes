@@ -82,7 +82,7 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
 
   const invitations: InvitationRepository<FakeTx> = {
     async insert(_tx, invitation) {
-      const row: Invitation = { id: nextId(), tokenHash: null, acceptedBy: null, ...invitation }
+      const row: Invitation = { id: nextId(), tokenHash: null, acceptedBy: null, revokedAt: null, ...invitation }
       state.invitations.set(row.id, row)
       return { ...row }
     },
@@ -117,7 +117,7 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
     },
     async markAccepted(_tx, invitationId, userId, now) {
       const row = state.invitations.get(invitationId)
-      if (!row || row.acceptedBy !== null || row.expiresAt.getTime() <= now.getTime())
+      if (!row || row.acceptedBy !== null || row.revokedAt !== null || row.expiresAt.getTime() <= now.getTime())
         return false
       row.acceptedBy = userId
       return true
@@ -138,7 +138,7 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
       return state.users.get(userId)
     },
     async findByEmail(_tx, email) {
-      const found = [...state.users].find(([, user]) => user.email === email)
+      const found = [...state.users].find(([, user]) => user.email.toLowerCase() === email.toLowerCase())
       return found && { id: found[0] }
     },
   }

@@ -11,6 +11,7 @@ const columns = {
   tokenHash: storeInvitations.tokenHash,
   expiresAt: storeInvitations.expiresAt,
   acceptedBy: storeInvitations.acceptedBy,
+  revokedAt: storeInvitations.revokedAt,
 }
 
 // A store's invitations, newest first. UUIDv7 ids sort by creation time.
@@ -61,7 +62,7 @@ export function createInvitationRepository(): InvitationRepository<Tx> {
     },
 
     async markAccepted(tx, invitationId, userId, now) {
-      const accepted = await tx.update(storeInvitations).set({ acceptedBy: userId }).where(and(eq(storeInvitations.id, invitationId), isNull(storeInvitations.acceptedBy), gt(storeInvitations.expiresAt, now))).returning({ id: storeInvitations.id })
+      const accepted = await tx.update(storeInvitations).set({ acceptedBy: userId }).where(and(eq(storeInvitations.id, invitationId), isNull(storeInvitations.acceptedBy), isNull(storeInvitations.revokedAt), gt(storeInvitations.expiresAt, now))).returning({ id: storeInvitations.id })
       return accepted.length > 0
     },
   }

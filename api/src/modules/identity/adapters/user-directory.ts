@@ -1,6 +1,6 @@
 import type { Tx } from '../../../platform/db/client.ts'
 import type { UserDirectory } from '../ports.ts'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { user } from './schema.ts'
 
 export function createUserDirectory(): UserDirectory<Tx> {
@@ -11,7 +11,7 @@ export function createUserDirectory(): UserDirectory<Tx> {
     },
 
     async findByEmail(tx, email) {
-      const [row] = await tx.select({ id: user.id }).from(user).where(eq(user.email, email))
+      const [row] = await tx.select({ id: user.id }).from(user).where(sql`lower(${user.email}) = lower(${email})`)
       return row
     },
   }

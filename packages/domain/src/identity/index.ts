@@ -116,11 +116,13 @@ export interface Store {
   defaultLanguage: StoreLanguage
 }
 
-export type InvitationState = 'open' | 'accepted' | 'expired'
+export type InvitationState = 'open' | 'accepted' | 'revoked' | 'expired'
 
-// Accepted wins over expired. A revoked invitation has its expiry moved into the past, so it reads as expired.
-export function invitationState(invitation: { acceptedBy: string | null, expiresAt: Date }, now: Date): InvitationState {
+// Accepted wins over revoked, and revoked wins over expired. Only an open invitation can be accepted or get a link.
+export function invitationState(invitation: { acceptedBy: string | null, revokedAt: Date | null, expiresAt: Date }, now: Date): InvitationState {
   if (invitation.acceptedBy !== null)
     return 'accepted'
+  if (invitation.revokedAt !== null)
+    return 'revoked'
   return invitation.expiresAt.getTime() <= now.getTime() ? 'expired' : 'open'
 }

@@ -1,5 +1,5 @@
 {
-  "id": "d9d4c69e-af23-4a3f-9537-fcade0013b1b",
+  "id": "a1f497eb-c065-4da5-863c-381e8721ba2a",
   "prevId": "9210f960-dbd9-4612-b03b-b9fe5e109e79",
   "version": "7",
   "dialect": "postgresql",
@@ -389,6 +389,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -409,6 +415,22 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "store_invitations_one_open_owner_idx": {
+          "name": "store_invitations_one_open_owner_idx",
+          "columns": [
+            {
+              "expression": "store_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"identity\".\"store_invitations\".\"role\" = 'owner' and \"identity\".\"store_invitations\".\"accepted_by\" is null and \"identity\".\"store_invitations\".\"revoked_at\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -489,7 +511,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "store_memberships_store_id_idx": {
+          "name": "store_memberships_store_id_idx",
+          "columns": [
+            {
+              "expression": "store_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "store_memberships_store_id_stores_id_fk": {
           "name": "store_memberships_store_id_stores_id_fk",

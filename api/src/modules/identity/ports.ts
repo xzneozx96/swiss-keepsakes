@@ -49,6 +49,7 @@ export interface Invitation {
   tokenHash: string | null
   expiresAt: Date
   acceptedBy: string | null
+  revokedAt: Date | null
 }
 
 // The store reads and writes below take a store id, not a StoreScope: they serve the Super Admin across stores
@@ -77,7 +78,7 @@ export interface InvitationRepository<T> {
   // Resend: a new expiry, and no token until the next mail is sent, so the old link stops working now.
   renew: (tx: T, invitationId: string, expiresAt: Date) => Promise<void>
   setTokenHash: (tx: T, invitationId: string, tokenHash: string) => Promise<void>
-  // Sets accepted_by only while it is null and the invitation has not expired. Returns whether it did.
+  // Sets accepted_by only while it is null, the invitation is not revoked and has not expired. Returns whether it did.
   markAccepted: (tx: T, invitationId: string, userId: string, now: Date) => Promise<boolean>
 }
 

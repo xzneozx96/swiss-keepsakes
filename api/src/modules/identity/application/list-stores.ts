@@ -23,7 +23,10 @@ export function makeListStores<T>({ uow, stores, invitations, conditions, clock 
     const found = await stores.list(tx, { limit: page.limit + 1, after: page.cursor })
     const shown = found.slice(0, page.limit)
     const newest = await invitations.newestOwnerInvitations(tx, shown.map(store => store.id))
-    const items = await Promise.all(shown.map(async store => adminStoreView(store, newest.get(store.id), await conditions.laterConditions(tx, store.id), now)))
+    // One query at a time, because a transaction runs one statement at once.
+    const items: AdminStoreView[] = []
+    for (const store of shown)
+      items.push(adminStoreView(store, newest.get(store.id), await conditions.laterConditions(tx, store.id), now))
     return { items, nextCursor: found.length > page.limit ? (shown.at(-1)?.id ?? null) : null }
   })
 }
