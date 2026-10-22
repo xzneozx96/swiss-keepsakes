@@ -4,9 +4,19 @@ Read this before you call an API or read server data. Check `front-end/package.j
 
 ## State of this repo
 
-- **TanStack Query v5** holds the shop's data in the browser (D19, E1.11). There is no API call yet: the demo `DataClient` answers from the browser-held demo store (`front-end/src/features/demo`). The **generated client** (D11) exists as `createApiClient` from `@sk/api-contract` (E1.10), and no screen imports it yet. It becomes the API implementation of a feature's client.
+- **TanStack Query v5** holds the shop's data in the browser (D19, E1.11). There is no API call yet: the demo `DataClient` answers from the browser-held demo store (`front-end/src/features/demo`). The **generated client** (D11) is `createApiClient` from `@sk/api-contract` (E1.10). The `stores` feature (E2.3) is the first to use it: `features/stores/api/api-client.ts` is its API client, and every other feature still has only its demo client.
 - **Sign-in is the first call to our API.** With `VITE_API_ENABLED=true`, C05 signs in through Better Auth's client on the SPA's own origin (`front-end/src/features/auth/`). The session is an HttpOnly cookie. The SPA holds no token and sends no `Authorization` header. `followSession` (`lib/session-sync.ts`) keeps the store's `signedInGuestId` in step with the session without blocking the first paint, and the demo store never saves that field in this mode. Until the account feature moves to the API, any session signs in the demo guest. Without the variable the demo sign-in below runs.
 - The other network calls today are the place search (`front-end/src/features/merchant/products/components/itinerary/use-place-search.ts`) and the map style and tiles (`front-end/src/features/tours/map/aerial-style.ts`).
+
+## The stores feature, the first API feature (E2.3)
+
+- `features/stores/` has no demo client. `createDemoDataClient` hands it the API client in both modes, and A01 and A02 show "works with the live API only" unless `VITE_API_ENABLED=true`. `tests/command-affects.test.ts` skips it, because it writes no demo collection. `tests/stores-screens.test.tsx` checks that `commandAffects.stores` lists every command instead.
+- **A read that takes a parameter** is not a command. An optional parameter already makes a method a read (`adminStores(cursor?)`). A required one needs the method's name in `ReadsWithInput` in `data-client/commands.ts` (`onboarding(storeId)`), or the type treats it as a command and wants a `commandAffects` entry.
+- **Its queries set their own options** (`staleTime: 0`, `retry: false`) in `stores/api/queries.ts`, as the API-feature paragraph below asks, and the screens show an error inline with `useQuery` and `useInfiniteQuery` where a 401 or 403 means something (sign in, not found).
+- **A refusal is an `ApiProblem`** (`data-client/errors.ts`) with the problem `type`. A screen maps the `type` to copy in its own message files. A `type` it does not know gets generic copy.
+- **Idempotency keys.** The client adds a new `Idempotency-Key` to every non-GET request, so each attempt has its own key. The API replays the first answer to a repeated key for 24 hours, a 409 included, so a screen must never resend a refused command with the same key.
+- **The invitation token** is taken off the address in `main.tsx` (`takeInvitationFromAddress`, also on `hashchange`) into `sessionStorage` under `sk.invitationToken`. `useAcceptInvitation` (`features/stores/hooks/`) posts it once and is the module the Store Manager's M01 screen reuses (E2.4). `returnTo` never carries it.
+- **The Owner's store id** is kept in `localStorage` under `sk.ownerStore` after an accept, because no API read lists a user's stores yet.
 
 ## Shop data through the `DataClient` (in use)
 
