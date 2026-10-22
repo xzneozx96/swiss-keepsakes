@@ -42,9 +42,9 @@ export function createIdentityWiring({ db, queueMail, conditions = createPending
     openStoreForSale: makeOpenStoreForSale({ uow, stores, conditions, audit, clock }),
     listMembers: makeListMembers({ uow, memberships, invitations, clock }),
     inviteManager: makeInviteManager({ uow, stores, invitations, memberships, users, admins, queueMail, audit, clock }),
-    resendManagerInvitation: makeResendManagerInvitation({ uow, stores, invitations, users, queueMail, audit, clock }),
+    resendManagerInvitation: makeResendManagerInvitation({ uow, stores, invitations, memberships, users, queueMail, audit, clock }),
     revokeInvitation: makeRevokeInvitation({ uow, invitations, audit, clock }),
-    removeMember: makeRemoveMember({ uow, memberships, audit }),
+    removeMember: makeRemoveMember({ uow, memberships, invitations, audit, clock }),
   }
   return { uow, stores, invitations, useCases }
 }

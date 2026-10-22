@@ -1,6 +1,7 @@
 import type { Tx } from '../../../platform/db/client.ts'
 import type { MailTemplate, SentMailRepository } from '../ports.ts'
 import { and, eq, sql } from 'drizzle-orm'
+import { cancelledError } from '../ports.ts'
 import { sentMail } from './schema.ts'
 
 export function createSentMailRepository(): SentMailRepository<Tx> {
@@ -27,6 +28,12 @@ export function createSentMailRepository(): SentMailRepository<Tx> {
       await tx.update(sentMail)
         .set({ attempts: sql`${sentMail.attempts} + 1`, lastError: error })
         .where(eq(sentMail.id, mailId))
+    },
+
+    async recordCancelled(tx, mailId, at) {
+      await tx.update(sentMail)
+        .set({ status: 'failed', failedAt: at, lastError: cancelledError })
+        .where(and(eq(sentMail.id, mailId), eq(sentMail.status, 'queued')))
     },
 
     async markFailed(tx, mailId, at) {

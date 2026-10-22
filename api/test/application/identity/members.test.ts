@@ -104,19 +104,20 @@ describe('[E2.4][AC02] the Owner invites a Store Manager', () => {
     expect(fake.state.mail).toEqual([])
   })
 
-  it('[E2.4] refuses an address with an open invitation, lets an expired, revoked or accepted one be invited anew', async () => {
+  it('[E2.4] refuses an address with an invitation that is neither accepted nor revoked, expired or not, and lets a revoked or accepted one be invited anew', async () => {
     const { fake, clock, store, owner, invite, revoke } = setup()
     const first = await invite(owner, store.id, { email: 'new@example.ch' }, null)
     expect(await invite(owner, store.id, { email: 'NEW@example.ch' }, null)).toEqual({ ok: false, reason: 'invitation-already-open' })
 
     clock.advance(invitationLifetimeMs)
+    expect(await invite(owner, store.id, { email: 'new@example.ch' }, null)).toEqual({ ok: false, reason: 'invitation-already-open' })
+    expect(fake.state.invitations.size).toBe(1)
+
+    await revoke(owner, store.id, first.ok ? first.invitation.id : '', null)
     expect(await invite(owner, store.id, { email: 'new@example.ch' }, null)).toMatchObject({ ok: true })
     const second = [...fake.state.invitations.values()].at(-1)!
-    expect(await invite(owner, store.id, { email: 'new@example.ch' }, null)).toEqual({ ok: false, reason: 'invitation-already-open' })
-
-    await revoke(owner, store.id, second.id, null)
+    second.acceptedBy = 'user-x'
     expect(await invite(owner, store.id, { email: 'new@example.ch' }, null)).toMatchObject({ ok: true })
-    expect(first.ok).toBe(true)
     expect(fake.state.invitations.size).toBe(3)
   })
 
@@ -189,6 +190,37 @@ describe('[E2.4][AC02] the Owner lists, resends and revokes', () => {
     expect(await resend(manager, store.id, one, undefined, null)).toEqual({ ok: false, reason: 'forbidden' })
     expect(await resend(elsewhere, store.id, one, undefined, null)).toEqual({ ok: false, reason: 'forbidden' })
     expect(fake.state.mail).toHaveLength(mails)
+  })
+
+  it('[E2.4] a resend of an old row is refused when its address belongs to the store now, and queues nothing', async () => {
+    const { fake, store, owner, invite, resend } = setup()
+    const created = await invite(owner, store.id, { email: 'lena.meier@example.ch' }, null)
+    const id = created.ok ? created.invitation.id : ''
+    await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    await fake.memberships.insertIfAbsent(tx, { userId: 'user-lena', storeId: store.id, role: 'manager', acceptedAt: start })
+    const mails = fake.state.mail.length
+
+    expect(await resend(owner, store.id, id, undefined, null)).toEqual({ ok: false, reason: 'already-a-member' })
+
+    expect(fake.state.mail).toHaveLength(mails)
+  })
+
+  it('[E2.4] a removed Manager\'s open invitations for the store are revoked in the removal, so neither a resend nor a link brings them back, and another store\'s are left alone', async () => {
+    const { fake, store, other, owner, invite, resend, remove } = setup()
+    await fake.memberships.insertIfAbsent(tx, { userId: 'user-lena', storeId: store.id, role: 'manager', acceptedAt: start })
+    const older = await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    const accepted = await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    fake.state.invitations.get(accepted.id)!.acceptedBy = 'user-lena'
+    const elsewhere = await fake.invitations.insert(tx, { storeId: other.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    const member = (await fake.memberships.list(tx, store.id)).find(entry => entry.role === 'manager')!
+
+    expect(await remove(owner, store.id, member.id, null)).toEqual({ ok: true })
+
+    expect(fake.state.invitations.get(older.id)?.revokedAt).toEqual(start)
+    expect(fake.state.invitations.get(accepted.id)?.revokedAt).toBeNull()
+    expect(fake.state.invitations.get(elsewhere.id)?.revokedAt).toBeNull()
+    expect(await resend(owner, store.id, older.id, undefined, null)).toEqual({ ok: false, reason: 'invitation-revoked' })
+    expect(await invite(owner, store.id, { email: 'lena.meier@example.ch' }, null)).toMatchObject({ ok: true })
   })
 
   it('[E2.4][AC02] an invitation of another store, or an Owner invitation, is not found under this store, by resend and by revoke', async () => {

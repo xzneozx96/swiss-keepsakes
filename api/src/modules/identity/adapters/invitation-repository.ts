@@ -53,8 +53,8 @@ export function createInvitationRepository(): InvitationRepository<Tx> {
       return row
     },
 
-    async renew(tx, invitationId, expiresAt) {
-      await tx.update(storeInvitations).set({ expiresAt, tokenHash: null }).where(eq(storeInvitations.id, invitationId))
+    async renew(tx, storeId, invitationId, expiresAt) {
+      await tx.update(storeInvitations).set({ expiresAt, tokenHash: null }).where(and(eq(storeInvitations.id, invitationId), eq(storeInvitations.storeId, storeId)))
     },
 
     async setTokenHash(tx, invitationId, tokenHash) {
@@ -75,13 +75,17 @@ export function createInvitationRepository(): InvitationRepository<Tx> {
       return tx.select(columns).from(storeInvitations).where(and(eq(storeInvitations.storeId, storeId), eq(storeInvitations.role, 'manager'), isNull(storeInvitations.acceptedBy), isNull(storeInvitations.revokedAt))).orderBy(newestFirst)
     },
 
-    async findOpenManagerByEmail(tx, storeId, email, now) {
-      const [row] = await tx.select(columns).from(storeInvitations).where(and(eq(storeInvitations.storeId, storeId), eq(storeInvitations.role, 'manager'), eq(storeInvitations.email, email), isNull(storeInvitations.acceptedBy), isNull(storeInvitations.revokedAt), gt(storeInvitations.expiresAt, now))).limit(1)
+    async findOpenManagerByEmail(tx, storeId, email) {
+      const [row] = await tx.select(columns).from(storeInvitations).where(and(eq(storeInvitations.storeId, storeId), eq(storeInvitations.role, 'manager'), eq(storeInvitations.email, email), isNull(storeInvitations.acceptedBy), isNull(storeInvitations.revokedAt))).limit(1)
       return row
     },
 
-    async revoke(tx, invitationId, now) {
-      await tx.update(storeInvitations).set({ revokedAt: now }).where(eq(storeInvitations.id, invitationId))
+    async revoke(tx, storeId, invitationId, now) {
+      await tx.update(storeInvitations).set({ revokedAt: now }).where(and(eq(storeInvitations.id, invitationId), eq(storeInvitations.storeId, storeId)))
+    },
+
+    async revokeOpenManagersByEmail(tx, storeId, email, now) {
+      await tx.update(storeInvitations).set({ revokedAt: now }).where(and(eq(storeInvitations.storeId, storeId), eq(storeInvitations.role, 'manager'), eq(storeInvitations.email, email), isNull(storeInvitations.acceptedBy), isNull(storeInvitations.revokedAt)))
     },
   }
 }

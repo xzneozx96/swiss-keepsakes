@@ -46,7 +46,14 @@ export interface Mailer {
 // Builds an invitation mail's link when the mail is sent, inside the attempt's transaction, so the job data
 // holds the invitation id and never its token (architecture section 8). The identity module implements it
 // (E2.3). Undefined means the invitation is no longer open, and the mail fails like a missing template value.
-export type InvitationLink<T> = (tx: T, template: InvitationTemplate, invitationId: string) => Promise<string | undefined>
+// `invitationRevoked` means the invitation was revoked on purpose before the mail went out: the mail is closed
+// without an alert, because nobody has to act on it.
+// The `sent_mail.last_error` of a mail closed that way.
+export const cancelledError = 'InvitationRevoked'
+
+export const invitationRevoked = Symbol('invitationRevoked')
+
+export type InvitationLink<T> = (tx: T, template: InvitationTemplate, invitationId: string) => Promise<string | typeof invitationRevoked | undefined>
 
 // Removes the secret a job's data holds (the N01 sign-in code) from the mail job and its dead-letter copy.
 export interface MailJobScrubber<T> {
@@ -80,6 +87,10 @@ export interface SentMailRepository<T> {
   recordAttemptFailed: (tx: T, mailId: string, error: string) => Promise<void>
   // Marks a queued mail failed and returns it, or returns undefined when it is no longer queued.
   markFailed: (tx: T, mailId: string, at: Date) => Promise<MailFailure | undefined>
+  // Closes a queued mail that must not go out because its invitation was revoked. It becomes `failed` with
+  // the last error `InvitationRevoked` (the status column has no other closed value), raises no alert and is
+  // left out of the ops list of mail that did not go out.
+  recordCancelled: (tx: T, mailId: string, at: Date) => Promise<void>
 }
 
 // Raised once for a mail that will not be retried: after its last attempt, or at once for a failure that a

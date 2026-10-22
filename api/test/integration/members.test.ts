@@ -1,5 +1,6 @@
 import type { MailJob } from '../../src/modules/notifications/application/queue-mail.ts'
 import { randomUUID } from 'node:crypto'
+import { serve } from '@hono/node-server'
 import { afterAll, beforeAll, describe, expect, inject, it, vi } from 'vitest'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
@@ -21,11 +22,14 @@ import { createJobQueue } from '../../src/platform/jobs/queue.ts'
 import { createLogger } from '../../src/platform/logger.ts'
 import { createIdentityWiring, insertStore } from '../support/identity-wiring.ts'
 import { createMemoryMailer } from '../support/memory-mailer.ts'
+import { sessionCookie } from '../support/session-cookie.ts'
 import { openTestDatabase, silentLogger } from './support.ts'
 
-// A real sign-in is two round trips against a Neon branch. The people here sign in once each, and everything else
-// (stores, memberships, a Super Admin) is written directly, because the sign-in is not what these tests prove.
-vi.setConfig({ testTimeout: 120_000, hookTimeout: 120_000 })
+// A real sign-in is two round trips against a Neon branch and took most of this file's time. One test signs in with
+// the emailed code, as the Owner. Everyone else is a user row with a session from Better Auth's own adapter
+// (`env.person`), and the stores, memberships and a Super Admin are written directly, because the sign-in is not
+// what the other tests prove.
+vi.setConfig({ testTimeout: 60_000, hookTimeout: 120_000 })
 
 const { pool, db } = openTestDatabase()
 let jobs: Awaited<ReturnType<typeof startJobs>>
@@ -106,6 +110,13 @@ async function setup() {
     return { userId: user.id, email: address, headers: { Cookie: cookie } }
   }
 
+  // A verified user and a session cookie for it, without the emailed code. It is the cookie the real sign-in sets.
+  async function person() {
+    const email = `person-${randomUUID().slice(0, 8)}@example.ch`
+    const { rows } = await pool.query<{ id: string }>(`insert into identity."user" (name, email, email_verified) values ('', $1, true) returning id`, [email])
+    return { userId: rows[0]!.id, email, headers: { Cookie: await sessionCookie(auth, rows[0]!.id, secret) } }
+  }
+
   // A store in the given status and the person as its member, written directly.
   async function storeOf(person: { userId: string }, role: 'owner' | 'manager' = 'owner', status = 'live') {
     const storeId = randomUUID()
@@ -135,7 +146,7 @@ async function setup() {
 
   const accept = (person: { headers: Record<string, string> }, token: string) => call('/api/me/invitations/accept', { method: 'POST', headers: person.headers, body: { token } })
 
-  return { call, signIn, storeOf, addMember, invite, newestJob, sendNewestMail, accept, memory, queues, logs, uow }
+  return { sendMail, app, call, signIn, person, storeOf, addMember, invite, newestJob, sendNewestMail, accept, memory, queues, logs, uow }
 }
 
 async function invitationRows(storeId: string) {
@@ -156,7 +167,7 @@ async function insertUser(email: string, verified = true) {
 
 describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees only that store', () => {
   it('[E2.4][AC02] the whole path over HTTP: invite, queued job without a token, M01 link, wrong address refused, right address accepts once, removal closes the store at once', async () => {
-    const [owner, invitee, stranger] = await Promise.all([env.signIn(), env.signIn(), env.signIn()])
+    const [owner, invitee, stranger] = await Promise.all([env.signIn(), env.person(), env.person()])
     const storeId = await env.storeOf(owner)
     const otherStore = await env.storeOf(stranger)
 
@@ -233,7 +244,7 @@ describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees o
   })
 
   it('[E2.4][AC02] a resend kills the old link at once, and only the newest mail\'s link works', async () => {
-    const [owner, invitee] = await Promise.all([env.signIn(), env.signIn()])
+    const [owner, invitee] = await Promise.all([env.person(), env.person()])
     const storeId = await env.storeOf(owner)
     const { id } = await (await env.invite(storeId, owner, { email: invitee.email })).json() as { id: string }
     const first = await env.sendNewestMail(invitee.email)
@@ -252,7 +263,7 @@ describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees o
   })
 
   it('[E2.4][AC02] a revoked invitation stops working at once, and no mail can mint a link for it', async () => {
-    const [owner, invitee] = await Promise.all([env.signIn(), env.signIn()])
+    const [owner, invitee] = await Promise.all([env.person(), env.person()])
     const storeId = await env.storeOf(owner)
     const { id } = await (await env.invite(storeId, owner, { email: invitee.email })).json() as { id: string }
     const { token } = await env.sendNewestMail(invitee.email)
@@ -269,8 +280,12 @@ describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees o
     expect(await memberRows(storeId)).toHaveLength(1)
     const unsent = await (await env.invite(storeId, owner, { email: 'unsent@example.ch' })).json() as { id: string }
     await env.call(`/api/store/${storeId}/member-invitations/${unsent.id}/revoke`, { method: 'POST', headers: owner.headers })
-    await expect(env.sendNewestMail('unsent@example.ch')).rejects.toBeInstanceOf(Error)
+    const mailsSent = env.memory.sent.length
+    await env.sendMail(await env.newestJob('unsent@example.ch'))
+    expect(env.memory.sent).toHaveLength(mailsSent)
     expect((await invitationRows(storeId)).find(row => row.id === unsent.id)?.token_hash).toBeNull()
+    const { rows: cancelled } = await pool.query<{ status: string, last_error: string }>(`select status, last_error from notifications.sent_mail where recipient = 'unsent@example.ch'`)
+    expect(cancelled).toEqual([{ status: 'failed', last_error: 'InvitationRevoked' }])
     expect((await env.call(`${url}/resend`, { method: 'POST', headers: owner.headers })).status).toBe(409)
     expect(await (await env.call(`${url}/revoke`, { method: 'POST', headers: owner.headers })).json()).toMatchObject({ type: 'invitation-revoked' })
     const listed = await (await env.call(`/api/store/${storeId}/members`, { headers: owner.headers })).json() as { invitations: unknown[] }
@@ -280,7 +295,7 @@ describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees o
   })
 
   it('[E2.4][AC02] another store\'s Owner sees nothing and changes nothing: the guard refuses the store, and the store\'s own ids are not found under another store', async () => {
-    const [owner, other, invitee] = await Promise.all([env.signIn(), env.signIn(), env.signIn()])
+    const [owner, other, invitee] = await Promise.all([env.person(), env.person(), env.person()])
     const storeId = await env.storeOf(owner)
     const otherStore = await env.storeOf(other)
     const managerMembership = await env.addMember(storeId, invitee.userId, 'manager')
@@ -309,7 +324,7 @@ describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees o
 
 describe('[E2.4] what the Owner may invite, and what the invitation may become', () => {
   it('[E2.4] refuses an address that is already a member, the Owner\'s own address, a Super Admin\'s address, and one with an open invitation, whatever its letters', async () => {
-    const [owner, member] = await Promise.all([env.signIn(), env.signIn()])
+    const [owner, member] = await Promise.all([env.person(), env.person()])
     const storeId = await env.storeOf(owner)
     await env.addMember(storeId, member.userId, 'manager')
     const adminEmail = `admin-${randomUUID().slice(0, 8)}@example.ch`
@@ -328,23 +343,115 @@ describe('[E2.4] what the Owner may invite, and what the invitation may become',
     expect((await pool.query(`select 1 from pgboss.job where name = $1 and data->>'template' = 'N18' and data->>'to' in ($2, $3, $4)`, [env.queues.send, member.email, owner.email, adminEmail])).rowCount).toBe(0)
   })
 
-  it('[E2.4] an expired invitation does not block a new one, and two invitations made at once for one address leave one', async () => {
-    const owner = await env.signIn()
+  it('[E2.4] an expired invitation still blocks a new one, so the Owner sends it again, and a resend reopens it', async () => {
+    const owner = await env.person()
     const storeId = await env.storeOf(owner)
     const { id } = await (await env.invite(storeId, owner, { email: 'late@example.ch' })).json() as { id: string }
     await pool.query(`update identity.store_invitations set expires_at = now() - interval '1 minute' where id = $1`, [id])
 
     const listed = await (await env.call(`/api/store/${storeId}/members`, { headers: owner.headers })).json() as { invitations: { state: string }[] }
     expect(listed.invitations.map(entry => entry.state)).toEqual(['expired'])
-    expect((await env.invite(storeId, owner, { email: 'late@example.ch' })).status).toBe(201)
+    const again = await env.invite(storeId, owner, { email: 'late@example.ch' })
+    expect(again.status).toBe(409)
+    expect(await again.json()).toMatchObject({ type: 'invitation-already-open' })
+    expect(await invitationRows(storeId)).toHaveLength(1)
 
-    const [first, second] = await Promise.all([env.invite(storeId, owner, { email: 'race@example.ch' }), env.invite(storeId, owner, { email: 'race@example.ch' })])
-    expect([first.status, second.status].sort()).toEqual([201, 409])
+    expect((await env.call(`/api/store/${storeId}/member-invitations/${id}/resend`, { method: 'POST', headers: owner.headers })).status).toBe(200)
+    expect((await invitationRows(storeId))[0]!.expires_at.getTime()).toBeGreaterThan(Date.now())
+  })
+
+  it('[E2.4] two invitations for one address meet one after the other: the store\'s row lock makes the second see the first', async () => {
+    const owner = await env.person()
+    const storeId = await env.storeOf(owner)
+    // The first invitation is in flight: it holds the store's row and has written its row, and has not committed.
+    const first = await pool.connect()
+    try {
+      await first.query('begin')
+      await first.query('select id from identity.stores where id = $1 for update', [storeId])
+      await first.query(`insert into identity.store_invitations (store_id, email, role, expires_at) values ($1, 'race@example.ch', 'manager', now() + interval '7 days')`, [storeId])
+
+      const second = env.invite(storeId, owner, { email: 'race@example.ch' })
+      // The second one waits for the store's row. Without the lock it would not wait, and would answer 201.
+      await vi.waitFor(async () => {
+        const { rows } = await pool.query(`select 1 from pg_stat_activity where datname = current_database() and wait_event_type = 'Lock' and query ilike '%stores%for update%'`)
+        expect(rows.length).toBeGreaterThan(0)
+      }, { timeout: 15_000, interval: 100 })
+      await first.query('commit')
+
+      const response = await second
+      expect(response.status).toBe(409)
+      expect(await response.json()).toMatchObject({ type: 'invitation-already-open' })
+    }
+    finally {
+      await first.query('rollback').catch(() => undefined)
+      first.release()
+    }
     expect((await invitationRows(storeId)).filter(row => row.email === 'race@example.ch')).toHaveLength(1)
   })
 
+  it('[E2.4] a resend of an old row is refused once its address belongs to the store, and once the member was removed the old row is revoked', async () => {
+    const [owner, invitee] = await Promise.all([env.person(), env.person()])
+    const storeId = await env.storeOf(owner)
+    const old = await (await env.invite(storeId, owner, { email: invitee.email })).json() as { id: string }
+    // A newer invitation for the same address was accepted: the person is a member now.
+    const memberId = await env.addMember(storeId, invitee.userId, 'manager')
+    await pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at, accepted_by) values ($1, $2, 'manager', now() + interval '7 days', $3)`, [storeId, invitee.email, invitee.userId])
+    const mails = (await pool.query(`select 1 from pgboss.job where name = $1 and data->>'to' = $2`, [env.queues.send, invitee.email])).rowCount
+    const resend = () => env.call(`/api/store/${storeId}/member-invitations/${old.id}/resend`, { method: 'POST', headers: owner.headers })
+
+    const refused = await resend()
+    expect(refused.status).toBe(409)
+    expect(await refused.json()).toMatchObject({ type: 'already-a-member' })
+    expect((await pool.query(`select 1 from pgboss.job where name = $1 and data->>'to' = $2`, [env.queues.send, invitee.email])).rowCount).toBe(mails)
+
+    expect((await env.call(`/api/store/${storeId}/members/${memberId}`, { method: 'DELETE', headers: owner.headers })).status).toBe(204)
+    expect((await invitationRows(storeId)).find(row => row.id === old.id)?.revoked_at).toBeInstanceOf(Date)
+    const afterRemoval = await resend()
+    expect(afterRemoval.status).toBe(409)
+    expect(await afterRemoval.json()).toMatchObject({ type: 'invitation-revoked' })
+  })
+
+  it('[E2.4] a removed Manager cannot rejoin through an older invitation that is still valid', async () => {
+    const [owner, invitee] = await Promise.all([env.person(), env.person()])
+    const storeId = await env.storeOf(owner)
+    const memberId = await env.addMember(storeId, invitee.userId, 'manager')
+    const token = newInvitationToken()
+    await pool.query(`insert into identity.store_invitations (store_id, email, role, token_hash, expires_at) values ($1, $2, 'manager', $3, now() + interval '1 day')`, [storeId, invitee.email, hashInvitationToken(token)])
+
+    expect((await env.call(`/api/store/${storeId}/members/${memberId}`, { method: 'DELETE', headers: owner.headers })).status).toBe(204)
+    const response = await env.accept(invitee, token)
+
+    expect(response.status).toBe(410)
+    expect(await response.json()).toMatchObject({ type: 'invitation-revoked' })
+    expect(await memberRows(storeId)).toHaveLength(1)
+  })
+
+  it('[E2.4] a resend with the JSON Content-Type and no body is a 200 through the production middleware on the node server, and a repeat of its key replays', async () => {
+    const [owner, invitee] = await Promise.all([env.person(), env.person()])
+    const storeId = await env.storeOf(owner)
+    const { id } = await (await env.invite(storeId, owner, { email: invitee.email })).json() as { id: string }
+    const server = serve({ fetch: env.app.fetch, hostname: '127.0.0.1', port: 0 })
+    await new Promise(resolve => server.once('listening', resolve))
+    const { port } = server.address() as { port: number }
+    try {
+      const key = randomUUID()
+      const resend = () => fetch(`http://127.0.0.1:${port}/api/store/${storeId}/member-invitations/${id}/resend`, { method: 'POST', headers: { 'Origin': origin, 'Content-Type': 'application/json', 'Idempotency-Key': key, 'Cookie': owner.headers.Cookie, 'fly-client-ip': randomIp() } })
+
+      const first = await resend()
+      const replay = await resend()
+
+      expect(first.status).toBe(200)
+      expect(await first.json()).toMatchObject({ id, state: 'open' })
+      expect(replay.status).toBe(200)
+      expect(replay.headers.get('Idempotent-Replayed')).toBe('true')
+    }
+    finally {
+      await new Promise(resolve => server.close(resolve))
+    }
+  })
+
   it('[E2.4] an Owner of the store who holds a Manager invitation is refused at accept: no role changes through invitations', async () => {
-    const owner = await env.signIn()
+    const owner = await env.person()
     const storeId = await env.storeOf(owner)
     const token = newInvitationToken()
     await pool.query(`insert into identity.store_invitations (store_id, email, role, token_hash, expires_at) values ($1, $2, 'manager', $3, now() + interval '1 day')`, [storeId, owner.email, hashInvitationToken(token)])
@@ -358,9 +465,9 @@ describe('[E2.4] what the Owner may invite, and what the invitation may become',
   })
 
   it('[E2.4] a Super Admin who holds a Manager link is refused at accept', async () => {
-    const owner = await env.signIn()
+    const owner = await env.person()
     const storeId = await env.storeOf(owner)
-    const admin = await env.signIn()
+    const admin = await env.person()
     await pool.query('insert into identity.platform_admins (user_id) values ($1)', [admin.userId])
     const token = newInvitationToken()
     await pool.query(`insert into identity.store_invitations (store_id, email, role, token_hash, expires_at) values ($1, $2, 'manager', $3, now() + interval '1 day')`, [storeId, admin.email, hashInvitationToken(token)])
@@ -373,7 +480,7 @@ describe('[E2.4] what the Owner may invite, and what the invitation may become',
   })
 
   it('[E2.4] the Idempotency-Key makes an invitation run once: a replay gets the first answer and queues one mail', async () => {
-    const owner = await env.signIn()
+    const owner = await env.person()
     const storeId = await env.storeOf(owner)
     const key = randomUUID()
     const request = { method: 'POST', headers: owner.headers, body: { email: 'once@example.ch' }, key }
@@ -390,7 +497,7 @@ describe('[E2.4] what the Owner may invite, and what the invitation may become',
   })
 
   it('[E2.4] an invitation and its mail are made together: a mail that cannot be queued leaves no invitation', async () => {
-    const owner = await env.signIn()
+    const owner = await env.person()
     const storeId = await env.storeOf(owner)
     const isolated = await setup()
     await jobs.boss.deleteQueue(isolated.queues.send)
@@ -402,7 +509,7 @@ describe('[E2.4] what the Owner may invite, and what the invitation may become',
   })
 
   it('[E2.4] the N18 mail names the inviter, the store and the M01 link, in the language of the request', async () => {
-    const [owner, invitee] = await Promise.all([env.signIn(), env.signIn()])
+    const [owner, invitee] = await Promise.all([env.person(), env.person()])
     const storeId = await env.storeOf(owner)
     await env.invite(storeId, owner, { email: invitee.email, language: 'de' })
 

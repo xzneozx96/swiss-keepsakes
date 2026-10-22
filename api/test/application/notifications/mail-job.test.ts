@@ -1,6 +1,7 @@
 import type { MailRequest } from '../../../src/modules/notifications/application/render-mail.ts'
 import type { InvitationLink, JobQueue, MailFailure, MailStatus, MailTemplate, QueuedMail, SentMailRepository, UnitOfWork } from '../../../src/modules/notifications/ports.ts'
 import { describe, expect, it } from 'vitest'
+import { invitationRevoked } from '../../../src/modules/notifications/ports.ts'
 import { makeFailMail } from '../../../src/modules/notifications/application/fail-mail.ts'
 import { makeQueueMail } from '../../../src/modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from '../../../src/modules/notifications/application/send-mail.ts'
@@ -78,6 +79,12 @@ function createFakes() {
       const row = rows.get(mailId)!
       Object.assign(row, { attempts: row.attempts + 1, lastError: error })
     },
+    async recordCancelled(tx, mailId, at) {
+      inTx(tx)
+      const row = rows.get(mailId)
+      if (row?.status === 'queued')
+        Object.assign(row, { status: 'failed', failedAt: at, lastError: 'InvitationRevoked' })
+    },
     async markFailed(tx, mailId, at) {
       inTx(tx)
       const row = rows.get(mailId)
@@ -95,13 +102,16 @@ function createFakes() {
   }
   // Open invitations and the link each one's mail gets. The link holds a token the job data must never hold.
   const invitations = new Map<string, string>()
+  const revoked = new Set<string>()
   const linkRequests: { template: MailTemplate, invitationId: string }[] = []
   const invitationLink: InvitationLink<FakeTx> = async (tx, template, invitationId) => {
     inTx(tx)
     linkRequests.push({ template, invitationId })
+    if (revoked.has(invitationId))
+      return invitationRevoked
     return invitations.get(invitationId)
   }
-  return { rows, jobs, alerts, invitations, linkRequests, uow, sentMail, jobQueue, invitationLink }
+  return { rows, jobs, alerts, invitations, revoked, linkRequests, uow, sentMail, jobQueue, invitationLink }
 }
 
 function setup() {
@@ -182,6 +192,20 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
 
     expect(memory.attempts).toEqual([])
     expect(rows.get(mailId)).toMatchObject({ status: 'queued', attempts: 1, lastError: 'MailRenderError' })
+  })
+
+  it('[E2.4] a mail for an invitation revoked before it was sent sends nothing, closes the mail without an alert, and the job completes', async () => {
+    const { rows, memory, alerts, revoked, sendMail, queued } = setup()
+    const { mailId, job } = await queued(n20)
+    revoked.add(n20.params.invitationId)
+
+    await expect(sendMail(job)).resolves.toBeUndefined()
+
+    expect(memory.attempts).toEqual([])
+    expect(alerts).toEqual([])
+    expect(rows.get(mailId)).toMatchObject({ status: 'failed', lastError: 'InvitationRevoked', sentAt: null })
+    await sendMail(job)
+    expect(memory.attempts).toEqual([])
   })
 
   it('[E2.8] a job that runs again after its mail was sent sends nothing and changes nothing', async () => {

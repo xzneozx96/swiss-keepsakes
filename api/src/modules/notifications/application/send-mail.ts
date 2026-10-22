@@ -1,5 +1,6 @@
 import type { Clock, InvitationLink, Mailer, SentMailRepository, UnitOfWork } from '../ports.ts'
 import type { MailJob } from './queue-mail.ts'
+import { invitationRevoked } from '../ports.ts'
 import { MailRenderError, renderMail } from './render-mail.ts'
 
 export interface SendMailDeps<T> {
@@ -56,6 +57,10 @@ export function makeSendMail<T>({ uow, sentMail, mailer, invitationLink, clock }
         if (await sentMail.lockForSend(tx, job.mailId) !== 'queued')
           return
         const link = job.template === 'N01' ? undefined : await invitationLink(tx, job.template, job.params.invitationId)
+        if (link === invitationRevoked) {
+          await sentMail.recordCancelled(tx, job.mailId, clock.now())
+          return
+        }
         const { to, subject, text } = renderMail(job, link)
         const { response } = await mailer.send({ id: job.mailId, to, subject, text })
         await sentMail.recordSent(tx, job.mailId, { at: clock.now(), response })

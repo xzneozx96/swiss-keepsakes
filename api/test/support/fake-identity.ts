@@ -105,9 +105,9 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
     async newestOwnerInvitationForUpdate(_tx, storeId) {
       return (await this.newestOwnerInvitations(_tx, [storeId])).get(storeId)
     },
-    async renew(_tx, invitationId, expiresAt) {
+    async renew(_tx, storeId, invitationId, expiresAt) {
       const row = state.invitations.get(invitationId)
-      if (row)
+      if (row?.storeId === storeId)
         Object.assign(row, { expiresAt, tokenHash: null })
     },
     async setTokenHash(_tx, invitationId, tokenHash) {
@@ -122,14 +122,20 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
     async listPendingManagers(_tx, storeId) {
       return [...state.invitations.values()].filter(row => row.storeId === storeId && row.role === 'manager' && row.acceptedBy === null && row.revokedAt === null).sort((a, b) => b.id.localeCompare(a.id)).map(row => ({ ...row }))
     },
-    async findOpenManagerByEmail(_tx, storeId, email, now) {
-      const row = [...state.invitations.values()].find(candidate => candidate.storeId === storeId && candidate.role === 'manager' && candidate.email === email && candidate.acceptedBy === null && candidate.revokedAt === null && candidate.expiresAt.getTime() > now.getTime())
+    async findOpenManagerByEmail(_tx, storeId, email) {
+      const row = [...state.invitations.values()].find(candidate => candidate.storeId === storeId && candidate.role === 'manager' && candidate.email === email && candidate.acceptedBy === null && candidate.revokedAt === null)
       return row && { ...row }
     },
-    async revoke(_tx, invitationId, now) {
+    async revoke(_tx, storeId, invitationId, now) {
       const row = state.invitations.get(invitationId)
-      if (row)
+      if (row?.storeId === storeId)
         row.revokedAt = now
+    },
+    async revokeOpenManagersByEmail(_tx, storeId, email, now) {
+      for (const row of state.invitations.values()) {
+        if (row.storeId === storeId && row.role === 'manager' && row.email === email && row.acceptedBy === null && row.revokedAt === null)
+          row.revokedAt = now
+      }
     },
     async markAccepted(_tx, invitationId, userId, now) {
       const row = state.invitations.get(invitationId)

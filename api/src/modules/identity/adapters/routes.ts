@@ -326,6 +326,8 @@ export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: Ident
         return problem(c, { type: 'invitation-already-accepted', status: 409, title: 'The invitation has already been accepted' })
       case 'invitation-revoked':
         return problem(c, { type: 'invitation-revoked', status: 409, title: 'The invitation was revoked and cannot be sent again. Invite the person anew' })
+      case 'already-a-member':
+        return problem(c, { type: 'already-a-member', status: 409, title: 'This person already belongs to the store' })
     }
   })
 

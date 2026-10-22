@@ -24,7 +24,8 @@ export type InviteManagerResult
 // The Owner invites a Store Manager by email (M22, N18, UX AC02). One transaction writes the invitation, the
 // audit row and the N18 job, which holds the invitation id and never the token (section 8). The store's row is
 // locked first, so two invitations for one address made at once meet one after the other and the second sees the
-// first. An address that already holds an open invitation is refused: the Owner sends that one again.
+// first. An address that already holds an invitation that is neither accepted nor revoked, expired or not, is refused: the
+// Owner sends that one again.
 export function makeInviteManager<T>({ uow, stores, invitations, memberships, users, admins, queueMail, audit, clock }: InviteManagerDeps<T>) {
   return async (actor: Actor, storeId: string, input: { email: string, language?: StoreLanguage | undefined }, requestId: string | null): Promise<InviteManagerResult> => {
     if (actor.kind !== 'staff' || !can(actor, 'manage-members', { storeId }))
@@ -40,7 +41,7 @@ export function makeInviteManager<T>({ uow, stores, invitations, memberships, us
         return { ok: false, reason: 'manager-is-super-admin' }
       if (existing && await memberships.has(tx, storeId, existing.id))
         return { ok: false, reason: 'already-a-member' }
-      if (await invitations.findOpenManagerByEmail(tx, storeId, email, now))
+      if (await invitations.findOpenManagerByEmail(tx, storeId, email))
         return { ok: false, reason: 'invitation-already-open' }
       const inviter = await users.find(tx, actor.userId)
       const invitation = await invitations.insert(tx, { storeId, email, role: 'manager', expiresAt: new Date(now.getTime() + invitationLifetimeMs) })

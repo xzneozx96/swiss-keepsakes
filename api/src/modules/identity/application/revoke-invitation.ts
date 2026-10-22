@@ -31,7 +31,7 @@ export function makeRevokeInvitation<T>({ uow, invitations, audit, clock }: Revo
         return { ok: false, reason: 'invitation-already-accepted' }
       if (invitation.revokedAt !== null)
         return { ok: false, reason: 'invitation-revoked' }
-      await invitations.revoke(tx, invitation.id, now)
+      await invitations.revoke(tx, storeId, invitation.id, now)
       await audit.record(tx, { storeId, actor: `staff:${actor.userId}`, entity: 'store_invitation', entityId: invitation.id, action: 'revoked', requestId })
       return { ok: true, invitation: memberInvitationView({ ...invitation, revokedAt: now }, now) }
     })

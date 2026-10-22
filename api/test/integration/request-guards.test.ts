@@ -237,7 +237,7 @@ describe('[E2.10][AC02] the guards over real Better Auth sessions and the real i
         expect(refusedToTheOwner(manager), `manager ${operation.method} ${operation.path}`).toBe(false)
       }
     }
-  // Eleven operations, each called by five outsiders and two members, and every call is several round trips to a Neon branch.
+  // 11 operations, each called by five outsiders and two members, is 77 calls, and every call is several round trips to a Neon branch.
   }, 120_000)
 
   it('[E2.10][AC02] a store id in upper case still opens the owner\'s own store', async () => {

@@ -28,11 +28,8 @@ export function createMembershipRepository(): MembershipRepository<Tx> {
     },
 
     async findInStoreForUpdate(tx, storeId, memberId) {
-      const [row] = await tx.select({ id: storeMemberships.id }).from(storeMemberships).where(and(eq(storeMemberships.id, memberId), eq(storeMemberships.storeId, storeId))).for('update')
-      if (!row)
-        return undefined
-      const [member] = await tx.select(memberColumns).from(storeMemberships).innerJoin(user, eq(user.id, storeMemberships.userId)).where(eq(storeMemberships.id, memberId))
-      return member
+      const [row] = await tx.select(memberColumns).from(storeMemberships).innerJoin(user, eq(user.id, storeMemberships.userId)).where(and(eq(storeMemberships.id, memberId), eq(storeMemberships.storeId, storeId))).for('update', { of: storeMemberships })
+      return row
     },
 
     async remove(tx, storeId, memberId) {

@@ -138,9 +138,9 @@ async function main() {
       openStoreForSale: makeOpenStoreForSale({ uow, stores, conditions, audit, clock: systemClock }),
       listMembers: makeListMembers({ uow, memberships, invitations, clock: systemClock }),
       inviteManager: makeInviteManager({ uow, stores, invitations, memberships, users, admins, queueMail, audit, clock: systemClock }),
-      resendManagerInvitation: makeResendManagerInvitation({ uow, stores, invitations, users, queueMail, audit, clock: systemClock }),
+      resendManagerInvitation: makeResendManagerInvitation({ uow, stores, invitations, memberships, users, queueMail, audit, clock: systemClock }),
       revokeInvitation: makeRevokeInvitation({ uow, invitations, audit, clock: systemClock }),
-      removeMember: makeRemoveMember({ uow, memberships, audit }),
+      removeMember: makeRemoveMember({ uow, memberships, invitations, audit, clock: systemClock }),
     }
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),

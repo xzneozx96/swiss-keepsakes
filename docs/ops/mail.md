@@ -23,12 +23,13 @@ Better Auth queues N01 for each emailed sign-in code, in the language the SPA se
 
 ## The ops list
 
-Mail that did not go out:
+Mail that did not go out. A mail whose invitation the Owner revoked before it was sent is closed with `last_error = 'InvitationRevoked'`, raises no alert and is left out:
 
 ```sql
 select id, store_id, template, language, recipient, attempts, last_error, queued_at, failed_at
 from notifications.sent_mail
 where status = 'failed'
+  and last_error is distinct from 'InvitationRevoked'
 order by failed_at desc;
 ```
 
@@ -52,7 +53,7 @@ The Super Admin resends the Owner invitation (N20) with `POST /api/admin/stores/
 | `ETLS` | No TLS. The server offers no STARTTLS, or `SMTP_SECURE` does not match the port | Use 465 with `true`, or 587 with `false` |
 | `ECONNECTION`, `ETIMEDOUT` | The server cannot be reached | Check `SMTP_HOST` and `SMTP_PORT`. Retries cover a short outage |
 | `EENVELOPE` with a code | The server refused the sender or the recipient. A 5xx code fails at once | Check the address in the row and `SMTP_FROM` |
-| `MailRenderError` | The job's data lacks a template value, or the invitation is no longer open, so there is no link. It fails at once | Check whether the invitation was accepted, revoked or expired. For an expired Owner invitation, resend it (above), which opens it again and queues a new mail. Otherwise it is a bug in the command that queued the mail |
+| `MailRenderError` | The job's data lacks a template value, or the invitation is no longer open, so there is no link. It fails at once | Check whether the invitation was accepted or expired (a revoked one is closed without an alert). For an expired Owner invitation, resend it (above), which opens it again and queues a new mail. Otherwise it is a bug in the command that queued the mail |
 
 ## Duplicates
 

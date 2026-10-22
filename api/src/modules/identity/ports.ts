@@ -76,7 +76,7 @@ export interface InvitationRepository<T> {
   newestOwnerInvitations: (tx: T, storeIds: string[]) => Promise<Map<string, Invitation>>
   newestOwnerInvitationForUpdate: (tx: T, storeId: string) => Promise<Invitation | undefined>
   // Resend: a new expiry, and no token until the next mail is sent, so the old link stops working now.
-  renew: (tx: T, invitationId: string, expiresAt: Date) => Promise<void>
+  renew: (tx: T, storeId: string, invitationId: string, expiresAt: Date) => Promise<void>
   setTokenHash: (tx: T, invitationId: string, tokenHash: string) => Promise<void>
   // Sets accepted_by only while it is null, the invitation is not revoked and has not expired. Returns whether it did.
   markAccepted: (tx: T, invitationId: string, userId: string, now: Date) => Promise<boolean>
@@ -84,9 +84,12 @@ export interface InvitationRepository<T> {
   findManagerInStoreForUpdate: (tx: T, storeId: string, invitationId: string) => Promise<Invitation | undefined>
   // The store's Store Manager invitations that are neither accepted nor revoked, newest first.
   listPendingManagers: (tx: T, storeId: string) => Promise<Invitation[]>
-  // The store's Store Manager invitation for this address that is neither accepted, revoked nor expired.
-  findOpenManagerByEmail: (tx: T, storeId: string, email: string, now: Date) => Promise<Invitation | undefined>
-  revoke: (tx: T, invitationId: string, now: Date) => Promise<void>
+  // The store's Store Manager invitation for this address that is neither accepted nor revoked. An expired one
+  // counts, so it blocks a new invitation and the Owner sends it again (the Owner invitation's partial index does the same).
+  findOpenManagerByEmail: (tx: T, storeId: string, email: string) => Promise<Invitation | undefined>
+  revoke: (tx: T, storeId: string, invitationId: string, now: Date) => Promise<void>
+  // Revokes every Store Manager invitation of this store for the address that is neither accepted nor revoked.
+  revokeOpenManagersByEmail: (tx: T, storeId: string, email: string, now: Date) => Promise<void>
 }
 
 export interface Member {

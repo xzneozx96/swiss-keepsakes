@@ -96,7 +96,8 @@ export const membersSchema = z.object({
 }).meta({ id: 'Members', description: 'M22\'s members tab: who belongs to the store and who was invited' })
 
 export const inviteManagerBodySchema = z.object({
-  email: z.email().max(254),
+  // The pipe validates the trimmed address. The input side names the format, which a pipe would otherwise drop from the document.
+  email: z.string().trim().max(254).meta({ format: 'email' }).pipe(z.email().max(254)),
   language: language.optional().meta({ description: 'The language of the invitation mail N18. The store\'s default language when left out' }),
 }).meta({ id: 'InviteManager' })
 
