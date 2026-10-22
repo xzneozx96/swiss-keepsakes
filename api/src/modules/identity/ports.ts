@@ -50,6 +50,25 @@ export interface Invitation {
   expiresAt: Date
   acceptedBy: string | null
   revokedAt: Date | null
+  invitedBy: string | null
+}
+
+// What the invitation preview needs: the invitation's state inputs, the store's name and the inviter's name.
+// It holds no address, so nothing it feeds can return one.
+export interface InvitationPreviewRow {
+  role: InvitationRole
+  expiresAt: Date
+  acceptedBy: string | null
+  revokedAt: Date | null
+  storeName: string
+  // The inviting user's name as Better Auth holds it. Blank for a user who signed in with a code and gave none.
+  inviterName: string | null
+}
+
+// Thrown by `insert` when the store already has an open Store Manager invitation for the address (Postgres 23505
+// on the partial unique index), which only a race past the use case's own check can cause.
+export class OpenManagerInvitationExists extends Error {
+  override name = 'OpenManagerInvitationExists'
 }
 
 // The store reads and writes below take a store id, not a StoreScope: they serve the Super Admin across stores
@@ -68,15 +87,18 @@ export interface StoreRepository<T> {
 }
 
 export interface InvitationRepository<T> {
-  insert: (tx: T, invitation: { storeId: string, email: string, role: InvitationRole, expiresAt: Date }) => Promise<Invitation>
+  insert: (tx: T, invitation: { storeId: string, email: string, role: InvitationRole, expiresAt: Date, invitedBy: string }) => Promise<Invitation>
   // Both lock the invitation's row until the transaction ends.
   findForUpdate: (tx: T, invitationId: string) => Promise<Invitation | undefined>
   findByTokenHashForUpdate: (tx: T, tokenHash: string) => Promise<Invitation | undefined>
   // The newest Owner invitation of each store, by store id.
   newestOwnerInvitations: (tx: T, storeIds: string[]) => Promise<Map<string, Invitation>>
   newestOwnerInvitationForUpdate: (tx: T, storeId: string) => Promise<Invitation | undefined>
-  // Resend: a new expiry, and no token until the next mail is sent, so the old link stops working now.
-  renew: (tx: T, storeId: string, invitationId: string, expiresAt: Date) => Promise<void>
+  // Resend: a new expiry, the user who sends again as the inviter, and no token until the next mail is sent, so the
+  // old link stops working now.
+  renew: (tx: T, storeId: string, invitationId: string, expiresAt: Date, invitedBy: string) => Promise<void>
+  // The invitation behind a token, for the preview. It locks nothing and writes nothing.
+  findPreviewByTokenHash: (tx: T, tokenHash: string) => Promise<InvitationPreviewRow | undefined>
   setTokenHash: (tx: T, invitationId: string, tokenHash: string) => Promise<void>
   // Sets accepted_by only while it is null, the invitation is not revoked and has not expired. Returns whether it did.
   markAccepted: (tx: T, invitationId: string, userId: string, now: Date) => Promise<boolean>
@@ -105,6 +127,8 @@ export interface MembershipRepository<T> {
   insertIfAbsent: (tx: T, membership: { userId: string, storeId: string, role: InvitationRole, acceptedAt: Date }) => Promise<boolean>
   // The store's members with their sign-in address, oldest first.
   list: (tx: T, storeId: string) => Promise<Member[]>
+  // The stores the user belongs to, with the role and the store's status, oldest membership first.
+  listForUser: (tx: T, userId: string) => Promise<{ storeId: string, role: InvitationRole, status: StoreStatus }[]>
   // Whether the user belongs to the store in any role.
   has: (tx: T, storeId: string, userId: string) => Promise<boolean>
   // A membership of this store, locked, or undefined when the id belongs to another store.

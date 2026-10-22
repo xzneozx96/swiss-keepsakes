@@ -1,7 +1,8 @@
 import type { Tx } from '../../../platform/db/client.ts'
 import type { Invitation, InvitationRepository } from '../ports.ts'
 import { and, desc, eq, gt, inArray, isNull } from 'drizzle-orm'
-import { storeInvitations } from './schema.ts'
+import { OpenManagerInvitationExists } from '../ports.ts'
+import { storeInvitations, stores, user } from './schema.ts'
 
 const columns = {
   id: storeInvitations.id,
@@ -12,15 +13,28 @@ const columns = {
   expiresAt: storeInvitations.expiresAt,
   acceptedBy: storeInvitations.acceptedBy,
   revokedAt: storeInvitations.revokedAt,
+  invitedBy: storeInvitations.invitedBy,
 }
 
 // A store's invitations, newest first. UUIDv7 ids sort by creation time.
 const newestFirst = desc(storeInvitations.id)
 
+const openManagerIndex = 'store_invitations_one_open_manager_idx'
+
+// Drizzle wraps the driver's error and keeps it as `cause`. 23505 is unique_violation.
+function violatesOpenManagerIndex(error: unknown): boolean {
+  const driverError = (error instanceof Error && error.cause !== undefined ? error.cause : error) as { code?: string, constraint?: string }
+  return driverError.code === '23505' && driverError.constraint === openManagerIndex
+}
+
 export function createInvitationRepository(): InvitationRepository<Tx> {
   return {
     async insert(tx, invitation) {
-      const [row] = await tx.insert(storeInvitations).values(invitation).returning(columns)
+      const [row] = await tx.insert(storeInvitations).values(invitation).returning(columns).catch((error: unknown) => {
+        if (violatesOpenManagerIndex(error))
+          throw new OpenManagerInvitationExists()
+        throw error
+      })
       if (!row)
         throw new Error('The invitation was not inserted')
       return row
@@ -53,8 +67,20 @@ export function createInvitationRepository(): InvitationRepository<Tx> {
       return row
     },
 
-    async renew(tx, storeId, invitationId, expiresAt) {
-      await tx.update(storeInvitations).set({ expiresAt, tokenHash: null }).where(and(eq(storeInvitations.id, invitationId), eq(storeInvitations.storeId, storeId)))
+    async findPreviewByTokenHash(tx, tokenHash) {
+      const [row] = await tx.select({
+        role: storeInvitations.role,
+        expiresAt: storeInvitations.expiresAt,
+        acceptedBy: storeInvitations.acceptedBy,
+        revokedAt: storeInvitations.revokedAt,
+        storeName: stores.name,
+        inviterName: user.name,
+      }).from(storeInvitations).innerJoin(stores, eq(stores.id, storeInvitations.storeId)).leftJoin(user, eq(user.id, storeInvitations.invitedBy)).where(eq(storeInvitations.tokenHash, tokenHash))
+      return row
+    },
+
+    async renew(tx, storeId, invitationId, expiresAt, invitedBy) {
+      await tx.update(storeInvitations).set({ expiresAt, tokenHash: null, invitedBy }).where(and(eq(storeInvitations.id, invitationId), eq(storeInvitations.storeId, storeId)))
     },
 
     async setTokenHash(tx, invitationId, tokenHash) {

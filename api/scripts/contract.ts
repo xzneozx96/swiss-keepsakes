@@ -30,6 +30,7 @@ export function contractApp(): OpenAPIHono<AppEnv> {
     origin: 'http://localhost',
     readSession: async () => ({ headers: new Headers(), response: null }),
     loadIdentity: async () => ({ guestId: '', access: { platformAdmin: false, memberships: [] } }),
+    listMyStores: async () => [],
   }, {
     idempotency: async (_c, next) => {
       await next()

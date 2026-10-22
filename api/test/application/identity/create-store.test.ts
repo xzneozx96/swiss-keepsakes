@@ -116,6 +116,18 @@ describe('[E2.3] A01\'s list of stores', () => {
     expect(page.items[0]).toMatchObject({ slug: 'lucerne-andenken', status: 'invited', paymentAccount: 'pending', invitation: { state: 'open', email: 'ngoc.tran@example.ch' } })
   })
 
+  it('[E2.4] the Owner invitation records the Super Admin who made it, and a resend the Super Admin who sent it again', async () => {
+    const { fake, createStore, resend } = setup()
+    const created = await createStore(admin, input, null)
+    const [invitation] = [...fake.state.invitations.values()]
+    expect(invitation?.invitedBy).toBe(admin.userId)
+    invitation!.invitedBy = null
+
+    await resend({ userId: 'another-admin' }, created.ok ? created.store.id : '', undefined, null)
+
+    expect(invitation?.invitedBy).toBe('another-admin')
+  })
+
   it('[E2.3] an invitation reads expired after 7 days, and open again after a resend', async () => {
     const { clock, createStore, listStores, resend } = setup()
     const created = await createStore(admin, input, null)

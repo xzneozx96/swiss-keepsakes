@@ -184,7 +184,10 @@ export const storeMemberships = identitySchema.table('store_memberships', {
 // newest link's token, null until the first mail is sent and again after a resend. The raw token is never stored.
 // `revoked_at` marks a revoked invitation, which is not open: no link is minted, accepting and resending are
 // refused. `accepted_by` is the accepting user's id as a plain value, like `store_memberships.user_id`. A store has
-// at most one open Owner invitation, which a partial unique index enforces.
+// at most one open Owner invitation, and one open Store Manager invitation per address, which partial unique
+// indexes enforce. `invited_by` is the inviting user's id as a plain value, with no foreign key, like `accepted_by`.
+// It is null on rows from before it existed. A resend sets it to the user who sends again, because the mail's
+// inviter is that user.
 export const storeInvitations = identitySchema.table('store_invitations', {
   id: uuid('id')
     .default(sql`uuidv7()`)
@@ -196,10 +199,12 @@ export const storeInvitations = identitySchema.table('store_invitations', {
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   acceptedBy: uuid('accepted_by'),
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  invitedBy: uuid('invited_by'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 }, table => [
   index('store_invitations_store_id_idx').on(table.storeId),
   uniqueIndex('store_invitations_one_open_owner_idx').on(table.storeId).where(sql`${table.role} = 'owner' and ${table.acceptedBy} is null and ${table.revokedAt} is null`),
+  uniqueIndex('store_invitations_one_open_manager_idx').on(table.storeId, table.email).where(sql`${table.role} = 'manager' and ${table.acceptedBy} is null and ${table.revokedAt} is null`),
   check('store_invitations_role_check', sql`${table.role} in ('owner', 'manager')`),
   check('store_invitations_email_check', sql`${table.email} = lower(btrim(${table.email})) and ${table.email} <> ''`),
 ])

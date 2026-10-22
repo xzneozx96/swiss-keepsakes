@@ -2,7 +2,7 @@ import type { Tx } from '../../../platform/db/client.ts'
 import type { MembershipRepository } from '../ports.ts'
 import { and, asc, eq } from 'drizzle-orm'
 import { alias } from 'drizzle-orm/pg-core'
-import { storeMemberships, user } from './schema.ts'
+import { storeMemberships, stores, user } from './schema.ts'
 
 const memberColumns = {
   id: storeMemberships.id,
@@ -21,6 +21,10 @@ export function createMembershipRepository(): MembershipRepository<Tx> {
 
     async list(tx, storeId) {
       return tx.select(memberColumns).from(storeMemberships).innerJoin(user, eq(user.id, storeMemberships.userId)).where(eq(storeMemberships.storeId, storeId)).orderBy(asc(storeMemberships.id))
+    },
+
+    async listForUser(tx, userId) {
+      return tx.select({ storeId: storeMemberships.storeId, role: storeMemberships.role, status: stores.status }).from(storeMemberships).innerJoin(stores, eq(stores.id, storeMemberships.storeId)).where(eq(storeMemberships.userId, userId)).orderBy(asc(storeMemberships.id))
     },
 
     async has(tx, storeId, userId) {

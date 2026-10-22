@@ -10,7 +10,7 @@ import { createPendingConditions } from '../../src/modules/identity/adapters/pen
 import { createPlatformAdminRepository } from '../../src/modules/identity/adapters/platform-admin-repository.ts'
 import { createStoreRepository } from '../../src/modules/identity/adapters/store-repository.ts'
 import { createUserDirectory } from '../../src/modules/identity/adapters/user-directory.ts'
-import { makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInviteManager, makeListMembers, makeListStores, makeOpenStoreForSale, makeRemoveMember, makeResendManagerInvitation, makeResendOwnerInvitation, makeRevokeInvitation, makeUpdateStoreInformation } from '../../src/modules/identity/index.ts'
+import { makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInviteManager, makeListMembers, makeListStores, makeOpenStoreForSale, makePreviewInvitation, makeRemoveMember, makeResendManagerInvitation, makeResendOwnerInvitation, makeRevokeInvitation, makeUpdateStoreInformation } from '../../src/modules/identity/index.ts'
 import { createAuditLog } from '../../src/platform/audit.ts'
 import { systemClock } from '../../src/platform/clock.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
@@ -36,6 +36,7 @@ export function createIdentityWiring({ db, queueMail, conditions = createPending
     createStore: makeCreateStore({ uow, stores, invitations, conditions, users, admins, queueMail, audit, clock }),
     listStores: makeListStores({ uow, stores, invitations, conditions, clock }),
     resendOwnerInvitation: makeResendOwnerInvitation({ uow, stores, invitations, conditions, queueMail, audit, clock }),
+    previewInvitation: makePreviewInvitation({ uow, invitations, clock }),
     acceptInvitation: makeAcceptInvitation({ uow, invitations, stores, memberships, users, admins, audit, clock }),
     getOnboarding: makeGetOnboarding({ uow, stores, conditions }),
     updateStoreInformation: makeUpdateStoreInformation({ uow, stores, audit, clock }),

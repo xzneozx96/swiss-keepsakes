@@ -84,7 +84,7 @@ describe('[E2.10] the Origin rule on every POST, PUT, PATCH and DELETE under /ap
 
     expect(response.status).toBe(403)
     expect(await response.json()).toMatchObject({ type: 'origin-refused' })
-    expect(calls).toEqual({ authHandler: 0, readSession: 0 })
+    expect(calls).toEqual({ authHandler: 0, readSession: 0, listMyStores: 0 })
   })
 
   it('[E2.10] /api/auth/* from our own origin reaches Better Auth, whatever its content type', async () => {

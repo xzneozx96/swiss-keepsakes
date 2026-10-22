@@ -192,7 +192,18 @@ describe('[E2.10] /api/me still answers staff and the Super Admin, who are guest
     const response = await app.request('/api/me', { headers: signedInAs(who) })
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toEqual({ guestId: `guest-of-${who}` })
+    expect(await response.json()).toMatchObject({ guestId: `guest-of-${who}` })
+  })
+
+  it('[E2.4] /api/me lists the caller\'s memberships with the store status, and a guest\'s is empty without a read', async () => {
+    const { app, calls } = createGuardedApp(people)
+    const stores = async (who: string) => ((await (await app.request('/api/me', { headers: signedInAs(who) })).json()) as { stores: unknown[] }).stores
+
+    expect(await stores('guest')).toEqual([])
+    expect(calls.listMyStores).toBe(0)
+    expect(await stores('owner')).toEqual([{ storeId: lucerne, role: 'owner', status: 'live' }])
+    expect(await stores('both')).toEqual([{ storeId: lucerne, role: 'owner', status: 'live' }, { storeId: zug, role: 'manager', status: 'live' }])
+    expect(await stores('ownerElsewhere')).toEqual([{ storeId: zug, role: 'owner', status: 'live' }])
   })
 
   it('[E2.10] an anonymous request still gets 401', async () => {

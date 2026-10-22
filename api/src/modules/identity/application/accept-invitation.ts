@@ -26,6 +26,7 @@ class AlreadyAMember extends Error {}
 // refusals come in an order that reveals nothing to someone else: an unknown token says nothing, a Super Admin never takes a store role (owner decision, 22.10.2026), and a different
 // signed-in address is told it is a different address before it learns whether the invitation is open. The
 // invited address is never returned. An Owner invitation also moves the store from `invited` to `onboarding`.
+// A repeated accept by the user who took the invitation answers as the first did and changes nothing.
 export function makeAcceptInvitation<T>({ uow, invitations, stores, memberships, users, admins, audit, clock }: AcceptInvitationDeps<T>) {
   return async (actor: { userId: string }, token: string, requestId: string | null): Promise<AcceptInvitationResult> => {
     try {
@@ -43,8 +44,16 @@ export function makeAcceptInvitation<T>({ uow, invitations, stores, memberships,
         if (!user.emailVerified)
           return { ok: false, reason: 'invitation-email-unverified' }
         const state = invitationState(invitation, now)
-        if (state === 'accepted')
+        if (state === 'accepted') {
+          // The answer to the first accept may have been lost, so the same user asking again gets the same answer,
+          // as long as they still belong to the store. Anyone else, and a member since removed, is refused.
+          if (invitation.acceptedBy === actor.userId && await memberships.has(tx, invitation.storeId, actor.userId)) {
+            const accepted = await stores.find(tx, invitation.storeId)
+            if (accepted)
+              return { ok: true, storeId: invitation.storeId, role: invitation.role, storeStatus: accepted.status }
+          }
           return { ok: false, reason: 'invitation-already-accepted' }
+        }
         if (state === 'revoked')
           return { ok: false, reason: 'invitation-revoked' }
         if (state === 'expired')

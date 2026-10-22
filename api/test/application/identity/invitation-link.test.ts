@@ -14,8 +14,8 @@ async function setup() {
   const fake = createFakeIdentity()
   const clock = createManualClock(start)
   const store = fake.addStore({ slug: 'lucerne' })
-  const owner = await fake.invitations.insert(tx, { storeId: store.id, email: 'ngoc.tran@example.ch', role: 'owner', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
-  const manager = await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+  const owner = await fake.invitations.insert(tx, { storeId: store.id, email: 'ngoc.tran@example.ch', role: 'owner', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
+  const manager = await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
   let counter = 0
   const link = makeInvitationLink({ invitations: fake.invitations, clock, newToken: () => `token-${++counter}`, appUrl: 'https://shop.example', screens: { N20: '/store/onboarding' } })
   return { fake, clock, owner, manager, link }

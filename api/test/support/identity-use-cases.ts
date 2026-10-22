@@ -15,6 +15,7 @@ export function createFakeIdentityUseCases(): IdentityUseCases {
     createStore: async () => ({ ok: true, store: adminStore }),
     listStores: async () => ({ items: [adminStore], nextCursor: null }),
     resendOwnerInvitation: async () => ({ ok: true, store: adminStore }),
+    previewInvitation: async () => ({ ok: true, preview: { storeName: store.name, role: 'owner', inviterName: null, state: 'open' } }),
     acceptInvitation: async () => ({ ok: true, storeId: store.id, role: 'owner', storeStatus: 'onboarding' }),
     getOnboarding: async () => ({
       store,
