@@ -6,6 +6,7 @@ import { createGuestProfileRepository } from './modules/identity/adapters/guest-
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
 import { createMembershipRepository } from './modules/identity/adapters/membership-repository.ts'
 import { createPendingConditions } from './modules/identity/adapters/pending-conditions.ts'
+import { createPlatformAdminRepository } from './modules/identity/adapters/platform-admin-repository.ts'
 import { registerIdentityRoutes } from './modules/identity/adapters/routes.ts'
 import { createStoreRepository } from './modules/identity/adapters/store-repository.ts'
 import { createUserDirectory } from './modules/identity/adapters/user-directory.ts'
@@ -125,11 +126,13 @@ async function main() {
     const invitations = createInvitationRepository()
     const conditions = createPendingConditions<Tx>()
     const audit = createAuditLog(systemClock)
+    const users = createUserDirectory()
+    const admins = createPlatformAdminRepository()
     const useCases = {
-      createStore: makeCreateStore({ uow, stores, invitations, conditions, queueMail, audit, clock: systemClock }),
+      createStore: makeCreateStore({ uow, stores, invitations, conditions, users, admins, queueMail, audit, clock: systemClock }),
       listStores: makeListStores({ uow, stores, invitations, conditions, clock: systemClock }),
       resendOwnerInvitation: makeResendOwnerInvitation({ uow, stores, invitations, conditions, queueMail, audit, clock: systemClock }),
-      acceptInvitation: makeAcceptInvitation({ uow, invitations, stores, memberships: createMembershipRepository(), users: createUserDirectory(), audit, clock: systemClock }),
+      acceptInvitation: makeAcceptInvitation({ uow, invitations, stores, memberships: createMembershipRepository(), users, admins, audit, clock: systemClock }),
       getOnboarding: makeGetOnboarding({ uow, stores, conditions }),
       updateStoreInformation: makeUpdateStoreInformation({ uow, stores, audit, clock: systemClock }),
       openStoreForSale: makeOpenStoreForSale({ uow, stores, conditions, audit, clock: systemClock }),

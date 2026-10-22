@@ -7,6 +7,7 @@ import type { Database, Tx } from '../../src/platform/db/client.ts'
 import { createInvitationRepository } from '../../src/modules/identity/adapters/invitation-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
 import { createPendingConditions } from '../../src/modules/identity/adapters/pending-conditions.ts'
+import { createPlatformAdminRepository } from '../../src/modules/identity/adapters/platform-admin-repository.ts'
 import { createStoreRepository } from '../../src/modules/identity/adapters/store-repository.ts'
 import { createUserDirectory } from '../../src/modules/identity/adapters/user-directory.ts'
 import { makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeListStores, makeOpenStoreForSale, makeResendOwnerInvitation, makeUpdateStoreInformation } from '../../src/modules/identity/index.ts'
@@ -28,11 +29,13 @@ export function createIdentityWiring({ db, queueMail, conditions = createPending
   const stores = createStoreRepository()
   const invitations = createInvitationRepository()
   const audit = createAuditLog(clock)
+  const users = createUserDirectory()
+  const admins = createPlatformAdminRepository()
   const useCases: IdentityUseCases = {
-    createStore: makeCreateStore({ uow, stores, invitations, conditions, queueMail, audit, clock }),
+    createStore: makeCreateStore({ uow, stores, invitations, conditions, users, admins, queueMail, audit, clock }),
     listStores: makeListStores({ uow, stores, invitations, conditions, clock }),
     resendOwnerInvitation: makeResendOwnerInvitation({ uow, stores, invitations, conditions, queueMail, audit, clock }),
-    acceptInvitation: makeAcceptInvitation({ uow, invitations, stores, memberships: createMembershipRepository(), users: createUserDirectory(), audit, clock }),
+    acceptInvitation: makeAcceptInvitation({ uow, invitations, stores, memberships: createMembershipRepository(), users, admins, audit, clock }),
     getOnboarding: makeGetOnboarding({ uow, stores, conditions }),
     updateStoreInformation: makeUpdateStoreInformation({ uow, stores, audit, clock }),
     openStoreForSale: makeOpenStoreForSale({ uow, stores, conditions, audit, clock }),

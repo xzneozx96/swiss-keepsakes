@@ -13,7 +13,7 @@ const input = { slug: 'lucerne-andenken', name: 'Lucerne Andenken', defaultLangu
 function setup() {
   const fake = createFakeIdentity()
   const clock = createManualClock(start)
-  const deps = { uow: fake.uow, stores: fake.stores, invitations: fake.invitations, conditions: fake.conditions, queueMail: fake.queueMail, audit: fake.audit, clock }
+  const deps = { uow: fake.uow, stores: fake.stores, invitations: fake.invitations, conditions: fake.conditions, users: fake.users, admins: fake.admins, queueMail: fake.queueMail, audit: fake.audit, clock }
   return { fake, clock, createStore: makeCreateStore(deps), listStores: makeListStores(deps), resend: makeResendOwnerInvitation(deps) }
 }
 
@@ -73,9 +73,27 @@ describe('[E2.3] the Super Admin creates a store with its Owner invitation', () 
     expect({ stores: fake.state.stores.size, invitations: fake.state.invitations.size, mail: fake.state.mail.length, audit: fake.state.audit.length }).toEqual(before)
   })
 
+  it('[E2.3] an Owner address that belongs to a Super Admin is refused, in any case, and nothing is written', async () => {
+    const { fake, createStore } = setup()
+    fake.addUser('user-root', 'Ngoc.Tran@example.ch')
+    await fake.admins.insertFirst({ id: 0 }, 'user-root')
+
+    expect(await createStore(admin, input, null)).toEqual({ ok: false, reason: 'owner-is-super-admin' })
+
+    expect({ stores: fake.state.stores.size, invitations: fake.state.invitations.size, mail: fake.state.mail.length, audit: fake.state.audit.length }).toEqual({ stores: 0, invitations: 0, mail: 0, audit: 0 })
+  })
+
+  it('[E2.3] an Owner address of an ordinary user, or of nobody yet, is accepted', async () => {
+    const { fake, createStore } = setup()
+    fake.addUser('user-ngoc', 'ngoc.tran@example.ch')
+
+    expect((await createStore(admin, input, null)).ok).toBe(true)
+    expect((await createStore(admin, { ...input, slug: 'two', ownerEmail: 'nobody@example.ch' }, null)).ok).toBe(true)
+  })
+
   it('[E2.3] a mail that cannot be queued undoes the store and the invitation', async () => {
     const { fake } = setup()
-    const failing = makeCreateStore({ uow: fake.uow, stores: fake.stores, invitations: fake.invitations, conditions: fake.conditions, queueMail: async () => {
+    const failing = makeCreateStore({ uow: fake.uow, stores: fake.stores, invitations: fake.invitations, conditions: fake.conditions, users: fake.users, admins: fake.admins, queueMail: async () => {
       throw new Error('queue is down')
     }, audit: fake.audit, clock: createManualClock(start) })
 
@@ -150,6 +168,17 @@ describe('[E2.3] the Super Admin resends the Owner invitation', () => {
     expect(fake.state.mail[1]).toMatchObject({ template: 'N20', to: 'ngoc.tran@example.ch', params: { invitationId: invitation?.id } })
     expect(JSON.stringify(fake.state.mail)).not.toMatch(/token|http/i)
     expect(fake.state.audit.at(-1)).toMatchObject({ entity: 'store_invitation', action: 'resent', requestId: 'request-2' })
+  })
+
+  it('[E2.3] is refused for a revoked invitation, and queues nothing', async () => {
+    const { fake, createStore, resend } = setup()
+    const created = await createStore(admin, input, null)
+    const storeId = created.ok ? created.store.id : ''
+    for (const invitation of fake.state.invitations.values())
+      invitation.revokedAt = new Date(start.getTime())
+
+    expect(await resend(admin, storeId, undefined, null)).toEqual({ ok: false, reason: 'invitation-revoked' })
+    expect(fake.state.mail).toHaveLength(1)
   })
 
   it('[E2.3] takes the language from the request, and the store\'s default language otherwise', async () => {

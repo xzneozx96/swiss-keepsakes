@@ -209,12 +209,33 @@ describe('[E2.3] migration 0004: stores and store_invitations', () => {
     const insert = (storeId: string, email = 'a@example.ch', role = 'owner') => pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at) values ($1, $2, $3, now())`, [storeId, email, role])
     const { rows } = await pool.query<{ id: string }>(`insert into identity.stores (slug, name) values ($1, 'Name') returning id`, [slugFor()])
 
-    expect(columns.map(column => column.column_name)).toEqual(['accepted_by', 'created_at', 'email', 'expires_at', 'id', 'role', 'store_id', 'token_hash'])
+    expect(columns.map(column => column.column_name)).toEqual(['accepted_by', 'created_at', 'email', 'expires_at', 'id', 'revoked_at', 'role', 'store_id', 'token_hash'])
     await expect(insert(randomUUID())).rejects.toMatchObject({ code: '23503', constraint: 'store_invitations_store_id_stores_id_fk' })
     await expect(insert(rows[0]!.id, 'a@example.ch', 'admin')).rejects.toMatchObject({ code: '23514', constraint: 'store_invitations_role_check' })
     await expect(insert(rows[0]!.id, 'Anna@Example.ch')).rejects.toMatchObject({ code: '23514', constraint: 'store_invitations_email_check' })
     await expect(insert(rows[0]!.id, ' anna@example.ch')).rejects.toMatchObject({ code: '23514', constraint: 'store_invitations_email_check' })
     await insert(rows[0]!.id, 'anna@example.ch', 'manager')
+  })
+
+  it('[E2.3] a store has at most one open Owner invitation, and a revoked or accepted one does not count', async () => {
+    const { rows } = await pool.query<{ id: string }>(`insert into identity.stores (slug, name) values ($1, 'Name') returning id`, [slugFor()])
+    const insert = (role: string) => pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at) values ($1, 'a@example.ch', $2, now())`, [rows[0]!.id, role])
+
+    await insert('owner')
+    await expect(insert('owner')).rejects.toMatchObject({ code: '23505', constraint: 'store_invitations_one_open_owner_idx' })
+    await insert('manager')
+    await insert('manager')
+    await pool.query(`update identity.store_invitations set revoked_at = now() where store_id = $1 and role = 'owner'`, [rows[0]!.id])
+    await insert('owner')
+    await expect(insert('owner')).rejects.toMatchObject({ constraint: 'store_invitations_one_open_owner_idx' })
+    await pool.query(`update identity.store_invitations set accepted_by = $2 where store_id = $1 and role = 'owner' and revoked_at is null`, [rows[0]!.id, randomUUID()])
+    await insert('owner')
+  })
+
+  it('[E2.3] store_memberships has an index on store_id', async () => {
+    const { rows } = await pool.query<{ indexdef: string }>(`select indexdef from pg_indexes where schemaname = 'identity' and tablename = 'store_memberships' and indexname = 'store_memberships_store_id_idx'`)
+
+    expect(rows[0]?.indexdef).toContain('(store_id)')
   })
 
   it('[E2.3] two invitations never share a token hash, and many have none', async () => {
@@ -363,6 +384,87 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
     expect(await resent.json()).toMatchObject({ invitation: { state: 'open' } })
     const fresh = await env.sendNewestMail(owner.email)
     expect((await env.call('/api/me/invitations/accept', { method: 'POST', headers: owner.headers, body: { token: fresh.token } })).status).toBe(200)
+  })
+
+  it('[E2.3] a revoked invitation is refused at accept with 410 and at resend with 409', async () => {
+    const env = shared
+    const admin = sharedAdmin
+    const owner = await env.signIn()
+    const { body } = await env.createStore(admin, owner.email)
+    const { token } = await env.sendNewestMail(owner.email)
+    await pool.query(`update identity.store_invitations set revoked_at = now() where store_id = $1`, [body.id])
+
+    const accept = await env.call('/api/me/invitations/accept', { method: 'POST', headers: owner.headers, body: { token } })
+    const resend = await env.call(`/api/admin/stores/${body.id}/owner-invitation/resend`, { method: 'POST', headers: admin.headers })
+
+    expect(accept.status).toBe(410)
+    expect(await accept.json()).toMatchObject({ type: 'invitation-revoked' })
+    expect(resend.status).toBe(409)
+    expect(await resend.json()).toMatchObject({ type: 'invitation-revoked' })
+    expect(await memberships(body.id)).toEqual([])
+    expect(await storeStatus(body.id)).toBe('invited')
+  })
+
+  it('[E2.3] the mail of a revoked invitation gets no link, fails at once, and stores no token', async () => {
+    const env = shared
+    const owner = await env.signIn()
+    const { body } = await env.createStore(sharedAdmin, owner.email)
+    await pool.query(`update identity.store_invitations set revoked_at = now() where store_id = $1`, [body.id])
+
+    await expect(env.sendNewestMail(owner.email)).rejects.toMatchObject({ permanent: true })
+
+    expect((await invitationRow(body.id))[0]?.token_hash).toBeNull()
+  })
+
+  it('[E2.3] a revoked invitation reads as revoked in A01\'s list', async () => {
+    const env = shared
+    const admin = sharedAdmin
+    const { body } = await env.createStore(admin, `owner-${randomUUID().slice(0, 8)}@example.ch`)
+    await pool.query(`update identity.store_invitations set revoked_at = now() where store_id = $1`, [body.id])
+
+    const page = await (await env.call('/api/admin/stores?limit=100', { headers: admin.headers })).json() as { items: { id: string, invitation: { state: string } }[] }
+
+    expect(page.items.find(item => item.id === body.id)?.invitation.state).toBe('revoked')
+  })
+
+  it('[E2.3][S8] a Super Admin is refused at accept, even with the invited address, and the invitation stays open', async () => {
+    const env = shared
+    const person = await env.signIn()
+    const { body } = await env.createStore(sharedAdmin, person.email)
+    const { token } = await env.sendNewestMail(person.email)
+    await pool.query('insert into identity.platform_admins (user_id) values ($1)', [person.userId])
+
+    const response = await env.call('/api/me/invitations/accept', { method: 'POST', headers: person.headers, body: { token } })
+
+    expect(response.status).toBe(403)
+    expect(await response.json()).toMatchObject({ type: 'invitation-super-admin' })
+    expect(await memberships(body.id)).toEqual([])
+    expect((await invitationRow(body.id))[0]?.accepted_by).toBeNull()
+    expect(await storeStatus(body.id)).toBe('invited')
+  })
+
+  it('[E2.3] a store cannot be created for the email of a Super Admin, whatever the letter case of either, and nothing is written', async () => {
+    const env = shared
+    const local = `Root.${randomUUID().slice(0, 8)}`
+    const { rows } = await pool.query<{ id: string }>(`insert into identity."user" (name, email, email_verified) values ('Root', $1, true) returning id`, [`${local}@Example.CH`])
+    await pool.query('insert into identity.platform_admins (user_id) values ($1)', [rows[0]!.id])
+    const slug = slugFor()
+
+    const response = await env.call('/api/admin/stores', { method: 'POST', headers: sharedAdmin.headers, body: { slug, name: 'Nope', ownerEmail: `${local.toUpperCase()}@example.ch` } })
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ type: 'owner-is-super-admin' })
+    expect((await pool.query('select 1 from identity.stores where slug = $1', [slug])).rowCount).toBe(0)
+  })
+
+  it('[E2.3] a resend with the JSON Content-Type and an empty body is accepted', async () => {
+    const env = shared
+    const owner = await env.signIn()
+    const { body } = await env.createStore(sharedAdmin, owner.email)
+
+    const response = await env.call(`/api/admin/stores/${body.id}/owner-invitation/resend`, { method: 'POST', headers: { ...sharedAdmin.headers, 'Content-Type': 'application/json' } })
+
+    expect(response.status).toBe(200)
   })
 
   it('[E2.3] the mail of an invitation that expired before it was sent gets no link, fails at once, and stores no token', async () => {
@@ -671,16 +773,19 @@ describe('[E2.3] admin:grant, the script that makes the first Super Admin', () =
     return rows[0]!.id
   }
 
-  it('[E2.3] grants a Super Admin by email, with no granting user, and prints no URL or secret', async () => {
+  const database = async () => (await pool.query<{ name: string, role: string }>('select current_database() as name, current_user as role')).rows[0]!
+
+  it('[E2.3] grants a Super Admin by email, with no granting user, names the target database, and prints no URL or secret', async () => {
     const address = `admin-${randomUUID().slice(0, 8)}@example.ch`
     const userId = await userRow(pool, address)
     const url = inject('databaseUrlUnpooled')
+    const target = await database()
 
-    const result = await run([address.toUpperCase()], { DATABASE_URL_UNPOOLED: url })
+    const result = await run([address.toUpperCase(), '--database', target.name], { DATABASE_URL_UNPOOLED: url })
 
     expect(result.code).toBe(0)
     const { hostname, password } = new URL(url)
-    expect(result.stdout).toBe(`Granted Super Admin to user ${userId}.\n`)
+    expect(result.stdout).toBe(`Target database ${target.name}, role ${target.role}.\nGranted Super Admin to user ${userId}.\n`)
     expect(result.output).not.toContain(hostname)
     if (password)
       expect(result.output).not.toContain(password)
@@ -693,12 +798,13 @@ describe('[E2.3] admin:grant, the script that makes the first Super Admin', () =
     const address = `again-${randomUUID().slice(0, 8)}@example.ch`
     await userRow(pool, address)
     const env = { DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled') }
+    const { name } = await database()
 
-    const missing = await run([`nobody-${randomUUID().slice(0, 8)}@example.ch`], env)
+    const missing = await run([`nobody-${randomUUID().slice(0, 8)}@example.ch`, '--database', name], env)
     expect(missing.code).toBe(1)
     expect(missing.output).toContain('No user has this email')
-    expect((await run([address], env)).code).toBe(0)
-    const twice = await run([address], env)
+    expect((await run([address, '--database', name], env)).code).toBe(0)
+    const twice = await run([address, '--database', name], env)
 
     expect(twice.code).toBe(1)
     expect(twice.output).toContain('already a Super Admin')
@@ -707,7 +813,7 @@ describe('[E2.3] admin:grant, the script that makes the first Super Admin', () =
 
   it('[E2.3] needs an address and DATABASE_URL_UNPOOLED from the shell, and reads no env file', async () => {
     const noAddress = await run([], { DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled') })
-    const noDatabase = await run(['someone@example.ch'], {})
+    const noDatabase = await run(['someone@example.ch', '--database', 'x'], {})
 
     expect(noAddress.code).toBe(2)
     expect(noAddress.output).toContain('Usage')
@@ -715,8 +821,26 @@ describe('[E2.3] admin:grant, the script that makes the first Super Admin', () =
     expect(noDatabase.output).toContain('DATABASE_URL_UNPOOLED is not set')
   })
 
+  it('[E2.3] without --database, or with another database name, it refuses and grants nothing', async () => {
+    const address = `guarded-${randomUUID().slice(0, 8)}@example.ch`
+    const userId = await userRow(pool, address)
+    const env = { DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled') }
+    const { name } = await database()
+
+    const none = await run([address], env)
+    const wrong = await run([address, '--database', 'neondb'], env)
+    const misplaced = await run(['--database', name, address], env)
+
+    expect(none.code).toBe(2)
+    expect(none.output).toContain('Usage')
+    expect(wrong.code).toBe(2)
+    expect(wrong.output).toContain(`connects to ${name}`)
+    expect(misplaced.code).toBe(2)
+    expect((await pool.query('select 1 from identity.platform_admins where user_id = $1', [userId])).rowCount).toBe(0)
+  })
+
   it('[E2.3] a database it cannot reach prints no connection string', async () => {
-    const result = await run(['someone@example.ch'], { DATABASE_URL_UNPOOLED: 'postgres://user:hunter2@127.0.0.1:1/none' })
+    const result = await run(['someone@example.ch', '--database', 'none'], { DATABASE_URL_UNPOOLED: 'postgres://user:hunter2@127.0.0.1:1/none' })
 
     expect(result.code).toBe(1)
     expect(result.output).not.toMatch(/hunter2|postgres:\/\//)

@@ -16,7 +16,7 @@ function setup(options: { role?: InvitationRole, status?: 'invited' | 'onboardin
   const invitation = fake.invitations.insert({ id: 0 }, { storeId: store.id, email: 'ngoc.tran@example.ch', role: options.role ?? 'owner', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
   fake.addUser('user-ngoc', 'ngoc.tran@example.ch')
   fake.addUser('user-other', 'someone.else@example.ch')
-  const accept = makeAcceptInvitation({ uow: fake.uow, invitations: fake.invitations, stores: fake.stores, memberships: fake.memberships, users: fake.users, audit: fake.audit, clock })
+  const accept = makeAcceptInvitation({ uow: fake.uow, invitations: fake.invitations, stores: fake.stores, memberships: fake.memberships, users: fake.users, admins: fake.admins, audit: fake.audit, clock })
   const mint = async () => {
     const { id } = await invitation
     await fake.invitations.setTokenHash({ id: 0 }, id, hashInvitationToken(token))
@@ -162,5 +162,38 @@ describe('[E2.3][S8] a signed-in user accepts an invitation', () => {
     fake.state.stores.get(store.id)!.status = 'suspended'
 
     expect(await accept({ userId: 'user-ngoc' }, token, null)).toMatchObject({ ok: true, storeStatus: 'suspended' })
+  })
+})
+
+describe('[E2.3][S8] a revoked invitation and a Super Admin', () => {
+  it('[E2.3][S8] a revoked invitation is refused with its own code, with no membership and no status change', async () => {
+    const { fake, store, accept, mint } = setup()
+    const invitationId = await mint()
+    fake.state.invitations.get(invitationId)!.revokedAt = new Date(start.getTime() - 1)
+
+    expect(await accept({ userId: 'user-ngoc' }, token, null)).toEqual({ ok: false, reason: 'invitation-revoked' })
+
+    expect(fake.state.memberships).toEqual([])
+    expect(fake.state.invitations.get(invitationId)?.acceptedBy).toBeNull()
+    expect(fake.state.stores.get(store.id)?.status).toBe('invited')
+  })
+
+  it('[E2.3][S8] a Super Admin is refused with its own code, even with the invited address, and the invitation stays open', async () => {
+    const { fake, store, accept, mint } = setup()
+    const invitationId = await mint()
+    await fake.admins.insertFirst({ id: 0 }, 'user-ngoc')
+
+    expect(await accept({ userId: 'user-ngoc' }, token, null)).toEqual({ ok: false, reason: 'invitation-super-admin' })
+
+    expect(fake.state.memberships).toEqual([])
+    expect(fake.state.invitations.get(invitationId)?.acceptedBy).toBeNull()
+    expect(fake.state.stores.get(store.id)?.status).toBe('invited')
+  })
+
+  it('[E2.3][S8] a Super Admin with an unknown token learns nothing but that the link is not valid', async () => {
+    const { fake, accept } = setup()
+    await fake.admins.insertFirst({ id: 0 }, 'user-ngoc')
+
+    expect(await accept({ userId: 'user-ngoc' }, token, null)).toEqual({ ok: false, reason: 'invitation-not-found' })
   })
 })

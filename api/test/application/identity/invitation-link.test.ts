@@ -61,7 +61,7 @@ describe('[E2.3] the identity module\'s InvitationLink', () => {
     clock.advance(invitationLifetimeMs)
     expect(await link(tx, 'N20', owner.id)).toBeUndefined()
     clock.advance(-invitationLifetimeMs)
-    fake.state.invitations.get(owner.id)!.expiresAt = new Date(start.getTime() - 1)
+    fake.state.invitations.get(owner.id)!.revokedAt = new Date(start.getTime() - 1)
     expect(await link(tx, 'N20', owner.id)).toBeUndefined()
 
     expect(fake.state.invitations.get(owner.id)?.tokenHash).toBeNull()

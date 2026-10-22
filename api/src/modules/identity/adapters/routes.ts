@@ -1,5 +1,6 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
 import type { Actor, StoreLanguage } from '@sk/domain/identity'
+import type { MiddlewareHandler } from 'hono'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { AcceptInvitationResult } from '../application/accept-invitation.ts'
 import type { CreateStoreInput, CreateStoreResult } from '../application/create-store.ts'
@@ -46,9 +47,21 @@ const listStoresRoute = createRoute({
   },
 })
 
+// The resend body is optional. A client that sets the JSON Content-Type and sends nothing is sent on as one
+// that set no Content-Type, which the validator lets through, instead of a 400 for an empty JSON document.
+const acceptEmptyBody: MiddlewareHandler = async (c, next) => {
+  if (c.req.header('Content-Type') !== undefined && (await c.req.arrayBuffer()).byteLength === 0) {
+    const headers = new Headers(c.req.raw.headers)
+    headers.delete('Content-Type')
+    c.req.raw = new Request(c.req.raw, { headers })
+  }
+  await next()
+}
+
 const resendRoute = createRoute({
   method: 'post',
   path: '/api/admin/stores/{id}/owner-invitation/resend',
+  middleware: [acceptEmptyBody],
   request: {
     params: z.object({ id: z.uuid() }),
     body: { required: false, content: json(resendOwnerInvitationBodySchema) },
@@ -115,8 +128,11 @@ export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: Ident
   app.openapi(createStoreRoute, async (c) => {
     const body = c.req.valid('json')
     const result = await useCases.createStore(signedIn(c.get('actor')), body, c.get('requestId'))
-    if (!result.ok)
-      return problem(c, { type: 'store-slug-taken', status: 409, title: 'Another store already has this slug' })
+    if (!result.ok) {
+      return problem(c, result.reason === 'slug-taken'
+        ? { type: 'store-slug-taken', status: 409, title: 'Another store already has this slug' }
+        : { type: 'owner-is-super-admin', status: 409, title: 'This email belongs to a Super Admin, who cannot own a store. Use another email address' })
+    }
     return c.json(result.store, 201)
   })
 
@@ -136,11 +152,16 @@ export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: Ident
         return problem(c, { type: 'invitation-not-found', status: 404, title: 'The store has no Owner invitation' })
       case 'invitation-already-accepted':
         return problem(c, { type: 'invitation-already-accepted', status: 409, title: 'The Owner has already accepted the invitation' })
+      case 'invitation-revoked':
+        return problem(c, { type: 'invitation-revoked', status: 409, title: 'The Owner invitation was revoked and cannot be sent again' })
     }
   })
 
   app.openapi(acceptRoute, async (c) => {
-    const result = await useCases.acceptInvitation(signedIn(c.get('actor')), c.req.valid('json').token, c.get('requestId'))
+    const actor = signedIn(c.get('actor'))
+    const result = c.get('actor').kind === 'super_admin'
+      ? { ok: false, reason: 'invitation-super-admin' } as const
+      : await useCases.acceptInvitation(actor, c.req.valid('json').token, c.get('requestId'))
     if (result.ok)
       return c.json({ storeId: result.storeId, role: result.role, storeStatus: result.storeStatus }, 200)
     switch (result.reason) {
@@ -150,8 +171,12 @@ export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: Ident
         return problem(c, { type: 'invitation-email-mismatch', status: 403, title: 'This invitation was sent to a different email address. Sign in with the address that received it' })
       case 'invitation-email-unverified':
         return problem(c, { type: 'invitation-email-unverified', status: 403, title: 'The email address of this account is not verified' })
+      case 'invitation-super-admin':
+        return problem(c, { type: 'invitation-super-admin', status: 403, title: 'A Super Admin cannot take a store role. Sign in with a store account' })
       case 'invitation-already-accepted':
         return problem(c, { type: 'invitation-already-accepted', status: 409, title: 'This invitation has already been accepted' })
+      case 'invitation-revoked':
+        return problem(c, { type: 'invitation-revoked', status: 410, title: 'This invitation was revoked. Ask for a new one' })
       case 'invitation-expired':
         return problem(c, { type: 'invitation-expired', status: 410, title: 'This invitation has expired. Ask for a new one' })
       case 'already-a-member':

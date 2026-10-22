@@ -105,6 +105,15 @@ describe('[E2.3] the Super Admin\'s routes', () => {
     expect(calls).toBe(0)
   })
 
+  it('[E2.3] an Owner address of a Super Admin is a 409 problem with the code owner-is-super-admin', async () => {
+    const app = setup({ createStore: async () => ({ ok: false, reason: 'owner-is-super-admin' }) })
+
+    const response = await app.request('/api/admin/stores', post({ ...signedInAs('superAdmin'), 'Idempotency-Key': 'k' }, newStore))
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ type: 'owner-is-super-admin', status: 409 })
+  })
+
   it('[E2.3] a taken slug is a 409 problem with the code store-slug-taken', async () => {
     const app = setup({ createStore: async () => ({ ok: false, reason: 'slug-taken' }) })
 
@@ -133,6 +142,7 @@ describe('[E2.3] the Super Admin\'s routes', () => {
     ['store-not-found', 404, 'not-found'],
     ['invitation-not-found', 404, 'invitation-not-found'],
     ['invitation-already-accepted', 409, 'invitation-already-accepted'],
+    ['invitation-revoked', 409, 'invitation-revoked'],
   ] as const)('[E2.3] resend: %s is a %s problem with the code %s', async (reason, status, type) => {
     const app = setup({ resendOwnerInvitation: async () => ({ ok: false, reason }) })
 
@@ -152,8 +162,9 @@ describe('[E2.3] the Super Admin\'s routes', () => {
 
     expect((await app.request(url, post({ ...asAdmin, 'Idempotency-Key': 'a' }, { language: 'de' }))).status).toBe(200)
     expect((await app.request(url, { method: 'POST', headers: { 'Origin': shopOrigin, ...signedInAs('superAdmin'), 'Idempotency-Key': 'b' } })).status).toBe(200)
+    expect((await app.request(url, post({ ...asAdmin, 'Idempotency-Key': 'd' }))).status).toBe(200)
     expect((await app.request(url, post({ ...asAdmin, 'Idempotency-Key': 'c' }, { language: 'fr' }))).status).toBe(400)
-    expect(languages).toEqual(['de', undefined])
+    expect(languages).toEqual(['de', undefined, undefined])
   })
 })
 
@@ -181,6 +192,8 @@ describe('[E2.3][S8] the accept route', () => {
     ['invitation-email-unverified', 403],
     ['invitation-already-accepted', 409],
     ['invitation-expired', 410],
+    ['invitation-revoked', 410],
+    ['invitation-super-admin', 403],
     ['already-a-member', 409],
   ] as const)('[E2.3][S8] %s is a %s problem with that code, and the body never holds an email address', async (reason, status) => {
     const app = setup({ acceptInvitation: async () => ({ ok: false, reason }) })
@@ -204,10 +217,24 @@ describe('[E2.3][S8] the accept route', () => {
     expect(calls).toBe(0)
   })
 
-  it.each(['owner', 'manager', 'superAdmin'])('[E2.3] %s, a signed-in user with other roles, may accept too', async (who) => {
+  it.each(['owner', 'manager'])('[E2.3] %s, a signed-in user with a store role, may accept an invitation to another store', async (who) => {
     const app = setup()
 
     expect((await app.request('/api/me/invitations/accept', post({ ...signedInAs(who), 'Idempotency-Key': 'k' }, body))).status).toBe(200)
+  })
+
+  it('[E2.3][S8] a Super Admin is refused with invitation-super-admin, and the use case never runs', async () => {
+    let calls = 0
+    const app = setup({ acceptInvitation: async () => {
+      calls++
+      return { ok: true, storeId: lucerne, role: 'owner', storeStatus: 'onboarding' }
+    } })
+
+    const response = await app.request('/api/me/invitations/accept', post({ ...signedInAs('superAdmin'), 'Idempotency-Key': 'k' }, body))
+
+    expect(response.status).toBe(403)
+    expect(await response.json()).toMatchObject({ type: 'invitation-super-admin', status: 403 })
+    expect(calls).toBe(0)
   })
 })
 
