@@ -1,7 +1,7 @@
 # The API image (architecture D3). It runs the API and the worker; serving the SPA comes with its own story.
 # Release command: node api/dist/platform/db/migrate.js
 
-FROM node:22.23.3-trixie-slim@sha256:154ba2f4d6fec323d28e4f4bb86bba4677f1223391a1979cf521304e03a98dfa AS base
+FROM node:22.23.4-trixie-slim@sha256:8eb619e402eaede1748a3c8173bffab391592812e85136452f781741c7242ddf AS base
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .pnpmfile.cjs ./
 COPY api/package.json api/
@@ -24,7 +24,7 @@ FROM base AS prod-deps
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm-store \
     pnpm install --prod --frozen-lockfile --store-dir /pnpm-store --filter "@sk/api..."
 
-FROM node:22.23.3-trixie-slim@sha256:154ba2f4d6fec323d28e4f4bb86bba4677f1223391a1979cf521304e03a98dfa
+FROM node:22.23.4-trixie-slim@sha256:8eb619e402eaede1748a3c8173bffab391592812e85136452f781741c7242ddf
 WORKDIR /app
 COPY --from=prod-deps /app ./
 COPY --from=build /app/packages/api-contract/dist packages/api-contract/dist

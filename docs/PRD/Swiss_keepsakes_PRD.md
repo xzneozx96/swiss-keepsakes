@@ -606,7 +606,7 @@ Bảng này tập hợp lựa chọn ảnh hưởng phạm vi, hành vi hoặc l
 - `client-resources/day-tripper-group.jpeg`, `multi-days-group.jpeg`, `long-stay-traveller.jpeg`, `day-tripper.jpeg`.
 - `client-resources/Hanh_trinh_Thuy_Si_cam_hung_Eric_Tieng_Viet.pdf`.
 - `client-resources/Thuy_Si_Hanh_Trinh_Erich_Ban_Mo_Rong_Tieng_Viet.pdf`. Bản có hậu tố `(1)` có nội dung tệp giống hệt, đã đối chiếu SHA-256 ngày 12/10/2026.
-- `Swiss_Stories_and_Gifts_PRD_v1.md`, chỉ đối chiếu lịch sử. Bản v1 được giữ nguyên.
+- Bản v1 (`Swiss_Stories_and_Gifts_PRD_v1.md`), chỉ đối chiếu lịch sử. Tệp đã được xóa khỏi cây thư mục và còn trong lịch sử git.
 
 ### 18.2 Khác biệt chính với v1
 

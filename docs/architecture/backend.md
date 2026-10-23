@@ -2,7 +2,7 @@
 
 Status: proposal for owner review. Last updated 20.10.2026.
 
-This document describes the production backend for Swiss Keepsakes. It replaces the browser-held mock data in `front-end/`. Product rules come from `docs/PRD/Swiss_Stories_and_Gifts_PRD_v2.md` (cited as PRD Lnnn), `docs/ux/ux-spec-phase1.md` (cited as UX Lnnn), and the prototype types in `front-end/src/features/*/types.ts`. Vendor facts are numbered F1 to F29 in section 18.
+This document describes the production backend for Swiss Keepsakes. It replaces the browser-held mock data in `front-end/`. Product rules come from `docs/PRD/Swiss_keepsakes_PRD.md` (cited as PRD Lnnn), `docs/ux/ux-spec-phase1.md` (cited as UX Lnnn), and the prototype types in `front-end/src/features/*/types.ts`. Vendor facts are numbered F1 to F29 in section 18.
 
 ## 1. Summary
 

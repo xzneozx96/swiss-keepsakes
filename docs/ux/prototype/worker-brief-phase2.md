@@ -18,7 +18,7 @@ Typecheck, lint and production build were clean at handover.
 1. `docs/ux/prototype/todo-phase2.md`: your steps, the "Verify the important booking cases" table and "Keep unresolved policies visible".
 2. `docs/ux/prototype/flow-2-outline.md`: routes, booking transitions, seat accounting and the sample policies. Step 2.0 (this outline) is still `[~]` awaiting owner approval; build against it and say so in your report.
 3. `docs/ux/prototype/reports/react-integration.md`, `reports/shared-listing-detail.md`, `reports/tour-reviews.md`: what codex built.
-4. PRD v2 (`docs/PRD/Swiss_Stories_and_Gifts_PRD_v2.md`) sections 6.3, 7.3, 9, 10 and acceptance criteria; UX spec (`docs/ux/ux-spec-phase1.md`) sections 2.2, 2.3, 4.3, 4.4, 5, 6, 7 and scenario S7. Search for your screen IDs.
+4. PRD v2 (`docs/PRD/Swiss_keepsakes_PRD.md`) sections 6.3, 7.3, 9, 10 and acceptance criteria; UX spec (`docs/ux/ux-spec-phase1.md`) sections 2.2, 2.3, 4.3, 4.4, 5, 6, 7 and scenario S7. Search for your screen IDs.
 5. `docs/ux/decisions.tsv`: the owner's taste. Follow it.
 6. `front-end/README.md`, `docs/ux/design-system/project/`, `.claude/skills/heroui-react/SKILL.md`.
 7. Code: `front-end/src/features/tours/` (all of it), `front-end/src/features/orders/` (gift order logic to mirror, not to duplicate), `src/components/`, `src/features/demo/`.

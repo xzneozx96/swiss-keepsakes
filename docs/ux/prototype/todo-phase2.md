@@ -19,7 +19,7 @@ Use the local Vite preview with `cd front-end && npm run dev` from the project r
 ## Use the current sources
 
 - [Main prototype checklist](todo.md), Phase 2 scope and review rules.
-- [Current PRD v2](../../PRD/Swiss_Stories_and_Gifts_PRD_v2.md), sections 6.3, 7.3, 9, 10, and acceptance criteria.
+- [Current PRD v2](../../PRD/Swiss_keepsakes_PRD.md), sections 6.3, 7.3, 9, 10, and acceptance criteria.
 - [UX spec](../ux-spec-phase1.md), sections 2.2, 2.3, 4.3, 4.4, 5, 6, 7, and scenario S7.
 - [Frontend conventions](../../../front-end/README.md) and [project design system](../design-system/project/README.md).
 - [Gift-flow outline](flow-1-outline.md) for shared payment, sign-in, merchant, review, and partner-report behavior.
