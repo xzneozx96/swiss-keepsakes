@@ -12,6 +12,7 @@ Read this when you show an error, a notice or a toast, or when a call can fail.
 ## Toasts
 
 - Use the HeroUI `toast` helper. One `AppToasts` region at the app root renders them (`front-end/src/components/app-toasts.tsx`). Do not add a second toast library or region.
+- Announce an error with `toast.danger`. It stays `role=alert`, which screen readers read at once. Announce success and info with `toast.success` or `toast.info`. `AppToasts` makes those `role=status` with `aria-live=polite`, because HeroUI marks every toast `role=alert` by default. Do not set a role at the call site.
 - Example of a toast that a feature raises: `front-end/src/features/catalog/lib/cart-toast.ts`.
 - Shared code must not import a feature (see `code-structure.md`), so a feature's warning reaches the toast region from above. For example, the storage-full warning is raised in the root route and handed to `AppToasts` as a prop.
 
