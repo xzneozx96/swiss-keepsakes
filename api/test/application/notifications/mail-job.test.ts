@@ -166,6 +166,7 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
 
     expect(memory.sent).toEqual([expect.objectContaining({ id: mailId, to: 'ngoc.tran@example.ch', subject: 'Einladung: Eröffnen Sie Zürich Andenken' })])
     expect(memory.sent[0]?.text).toContain(n20Link)
+    expect(memory.sent[0]?.html).toContain(`href="${n20Link}"`)
     expect(rows.get(mailId)).toMatchObject({ status: 'sent', attempts: 1, response: `250 2.0.0 OK queued as ${mailId}`, sentAt: new Date('2026-10-20T08:00:02Z') })
   })
 

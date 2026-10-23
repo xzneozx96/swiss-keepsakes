@@ -1,7 +1,9 @@
 import type { MailKey } from '@sk/i18n/en'
 import type { MailLanguage, MailTemplate } from '../ports.ts'
+import type { HtmlBlock } from './mail-layout.ts'
 import { mailDe } from '@sk/i18n/de'
 import { mailEn } from '@sk/i18n/en'
+import { renderHtml } from './mail-layout.ts'
 
 // The values each template's job stores. An invitation mail stores the invitation id, never the link: the link
 // holds the invitation's token, so it is built when the mail is sent (InvitationLink) and fills `{link}`.
@@ -17,28 +19,64 @@ export type MailRequest = {
   [K in MailTemplate]: { template: K, to: string, language: MailLanguage, storeId: string | null, params: MailParams[K] }
 }[MailTemplate]
 
+// What a template says, in order. The text and the HTML are both built from this list and the same copy, so
+// the words live once. `lead` and `note` are paragraphs that the HTML sets in another style. `code` is the
+// sign-in code, big in the HTML. `action` is a sentence that ends in the link: the text puts the link after a
+// colon, the HTML puts a button and the plain link under the sentence.
+type Item
+  = | { kind: 'paragraph' | 'lead' | 'note', key: MailKey }
+    | { kind: 'code', key: MailKey, label: MailKey }
+    | { kind: 'action', key: MailKey, button: MailKey }
+
+interface Template { subject: MailKey, preheader: MailKey, body: Item[] }
+
 // UX spec section 6. The copy lives in packages/i18n, shared with the prototype's mail log.
-const templates: Record<MailTemplate, { subject: MailKey, body: MailKey[] }> = {
+const templates: Record<MailTemplate, Template> = {
   // Sign-in code, to the guest or staff member who asked for it. The SPA's language, or EN.
   N01: {
     subject: 'mail.N01.subject',
-    body: ['mail.N01.code', 'mail.N01.expiry', 'mail.N01.ignore'],
+    preheader: 'mail.N01.expiry',
+    body: [
+      { kind: 'code', key: 'mail.N01.code', label: 'mail.N01.label' },
+      { kind: 'paragraph', key: 'mail.N01.expiry' },
+      { kind: 'note', key: 'mail.N01.ignore' },
+    ],
   },
   // Store Manager invitation, to the invitee, with the M01 link.
   N18: {
     subject: 'mail.N18.subject',
-    body: ['mail.greeting', 'mail.N18.invited', 'mail.N18.accept', 'mail.invitation.expiry', 'mail.invitation.ignore'],
+    preheader: 'mail.N18.invited',
+    body: [
+      { kind: 'paragraph', key: 'mail.greeting' },
+      { kind: 'lead', key: 'mail.N18.invited' },
+      { kind: 'action', key: 'mail.N18.accept', button: 'mail.N18.button' },
+      { kind: 'note', key: 'mail.invitation.expiry' },
+      { kind: 'note', key: 'mail.invitation.ignore' },
+    ],
   },
   // Owner invitation, to the new Owner, with the A02 link.
   N20: {
     subject: 'mail.N20.subject',
-    body: ['mail.greeting', 'mail.N20.invited', 'mail.N20.setup', 'mail.invitation.expiry', 'mail.invitation.ignore'],
+    preheader: 'mail.N20.invited',
+    body: [
+      { kind: 'paragraph', key: 'mail.greeting' },
+      { kind: 'lead', key: 'mail.N20.invited' },
+      { kind: 'action', key: 'mail.N20.setup', button: 'mail.N20.button' },
+      { kind: 'note', key: 'mail.invitation.expiry' },
+      { kind: 'note', key: 'mail.invitation.ignore' },
+    ],
   },
 }
 
 const copy = { en: mailEn, de: mailDe }
 
 const placeholder = /\{(\w+)\}/g
+
+const brand = 'Swiss Keepsakes'
+
+// The only links a mail may carry are the http(s) ones InvitationLink builds. Anything else, such as a
+// `javascript:` URL, never reaches an href.
+const webLink = /^https?:\/\/[^\s<>"']+$/i
 
 export class MailRenderError extends Error {
   override name = 'MailRenderError'
@@ -48,18 +86,49 @@ export interface RenderedMail {
   to: string
   subject: string
   text: string
+  html: string
 }
 
-// Plain text only. An empty or missing value throws, so a mail never goes out with a raw `{link}` in it.
+// An empty or missing value throws, so a mail never goes out with a raw `{link}` in it. The text part is
+// plain text, so a value goes in as typed. The HTML part escapes every value and every word of copy.
 export function renderMail(request: MailRequest, link: string | undefined): RenderedMail {
-  const { subject, body } = templates[request.template]
+  const { template } = request
+  const { subject, preheader, body } = templates[template]
   const words = copy[request.language]
   const params: Record<string, string | undefined> = { ...request.params, link }
   const fill = (key: MailKey) => words[key].replace(placeholder, (_, name: string) => {
     const value = params[name]
     if (!value?.trim())
-      throw new MailRenderError(`${request.template} has no value for {${name}}`)
+      throw new MailRenderError(`${template} has no value for {${name}}`)
     return value
   })
-  return { to: request.to, subject: fill(subject), text: body.map(fill).join('\n\n') }
+  const needsLink = body.some(item => item.kind === 'action')
+  if (needsLink && !link?.trim())
+    throw new MailRenderError(`${template} has no value for {link}`)
+  if (needsLink && !webLink.test(link ?? ''))
+    throw new MailRenderError(`${template} has a link that is not an http(s) URL`)
+
+  const text = body.map((item) => {
+    const sentence = fill(item.key)
+    return item.kind === 'action' ? `${sentence}: ${link}` : sentence
+  }).join('\n\n')
+  const subjectLine = fill(subject)
+  const html = renderHtml({
+    language: request.language,
+    title: subjectLine,
+    preheader: fill(preheader),
+    wordmark: brand,
+    footer: words['mail.footer'],
+    blocks: body.map((item): HtmlBlock => {
+      switch (item.kind) {
+        case 'code':
+          return { kind: 'code', label: fill(item.label), code: params.code ?? '' }
+        case 'action':
+          return { kind: 'action', text: `${fill(item.key)}.`, button: fill(item.button), link: link ?? '', fallback: words['mail.linkFallback'] }
+        default:
+          return { kind: item.kind, text: fill(item.key) }
+      }
+    }),
+  })
+  return { to: request.to, subject: subjectLine, text, html }
 }
