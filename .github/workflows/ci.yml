@@ -1,5 +1,5 @@
-# The gates, the pull request's Neon branch with migrations and integration tests, the API image, and the
-# Playwright suite. docs/ops/ci.md explains each job and the Neon safety rules.
+# The gates and the API image run on every pull request. The Neon integration job and the Playwright suite run
+# only when started by hand (Actions, Run workflow). docs/ops/ci.md explains each job and the Neon safety rules.
 # Actions are pinned by commit. The comment after each pin is the release it points to.
 name: ci
 
@@ -7,8 +7,14 @@ on:
   push:
     branches: [main]
   pull_request:
-    # closed deletes the pull request's Neon branch.
+    # closed deletes the pull request's Neon branch, if a manual run made one.
     types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: The pull request number. It names the Neon branch preview/pr-<number> for the integration job.
+        required: true
+        type: string
 
 # One run per pull request. A push cancels the run it replaces, and a close cancels a run that may still be
 # creating the branch, then deletes it. Runs on main are never cancelled.
@@ -85,41 +91,14 @@ jobs:
             echo "::warning title=Dependency audit::$count high or critical advisories in development dependencies. This step lists them."
           fi
 
-  # The integration job takes 15 to 27 minutes on a remote Neon branch. It runs only when the pull request changes
-  # something it can break. Any doubt runs it: a failed diff or a base the runner cannot reach sets api=true.
-  changes:
-    name: changes
-    if: github.event_name == 'pull_request' && github.event.action != 'closed'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    outputs:
-      api: ${{ steps.diff.outputs.api }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Does the pull request touch what the integration tests cover
-        id: diff
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          pattern='^(api/|packages/|scripts/|\.github/|front-end/tests/e2e/|front-end/playwright\.config|front-end/src/main\.tsx|front-end/src/features/(auth|stores)/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|\.nvmrc|Dockerfile|vitest\.)'
-          if files=$(git diff --name-only "$BASE_SHA"...HEAD) && ! printf '%s\n' "$files" | grep -Eq "$pattern"; then
-            echo 'api=false' >> "$GITHUB_OUTPUT"
-            echo '::notice title=Integration skipped::No changed file is under a path the integration tests cover.'
-          else
-            echo 'api=true' >> "$GITHUB_OUTPUT"
-          fi
-
+  # 15 to 28 minutes on a remote Neon branch, so it runs only when started by hand (owner decision 23.10.2026).
   integration:
     name: integration (Neon)
-    needs: changes
-    if: github.event_name == 'pull_request' && github.event.action != 'closed' && needs.changes.outputs.api == 'true'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_NUMBER: ${{ inputs.pr_number }}
     steps:
       - name: Neon secret
         id: neon
@@ -320,7 +299,7 @@ jobs:
         run: scripts/image-smoke.sh sk-api:ci postgres://postgres@127.0.0.1:5432/swiss_keepsakes
 
   e2e:
-    if: github.event.action != 'closed'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
