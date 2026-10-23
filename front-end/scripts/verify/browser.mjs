@@ -35,18 +35,3 @@ export function serve(dir) {
 export function launchBrowser() {
   return chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL, args: ['--no-sandbox'] })
 }
-
-/**
- * These scripts serve a build with no API, so the session read answers here: a signed-in user, as the app
- * would see after a real sign-in. The app then signs in the demo guest, the same for every user.
- */
-export function answerSession(context) {
-  const now = new Date().toISOString()
-
-  return context.route('**/api/auth/get-session', route => route.fulfill({
-    json: {
-      session: { id: 's1', userId: 'u1', token: 't', expiresAt: new Date(Date.now() + 86_400_000).toISOString(), createdAt: now, updatedAt: now },
-      user: { id: 'u1', name: 'Guest', email: 'guest@example.ch', emailVerified: true, createdAt: now, updatedAt: now },
-    },
-  }))
-}
