@@ -1,6 +1,6 @@
 export { createApiClient } from './client.ts'
 export { healthSchema } from './health.ts'
-export { meSchema, meStoreSchema } from './me.ts'
+export { type Me, meSchema, type MeStore, meStoreSchema } from './me.ts'
 export { type Problem, problemSchema, type ProblemType, problemTypes } from './problem.ts'
 export {
   type AcceptedInvitation,
@@ -16,8 +16,11 @@ export {
   createStoreBodySchema,
   invitationPreviewSchema,
   inviteManagerBodySchema,
+  type Member,
+  type MemberInvitation,
   memberInvitationSchema,
   memberSchema,
+  type Members,
   membersSchema,
   type InvitationPreview,
   type Onboarding,

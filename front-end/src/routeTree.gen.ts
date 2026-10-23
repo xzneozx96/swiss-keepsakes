@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as InvitationRouteImport } from './routes/invitation'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as GuestIndexRouteImport } from './routes/_guest/index'
@@ -104,6 +105,11 @@ const GuestRoute = GuestRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvitationRoute = InvitationRouteImport.update({
+  id: '/invitation',
+  path: '/invitation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignInRoute = SignInRouteImport.update({
@@ -547,6 +553,7 @@ const GuestToursSlugBookReviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof GuestIndexRoute
   '/admin': typeof AdminRoute
+  '/invitation': typeof InvitationRoute
   '/sign-in': typeof SignInRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
@@ -634,6 +641,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
+  '/invitation': typeof InvitationRoute
   '/sign-in': typeof SignInRoute
   '/account': typeof GuestAccountRoute
   '/cart': typeof GuestCartRoute
@@ -720,6 +728,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_guest': typeof GuestRouteWithChildren
   '/admin': typeof AdminRoute
+  '/invitation': typeof InvitationRoute
   '/sign-in': typeof SignInRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
@@ -811,6 +820,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/invitation'
     | '/sign-in'
     | '/store'
     | '/store/reports'
@@ -898,6 +908,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/admin'
+    | '/invitation'
     | '/sign-in'
     | '/account'
     | '/cart'
@@ -983,6 +994,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_guest'
     | '/admin'
+    | '/invitation'
     | '/sign-in'
     | '/store'
     | '/store/reports'
@@ -1073,6 +1085,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   GuestRoute: typeof GuestRouteWithChildren
   AdminRoute: typeof AdminRoute
+  InvitationRoute: typeof InvitationRoute
   SignInRoute: typeof SignInRoute
   StoreRoute: typeof StoreRouteWithChildren
   LabAdviceRoute: typeof LabAdviceRoute
@@ -1112,6 +1125,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invitation': {
+      id: '/invitation'
+      path: '/invitation'
+      fullPath: '/invitation'
+      preLoaderRoute: typeof InvitationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sign-in': {
@@ -1886,6 +1906,7 @@ const StoreRouteWithChildren = StoreRoute._addFileChildren(StoreRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   GuestRoute: GuestRouteWithChildren,
   AdminRoute: AdminRoute,
+  InvitationRoute: InvitationRoute,
   SignInRoute: SignInRoute,
   StoreRoute: StoreRouteWithChildren,
   LabAdviceRoute: LabAdviceRoute,

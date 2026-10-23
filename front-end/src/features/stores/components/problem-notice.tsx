@@ -17,7 +17,7 @@ export function ProblemNotice({ error, message, onRetry }: { error: unknown, mes
         <p className="text-xs opacity-80">{t('stores.problem.requestId', { id: error.requestId })}</p>
       )}
       {onRetry && (
-        <Button variant="secondary" onPress={onRetry}>
+        <Button className="min-h-11" variant="secondary" onPress={onRetry}>
           {t('stores.problem.retry')}
         </Button>
       )}

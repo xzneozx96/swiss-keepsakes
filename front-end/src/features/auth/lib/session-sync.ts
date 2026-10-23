@@ -12,7 +12,7 @@ import { loadAuthClient } from './auth-api'
  * the session by itself (window focus, coming back online, other tabs through its broadcast, and its own
  * sign-in and sign-out), so a sign-out in another tab or a revoked or expired session clears the store.
  * When the session is gone, the account data of the demo guest goes with it (`clearGuestData`), but only when the guest was signed in in this tab. Until the account feature moves to the API, any session signs in the demo guest.
- * The stores feature's cached reads and remembered store go when the session ends or another user takes it over
+ * The stores feature's cached reads go when the session ends or another user takes it over
  * in this tab: this is the one place that sees both.
  */
 export function followSession(store: DemoStore, queryClient: QueryClient) {

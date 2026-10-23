@@ -123,3 +123,6 @@ export type InvitationPreview = z.infer<typeof invitationPreviewSchema>
 export type AcceptedInvitation = z.infer<typeof acceptedInvitationSchema>
 export type Onboarding = z.infer<typeof onboardingSchema>
 export type Store = z.infer<typeof storeSchema>
+export type Member = z.infer<typeof memberSchema>
+export type MemberInvitation = z.infer<typeof memberInvitationSchema>
+export type Members = z.infer<typeof membersSchema>

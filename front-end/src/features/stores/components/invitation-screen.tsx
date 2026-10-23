@@ -1,0 +1,68 @@
+import { Skeleton } from '@heroui/react'
+import { useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
+
+import { useLocale } from '@/contexts/locale-context'
+import { useDemoSelector } from '@/features/demo'
+import { useAcceptInvitation } from '../hooks/use-accept-invitation'
+import { useDisplayName } from '../hooks/use-display-name'
+import { INVITATION_PATH, ONBOARDING_PATH, STORE_PATH } from '../lib/search-params'
+import { DisplayNameForm } from './display-name-form'
+import { InvitationPreview } from './invitation-preview'
+import { RefusalView } from './refusal-view'
+import { ScreenFrame } from './screen-frame'
+
+/**
+ * M01 (UX 4.12, AC02): the invited Store Manager sees the store, the inviter and the role before sign-in, and
+ * accepts with a button. Nothing accepts by itself, so a crafted link cannot join anyone to a store silently.
+ */
+export function InvitationScreen() {
+  const { t } = useLocale()
+  const { state, token, accept, signIn, retry } = useAcceptInvitation(INVITATION_PATH, { manual: true })
+  const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)
+
+  if (state.kind === 'accepted')
+    return <Welcome role={state.accepted.role} />
+  if (state.kind === 'refused')
+    return <RefusalView refusal={state.refusal} returnTo={INVITATION_PATH} audience={state.role ?? 'manager'} onRetry={retry} />
+  if (!token)
+    return <RefusalView refusal="missing" returnTo={INVITATION_PATH} audience="manager" />
+
+  return (
+    <InvitationPreview
+      actionLabel={t(signedIn ? 'stores.invite.accept' : 'stores.invite.signIn')}
+      pending={state.kind === 'accepting'}
+      returnTo={INVITATION_PATH}
+      audience="manager"
+      signedOut={!signedIn}
+      token={token}
+      onAction={signedIn ? accept : signIn}
+    />
+  )
+}
+
+/** After the accept: ask for a name if the account has none, then open the store (the Owner's own screen for an Owner link). */
+function Welcome({ role }: { role: 'owner' | 'manager' }) {
+  const { t } = useLocale()
+  const navigate = useNavigate()
+  const { loaded, needsName } = useDisplayName()
+  const done = () => void navigate({ to: role === 'owner' ? ONBOARDING_PATH : STORE_PATH, replace: true })
+
+  useEffect(() => {
+    if (loaded && !needsName)
+      void navigate({ to: role === 'owner' ? ONBOARDING_PATH : STORE_PATH, replace: true })
+  }, [loaded, needsName, role, navigate])
+
+  return (
+    <ScreenFrame title={t('stores.invite.title')}>
+      {loaded && needsName
+        ? <DisplayNameForm onDone={done} />
+        : (
+            <>
+              <p aria-live="polite" className="text-sm text-muted" role="status">{t('stores.invite.accepting')}</p>
+              <Skeleton className="h-24 w-full rounded-3xl" />
+            </>
+          )}
+    </ScreenFrame>
+  )
+}

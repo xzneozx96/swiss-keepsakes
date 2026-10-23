@@ -48,7 +48,12 @@ describe('[E2.3][S8] the invitation token leaves the address', () => {
     expect(heldInvitationToken()).toBeUndefined()
   })
 
-  it('captures a token on A02 only', () => {
+  it('[E2.4][AC02] takes the token off the M01 address too, and keeps it out of the address', () => {
+    expect(takeInvitationFromHash(`#/invitation?invitation=${token}`)).toBe('#/invitation')
+    expect(heldInvitationToken()).toBe(token)
+  })
+
+  it('captures a token on A02 and M01 only', () => {
     expect(takeInvitationFromHash(`#/admin?invitation=${token}`)).toBeUndefined()
     expect(takeInvitationFromHash(`#/sign-in?invitation=${token}`)).toBeUndefined()
     expect(heldInvitationToken()).toBeUndefined()

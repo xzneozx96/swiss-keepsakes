@@ -3,3 +3,12 @@ export const INVITATION_PARAM = 'invitation'
 
 /** A02. The invitation link and the sign-in return both point here, and the return never carries the token. */
 export const ONBOARDING_PATH = '/store/onboarding'
+
+/** M01 Accept an invitation (Store Manager). N18's link points here, `#/invitation?invitation=<token>`, and the sign-in return never carries the token. */
+export const INVITATION_PATH = '/invitation'
+
+/** Where a Manager who accepted goes: the merchant shell. */
+export const STORE_PATH = '/store'
+
+/** The merchant shell's Settings, where M22 lives. A session that ended there signs in again and returns here. */
+export const SETTINGS_PATH = '/store/settings'
