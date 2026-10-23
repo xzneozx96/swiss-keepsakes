@@ -1,3 +1,4 @@
+import { toast } from '@heroui/react'
 import { acceptedInvitationSchema, adminStoreListSchema, adminStoreSchema, invitationPreviewSchema, meSchema, onboardingSchema, problemSchema, storeSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
@@ -454,6 +455,21 @@ const listed = adminStoreListSchema.parse({
 
 const emptyList = () => Response.json(adminStoreListSchema.parse({ items: [], nextCursor: null }))
 
+/** The list answered, and the session answered as a signed-in Super Admin would see it. */
+const adminAnswers = (list: () => Response) => (call: Call): Response => call.path === '/api/auth/get-session' ? signedInSession() : list()
+
+async function openInviteSheet() {
+  const [button] = await screen.findAllByRole('button', { name: 'Invite an Owner' })
+
+  await waitFor(() => expect(button).toBeEnabled())
+  await userEvent.click(button)
+
+  return screen.findByRole('dialog', { name: 'Invite an Owner' })
+}
+
+const storeCards = () => screen.getByRole('list', { name: 'All stores' })
+const storeTable = () => screen.getByRole('grid', { name: 'All stores' })
+
 describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
   it('lists stores with their status and invitation state, and offers a resend only while the Owner has not accepted', async () => {
     answer = () => Response.json(listed)
@@ -462,7 +478,106 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     expect(await screen.findByText('Invitation sent to owner@example.ch. It expires on 29.10.2026.')).toBeInTheDocument()
     expect(screen.getByText('Invitation to late@example.ch expired on 01.10.2026.')).toBeInTheDocument()
     expect(screen.getByText('done@example.ch accepted the invitation.')).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: 'Send invitation again' })).toHaveLength(2)
+    expect(within(storeCards()).getAllByRole('button', { name: 'Send invitation again' })).toHaveLength(2)
+    expect(within(storeTable()).getAllByRole('button', { name: 'Send invitation again' })).toHaveLength(2)
+  })
+
+  it('lists the stores in a table with the Owner, the status, the invitation and its expiry, and the payment account', async () => {
+    answer = () => Response.json(listed)
+    renderAt('/admin', AdminStoresScreen)
+
+    await within(await screen.findByRole('grid', { name: 'All stores' })).findByText('Old Shop')
+    const table = within(storeTable())
+
+    expect(table.getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Store', 'Owner', 'Status', 'Invitation', 'Payment account', 'Actions'])
+    const [, first, second, third] = table.getAllByRole('row')
+
+    expect(within(first).getByText('owner@example.ch')).toBeInTheDocument()
+    expect(within(first).getByText('Sent')).toBeInTheDocument()
+    expect(within(first).getByText('Expires 29.10.2026')).toBeInTheDocument()
+    expect(within(second).getByText('Expired')).toBeInTheDocument()
+    expect(within(second).getByText('Expired 01.10.2026')).toBeInTheDocument()
+    expect(within(third).getByText('Accepted')).toBeInTheDocument()
+    expect(within(third).getByText('Open for sale')).toBeInTheDocument()
+    expect(within(third).getByText('Done')).toBeInTheDocument()
+    expect(within(third).queryByRole('button', { name: 'Send invitation again' })).not.toBeInTheDocument()
+  })
+
+  it('shows one card per store for a phone, with the store address name and the invitation sentence', async () => {
+    answer = () => Response.json(listed)
+    renderAt('/admin', AdminStoresScreen)
+
+    await within(await screen.findByRole('list', { name: 'All stores' })).findByText('Old Shop')
+    const cards = within(storeCards()).getAllByRole('listitem')
+
+    expect(cards).toHaveLength(3)
+    expect(cards[1]).toHaveAttribute('data-store', 'old')
+    expect(cards[1].querySelector('[data-invitation]')).toHaveAttribute('data-invitation', 'expired')
+    expect(within(cards[2]).getByText('Open for sale')).toBeInTheDocument()
+    expect(within(cards[2]).getByText('Done')).toBeInTheDocument()
+  })
+
+  it('counts the stores of the list in four tiles', async () => {
+    answer = () => Response.json(listed)
+    renderAt('/admin', AdminStoresScreen)
+
+    await screen.findByText('Old Shop', { selector: 'h3' })
+    const tiles = screen.getByLabelText('Stores at a glance')
+
+    expect(within(tiles).getByText('Stores')).toBeInTheDocument()
+    expect(within(tiles).getByText('Waiting for the Owner')).toBeInTheDocument()
+    expect(within(tiles).getByText('Onboarding')).toBeInTheDocument()
+    expect(within(tiles).getByText('Open for sale')).toBeInTheDocument()
+    expect(tiles.querySelector('[data-tile=total]')).toHaveTextContent('3')
+    expect(tiles.querySelector('[data-tile=waiting]')).toHaveTextContent('2')
+    expect(tiles.querySelector('[data-tile=onboarding]')).toHaveTextContent('0')
+    expect(tiles.querySelector('[data-tile=live]')).toHaveTextContent('1')
+  })
+
+  it('says the total is what was loaded so far while another page waits', async () => {
+    answer = () => Response.json(adminStoreListSchema.parse({ items: [listed.items[0]], nextCursor: '0198a000-0000-7000-8000-0000000000aa' }))
+    renderAt('/admin', AdminStoresScreen)
+
+    expect(await screen.findByText('Stores loaded so far')).toBeInTheDocument()
+  })
+
+  it('shows loading bars in place of the figures and the rows until the list arrives', async () => {
+    answer = () => Response.json(listed)
+    renderAt('/admin', AdminStoresScreen)
+
+    const tiles = await screen.findByLabelText('Stores at a glance')
+
+    expect(tiles.querySelector('[data-tile]')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Invite an Owner' })).toBeDisabled()
+    await screen.findByText('Old Shop', { selector: 'h3' })
+    expect(tiles.querySelector('[data-tile=total]')).toHaveTextContent('3')
+  })
+
+  it('shows the empty state with the way to the first invitation, and the sheet opens from it', async () => {
+    answer = () => emptyList()
+    renderAt('/admin', AdminStoresScreen)
+
+    expect(await screen.findByText(/No store yet\. Invite the first Owner/)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Stores at a glance')).not.toBeInTheDocument()
+    const buttons = screen.getAllByRole('button', { name: 'Invite an Owner' })
+
+    expect(buttons).toHaveLength(2)
+    await userEvent.click(buttons[1])
+
+    expect(await screen.findByRole('dialog', { name: 'Invite an Owner' })).toBeInTheDocument()
+  })
+
+  it('shows the account of the signed-in Super Admin, the one page, and signs out to the home screen', async () => {
+    answer = call => call.path === '/api/auth/sign-out' ? Response.json({ success: true }) : adminAnswers(() => Response.json(listed))(call)
+    renderAt('/admin', AdminStoresScreen)
+
+    expect(await screen.findByText('o@example.ch')).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: 'Stores' }).length).toBeGreaterThan(0)
+    expect(screen.queryByRole('link', { name: 'Orders' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Sign out' }))
+
+    expect(await screen.findByText('Home')).toBeInTheDocument()
+    expect(calls.some(call => call.path === '/api/auth/sign-out')).toBe(true)
   })
 
   it('creates the store with a slug from its name and the chosen language, then shows the new list', async () => {
@@ -479,12 +594,14 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     }
     renderAt('/admin', AdminStoresScreen)
 
+    await openInviteSheet()
     await userEvent.type(await screen.findByRole('textbox', { name: 'Store name' }), 'Chị Ngọc Keepsakes')
     await userEvent.type(screen.getByRole('textbox', { name: 'Owner email' }), 'owner@example.ch')
     await userEvent.click(screen.getByRole('radio', { name: 'Deutsch' }))
     await userEvent.click(screen.getByRole('button', { name: 'Create store and send invitation' }))
 
     expect(await screen.findByText('Invitation sent to owner@example.ch. It expires on 29.10.2026.')).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     const post = calls.find(call => call.method === 'POST')
 
     expect(post?.path).toBe('/api/admin/stores')
@@ -499,6 +616,7 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     answer = call => call.method === 'POST' ? problem(409, type) : emptyList()
     renderAt('/admin', AdminStoresScreen)
 
+    await openInviteSheet()
     await userEvent.type(await screen.findByRole('textbox', { name: 'Store name' }), 'Chi Ngoc')
     await userEvent.type(screen.getByRole('textbox', { name: 'Owner email' }), 'owner@example.ch')
     await userEvent.click(screen.getByRole('button', { name: 'Create store and send invitation' }))
@@ -510,6 +628,7 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     answer = () => emptyList()
     renderAt('/admin', AdminStoresScreen)
 
+    await openInviteSheet()
     await userEvent.type(await screen.findByRole('textbox', { name: 'Store name' }), 'Chi Ngoc')
     await userEvent.type(screen.getByRole('textbox', { name: 'Owner email' }), 'nobody')
     await userEvent.click(screen.getByRole('button', { name: 'Create store and send invitation' }))
@@ -518,15 +637,72 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     expect(calls.some(call => call.method === 'POST')).toBe(false)
   })
 
+  it('opens the sheet with the three fields from the primary button, and Cancel closes it and gives the focus back', async () => {
+    answer = () => Response.json(listed)
+    renderAt('/admin', AdminStoresScreen)
+
+    const dialog = await openInviteSheet()
+
+    expect(within(dialog).getByRole('textbox', { name: 'Store name' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('textbox', { name: 'Owner email' })).toBeInTheDocument()
+    expect(within(dialog).getByRole('radio', { name: 'English' })).toBeChecked()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(calls.some(call => call.method === 'POST')).toBe(false)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Invite an Owner' })).toHaveFocus())
+  })
+
+  it('names the invalid fields in the sheet and sends nothing for an empty form', async () => {
+    answer = () => emptyList()
+    renderAt('/admin', AdminStoresScreen)
+
+    const dialog = await openInviteSheet()
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Create store and send invitation' }))
+
+    expect(await within(dialog).findByText('Enter a store name of at least two letters or digits.')).toBeInTheDocument()
+    expect(within(dialog).getByText('Enter a valid email address.')).toBeInTheDocument()
+    expect(calls.some(call => call.method === 'POST')).toBe(false)
+  })
+
+  it('closes the sheet once the store is created, shows the toast, and reads the list again', async () => {
+    let created = false
+
+    answer = (call) => {
+      if (call.method === 'POST') {
+        created = true
+
+        return Response.json(adminStoreSchema.parse(listed.items[0]), { status: 201 })
+      }
+
+      return created ? Response.json(listed) : emptyList()
+    }
+    const success = vi.spyOn(toast, 'success')
+
+    renderAt('/admin', AdminStoresScreen)
+
+    await openInviteSheet()
+    await userEvent.type(await screen.findByRole('textbox', { name: 'Store name' }), 'Chi Ngoc')
+    await userEvent.type(screen.getByRole('textbox', { name: 'Owner email' }), 'owner@example.ch')
+    await userEvent.click(screen.getByRole('button', { name: 'Create store and send invitation' }))
+
+    await waitFor(() => expect(success).toHaveBeenCalledWith('Store created. The invitation goes to owner@example.ch.'))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(await screen.findByText('Old Shop', { selector: 'h3' })).toBeInTheDocument()
+    expect(calls.filter(call => call.method === 'POST')).toHaveLength(1)
+  })
+
   it('resends the Owner invitation with a new Idempotency-Key each time', async () => {
     answer = call => call.method === 'POST' ? Response.json(adminStoreSchema.parse(listed.items[0])) : Response.json(listed)
     renderAt('/admin', AdminStoresScreen)
 
-    const [button] = await screen.findAllByRole('button', { name: 'Send invitation again' })
+    await screen.findByText('Old Shop', { selector: 'h3' })
+    const [button] = within(storeCards()).getAllByRole('button', { name: 'Send invitation again' })
 
     await userEvent.click(button)
     await waitFor(() => expect(calls.filter(call => call.method === 'POST')).toHaveLength(1))
-    await userEvent.click(screen.getAllByRole('button', { name: 'Send invitation again' })[0])
+    await userEvent.click(within(storeTable()).getAllByRole('button', { name: 'Send invitation again' })[0])
     await waitFor(() => expect(calls.filter(call => call.method === 'POST')).toHaveLength(2))
 
     const [first, second] = calls.filter(call => call.method === 'POST')
@@ -546,7 +722,7 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Show more stores' }))
 
-    expect(await screen.findByText('Live Shop')).toBeInTheDocument()
+    expect(await screen.findByText('Live Shop', { selector: 'h3' })).toBeInTheDocument()
     expect(calls.at(-1)?.path).toBe(`/api/admin/stores?cursor=${next}`)
     expect(screen.queryByRole('button', { name: 'Show more stores' })).not.toBeInTheDocument()
   })
@@ -556,6 +732,8 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     renderAt('/admin', AdminStoresScreen)
 
     expect(await screen.findByText('No such page')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Invite an Owner' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Stores' })).not.toBeInTheDocument()
     expect(screen.queryByRole('textbox', { name: 'Store name' })).not.toBeInTheDocument()
   })
 
@@ -651,6 +829,7 @@ describe('[E2.3][S8] one Idempotency-Key per intent, not per request', () => {
     }
     renderAt('/admin', AdminStoresScreen)
 
+    await openInviteSheet()
     await userEvent.type(await screen.findByRole('textbox', { name: 'Store name' }), 'Chi Ngoc')
     await userEvent.type(screen.getByRole('textbox', { name: 'Owner email' }), 'owner@example.ch')
     await userEvent.click(screen.getByRole('button', { name: 'Create store and send invitation' }))
@@ -667,6 +846,7 @@ describe('[E2.3][S8] one Idempotency-Key per intent, not per request', () => {
     answer = call => call.method === 'GET' ? emptyList() : problem(503, 'internal-error')
     renderAt('/admin', AdminStoresScreen)
 
+    await openInviteSheet()
     await userEvent.type(await screen.findByRole('textbox', { name: 'Store name' }), 'Chi Ngoc')
     await userEvent.type(screen.getByRole('textbox', { name: 'Owner email' }), 'owner@example.ch')
     await userEvent.click(screen.getByRole('button', { name: 'Create store and send invitation' }))
@@ -686,6 +866,7 @@ describe('[E2.3][S8] a double tap sends one request', () => {
     answer = call => call.method === 'GET' ? emptyList() : Response.json(adminStoreSchema.parse(listed.items[0]), { status: 201 })
     renderAt('/admin', AdminStoresScreen)
 
+    await openInviteSheet()
     await userEvent.type(await screen.findByRole('textbox', { name: 'Store name' }), 'Chi Ngoc')
     await userEvent.type(screen.getByRole('textbox', { name: 'Owner email' }), 'owner@example.ch')
     let release = () => {}
@@ -708,7 +889,8 @@ describe('[E2.3][S8] a double tap sends one request', () => {
     answer = call => call.method === 'POST' ? Response.json(adminStoreSchema.parse(listed.items[0])) : Response.json(listed)
     renderAt('/admin', AdminStoresScreen)
 
-    const [button] = await screen.findAllByRole('button', { name: 'Send invitation again' })
+    await screen.findByText('Old Shop', { selector: 'h3' })
+    const [button] = within(storeCards()).getAllByRole('button', { name: 'Send invitation again' })
     let release = () => {}
 
     hold = new Promise<void>((resolve) => { release = resolve })
@@ -852,23 +1034,46 @@ describe('[E2.3][S8] refusals and failed reads', () => {
     expect(screen.queryByText('No such page')).not.toBeInTheDocument()
   })
 
-  it('keeps the form and the loaded list when a later read fails', async () => {
+  it('offers a retry when the first read fails, and shows the list once it works', async () => {
+    let reads = 0
+
+    answer = (call) => {
+      if (call.path === '/api/auth/get-session')
+        return signedInSession()
+      reads += 1
+
+      return reads === 1 ? problem(503, 'internal-error') : Response.json(listed)
+    }
+    renderAt('/admin', AdminStoresScreen)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Reference: req-1')
+    expect(screen.queryByLabelText('Stores at a glance')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+
+    expect(await screen.findByText('Live Shop', { selector: 'h3' })).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
+  it('keeps the Invite button and the loaded list when a later read fails', async () => {
     let reads = 0
 
     answer = (call) => {
       if (call.method === 'POST')
         return Response.json(adminStoreSchema.parse(listed.items[0]))
+      if (call.path === '/api/auth/get-session')
+        return signedInSession()
       reads += 1
 
       return reads === 1 ? Response.json(listed) : problem(503, 'internal-error')
     }
     renderAt('/admin', AdminStoresScreen)
 
-    await userEvent.click((await screen.findAllByRole('button', { name: 'Send invitation again' }))[0])
+    await screen.findByText('Old Shop', { selector: 'h3' })
+    await userEvent.click(within(storeCards()).getAllByRole('button', { name: 'Send invitation again' })[0])
 
     expect(await screen.findByRole('alert')).toBeInTheDocument()
-    expect(screen.getByRole('textbox', { name: 'Store name' })).toBeInTheDocument()
-    expect(screen.getByText('Live Shop')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Invite an Owner' })).toBeEnabled()
+    expect(screen.getByText('Live Shop', { selector: 'h3' })).toBeInTheDocument()
   })
 
   it('says to check the steps when the 409 meets conditions that are all met', async () => {
@@ -917,6 +1122,7 @@ describe('[E2.3][S8] refusals and failed reads', () => {
     answer = () => emptyList()
     renderAt('/admin', AdminStoresScreen)
 
+    await openInviteSheet()
     await userEvent.type(await screen.findByRole('textbox', { name: 'Store name' }), 'Chị Ngọc Keepsakes')
 
     expect(screen.getByText('Web address name: chi-ngoc-keepsakes')).toBeInTheDocument()

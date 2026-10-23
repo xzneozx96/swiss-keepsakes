@@ -38,3 +38,8 @@ if (!window.matchMedia) {
 if (!Element.prototype.getAnimations) {
   Element.prototype.getAnimations = () => []
 }
+
+// jsdom does not implement Element.animate either. A closed bottom sheet slides out through it (playSheetExit).
+if (!Element.prototype.animate) {
+  Element.prototype.animate = (() => ({ finished: Promise.resolve() })) as unknown as typeof Element.prototype.animate
+}
