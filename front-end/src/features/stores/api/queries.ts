@@ -16,6 +16,25 @@ export const storesQueries = {
       initialPageParam: undefined as string | undefined,
       getNextPageParam: page => page.nextCursor ?? undefined,
     }),
+  me: (client: DataClient) =>
+    queryOptions({
+      ...fromApi,
+      queryKey: queryKeys.stores.me,
+      queryFn: () => client.stores.me(),
+    }),
+  members: (client: DataClient, storeId: string) =>
+    queryOptions({
+      ...fromApi,
+      queryKey: [...queryKeys.stores.members, storeId],
+      queryFn: () => client.stores.members(storeId),
+    }),
+  // The token is in the key and nowhere else: queries live in memory, and a sign-out removes them.
+  invitationPreview: (client: DataClient, token: string) =>
+    queryOptions({
+      ...fromApi,
+      queryKey: [...queryKeys.stores.invitationPreview, token],
+      queryFn: () => client.stores.previewInvitation(token),
+    }),
   onboarding: (client: DataClient, storeId: string) =>
     queryOptions({
       ...fromApi,
@@ -35,5 +54,24 @@ export function useOnboarding(storeId: string | undefined) {
   return useQuery({
     ...storesQueries.onboarding(client, storeId ?? ''),
     enabled: storeId !== undefined,
+  })
+}
+
+/** The signed-in user's stores. `enabled: false` leaves it alone until a screen needs it. */
+export function useMe(enabled = true) {
+  return useQuery({ ...storesQueries.me(useDataClient()), enabled })
+}
+
+/** M22's list. The API answers 403 to a Manager, which is the real guard. */
+export function useMembers(storeId: string) {
+  return useQuery(storesQueries.members(useDataClient(), storeId))
+}
+
+export function useInvitationPreview(token: string | undefined) {
+  const client = useDataClient()
+
+  return useQuery({
+    ...storesQueries.invitationPreview(client, token ?? ''),
+    enabled: token !== undefined,
   })
 }

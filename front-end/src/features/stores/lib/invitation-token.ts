@@ -1,5 +1,5 @@
 import { readSessionStored, removeSessionStored, writeSessionStored } from '@/lib/storage'
-import { INVITATION_PARAM, ONBOARDING_PATH } from './search-params'
+import { INVITATION_PARAM, INVITATION_PATH, ONBOARDING_PATH } from './search-params'
 
 const TOKEN_KEY = 'sk.invitationToken'
 const LEADING_HASH = /^#/
@@ -22,14 +22,14 @@ export function subscribeInvitationToken(listener: () => void) {
 
 /**
  * Moves the invitation token from an address to `sessionStorage` and returns the address without it. It
- * returns undefined when the address holds no token, or is not A02: only A02's link carries one. Only
+ * returns undefined when the address holds no token, or is neither A02 nor M01: only their links carry one. Only
  * `sessionStorage` keeps the token: it lives as long as the tab, so the sign-in redirect and Google's round trip
  * find it again, and it reaches no history entry, no `returnTo` and no other tab.
  */
 export function takeInvitationFromHash(hash: string): string | undefined {
   const [path = '', query = ''] = hash.replace(LEADING_HASH, '').split('?')
 
-  if (path !== ONBOARDING_PATH)
+  if (path !== ONBOARDING_PATH && path !== INVITATION_PATH)
     return undefined
   const params = new URLSearchParams(query)
   const token = params.get(INVITATION_PARAM)
