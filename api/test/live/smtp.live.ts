@@ -10,13 +10,15 @@ import { createSmtpTransport } from '../../src/platform/mail.ts'
 // The only inbox this suite may send to (owner, 20.10.2026).
 const testInbox = 'tuananhngyen218@gmail.com'
 
-const link = 'https://swiss-keepsakes.example/live-check/e2-8'
+// The N01 code is fake. The link is the shape InvitationLink builds, with a fake token.
+const link = 'https://swiss-keepsakes.example/#/invitation?invitation=live-check-fake-token-not-valid'
 
 const invitationId = '00000000-0000-7000-8000-00000000e208'
 
 const accepted = /^250 /
 
-const requests: Record<'N18' | 'N20', (language: 'en' | 'de') => MailRequest> = {
+const requests: Record<'N01' | 'N18' | 'N20', (language: 'en' | 'de') => MailRequest> = {
+  N01: language => ({ template: 'N01', to: testInbox, language, storeId: null, params: { shop: 'Swiss Keepsakes', code: '000000' } }),
   N18: language => ({ template: 'N18', to: testInbox, language, storeId: null, params: { inviter: 'E2.8 live check', store: 'Swiss Keepsakes test store', invitationId } }),
   N20: language => ({ template: 'N20', to: testInbox, language, storeId: null, params: { store: 'Swiss Keepsakes test store', invitationId } }),
 }
@@ -30,10 +32,10 @@ function smtpConfig() {
   return loaded.config.smtp
 }
 
-describe('[E2.8] live SMTP: the adapter delivers N18 and N20 to the test inbox', () => {
-  it.each([['N18', 'en'], ['N18', 'de'], ['N20', 'en'], ['N20', 'de']] as const)('[E2.8] %s in %s is accepted by the SMTP server', async (template, language) => {
+describe('[E2.8] live SMTP: the adapter delivers N01, N18 and N20 to the test inbox', () => {
+  it.each([['N01', 'en'], ['N01', 'de'], ['N18', 'en'], ['N18', 'de'], ['N20', 'en'], ['N20', 'de']] as const)('[E2.8] %s in %s is accepted by the SMTP server', async (template, language) => {
     const smtp = smtpConfig()
-    const mail = renderMail(requests[template](language), link)
+    const mail = renderMail(requests[template](language), template === 'N01' ? undefined : link)
     if (mail.to !== testInbox)
       throw new Error('The live suite sends only to the test inbox.')
     const id = randomUUID()
