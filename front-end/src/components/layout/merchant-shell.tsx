@@ -6,7 +6,6 @@ import { Button, Drawer } from '@heroui/react'
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
-import brandMark from '@/assets/brand/swiss-keepsakes-mark.png'
 import {
   BookingsIcon,
   ChevronDownIcon,
@@ -22,6 +21,7 @@ import {
   SettingsIcon,
   TodayIcon,
 } from '@/components/icons'
+import { BrandMark } from '@/components/layout/brand-mark'
 import { MerchantBarSlotContext } from '@/components/layout/merchant-back-bar'
 import { SECTION_PAGES } from '@/components/layout/section-pages'
 import { useLocale } from '@/contexts/locale-context'
@@ -292,15 +292,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
             className="flex items-center gap-3 rounded-xl px-2 pt-2 outline-none focus-visible:focus-ring"
             to="/store"
           >
-            <svg
-              aria-hidden
-              className="h-9 w-auto shrink-0"
-              height={883}
-              viewBox="79 173 1053 883"
-              width={1053}
-            >
-              <image height={1254} href={brandMark} width={1254} />
-            </svg>
+            <BrandMark />
             <span className="min-w-0 text-sm leading-snug font-semibold">
               {shop.name}
             </span>
