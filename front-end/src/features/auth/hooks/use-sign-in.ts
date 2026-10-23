@@ -1,11 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
-import { useDemoActions, useDemoSelector } from '@/features/demo'
-import { demoNow } from '@/features/demo/clock'
-import { sendMail } from '@/features/notifications/mail'
+import { useDemoActions } from '@/features/demo'
 import { demoGuest } from '@/features/orders/seed'
-import { apiEnabled } from '@/lib/api-mode'
 import { authFetchOptions, loadAuthClient } from '../lib/auth-api'
 import { codeFailure } from '../lib/code-errors'
 import { clearGoogleReturnFailure, googleReturnFailed } from '../lib/google-return'
@@ -21,10 +18,6 @@ export const RESEND_AFTER_MS = 30_000
 
 /** Spec §4.5: 3 tries per code, then a new code is needed. The API refuses a 4th try. */
 export const MAX_ATTEMPTS = 3
-/** Prototype codes: any 6 digits sign in, except these two (P01 uses the same rule). */
-export const WRONG_CODE = '000000'
-export const EXPIRED_CODE = '999999'
-const GOOGLE_DELAY_MS = 700
 
 export type CodeStatus = 'idle' | 'wrong' | 'expired' | 'locked'
 
@@ -33,7 +26,7 @@ export type SignInProblem = 'unavailable' | 'rateLimited' | 'google'
 
 interface CodeStep {
   email: string
-  /** When the latest code was sent: demo time in demo mode, where expiry counts from here. */
+  /** When the latest code was sent, in real time: expiry counts from here. */
   sentAt: number
   /** Real time the resend link unlocks. */
   resendAt: number
@@ -42,16 +35,14 @@ interface CodeStep {
 }
 
 /**
- * C05 sign-in state: Google or an emailed 6-digit code. With the API (`VITE_API_ENABLED`), Better Auth
- * sends and checks the code and runs Google sign-in. Without it, the demo simulates both. The state
- * lives in the caller, so closing the sheet to read N01 in the Mail panel keeps the code step.
+ * C05 sign-in state: Google or an emailed 6-digit code. Better Auth sends and checks the code and runs
+ * Google sign-in. The state lives in the caller, so closing the sheet to read the mail keeps the code step.
  * `googleFailed`: Better Auth sent the guest back here because Google sign-in did not finish.
  */
 export function useSignIn(returnTo: string, googleFailed: boolean) {
   const { update } = useDemoActions()
-  const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const { language } = useLocale()
-  const [email, setEmail] = useState(apiEnabled ? '' : demoGuest.email)
+  const [email, setEmail] = useState('')
   const [emailError, setEmailError] = useState(false)
   const [code, setCode] = useState('')
   const [codeStep, setCodeStep] = useState<CodeStep | null>(null)
@@ -153,25 +144,6 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
   const sendCode = async (to: string) => {
     clearGoogleReturnFailure()
     setProblem(null)
-    if (!apiEnabled) {
-      const sentAt = demoNow(clockStartedAt)
-      // Shown only in the N01 email; any 6 digits sign in (see the codes above).
-      const mailedCode = String(Math.floor(100_000 + Math.random() * 900_000))
-
-      update(s =>
-        sendMail(s, {
-          at: sentAt.toISOString(),
-          to: 'guest',
-          guestId: demoGuest.id,
-          language,
-          template: 'N01',
-          params: { code: mailedCode, email: to },
-        }),
-      )
-      startCodeStep(to, sentAt.getTime())
-
-      return
-    }
     if (callingRef.current)
       return
     callingRef.current = true
@@ -224,17 +196,6 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
     if (value.length !== CODE_LENGTH)
       return
 
-    if (!apiEnabled) {
-      const age = demoNow(clockStartedAt).getTime() - codeStep.sentAt
-
-      if (value === EXPIRED_CODE || age > CODE_LIFETIME_MS)
-        refuseCode('expired')
-      else if (value === WRONG_CODE)
-        refuseCode('wrong')
-      else finish()
-
-      return
-    }
     if (callingRef.current)
       return
     callingRef.current = true
@@ -269,14 +230,6 @@ export function useSignIn(returnTo: string, googleFailed: boolean) {
     clearGoogleReturnFailure()
     setPending('google')
     setProblem(null)
-    if (!apiEnabled) {
-      window.setTimeout(() => {
-        setPending(null)
-        finish()
-      }, GOOGLE_DELAY_MS)
-
-      return
-    }
     try {
       const auth = await loadAuthClient()
       // On success the client leaves the page for Google, so the button stays pending.
