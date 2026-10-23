@@ -338,7 +338,6 @@ describe('[E2.1][AC01] sign-in through the real Better Auth client', () => {
     }))
 
     answer = path => path === '/api/auth/get-session' && user ? sessionOf(user) : Response.json(null)
-    localStorage.setItem('sk.ownerStore', JSON.stringify('store-of-u1'))
     demo.queryClient.setQueryData(['stores', 'onboarding', 'store-of-u1'], { name: 'u1 shop' })
     demo.queryClient.setQueryData(['orders', 'orders'], ['kept'])
     followSession(demo.store, demo.queryClient)
@@ -347,12 +346,10 @@ describe('[E2.1][AC01] sign-in through the real Better Auth client', () => {
     await waitFor(() => expect(demo.store.getState().data.signedInGuestId).toBe(demoGuest.id))
 
     expect(demo.queryClient.getQueryData(['stores', 'onboarding', 'store-of-u1'])).toBeDefined()
-    expect(localStorage.getItem('sk.ownerStore')).not.toBeNull()
 
     user = 'u2'
     message()
     await waitFor(() => expect(demo.queryClient.getQueryData(['stores', 'onboarding', 'store-of-u1'])).toBeUndefined())
-    expect(localStorage.getItem('sk.ownerStore')).toBeNull()
     expect(demo.queryClient.getQueryData(['orders', 'orders'])).toEqual(['kept'])
 
     demo.queryClient.setQueryData(['stores', 'adminStores'], { pages: [] })

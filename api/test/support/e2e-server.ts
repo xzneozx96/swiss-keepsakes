@@ -8,7 +8,7 @@ import { Client } from 'pg'
 import { createInvitationRepository } from '../../src/modules/identity/adapters/invitation-repository.ts'
 import { createPlatformAdminRepository } from '../../src/modules/identity/adapters/platform-admin-repository.ts'
 import { createUserDirectory } from '../../src/modules/identity/adapters/user-directory.ts'
-import { makeGrantSuperAdmin, makeInvitationLink, newInvitationToken } from '../../src/modules/identity/index.ts'
+import { invitationScreens, makeGrantSuperAdmin, makeInvitationLink, newInvitationToken } from '../../src/modules/identity/index.ts'
 import { mailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { createSmtpMailer } from '../../src/modules/notifications/adapters/smtp-mailer.ts'
@@ -31,9 +31,9 @@ import { refusedDatabaseTarget } from './database-target.ts'
 // POST /expire ages that code, POST /age-limits lifts the rate limits, and POST /end-sessions deletes a guest's sessions.
 // POST /grant-admin makes a user a Super Admin through the use case that api/scripts/admin-grant.ts runs, and
 // POST /invitation-link runs the real mail attempt (makeSendMail, the SMTP mailer over a transport that keeps the
-// message, the N20 template and the invitation link of src/main.ts at APP_URL) for the newest N20 job of an address
-// and returns the link the mail would carry. No worker runs, so no mail goes out. This process is a test tool: src/
-// never imports it, and it starts only past refusedDatabaseTarget.
+// message, the N20 or N18 template and the invitation link of src/main.ts at APP_URL) for the newest job of that
+// template (`template=N18` for a Store Manager, N20 when left out) for an address and returns the link the mail
+// would carry. No worker runs, so no mail goes out. This process is a test tool: src/ never imports it, and it starts only past refusedDatabaseTarget.
 const { DATABASE_URL: pooledEnv, DATABASE_URL_UNPOOLED: directEnv } = process.env
 const apiPort = process.env.E2E_API_PORT ?? '5394'
 const inboxPort = Number(process.env.E2E_INBOX_PORT ?? '5393')
@@ -164,7 +164,7 @@ async function main() {
         },
       }, 'shop@example.ch'),
       // The same wiring as the worker's in src/main.ts.
-      invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl: origin, screens: { N20: '/store/onboarding' } }),
+      invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl: origin, screens: invitationScreens }),
       clock: systemClock,
     })
     return sendMail(job).then(() => messages[0])
@@ -210,13 +210,14 @@ async function main() {
         return json(response, result.ok ? 200 : 409, result)
       }
       if (url.pathname === '/invitation-link' && request.method === 'POST') {
+        const template = url.searchParams.get('template') === 'N18' ? 'N18' : 'N20'
         const { rows } = await pool.query<{ data: { mailId: string } & Parameters<ReturnType<typeof makeSendMail>>[0] }>(
-          `select data from pgboss.job where name = $1 and data->>'template' = 'N20' and data->>'to' = $2 order by created_on desc limit 1`,
-          [mailQueues.send, email],
+          `select data from pgboss.job where name = $1 and data->>'template' = $2 and data->>'to' = $3 order by created_on desc limit 1`,
+          [mailQueues.send, template, email],
         )
         const job = rows[0]?.data
         if (!job)
-          return json(response, 404, { reason: 'no-n20-job' })
+          return json(response, 404, { reason: `no-${template.toLowerCase()}-job` })
         const known = sent.get(job.mailId)
         if (known)
           return json(response, 200, known)
