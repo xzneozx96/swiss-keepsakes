@@ -3,7 +3,7 @@
   "private": true,
   "packageManager": "pnpm@10.33.4",
   "scripts": {
-    "dev": "pnpm --filter @sk/api dev",
+    "dev": "pnpm --parallel --filter @sk/api --filter swiss-keepsakes-prototype dev",
     "build": "pnpm -r --if-present build",
     "contract:build": "pnpm --filter @sk/api contract:build",
     "typecheck": "pnpm -r --if-present typecheck",

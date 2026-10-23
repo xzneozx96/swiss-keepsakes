@@ -1,5 +1,5 @@
-# The gates, the pull request's Neon branch with migrations and integration tests, the API image, and the
-# Playwright suite. docs/ops/ci.md explains each job and the Neon safety rules.
+# The gates, the pull request's Neon branch with migrations, integration tests and the Playwright specs, and the
+# API image. docs/ops/ci.md explains each job and the Neon safety rules.
 # Actions are pinned by commit. The comment after each pin is the release it points to.
 name: ci
 
@@ -104,7 +104,7 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          pattern='^(api/|packages/|scripts/|\.github/|front-end/tests/e2e/|front-end/playwright\.config|front-end/src/main\.tsx|front-end/src/features/(auth|stores)/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|\.nvmrc|Dockerfile|vitest\.)'
+          pattern='^(api/|packages/|scripts/|\.github/|front-end/|e2e/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|\.nvmrc|Dockerfile|vitest\.)'
           if files=$(git diff --name-only "$BASE_SHA"...HEAD) && ! printf '%s\n' "$files" | grep -Eq "$pattern"; then
             echo 'api=false' >> "$GITHUB_OUTPUT"
             echo '::notice title=Integration skipped::No changed file is under a path the integration tests cover.'
@@ -194,26 +194,34 @@ jobs:
         env:
           INTEGRATION_ALLOW_REMOTE_DATABASE: '1'
         run: pnpm test:integration
-      # The sign-in specs run the real API against its own sk_test_* database on the same branch (docs/ops/ci.md),
-      # on WebKit and Chromium. The harness starts the API and drops the database when Playwright stops it.
+      # Every Playwright spec runs the real API against its own sk_test_* database on the same branch (docs/ops/ci.md).
+      # The harness starts the API and drops the database when Playwright stops it.
       - name: Install Playwright browsers
         if: ${{ !cancelled() && steps.neon.outputs.available == 'true' }}
         run: pnpm exec playwright install --with-deps chromium webkit
         working-directory: front-end
-      - name: Sign-in end to end
+      - name: Sign-in and stores end to end
         if: ${{ !cancelled() && steps.neon.outputs.available == 'true' }}
         env:
           INTEGRATION_ALLOW_REMOTE_DATABASE: '1'
           CI: 'true'
         run: pnpm test:e2e
         working-directory: front-end
+      - name: Demo flows end to end
+        if: ${{ !cancelled() && steps.neon.outputs.available == 'true' }}
+        env:
+          INTEGRATION_ALLOW_REMOTE_DATABASE: '1'
+          CI: 'true'
+        run: pnpm e2e
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure() && steps.neon.outputs.available == 'true'
         with:
-          name: sign-in-playwright-report
+          name: playwright-report
           path: |
             front-end/playwright-report
             front-end/test-results
+            e2e/playwright-report
+            e2e/test-results
           retention-days: 14
       - name: The run dropped its test database
         if: always() && steps.connect.outcome == 'success'
@@ -318,31 +326,3 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Smoke test
         run: scripts/image-smoke.sh sk-api:ci postgres://postgres@127.0.0.1:5432/swiss_keepsakes
-
-  e2e:
-    if: github.event.action != 'closed'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-        working-directory: e2e
-      - run: pnpm e2e
-        env:
-          CI: 'true'
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: always()
-        with:
-          name: playwright-report
-          path: |
-            e2e/playwright-report
-            e2e/test-results
-          retention-days: 14
