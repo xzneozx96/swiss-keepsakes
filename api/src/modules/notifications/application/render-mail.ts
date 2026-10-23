@@ -28,7 +28,7 @@ type Item
     | { kind: 'code', key: MailKey, label: MailKey }
     | { kind: 'action', key: MailKey, button: MailKey }
 
-interface Template { subject: MailKey, preheader: MailKey, body: Item[] }
+interface Template { subject: MailKey, preheader: MailKey, reason?: MailKey, body: Item[] }
 
 // UX spec section 6. The copy lives in packages/i18n, shared with the prototype's mail log.
 const templates: Record<MailTemplate, Template> = {
@@ -36,6 +36,7 @@ const templates: Record<MailTemplate, Template> = {
   N01: {
     subject: 'mail.N01.subject',
     preheader: 'mail.N01.expiry',
+    reason: 'mail.N01.reason',
     body: [
       { kind: 'code', key: 'mail.N01.code', label: 'mail.N01.label' },
       { kind: 'paragraph', key: 'mail.N01.expiry' },
@@ -72,7 +73,11 @@ const copy = { en: mailEn, de: mailDe }
 
 const placeholder = /\{(\w+)\}/g
 
-const brand = 'Swiss Keepsakes'
+// The one place the store's brand name lives. main.ts passes it as the sign-in mail's `shop`.
+export const brandName = 'Swiss Keepsakes'
+
+// Control characters and the bidi and zero-width ones, which can hide or reorder text in a mail client.
+const invisible = /[\p{Cc}\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/gu
 
 // The only links a mail may carry are the http(s) ones InvitationLink builds. Anything else, such as a
 // `javascript:` URL, never reaches an href.
@@ -93,9 +98,12 @@ export interface RenderedMail {
 // plain text, so a value goes in as typed. The HTML part escapes every value and every word of copy.
 export function renderMail(request: MailRequest, link: string | undefined): RenderedMail {
   const { template } = request
-  const { subject, preheader, body } = templates[template]
+  const { subject, preheader, reason, body } = templates[template]
   const words = copy[request.language]
-  const params: Record<string, string | undefined> = { ...request.params, link }
+  const params: Record<string, string | undefined> = Object.fromEntries(
+    Object.entries<string>(request.params).map(([name, value]) => [name, value.replace(invisible, '')]),
+  )
+  params.link = link
   const fill = (key: MailKey) => words[key].replace(placeholder, (_, name: string) => {
     const value = params[name]
     if (!value?.trim())
@@ -108,6 +116,10 @@ export function renderMail(request: MailRequest, link: string | undefined): Rend
   if (needsLink && !webLink.test(link ?? ''))
     throw new MailRenderError(`${template} has a link that is not an http(s) URL`)
 
+  const code = params.code?.trim() ?? ''
+  if (body.some(item => item.kind === 'code') && !code)
+    throw new MailRenderError(`${template} has no value for {code}`)
+
   const text = body.map((item) => {
     const sentence = fill(item.key)
     return item.kind === 'action' ? `${sentence}: ${link}` : sentence
@@ -117,12 +129,12 @@ export function renderMail(request: MailRequest, link: string | undefined): Rend
     language: request.language,
     title: subjectLine,
     preheader: fill(preheader),
-    wordmark: brand,
-    footer: words['mail.footer'],
+    wordmark: brandName,
+    footer: [...(reason ? [fill(reason)] : []), words['mail.footer']],
     blocks: body.map((item): HtmlBlock => {
       switch (item.kind) {
         case 'code':
-          return { kind: 'code', label: fill(item.label), code: params.code ?? '' }
+          return { kind: 'code', label: fill(item.label), code }
         case 'action':
           return { kind: 'action', text: `${fill(item.key)}.`, button: fill(item.button), link: link ?? '', fallback: words['mail.linkFallback'] }
         default:

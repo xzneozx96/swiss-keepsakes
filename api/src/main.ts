@@ -18,6 +18,7 @@ import { createSentMailRepository } from './modules/notifications/adapters/sent-
 import { createSmtpMailer, createUnconfiguredMailer } from './modules/notifications/adapters/smtp-mailer.ts'
 import { makeFailMail } from './modules/notifications/application/fail-mail.ts'
 import { makeQueueMail } from './modules/notifications/application/queue-mail.ts'
+import { brandName } from './modules/notifications/application/render-mail.ts'
 import { makeSendMail } from './modules/notifications/application/send-mail.ts'
 import { createAuditLog } from './platform/audit.ts'
 import { createAuth, createSessionReader, ownOrigin } from './platform/auth.ts'
@@ -35,7 +36,7 @@ import { createLogger } from './platform/logger.ts'
 import { createSmtpTransport } from './platform/mail.ts'
 
 // The shop name in the N01 subject, the sign-in code mail.
-const appName = 'Swiss Keepsakes'
+const appName = brandName
 
 const loaded = loadConfig(process.env)
 if (!loaded.ok) {

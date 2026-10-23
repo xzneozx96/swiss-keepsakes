@@ -2,7 +2,7 @@ import type { MailKey } from './en.ts'
 
 /** German email copy as used in Switzerland: "ss", never "ß". */
 export const mailDe: Record<MailKey, string> = {
-  'mail.greeting': 'Grüezi',
+  'mail.greeting': 'Grüezi,',
   'mail.N19.subject': 'Ihr Code für den Provisionsbericht von {shop}: {code}',
   'mail.N19.greeting': 'Guten Tag {partner}',
   'mail.N19.code':
@@ -14,6 +14,8 @@ export const mailDe: Record<MailKey, string> = {
   'mail.N01.code': 'Ihr Anmeldecode lautet {code}.',
   'mail.N01.expiry':
     'Geben Sie ihn im Anmeldefenster ein. Er ist 5 Minuten gültig.',
+  'mail.N01.reason':
+    'Sie erhalten diese E-Mail, weil bei {shop} ein Anmeldecode angefordert wurde.',
   'mail.N01.ignore':
     'Wenn Sie sich nicht anmelden wollten, können Sie diese E-Mail ignorieren.',
   'mail.pickup': 'Abholung: {pickupDate} in {place}.',

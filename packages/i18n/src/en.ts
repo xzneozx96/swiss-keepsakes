@@ -10,6 +10,7 @@ export const mailEn = {
   'mail.N01.label': 'Your sign-in code',
   'mail.N01.code': 'Your sign-in code is {code}.',
   'mail.N01.expiry': 'Enter it in the sign-in window. It works for 5 minutes.',
+  'mail.N01.reason': 'You get this because a sign-in code was asked for at {shop}.',
   'mail.N01.ignore': 'If you didn’t try to sign in, you can ignore this email.',
   'mail.pickup': 'Pickup: {pickupDate} at {place}.',
   'mail.N02.subject': 'We received your request {orderRef}',
