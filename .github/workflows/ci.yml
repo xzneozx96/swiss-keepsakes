@@ -85,9 +85,37 @@ jobs:
             echo "::warning title=Dependency audit::$count high or critical advisories in development dependencies. This step lists them."
           fi
 
+  # The integration job takes 15 to 27 minutes on a remote Neon branch. It runs only when the pull request changes
+  # something it can break. Any doubt runs it: a failed diff or a base the runner cannot reach sets api=true.
+  changes:
+    name: changes
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      api: ${{ steps.diff.outputs.api }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Does the pull request touch what the integration tests cover
+        id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          pattern='^(api/|packages/|scripts/|\.github/|front-end/tests/e2e/|front-end/playwright\.config|front-end/src/main\.tsx|front-end/src/features/(auth|stores)/|package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|\.nvmrc|Dockerfile|vitest\.)'
+          if files=$(git diff --name-only "$BASE_SHA"...HEAD) && ! printf '%s\n' "$files" | grep -Eq "$pattern"; then
+            echo 'api=false' >> "$GITHUB_OUTPUT"
+            echo '::notice title=Integration skipped::No changed file is under a path the integration tests cover.'
+          else
+            echo 'api=true' >> "$GITHUB_OUTPUT"
+          fi
+
   integration:
     name: integration (Neon)
-    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    needs: changes
+    if: github.event_name == 'pull_request' && github.event.action != 'closed' && needs.changes.outputs.api == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
