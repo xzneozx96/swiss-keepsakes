@@ -104,7 +104,7 @@ export async function signedInSuperAdmin(browser: Browser, language: Language) {
   await expect(page.getByText(words[language].notFound)).toBeVisible()
   await grantSuperAdmin(email)
   await page.reload()
-  await expect(page.getByRole('heading', { name: say(language, 'stores.create.title') })).toBeVisible()
+  await expect(page.getByRole('heading', { name: say(language, 'stores.admin.title'), level: 1 })).toBeVisible()
 
   return page
 }
@@ -112,10 +112,15 @@ export async function signedInSuperAdmin(browser: Browser, language: Language) {
 export async function createStore(page: Page, language: Language, ownerEmail: string) {
   const { name, slug } = newStoreName()
 
-  await page.getByRole('textbox', { name: say(language, 'stores.create.name') }).fill(name)
-  await expect(page.getByText(say(language, 'stores.create.slug', { slug }))).toBeVisible()
-  await page.getByRole('textbox', { name: say(language, 'stores.create.email') }).fill(ownerEmail)
-  await page.getByRole('button', { name: say(language, 'stores.create.submit') }).click()
+  await page.getByRole('button', { name: say(language, 'stores.create.open') }).first().click()
+
+  const sheet = page.getByRole('dialog', { name: say(language, 'stores.create.title') })
+
+  await sheet.getByRole('textbox', { name: say(language, 'stores.create.name') }).fill(name)
+  await expect(sheet.getByText(say(language, 'stores.create.slug', { slug }))).toBeVisible()
+  await sheet.getByRole('textbox', { name: say(language, 'stores.create.email') }).fill(ownerEmail)
+  await sheet.getByRole('button', { name: say(language, 'stores.create.submit') }).click()
+  await expect(sheet).toHaveCount(0)
 
   const card = page.locator(`[data-store="${slug}"]`)
 
