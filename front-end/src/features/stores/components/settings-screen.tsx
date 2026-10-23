@@ -3,7 +3,6 @@ import { useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { MoreIcon } from '@/components/icons'
-import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { useLocale } from '@/contexts/locale-context'
 import { apiEnabled } from '@/lib/api-mode'
 import { useMe } from '../api/queries'
@@ -35,7 +34,7 @@ export function SettingsScreen() {
 
   return (
     <div className="flex flex-col gap-4">
-      <MerchantPageHeader description={t('stores.members.intro')} title={t('nav.settings')} />
+      <h1 className="text-title">{t('nav.settings')}</h1>
       <Tabs className="w-full" selectedKey={tab} onSelectionChange={key => setTab(key as SettingsTab)}>
         <Tabs.ListContainer className="w-fit max-w-full">
           <Tabs.List aria-label={t('stores.members.tabs')}>
