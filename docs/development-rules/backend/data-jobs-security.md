@@ -33,7 +33,7 @@
 - Configuration comes from environment variables, checked at startup against one Zod schema. The service refuses to start on a bad value. Secrets live in Fly secrets. (11)
   - Built: add a variable to the schema in `api/src/platform/config.ts` and to `api/.env.example`. The startup message names the variable and never prints its value. Tests: `api/test/platform/config.test.ts`.
   - `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` are required in every environment (E2.2), the secret at 32 characters or more. `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` come as a pair. Without them the service starts and offers no Google sign-in. The release command (`db:migrate`) loads the same configuration, so it needs them too. With `NODE_ENV=production` the URL must be https. `BETTER_AUTH_TRUSTED_ORIGINS` is refused, because Better Auth reads it outside our schema and the only trusted origin is `BETTER_AUTH_URL`'s.
-  - `APP_URL` is the origin of the SPA that an invitation link opens (E2.3). It is required with `NODE_ENV=production`, where it must be https, and defaults to `http://localhost:4200` elsewhere. Only its origin is used.
+  - `APP_URL` is the origin of the SPA that an invitation link opens (E2.3). It is required with `NODE_ENV=production`, where it must be https, and defaults to `http://localhost:3002` elsewhere. Only its origin is used.
   - `SMTP_*` is all six variables or none (E2.8). A partial setting stops startup. With none, the service starts and warns, and mail fails and alerts until they are set, because no variable tells production from development.
 
 ## Security and privacy (both sides follow these)

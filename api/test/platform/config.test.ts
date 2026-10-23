@@ -18,14 +18,14 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
   it('[E1.8] accepts a complete environment and turns PORT into a number', () => {
     expect(loadConfig({ ROLE: 'api', HOST: '127.0.0.1', PORT: '8080', LOG_LEVEL: 'debug', ...urls, UNRELATED: 'x' })).toEqual({
       ok: true,
-      config: { ROLE: 'api', HOST: '127.0.0.1', PORT: 8080, LOG_LEVEL: 'debug', ...urls, APP_URL: 'http://localhost:4200' },
+      config: { ROLE: 'api', HOST: '127.0.0.1', PORT: 8080, LOG_LEVEL: 'debug', ...urls, APP_URL: 'http://localhost:3002' },
     })
   })
 
   it('[E1.8] defaults ROLE to all, HOST to 0.0.0.0, PORT to 3000 and LOG_LEVEL to info, and treats blank values as unset', () => {
     expect(loadConfig({ ...urls, ROLE: ' ', PORT: '' })).toEqual({
       ok: true,
-      config: { ROLE: 'all', HOST: '0.0.0.0', PORT: 3000, LOG_LEVEL: 'info', ...urls, APP_URL: 'http://localhost:4200' },
+      config: { ROLE: 'all', HOST: '0.0.0.0', PORT: 3000, LOG_LEVEL: 'info', ...urls, APP_URL: 'http://localhost:3002' },
     })
   })
 
@@ -106,7 +106,7 @@ describe('[E2.8] config: SMTP_* is all six variables or none', () => {
         ROLE: 'all',
         HOST: '0.0.0.0',
         PORT: 3000,
-        APP_URL: 'http://localhost:4200',
+        APP_URL: 'http://localhost:3002',
         LOG_LEVEL: 'info',
         ...urls,
         smtp: { host: 'smtp.gmail.com', port: 465, secure: true, user: 'keepsakes.test@gmail.com', password: 'abcd efgh ijkl mnop', from: 'keepsakes.test@gmail.com' },
@@ -214,8 +214,8 @@ describe('[E2.2] config: the trusted origin is BETTER_AUTH_URL and no other', ()
 
 describe('[E2.3] config: APP_URL is the origin an invitation link opens', () => {
   it('[E2.3] defaults to the Vite dev server outside production', () => {
-    expect(loadConfig(urls)).toMatchObject({ ok: true, config: { APP_URL: 'http://localhost:4200' } })
-    expect(loadConfig({ ...urls, NODE_ENV: 'development' })).toMatchObject({ ok: true, config: { APP_URL: 'http://localhost:4200' } })
+    expect(loadConfig(urls)).toMatchObject({ ok: true, config: { APP_URL: 'http://localhost:3002' } })
+    expect(loadConfig({ ...urls, NODE_ENV: 'development' })).toMatchObject({ ok: true, config: { APP_URL: 'http://localhost:3002' } })
   })
 
   it('[E2.3] keeps only the origin of what it is given', () => {

@@ -17,7 +17,7 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  server: { port: 4200, strictPort: true, proxy: apiProxy },
+  server: { port: 3002, strictPort: true, proxy: apiProxy },
   preview: { proxy: apiProxy },
   plugins: [
     // TanStack Router's plugin must come before @vitejs/plugin-react.
