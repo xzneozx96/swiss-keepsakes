@@ -205,7 +205,8 @@ describe('[E2.4][AC02] a repeated accept', () => {
     expect(other.status).toBe(403)
     expect(await other.json()).toMatchObject({ type: 'invitation-email-mismatch' })
 
-    await pool.query('delete from identity.store_memberships where user_id = $1 and store_id = $2', [invitee.userId, storeId])
+    const { rows: [membership] } = await pool.query<{ id: string }>('select id from identity.store_memberships where user_id = $1 and store_id = $2', [invitee.userId, storeId])
+    expect((await env.call(`/api/store/${storeId}/members/${membership!.id}`, { method: 'DELETE', headers: owner.headers, key: randomUUID() })).status).toBe(204)
     const removed = await env.accept(invitee, token)
     expect(removed.status).toBe(409)
     expect(await removed.json()).toMatchObject({ type: 'invitation-already-accepted' })
@@ -233,7 +234,7 @@ describe('[E2.4] the one open Manager invitation per address', () => {
     await expect(env.uow.run(tx => createInvitationRepository().insert(tx, { storeId, email: 'Not Lower@example.ch', role: 'manager', expiresAt: new Date(), invitedBy: owner.userId }))).rejects.not.toBeInstanceOf(OpenManagerInvitationExists)
   })
 
-  it('[E2.4] a race past the use case\'s own check answers invitation-already-open, and writes and queues nothing more', async () => {
+  it('[E2.4] two requests racing past the use case\'s own check: one wins and the other answers invitation-already-open, and writes and queues nothing more', async () => {
     const owner = await env.person()
     const storeId = await env.storeOf(owner)
     const repository = createInvitationRepository()
@@ -254,8 +255,10 @@ describe('[E2.4] the one open Manager invitation per address', () => {
     })
     const actor = { kind: 'staff' as const, userId: owner.userId, guestId: randomUUID(), stores: new Map([[storeId, 'owner' as const]]) }
 
-    expect(await blind(actor, storeId, { email: 'race@example.ch' }, null)).toMatchObject({ ok: true })
-    expect(await blind(actor, storeId, { email: 'race@example.ch' }, null)).toEqual({ ok: false, reason: 'invitation-already-open' })
+    const results = await Promise.all([blind(actor, storeId, { email: 'race@example.ch' }, null), blind(actor, storeId, { email: 'race@example.ch' }, null)])
+
+    expect(results.filter(result => result.ok)).toHaveLength(1)
+    expect(results.filter(result => !result.ok)).toEqual([{ ok: false, reason: 'invitation-already-open' }])
     expect(queued).toEqual(['race@example.ch'])
     expect(Number((await pool.query(`select count(*) from identity.store_invitations where store_id = $1`, [storeId])).rows[0].count)).toBe(1)
   })
