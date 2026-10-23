@@ -17,7 +17,7 @@ export type CommandName<F extends Feature> = Exclude<
 
 /** Reads that take a parameter, such as a cursor or a store id. They are not commands, whatever their signature. */
 interface ReadsWithInput {
-  stores: 'onboarding'
+  stores: 'onboarding' | 'members' | 'previewInvitation'
 }
 
 /**
@@ -107,7 +107,11 @@ export const commandAffects: {
   stores: {
     createStore: [queryKeys.stores.adminStores],
     resendOwnerInvitation: [queryKeys.stores.adminStores],
-    acceptInvitation: [queryKeys.stores.onboarding],
+    acceptInvitation: [queryKeys.stores.onboarding, queryKeys.stores.me, queryKeys.stores.members],
+    inviteManager: [queryKeys.stores.members],
+    resendManagerInvitation: [queryKeys.stores.members],
+    revokeManagerInvitation: [queryKeys.stores.members],
+    removeMember: [queryKeys.stores.members],
     updateStoreInformation: [queryKeys.stores.onboarding],
     openForSale: [queryKeys.stores.onboarding],
   },

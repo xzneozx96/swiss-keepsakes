@@ -1,32 +1,15 @@
-import type { Browser, BrowserContext, Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
-import { storesEn } from '../../src/features/stores/messages'
-import { storesDe } from '../../src/features/stores/messages.de'
-import { grantSuperAdmin, latestCode, newEmail, newStoreName, ownerInvitationMail, SPA_ORIGIN } from './api-server'
+import { newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
+import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, sayStart, signedInSuperAdmin, signInFromSheet, words } from './invitation-flows'
 
 // [E2.3][S8] The invitation screens against the real API (Better Auth, its own database) on one origin, at 375x812,
 // on WebKit and Chromium, EN and DE. The first specs drive what a visitor can reach with no invitation: the token
 // leaving the address, the sign-in round trip, the real refusals, and the guard of A01. The last two drive the whole
 // path with a real Super Admin and a real N20 link: the test server grants the Super Admin through the use case
 // behind `admin:grant` and returns the link that the real mail attempt builds (api/test/support/e2e-server.ts).
-const words = {
-  en: { send: 'Email me a code', signOut: 'Sign out', unknownTitle: 'This invitation link is not valid', missingTitle: 'Open the link from your email', notFound: /This page does not exist/ },
-  de: { send: 'Code per E-Mail senden', signOut: 'Abmelden', unknownTitle: 'Dieser Einladungslink ist nicht gültig', missingTitle: 'Öffnen Sie den Link aus Ihrer E-Mail', notFound: /Diese Seite gibt es nicht/ },
-}
-
-type Language = keyof typeof words
-
 const token = 'e2e-invitation-token-abcdefghijklmnopqrstuvwxyz0123456789'
 
-async function newClientAddress(context: BrowserContext) {
-  const octet = () => Math.floor(Math.random() * 250) + 1
-
-  await context.setExtraHTTPHeaders({ 'fly-client-ip': `198.51.${octet()}.${octet()}` })
-}
-
-function languageOf(testInfo: { project: { name: string } }): Language {
-  return testInfo.project.name.endsWith('-de') ? 'de' : 'en'
-}
+test.afterEach(closeVisitors)
 
 test.beforeEach(async ({ page, context }, testInfo) => {
   await newClientAddress(context)
@@ -36,45 +19,31 @@ test.beforeEach(async ({ page, context }, testInfo) => {
   )
 })
 
-async function signInFromSheet(page: Page, language: Language, email: string) {
-  await page.getByRole('textbox', { name: /e-?mail/i }).fill(email)
-  await page.getByRole('button', { name: words[language].send }).click()
-  await expect(page.locator('#sign-in-code')).toBeVisible()
-  await page.locator('#sign-in-code').pressSequentially((await latestCode(email)).code)
-}
-
-test('[E2.3][S8] the token leaves the address before sign-in, the sign-in return never carries it, and a refused token shows its own state', async ({ page }, testInfo) => {
-  const language = languageOf(testInfo)
-  const t = words[language]
+test('[E2.3][S8] the token leaves the address before anything else, and a link the API does not know shows its own state before sign-in', async ({ page }, testInfo) => {
+  const t = words[languageOf(testInfo)]
   const addresses: string[] = []
 
   page.on('framenavigated', frame => addresses.push(frame.url()))
   await page.goto(`/#/store/onboarding?invitation=${token}`)
 
-  await expect(page).toHaveURL(/#\/sign-in\?returnTo=%2Fstore%2Fonboarding$/)
+  await expect(page.getByRole('heading', { name: t.unknownTitle })).toBeVisible()
   // The first address is the link as the mail holds it. Every address after it is the app's own, token-free.
   expect(addresses[0]).toContain(token)
   expect(addresses.slice(1).join('\n')).not.toContain(token)
-  expect(await page.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBe(token)
-  expect(await page.evaluate(() => JSON.stringify({ ...localStorage }))).not.toContain(token)
-
-  await signInFromSheet(page, language, newEmail())
-
-  await expect(page).toHaveURL(/#\/store\/onboarding$/)
-  await expect(page.getByRole('heading', { name: t.unknownTitle })).toBeVisible()
-  expect(await page.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
   expect(page.url()).not.toContain(token)
+  // The preview refused the link for good, so the token is gone from the tab and from the query keys.
+  expect(await page.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
+  expect(await page.evaluate(() => JSON.stringify({ ...localStorage }))).not.toContain(token)
   await expect(page.getByRole('button', { name: t.signOut })).toHaveCount(0)
 })
 
-test('[E2.3][S8] A02 without a link or a store says to open the email link, and asks the API nothing', async ({ page }, testInfo) => {
-  const language = languageOf(testInfo)
+test('[E2.3][S8] A02 without a link sends a visitor who has not signed in to sign-in and back, and asks the API for no store and no invitation', async ({ page }) => {
   const calls: string[] = []
 
   page.on('request', request => calls.push(new URL(request.url()).pathname))
   await page.goto('/#/store/onboarding')
 
-  await expect(page.getByRole('heading', { name: words[language].missingTitle })).toBeVisible()
+  await expect(page).toHaveURL(/#\/sign-in\?returnTo=%2Fstore%2Fonboarding$/)
   expect(calls.filter(path => path.startsWith('/api/store') || path.startsWith('/api/me/invitations'))).toEqual([])
 })
 
@@ -90,91 +59,6 @@ test('[E2.3][S8] A01 sends a visitor who has not signed in to sign-in, and shows
   await expect(page.getByText(words[language].notFound)).toBeVisible()
   await expect(page.getByRole('textbox')).toHaveCount(0)
 })
-
-type MessageKey = keyof typeof storesEn
-
-const copy = { en: storesEn, de: storesDe }
-
-/** The screen's own copy, so the spec follows a wording change instead of breaking on it. `{param}`s are filled in. */
-function say(language: Language, key: MessageKey, params: Record<string, string> = {}): string {
-  return Object.entries(params).reduce((text, [name, value]) => text.replace(`{${name}}`, value), copy[language][key])
-}
-
-/** The part of a message before its first parameter, for text that holds a date or a list. */
-function sayStart(language: Language, key: MessageKey, params: Record<string, string> = {}): RegExp {
-  const filled = say(language, key, params)
-
-  const end = filled.indexOf('{')
-
-  return new RegExp(filled.slice(0, end === -1 ? undefined : end).replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`))
-}
-
-const visitors: BrowserContext[] = []
-
-test.afterEach(async () => {
-  await Promise.all(visitors.splice(0).map(context => context.close()))
-})
-
-/** A browser of its own, at 375x812, with its own client address: a separate person on a separate phone. */
-async function newVisitor(browser: Browser, language: Language): Promise<Page> {
-  const context = await browser.newContext({
-    baseURL: SPA_ORIGIN,
-    viewport: { width: 375, height: 812 },
-    isMobile: true,
-    hasTouch: true,
-    locale: language === 'de' ? 'de-CH' : 'en-CH',
-  })
-
-  visitors.push(context)
-  await newClientAddress(context)
-  await context.addInitScript(
-    (value: string) => localStorage.setItem('sk.language', JSON.stringify(value)),
-    language,
-  )
-
-  return context.newPage()
-}
-
-/** Opens the owner link, signs in with this email on the sign-in screen it lands on, and waits for the screen to come back. */
-async function followLinkAs(page: Page, language: Language, link: string, email: string) {
-  await page.goto(link)
-  await expect(page).toHaveURL(/#\/sign-in\?returnTo=%2Fstore%2Fonboarding$/)
-  await signInFromSheet(page, language, email)
-  await expect(page).toHaveURL(/#\/store\/onboarding$/)
-}
-
-async function signedInSuperAdmin(browser: Browser, language: Language) {
-  const page = await newVisitor(browser, language)
-  const email = newEmail()
-
-  await page.goto('/#/admin')
-  await expect(page).toHaveURL(/#\/sign-in\?returnTo=%2Fadmin$/)
-  await signInFromSheet(page, language, email)
-  await expect(page).toHaveURL(/#\/admin$/)
-  await expect(page.getByText(words[language].notFound)).toBeVisible()
-  await grantSuperAdmin(email)
-  await page.reload()
-  await expect(page.getByRole('heading', { name: say(language, 'stores.create.title') })).toBeVisible()
-
-  return page
-}
-
-async function createStore(page: Page, language: Language, ownerEmail: string) {
-  const { name, slug } = newStoreName()
-
-  await page.getByRole('textbox', { name: say(language, 'stores.create.name') }).fill(name)
-  await expect(page.getByText(say(language, 'stores.create.slug', { slug }))).toBeVisible()
-  await page.getByRole('textbox', { name: say(language, 'stores.create.email') }).fill(ownerEmail)
-  await page.getByRole('button', { name: say(language, 'stores.create.submit') }).click()
-
-  const card = page.locator(`[data-store="${slug}"]`)
-
-  await expect(card).toBeVisible()
-  await expect(card.locator('[data-invitation]')).toHaveAttribute('data-invitation', 'open')
-  await expect(card.getByText(sayStart(language, 'stores.invitation.open', { email: ownerEmail }))).toBeVisible()
-
-  return { name, slug, card }
-}
 
 test('[E2.3][S8] the Super Admin creates the store, the Owner follows the N20 link and accepts, another email is refused, a second accept by the Owner answers as the first did, and open for sale is refused with the checklist', async ({ browser }, testInfo) => {
   testInfo.setTimeout(120_000)
@@ -230,9 +114,8 @@ test('[E2.3][S8] the Super Admin creates the store, the Owner follows the N20 li
   await expect(owner.getByRole('button', { name: say(language, 'stores.open.action') })).toBeDisabled()
   expect(owner.url()).not.toContain(token)
   expect(await owner.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
-  // The first accept met no session (401) and the second one, after sign-in, took the invitation. Each has its own key, because a 401 is a final answer.
-  expect(keys).toHaveLength(2)
-  expect(new Set(keys).size).toBe(2)
+  // The screen read the session first and sent no accept before sign-in, so the one accept after sign-in took the invitation.
+  expect(keys).toHaveLength(1)
   expect(keys.every(key => (key?.length ?? 0) > 10)).toBe(true)
 
   // A second accept of the same link by the same Owner, on another phone, answers as the first did (E2.4, so a lost answer cannot strand the Owner).
@@ -280,9 +163,9 @@ test('[E2.3][S8] after the Super Admin sends the invitation again, the old link 
 
   const stale = await newVisitor(browser, language)
 
-  await followLinkAs(stale, language, first.link, ownerEmail)
+  await stale.goto(first.link)
   await expect(stale.getByRole('heading', { name: say(language, 'stores.refusal.notFound.title') })).toBeVisible()
-  expect(await stale.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
+  await expect(stale.getByRole('button', { name: say(language, 'stores.invite.signIn') })).toHaveCount(0)
 
   const fresh = await newVisitor(browser, language)
 
@@ -294,15 +177,15 @@ test('[E2.3][S8] a link opened in a tab that already shows A02 leaves the addres
   const language = languageOf(testInfo)
   const addresses: string[] = []
 
-  await page.goto('/#/store/onboarding')
-  await expect(page.getByRole('heading', { name: say(language, 'stores.refusal.missing.title') })).toBeVisible()
+  await page.goto('/#/')
+  await expect(page.getByRole('main')).toBeVisible()
   page.on('framenavigated', frame => addresses.push(frame.url()))
   await page.evaluate((value: string) => {
     window.location.hash = `#/store/onboarding?invitation=${value}`
   }, token)
 
-  await expect(page).toHaveURL(/#\/sign-in\?returnTo=%2Fstore%2Fonboarding$/)
-  expect(await page.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBe(token)
+  await expect(page.getByRole('heading', { name: say(language, 'stores.refusal.notFound.title') })).toBeVisible()
+  expect(await page.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
   expect(page.url()).not.toContain(token)
   expect(addresses.at(-1)).not.toContain(token)
 })

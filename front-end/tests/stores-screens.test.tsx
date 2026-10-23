@@ -1,4 +1,4 @@
-import { acceptedInvitationSchema, adminStoreListSchema, adminStoreSchema, onboardingSchema, problemSchema, storeSchema } from '@sk/api-contract'
+import { acceptedInvitationSchema, adminStoreListSchema, adminStoreSchema, invitationPreviewSchema, meSchema, onboardingSchema, problemSchema, storeSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
@@ -13,7 +13,6 @@ import { startDemo } from '@/features/demo/data-client'
 import { AdminStoresScreen } from '@/features/stores/components/admin-stores-screen'
 import { OnboardingScreen } from '@/features/stores/components/onboarding-screen'
 import { heldInvitationToken, takeInvitationFromHash } from '@/features/stores/lib/invitation-token'
-import { rememberedStore } from '@/features/stores/lib/owner-store'
 
 // The real screens, hooks, DataClient and generated client, with the HTTP answered here. The bodies copy
 // what the API sends (api/src/modules/identity/adapters/routes.ts).
@@ -35,6 +34,13 @@ function conditions(payment: Condition['state'] = 'pending'): Condition[] {
   ]
 }
 
+const ownerEntry = { storeId, role: 'owner' as const, status: 'onboarding' as const }
+const meBody = (stores: Array<typeof ownerEntry | { storeId: string, role: 'manager', status: 'onboarding' }>) => Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', stores }))
+function previewBody(overrides: Partial<{ storeName: string, role: 'owner' | 'manager', inviterName: string | null, state: 'open' | 'expired' | 'revoked' | 'accepted' }> = {}) {
+  return Response.json(invitationPreviewSchema.parse({ storeName: 'Chi Ngoc', role: 'owner', inviterName: null, state: 'open', ...overrides }))
+}
+
+let meStores: Parameters<typeof meBody>[0]
 let calls: Call[]
 let answer: (call: Call) => Response
 let demo: ReturnType<typeof startDemo>
@@ -61,6 +67,7 @@ beforeEach(async () => {
   localStorage.clear()
   sessionStorage.clear()
   calls = []
+  meStores = []
   hold = undefined
   answer = () => Response.json({})
   fetchImpl = async (input, init) => {
@@ -74,7 +81,7 @@ beforeEach(async () => {
     }
 
     calls.push(call)
-    if (hold && request.method !== 'GET')
+    if (hold && request.method !== 'GET' && call.path !== '/api/public/invitations/preview')
       await hold
 
     return answer(call)
@@ -94,8 +101,9 @@ function renderAt(path: string, Screen: () => React.ReactNode) {
     component: () => <p>Sign-in screen</p>,
   })
   const home = createRoute({ getParentRoute: () => root, path: '/', component: () => <p>Home</p> })
+  const invitation = createRoute({ getParentRoute: () => root, path: '/invitation', component: () => <p>Manager invitation</p> })
   const router = createRouter({
-    routeTree: root.addChildren([page, signIn, home]),
+    routeTree: root.addChildren([page, signIn, home, invitation]),
     history: createMemoryHistory({ initialEntries: [path] }),
     disableGlobalCatchBoundary: true,
   })
@@ -115,6 +123,15 @@ function renderAt(path: string, Screen: () => React.ReactNode) {
   return Object.assign(router, { unmount: view.unmount })
 }
 
+const signedInSession = (name = 'Mia') => Response.json({ session: { id: 's', userId: 'u', expiresAt: new Date(Date.now() + 1e7).toISOString() }, user: { id: 'u', email: 'o@example.ch', name } })
+
+/** The accept answered with `onAccept`, and every other call as `onboardingAnswers` does. */
+function acceptAnswers(onAccept: (call: Call) => Response) {
+  const rest = onboardingAnswers()
+
+  return (call: Call): Response => call.path === '/api/me/invitations/accept' ? onAccept(call) : rest(call)
+}
+
 function onboardingAnswers(overrides: Partial<Record<string, () => Response>> = {}) {
   return (call: Call): Response => {
     const handler = overrides[`${call.method} ${call.path}`]
@@ -123,6 +140,12 @@ function onboardingAnswers(overrides: Partial<Record<string, () => Response>> = 
       return handler()
     if (call.method === 'POST' && call.path === '/api/me/invitations/accept')
       return accepted()
+    if (call.method === 'GET' && call.path === '/api/me')
+      return meBody(meStores)
+    if (call.path === '/api/public/invitations/preview')
+      return previewBody()
+    if (call.path === '/api/auth/get-session')
+      return signedInSession()
     if (call.path === `/api/store/${storeId}/onboarding`)
       return onboardingBody()
 
@@ -143,19 +166,33 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(accepts[0].body).toEqual({ token })
     expect(accepts[0].key).toBeTruthy()
     expect(heldInvitationToken()).toBeUndefined()
-    expect(rememberedStore()).toBe(storeId)
     expect(screen.getByText('1 of 4 done')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Open for sale' })).toBeDisabled()
     expect(screen.getByText('Finish every step above to open for sale.')).toBeInTheDocument()
   })
 
-  it('goes to sign-in with the fixed returnTo when the API answers 401, and keeps the token in sessionStorage only', async () => {
+  it('shows the store from the preview and a sign-in button when the API answers 401, and the button goes to sign-in with the fixed returnTo, the token in sessionStorage only', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
-    answer = () => problem(401, 'unauthenticated')
+    answer = (call) => {
+      if (call.path === '/api/public/invitations/preview')
+        return previewBody({ storeName: 'Chi Ngoc Shop' })
+
+      return call.path === '/api/auth/get-session' ? Response.json(null) : problem(401, 'unauthenticated')
+    }
     const router = renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByText('Sign-in screen')).toBeInTheDocument()
-    expect(router.state.location.pathname).toBe('/sign-in')
+    expect(await screen.findByRole('heading', { name: 'Chi Ngoc Shop' })).toBeInTheDocument()
+    expect(screen.getByText('You are invited to open Chi Ngoc Shop.')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/store/onboarding')
+    const preview = calls.find(call => call.path === '/api/public/invitations/preview')
+
+    expect(preview?.body).toEqual({ token })
+    expect(preview?.key).toBeNull()
+    expect(calls.some(call => call.path === '/api/me/invitations/accept')).toBe(false)
+    expect(calls.map(call => call.path).join('\n')).not.toContain(token)
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in to continue' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
     expect(router.state.location.search).toEqual({ returnTo: '/store/onboarding' })
     expect(router.state.location.href).not.toContain(token)
     expect(heldInvitationToken()).toBe(token)
@@ -173,7 +210,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     [400, 'validation-failed', 'This invitation link is not valid', true],
   ])('shows its own state for %i %s', async (status, type, title, spent) => {
     sessionStorage.setItem('sk.invitationToken', token)
-    answer = () => problem(status, type)
+    answer = acceptAnswers(() => problem(status, type))
     renderAt('/store/onboarding', OnboardingScreen)
 
     expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
@@ -182,7 +219,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
 
   it('offers sign-out for a wrong account, and the invitation stays open for the right one', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
-    answer = call => call.path.startsWith('/api/auth/') ? Response.json({ success: true }) : problem(403, 'invitation-email-mismatch')
+    answer = call => call.path.startsWith('/api/auth/') && call.path !== '/api/auth/get-session' ? Response.json({ success: true }) : acceptAnswers(() => problem(403, 'invitation-email-mismatch'))(call)
     const router = renderAt('/store/onboarding', OnboardingScreen)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Sign out and use another account' }))
@@ -192,33 +229,152 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(heldInvitationToken()).toBe(token)
   })
 
-  it('says to open the email link when there is no token and no store', async () => {
+  it('says to open the email link when there is no token and the signed-in visitor has no store', async () => {
+    answer = call => call.path === '/api/me' ? meBody([]) : problem(404, 'not-found')
     renderAt('/store/onboarding', OnboardingScreen)
 
     expect(await screen.findByRole('heading', { name: 'Open the link from your email' })).toBeInTheDocument()
-    expect(calls).toEqual([])
+    expect(calls.map(call => call.path)).toEqual(['/api/me'])
   })
 
-  it('reopens the remembered store without a token', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
+  it('sends a signed-out visitor with no token to sign-in and back to A02, not to the missing-link state', async () => {
+    answer = () => problem(401, 'unauthenticated')
+    const router = renderAt('/store/onboarding', OnboardingScreen)
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
+    expect(router.state.location.search).toEqual({ returnTo: '/store/onboarding' })
+    expect(screen.queryByRole('heading', { name: 'Open the link from your email' })).not.toBeInTheDocument()
+  })
+
+  it('does not accept a Manager invitation on A02, and sends the Manager to M01 with the token kept', async () => {
+    sessionStorage.setItem('sk.invitationToken', token)
+    answer = call => call.path === '/api/public/invitations/preview' ? previewBody({ role: 'manager', inviterName: 'Ngoc' }) : onboardingAnswers()(call)
+    const router = renderAt('/store/onboarding', OnboardingScreen)
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/invitation'))
+    expect(calls.some(call => call.path === '/api/me/invitations/accept')).toBe(false)
+    expect(screen.queryByText(/You joined the store/)).not.toBeInTheDocument()
+    expect(heldInvitationToken()).toBe(token)
+  })
+
+  it('sends no accept for a visitor whose session is gone, and shows the sign-in button', async () => {
+    sessionStorage.setItem('sk.invitationToken', token)
+    answer = call => call.path === '/api/auth/get-session' ? Response.json(null) : onboardingAnswers()(call)
+    renderAt('/store/onboarding', OnboardingScreen)
+
+    expect(await screen.findByRole('button', { name: 'Sign in to continue' })).toBeInTheDocument()
+    expect(calls.some(call => call.path === '/api/me/invitations/accept')).toBe(false)
+  })
+
+  it.each([
+    ['expired', 'This invitation has expired'],
+    ['revoked', 'This invitation was withdrawn'],
+  ] as const)('shows the %s preview as a refusal, sends no accept, drops the token, and leaves no token in a query key', async (state, title) => {
+    sessionStorage.setItem('sk.invitationToken', token)
+    answer = call => call.path === '/api/public/invitations/preview' ? previewBody({ state }) : onboardingAnswers()(call)
+    renderAt('/store/onboarding', OnboardingScreen)
+
+    expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
+    expect(calls.some(call => call.path === '/api/me/invitations/accept')).toBe(false)
+    expect(heldInvitationToken()).toBeUndefined()
+    expect(JSON.stringify(demo.queryClient.getQueryCache().getAll().map(query => query.queryKey))).not.toContain(token)
+  })
+
+  it('shows the unknown-link refusal from the preview and drops the token', async () => {
+    sessionStorage.setItem('sk.invitationToken', token)
+    answer = call => call.path === '/api/public/invitations/preview' ? problem(404, 'invitation-not-found') : onboardingAnswers()(call)
+    renderAt('/store/onboarding', OnboardingScreen)
+
+    expect(await screen.findByRole('heading', { name: 'This invitation link is not valid' })).toBeInTheDocument()
+    expect(heldInvitationToken()).toBeUndefined()
+  })
+
+  it('removes the preview from the query cache once the invitation is accepted', async () => {
+    sessionStorage.setItem('sk.invitationToken', token)
     answer = onboardingAnswers()
     renderAt('/store/onboarding', OnboardingScreen)
 
     expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
-    expect(calls.map(call => call.path)).toEqual([`/api/store/${storeId}/onboarding`])
+    expect(JSON.stringify(demo.queryClient.getQueryCache().getAll().map(query => query.queryKey))).not.toContain(token)
   })
 
-  it('forgets a remembered store that answers 403', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
-    answer = () => problem(403, 'forbidden')
+  it('finds the Owner\'s store from GET /api/me on a new device, with no token and no stored id', async () => {
+    meStores = [ownerEntry]
+    answer = onboardingAnswers()
+    renderAt('/store/onboarding', OnboardingScreen)
+
+    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    expect(calls.map(call => call.path).filter(path => path !== '/api/auth/get-session')).toEqual(['/api/me', `/api/store/${storeId}/onboarding`])
+    expect(localStorage.getItem('sk.ownerStore')).toBeNull()
+  })
+
+  it('says to open the email link when the store the API listed answers 403', async () => {
+    meStores = [ownerEntry]
+    answer = call => call.path === '/api/me' ? meBody(meStores) : problem(403, 'forbidden')
     renderAt('/store/onboarding', OnboardingScreen)
 
     expect(await screen.findByRole('heading', { name: 'Open the link from your email' })).toBeInTheDocument()
-    expect(rememberedStore()).toBeUndefined()
+  })
+
+  it('shows the already-a-member state with a way into the store when the visitor has no Owner store', async () => {
+    sessionStorage.setItem('sk.invitationToken', token)
+    answer = call => call.path === '/api/me' ? meBody([{ storeId, role: 'manager', status: 'onboarding' }]) : acceptAnswers(() => problem(409, 'already-a-member'))(call)
+    renderAt('/store/onboarding', OnboardingScreen)
+
+    expect(await screen.findByRole('heading', { name: 'You already belong to this store' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open the store' })).toBeInTheDocument()
+  })
+
+  it('shows the Owner\'s store for already-a-member when /api/me lists it', async () => {
+    sessionStorage.setItem('sk.invitationToken', token)
+    meStores = [ownerEntry]
+    answer = (call) => {
+      return acceptAnswers(() => problem(409, 'already-a-member'))(call)
+    }
+    renderAt('/store/onboarding', OnboardingScreen)
+
+    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+  })
+
+  it('asks for a display name when the account has none, and saves it with updateUser, as plain text capped at 80 characters', async () => {
+    meStores = [ownerEntry]
+    answer = (call) => {
+      if (call.path === '/api/auth/get-session')
+        return Response.json({ session: { id: 's', userId: 'u', expiresAt: new Date(Date.now() + 1e7).toISOString() }, user: { id: 'u', email: 'o@example.ch', name: '' } })
+      if (call.path === '/api/auth/update-user')
+        return Response.json({ status: true })
+
+      return onboardingAnswers()(call)
+    }
+    renderAt('/store/onboarding', OnboardingScreen)
+
+    const field = await screen.findByRole('textbox', { name: 'Your name' })
+
+    expect(field).toHaveAttribute('maxlength', '80')
+    await userEvent.type(field, '  <b>Ngoc</b>  ')
+    await userEvent.click(screen.getByRole('button', { name: 'Save name' }))
+
+    await waitFor(() => expect(calls.some(call => call.path === '/api/auth/update-user')).toBe(true))
+    expect(calls.find(call => call.path === '/api/auth/update-user')?.body).toEqual({ name: '<b>Ngoc</b>' })
+  })
+
+  it('does not ask for a name when the account has one', async () => {
+    meStores = [ownerEntry]
+    answer = (call) => {
+      if (call.path === '/api/auth/get-session')
+        return Response.json({ session: { id: 's', userId: 'u', expiresAt: new Date(Date.now() + 1e7).toISOString() }, user: { id: 'u', email: 'o@example.ch', name: 'Ngoc' } })
+
+      return onboardingAnswers()(call)
+    }
+    renderAt('/store/onboarding', OnboardingScreen)
+
+    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    await waitFor(() => expect(calls.some(call => call.path === '/api/auth/get-session')).toBe(true))
+    expect(screen.queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument()
   })
 
   it('saves the store information, with a new Idempotency-Key once the first save is done', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
+    meStores = [ownerEntry]
     answer = onboardingAnswers({
       [`PATCH /api/store/${storeId}/information`]: () => Response.json(storeSchema.parse({ ...store, name: 'Chi Ngoc Shop' })),
     })
@@ -242,7 +398,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
   })
 
   it('opens the store when every condition is met', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
+    meStores = [ownerEntry]
     let live = false
 
     answer = onboardingAnswers({
@@ -266,7 +422,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
   })
 
   it('shows the 409 onboarding-incomplete state with the steps still open, then reads the conditions again', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
+    meStores = [ownerEntry]
     answer = onboardingAnswers({
       [`GET /api/store/${storeId}/onboarding`]: () => onboardingBody({ mayOpenForSale: true }),
       [`POST /api/store/${storeId}/open-for-sale`]: () => problem(409, 'onboarding-incomplete'),
@@ -278,7 +434,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     const alert = await screen.findByRole('alert')
 
     expect(within(alert).getByText(/The store cannot open yet\. Still open: Payment account, A product or a tour, Policies\./)).toBeInTheDocument()
-    await waitFor(() => expect(calls.filter(call => call.method === 'GET')).toHaveLength(2))
+    await waitFor(() => expect(calls.filter(call => call.path === `/api/store/${storeId}/onboarding`)).toHaveLength(2))
     await userEvent.click(screen.getByRole('button', { name: 'Open for sale' }))
     await waitFor(() => expect(calls.filter(call => call.method === 'POST')).toHaveLength(2))
 
@@ -415,7 +571,7 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
 
 describe('[E2.3] the stores client in the DataClient', () => {
   it('lists the queries each command refreshes, and only the commands', () => {
-    const reads = ['adminStores', 'onboarding']
+    const reads = ['adminStores', 'onboarding', 'me', 'members', 'previewInvitation']
     const commands = Object.keys(demo.dataClient.stores).filter(name => !reads.includes(name))
 
     expect(Object.keys(commandAffects.stores).sort()).toEqual(commands.sort())
@@ -437,13 +593,11 @@ describe('[E2.3][S8] one Idempotency-Key per intent, not per request', () => {
     sessionStorage.setItem('sk.invitationToken', token)
     let attempt = 0
 
-    answer = (call) => {
-      if (call.path !== '/api/me/invitations/accept')
-        return onboardingBody()
+    answer = acceptAnswers(() => {
       attempt += 1
 
       return attempt === 1 ? first() : accepted()
-    }
+    })
     renderAt('/store/onboarding', OnboardingScreen)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Try again' }))
@@ -460,13 +614,11 @@ describe('[E2.3][S8] one Idempotency-Key per intent, not per request', () => {
     sessionStorage.setItem('sk.invitationToken', token)
     let attempt = 0
 
-    answer = (call) => {
-      if (call.path !== '/api/me/invitations/accept')
-        return onboardingBody()
+    answer = acceptAnswers(() => {
       attempt += 1
 
       return attempt === 1 ? problem(422, 'idempotency-key-reused') : accepted()
-    }
+    })
     renderAt('/store/onboarding', OnboardingScreen)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Try again' }))
@@ -479,7 +631,7 @@ describe('[E2.3][S8] one Idempotency-Key per intent, not per request', () => {
 
   it('does not say nothing was changed after a failure that may have worked', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
-    answer = () => { throw timeoutError() }
+    answer = acceptAnswers(() => { throw timeoutError() })
     renderAt('/store/onboarding', OnboardingScreen)
 
     expect(await screen.findByText(/We could not tell whether it worked/)).toBeInTheDocument()
@@ -573,7 +725,7 @@ describe('[E2.3][S8] a double tap sends one request', () => {
   })
 
   it('opens for sale once', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
+    meStores = [ownerEntry]
     answer = onboardingAnswers({
       [`GET /api/store/${storeId}/onboarding`]: () => onboardingBody({ mayOpenForSale: true, conditions: conditions('met').map(condition => ({ ...condition, state: 'met' })) }),
       [`POST /api/store/${storeId}/open-for-sale`]: () => Response.json(storeSchema.parse({ ...store, status: 'live' })),
@@ -596,7 +748,7 @@ describe('[E2.3][S8] a double tap sends one request', () => {
   })
 
   it('saves the store information once', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
+    meStores = [ownerEntry]
     answer = onboardingAnswers({
       [`PATCH /api/store/${storeId}/information`]: () => Response.json(storeSchema.parse({ ...store, name: 'Chi Ngoc Shop' })),
     })
@@ -620,7 +772,7 @@ describe('[E2.3][S8] a double tap sends one request', () => {
 })
 
 describe('[E2.3][S8] the invitation survives a screen that is gone and a link opened in an open tab', () => {
-  it('drops the token and remembers the store although the screen unmounted before the answer', async () => {
+  it('drops the token although the screen unmounted before the answer', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     answer = onboardingAnswers()
     let release = () => {}
@@ -632,8 +784,7 @@ describe('[E2.3][S8] the invitation survives a screen that is gone and a link op
     router.unmount()
     release()
 
-    await waitFor(() => expect(rememberedStore()).toBe(storeId))
-    expect(heldInvitationToken()).toBeUndefined()
+    await waitFor(() => expect(heldInvitationToken()).toBeUndefined())
   })
 
   it('accepts a link that is opened while the screen already shows no link', async () => {
@@ -654,15 +805,11 @@ describe('[E2.3][S8] the invitation survives a screen that is gone and a link op
     sessionStorage.setItem('sk.invitationToken', token)
     let answers = 0
 
-    answer = (call) => {
-      if (call.path === '/api/me/invitations/accept') {
-        answers += 1
+    answer = acceptAnswers(() => {
+      answers += 1
 
-        return answers === 1 ? problem(404, 'invitation-not-found') : accepted()
-      }
-
-      return onboardingBody()
-    }
+      return answers === 1 ? problem(404, 'invitation-not-found') : accepted()
+    })
     renderAt('/store/onboarding', OnboardingScreen)
 
     expect(await screen.findByRole('heading', { name: 'This invitation link is not valid' })).toBeInTheDocument()
@@ -678,8 +825,10 @@ describe('[E2.3][S8] a 401 marks the app signed out before sign-in', () => {
   it('clears the signed-in flag the sign-in screen would bounce back from, on accept', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     demo.store.update(s => ({ ...s, data: { ...s.data, signedInGuestId: 'stale-guest' } }))
-    answer = () => problem(401, 'unauthenticated')
+    answer = call => call.path === '/api/public/invitations/preview' ? previewBody() : problem(401, 'unauthenticated')
     const router = renderAt('/store/onboarding', OnboardingScreen)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Sign in to continue' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
     expect(demo.store.getState().data.signedInGuestId).toBeNull()
@@ -724,7 +873,7 @@ describe('[E2.3][S8] refusals and failed reads', () => {
   })
 
   it('says to check the steps when the 409 meets conditions that are all met', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
+    meStores = [ownerEntry]
     answer = onboardingAnswers({
       [`GET /api/store/${storeId}/onboarding`]: () => onboardingBody({ mayOpenForSale: true, conditions: conditions('met').map(condition => ({ ...condition, state: 'met' })) }),
       [`POST /api/store/${storeId}/open-for-sale`]: () => problem(409, 'onboarding-incomplete'),
@@ -746,7 +895,7 @@ describe('[E2.3][S8] refusals and failed reads', () => {
   })
 
   it('describes the locked Open for sale button by the reason it is locked', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
+    meStores = [ownerEntry]
     answer = onboardingAnswers()
     renderAt('/store/onboarding', OnboardingScreen)
 
@@ -757,7 +906,7 @@ describe('[E2.3][S8] refusals and failed reads', () => {
 
   it('gives a Super Admin the sign-out alone, with the private window hint', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
-    answer = () => problem(403, 'invitation-super-admin')
+    answer = acceptAnswers(() => problem(403, 'invitation-super-admin'))
     renderAt('/store/onboarding', OnboardingScreen)
 
     expect(await screen.findByText(/or open the link in a private window/)).toBeInTheDocument()
@@ -777,7 +926,7 @@ describe('[E2.3][S8] refusals and failed reads', () => {
 
 describe('[E2.3][S8] the store information form keeps an edit through a background read', () => {
   it('does not wipe what the Owner typed when the store is read again with another name', async () => {
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
+    meStores = [ownerEntry]
     let name = 'Chi Ngoc'
 
     answer = onboardingAnswers({
@@ -797,16 +946,15 @@ describe('[E2.3][S8] the store information form keeps an edit through a backgrou
 })
 
 describe('[E2.3][S8] a sign-out forgets the stores of the user who signed out', () => {
-  it('removes the cached reads and the remembered store', async () => {
+  it('removes the cached reads', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
-    localStorage.setItem('sk.ownerStore', JSON.stringify(storeId))
     demo.queryClient.setQueryData(['stores', 'onboarding', storeId], { store })
-    answer = call => call.path.startsWith('/api/auth/') ? Response.json({ success: true }) : problem(403, 'invitation-email-mismatch')
+    answer = call => call.path.startsWith('/api/auth/') && call.path !== '/api/auth/get-session' ? Response.json({ success: true }) : acceptAnswers(() => problem(403, 'invitation-email-mismatch'))(call)
     renderAt('/store/onboarding', OnboardingScreen)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Sign out and use another account' }))
 
-    await waitFor(() => expect(rememberedStore()).toBeUndefined())
+    await waitFor(() => expect(demo.queryClient.getQueryData(['stores', 'onboarding', storeId])).toBeUndefined())
     expect(demo.queryClient.getQueryData(['stores', 'onboarding', storeId])).toBeUndefined()
     expect(heldInvitationToken()).toBe(token)
   })

@@ -1,16 +1,20 @@
+import type { ReactNode } from 'react'
+
 import { Skeleton } from '@heroui/react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { apiEnabled } from '@/lib/api-mode'
-import { useOnboarding } from '../api/queries'
+import { useMe, useOnboarding } from '../api/queries'
 import { useAcceptInvitation } from '../hooks/use-accept-invitation'
 import { useGoToSignIn } from '../hooks/use-go-to-sign-in'
-import { forgetStore, rememberedStore } from '../lib/owner-store'
+import { currentStore } from '../lib/current-store'
 import { ONBOARDING_PATH } from '../lib/search-params'
+import { DisplayNamePrompt } from './display-name-form'
+import { InvitationPreview } from './invitation-preview'
 import { OnboardingChecklist } from './onboarding-checklist'
 import { OpenForSale } from './open-for-sale'
 import { ProblemNotice } from './problem-notice'
@@ -38,8 +42,7 @@ export function OnboardingScreen() {
 
 function InvitationFlow() {
   const { t } = useLocale()
-  const { state, retry } = useAcceptInvitation()
-  const [remembered] = useState(rememberedStore)
+  const { state, token, retry, signIn } = useAcceptInvitation()
 
   if (state.kind === 'accepting') {
     return (
@@ -49,24 +52,68 @@ function InvitationFlow() {
       </ScreenFrame>
     )
   }
-  if (state.kind === 'accepted') {
-    return state.accepted.role === 'owner'
-      ? <OnboardingView storeId={state.accepted.storeId} />
-      : (
-          <ScreenFrame title={t('stores.onboarding.title')}>
-            <p className="text-sm text-muted" role="status">{t('stores.onboarding.manager')}</p>
-          </ScreenFrame>
-        )
+  if (state.kind === 'signIn' && token) {
+    return (
+      <InvitationPreview
+        actionLabel={t('stores.invite.signIn')}
+        returnTo={ONBOARDING_PATH}
+        audience="owner"
+        signedOut
+        token={token}
+        onAction={signIn}
+      />
+    )
   }
+  if (state.kind === 'previewFailed') {
+    return (
+      <ScreenFrame title={t('stores.onboarding.title')}>
+        <ProblemNotice error={state.error} onRetry={retry} />
+      </ScreenFrame>
+    )
+  }
+  if (state.kind === 'accepted' && state.accepted.role === 'owner')
+    return <OnboardingView storeId={state.accepted.storeId} />
   if (state.kind === 'refused') {
-    const used = state.refusal === 'accepted' || state.refusal === 'member'
+    const refusal = <RefusalView audience={state.role} refusal={state.refusal} onRetry={retry} />
 
-    return used && remembered
-      ? <OnboardingView storeId={remembered} />
-      : <RefusalView refusal={state.refusal} onRetry={retry} />
+    return state.refusal === 'member' ? <OwnerStore fallback={refusal} /> : refusal
   }
 
-  return remembered ? <OnboardingView storeId={remembered} /> : <RefusalView refusal="missing" />
+  return <OwnerStore fallback={<RefusalView refusal="missing" />} />
+}
+
+/** A signed-in Owner on a new device finds the store from `GET /api/me`, with no link. A visitor who has not signed in (401) goes to sign-in and comes back here. Anyone else and an answer of 4xx get `fallback`; a lost connection or a 5xx says so, with a retry. */
+function OwnerStore({ fallback }: { fallback: ReactNode }) {
+  const { t } = useLocale()
+  const goToSignIn = useGoToSignIn(ONBOARDING_PATH)
+  const me = useMe()
+  const current = currentStore(me.data)
+  const owned = current?.role === 'owner' ? current : undefined
+  const signedOut = me.error instanceof ApiProblem && me.error.status === 401
+
+  useEffect(() => {
+    if (signedOut)
+      goToSignIn()
+  }, [signedOut, goToSignIn])
+
+  if (me.isPending || signedOut) {
+    return (
+      <ScreenFrame title={t('stores.onboarding.title')}>
+        <Skeleton className="h-40 w-full rounded-3xl" />
+      </ScreenFrame>
+    )
+  }
+  if (owned)
+    return <OnboardingView storeId={owned.storeId} />
+  if (me.isError && !(me.error instanceof ApiProblem && me.error.status < 500)) {
+    return (
+      <ScreenFrame title={t('stores.onboarding.title')}>
+        <ProblemNotice error={me.error} onRetry={() => void me.refetch()} />
+      </ScreenFrame>
+    )
+  }
+
+  return fallback
 }
 
 function OnboardingView({ storeId }: { storeId: string }) {
@@ -80,9 +127,7 @@ function OnboardingView({ storeId }: { storeId: string }) {
   useEffect(() => {
     if (signedOut)
       goToSignIn()
-    if (notYours)
-      forgetStore()
-  }, [signedOut, notYours, goToSignIn])
+  }, [signedOut, goToSignIn])
 
   if (notYours)
     return <RefusalView refusal="missing" />
@@ -105,6 +150,7 @@ function OnboardingView({ storeId }: { storeId: string }) {
 
   return (
     <ScreenFrame intro={store.name} title={t('stores.onboarding.title')}>
+      <DisplayNamePrompt />
       <OnboardingChecklist conditions={conditions} />
       <StoreInformationForm store={store} />
       <OpenForSale onboarding={query.data} />

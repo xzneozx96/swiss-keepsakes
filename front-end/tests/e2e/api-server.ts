@@ -45,16 +45,26 @@ export async function grantSuperAdmin(email: string) {
     throw new Error(`${email} could not be made a Super Admin: ${await response.text()}`)
 }
 
-export interface OwnerInvitationMail { to: string, subject: string, text: string, link: string }
+export interface InvitationMail { to: string, subject: string, text: string, link: string }
+export type OwnerInvitationMail = InvitationMail
 
-/** Runs the mail attempt for the newest N20 job of this address and returns the mail it would send, with its link. */
-export async function ownerInvitationMail(email: string): Promise<OwnerInvitationMail> {
-  const response = await fetch(`${inbox}/invitation-link?email=${encodeURIComponent(email)}`, { method: 'POST' })
+async function invitationMail(template: 'N18' | 'N20', email: string): Promise<InvitationMail> {
+  const response = await fetch(`${inbox}/invitation-link?email=${encodeURIComponent(email)}&template=${template}`, { method: 'POST' })
 
   if (!response.ok)
-    throw new Error(`No N20 link could be made for ${email}: ${await response.text()}`)
+    throw new Error(`No ${template} link could be made for ${email}: ${await response.text()}`)
 
-  return response.json() as Promise<OwnerInvitationMail>
+  return response.json() as Promise<InvitationMail>
+}
+
+/** Runs the mail attempt for the newest N20 job of this address and returns the mail it would send, with its link. */
+export function ownerInvitationMail(email: string): Promise<InvitationMail> {
+  return invitationMail('N20', email)
+}
+
+/** The same for the newest N18 job: the Store Manager's invitation, whose link opens M01. */
+export function managerInvitationMail(email: string): Promise<InvitationMail> {
+  return invitationMail('N18', email)
 }
 
 export function newStoreName(): { name: string, slug: string } {

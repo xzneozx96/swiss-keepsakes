@@ -37,18 +37,17 @@ export function spentToken(refusal: AcceptRefusal): boolean {
   return refusal === 'notFound' || refusal === 'expired' || refusal === 'revoked' || refusal === 'accepted' || refusal === 'member'
 }
 
-export function refusalKeys(refusal: AcceptRefusal): { title: MessageKey, text: MessageKey } {
-  switch (refusal) {
-    case 'missing': return { title: 'stores.refusal.missing.title', text: 'stores.refusal.missing.text' }
-    case 'notFound': return { title: 'stores.refusal.notFound.title', text: 'stores.refusal.notFound.text' }
-    case 'expired': return { title: 'stores.refusal.expired.title', text: 'stores.refusal.expired.text' }
-    case 'revoked': return { title: 'stores.refusal.revoked.title', text: 'stores.refusal.revoked.text' }
-    case 'accepted': return { title: 'stores.refusal.accepted.title', text: 'stores.refusal.accepted.text' }
-    case 'member': return { title: 'stores.refusal.member.title', text: 'stores.refusal.member.text' }
-    case 'mismatch': return { title: 'stores.refusal.mismatch.title', text: 'stores.refusal.mismatch.text' }
-    case 'unverified': return { title: 'stores.refusal.unverified.title', text: 'stores.refusal.unverified.text' }
-    case 'superAdmin': return { title: 'stores.refusal.superAdmin.title', text: 'stores.refusal.superAdmin.text' }
-    case 'failed': return { title: 'stores.refusal.failed.title', text: 'stores.refusal.failed.text' }
+export type InviteRole = 'owner' | 'manager'
+
+const managerWording: ReadonlySet<AcceptRefusal> = new Set(['expired', 'revoked', 'accepted', 'member'])
+
+/** The copy of a refusal. A Store Manager is told to ask the store's Owner, an Owner to ask the platform team. */
+export function refusalKeys(refusal: AcceptRefusal, role: InviteRole = 'owner'): { title: MessageKey, text: MessageKey } {
+  const suffix = role === 'manager' && managerWording.has(refusal) ? '.manager' : ''
+
+  return {
+    title: `stores.refusal.${refusal}${suffix}.title` as MessageKey,
+    text: `stores.refusal.${refusal}${suffix}.text` as MessageKey,
   }
 }
 

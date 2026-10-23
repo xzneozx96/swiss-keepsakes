@@ -38,6 +38,10 @@ export const queryKeys = {
   stores: {
     adminStores: ['stores', 'adminStores'],
     onboarding: ['stores', 'onboarding'],
+    me: ['stores', 'me'],
+    members: ['stores', 'members'],
+    invitationPreview: ['stores', 'invitationPreview'],
+    sessionUser: ['stores', 'sessionUser'],
   },
   tours: {
     records: ['tours', 'records'],

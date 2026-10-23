@@ -2,7 +2,6 @@ import type { StoresClient } from './client'
 
 import { ApiProblem } from '@/features/data-client/errors'
 import { dropInvitationToken } from '../lib/invitation-token'
-import { rememberStore } from '../lib/owner-store'
 import { acceptRefusal, spentToken } from '../lib/refusals'
 
 /** No call waits longer than this. An abort ends the call like a lost connection does. */
@@ -64,14 +63,13 @@ export function createStoresClient(): StoresClient {
         params: { path: { id } },
         body: language ? { language } : {},
       })),
-    // What the answer means for the held token and the remembered store happens here, not in the screen: the
+    // What the answer means for the held token happens here, not in the screen: the
     // screen may be gone when the answer arrives, and the token must not outlive a use.
     acceptInvitation: async ({ token, idempotencyKey }) => {
       try {
         const accepted = await answer((await loadClient()).POST('/api/me/invitations/accept', { ...keyed(idempotencyKey), body: { token } }))
 
         dropInvitationToken(token)
-        rememberStore(accepted.storeId)
 
         return accepted
       }
@@ -80,6 +78,27 @@ export function createStoresClient(): StoresClient {
           dropInvitationToken(token)
         throw error
       }
+    },
+    previewInvitation: async token =>
+      answer((await loadClient()).POST('/api/public/invitations/preview', { ...timeout(), body: { token } })),
+    me: async () => answer((await loadClient()).GET('/api/me', timeout())),
+    members: async storeId =>
+      answer((await loadClient()).GET('/api/store/{storeId}/members', { ...timeout(), params: { path: { storeId } } })),
+    inviteManager: async ({ storeId, idempotencyKey, ...body }) =>
+      answer((await loadClient()).POST('/api/store/{storeId}/member-invitations', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
+    resendManagerInvitation: async ({ storeId, invitationId, language, idempotencyKey }) =>
+      answer((await loadClient()).POST('/api/store/{storeId}/member-invitations/{invitationId}/resend', {
+        ...keyed(idempotencyKey),
+        params: { path: { storeId, invitationId } },
+        body: language ? { language } : {},
+      })),
+    revokeManagerInvitation: async ({ storeId, invitationId, idempotencyKey }) =>
+      answer((await loadClient()).POST('/api/store/{storeId}/member-invitations/{invitationId}/revoke', { ...keyed(idempotencyKey), params: { path: { storeId, invitationId } } })),
+    removeMember: async ({ storeId, memberId, idempotencyKey }) => {
+      const { error, response } = await (await loadClient()).DELETE('/api/store/{storeId}/members/{memberId}', { ...keyed(idempotencyKey), params: { path: { storeId, memberId } } })
+
+      if (!response.ok)
+        throw problemOf(response, error)
     },
     onboarding: async storeId =>
       answer((await loadClient()).GET('/api/store/{storeId}/onboarding', { ...timeout(), params: { path: { storeId } } })),
