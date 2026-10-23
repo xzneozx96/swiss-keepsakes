@@ -34,7 +34,7 @@ const configSchema = z.object({
   // The sender. Gmail accepts only the signed-in account. Message-IDs use its domain.
   SMTP_FROM: z.email({ error: 'Expected an email address' }).optional(),
   // The sender's display name. Plain text: no control characters, angle brackets or quotes, so it cannot open a header.
-  SMTP_FROM_NAME: z.string().trim().min(1).max(80).regex(/^[^\u0000-\u001F\u007F<>"]+$/, 'Expected plain text without line breaks, angle brackets or quotes').default('Swiss Keepsakes'),
+  SMTP_FROM_NAME: z.string().trim().min(1).max(80).refine(isPlainName, 'Expected plain text without line breaks, angle brackets or quotes').default('Swiss Keepsakes'),
   // Better Auth (D8). BETTER_AUTH_URL is the origin the browser sees: the cookie, the trusted origin and the
   // Google redirect URI come from it. The secret is required everywhere, so a missing one never falls back to
   // Better Auth's built-in development secret.
@@ -49,6 +49,11 @@ const configSchema = z.object({
 })
 
 const googleKeys = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'] as const
+
+// A sender name never carries a control character, an angle bracket or a quote, so it cannot open a header.
+function isPlainName(name: string): boolean {
+  return ![...name].some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127 || '<>"'.includes(char))
+}
 
 const smtpKeys = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_SECURE', 'SMTP_USER', 'SMTP_PASSWORD', 'SMTP_FROM'] as const
 
