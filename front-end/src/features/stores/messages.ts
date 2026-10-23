@@ -1,5 +1,6 @@
 /** A01 (Super Admin's stores) and A02 (the invited Owner's onboarding), E2.3. */
 export const storesEn = {
+  'stores.apiOnly': 'This screen works with the live API only.',
   'stores.problem.network': 'The connection was lost. Check it and try again.',
   'stores.problem.generic': 'Something went wrong. Try again in a moment.',
   'stores.problem.retry': 'Try again',

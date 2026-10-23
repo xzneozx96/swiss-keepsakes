@@ -17,6 +17,8 @@ import { heldInvitationToken } from '@/features/stores/lib/invitation-token'
 import { memberProblemKey, showsMembersTab } from '@/features/stores/lib/member-problems'
 import { acceptRefusal, refusalKeys } from '@/features/stores/lib/refusals'
 
+vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
+
 interface Call { method: string, path: string, key: string | null, body: unknown }
 
 const storeId = '0198a000-0000-7000-8000-000000000001'

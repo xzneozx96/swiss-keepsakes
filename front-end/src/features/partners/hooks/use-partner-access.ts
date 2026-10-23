@@ -6,16 +6,14 @@ import { useEffect, useState } from 'react'
 import { useLocale } from '@/contexts/locale-context'
 import {
   CODE_LENGTH,
+  EXPIRED_CODE,
   RESEND_AFTER_MS,
+  WRONG_CODE,
 } from '@/features/auth/hooks/use-sign-in'
 import { useDemoActions, useDemoNow, useDemoSelector } from '@/features/demo'
 import { demoNow } from '@/features/demo/clock'
 import { sendMail } from '@/features/notifications/mail'
 import { usePartners } from '@/features/partners/api/queries'
-
-/** Prototype partner codes: any 6 digits open the report, except these two. */
-export const WRONG_CODE = '000000'
-export const EXPIRED_CODE = '999999'
 
 /** R10: once the code is entered, the report opens on this browser for 30 days. */
 const SESSION_MS = 30 * 24 * 60 * 60 * 1000

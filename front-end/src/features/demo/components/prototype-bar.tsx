@@ -18,6 +18,7 @@ import { useLocale } from '@/contexts/locale-context'
 
 // import { ProposalsToggle } from "./proposal-mark";
 
+// import { SignInDemoHint } from "@/features/auth/components/sign-in-demo-hint";
 // import { CartDemoControl } from "@/features/cart/components/cart-demo-control";
 // import { CheckoutDemoControl } from "@/features/checkout/components/checkout-demo-control";
 import { MailPanel } from '@/features/notifications/components/mail-panel'
@@ -240,6 +241,7 @@ export function PrototypeBar() {
                 <ToursDemoControl onDone={() => setOpen(false)} />
                 <TourDemoControl onDone={() => setOpen(false)} />
                 <ProposalsToggle />
+                <SignInDemoHint />
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-medium">Demo data</p>
                   <p className="text-sm text-muted">

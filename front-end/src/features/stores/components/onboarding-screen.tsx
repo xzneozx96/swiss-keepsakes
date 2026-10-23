@@ -3,8 +3,11 @@ import type { ReactNode } from 'react'
 import { Skeleton } from '@heroui/react'
 import { useEffect } from 'react'
 
+import { EmptyState } from '@/components/empty-state'
+import { InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
+import { apiEnabled } from '@/lib/api-mode'
 import { useMe, useOnboarding } from '../api/queries'
 import { useAcceptInvitation } from '../hooks/use-accept-invitation'
 import { useGoToSignIn } from '../hooks/use-go-to-sign-in'
@@ -24,6 +27,20 @@ import { StoreInformationForm } from './store-information-form'
  * the store, edits the store information and opens it for sale.
  */
 export function OnboardingScreen() {
+  const { t } = useLocale()
+
+  if (!apiEnabled) {
+    return (
+      <ScreenFrame title={t('stores.onboarding.title')}>
+        <EmptyState icon={InfoIcon} message={t('stores.apiOnly')} />
+      </ScreenFrame>
+    )
+  }
+
+  return <InvitationFlow />
+}
+
+function InvitationFlow() {
   const { t } = useLocale()
   const { state, token, retry, signIn } = useAcceptInvitation()
 

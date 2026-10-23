@@ -4,7 +4,7 @@ import { storesEn } from '../../src/features/stores/messages'
 import { storesDe } from '../../src/features/stores/messages.de'
 import { grantSuperAdmin, latestCode, newEmail, newStoreName, SPA_ORIGIN } from './api-server'
 
-// What the real-API specs of the invitation screens share (stores.spec.ts, members.spec.ts): the screens'
+// What the real-API specs of the invitation screens share (stores.api.spec.ts, members.api.spec.ts): the screens'
 // own copy in both languages, a separate browser per person, the sign-in sheet, and the Super Admin who creates a store.
 const EMAIL_FIELD = /e-?mail/i
 const REGEXP_MARKS = /[.*+?^${}()|[\]\\]/g
