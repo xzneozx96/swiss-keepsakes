@@ -66,6 +66,23 @@
 }
 
 /*
+ * The one-time code fills the field's width, so its edges line up with the Continue button. The two groups share
+ * the space and the six slots split it evenly around the separator. HeroUI sizes a slot at 38 x 40 px.
+ */
+.input-otp__group {
+  flex: 1 1 0;
+}
+
+.input-otp__slot {
+  height: 3.25rem;
+  width: auto;
+}
+
+.input-otp__slot-value {
+  font-size: 1.375rem;
+}
+
+/*
  * Calendar card. Today is the demo-clock day (React Aria's data-today follows the real
  * clock, which differs during a demo): soft accent, weight 600 and a 3px dot.
  * Nav chevrons are ink; red stays for selection.
