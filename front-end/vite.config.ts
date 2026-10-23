@@ -8,7 +8,7 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 // The API's address for the dev and preview servers. The browser only ever calls /api on its own origin.
-const apiProxy = { '/api': process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:3000' }
+const apiProxy = { '/api': process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:5002' }
 
 // https://vitejs.dev/config/
 export default defineConfig({

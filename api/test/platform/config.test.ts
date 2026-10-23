@@ -22,10 +22,10 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
     })
   })
 
-  it('[E1.8] defaults ROLE to all, HOST to 0.0.0.0, PORT to 3000 and LOG_LEVEL to info, and treats blank values as unset', () => {
+  it('[E1.8] defaults ROLE to all, HOST to 0.0.0.0, PORT to 5002 and LOG_LEVEL to info, and treats blank values as unset', () => {
     expect(loadConfig({ ...urls, ROLE: ' ', PORT: '' })).toEqual({
       ok: true,
-      config: { ROLE: 'all', HOST: '0.0.0.0', PORT: 3000, LOG_LEVEL: 'info', ...urls, APP_URL: 'http://localhost:3002' },
+      config: { ROLE: 'all', HOST: '0.0.0.0', PORT: 5002, LOG_LEVEL: 'info', ...urls, APP_URL: 'http://localhost:3002' },
     })
   })
 
@@ -105,7 +105,7 @@ describe('[E2.8] config: SMTP_* is all six variables or none', () => {
       config: {
         ROLE: 'all',
         HOST: '0.0.0.0',
-        PORT: 3000,
+        PORT: 5002,
         APP_URL: 'http://localhost:3002',
         LOG_LEVEL: 'info',
         ...urls,

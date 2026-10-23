@@ -18,7 +18,7 @@ const configSchema = z.object({
   NODE_ENV: z.string().optional(),
   ROLE: z.enum(['api', 'worker', 'all']).default('all'),
   HOST: host.default('0.0.0.0'),
-  PORT: port.default(3000),
+  PORT: port.default(5002),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   // Request handlers use the pooled connection, pg-boss and migrations the direct one (D2).
   // The names are the ones `neon env pull` writes.
