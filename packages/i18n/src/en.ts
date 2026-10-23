@@ -7,8 +7,10 @@ export const mailEn = {
   'mail.N19.ignore':
     'If you didn\'t open the report link, you can ignore this email. Nobody can open your report without this code.',
   'mail.N01.subject': 'Your {shop} sign-in code: {code}',
+  'mail.N01.label': 'Your sign-in code',
   'mail.N01.code': 'Your sign-in code is {code}.',
   'mail.N01.expiry': 'Enter it in the sign-in window. It works for 5 minutes.',
+  'mail.N01.reason': 'You get this because a sign-in code was asked for at {shop}.',
   'mail.N01.ignore': 'If you didn’t try to sign in, you can ignore this email.',
   'mail.pickup': 'Pickup: {pickupDate} at {place}.',
   'mail.N02.subject': 'We received your request {orderRef}',
@@ -63,16 +65,20 @@ export const mailEn = {
   'mail.N23.staff':
     'Order {orderRef} was cancelled automatically: the first payment wasn’t made by {dueAt}.',
   'mail.N23.stock': 'The items it held are back in stock.',
+  'mail.linkFallback': 'If the button doesn’t work, copy this link into your browser:',
+  'mail.footer': 'Swiss Keepsakes · Lucerne',
   'mail.invitation.expiry': 'The link works for 7 days.',
   'mail.invitation.ignore':
     'If you didn’t expect this invitation, you can ignore this email.',
   'mail.N18.subject': '{inviter} invited you to {store}',
   'mail.N18.invited': '{inviter} invited you to join {store} as Store Manager.',
-  'mail.N18.accept': 'Open the invitation, sign in and accept it: {link}',
+  'mail.N18.accept': 'Open the invitation, sign in and accept it',
+  'mail.N18.button': 'Accept invitation',
   'mail.N20.subject': 'You’re invited to open {store}',
   'mail.N20.invited': 'You’re invited to run {store} as its Owner.',
   'mail.N20.setup':
-    'Open the invitation, sign in and complete the steps your store needs before it can sell: {link}',
+    'Open the invitation, sign in and complete the steps your store needs before it can sell',
+  'mail.N20.button': 'Set up your store',
 
   'tourMail.greeting': 'Hello {guest},',
   'tourMail.seller': 'Seller: {seller}',

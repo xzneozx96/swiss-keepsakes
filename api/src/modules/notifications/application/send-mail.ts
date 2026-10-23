@@ -61,8 +61,8 @@ export function makeSendMail<T>({ uow, sentMail, mailer, invitationLink, clock }
           await sentMail.recordCancelled(tx, job.mailId, clock.now())
           return
         }
-        const { to, subject, text } = renderMail(job, link)
-        const { response } = await mailer.send({ id: job.mailId, to, subject, text })
+        const { to, subject, text, html } = renderMail(job, link)
+        const { response } = await mailer.send({ id: job.mailId, to, subject, text, html })
         await sentMail.recordSent(tx, job.mailId, { at: clock.now(), response })
       })
     }

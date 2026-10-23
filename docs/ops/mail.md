@@ -1,6 +1,6 @@
 # Mail
 
-Mail goes over SMTP (architecture D12). A business command queues a `mail` job and a `notifications.sent_mail` row in its own transaction. Each mail goes to one plain address. A list, a display name or a header line in `to` is refused, and the command rolls back. An invitation mail's job holds the invitation id, never the link or its token. The worker builds the link when it sends (architecture section 8). The worker renders the template in the language stored with the job and sends it to the SMTP server that `SMTP_*` names. The code is in `api/src/modules/notifications/` and `api/src/platform/mail.ts`.
+Mail goes over SMTP (architecture D12). A business command queues a `mail` job and a `notifications.sent_mail` row in its own transaction. Each mail goes to one plain address. A list, a display name or a header line in `to` is refused, and the command rolls back. An invitation mail's job holds the invitation id, never the link or its token. The worker builds the link when it sends (architecture section 8). The worker renders the template in the language stored with the job and sends it to the SMTP server that `SMTP_*` names. N01, N18 and N20 go out as text plus HTML (multipart/alternative, plain text first). The other templates are not built on the server yet. The code is in `api/src/modules/notifications/` and `api/src/platform/mail.ts`.
 
 ## Settings
 
@@ -63,6 +63,19 @@ Each attempt locks the mail's `sent_mail` row from before the send until it reco
 - A mail recorded as `sent` is never sent again, and a mail marked `failed` after its alert is never sent and never turns `sent`.
 - Not preventable. SMTP has no idempotency key. When the server accepted a message but the attempt never committed, the retry sends the message again with the same `Message-ID`, which is `<mail id@domain of SMTP_FROM>`. This happens when the reply was lost, when the worker crashed, or when a shutdown cut the attempt after the 10 s limit in `main.ts`. For an invitation the retry mints a new token, so the two messages carry different links and only the second works. A mailbox that drops the second message because it has the same `Message-ID`, as Gmail does, leaves the person with the dead link. Resend the invitation then: it queues a new mail with a new `Message-ID`.
 
+## The HTML part
+
+N01, N18 and N20 carry a branded HTML body besides the plain text. The words come from `packages/i18n` once, and both parts are built from them. `api/src/modules/notifications/application/mail-layout.ts` adds the layout: one column, a rounded white card on the paper-coloured page, the wordmark in the serif face with a Georgia fallback, in the navy of the logo (ivory in dark mode), the code in large bold, letter-spaced digits in the sans face (N01), and a centred button with the plain link under it (N18, N20). The button is red, the only red in the mail, and a bar of its own width, full width on a phone. The one mail-wide brand name is `brandName` in `render-mail.ts`. N01 also says in its footer why the mail arrived.
+
+- **Inline styles and tables.** Gmail drops what is not inline and Outlook ignores most modern CSS, so Outlook gets a fixed 600 pixel wrapper in a conditional comment. The one `<style>` block only adds dark mode and narrow-screen padding. Without it the mail still reads, in the light colours.
+- **No remote content.** No image, no web font, no tracking pixel, no script. Nothing is fetched when the mail opens.
+- **Escaping.** Every value and every word of copy is escaped for HTML text and attributes. The text part carries values as typed. A link goes into an `href` only when it is an http(s) URL without spaces, quotes or angle brackets. Anything else raises `MailRenderError` and the mail fails at once.
+- **Hidden characters.** Control, bidi and zero-width characters are stripped from every value before both parts are built, so a name cannot reorder or hide text. The length of an inviter or store name is not capped on the server.
+- **Retries.** The text and the HTML of one mail are the same bytes on every attempt. Only an invitation's token, and so its link, changes (see Duplicates).
+- **Dark mode.** A `color-scheme` meta and a `prefers-color-scheme` block with warm dark colours, not inverted ones. Clients that ignore it show the light version.
+
+To preview, run `MAIL_PREVIEW_DIR=/tmp/opencode/mail-preview pnpm exec vitest run api/test/application/notifications/mail-preview.test.ts` from the repository root. It writes each template in EN and DE, with a long-name variant of the invitations, as an `.html` file in that folder. Open them in a browser, or screenshot them at 600 and 375 pixels wide.
+
 ## The live check
 
-`pnpm --filter @sk/api test:smtp-live` sends N18 and N20 in English and German through the SMTP adapter, with `SMTP_*` from the shell or `api/.env.local`. It sends only to the owner's test inbox, `tuananhngyen218@gmail.com`, and prints each `Message-ID` and the server's reply. `pnpm test`, `pnpm test:integration` and CI never run it.
+`pnpm --filter @sk/api test:smtp-live` sends N01 (with the fake code 000000), N18 and N20 in English and German through the SMTP adapter, with `SMTP_*` from the shell or `api/.env.local`. It sends only to the owner's test inbox, `tuananhngyen218@gmail.com`, and prints each `Message-ID` and the server's reply. `pnpm test`, `pnpm test:integration` and CI never run it.
