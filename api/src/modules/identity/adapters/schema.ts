@@ -13,6 +13,8 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 
+import { timestamps } from '../../../platform/db/timestamps.ts'
+
 export const identitySchema = pgSchema('identity')
 
 export const user = identitySchema.table('user', {
@@ -134,6 +136,7 @@ export const guestProfiles = identitySchema.table('guest_profiles', {
     .default(sql`uuidv7()`)
     .primaryKey(),
   authUserId: uuid('auth_user_id').unique(),
+  ...timestamps(),
 })
 
 // A store, the tenant every other table scopes by (D9, section 5). The Super Admin creates it as `invited`, the
@@ -153,8 +156,7 @@ export const stores = identitySchema.table('stores', {
   stripePayoutsEnabled: boolean('stripe_payouts_enabled').notNull().default(false),
   twintCapability: text('twint_capability'),
   defaultLanguage: text('default_language', { enum: ['en', 'de'] }).notNull().default('en'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  ...timestamps(),
 }, table => [
   check('stores_status_check', sql`${table.status} in ('invited', 'onboarding', 'live', 'suspended')`),
   check('stores_default_language_check', sql`${table.defaultLanguage} in ('en', 'de')`),
@@ -173,6 +175,7 @@ export const storeMemberships = identitySchema.table('store_memberships', {
   storeId: uuid('store_id').notNull().references(() => stores.id),
   role: text('role', { enum: ['owner', 'manager'] }).notNull(),
   acceptedAt: timestamp('accepted_at', { withTimezone: true }).notNull(),
+  ...timestamps(),
 }, table => [
   unique('store_memberships_user_id_store_id_unique').on(table.userId, table.storeId),
   index('store_memberships_store_id_idx').on(table.storeId),
