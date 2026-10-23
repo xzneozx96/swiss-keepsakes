@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
-import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, signedInSuperAdmin, signInFromSheet, words } from './invitation-flows'
+import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, sayStart, signedInSuperAdmin, signInFromSheet, words } from './invitation-flows'
 
 // [E2.3][S8] The invitation screens against the real API (Better Auth, its own database) on one origin, at 375x812,
 // on WebKit and Chromium, EN and DE. The first specs drive what a visitor can reach with no invitation: the token
