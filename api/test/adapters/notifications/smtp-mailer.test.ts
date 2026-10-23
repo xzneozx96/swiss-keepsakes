@@ -24,7 +24,7 @@ function capturingTransport() {
 describe('[E2.8] SMTP adapter', () => {
   it('[E2.4] a display name with markup and a line break goes out as plain text, with no HTML part and no extra header', async () => {
     const { transport, messages } = capturingTransport()
-    const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com')
+    const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com', 'Swiss Keepsakes')
     const rendered = renderMail({ template: 'N18', to: 'lena.meier@example.ch', language: 'en', storeId: null, params: { inviter: '<b>Ngoc</b> <img src=x onerror=alert(1)>\r\nBcc: evil@example.ch', store: 'Lucerne Gifts', invitationId: mailId } }, 'https://swiss-keepsakes.example/i/7f3c')
 
     await mailer.send({ id: mailId, ...rendered })
@@ -37,9 +37,9 @@ describe('[E2.8] SMTP adapter', () => {
     expect(message).toContain('<b>Ngoc</b> <img src=x onerror=alert(1)>')
   })
 
-  it('[E2.8] sends from SMTP_FROM to the recipient, with the mail id at the sender\'s domain as Message-ID', async () => {
+  it('[E2.8] sends from SMTP_FROM, named SMTP_FROM_NAME, to the recipient, with the mail id at the sender\'s domain as Message-ID', async () => {
     const { transport, messages } = capturingTransport()
-    const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com')
+    const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com', 'Swiss Keepsakes')
 
     const result = await mailer.send({ id: mailId, to: 'lena.meier@example.ch', subject: 'Ngoc Tran invited you to Lucerne Gifts', text: 'Hello,\n\nOpen it: https://swiss-keepsakes.example/i/7f3c' })
 
@@ -47,7 +47,7 @@ describe('[E2.8] SMTP adapter', () => {
     const [message = ''] = messages
     const headers = message.slice(0, message.indexOf('\n\n'))
     expect(headers).toMatch(/^Message-ID: <0192f3a0-0000-7000-8000-0000000000bb@gmail\.com>$/m)
-    expect(headers).toMatch(/^From: keepsakes\.test@gmail\.com$/m)
+    expect(headers).toMatch(/^From: Swiss Keepsakes <keepsakes\.test@gmail\.com>$/m)
     expect(headers).toMatch(/^To: lena\.meier@example\.ch$/m)
     expect(headers).toMatch(/^Subject: Ngoc Tran invited you to Lucerne Gifts$/m)
     expect(headers).toMatch(/^Content-Type: text\/plain; charset=utf-8$/m)
@@ -56,7 +56,7 @@ describe('[E2.8] SMTP adapter', () => {
 
   it('[E2.8] a repeat of the same mail carries the same Message-ID', async () => {
     const { transport, messages } = capturingTransport()
-    const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com')
+    const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com', 'Swiss Keepsakes')
     const mail = { id: mailId, to: 'lena.meier@example.ch', subject: 'Hello', text: 'Hello' }
 
     await mailer.send(mail)

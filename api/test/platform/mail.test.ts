@@ -42,7 +42,7 @@ async function plainSmtpServer() {
 describe('[E2.8] the SMTP client', () => {
   it('[E2.8] with SMTP_SECURE=false it requires STARTTLS and never sends the login to a server without it', async () => {
     const { port, commands } = await plainSmtpServer()
-    const transport = createSmtpTransport({ host: '127.0.0.1', port, secure: false, user: 'sender@example.com', password: 'not-a-real-password', from: 'sender@example.com' })
+    const transport = createSmtpTransport({ host: '127.0.0.1', port, secure: false, user: 'sender@example.com', password: 'not-a-real-password', from: 'sender@example.com', fromName: 'Swiss Keepsakes' })
 
     await expect(transport.sendMail({ from: 'sender@example.com', to: 'lena.meier@example.ch', subject: 'Hello', text: 'Hello' })).rejects.toMatchObject({ code: 'ETLS' })
 

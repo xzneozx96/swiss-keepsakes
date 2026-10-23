@@ -9,11 +9,11 @@ export interface SmtpSender {
 
 // The Mailer over SMTP (D12). The Message-ID is the mail id at the sender's domain, as section 8 asks, so a
 // repeat after a lost reply carries the same Message-ID.
-export function createSmtpMailer(transport: SmtpSender, from: string): Mailer {
+export function createSmtpMailer(transport: SmtpSender, from: string, fromName: string): Mailer {
   const domain = from.slice(from.lastIndexOf('@') + 1)
   return {
     async send({ id, to, subject, text }) {
-      const { response } = await transport.sendMail({ from, to, subject, text, messageId: `<${id}@${domain}>` })
+      const { response } = await transport.sendMail({ from: { name: fromName, address: from }, to, subject, text, messageId: `<${id}@${domain}>` })
       return { response }
     },
   }
