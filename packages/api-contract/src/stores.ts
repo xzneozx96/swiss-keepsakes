@@ -15,6 +15,7 @@ export const storeSchema = z.object({
   name: z.string(),
   status: storeStatus,
   defaultLanguage: language,
+  createdAt: z.iso.datetime(),
 }).meta({ id: 'Store' })
 
 const invitationSchema = z.object({

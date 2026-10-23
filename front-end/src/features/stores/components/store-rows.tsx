@@ -77,6 +77,7 @@ function StoreCards({ stores, label }: { stores: AdminStore[], label: string }) 
                   <span className="text-muted">{t('stores.list.paymentAccount')}</span>
                   <span className="font-medium">{t(`stores.condition.${store.paymentAccount}`)}</span>
                 </p>
+                <p className="text-muted">{t('stores.list.created', { date: formatDate(new Date(store.createdAt), intlLocale) })}</p>
               </div>
               {(invitation?.state === 'open' || invitation?.state === 'expired') && (
                 <div className="flex justify-end border-t border-separator px-4 py-2.5">
@@ -93,7 +94,7 @@ function StoreCards({ stores, label }: { stores: AdminStore[], label: string }) 
 
 /** From 1024px a table, below it the cards. The Owner's email has its own column, and so does the resend. */
 export function StoreRows({ stores, label, isLoading }: { stores: AdminStore[], label: string, isLoading: boolean }) {
-  const { t } = useLocale()
+  const { t, intlLocale } = useLocale()
   const columns: DataTableColumn<AdminStore>[] = [
     {
       id: 'store',
@@ -134,6 +135,12 @@ export function StoreRows({ stores, label, isLoading }: { stores: AdminStore[], 
       skeleton: 'chip',
       cellClassName: 'whitespace-nowrap',
       render: store => <StatusChip tone={paymentTone[store.paymentAccount]}>{t(`stores.condition.${store.paymentAccount}`)}</StatusChip>,
+    },
+    {
+      id: 'created',
+      header: t('stores.column.created'),
+      cellClassName: 'whitespace-nowrap tabular-nums',
+      render: store => formatDate(new Date(store.createdAt), intlLocale),
     },
   ]
 

@@ -58,6 +58,10 @@
       "AdminStore": {
         "description": "A store as A01 lists it: its Owner invitation and whether its payment account is verified",
         "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "defaultLanguage": {
             "enum": [
               "en",
@@ -97,6 +101,7 @@
           "name",
           "status",
           "defaultLanguage",
+          "createdAt",
           "invitation",
           "paymentAccount"
         ],
@@ -565,6 +570,10 @@
       },
       "Store": {
         "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
           "defaultLanguage": {
             "enum": [
               "en",
@@ -597,7 +606,8 @@
           "slug",
           "name",
           "status",
-          "defaultLanguage"
+          "defaultLanguage",
+          "createdAt"
         ],
         "type": "object"
       },

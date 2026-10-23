@@ -672,7 +672,7 @@ describe('[E2.3] the Super Admin\'s routes over real sessions', () => {
     const ids = everything.map(item => item.id)
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids.filter(id => slugs.includes(id))).toEqual([...slugs].reverse())
-    expect(everything.find(item => item.id === slugs[0])).toMatchObject({ status: 'invited', paymentAccount: 'pending', invitation: { state: 'open' } })
+    expect(everything.find(item => item.id === slugs[0])).toMatchObject({ status: 'invited', paymentAccount: 'pending', createdAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT[\d:.]+Z$/), invitation: { state: 'open' } })
   })
 })
 

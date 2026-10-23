@@ -49,7 +49,7 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
     async insert(_tx, store) {
       if ([...state.stores.values()].some(row => row.slug === store.slug))
         return undefined
-      const row: Store = { id: nextId(), status: 'invited', ...store }
+      const row: Store = { id: nextId(), status: 'invited', createdAt: new Date('2026-10-20T08:00:00Z'), ...store }
       state.stores.set(row.id, row)
       return { ...row }
     },
@@ -219,7 +219,7 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
       state.users.set(userId, { email, name, emailVerified })
     },
     addStore(row: Partial<Store> & { slug: string }): Store {
-      const store: Store = { id: nextId(), name: 'Zürich Andenken', status: 'invited', defaultLanguage: 'en', ...row }
+      const store: Store = { id: nextId(), name: 'Zürich Andenken', status: 'invited', defaultLanguage: 'en', createdAt: new Date('2026-10-20T08:00:00Z'), ...row }
       state.stores.set(store.id, store)
       return store
     },

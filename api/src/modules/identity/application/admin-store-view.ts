@@ -3,9 +3,10 @@ import type { Invitation, LaterConditions } from '../ports.ts'
 import { invitationState } from '@sk/domain/identity'
 
 // A store as A01 lists it.
-export interface AdminStoreView extends Store {
+export interface AdminStoreView extends Omit<Store, 'createdAt'> {
   invitation: { email: string, state: InvitationState, expiresAt: string } | null
   paymentAccount: ConditionState
+  createdAt: string
 }
 
 export function adminStoreView(store: Store, invitation: Invitation | undefined, later: LaterConditions, now: Date): AdminStoreView {
@@ -15,5 +16,6 @@ export function adminStoreView(store: Store, invitation: Invitation | undefined,
       ? { email: invitation.email, state: invitationState(invitation, now), expiresAt: invitation.expiresAt.toISOString() }
       : null,
     paymentAccount: later['payment-account'],
+    createdAt: store.createdAt.toISOString(),
   }
 }

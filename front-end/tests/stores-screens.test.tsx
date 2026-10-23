@@ -22,7 +22,7 @@ interface Call { method: string, path: string, key: string | null, body: unknown
 
 const storeId = '0198a000-0000-7000-8000-000000000001'
 const token = 'tok_abcDEF123_-abcDEF123_-abcDEF123_-abcDEF123_-xyz'
-const store = storeSchema.parse({ id: storeId, slug: 'chi-ngoc', name: 'Chi Ngoc', status: 'onboarding', defaultLanguage: 'en' })
+const store = storeSchema.parse({ id: storeId, slug: 'chi-ngoc', name: 'Chi Ngoc', status: 'onboarding', defaultLanguage: 'en', createdAt: '2026-10-20T08:00:00.000Z' })
 
 interface Condition { key: 'store-information' | 'payment-account' | 'catalogue' | 'policies', state: 'met' | 'unmet' | 'pending' }
 function conditions(payment: Condition['state'] = 'pending'): Condition[] {
@@ -447,8 +447,8 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
 const listed = adminStoreListSchema.parse({
   items: [
     { ...store, status: 'invited', invitation: { email: 'owner@example.ch', state: 'open', expiresAt: '2026-10-29T10:00:00.000Z' }, paymentAccount: 'pending' },
-    { ...store, id: '0198a000-0000-7000-8000-000000000002', slug: 'old', name: 'Old Shop', status: 'invited', invitation: { email: 'late@example.ch', state: 'expired', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'pending' },
-    { ...store, id: '0198a000-0000-7000-8000-000000000003', slug: 'live', name: 'Live Shop', status: 'live', invitation: { email: 'done@example.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'met' },
+    { ...store, id: '0198a000-0000-7000-8000-000000000002', slug: 'old', name: 'Old Shop', status: 'invited', createdAt: '2026-09-15T08:00:00.000Z', invitation: { email: 'late@example.ch', state: 'expired', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'pending' },
+    { ...store, id: '0198a000-0000-7000-8000-000000000003', slug: 'live', name: 'Live Shop', status: 'live', createdAt: '2026-08-03T08:00:00.000Z', invitation: { email: 'done@example.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'met' },
   ],
   nextCursor: null,
 })
@@ -479,6 +479,7 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     expect(screen.getByText('Invitation to late@example.ch expired on 01.10.2026.')).toBeInTheDocument()
     expect(screen.getByText('done@example.ch accepted the invitation.')).toBeInTheDocument()
     expect(within(storeCards()).getAllByRole('button', { name: 'Send invitation again' })).toHaveLength(2)
+    expect(within(storeCards()).getByText('Created 15.09.2026')).toBeInTheDocument()
     expect(within(storeTable()).getAllByRole('button', { name: 'Send invitation again' })).toHaveLength(2)
   })
 
@@ -489,7 +490,7 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     await within(await screen.findByRole('grid', { name: 'All stores' })).findByText('Old Shop')
     const table = within(storeTable())
 
-    expect(table.getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Store', 'Owner', 'Status', 'Invitation', 'Payment account', 'Actions'])
+    expect(table.getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Store', 'Owner', 'Status', 'Invitation', 'Payment account', 'Created', 'Actions'])
     const [, first, second, third] = table.getAllByRole('row')
 
     expect(within(first).getByText('owner@example.ch')).toBeInTheDocument()
@@ -498,6 +499,9 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     expect(within(second).getByText('Expired')).toBeInTheDocument()
     expect(within(second).getByText('Expired 01.10.2026')).toBeInTheDocument()
     expect(within(third).getByText('Accepted')).toBeInTheDocument()
+    expect(within(first).getByText('20.10.2026')).toBeInTheDocument()
+    expect(within(second).getByText('15.09.2026')).toBeInTheDocument()
+    expect(within(third).getByText('03.08.2026')).toBeInTheDocument()
     expect(within(third).getByText('Open for sale')).toBeInTheDocument()
     expect(within(third).getByText('Done')).toBeInTheDocument()
     expect(within(third).queryByRole('button', { name: 'Send invitation again' })).not.toBeInTheDocument()

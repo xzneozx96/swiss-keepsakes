@@ -28,7 +28,7 @@ describe('[E2.3][AC03] A02\'s four conditions', () => {
     const { store, getOnboarding } = setup()
 
     expect(await getOnboarding(store.id)).toEqual({
-      store: { id: store.id, slug: 'lucerne', name: 'Zürich Andenken', status: 'onboarding', defaultLanguage: 'en' },
+      store: { id: store.id, slug: 'lucerne', name: 'Zürich Andenken', status: 'onboarding', defaultLanguage: 'en', createdAt: store.createdAt },
       conditions: [
         { key: 'store-information', state: 'met' },
         { key: 'payment-account', state: 'pending' },

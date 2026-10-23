@@ -10,6 +10,7 @@ const columns = {
   name: stores.name,
   status: stores.status,
   defaultLanguage: stores.defaultLanguage,
+  createdAt: stores.createdAt,
 }
 
 export function createStoreRepository(): StoreRepository<Tx> {

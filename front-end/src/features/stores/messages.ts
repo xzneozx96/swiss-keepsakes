@@ -26,6 +26,7 @@ export const storesEn = {
   'stores.column.status': 'Status',
   'stores.column.invitation': 'Invitation',
   'stores.column.payment': 'Payment account',
+  'stores.column.created': 'Created',
 
   'stores.create.open': 'Invite an Owner',
   'stores.create.title': 'Invite an Owner',
@@ -47,6 +48,7 @@ export const storesEn = {
   'stores.list.empty': 'No store yet. Invite the first Owner and the store is created with the invitation.',
   'stores.list.more': 'Show more stores',
   'stores.list.paymentAccount': 'Payment account',
+  'stores.list.created': 'Created {date}',
   'stores.list.noInvitation': 'No Owner invitation',
 
   'stores.status.invited': 'Invited',

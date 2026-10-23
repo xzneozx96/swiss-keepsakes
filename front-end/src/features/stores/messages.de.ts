@@ -27,6 +27,7 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.column.status': 'Status',
   'stores.column.invitation': 'Einladung',
   'stores.column.payment': 'Zahlungskonto',
+  'stores.column.created': 'Erstellt',
 
   'stores.create.open': 'Inhaber einladen',
   'stores.create.title': 'Inhaber einladen',
@@ -48,6 +49,7 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.list.empty': 'Noch kein Shop. Laden Sie den ersten Inhaber ein, dann wird der Shop mit der Einladung angelegt.',
   'stores.list.more': 'Weitere Shops anzeigen',
   'stores.list.paymentAccount': 'Zahlungskonto',
+  'stores.list.created': 'Erstellt am {date}',
   'stores.list.noInvitation': 'Keine Einladung an den Inhaber',
 
   'stores.status.invited': 'Eingeladen',
