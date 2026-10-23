@@ -95,7 +95,7 @@ function authProblems(present: Record<string, string>, parsed: Parsed | undefine
   ]
 }
 
-const developmentAppUrl = 'http://localhost:5173'
+const developmentAppUrl = 'http://localhost:4200'
 
 function appUrlProblems(present: Record<string, string>, parsed: Parsed | undefined): string[] {
   if (parsed?.NODE_ENV !== 'production')
