@@ -1,6 +1,6 @@
 # Đặc tả UX Phase 1: Swiss Stories & Gifts
 
-Phiên bản nháp 2 · Cập nhật 14/10/2026 · Nguồn yêu cầu: `docs/PRD/Swiss_Stories_and_Gifts_PRD_v2.md` (bản đã cập nhật quyết định)
+Phiên bản nháp 2 · Cập nhật 14/10/2026 · Nguồn yêu cầu: `docs/PRD/Swiss_keepsakes_PRD.md` (bản đã cập nhật quyết định)
 
 Tài liệu này mô tả trải nghiệm Phase 1 cho khách, Owner, Store Manager và đối tác giới thiệu. Luồng Super Admin trong Phase 1 chỉ dùng để mời và kích hoạt cửa hàng đầu tiên của Chị Ngọc; mở thêm merchant độc lập thuộc giai đoạn sau. Đây là **đặc tả thiết kế**, chưa có prototype hay kiểm thử tự động. Mỗi màn hình có một mã (ví dụ `C03`, `M04`) để đối chiếu khi dựng prototype sau này.
 

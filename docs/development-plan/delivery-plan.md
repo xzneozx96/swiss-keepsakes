@@ -272,6 +272,6 @@ The full list is architecture section 15. These are the ones that change the pla
 ## 8. Reading list
 
 - `docs/architecture/backend.md` is the design every story builds on.
-- `docs/PRD/Swiss_Stories_and_Gifts_PRD_v2.md` holds the product rules.
+- `docs/PRD/Swiss_keepsakes_PRD.md` holds the product rules.
 - `docs/ux/ux-spec-phase1.md` holds the screens (C, M, P, A), the mails (N01 to N24), the acceptance criteria (AC01 to AC34) and the scenarios (S1 to S12).
 - `docs/development-plan/sprint-0-1.md` is the pull-request plan for Sprints 0 and 1.

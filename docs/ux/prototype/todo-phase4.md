@@ -18,7 +18,7 @@ Use the local Vite preview with `cd front-end && npm run dev` from the project r
 
 - [Main prototype checklist](todo.md), Phase 4 scope and review rules.
 - [UX spec](../ux-spec-phase1.md), sections 3.1, 3.2, 4.1, 4.9, 4.10, 4.11, 5.1, 5.2, 6 (N16, N17), and scenario S10.
-- [Current PRD v2](../../PRD/Swiss_Stories_and_Gifts_PRD_v2.md), sections 3.1 and 12, and acceptance criteria AC16, AC17, AC18.
+- [Current PRD v2](../../PRD/Swiss_keepsakes_PRD.md), sections 3.1 and 12, and acceptance criteria AC16, AC17, AC18.
 - [Frontend conventions](../../../front-end/README.md) and [project design system](../design-system/project/README.md).
 
 ## Keep the phase bounded

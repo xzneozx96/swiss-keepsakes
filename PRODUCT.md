@@ -4,7 +4,7 @@
 
 Swiss Keepsakes helps travellers discover Lucerne gifts and fixed-departure tours, make requests or bookings, and understand collection, participation, and payment. Guests primarily use a phone. Merchant Owner and Manager roles operate the store. Referral partners receive a limited view of their transactions.
 
-Product authority is `docs/PRD/Swiss_Stories_and_Gifts_PRD_v2.md` and `docs/ux/ux-spec-phase1.md`. Prototype delivery order and owner approval are tracked in `docs/ux/prototype/todo.md` and `todo-phase2.md`.
+Product authority is `docs/PRD/Swiss_keepsakes_PRD.md` and `docs/ux/ux-spec-phase1.md`. Prototype delivery order and owner approval are tracked in `docs/ux/prototype/todo.md` and `todo-phase2.md`.
 
 ## Platform and stack
 
