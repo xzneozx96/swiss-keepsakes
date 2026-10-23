@@ -17,6 +17,7 @@ import { heldInvitationToken, takeInvitationFromHash } from '@/features/stores/l
 
 // The real screens, hooks, DataClient and generated client, with the HTTP answered here. The bodies copy
 // what the API sends (api/src/modules/identity/adapters/routes.ts).
+vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
 interface Call { method: string, path: string, key: string | null, body: unknown }
 

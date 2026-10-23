@@ -3,16 +3,18 @@ import { notFound } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
-import { PlusIcon, ShopIcon } from '@/components/icons'
+import { InfoIcon, PlusIcon, ShopIcon } from '@/components/icons'
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
+import { apiEnabled } from '@/lib/api-mode'
 import { useAdminStores } from '../api/queries'
 import { useGoToSignIn } from '../hooks/use-go-to-sign-in'
 import { countStores } from '../lib/store-counts'
 import { AdminShell } from './admin-shell'
 import { CreateStoreSheet } from './create-store-sheet'
 import { ProblemNotice } from './problem-notice'
+import { ScreenFrame } from './screen-frame'
 import { StoreRows } from './store-rows'
 import { StoreTiles } from './store-tiles'
 
@@ -23,6 +25,20 @@ import { StoreTiles } from './store-tiles'
  * says what happened, with a retry. A list that is already loaded stays on screen when a later read fails.
  */
 export function AdminStoresScreen() {
+  const { t } = useLocale()
+
+  if (!apiEnabled) {
+    return (
+      <ScreenFrame title={t('stores.admin.title')}>
+        <EmptyState icon={InfoIcon} message={t('stores.apiOnly')} />
+      </ScreenFrame>
+    )
+  }
+
+  return <AdminStores />
+}
+
+function AdminStores() {
   const { t } = useLocale()
   const goToSignIn = useGoToSignIn('/admin')
   const stores = useAdminStores()

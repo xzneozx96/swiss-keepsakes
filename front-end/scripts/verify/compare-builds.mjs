@@ -5,7 +5,7 @@ import { join } from 'node:path'
 // Renders the same routes from two static builds with a frozen clock and diffs the visible text.
 // usage: node scripts/verify/compare-builds.mjs <baseDir> <newDir> <outDir>
 import process from 'node:process'
-import { answerSession, launchBrowser, serve } from './browser.mjs'
+import { launchBrowser, serve } from './browser.mjs'
 
 const [baseDir, newDir, outDir] = process.argv.slice(2)
 
@@ -35,7 +35,6 @@ async function capture(label, dir) {
       const context = await browser.newContext({ viewport: { width: 430, height: 932 } })
 
       await context.clock.setFixedTime(FROZEN)
-      await answerSession(context)
       const page = await context.newPage()
       const base = `http://localhost:${port}/index.html`
 
@@ -49,6 +48,7 @@ async function capture(label, dir) {
           const booking = d.tours.bookings.find(b => b.guestId === guest.id) ?? d.tours.bookings[0]
 
           state.role = role
+          d.signedInGuestId = booking.guestId
           localStorage.setItem('sk.demo', JSON.stringify(state))
           localStorage.setItem('sk.language', JSON.stringify(lang))
 

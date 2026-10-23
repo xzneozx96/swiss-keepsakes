@@ -2,8 +2,11 @@ import { Skeleton } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
+import { EmptyState } from '@/components/empty-state'
+import { InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoSelector } from '@/features/demo'
+import { apiEnabled } from '@/lib/api-mode'
 import { useAcceptInvitation } from '../hooks/use-accept-invitation'
 import { useDisplayName } from '../hooks/use-display-name'
 import { INVITATION_PATH, ONBOARDING_PATH, STORE_PATH } from '../lib/search-params'
@@ -17,6 +20,20 @@ import { ScreenFrame } from './screen-frame'
  * accepts with a button. Nothing accepts by itself, so a crafted link cannot join anyone to a store silently.
  */
 export function InvitationScreen() {
+  const { t } = useLocale()
+
+  if (!apiEnabled) {
+    return (
+      <ScreenFrame title={t('stores.invite.title')}>
+        <EmptyState icon={InfoIcon} message={t('stores.apiOnly')} />
+      </ScreenFrame>
+    )
+  }
+
+  return <InvitationFlow />
+}
+
+function InvitationFlow() {
   const { t } = useLocale()
   const { state, token, accept, signIn, retry } = useAcceptInvitation(INVITATION_PATH, { manual: true })
   const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)

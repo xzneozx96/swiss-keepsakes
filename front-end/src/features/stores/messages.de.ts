@@ -1,6 +1,7 @@
 import type { storesEn } from './messages'
 
 export const storesDe: Record<keyof typeof storesEn, string> = {
+  'stores.apiOnly': 'Dieser Bildschirm funktioniert nur mit der echten API.',
   'stores.problem.network': 'Die Verbindung ist abgebrochen. Prüfen Sie sie und versuchen Sie es erneut.',
   'stores.problem.generic': 'Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal.',
   'stores.problem.retry': 'Erneut versuchen',

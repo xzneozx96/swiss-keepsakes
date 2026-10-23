@@ -5,10 +5,11 @@ import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
+import { useSignIn, WRONG_CODE } from '@/features/auth/hooks/use-sign-in'
 import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
-import { usePartnerAccess, WRONG_CODE } from '@/features/partners/hooks/use-partner-access'
+import { usePartnerAccess } from '@/features/partners/hooks/use-partner-access'
 
 const MINUTE = 60_000
 const PARTNER_TOKEN = 'r7Kq2mVx'
@@ -38,6 +39,14 @@ function Providers({ children }: { children: ReactNode }) {
   )
 }
 
+function renderGuestSignIn() {
+  const hook = renderHook(() => useSignIn('/account', false), { wrapper: Providers })
+
+  act(() => hook.result.current.submitEmail())
+
+  return hook
+}
+
 function renderPartnerAccess() {
   const hook = renderHook(() => usePartnerAccess(PARTNER_TOKEN), { wrapper: Providers })
 
@@ -57,6 +66,43 @@ function partnerCode(hook: ReturnType<typeof renderPartnerAccess>) {
 
   return access
 }
+
+describe('[E2.1] guest sign-in codes: 5 minutes and 3 tries', () => {
+  it('locks the code after the 3rd wrong try', () => {
+    const { result } = renderGuestSignIn()
+
+    act(() => result.current.verify(WRONG_CODE))
+    expect(result.current.status).toBe('wrong')
+    expect(result.current.attemptsLeft).toBe(2)
+
+    act(() => result.current.verify(WRONG_CODE))
+    expect(result.current.attemptsLeft).toBe(1)
+
+    act(() => result.current.verify(WRONG_CODE))
+    expect(result.current.status).toBe('locked')
+    expect(result.current.attemptsLeft).toBe(0)
+  })
+
+  it('takes a code until 5 minutes have passed', () => {
+    const { result } = renderGuestSignIn()
+
+    expect(result.current.codeMinutes).toBe(5)
+    vi.setSystemTime(Date.now() + 5 * MINUTE - 1_000)
+    act(() => result.current.verify('123456'))
+
+    expect(demo.store.getState().data.signedInGuestId).not.toBeNull()
+  })
+
+  it('refuses a code after 5 minutes', () => {
+    const { result } = renderGuestSignIn()
+
+    vi.setSystemTime(Date.now() + 5 * MINUTE + 1_000)
+    act(() => result.current.verify('123456'))
+
+    expect(result.current.status).toBe('expired')
+    expect(demo.store.getState().data.signedInGuestId).toBeNull()
+  })
+})
 
 describe('[E2.1] partner report codes keep 10 minutes and 5 tries (Q8)', () => {
   it('locks the code after the 5th wrong try, not the 3rd', () => {

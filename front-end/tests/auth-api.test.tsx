@@ -15,6 +15,7 @@ import { demoGuest } from '@/features/orders/seed'
 
 // The real Better Auth client and the real hook, with the HTTP answered here. The error bodies copy what
 // the API sends (api/test/integration/auth.test.ts).
+vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
 interface Call { path: string, method: string, headers: Headers }
 
