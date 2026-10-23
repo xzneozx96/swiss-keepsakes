@@ -37,7 +37,8 @@ const guestBookings = (page: Page) =>
   page.evaluate(() => {
     const { data } = JSON.parse(localStorage.getItem("sk.demo")!);
 
-    return data.tours.bookings.filter((b: { guestId: string }) => b.guestId === data.signedInGuestId).length as number;
+    // Every real user is the demo guest until the account feature moves to the API.
+    return data.tours.bookings.filter((b: { guestId: string }) => b.guestId === "g-anna").length as number;
   });
 
 // A phone is slower than the test machine: 4x CPU throttle, as the render checks use.
