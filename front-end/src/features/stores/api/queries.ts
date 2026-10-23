@@ -1,11 +1,24 @@
 import type { DataClient } from '@/features/data-client'
 
 import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { authFetchOptions, loadAuthClient } from '@/features/auth/lib/auth-api'
 import { queryKeys, useDataClient } from '@/features/data-client'
 
 // The demo QueryClient never refetches and never retries, which suits browser-held data. These reads
 // come from the API, where the next read must be a fresh one: another session may have changed the store.
 const fromApi = { staleTime: 0, gcTime: 5 * 60_000, retry: false, networkMode: 'online', structuralSharing: true } as const
+
+/** The signed-in user from the session cookie, or null. The demo store's signed-in flag follows it only after the first paint, so it cannot say that a visitor is signed out. */
+export const sessionUserQuery = queryOptions({
+  queryKey: queryKeys.stores.sessionUser,
+  queryFn: async () => {
+    const { data } = await (await loadAuthClient()).getSession({ fetchOptions: authFetchOptions() })
+
+    return data?.user ?? null
+  },
+  staleTime: 0,
+  retry: false,
+})
 
 export const storesQueries = {
   adminStores: (client: DataClient) =>

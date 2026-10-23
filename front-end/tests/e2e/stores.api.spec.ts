@@ -31,19 +31,19 @@ test('[E2.3][S8] the token leaves the address before anything else, and a link t
   expect(addresses[0]).toContain(token)
   expect(addresses.slice(1).join('\n')).not.toContain(token)
   expect(page.url()).not.toContain(token)
-  expect(await page.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBe(token)
+  // The preview refused the link for good, so the token is gone from the tab and from the query keys.
+  expect(await page.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
   expect(await page.evaluate(() => JSON.stringify({ ...localStorage }))).not.toContain(token)
   await expect(page.getByRole('button', { name: t.signOut })).toHaveCount(0)
 })
 
-test('[E2.3][S8] A02 without a link or a store says to open the email link, and asks the API for no store and no invitation', async ({ page }, testInfo) => {
-  const language = languageOf(testInfo)
+test('[E2.3][S8] A02 without a link sends a visitor who has not signed in to sign-in and back, and asks the API for no store and no invitation', async ({ page }) => {
   const calls: string[] = []
 
   page.on('request', request => calls.push(new URL(request.url()).pathname))
   await page.goto('/#/store/onboarding')
 
-  await expect(page.getByRole('heading', { name: words[language].missingTitle })).toBeVisible()
+  await expect(page).toHaveURL(/#\/sign-in\?returnTo=%2Fstore%2Fonboarding$/)
   expect(calls.filter(path => path.startsWith('/api/store') || path.startsWith('/api/me/invitations'))).toEqual([])
 })
 
@@ -114,9 +114,8 @@ test('[E2.3][S8] the Super Admin creates the store, the Owner follows the N20 li
   await expect(owner.getByRole('button', { name: say(language, 'stores.open.action') })).toBeDisabled()
   expect(owner.url()).not.toContain(token)
   expect(await owner.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
-  // The first accept met no session (401) and the second one, after sign-in, took the invitation. Each has its own key, because a 401 is a final answer.
-  expect(keys).toHaveLength(2)
-  expect(new Set(keys).size).toBe(2)
+  // The screen read the session first and sent no accept before sign-in, so the one accept after sign-in took the invitation.
+  expect(keys).toHaveLength(1)
   expect(keys.every(key => (key?.length ?? 0) > 10)).toBe(true)
 
   // A second accept of the same link by the same Owner, on another phone, answers as the first did (E2.4, so a lost answer cannot strand the Owner).
@@ -178,15 +177,15 @@ test('[E2.3][S8] a link opened in a tab that already shows A02 leaves the addres
   const language = languageOf(testInfo)
   const addresses: string[] = []
 
-  await page.goto('/#/store/onboarding')
-  await expect(page.getByRole('heading', { name: say(language, 'stores.refusal.missing.title') })).toBeVisible()
+  await page.goto('/#/')
+  await expect(page.getByRole('main')).toBeVisible()
   page.on('framenavigated', frame => addresses.push(frame.url()))
   await page.evaluate((value: string) => {
     window.location.hash = `#/store/onboarding?invitation=${value}`
   }, token)
 
   await expect(page.getByRole('heading', { name: say(language, 'stores.refusal.notFound.title') })).toBeVisible()
-  expect(await page.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBe(token)
+  expect(await page.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
   expect(page.url()).not.toContain(token)
   expect(addresses.at(-1)).not.toContain(token)
 })

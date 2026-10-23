@@ -41,7 +41,7 @@ function InvitationFlow() {
   if (state.kind === 'accepted')
     return <Welcome role={state.accepted.role} />
   if (state.kind === 'refused')
-    return <RefusalView refusal={state.refusal} returnTo={INVITATION_PATH} audience="manager" onRetry={retry} />
+    return <RefusalView refusal={state.refusal} returnTo={INVITATION_PATH} audience={state.role ?? 'manager'} onRetry={retry} />
   if (!token)
     return <RefusalView refusal="missing" returnTo={INVITATION_PATH} audience="manager" />
 

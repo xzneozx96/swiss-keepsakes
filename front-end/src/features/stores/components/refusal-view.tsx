@@ -37,6 +37,7 @@ export function RefusalView({ refusal, audience = 'owner', returnTo = ONBOARDING
         <p className="text-sm text-pretty text-muted">{t(keys.text)}</p>
         {switchesAccount(refusal) && (
           <Button
+            className="min-h-11"
             isPending={pending}
             variant="secondary"
             onPress={() => signOutThen(() => void navigate({ to: '/sign-in', search: { returnTo }, replace: true }))}
@@ -45,15 +46,15 @@ export function RefusalView({ refusal, audience = 'owner', returnTo = ONBOARDING
           </Button>
         )}
         {refusal === 'failed' && onRetry && (
-          <Button variant="secondary" onPress={onRetry}>{t('stores.problem.retry')}</Button>
+          <Button className="min-h-11" variant="secondary" onPress={onRetry}>{t('stores.problem.retry')}</Button>
         )}
         {refusal === 'member' && (
-          <Link className={buttonVariants({ variant: 'secondary' })} to={STORE_PATH}>
+          <Link className={`${buttonVariants({ variant: 'secondary' })} min-h-11`} to={STORE_PATH}>
             {t('stores.refusal.openStore')}
           </Link>
         )}
         {!switchesAccount(refusal) && refusal !== 'failed' && refusal !== 'member' && (
-          <Link className={buttonVariants({ variant: 'secondary' })} to="/">
+          <Link className={`${buttonVariants({ variant: 'secondary' })} min-h-11`} to="/">
             {t('stores.onboarding.home')}
           </Link>
         )}

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { authFetchOptions, loadAuthClient } from '@/features/auth/lib/auth-api'
 import { queryKeys } from '@/features/data-client'
+import { sessionUserQuery } from '../api/queries'
 import { lacksDisplayName } from '../lib/display-name'
 
 /**
@@ -11,17 +12,7 @@ import { lacksDisplayName } from '../lib/display-name'
  */
 export function useDisplayName(enabled = true) {
   const queryClient = useQueryClient()
-  const user = useQuery({
-    queryKey: queryKeys.stores.sessionUser,
-    queryFn: async () => {
-      const { data } = await (await loadAuthClient()).getSession({ fetchOptions: authFetchOptions() })
-
-      return data?.user ?? null
-    },
-    staleTime: 0,
-    retry: false,
-    enabled,
-  })
+  const user = useQuery({ ...sessionUserQuery, enabled })
   const save = useMutation({
     mutationFn: async (name: string) => {
       const { error } = await (await loadAuthClient()).updateUser({ name, fetchOptions: authFetchOptions() })
