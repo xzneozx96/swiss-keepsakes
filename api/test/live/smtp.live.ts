@@ -38,7 +38,7 @@ describe('[E2.8] live SMTP: the adapter delivers N18 and N20 to the test inbox',
       throw new Error('The live suite sends only to the test inbox.')
     const id = randomUUID()
 
-    const { response } = await createSmtpMailer(createSmtpTransport(smtp), smtp.from).send({ id, ...mail })
+    const { response } = await createSmtpMailer(createSmtpTransport(smtp), smtp.from, smtp.fromName).send({ id, ...mail })
 
     expect(response).toMatch(accepted)
     const domain = smtp.from.slice(smtp.from.lastIndexOf('@') + 1)

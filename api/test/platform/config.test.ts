@@ -109,7 +109,7 @@ describe('[E2.8] config: SMTP_* is all six variables or none', () => {
         APP_URL: 'http://localhost:3002',
         LOG_LEVEL: 'info',
         ...urls,
-        smtp: { host: 'smtp.gmail.com', port: 465, secure: true, user: 'keepsakes.test@gmail.com', password: 'abcd efgh ijkl mnop', from: 'keepsakes.test@gmail.com' },
+        smtp: { host: 'smtp.gmail.com', port: 465, secure: true, user: 'keepsakes.test@gmail.com', password: 'abcd efgh ijkl mnop', from: 'keepsakes.test@gmail.com', fromName: 'Swiss Keepsakes' },
       },
     })
   })
@@ -131,6 +131,16 @@ describe('[E2.8] config: SMTP_* is all six variables or none', () => {
       '  SMTP_FROM: Required when any SMTP_* variable is set',
       'Values are never printed.',
     ].join('\n'))
+  })
+
+  it('[E2.8] SMTP_FROM_NAME names the sender, trimmed, and defaults to Swiss Keepsakes', () => {
+    expect(loadConfig({ ...urls, ...smtp, SMTP_FROM_NAME: '  Lucerne Gifts  ' })).toMatchObject({ ok: true, config: { smtp: { fromName: 'Lucerne Gifts' } } })
+    expect(loadConfig({ ...urls, ...smtp })).toMatchObject({ ok: true, config: { smtp: { fromName: 'Swiss Keepsakes' } } })
+    expect(loadConfig({ ...urls, ...smtp, SMTP_FROM_NAME: '' })).toMatchObject({ ok: true, config: { smtp: { fromName: 'Swiss Keepsakes' } } })
+  })
+
+  it.each(['Bad <name>', 'Bad "name"', 'Line\r\nBcc: evil@example.ch', 'x'.repeat(81)])('[E2.8] rejects the sender name %j', (name) => {
+    expect(failure({ ...urls, ...smtp, SMTP_FROM_NAME: name })).toContain('  SMTP_FROM_NAME:')
   })
 
   it('[E2.8] rejects a bad port, a SMTP_SECURE other than true or false, and a sender that is not an address', () => {

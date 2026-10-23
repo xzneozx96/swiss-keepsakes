@@ -88,7 +88,7 @@ async function main() {
     const sentMail = createSentMailRepository()
     if (!config.smtp)
       logger.warn({ event: 'mail.smtp-unset' }, 'SMTP_* is not set: every mail fails and retries until it is')
-    const mailer = config.smtp ? createSmtpMailer(createSmtpTransport(config.smtp), config.smtp.from) : createUnconfiguredMailer(logger)
+    const mailer = config.smtp ? createSmtpMailer(createSmtpTransport(config.smtp), config.smtp.from, config.smtp.fromName) : createUnconfiguredMailer(logger)
     await startMailWorkers(jobs.boss, {
       sendMail: makeSendMail({
         uow,

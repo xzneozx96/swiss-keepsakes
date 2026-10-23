@@ -4,7 +4,7 @@ Mail goes over SMTP (architecture D12). A business command queues a `mail` job a
 
 ## Settings
 
-- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` and `SMTP_FROM`, described in `api/.env.example`. Set all six or none. A partial setting stops startup and names the missing variables.
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` and `SMTP_FROM`, described in `api/.env.example`. `SMTP_FROM_NAME` is optional and sets the sender's display name (default `Swiss Keepsakes`, plain text up to 80 characters, no angle brackets, quotes or line breaks). It is not one of the six, so setting it alone does not start the SMTP setting. Set all six or none. A partial setting stops startup and names the missing variables.
 - With none set, the service still starts. The worker logs a warning with `"event":"mail.smtp-unset"`, and every mail fails with `ESMTPUNSET`, retries, and then raises the alert below. The service has no setting that tells production from development, so it cannot refuse to start without SMTP in production only.
 - `SMTP_SECURE=true` uses TLS from the first byte (port 465). `SMTP_SECURE=false` upgrades with STARTTLS (port 587), and the service refuses a server that does not offer it, so the password never travels in clear.
 - Local and staging use the owner's test SMTP account (Gmail). Gmail sends only from the signed-in account and limits daily sending, so it suits tests only. Production uses the store's own mail host, which is still open (Q15).

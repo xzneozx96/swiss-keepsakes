@@ -162,7 +162,7 @@ async function main() {
           messages.push({ to: String(message.to), subject: String(message.subject), text: String(message.text) })
           return { response: '250 2.0.0 OK captured' }
         },
-      }, 'shop@example.ch'),
+      }, 'shop@example.ch', 'Swiss Keepsakes'),
       // The same wiring as the worker's in src/main.ts.
       invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl: origin, screens: invitationScreens }),
       clock: systemClock,
