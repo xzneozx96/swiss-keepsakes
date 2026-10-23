@@ -511,6 +511,9 @@ describe('[E2.4][AC02] the invitation preview route', () => {
     expect((await app.request('/api/me/invitations/accept', post(signedInAs('guest'), { token }))).status).toBe(400)
     expect(await (await app.request('/api/me/invitations/accept', post(signedInAs('guest'), { token }))).json()).toMatchObject({ type: 'idempotency-key-required' })
     expect((await app.request(`${previewPath}/other`, post({}, { token }))).status).toBe(400)
+    expect((await app.request(`${previewPath}/`, post({}, { token }))).status).toBe(400)
+    expect((await app.request('/api/public/invitations/Preview', post({}, { token }))).status).toBe(400)
+    expect((await app.request('/API/PUBLIC/INVITATIONS/PREVIEW', post({}, { token }))).status).toBe(404)
   })
 
   it('[E2.4][AC02] a token in the query string is not accepted: the body is required and the query is never read', async () => {
@@ -527,6 +530,22 @@ describe('[E2.4][AC02] the invitation preview route', () => {
     const noContentType = await app.request(`${previewPath}?token=${token}`, { method: 'POST', headers: { Origin: shopOrigin } })
     expect(noContentType.status).toBe(400)
     expect(await noContentType.json()).toMatchObject({ type: 'validation-failed' })
+    expect(calls).toBe(0)
+  })
+
+  it('[E2.4][AC02] a valid body does not excuse a token in the query string: any query is a validation failure', async () => {
+    let calls = 0
+    const app = setup({ previewInvitation: async () => {
+      calls++
+      return { ok: false, reason: 'invitation-not-found' }
+    } }, strictCommands)
+
+    for (const query of [`?token=${token}`, '?other=1']) {
+      const response = await app.request(previewPath + query, post({}, { token }))
+
+      expect(response.status).toBe(400)
+      expect(await response.json()).toMatchObject({ type: 'validation-failed' })
+    }
     expect(calls).toBe(0)
   })
 

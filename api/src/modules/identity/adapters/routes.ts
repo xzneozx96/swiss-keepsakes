@@ -92,7 +92,7 @@ export const invitationPreviewPath = '/api/public/invitations/preview'
 const previewRoute = createRoute({
   method: 'post',
   path: invitationPreviewPath,
-  request: { body: { required: true, content: json(previewInvitationBodySchema) } },
+  request: { query: z.object({}).strict(), body: { required: true, content: json(previewInvitationBodySchema) } },
   responses: {
     200: { description: 'The store, the role, the inviter\'s name and the state of the invitation. Never the invited address', headers: requestIdHeader, content: json(invitationPreviewSchema) },
     ...problemResponses,
