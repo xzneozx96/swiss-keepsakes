@@ -1,4 +1,4 @@
-import { acceptedInvitationSchema, invitationPreviewSchema, membersSchema, meSchema, problemSchema } from '@sk/api-contract'
+import { acceptedInvitationSchema, invitationPreviewSchema, memberInvitationSchema, membersSchema, meSchema, problemSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
-import { DataClientProvider } from '@/features/data-client'
+import { DataClientProvider, queryKeys } from '@/features/data-client'
 import { ApiProblem } from '@/features/data-client/errors'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
@@ -51,7 +51,7 @@ function membersFixture() {
   })
 }
 
-const invitationOf = (id: string, email: string) => ({ id, email, state: 'open', expiresAt: '2026-10-29T10:00:00.000Z' })
+const invitationOf = (id: string, email: string, state: 'open' | 'expired' | 'revoked' = 'open') => memberInvitationSchema.parse({ id, email, state, expiresAt: '2026-10-29T10:00:00.000Z' })
 
 beforeEach(async () => {
   window.scrollTo = vi.fn()
@@ -161,8 +161,27 @@ describe('[E2.4][AC02] M01, the Store Manager accepts an invitation', () => {
     expect(screen.getByText('Ngoc invited you to Chi Ngoc as a Store Manager.')).toBeInTheDocument()
     expect(screen.getByText('Role: Store Manager')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sign in to continue' })).toBeInTheDocument()
-    await new Promise(resolve => setTimeout(resolve, 30))
     expect(calls.map(call => call.path)).toEqual(['/api/public/invitations/preview'])
+  })
+
+  it('sends no accept for a signed-in Manager before the tap', async () => {
+    sessionStorage.setItem('sk.invitationToken', token)
+    demo.store.update(s => ({ ...s, data: { ...s.data, signedInGuestId: 'guest-1' } }))
+    answer = () => preview()
+    renderAt('/invitation', InvitationScreen)
+
+    expect(await screen.findByRole('button', { name: 'Accept invitation' })).toBeInTheDocument()
+    expect(calls.map(call => call.path)).toEqual(['/api/public/invitations/preview'])
+    expect(heldInvitationToken()).toBe(token)
+  })
+
+  it('words a refused Owner link on M01 for the platform team, by the role of the preview, and drops the token', async () => {
+    sessionStorage.setItem('sk.invitationToken', token)
+    answer = () => preview({ role: 'owner', state: 'expired' })
+    renderAt('/invitation', InvitationScreen)
+
+    expect(await screen.findByText('Ask the platform team to send the invitation again.')).toBeInTheDocument()
+    expect(heldInvitationToken()).toBeUndefined()
   })
 
   it('uses a generic line when the inviter has no name', async () => {
@@ -440,21 +459,123 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     expect(calls.filter(call => call.method === 'POST')).toHaveLength(1)
   })
 
-  it('sends an expired invitation again in the screen language and revokes an open one', async () => {
+  it('sends an expired invitation again without a language, and revokes an open one after a confirmation', async () => {
     answer = membersAnswers({
       [`POST /api/store/${storeId}/member-invitations/${expiredInvitation}/resend`]: () => Response.json(invitationOf(expiredInvitation, 'late@example.ch')),
-      [`POST /api/store/${storeId}/member-invitations/${openInvitation}/revoke`]: () => Response.json({ ...invitationOf(openInvitation, 'open@example.ch'), state: 'revoked' }),
+      [`POST /api/store/${storeId}/member-invitations/${openInvitation}/revoke`]: () => Response.json(invitationOf(openInvitation, 'open@example.ch', 'revoked')),
     })
     renderAt('/members', () => <MembersTab storeId={storeId} />)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Send the invitation to late@example.ch again' }))
     await waitFor(() => expect(calls.some(call => call.path.endsWith('/resend'))).toBe(true))
     await userEvent.click(screen.getByRole('button', { name: 'Revoke the invitation to open@example.ch' }))
+    expect(calls.some(call => call.path.endsWith('/revoke'))).toBe(false)
+    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
     await waitFor(() => expect(calls.some(call => call.path.endsWith('/revoke'))).toBe(true))
 
-    expect(calls.find(call => call.path.endsWith('/resend'))?.body).toEqual({ language: 'en' })
+    expect(calls.find(call => call.path.endsWith('/resend'))?.body).toEqual({})
     expect(calls.find(call => call.path.endsWith('/revoke'))?.key).toBeTruthy()
     expect(calls.filter(call => call.path === `/api/store/${storeId}/members`).length).toBeGreaterThanOrEqual(3)
+  })
+
+  it('does not revoke when the Owner cancels the confirmation', async () => {
+    answer = membersAnswers()
+    renderAt('/members', () => <MembersTab storeId={storeId} />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Revoke the invitation to open@example.ch' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
+
+    expect(calls.some(call => call.path.endsWith('/revoke'))).toBe(false)
+  })
+
+  it('keeps one key for a resend until it is settled, renews it for the next resend, and uses another key for a revoke', async () => {
+    let attempt = 0
+
+    answer = membersAnswers({
+      [`POST /api/store/${storeId}/member-invitations/${expiredInvitation}/resend`]: () => {
+        attempt += 1
+
+        return attempt === 1 ? problem(503, 'internal-error') : Response.json(invitationOf(expiredInvitation, 'late@example.ch'))
+      },
+      [`POST /api/store/${storeId}/member-invitations/${expiredInvitation}/revoke`]: () => Response.json(invitationOf(expiredInvitation, 'late@example.ch', 'revoked')),
+    })
+    renderAt('/members', () => <MembersTab storeId={storeId} />)
+    const resendButton = await screen.findByRole('button', { name: 'Send the invitation to late@example.ch again' })
+    const resends = () => calls.filter(call => call.path.endsWith('/resend'))
+
+    await userEvent.click(resendButton)
+    await waitFor(() => expect(resends()).toHaveLength(1))
+    await userEvent.click(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again' }))
+    await waitFor(() => expect(resends()).toHaveLength(2))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again' })).toBeEnabled())
+    await userEvent.click(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again' }))
+    await waitFor(() => expect(resends()).toHaveLength(3))
+    await userEvent.click(screen.getByRole('button', { name: 'Revoke the invitation to late@example.ch' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
+    await waitFor(() => expect(calls.some(call => call.path.endsWith('/revoke'))).toBe(true))
+
+    const [first, retry, next] = resends()
+    const revoke = calls.find(call => call.path.endsWith('/revoke'))
+
+    expect(retry.key).toBe(first.key)
+    expect(next.key).not.toBe(first.key)
+    expect(revoke?.key).not.toBe(first.key)
+    expect(revoke?.key).not.toBe(next.key)
+  })
+
+  it('disables Send again while the revoke is pending, and Revoke while the resend is pending', async () => {
+    answer = membersAnswers({
+      [`POST /api/store/${storeId}/member-invitations/${expiredInvitation}/resend`]: () => Response.json(invitationOf(expiredInvitation, 'late@example.ch')),
+      [`POST /api/store/${storeId}/member-invitations/${expiredInvitation}/revoke`]: () => Response.json(invitationOf(expiredInvitation, 'late@example.ch', 'revoked')),
+    })
+    let release = () => {}
+
+    hold = new Promise<void>((resolve) => { release = resolve })
+    renderAt('/members', () => <MembersTab storeId={storeId} />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Send the invitation to late@example.ch again' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Revoke the invitation to late@example.ch' })).toBeDisabled())
+    release()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Revoke the invitation to late@example.ch' })).toBeEnabled())
+
+    hold = new Promise<void>((resolve) => { release = resolve })
+    await userEvent.click(screen.getByRole('button', { name: 'Revoke the invitation to late@example.ch' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again' })).toBeDisabled())
+    release()
+  })
+
+  it.each([
+    [404, 'invitation-not-found'],
+    [409, 'invitation-already-accepted'],
+  ])('reads the list again after a %i %s on a revoke, so the list is never stale', async (status, type) => {
+    answer = membersAnswers({ [`POST /api/store/${storeId}/member-invitations/${openInvitation}/revoke`]: () => problem(status, type) })
+    renderAt('/members', () => <MembersTab storeId={storeId} />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Revoke the invitation to open@example.ch' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
+
+    await waitFor(() => expect(calls.filter(call => call.path === `/api/store/${storeId}/members`)).toHaveLength(2))
+  })
+
+  it('goes to sign-in and back to Settings when a members command meets a session that ended', async () => {
+    answer = membersAnswers({ [`POST /api/store/${storeId}/member-invitations/${openInvitation}/revoke`]: () => problem(401, 'unauthenticated') })
+    const router = renderAt('/members', () => <MembersTab storeId={storeId} />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Revoke the invitation to open@example.ch' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
+    expect(router.state.location.search).toEqual({ returnTo: '/store/settings' })
+  })
+
+  it('goes to sign-in and back to Settings when the list answers 401', async () => {
+    answer = () => problem(401, 'unauthenticated')
+    const router = renderAt('/members', () => <MembersTab storeId={storeId} />)
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
+    expect(router.state.location.search).toEqual({ returnTo: '/store/settings' })
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument()
   })
 
   it('asks before removing a Manager, then removes and reads the list again', async () => {
@@ -484,23 +605,30 @@ describe('[E2.4][AC02] M22, the members tab', () => {
 describe('[E2.4][AC02] the members tab sits in Settings and is hidden from a Manager', () => {
   const meOf = (role: 'owner' | 'manager') => Response.json(meSchema.parse({ guestId: '0198a000-0000-7000-8000-0000000000f1', stores: [{ storeId, role, status: 'live' }] }))
 
-  it('shows General and Members to the Owner of the current store, and loads the members only on the tab', async () => {
+  it('opens on Members for the Owner of the current store, with General beside it, and no tab before /api/me answers', async () => {
     answer = call => call.path === '/api/me' ? meOf('owner') : Response.json(members)
     renderAt('/members', SettingsScreen)
 
-    const tab = await screen.findByRole('tab', { name: 'Members' })
-
-    expect(calls.some(call => call.path.endsWith('/members'))).toBe(false)
-    await userEvent.click(tab)
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument()
+    expect(await screen.findByRole('tab', { name: 'Members', selected: true })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'General' })).toBeInTheDocument()
     expect(await screen.findByText('owner@example.ch')).toBeInTheDocument()
+  })
+
+  it('goes to sign-in and back to Settings when /api/me answers 401', async () => {
+    answer = () => problem(401, 'unauthenticated')
+    const router = renderAt('/members', SettingsScreen)
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
+    expect(router.state.location.search).toEqual({ returnTo: '/store/settings' })
   })
 
   it('shows a Manager no members tab, and never asks for the members', async () => {
     answer = call => call.path === '/api/me' ? meOf('manager') : problem(403, 'forbidden')
     renderAt('/members', SettingsScreen)
 
-    await waitFor(() => expect(calls.some(call => call.path === '/api/me')).toBe(true))
-    await new Promise(resolve => setTimeout(resolve, 30))
+    await waitFor(() => expect(demo.queryClient.getQueryState(queryKeys.stores.me)?.status).toBe('success'))
+    expect(await screen.findByText(/later phase/i)).toBeInTheDocument()
     expect(screen.queryByRole('tab')).not.toBeInTheDocument()
     expect(calls.some(call => call.path.endsWith('/members'))).toBe(false)
   })

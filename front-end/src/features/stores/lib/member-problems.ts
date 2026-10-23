@@ -24,3 +24,8 @@ export function memberProblemKey(error: unknown): MessageKey {
 export function showsMembersTab(entry: { role: 'owner' | 'manager' } | undefined): boolean {
   return entry?.role === 'owner'
 }
+
+/** A 404 or 409 on a members command says the list on screen is out of date (the invitation or member is gone, taken or already changed), so it must be read again. */
+export function listIsStale(error: unknown): boolean {
+  return error instanceof ApiProblem && (error.status === 404 || error.status === 409)
+}

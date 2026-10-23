@@ -1,12 +1,16 @@
-import { Tabs } from '@heroui/react'
-import { useState } from 'react'
+import { Skeleton, Tabs } from '@heroui/react'
+import { useEffect, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { MoreIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
+import { ApiProblem } from '@/features/data-client/errors'
 import { apiEnabled } from '@/lib/api-mode'
 import { useMe } from '../api/queries'
+import { useGoToSignIn } from '../hooks/use-go-to-sign-in'
+import { currentStore } from '../lib/current-store'
 import { showsMembersTab } from '../lib/member-problems'
+import { SETTINGS_PATH } from '../lib/search-params'
 import { MembersTab } from './members-tab'
 
 type SettingsTab = 'general' | 'members'
@@ -14,13 +18,23 @@ type SettingsTab = 'general' | 'members'
 /**
  * M22 inside the merchant shell's Settings. Settings is still the Phase 6 placeholder, so the members tab is the
  * first thing in it: an Owner gets "General" (the placeholder) and "Members". A Manager, and the demo, get the
- * placeholder alone. The store is the first entry of `GET /api/me` `stores`: Phase 1 has one store per person.
+ * placeholder alone. The store is `currentStore(me)`, the same rule A02 uses. An Owner opens on Members, the reason
+ * to come here, and the tabs wait for `GET /api/me` behind a skeleton, so they do not pop in. A session that ended
+ * (401) goes to sign-in and comes back to Settings.
  */
 export function SettingsScreen() {
   const { t } = useLocale()
   const me = useMe(apiEnabled)
-  const current = me.data?.stores[0]
-  const [tab, setTab] = useState<SettingsTab>('general')
+  const goToSignIn = useGoToSignIn(SETTINGS_PATH)
+  const current = currentStore(me.data)
+  const signedOut = me.error instanceof ApiProblem && me.error.status === 401
+  const [tab, setTab] = useState<SettingsTab>('members')
+
+  useEffect(() => {
+    if (signedOut)
+      goToSignIn()
+  }, [signedOut, goToSignIn])
+
   const placeholder = (
     <EmptyState
       action={{ label: t('placeholder.backToday'), to: '/store' }}
@@ -29,6 +43,14 @@ export function SettingsScreen() {
     />
   )
 
+  if (apiEnabled && (me.isPending || signedOut)) {
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="text-title">{t('nav.settings')}</h1>
+        <Skeleton className="h-11 w-48 rounded-2xl" />
+      </div>
+    )
+  }
   if (!apiEnabled || !current || !showsMembersTab(current))
     return placeholder
 

@@ -3,7 +3,7 @@ import type { Language } from '@sk/domain/shared'
 
 import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, Skeleton, TextField, toast } from '@heroui/react'
 import { formatDate } from '@sk/domain/shared'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
@@ -13,8 +13,11 @@ import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { useMembers } from '../api/queries'
+import { useGoToSignIn } from '../hooks/use-go-to-sign-in'
 import { useIdempotencyKey } from '../hooks/use-idempotency-key'
+import { useMemberFailure } from '../hooks/use-member-failure'
 import { memberProblemKey } from '../lib/member-problems'
+import { SETTINGS_PATH } from '../lib/search-params'
 import { ProblemNotice } from './problem-notice'
 
 const EMAIL = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
@@ -27,13 +30,20 @@ const EMAIL = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
 export function MembersTab({ storeId }: { storeId: string }) {
   const { t } = useLocale()
   const members = useMembers(storeId)
+  const goToSignIn = useGoToSignIn(SETTINGS_PATH)
+  const signedOut = members.error instanceof ApiProblem && members.error.status === 401
 
-  if (members.isError) {
+  useEffect(() => {
+    if (signedOut)
+      goToSignIn()
+  }, [signedOut, goToSignIn])
+
+  if (members.isError && !signedOut) {
     const forbidden = members.error instanceof ApiProblem && members.error.type === 'forbidden'
 
     return <ProblemNotice error={members.error} message={forbidden ? 'stores.members.forbidden' : undefined} onRetry={forbidden ? undefined : () => void members.refetch()} />
   }
-  if (!members.data) {
+  if (!members.data || signedOut) {
     return (
       <div className="flex flex-col gap-3">
         <p aria-live="polite" className="sr-only" role="status">{t('stores.members.title')}</p>
@@ -77,6 +87,7 @@ function MemberRow({ member, storeId }: { member: Member, storeId: string }) {
   const { confirm, dialog } = useConfirm()
   const { submit, isPending } = useSubmit('stores', 'removeMember')
   const key = useIdempotencyKey({ storeId, memberId: member.id })
+  const fail = useMemberFailure(storeId)
 
   const remove = async () => {
     if (!(await confirm({
@@ -93,7 +104,7 @@ function MemberRow({ member, storeId }: { member: Member, storeId: string }) {
       },
       onError: (error) => {
         key.settled(error)
-        toast.danger(t(memberProblemKey(error)))
+        fail(error)
       },
     })
   }
@@ -122,13 +133,46 @@ function MemberRow({ member, storeId }: { member: Member, storeId: string }) {
 }
 
 function InvitationRow({ invitation, storeId }: { invitation: MemberInvitation, storeId: string }) {
-  const { t, intlLocale, language } = useLocale()
+  const { t, intlLocale } = useLocale()
+  const { confirm, dialog } = useConfirm()
   const resend = useSubmit('stores', 'resendManagerInvitation')
   const revoke = useSubmit('stores', 'revokeManagerInvitation')
-  const resendKey = useIdempotencyKey({ storeId, invitationId: invitation.id, language, action: 'resend' })
+  const resendKey = useIdempotencyKey({ storeId, invitationId: invitation.id, action: 'resend' })
   const revokeKey = useIdempotencyKey({ storeId, invitationId: invitation.id, action: 'revoke' })
+  const fail = useMemberFailure(storeId)
   const date = formatDate(new Date(invitation.expiresAt), intlLocale)
   const expired = invitation.state === 'expired'
+
+  const sendAgain = () => resend.submit({ storeId, invitationId: invitation.id, idempotencyKey: resendKey.next() }, {
+    onSuccess: () => {
+      resendKey.settled()
+      toast.success(t('stores.members.resent', { email: invitation.email }))
+    },
+    onError: (error) => {
+      resendKey.settled(error)
+      fail(error)
+    },
+  })
+
+  const withdraw = async () => {
+    if (!(await confirm({
+      title: t('stores.members.revokeTitle', { email: invitation.email }),
+      body: t('stores.members.revokeBody'),
+      confirmLabel: t('stores.members.revokeConfirm'),
+    }))) {
+      return
+    }
+    revoke.submit({ storeId, invitationId: invitation.id, idempotencyKey: revokeKey.next() }, {
+      onSuccess: () => {
+        revokeKey.settled()
+        toast.success(t('stores.members.revoked', { email: invitation.email }))
+      },
+      onError: (error) => {
+        revokeKey.settled(error)
+        fail(error)
+      },
+    })
+  }
 
   return (
     <li className="flex flex-col gap-2 rounded-3xl bg-surface p-4 shadow-surface" data-invitation={invitation.state}>
@@ -138,40 +182,25 @@ function InvitationRow({ invitation, storeId }: { invitation: MemberInvitation, 
         <Button
           aria-label={t('stores.members.resendLabel', { email: invitation.email })}
           className="min-h-11"
+          isDisabled={revoke.isPending}
           isPending={resend.isPending}
           variant="secondary"
-          onPress={() => resend.submit({ storeId, invitationId: invitation.id, language, idempotencyKey: resendKey.next() }, {
-            onSuccess: () => {
-              resendKey.settled()
-              toast.success(t('stores.members.resent', { email: invitation.email }))
-            },
-            onError: (error) => {
-              resendKey.settled(error)
-              toast.danger(t(memberProblemKey(error)))
-            },
-          })}
+          onPress={sendAgain}
         >
           {t('stores.members.resend')}
         </Button>
         <Button
           aria-label={t('stores.members.revokeLabel', { email: invitation.email })}
           className="min-h-11"
+          isDisabled={resend.isPending}
           isPending={revoke.isPending}
           variant="tertiary"
-          onPress={() => revoke.submit({ storeId, invitationId: invitation.id, idempotencyKey: revokeKey.next() }, {
-            onSuccess: () => {
-              revokeKey.settled()
-              toast.success(t('stores.members.revoked', { email: invitation.email }))
-            },
-            onError: (error) => {
-              revokeKey.settled(error)
-              toast.danger(t(memberProblemKey(error)))
-            },
-          })}
+          onPress={() => void withdraw()}
         >
           {t('stores.members.revoke')}
         </Button>
       </div>
+      {dialog}
     </li>
   )
 }
@@ -184,6 +213,7 @@ function InviteForm({ storeId }: { storeId: string }) {
   const { submit: send, isPending, error, reset } = useSubmit('stores', 'inviteManager')
   const input = { storeId, email: email.trim(), language }
   const key = useIdempotencyKey(input)
+  const fail = useMemberFailure(storeId)
   const problem = error instanceof ApiProblem ? error : undefined
   const ofField = problem !== undefined && ['already-a-member', 'invitation-already-open', 'manager-is-super-admin'].includes(problem.type)
 
@@ -199,7 +229,10 @@ function InviteForm({ storeId }: { storeId: string }) {
         toast.success(t('stores.members.invite.done', { email: input.email }))
         setEmail('')
       },
-      onError: failure => key.settled(failure),
+      onError: (failure) => {
+        key.settled(failure)
+        fail(failure, { toastIt: false })
+      },
     })
   }
 

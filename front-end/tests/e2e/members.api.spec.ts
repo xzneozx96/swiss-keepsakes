@@ -105,6 +105,7 @@ test('[E2.4][AC02] the Owner invites a Manager, another email is refused, the Ma
   expect(me.stores[0].role).toBe('manager')
   const { storeId } = me.stores[0]
 
+  expect((await manager.request.get(`/api/store/${storeId}/onboarding`)).ok()).toBe(true)
   await manager.goto('/#/store/settings')
   await expect(manager.getByRole('tab')).toHaveCount(0)
   expect((await manager.request.get(`/api/store/${storeId}/members`)).status()).toBe(403)
@@ -120,7 +121,7 @@ test('[E2.4][AC02] the Owner invites a Manager, another email is refused, the Ma
   await expect(owner.locator('[data-member="manager"]')).toHaveCount(0)
 
   // The Manager's next request is refused, and /api/me lists no store.
-  expect((await manager.request.get(`/api/store/${storeId}/onboarding`)).ok()).toBe(false)
+  expect((await manager.request.get(`/api/store/${storeId}/onboarding`)).status()).toBe(403)
   const after = await (await manager.request.get('/api/me')).json() as { stores: unknown[] }
 
   expect(after.stores).toHaveLength(0)
@@ -138,6 +139,9 @@ test('[E2.4][AC02] revoke kills the link and a new invitation of the same addres
   const revokedMail = await managerInvitationMail(revoked)
 
   await owner.getByRole('button', { name: say(language, 'stores.members.revokeLabel', { email: revoked }) }).click()
+  await owner.getByRole('button', { name: say(language, 'stores.members.revokeConfirm') }).click()
+  // The confirm button sits where the toast shows, and a toast under the pointer stays open and covers the form below.
+  await owner.mouse.move(0, 0)
   await expect(owner.locator('[data-invitation]').filter({ hasText: revoked })).toHaveCount(0)
   const late = await newVisitor(browser, language)
 
