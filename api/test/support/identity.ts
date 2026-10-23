@@ -5,6 +5,7 @@ export const noSessions: IdentityDeps = {
   authHandler: async () => new Response(null, { status: 404 }),
   origin: 'http://localhost',
   readSession: async () => ({ headers: new Headers(), response: null }),
+  listMyStores: async () => [],
   loadIdentity: async () => {
     throw new Error('no session, so no identity')
   },

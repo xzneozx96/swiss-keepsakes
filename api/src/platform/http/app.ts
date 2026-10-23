@@ -1,4 +1,4 @@
-import type { Actor, StoreRole } from '@sk/domain/identity'
+import type { Actor, StoreRole, StoreStatus } from '@sk/domain/identity'
 import type { MiddlewareHandler } from 'hono'
 import type { RequestIdVariables } from 'hono/request-id'
 import type { Logger } from 'pino'
@@ -27,6 +27,8 @@ export interface AppEnv {
 export interface IdentityDeps extends AuthenticateDeps {
   authHandler: (request: Request) => Promise<Response>
   origin: string
+  // The stores of one user with their role and status, one query. `GET /api/me` calls it for staff only.
+  listMyStores: (userId: string) => Promise<{ storeId: string, role: StoreRole, status: StoreStatus }[]>
 }
 
 // What the modules add to the app. `idempotency` is the Idempotency-Key middleware (D11). createApp mounts it after
@@ -34,6 +36,9 @@ export interface IdentityDeps extends AuthenticateDeps {
 // `app.openapi`, after the guards and the middleware, so every one of them is guarded and checked for a key.
 export interface CommandDeps {
   idempotency: MiddlewareHandler<AppEnv>
+  // POST routes that only read, such as an invitation preview whose token must not sit in a query string. They
+  // take no Idempotency-Key. A route that changes anything never belongs here.
+  withoutIdempotencyKey?: string[]
   routes: ((app: OpenAPIHono<AppEnv>) => void)[]
 }
 
@@ -61,7 +66,7 @@ const meRoute = createRoute({
   path: '/api/me',
   responses: {
     200: {
-      description: 'The signed-in guest',
+      description: 'The signed-in guest and the stores they belong to',
       headers: requestIdHeader,
       content: { 'application/json': { schema: meSchema } },
     },
@@ -122,7 +127,8 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
   app.use('/api/admin/*', requireSuperAdmin)
   // After the guards, so an anonymous request or an outsider is refused with 401 or 403 before it needs a key.
   // Better Auth's routes answered above and never get here.
-  app.use('/api/*', commands.idempotency)
+  const readOnlyPosts = new Set(commands.withoutIdempotencyKey)
+  app.use('/api/*', (c, next) => c.req.method === 'POST' && readOnlyPosts.has(c.req.path) ? next() : commands.idempotency(c, next))
 
   app.openapi(healthRoute, async (c) => {
     const report = await checkHealth()
@@ -133,7 +139,11 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
   })
 
   app.openapi(meRoute, async (c) => {
-    return c.json({ guestId: c.get('guest').guestId }, 200)
+    const { guestId, userId } = c.get('guest')
+    // Only staff hold store roles. A guest holds none, and the guards give a Super Admin none even when a stray
+    // membership row exists, so listing that store would send a screen to a store the guards refuse.
+    const stores = c.get('actor').kind === 'staff' ? await identity.listMyStores(userId) : []
+    return c.json({ guestId, stores }, 200)
   })
 
   for (const register of commands.routes)

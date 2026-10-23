@@ -42,7 +42,7 @@ export function makeCreateStore<T>({ uow, stores, invitations, conditions, users
     const store = await stores.insert(tx, { slug: input.slug, name: input.name, defaultLanguage: input.defaultLanguage })
     if (!store)
       return { ok: false, reason: 'slug-taken' }
-    const invitation = await invitations.insert(tx, { storeId: store.id, email, role: 'owner', expiresAt: new Date(now.getTime() + invitationLifetimeMs) })
+    const invitation = await invitations.insert(tx, { storeId: store.id, email, role: 'owner', expiresAt: new Date(now.getTime() + invitationLifetimeMs), invitedBy: actor.userId })
     await queueMail(tx, { template: 'N20', to: email, language: input.language ?? store.defaultLanguage, storeId: store.id, params: { store: store.name, invitationId: invitation.id } })
     const by = `super_admin:${actor.userId}`
     await audit.record(tx, { storeId: store.id, actor: by, entity: 'store', entityId: store.id, action: 'created', after: { status: store.status }, requestId })

@@ -7,10 +7,10 @@ import { createInvitationRepository } from './modules/identity/adapters/invitati
 import { createMembershipRepository } from './modules/identity/adapters/membership-repository.ts'
 import { createPendingConditions } from './modules/identity/adapters/pending-conditions.ts'
 import { createPlatformAdminRepository } from './modules/identity/adapters/platform-admin-repository.ts'
-import { registerIdentityRoutes } from './modules/identity/adapters/routes.ts'
+import { invitationPreviewPath, registerIdentityRoutes } from './modules/identity/adapters/routes.ts'
 import { createStoreRepository } from './modules/identity/adapters/store-repository.ts'
 import { createUserDirectory } from './modules/identity/adapters/user-directory.ts'
-import { invitationScreens, makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInvitationLink, makeInviteManager, makeListMembers, makeListStores, makeLoadIdentity, makeOpenStoreForSale, makeRemoveMember, makeResendManagerInvitation, makeResendOwnerInvitation, makeRevokeInvitation, makeUpdateStoreInformation, newInvitationToken } from './modules/identity/index.ts'
+import { invitationScreens, makeAcceptInvitation, makeCreateStore, makeGetOnboarding, makeInvitationLink, makeInviteManager, makeListMembers, makeListMyStores, makeListStores, makeLoadIdentity, makeOpenStoreForSale, makePreviewInvitation, makeRemoveMember, makeResendManagerInvitation, makeResendOwnerInvitation, makeRevokeInvitation, makeUpdateStoreInformation, newInvitationToken } from './modules/identity/index.ts'
 import { createMailJobScrubber } from './modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
@@ -119,6 +119,7 @@ async function main() {
       origin: ownOrigin(config.BETTER_AUTH_URL),
       readSession: createSessionReader(auth),
       loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
+      listMyStores: makeListMyStores({ uow, memberships: createMembershipRepository() }),
     }
     const database = createDatabase(pool)
     const stores = createStoreRepository()
@@ -132,6 +133,7 @@ async function main() {
       createStore: makeCreateStore({ uow, stores, invitations, conditions, users, admins, queueMail, audit, clock: systemClock }),
       listStores: makeListStores({ uow, stores, invitations, conditions, clock: systemClock }),
       resendOwnerInvitation: makeResendOwnerInvitation({ uow, stores, invitations, conditions, queueMail, audit, clock: systemClock }),
+      previewInvitation: makePreviewInvitation({ uow, invitations, clock: systemClock }),
       acceptInvitation: makeAcceptInvitation({ uow, invitations, stores, memberships, users, admins, audit, clock: systemClock }),
       getOnboarding: makeGetOnboarding({ uow, stores, conditions }),
       updateStoreInformation: makeUpdateStoreInformation({ uow, stores, audit, clock: systemClock }),
@@ -144,6 +146,7 @@ async function main() {
     }
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
+      withoutIdempotencyKey: [invitationPreviewPath],
       routes: [app => registerIdentityRoutes(app, useCases)],
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity, commands).fetch, config.HOST, config.PORT, logger)

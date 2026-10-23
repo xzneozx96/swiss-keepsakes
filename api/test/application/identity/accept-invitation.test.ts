@@ -13,7 +13,7 @@ function setup(options: { role?: InvitationRole, status?: 'invited' | 'onboardin
   const fake = createFakeIdentity()
   const clock = createManualClock(start)
   const store = fake.addStore({ slug: 'lucerne', status: options.status ?? 'invited' })
-  const invitation = fake.invitations.insert({ id: 0 }, { storeId: store.id, email: 'ngoc.tran@example.ch', role: options.role ?? 'owner', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+  const invitation = fake.invitations.insert({ id: 0 }, { storeId: store.id, email: 'ngoc.tran@example.ch', role: options.role ?? 'owner', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
   fake.addUser('user-ngoc', 'ngoc.tran@example.ch')
   fake.addUser('user-other', 'someone.else@example.ch')
   const accept = makeAcceptInvitation({ uow: fake.uow, invitations: fake.invitations, stores: fake.stores, memberships: fake.memberships, users: fake.users, admins: fake.admins, audit: fake.audit, clock })
@@ -104,16 +104,50 @@ describe('[E2.3][S8] a signed-in user accepts an invitation', () => {
     expect(await accept({ userId: 'user-ngoc' }, token, null)).toEqual({ ok: false, reason: 'invitation-not-found' })
   })
 
-  it('[E2.3] an invitation is single use: the second accept fails, from the same user or another, and adds nothing', async () => {
-    const { fake, accept, mint } = setup()
+  it('[E2.3] an invitation is single use: a second accept by another user fails, one by the same user adds nothing', async () => {
+    const { fake, store, accept, mint } = setup()
     await mint()
 
     expect((await accept({ userId: 'user-ngoc' }, token, null)).ok).toBe(true)
 
-    expect(await accept({ userId: 'user-ngoc' }, token, null)).toEqual({ ok: false, reason: 'invitation-already-accepted' })
+    expect(await accept({ userId: 'user-ngoc' }, token, null)).toEqual({ ok: true, storeId: store.id, role: 'owner', storeStatus: 'onboarding' })
     // Someone else holding the link is told it is the wrong address, which reveals nothing about the invitation.
     expect(await accept({ userId: 'user-other' }, token, null)).toEqual({ ok: false, reason: 'invitation-email-mismatch' })
     expect(fake.state.memberships).toHaveLength(1)
+  })
+
+  it('[E2.4] a repeated accept by the same user answers as the first did and changes nothing, for a Manager too', async () => {
+    const { fake, store, accept, mint } = setup({ role: 'manager', status: 'onboarding' })
+    await mint()
+
+    const first = await accept({ userId: 'user-ngoc' }, token, null)
+    const auditRows = fake.state.audit.length
+    const again = await accept({ userId: 'user-ngoc' }, token, 'request-2')
+
+    expect(first).toEqual({ ok: true, storeId: store.id, role: 'manager', storeStatus: 'onboarding' })
+    expect(again).toEqual(first)
+    expect(fake.state.memberships).toHaveLength(1)
+    expect(fake.state.audit).toHaveLength(auditRows)
+  })
+
+  it('[E2.4] a repeated accept by someone who is no longer a member is refused', async () => {
+    const { fake, accept, mint } = setup({ role: 'manager', status: 'onboarding' })
+    await mint()
+    await accept({ userId: 'user-ngoc' }, token, null)
+    fake.state.memberships.length = 0
+
+    expect(await accept({ userId: 'user-ngoc' }, token, null)).toEqual({ ok: false, reason: 'invitation-already-accepted' })
+  })
+
+  it('[E2.4] only the user who took the invitation gets the repeat answer, even for another account with the same address', async () => {
+    const { fake, store, accept, mint } = setup({ role: 'manager', status: 'onboarding' })
+    await mint()
+    await accept({ userId: 'user-ngoc' }, token, null)
+    fake.addUser('user-twin', 'ngoc.tran@example.ch')
+    await fake.memberships.insertIfAbsent({ id: 0 }, { userId: 'user-twin', storeId: store.id, role: 'manager', acceptedAt: start })
+
+    expect(await accept({ userId: 'user-twin' }, token, null)).toEqual({ ok: false, reason: 'invitation-already-accepted' })
+    expect(fake.state.memberships).toHaveLength(2)
   })
 
   it('[E2.3] an expired invitation is refused from the second it expires, and nothing changes', async () => {

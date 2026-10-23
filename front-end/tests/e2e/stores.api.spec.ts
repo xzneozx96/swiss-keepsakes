@@ -176,7 +176,7 @@ async function createStore(page: Page, language: Language, ownerEmail: string) {
   return { name, slug, card }
 }
 
-test('[E2.3][S8] the Super Admin creates the store, the Owner follows the N20 link and accepts, another email and a second accept are refused, and open for sale is refused with the checklist', async ({ browser }, testInfo) => {
+test('[E2.3][S8] the Super Admin creates the store, the Owner follows the N20 link and accepts, another email is refused, a second accept by the Owner answers as the first did, and open for sale is refused with the checklist', async ({ browser }, testInfo) => {
   testInfo.setTimeout(120_000)
   const language = languageOf(testInfo)
   const ownerEmail = newEmail()
@@ -235,11 +235,11 @@ test('[E2.3][S8] the Super Admin creates the store, the Owner follows the N20 li
   expect(new Set(keys).size).toBe(2)
   expect(keys.every(key => (key?.length ?? 0) > 10)).toBe(true)
 
-  // A second accept of the same link is refused, even by the Owner on another phone.
+  // A second accept of the same link by the same Owner, on another phone, answers as the first did (E2.4, so a lost answer cannot strand the Owner).
   const phone = await newVisitor(browser, language)
 
   await followLinkAs(phone, language, mail.link, ownerEmail)
-  await expect(phone.getByRole('heading', { name: say(language, 'stores.refusal.accepted.title') })).toBeVisible()
+  await expect(phone.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
   expect(await phone.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
 
   // Open for sale is refused by the API with the checklist. The screen is made to think the store may open, as a

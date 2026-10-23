@@ -5,9 +5,10 @@ import { afterAll, beforeAll, describe, expect, inject, it, vi } from 'vitest'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from '../../src/modules/identity/adapters/invitation-repository.ts'
+import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
 import { registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
 import { hashInvitationToken } from '../../src/modules/identity/application/invitation-token.ts'
-import { invitationScreens, makeInvitationLink, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
+import { invitationScreens, makeInvitationLink, makeListMyStores, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
@@ -76,6 +77,7 @@ async function setup() {
     origin,
     readSession: createSessionReader(auth),
     loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
+    listMyStores: makeListMyStores({ uow, memberships: createMembershipRepository() }),
   }, {
     idempotency: idempotency({ db, clock: systemClock, actorId: idempotencyActor }),
     routes: [routes => registerIdentityRoutes(routes, wiring.useCases)],
@@ -201,8 +203,11 @@ describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees o
     expect((await memberRows(storeId)).map(member => member.role).sort()).toEqual(['manager', 'owner'])
     expect((await invitationRows(storeId))[0]?.accepted_by).toBe(invitee.userId)
     const again = await env.accept(invitee, token!)
-    expect(again.status).toBe(409)
-    expect(await again.json()).toMatchObject({ type: 'invitation-already-accepted' })
+    expect(again.status).toBe(200)
+    expect(await again.json()).toEqual({ storeId, role: 'manager', storeStatus: 'live' })
+    const other = await env.accept(stranger, token!)
+    expect(other.status).toBe(403)
+    expect(await memberRows(storeId)).toHaveLength(2)
 
     // The Manager sees only that store, and not the members tab.
     expect((await env.call(`/api/store/${storeId}/onboarding`, { headers: invitee.headers })).status).toBe(200)
@@ -436,7 +441,7 @@ describe('[E2.4] what the Owner may invite, and what the invitation may become',
 
     await env.uow.run(async (tx) => {
       await repository.revoke(tx, elsewhere, id, new Date())
-      await repository.renew(tx, elsewhere, id, new Date(Date.now() + 365 * 24 * 60 * 60 * 1000))
+      await repository.renew(tx, elsewhere, id, new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), randomUUID())
       await repository.revokeOpenManagersByEmail(tx, elsewhere, 'scoped@example.ch', new Date())
     })
 

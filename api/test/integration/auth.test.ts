@@ -5,7 +5,8 @@ import { linkOAuthAccount } from 'better-auth/oauth2'
 import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
-import { makeLoadIdentity } from '../../src/modules/identity/index.ts'
+import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
+import { makeListMyStores, makeLoadIdentity } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
@@ -56,6 +57,7 @@ async function setup({ google, baseUrl = origin }: { google?: GoogleConfig, base
     origin: ownOrigin(baseUrl),
     readSession: createSessionReader(auth),
     loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
+    listMyStores: makeListMyStores({ uow, memberships: createMembershipRepository() }),
   }, noCommands)
 
   // Each call gets its own client address unless it names one, because the code routes allow 3 calls a minute per address.
@@ -195,7 +197,7 @@ describe('[E2.2] sessions and the actor', () => {
     expect(setCookie).not.toMatch(/Secure/i)
     const me = await call('/api/me', { headers: { Cookie: cookie } })
     expect(me.status).toBe(200)
-    expect(await me.json()).toEqual({ guestId: expect.stringMatching(/^[0-9a-f-]{36}$/) })
+    expect(await me.json()).toEqual({ stores: [], guestId: expect.stringMatching(/^[0-9a-f-]{36}$/) })
   })
 
   it('[E2.1] no response body of sign-in, get-session or sign-out holds the session token, and the cookie still carries it', async () => {

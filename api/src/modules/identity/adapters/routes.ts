@@ -9,13 +9,14 @@ import type { InviteManagerResult } from '../application/invite-manager.ts'
 import type { ListMembersResult } from '../application/list-members.ts'
 import type { StorePage } from '../application/list-stores.ts'
 import type { OpenStoreForSaleResult } from '../application/open-store-for-sale.ts'
+import type { PreviewInvitationResult } from '../application/preview-invitation.ts'
 import type { RemoveMemberResult } from '../application/remove-member.ts'
 import type { ResendManagerInvitationResult } from '../application/resend-manager-invitation.ts'
 import type { ResendOwnerInvitationResult } from '../application/resend-owner-invitation.ts'
 import type { RevokeInvitationResult } from '../application/revoke-invitation.ts'
 import type { UpdateStoreInformationResult } from '../application/update-store-information.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { acceptedInvitationSchema, acceptInvitationBodySchema, adminStoreListQuerySchema, adminStoreListSchema, adminStoreSchema, createStoreBodySchema, inviteManagerBodySchema, memberInvitationSchema, membersSchema, onboardingSchema, resendManagerInvitationBodySchema, resendOwnerInvitationBodySchema, storeInformationBodySchema, storeSchema } from '@sk/api-contract'
+import { acceptedInvitationSchema, acceptInvitationBodySchema, adminStoreListQuerySchema, adminStoreListSchema, adminStoreSchema, createStoreBodySchema, invitationPreviewSchema, inviteManagerBodySchema, memberInvitationSchema, membersSchema, onboardingSchema, previewInvitationBodySchema, resendManagerInvitationBodySchema, resendOwnerInvitationBodySchema, storeInformationBodySchema, storeSchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 
@@ -24,6 +25,7 @@ export interface IdentityUseCases {
   createStore: (actor: { userId: string }, input: CreateStoreInput, requestId: string | null) => Promise<CreateStoreResult>
   listStores: (page: { limit: number, cursor?: string | undefined }) => Promise<StorePage>
   resendOwnerInvitation: (actor: { userId: string }, storeId: string, language: StoreLanguage | undefined, requestId: string | null) => Promise<ResendOwnerInvitationResult>
+  previewInvitation: (token: string) => Promise<PreviewInvitationResult>
   acceptInvitation: (actor: { userId: string }, token: string, requestId: string | null) => Promise<AcceptInvitationResult>
   getOnboarding: (storeId: string) => Promise<OnboardingView | undefined>
   updateStoreInformation: (actor: Actor, storeId: string, changes: { name?: string, defaultLanguage?: StoreLanguage }, requestId: string | null) => Promise<UpdateStoreInformationResult>
@@ -79,6 +81,20 @@ const resendRoute = createRoute({
   },
   responses: {
     200: { description: 'The store. Its Owner invitation lives 7 more days and only the new mail\'s link works', headers: requestIdHeader, content: json(adminStoreSchema) },
+    ...problemResponses,
+  },
+})
+
+// A read that uses POST so the token travels in the body. createApp does not ask it for an Idempotency-Key
+// (`commands.withoutIdempotencyKey`), which would otherwise put every anonymous caller in one key scope.
+export const invitationPreviewPath = '/api/public/invitations/preview'
+
+const previewRoute = createRoute({
+  method: 'post',
+  path: invitationPreviewPath,
+  request: { query: z.object({}).strict(), body: { required: true, content: json(previewInvitationBodySchema) } },
+  responses: {
+    200: { description: 'The store, the role, the inviter\'s name and the state of the invitation. Never the invited address', headers: requestIdHeader, content: json(invitationPreviewSchema) },
     ...problemResponses,
   },
 })
@@ -225,6 +241,13 @@ export function registerIdentityRoutes(app: OpenAPIHono<AppEnv>, useCases: Ident
       case 'invitation-revoked':
         return problem(c, { type: 'invitation-revoked', status: 409, title: 'The Owner invitation was revoked and cannot be sent again' })
     }
+  })
+
+  app.openapi(previewRoute, async (c) => {
+    const result = await useCases.previewInvitation(c.req.valid('json').token)
+    if (result.ok)
+      return c.json(result.preview, 200)
+    return problem(c, { type: 'invitation-not-found', status: 404, title: 'This invitation link is not valid. Ask for a new one' })
   })
 
   app.openapi(acceptRoute, async (c) => {

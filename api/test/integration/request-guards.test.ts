@@ -5,8 +5,9 @@ import { afterAll, beforeAll, describe, expect, inject, it } from 'vitest'
 import { openApiDocument } from '../../scripts/contract.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
+import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
 import { registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
-import { makeLoadIdentity } from '../../src/modules/identity/index.ts'
+import { makeListMyStores, makeLoadIdentity } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
@@ -70,6 +71,7 @@ async function setup() {
     origin: ownOrigin(baseUrl),
     readSession: createSessionReader(auth),
     loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
+    listMyStores: makeListMyStores({ uow, memberships: createMembershipRepository() }),
   }, {
     idempotency: idempotency({ db, clock: systemClock, actorId: idempotencyActor }),
     routes: [routes => registerIdentityRoutes(routes, useCases)],
@@ -271,10 +273,10 @@ describe('[E2.10][AC02] the guards over real Better Auth sessions and the real i
   it('[E2.10] /api/me still answers staff and the Super Admin with their guest profile', async () => {
     const env = shared
 
-    for (const who of [env.guest, env.owner, env.superAdmin]) {
+    for (const [who, stores] of [[env.guest, []], [env.owner, [{ storeId: expect.any(String), role: 'owner', status: expect.any(String) }]], [env.superAdmin, []]] as const) {
       const response = await env.call('/api/me', { headers: who.headers })
       expect(response.status).toBe(200)
-      expect(await response.json()).toEqual({ guestId: expect.any(String) })
+      expect(await response.json()).toEqual({ guestId: expect.any(String), stores })
     }
   })
 })

@@ -105,10 +105,17 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
     async newestOwnerInvitationForUpdate(_tx, storeId) {
       return (await this.newestOwnerInvitations(_tx, [storeId])).get(storeId)
     },
-    async renew(_tx, storeId, invitationId, expiresAt) {
+    async renew(_tx, storeId, invitationId, expiresAt, invitedBy) {
       const row = state.invitations.get(invitationId)
       if (row?.storeId === storeId)
-        Object.assign(row, { expiresAt, tokenHash: null })
+        Object.assign(row, { expiresAt, tokenHash: null, invitedBy })
+    },
+    async findPreviewByTokenHash(_tx, tokenHash) {
+      const row = [...state.invitations.values()].find(candidate => candidate.tokenHash === tokenHash)
+      const store = row && state.stores.get(row.storeId)
+      if (!row || !store)
+        return undefined
+      return { role: row.role, expiresAt: row.expiresAt, acceptedBy: row.acceptedBy, revokedAt: row.revokedAt, storeName: store.name, inviterName: (row.invitedBy && state.users.get(row.invitedBy)?.name) ?? null }
     },
     async setTokenHash(_tx, invitationId, tokenHash) {
       const row = state.invitations.get(invitationId)
@@ -155,6 +162,9 @@ export function createFakeIdentity(later: LaterConditions = { 'payment-account':
     },
     async list(_tx, storeId) {
       return state.memberships.filter(row => row.storeId === storeId).map(row => ({ id: row.id, userId: row.userId, email: state.users.get(row.userId)?.email ?? '', role: row.role, acceptedAt: row.acceptedAt }))
+    },
+    async listForUser(_tx, userId) {
+      return state.memberships.filter(row => row.userId === userId).map(row => ({ storeId: row.storeId, role: row.role, status: state.stores.get(row.storeId)?.status ?? 'invited' }))
     },
     async has(_tx, storeId, userId) {
       return state.memberships.some(row => row.storeId === storeId && row.userId === userId)

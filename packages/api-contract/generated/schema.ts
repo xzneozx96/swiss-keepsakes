@@ -153,7 +153,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description The signed-in guest */
+                /** @description The signed-in guest and the stores they belong to */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];
@@ -223,6 +223,56 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["AcceptedInvitation"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/invitations/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PreviewInvitation"];
+                };
+            };
+            responses: {
+                /** @description The store, the role, the inviter's name and the state of the invitation. Never the invited address */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InvitationPreview"];
                     };
                 };
                 /** @description An RFC 9457 problem. `type` says what went wrong */
@@ -700,6 +750,7 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description A repeated accept by the user who took the invitation answers the same, while they still belong to the store */
         AcceptedInvitation: {
             /** @enum {string} */
             role: "owner" | "manager";
@@ -757,6 +808,16 @@ export interface components {
             /** @enum {string} */
             status: "ok";
         };
+        /** @description What M01 and A02 show before sign-in. It never carries the invited address */
+        InvitationPreview: {
+            /** @description The inviting user's name, or null when they have none or the invitation is an Owner invitation. It is never their address */
+            inviterName: string | null;
+            /** @enum {string} */
+            role: "owner" | "manager";
+            /** @enum {string} */
+            state: "open" | "expired" | "revoked" | "accepted";
+            storeName: string;
+        };
         InviteManager: {
             /** Format: email */
             email: string;
@@ -772,6 +833,8 @@ export interface components {
              * @description The guest profile that the guest's orders and bookings point at
              */
             guestId: string;
+            /** @description The stores the user belongs to, oldest membership first. Empty for a guest and for a Super Admin, who hold no store role */
+            stores: components["schemas"]["MeStore"][];
         };
         Member: {
             /** Format: date-time */
@@ -803,6 +866,14 @@ export interface components {
             invitations: components["schemas"]["MemberInvitation"][];
             members: components["schemas"]["Member"][];
         };
+        MeStore: {
+            /** @enum {string} */
+            role: "owner" | "manager";
+            /** @enum {string} */
+            status: "invited" | "onboarding" | "live" | "suspended";
+            /** Format: uuid */
+            storeId: string;
+        };
         Onboarding: {
             conditions: {
                 /** @enum {string} */
@@ -821,6 +892,10 @@ export interface components {
             /** @enum {string} */
             state: "open" | "accepted" | "revoked" | "expired";
         } | null;
+        PreviewInvitation: {
+            /** @description The token from the invitation link. It travels in the body, never in the query string */
+            token: string;
+        };
         /** @description RFC 9457 problem details, sent as application/problem+json */
         Problem: {
             checks?: {

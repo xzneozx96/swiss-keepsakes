@@ -25,6 +25,7 @@
         "type": "object"
       },
       "AcceptedInvitation": {
+        "description": "A repeated accept by the user who took the invitation answers the same, while they still belong to the store",
         "properties": {
           "role": {
             "enum": [
@@ -189,6 +190,44 @@
         ],
         "type": "object"
       },
+      "InvitationPreview": {
+        "description": "What M01 and A02 show before sign-in. It never carries the invited address",
+        "properties": {
+          "inviterName": {
+            "description": "The inviting user's name, or null when they have none or the invitation is an Owner invitation. It is never their address",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "enum": [
+              "owner",
+              "manager"
+            ],
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "open",
+              "expired",
+              "revoked",
+              "accepted"
+            ],
+            "type": "string"
+          },
+          "storeName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "storeName",
+          "role",
+          "inviterName",
+          "state"
+        ],
+        "type": "object"
+      },
       "InviteManager": {
         "properties": {
           "email": {
@@ -216,10 +255,48 @@
             "description": "The guest profile that the guest's orders and bookings point at",
             "format": "uuid",
             "type": "string"
+          },
+          "stores": {
+            "description": "The stores the user belongs to, oldest membership first. Empty for a guest and for a Super Admin, who hold no store role",
+            "items": {
+              "$ref": "#/components/schemas/MeStore"
+            },
+            "type": "array"
           }
         },
         "required": [
-          "guestId"
+          "guestId",
+          "stores"
+        ],
+        "type": "object"
+      },
+      "MeStore": {
+        "properties": {
+          "role": {
+            "enum": [
+              "owner",
+              "manager"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "invited",
+              "onboarding",
+              "live",
+              "suspended"
+            ],
+            "type": "string"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "storeId",
+          "role",
+          "status"
         ],
         "type": "object"
       },
@@ -380,6 +457,20 @@
           "object",
           "null"
         ]
+      },
+      "PreviewInvitation": {
+        "properties": {
+          "token": {
+            "description": "The token from the invitation link. It travels in the body, never in the query string",
+            "maxLength": 256,
+            "minLength": 16,
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
       },
       "Problem": {
         "description": "RFC 9457 problem details, sent as application/problem+json",
@@ -705,7 +796,7 @@
                 }
               }
             },
-            "description": "The signed-in guest",
+            "description": "The signed-in guest and the stores they belong to",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -767,6 +858,52 @@
               }
             },
             "description": "The signed-in user now belongs to the store",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/invitations/preview": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewInvitation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationPreview"
+                }
+              }
+            },
+            "description": "The store, the role, the inviter's name and the state of the invitation. Never the invited address",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"

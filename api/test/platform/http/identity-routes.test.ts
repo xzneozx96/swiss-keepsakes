@@ -486,3 +486,87 @@ describe('[E2.4] an optional-body command over the real HTTP server', () => {
     }
   })
 })
+
+describe('[E2.4][AC02] the invitation preview route', () => {
+  const previewPath = '/api/public/invitations/preview'
+  const token = 'T0ken-of-the-preview-link-0123456789abcdef'
+
+  it('[E2.4][AC02] answers an anonymous caller with the token in the body and no Idempotency-Key, under the real key middleware', async () => {
+    const seen: string[] = []
+    const app = setup({ previewInvitation: async (value) => {
+      seen.push(value)
+      return { ok: true, preview: { storeName: 'Lucerne Andenken', role: 'manager', inviterName: 'Ngoc Tran', state: 'open' } }
+    } }, strictCommands)
+
+    const response = await app.request(previewPath, post({}, { token }))
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toEqual({ storeName: 'Lucerne Andenken', role: 'manager', inviterName: 'Ngoc Tran', state: 'open' })
+    expect(seen).toEqual([token])
+  })
+
+  it('[E2.4][AC02] other anonymous commands still need a key: only the named route is exempt', async () => {
+    const app = setup({}, strictCommands)
+
+    expect((await app.request('/api/me/invitations/accept', post(signedInAs('guest'), { token }))).status).toBe(400)
+    expect(await (await app.request('/api/me/invitations/accept', post(signedInAs('guest'), { token }))).json()).toMatchObject({ type: 'idempotency-key-required' })
+    expect((await app.request(`${previewPath}/other`, post({}, { token }))).status).toBe(400)
+    expect((await app.request(`${previewPath}/`, post({}, { token }))).status).toBe(400)
+    expect((await app.request('/api/public/invitations/Preview', post({}, { token }))).status).toBe(400)
+    expect((await app.request('/API/PUBLIC/INVITATIONS/PREVIEW', post({}, { token }))).status).toBe(404)
+  })
+
+  it('[E2.4][AC02] a token in the query string is not accepted: the body is required and the query is never read', async () => {
+    let calls = 0
+    const app = setup({ previewInvitation: async () => {
+      calls++
+      return { ok: false, reason: 'invitation-not-found' }
+    } }, strictCommands)
+
+    const response = await app.request(`${previewPath}?token=${token}`, post({}))
+
+    expect(response.status).toBe(400)
+    expect(calls).toBe(0)
+    const noContentType = await app.request(`${previewPath}?token=${token}`, { method: 'POST', headers: { Origin: shopOrigin } })
+    expect(noContentType.status).toBe(400)
+    expect(await noContentType.json()).toMatchObject({ type: 'validation-failed' })
+    expect(calls).toBe(0)
+  })
+
+  it('[E2.4][AC02] a valid body does not excuse a token in the query string: any query is a validation failure', async () => {
+    let calls = 0
+    const app = setup({ previewInvitation: async () => {
+      calls++
+      return { ok: false, reason: 'invitation-not-found' }
+    } }, strictCommands)
+
+    for (const query of [`?token=${token}`, '?other=1']) {
+      const response = await app.request(previewPath + query, post({}, { token }))
+
+      expect(response.status).toBe(400)
+      expect(await response.json()).toMatchObject({ type: 'validation-failed' })
+    }
+    expect(calls).toBe(0)
+  })
+
+  it('[E2.4][AC02] a body with a short token, or a foreign Origin, is refused before the use case', async () => {
+    let calls = 0
+    const app = setup({ previewInvitation: async () => {
+      calls++
+      return { ok: false, reason: 'invitation-not-found' }
+    } }, strictCommands)
+
+    expect((await app.request(previewPath, post({}, { token: 'short' }))).status).toBe(400)
+    expect((await app.request(previewPath, { ...post({}, { token }), headers: { 'Origin': 'https://evil.example', 'Content-Type': 'application/json' } })).status).toBe(403)
+    expect(calls).toBe(0)
+  })
+
+  it('[E2.4][AC02] an unknown token is the not-found problem', async () => {
+    const app = setup({ previewInvitation: async () => ({ ok: false, reason: 'invitation-not-found' }) }, strictCommands)
+
+    const response = await app.request(previewPath, post({}, { token }))
+
+    expect(response.status).toBe(404)
+    expect(await response.json()).toMatchObject({ type: 'invitation-not-found', status: 404 })
+  })
+})

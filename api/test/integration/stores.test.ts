@@ -9,10 +9,11 @@ import { afterAll, beforeAll, describe, expect, inject, it, vi } from 'vitest'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from '../../src/modules/identity/adapters/invitation-repository.ts'
+import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
 import { createPlatformAdminRepository } from '../../src/modules/identity/adapters/platform-admin-repository.ts'
 import { registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
 import { createUserDirectory } from '../../src/modules/identity/adapters/user-directory.ts'
-import { invitationScreens, makeGrantSuperAdmin, makeInvitationLink, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
+import { invitationScreens, makeGrantSuperAdmin, makeInvitationLink, makeListMyStores, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
@@ -93,6 +94,7 @@ async function setup(options: SetupOptions = {}) {
     origin,
     readSession: createSessionReader(auth),
     loadIdentity: makeLoadIdentity({ uow, profiles: createGuestProfileRepository(), access: createAccessRepository() }),
+    listMyStores: makeListMyStores({ uow, memberships: createMembershipRepository() }),
   }, {
     idempotency: idempotency({ db, clock: systemClock, actorId: idempotencyActor }),
     routes: [routes => registerIdentityRoutes(routes, wiring.useCases)],
@@ -209,7 +211,7 @@ describe('[E2.3] migration 0004: stores and store_invitations', () => {
     const insert = (storeId: string, email = 'a@example.ch', role = 'owner') => pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at) values ($1, $2, $3, now())`, [storeId, email, role])
     const { rows } = await pool.query<{ id: string }>(`insert into identity.stores (slug, name) values ($1, 'Name') returning id`, [slugFor()])
 
-    expect(columns.map(column => column.column_name)).toEqual(['accepted_by', 'created_at', 'email', 'expires_at', 'id', 'revoked_at', 'role', 'store_id', 'token_hash'])
+    expect(columns.map(column => column.column_name)).toEqual(['accepted_by', 'created_at', 'email', 'expires_at', 'id', 'invited_by', 'revoked_at', 'role', 'store_id', 'token_hash'])
     await expect(insert(randomUUID())).rejects.toMatchObject({ code: '23503', constraint: 'store_invitations_store_id_stores_id_fk' })
     await expect(insert(rows[0]!.id, 'a@example.ch', 'admin')).rejects.toMatchObject({ code: '23514', constraint: 'store_invitations_role_check' })
     await expect(insert(rows[0]!.id, 'Anna@Example.ch')).rejects.toMatchObject({ code: '23514', constraint: 'store_invitations_email_check' })
@@ -224,7 +226,7 @@ describe('[E2.3] migration 0004: stores and store_invitations', () => {
     await insert('owner')
     await expect(insert('owner')).rejects.toMatchObject({ code: '23505', constraint: 'store_invitations_one_open_owner_idx' })
     await insert('manager')
-    await insert('manager')
+    await expect(insert('manager')).rejects.toMatchObject({ code: '23505', constraint: 'store_invitations_one_open_manager_idx' })
     await pool.query(`update identity.store_invitations set revoked_at = now() where store_id = $1 and role = 'owner'`, [rows[0]!.id])
     await insert('owner')
     await expect(insert('owner')).rejects.toMatchObject({ constraint: 'store_invitations_one_open_owner_idx' })
@@ -240,7 +242,7 @@ describe('[E2.3] migration 0004: stores and store_invitations', () => {
 
   it('[E2.3] two invitations never share a token hash, and many have none', async () => {
     const { rows } = await pool.query<{ id: string }>(`insert into identity.stores (slug, name) values ($1, 'Name') returning id`, [slugFor()])
-    const insert = (hash: string | null) => pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at, token_hash) values ($1, 'a@example.ch', 'manager', now(), $2)`, [rows[0]!.id, hash])
+    const insert = (hash: string | null) => pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at, token_hash) values ($1, $3, 'manager', now(), $2)`, [rows[0]!.id, hash, `${randomUUID().slice(0, 8)}@example.ch`])
 
     await insert(null)
     await insert(null)
@@ -296,10 +298,10 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
     expect(await storeStatus(storeId)).toBe('onboarding')
     expect((await invitationRow(storeId))[0]?.accepted_by).toBe(owner.userId)
 
-    // A second accept fails, and the Owner is now staff of the store.
+    // A second accept by the same user answers as the first did (E2.4), and the Owner is now staff of the store.
     const again = await env.call('/api/me/invitations/accept', { method: 'POST', headers: owner.headers, body: { token } })
-    expect(again.status).toBe(409)
-    expect(await again.json()).toMatchObject({ type: 'invitation-already-accepted' })
+    expect(again.status).toBe(200)
+    expect(await again.json()).toEqual({ storeId, role: 'owner', storeStatus: 'onboarding' })
     expect(await memberships(storeId)).toHaveLength(1)
 
     // A02: four conditions, only the store information met, and opening is refused with a 409.
@@ -349,7 +351,7 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
     expect(await response.json()).toMatchObject({ type: 'invitation-not-found' })
   })
 
-  it('[E2.3][S8] two parallel accepts with different keys give one 200 and one 409, and one membership', async () => {
+  it('[E2.3][S8] four parallel accepts by one user with different keys give four answers of one acceptance, and one membership', async () => {
     const env = shared
     const admin = sharedAdmin
     const owner = await env.signIn()
@@ -358,10 +360,9 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
 
     const answers = await Promise.all(['a', 'b', 'c', 'd'].map(key => env.call('/api/me/invitations/accept', { method: 'POST', headers: owner.headers, body: { token }, key: `${key}-${randomUUID()}` })))
 
-    expect(answers.map(answer => answer.status).sort()).toEqual([200, 409, 409, 409])
-    // The invitation's lock and its conditional update refuse the losers, not the membership's unique key.
-    const refusals = await Promise.all(answers.filter(answer => answer.status === 409).map(async answer => (await answer.json() as { type: string }).type))
-    expect(refusals).toEqual(['invitation-already-accepted', 'invitation-already-accepted', 'invitation-already-accepted'])
+    // The invitation's lock makes the losers wait and then find it accepted by the same user, who gets the same answer.
+    expect(answers.map(answer => answer.status)).toEqual([200, 200, 200, 200])
+    expect(await Promise.all(answers.map(async answer => answer.json()))).toEqual(Array.from({ length: 4 }).fill({ storeId: body.id, role: 'owner', storeStatus: 'onboarding' }))
     expect(await memberships(body.id)).toHaveLength(1)
     expect(await storeStatus(body.id)).toBe('onboarding')
   })

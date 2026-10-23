@@ -58,7 +58,18 @@ export const acceptedInvitationSchema = z.object({
   storeId: z.uuid(),
   role: z.enum(['owner', 'manager']),
   storeStatus,
-}).meta({ id: 'AcceptedInvitation' })
+}).meta({ id: 'AcceptedInvitation', description: 'A repeated accept by the user who took the invitation answers the same, while they still belong to the store' })
+
+export const previewInvitationBodySchema = z.object({
+  token: z.string().min(16).max(256).meta({ description: 'The token from the invitation link. It travels in the body, never in the query string' }),
+}).meta({ id: 'PreviewInvitation' })
+
+export const invitationPreviewSchema = z.object({
+  storeName: z.string(),
+  role: z.enum(['owner', 'manager']),
+  inviterName: z.string().nullable().meta({ description: 'The inviting user\'s name, or null when they have none or the invitation is an Owner invitation. It is never their address' }),
+  state: z.enum(['open', 'expired', 'revoked', 'accepted']),
+}).meta({ id: 'InvitationPreview', description: 'What M01 and A02 show before sign-in. It never carries the invited address' })
 
 export const onboardingSchema = z.object({
   store: storeSchema,
@@ -108,6 +119,7 @@ export const resendManagerInvitationBodySchema = z.object({
 export type AdminStore = z.infer<typeof adminStoreSchema>
 export type AdminStoreList = z.infer<typeof adminStoreListSchema>
 export type CreateStore = z.infer<typeof createStoreBodySchema>
+export type InvitationPreview = z.infer<typeof invitationPreviewSchema>
 export type AcceptedInvitation = z.infer<typeof acceptedInvitationSchema>
 export type Onboarding = z.infer<typeof onboardingSchema>
 export type Store = z.infer<typeof storeSchema>

@@ -6,6 +6,7 @@ import { makeListMembers } from '../../../src/modules/identity/application/list-
 import { makeRemoveMember } from '../../../src/modules/identity/application/remove-member.ts'
 import { makeResendManagerInvitation } from '../../../src/modules/identity/application/resend-manager-invitation.ts'
 import { makeRevokeInvitation } from '../../../src/modules/identity/application/revoke-invitation.ts'
+import { OpenManagerInvitationExists } from '../../../src/modules/identity/ports.ts'
 import { createFakeIdentity } from '../../support/fake-identity.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
 
@@ -123,7 +124,7 @@ describe('[E2.4][AC02] the Owner invites a Store Manager', () => {
 
   it('[E2.4] an invitation of another store with the same address does not count as open here', async () => {
     const { fake, store, other, owner, invite } = setup()
-    await fake.invitations.insert(tx, { storeId: other.id, email: 'shared@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    await fake.invitations.insert(tx, { storeId: other.id, email: 'shared@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
 
     expect(await invite(owner, store.id, { email: 'shared@example.ch' }, null)).toMatchObject({ ok: true })
   })
@@ -143,7 +144,7 @@ describe('[E2.4][AC02] the Owner lists, resends and revokes', () => {
     await invite(owner, store.id, { email: 'two@example.ch' }, null)
     const revoked = [...fake.state.invitations.values()][0]!
     await revoke(owner, store.id, revoked.id, null)
-    const accepted = await fake.invitations.insert(tx, { storeId: store.id, email: 'done@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    const accepted = await fake.invitations.insert(tx, { storeId: store.id, email: 'done@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
     fake.state.invitations.get(accepted.id)!.acceptedBy = 'user-x'
 
     const result = await list(owner, store.id)
@@ -159,6 +160,52 @@ describe('[E2.4][AC02] the Owner lists, resends and revokes', () => {
     await fake.invitations.setTokenHash(tx, created.ok ? created.invitation.id : '', 'hash-of-the-token')
 
     expect(JSON.stringify(await list(owner, store.id))).not.toMatch(/hash|token|http/i)
+  })
+
+  it('[E2.4] the invitation records who invited, and a resend records who sent it again', async () => {
+    const { fake, clock, store, owner, invite, resend } = setup()
+    const created = await invite(owner, store.id, { email: 'one@example.ch' }, null)
+    const id = created.ok ? created.invitation.id : ''
+    expect(fake.state.invitations.get(id)?.invitedBy).toBe('user-ngoc')
+    fake.state.invitations.get(id)!.invitedBy = 'user-someone-else'
+    clock.advance(1000)
+
+    await resend(owner, store.id, id, undefined, null)
+
+    expect(fake.state.invitations.get(id)?.invitedBy).toBe('user-ngoc')
+  })
+
+  it('[E2.4] a race past the check ends in the unique index, which answers invitation-already-open and queues nothing', async () => {
+    const { fake, store, owner } = setup()
+    const racing = makeInviteManager({
+      uow: fake.uow,
+      stores: fake.stores,
+      invitations: {
+        ...fake.invitations,
+        findOpenManagerByEmail: async () => undefined,
+        insert: async () => {
+          throw new OpenManagerInvitationExists()
+        },
+      },
+      memberships: fake.memberships,
+      users: fake.users,
+      admins: fake.admins,
+      queueMail: fake.queueMail,
+      audit: fake.audit,
+      clock: createManualClock(start),
+    })
+
+    expect(await racing(owner, store.id, { email: 'one@example.ch' }, null)).toEqual({ ok: false, reason: 'invitation-already-open' })
+    expect(fake.state.mail).toEqual([])
+  })
+
+  it('[E2.4] another failure of the insert is not hidden as an open invitation', async () => {
+    const { fake, store, owner } = setup()
+    const failing = makeInviteManager({ uow: fake.uow, stores: fake.stores, invitations: { ...fake.invitations, insert: async () => {
+      throw new Error('connection lost')
+    } }, memberships: fake.memberships, users: fake.users, admins: fake.admins, queueMail: fake.queueMail, audit: fake.audit, clock: createManualClock(start) })
+
+    await expect(failing(owner, store.id, { email: 'one@example.ch' }, null)).rejects.toThrow('connection lost')
   })
 
   it('[E2.4] a resend moves the expiry 7 days ahead, clears the token and queues N18 again with the same invitation id', async () => {
@@ -196,7 +243,7 @@ describe('[E2.4][AC02] the Owner lists, resends and revokes', () => {
     const { fake, store, owner, invite, resend } = setup()
     const created = await invite(owner, store.id, { email: 'lena.meier@example.ch' }, null)
     const id = created.ok ? created.invitation.id : ''
-    await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
     await fake.memberships.insertIfAbsent(tx, { userId: 'user-lena', storeId: store.id, role: 'manager', acceptedAt: start })
     const mails = fake.state.mail.length
 
@@ -208,10 +255,10 @@ describe('[E2.4][AC02] the Owner lists, resends and revokes', () => {
   it('[E2.4] a removed Manager\'s open invitations for the store are revoked in the removal, so neither a resend nor a link brings them back, and another store\'s are left alone', async () => {
     const { fake, store, other, owner, invite, resend, remove } = setup()
     await fake.memberships.insertIfAbsent(tx, { userId: 'user-lena', storeId: store.id, role: 'manager', acceptedAt: start })
-    const older = await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
-    const accepted = await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    const older = await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
+    const accepted = await fake.invitations.insert(tx, { storeId: store.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
     fake.state.invitations.get(accepted.id)!.acceptedBy = 'user-lena'
-    const elsewhere = await fake.invitations.insert(tx, { storeId: other.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    const elsewhere = await fake.invitations.insert(tx, { storeId: other.id, email: 'lena.meier@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
     const member = (await fake.memberships.list(tx, store.id)).find(entry => entry.role === 'manager')!
 
     expect(await remove(owner, store.id, member.id, null)).toEqual({ ok: true })
@@ -225,8 +272,8 @@ describe('[E2.4][AC02] the Owner lists, resends and revokes', () => {
 
   it('[E2.4][AC02] an invitation of another store, or an Owner invitation, is not found under this store, by resend and by revoke', async () => {
     const { fake, other, store, owner, resend, revoke } = setup()
-    const foreign = await fake.invitations.insert(tx, { storeId: other.id, email: 'z@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
-    const ownerInvitation = await fake.invitations.insert(tx, { storeId: store.id, email: 'o@example.ch', role: 'owner', expiresAt: new Date(start.getTime() + invitationLifetimeMs) })
+    const foreign = await fake.invitations.insert(tx, { storeId: other.id, email: 'z@example.ch', role: 'manager', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
+    const ownerInvitation = await fake.invitations.insert(tx, { storeId: store.id, email: 'o@example.ch', role: 'owner', expiresAt: new Date(start.getTime() + invitationLifetimeMs), invitedBy: 'user-inviter' })
 
     for (const id of [foreign.id, ownerInvitation.id, '0190f0c2-0000-7000-8000-0000000000ff']) {
       expect(await resend(owner, store.id, id, undefined, null)).toEqual({ ok: false, reason: 'invitation-not-found' })

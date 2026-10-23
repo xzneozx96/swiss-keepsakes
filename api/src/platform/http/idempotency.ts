@@ -55,10 +55,20 @@ function answer(c: Context<AppEnv>, record: IdempotencyRecord | undefined, reque
   return c.body(Buffer.from(base64Body, 'base64'), status as ContentfulStatusCode, replayHeaders)
 }
 
-async function stored(response: Response): Promise<StoredResponse> {
+// The body is read once. The bytes are put back on the context as a new Response, so the client gets the same
+// answer. A clone that is read and dropped is not safe: when it is garbage-collected it can cancel the original body.
+async function takeBody(c: Context<AppEnv>): Promise<Buffer | null> {
+  const original = c.res
+  if (nullBodyStatuses.has(original.status))
+    return null
+  const bytes = Buffer.from(await original.arrayBuffer())
+  c.res = new Response(bytes, original)
+  return bytes
+}
+
+function stored(response: Response, bytes: Buffer | null): StoredResponse {
   const headers = Object.fromEntries([...response.headers].filter(([name]) => headersStored.has(name)))
-  const base64Body = nullBodyStatuses.has(response.status) ? null : Buffer.from(await response.clone().arrayBuffer()).toString('base64')
-  return { status: response.status, headers, base64Body }
+  return { status: response.status, headers, base64Body: bytes?.toString('base64') ?? null }
 }
 
 // Every command carries an Idempotency-Key (D11). The first request with a key runs. A repeat from the
@@ -97,7 +107,8 @@ export function idempotency(deps: { db: Database, clock: Clock, actorId: (c: Con
     else if (claim.state === 'claimed') {
       // Whatever the status: the command committed, so a repeat must not run it again.
       try {
-        await saveIdempotentResponse(deps.db, scope, await stored(c.res))
+        const bytes = await takeBody(c)
+        await saveIdempotentResponse(deps.db, scope, stored(c.res, bytes))
       }
       catch (error) {
         // The command did commit, so this client still gets its answer. A repeat gets 409 until the key expires.

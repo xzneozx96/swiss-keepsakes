@@ -2,7 +2,7 @@ import type { Access } from '@sk/domain/identity'
 import type { Logger } from 'pino'
 import type { Database } from '../../src/platform/db/client.ts'
 import type { CommandDeps } from '../../src/platform/http/app.ts'
-import { registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
+import { invitationPreviewPath, registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
 import { systemClock } from '../../src/platform/clock.ts'
 import { createApp } from '../../src/platform/http/app.ts'
 import { idempotency, idempotencyActor } from '../../src/platform/http/idempotency.ts'
@@ -23,6 +23,7 @@ export const guardedCommands: CommandDeps = { ...noCommands, routes }
 // one, which is what these tests send, and one with a key would fail loudly.
 export const strictCommands: CommandDeps = {
   idempotency: idempotency({ db: {} as Database, clock: systemClock, actorId: idempotencyActor }),
+  withoutIdempotencyKey: [invitationPreviewPath],
   routes,
 }
 
@@ -32,7 +33,7 @@ export const noAccess: Access = { platformAdmin: false, memberships: [] }
 // named by its `sk-test-user` cookie, and what that user may do comes from `people`. Everything after the
 // session, the Origin rule, `authenticate`, the guards, `can()`, is the real code.
 export function createGuardedApp(people: Record<string, Access> = {}, logger: Logger = createLogger('silent'), commands: CommandDeps = guardedCommands) {
-  const calls = { authHandler: 0, readSession: 0 }
+  const calls = { authHandler: 0, readSession: 0, listMyStores: 0 }
   const app = createApp(logger, async () => ({ database: true, jobs: true }), {
     origin: shopOrigin,
     authHandler: async () => {
@@ -45,6 +46,10 @@ export function createGuardedApp(people: Record<string, Access> = {}, logger: Lo
       return { headers: new Headers(), response: userId ? { user: { id: userId } } : null }
     },
     loadIdentity: async userId => ({ guestId: `guest-of-${userId}`, access: people[userId] ?? noAccess }),
+    listMyStores: async (userId) => {
+      calls.listMyStores++
+      return (people[userId] ?? noAccess).memberships.map(membership => ({ ...membership, status: 'live' as const }))
+    },
   }, commands)
   return { app, calls }
 }

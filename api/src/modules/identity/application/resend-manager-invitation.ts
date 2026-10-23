@@ -45,11 +45,11 @@ export function makeResendManagerInvitation<T>({ uow, stores, invitations, membe
       if (member && await memberships.has(tx, storeId, member.id))
         return { ok: false, reason: 'already-a-member' }
       const expiresAt = new Date(now.getTime() + invitationLifetimeMs)
-      await invitations.renew(tx, storeId, invitation.id, expiresAt)
+      await invitations.renew(tx, storeId, invitation.id, expiresAt, actor.userId)
       const inviter = await users.find(tx, actor.userId)
       await queueMail(tx, { template: 'N18', to: invitation.email, language: language ?? store.defaultLanguage, storeId, params: { inviter: inviter?.name.trim() || inviter?.email || store.name, store: store.name, invitationId: invitation.id } })
       await audit.record(tx, { storeId, actor: `staff:${actor.userId}`, entity: 'store_invitation', entityId: invitation.id, action: 'resent', requestId })
-      return { ok: true, invitation: memberInvitationView({ ...invitation, tokenHash: null, expiresAt }, now) }
+      return { ok: true, invitation: memberInvitationView({ ...invitation, tokenHash: null, expiresAt, invitedBy: actor.userId }, now) }
     })
   }
 }
