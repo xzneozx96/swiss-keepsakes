@@ -194,7 +194,7 @@
         "description": "What M01 and A02 show before sign-in. It never carries the invited address",
         "properties": {
           "inviterName": {
-            "description": "The inviting user's name, or null when they have none. It is never their address",
+            "description": "The inviting user's name, or null when they have none or the invitation is an Owner invitation. It is never their address",
             "type": [
               "string",
               "null"

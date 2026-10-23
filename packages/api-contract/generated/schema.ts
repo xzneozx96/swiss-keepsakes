@@ -810,7 +810,7 @@ export interface components {
         };
         /** @description What M01 and A02 show before sign-in. It never carries the invited address */
         InvitationPreview: {
-            /** @description The inviting user's name, or null when they have none. It is never their address */
+            /** @description The inviting user's name, or null when they have none or the invitation is an Owner invitation. It is never their address */
             inviterName: string | null;
             /** @enum {string} */
             role: "owner" | "manager";

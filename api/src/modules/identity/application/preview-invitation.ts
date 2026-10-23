@@ -27,6 +27,6 @@ export function makePreviewInvitation<T>({ uow, invitations, clock }: PreviewInv
     const row = await invitations.findPreviewByTokenHash(tx, hashInvitationToken(token))
     if (!row)
       return { ok: false, reason: 'invitation-not-found' }
-    return { ok: true, preview: { storeName: row.storeName, role: row.role, inviterName: row.inviterName?.trim() || null, state: invitationState(row, clock.now()) } }
+    return { ok: true, preview: { storeName: row.storeName, role: row.role, inviterName: row.role === 'owner' ? null : row.inviterName?.trim() || null, state: invitationState(row, clock.now()) } }
   })
 }

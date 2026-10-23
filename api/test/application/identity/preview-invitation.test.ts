@@ -41,10 +41,10 @@ describe('[E2.4][AC02] the invitation preview', () => {
     }
   })
 
-  it('[E2.4][AC02] an Owner invitation answers the owner role', async () => {
+  it('[E2.4][AC02] an Owner invitation answers the owner role and never names the inviter, who is platform staff', async () => {
     const { preview } = await setup({ role: 'owner' })
 
-    expect(await preview(token)).toMatchObject({ ok: true, preview: { role: 'owner' } })
+    expect(await preview(token)).toEqual({ ok: true, preview: { storeName: 'Lucerne Andenken', role: 'owner', inviterName: null, state: 'open' } })
   })
 
   it('[E2.4][AC02] an unknown token is not found', async () => {

@@ -67,7 +67,7 @@ export const previewInvitationBodySchema = z.object({
 export const invitationPreviewSchema = z.object({
   storeName: z.string(),
   role: z.enum(['owner', 'manager']),
-  inviterName: z.string().nullable().meta({ description: 'The inviting user\'s name, or null when they have none. It is never their address' }),
+  inviterName: z.string().nullable().meta({ description: 'The inviting user\'s name, or null when they have none or the invitation is an Owner invitation. It is never their address' }),
   state: z.enum(['open', 'expired', 'revoked', 'accepted']),
 }).meta({ id: 'InvitationPreview', description: 'What M01 and A02 show before sign-in. It never carries the invited address' })
 
