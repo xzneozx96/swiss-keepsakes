@@ -4,8 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { followSession } from '@/features/auth/lib/session-sync'
 import { startDemo } from '@/features/demo/data-client'
 
-vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
-
 beforeEach(() => {
   localStorage.clear()
   vi.stubGlobal('fetch', vi.fn(async () => Response.json(null)))

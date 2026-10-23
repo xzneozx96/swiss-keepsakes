@@ -5,7 +5,6 @@ import { EmptyState } from '@/components/empty-state'
 import { MoreIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
-import { apiEnabled } from '@/lib/api-mode'
 import { useMe } from '../api/queries'
 import { useGoToSignIn } from '../hooks/use-go-to-sign-in'
 import { currentStore } from '../lib/current-store'
@@ -24,7 +23,7 @@ type SettingsTab = 'general' | 'members'
  */
 export function SettingsScreen() {
   const { t } = useLocale()
-  const me = useMe(apiEnabled)
+  const me = useMe()
   const goToSignIn = useGoToSignIn(SETTINGS_PATH)
   const current = currentStore(me.data)
   const signedOut = me.error instanceof ApiProblem && me.error.status === 401
@@ -43,7 +42,7 @@ export function SettingsScreen() {
     />
   )
 
-  if (apiEnabled && (me.isPending || signedOut)) {
+  if (me.isPending || signedOut) {
     return (
       <div className="flex flex-col gap-4">
         <h1 className="text-title">{t('nav.settings')}</h1>
@@ -51,7 +50,7 @@ export function SettingsScreen() {
       </div>
     )
   }
-  if (!apiEnabled || !current || !showsMembersTab(current))
+  if (!current || !showsMembersTab(current))
     return placeholder
 
   return (

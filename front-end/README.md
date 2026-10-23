@@ -12,7 +12,7 @@ A clickable prototype of Swiss Keepsakes for the client. It has no backend, and 
 
 ```bash
 pnpm install
-pnpm dev             # local dev server
+pnpm dev             # the SPA alone. Sign-in needs the API: run `pnpm dev` at the repo root instead, which starts both
 pnpm build         # type-check + production build into dist/
 pnpm build:artifact # build + dist/artifact.html for publishing as a claude.ai Artifact
 pnpm lint

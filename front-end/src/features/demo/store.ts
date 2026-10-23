@@ -1,7 +1,6 @@
 import type { DemoData, DemoState, Role } from './types'
 
 import { StorageFullError } from '@/features/data-client/errors'
-import { apiEnabled } from '@/lib/api-mode'
 import { readStored, writeStored } from '@/lib/storage'
 
 import { createSeedState, DEMO_VERSION } from './seed'
@@ -9,14 +8,9 @@ import { upgradeDemoData } from './upgrade'
 
 const STORAGE_KEY = 'sk.demo'
 
-/**
- * With the API, the session cookie decides who is signed in, so the browser neither keeps nor trusts a
- * saved copy of it.
- */
+/** The session cookie decides who is signed in, so the browser neither keeps nor trusts a saved copy of it. */
 function withoutSession(state: DemoState): DemoState {
-  return apiEnabled
-    ? { ...state, data: { ...state.data, signedInGuestId: null } }
-    : state
+  return { ...state, data: { ...state.data, signedInGuestId: null } }
 }
 
 /** What a signed-in guest creates or edits. Nothing here can exist without a session. */
@@ -36,7 +30,7 @@ const accountKeys = [
 const browsingKeys = ['cart', 'favouriteProductIds', 'adviceDraft'] as const
 
 /**
- * With the API, every account is still the one demo guest, so what one guest created must not reach the next on a
+ * Every account is still the one demo guest, so what one guest created must not reach the next on a
  * shared device. This puts the account data back to the seed (orders, the guest profile, reviews, comments, advice and
  * private tour requests, tour bookings, the Mail panel, the order counter) and signs out. The cart, saved gifts and the open advice request go too. The catalogue,
  * stories, partners, costs, the role and the clock stay.

@@ -1,7 +1,7 @@
 // Counts component renders (React's PerformedWork flag, as DevTools does) and CPU time at 4x throttle for a few scenarios.
 // usage: node scripts/verify/render-count.mjs <buildDir>     (PROFILE=S5 lists the top components for one scenario)
 import process from 'node:process'
-import { launchBrowser, serve } from './browser.mjs'
+import { answerSession, launchBrowser, serve } from './browser.mjs'
 
 const [dir] = process.argv.slice(2)
 const { server, port } = await serve(dir)
@@ -10,6 +10,7 @@ const browser = await launchBrowser()
 async function scenario(name, role, start, act) {
   const context = await browser.newContext({ viewport: { width: 430, height: 932 } })
 
+  await answerSession(context)
   await context.addInitScript(() => {
     const stats = { commits: 0, renders: 0, by: {} }
     const COMPONENT_TAGS = new Set([0, 1, 11, 14, 15])
@@ -72,7 +73,6 @@ async function scenario(name, role, start, act) {
     const state = JSON.parse(localStorage.getItem('sk.demo'))
 
     state.role = role
-    state.data.signedInGuestId = state.data.tours.bookings[0].guestId
     localStorage.setItem('sk.demo', JSON.stringify(state))
   }, role)
   await page.reload()

@@ -16,7 +16,7 @@ The chosen stack, and what is in use versus only planned, is in `docs/developmen
 - Build: `pnpm build` (about 22 s, because the React Compiler runs)
 - Unit tests: `pnpm test` (Vitest, about 2 s). Type-check the tests: `pnpm typecheck:tests`
 - Rendering, routing or state change: compare builds with `pnpm verify:routes` and `pnpm verify:renders` (`front-end/scripts/verify/README.md`)
-- End-to-end: `pnpm test:e2e` (own dev server on port 5391). Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Chrome
+- End-to-end: `pnpm test:e2e` runs the real API and the SPA on port 5392 against the Neon development branch (setup in `docs/development-rules/shared/testing.md`). Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Chrome
 - Never run `pnpm lint:fix`. It rewrites every file, and other sessions are editing them. Fix your own files with `pnpm exec eslint --fix <files>`.
 - Tests live in `front-end/tests/`. Setup and examples are in `docs/development-rules/shared/testing.md`.
 

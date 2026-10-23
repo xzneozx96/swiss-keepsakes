@@ -17,7 +17,7 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
-  server: { proxy: apiProxy },
+  server: { port: 3002, strictPort: true, proxy: apiProxy },
   preview: { proxy: apiProxy },
   plugins: [
     // TanStack Router's plugin must come before @vitejs/plugin-react.
@@ -27,15 +27,6 @@ export default defineConfig({
     // memo is needed. The react-hooks lint rules keep the code compilable.
     babel({ presets: [reactCompilerPreset()] }),
     tailwindcss(),
-    {
-      name: 'warn-api-mode-with-demo-accounts',
-      apply: 'build',
-      buildStart() {
-        if (process.env.VITE_API_ENABLED === 'true') {
-          this.warn('VITE_API_ENABLED=true: guests sign in through the API, but the account, orders and checkout screens still read the demo data, and every account is the one demo guest. Do not deploy this build to guests until the account feature moves to the API.')
-        }
-      },
-    },
   ],
   test: {
     // Files in tests/ sit outside tsconfig.json, so `resolve.tsconfigPaths` does not cover them.
