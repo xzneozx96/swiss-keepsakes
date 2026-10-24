@@ -764,6 +764,8 @@ export interface components {
         };
         /** @description A store as A01 lists it: its Owner invitation and whether its payment account is verified */
         AdminStore: {
+            /** Format: date-time */
+            createdAt: string;
             /** @enum {string} */
             defaultLanguage: "en" | "de";
             /** Format: uuid */
@@ -930,6 +932,8 @@ export interface components {
             language?: "en" | "de";
         };
         Store: {
+            /** Format: date-time */
+            createdAt: string;
             /** @enum {string} */
             defaultLanguage: "en" | "de";
             /** Format: uuid */

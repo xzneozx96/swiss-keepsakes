@@ -23,7 +23,7 @@ describe('[E2.3] the Super Admin creates a store with its Owner invitation', () 
 
     const result = await createStore(admin, input, 'request-1')
 
-    expect(result).toMatchObject({ ok: true, store: { slug: 'lucerne-andenken', name: 'Lucerne Andenken', status: 'invited', defaultLanguage: 'de', paymentAccount: 'pending' } })
+    expect(result).toMatchObject({ ok: true, store: { slug: 'lucerne-andenken', name: 'Lucerne Andenken', status: 'invited', defaultLanguage: 'de', paymentAccount: 'pending', createdAt: start.toISOString() } })
     const [invitation] = [...fake.state.invitations.values()]
     expect(invitation).toMatchObject({ role: 'owner', email: 'ngoc.tran@example.ch', tokenHash: null, acceptedBy: null })
     expect(invitation?.expiresAt.getTime()).toBe(start.getTime() + invitationLifetimeMs)
@@ -113,7 +113,7 @@ describe('[E2.3] A01\'s list of stores', () => {
 
     expect(page.nextCursor).toBeNull()
     expect(page.items).toHaveLength(1)
-    expect(page.items[0]).toMatchObject({ slug: 'lucerne-andenken', status: 'invited', paymentAccount: 'pending', invitation: { state: 'open', email: 'ngoc.tran@example.ch' } })
+    expect(page.items[0]).toMatchObject({ slug: 'lucerne-andenken', status: 'invited', paymentAccount: 'pending', createdAt: start.toISOString(), invitation: { state: 'open', email: 'ngoc.tran@example.ch' } })
   })
 
   it('[E2.4] the Owner invitation records the Super Admin who made it, and a resend the Super Admin who sent it again', async () => {

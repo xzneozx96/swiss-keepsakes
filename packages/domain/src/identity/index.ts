@@ -114,6 +114,7 @@ export interface Store {
   name: string
   status: StoreStatus
   defaultLanguage: StoreLanguage
+  createdAt: Date
 }
 
 export type InvitationState = 'open' | 'accepted' | 'revoked' | 'expired'

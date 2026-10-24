@@ -211,7 +211,7 @@ describe('[E2.3] migration 0004: stores and store_invitations', () => {
     const insert = (storeId: string, email = 'a@example.ch', role = 'owner') => pool.query(`insert into identity.store_invitations (store_id, email, role, expires_at) values ($1, $2, $3, now())`, [storeId, email, role])
     const { rows } = await pool.query<{ id: string }>(`insert into identity.stores (slug, name) values ($1, 'Name') returning id`, [slugFor()])
 
-    expect(columns.map(column => column.column_name)).toEqual(['accepted_by', 'created_at', 'email', 'expires_at', 'id', 'invited_by', 'revoked_at', 'role', 'store_id', 'token_hash'])
+    expect(columns.map(column => column.column_name)).toEqual(['accepted_by', 'created_at', 'email', 'expires_at', 'id', 'invited_by', 'revoked_at', 'role', 'store_id', 'token_hash', 'updated_at'])
     await expect(insert(randomUUID())).rejects.toMatchObject({ code: '23503', constraint: 'store_invitations_store_id_stores_id_fk' })
     await expect(insert(rows[0]!.id, 'a@example.ch', 'admin')).rejects.toMatchObject({ code: '23514', constraint: 'store_invitations_role_check' })
     await expect(insert(rows[0]!.id, 'Anna@Example.ch')).rejects.toMatchObject({ code: '23514', constraint: 'store_invitations_email_check' })
@@ -672,7 +672,7 @@ describe('[E2.3] the Super Admin\'s routes over real sessions', () => {
     const ids = everything.map(item => item.id)
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids.filter(id => slugs.includes(id))).toEqual([...slugs].reverse())
-    expect(everything.find(item => item.id === slugs[0])).toMatchObject({ status: 'invited', paymentAccount: 'pending', invitation: { state: 'open' } })
+    expect(everything.find(item => item.id === slugs[0])).toMatchObject({ status: 'invited', paymentAccount: 'pending', createdAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT[\d:.]+Z$/), invitation: { state: 'open' } })
   })
 })
 
