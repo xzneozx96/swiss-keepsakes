@@ -203,7 +203,7 @@ export const storeInvitations = identitySchema.table('store_invitations', {
   acceptedBy: uuid('accepted_by'),
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
   invitedBy: uuid('invited_by'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  ...timestamps(),
 }, table => [
   index('store_invitations_store_id_idx').on(table.storeId),
   uniqueIndex('store_invitations_one_open_owner_idx').on(table.storeId).where(sql`${table.role} = 'owner' and ${table.acceptedBy} is null and ${table.revokedAt} is null`),
