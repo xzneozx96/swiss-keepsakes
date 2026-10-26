@@ -51,11 +51,17 @@ function restoreOnce(demo: Demo): Promise<void> {
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   const rendersOnServer = useRouterState({
-    select: state => state.matches.every(match => match.ssr !== false),
+    select: state => state.matches.every(match => match.ssr === true),
   })
   // The initializer runs once per server request, and once in the browser.
   const [demo] = useState(startSeedDemo)
   const [restored, setRestored] = useState(false)
+  // Once a server-rendered page is on screen it stays mounted, also when the guest moves on to a
+  // client-only route before the saved state has loaded.
+  const [shown, setShown] = useState(rendersOnServer)
+
+  if (rendersOnServer && !shown)
+    setShown(true)
 
   useEffect(() => {
     let current = true
@@ -68,7 +74,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     }
   }, [demo])
 
-  if (!restored && !rendersOnServer)
+  if (!restored && !shown)
     return null
 
   return (
