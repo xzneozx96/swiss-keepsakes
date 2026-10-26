@@ -220,7 +220,16 @@ export function startSeedDemo() {
   return {
     ...parts,
     restore: () => {
-      parts.store.restore(loadDemoState())
+      // Corrupt saved data must not leave the store queueing for good: restore with the seed, which also starts saving.
+      let saved = createSeedState()
+
+      try {
+        saved = loadDemoState()
+      }
+      catch (error) {
+        console.error('The saved demo state could not be read, starting from the seed', error)
+      }
+      parts.store.restore(saved)
 
       return readCollections(parts.queryClient, parts.dataClient)
     },
