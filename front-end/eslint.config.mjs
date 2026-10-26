@@ -21,6 +21,7 @@ export default antfu(
       'playwright-report/**',
       'test-results/**',
       '*.prototype.html',
+      'src/dormant/**',
     ],
   },
   {
