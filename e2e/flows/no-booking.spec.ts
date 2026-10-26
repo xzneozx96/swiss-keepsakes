@@ -6,6 +6,16 @@ const bookingPath = /\/book|bookings|private-tour|requests\/private|products\/ca
 const bookingButton = /\bbook|\bbuch(en|ung)/i;
 const tour = "lucerne-the-things-that-remain";
 const more: Record<Language, RegExp> = { en: /More/, de: /Mehr/ };
+const about: Record<Language, string> = { en: "About this experience", de: "Über dieses Erlebnis" };
+const notFound: Record<Language, { page: string; tour: string }> = {
+  en: { page: "This page does not exist", tour: "This tour is unavailable" },
+  de: { page: "Diese Seite gibt es nicht", tour: "Diese Tour ist nicht verfügbar" },
+};
+// Booking content of the old tour page: group prices, age bands, seats and the payment-by-departure row.
+const bookingText: Record<Language, string[]> = {
+  en: ["Prices for your group", "Depends on the departure", "no seat needed", "Ages 0–5", "CHF 89.00", "CHF 45.00", "CHF 0.00"],
+  de: ["Preise für Ihre Gruppe", "Je nach Termin", "kein Platz nötig", "0–5 Jahre", "CHF 89.00", "CHF 45.00", "CHF 0.00"],
+};
 
 const hrefs = (page: Page, selector: string) =>
   page.locator(selector).evaluateAll(anchors => anchors.map(a => a.getAttribute("href") ?? ""));
@@ -17,50 +27,85 @@ async function expectNoBooking(page: Page, where: string) {
   await expect(page.getByRole("link", { name: bookingButton }), `${where}: booking link`).toHaveCount(0);
 }
 
-async function walk(page: Page, label: string, collected: string[]) {
-  const unique = [...new Set(collected)].filter(href => href.startsWith("/#/"));
+const mainText = (page: Page) => page.locator("main").first().innerText().catch(() => "");
 
-  expect(unique.length, `${label}: menu links found`).toBeGreaterThan(3);
-  expect(unique, `${label}: menu links`).not.toContainEqual(expect.stringMatching(bookingPath));
-  for (const href of unique) {
-    await goto(page, href.slice(2));
-    await expect(page.locator("main").first()).toBeVisible();
+// A route is a lazy chunk, so the old page stays up for a moment: wait until the main text changes.
+async function visit(page: Page, hash: string) {
+  const before = await mainText(page);
+  const already = await page.evaluate(h => location.hash === `#${h}`, hash);
+
+  await goto(page, hash);
+  if (!already) await page.waitForFunction(prev => (document.querySelector("main") as HTMLElement | null)?.innerText.trim() && (document.querySelector("main") as HTMLElement).innerText !== prev, before);
+  // Skeletons come before the content: wait until the text stops changing.
+  let last = "";
+
+  await expect.poll(async () => {
+    const now = await mainText(page);
+    const settled = now === last;
+
+    last = now;
+
+    return settled;
+  }, { intervals: [200] }).toBe(true);
+}
+
+async function walk(page: Page, label: string, sources: Record<string, string[]>) {
+  const all = new Set<string>();
+
+  for (const [source, links] of Object.entries(sources)) {
+    expect(links.length, `${label} ${source}: menu links found`).toBeGreaterThanOrEqual(minimum[source]);
+    expect(links, `${label} ${source}: menu links`).not.toContainEqual(expect.stringMatching(bookingPath));
+    links.filter(href => href.startsWith("/#/")).forEach(href => all.add(href));
+  }
+  for (const href of all) {
+    await visit(page, href.slice(2));
+    expect(page.url(), `${label} ${href}`).toContain(href.slice(1));
     await expectNoBooking(page, `${label} ${href}`);
   }
 }
 
+const minimum: Record<string, number> = { tabBar: 5, account: 3, phoneBar: 4, moreSheet: 5, sidebar: 10 };
+
 test("[E3.1][AC50] no menu link leads to booking", async ({ seedDemo, language }) => {
   const guest = await seedDemo("guest");
+  const tabBar = await hrefs(guest, "nav a[href]");
 
-  await goto(guest, "/");
-  const guestLinks = await hrefs(guest, "nav a[href]");
+  await visit(guest, "/account");
+  const account = await hrefs(guest, "main a[href]");
 
-  await goto(guest, "/account");
-  await expect(guest.locator("main").first()).toBeVisible();
-  guestLinks.push(...await hrefs(guest, "main a[href]"));
-  await walk(guest, "guest", guestLinks);
+  await walk(guest, "guest", { tabBar, account });
 
   const owner = await seedDemo("owner");
 
-  await goto(owner, "/store");
+  await visit(owner, "/store");
   await expect(owner.getByRole("button", { name: more[language] })).toBeVisible();
-  const ownerLinks = await hrefs(owner, "nav a[href]");
+  const phoneBar = await hrefs(owner, "nav a[href]");
 
   await owner.getByRole("button", { name: more[language] }).click();
   await expect(owner.getByRole("dialog")).toBeVisible();
-  ownerLinks.push(...await hrefs(owner, "[role=dialog] a[href]"));
+  const moreSheet = await hrefs(owner, "[role=dialog] a[href]");
+
   await owner.keyboard.press("Escape");
   await owner.setViewportSize({ width: 1280, height: 800 });
-  ownerLinks.push(...await hrefs(owner, "aside a[href]"));
-  await walk(owner, "owner", ownerLinks);
+  const sidebar = await hrefs(owner, "aside a[href]");
+
+  await walk(owner, "owner", { phoneBar, moreSheet, sidebar });
 });
 
-test("[E3.1][AC50] old booking addresses render no booking", async ({ seedDemo }) => {
+test("[E3.1][AC50] old booking addresses render no booking", async ({ seedDemo, language }) => {
   const page = await seedDemo("guest");
+  const expected = [
+    [`/tours/${tour}/book`, notFound[language].page],
+    ["/store/bookings", notFound[language].page],
+    ["/account/bookings/x", notFound[language].page],
+    ["/tours/private-tour", notFound[language].tour],
+  ];
 
-  for (const hash of [`/tours/${tour}/book`, "/store/bookings", "/account/bookings/x", "/tours/private-tour"]) {
-    await goto(page, hash);
-    await page.waitForTimeout(500);
+  for (const [hash, message] of expected) {
+    // A fresh load each time, so the previous address's message cannot satisfy the next check.
+    await page.goto("/favicon.png");
+    await page.goto(`/#${hash}`);
+    await expect(page.getByText(message), hash).toBeVisible();
     await expect(page.getByRole("dialog"), hash).toHaveCount(0);
     await expect(page.getByRole("button", { name: bookingButton }), hash).toHaveCount(0);
     await expect(page.getByRole("textbox"), `${hash}: no booking form`).toHaveCount(0);
@@ -68,10 +113,14 @@ test("[E3.1][AC50] old booking addresses render no booking", async ({ seedDemo }
   }
 
   // The retired ?book=true parameter: the plain tour page, with no booking sheet.
-  await goto(page, `/tours/${tour}?book=true`);
+  await page.goto("/favicon.png");
+  await page.goto(`/#/tours/${tour}?book=true`);
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
-  await page.waitForTimeout(500);
+  await expect(page.getByText(about[language])).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: bookingButton })).toHaveCount(0);
   await expect(page.getByRole("textbox")).toHaveCount(0);
+  const text = await page.locator("body").innerText();
+
+  for (const needle of bookingText[language]) expect(text, needle).not.toContain(needle);
 });
