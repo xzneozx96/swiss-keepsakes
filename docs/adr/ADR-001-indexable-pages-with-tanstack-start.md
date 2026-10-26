@@ -52,6 +52,7 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - A hash-link migration shim maps old `#/path` links to their path once, on the client, so shared prototype links keep working.
 - The invitation token stays in the URL fragment. `captureInvitations` is kept and tested under the new router. `takeGoogleReturn` is removed, because `/sign-in?error=` is now readable. Both flows need an end-to-end test, since each was written for hash history.
 - The partner report token stays a path segment (gate D7). `/partner/*` sends `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex`, and the access log scrubs the token.
+- A Start request middleware registered in `src/start.ts` sets these headers (and `noindex` on every private area) on pages, 404s and router redirects, matching the path the way the router does. Start answers a protocol-relative path such as `//partner/x` with a 308 before any middleware runs, so that one redirect has no headers (its target has). Gate G-E33-STARTMW.
 - `/r/:code` records the visit and redirects to an optional same-origin target path, else `/:lang` (AC24).
 
 **Price rule (gate D10).** No document, meta tag, JSON-LD, list page, list JSON or public list response carries a price. Price elements carry `data-nosnippet`.
@@ -88,3 +89,4 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-26 amended (gate H3)
 - 2026-10-27 amended (gate G-E33-D10): interim prices and guest text in prototype server HTML; launch blocked until E4.12, E4.13, E4.14, E6.4
+- 2026-10-27 amended (gate G-E33-STARTMW): private-area headers set by Start request middleware

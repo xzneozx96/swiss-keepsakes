@@ -337,7 +337,7 @@ api/src/modules/{content,reviews,inventory,analytics}/
 packages/domain/src/content/       resolver, ranking, link renderer, tour guide types
 front-end/src/lib/analytics/       event sender, session id
 front-end/src/dormant/routes/      booking route wrappers (excluded from tsc and lint)
-front-end/src/server/              Nitro server handlers (private-area headers; later sitemap, robots, hosting middleware). Owner gate G-E33-SERVERDIR, 2026-10-27.
+front-end/src/start.ts             global request middleware (private-area headers; later CSRF). Owner gate G-E33-STARTMW, 2026-10-27.
 ```
 
 ## Migration from the prototype
