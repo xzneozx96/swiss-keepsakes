@@ -29,13 +29,14 @@ These files tell people and AI coding agents how to build in this repo. `AGENTS.
 | `frontend/heroui-and-styling.md` | build or restyle UI |
 | `frontend/linting.md` | change lint config, add a rule, or format code |
 | `frontend/stack-notes.md` | need Vite, React, router or compiler facts and traps |
+| `frontend/tanstack-start.md` | add or change a route, a loader, server code, the document head or anything that renders on the server |
 | `backend/architecture.md` | decide where backend code goes and what may import what |
 | `backend/api-contract.md` | add or change an endpoint |
 | `backend/data-jobs-security.md` | touch the database, jobs, configuration or security |
 
 ## How each file is written
 
-Every rule is a "do" or "don't" with a short reason. It points to real code in this repo as the example, and it names the check that enforces it, if there is one. A rule comes from an incident in this repo, from a check, from the React team's docs at react.dev, from the owner's former `react-patterns` skill (deleted on 2026-10-19; its rules now live in these files), or from the owner's other projects. Anything else is marked "Guidance".
+Every rule is a "do" or "don't" with a short reason. It points to real code in this repo as the example, and it names the check that enforces it, if there is one. A rule comes from an incident in this repo, from a check, from the React team's docs at react.dev, from the owner's former `react-patterns` skill (deleted on 2026-10-19; its rules now live in these files), or from the owner's other projects. Anything else is marked "Guidance". In `frontend/tanstack-start.md` every rule carries one label: "Documented" (the TanStack docs or the skills shipped in `node_modules` say it), "Learned in this repo" (a spike, an incident or a ticket found it) or "Guidance".
 
 Many rules are conditional. They start with "check `package.json` first" or "follow the existing pattern", so the same files work in a project that uses different libraries.
 
