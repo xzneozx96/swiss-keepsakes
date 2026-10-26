@@ -1,7 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
+import { hydrateRoot } from 'react-dom/client'
+import { renderToString } from 'react-dom/server'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { LocaleProvider, useLocale } from '@/contexts/locale-context'
+import { loadDictionary, LocaleProvider, useLocale } from '@/contexts/locale-context'
 import { startSeedDemo } from '@/features/demo/data-client'
 import { createSeedState } from '@/features/demo/seed'
 
@@ -31,7 +33,45 @@ describe('[E3.2] the providers on the server and in the first render', () => {
     expect(JSON.parse(localStorage.getItem('sk.demo') ?? '{}').role).toBe('guest')
   })
 
-  it('the saved language arrives after the first render, which is English', async () => {
+  it('hydrating server HTML, the provider starts in English although German is saved and loaded, then switches', async () => {
+    await loadDictionary('de')
+    const seen: string[] = []
+    const recoverable: unknown[] = []
+
+    function Probe() {
+      const { language } = useLocale()
+
+      seen.push(language)
+
+      return <p>{language}</p>
+    }
+    const app = (
+      <LocaleProvider>
+        <Probe />
+      </LocaleProvider>
+    )
+    // The server has no storage: it renders English.
+    const container = document.createElement('div')
+
+    localStorage.setItem('sk.language', '"de"')
+    container.innerHTML = renderToString(app)
+    seen.length = 0
+    expect(container.textContent).toBe('en')
+
+    document.body.append(container)
+    act(() => {
+      hydrateRoot(container, app, { onRecoverableError: error => recoverable.push(error) })
+    })
+
+    // The first render while hydrating must equal the server's HTML, or React throws the page away and rebuilds it.
+    expect(seen[0]).toBe('en')
+    await waitFor(() => expect(container.textContent).toBe('de'))
+    expect(recoverable).toEqual([])
+    container.remove()
+  })
+
+  it('a client-only render starts in the saved language when its messages are loaded', async () => {
+    await loadDictionary('de')
     localStorage.setItem('sk.language', '"de"')
     const seen: string[] = []
 
@@ -49,7 +89,6 @@ describe('[E3.2] the providers on the server and in the first render', () => {
       </LocaleProvider>,
     )
 
-    expect(seen[0]).toBe('en')
-    await waitFor(() => expect(screen.getByText('de')).toBeInTheDocument())
+    expect(seen[0]).toBe('de')
   })
 })
