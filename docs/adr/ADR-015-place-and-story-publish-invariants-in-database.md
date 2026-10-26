@@ -18,6 +18,8 @@ We will enforce each rule at the lowest level that can express it.
 - **Place type never changes.** A trigger refuses an update of `type`. This keeps `reviews.place_reviews.place_type` (a CHECK-readable copy) true, which is how "a practical place has no reviews" reaches the database across modules (ADR-013).
 - **Published rows are not deleted.** A place with `first_published_at` and a story version with published content cannot be deleted. A story group is held by its versions through `RESTRICT`.
 - **`first_published_at` is fixed once set.** A trigger refuses any change of `first_published_at` that starts from a non-NULL value. Without it, a published place could be set back to `draft` with the column cleared, which passes the draft CHECK and then lifts the delete guard (AC79). The slug would be free again. Hiding a place leaves the column alone, so hiding is unaffected.
+- **Published story text is kept once set.** A trigger refuses an update that clears `published` on a story version. Unpublishing sets `status = 'draft'` and keeps the document. Without it, clearing `published` would let a published version be deleted, and then its group (AC79).
+- **TRUNCATE is refused on the tables the delete guards protect** (`content.places`, `content.story_versions`, `content.media_refs`), by a statement-level trigger that calls `platform.reject_change()`. TRUNCATE skips row triggers, so the guards would not hold. Postgres already refuses a plain TRUNCATE of `places` because of its foreign keys, so the trigger stops `TRUNCATE ... CASCADE`. Test resets use DELETE, or a reset of the Neon branch. This is the pattern for later schemas: any table guarded by row-level delete or append-only triggers also gets a `BEFORE TRUNCATE ... FOR EACH STATEMENT EXECUTE FUNCTION platform.reject_change()` trigger.
 - An editorial review names a subject place of type sight, restaurant or accommodation, through a copy of the type that a composite key proves.
 - The use case still checks the same rules first, to give the editor a clear message. The database is the backstop.
 
@@ -42,3 +44,4 @@ We will enforce each rule at the lowest level that can express it.
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-26 amended (gate G-E25-FIRSTPUB): first_published_at fixed once set
+- 2026-10-26 amended (gates G-E25-STORYKEEP, G-E25-TRUNCATE): published story text kept once set; TRUNCATE refused on guarded tables

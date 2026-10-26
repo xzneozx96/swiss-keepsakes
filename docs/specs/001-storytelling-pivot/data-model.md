@@ -130,7 +130,7 @@ Why. A Drizzle foreign key imports the other module's schema, which the module r
 
 ### DM-3 Published columns, one draft document, structure saved directly
 
-Decision. Structure (type, coordinates, tags, main story, PDF, stops, links, prices) is saved straight into typed columns and child rows, so CHECKs and keys hold at all times. Text has `published jsonb` and `draft jsonb`. Publishing copies one to the other in one transaction and bumps `row_version`. Media used inside documents is listed in `content.media_refs`. A trigger refuses to retire a media row that a column or a document still uses, and the cover, PDF and stop-photo keys also carry the media kind, so an image cannot be a PDF. A concurrent save can still add a reference during a retire, which the grace period of ADR-004 covers. Keepsake photos (`catalog.product_media`) hold plain media ids, and the cleanup job asks `catalog` before it removes a file. Serves AP-1 to AP-8. ADR: ADR-014.
+Decision. Structure (type, coordinates, tags, main story, PDF, stops, links, prices) is saved straight into typed columns and child rows, so CHECKs and keys hold at all times. Text has `published jsonb` and `draft jsonb`. Publishing copies one to the other in one transaction and bumps `row_version`. Media used inside documents is listed in `content.media_refs`. A trigger refuses to retire a media row that a column or a document still uses, and the cover, PDF and stop-photo keys also carry the media kind, so an image cannot be a PDF. A concurrent save can still add a reference during a retire, which the grace period of ADR-004 covers. The database has no guard against a save that points a cover, a PDF or a stop photo at media that is already `retired` (gate G-E25-RETIREDMEDIA, 2026-10-26). **Requirement on E2.6:** the content use cases that set a cover, a PDF or a stop photo must refuse media whose status is `retired`. Keepsake photos (`catalog.product_media`) hold plain media ids, and the cleanup job asks `catalog` before it removes a file. Serves AP-1 to AP-8. ADR: ADR-014.
 
 Why. Public reads need typed, indexed fields. The body changes shape often and cannot hold a key. Alternatives rejected. Revision rows, shadow tables, two jsonb documents with no typed columns, and drafting structure too (ADR-014 lists the reasons).
 
@@ -142,7 +142,13 @@ Why. ADR-002 wants a slug unique per type and language across the platform. Per-
 
 ### DM-5 The pin rule in the database
 
-Decision. AC43 splits in two. The row-local part is a CHECK (a published pin names its main story, a practical place names none). The cross-row part is two deferred constraint triggers that lock the story group row, `FOR SHARE` on the publish side and `FOR UPDATE` on the unpublish side. Place `type` is immutable. A draft place can be deleted. A published place can only be hidden (owner M6, 2026-10-26), and a published story version cannot be deleted either. `first_published_at` cannot change once it is set (gate G-E25-FIRSTPUB, 2026-10-26), because clearing it would let a published place go back to draft and then be deleted (AC79). Tours have no delete guard, and this document does not decide one. A published version cannot move to another group. An editorial review names its subject place with a copy of the place type, which a composite key checks and a CHECK limits to sight, restaurant and accommodation. Serves AP-8. ADR: ADR-015.
+Decision. AC43 splits in two. The row-local part is a CHECK (a published pin names its main story, a practical place names none). The cross-row part is two deferred constraint triggers that lock the story group row, `FOR SHARE` on the publish side and `FOR UPDATE` on the unpublish side. Place `type` is immutable. A draft place can be deleted. A published place can only be hidden (owner M6, 2026-10-26), and a published story version cannot be deleted either. `first_published_at` cannot change once it is set (gate G-E25-FIRSTPUB, 2026-10-26), because clearing it would let a published place go back to draft and then be deleted (AC79). Two more rules close the same gap (gates G-E25-STORYKEEP and G-E25-TRUNCATE, 2026-10-26). Rule 1: once a story version's `published` text is set, it is kept. Unpublishing sets `status = 'draft'` and keeps the document, because clearing `published` would let a published version be deleted, and then its group. Rule 2: TRUNCATE is refused on `content.places`, `content.story_versions` and `content.media_refs`, because TRUNCATE skips row triggers and the delete guards would not hold. Postgres already refuses a plain TRUNCATE of `places` because of its foreign keys, so the trigger stops `TRUNCATE ... CASCADE`. Test resets use DELETE, or a reset of the Neon branch. Tours have no delete guard, and this document does not decide one. A published version cannot move to another group. An editorial review names its subject place with a copy of the place type, which a composite key checks and a CHECK limits to sight, restaurant and accommodation. Serves AP-8. ADR: ADR-015.
+
+Requirements on E2.6, from the E2.5 gates (2026-10-26):
+
+- Publish a place as one UPDATE. The deferred publish trigger refuses a transaction that publishes and then re-points or hides the same place.
+- Keep E2.6's unit of work at READ COMMITTED. Under REPEATABLE READ the pin race lets both sides commit.
+- Refuse `retired` media when a use case sets a cover, a PDF or a stop photo (DM-3).
 
 Why. A CHECK cannot read another table, and ADR-005 asks for the lock. The trigger puts the lock inside the database, so a missed code path cannot skip it. Alternative rejected. Application locks only. This is the first business-rule trigger in the repository, and section 8 returns it as a decision.
 
@@ -190,7 +196,7 @@ Why. Nothing exists to migrate, and a table with no reader would only drift.
 
 ### DM-13 Triggers and functions are hand-written SQL
 
-Decision. Drizzle has no declaration for triggers or trigger functions, and I did not check that it expresses every other form the DDL uses (the deferrable unique key, the generated columns inside foreign keys, the `IS TRUE` CHECKs). The migration author writes those parts as custom SQL (`drizzle-kit generate --custom`), and each trigger has a test that runs against a real database. The `schema.ts` files declare the same tables and CHECKs so the types stay in step. Serves AP-8, AP-13, AP-14 and AP-11. No ADR, since ADR-015 and ADR-016 name the triggers.
+Decision. Drizzle has no declaration for triggers or trigger functions, and I did not check that it expresses every other form the DDL uses (the deferrable unique key, the generated columns inside foreign keys, the `IS TRUE` CHECKs). The migration author writes those parts as custom SQL (`drizzle-kit generate --custom`), and each trigger has a test that runs against a real database. The `schema.ts` files declare the same tables and CHECKs so the types stay in step. Serves AP-8, AP-13, AP-14 and AP-11. Pattern for every later schema (gate G-E25-TRUNCATE): any table guarded by a row-level delete or append-only trigger also gets a `BEFORE TRUNCATE ... FOR EACH STATEMENT EXECUTE FUNCTION platform.reject_change()` trigger, because TRUNCATE skips row triggers. Section 4 holds only the `content` ones so far, and the later schemas must add theirs. No ADR, since ADR-015 and ADR-016 name the triggers.
 
 ### DM-14 Order lines are snapshots, the total is a snapshot, and end states carry a timestamp
 
@@ -605,6 +611,9 @@ CREATE TRIGGER places_keep_once_published BEFORE DELETE ON content.places
   FOR EACH ROW WHEN (OLD.first_published_at IS NOT NULL) EXECUTE FUNCTION content.reject_delete();
 CREATE TRIGGER story_versions_keep_once_published BEFORE DELETE ON content.story_versions
   FOR EACH ROW WHEN (OLD.published IS NOT NULL) EXECUTE FUNCTION content.reject_delete();
+-- AC79: delete is refused while published is set, so the text is kept once set. Unpublish means status = 'draft'; the document stays.
+CREATE TRIGGER story_versions_published_is_kept BEFORE UPDATE OF published ON content.story_versions
+  FOR EACH ROW WHEN (OLD.published IS NOT NULL AND NEW.published IS NULL) EXECUTE FUNCTION platform.reject_column_change('published');
 
 CREATE FUNCTION content.reject_type_change() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -616,6 +625,13 @@ CREATE TRIGGER places_type_is_immutable BEFORE UPDATE OF type ON content.places
 -- Without this, a published place could be put back to draft with the column cleared, then deleted.
 CREATE TRIGGER places_first_published_is_fixed BEFORE UPDATE OF first_published_at ON content.places
   FOR EACH ROW WHEN (OLD.first_published_at IS NOT NULL AND NEW.first_published_at IS DISTINCT FROM OLD.first_published_at) EXECUTE FUNCTION platform.reject_column_change('first_published_at');
+-- AC79: TRUNCATE skips row triggers, so the delete guards would not hold. Refuse it on the tables they protect.
+CREATE TRIGGER places_no_truncate BEFORE TRUNCATE ON content.places
+  FOR EACH STATEMENT EXECUTE FUNCTION platform.reject_change();
+CREATE TRIGGER story_versions_no_truncate BEFORE TRUNCATE ON content.story_versions
+  FOR EACH STATEMENT EXECUTE FUNCTION platform.reject_change();
+CREATE TRIGGER media_refs_no_truncate BEFORE TRUNCATE ON content.media_refs
+  FOR EACH STATEMENT EXECUTE FUNCTION platform.reject_change();
 
 -- AC43, cross-row half. Both checks run at commit and lock the story group row, so a publish
 -- and an unpublish that race cannot both pass.
@@ -674,13 +690,16 @@ CREATE TRIGGER media_not_retired_while_used BEFORE UPDATE OF status ON content.m
   FOR EACH ROW WHEN (NEW.status = 'retired' AND OLD.status <> 'retired') EXECUTE FUNCTION content.reject_retire_if_used();
 
 -- Place sheet (AP-4): main story first, then every other story that mentions the place or reviews it.
+-- A story that is both the main story and listed on the place appears once, at rank 0.
 CREATE VIEW content.place_story_links AS
-  SELECT p.id AS place_id, p.main_story_group_id AS group_id, 0 AS rank
-    FROM content.places p WHERE p.main_story_group_id IS NOT NULL
-  UNION
-  SELECT g.place_id, g.group_id, 1 FROM content.story_group_places g
-  UNION
-  SELECT s.subject_place_id, s.id, 1 FROM content.story_groups s WHERE s.subject_place_id IS NOT NULL;
+  SELECT u.place_id, u.group_id, min(u.rank) AS rank FROM (
+    SELECT p.id AS place_id, p.main_story_group_id AS group_id, 0 AS rank
+      FROM content.places p WHERE p.main_story_group_id IS NOT NULL
+    UNION
+    SELECT g.place_id, g.group_id, 1 FROM content.story_group_places g
+    UNION
+    SELECT s.subject_place_id, s.id, 1 FROM content.story_groups s WHERE s.subject_place_id IS NOT NULL
+  ) u GROUP BY u.place_id, u.group_id;
 
 -- ===================================================================== catalog (Victorinox SKUs only)
 CREATE SCHEMA catalog;
@@ -2052,6 +2071,9 @@ Results. All of them came from the DDL in section 4.
 | Last published version of a pin story cannot go | `story_versions_keep_pin_story` | Refused when unpublished and when moved to another group while a pin is published. Accepted when a second version is published, or when the place is hidden |
 | Published or hidden rows are not deleted | `reject_delete` and keys | Delete of a published place, of a published version, and of a group with versions refused. A draft place deleted |
 | A published place cannot clear `first_published_at` and then be deleted | `places_first_published_is_fixed` | Setting `status = 'draft'` with the column cleared on a published place refused, so the delete guard holds. Hiding a place accepted. Test `[E2.5][AC79]` in `api/test/integration/content-schema.test.ts` |
+| A story version keeps its published text once set | `story_versions_published_is_kept` | Setting `published` to NULL refused. Replacing the text accepted. `status = 'draft'` accepted, so the document stays. Delete of the version and of its group refused. Test `[E2.5][AC79] a published story version keeps its published text` in `api/test/integration/content-schema.test.ts` |
+| TRUNCATE cannot skip the delete guards | `places_no_truncate`, `story_versions_no_truncate`, `media_refs_no_truncate` | `TRUNCATE ... CASCADE` on each of the three tables refused. Tests `[E2.5][AC79] TRUNCATE ... CASCADE on content.%s is refused by the trigger` (one per table) in `api/test/integration/content-schema.test.ts` |
+| A story is listed once on a place sheet | View `place_story_links` | A story that is the main story and also linked on the place appears once, at rank 0. Test `[E2.5] place_story_links lists a main story that is also linked on the place once, at rank 0`, beside the test for rank 0 and rank 1 |
 | One version per language, only `en` or `de` | Primary key, CHECK | Second `en` refused, `fr` refused |
 | Slug unique per language | Unique key and expression indexes | Duplicate story slug and duplicate place slug refused |
 | A version exists only with its required fields | `*_published_fields_check` | Published story without `sections` refused. Published tour without a PDF refused. Name and slug languages that differ refused |
@@ -2098,7 +2120,7 @@ Not verified.
 - Two concurrent moves in the category tree that together make a loop, and a new option added while a SKU is inserted in another session (the product row lock is designed for it and not raced).
 - The handover races ran with two sessions each. A third writer, for example a partner moving an order while the merchant moves the cut-off and a guest orders, is not tested.
 - Pickup times inside the pickup point's opening hours, which cross a module and an hours table. The use case checks them.
-- A concurrent save that adds a media reference while the media row is retired. The grace period of ADR-004 is the only cover.
+- A concurrent save that adds a media reference while the media row is retired. The grace period of ADR-004 is the only cover. A save that sets a cover, a PDF or a stop photo to media already `retired` has no database guard. E2.6 must refuse it (DM-3).
 - Roles and grants. The scratch database used the superuser.
 - Behaviour above READ COMMITTED, and the lock behaviour of the deferred triggers with more than two sessions.
 
