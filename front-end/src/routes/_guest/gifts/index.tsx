@@ -21,6 +21,7 @@ interface GiftsSearch {
 
 // C02 Gifts: list, category filter and search.
 export const Route = createFileRoute('/_guest/gifts/')({
+  ssr: true,
   validateSearch: (search: Record<string, unknown>): GiftsSearch => {
     // The store's own sub-categories are in demo state, so the page checks the id.
     const subcategory

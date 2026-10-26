@@ -7,18 +7,28 @@ const PUBLIC_ROUTES: { path: string, text: string }[] = [
   { path: '/stories', text: 'A morning on the Musegg wall' },
   { path: '/stories/musegg-morning', text: 'Climb the old town wall before the city wakes up' },
   { path: '/credits', text: 'Photo credits' },
+  { path: '/tours', text: 'Pilatus' },
+  { path: '/tours/pilatus-above-the-city', text: 'Pilatus' },
+  { path: '/gifts', text: 'Luzerne gift box' },
+  { path: '/gifts/lucerne-gift-box', text: 'Three small things from Luzerne makers' },
+  { path: '/search?q=Pilatus', text: 'Pilatus' },
 ]
 
 /**
  * Waits until React has committed the hydrated page. The root layout sets `data-hydrated` from an effect, which
- * runs after the root commit; `__reactFiber` on every element of `<main>` (icon paths are set as markup, so not those) shows the routed content (loaded lazily,
- * so it hydrates later than the root) is hydrated or client-rendered too. Neither signal alone is enough.
+ * runs after the root commit. `<main>` must then hold at least one element (an empty `<main>` must not pass) and every
+ * element in it must carry `__reactFiber` (icon paths are set as markup, so not those): the lazily loaded `_guest`
+ * layout and the routed content are hydrated or client-rendered. The nav is not used: detail pages hide it.
+ * No single signal is enough.
  */
 async function waitForHydration(page: Page) {
-  await page.waitForFunction(() =>
-    document.documentElement.dataset.hydrated === 'true'
-    && [...document.querySelectorAll('main *:not(svg *)')].every(element => Object.keys(element).some(key => key.startsWith('__reactFiber'))),
-  )
+  await page.waitForFunction(() => {
+    const inMain = [...document.querySelectorAll('main *:not(svg *)')]
+
+    return document.documentElement.dataset.hydrated === 'true'
+      && inMain.length > 0
+      && inMain.every(element => Object.keys(element).some(key => key.startsWith('__reactFiber')))
+  })
 }
 
 const ENTITIES: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: '\'', nbsp: ' ' }
@@ -53,8 +63,7 @@ for (const { path, text } of PUBLIC_ROUTES) {
 
     expect(response.status()).toBe(200)
     expect(mainText(html)).toContain(text)
-    // Scoped to the page text: the document itself carries `skeleton` in CSS and scripts.
-    expect(mainText(html)).not.toContain('skeleton')
+    // Scoped to `<main>`: the document itself carries `skeleton` in CSS and scripts.
     expect(/<main\b[^>]*>[\s\S]*?<\/main>/.exec(html)?.[0] ?? '').not.toMatch(/class="[^"]*\bskeleton\b/)
   })
 

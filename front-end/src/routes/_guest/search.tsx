@@ -20,6 +20,7 @@ import { useUrlInput } from '@/hooks/use-url-input'
 
 // Global search from the discovery home (UX proposal: search is not in the spec).
 export const Route = createFileRoute('/_guest/search')({
+  ssr: true,
   validateSearch: (search: Record<string, unknown>): { q?: string } =>
     typeof search.q === 'string' && search.q ? { q: search.q } : {},
   component: SearchPage,

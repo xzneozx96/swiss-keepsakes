@@ -1,8 +1,9 @@
 import type { TourSection, TourSectionItem } from '@sk/domain/bookings'
 
-import { calendarDay, formatDate, pickText, safeHref } from '@sk/domain/shared'
+import { pickText, safeHref } from '@sk/domain/shared'
 import { CallIcon, EmailIcon, InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
+import { formatCalendarDay } from '@/lib/shop-dates'
 
 const BLANK_LINE = /\n{2,}/
 const WHITESPACE = /\s/g
@@ -199,7 +200,7 @@ export function TourSections({
       {checkedOn && (
         <p className="border-t border-separator pt-5 pb-2 text-xs text-muted">
           {t('tourDiscovery.sections.checkedOn', {
-            date: formatDate(calendarDay(checkedOn), intlLocale),
+            date: formatCalendarDay(checkedOn, intlLocale),
           })}
         </p>
       )}
