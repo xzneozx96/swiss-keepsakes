@@ -249,3 +249,28 @@ test('[E3.2][AC-2] saved German and a saved sign-in hydrate with no error', asyn
   await expect(page.locator('nav a[href="/account"] img').first()).toBeVisible()
   expect(problems).toEqual([])
 })
+
+test('[E3.3][AC-1] a returning visit with a saved cart of 3 shows the badge count after hydration', async ({ page }) => {
+  const problems = collectProblems(page)
+
+  // Let the app write its own current saved state, then put three items in the cart.
+  await page.goto('/lab')
+  await page.waitForFunction(() => localStorage.getItem('sk.demo') !== null)
+  const saved = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('sk.demo') as string)
+
+    state.data.cart = [{ id: 'saved-line', productId: 'p', variantId: 'v', quantity: 3, pickupDate: '2027-01-01', pickupPlaceId: 'x' }]
+
+    return JSON.stringify(state)
+  })
+
+  await page.addInitScript(demo => localStorage.setItem('sk.demo', demo), saved)
+  await page.goto('/gifts')
+  await waitForHydration(page)
+
+  const cart = page.locator('a[data-cart-target]').first()
+
+  await expect(cart).toHaveAttribute('aria-label', 'Cart, 3 items')
+  await expect(cart).toContainText('3')
+  expect(problems).toEqual([])
+})

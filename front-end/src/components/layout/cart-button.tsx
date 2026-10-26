@@ -36,10 +36,6 @@ export function CartButton({ tone = 'floating' }: { tone?: ActionTone }) {
   const previousRef = useRef(shown)
   const badgeRef = useRef<HTMLSpanElement>(null)
 
-  // Adjusting state while rendering, not in an effect: a restored count must not wait for a flight that never starts.
-  if (count !== shown && !hasAddedToCart())
-    setShown(count)
-
   useEffect(() => {
     if (count === shown)
       return
