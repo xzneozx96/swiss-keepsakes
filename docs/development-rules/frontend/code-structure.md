@@ -23,7 +23,7 @@ Example: `front-end/src/features/catalog/` has `components/`, `hooks/`, `lib/`, 
 
 ## Routes are thin
 
-A file in `front-end/src/routes/` declares the route, its search validation and its page, and composes a screen from a feature. It holds no business logic and no raw `fetch`. A loader may call a feature's `api` module, which holds the call (`tanstack-start.md`, rule 4).
+A file in `front-end/src/routes/` declares the route, its search validation and its page, and composes a screen from a feature. It holds no business logic and no raw `fetch`. A loader may call a server-safe function in a feature's `api` module that takes its base from `apiOrigin()` (rule 4).
 Example: `front-end/src/routes/_guest/gifts/index.tsx`.
 
 TanStack Router's code splitting moves only the route's `component` into its own chunk. Everything else in the route file, including what `validateSearch` and `beforeLoad` import, loads on first paint for every visitor.

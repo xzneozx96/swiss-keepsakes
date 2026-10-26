@@ -36,7 +36,7 @@ These files tell people and AI coding agents how to build in this repo. `AGENTS.
 
 ## How each file is written
 
-Every rule is a "do" or "don't" with a short reason. It points to real code in this repo as the example, and it names the check that enforces it, if there is one. A rule comes from an incident in this repo, from a check, from the React team's docs at react.dev, from the owner's former `react-patterns` skill (deleted on 2026-10-19; its rules now live in these files), or from the owner's other projects. Anything else is marked "Guidance". In `frontend/tanstack-start.md` every rule carries one label: "Documented" (the TanStack docs or the skills shipped in `node_modules` say it), "Learned in this repo" (a spike, an incident or a ticket found it) or "Guidance".
+Every rule is a "do" or "don't" with a short reason. It points to real code in this repo as the example, and it names the check that enforces it, if there is one. A rule comes from an incident in this repo, from a check, from the React team's docs at react.dev, from the owner's former `react-patterns` skill (deleted on 2026-10-19; its rules now live in these files), or from the owner's other projects. Anything else is marked "Guidance". In `frontend/tanstack-start.md` every rule carries one or two labels: "Documented" (the TanStack docs or the skills shipped in `node_modules` say it), "Learned in this repo" (a spike, an incident or a ticket found it) or "Guidance".
 
 Many rules are conditional. They start with "check `package.json` first" or "follow the existing pattern", so the same files work in a project that uses different libraries.
 

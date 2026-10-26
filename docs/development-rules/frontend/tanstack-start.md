@@ -24,7 +24,7 @@ const key = process.env.MAIL_KEY
 export const mailKey = createServerOnlyFn(() => process.env.MAIL_KEY)
 ```
 
-### 2. The Hono API owns commands, auth and jobs, so we write no `createServerFn` by default (Learned in this repo)
+### 2. The Hono API owns commands, auth and jobs, so we write no `createServerFn` by default (Guidance, ADR-001)
 
 ADR-001 keeps the Hono API as the only place for commands, auth and jobs. Start's shipped skills teach server functions first. Do not follow them here. If a server function is ever added, it needs four things: `.validator()`, an auth check inside the function (a `beforeLoad` guard protects the screen, not the endpoint), `useServerFn` when it throws `redirect` or `notFound`, and the CSRF middleware of rule 6. Ask first, because a server function is a second place for business rules.
 
@@ -50,7 +50,7 @@ createServerFn().validator((data: { id: string }) => data)
 
 ### 4. A loader that reads the API uses the generated client with an absolute base (Learned in this repo)
 
-A relative `fetch('/api/...')` in a loader fails during server rendering, because the server has no origin. Use `createApiClient` from `@sk/api-contract` (see `api-integration.md`). The server base is the API's internal address, read inside a function. The browser base is its own origin, and the paths already start with `/api`. A loader never imports API module code (`api/src/`). Today only the stores feature calls the API, from the browser (`front-end/src/features/stores/api/api-client.ts`). The name of the server variable is chosen with the first server-rendered loader. `API_ORIGIN` below is a placeholder.
+A relative `fetch('/api/...')` in a loader fails during server rendering, because the server has no origin. Use `createApiClient` from `@sk/api-contract` (see `api-integration.md`). The server base is the API's internal address, read inside a function. The browser base is its own origin, and the paths already start with `/api`. A loader never imports the Hono API's own code (`api/src/`). Today only the stores feature calls the API, from the browser (`front-end/src/features/stores/api/api-client.ts`). The name of the server variable is chosen with the first server-rendered loader, so `API_ORIGIN` below is a placeholder. `/api/public/stories` is a placeholder until the content endpoint exists, and `apiOrigin()` is the helper this rule asks for.
 
 ```ts
 const apiOrigin = createIsomorphicFn()
@@ -58,20 +58,27 @@ const apiOrigin = createIsomorphicFn()
   .client(() => window.location.origin)
 
 // Don't: loader: () => fetch('/api/public/stories').then(r => r.json())
-loader: async () => (await createApiClient(apiOrigin()).GET('/api/public/stories')).data,
+// Do: features/stories/api/public-stories.ts
+export async function loadPublicStories() {
+  const { createApiClient } = await import('@sk/api-contract') // Zod stays out of the first load
+  return (await createApiClient(apiOrigin()).GET('/api/public/stories')).data
+}
+// route file
+loader: () => loadPublicStories(),
 ```
 
 ## Rendering
 
 ### 5. Routes are client-only by default. Public routes opt in, private routes stay out and say so (Learned in this repo)
 
-`defaultSsr: false` lives in `front-end/src/start.ts`, because Start reads it there and not from the router options. A route renders on the server only with `ssr: true`, and a parent's `false` wins over a child's `true`. So set `ssr: true` on every layout above a public route as well as on the route. Private routes (`store`, `admin`, `partner`, `lab`, `sign-in`, `invitation`, cart and account) keep `ssr: false`, and Start request middleware in `src/start.ts` adds `X-Robots-Tag: noindex` for their paths (owner gate G-E33-STARTMW). `main` has the root route with `ssr: true` and the default today. The public routes and the middleware arrive with E3.3. Two traps from E3.3: compare the lower-cased path, because the router matches paths without regard to case, and test the header against a built server, not only in dev.
+`defaultSsr: false` lives in `front-end/src/start.ts`, because Start reads it there and not from the router options. A route renders on the server only with `ssr: true`, and a parent's `false` wins over a child's `true`. So set `ssr: true` on every layout above a public route as well as on the route. Private routes (`store`, `admin`, `partner`, `lab`, `sign-in`, `invitation`, cart, checkout and account) keep `ssr: false` by inheriting the default, so do not set it. Start request middleware in `src/start.ts` sends `X-Robots-Tag: noindex` for their paths (owner gate G-E33-STARTMW). `main` has the root route with `ssr: true` and the default today. The public routes and the middleware arrive with E3.3. Two traps from E3.3: compare the lower-cased path, because the router matches paths without regard to case, and match whole segments, because `startsWith('/store')` also matches an unrelated path such as `/storehouse`. Test the header against a built server, not only in dev.
 
 ```ts
 // src/start.ts
 const privateRoutes = createMiddleware().server(async ({ next, pathname }) => {
   const result = await next()
-  if (pathname.toLowerCase().startsWith('/store'))
+  const p = pathname.toLowerCase()
+  if (p === '/store' || p.startsWith('/store/'))
     result.response.headers.set('X-Robots-Tag', 'noindex')
   return result
 })
@@ -83,15 +90,26 @@ export const startInstance = createStart(() => ({
 
 `src/routes/__root.tsx` shows the root's `ssr: true`. Check with `curl -I localhost:<port>/store` on the built server.
 
-### 6. Add CSRF middleware with the first server function or non-GET server route (Documented)
+### 6. Add CSRF middleware with the first server function or non-GET server route (Documented, Learned in this repo)
 
-A server function is a POST endpoint that a form on another site can hit. `createCsrfMiddleware` checks `Sec-Fetch-Site`, `Origin` and `Referer`, and answers 403 on a mismatch. The `filter` below covers server functions. A non-GET server route needs its own filter, because `handlerType` is `'router'` for it. It covers Start's endpoints only, not the Hono API.
+A server function is a POST endpoint that a form on another site can hit. `createCsrfMiddleware` checks `Sec-Fetch-Site`, `Origin` and `Referer`, and answers 403 on a mismatch. Because `src/start.ts` exists, Start does not add its default CSRF middleware (`createStartHandler.js`: the default applies only without a start instance), so add it yourself with the first server function. The `filter` below covers server functions. It covers Start's endpoints only, not the Hono API.
 
 ```ts
 requestMiddleware: [
   createCsrfMiddleware({ filter: ctx => ctx.handlerType === 'serverFn' }),
   privateRoutes,
 ],
+```
+
+For a non-GET server route, add `createCsrfMiddleware()` to that route's `server.middleware`. Don't widen the global filter to `router` requests, because that returns 403 to cross-site page links.
+
+```tsx
+export const Route = createFileRoute('/api/foo')({
+  server: {
+    middleware: [createCsrfMiddleware()],
+    handlers: { POST: async ({ request }) => new Response('ok') },
+  },
+})
 ```
 
 ### 7. Server routes: `sitemap[.]xml.ts` and `robots[.]txt.ts`, with escaped XML and honest cache headers (Documented, Learned in this repo)
@@ -116,16 +134,19 @@ const escapeXml = (s: string) => s.replace(/[<>&'"]/g, c => `&#${c.charCodeAt(0)
 
 ### 8. The head comes from loader data, with absolute URLs (Documented; hreflang from ADR-002)
 
-`head()` receives `loaderData`, which can be `undefined` while a loader fails, so read it with `?.`. Build every URL from `import.meta.env.VITE_SITE_URL`: a canonical, Open Graph and JSON-LD URL must be absolute. JSON-LD carries no `offers` (the price rule, D10). The Start docs say nothing about hreflang. Add `rel: 'alternate'` links with `hreflang` yourself, as ADR-002 sets (`en`, `de`, `x-default`).
+`head()` receives `loaderData`, which can be `undefined` while a loader fails, so return early when it is missing. Build every URL from `import.meta.env.VITE_SITE_URL`: a canonical, Open Graph and JSON-LD URL must be absolute. JSON-LD carries no `offers` (the price rule, D10). The Start docs say nothing about hreflang. Add `rel: 'alternate'` links yourself, as ADR-002 sets. The attribute is `hrefLang` in React. Each language has its own slug (ADR-002), so the loader returns the path of every language and does not rewrite `/en/` to `/de/`. `alternates` includes `x-default`, which points to English.
 
 ```ts
 head: ({ loaderData }) => {
-  const url = `${import.meta.env.VITE_SITE_URL}/en/stories/${loaderData?.slug}`
+  if (!loaderData)
+    return {}
+  const site = import.meta.env.VITE_SITE_URL
   return {
-    meta: [{ title: loaderData?.title }, { property: 'og:title', content: loaderData?.title }],
+    meta: [{ title: loaderData.title }, { property: 'og:title', content: loaderData.title }],
     links: [
-      { rel: 'canonical', href: url },
-      { rel: 'alternate', hreflang: 'de', href: url.replace('/en/', '/de/') },
+      { rel: 'canonical', href: `${site}${loaderData.path}` },
+      // loaderData.alternates comes from the shared resolver in packages/domain/src/content/ (ADR-002)
+      ...loaderData.alternates.map(a => ({ rel: 'alternate', hrefLang: a.lang, href: `${site}${a.path}` })),
     ],
   }
 },
@@ -155,7 +176,7 @@ return <p>{hydrated ? day.format(Date.now()) : null}</p>
 
 ### 11. Keep server-only code out of the client bundle (Documented, Learned in this repo)
 
-Name the file `*.server.ts`. Start's import protection then refuses the import from client code. The `server-only` marker import is the experimental alternative (rule 15). It is an error in a build and only a mock in dev, so run `pnpm build` after you add such a file. Import server functions statically, because the build swaps them for stubs. Import a heavy server-only helper with `import()` inside the handler, as ADR-001 says.
+Name the file `*.server.ts`. Start's import protection (experimental) then refuses the import from client code. In a build that is an error, but in dev it is only a mock, so run `pnpm build` after you add such a file. The `server-only` marker import does the same for a file you cannot rename. Import server functions statically, because the build swaps them for stubs. Import a heavy server-only helper with `import()` inside the handler, as ADR-001 says.
 
 ```ts
 // src/lib/mail-keys.server.ts: import protection applies by the file name
@@ -175,20 +196,20 @@ const [demo] = useState(startSeedDemo) // one store and one QueryClient per requ
 
 ### 13. Keep route options in one order (Documented)
 
-Type inference follows the order of the options. Write `validateSearch`, `loaderDeps`, `beforeLoad`, `loader`, then the rest. `loaderDeps` returns only the keys the loader uses, because the loader re-runs whenever its result changes.
+Type inference follows the order of the options. Write `validateSearch`, `loaderDeps`, `beforeLoad`, `loader`, then the rest. `loaderDeps` returns only the keys the loader uses, because the loader re-runs whenever its result changes. A loader here fetches public content. Shop reads go through the query hooks (AGENTS.md, rule 4).
 
 ```ts
-export const Route = createFileRoute('/_guest/gifts/')({
-  validateSearch: parseGiftsSearch,
+export const Route = createFileRoute('/$lang/stories/')({
+  validateSearch: parseStoriesSearch, // placeholder parser
   // Don't: loaderDeps: ({ search }) => search
   loaderDeps: ({ search }) => ({ subcategory: search.subcategory }),
-  loader: ({ deps }) => loadGifts(deps.subcategory),
+  loader: ({ deps }) => loadPublicStories(deps.subcategory),
 })
 ```
 
 ### 14. Unknown public slugs throw `notFound()` and answer 404 (Documented)
 
-This is the target state for the content routes. Today an unknown slug shows the not-found panel with status 200, and a later ticket adds the loader. A search engine reads the status, not the panel. After you add the loader, check the status with `curl -I`. A failed loader is retried with `router.invalidate()`, which also resets the error boundary. Do not call `reset()` (`RouteError` in `front-end/src/components/route-fallbacks.tsx` uses `invalidate`).
+This is the target state for the content routes. Today an unknown slug shows the not-found panel with status 200, and a later ticket adds the loader. A search engine reads the status, not the panel. After you add the loader, check the status with `curl -I`. Retry a failed loader with `router.invalidate()` (`RouteError` in `front-end/src/components/route-fallbacks.tsx` does). Do not use the error component's `reset` prop alone. It clears the boundary but does not re-run the loader.
 
 ```ts
 loader: async ({ params }) => {
@@ -201,7 +222,7 @@ loader: async ({ params }) => {
 
 ### 15. Experimental APIs need an ADR, and docs come first (Guidance)
 
-`Hydrate` with its strategies, the `transformAssets` plugin option and the `server-only` and `client-only` markers are marked experimental or new. Use one only with a reason written in an ADR. Before you use any Start API, read the shipped skill that matches the installed version, and check a web snippet against `package.json`, because `/latest` can be ahead. Find the skills with the command in `AGENTS.md`. A shipped skill is version-matched, but it is generic. Where it says "call a server function from the loader" or "use `createServerFn`", rules 2 and 4 of this file win.
+`Hydrate` and its strategies (new in 1.169), the `transformAssets` option of `createStartHandler`, and the `server-only` and `client-only` markers (marked experimental) each need a reason written in an ADR before you use them. Before you use any Start API, read the shipped skill that matches the installed version, and check a web snippet against `package.json`, because `/latest` can be ahead. Find the skills with the command in `AGENTS.md`. A shipped skill is version-matched, but it is generic. Where it says "call a server function from the loader" or "use `createServerFn`", rules 2 and 4 of this file win.
 
 ```tsx
 import { Hydrate } from '@tanstack/react-start'
@@ -212,7 +233,7 @@ import { visible } from '@tanstack/react-start/hydration'
 
 ## How to check
 
-- `pnpm exec tsc --noEmit` catches a wrong method name (rule 3). Run it in CI.
+- `pnpm exec tsc --noEmit` catches a wrong method name (rule 3). CI runs it (`pnpm typecheck`; `front-end` `build` is `tsc && vite build`).
 - `pnpm build`, then `node .output/server/index.mjs`, then `curl -I` for status and headers (rules 5, 7, 14). Dev mode is not proof.
 - `pnpm verify:routes` and `pnpm verify:renders` compare two builds (`front-end/scripts/verify/README.md`).
 - A hydration error shows in the browser console. Open a built page and read it.
