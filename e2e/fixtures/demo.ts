@@ -33,7 +33,7 @@ export const test = base.extend<Fixtures>({
 
     await use(async (role = "guest") => {
       await page.goto("/");
-      // The app renders nothing until the client boots; the prototype bar only exists after that.
+      // Client-only today (every route except the root and the test routes is client-only), so the prototype bar appears after the client boots. E3.3 must change this wait when it sets ssr:true.
       await expect(page.getByRole("region", { name: "Prototype controls" })).toBeVisible();
       await expect(page.getByRole("navigation").first()).toBeVisible();
       await page.evaluate((nextRole) => {

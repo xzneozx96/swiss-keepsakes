@@ -16,9 +16,10 @@ const TYPES = {
   '.mp3': 'audio/mpeg',
 }
 
-const PORTS = Array.from({ length: 10 }, (_, i) => 5420 + i)
+// 5429 is the default port of the root e2e suite, so the verify scripts leave it alone.
+const PORTS = Array.from({ length: 9 }, (_, i) => 5420 + i)
 
-/** The first free port in 5420 to 5429. */
+/** The first free port in 5420 to 5428. */
 async function freePort() {
   for (const port of PORTS) {
     const free = await new Promise((resolve) => {
@@ -78,7 +79,7 @@ export function goTo(page, served, path) {
 }
 
 /**
- * Serves a built folder on a free port from 5420 to 5429 and resolves `{ server, port, mode }`.
+ * Serves a built folder on a free port from 5420 to 5428 and resolves `{ server, port, mode }`.
  * The folder layout picks the mode:
  * - Nitro output (`<dir>/server/index.mjs`, the Start build): runs `node <dir>/server/index.mjs` with PORT set.
  *   `server.close()` kills that child by its PID.
@@ -133,7 +134,7 @@ export async function serve(dir) {
 }
 
 /**
- * The app renders nothing on the server and on the first client render, so wait for the prototype bar (client only)
+ * The app renders nothing on the server and on the first client render, so wait for the prototype bar (client-only today, because every route except the root and the test routes is client-only; E3.3 must change this wait when it sets ssr:true)
  * before reading text or storage.
  */
 export function waitForBoot(page) {

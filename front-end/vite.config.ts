@@ -8,12 +8,11 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
 
-// The API's address for the dev and preview servers. The browser only ever calls /api on its own origin.
+// The API's address for the dev server. The browser only ever calls /api on its own origin.
 const apiTarget = process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:5002'
-const apiProxy = { '/api': apiTarget }
 
-// The dev server forwards /api through Nitro, which answers requests before Vite's `server.proxy` can.
-// The build gets no rule: production forwarding belongs to hosting.
+// Only `vite dev` forwards /api, through Nitro route rules (Nitro answers before Vite's `server.proxy` can).
+// The built server (`.output`, also what `vite preview` serves) has no forwarding: production forwarding belongs to hosting.
 const devApiRules = { routeRules: { '/api/**': { proxy: `${apiTarget}/api/**` } } }
 
 // https://vitejs.dev/config/
@@ -24,7 +23,6 @@ export default defineConfig(({ command }) => ({
     tsconfigPaths: true,
   },
   server: { port: 3002, strictPort: true },
-  preview: { proxy: apiProxy },
   plugins: [
     // TanStack Start (it includes the router plugin) must come before @vitejs/plugin-react.
     // Vitest renders components in jsdom and needs neither the server build nor its environments.

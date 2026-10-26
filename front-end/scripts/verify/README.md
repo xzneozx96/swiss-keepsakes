@@ -6,7 +6,7 @@ Each script takes a build folder and picks the server from its layout:
 
 | Folder | Build | Served with | URL form |
 | :-- | :-- | :-- | :-- |
-| contains `server/index.mjs` | Nitro output of the Start build (`front-end/.output`) | `node <dir>/server/index.mjs` with `PORT` set, on the first free port in 5420 to 5429. `server.close()` kills that process by its PID | `/store/orders` |
+| contains `server/index.mjs` | Nitro output of the Start build (`front-end/.output`) | `node <dir>/server/index.mjs` with `PORT` set, on the first free port in 5420 to 5428. `server.close()` kills that process by its PID | `/store/orders` |
 | contains `index.html` | Static `dist` of the E3.1 hash-history build (d52ce9e) | a small static server with an `index.html` fallback, same port range | `/index.html#/store/orders` |
 
 So a comparison can take the E3.1 baseline and a Start build, or two builds of either kind. The app renders nothing on the server and on the first client render, so the scripts wait for the prototype bar (`aria-label="Prototype controls"`) before they read storage or text.
@@ -21,6 +21,17 @@ rm -rf /tmp/sk-new && cp -r .output /tmp/sk-new
 ```
 
 Copy it again after every build, because the next build replaces `.output` (the `rm -rf` stops a second copy from nesting inside the first). `PORT=5421 node /tmp/sk-new/server/index.mjs` serves it. The production server has no `/api` forwarding (hosting owns it), so the demo checks need no API.
+
+## Measure the first load of a Start build
+
+The measuring script needs an `index.html` and the assets beside it. Save the HTML that the server sends for `/` and copy the assets next to it:
+
+```
+mkdir -p /tmp/sk-meas && PORT=5421 node /tmp/sk-new/server/index.mjs &
+sleep 2 && curl -s localhost:5421/ -o /tmp/sk-meas/index.html; kill %1
+cp -r /tmp/sk-new/public/assets /tmp/sk-meas/assets
+node ../docs/front-end-audit/measure-initial-load.mjs /tmp/sk-meas
+```
 
 ## Build the E3.1 baseline outside the repo
 
@@ -39,7 +50,7 @@ cd front-end && pnpm exec vite build --outDir /tmp/sk-base-src/base-out
 | :-- | :-- |
 | `pnpm verify:routes /tmp/sk-base-src/base-out /tmp/sk-new /tmp/sk-out` | The visible text of 100 routes, in English and German with a frozen clock, is identical in both builds. It prints every route that differs |
 | `pnpm verify:renders /tmp/sk-new` | Component renders, commits and CPU time at 4x throttle for seven scenarios. `PROFILE=S5` lists the top components for one scenario |
-| `node ../docs/front-end-audit/measure-initial-load.mjs /tmp/sk-new` | First-load JavaScript and CSS, gzipped |
+| `node ../docs/front-end-audit/measure-initial-load.mjs <dir>` | First-load JavaScript and CSS, gzipped. It reads `<dir>/index.html`, so it works on the static baseline as is. A Start build has no `index.html`: see below |
 
 Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Google Chrome. Without it the scripts use Playwright's Chromium (`pnpm exec playwright install chromium`). Render counts are stable between runs. CPU times are not, so run the CPU comparison with nothing else running and compare medians of three.
 
