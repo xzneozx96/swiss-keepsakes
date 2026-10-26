@@ -21,15 +21,39 @@ function sourceFiles(dir: string): string[] {
   })
 }
 
-// A string or template that starts with `#/`, or an interpolation followed by `#/`, is a hash-history address.
-const HASH_LINK = /['"`}]#\//
+// A `#/` anywhere in code, or a template that interpolates after a `#`, is a hash-history address. An SVG `href={`#${id}`}` points at an element, not a route.
+const HASH_LINK = /#\/|(?<!href=\{`)#\$\{/
 const COMMENT_LINE = /^\s*(?:\/\/|\/\*|\*)/
+const TRAILING_COMMENT = /\s\/\/.*$/
+
+// Until E3.4 moves invitation and Google returns off the hash.
+const UNTIL_E3_4 = [
+  'features/stores/lib/invitation-token.ts', // until E3.4
+  'features/auth/lib/google-return.ts', // until E3.4
+]
+
+function hashLinkLines(text: string): number[] {
+  return text.split('\n').flatMap((line, n) =>
+    !COMMENT_LINE.test(line) && HASH_LINK.test(line.replace(TRAILING_COMMENT, '')) ? [n + 1] : [],
+  )
+}
 
 describe('[E3.2] in-app links are paths, not hash addresses', () => {
-  it('no live source builds a `#/` address (the app uses browser history)', () => {
+  /* eslint-disable no-template-curly-in-string -- the probes are source text, not templates */
+  it('flags each way of writing a hash address, and leaves comments and SVG ids alone', () => {
+    expect(hashLinkLines('const a = `${window.location.origin}/#/r/${o}`')).toEqual([1])
+    expect(hashLinkLines('const a = \'/#/store\'')).toEqual([1])
+    expect(hashLinkLines('const a = `#${\'/x\'}`')).toEqual([1])
+    expect(hashLinkLines('// compared on #/lab\n * see #/x\nconst a = 1 // #/x')).toEqual([])
+    expect(hashLinkLines('<textPath href={`#${id}`}>')).toEqual([])
+  })
+  /* eslint-enable no-template-curly-in-string */
+
+  it('no live source builds a `#/` address, except the two files E3.4 replaces', () => {
     const offenders = sourceFiles(SRC)
       .filter(file => !file.endsWith('routeTree.gen.ts'))
-      .flatMap(file => readFileSync(file, 'utf8').split('\n').map((line, n) => ({ line, n })).filter(({ line }) => !COMMENT_LINE.test(line) && HASH_LINK.test(line)).map(({ n }) => `${relative(SRC, file)}:${n + 1}`))
+      .filter(file => !UNTIL_E3_4.includes(relative(SRC, file)))
+      .flatMap(file => hashLinkLines(readFileSync(file, 'utf8')).map(n => `${relative(SRC, file)}:${n}`))
 
     expect(offenders, 'files that still build `#/` links').toEqual([])
   })
