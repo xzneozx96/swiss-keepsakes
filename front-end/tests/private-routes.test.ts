@@ -62,7 +62,6 @@ describe('private routes', () => {
     expect(privateRoutes.filter(route => !hasNoIndex(route)).map(route => route.fullPath)).toEqual([])
   })
 
-
   it.each(PRIVATE_PREFIXES)('[E3.3][AC12] treats %s and its sub-paths as private', (prefix) => {
     expect(isPrivatePath(prefix)).toBe(true)
     expect(isPrivatePath(`${prefix}/x`)).toBe(true)
