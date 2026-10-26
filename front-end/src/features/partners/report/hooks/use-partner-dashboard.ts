@@ -60,7 +60,6 @@ export interface MixPart {
   label: string
   value: string
   amount: number
-  share: string
   colour: string
   track: string
 }
@@ -267,9 +266,6 @@ export function usePartnerDashboard(
         label: t('partnerDash.mix.keepsakes'),
         value: money(allAmount),
         amount: allAmount,
-        share: t('partnerDash.mix.share', {
-          share: percent(allAmount, allAmount),
-        }),
         ...MIX.keepsakes,
       } satisfies MixPart,
     ],

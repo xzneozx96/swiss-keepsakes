@@ -21,7 +21,6 @@ export const partnerDashboardEn = {
   'partnerDash.mix.keepsakes': 'Keepsakes',
   'partnerDash.mix.tours': 'Tours',
   'partnerDash.mix.total': 'Total',
-  'partnerDash.mix.share': '{share} of the commission',
   'partnerDash.mix.empty': 'No commission in this period yet',
   'partnerDash.tabs.label': 'Details',
   'partnerDash.tabs.transactions': 'Transactions',

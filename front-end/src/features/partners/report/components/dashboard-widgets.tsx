@@ -360,9 +360,7 @@ export function MixWidget({
                         />
                       </span>
                       <div className="flex flex-col gap-1 text-xs text-muted tabular-nums">
-                        <span>
-                          {p.share} · {p.orders}
-                        </span>
+                        <span>{p.orders}</span>
                         <span className="flex flex-wrap justify-between gap-x-4">
                           <span>
                             {t('partnerDash.filter.recorded')}
