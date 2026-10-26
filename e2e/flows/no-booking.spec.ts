@@ -13,8 +13,8 @@ const notFound: Record<Language, { page: string; tour: string }> = {
 };
 // Booking content of the old tour page: group prices, age bands, seats and the payment-by-departure row.
 const bookingText: Record<Language, string[]> = {
-  en: ["Prices for your group", "Depends on the departure", "no seat needed", "Ages 0–5", "CHF 89.00", "CHF 45.00", "CHF 0.00"],
-  de: ["Preise für Ihre Gruppe", "Je nach Termin", "kein Platz nötig", "0–5 Jahre", "CHF 89.00", "CHF 45.00", "CHF 0.00"],
+  en: ["Prices for your group", "Depends on the departure", "no seat needed", "Ages 0–5", "CHF 89.00", "CHF 45.00", "CHF 0.00", "ordered separately from your booking"],
+  de: ["Preise für Ihre Gruppe", "Je nach Termin", "kein Platz nötig", "0–5 Jahre", "CHF 89.00", "CHF 45.00", "CHF 0.00", "getrennt von Ihrer Buchung"],
 };
 
 const hrefs = (page: Page, selector: string) =>
@@ -57,6 +57,7 @@ async function walk(page: Page, label: string, sources: Record<string, string[]>
     expect(links, `${label} ${source}: menu links`).not.toContainEqual(expect.stringMatching(bookingPath));
     links.filter(href => href.startsWith("/#/")).forEach(href => all.add(href));
   }
+  expect(all.size, `${label}: pages visited`).toBeGreaterThan(0);
   for (const href of all) {
     await visit(page, href.slice(2));
     expect(page.url(), `${label} ${href}`).toContain(href.slice(1));
@@ -67,6 +68,7 @@ async function walk(page: Page, label: string, sources: Record<string, string[]>
 const minimum: Record<string, number> = { tabBar: 5, account: 3, phoneBar: 4, moreSheet: 5, sidebar: 10 };
 
 test("[E3.1][AC50] no menu link leads to booking", async ({ seedDemo, language }) => {
+  test.slow();
   const guest = await seedDemo("guest");
   const tabBar = await hrefs(guest, "nav a[href]");
 
@@ -99,6 +101,11 @@ test("[E3.1][AC50] old booking addresses render no booking", async ({ seedDemo, 
     ["/store/bookings", notFound[language].page],
     ["/account/bookings/x", notFound[language].page],
     ["/tours/private-tour", notFound[language].tour],
+    ["/store/requests/private", notFound[language].page],
+    ["/store/products/categories", notFound[language].page],
+    ["/store/bookings/departures/x", notFound[language].page],
+    ["/tours/x/book/review", notFound[language].page],
+    ["/account/bookings/x/pay", notFound[language].page],
   ];
 
   for (const [hash, message] of expected) {
@@ -120,6 +127,7 @@ test("[E3.1][AC50] old booking addresses render no booking", async ({ seedDemo, 
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("button", { name: bookingButton })).toHaveCount(0);
   await expect(page.getByRole("textbox")).toHaveCount(0);
+  expect(await hrefs(page, "a[href]"), "?book=true: links").not.toContainEqual(expect.stringMatching(bookingPath));
   const text = await page.locator("body").innerText();
 
   for (const needle of bookingText[language]) expect(text, needle).not.toContain(needle);
