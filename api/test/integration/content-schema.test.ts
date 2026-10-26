@@ -38,7 +38,7 @@ describe('[E2.5] migration 0007: platform helper functions', () => {
   })
 })
 
-interface PgFailure { code?: string, constraint?: string }
+interface PgFailure { code?: string, constraint?: string, message?: string }
 
 async function failure(promise: Promise<unknown>): Promise<PgFailure> {
   try {
@@ -430,6 +430,15 @@ describe('[E2.5] content rules', () => {
     expect(deletedVersion).toMatchObject({ code: '23001' })
     expect(deletedGroup).toMatchObject({ code: '23001', constraint: 'story_versions_group_fkey' })
     expect(await count(pool, `select count(*) from content.story_versions where group_id = $1 and status = 'draft' and published->>'title' = 'New'`, [group])).toBe(1)
+  })
+
+  // CASCADE, because Postgres refuses a plain TRUNCATE of a referenced table before any trigger runs.
+  // A cascade from places also reaches story_versions, so the message may name either table.
+  it.each(['places', 'story_versions', 'media_refs'])('[E2.5][AC79] TRUNCATE ... CASCADE on content.%s is refused by the trigger', async (table) => {
+    const refused = await failure(pool.query(`truncate content.${table} cascade`))
+
+    expect(refused).toMatchObject({ code: '23000' })
+    expect(refused.message).toMatch(/TRUNCATE on content\.\w+ is refused/)
   })
 
   it('[E2.5] a group with versions cannot be deleted', async () => {
