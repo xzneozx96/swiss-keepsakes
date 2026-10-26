@@ -42,7 +42,7 @@ cd front-end && pnpm exec vite build
 rm -rf /tmp/sk-e33-e32 && cp -r .output /tmp/sk-e33-e32
 ```
 
-The install needs the whole workspace (`api`, `e2e`, `spikes`, `.pnpmfile.cjs`), or the frozen lockfile check fails. Use scratch names that no other session uses.
+The install needs the whole workspace (`api`, `e2e`, `spikes`, `.pnpmfile.cjs`), or the frozen lockfile check fails. The `/tmp/sk-e33-*` names are examples. Use scratch names that no other session uses.
 
 | Command | What it proves |
 | :-- | :-- |
@@ -52,6 +52,6 @@ The install needs the whole workspace (`api`, `e2e`, `spikes`, `.pnpmfile.cjs`),
 
 Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Google Chrome. Without it the scripts use Playwright's Chromium (`pnpm exec playwright install chromium`). Render counts are stable between runs. CPU times are not, so run the CPU comparison with nothing else running and compare medians of three.
 
-`verify:renders` measures one build at a time. To compare, run it on the baseline and on the new build. On E3.2 the Start build showed 1 to 2 % more renders in S2, S4 and S5; that difference was not investigated.
+`verify:renders` measures one build at a time. To compare, run it on the baseline and on the new build. The E3.2 Start build rendered 1 to 2 % more than the E3.1 static build in S2, S4 and S5; that difference was not investigated.
 
 Formatting-only changes cannot change compiled output. To prove a large reformat, build before and after and compare the CSS files byte for byte, as `docs/development-rules/frontend/linting.md` describes.

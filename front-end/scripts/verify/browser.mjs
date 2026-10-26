@@ -82,6 +82,9 @@ export async function serve(dir) {
 
   // Backstop: a script that throws before it calls close() must not leave the server behind.
   process.once('exit', () => server.close())
+  // A killed script (Ctrl-C, SIGTERM) skips 'exit' handlers unless a signal handler ends the process.
+  for (const signal of ['SIGINT', 'SIGTERM'])
+    process.once(signal, () => { server.close(); process.exit(1) })
 
   try {
     await waitUntilUp(port, child)

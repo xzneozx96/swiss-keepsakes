@@ -208,8 +208,8 @@ test('[E3.2][AC01] a first visit with empty storage moves to a guest page on the
 
   await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/tours$/)
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe('kept')
-  // Only /tours shows this text, so the count below is read on the moved page.
-  await expect(page.getByText('Pilatus').first()).toBeVisible()
+  // Only /tours has this heading, so the count below is read on the moved page.
+  await expect(page.getByRole('heading', { level: 1, name: 'Tours around Luzerne' })).toBeVisible()
   expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
   expect(urls.some(url => url.includes('sign-in'))).toBe(false)
 })

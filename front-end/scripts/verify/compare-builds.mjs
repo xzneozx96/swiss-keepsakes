@@ -3,6 +3,8 @@ import { join } from 'node:path'
 // Renders the same routes from two builds with a frozen clock and diffs the visible text.
 // Each folder is a Nitro `.output` (the Start build), see README.md.
 // usage: node scripts/verify/compare-builds.mjs <baseDir> <newDir> <outDir>
+// The exit code is 1 when any text differs, any page error occurs or any final address differs.
+// COMPARE_TZ=host leaves the browser in the host time zone instead of Europe/Zurich (to see zone-dependent text).
 import process from 'node:process'
 import { appUrl, goTo, launchBrowser, serve, waitForBoot } from './browser.mjs'
 
@@ -39,7 +41,7 @@ async function capture(label, dir) {
 
     for (const lang of ['en', 'de']) {
       for (const set of SETS) {
-        const context = await browser.newContext({ viewport: { width: 430, height: 932 }, timezoneId: 'Europe/Zurich' })
+        const context = await browser.newContext({ viewport: { width: 430, height: 932 }, ...(process.env.COMPARE_TZ === 'host' ? {} : { timezoneId: 'Europe/Zurich' }) })
 
         await context.clock.setFixedTime(FROZEN)
         const page = await context.newPage()
@@ -153,5 +155,10 @@ for (const key of diffs) {
 
 if (addressDiffs.length) {
   console.error(`${addressDiffs.length} routes ended at a different address in the two builds`)
+  process.exitCode = 1
+}
+
+if (diffs.length || errA + errB) {
+  console.error(`${diffs.length} routes differ in text, ${errA + errB} page errors`)
   process.exitCode = 1
 }
