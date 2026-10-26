@@ -52,6 +52,18 @@ export default antfu(
     },
   },
   {
+    // Hidden booking code sits outside the build (ADR-012). Live code must not import it.
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['@/dormant/*', '**/dormant/**'],
+          message: 'Live code must not import from src/dormant (ADR-012)',
+        }],
+      }],
+    },
+  },
+  {
     // Shared code never imports a feature or a route.
     files: ['src/**/*.{ts,tsx}'],
     plugins: { boundaries },
