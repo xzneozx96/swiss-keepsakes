@@ -21,6 +21,8 @@ Each file sits here at its old path relative to `src/`. Move it back with `git m
 - `components/surface-card.tsx`
 - `features/tours/merchant/lib/report.ts` and `features/tours/merchant/lib/render-mail.ts` (nothing imported them after E3.1).
 - `features/tours/discovery/departure-picker/` (whole folder)
+- `features/tours/discovery/maintenance-notice.tsx` (the tour page stopped rendering it in E3.1)
+- `features/tours/discovery/age-bands.ts`
 - `features/tours/booking/booking-summary.tsx` and `features/tours/booking/sample-bookings.ts`
 - `features/tours/reviews/tour-booking-review.tsx` and `features/tours/reviews/index.ts` (the reviews `messages*.ts` and `seed.ts` stay, because the dictionaries and the demo seed use them)
 - `features/tours/components/booking-status.tsx`
