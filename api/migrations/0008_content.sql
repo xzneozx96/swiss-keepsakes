@@ -292,6 +292,9 @@ CREATE TRIGGER places_keep_once_published BEFORE DELETE ON content.places
   FOR EACH ROW WHEN (OLD.first_published_at IS NOT NULL) EXECUTE FUNCTION content.reject_delete();--> statement-breakpoint
 CREATE TRIGGER story_versions_keep_once_published BEFORE DELETE ON content.story_versions
   FOR EACH ROW WHEN (OLD.published IS NOT NULL) EXECUTE FUNCTION content.reject_delete();--> statement-breakpoint
+-- AC79: delete is refused while published is set, so the text is kept once set. Unpublish means status = 'draft'; the document stays.
+CREATE TRIGGER story_versions_published_is_kept BEFORE UPDATE OF published ON content.story_versions
+  FOR EACH ROW WHEN (OLD.published IS NOT NULL AND NEW.published IS NULL) EXECUTE FUNCTION platform.reject_column_change('published');--> statement-breakpoint
 CREATE FUNCTION content.reject_type_change() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   RAISE EXCEPTION 'the type of place % cannot change after it is created', OLD.id USING ERRCODE = 'restrict_violation';

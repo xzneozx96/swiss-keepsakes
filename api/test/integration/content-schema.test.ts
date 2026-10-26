@@ -412,6 +412,26 @@ describe('[E2.5] content rules', () => {
     expect(deleted.rowCount).toBe(1)
   })
 
+  it('[E2.5][AC79] a published story version keeps its published text', async () => {
+    const store = randomUUID()
+    const group = await newGroup(store)
+    await insertVersion(group, 'en', store, slugOf('story'))
+
+    const cleared = await failure(pool.query(`update content.story_versions set published = NULL where group_id = $1 and language = 'en'`, [group]))
+    const replaced = await pool.query(`update content.story_versions set published = '{"title":"New","sections":[]}' where group_id = $1 and language = 'en'`, [group])
+    const unpublished = await pool.query(`update content.story_versions set status = 'draft' where group_id = $1 and language = 'en'`, [group])
+    const deletedVersion = await failure(pool.query(`delete from content.story_versions where group_id = $1 and language = 'en'`, [group]))
+    const deletedGroup = await failure(pool.query('delete from content.story_groups where id = $1', [group]))
+
+    expect(cleared).toMatchObject({ code: '23001' })
+    expect((cleared as Error).message).toContain('column published')
+    expect(replaced.rowCount).toBe(1)
+    expect(unpublished.rowCount).toBe(1)
+    expect(deletedVersion).toMatchObject({ code: '23001' })
+    expect(deletedGroup).toMatchObject({ code: '23001', constraint: 'story_versions_group_fkey' })
+    expect(await count(pool, `select count(*) from content.story_versions where group_id = $1 and status = 'draft' and published->>'title' = 'New'`, [group])).toBe(1)
+  })
+
   it('[E2.5] a group with versions cannot be deleted', async () => {
     const store = randomUUID()
     const group = await newGroup(store)
