@@ -151,8 +151,50 @@ test("[E0.9] skip, fixme and todo tests are listed as switched off and not count
   });
   const result = run([w.plan, "--tests", w.tests]);
 
-  assert.equal(result.status, 0);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /without a test: E0\.2/);
   assert.match(result.stdout, /E0\.1 tests=1 switched-off=1 status=Done/);
   assert.match(result.stdout, /E0\.2 tests=0 switched-off=2 status=Done/);
   assert.match(result.stderr, /only tests are switched off.*E0\.2/);
+});
+
+test("[E0.9] a Done story whose only tests are switched off fails and says so", () => {
+  const w = workspace("off-only", {
+    plan: header + row("E0.1"),
+    status: { "E0.1": "Done" },
+    tests: { "a.spec.ts": offCall("skip", "[E0.1] off") },
+  });
+  const result = run([w.plan, "--tests", w.tests]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /without a test: E0\.1/);
+  assert.match(result.stderr, /only tests are switched off.*E0\.1/);
+});
+
+test("[E0.9] it.each and test.each count as tests", () => {
+  const w = workspace("each", {
+    plan: header + row("E0.1") + row("E0.2"),
+    status: { "E0.1": "Done", "E0.2": "Done" },
+    tests: {
+      "a.test.ts": `it.each([['a'], ['b']])(${JSON.stringify("[E0.1] runs %s")}, () => {});\ntest.each\`\n  a | b\n  \${1} | \${2}\n\`(${JSON.stringify("[E0.2] table %s")}, () => {});\n`,
+    },
+  });
+  const result = run([w.plan, "--tests", w.tests]);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /E0\.1 tests=1 status=Done/);
+  assert.match(result.stdout, /E0\.2 tests=1 status=Done/);
+});
+
+test("[E0.9] test.describe.skip and describe.fixme switch off the tests inside", () => {
+  const w = workspace("describe-off", {
+    plan: header + row("E0.1") + row("E0.2"),
+    tests: {
+      "a.spec.ts": `test.describe.skip(${JSON.stringify("[E0.1] block")}, () => { test("inside", () => {}); });\ndescribe.fixme(${JSON.stringify("[E0.2] block")}, () => { it("inside", () => {}); });\n`,
+    },
+  });
+  const result = run([w.plan, "--tests", w.tests]);
+
+  assert.match(result.stdout, /E0\.1 tests=0 switched-off=1 status=Backlog/);
+  assert.match(result.stdout, /E0\.2 tests=0 switched-off=1 status=Backlog/);
 });
