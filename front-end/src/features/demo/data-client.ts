@@ -204,9 +204,10 @@ export function startDemo() {
 /**
  * The demo's store, data client and query client for a page the server renders: the seed, with nothing read
  * from or written to storage and no collection read, so the server and the browser's first render show the
- * same thing. Each call makes its own store, so a server never shares one between requests. `restore` then
- * puts the saved state in the store and saves it, once the page has hydrated, and settles when every
- * collection has been read.
+ * same thing. Each call makes its own store, so a server never shares one between requests. The store queues
+ * any update made before `restore` (it does not change the state). `restore` then puts the saved state in the
+ * store, replays the queued updates on top of it and saves the result, once the page has hydrated, and settles
+ * when every collection has been read.
  */
 export function startSeedDemo() {
   const parts = assemble(createDemoStore(createSeedState(), { persist: false }))

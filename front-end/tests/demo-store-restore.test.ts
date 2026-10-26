@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createSeedState } from '@/features/demo/seed'
 import { createDemoStore } from '@/features/demo/store'
@@ -97,5 +97,34 @@ describe('demo store updates before restore', () => {
     store.setRole('owner')
 
     expect(store.getState().role).toBe('owner')
+  })
+
+  it('[E3.3] saves the replayed update with the restored state', () => {
+    const store = createDemoStore(createSeedState(), { persist: false })
+
+    store.update(s => ({ ...s, role: 'owner' }))
+    store.restore(saved())
+
+    expect(JSON.parse(window.localStorage.getItem('sk.demo') ?? '{}').role).toBe('owner')
+  })
+
+  it('[E3.3] a recipe that throws does not stop the others or later updates, and restore does not throw', () => {
+    const store = createDemoStore(createSeedState(), { persist: false })
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    store.update(s => ({ ...s, role: 'owner' }))
+    store.update(() => {
+      throw new Error('bad recipe')
+    })
+    store.update(s => ({ ...s, role: s.role === 'owner' ? 'manager' : 'guest' }))
+
+    expect(() => store.restore(saved())).not.toThrow()
+    expect(store.getState().role).toBe('manager')
+    expect(errors).toHaveBeenCalledTimes(1)
+
+    store.setRole('owner')
+
+    expect(store.getState().role).toBe('owner')
+    errors.mockRestore()
   })
 })

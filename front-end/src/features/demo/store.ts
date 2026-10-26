@@ -79,11 +79,18 @@ export interface DemoStore extends DemoActions {
   save: () => void
   /** The state the store started with: what the server rendered. */
   getInitialState: () => DemoState
-  /** Replaces the state with the saved one, starts saving and saves it now, so a first visit writes the copy and the clock survives a reload. */
+  /**
+   * Replaces the state with the saved one, replays the updates a `persist: false` store queued before it (in call order,
+   * on top of the saved state; one that throws is logged and skipped), starts saving and saves the result now, so a first
+   * visit writes the copy and the clock survives a reload.
+   */
   restore: (saved: DemoState) => void
 }
 
-/** `persist: false` is for a store that only stands in until `restore` gives it the saved state: it never writes the browser's copy. */
+/**
+ * `persist: false` is for a store that only stands in until `restore` gives it the saved state. Until then it never
+ * writes the browser's copy, and `update` only queues the recipe (the state does not change); `restore` replays the queue on top of the saved state.
+ */
 export function createDemoStore(initial: DemoState, { persist = true } = {}): DemoStore {
   const listeners = new Set<() => void>()
   let state = initial
@@ -135,8 +142,17 @@ export function createDemoStore(initial: DemoState, { persist = true } = {}): De
     save,
     getInitialState: () => initial,
     restore(saved) {
-      state = queued.splice(0).reduce((current, recipe) => recipe(current), saved)
+      // Start saving first, so a recipe that throws cannot leave the store queueing for good.
       persisting = true
+      state = saved
+      for (const recipe of queued.splice(0)) {
+        try {
+          state = recipe(state)
+        }
+        catch (error) {
+          console.error('A demo update made before restore failed and was skipped', error)
+        }
+      }
       save()
       listeners.forEach(notify => notify())
     },
