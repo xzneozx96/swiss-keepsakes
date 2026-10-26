@@ -14,6 +14,21 @@ This folder is outside `tsc`, `typecheck:tests` and the router. Nothing live imp
 4. Fix what drifted while the code was out of the build. The moved screens were not type-checked.
 5. Plan a backend phase first. Phase 1 builds no `bookings` module (ADR-012), so the screens have no server to talk to. Restoring them is a project, not a switch.
 
+## Files moved because only dormant code used them
+
+Each file sits here at its old path relative to `src/`. Move it back with `git mv` when you restore the screens that use it. No import was rewritten, so the restored paths match.
+
+- `components/surface-card.tsx`
+- `features/tours/merchant/lib/report.ts` and `features/tours/merchant/lib/render-mail.ts` (nothing imported them after E3.1).
+- `features/tours/discovery/departure-picker/` (whole folder)
+- `features/tours/booking/booking-summary.tsx` and `features/tours/booking/sample-bookings.ts`
+- `features/tours/reviews/tour-booking-review.tsx` and `features/tours/reviews/index.ts` (the reviews `messages*.ts` and `seed.ts` stay, because the dictionaries and the demo seed use them)
+- `features/tours/components/booking-status.tsx`
+- `features/tours/merchant/attendance-actions.tsx` and `features/tours/merchant/payment-sheet.tsx`
+- `features/merchant/products/hooks/use-subcategories.ts` and `features/merchant/products/components/subcategory-sheet.tsx`
+- `features/requests/hooks/use-private-tour.ts`, with its test in `tests/submit.tsx` (renamed from `tests/submit.test.tsx`; rename it back on restore)
+- `usePrivateTourRequests` now lives in `features/requests/api/queries.ts` here. On restore, copy it back into `src/features/requests/api/queries.ts` (it needs `PrivateTourRequest` from `@sk/domain/requests`).
+
 ## Code deleted, not moved
 
 E3.1 also deleted booking code from kept files. The source of truth is commit `466657f`, the last commit before E3.1. For any path below, run `git diff 466657f -- front-end/src/<path>` to see exactly what went, and restore the hunks you want. Paths are under `front-end/src/`.
@@ -36,7 +51,6 @@ E3.1 also deleted booking code from kept files. The source of truth is commit `4
 Paths in this list are the current locations inside `src/dormant/`, except where it says otherwise.
 
 - End-to-end specs `e2e/flows/tour.spec.ts` and `e2e/flows/tour-submit.spec.ts` (repo root `e2e/`) were switched to `test.skip`. Re-enable them on restore.
-- `features/tours/discovery/tour-selection-sheet.tsx` imports `@/dormant/features/tours/discovery/age-bands`. `age-bands.ts` was moved here too; put it back at `features/tours/discovery/age-bands.ts` and rewrite that import to `./age-bands`. This is the only import rewritten to a `@/dormant` path.
 - `features/requests/merchant/components/private-tour-rows.tsx` imports `PrivateTourRow` from the inbox hook; that type was deleted (see above).
 - Moved files with relative imports (for example `use-overdue-check.ts`) resolve again once moved back to their original folder.
 - `src/dormant/tests/failed-command-tours.tsx` has no `.test` in its name so that Vitest skips it. Rename it to `failed-command-tours.test.tsx` when you restore the screens.

@@ -19,7 +19,7 @@ import { EmptyState } from '@/components/empty-state'
 import { InfoIcon, TourIcon } from '@/components/icons'
 import { QuantityStepper } from '@/components/quantity-stepper'
 import { useLocale } from '@/contexts/locale-context'
-import { ageBandLabels } from '@/dormant/features/tours/discovery/age-bands'
+import { ageBandLabels } from '@/features/tours/discovery/age-bands'
 import { DeparturePicker } from '@/features/tours/discovery/departure-picker/departure-picker'
 import {
   usePickerFormat,
