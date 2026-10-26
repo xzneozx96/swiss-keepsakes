@@ -1,3 +1,4 @@
+// pre-Start only: reads index.html
 // Production build of front-end with the same plugins as front-end/vite.config.ts, plus a
 // plugin that dumps the chunk and module graph (rendered bytes per module, importers).
 // Writes nothing inside the repo: outDir, the generated route tree copy and the router

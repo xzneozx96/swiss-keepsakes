@@ -89,7 +89,7 @@ export function useCostData(filter: CostFilter, week: string | null) {
     .map(o => ({
       transaction: { kind: 'order' as const, id: o.id },
       ref: o.ref,
-      href: `#/store/orders/${o.id}`,
+      href: `/store/orders/${o.id}`,
       at: o.completedAt as string,
       title: pickText(o.lines[0].productName, language).text,
       more:

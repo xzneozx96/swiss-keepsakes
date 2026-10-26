@@ -18,7 +18,7 @@ function Action({ label, full = false }: { label: string, full?: boolean }) {
   return (
     <a
       className={`${pill} ${full ? 'w-full' : ''}`}
-      href="#/tours/private-tour"
+      href="/tours/private-tour"
     >
       {label}
       <ArrowRightIcon aria-hidden size={18} />

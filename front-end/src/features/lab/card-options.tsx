@@ -1,5 +1,5 @@
 /**
- * Lab: candidate layouts for the shared gift card, compared on #/lab/cards.
+ * Lab: candidate layouts for the shared gift card, compared on /lab/cards.
  * Option D was chosen (13.10.2026) and lives in features/catalog/components/product-card.tsx;
  * the others stay here for later UI experiments. Not part of the product.
  */

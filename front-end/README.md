@@ -14,7 +14,6 @@ A clickable prototype of Swiss Keepsakes for the client. It has no backend, and 
 pnpm install
 pnpm dev             # dev server on port 3002 with the demo sign-in. For the real sign-in set VITE_API_ENABLED=true in .env.local and run `pnpm dev` at the repo root, which starts the API (5002) too
 pnpm build         # type-check + production build into dist/
-pnpm build:artifact # build + dist/artifact.html for publishing as a claude.ai Artifact
 pnpm lint
 ```
 

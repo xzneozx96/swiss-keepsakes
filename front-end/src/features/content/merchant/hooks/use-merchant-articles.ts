@@ -79,7 +79,7 @@ export function useMerchantArticles(filter: ArticleFilter[]) {
 
       return {
         id: article.id,
-        href: `#/store/content/articles/${encodeURIComponent(article.id)}`,
+        href: `/store/content/articles/${encodeURIComponent(article.id)}`,
         title: article.title || t('merchantArticles.untitled'),
         language: article.language,
         languageCode: article.language.toUpperCase(),

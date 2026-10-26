@@ -1,3 +1,18 @@
+// A backslash or a control character (tab, newline) is dropped or turned into `/` by the browser's URL parser, so `/\evil.com` can become `//evil.com`.
+// eslint-disable-next-line no-control-regex
+const UNSAFE = /[\\\u0000-\u001F\u007F]/
+
+function isUnsafe(value: string): boolean {
+  if (UNSAFE.test(value))
+    return true
+  try {
+    return UNSAFE.test(decodeURIComponent(value))
+  }
+  catch {
+    return true
+  }
+}
+
 /**
  * Where the sign-in screen goes after sign-in. Only in-app paths are accepted, so a crafted
  * link cannot send the guest to another site or loop back into sign-in.
@@ -7,7 +22,34 @@ export function safeReturnTo(value: string | undefined): string {
     !value
     || !value.startsWith('/')
     || value.startsWith('//')
-    || value.startsWith('/sign-in')
+    || isUnsafe(value)
+  ) {
+    return '/account'
+  }
+
+  // The server has no `window`; the base only has to be the same one the parsed address is compared with.
+  const origin = typeof window === 'undefined' ? 'http://localhost' : window.location.origin
+  let url: URL
+
+  try {
+    url = new URL(value, origin)
+  }
+  catch {
+    return '/account'
+  }
+  let path: string
+
+  try {
+    path = decodeURIComponent(url.pathname).toLowerCase()
+  }
+  catch {
+    return '/account'
+  }
+  if (
+    url.origin !== origin
+    || !path.startsWith('/')
+    || path.startsWith('//')
+    || path.startsWith('/sign-in')
   ) {
     return '/account'
   }
@@ -22,7 +64,7 @@ export function safeReturnTo(value: string | undefined): string {
 export function signInUrl(returnTo: string): string {
   const search = new URLSearchParams({ returnTo })
 
-  return `${window.location.origin}${window.location.pathname}#/sign-in?${search}`
+  return `${window.location.origin}/sign-in?${search}`
 }
 
 /**

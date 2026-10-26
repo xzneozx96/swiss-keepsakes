@@ -1,5 +1,5 @@
 /**
- * Lab: discovery-home hero options, compared on #/lab/hero. Each option keeps the real
+ * Lab: discovery-home hero options, compared on /lab/hero. Each option keeps the real
  * top row (logo, global search, cart). To promote one into Hero it still needs the
  * forwarded end ref (collapsing bar) and -mx-4 against the home's side padding.
  * Rules: Swiss red only for actions; no live data except the Luzerne clock; EN + DE.

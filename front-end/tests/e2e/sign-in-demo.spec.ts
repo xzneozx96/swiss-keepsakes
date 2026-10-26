@@ -6,7 +6,7 @@ test('[E2.1] demo mode signs in with any 6 digits and never loads the auth clien
   const requested: string[] = []
 
   page.on('request', request => requested.push(request.url()))
-  await page.goto('/#/sign-in?returnTo=/account')
+  await page.goto('/sign-in?returnTo=/account')
   await page.getByRole('button', { name: 'Email me a code' }).click()
   await page.locator('#sign-in-code').pressSequentially('123456')
 

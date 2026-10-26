@@ -1,9 +1,11 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "@playwright/test";
 
-const port = Number(process.env.E2E_PORT ?? 4317);
+const port = Number(process.env.E2E_PORT ?? 5429);
 const frontEnd = fileURLToPath(new URL("../front-end", import.meta.url));
-const dist = process.env.E2E_DIST ?? `${frontEnd}/dist`;
+// The Start build: a Nitro output folder (`server/index.mjs` beside `public/`). `pnpm e2e` builds it first.
+// E2E_DIST is a Nitro output folder (it held a static `dist` before E3.2).
+const output = process.env.E2E_DIST ?? `${frontEnd}/.output`;
 const phone = { viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 };
 
 export default defineConfig({
@@ -23,8 +25,8 @@ export default defineConfig({
     { name: "phone-de", use: { ...phone, locale: "de-CH" } },
   ],
   webServer: {
-    command: `pnpm exec vite preview --outDir "${dist}" --port ${port} --strictPort`,
-    cwd: frontEnd,
+    command: `node "${output}/server/index.mjs"`,
+    env: { PORT: String(port), HOST: "127.0.0.1" },
     url: `http://localhost:${port}/`,
     reuseExistingServer: false,
     timeout: 60_000,

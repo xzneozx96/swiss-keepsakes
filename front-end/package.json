@@ -11,7 +11,6 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
-    "build:artifact": "pnpm build && node scripts/artifact-page.mjs",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "verify:routes": "node scripts/verify/compare-builds.mjs",
@@ -29,7 +28,8 @@
     "@sk/i18n": "workspace:*",
     "@tanstack/history": "^1.162.5",
     "@tanstack/react-query": "^5.104.3",
-    "@tanstack/react-router": "^1.170.44",
+    "@tanstack/react-router": "^1.170.46",
+    "@tanstack/react-start": "1.169.4",
     "@tiptap/pm": "^3.32.0",
     "@tiptap/react": "^3.32.0",
     "@tiptap/starter-kit": "^3.32.0",
@@ -37,6 +37,7 @@
     "better-auth": "1.7.11",
     "clsx": "2.1.1",
     "maplibre-gl": "^6.14.0",
+    "nitro": "3.0.260903-beta",
     "qrcode.react": "4.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -53,7 +54,6 @@
     "@playwright/test": "^1.64.1",
     "@rolldown/plugin-babel": "0.2.4",
     "@tailwindcss/vite": "4.3.3",
-    "@tanstack/router-plugin": "^1.168.45",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.3",
@@ -75,7 +75,7 @@
     "tailwind-variants": "3.3.1",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
-    "vite": "8.3.1",
+    "vite": "8.3.4",
     "vitest": "^4.1.12"
   }
 }

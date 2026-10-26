@@ -69,10 +69,10 @@ const factLabels: Record<string, MessageKey> = {
 }
 
 /**
- * M04 is built in step 1.11, so its route is not in the typed route tree yet. Hash history
- * follows a plain anchor; 1.11 can swap this for a typed Link to /store/orders/$orderId.
+ * M04 is built in step 1.11, so its route is not in the typed route tree yet. A plain anchor
+ * to the path works under browser history; 1.11 can swap this for a typed Link to /store/orders/$orderId.
  */
-export const orderDetailHref = (order: Order) => `#/store/orders/${order.id}`
+export const orderDetailHref = (order: Order) => `/store/orders/${order.id}`
 
 /**
  * M03 Gift orders: tab labels with counts and the selected tab's rows. Open tabs list the

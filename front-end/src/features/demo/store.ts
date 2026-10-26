@@ -77,14 +77,22 @@ export interface DemoStore extends DemoActions {
   getStorageFull: () => boolean
   subscribe: (listener: () => void) => () => void
   save: () => void
+  /** The state the store started with: what the server rendered. */
+  getInitialState: () => DemoState
+  /** Replaces the state with the saved one, starts saving and saves it now, so a first visit writes the copy and the clock survives a reload. */
+  restore: (saved: DemoState) => void
 }
 
-export function createDemoStore(initial: DemoState): DemoStore {
+/** `persist: false` is for a store that only stands in until `restore` gives it the saved state: it never writes the browser's copy. */
+export function createDemoStore(initial: DemoState, { persist = true } = {}): DemoStore {
   const listeners = new Set<() => void>()
   let state = initial
+  let persisting = persist
   let storageFull = false
 
   const save = () => {
+    if (!persisting)
+      return
     const full = writeStored(STORAGE_KEY, withoutSession(state)) === 'full'
 
     if (full === storageFull)
@@ -117,6 +125,13 @@ export function createDemoStore(initial: DemoState): DemoStore {
       }
     },
     save,
+    getInitialState: () => initial,
+    restore(saved) {
+      state = saved
+      persisting = true
+      save()
+      listeners.forEach(notify => notify())
+    },
     update,
     setRole: role => update(s => ({ ...s, role })),
     // Keeps the current role so the presenter stays where they are.

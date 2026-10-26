@@ -35,7 +35,8 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   use: {
-    baseURL: `http://localhost:${PORT}`,
+    // E2E_BASE_URL points the demo specs at another server, e.g. a production build.
+    baseURL: process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

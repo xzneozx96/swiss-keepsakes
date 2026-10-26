@@ -34,7 +34,7 @@ function languageOf(testInfo: { project: { name: string } }): Language {
 }
 
 async function requestCode(page: Page, language: Language, email: string, returnTo = '/account') {
-  await page.goto(`/#/sign-in?returnTo=${encodeURIComponent(returnTo)}`)
+  await page.goto(`/sign-in?returnTo=${encodeURIComponent(returnTo)}`)
   await page.getByRole('textbox', { name: /e-?mail/i }).fill(email)
   await page.getByRole('button', { name: words[language].send }).click()
   await expect(page.locator('#sign-in-code')).toBeVisible()
@@ -73,7 +73,7 @@ test('[E2.1][AC01] signs in with the emailed code, stays signed in across a relo
   })
   const email = await signIn(page, language)
 
-  await expect(page).toHaveURL(/#\/account$/)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/account$/)
   await page.reload()
   await expect(page.getByRole('button', { name: words[language].signOut })).toBeVisible()
 
@@ -203,21 +203,21 @@ test('[E2.1][AC01] a failed Google return shows an error and cleans the address'
       body: `<script>location.replace(${JSON.stringify(callback.toString())})</script>`,
     })
   })
-  await page.goto('/#/sign-in?returnTo=%2Fcart%2Freview')
+  await page.goto('/sign-in?returnTo=%2Fcart%2Freview')
   await page.getByRole('button', { name: t.google }).click()
 
   await expect(page.getByText(t.googleFailed)).toBeVisible()
   expect(consent?.searchParams.get('redirect_uri')).toBe(`${SPA_ORIGIN}/api/auth/callback/google`)
   expect(consent?.searchParams.get('client_id')).toContain('e2e-google-client-id')
   // The error is gone from the address and the return path stays, so a second try still comes back to the cart.
-  await expect(page).toHaveURL(`${SPA_ORIGIN}/#/sign-in?returnTo=%2Fcart%2Freview`)
+  await expect(page).toHaveURL(`${SPA_ORIGIN}/sign-in?returnTo=%2Fcart%2Freview`)
   await expect(page.getByRole('button', { name: t.google })).toBeEnabled()
 })
 
 test('[E2.1][AC01] the Google button is not stuck pending after a synthetic pageshow with persisted set (a real bfcache restore is not driven)', async ({ page }, testInfo) => {
   const t = words[languageOf(testInfo)]
 
-  await page.goto('/#/sign-in')
+  await page.goto('/sign-in')
   await page.route('https://accounts.google.com/**', route => route.abort())
   await page.getByRole('button', { name: t.google }).click()
   await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })))
@@ -231,7 +231,7 @@ test('[E2.1][AC01] a sign-out in another tab and a revoked session clear the sig
   const email = await signIn(page, language)
   const other = await context.newPage()
 
-  await other.goto('/#/account')
+  await other.goto('/account')
   await expect(other.getByRole('button', { name: t.signOut })).toBeVisible()
 
   await page.getByRole('button', { name: t.signOut }).click()

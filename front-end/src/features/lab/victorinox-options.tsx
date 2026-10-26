@@ -1,6 +1,6 @@
 /**
  * Lab: five competing layouts for the Victorinox partner section on the guest home (C01),
- * compared on #/lab/victorinox. This file holds the shared pieces and options V1 and V2;
+ * compared on /lab/victorinox. This file holds the shared pieces and options V1 and V2;
  * V3 to V5 are in victorinox-options-2.tsx. Lab-only copy is written in English.
  */
 import type { ProductCardProps } from '@/features/catalog/components/product-card'

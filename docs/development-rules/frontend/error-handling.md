@@ -23,7 +23,7 @@ Read this when you show an error, a notice or a toast, or when a call can fail.
 
 ## Degrade, don't break
 
-A failure in something optional must not blank the app. Example: if the German dictionary chunk cannot load, `front-end/src/main.tsx` starts in English, and a language switch that fails leaves the current language. Do the same for any lazy part that is not required to start.
+A failure in something optional must not blank the app. Example: if the German dictionary chunk cannot load, `restoreOnce` in `front-end/src/app-providers.tsx` starts in English, and a language switch that fails leaves the current language. Do the same for any lazy part that is not required to start.
 
 ## Not covered yet
 

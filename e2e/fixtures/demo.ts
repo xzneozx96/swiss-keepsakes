@@ -32,7 +32,9 @@ export const test = base.extend<Fixtures>({
     }, language);
 
     await use(async (role = "guest") => {
-      await page.goto("/#/");
+      await page.goto("/");
+      // Client-only today (every route except the root and the test routes is client-only), so the prototype bar appears after the client boots. E3.3 must change this wait when it sets ssr:true.
+      await expect(page.getByRole("region", { name: "Prototype controls" })).toBeVisible();
       await expect(page.getByRole("navigation").first()).toBeVisible();
       await page.evaluate((nextRole) => {
         const state = JSON.parse(localStorage.getItem("sk.demo")!);
@@ -44,6 +46,7 @@ export const test = base.extend<Fixtures>({
         localStorage.setItem("sk.demo", JSON.stringify(state));
       }, role);
       await page.reload();
+      await expect(page.getByRole("region", { name: "Prototype controls" })).toBeVisible();
       await expect(page.getByRole("navigation").first()).toBeVisible();
 
       return page;
@@ -53,6 +56,10 @@ export const test = base.extend<Fixtures>({
 
 export { expect };
 
-export const goto = async (page: Page, hash: string) => {
-  await page.evaluate((h) => { location.hash = h; }, hash);
+/** Moves to an app path without a reload, as a tap on a link does (browser history). */
+export const goto = async (page: Page, path: string) => {
+  await page.evaluate((p) => {
+    window.history.pushState({}, "", p);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  }, path);
 };

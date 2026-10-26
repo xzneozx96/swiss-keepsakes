@@ -110,9 +110,9 @@ export function PrototypeBar() {
   }
 
   const sourceId = attributedPartnerId(referralVisits, demoNow(clockStartedAt))
-  // Hash routing, so the scannable link is this deployment's origin plus #/r/{code}.
+  // The scannable link is this deployment's origin plus /r/{code}.
   const qrUrl = (code: string) =>
-    `${window.location.origin}${window.location.pathname}#/r/${code}`
+    `${window.location.origin}/r/${code}`
   const qrPartner = partners.find(p => p.code === qrCode)
 
   const sourceName

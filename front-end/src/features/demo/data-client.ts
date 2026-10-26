@@ -25,6 +25,7 @@ import { reviewsQueries } from '@/features/reviews/api/queries'
 import { createStoresClient } from '@/features/stores/api/api-client'
 import { createToursDemoClient } from '@/features/tours/api/demo-client'
 import { toursQueries } from '@/features/tours/api/queries'
+import { createSeedState } from './seed'
 import { createDemoStore, loadDemoState } from './store'
 
 /** A collection of the demo data, read into the cache by its query. */
@@ -160,20 +161,48 @@ function bridgeStore(
   })
 }
 
-/**
- * The demo's store, data client and query client. `ready` settles once every collection has been
- * read into the cache, so no screen ever waits on a demo read; render after it.
- */
-export function startDemo() {
-  const store = createDemoStore(loadDemoState())
+function readCollections(queryClient: QueryClient, dataClient: DataClient) {
+  return Promise.all(
+    queriedKeys.map(key => collections[key].read(queryClient, dataClient)),
+  )
+}
+
+function assemble(store: DemoStore) {
   const dataClient = createDemoDataClient(store)
   const queryClient = createDemoQueryClient()
 
   bridgeStore(store, queryClient, dataClient)
 
-  const ready = Promise.all(
-    queriedKeys.map(key => collections[key].read(queryClient, dataClient)),
-  )
+  return { store, dataClient, queryClient }
+}
 
-  return { store, dataClient, queryClient, ready }
+/**
+ * The demo's store, data client and query client, loaded from the browser's saved copy. `ready` settles
+ * once every collection has been read into the cache. No route uses it any more (a page starts with
+ * `startSeedDemo`); the unit tests use it to get a ready demo without a server render.
+ */
+export function startDemo() {
+  const parts = assemble(createDemoStore(loadDemoState()))
+
+  return { ...parts, ready: readCollections(parts.queryClient, parts.dataClient) }
+}
+
+/**
+ * The demo's store, data client and query client for a page the server renders: the seed, with nothing read
+ * from or written to storage and no collection read, so the server and the browser's first render show the
+ * same thing. Each call makes its own store, so a server never shares one between requests. `restore` then
+ * puts the saved state in the store and saves it, once the page has hydrated, and settles when every
+ * collection has been read.
+ */
+export function startSeedDemo() {
+  const parts = assemble(createDemoStore(createSeedState(), { persist: false }))
+
+  return {
+    ...parts,
+    restore: () => {
+      parts.store.restore(loadDemoState())
+
+      return readCollections(parts.queryClient, parts.dataClient)
+    },
+  }
 }

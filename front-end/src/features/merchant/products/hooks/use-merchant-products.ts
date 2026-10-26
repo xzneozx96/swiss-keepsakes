@@ -81,7 +81,7 @@ export function useMerchantProducts() {
 
     return {
       id: product.id,
-      href: `#/store/products/gifts/${product.id}`,
+      href: `/store/products/gifts/${product.id}`,
       name: pick(product.name),
       photo: product.photo,
       subcategoryId: product.subcategoryId,
@@ -113,7 +113,7 @@ export function useMerchantProducts() {
 
   const tourRow = (tour: Tour): ProductRow => ({
     id: tour.id,
-    href: `#/store/products/tours/${tour.id}`,
+    href: `/store/products/tours/${tour.id}`,
     name: pick(tour.name),
     photo: tour.photos[0],
     meta: t('products.duration', {

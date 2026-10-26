@@ -5,9 +5,9 @@ import { useRef } from 'react'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 
-/** The partner's public referral link; hash routing, so it works on any deployment. */
+/** The partner's public referral link, on this deployment's origin. */
 export function referralUrl(code: string) {
-  return `${window.location.origin}${window.location.pathname}#/r/${code}`
+  return `${window.location.origin}/r/${code}`
 }
 
 /**

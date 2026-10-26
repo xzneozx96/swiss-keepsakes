@@ -82,7 +82,7 @@ export function useMerchantComments(filter: CommentFilter[]) {
         posted: time.format(new Date(c.createdAt)),
         article: {
           title: article?.title ?? c.articleId,
-          href: `#/store/content/articles/${encodeURIComponent(c.articleId)}`,
+          href: `/store/content/articles/${encodeURIComponent(c.articleId)}`,
           language: article?.language ?? 'en',
           code: (article?.language ?? 'en').toUpperCase(),
         },

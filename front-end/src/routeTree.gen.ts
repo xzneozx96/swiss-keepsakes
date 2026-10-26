@@ -13,6 +13,8 @@ import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as InvitationRouteImport } from './routes/invitation'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SsrCheckRouteImport } from './routes/ssr-check'
+import { Route as SsrCheckBRouteImport } from './routes/ssr-check-b'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as GuestIndexRouteImport } from './routes/_guest/index'
 import { Route as GuestAccountRouteImport } from './routes/_guest/account'
@@ -102,6 +104,16 @@ const InvitationRoute = InvitationRouteImport.update({
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SsrCheckRoute = SsrCheckRouteImport.update({
+  id: '/ssr-check',
+  path: '/ssr-check',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SsrCheckBRoute = SsrCheckBRouteImport.update({
+  id: '/ssr-check-b',
+  path: '/ssr-check-b',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoreRoute = StoreRouteImport.update({
@@ -471,6 +483,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
   '/sign-in': typeof SignInRoute
+  '/ssr-check': typeof SsrCheckRoute
+  '/ssr-check-b': typeof SsrCheckBRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
   '/account': typeof GuestAccountRoute
@@ -546,6 +560,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
   '/sign-in': typeof SignInRoute
+  '/ssr-check': typeof SsrCheckRoute
+  '/ssr-check-b': typeof SsrCheckBRoute
   '/account': typeof GuestAccountRoute
   '/cart': typeof GuestCartRoute
   '/credits': typeof GuestCreditsRoute
@@ -621,6 +637,8 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
   '/sign-in': typeof SignInRoute
+  '/ssr-check': typeof SsrCheckRoute
+  '/ssr-check-b': typeof SsrCheckBRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
   '/_guest/account': typeof GuestAccountRoute
@@ -700,6 +718,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/invitation'
     | '/sign-in'
+    | '/ssr-check'
+    | '/ssr-check-b'
     | '/store'
     | '/store/reports'
     | '/account'
@@ -775,6 +795,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/invitation'
     | '/sign-in'
+    | '/ssr-check'
+    | '/ssr-check-b'
     | '/account'
     | '/cart'
     | '/credits'
@@ -849,6 +871,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/invitation'
     | '/sign-in'
+    | '/ssr-check'
+    | '/ssr-check-b'
     | '/store'
     | '/store/reports'
     | '/_guest/account'
@@ -927,6 +951,8 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   InvitationRoute: typeof InvitationRoute
   SignInRoute: typeof SignInRoute
+  SsrCheckRoute: typeof SsrCheckRoute
+  SsrCheckBRoute: typeof SsrCheckBRoute
   StoreRoute: typeof StoreRouteWithChildren
   LabAdviceRoute: typeof LabAdviceRoute
   LabBlogHomeRoute: typeof LabBlogHomeRoute
@@ -979,6 +1005,20 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ssr-check': {
+      id: '/ssr-check'
+      path: '/ssr-check'
+      fullPath: '/ssr-check'
+      preLoaderRoute: typeof SsrCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ssr-check-b': {
+      id: '/ssr-check-b'
+      path: '/ssr-check-b'
+      fullPath: '/ssr-check-b'
+      preLoaderRoute: typeof SsrCheckBRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/store': {
@@ -1619,6 +1659,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   InvitationRoute: InvitationRoute,
   SignInRoute: SignInRoute,
+  SsrCheckRoute: SsrCheckRoute,
+  SsrCheckBRoute: SsrCheckBRoute,
   StoreRoute: StoreRouteWithChildren,
   LabAdviceRoute: LabAdviceRoute,
   LabBlogHomeRoute: LabBlogHomeRoute,
@@ -1645,3 +1687,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -230,7 +230,7 @@ function useLabRows(): LabOrderRow[] {
 
       return {
         id: order.id,
-        href: `#/store/orders/${order.id}`,
+        href: `/store/orders/${order.id}`,
         reference: order.ref,
         guestName,
         initial: guestName.charAt(0),

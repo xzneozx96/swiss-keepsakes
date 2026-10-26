@@ -19,7 +19,7 @@ export interface RequestStatus {
 
 export interface AdviceRow {
   id: string
-  /** Opens the request at `#/store/requests/advice/{id}`, which marks it read. */
+  /** Opens the request at `/store/requests/advice/{id}`, which marks it read. */
   href: string
   email: string
   /** "German · 14.10.2026, 09:00". */
@@ -72,7 +72,7 @@ export function useMerchantRequests() {
 
     return {
       id: r.id,
-      href: `#/store/requests/advice/${r.id}`,
+      href: `/store/requests/advice/${r.id}`,
       email: r.email,
       meta: t('merchantRequests.meta', {
         language: languageName(r.language),

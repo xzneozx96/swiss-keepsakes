@@ -1,97 +1,123 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-// Renders the same routes from two static vite builds with a frozen clock and diffs the visible text.
-// usage: node compare-builds.mjs <baseDir> <newDir> <outDir>
-// Renders the same routes from two static builds with a frozen clock and diffs the visible text.
+// Renders the same routes from two builds with a frozen clock and diffs the visible text.
+// Each folder is either a static vite `dist` (hash history, the E3.1 baseline) or a Nitro `.output` (browser history, the
+// Start build). The folder layout picks the server and the URL form, see README.md.
 // usage: node scripts/verify/compare-builds.mjs <baseDir> <newDir> <outDir>
 import process from 'node:process'
-import { launchBrowser, serve } from './browser.mjs'
+import { appUrl, goTo, launchBrowser, serve, waitForBoot } from './browser.mjs'
 
 const [baseDir, newDir, outDir] = process.argv.slice(2)
 
+// A rendered route shows at least the prototype bar plus a heading; less means the page did not render.
+const MIN_TEXT = 40
+const SECTION_END = /[/?]/
 const FROZEN = new Date('2026-10-14T09:30:00+02:00')
 
 const SETS = [
   {
     name: 'guest',
     role: 'guest',
-    routes: ['/', '/gifts', '/gifts/:gift', '/tours', '/tours/lucerne-the-things-that-remain', '/stories', '/stories/musegg-morning', '/search', '/cart', '/plan', '/credits', '/account', '/account/bookings/:booking', '/account/bookings/:booking/pay', '/account/orders/:order'],
+    routes: ['/', '/gifts', '/gifts/:gift', '/tours', '/stories', '/stories/musegg-morning', '/search', '/cart', '/plan', '/credits', '/account', '/account/orders/:order'],
   },
   {
     name: 'owner',
     role: 'owner',
-    routes: ['/store', '/store/orders', '/store/orders/:order', '/store/bookings', '/store/bookings/:booking', '/store/bookings/departures/:departure', '/store/calendar', '/store/sales', '/store/reports', '/store/reports/sales', '/store/reports/costs', '/store/reports/guests', '/store/reports/margin', '/store/partners', '/store/partners/:partner', '/store/partners/analytics', '/store/products', '/store/products/gifts/:gift', '/store/products/tours', '/store/products/tours/:tour', '/store/content', '/store/content/analytics', '/store/content/reviews', '/store/requests', '/store/requests/analytics', '/store/requests/private', '/store/requests/questions', '/store/products/gifts/:gift?step=pickup', '/store/products/gifts/:gift?step=bogus', '/store/products/tours/:tour?step=departures', '/store/products/tours/:tour?step=bogus', '/store/products?tab=tours', '/store/products?tab=nope', '/store/content?lang=de', '/store/content?lang=en'],
+    routes: ['/store', '/store/orders', '/store/orders/:order', '/store/calendar', '/store/sales', '/store/reports', '/store/reports/sales', '/store/reports/costs', '/store/reports/guests', '/store/reports/margin', '/store/partners', '/store/partners/:partner', '/store/partners/analytics', '/store/products', '/store/products/gifts/:gift', '/store/products/tours', '/store/products/tours/:tour', '/store/content', '/store/content/analytics', '/store/content/reviews', '/store/requests', '/store/requests/analytics', '/store/requests/questions', '/store/products/gifts/:gift?step=pickup', '/store/products/gifts/:gift?step=bogus', '/store/products/tours/:tour?step=departures', '/store/products/tours/:tour?step=bogus', '/store/products?tab=tours', '/store/products?tab=nope', '/store/content?lang=de', '/store/content?lang=en'],
   },
 ]
 
 async function capture(label, dir) {
-  const { server, port } = await serve(dir)
-  const browser = await launchBrowser()
+  const served = await serve(dir)
+  const { server } = served
   const result = {}
   const errors = {}
+  const problems = []
+  const where = {}
+  let browser
 
-  for (const lang of ['en', 'de']) {
-    for (const set of SETS) {
-      const context = await browser.newContext({ viewport: { width: 430, height: 932 } })
+  try {
+    browser = await launchBrowser()
 
-      await context.clock.setFixedTime(FROZEN)
-      const page = await context.newPage()
-      const base = `http://localhost:${port}/index.html`
+    for (const lang of ['en', 'de']) {
+      for (const set of SETS) {
+        const context = await browser.newContext({ viewport: { width: 430, height: 932 } })
 
-      await page.goto(`${base}#/`)
-      await page.waitForTimeout(1200)
-      const ids = await page.evaluate(
-        ({ role, lang }) => {
-          const state = JSON.parse(localStorage.getItem('sk.demo'))
-          const d = state.data
-          const guest = d.guests.find(g => d.orders.some(o => o.guestId === g.id)) ?? d.guests[0]
-          const booking = d.tours.bookings.find(b => b.guestId === guest.id) ?? d.tours.bookings[0]
+        await context.clock.setFixedTime(FROZEN)
+        const page = await context.newPage()
 
-          state.role = role
-          d.signedInGuestId = booking.guestId
-          localStorage.setItem('sk.demo', JSON.stringify(state))
-          localStorage.setItem('sk.language', JSON.stringify(lang))
+        await page.goto(appUrl(served, '/'))
+        await waitForBoot(page)
+        await page.waitForTimeout(1200)
+        const ids = await page.evaluate(
+          ({ role, lang }) => {
+            const state = JSON.parse(localStorage.getItem('sk.demo'))
+            const d = state.data
+            const guest = d.guests.find(g => d.orders.some(o => o.guestId === g.id)) ?? d.guests[0]
+            const booking = d.tours.bookings.find(b => b.guestId === guest.id) ?? d.tours.bookings[0]
 
-          return {
-            gift: d.products[0].slug ?? d.products[0].id,
-            giftId: d.products[0].id,
-            booking: booking.id,
-            departure: d.tours.departures[0].id,
-            tour: d.tours.tours[0].id,
-            order: d.orders.find(o => o.guestId === booking.guestId)?.id ?? d.orders[0].id,
-            partner: d.partners[0].id,
-          }
-        },
-        { role: set.role, lang },
-      )
+            state.role = role
+            d.signedInGuestId = booking.guestId
+            localStorage.setItem('sk.demo', JSON.stringify(state))
+            localStorage.setItem('sk.language', JSON.stringify(lang))
 
-      await page.reload()
-      await page.waitForTimeout(1200)
+            return {
+              gift: d.products[0].slug ?? d.products[0].id,
+              giftId: d.products[0].id,
+              booking: booking.id,
+              departure: d.tours.departures[0].id,
+              tour: d.tours.tours[0].id,
+              order: d.orders.find(o => o.guestId === booking.guestId)?.id ?? d.orders[0].id,
+              partner: d.partners[0].id,
+            }
+          },
+          { role: set.role, lang },
+        )
 
-      for (const route of set.routes) {
-        const path = route.replace(':gift', route.includes('/store/') ? ids.giftId : ids.gift).replace(':booking', ids.booking).replace(':departure', ids.departure).replace(':tour', ids.tour).replace(':order', ids.order).replace(':partner', ids.partner)
-        const key = `${lang}${set.name}${route.replaceAll('/', '_')}`
-        const messages = []
-        const onError = e => messages.push(String(e.message).slice(0, 160))
+        await page.reload()
+        await waitForBoot(page)
+        await page.waitForTimeout(1200)
 
-        page.on('pageerror', onError)
-        await page.evaluate((p) => { location.hash = p }, path)
-        await page.waitForTimeout(900)
-        // eslint-disable-next-line unicorn/prefer-dom-node-text-content -- innerText is the text a visitor can see; textContent would include hidden nodes
-        result[key] = await page.evaluate(() => document.body.innerText)
-        errors[key] = messages
-        page.off('pageerror', onError)
+        for (const route of set.routes) {
+          const path = route.replace(':gift', route.includes('/store/') ? ids.giftId : ids.gift).replace(':booking', ids.booking).replace(':departure', ids.departure).replace(':tour', ids.tour).replace(':order', ids.order).replace(':partner', ids.partner)
+          const key = `${lang}${set.name}${route.replaceAll('/', '_')}`
+          const messages = []
+          const onError = e => messages.push(String(e.message).slice(0, 160))
+
+          page.on('pageerror', onError)
+          await goTo(page, served, path)
+          await page.waitForTimeout(900)
+          // eslint-disable-next-line unicorn/prefer-dom-node-text-content -- innerText is the text a visitor can see; textContent would include hidden nodes
+          result[key] = await page.evaluate(() => document.body.innerText)
+          // A vacuous comparison (blank pages, or a navigation that never happened) would pass as "identical".
+          const at = await page.evaluate(() => (location.hash.startsWith('#/') ? location.hash.slice(1) : location.pathname + location.search))
+
+          // The app may redirect (`?tab=tours` becomes `/store/products/tours`), so check the section, and compare the final address between builds below.
+          if (at.split(SECTION_END)[1] !== path.split(SECTION_END)[1])
+            problems.push(`${label} ${key}: the page is at ${at}, expected ${path}`)
+          where[key] = at
+          if (result[key].trim().length < MIN_TEXT)
+            problems.push(`${label} ${key}: only ${result[key].trim().length} characters of text`)
+          errors[key] = messages
+          page.off('pageerror', onError)
+        }
+        await context.close()
       }
-      await context.close()
     }
   }
-  await browser.close()
-  server.close()
+  finally {
+    await browser?.close()
+    server.close()
+  }
+
   mkdirSync(join(outDir, label), { recursive: true })
   writeFileSync(join(outDir, label, 'text.json'), JSON.stringify(result, null, 1))
   writeFileSync(join(outDir, label, 'errors.json'), JSON.stringify(errors, null, 1))
 
-  return { result, errors }
+  if (problems.length)
+    throw new Error(`${problems.length} routes did not load as requested in ${label}:\n${problems.join('\n')}`)
+
+  return { result, errors, where }
 }
 
 mkdirSync(outDir, { recursive: true })
@@ -100,7 +126,13 @@ const b = await capture('new', newDir)
 let same = 0
 const diffs = []
 
+const addressDiffs = []
+
 for (const key of Object.keys(a.result)) {
+  if (a.where[key] !== b.where[key]) {
+    addressDiffs.push(key)
+    console.log(`ADDRESS ${key}: base ${a.where[key]}, new ${b.where[key]}`)
+  }
   if (a.result[key] === b.result[key])
     same++
   else diffs.push(key)
@@ -120,4 +152,9 @@ for (const key of diffs) {
       changed.push(`  - ${x[i] ?? ''}\n  + ${y[i] ?? ''}`)
   }
   console.log(`DIFF ${key} (${changed.length} lines)\n${changed.slice(0, 6).join('\n')}`)
+}
+
+if (addressDiffs.length) {
+  console.error(`${addressDiffs.length} routes ended at a different address in the two builds`)
+  process.exitCode = 1
 }

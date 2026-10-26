@@ -28,3 +28,4 @@ test-results/
 playwright-report/
 playwright-results.xml
 blob-report/
+.output

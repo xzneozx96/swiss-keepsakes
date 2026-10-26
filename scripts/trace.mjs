@@ -9,6 +9,9 @@
 // a missing file makes every story Backlog.
 // A spike story has no automated test: its acceptance names a docs/spikes/SP<n>.md proof, and that file existing
 // satisfies the check.
+// A skip, fixme or todo test is not counted: it is listed as switched-off, and a Verified or Done story with only switched-off
+// tests fails the run like a story with no test, with a note that its tests are switched off.
+// it.each([...])('title') and test.each`table`('title') count as one test; test.describe.skip() and describe.fixme() switch off the block.
 // Exit 0 ok, 1 when a Verified or Done story has no test, 2 on a malformed story row or unreadable input.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -17,7 +20,8 @@ import { fileURLToPath } from "node:url";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const fixtures = join(repoRoot, "scripts", "fixtures");
 const TEST_FILE = /\.(?:[cm]?[jt]sx?)$/;
-const TEST_CALL = /\b(test|it|describe)(?:\.\w+)*\(\s*(["'`])((?:\\.|(?!\2).)*)\2/g;
+const TEST_CALL = /\b(test|it|describe)((?:\.\w+)*)(?:(?<=\.each)(?:\((?:[^()]|\([^()]*\))*\)|`[^`]*`))?\(\s*(["'`])((?:\\.|(?!\3).)*)\3/g;
+const SWITCHED_OFF = /\.(?:skip|fixme|todo)\b/;
 const SPIKE_PROOF = /docs\/spikes\/SP\d+\.md/;
 const STORY_ID = /^E\d+\.\d+$/;
 
@@ -96,15 +100,17 @@ export function collectTests(roots, stop = repoRoot) {
       const blocks = [];
 
       for (const match of source.matchAll(TEST_CALL)) {
-        const [, kind, , title] = match;
-        const inherited = blocks.filter((b) => match.index < b.end).flatMap((b) => b.ids);
+        const [, kind, modifiers, , title] = match;
+        const enclosing = blocks.filter((b) => match.index < b.end);
+        const inherited = enclosing.flatMap((b) => b.ids);
+        const off = SWITCHED_OFF.test(modifiers) || enclosing.some((b) => b.off);
         const own = [...title.matchAll(/\[(E\d+\.\d+)\]/g)].map((m) => m[1]);
 
-        if (kind === "describe") {
-          blocks.push({ ids: own, end: blockEnd(source, match.index + match[0].length) });
+        if (kind === "describe" || /\.describe\b/.test(modifiers)) {
+          blocks.push({ ids: own, off, end: blockEnd(source, match.index + match[0].length) });
           continue;
         }
-        for (const id of new Set([...own, ...inherited])) found.push({ id, title, file, runs });
+        for (const id of new Set([...own, ...inherited])) found.push({ id, title, file, runs, off });
       }
     }
   }
@@ -120,24 +126,31 @@ export function trace({ plan, testRoots, statusPath }) {
   const lines = [];
   const warnings = [];
   const missing = [];
+  const switchedOffOnly = [];
 
   for (const story of stories) {
-    const mine = tests.filter((t) => t.id === story.id);
+    const all = tests.filter((t) => t.id === story.id);
+    const mine = all.filter((t) => !t.off);
     const count = mine.reduce((n, t) => n + t.runs, 0);
+    const off = all.length - mine.length;
     const status = statuses[story.id] ?? "Backlog";
 
     const proof = story.acceptance.match(SPIKE_PROOF)?.[0];
     const proofed = proof && existsSync(join(repoRoot, proof));
 
-    lines.push(`${story.id} tests=${count} status=${status}${proofed ? ` proof=${proof}` : ""}`);
+    lines.push(`${story.id} tests=${count}${off ? ` switched-off=${off}` : ""} status=${status}${proofed ? ` proof=${proof}` : ""}`);
     for (const t of mine) lines.push(`  ${t.title}${t.runs > 1 ? ` (x${t.runs} projects)` : ""}`);
-    if (count === 0 && !proofed && (status === "Verified" || status === "Done")) missing.push(story.id);
+    for (const t of all.filter((t) => t.off)) lines.push(`  switched off: ${t.title}`);
+    if (count === 0 && !proofed && (status === "Verified" || status === "Done")) {
+      missing.push(story.id);
+      if (off > 0) switchedOffOnly.push(story.id);
+    }
   }
   for (const t of tests) {
     if (!known.has(t.id)) warnings.push(`warning: unknown story ID ${t.id} in test title "${t.title}" (${t.file})`);
   }
 
-  return { stories, lines, warnings, missing };
+  return { stories, lines, warnings, missing, switchedOffOnly };
 }
 
 function main(argv) {
@@ -173,6 +186,10 @@ function main(argv) {
   for (const w of result.warnings) console.error(w);
   if (result.missing.length) {
     console.error(`error: Verified or Done stories without a test: ${result.missing.join(", ")}`);
+    if (result.switchedOffOnly.length) {
+      console.error(`note: for these stories the only tests are switched off (skip, fixme, todo): ${result.switchedOffOnly.join(", ")}`);
+    }
+
     return 1;
   }
 
