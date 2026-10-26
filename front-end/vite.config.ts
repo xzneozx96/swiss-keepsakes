@@ -3,8 +3,9 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
-import { tanstackRouter } from '@tanstack/router-plugin/vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
 
 // The API's address for the dev and preview servers. The browser only ever calls /api on its own origin.
@@ -12,16 +13,17 @@ const apiProxy = { '/api': process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:500
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // Relative asset paths so the static build runs from any folder or host.
-  base: './',
+  // Browser history needs absolute asset paths, so a deep link such as /store/orders loads its files.
+  base: '/',
   resolve: {
     tsconfigPaths: true,
   },
   server: { port: 3002, strictPort: true, proxy: apiProxy },
   preview: { proxy: apiProxy },
   plugins: [
-    // TanStack Router's plugin must come before @vitejs/plugin-react.
-    tanstackRouter({ target: 'react', autoCodeSplitting: true }),
+    // TanStack Start (it includes the router plugin) must come before @vitejs/plugin-react.
+    // Vitest renders components in jsdom and needs neither the server build nor its environments.
+    ...(process.env.VITEST ? [] : [tanstackStart(), nitro()]),
     react(),
     // React Compiler: memoizes every component and hook at build time, so no hand-written
     // memo is needed. The react-hooks lint rules keep the code compilable.
