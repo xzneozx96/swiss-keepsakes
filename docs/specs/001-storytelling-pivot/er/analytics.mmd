@@ -1,0 +1,40 @@
+---
+title: schema analytics
+---
+erDiagram
+    direction TB
+    analytics_events["analytics.events"] {
+        uuid session_id PK
+        smallint seq PK
+        timestamptz bucket_hour
+        text name
+        text page_type
+        uuid content_id "id -> story, place, tour or product by page_type; no key by design (DM-10)"
+        text language
+        text referrer_class
+        text segment
+        text[] interests
+        text device_class
+    }
+    analytics_daily_counts["analytics.daily_counts"] {
+        date day UK "unique with name, page_type, content_id, language, referrer_class, segment, device_class"
+        text name UK "unique with day, page_type, content_id, language, referrer_class, segment, device_class"
+        text page_type UK "unique with day, name, content_id, language, referrer_class, segment, device_class"
+        uuid content_id UK "unique with day, name, page_type, language, referrer_class, segment, device_class; id -> same as events.content_id; no key by design (DM-10)"
+        text language UK "unique with day, name, page_type, content_id, referrer_class, segment, device_class"
+        text referrer_class UK "unique with day, name, page_type, content_id, language, segment, device_class"
+        text segment UK "unique with day, name, page_type, content_id, language, referrer_class, device_class"
+        text device_class UK "unique with day, name, page_type, content_id, language, referrer_class, segment"
+        bigint events
+        bigint sessions
+    }
+    analytics_daily_funnels["analytics.daily_funnels"] {
+        date day UK "unique with referrer_class, segment"
+        text referrer_class UK "unique with day, segment"
+        text segment UK "unique with day, referrer_class"
+        bigint story_sessions
+        bigint product_sessions
+        bigint order_submits
+        bigint order_sessions
+    }
+

@@ -1,0 +1,94 @@
+---
+title: schema reviews
+---
+erDiagram
+    direction TB
+    reviews_place_reviews["reviews.place_reviews"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid place_id "id -> content.places"
+        text place_type
+        uuid author_guest_id "id -> identity.guest_profiles"
+        text author_name
+        smallint rating
+        text body
+        text state
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    reviews_story_comments["reviews.story_comments"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid story_group_id FK "-> reviews.story_comments; id -> content.story_groups"
+        uuid parent_id FK "-> reviews.story_comments"
+        boolean is_reply "generated"
+        boolean parent_must_be_root FK "-> reviews.story_comments; generated"
+        text author_kind
+        uuid author_guest_id "id -> identity.guest_profiles"
+        uuid staff_user_id "id -> identity.user"
+        text author_name
+        text body
+        text state
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    reviews_product_ratings["reviews.product_ratings"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid product_id UK "unique with author_guest_id, order_id; id -> catalog.products"
+        uuid order_id UK "unique with author_guest_id, product_id; id -> orders.orders"
+        uuid author_guest_id UK "unique with order_id, product_id; id -> identity.guest_profiles"
+        text author_name
+        smallint rating
+        text body
+        text state
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    reviews_moderation_events["reviews.moderation_events"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid place_review_id FK "-> reviews.place_reviews"
+        uuid story_comment_id FK "-> reviews.story_comments"
+        uuid product_rating_id FK "-> reviews.product_ratings"
+        text action
+        uuid actor_user_id "id -> identity.user"
+        text reason
+        timestamptz at
+    }
+    content_places["content.places (stub)"] {
+        uuid id PK
+    }
+    identity_guest_profiles["identity.guest_profiles (stub)"] {
+        uuid id PK
+    }
+    content_story_groups["content.story_groups (stub)"] {
+        uuid id PK
+    }
+    identity_user["identity.user (stub)"] {
+        uuid id PK
+    }
+    catalog_products["catalog.products (stub)"] {
+        uuid id PK
+    }
+    orders_orders["orders.orders (stub)"] {
+        uuid id PK
+    }
+
+    %% fk: story_comments_parent_fkey
+    reviews_story_comments |o--o{ reviews_story_comments : "reply to (one level)"
+    %% fk: moderation_events_place_review_fkey
+    reviews_place_reviews |o--o{ reviews_moderation_events : "history"
+    %% fk: moderation_events_story_comment_fkey
+    reviews_story_comments |o--o{ reviews_moderation_events : "history"
+    %% fk: moderation_events_product_rating_fkey
+    reviews_product_ratings |o--o{ reviews_moderation_events : "history"
+    content_places ||..o{ reviews_place_reviews : "place_id"
+    identity_guest_profiles ||..o{ reviews_place_reviews : "author_guest_id"
+    content_story_groups ||..o{ reviews_story_comments : "story_group_id"
+    identity_guest_profiles |o..o{ reviews_story_comments : "author_guest_id"
+    identity_user |o..o{ reviews_story_comments : "staff_user_id"
+    catalog_products ||..o{ reviews_product_ratings : "product_id"
+    orders_orders ||..o{ reviews_product_ratings : "order_id"
+    identity_guest_profiles ||..o{ reviews_product_ratings : "author_guest_id"
+    identity_user ||..o{ reviews_moderation_events : "actor_user_id"

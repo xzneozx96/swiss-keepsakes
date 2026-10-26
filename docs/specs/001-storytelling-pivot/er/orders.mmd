@@ -1,0 +1,215 @@
+---
+title: schema orders
+---
+erDiagram
+    direction TB
+    orders_handovers["orders.handovers"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid partner_id "id -> partners.partners"
+        uuid pickup_place_id "id -> catalog.pickup_places"
+        text kind
+        text state
+        text share_code UK
+        time local_time
+        date rule_starts_on
+        date rule_ends_on
+        text created_by_kind
+        uuid created_by_user "id -> identity.user"
+        timestamptz agreed_at
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    orders_handover_occurrences["orders.handover_occurrences"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid handover_id FK, UK "-> orders.handovers; unique with occurrence_date"
+        uuid partner_id FK "-> orders.handovers"
+        text handover_kind FK "-> orders.handovers"
+        timestamptz occurs_at
+        date occurrence_date UK "unique with handover_id; generated"
+        timestamptz closes_orders_at
+        timestamptz group_arrival_at
+        timestamptz group_leaving_at
+        text state
+        timestamptz done_at
+        timestamptz cancelled_at
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    orders_handover_proposals["orders.handover_proposals"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid handover_id FK "-> orders.handovers; -> orders.handover_occurrences"
+        uuid occurrence_id FK "-> orders.handover_occurrences"
+        text proposed_by_kind
+        uuid proposed_by_user "id -> identity.user"
+        timestamptz starts_at
+        time local_time
+        timestamptz group_arrival_at
+        timestamptz group_leaving_at
+        text status
+        timestamptz responded_at
+        uuid responded_by_user "id -> identity.user"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    orders_carts["orders.carts"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid guest_id "id -> identity.guest_profiles"
+        timestamptz linked_at
+        uuid partner_id "id -> partners.partners"
+        text language
+        text status
+        timestamptz completed_at
+        timestamptz last_activity_at
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    orders_cart_lines["orders.cart_lines"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid cart_id FK, UK "-> orders.carts; unique with sku_id, handover_occurrence_id, pickup_place_id, pickup_at, payment_route"
+        uuid sku_id UK "unique with cart_id, handover_occurrence_id, pickup_place_id, pickup_at, payment_route; id -> catalog.skus"
+        integer quantity
+        bigint unit_price_rappen
+        uuid handover_occurrence_id FK, UK "-> orders.handover_occurrences; unique with cart_id, sku_id, pickup_place_id, pickup_at, payment_route"
+        uuid pickup_place_id UK "unique with cart_id, sku_id, handover_occurrence_id, pickup_at, payment_route; id -> catalog.pickup_places"
+        timestamptz pickup_at UK "unique with cart_id, sku_id, handover_occurrence_id, pickup_place_id, payment_route"
+        text payment_route UK "unique with cart_id, sku_id, handover_occurrence_id, pickup_place_id, pickup_at"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    orders_orders["orders.orders"] {
+        uuid id PK
+        uuid store_id UK "unique with ref; id -> identity.stores"
+        bigint display_number "generated"
+        text ref UK "unique with store_id; generated"
+        uuid guest_id FK "-> orders.carts; id -> identity.guest_profiles"
+        text guest_name
+        text guest_email
+        timestamptz guest_erased_at
+        uuid cart_id FK, UK "-> orders.carts; unique with cart_split_key"
+        text cart_split_key UK "unique with cart_id"
+        text language
+        text status
+        text payment_route
+        uuid partner_id FK "-> orders.handover_occurrences; id -> partners.partners"
+        uuid handover_occurrence_id FK "-> orders.handover_occurrences"
+        uuid returned_from_occurrence_id FK "-> orders.handover_occurrences"
+        timestamptz returned_at
+        uuid pickup_place_id "id -> catalog.pickup_places"
+        timestamptz pickup_at
+        bigint total_rappen
+        text accepted_mode
+        timestamptz accepted_at
+        timestamptz first_payment_due_at
+        timestamptz delivered_at
+        timestamptz completed_at
+        uuid completed_by "id -> identity.user"
+        timestamptz cancelled_at
+        text cancelled_reason
+        timestamptz declined_at
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    orders_order_lines["orders.order_lines"] {
+        uuid id PK, UK "unique with store_id"
+        uuid store_id UK "unique with id; id -> identity.stores"
+        uuid order_id FK "-> orders.orders"
+        uuid sku_id "id -> catalog.skus"
+        uuid product_id "id -> catalog.products"
+        text sku_code
+        jsonb product_name
+        jsonb option_values
+        uuid thumbnail_media_id "id -> content.media"
+        integer quantity
+        bigint unit_price_rappen
+        bigint line_total_rappen "generated"
+        numeric_5_4 commission_rate
+        jsonb basis_components
+        timestamptz created_at
+    }
+    orders_handover_receipts["orders.handover_receipts"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid occurrence_id FK "-> orders.handover_occurrences"
+        uuid partner_id FK "-> orders.handover_occurrences"
+        uuid received_by_user "id -> identity.user"
+        timestamptz received_at
+        timestamptz created_at
+    }
+    orders_handover_receipt_items["orders.handover_receipt_items"] {
+        uuid receipt_id PK, FK "-> orders.handover_receipts"
+        uuid order_id PK, FK "-> orders.orders"
+        uuid store_id "id -> identity.stores"
+        boolean received
+    }
+    partners_partners["partners.partners (stub)"] {
+        uuid id PK
+    }
+    catalog_pickup_places["catalog.pickup_places (stub)"] {
+        uuid id PK
+    }
+    identity_user["identity.user (stub)"] {
+        uuid id PK
+    }
+    identity_guest_profiles["identity.guest_profiles (stub)"] {
+        uuid id PK
+    }
+    catalog_skus["catalog.skus (stub)"] {
+        uuid id PK
+    }
+    catalog_products["catalog.products (stub)"] {
+        uuid id PK
+    }
+    content_media["content.media (stub)"] {
+        uuid id PK
+    }
+
+    %% fk: handover_occurrences_handover_fkey
+    orders_handovers ||--o{ orders_handover_occurrences : "meets on (same partner and kind)"
+    %% fk: handover_proposals_handover_fkey
+    orders_handovers ||--o{ orders_handover_proposals : "negotiates"
+    %% fk: handover_proposals_occurrence_fkey
+    orders_handover_occurrences |o--o{ orders_handover_proposals : "about one meeting"
+    %% fk: cart_lines_cart_fkey
+    orders_carts ||--o{ orders_cart_lines : "lines"
+    %% fk: cart_lines_occurrence_fkey
+    orders_handover_occurrences |o--o{ orders_cart_lines : "destination meeting"
+    %% fk: orders_cart_fkey
+    orders_carts |o--o{ orders_orders : "made from (same guest)"
+    %% fk: orders_handover_fkey
+    orders_handover_occurrences |o--o{ orders_orders : "binds (same partner)"
+    %% fk: orders_returned_from_fkey
+    orders_handover_occurrences |o--o{ orders_orders : "returned from (same partner)"
+    %% fk: order_lines_order_fkey
+    orders_orders ||--o{ orders_order_lines : "contains"
+    %% fk: handover_receipts_occurrence_fkey
+    orders_handover_occurrences ||--o{ orders_handover_receipts : "received at (same partner)"
+    %% fk: handover_receipt_items_receipt_fkey
+    orders_handover_receipts ||--o{ orders_handover_receipt_items : "lists"
+    %% fk: handover_receipt_items_order_fkey
+    orders_orders ||--o{ orders_handover_receipt_items : "ticked on"
+    partners_partners ||..o{ orders_handovers : "partner_id"
+    catalog_pickup_places ||..o{ orders_handovers : "pickup_place_id"
+    identity_user ||..o{ orders_handovers : "created_by_user"
+    identity_user ||..o{ orders_handover_proposals : "proposed_by_user"
+    identity_user |o..o{ orders_handover_proposals : "responded_by_user"
+    identity_guest_profiles |o..o{ orders_carts : "guest_id"
+    partners_partners |o..o{ orders_carts : "partner_id"
+    catalog_skus ||..o{ orders_cart_lines : "sku_id"
+    catalog_pickup_places |o..o{ orders_cart_lines : "pickup_place_id"
+    identity_guest_profiles ||..o{ orders_orders : "guest_id"
+    partners_partners |o..o{ orders_orders : "partner_id"
+    catalog_pickup_places |o..o{ orders_orders : "pickup_place_id"
+    identity_user |o..o{ orders_orders : "completed_by"
+    catalog_skus ||..o{ orders_order_lines : "sku_id"
+    catalog_products ||..o{ orders_order_lines : "product_id"
+    content_media |o..o{ orders_order_lines : "thumbnail_media_id"
+    identity_user ||..o{ orders_handover_receipts : "received_by_user"

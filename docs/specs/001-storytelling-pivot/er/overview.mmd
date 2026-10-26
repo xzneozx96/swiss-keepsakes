@@ -1,0 +1,179 @@
+---
+title: all 44 new tables by schema
+---
+erDiagram
+    direction LR
+    content_media["content.media"]:::content
+    content_story_groups["content.story_groups"]:::content
+    content_places["content.places"]:::content
+    content_story_versions["content.story_versions"]:::content
+    content_story_group_places["content.story_group_places"]:::content
+    content_story_keepsake_links["content.story_keepsake_links"]:::content
+    content_story_related["content.story_related"]:::content
+    content_place_links["content.place_links"]:::content
+    content_tours["content.tours"]:::content
+    content_tour_stops["content.tour_stops"]:::content
+    content_tour_keepsake_links["content.tour_keepsake_links"]:::content
+    content_media_refs["content.media_refs"]:::content
+    catalog_products["catalog.products"]:::catalog
+    catalog_product_options["catalog.product_options"]:::catalog
+    catalog_product_option_values["catalog.product_option_values"]:::catalog
+    catalog_skus["catalog.skus"]:::catalog
+    catalog_sku_option_values["catalog.sku_option_values"]:::catalog
+    catalog_product_categories["catalog.product_categories"]:::catalog
+    catalog_product_category_links["catalog.product_category_links"]:::catalog
+    catalog_product_media["catalog.product_media"]:::catalog
+    catalog_pickup_places["catalog.pickup_places"]:::catalog
+    catalog_pickup_place_hours["catalog.pickup_place_hours"]:::catalog
+    inventory_stock_items["inventory.stock_items"]:::inventory
+    inventory_stock_holds["inventory.stock_holds"]:::inventory
+    inventory_stock_adjustments["inventory.stock_adjustments"]:::inventory
+    reviews_place_reviews["reviews.place_reviews"]:::reviews
+    reviews_story_comments["reviews.story_comments"]:::reviews
+    reviews_product_ratings["reviews.product_ratings"]:::reviews
+    reviews_moderation_events["reviews.moderation_events"]:::reviews
+    partners_partners["partners.partners"]:::partners
+    partners_partner_invitations["partners.partner_invitations"]:::partners
+    partners_partner_accounts["partners.partner_accounts"]:::partners
+    orders_handovers["orders.handovers"]:::orders
+    orders_handover_occurrences["orders.handover_occurrences"]:::orders
+    orders_handover_proposals["orders.handover_proposals"]:::orders
+    orders_carts["orders.carts"]:::orders
+    orders_cart_lines["orders.cart_lines"]:::orders
+    orders_orders["orders.orders"]:::orders
+    orders_order_lines["orders.order_lines"]:::orders
+    orders_handover_receipts["orders.handover_receipts"]:::orders
+    orders_handover_receipt_items["orders.handover_receipt_items"]:::orders
+    analytics_events["analytics.events"]:::analytics
+    analytics_daily_counts["analytics.daily_counts"]:::analytics
+    analytics_daily_funnels["analytics.daily_funnels"]:::analytics
+
+    %% fk: story_groups_subject_place_fkey
+    content_places |o--o{ content_story_groups : " "
+    %% fk: story_groups_subject_type_fkey
+    content_places |o--o{ content_story_groups : " "
+    %% fk: places_main_story_fkey
+    content_story_groups |o--o{ content_places : " "
+    %% fk: places_cover_media_fkey
+    content_media |o--o{ content_places : " "
+    %% fk: story_versions_group_fkey
+    content_story_groups ||--o{ content_story_versions : " "
+    %% fk: story_group_places_group_fkey
+    content_story_groups ||--o{ content_story_group_places : " "
+    %% fk: story_group_places_place_fkey
+    content_places ||--o{ content_story_group_places : " "
+    %% fk: story_keepsake_links_group_fkey
+    content_story_groups ||--o{ content_story_keepsake_links : " "
+    %% fk: story_related_group_fkey
+    content_story_groups ||--o{ content_story_related : " "
+    %% fk: story_related_target_fkey
+    content_story_groups ||--o{ content_story_related : " "
+    %% fk: place_links_place_fkey
+    content_places |o--o| content_place_links : " "
+    %% fk: place_links_store_fkey
+    content_places |o--o| content_place_links : " "
+    %% fk: tours_cover_media_fkey
+    content_media |o--o{ content_tours : " "
+    %% fk: tours_pdf_media_fkey
+    content_media |o--o{ content_tours : " "
+    %% fk: tour_stops_tour_fkey
+    content_tours ||--o{ content_tour_stops : " "
+    %% fk: tour_stops_media_fkey
+    content_media |o--o{ content_tour_stops : " "
+    %% fk: tour_stops_place_fkey
+    content_places |o--o{ content_tour_stops : " "
+    %% fk: tour_keepsake_links_tour_fkey
+    content_tours ||--o{ content_tour_keepsake_links : " "
+    %% fk: media_refs_media_fkey
+    content_media ||--o{ content_media_refs : " "
+    %% fk: product_options_product_fkey
+    catalog_products ||--o{ catalog_product_options : " "
+    %% fk: product_option_values_option_fkey
+    catalog_product_options ||--o{ catalog_product_option_values : " "
+    %% fk: product_option_values_store_fkey
+    catalog_products ||--o{ catalog_product_option_values : " "
+    %% fk: skus_product_fkey
+    catalog_products ||--o{ catalog_skus : " "
+    %% fk: sku_option_values_sku_fkey
+    catalog_skus ||--o{ catalog_sku_option_values : " "
+    %% fk: sku_option_values_value_fkey
+    catalog_product_option_values ||--o{ catalog_sku_option_values : " "
+    %% fk: product_categories_parent_fkey
+    catalog_product_categories |o--o{ catalog_product_categories : " "
+    %% fk: product_category_links_product_fkey
+    catalog_products ||--o{ catalog_product_category_links : " "
+    %% fk: product_category_links_category_fkey
+    catalog_product_categories ||--o{ catalog_product_category_links : " "
+    %% fk: product_media_product_fkey
+    catalog_products ||--o{ catalog_product_media : " "
+    %% fk: pickup_place_hours_place_fkey
+    catalog_pickup_places ||--o{ catalog_pickup_place_hours : " "
+    %% fk: stock_holds_item_fkey
+    inventory_stock_items ||--o{ inventory_stock_holds : " "
+    %% fk: stock_adjustments_item_fkey
+    inventory_stock_items ||--o{ inventory_stock_adjustments : " "
+    %% fk: story_comments_parent_fkey
+    reviews_story_comments |o--o{ reviews_story_comments : " "
+    %% fk: moderation_events_place_review_fkey
+    reviews_place_reviews |o--o{ reviews_moderation_events : " "
+    %% fk: moderation_events_story_comment_fkey
+    reviews_story_comments |o--o{ reviews_moderation_events : " "
+    %% fk: moderation_events_product_rating_fkey
+    reviews_product_ratings |o--o{ reviews_moderation_events : " "
+    %% fk: partner_invitations_partner_fkey
+    partners_partners ||--o{ partners_partner_invitations : " "
+    %% fk: partner_accounts_invitation_fkey
+    partners_partner_invitations ||--o| partners_partner_accounts : " "
+    %% fk: handover_occurrences_handover_fkey
+    orders_handovers ||--o{ orders_handover_occurrences : " "
+    %% fk: handover_proposals_handover_fkey
+    orders_handovers ||--o{ orders_handover_proposals : " "
+    %% fk: handover_proposals_occurrence_fkey
+    orders_handover_occurrences |o--o{ orders_handover_proposals : " "
+    %% fk: cart_lines_cart_fkey
+    orders_carts ||--o{ orders_cart_lines : " "
+    %% fk: cart_lines_occurrence_fkey
+    orders_handover_occurrences |o--o{ orders_cart_lines : " "
+    %% fk: orders_cart_fkey
+    orders_carts |o--o{ orders_orders : " "
+    %% fk: orders_handover_fkey
+    orders_handover_occurrences |o--o{ orders_orders : " "
+    %% fk: orders_returned_from_fkey
+    orders_handover_occurrences |o--o{ orders_orders : " "
+    %% fk: order_lines_order_fkey
+    orders_orders ||--o{ orders_order_lines : " "
+    %% fk: handover_receipts_occurrence_fkey
+    orders_handover_occurrences ||--o{ orders_handover_receipts : " "
+    %% fk: handover_receipt_items_receipt_fkey
+    orders_handover_receipts ||--o{ orders_handover_receipt_items : " "
+    %% fk: handover_receipt_items_order_fkey
+    orders_orders ||--o{ orders_handover_receipt_items : " "
+    catalog_products ||..o{ content_story_keepsake_links : "product_id"
+    catalog_products ||..o{ content_tour_keepsake_links : "product_id"
+    content_media ||..o{ catalog_product_media : "media_id"
+    catalog_skus |o..o| inventory_stock_items : "sku_id"
+    orders_orders ||..o{ inventory_stock_holds : "order_id"
+    orders_order_lines ||..o| inventory_stock_holds : "order_line_id"
+    orders_orders |o..o{ inventory_stock_adjustments : "order_id"
+    content_places ||..o{ reviews_place_reviews : "place_id"
+    content_story_groups ||..o{ reviews_story_comments : "story_group_id"
+    catalog_products ||..o{ reviews_product_ratings : "product_id"
+    orders_orders ||..o{ reviews_product_ratings : "order_id"
+    partners_partners ||..o{ orders_handovers : "partner_id"
+    catalog_pickup_places ||..o{ orders_handovers : "pickup_place_id"
+    partners_partners |o..o{ orders_carts : "partner_id"
+    catalog_skus ||..o{ orders_cart_lines : "sku_id"
+    catalog_pickup_places |o..o{ orders_cart_lines : "pickup_place_id"
+    partners_partners |o..o{ orders_orders : "partner_id"
+    catalog_pickup_places |o..o{ orders_orders : "pickup_place_id"
+    catalog_skus ||..o{ orders_order_lines : "sku_id"
+    catalog_products ||..o{ orders_order_lines : "product_id"
+    content_media |o..o{ orders_order_lines : "thumbnail_media_id"
+
+    classDef content fill:#e8f1ff,stroke:#2563eb,color:#111,stroke-width:2px
+    classDef catalog fill:#e9f9ee,stroke:#16a34a,color:#111,stroke-width:2px
+    classDef inventory fill:#fff4e0,stroke:#d97706,color:#111,stroke-width:2px
+    classDef orders fill:#ffe9e9,stroke:#dc2626,color:#111,stroke-width:2px
+    classDef reviews fill:#f3e8ff,stroke:#9333ea,color:#111,stroke-width:2px
+    classDef partners fill:#e0f7f7,stroke:#0d9488,color:#111,stroke-width:2px
+    classDef analytics fill:#f1f1f1,stroke:#525252,color:#111,stroke-width:2px

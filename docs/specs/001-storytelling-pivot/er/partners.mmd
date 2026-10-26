@@ -1,0 +1,49 @@
+---
+title: schema partners
+---
+erDiagram
+    direction TB
+    partners_partners["partners.partners"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        text kind
+        text name
+        text code UK
+        text email
+        text report_token_hash
+        integer report_token_version
+        timestamptz archived_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    partners_partner_invitations["partners.partner_invitations"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid partner_id FK "-> partners.partners"
+        text email
+        text token_hash UK
+        timestamptz expires_at
+        timestamptz accepted_at
+        timestamptz revoked_at
+        uuid invited_by "id -> identity.user"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    partners_partner_accounts["partners.partner_accounts"] {
+        uuid partner_id PK, FK "-> partners.partner_invitations"
+        uuid store_id UK "unique with user_id; id -> identity.stores"
+        uuid user_id UK "unique with store_id; id -> identity.user"
+        uuid invitation_id FK, UK "-> partners.partner_invitations"
+        timestamptz revoked_at
+        timestamptz created_at
+    }
+    identity_user["identity.user (stub)"] {
+        uuid id PK
+    }
+
+    %% fk: partner_invitations_partner_fkey
+    partners_partners ||--o{ partners_partner_invitations : "invites"
+    %% fk: partner_accounts_invitation_fkey
+    partners_partner_invitations ||--o| partners_partner_accounts : "accepted as (same partner)"
+    identity_user |o..o{ partners_partner_invitations : "invited_by"
+    identity_user ||..o{ partners_partner_accounts : "user_id"

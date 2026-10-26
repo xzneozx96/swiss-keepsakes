@@ -1,0 +1,61 @@
+---
+title: schema inventory
+---
+erDiagram
+    direction TB
+    inventory_stock_items["inventory.stock_items"] {
+        uuid sku_id PK "id -> catalog.skus"
+        uuid store_id "id -> identity.stores"
+        integer on_hand
+        integer held
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    inventory_stock_holds["inventory.stock_holds"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid sku_id FK "-> inventory.stock_items"
+        uuid order_id "id -> orders.orders"
+        uuid order_line_id UK "id -> orders.order_lines"
+        integer quantity
+        text state
+        timestamptz resolved_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    inventory_stock_adjustments["inventory.stock_adjustments"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid sku_id FK "-> inventory.stock_items"
+        text kind
+        integer delta
+        integer on_hand_before
+        integer on_hand_after
+        text reason
+        uuid actor_user_id "id -> identity.user"
+        uuid order_id "id -> orders.orders"
+        timestamptz at
+    }
+    catalog_skus["catalog.skus (stub)"] {
+        uuid id PK
+    }
+    orders_orders["orders.orders (stub)"] {
+        uuid id PK
+    }
+    orders_order_lines["orders.order_lines (stub)"] {
+        uuid id PK
+    }
+    identity_user["identity.user (stub)"] {
+        uuid id PK
+    }
+
+    %% fk: stock_holds_item_fkey
+    inventory_stock_items ||--o{ inventory_stock_holds : "holds"
+    %% fk: stock_adjustments_item_fkey
+    inventory_stock_items ||--o{ inventory_stock_adjustments : "history"
+    catalog_skus |o..o| inventory_stock_items : "sku_id"
+    orders_orders ||..o{ inventory_stock_holds : "order_id"
+    orders_order_lines ||..o| inventory_stock_holds : "order_line_id"
+    identity_user |o..o{ inventory_stock_adjustments : "actor_user_id"
+    orders_orders |o..o{ inventory_stock_adjustments : "order_id"

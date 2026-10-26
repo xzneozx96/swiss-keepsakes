@@ -1,0 +1,123 @@
+---
+title: schema catalog
+---
+erDiagram
+    direction TB
+    catalog_products["catalog.products"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        text status
+        jsonb slug
+        jsonb published
+        jsonb draft
+        integer preparation_hours
+        numeric_5_4 commission_rate
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    catalog_product_options["catalog.product_options"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid product_id FK, UK "-> catalog.products; unique with position"
+        jsonb name
+        integer position UK "unique with product_id"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    catalog_product_option_values["catalog.product_option_values"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid product_id FK "-> catalog.product_options; -> catalog.products"
+        uuid option_id FK, UK "-> catalog.product_options; unique with position"
+        jsonb label
+        text swatch
+        integer position UK "unique with option_id"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    catalog_skus["catalog.skus"] {
+        uuid id PK, UK "unique with store_id"
+        uuid store_id UK "unique with id; unique with sku_code; id -> identity.stores"
+        text sku_code UK "unique with store_id"
+        uuid product_id FK, UK "-> catalog.products; unique with combination_key"
+        text combination_key UK "unique with product_id"
+        bigint price_rappen
+        text status
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    catalog_sku_option_values["catalog.sku_option_values"] {
+        uuid sku_id PK, FK "-> catalog.skus"
+        uuid option_id PK, FK "-> catalog.product_option_values"
+        uuid value_id FK "-> catalog.product_option_values"
+        uuid product_id FK "-> catalog.skus; -> catalog.product_option_values"
+        uuid store_id "id -> identity.stores"
+    }
+    catalog_product_categories["catalog.product_categories"] {
+        uuid id PK
+        uuid store_id UK "unique with slug; id -> identity.stores"
+        jsonb name
+        text slug UK "unique with store_id"
+        uuid parent_id FK "-> catalog.product_categories"
+        integer position
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    catalog_product_category_links["catalog.product_category_links"] {
+        uuid product_id PK, FK "-> catalog.products"
+        uuid category_id PK, FK "-> catalog.product_categories"
+        uuid store_id "id -> identity.stores"
+        integer position
+    }
+    catalog_product_media["catalog.product_media"] {
+        uuid product_id PK, FK "-> catalog.products"
+        uuid store_id "id -> identity.stores"
+        integer position PK
+        uuid media_id "id -> content.media"
+    }
+    catalog_pickup_places["catalog.pickup_places"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        jsonb name
+        jsonb address
+        jsonb instructions
+        integer position
+        timestamptz archived_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    catalog_pickup_place_hours["catalog.pickup_place_hours"] {
+        uuid place_id PK, FK "-> catalog.pickup_places"
+        uuid store_id "id -> identity.stores"
+        smallint weekday PK
+        time opens PK
+        time closes
+    }
+    content_media["content.media (stub)"] {
+        uuid id PK
+    }
+
+    %% fk: product_options_product_fkey
+    catalog_products ||--o{ catalog_product_options : "options"
+    %% fk: product_option_values_option_fkey
+    catalog_product_options ||--o{ catalog_product_option_values : "values"
+    %% fk: product_option_values_store_fkey
+    catalog_products ||--o{ catalog_product_option_values : "values of product"
+    %% fk: skus_product_fkey
+    catalog_products ||--o{ catalog_skus : "sells"
+    %% fk: sku_option_values_sku_fkey
+    catalog_skus ||--o{ catalog_sku_option_values : "option choices"
+    %% fk: sku_option_values_value_fkey
+    catalog_product_option_values ||--o{ catalog_sku_option_values : "chosen value"
+    %% fk: product_categories_parent_fkey
+    catalog_product_categories |o--o{ catalog_product_categories : "parent category"
+    %% fk: product_category_links_product_fkey
+    catalog_products ||--o{ catalog_product_category_links : "listed in"
+    %% fk: product_category_links_category_fkey
+    catalog_product_categories ||--o{ catalog_product_category_links : "holds"
+    %% fk: product_media_product_fkey
+    catalog_products ||--o{ catalog_product_media : "photos"
+    %% fk: pickup_place_hours_place_fkey
+    catalog_pickup_places ||--o{ catalog_pickup_place_hours : "opens"
+    content_media ||..o{ catalog_product_media : "media_id"

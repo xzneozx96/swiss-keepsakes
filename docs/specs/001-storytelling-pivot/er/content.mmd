@@ -1,0 +1,189 @@
+---
+title: schema content
+---
+erDiagram
+    direction TB
+    content_media["content.media"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        text kind
+        text storage_key UK
+        text content_type
+        bigint byte_size
+        text sha256
+        integer width
+        integer height
+        integer duration_seconds
+        jsonb alt
+        text status
+        timestamptz retired_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    content_story_groups["content.story_groups"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        text kind
+        uuid subject_place_id FK "-> content.places"
+        text subject_place_type FK "-> content.places"
+        text stay_tag
+        text[] interests
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    content_places["content.places"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        text type
+        text status
+        jsonb slug
+        double_precision latitude
+        double_precision longitude
+        text stay_tag
+        text[] interests
+        uuid main_story_group_id FK "-> content.story_groups"
+        uuid cover_media_id FK "-> content.media"
+        text cover_media_kind FK "-> content.media; generated"
+        jsonb published
+        jsonb draft
+        timestamptz first_published_at
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    content_story_versions["content.story_versions"] {
+        uuid group_id PK, FK, UK "-> content.story_groups; unique with store_id, language"
+        text language PK, UK "unique with store_id, group_id; unique with slug"
+        uuid store_id UK "unique with group_id, language; id -> identity.stores"
+        text status
+        text slug UK "unique with language"
+        jsonb published
+        timestamptz published_at
+        jsonb draft
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    content_story_group_places["content.story_group_places"] {
+        uuid group_id PK, FK "-> content.story_groups"
+        uuid place_id PK, FK "-> content.places"
+        uuid store_id "id -> identity.stores"
+        integer position
+    }
+    content_story_keepsake_links["content.story_keepsake_links"] {
+        uuid group_id PK, FK, UK "-> content.story_groups; unique with product_id"
+        uuid store_id "id -> identity.stores"
+        integer position PK
+        uuid product_id UK "unique with group_id; id -> catalog.products"
+    }
+    content_story_related["content.story_related"] {
+        uuid group_id PK, FK, UK "-> content.story_groups; unique with related_group_id"
+        uuid store_id "id -> identity.stores"
+        integer position PK
+        uuid related_group_id FK, UK "-> content.story_groups; unique with group_id"
+    }
+    content_place_links["content.place_links"] {
+        uuid place_id PK, FK "-> content.places"
+        text place_type FK "-> content.places"
+        uuid store_id "id -> identity.stores"
+        text kind
+        text url
+        jsonb url_by_language
+        text network
+        boolean disclosure
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    content_tours["content.tours"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        text status
+        jsonb slug
+        text stay_tag
+        text[] interests
+        integer duration_minutes
+        uuid cover_media_id FK "-> content.media"
+        text cover_media_kind FK "-> content.media; generated"
+        uuid pdf_media_id FK "-> content.media"
+        text pdf_media_kind FK "-> content.media; generated"
+        jsonb published
+        jsonb draft
+        integer row_version
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    content_tour_stops["content.tour_stops"] {
+        uuid id PK
+        uuid tour_id FK, UK "-> content.tours; unique with position"
+        uuid store_id "id -> identity.stores"
+        integer position UK "unique with tour_id"
+        double_precision latitude
+        double_precision longitude
+        jsonb content
+        integer minutes_from_start
+        uuid media_id FK "-> content.media"
+        text media_kind FK "-> content.media; generated"
+        uuid place_id FK "-> content.places"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    content_tour_keepsake_links["content.tour_keepsake_links"] {
+        uuid tour_id PK, FK, UK "-> content.tours; unique with product_id"
+        uuid store_id "id -> identity.stores"
+        integer position PK
+        uuid product_id UK "unique with tour_id; id -> catalog.products"
+    }
+    content_media_refs["content.media_refs"] {
+        uuid id PK
+        uuid store_id "id -> identity.stores"
+        uuid media_id FK, UK "-> content.media; unique with owner_kind, owner_id, owner_language, slot"
+        text owner_kind UK "unique with media_id, owner_id, owner_language, slot"
+        uuid owner_id UK "unique with media_id, owner_kind, owner_language, slot; id -> story_version, place or tour, by owner_kind"
+        text owner_language UK "unique with media_id, owner_kind, owner_id, slot"
+        text slot UK "unique with media_id, owner_kind, owner_id, owner_language"
+    }
+    catalog_products["catalog.products (stub)"] {
+        uuid id PK
+    }
+
+    %% fk: story_groups_subject_place_fkey
+    content_places |o--o{ content_story_groups : "review subject"
+    %% fk: story_groups_subject_type_fkey
+    content_places |o--o{ content_story_groups : "subject type copy"
+    %% fk: places_main_story_fkey
+    content_story_groups |o--o{ content_places : "main story"
+    %% fk: places_cover_media_fkey
+    content_media |o--o{ content_places : "cover image"
+    %% fk: story_versions_group_fkey
+    content_story_groups ||--o{ content_story_versions : "one per language"
+    %% fk: story_group_places_group_fkey
+    content_story_groups ||--o{ content_story_group_places : "mentions"
+    %% fk: story_group_places_place_fkey
+    content_places ||--o{ content_story_group_places : "is mentioned by"
+    %% fk: story_keepsake_links_group_fkey
+    content_story_groups ||--o{ content_story_keepsake_links : "up to 6 keepsakes"
+    %% fk: story_related_group_fkey
+    content_story_groups ||--o{ content_story_related : "up to 3 related"
+    %% fk: story_related_target_fkey
+    content_story_groups ||--o{ content_story_related : "related story"
+    %% fk: place_links_place_fkey
+    content_places |o--o| content_place_links : "type pinned to accommodation"
+    %% fk: place_links_store_fkey
+    content_places |o--o| content_place_links : "outbound link"
+    %% fk: tours_cover_media_fkey
+    content_media |o--o{ content_tours : "cover image"
+    %% fk: tours_pdf_media_fkey
+    content_media |o--o{ content_tours : "one PDF"
+    %% fk: tour_stops_tour_fkey
+    content_tours ||--o{ content_tour_stops : "route"
+    %% fk: tour_stops_media_fkey
+    content_media |o--o{ content_tour_stops : "stop image"
+    %% fk: tour_stops_place_fkey
+    content_places |o--o{ content_tour_stops : "read more"
+    %% fk: tour_keepsake_links_tour_fkey
+    content_tours ||--o{ content_tour_keepsake_links : "up to 3 keepsakes"
+    %% fk: media_refs_media_fkey
+    content_media ||--o{ content_media_refs : "used by documents"
+    catalog_products ||..o{ content_story_keepsake_links : "product_id"
+    catalog_products ||..o{ content_tour_keepsake_links : "product_id"

@@ -2,9 +2,9 @@
 
 ## Product and audience
 
-Swiss Keepsakes helps travellers discover Lucerne gifts and fixed-departure tours, make requests or bookings, and understand collection, participation, and payment. Guests primarily use a phone. Merchant Owner and Manager roles operate the store. Referral partners receive a limited view of their transactions.
+Swiss Keepsakes tells emotional stories about Lucerne for free: history, culture, and high-quality reviews of sights, restaurants, and accommodation, linked to an interactive map. The stories build organic traffic and loyalty. Victorinox knives are introduced gently as a bonus. Guests primarily use a phone. Visitors choose a stay type (short-stay or multi-day) and interests, kept in the browser only. Merchant Owner and Manager roles run the store. Referral partners, including guides, receive a limited view of their transactions and run group orders (the order flow is still open). Tour booking is hidden. Tours are free information with a PDF guide and an advisory route set by the merchant. The product is not a route planner.
 
-Product authority is `docs/PRD/Swiss_keepsakes_PRD.md` and `docs/ux/ux-spec-phase1.md`. Prototype delivery order and owner approval are tracked in `docs/ux/prototype/todo.md` and `todo-phase2.md`.
+Product authority is `docs/PRD/Swiss_keepsakes_PRD.md` (version 3, storytelling pivot) and `docs/ux/ux-spec-phase1.md`. The booking states, the 15-minute seat hold, deposit, pay-later and tour payment parts of `docs/ux/ux-spec-phase1.md` are superseded by the PRD and stay dormant. Prototype delivery order and owner approval are tracked in `docs/ux/prototype/todo.md` and `todo-phase2.md`.
 
 ## Platform and stack
 
@@ -14,8 +14,8 @@ This is a web prototype. `front-end/` uses React 19, HeroUI v3, Tailwind CSS v4,
 
 - Guest and merchant interface copy supports English and Swiss German. Preserve the selected language, price, date, and booking meaning together.
 - Booking and payment status are separate facts. Confirmation does not imply full payment, and full payment does not imply service delivery.
-- A tour's initial full-payment or deposit booking holds seats for 15 minutes. Reload does not extend the original deadline. Expiry releases seats and requires a new booking. Confirmed pay-later bookings and balance payments do not use that initial timer.
-- Complete a tour booking only after merchant-confirmed service delivery and full payment. No-show does not permit completion, commission, or review, even when payment is retained. Money and debt require separate policy handling.
+- Tour booking and every reservation service are out of scope and not shown to guests. The code stays dormant. The 15-minute seat hold, deposits, pay-later and tour completion rules are retired (PRD v3, section 18.2).
+- The shop sells Victorinox knives only, with stock per SKU (size x theme x colour). A zero-stock combination cannot be selected. Prices first appear on the product page, never in stories, the map or shop lists. Complete a keepsake order only after delivery and full payment.
 - Build and review steps separately. A built step stays awaiting review until the owner approves it. Update the client Artifact only when requested.
 
 ## Existing visual authority

@@ -1,0 +1,170 @@
+<title>Swiss Keepsakes Data Model</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky schema tabs over one module panel; diagram on a paper sheet that zooms and scrolls inside itself. */
+:root {
+  --bg: #f6f6f4; --surface: #ffffff; --fg: #23272b; --muted: #5d646b; --line: #dcdcd6;
+  --accent: #c8281e; --accent-soft: #fbe9e7; --sheet: #ffffff;
+  --display: "Source Serif 4", Georgia, serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #17191b; --surface: #202326; --fg: #e8e8e4; --muted: #a2a8ad; --line: #34383c;
+  --accent: #ff7a6b; --accent-soft: #3a2220; --sheet: #ffffff; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #17191b; --surface: #202326; --fg: #e8e8e4; --muted: #a2a8ad; --line: #34383c;
+  --accent: #ff7a6b; --accent-soft: #3a2220; --sheet: #ffffff; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 15px/1.6 var(--body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header.page { padding-block: 28px 18px; display: grid; gap: 8px; }
+h1 { font: 600 clamp(26px, 4vw, 36px)/1.15 var(--display); margin: 0; text-wrap: balance; }
+h2 { font: 600 24px/1.2 var(--display); margin: 0; text-wrap: balance; }
+h3 { font: 600 12px/1.3 var(--body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0; }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: 500 12px/1 var(--mono); padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); font-variant-numeric: tabular-nums; }
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-block: 1px solid var(--line); }
+nav.tabs .wrap { display: flex; gap: 4px; overflow-x: auto; padding-block: 8px; }
+nav.tabs button { font: 500 14px/1 var(--body); color: var(--fg); background: none; border: 0; padding: 9px 12px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+nav.tabs button:focus-visible, .zoom button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+main { padding-block: 24px 48px; }
+.panel { display: grid; gap: 20px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+@media (max-width: 760px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+.cols > div { display: grid; gap: 10px; align-content: start; min-width: 0; }
+ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+li { max-width: 68ch; }
+code { font: 13px var(--mono); }
+.sheet { background: var(--sheet); border: 1px solid var(--line); border-radius: 6px; overflow: auto; max-height: 78vh; }
+.sheet img { display: block; max-width: none; height: auto; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.zoom { display: flex; gap: 6px; align-items: center; }
+.zoom button { font: 500 13px/1 var(--body); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px; cursor: pointer; }
+.zoom span { font: 12px var(--mono); color: var(--muted); min-width: 4ch; text-align: right; font-variant-numeric: tabular-nums; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 13px; }
+.legend b { color: var(--fg); font-weight: 600; }
+.open { border-top: 1px solid var(--line); padding-top: 24px; display: grid; gap: 12px; }
+.open table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.open th, .open td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.open th { font: 600 12px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.open td:first-child { font: 500 13px var(--mono); white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+@media (prefers-reduced-motion: no-preference) { nav.tabs button { transition: background .15s; } }
+</style>
+
+<header class="page wrap">
+  <h1>Swiss Keepsakes Data Model</h1>
+  <p class="lede">The proposed Postgres schema for the storytelling pivot, generated from the tested SQL. Pick a module, read its rules, then check the diagram. Nothing here is built yet.</p>
+  <div class="meta">
+    <span class="chip">44 new tables</span>
+    <span class="chip">50 foreign keys, all drawn</span>
+    <span class="chip">200 constraint checks pass</span>
+    <span class="chip">ADR-013 to ADR-028</span>
+    <span class="chip">status: proposed</span>
+  </div>
+  <div class="legend">
+    <span><b>Solid line</b> foreign key inside one module</span>
+    <span><b>Dotted line</b> plain id to another module (no database key)</span>
+    <span><b>(stub)</b> table from another module, id only</span>
+    <span><b>PK FK UK</b> primary, foreign, unique</span>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Modules"><div class="wrap" role="tablist" id="tabs"></div></nav>
+
+<main class="wrap">
+  <section class="panel" id="panel" role="tabpanel" aria-live="polite"></section>
+
+  <section class="open">
+    <h2>Your answers in this model</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Gate</th><th>Question</th><th>Your answer</th></tr></thead>
+      <tbody>
+        <tr><td>M1</td><td>Related stories and keepsake links</td><td>One shared list per story; links hidden where the target has no version in the reader's language</td></tr>
+        <tr><td>M2</td><td>Partner invitations and accounts</td><td>Own tables in partners</td></tr>
+        <tr><td>M3</td><td>Plain ids between modules, rules in triggers</td><td>Yes to both</td></tr>
+        <tr><td>M7</td><td>Cart</td><td>Server cart, Medusa-style; one cart can become several orders</td></tr>
+        <tr><td>M8</td><td>Guest details on orders</td><td>Name and email copy, cleared on erasure (lawyer O33 open)</td></tr>
+        <tr><td>M9</td><td>Catalog options</td><td>Generic options; Victorinox is one product with Size, Theme, Colour</td></tr>
+        <tr><td>M10</td><td>Categories</td><td>Tables now, no screens in Phase 1</td></tr>
+        <tr><td>C1</td><td>Commission timing</td><td>When the order completes: delivered and fully paid</td></tr>
+        <tr><td>DESIGN</td><td>Accept the architecture, data model and 28 ADRs, apply backend.md and tech-stack.md changes</td><td>Waiting on you</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</main>
+
+<script>
+const modules = [
+  { id: "overview", name: "Overview", img: "overview.svg",
+    what: "All 40 tables without columns, coloured by module. Dotted lines are plain ids between modules.",
+    rules: ["Every table carries a store_id (plain id to identity.stores); it is not drawn as a line.", "analytics has no link to any other table, by design."] },
+  { id: "content", name: "Content", img: "content.svg",
+    what: "Stories, places, tour guides and media. A story is a group with one version per language (en, de). A place is a map pin with one main story. A tour has a route of stops and one PDF.",
+    rules: ["A published story pin must name a main story with a published version (checked at commit).", "A practical place (toilet, water, ATM) has no main story.", "A place never changes type. Published places and stories are hidden, never deleted; drafts can be deleted (M6).", "Slugs are unique per language. A media file cannot be retired while something still uses it.", "Related stories (up to 3) and keepsake links (up to 6) are set once per story and shared by both languages (M1). A link is hidden when the target has no published version in the reader's language."] },
+  { id: "catalog", name: "Catalog", img: "catalog.svg",
+    what: "Products with their own options and values (Medusa-style), SKUs, photos, a category tree, and pickup places with opening hours. Victorinox is one product with Size, Theme and Colour options; a chocolate or postcard would define its own.",
+    rules: ["A SKU takes exactly one value of each of its product's options, checked at commit. Each combination appears once per product.", "A product with no options has exactly one SKU.", "Categories form a tree without loops, slugs unique per store. No category screens in Phase 1 (M10).", "Prices are whole Rappen above zero.", "Pickup places serve both self-collect orders and handovers. Hours are Zurich times of day."] },
+  { id: "inventory", name: "Inventory", img: "inventory.svg",
+    what: "Stock per SKU: on_hand and held, with one hold per order line and a history of every adjustment.",
+    rules: ["Stock never goes negative: held can never exceed on_hand.", "held changes only through the hold trigger; a direct write is refused.", "Holds and adjustments are never edited or deleted by hand."] },
+  { id: "orders", name: "Orders & handovers", img: "orders.svg",
+    what: "Server carts, orders and their lines, plus handovers: a partner agrees to meet the shop at a pickup place, on one or repeating dated meetings, and ticks received orders on a receipt.",
+    rules: ["A cart lives on the server (id in a cookie) and can complete into several orders, split by pickup or handover. Completing twice creates nothing extra; a completed cart cannot change (M7).", "Each order keeps a copy of the guest's name and email, cleared together on erasure (M8).", "Commission is due when the order completes: delivered and fully paid (C1).","An order binds only to a meeting of its own partner, and only while that meeting is scheduled, agreed and before its order cut-off.", "Order lines are a write-once copy of what the guest saw. The order total must equal the sum of its lines.", "The partner, guest and total of an order never change.", "A handover has at most one open time proposal. Unanswered proposals expire (AC77).", "Ticking an item on a receipt moves the order to With partner. Cash orders are never cancelled for non-payment."] },
+  { id: "reviews", name: "Reviews", img: "reviews.svg",
+    what: "Place reviews, story comments, product ratings and one moderation history over all three.",
+    rules: ["Only sights, restaurants and accommodation take reviews.", "Nothing is deleted. The merchant hides or unhides through a moderation event, which sets the visible state.", "One product rating per guest, order and product."] },
+  { id: "partners", name: "Partners", img: "partners.svg",
+    what: "Partners (guides, hotels), their invitations, and the accounts that sign in.",
+    rules: ["A user becomes a partner only through an accepted, unrevoked, unexpired invitation (D1). Self sign-up stays a guest.", "At most one open invitation per partner. Access ends through revoked_at; accounts are never deleted."] },
+  { id: "analytics", name: "Analytics", img: "analytics.svg",
+    what: "An anonymous event log and two daily roll-ups.",
+    rules: ["No account, order, partner, visitor, IP, user agent, URL or exact time. Time is kept to the hour.", "Product views carry the product id (M5). Purchases are only counted per day, never stored per session."] }
+];
+const tabs = document.getElementById("tabs");
+const panel = document.getElementById("panel");
+let zoom = 1;
+function esc(s) { return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]); }
+function show(id) {
+  const m = modules.find(x => x.id === id) || modules[0];
+  zoom = 1;
+  [...tabs.children].forEach(b => b.setAttribute("aria-selected", b.dataset.id === m.id ? "true" : "false"));
+  panel.innerHTML = `
+    <div class="cols">
+      <div><h3>What it holds</h3><p>${esc(m.what)}</p></div>
+      <div><h3>Rules the database enforces</h3><ul>${m.rules.map(r => `<li>${esc(r)}</li>`).join("")}</ul></div>
+    </div>
+    <div class="toolbar">
+      <h2>${esc(m.name)}</h2>
+      <div class="zoom">
+        <button type="button" id="zout" aria-label="Zoom out">−</button>
+        <span id="zval">fit</span>
+        <button type="button" id="zin" aria-label="Zoom in">+</button>
+        <button type="button" id="zfit">Fit width</button>
+      </div>
+    </div>
+    <div class="sheet" id="sheet"><img id="dia" src="${m.img}" alt="${esc(m.name)} schema diagram"></div>`;
+  const img = document.getElementById("dia"), sheet = document.getElementById("sheet"), zval = document.getElementById("zval");
+  function apply() {
+    if (zoom === 1) { img.style.width = "100%"; zval.textContent = "fit"; }
+    else { img.style.width = Math.round(sheet.clientWidth * zoom) + "px"; zval.textContent = Math.round(zoom * 100) + "%"; }
+  }
+  document.getElementById("zin").onclick = () => { zoom = Math.min(zoom * 1.5, 6); apply(); };
+  document.getElementById("zout").onclick = () => { zoom = Math.max(zoom / 1.5, 1); apply(); };
+  document.getElementById("zfit").onclick = () => { zoom = 1; apply(); };
+  apply();
+  try { history.replaceState(null, "", "#" + m.id); } catch (e) {}
+}
+modules.forEach(m => {
+  const b = document.createElement("button");
+  b.type = "button"; b.role = "tab"; b.dataset.id = m.id; b.textContent = m.name;
+  b.onclick = () => show(m.id);
+  tabs.appendChild(b);
+});
+show((location.hash || "").slice(1));
+</script>
