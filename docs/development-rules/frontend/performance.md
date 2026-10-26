@@ -7,8 +7,8 @@ Read this before you touch first load, lists, typing, scrolling, streaming, depe
 1. **Keep route-file imports light** (`bundle-dynamic-imports`). Constants for `validateSearch` go in `front-end/src/features/<feature>/lib/search-params.ts`. One heavy import there cost 63 KB.
 2. **A barrel contains plain re-exports only** (`bundle-barrel-imports`). `front-end/src/components/icons.ts` is `export { X as YIcon } from "reicon-react"`. A wrapper call per icon pulled all 86 icons into first load (54 KB).
 3. **Load heavy libraries on demand** (`bundle-conditional`, `bundle-defer-third-party`). Maps, charts, calendar, rich text editor, the QR code and the Better Auth client (E2.1) use `import()`. Load their CSS with them. Examples: `front-end/src/features/tours/map/tour-itinerary-map.tsx`, `front-end/src/features/demo/components/prototype-bar.tsx` (`lazy`).
-4. **Preload on intent** (`bundle-preload`). The router has `defaultPreload: "intent"` in `front-end/src/main.tsx`. Keep `validateSearch` and `beforeLoad` pure, because hovering a link runs them.
-5. **Images and fonts.** Give every `<img>` an explicit loading choice. Use `loading="lazy"` for anything below the fold and `fetchPriority="high"` for the hero (`front-end/src/features/discovery/components/hero.tsx`). Fonts must not block first paint (`index.html`).
+4. **Preload on intent** (`bundle-preload`). The router has `defaultPreload: "intent"` in `front-end/src/router.tsx`. Keep `validateSearch` and `beforeLoad` pure, because hovering a link runs them.
+5. **Images and fonts.** Give every `<img>` an explicit loading choice. Use `loading="lazy"` for anything below the fold and `fetchPriority="high"` for the hero (`front-end/src/features/discovery/components/hero.tsx`). Fonts must not block first paint: the root route preloads the stylesheet and a small inline script adds it, with a `<noscript>` link as the fallback (`front-end/src/routes/__root.tsx`).
 
 ## Updates that happen often
 
