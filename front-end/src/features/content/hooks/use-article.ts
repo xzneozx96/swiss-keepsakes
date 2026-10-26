@@ -5,7 +5,7 @@ import type { ProductCardProps } from '@/features/catalog/components/product-car
 import { isPublished } from '@sk/domain/catalog'
 import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from '@sk/domain/content'
 
-import { formatDate } from '@sk/domain/shared'
+import { dateTimeFormat } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
 import { useProducts } from '@/features/catalog/api/queries'
@@ -80,7 +80,8 @@ export function useArticle(slug: string): ArticleView | null {
     return null
 
   const guests = new Map(demoGuests.map(g => [g.id, g]))
-  const date = (iso: string) => formatDate(new Date(iso), intlLocale)
+  // The shop's calendar day (Zurich), so the server's HTML and every reader's browser print the same date, in any time zone.
+  const date = (iso: string) => dateTimeFormat(intlLocale, { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Zurich' }).format(new Date(iso))
   const toView = (c: ArticleComment): CommentView => {
     const isShop = c.author.kind === 'shop'
     const name

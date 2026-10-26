@@ -11,6 +11,7 @@ import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 
 // C20 Article.
 export const Route = createFileRoute('/_guest/stories/$slug')({
+  ssr: true,
   // The comment bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   component: ArticleRoute,

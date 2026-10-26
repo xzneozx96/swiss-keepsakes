@@ -1,12 +1,20 @@
 import { act, render } from '@testing-library/react'
 import { hydrateRoot } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { getServerMusic, setMusic, useMusic } from '@/components/background-music-store'
 import { setShowProposals, useShowProposals } from '@/features/demo/proposals'
 import { useSharedClock } from '@/hooks/use-shared-clock'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+
+// Whatever a test changed (timers, saved state, the module-level stores) is put back even when it fails.
+afterEach(() => {
+  vi.useRealTimers()
+  setShowProposals(false)
+  setMusic({ muted: false, level: 0.35, enabled: true })
+  localStorage.clear()
+})
 
 describe('[E3.3] server snapshots of the module-level stores', () => {
   it('the shared clock renders the value it is given on the server, not the real time', () => {
@@ -30,7 +38,6 @@ describe('[E3.3] server snapshots of the module-level stores', () => {
     }
 
     expect(renderToString(<Probe />)).toContain('proposals:false')
-    setShowProposals(false)
   })
 
   it('useMusic renders on the server', () => {
@@ -117,7 +124,6 @@ describe('[E3.3] useSimulatedLoading', () => {
       await vi.advanceTimersByTimeAsync(400)
     })
     expect(seen.at(-1)).toBe(false)
-    vi.useRealTimers()
   })
 })
 
@@ -137,6 +143,5 @@ describe('[E3.3] a restored seed demo', () => {
     await restore()
 
     expect(queryClient.getQueryData(key)).toHaveLength(2)
-    localStorage.clear()
   })
 })
