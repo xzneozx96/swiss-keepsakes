@@ -1,6 +1,6 @@
 /**
  * Lab, round 2: simple discovery heroes after the owner's four app references (greeting,
- * short title, a search field, chips or tabs). Compared on #/lab/hero. Guests are not
+ * short title, a search field, chips or tabs). Compared on /lab/hero. Guests are not
  * signed in, so the greeting is "Grüezi" instead of a name and the cart takes the avatar
  * slot. Search fields, tabs and chips are inert here.
  */

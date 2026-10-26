@@ -1,7 +1,7 @@
 /**
  * Lab, round 3: variants of round 2's F (greeting band plus a white search card), the
  * direction the owner picked. Each varies the band or the card and adds a Luzerne photo.
- * Compared on #/lab/hero. Tabs, fields and the Search button are inert here.
+ * Compared on /lab/hero. Tabs, fields and the Search button are inert here.
  */
 import { BookingsIcon, PickupIcon } from '@/components/icons'
 import { CartButton } from '@/components/layout/cart-button'

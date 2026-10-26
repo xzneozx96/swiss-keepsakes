@@ -1,6 +1,6 @@
 /**
  * Lab: candidate layouts for the trip-advice call to action at the end of the discovery
- * home (spec §4.1, §4.10). Compared on #/lab/advice. Copy rules: no "AI", no promised
+ * home (spec §4.1, §4.10). Compared on /lab/advice. Copy rules: no "AI", no promised
  * reply time; the shop replies by email.
  */
 import { buttonVariants } from '@heroui/react'

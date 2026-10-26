@@ -1,6 +1,6 @@
 /**
  * Lab, round 2: trip-advice call to action built from the subject itself (Luzerne, travel
- * paper, a shop owner who writes back). Compared on #/lab/advice. Copy rules (spec §4.10):
+ * paper, a shop owner who writes back). Compared on /lab/advice. Copy rules (spec §4.10):
  * no "AI", no promised reply time; the shop replies by email.
  */
 import { ArrowRightIcon } from '@/components/icons'
