@@ -34,6 +34,7 @@ Always read `docs/development-rules/shared/code-style.md`. Then read by task.
   - New files, imports, routes: `docs/development-rules/frontend/code-structure.md`
   - Components and hooks: `docs/development-rules/frontend/components-and-hooks.md`
   - Rendering, state, events, lists (React team rules): `docs/development-rules/frontend/react-rendering-and-state.md`
+  - Routes, loaders, SSR, server code, head/SEO: `docs/development-rules/frontend/tanstack-start.md`
   - Effects, refs, custom hooks: `docs/development-rules/frontend/react-effects-and-refs.md`
   - Splitting components, context, reducers: `docs/development-rules/frontend/react-composition-and-context.md`
   - UI and styling: `docs/development-rules/frontend/heroui-and-styling.md`
@@ -56,6 +57,8 @@ Always read `docs/development-rules/shared/code-style.md`. Then read by task.
 7. **Formatters.** Do use the cached helpers in `packages/domain/src/shared/format.ts`. Don't create `new Intl.*` or long regexes inside render.
 8. **Hooks rules.** Don't read or write refs during render or call `setState` synchronously in an effect. ESLint enforces this.
 9. **Heavy libraries.** Do load maps, charts, calendar, editor and QR code with a dynamic `import()` and their CSS. Don't import them from route files or shared modules.
+
+TanStack's own skills ship in `node_modules` and match the installed version. List them from the repo root with `find node_modules/.pnpm -path '*@tanstack*/skills/*' -name SKILL.md`, and read the one for the API you use. Where they say "use `createServerFn`", the rules in `tanstack-start.md` win.
 
 Existing code does not always follow these. Do not copy it as a template. `docs/development-rules/frontend/performance.md` lists what was left on purpose.
 
