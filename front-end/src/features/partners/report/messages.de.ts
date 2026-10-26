@@ -25,7 +25,6 @@ export const partnerDashboardDe: Record<
   'partnerDash.mix.keepsakes': 'Andenken',
   'partnerDash.mix.tours': 'Touren',
   'partnerDash.mix.total': 'Gesamt',
-  'partnerDash.mix.share': '{share} der Provision',
   'partnerDash.mix.empty': 'Noch keine Provision in diesem Zeitraum',
   'partnerDash.tabs.label': 'Details',
   'partnerDash.tabs.transactions': 'Transaktionen',

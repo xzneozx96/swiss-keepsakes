@@ -118,7 +118,7 @@ export const tourDiscoveryDe: Record<keyof typeof tourDiscoveryEn, string> = {
     'Bereits gemachte Buchungen sind nicht betroffen.',
   'tourDiscovery.keepsakes.title': 'Die Geschichte mitnehmen',
   'tourDiscovery.keepsakes.intro':
-    'Andenken, die diese Tour fortsetzen. Sie werden getrennt von Ihrer Buchung bestellt, und die Tour hat keinen Einkaufsstopp.',
+    'Andenken werden separat bestellt.',
   'tourDiscovery.keepsakes.confirmedTitle': 'Ein Andenken zu dieser Tour',
   'tourDiscovery.keepsakes.confirmedIntro':
     'Optional. Separat bestellbar, jederzeit vor Ihrer Tour.',

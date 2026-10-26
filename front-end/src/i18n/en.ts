@@ -582,7 +582,7 @@ export const en = {
   'costData.help.packaging': 'Boxes, paper, bags.',
   'costData.help.payment-fee': 'The provider\'s fee for online payments.',
   'costData.help.delivery': 'Courier or postage, if any.',
-  'costData.help.other': 'For example packaging or shipping.',
+  'costData.help.other': 'Any other cost of selling this keepsake.',
   'partnerAccess.invalid.title': 'This link no longer works',
   'partnerAccess.invalid.body':
     'The report link was replaced or switched off. Ask {shop} for your current link.',

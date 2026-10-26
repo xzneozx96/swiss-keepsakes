@@ -1,4 +1,4 @@
-import type { AdviceQuestionSet, AdviceRequest, PrivateTourRequest } from '@sk/domain/requests'
+import type { AdviceQuestionSet, AdviceRequest } from '@sk/domain/requests'
 import type { DataClient } from '@/features/data-client'
 
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
@@ -36,12 +36,4 @@ export function useAdviceRequests<T = AdviceRequest[]>(
   const client = useDataClient()
 
   return useSuspenseQuery({ ...requestsQueries.adviceRequests(client), select }).data
-}
-
-export function usePrivateTourRequests<T = PrivateTourRequest[]>(
-  select?: (privateTourRequests: PrivateTourRequest[]) => T,
-): T {
-  const client = useDataClient()
-
-  return useSuspenseQuery({ ...requestsQueries.privateTourRequests(client), select }).data
 }
