@@ -8,7 +8,7 @@ sql_executed: yes (postgres:18-alpine in Docker, PostgreSQL 18.6, scratch databa
 ---
 # Data model: storytelling pivot
 
-This document proposes the PostgreSQL tables, constraints, indexes and migrations for PRD v3. A human must approve it before anyone writes a migration. The ADRs it produces, ADR-013 to ADR-020, ADR-022 to ADR-023 and ADR-024 to ADR-025 and ADR-026 to ADR-028, are also `proposed`. The partner handover of `docs/decisions/2026-10-26-partner-handover.md` is modelled in DM-16 and DM-17. The owner's final data answers of 2026-10-26 (M1, M2, M3, M7 to M10 and C1) are applied: story links per group, a server cart, guest name and e-mail on orders, commission at completion, generic product options, and categories. Section 9 records what the model took from Medusa 2 and what it skipped.
+This document holds the PostgreSQL tables, constraints, indexes and migrations for PRD v3. The owner accepted it on 2026-10-26 (gate DESIGN). The ADRs it produces, ADR-013 to ADR-020, ADR-022 to ADR-023 and ADR-024 to ADR-025 and ADR-026 to ADR-028, are also `accepted`. The partner handover of `docs/decisions/2026-10-26-partner-handover.md` is modelled in DM-16 and DM-17. The owner's final data answers of 2026-10-26 (M1, M2, M3, M7 to M10 and C1) are applied: story links per group, a server cart, guest name and e-mail on orders, commission at completion, generic product options, and categories. Section 9 records what the model took from Medusa 2 and what it skipped.
 
 The model follows the module ownership in `architecture.md` and the conventions of `docs/architecture/backend.md` section 5. Where the PRD, an ADR or the architecture disagree, the document says so in section 8 and keeps the DDL easy to switch.
 
@@ -142,7 +142,7 @@ Why. ADR-002 wants a slug unique per type and language across the platform. Per-
 
 ### DM-5 The pin rule in the database
 
-Decision. AC43 splits in two. The row-local part is a CHECK (a published pin names its main story, a practical place names none). The cross-row part is two deferred constraint triggers that lock the story group row, `FOR SHARE` on the publish side and `FOR UPDATE` on the unpublish side. Place `type` is immutable. A draft place can be deleted. A published place can only be hidden (owner M6, 2026-10-26), and a published story version cannot be deleted either. Tours have no delete guard, and this document does not decide one. A published version cannot move to another group. An editorial review names its subject place with a copy of the place type, which a composite key checks and a CHECK limits to sight, restaurant and accommodation. Serves AP-8. ADR: ADR-015.
+Decision. AC43 splits in two. The row-local part is a CHECK (a published pin names its main story, a practical place names none). The cross-row part is two deferred constraint triggers that lock the story group row, `FOR SHARE` on the publish side and `FOR UPDATE` on the unpublish side. Place `type` is immutable. A draft place can be deleted. A published place can only be hidden (owner M6, 2026-10-26), and a published story version cannot be deleted either. `first_published_at` cannot change once it is set (gate G-E25-FIRSTPUB, 2026-10-26), because clearing it would let a published place go back to draft and then be deleted (AC79). Tours have no delete guard, and this document does not decide one. A published version cannot move to another group. An editorial review names its subject place with a copy of the place type, which a composite key checks and a CHECK limits to sight, restaurant and accommodation. Serves AP-8. ADR: ADR-015.
 
 Why. A CHECK cannot read another table, and ADR-005 asks for the lock. The trigger puts the lock inside the database, so a missed code path cannot skip it. Alternative rejected. Application locks only. This is the first business-rule trigger in the repository, and section 8 returns it as a decision.
 
@@ -612,6 +612,10 @@ BEGIN
 END $$;
 CREATE TRIGGER places_type_is_immutable BEFORE UPDATE OF type ON content.places
   FOR EACH ROW WHEN (OLD.type IS DISTINCT FROM NEW.type) EXECUTE FUNCTION content.reject_type_change();
+-- AC79: first_published_at is what holds a place against deletion, so it is fixed once set.
+-- Without this, a published place could be put back to draft with the column cleared, then deleted.
+CREATE TRIGGER places_first_published_is_fixed BEFORE UPDATE OF first_published_at ON content.places
+  FOR EACH ROW WHEN (OLD.first_published_at IS NOT NULL AND NEW.first_published_at IS DISTINCT FROM OLD.first_published_at) EXECUTE FUNCTION platform.reject_column_change('first_published_at');
 
 -- AC43, cross-row half. Both checks run at commit and lock the story group row, so a publish
 -- and an unpublish that race cannot both pass.
@@ -1925,7 +1929,7 @@ Foreign keys with no index of their own, and why.
 - `stock_holds_item_fkey` and `stock_adjustments_item_fkey`. Stock rows are never deleted, so the parent-side check never runs. The partial indexes above cover the reads.
 - `moderation_events` keys to the three review tables. Reviews are never deleted, so the check never runs. The partial history indexes cover the reads.
 - `place_links_store_fkey` and `place_links_place_fkey`. The primary key on `place_id` serves them, and the table has at most one row per place.
-- `media_refs_media_fkey` is covered by `media_refs_media_fkey_idx`. `skus_product_fkey` is covered by the leading column of `skus_combination_key`. `story_versions_group_fkey`, `story_keepsake_links_version_fkey`, `story_related_version_fkey`, `tour_stops_tour_fkey`, `tour_keepsake_links_tour_fkey`, `product_media_product_fkey` and `partner_invitations_partner_fkey` lead with columns of their table's key or of an index above.
+- `media_refs_media_fkey` is covered by `media_refs_media_fkey_idx`. `skus_product_fkey` is covered by the leading column of `skus_combination_key`. `story_versions_group_fkey`, `story_keepsake_links_group_fkey`, `story_related_group_fkey`, `tour_stops_tour_fkey`, `tour_keepsake_links_tour_fkey`, `product_media_product_fkey` and `partner_invitations_partner_fkey` lead with columns of their table's key or of an index above.
 
 No partitioning. The largest table, `analytics.events`, stays near 3 million rows in a year, far below the 100 million row threshold, and retention deletes by `bucket_hour`.
 
@@ -1966,7 +1970,7 @@ The numbers below are working names. Each migration takes the next free number w
 
 | Step | Phase | SQL | Lock taken | Rollback |
 |---|---|---|---|---|
-| `0007_platform_helpers` | Expand | The three functions in `platform` | None on a table. A short catalog lock | `DROP FUNCTION`. After `0008`, drop with the schemas that use them |
+| `0007_platform_helpers` | Expand | The five functions in `platform` | None on a table. A short catalog lock | `DROP FUNCTION`. After `0008`, drop with the schemas that use them |
 | `0008_content` | Expand | Schema `content`: tables, deferred foreign key `story_groups_subject_place_fkey`, triggers, the `place_story_links` view, section 5 indexes | None on existing tables. New tables are empty | Development and staging: reset the Neon branch from its parent, which also clears Drizzle's applied-migration record, or write a down migration with `DROP SCHEMA content CASCADE` and delete the record. Production before real content: the same. Production after real content: irreversible, restore the Neon branch from before the step and replay |
 | `0009_catalog` | Expand | Schema `catalog`: products, options and values, SKUs and their option values, categories, `pickup_places` and `pickup_place_hours`, the combination-key triggers | As above | As above |
 | `0010_inventory` | Expand | Schema `inventory`, the hold trigger | As above | As above |
@@ -2047,6 +2051,7 @@ Results. All of them came from the DDL in section 4.
 | A practical place has no reviews | `place_reviews_type_check` and the immutable type | Review with type `practical` refused. Type change refused |
 | Last published version of a pin story cannot go | `story_versions_keep_pin_story` | Refused when unpublished and when moved to another group while a pin is published. Accepted when a second version is published, or when the place is hidden |
 | Published or hidden rows are not deleted | `reject_delete` and keys | Delete of a published place, of a published version, and of a group with versions refused. A draft place deleted |
+| A published place cannot clear `first_published_at` and then be deleted | `places_first_published_is_fixed` | Setting `status = 'draft'` with the column cleared on a published place refused, so the delete guard holds. Hiding a place accepted. Test `[E2.5][AC79]` in `api/test/integration/content-schema.test.ts` |
 | One version per language, only `en` or `de` | Primary key, CHECK | Second `en` refused, `fr` refused |
 | Slug unique per language | Unique key and expression indexes | Duplicate story slug and duplicate place slug refused |
 | A version exists only with its required fields | `*_published_fields_check` | Published story without `sections` refused. Published tour without a PDF refused. Name and slug languages that differ refused |

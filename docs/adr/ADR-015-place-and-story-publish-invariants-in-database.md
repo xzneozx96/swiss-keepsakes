@@ -17,6 +17,7 @@ We will enforce each rule at the lowest level that can express it.
 - **The cross-row rule is two deferred constraint triggers that lock the story group row.** When a place is published or its main story changes, the trigger takes `FOR SHARE` on the story group and checks that a published version exists. When a story version leaves `published`, moves to another group or is deleted, the trigger takes `FOR UPDATE` on the group and checks that no published pin still depends on it. Both run at commit. The row lock makes a racing publish and unpublish serialize, and the second one to run sees the first one's result.
 - **Place type never changes.** A trigger refuses an update of `type`. This keeps `reviews.place_reviews.place_type` (a CHECK-readable copy) true, which is how "a practical place has no reviews" reaches the database across modules (ADR-013).
 - **Published rows are not deleted.** A place with `first_published_at` and a story version with published content cannot be deleted. A story group is held by its versions through `RESTRICT`.
+- **`first_published_at` is fixed once set.** A trigger refuses any change of `first_published_at` that starts from a non-NULL value. Without it, a published place could be set back to `draft` with the column cleared, which passes the draft CHECK and then lifts the delete guard (AC79). The slug would be free again. Hiding a place leaves the column alone, so hiding is unaffected.
 - An editorial review names a subject place of type sight, restaurant or accommodation, through a copy of the type that a composite key proves.
 - The use case still checks the same rules first, to give the editor a clear message. The database is the backstop.
 
@@ -40,3 +41,4 @@ We will enforce each rule at the lowest level that can express it.
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-26 amended (gate G-E25-FIRSTPUB): first_published_at fixed once set
