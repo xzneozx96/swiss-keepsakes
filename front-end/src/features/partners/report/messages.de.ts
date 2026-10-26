@@ -48,13 +48,13 @@ export const partnerDashboardDe: Record<
   'partnerDash.fig.toPay.hint':
     'Was Ihnen am Ende jedes Balkens noch geschuldet wurde: verbuchte Provision abzüglich Auszahlungen.',
   'partnerDash.fig.orders.hint':
-    'Von Ihnen vermittelte Bestellungen und Buchungen, ohne abgelehnte oder stornierte.',
+    'Von Ihnen vermittelte Bestellungen, ohne abgelehnte oder stornierte.',
   'partnerDash.fig.amount': 'Betrag',
   'partnerDash.fig.balance': 'Noch offen',
   'partnerDash.transactions.title': 'Transaktionen',
   'partnerDash.transactions.description':
-    'Von Ihnen vermittelte Bestellungen und Buchungen in diesem Zeitraum',
+    'Von Ihnen vermittelte Bestellungen in diesem Zeitraum',
   'partnerDash.balance.share': '{share} vom Gesamtbetrag',
   'partnerDash.fig.orders.hintExcluded':
-    'Von Ihnen vermittelte Bestellungen und Buchungen. {count} abgelehnte oder stornierte stehen in der Tabelle, werden hier aber nicht gezählt.',
+    'Von Ihnen vermittelte Bestellungen. {count} abgelehnte oder stornierte stehen in der Tabelle, werden hier aber nicht gezählt.',
 }

@@ -45,7 +45,7 @@ export const reportPagesDe: Record<keyof typeof reportPagesEn, string> = {
 
   'reportPages.ended.title': 'Wie die Verkäufe endeten',
   'reportPages.ended.description':
-    'Im Zeitraum erfasste Bestellungen und Buchungen',
+    'Im Zeitraum erfasste Bestellungen',
   'reportPages.ended.total': 'Erfasst',
   'reportPages.ended.completed': 'Abgeschlossen',
   'reportPages.ended.open': 'Noch offen',
@@ -55,7 +55,7 @@ export const reportPagesDe: Record<keyof typeof reportPagesEn, string> = {
 
   'reportPages.groups.title': 'Gesamtumsatz nach Produktgruppe',
   'reportPages.groups.description':
-    'Andenken-Unterkategorien und Touren als eine Gruppe',
+    'Andenken-Unterkategorien',
 
   'reportPages.sources.title': 'Herkunft',
   'reportPages.sources.description':
@@ -63,7 +63,7 @@ export const reportPagesDe: Record<keyof typeof reportPagesEn, string> = {
   'reportPages.sources.source': 'Herkunft',
   'reportPages.guestGroups.title': 'Gästegruppen',
   'reportPages.guestGroups.description':
-    'Gesamtumsatz nach den Reiseangaben jeder Bestellung oder Buchung',
+    'Gesamtumsatz nach den Reiseangaben jeder Bestellung',
   'reportPages.guestGroups.unknown': 'Nicht bestimmt (keine Reiseangaben)',
   'reportPages.places.title': 'Abholorte für Andenken',
   'reportPages.places.description': 'Andenken-Umsatz im Zeitraum nach Abholort',

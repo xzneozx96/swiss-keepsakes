@@ -267,9 +267,9 @@ export function MonthsWidget({
 }
 
 /**
- * Keepsakes and tours, in the Sales overview's split card: a donut with the period's total,
- * a tile per side (commission, share, how much is recorded against estimated), then each
- * product group ranked as divider rows in its side's colour.
+ * Keepsakes, in the Sales overview's split card: a donut with the period's total, a tile
+ * (commission, share, how much is recorded against estimated), then each product group
+ * ranked as divider rows in the keepsakes colour.
  */
 export function MixWidget({
   mix,
@@ -285,7 +285,7 @@ export function MixWidget({
   const { t } = useLocale()
   const [active, setActive] = useState<number | null>(null)
   const shown = active === null ? null : mix.parts[active]
-  const colourOf = () => mix.parts[0]
+  const keepsakesColour = mix.parts[0]
 
   return (
     <Widget
@@ -395,7 +395,7 @@ export function MixWidget({
                         <span
                           aria-hidden
                           className="size-3 shrink-0 rounded-full"
-                          style={{ background: colourOf().colour }}
+                          style={{ background: keepsakesColour.colour }}
                         />
                         <span className="flex min-w-0 flex-1 flex-col">
                           <span className="truncate font-medium">{g.name}</span>

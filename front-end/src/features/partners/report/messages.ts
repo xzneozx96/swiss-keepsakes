@@ -42,13 +42,13 @@ export const partnerDashboardEn = {
   'partnerDash.fig.toPay.hint':
     'What was still owed to you at the end of each bar: recorded commission minus what was paid out.',
   'partnerDash.fig.orders.hint':
-    'Orders and bookings you referred, without declined or cancelled ones.',
+    'Orders you referred, without declined or cancelled ones.',
   'partnerDash.fig.amount': 'Amount',
   'partnerDash.fig.balance': 'Still owed',
   'partnerDash.transactions.title': 'Transactions',
   'partnerDash.transactions.description':
-    'Orders and bookings you referred in this period',
+    'Orders you referred in this period',
   'partnerDash.balance.share': '{share} of the total',
   'partnerDash.fig.orders.hintExcluded':
-    'Orders and bookings you referred. {count} declined or cancelled are in the table but not counted here.',
+    'Orders you referred. {count} declined or cancelled are in the table but not counted here.',
 } as const

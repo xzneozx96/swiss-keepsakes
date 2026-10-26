@@ -87,7 +87,7 @@ const MIX = {
 /**
  * P02 as a dashboard: the period report of `usePartnerReport` plus what its widgets need on
  * top (comparison with the period before, the money split, months to jump to, the keepsakes
- * and tours split, and each transaction's chart column and commission state).
+ * split, and each transaction's chart column and commission state).
  */
 export function usePartnerDashboard(
   partnerId: string,

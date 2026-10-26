@@ -463,7 +463,7 @@ export const de: Record<MessageKey, string> = {
   'reports.money.label': 'Geld im Zeitraum',
   'reports.money.goods': 'Andenken {amount}',
   'reports.money.tours': 'Touren {amount}',
-  'reports.money.value': 'Wert der Bestellungen und Buchungen',
+  'reports.money.value': 'Wert der Bestellungen',
   'reports.money.value.hint':
     'Im Zeitraum aufgegeben, ohne abgelehnte oder stornierte.',
   'reports.money.collected': 'Eingenommen',
@@ -486,8 +486,8 @@ export const de: Record<MessageKey, string> = {
     'Besuche und Aufrufe haben noch keine Gästegruppe und keinen Warenkorb; mit diesen Filtern beginnt der Trichter bei der Anfrage.',
   'reports.funnel.visits': 'Besuche (QR, Links, direkt)',
   'reports.funnel.viewed': 'Andenken oder Tour angesehen',
-  'reports.funnel.started': 'Bestellung oder Buchung begonnen',
-  'reports.funnel.sent': 'Anfrage oder Buchung gesendet',
+  'reports.funnel.started': 'Bestellung begonnen',
+  'reports.funnel.sent': 'Anfrage gesendet',
   'reports.funnel.paid': 'Bezahlt',
   'reports.funnel.completed': 'Abgeschlossen',
   'reports.funnel.drop': '{share} abgesprungen',
@@ -495,7 +495,7 @@ export const de: Record<MessageKey, string> = {
     'Nur {share} der Besuche in diesem Zeitraum wurden gemessen: Einige Besucher blockierten das Tracking. Besuche, Aufrufe und Starts sind daher zu tief; die Verkäufe sind vollständig.',
   'reports.groups.title': 'Gästegruppen',
   'reports.groups.description':
-    'Verkaufswert nach den Reiseangaben jeder Bestellung oder Buchung',
+    'Verkaufswert nach den Reiseangaben jeder Bestellung',
   'reports.groups.count': '{count} Verkäufe',
   'reports.sources.title': 'Quellen',
   'reports.sources.description':
@@ -559,7 +559,7 @@ export const de: Record<MessageKey, string> = {
   'reports.margin.enterCosts': 'Kosten erfassen',
   'costData.title': 'Kostendaten',
   'costData.intro':
-    'Tatsächliche Kosten pro abgeschlossener Bestellung und Tourbuchung. Die Marge wird nur berechnet, wenn alle Kosten erfasst sind; ein leeres Feld gilt als fehlend, nie als 0.',
+    'Tatsächliche Kosten pro abgeschlossener Bestellung. Die Marge wird nur berechnet, wenn alle Kosten erfasst sind; ein leeres Feld gilt als fehlend, nie als 0.',
   'costData.meter': '{complete} von {total} Transaktionen vollständig',
   'costData.more': '+{count} weitere',
   'costData.chart.title': 'Kostendaten pro Woche',
@@ -616,7 +616,7 @@ export const de: Record<MessageKey, string> = {
   'partnerAccess.code.sent':
     'Wir haben einen 6-stelligen Code an {email} gesendet. Er gilt 10 Minuten.',
   'partnerAccess.privacy':
-    'Der Bericht zeigt nur Bestellungen und Buchungen über Ihren Link, mit dem Namen der Gäste und ohne Kontaktdaten.',
+    'Der Bericht zeigt nur Bestellungen über Ihren Link, mit dem Namen der Gäste und ohne Kontaktdaten.',
   'partnerDetail.subtitle': '{kind} · Code {code}',
   'partnerDetail.notFound':
     'Diesen Partner gibt es nicht oder er wurde gelöscht.',
@@ -657,7 +657,7 @@ export const de: Record<MessageKey, string> = {
   'partnerDetail.state.partlyPaid': 'Teilweise bezahlt',
   'partnerDetail.transactions.title': 'Transaktionen ({count})',
   'partnerDetail.transactions.empty':
-    'Noch keine Bestellungen oder Buchungen über diesen Partner.',
+    'Noch keine Bestellungen über diesen Partner.',
   'partnerDetail.links.title': 'QR-Code und Links',
   'partnerDetail.links.qr': 'QR-Code anzeigen',
   'partnerDetail.links.referral': 'Empfehlungslink',

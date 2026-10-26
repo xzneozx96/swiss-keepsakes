@@ -46,7 +46,7 @@ export interface SingleBar {
   valueText: string
 }
 
-/** A figure that is one amount per bar (payouts, the running balance), not keepsakes and tours. */
+/** A figure that is one amount per bar (payouts, the running balance), not a keepsakes split. */
 export interface SingleFigure {
   id: 'paid' | 'to-pay'
   label: string
@@ -59,7 +59,7 @@ export interface SingleFigure {
 
 /**
  * The P02 dashboard for any range of days: the Sales overview's engine filtered to this
- * partner (commission and orders, keepsakes and tours stacked), the partner ledger for what
+ * partner (commission and orders), the partner ledger for what
  * was paid out and what was still owed, and the period report for the transactions, the
  * payments log, the all-time balance and the commission split.
  */

@@ -375,11 +375,8 @@ export function useSalesOverview(
   const unpaidSplit = byKind(cur.placed, s => s.outstanding)
   const valueTotal = valueSplit.goods + valueSplit.tours
   const unpaidTotal = unpaidSplit.goods + unpaidSplit.tours
-  const moneySplit = (s: { goods: number, tours: number }) =>
-    t('salesOverview.split', {
-      gifts: money(s.goods),
-      tours: money(s.tours),
-    })
+  const moneySplit = (s: { goods: number }) =>
+    t('salesOverview.split', { gifts: money(s.goods) })
 
   const valueDelta = delta(
     valueTotal,

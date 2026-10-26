@@ -34,16 +34,16 @@ export const salesOverviewDe: Record<keyof typeof salesOverviewEn, string> = {
 
   'salesOverview.value': 'Gesamtumsatz',
   'salesOverview.value.hint':
-    'Der Gesamtpreis der erfassten Bestellungen und Buchungen, ohne abgelehnte oder stornierte. Das ist kein Gewinn: Kosten, Provision und Rückerstattungen sind nicht abgezogen, und ein Teil kann noch offen sein.',
+    'Der Gesamtpreis der erfassten Bestellungen, ohne abgelehnte oder stornierte. Das ist kein Gewinn: Kosten, Provision und Rückerstattungen sind nicht abgezogen, und ein Teil kann noch offen sein.',
   'salesOverview.collected': 'Eingenommen',
   'salesOverview.collected.hint':
     'Im Zeitraum tatsächlich erhaltenes Geld, online oder vom Geschäft erfasst, egal wann verkauft wurde.',
   'salesOverview.orders': 'Bestellungen gesamt',
   'salesOverview.orders.hint':
-    'Wie viele Bestellungen und Buchungen erfasst wurden, ohne abgelehnte oder stornierte.',
+    'Wie viele Bestellungen erfasst wurden, ohne abgelehnte oder stornierte.',
   'salesOverview.unpaid': 'Offen aus diesen Verkäufen',
   'salesOverview.unpaid.hint':
-    'Was heute auf den im Zeitraum erfassten Bestellungen und Buchungen noch offen ist.',
+    'Was heute auf den im Zeitraum erfassten Bestellungen noch offen ist.',
   'salesOverview.unpaid.share': '{share} des Gesamtumsatzes ist noch offen',
   'salesOverview.unpaidShort': 'Offen',
   'salesOverview.refunds': 'Rückerstattungen',
@@ -51,7 +51,7 @@ export const salesOverviewDe: Record<keyof typeof salesOverviewEn, string> = {
   'salesOverview.commission': 'Provision',
   'salesOverview.commission.hint':
     'Im Zeitraum erfasste Partnerprovision. Eine Rückerstattung zieht ihre Provision am selben Tag ab, daher kann ein Tag mit Rückerstattungen unter null liegen.',
-  'salesOverview.split': 'Andenken {gifts} · Touren {tours}',
+  'salesOverview.split': 'Andenken {gifts}',
   'salesOverview.giftOrders.one': '{count} Andenken-Bestellung',
   'salesOverview.giftOrders.other': '{count} Andenken-Bestellungen',
   'salesOverview.tourBookings.one': '{count} Tourbuchung',
@@ -64,7 +64,7 @@ export const salesOverviewDe: Record<keyof typeof salesOverviewEn, string> = {
   'salesOverview.top.title': 'Bestseller',
   'salesOverview.sellers.title': 'Meistverkauft',
   'salesOverview.top.description':
-    'Andenken und Touren, nach Gesamtumsatz im Zeitraum',
+    'Andenken, nach Gesamtumsatz im Zeitraum',
   'salesOverview.top.empty': 'In diesem Zeitraum wurde nichts verkauft.',
   'salesOverview.top.seeAll': 'Alle ansehen',
   'salesOverview.top.product': 'Produkte',
