@@ -56,7 +56,7 @@ export const salesOverviewEn = {
   'salesOverview.tourBookings.one': '{count} tour booking',
   'salesOverview.tourBookings.other': '{count} tour bookings',
 
-  'salesOverview.mix.title': 'Keepsakes and tours',
+  'salesOverview.mix.title': 'Keepsakes',
   'salesOverview.mix.description': 'Total sales in the period, split',
   'salesOverview.mix.share': '{share} of total sales',
 

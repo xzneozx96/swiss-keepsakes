@@ -15,6 +15,7 @@ import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 import { REQUEST_TABS } from '@/features/requests/merchant/lib/search-params'
 import { en } from '@/i18n/en'
+import { Route as accountRoute } from '@/routes/_guest/account'
 
 let demo: ReturnType<typeof startDemo>
 
@@ -72,5 +73,12 @@ describe('store menus', () => {
     await renderAt('/account', () => <AccountHub guest={guest} onSignOut={() => {}} />)
     expect(document.body.textContent).not.toContain(en['account.section.bookings'])
     expect(document.querySelectorAll('a[href*="bookings"]')).toHaveLength(0)
+  })
+
+  it('[E3.1][AC50] /account?tab=bookings falls back to the hub', () => {
+    const validate = accountRoute.options.validateSearch as (search: Record<string, unknown>) => { tab?: string }
+
+    expect(validate({ tab: 'bookings' }).tab).toBeUndefined()
+    expect(validate({ tab: 'payments' }).tab).toBe('payments')
   })
 })

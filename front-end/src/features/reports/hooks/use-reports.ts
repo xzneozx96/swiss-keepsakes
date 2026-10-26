@@ -81,7 +81,6 @@ export interface MoneyCardView {
   label: string
   value: string
   goods: string
-  tours: string
   hint: string
   delta: DeltaView
   trend: number[]
@@ -163,7 +162,6 @@ export function useReports(
       label: t(`reports.money.${id}`),
       value: money(value),
       goods: t('reports.money.goods', { amount: money(summary.cur[id].goods) }),
-      tours: t('reports.money.tours', { amount: money(summary.cur[id].tours) }),
       hint: t(`reports.money.${id}.hint`),
       delta: {
         text: d.delta,
@@ -390,7 +388,7 @@ export function useReports(
     }),
     filterOptions: {
       source: sourceOptions,
-      type: (['all', 'goods', 'tours'] as const).map(id => ({
+      type: (['all', 'goods'] as const).map(id => ({
         id,
         label: t(`reports.filter.type.${id}`),
       })),
@@ -442,21 +440,6 @@ export function useReports(
           label: t('reports.outcome.goodsLost'),
           value: outcome('goods', 'lost'),
         },
-        {
-          id: 'tours-completed',
-          label: t('reports.outcome.toursCompleted'),
-          value: outcome('tours', 'completed'),
-        },
-        {
-          id: 'tours-noshow',
-          label: t('reports.outcome.toursNoShow'),
-          value: outcome('tours', 'no-show'),
-        },
-        {
-          id: 'tours-lost',
-          label: t('reports.outcome.toursLost'),
-          value: outcome('tours', 'lost'),
-        },
       ],
       articles,
       widget: [
@@ -478,7 +461,7 @@ export function useReports(
       ],
     },
     margin: {
-      parts: [marginPart('goods'), marginPart('tours')],
+      parts: [marginPart('goods')],
       summary:
         allSales === 0
           ? null

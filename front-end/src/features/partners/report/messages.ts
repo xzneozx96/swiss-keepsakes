@@ -15,7 +15,7 @@ export const partnerDashboardEn = {
   'partnerDash.chart.hint': 'Select a column to see its orders',
   'partnerDash.chart.previous': 'Previous period',
   'partnerDash.chart.previousValue': 'Previous period: {amount}',
-  'partnerDash.mix.title': 'Keepsakes and tours',
+  'partnerDash.mix.title': 'Keepsakes',
   'partnerDash.mix.description':
     'Commission in the period, recorded and estimated',
   'partnerDash.mix.keepsakes': 'Keepsakes',

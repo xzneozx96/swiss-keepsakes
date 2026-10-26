@@ -19,7 +19,7 @@ export const partnerDashboardDe: Record<
   'partnerDash.chart.hint': 'Spalte wählen, um ihre Bestellungen zu sehen',
   'partnerDash.chart.previous': 'Vorheriger Zeitraum',
   'partnerDash.chart.previousValue': 'Vorheriger Zeitraum: {amount}',
-  'partnerDash.mix.title': 'Andenken und Touren',
+  'partnerDash.mix.title': 'Andenken',
   'partnerDash.mix.description':
     'Provision im Zeitraum, verbucht und geschätzt',
   'partnerDash.mix.keepsakes': 'Andenken',

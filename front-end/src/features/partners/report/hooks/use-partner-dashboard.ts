@@ -56,7 +56,7 @@ export interface MonthBar {
 }
 
 export interface MixPart {
-  id: 'keepsakes' | 'tours'
+  id: 'keepsakes'
   label: string
   value: string
   amount: number
@@ -79,10 +79,9 @@ export const BALANCE_COLOURS: Record<BalancePart['id'], string> = {
   'estimated': 'var(--chart-1-light)',
 }
 
-/** Keepsakes red, tours teal, as every gifts/tours split (owner 15.10.2026). */
+/** Keepsakes red (owner 15.10.2026). Tours are dormant (ADR-012). */
 const MIX = {
   keepsakes: { colour: 'var(--chart-1)', track: 'var(--chart-track)' },
-  tours: { colour: 'var(--chart-4)', track: 'var(--chart-4-track)' },
 }
 
 /**
@@ -255,8 +254,6 @@ export function usePartnerDashboard(
     }
   })
 
-  const tourGroup = report.groups.find(g => g.subcategoryId === 'tours')
-  const tourAmount = tourGroup ? tourGroup.recorded + tourGroup.estimated : 0
   const allAmount = report.groups.reduce(
     (sum, g) => sum + g.recorded + g.estimated,
     0,
@@ -264,23 +261,18 @@ export function usePartnerDashboard(
   const mix = {
     total: money(allAmount),
     isEmpty: allAmount === 0,
-    parts: (
-      [
-        ['keepsakes', allAmount - tourAmount],
-        ['tours', tourAmount],
-      ] as const
-    ).map(([id, amount]): MixPart => ({
-      id,
-      label: t(
-        id === 'tours' ? 'partnerDash.mix.tours' : 'partnerDash.mix.keepsakes',
-      ),
-      value: money(amount),
-      amount,
-      share: t('partnerDash.mix.share', {
-        share: percent(amount, allAmount),
-      }),
-      ...MIX[id],
-    })),
+    parts: [
+      {
+        id: 'keepsakes',
+        label: t('partnerDash.mix.keepsakes'),
+        value: money(allAmount),
+        amount: allAmount,
+        share: t('partnerDash.mix.share', {
+          share: percent(allAmount, allAmount),
+        }),
+        ...MIX.keepsakes,
+      } satisfies MixPart,
+    ],
   }
 
   const rawRows = new Map(report.rows.map(r => [r.id, r]))

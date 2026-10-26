@@ -317,13 +317,6 @@ export function ReportsMoneyPage() {
                               {m.gifts}
                             </span>
                           </span>
-                          <span>
-                            {t('salesOverview.tours')}
-                            {' '}
-                            <span className="font-medium text-foreground">
-                              {m.tours}
-                            </span>
-                          </span>
                         </span>
                       </div>
                     </li>
@@ -544,7 +537,6 @@ export function ReportsGuestsPage() {
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const mixParts = [
     { key: 'gifts', label: t('salesOverview.gifts'), colour: MIX_COLOURS[0] },
-    { key: 'tours', label: t('salesOverview.tours'), colour: MIX_COLOURS[1] },
   ]
   const empty = useEmpty()
   const sources = report.funnel.sources
@@ -567,9 +559,9 @@ export function ReportsGuestsPage() {
           rows={sourceSplit.map(src => ({
             id: src.id,
             label: src.label,
-            values: [src.gifts, src.tours],
-            texts: [money(src.gifts), money(src.tours)],
-            totalText: money(src.gifts + src.tours),
+            values: [src.gifts],
+            texts: [money(src.gifts)],
+            totalText: money(src.gifts),
           }))}
         />
         <div className="mt-4 border-t border-separator pt-2">
@@ -589,16 +581,12 @@ export function ReportsGuestsPage() {
             parts={mixParts}
             rows={guestGroups.map(g => ({
               id: g.id,
-              // Keepsakes and tours stay split here too; the label says why it is apart.
               label:
                 g.id === 'unknown'
                   ? t('reportPages.guestGroups.unknown')
                   : g.label,
-              values: [g.amounts?.gifts ?? 0, g.amounts?.tours ?? 0],
-              texts: [
-                money(g.amounts?.gifts ?? 0),
-                money(g.amounts?.tours ?? 0),
-              ],
+              values: [g.amounts?.gifts ?? 0],
+              texts: [money(g.amounts?.gifts ?? 0)],
               totalText: g.value,
             }))}
           />
@@ -696,9 +684,7 @@ export function ReportsMarginPage() {
                       }),
                     empty: part.hasData
                       ? undefined
-                      : part.sales === 0 && part.id === 'tours'
-                        ? t('reportPages.margin.noTours')
-                        : t('reports.margin.noData'),
+                      : t('reports.margin.noData'),
                   }))}
                 />
               )

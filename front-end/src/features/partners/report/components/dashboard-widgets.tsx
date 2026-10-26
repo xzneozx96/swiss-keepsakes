@@ -285,8 +285,7 @@ export function MixWidget({
   const { t } = useLocale()
   const [active, setActive] = useState<number | null>(null)
   const shown = active === null ? null : mix.parts[active]
-  const colourOf = (id: string) =>
-    mix.parts.find(p => p.id === (id === 'tours' ? 'tours' : 'keepsakes'))!
+  const colourOf = () => mix.parts[0]
 
   return (
     <Widget
@@ -396,7 +395,7 @@ export function MixWidget({
                         <span
                           aria-hidden
                           className="size-3 shrink-0 rounded-full"
-                          style={{ background: colourOf(g.id).colour }}
+                          style={{ background: colourOf().colour }}
                         />
                         <span className="flex min-w-0 flex-1 flex-col">
                           <span className="truncate font-medium">{g.name}</span>

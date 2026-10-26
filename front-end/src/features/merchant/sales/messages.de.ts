@@ -57,7 +57,7 @@ export const salesOverviewDe: Record<keyof typeof salesOverviewEn, string> = {
   'salesOverview.tourBookings.one': '{count} Tourbuchung',
   'salesOverview.tourBookings.other': '{count} Tourbuchungen',
 
-  'salesOverview.mix.title': 'Andenken und Touren',
+  'salesOverview.mix.title': 'Andenken',
   'salesOverview.mix.description': 'Gesamtumsatz im Zeitraum, aufgeteilt',
   'salesOverview.mix.share': '{share} des Gesamtumsatzes',
 
