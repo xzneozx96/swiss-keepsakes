@@ -298,6 +298,10 @@ BEGIN
 END $$;--> statement-breakpoint
 CREATE TRIGGER places_type_is_immutable BEFORE UPDATE OF type ON content.places
   FOR EACH ROW WHEN (OLD.type IS DISTINCT FROM NEW.type) EXECUTE FUNCTION content.reject_type_change();--> statement-breakpoint
+-- AC79: first_published_at is what holds a place against deletion, so it is fixed once set.
+-- Without this, a published place could be put back to draft with the column cleared, then deleted.
+CREATE TRIGGER places_first_published_is_fixed BEFORE UPDATE OF first_published_at ON content.places
+  FOR EACH ROW WHEN (OLD.first_published_at IS NOT NULL AND NEW.first_published_at IS DISTINCT FROM OLD.first_published_at) EXECUTE FUNCTION platform.reject_column_change('first_published_at');--> statement-breakpoint
 -- AC43, cross-row half. Both checks run at commit and lock the story group row, so a publish
 -- and an unpublish that race cannot both pass.
 CREATE FUNCTION content.assert_pin_has_published_story() RETURNS trigger LANGUAGE plpgsql AS $$

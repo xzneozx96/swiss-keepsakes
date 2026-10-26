@@ -381,6 +381,23 @@ describe('[E2.5] content rules', () => {
     expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'hidden'`, [published])).toBe(1)
   })
 
+  it('[E2.5][AC79] a published place cannot clear first_published_at and then be deleted', async () => {
+    const store = randomUUID()
+    const place = await newPlace(store, 'practical')
+    const first = await publishPlace(place, JSON.stringify({ en: slugOf('pier') }), '{"name":{"en":"Pier"}}')
+
+    const cleared = await failure(pool.query(`update content.places set status = 'draft', first_published_at = NULL where id = $1`, [place]))
+    const moved = await failure(pool.query(`update content.places set first_published_at = now() + interval '1 day' where id = $1`, [place]))
+    const deleted = await failure(pool.query('delete from content.places where id = $1', [place]))
+
+    expect(first.rowCount).toBe(1)
+    expect(cleared).toMatchObject({ code: '23001' })
+    expect((cleared as Error).message).toContain('column first_published_at')
+    expect(moved).toMatchObject({ code: '23001' })
+    expect(deleted).toMatchObject({ code: '23001' })
+    expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'published' and first_published_at is not null`, [place])).toBe(1)
+  })
+
   it('[E2.5] a published story version cannot be deleted, and a draft one can', async () => {
     const store = randomUUID()
     const group = await newGroup(store)
