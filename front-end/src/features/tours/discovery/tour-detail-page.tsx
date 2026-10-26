@@ -26,7 +26,6 @@ import { StorySheet } from '@/features/catalog/components/story-sheet'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'
 import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
 import { shop } from '@/features/catalog/seed'
-import { MaintenanceNotice } from '@/features/tours/discovery/maintenance-notice'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
 import { TourSections } from '@/features/tours/discovery/tour-sections'
 import { useTours } from '@/features/tours/hooks/use-tours'
@@ -200,11 +199,6 @@ export function TourDetail({
           }}
           subtitle={text(tour.summary)}
         />
-        {tour.maintenance?.active && (
-          <div className="pt-5">
-            <MaintenanceNotice maintenance={tour.maintenance} />
-          </div>
-        )}
         <section className="py-5">
           <SellerRow
             address={shopPlace.address}
