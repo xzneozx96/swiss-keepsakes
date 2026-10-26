@@ -60,7 +60,9 @@ async function walk(page: Page, label: string, sources: Record<string, string[]>
   expect(all.size, `${label}: pages visited`).toBeGreaterThan(0);
   for (const href of all) {
     await visit(page, href);
-    expect(page.url(), `${label} ${href}`).toContain(href);
+    const landed = new URL(page.url());
+
+    expect(landed.pathname + landed.search, `${label} ${href}`).toBe(href);
     await expectNoBooking(page, `${label} ${href}`);
   }
 }
