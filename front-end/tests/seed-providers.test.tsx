@@ -59,14 +59,17 @@ describe('[E3.2] the providers on the server and in the first render', () => {
     expect(container.textContent).toBe('en')
 
     document.body.append(container)
+    let root!: ReturnType<typeof hydrateRoot>
+
     act(() => {
-      hydrateRoot(container, app, { onRecoverableError: error => recoverable.push(error) })
+      root = hydrateRoot(container, app, { onRecoverableError: error => recoverable.push(error) })
     })
 
     // The first render while hydrating must equal the server's HTML, or React throws the page away and rebuilds it.
     expect(seen[0]).toBe('en')
     await waitFor(() => expect(container.textContent).toBe('de'))
     expect(recoverable).toEqual([])
+    act(() => root.unmount())
     container.remove()
   })
 
