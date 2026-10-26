@@ -8,7 +8,7 @@ import { signInUrl } from '@/features/auth/lib/return-to'
 import { orderDetailHref } from '@/features/merchant/orders/hooks/use-merchant-orders'
 import { referralUrl } from '@/features/merchant/partners/components/partner-qr-sheet'
 
-const SRC = join(process.cwd(), 'src')
+const SRC = join(import.meta.dirname, '..', 'src')
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
