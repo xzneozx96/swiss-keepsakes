@@ -277,17 +277,19 @@ describe('[E2.5] content tables', () => {
 
 async function inTransaction(work: (client: PoolClient) => Promise<void>): Promise<void> {
   const client = await pool.connect()
+  let failed: Error | undefined
   try {
     await client.query('begin')
     await work(client)
     await client.query('commit')
   }
   catch (error) {
+    failed = error as Error
     await client.query('rollback').catch(() => undefined)
     throw error
   }
   finally {
-    client.release()
+    client.release(failed)
   }
 }
 
@@ -333,8 +335,9 @@ describe('[E2.5] content rules', () => {
       await publishSight(client, sight, group)
     }))
     await inTransaction(async (client) => {
-      await publishVersion(client, group, 'en')
+      // sight first, version second: only a deferred check accepts this order
       await publishSight(client, sight, group)
+      await publishVersion(client, group, 'en')
     })
     const practical = await newPlace(store, 'practical')
     await publishPlace(practical, JSON.stringify({ en: slugOf('toilets') }), '{"name":{"en":"Toilets"}}')
@@ -432,8 +435,9 @@ describe('[E2.5] content rules', () => {
     await newDraftVersion(group, 'de', store)
 
     await inTransaction(async (client) => {
-      await publishVersion(client, group, 'de')
+      // unpublish first, publish second: only a deferred check accepts this order
       await client.query(`update content.story_versions set status = 'draft' where group_id = $1 and language = 'en'`, [group])
+      await publishVersion(client, group, 'de')
     })
 
     expect(await count(pool, `select count(*) from content.story_versions where group_id = $1 and status = 'published' and language = 'de'`, [group])).toBe(1)
@@ -444,20 +448,22 @@ describe('[E2.5] content rules', () => {
     const { group, place } = await publishedPin(store)
 
     await inTransaction(async (client) => {
-      await client.query(`update content.places set status = 'hidden' where id = $1`, [place])
+      // unpublish first, hide second: only a deferred check accepts this order
       await client.query(`update content.story_versions set status = 'draft' where group_id = $1 and language = 'en'`, [group])
+      await client.query(`update content.places set status = 'hidden' where id = $1`, [place])
     })
 
     expect(await count(pool, `select count(*) from content.story_versions where group_id = $1 and status = 'published'`, [group])).toBe(0)
   })
 
-  it('[E2.5] a deleted published version cannot be the last of a pin story (the delete trigger fires first)', async () => {
+  it('[E2.5] reject_delete refuses deleting the last published version of a pin story', async () => {
     const store = randomUUID()
     const { group } = await publishedPin(store)
 
     const refused = await failure(pool.query(`delete from content.story_versions where group_id = $1 and language = 'en'`, [group]))
 
     expect(refused).toMatchObject({ code: '23001' })
+    expect((refused as Error).message).toContain('cannot be deleted; hide it instead')
   })
 
   it('[E2.5] a used media row cannot be retired, and an unused one can', async () => {
