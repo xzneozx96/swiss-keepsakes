@@ -557,4 +557,16 @@ describe('[E2.5] content rules', () => {
       ...[mention, review].sort().map(group_id => ({ group_id, rank: 1 })),
     ])
   })
+
+  it('[E2.5] place_story_links lists a main story that is also linked on the place once, at rank 0', async () => {
+    const store = randomUUID()
+    const place = await newPlace(store, 'sight')
+    const group = await newGroup(store)
+    await pool.query('update content.places set main_story_group_id = $2 where id = $1', [place, group])
+    await pool.query('insert into content.story_group_places (group_id, place_id, store_id, position) values ($1, $2, $3, 1)', [group, place, store])
+
+    const { rows } = await pool.query<{ group_id: string, rank: number }>('select group_id, rank from content.place_story_links where place_id = $1', [place])
+
+    expect(rows).toEqual([{ group_id: group, rank: 0 }])
+  })
 })

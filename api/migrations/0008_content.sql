@@ -366,10 +366,13 @@ END $$;--> statement-breakpoint
 CREATE TRIGGER media_not_retired_while_used BEFORE UPDATE OF status ON content.media
   FOR EACH ROW WHEN (NEW.status = 'retired' AND OLD.status <> 'retired') EXECUTE FUNCTION content.reject_retire_if_used();--> statement-breakpoint
 -- Place sheet (AP-4): main story first, then every other story that mentions the place or reviews it.
+-- A story that is both the main story and listed on the place appears once, at rank 0.
 CREATE VIEW content.place_story_links AS
-  SELECT p.id AS place_id, p.main_story_group_id AS group_id, 0 AS rank
-    FROM content.places p WHERE p.main_story_group_id IS NOT NULL
-  UNION
-  SELECT g.place_id, g.group_id, 1 FROM content.story_group_places g
-  UNION
-  SELECT s.subject_place_id, s.id, 1 FROM content.story_groups s WHERE s.subject_place_id IS NOT NULL;
+  SELECT u.place_id, u.group_id, min(u.rank) AS rank FROM (
+    SELECT p.id AS place_id, p.main_story_group_id AS group_id, 0 AS rank
+      FROM content.places p WHERE p.main_story_group_id IS NOT NULL
+    UNION
+    SELECT g.place_id, g.group_id, 1 FROM content.story_group_places g
+    UNION
+    SELECT s.subject_place_id, s.id, 1 FROM content.story_groups s WHERE s.subject_place_id IS NOT NULL
+  ) u GROUP BY u.place_id, u.group_id;
