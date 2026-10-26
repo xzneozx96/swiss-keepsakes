@@ -11,7 +11,6 @@ import {
 import { formatMoney, pickText } from '@sk/domain/shared'
 import { shop } from '@/features/catalog/seed'
 import { renderRequestMail } from '@/features/requests/lib/render-request-mail'
-import { renderTourMail } from '@/features/tours/merchant/lib/render-mail'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 
@@ -189,8 +188,6 @@ function formatParams(
  * `places` is the demo data's pickup places (outline D4).
  */
 export function renderMail(mail: Mail, places: PickupPlace[]): RenderedMail {
-  if (mail.bookingId)
-    return renderTourMail(mail)
   if (mail.template === 'N16' || mail.template === 'N17')
     return renderRequestMail(mail)
   const copy = messages[mail.language]

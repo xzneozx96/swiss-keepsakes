@@ -11,8 +11,6 @@ import { TourDetailPage } from '@/features/tours/discovery'
 import { tourDiscoveryEn as discovery } from '@/features/tours/discovery/messages'
 
 const slug = 'lucerne-the-things-that-remain'
-// The page takes no booking prop once E3.1 removes it (ADR-012); the cast keeps this test valid before and after.
-const Detail = TourDetailPage as unknown as (props: { slug: string }) => React.ReactNode
 
 let demo: ReturnType<typeof startDemo>
 
@@ -26,7 +24,7 @@ beforeEach(async () => {
 
 async function renderTour() {
   const root = createRootRoute({ component: Outlet })
-  const page = createRoute({ getParentRoute: () => root, path: '/tours/$slug', component: () => <Detail slug={slug} /> })
+  const page = createRoute({ getParentRoute: () => root, path: '/tours/$slug', component: () => <TourDetailPage slug={slug} /> })
   const router = createRouter({
     routeTree: root.addChildren([page]),
     history: createMemoryHistory({ initialEntries: [`/tours/${slug}`] }),

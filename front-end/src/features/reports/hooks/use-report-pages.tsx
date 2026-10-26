@@ -13,7 +13,7 @@ import { useOrders } from '@/features/orders/api/queries'
 import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
 import { useReports } from '@/features/reports/hooks/use-reports'
 import { NO_FILTERS } from '@/features/reports/lib/money'
-import { useAdviceRequests, usePrivateTourRequests } from '@/features/requests/api/queries'
+import { useAdviceRequests } from '@/features/requests/api/queries'
 
 /** A previous range that holds nothing, for "All time" (no comparison). */
 const NOTHING: DayRange = { start: '0000-01-01', end: '0000-01-01' }
@@ -41,7 +41,6 @@ function useReportPagesState() {
   const pickupPlaces = usePickupPlaces()
   const orders = useOrders()
   const adviceRequests = useAdviceRequests()
-  const privateTourRequests = usePrivateTourRequests()
   const [period, setPeriod] = useState<SalesPeriodId>('7d')
   const [custom, setCustom] = useState<DayRange | null>(null)
   const [filters, setFilters] = useState<ReportFilters>(NO_FILTERS)
@@ -219,25 +218,17 @@ function useReportPagesState() {
     noShow: ended('no-show'),
   }
 
-  // Inquiries sent in the period: advice requests (opened or not) and private tour requests.
+  // Inquiries sent in the period: advice requests (opened or not).
   const sentIn = (iso: string) => {
     const day = zurichDayOf(iso)
 
     return day >= sales.current.start && day <= sales.current.end
   }
   const adviceIn = adviceRequests.filter(r => sentIn(r.sentAt))
-  const privateIn = privateTourRequests.filter(r =>
-    sentIn(r.sentAt),
-  )
   const inquiries = {
     advice: {
       read: adviceIn.filter(r => r.readAt).length,
       unread: adviceIn.filter(r => !r.readAt).length,
-    },
-    privateTours: {
-      answered: privateIn.filter(r => r.answeredAt).length,
-      waiting: privateIn.filter(r => !r.answeredAt).length,
-      guests: privateIn.reduce((a, r) => a + r.groupSize, 0),
     },
   }
 

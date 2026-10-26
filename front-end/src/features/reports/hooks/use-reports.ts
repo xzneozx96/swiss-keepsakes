@@ -2,8 +2,6 @@ import type { DayRange, PeriodId, Polarity } from '@sk/domain/reporting'
 import type { MoneyMetric, ReportFilters } from '../lib/money'
 import type { DeltaView } from '@/components/stat-card'
 
-import { departureSeats } from '@sk/domain/bookings'
-
 import { zurichDate } from '@sk/domain/catalog'
 import { variantAvailable } from '@sk/domain/orders'
 import { deltaOf, periodRanges, PERIODS } from '@sk/domain/reporting'
@@ -11,7 +9,6 @@ import {
   calendarDay,
   dateTimeFormat,
   formatMoney,
-  formatShortDate,
   numberFormat,
   percentOf,
   pickText,
@@ -311,31 +308,6 @@ export function useReports(
       }))
       .filter(v => v.left <= 2),
   )
-  const soon = now.getTime() + 14 * 24 * 60 * 60 * 1000
-  const seats = (tours?.departures ?? [])
-    .filter(
-      d =>
-        !d.cancelledAt
-        && Date.parse(d.startsAt) > now.getTime()
-        && Date.parse(d.startsAt) < soon,
-    )
-    .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))
-    .slice(0, 6)
-    .map((d) => {
-      const s = tours ? departureSeats(tours, d.id, now) : null
-
-      return {
-        id: d.id,
-        name: productName(d.tourId),
-        when: formatShortDate(
-          zurichDate(new Date(d.startsAt)),
-          today,
-          intlLocale,
-        ),
-        taken: s ? s.confirmed + s.held : 0,
-        capacity: s?.capacity ?? d.capacity,
-      }
-    })
   const outcome = (kind: 'goods' | 'tours', status: string) =>
     inPeriod.filter(tx => tx.kind === kind && tx.status === status).length
   const articles = storedArticles
@@ -459,7 +431,6 @@ export function useReports(
       goods: sold('goods'),
       tours: sold('tours'),
       lowStock,
-      seats,
       outcomes: [
         {
           id: 'goods-completed',

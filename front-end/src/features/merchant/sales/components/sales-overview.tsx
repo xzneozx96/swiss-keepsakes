@@ -332,12 +332,6 @@ export function FigureChart({
             value: bar.giftsText,
           },
           {
-            key: 'tours',
-            colour: MIX_COLOURS[1],
-            label: t('salesOverview.tours'),
-            value: bar.toursText,
-          },
-          {
             key: 'now',
             colour: 'var(--foreground)',
             label: t('salesOverview.total'),
@@ -374,7 +368,7 @@ export function FigureChart({
         <span className="ms-auto text-xs text-muted">{view.bucketLabel}</span>
       </div>
       <ul className="mt-2 flex gap-4 text-xs text-muted">
-        {[t('salesOverview.gifts'), t('salesOverview.tours')].map((name, p) => (
+        {[t('salesOverview.gifts')].map((name, p) => (
           <li key={name} className="flex items-center gap-1.5">
             <span
               aria-hidden

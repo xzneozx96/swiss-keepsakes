@@ -500,8 +500,6 @@ function DeparturesCard({ tour, error }: { tour: Tour, error?: string }) {
           onPress={() => setAdding(true)}
         />
       </div>
-      <div className={separate}>
-      </div>
       {error && (
         <p data-visible className="field-error px-4 pb-3" role="alert">
           {error}

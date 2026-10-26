@@ -20,7 +20,7 @@ import { TransactionList } from '@/features/transactions/components/transaction-
 
 // Account tab: signed-out prompt opens C05 (step 1.6); signed in, the settings-style hub (1.12s)
 // whose rows drill into sub-screens kept in `?tab=`. The 1.12r tab values are sub-screens now,
-// so /account?tab=payments and the tour flow's ?tab=bookings still land on that content.
+// so /account?tab=payments still lands on that content.
 export const Route = createFileRoute('/_guest/account')({
   // `tab: undefined` (not `{}`) drops an unknown value: the root route passes raw search params
   // through, so an omitted key would keep it.
@@ -36,7 +36,6 @@ export const Route = createFileRoute('/_guest/account')({
 
 const sectionTitle: Record<AccountSection, MessageKey> = {
   orders: 'account.section.orders',
-  bookings: 'account.section.bookings',
   payments: 'account.section.payments',
   profile: 'account.section.profile',
   notifications: 'account.section.notifications',

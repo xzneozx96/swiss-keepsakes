@@ -29,8 +29,7 @@ import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { avatarUrl } from '@/lib/avatars'
 
 export type MerchantSection
-  = | 'bookings'
-    | 'products'
+  = | 'products'
     | 'partners'
     | 'content'
     | 'requests'
@@ -121,7 +120,7 @@ const sidebarItems: NavItem[] = [
 ]
 
 /**
- * Phones keep the bottom bar they had: Today, Orders and Bookings, plus Calendar, with the other sections in
+ * Phones keep the bottom bar they had: Today, Orders, Calendar and Products, with the other sections in
  * the More sheet. Dashboard's analytics pages are the Sales tab here and Analytics in More.
  */
 const phoneItems: NavItem[] = [
@@ -253,7 +252,7 @@ const tabLink
 
 /**
  * Merchant dashboard frame (UX spec §3.2). Phones: bottom navigation with Today,
- * Orders, Bookings and More (a sheet with the other sections). From 1024px: a sidebar.
+ * Orders and More (a sheet with the other sections). From 1024px: a sidebar.
  */
 export function MerchantShell({ children }: { children: React.ReactNode }) {
   const { t } = useLocale()

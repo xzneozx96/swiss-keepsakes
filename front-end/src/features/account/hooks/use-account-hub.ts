@@ -8,11 +8,8 @@ import { useDemoNow } from '@/features/demo'
 import { useMail } from '@/features/notifications/api/queries'
 import { renderMail } from '@/features/notifications/components/render-mail'
 import { useGuestOrders } from '@/features/orders/hooks/use-orders'
-import { useTourRecords } from '@/features/tours/api/queries'
 import { isClosedOrder } from '@/features/transactions/hooks/use-transaction-row'
 import { useAccountPayments } from './use-account-payments'
-
-const liveBooking = ['pending_payment', 'confirmed']
 
 /**
  * One line under each hub row (1.12s), so the hub answers "anything for me?" before a tap:
@@ -22,7 +19,6 @@ export function useAccountHub(guestId: string) {
   const { t, language, intlLocale } = useLocale()
   const demoMail = useMail()
   const pickupPlaces = usePickupPlaces()
-  const tours = useTourRecords()
   const now = useDemoNow()
   const today = zurichDate(now)
   const orders = useGuestOrders()
@@ -31,13 +27,6 @@ export function useAccountHub(guestId: string) {
   const next = orders
     .filter(o => !isClosedOrder(o))
     .sort((a, b) => a.pickupDate.localeCompare(b.pickupDate))[0]
-
-  const bookings = (tours?.bookings ?? []).filter(b => b.guestId === guestId)
-  const nextTour = bookings
-    .filter(
-      b => liveBooking.includes(b.status) && Date.parse(b.startsAt) > +now,
-    )
-    .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0]
 
   const dueTotal = due.reduce((sum, o) => sum + amountDueNow(o), 0)
   const lastMail = demoMail
@@ -54,18 +43,6 @@ export function useAccountHub(guestId: string) {
       : orders.length > 0
         ? t('account.hub.orders.noneOpen')
         : t('account.hub.orders.none'),
-    bookingCount: bookings.length,
-    bookings: nextTour
-      ? t('account.hub.bookings.next', {
-          date: formatShortDate(
-            zurichDate(new Date(nextTour.startsAt)),
-            today,
-            intlLocale,
-          ),
-        })
-      : bookings.length > 0
-        ? t('account.hub.bookings.noneUpcoming')
-        : t('account.hub.bookings.none'),
     dueCount: due.length,
     payments:
       due.length > 0

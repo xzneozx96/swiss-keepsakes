@@ -205,15 +205,6 @@ export function useSalesOverview(
         o.commissionRecordedAt,
       )
     }
-    for (const b of tours?.bookings ?? []) {
-      add(
-        transactionKey({ kind: 'booking', id: b.id }),
-        'tours',
-        b.createdAt,
-        b.payments,
-        b.commissionRecordedAt,
-      )
-    }
     // A refund gives money back and takes the partner's commission on it off again.
     for (const a of commissionAdjustments) {
       const tx = txs.get(transactionKey(a.transaction))
@@ -261,13 +252,6 @@ export function useSalesOverview(
       n === 1
         ? 'salesOverview.giftOrders.one'
         : 'salesOverview.giftOrders.other',
-      { count: n },
-    )
-  const tourBookings = (n: number) =>
-    t(
-      n === 1
-        ? 'salesOverview.tourBookings.one'
-        : 'salesOverview.tourBookings.other',
       { count: n },
     )
   const pct = (part: number, whole: number) =>
@@ -507,7 +491,7 @@ export function useSalesOverview(
       id: 'sales',
       label: t('salesOverview.orders'),
       value: count(cur.placed.length),
-      split: `${giftOrders(salesSplit.goods)} · ${tourBookings(salesSplit.tours)}`,
+      split: giftOrders(salesSplit.goods),
       delta: salesDelta,
       note: salesDelta ? null : t('salesOverview.noCompare'),
       hint: t('salesOverview.orders.hint'),
@@ -752,7 +736,7 @@ export function useSalesOverview(
     extra,
     methods,
     paidTotal: money(paidTotal),
-    mix: (['goods', 'tours'] as const).map(kind => ({
+    mix: (['goods'] as const).map(kind => ({
       id: kind,
       label: t(
         kind === 'goods' ? 'salesOverview.gifts' : 'salesOverview.tours',
@@ -765,10 +749,7 @@ export function useSalesOverview(
         paidSplit[kind] + unpaidSplit[kind]
           ? paidSplit[kind] / (paidSplit[kind] + unpaidSplit[kind])
           : 0,
-      orders:
-        kind === 'goods'
-          ? giftOrders(salesSplit.goods)
-          : tourBookings(salesSplit.tours),
+      orders: giftOrders(salesSplit.goods),
       facts: [
         {
           id: 'collected',

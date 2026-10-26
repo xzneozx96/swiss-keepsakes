@@ -27,11 +27,9 @@ import { attributedPartnerId } from '@/features/partners/referral'
 import { demoNow } from '../clock'
 import { useDemoActions, useDemoSelector } from '../demo-store'
 // import { PaymentDemoControl } from "@/features/payment/components/payment-demo-control";
-// import { TourBookingDemoControl } from "@/features/tours/booking/booking-demo-control";
 // import { TransactionsDemoControl } from "@/features/transactions/components/transactions-demo-control";
 // import { OrderDetailDemoControl } from "@/features/transactions/order-detail/components/order-detail-demo-control";
 // import { ToursDemoControl } from "@/features/tours/discovery/tours-demo-control";
-// import { TourDemoControl } from "@/features/tours/merchant/tour-demo-control";
 
 const QRCodeSVG = lazy(() =>
   import('qrcode.react').then(m => ({ default: m.QRCodeSVG })),
@@ -237,9 +235,7 @@ export function PrototypeBar() {
                 <TransactionsDemoControl onDone={() => setOpen(false)} />
                 <OrderDetailDemoControl onDone={() => setOpen(false)} />
                 <PaymentDemoControl onDone={() => setOpen(false)} />
-                <TourBookingDemoControl onDone={() => setOpen(false)} />
                 <ToursDemoControl onDone={() => setOpen(false)} />
-                <TourDemoControl onDone={() => setOpen(false)} />
                 <ProposalsToggle />
                 <SignInDemoHint />
                 <div className="flex flex-col gap-2">

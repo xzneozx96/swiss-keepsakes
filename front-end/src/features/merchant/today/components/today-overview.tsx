@@ -1,6 +1,5 @@
 import { Skeleton } from '@heroui/react'
 
-import { useOverdueCheck } from '@/features/tours/merchant/use-overdue-check'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 import { useMerchantToday } from '../hooks/use-merchant-today'
 import { AlertRow, CollectWidget, PickupsWidget, Tile } from './merchant-today'
@@ -60,7 +59,7 @@ function CollectSkeleton() {
   )
 }
 
-/** Today while loading: the same bento, gifts left and tours right. */
+/** Today while loading: the same bento. */
 function TodaySkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-x-6">
@@ -85,9 +84,9 @@ function TodaySkeleton() {
 }
 
 /**
- * M02 Overview › Today (owner review 15.10.2026) as a bento: gifts on the left, tours on the
- * right, each row's boxes the same height (tasks, the next pickups or departures, then what
- * is still to collect). A shop without tours shows the gifts half only.
+ * M02 Overview › Today (owner review 15.10.2026) as a bento of keepsake orders, each row's
+ * boxes the same height (tasks, the next pickups, then what is still to collect). The tours
+ * half is dormant with tour booking (ADR-012).
  */
 export function TodayOverview() {
   const today = useMerchantToday()
@@ -98,8 +97,6 @@ export function TodayOverview() {
   const strip = today.tiles.filter(
     tile => tile.id !== 'overdue' && tile.id !== 'owing',
   )
-
-  useOverdueCheck()
 
   if (isLoading)
     return <TodaySkeleton />

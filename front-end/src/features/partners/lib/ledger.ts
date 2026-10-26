@@ -7,7 +7,6 @@ import type {
 } from '@sk/domain/partners'
 import type { QueriedData } from '@/features/demo/types'
 
-import { bookingCommission } from '@sk/domain/bookings'
 import { offsetAmount } from '@sk/domain/money'
 import { commission } from '@sk/domain/orders'
 import { DEMO_HISTORY } from '@/features/merchant/today/lib/demo-history'
@@ -87,32 +86,7 @@ export function commissionItems(
         },
       )
     })
-  // Holds that never became a booking are not the partner's transactions (R15).
-  const bookings = (data.tours?.bookings ?? [])
-    .filter(
-      b =>
-        b.partnerId === partnerId
-        && b.status !== 'pending_payment'
-        && b.status !== 'expired',
-    )
-    .map((b) => {
-      const c = bookingCommission(b)
-
-      return item(
-        { kind: 'booking', id: b.id },
-        {
-          ref: b.ref,
-          partnerId,
-          guestId: b.guestId,
-          createdAt: b.createdAt,
-          amount: c.amount,
-          recordedAt: b.commissionRecordedAt,
-          state: c.state,
-        },
-      )
-    })
-
-  return [...orders, ...bookings].sort(
+  return orders.sort(
     (a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt),
   )
 }

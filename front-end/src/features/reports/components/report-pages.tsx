@@ -872,7 +872,6 @@ export function InquiriesAnalyticsPage() {
   const pct = (part: number, whole: number) =>
     percentOf(part, whole, intlLocale)
   const advice = inquiries.advice
-  const privateTours = inquiries.privateTours
 
   if (isLoading)
     return <PageSkeleton widgets={3} />
@@ -901,7 +900,7 @@ export function InquiriesAnalyticsPage() {
           }))}
         />
       </Widget>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4">
         <Widget
           className="h-full"
           description={t('reportPages.advice.requestsDescription')}
@@ -930,51 +929,6 @@ export function InquiriesAnalyticsPage() {
                 text: String(advice.read),
                 share: t('reportPages.advice.share', {
                   share: pct(advice.read, advice.read + advice.unread),
-                }),
-              },
-            ]}
-          />
-        </Widget>
-        <Widget
-          className="h-full"
-          description={t('reportPages.privateTours.description')}
-          footer={t(
-            privateTours.guests === 1
-              ? 'reportPages.privateTours.guests.one'
-              : 'reportPages.privateTours.guests.other',
-            { count: privateTours.guests },
-          )}
-          id="lab-private-tours"
-          title={t('reportPages.privateTours.title')}
-        >
-          <Donut
-            centerLabel={t('reportPages.advice.received')}
-            centerValue={String(privateTours.answered + privateTours.waiting)}
-            slices={[
-              {
-                id: 'waiting',
-                label: t('reportPages.privateTours.waiting'),
-                value: privateTours.waiting,
-                colour: 'var(--status-warning-fill)',
-                text: String(privateTours.waiting),
-                share: t('reportPages.advice.share', {
-                  share: pct(
-                    privateTours.waiting,
-                    privateTours.answered + privateTours.waiting,
-                  ),
-                }),
-              },
-              {
-                id: 'answered',
-                label: t('reportPages.privateTours.answered'),
-                value: privateTours.answered,
-                colour: 'var(--status-success-fill)',
-                text: String(privateTours.answered),
-                share: t('reportPages.advice.share', {
-                  share: pct(
-                    privateTours.answered,
-                    privateTours.answered + privateTours.waiting,
-                  ),
                 }),
               },
             ]}

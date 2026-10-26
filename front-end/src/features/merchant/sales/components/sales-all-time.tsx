@@ -146,7 +146,7 @@ function MonthlySales({
       title={t('salesOverview.months.title')}
     >
       <ul className="mb-3 flex gap-4 text-xs text-muted">
-        {[t('salesOverview.gifts'), t('salesOverview.tours')].map((name, p) => (
+        {[t('salesOverview.gifts')].map((name, p) => (
           <li key={name} className="flex items-center gap-1.5">
             <span
               aria-hidden

@@ -102,7 +102,7 @@ export function renderRequestMail(mail: Mail): RenderedMail {
     ],
     link: {
       label: line('requestMail.link.private'),
-      href: '#/store/requests/private',
+      href: '#/store/requests',
       role: (p.staffRole === 'manager' ? 'manager' : 'owner') satisfies Role,
     },
   }
