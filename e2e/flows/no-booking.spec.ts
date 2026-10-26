@@ -55,7 +55,7 @@ async function walk(page: Page, label: string, sources: Record<string, string[]>
   for (const [source, links] of Object.entries(sources)) {
     expect(links.length, `${label} ${source}: menu links found`).toBeGreaterThanOrEqual(minimum[source]);
     expect(links, `${label} ${source}: menu links`).not.toContainEqual(expect.stringMatching(bookingPath));
-    links.filter(href => href.startsWith("/")).forEach(href => all.add(href));
+    links.filter(href => href.startsWith("/") && !href.startsWith("/api")).forEach(href => all.add(href));
   }
   expect(all.size, `${label}: pages visited`).toBeGreaterThan(0);
   for (const href of all) {
