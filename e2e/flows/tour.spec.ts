@@ -41,7 +41,8 @@ const words: Record<Language, Record<string, string>> = {
   },
 };
 
-test("[E0.8] tour: from the departure sheet to the confirmed booking", async ({ seedDemo, language }) => {
+// E3.1 hides tour booking, see ADR-012. Restore these flows when booking returns.
+test.skip("[E0.8] tour: from the departure sheet to the confirmed booking", async ({ seedDemo, language }) => {
   const w = words[language];
   const page = await seedDemo();
 
