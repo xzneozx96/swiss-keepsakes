@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createSeedState } from '@/features/demo/seed'
-import { createDemoStore } from '@/features/demo/store'
+import { createDemoStore, updateWithinBudget } from '@/features/demo/store'
 
 beforeEach(() => {
   window.localStorage.clear()
@@ -126,5 +126,19 @@ describe('demo store updates before restore', () => {
 
     expect(store.getState().role).toBe('owner')
     errors.mockRestore()
+  })
+})
+
+describe('budgeted update before restore', () => {
+  it('[E3.3] applies on top of the restored data and does not overwrite it with a seed snapshot', () => {
+    const store = createDemoStore(createSeedState(), { persist: false })
+    const savedState = { ...createSeedState(), role: 'guest' as const }
+
+    savedState.data = { ...savedState.data, guests: savedState.data.guests.slice(0, 1) }
+    updateWithinBudget(store, s => ({ ...s, role: 'owner' }))
+    store.restore(savedState)
+
+    expect(store.getState().data.guests).toHaveLength(1)
+    expect(store.getState().role).toBe('owner')
   })
 })

@@ -186,9 +186,13 @@ export function updateWithinBudget(
   store: DemoStore,
   recipe: (state: DemoState) => DemoState,
 ): void {
-  const next = recipe(store.getState())
+  // The recipe and the budget check run inside the update, so before restore they run on the saved state at replay.
+  store.update((state) => {
+    const next = recipe(state)
 
-  if (JSON.stringify(next).length > STORAGE_BUDGET)
-    throw new StorageFullError()
-  store.update(() => next)
+    if (JSON.stringify(next).length > STORAGE_BUDGET)
+      throw new StorageFullError()
+
+    return next
+  })
 }
