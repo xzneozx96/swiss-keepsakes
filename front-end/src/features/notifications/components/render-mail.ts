@@ -200,7 +200,8 @@ export function renderMail(mail: Mail, places: PickupPlace[]): RenderedMail {
   )[mail.template]
 
   // Templates outside flow 1 (or a param set this renderer does not know) stay readable.
-  if (!template) {
+  // Tour booking mails left in storage (ADR-012) share template ids with keepsake mails, so they take this path too.
+  if (!template || mail.bookingId) {
     return {
       subject: mail.template,
       body: Object.entries(mail.params).map(([k, v]) => `${k}: ${v}`),

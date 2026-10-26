@@ -16,9 +16,22 @@ This folder is outside `tsc`, `typecheck:tests` and the router. Nothing live imp
 
 ## Code deleted, not moved
 
-Task-level edits removed some booking and private-request code outright. Recover it from git, not from this folder.
+E3.1 also deleted booking code from kept files. The source of truth is commit `466657f`, the last commit before E3.1. For any path below, run `git diff 466657f -- front-end/<path>` to see exactly what went, and restore the hunks you want. Paths are under `front-end/src/`.
 
-- Entry-point code removed when the routes moved (the booking sheet and sticky bar on the tour page, the "all departures" and categories links, the bookings menu items): commit `55690f9` and its parent.
-- The private-request tab code removed from the request inbox (the `PrivateTourRow` type, the `privateRow` builder, the mark-answered toast, the `'private'` branch of `replyHref`), the booking rows removed from the partner ledger, reports, sales, cost data and calendar, the bookings row on the account hub, and the `renderTourMail` call in `render-mail.ts`: the commit `feat(E3.1): strip booking from kept screens and menus` (use `git log --grep 'strip booking'`) and its parent.
-- Files here that import types or hooks that no longer exist (`merchant/components/private-tour-rows.tsx`, `use-overdue-check.ts`) need those imports fixed on restore.
+- Tour page, `features/tours/discovery/tour-detail-page.tsx`: price list, payment-policy rows, sticky price and departure bar, sold-out state. `routes/_guest/tours/$slug.tsx`: the `?book` search. `tour-list-page.tsx`: the private-tour entry. `tour-preview.tsx`: the booking prop.
+- Partner report, `features/partners/report/`: tours part of the mix and `colourOf` (`hooks/use-partner-dashboard.ts`, `hooks/use-partner-overview.ts`, `components/dashboard-widgets.tsx`); tour rows in `partnerReport` and bookings in `partnerAllTime` (`lib/report.ts`); the booking lookup in `hooks/use-partner-report.ts`.
+- Partner ledger, `features/partners/lib/ledger.ts`: booking items in `commissionItems`. `features/merchant/partners/hooks/use-partner-detail.ts`: the booking link.
+- Sales, `features/merchant/sales/`: tours split in the cards, charts and legends (`hooks/use-sales-overview.ts`, `components/sales-overview.tsx`, `components/sales-all-time.tsx`) and the split copy in `messages*.ts`.
+- Reports, `features/reports/`: the booking mapper in `reportTransactions` (`lib/transactions.ts`); bookings in `useCostData` (`hooks/use-cost-data.ts`); the seats widget, tours outcomes, tours margin part and type filter options in `useReports` (`hooks/use-reports.ts`); the type filter in `components/filters-sheet.tsx` and `components/report-pages.tsx`; the private-tours donut (`hooks/use-report-pages.tsx`, `components/report-pages.tsx`); wording in `pages-messages*.ts` and `i18n/{en,de}.ts`.
+- Requests, `features/requests/`: the private tab, `privateRow`, `PrivateTourRow` and the mark-answered toast (`merchant/components/merchant-requests.tsx`, `merchant/hooks/use-merchant-requests.ts`, `merchant/lib/search-params.ts`); the `'private'` branch of `replyHref` (`merchant/hooks/use-advice-request.ts`); the N17 link (`lib/render-request-mail.ts`).
+- Calendar, `features/merchant/calendar/`: the tour-event builder (`use-calendar-items.ts`) and the open-departure link (`calendar-overlays.tsx`).
+- Today, `features/merchant/today/components/today-overview.tsx`: the tours half and the `useOverdueCheck` call.
+- Account, `routes/_guest/account.tsx`, `features/account/`: the bookings section, hub row and counts.
+- Menus and demo, `components/layout/merchant-shell.tsx` (bookings items; the phone bar lost Bookings and Products moved under More), `components/layout/section-pages.ts`, `features/demo/components/prototype-bar.tsx`, `features/notifications/components/render-mail.ts` (the `renderTourMail` call and the `bookingId` guard), the categories links in `features/merchant/products/components/{gift-editor,merchant-products}.tsx`, the departures link in `tour-editor.tsx`.
+
+## Imports to fix on restore
+
+- `features/tours/discovery/tour-selection-sheet.tsx` imports `@/dormant/features/tours/discovery/age-bands`. `age-bands.ts` was moved here too; put it back at `features/tours/discovery/age-bands.ts` and rewrite that import to `./age-bands`. This is the only import rewritten to a `@/dormant` path.
+- `features/requests/merchant/components/private-tour-rows.tsx` imports `PrivateTourRow` from the inbox hook; that type was deleted (see above).
+- Moved files with relative imports (for example `use-overdue-check.ts`) resolve again once moved back to their original folder.
 - `src/dormant/tests/failed-command-tours.tsx` has no `.test` in its name so that Vitest skips it. Rename it to `failed-command-tours.test.tsx` when you restore the screens.

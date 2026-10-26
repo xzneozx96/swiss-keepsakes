@@ -120,8 +120,8 @@ const sidebarItems: NavItem[] = [
 ]
 
 /**
- * Phones keep the bottom bar they had: Today, Orders, Calendar and Products, with the other sections in
- * the More sheet. Dashboard's analytics pages are the Sales tab here and Analytics in More.
+ * Phones: Today, Orders and Calendar, with the other sections in the More sheet (Bookings left
+ * the bar with ADR-012; E4.1 redoes it). Dashboard's analytics pages are the Sales tab here and Analytics in More.
  */
 const phoneItems: NavItem[] = [
   {
@@ -181,8 +181,8 @@ const phoneItems: NavItem[] = [
   },
 ]
 
-const phonePrimary = phoneItems.slice(0, 4)
-const phoneMore = phoneItems.slice(4)
+const phonePrimary = phoneItems.slice(0, 3)
+const phoneMore = phoneItems.slice(3)
 
 function isUnder(pathname: string, base: string) {
   return base === '/store'
@@ -412,7 +412,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
           aria-label={t('nav.merchant.label')}
           className="fixed inset-x-0 bottom-0 z-20 border-t border-separator bg-surface pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
         >
-          <ul className="grid grid-cols-5">
+          <ul className="grid grid-cols-4">
             {phonePrimary.map(item => (
               <li key={item.label}>
                 <NavLink className={tabLink} item={item}>
