@@ -903,6 +903,7 @@ Bảng này tập hợp lựa chọn ảnh hưởng phạm vi, hành vi hoặc l
 | O40 | Tiền mặt đối tác đang giữ: ứng dụng có theo dõi đối tác còn nợ merchant bao nhiêu, đối soát và thanh toán bù trừ hay không. Chủ sản phẩm đưa ra ngoài phạm vi ngày 26/10/2026; còn mở theo văn bản quyết định bàn giao. Liên quan O34 | Khi chủ sản phẩm quyết định | Chủ sản phẩm |
 | O41 | Giỏ hàng lưu trên máy chủ (cổng M7): giỏ của khách chưa đăng nhập giữ bằng định danh nào, hết hạn khi nào, và quan hệ với G4 và O32 | Trước đặc tả giỏ hàng | Chủ sản phẩm, kỹ thuật |
 | O42 | Xuất và xóa dữ liệu của khách (cổng P1, 26/10/2026): Phase 1 xử lý thủ công, chưa có chức năng tự phục vụ. Còn mở: quy trình, thời hạn trả lời và phạm vi dữ liệu (tên và email trên đơn, review, tài khoản). Gắn với O33 | Trước dữ liệu khách thật | Chủ sản phẩm, luật sư |
+| O43 | Nơi chạy staging và production (26/10/2026): mặc định là Fly theo ADR-001, hoặc nhà cung cấp khác. Chủ sản phẩm chọn phát triển trên máy local trước và quyết định sau | Trước khi dựng staging (Sprint 12) | Chủ sản phẩm, kỹ thuật |
 
 
 Ưu tiên trước khi lập kế hoạch phát triển: O21, O22.

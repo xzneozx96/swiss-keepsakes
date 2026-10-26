@@ -18,7 +18,7 @@ The Lark task list "Swiss Keepsakes" mirrors the story tables in this file, one 
 
 - **Sprint planning**, on the first day. Pick stories from the top of the backlog that meet the Definition of Ready. Split anything over 5 points. Refine the next sprint's stories to pull-request level.
 - **Daily note.** One comment per active story on its Lark task. There is no meeting for a team of one.
-- **Sprint review**, on the last day. The owner uses the sprint's stories on staging, or on screenshots and video before staging exists in Sprint 5. Each story the owner accepts moves to Done.
+- **Sprint review**, on the last day. The owner uses the sprint's stories on staging, or on the local stack and on screenshots and video until staging exists. Hosting is decided later (O43). Each story the owner accepts moves to Done.
 - **Retro.** Three lines in `docs/development-plan/retro.md`. What to keep, what to change, and what to try.
 
 **Estimates.** Story points on the 1, 2, 3, 5, 8 scale. An 8 is split before it enters a sprint. The sprint map in section 5 is a guess until Sprint 2 ends. After that, it is rebuilt from the measured velocity.
@@ -52,7 +52,7 @@ A story is Verified only when all of these items have evidence. The evidence is 
 4. **The real surface works.** The behaviour was driven on the running app, local or staging, and a screenshot or log is linked. A front-end story runs its Playwright scenario at 375 px wide in English and German, with no missing translation keys.
 5. **No mock data remains for a moved feature.** When a feature moves to the API, its demo seed becomes a database seed, and its mock code is deleted in the same story. No feature reads from both sources.
 6. **Operations are covered.** A new failure path gets an alert and a runbook in `docs/ops/`.
-7. **It is deployed.** From Sprint 5 on, the story is on staging before sprint review.
+7. **It is deployed.** Once staging exists (E2.9), the story is on staging before sprint review. Until then it runs on the local stack.
 
 ### 1.3 Operator prerequisites for Sprint 0
 
@@ -95,7 +95,7 @@ Three rules hold the harness together.
 | E0. Spikes and harness foundation | Answer the seven spikes and put a regression net under the prototype | SP1 to SP7 answered in writing. The prototype flows run as Playwright tests in CI | 0 |
 | E1. Monorepo and seams | Split the code into packages, build the API skeleton and the platform layer, and put the demo store behind a data interface | No behaviour change. The E0.8 tests stay green. CI runs every gate | 1 to 2 |
 | E2. Identity, catalogue and staging | Real sign-in, stores and staff. The content schema, content reads and media. Fly staging for the real app | Staff sign in. The content and media APIs serve seeded data on staging. A01, A02 and M01 work on staging | 3 to 5 |
-| E3. Platform move | Hide booking, move the front-end to TanStack Start with browser history, and run two programs on Fly | No route leads to booking. Browser history works on every route. Both programs run on staging | 4 to 6 |
+| E3. Platform move | Hide booking, move the front-end to TanStack Start with browser history, and run two programs on Fly | No route leads to booking. Browser history works on every route. Both programs run on staging once hosting is decided (O43) | 4 to 6, E3.8 in 13 |
 | E4. Content, map and onboarding | Track 1. Merchants write places, stories and tour guides. Guests meet onboarding, the map, stories, places and tour information | The track 1 journeys pass on staging in EN and DE. AC24, AC36 to AC38, AC42, AC44, AC50 and AC61 pass | 6 to 13 |
 | E5. Reviews | Guests review places and comment on stories, and merchants moderate. Guests rate keepsakes after delivery | AC46 to AC49, AC16, AC17 and AC69 pass | 13 to 19 |
 | E6. Catalog, inventory and cart | Track 2. Merchants manage keepsakes, options, SKUs and stock. Guests browse keepsakes and keep a server cart | AC05, AC52 to AC55 and AC80 to AC81 pass | 7 to 12 |
@@ -153,7 +153,7 @@ Each spike is a throwaway branch with a written answer in `docs/spikes/SPn.md`. 
 | E2.6 | Content module. Aggregates and publish rules, the draft document with `If-Match`, public reads of stories, places, tour guides and the map pins as one cached list (60-second TTL, no price field), and `db:seed` that imports the prototype's stories and tours as drafts | BE | 5 | High | E2.5, E2.10 | A stale edit gets 412. A merchant edit shows on the public read within 60 seconds and never later than 5 minutes (AC45). No public content response carries a price (AC54). Running the seed twice changes nothing. A response for a language with no version says so and carries the other version (AC64). Tests `[E2.6][AC45][AC54][AC64]`. ADR-003, ADR-005, ADR-006, ADR-014 |
 | E2.7 | Media and PDFs. Neon Object Storage public buckets, presigned upload, versioned keys, `sharp` variants made by the worker, exactly one PDF per tour | BE | 5 | Medium | E0.5, E2.6 | An upload gets a presigned URL, a worker job makes the variants, and the public URL serves them. Replacing a file creates a new key and the old key stays readable until the page that used it is republished. A second PDF for one tour replaces the first (AC51). Tests `[E2.7][AC51]`. ADR-004 |
 | E2.8 | Notifications module. SMTP adapter behind the `Mailer` port with the `SMTP_*` config, an in-memory `Mailer` for tests, Mailpit removed from Docker Compose, EN and DE templates, the `mail` job with retries | BE | 5 | Medium | E1.9, E1.12 | N18 and N20 render in both languages and the SMTP adapter delivers them to the test inbox. A failing send retries and then alerts. The sign-in code mail N01 goes through the same job, and E2.2 queues it (D8). Tests `[E2.8]` |
-| E2.9 | Fly staging for the real app (gate H3: the demo stays on Vercel static hosting until launch). Fly `sk-staging`, Neon `staging` branch, Sentry EU, deploy on merge, smoke tests after each deploy. Sentry receives the `mail.failed` error log lines, which are the mail alert until then (`docs/ops/mail.md`) | Ops | 5 | High | E1.13, E0.7 | A merge to `main` reaches staging, and the E0.8 and E2 Playwright tests pass there. Staging serves the real app only, and the demo stays reachable on its Vercel address (AC01). Proof is the deploy log and the run link. ADR-001. Test `[E2.9][AC01]` |
+| E2.9 | Fly staging for the real app (gate H3: the demo stays on Vercel static hosting until launch). Blocked by O43, the owner decides hosting after local development. Fly `sk-staging`, Neon `staging` branch, Sentry EU, deploy on merge, smoke tests after each deploy. Sentry receives the `mail.failed` error log lines, which are the mail alert until then (`docs/ops/mail.md`) | Ops | 5 | High | E1.13, E0.7 | A merge to `main` reaches staging, and the E0.8 and E2 Playwright tests pass there. Staging serves the real app only, and the demo stays reachable on its Vercel address (AC01). Proof is the deploy log and the run link. ADR-001. Test `[E2.9][AC01]` |
 | E2.10 | Request guards, split from E2.2 on 20.10.2026. The `Origin` check, memberships, `can()` and the generated permission matrix | BE | 3 | High | E2.2 | One rule checks `Origin` on every POST, PUT, PATCH and DELETE under `/api/`, `/api/auth/*` included, and excludes `/webhooks/stripe` by name. Tests refuse a JSON POST, a form POST, a PUT, a PATCH and a DELETE from a foreign origin with 403, let the same requests from our origin through, cover a request without `Origin`, and show `/webhooks/stripe` is not checked. Every `/api/store/*` route returns 403 to a member of another store, checked by the generated permission matrix. Tests `[E2.10][AC02]` |
 
 
@@ -170,8 +170,8 @@ This epic moves the front-end to TanStack Start and hides booking. Every route s
 | E3.5 | Language-prefixed routes and the guest shell. `_guest.tsx` under `/$lang` with the phone tabs Explore, Map, Keepsakes and Account, the page language taken from the URL (`en` or `de`), `/` answering 302 to a language home, the language notice slot, and the `tours.tsx` layout moved with its children | FE | 5 | High | E3.3, E3.4 | `/` redirects to a language home. The same path under `en` and `de` renders each language, and routes without a prefix (cart, account) use the stored language (AC30). A page with no version in the URL's language shows the other version with a notice and no machine translation (AC64). Playwright `[E3.5][AC30][AC64]`. ADR-002 |
 | E3.6 | Sitemap and robots (N22). `/sitemap.xml` and `/robots.txt` as server routes, with canonical and hreflang values taken from the translation group | Both | 3 | Medium | E2.6, E3.5 | The sitemap lists published pages only, each with its language alternates, and omits a language that has no version (AC61). `robots.txt` disallows everything outside production. Tests `[E3.6][AC61]`. ADR-001, ADR-002 |
 | E3.7 | Referral redirect `r.$code.tsx` as a server route that answers 302 to a same-origin target path. The visit record is added in E8.3 | Both | 2 | Medium | E3.2 | A partner QR or link opens the shared story at once and asks for no choice first (AC24). A target on another origin is refused. Tests `[E3.7][AC24]`. ADR-001 |
-| E3.8 | Two programs on Fly (H1). One image with two processes, `web` (Start) and `api` (Hono). The web process forwards `/api` and `/webhooks`. `/partner/*` sends `Referrer-Policy: no-referrer`, and request logs scrub the report token (D7) | Ops | 5 | High | E2.9, E3.2 | The deploy runs both processes on `sk-staging`. A request to the health route through the web process reaches the API. An access-log test finds no partner report token (AC12). Proof is the deploy log and `[E3.8][AC12]`. ADR-001 |
-| E3.9 | Start move exit check on staging | Ops | 2 | Medium | E3.5 to E3.8 | Browser history works on every route. Invitation and Google sign-in pass their end-to-end tests on staging (AC01, AC02). The `/partner/*` response sends no-referrer (AC12). Proof is the run link `[E3.9][AC12]`. ADR-001, ADR-002 |
+| E3.8 | Two programs on Fly (H1). Blocked by O43. One image with two processes, `web` (Start) and `api` (Hono). The web process forwards `/api` and `/webhooks`. `/partner/*` sends `Referrer-Policy: no-referrer`, and request logs scrub the report token (D7) | Ops | 5 | High | E2.9, E3.2 | The deploy runs both processes on `sk-staging`. A request to the health route through the web process reaches the API. An access-log test finds no partner report token (AC12). Proof is the deploy log and `[E3.8][AC12]`. ADR-001 |
+| E3.9 | Start move exit check on the local stack. The staging check moves to E3.8 | Ops | 2 | Medium | E3.5 to E3.7 | Browser history works on every route. Invitation and Google sign-in pass their end-to-end tests against the local stack (AC01, AC02). A `/partner/*` path returns the client shell with `noindex` (AC12). Proof is the run log `[E3.9][AC12]`. ADR-001, ADR-002 |
 
 ### E4. Content, map and onboarding
 
@@ -283,7 +283,7 @@ O06 (payment provider and legal entity), O32 and O33 (lawyer), O34 and O40 (part
 
 | ID | Story | Side | Pts | Priority | Depends | Acceptance and proof |
 |---|---|---|---|---|---|---|
-| E9.1 | Production. Neon `main` at 0.5 CU or more with scale to zero off and 7 days of restore history, and Fly `sk` with 2 machines running both programs | Ops | 3 | High | E3.9, E4.17, E7.25 | A script checks the settings and records them. In production `robots.txt` allows indexing and the sitemap lists published pages (AC61). Script test `[E9.1][AC61]`. ADR-001 |
+| E9.1 | Production. Neon `main` at 0.5 CU or more with scale to zero off and 7 days of restore history, and Fly `sk` with 2 machines running both programs | Ops | 3 | High | E3.8, E3.9, E4.17, E7.25 | A script checks the settings and records them. In production `robots.txt` allows indexing and the sitemap lists published pages (AC61). Script test `[E9.1][AC61]`. ADR-001 |
 | E9.2 | Restore drill. Branch from a past timestamp and check the data | Ops | 2 | High | E9.1 | After the restore the order and ledger totals match the figures taken before (AC08). Proof is `docs/ops/restore-drill.md` with times, and `[E9.2][AC08]`. ADR-023 |
 | E9.3 | Runbooks in `docs/ops/` for dead jobs, stuck webhooks, money exceptions, mail failure and a failed deploy | Ops | 3 | Medium | E9.1 | Each runbook was followed once on staging, and the money-exception runbook ends with a ledger that matches the provider (AC08). Proof is a log per runbook, `[E9.3][AC08]`. ADR-021 |
 | E9.4 | Security. OWASP ASVS level 2 checklist, a content security policy that allows the map tiles and Stripe, a dependency audit and secret rotation | Ops | 5 | High | E9.1 | The checklist is filled in with links. A partner report token appears in no log, and a Manager can't open another store (AC02, AC12). Tests `[E9.4][AC02][AC12]`. ADR-001, ADR-010 |
@@ -298,7 +298,7 @@ O06 (payment provider and legal entity), O32 and O33 (lawyer), O34 and O40 (part
 
 This is a guess for one developer with Claude agents. Velocity is unknown, so each sprint holds about 20 to 24 points, which is the size the old Sprint 3 had. The map is rebuilt from measured velocity after Sprint 6, the end of the platform move. Sprints 0 to 3 are unchanged and finished.
 
-Both tracks start after the platform move (E3). From Sprint 7 each sprint carries track 1 (E4, E5 and the analytics stories of E8) and track 2 (E6, E7 and the partner stories of E8) side by side. The move starts in Sprint 4, so the riskiest step comes first and staging is set up once, on Start with both programs (owner, 26.10.2026). Sprint 6 stays light because Start with Nitro is a beta. Stories that O23, O26, O41, O22, O32 or O14 block sit in the sprint where section 6 says the answer is needed.
+Both tracks start after the platform move (E3). From Sprint 7 each sprint carries track 1 (E4, E5 and the analytics stories of E8) and track 2 (E6, E7 and the partner stories of E8) side by side. The move starts in Sprint 4, so the riskiest step comes first (owner, 26.10.2026). Development stays on the local stack and hosting is decided later (O43), so staging is set up once, on Start with both programs, in Sprints 12 and 13. Sprint 6 stays light because Start with Nitro is a beta. Stories that O23, O26, O41, O22, O32 or O14 block sit in the sprint where section 6 says the answer is needed.
 
 | Sprint | Goal | Stories |
 |---|---|---|
@@ -307,15 +307,15 @@ Both tracks start after the platform move (E3). From Sprint 7 each sprint carrie
 | 2 | API skeleton, platform layer, CI | E1.8 to E1.13 |
 | 3 | Better Auth in the API and the request guards first, then sign-in, stores and staff. Mail is already built | E2.2, E2.10, E2.1, E2.3, E2.4, E2.8 |
 | 4 | Booking hidden, Start entry, browser-only code guarded, browser history. Content schema in parallel | E3.1, E3.2, E3.3, E3.4, E2.5 |
-| 5 | Language routes, referral redirect, content reads, Fly staging set up once with both programs | E3.5, E3.7, E2.6, E2.9, E3.8 |
-| 6 | Media, sitemap, Start move exit check, merchant navigation. Light on purpose | E2.7, E3.6, E3.9, E4.1 |
+| 5 | Language routes, referral redirect, content reads | E3.5, E3.7, E2.6 |
+| 6 | Media, sitemap, Start move exit check on the local stack, merchant navigation. Light on purpose | E2.7, E3.6, E3.9, E4.1 |
 | 7 | Track 1: places and the story editor. Track 2: product editor, options and SKUs | E4.2, E4.3, E6.1, E6.2 |
 | 8 | Track 1: story pages and onboarding. Track 2: stock and the guest keepsake pages | E4.4, E4.5, E6.3, E6.4 |
 | 9 | Track 1: map, place sheet, place page. Track 2: catalogue data, pickup points, server cart | E4.6, E4.7, E4.8, E6.5, E6.6, E6.7 |
 | 10 | Track 1: tour editor, PDF, media library. Track 2: orders from the cart and checkout review | E4.9, E4.10, E4.11, E7.1, E7.2 |
 | 11 | Track 1: tour information and home. Track 2: order list, acceptance, anonymous cart | E4.12, E4.13, E6.8, E7.3, E7.4 |
-| 12 | Track 1: search, advice form and inbox. Track 2: external payments, delivery, keepsake links | E4.14, E4.15, E4.16, E6.9, E7.5, E7.6 |
-| 13 | Track 1: track 1 sign-off, reviews module, place reviews. Track 2: order tracking, money module | E4.17, E5.1, E5.2, E7.7, E7.8 |
+| 12 | Track 1: search, advice form and inbox. Track 2: external payments, delivery, keepsake links. Staging | E4.14, E4.15, E4.16, E6.9, E7.5, E7.6, E2.9 |
+| 13 | Track 1: track 1 sign-off, reviews module, place reviews. Track 2: order tracking, money module. Two programs on staging | E4.17, E5.1, E5.2, E7.7, E7.8, E3.8 |
 | 14 | Track 1: story comments, moderation, event log. Track 2: online payment and webhooks | E5.3, E5.4, E8.7, E7.9, E7.10 |
 | 15 | Track 1: traffic and map reports. Track 2: merchant handovers, partner accounts and partner list | E8.8, E8.9, E7.14, E8.1, E8.2 |
 | 16 | Track 1: event retention. Track 2: refunds outside the app, meeting changes, partner handover screens, preparation time | E8.12, E7.12, E7.15, E7.16, E7.17, E7.21 |
@@ -333,6 +333,7 @@ Each row names the PRD v3 id. A story that waits for the answer says "Blocked by
 | O23. Map visuals and the production tile source (the owner's reference images) | E4.6, E4.7, E4.13 | Sprint 9 |
 | O26. Colour list, theme list, design rights and prices for Victorinox | E6.5 | Sprint 9 |
 | O41. How a cart without sign-in is kept, and for how long | E6.8 | Sprint 11 |
+| O43. Hosting for staging and production: Fly as ADR-001 says, or another host. Decided after local development | E2.9, E3.8 | Sprint 12 |
 | O14. Retention and consent text for the event log | E8.8, E8.9, E8.10, E8.11, E8.12 | Sprint 15 |
 | O22. Preparation hours and the auto-accept rule | E7.20, E7.21 | Sprint 16 |
 | O32. Order of the onboarding prompt and the consent box, and what needs consent (referral memory, analytics, embedded video). A lawyer checks it | E8.3, E9.6 | Sprint 18 |
@@ -351,7 +352,7 @@ The full list is architecture section 15 of `docs/architecture/backend.md`, and 
 
 - **Start with Nitro is a beta.** The move to TanStack Start has no official guide for a single-page app, and the architecture spine estimates 2 to 3 weeks that nobody measured. E3 holds the move and Sprint 6 is kept light. A failure in E3.2 returns to the owner (gate S1).
 - **Track 2 is the larger track.** E6 and E7 hold 142 points and E4 and E5 hold 89. The two tracks run side by side, so track 2 sets the end date. If it slips, E8 and E9 move, not the tests.
-- **Owner decisions stack up late.** Fourteen rows in section 6 block 19 stories. Three of them (O23, O26, O22) are needed before Sprint 16. A late answer stalls its story, not the track, because the blocked stories are the last in their chain.
+- **Owner decisions stack up late.** Fifteen rows in section 6 block 21 stories. Four of them (O23, O26, O43, O22) are needed before Sprint 16. A late answer stalls its story, not the track, because the blocked stories are the last in their chain.
 - **Payments are still the hardest part.** E7.8 to E7.13 carry the money module, webhooks and refunds. The fake gateway timeline and the replay tests come first.
 - **SP6 failed on WebKit, so auth moved.** On 20.10.2026 the E2.1 Playwright WebKit run refused Neon Auth's third-party session cookie, and the owner moved D8 to Better Auth inside the API. E2.2 grew from 3 to 8 points, and on 20.10.2026 the owner split it into E2.2 (5) and E2.10 (3), which come first in Sprint 3. Sprint 3 holds 26 points where it held 21. The real iPhone check stays in E2.1 and is not verified until it runs.
 - **Better Auth security advisories.** The auth code now runs in our process (R13). `better-auth` is pinned at 1.7.7 or later, and each advisory can add an unplanned upgrade.
