@@ -9,21 +9,26 @@ import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
 
 // The API's address for the dev and preview servers. The browser only ever calls /api on its own origin.
-const apiProxy = { '/api': process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:5002' }
+const apiTarget = process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:5002'
+const apiProxy = { '/api': apiTarget }
+
+// The dev server forwards /api through Nitro, which answers requests before Vite's `server.proxy` can.
+// The build gets no rule: production forwarding belongs to hosting.
+const devApiRules = { routeRules: { '/api/**': { proxy: `${apiTarget}/api/**` } } }
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   // Browser history needs absolute asset paths, so a deep link such as /store/orders loads its files.
   base: '/',
   resolve: {
     tsconfigPaths: true,
   },
-  server: { port: 3002, strictPort: true, proxy: apiProxy },
+  server: { port: 3002, strictPort: true },
   preview: { proxy: apiProxy },
   plugins: [
     // TanStack Start (it includes the router plugin) must come before @vitejs/plugin-react.
     // Vitest renders components in jsdom and needs neither the server build nor its environments.
-    ...(process.env.VITEST ? [] : [tanstackStart(), nitro()]),
+    ...(process.env.VITEST ? [] : [tanstackStart(), nitro(command === 'serve' ? devApiRules : {})]),
     react(),
     // React Compiler: memoizes every component and hook at build time, so no hand-written
     // memo is needed. The react-hooks lint rules keep the code compilable.
@@ -47,4 +52,4 @@ export default defineConfig({
     globals: true,
     exclude: ['**/node_modules/**', '**/tests/e2e/**'],
   },
-})
+}))

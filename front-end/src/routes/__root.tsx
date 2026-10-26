@@ -53,7 +53,8 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body className="bg-background text-foreground">
-        {children}
+        {/* The providers sit above the route boundaries, so RouteError and NotFound can use them. */}
+        <AppProviders>{children}</AppProviders>
         <Scripts />
       </body>
     </html>
@@ -61,14 +62,6 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function RootLayout() {
-  return (
-    <AppProviders>
-      <RootContent />
-    </AppProviders>
-  )
-}
-
-function RootContent() {
   const storageFull = useStorageFull()
   const isCalendarLab = useRouterState({
     select: state => state.location.pathname === '/lab/calendar',

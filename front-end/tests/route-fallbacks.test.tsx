@@ -17,12 +17,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { RouteError, RoutePending } from '@/components/route-fallbacks'
 import { LocaleProvider } from '@/contexts/locale-context'
+import { Route as appRoot } from '@/routes/__root'
 
 beforeEach(() => {
   window.localStorage.clear()
 })
 
-/** One screen whose read waits for `answer` and then fails or succeeds, set up as main.tsx and __root.tsx do. */
+/** One screen whose read waits for `answer` and then fails or succeeds, set up as the app does (providers above the router boundaries). */
 function renderScreen() {
   const reads: { answer: (outcome: 'fail' | 'load') => void }[] = []
   const queryClient = new QueryClient({
@@ -87,5 +88,38 @@ describe('route fallbacks', () => {
     reads[1].answer('load')
 
     expect(await screen.findByText('Loaded screen')).toBeInTheDocument()
+  })
+
+  // The fallbacks read the language, so the real root route must mount the providers above its boundary.
+  // The shell renders <html>, which React warns about inside the test container; the output is still checked.
+  async function renderInRealRoot(path: string, broken: boolean) {
+    const page = createRoute({
+      getParentRoute: () => appRoot,
+      path: '/broken',
+      component: () => {
+        throw new Error('The screen broke')
+      },
+    })
+    const router = createRouter({
+      routeTree: appRoot.addChildren(broken ? [page] : []),
+      history: createMemoryHistory({ initialEntries: [path] }),
+      defaultPendingComponent: RoutePending,
+      disableGlobalCatchBoundary: true,
+    })
+
+    await router.load()
+    render(<RouterProvider router={router} />)
+  }
+
+  it('[E3.2] a screen that throws shows RouteError inside the real root route, with the providers', async () => {
+    await renderInRealRoot('/broken', true)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('This screen could not load.')
+  })
+
+  it('[E3.2] an unknown address shows NotFound inside the real root route, with the providers', async () => {
+    await renderInRealRoot('/nowhere', false)
+
+    expect(await screen.findByText('This page does not exist.', { exact: false })).toBeInTheDocument()
   })
 })
