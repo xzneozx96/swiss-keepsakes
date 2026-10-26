@@ -8,8 +8,8 @@ import { grantSuperAdmin, latestCode, newEmail, newStoreName, SPA_ORIGIN } from 
 // own copy in both languages, a separate browser per person, the sign-in sheet, and the Super Admin who creates a store.
 const EMAIL_FIELD = /e-?mail/i
 const REGEXP_MARKS = /[.*+?^${}()|[\]\\]/g
-const ADMIN_SIGN_IN = /\/sign-in\?returnTo=%2Fadmin$/
-const ADMIN_SCREEN = /\/admin$/
+const ADMIN_SIGN_IN = /^https?:\/\/[^/#]+\/sign-in\?returnTo=%2Fadmin$/
+const ADMIN_SCREEN = /^https?:\/\/[^/#]+\/admin$/
 
 export const words = {
   en: { send: 'Email me a code', signOut: 'Sign out', unknownTitle: 'This invitation link is not valid', missingTitle: 'Open the link from your email', notFound: /This page does not exist/ },
@@ -88,9 +88,9 @@ export async function newVisitor(browser: Browser, language: Language): Promise<
 export async function followLinkAs(page: Page, language: Language, link: string, email: string, screen: '/store/onboarding' | '/invitation' = '/store/onboarding') {
   await page.goto(link)
   await page.getByRole('button', { name: say(language, 'stores.invite.signIn') }).click()
-  await expect(page).toHaveURL(new RegExp(`/sign-in\\?returnTo=${encodeURIComponent(screen)}$`))
+  await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+/sign-in\\?returnTo=${encodeURIComponent(screen)}$`))
   await signInFromSheet(page, language, email)
-  await expect(page).toHaveURL(new RegExp(`${screen}$`))
+  await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+${screen}$`))
 }
 
 export async function signedInSuperAdmin(browser: Browser, language: Language) {

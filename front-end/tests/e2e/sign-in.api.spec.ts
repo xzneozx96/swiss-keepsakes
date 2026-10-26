@@ -73,7 +73,7 @@ test('[E2.1][AC01] signs in with the emailed code, stays signed in across a relo
   })
   const email = await signIn(page, language)
 
-  await expect(page).toHaveURL(/\/account$/)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/account$/)
   await page.reload()
   await expect(page.getByRole('button', { name: words[language].signOut })).toBeVisible()
 

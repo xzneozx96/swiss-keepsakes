@@ -19,13 +19,13 @@ test.beforeEach(async ({ page, context }, testInfo) => {
   )
 })
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links.
+// E3.4: browser history. Needs captureInvitations in the Start entry alone (the link is the fragment form the API mails).
 test.fixme('[E2.3][S8] the token leaves the address before anything else, and a link the API does not know shows its own state before sign-in', async ({ page }, testInfo) => {
   const t = words[languageOf(testInfo)]
   const addresses: string[] = []
 
   page.on('framenavigated', frame => addresses.push(frame.url()))
-  await page.goto(`/store/onboarding?invitation=${token}`)
+  await page.goto(`/#/store/onboarding?invitation=${token}`)
 
   await expect(page.getByRole('heading', { name: t.unknownTitle })).toBeVisible()
   // The first address is the link as the mail holds it. Every address after it is the app's own, token-free.
@@ -44,7 +44,7 @@ test('[E2.3][S8] A02 without a link sends a visitor who has not signed in to sig
   page.on('request', request => calls.push(new URL(request.url()).pathname))
   await page.goto('/store/onboarding')
 
-  await expect(page).toHaveURL(/\/sign-in\?returnTo=%2Fstore%2Fonboarding$/)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/sign-in\?returnTo=%2Fstore%2Fonboarding$/)
   expect(calls.filter(path => path.startsWith('/api/store') || path.startsWith('/api/me/invitations'))).toEqual([])
 })
 
@@ -52,11 +52,11 @@ test('[E2.3][S8] A01 sends a visitor who has not signed in to sign-in, and shows
   const language = languageOf(testInfo)
 
   await page.goto('/admin')
-  await expect(page).toHaveURL(/\/sign-in\?returnTo=%2Fadmin$/)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/sign-in\?returnTo=%2Fadmin$/)
 
   await signInFromSheet(page, language, newEmail())
 
-  await expect(page).toHaveURL(/\/admin$/)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/admin$/)
   await expect(page.getByText(words[language].notFound)).toBeVisible()
   await expect(page.getByRole('textbox')).toHaveCount(0)
 })
@@ -82,7 +82,7 @@ test.fixme('[E2.3][S8] the Super Admin creates the store, the Owner follows the 
 
   // A Super Admin who follows the Owner's link gets a refusal with the sign-out alone, and the invitation stays open.
   await admin.goto(mail.link)
-  await expect(admin).toHaveURL(/\/store\/onboarding$/)
+  await expect(admin).toHaveURL(/^https?:\/\/[^/#]+\/store\/onboarding$/)
   await expect(admin.getByRole('heading', { name: say(language, 'stores.refusal.superAdmin.title') })).toBeVisible()
   await expect(admin.getByText(say(language, 'stores.refusal.superAdmin.text'))).toBeVisible()
   await expect(admin.getByRole('button', { name: say(language, 'stores.onboarding.signOutOnly'), exact: true })).toBeVisible()
@@ -176,7 +176,7 @@ test.fixme('[E2.3][S8] after the Super Admin sends the invitation again, the old
   await expect(fresh.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
 })
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links.
+// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links. The body still sets `location.hash`; E3.4 must rewrite it.
 test.fixme('[E2.3][S8] a link opened in a tab that already shows A02 leaves the address and is taken up and leaves the address', async ({ page }, testInfo) => {
   const language = languageOf(testInfo)
   const addresses: string[] = []

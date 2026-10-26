@@ -49,12 +49,12 @@ async function acceptAsManager(page: Page, language: Language, link: string, ema
   await page.getByRole('button', { name: say(language, 'stores.invite.accept') }).click()
   const name = page.getByRole('textbox', { name: say(language, 'stores.name.label') })
 
-  await expect.poll(async () => page.url().endsWith('/store') || await name.isVisible()).toBe(true)
-  if (!page.url().endsWith('/store')) {
+  await expect.poll(async () => new URL(page.url()).pathname === '/store' || await name.isVisible()).toBe(true)
+  if (new URL(page.url()).pathname !== '/store') {
     await name.fill('Mia Manager')
     await page.getByRole('button', { name: say(language, 'stores.name.saveContinue') }).click()
   }
-  await expect(page).toHaveURL(/\/store$/)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/store$/)
 }
 
 // E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links.
