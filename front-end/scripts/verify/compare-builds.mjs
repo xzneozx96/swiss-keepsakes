@@ -11,19 +11,18 @@ const [baseDir, newDir, outDir] = process.argv.slice(2)
 
 // A rendered route shows at least the prototype bar plus a heading; less means the page did not render.
 const MIN_TEXT = 40
-const SECTION_END = /[/?]/
 const FROZEN = new Date('2026-10-14T09:30:00+02:00')
 
 const SETS = [
   {
     name: 'guest',
     role: 'guest',
-    routes: ['/', '/gifts', '/gifts/:gift', '/tours', '/tours/lucerne-the-things-that-remain', '/stories', '/stories/musegg-morning', '/search', '/cart', '/plan', '/credits', '/account', '/account/bookings/:booking', '/account/bookings/:booking/pay', '/account/orders/:order'],
+    routes: ['/', '/gifts', '/gifts/:gift', '/tours', '/stories', '/stories/musegg-morning', '/search', '/cart', '/plan', '/credits', '/account', '/account/orders/:order'],
   },
   {
     name: 'owner',
     role: 'owner',
-    routes: ['/store', '/store/orders', '/store/orders/:order', '/store/bookings', '/store/bookings/:booking', '/store/bookings/departures/:departure', '/store/calendar', '/store/sales', '/store/reports', '/store/reports/sales', '/store/reports/costs', '/store/reports/guests', '/store/reports/margin', '/store/partners', '/store/partners/:partner', '/store/partners/analytics', '/store/products', '/store/products/gifts/:gift', '/store/products/tours', '/store/products/tours/:tour', '/store/content', '/store/content/analytics', '/store/content/reviews', '/store/requests', '/store/requests/analytics', '/store/requests/private', '/store/requests/questions', '/store/products/gifts/:gift?step=pickup', '/store/products/gifts/:gift?step=bogus', '/store/products/tours/:tour?step=departures', '/store/products/tours/:tour?step=bogus', '/store/products?tab=tours', '/store/products?tab=nope', '/store/content?lang=de', '/store/content?lang=en'],
+    routes: ['/store', '/store/orders', '/store/orders/:order', '/store/calendar', '/store/sales', '/store/reports', '/store/reports/sales', '/store/reports/costs', '/store/reports/guests', '/store/reports/margin', '/store/partners', '/store/partners/:partner', '/store/partners/analytics', '/store/products', '/store/products/gifts/:gift', '/store/products/tours', '/store/products/tours/:tour', '/store/content', '/store/content/analytics', '/store/content/reviews', '/store/requests', '/store/requests/analytics', '/store/requests/questions', '/store/products/gifts/:gift?step=pickup', '/store/products/gifts/:gift?step=bogus', '/store/products/tours/:tour?step=departures', '/store/products/tours/:tour?step=bogus', '/store/products?tab=tours', '/store/products?tab=nope', '/store/content?lang=de', '/store/content?lang=en'],
   },
 ]
 
@@ -92,9 +91,8 @@ async function capture(label, dir) {
           // A vacuous comparison (blank pages, or a navigation that never happened) would pass as "identical".
           const at = await page.evaluate(() => (location.hash.startsWith('#/') ? location.hash.slice(1) : location.pathname + location.search))
 
-          // The app may redirect (`?tab=tours` becomes `/store/products/tours`), so check the section, and compare the final address between builds below.
-          if (at.split(SECTION_END)[1] !== path.split(SECTION_END)[1])
-            problems.push(`${label} ${key}: the page is at ${at}, expected ${path}`)
+          // The app may redirect (`?tab=tours` becomes `/store/products/tours`), so the final address is
+          // not checked against the request here; it must be the same in both builds (below).
           where[key] = at
           if (result[key].trim().length < MIN_TEXT)
             problems.push(`${label} ${key}: only ${result[key].trim().length} characters of text`)
@@ -126,9 +124,13 @@ const b = await capture('new', newDir)
 let same = 0
 const diffs = []
 
+const addressDiffs = []
+
 for (const key of Object.keys(a.result)) {
-  if (a.where[key] !== b.where[key])
+  if (a.where[key] !== b.where[key]) {
+    addressDiffs.push(key)
     console.log(`ADDRESS ${key}: base ${a.where[key]}, new ${b.where[key]}`)
+  }
   if (a.result[key] === b.result[key])
     same++
   else diffs.push(key)
@@ -148,4 +150,9 @@ for (const key of diffs) {
       changed.push(`  - ${x[i] ?? ''}\n  + ${y[i] ?? ''}`)
   }
   console.log(`DIFF ${key} (${changed.length} lines)\n${changed.slice(0, 6).join('\n')}`)
+}
+
+if (addressDiffs.length) {
+  console.error(`${addressDiffs.length} routes ended at a different address in the two builds`)
+  process.exitCode = 1
 }

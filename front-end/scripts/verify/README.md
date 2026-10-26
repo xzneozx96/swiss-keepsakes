@@ -48,7 +48,7 @@ cd front-end && pnpm exec vite build --outDir /tmp/sk-base-src/base-out
 
 | Command | What it proves |
 | :-- | :-- |
-| `pnpm verify:routes /tmp/sk-base-src/base-out /tmp/sk-new /tmp/sk-out` | The visible text of 100 routes, in English and German with a frozen clock, is identical in both builds. It prints every route that differs |
+| `pnpm verify:routes /tmp/sk-base-src/base-out /tmp/sk-new /tmp/sk-out` | The visible text of 86 routes, in English and German with a frozen clock, is identical in both builds, and each route ends at the same address in both (a difference fails the run). It prints every route that differs. The routes that only render NotFound (retired booking routes) are not in the list |
 | `pnpm verify:renders /tmp/sk-new` | Component renders, commits and CPU time at 4x throttle for seven scenarios. `PROFILE=S5` lists the top components for one scenario |
 | `node ../docs/front-end-audit/measure-initial-load.mjs <dir>` | First-load JavaScript and CSS, gzipped. It reads `<dir>/index.html`, so it works on the static baseline as is. A Start build has no `index.html`: see below |
 
