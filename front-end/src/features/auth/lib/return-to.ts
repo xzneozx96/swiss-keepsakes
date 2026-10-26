@@ -22,7 +22,7 @@ export function safeReturnTo(value: string | undefined): string {
 export function signInUrl(returnTo: string): string {
   const search = new URLSearchParams({ returnTo })
 
-  return `${window.location.origin}${window.location.pathname}#/sign-in?${search}`
+  return `${window.location.origin}/sign-in?${search}`
 }
 
 /**

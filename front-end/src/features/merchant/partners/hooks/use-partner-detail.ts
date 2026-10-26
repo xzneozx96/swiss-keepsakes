@@ -30,9 +30,9 @@ function staffName(who: StaffId) {
   return who === 'owner' ? shop.ownerName : 'Lukas'
 }
 
-/** The private report link (P01, step 5.6); hash routing, so it works on any deployment. */
+/** The private report link (P01, step 5.6), on this deployment's origin. */
 export function reportUrl(token: string) {
-  return `${window.location.origin}${window.location.pathname}#/partner/${token}`
+  return `${window.location.origin}/partner/${token}`
 }
 
 export interface LedgerRow {
@@ -58,7 +58,7 @@ export interface TransactionRow {
 
 /** The ledger holds orders only; tour bookings are dormant (ADR-012). */
 function hrefOf(item: CommissionItem) {
-  return `#/store/orders/${item.transaction.id}`
+  return `/store/orders/${item.transaction.id}`
 }
 
 /**

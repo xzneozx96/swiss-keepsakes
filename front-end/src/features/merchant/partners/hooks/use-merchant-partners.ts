@@ -73,7 +73,7 @@ export function useMerchantPartners(filter: PartnerFilter[], query: string) {
 
       return {
         id: partner.id,
-        href: `#/store/partners/${partner.id}`,
+        href: `/store/partners/${partner.id}`,
         name: partner.name,
         code: partner.code,
         email: partner.email,

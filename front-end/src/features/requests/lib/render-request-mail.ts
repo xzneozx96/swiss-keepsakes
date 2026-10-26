@@ -72,7 +72,7 @@ export function renderRequestMail(mail: Mail): RenderedMail {
       ],
       link: {
         label: line('requestMail.link.advice'),
-        href: `#/store/requests/advice/${String(p.requestId)}`,
+        href: `/store/requests/advice/${String(p.requestId)}`,
         role: 'owner',
       },
     }
@@ -102,7 +102,7 @@ export function renderRequestMail(mail: Mail): RenderedMail {
     ],
     link: {
       label: line('requestMail.link.private'),
-      href: '#/store/requests',
+      href: '/store/requests',
       role: (p.staffRole === 'manager' ? 'manager' : 'owner') satisfies Role,
     },
   }

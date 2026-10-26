@@ -17,7 +17,7 @@ const pill = `${buttonVariants({ variant: 'primary' })} transition-transform act
 
 function Action({ label }: { label: string }) {
   return (
-    <a className={pill} href="#/tours/private-tour">
+    <a className={pill} href="/tours/private-tour">
       {label}
       <ArrowRightIcon aria-hidden size={18} />
     </a>

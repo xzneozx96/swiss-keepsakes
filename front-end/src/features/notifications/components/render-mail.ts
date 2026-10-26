@@ -22,7 +22,7 @@ export interface RenderedMail {
   subject: string
   /** Paragraphs of the email body. */
   body: string[]
-  /** The mail's button (N16, N17): a hash link into the shop, opened as `role`. */
+  /** The mail's button (N16, N17): a link into the shop, opened as `role`. */
   link?: { label: string, href: string, role: Role }
 }
 
