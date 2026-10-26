@@ -138,3 +138,21 @@ test("[E0.9] a Done spike whose proof document exists passes without a test", ()
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout.trim(), "E0.1 tests=0 status=Done proof=docs/spikes/SP1.md");
 });
+
+const offCall = (modifier, title) => `test.${modifier}(${JSON.stringify(title)}, () => {});\n`;
+
+test("[E0.9] skip, fixme and todo tests are listed as switched off and not counted", () => {
+  const w = workspace("off", {
+    plan: header + row("E0.1") + row("E0.2"),
+    status: { "E0.1": "Done", "E0.2": "Done" },
+    tests: {
+      "a.spec.ts": testCall("[E0.1] runs") + offCall("fixme", "[E0.1] off") + offCall("skip", "[E0.2] off") + `describe.${"skip"}(${JSON.stringify("[E0.2] block")}, () => { test("inside", () => {}); });\n`,
+    },
+  });
+  const result = run([w.plan, "--tests", w.tests]);
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /E0\.1 tests=1 switched-off=1 status=Done/);
+  assert.match(result.stdout, /E0\.2 tests=0 switched-off=2 status=Done/);
+  assert.match(result.stderr, /only tests are switched off.*E0\.2/);
+});
