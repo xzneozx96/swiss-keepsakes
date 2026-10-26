@@ -281,4 +281,81 @@ CREATE UNIQUE INDEX tours_slug_de_key ON content.tours ((slug->>'de')) WHERE slu
 CREATE INDEX tours_pdf_media_idx ON content.tours (store_id, pdf_media_id) WHERE pdf_media_id IS NOT NULL;--> statement-breakpoint
 CREATE INDEX tours_cover_media_idx ON content.tours (store_id, cover_media_id) WHERE cover_media_id IS NOT NULL;--> statement-breakpoint
 CREATE INDEX tour_stops_media_idx ON content.tour_stops (store_id, media_id) WHERE media_id IS NOT NULL;--> statement-breakpoint
-CREATE INDEX tour_stops_place_idx ON content.tour_stops (store_id, place_id) WHERE place_id IS NOT NULL;
+CREATE INDEX tour_stops_place_idx ON content.tour_stops (store_id, place_id) WHERE place_id IS NOT NULL;--> statement-breakpoint
+-- Triggers: invariants that span rows. Row-local parts are CHECKs above.
+CREATE FUNCTION content.reject_delete() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION 'a published or hidden % cannot be deleted; hide it instead', TG_TABLE_NAME
+    USING ERRCODE = 'restrict_violation';
+END $$;--> statement-breakpoint
+CREATE TRIGGER places_keep_once_published BEFORE DELETE ON content.places
+  FOR EACH ROW WHEN (OLD.first_published_at IS NOT NULL) EXECUTE FUNCTION content.reject_delete();--> statement-breakpoint
+CREATE TRIGGER story_versions_keep_once_published BEFORE DELETE ON content.story_versions
+  FOR EACH ROW WHEN (OLD.published IS NOT NULL) EXECUTE FUNCTION content.reject_delete();--> statement-breakpoint
+CREATE FUNCTION content.reject_type_change() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION 'the type of place % cannot change after it is created', OLD.id USING ERRCODE = 'restrict_violation';
+END $$;--> statement-breakpoint
+CREATE TRIGGER places_type_is_immutable BEFORE UPDATE OF type ON content.places
+  FOR EACH ROW WHEN (OLD.type IS DISTINCT FROM NEW.type) EXECUTE FUNCTION content.reject_type_change();--> statement-breakpoint
+-- AC43, cross-row half. Both checks run at commit and lock the story group row, so a publish
+-- and an unpublish that race cannot both pass.
+CREATE FUNCTION content.assert_pin_has_published_story() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.status = 'published' AND NEW.type <> 'practical' THEN
+    PERFORM 1 FROM content.story_groups g WHERE g.id = NEW.main_story_group_id FOR SHARE;
+    IF NOT EXISTS (SELECT 1 FROM content.story_versions v
+                    WHERE v.group_id = NEW.main_story_group_id AND v.status = 'published') THEN
+      RAISE EXCEPTION 'place % cannot be published: its main story has no published version', NEW.id
+        USING ERRCODE = 'check_violation', CONSTRAINT = 'places_pin_has_published_story';
+    END IF;
+  END IF;
+  RETURN NULL;
+END $$;--> statement-breakpoint
+CREATE CONSTRAINT TRIGGER places_pin_has_published_story
+  AFTER INSERT OR UPDATE OF status, main_story_group_id ON content.places
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION content.assert_pin_has_published_story();--> statement-breakpoint
+CREATE FUNCTION content.assert_published_pins_keep_story() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM 1 FROM content.story_groups g WHERE g.id = OLD.group_id FOR UPDATE;
+  IF EXISTS (SELECT 1 FROM content.places p
+              WHERE p.main_story_group_id = OLD.group_id AND p.status = 'published' AND p.type <> 'practical')
+     AND NOT EXISTS (SELECT 1 FROM content.story_versions v
+                      WHERE v.group_id = OLD.group_id AND v.status = 'published') THEN
+    RAISE EXCEPTION 'story group % is the main story of a published place and keeps no published version', OLD.group_id
+      USING ERRCODE = 'check_violation', CONSTRAINT = 'story_versions_keep_pin_story';
+  END IF;
+  RETURN NULL;
+END $$;--> statement-breakpoint
+-- Fires when a published version leaves 'published', moves to another group, or is deleted.
+CREATE CONSTRAINT TRIGGER story_versions_keep_pin_story
+  AFTER UPDATE ON content.story_versions
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  WHEN (OLD.status = 'published' AND (NEW.status IS DISTINCT FROM OLD.status OR NEW.group_id IS DISTINCT FROM OLD.group_id))
+  EXECUTE FUNCTION content.assert_published_pins_keep_story();--> statement-breakpoint
+CREATE CONSTRAINT TRIGGER story_versions_keep_pin_story_on_delete
+  AFTER DELETE ON content.story_versions
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (OLD.status = 'published')
+  EXECUTE FUNCTION content.assert_published_pins_keep_story();--> statement-breakpoint
+-- A media row cannot be retired while a column or a document still uses it. A save that adds a reference at the
+-- same moment can still slip past, which the grace period of ADR-004 covers.
+CREATE FUNCTION content.reject_retire_if_used() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM content.media_refs r WHERE r.media_id = NEW.id)
+     OR EXISTS (SELECT 1 FROM content.places p WHERE p.cover_media_id = NEW.id)
+     OR EXISTS (SELECT 1 FROM content.tours t WHERE t.cover_media_id = NEW.id OR t.pdf_media_id = NEW.id)
+     OR EXISTS (SELECT 1 FROM content.tour_stops s WHERE s.media_id = NEW.id) THEN
+    RAISE EXCEPTION 'media % is still used and cannot be retired', NEW.id USING ERRCODE = 'restrict_violation';
+  END IF;
+  RETURN NEW;
+END $$;--> statement-breakpoint
+CREATE TRIGGER media_not_retired_while_used BEFORE UPDATE OF status ON content.media
+  FOR EACH ROW WHEN (NEW.status = 'retired' AND OLD.status <> 'retired') EXECUTE FUNCTION content.reject_retire_if_used();--> statement-breakpoint
+-- Place sheet (AP-4): main story first, then every other story that mentions the place or reviews it.
+CREATE VIEW content.place_story_links AS
+  SELECT p.id AS place_id, p.main_story_group_id AS group_id, 0 AS rank
+    FROM content.places p WHERE p.main_story_group_id IS NOT NULL
+  UNION
+  SELECT g.place_id, g.group_id, 1 FROM content.story_group_places g
+  UNION
+  SELECT s.subject_place_id, s.id, 1 FROM content.story_groups s WHERE s.subject_place_id IS NOT NULL;
