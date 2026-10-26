@@ -9,6 +9,7 @@ import { usePartnerAccess } from '@/features/partners/hooks/use-partner-access'
 import { PartnerDashboard } from '@/features/partners/report/components/partner-dashboard'
 import { usePartnerOverview } from '@/features/partners/report/hooks/use-partner-overview'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { noIndexHead } from '@/lib/no-index'
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/
 
@@ -36,6 +37,8 @@ function isPeriod(value: unknown): value is SalesPeriodId {
 // code, then for 30 days on this browser (R10). /partner redirects here. Links from before
 // the period dropdown (?period=month&date=…) fall back to the default period.
 export const Route = createFileRoute('/partner/$token')({
+  ssr: false,
+  head: noIndexHead,
   validateSearch: (search: Record<string, unknown>): PartnerSearch => ({
     period: isPeriod(search.period) ? search.period : undefined,
     from: isIsoDate(search.from) ? search.from : undefined,

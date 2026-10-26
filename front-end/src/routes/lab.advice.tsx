@@ -18,6 +18,7 @@ import {
   AdviceRouteSketch,
   AdviceTicket,
 } from '@/features/lab/advice-options-v2'
+import { noIndexHead } from '@/lib/no-index'
 
 const round2 = [
   {
@@ -53,7 +54,11 @@ const round2 = [
 ]
 
 /** Lab: compare trip-advice call-to-action layouts at phone width. Not part of the product. */
-export const Route = createFileRoute('/lab/advice')({ component: AdviceLab })
+export const Route = createFileRoute('/lab/advice')({
+  ssr: false,
+  head: noIndexHead,
+  component: AdviceLab,
+})
 
 const options = [
   {

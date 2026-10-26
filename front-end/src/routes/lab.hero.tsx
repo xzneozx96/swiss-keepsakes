@@ -26,9 +26,14 @@ import {
   HeroF4PhotoTabs,
   HeroF5CardPhoto,
 } from '@/features/lab/hero-options-v3'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: compare discovery-home hero layouts at phone width. Not part of the product. */
-export const Route = createFileRoute('/lab/hero')({ component: HeroLab })
+export const Route = createFileRoute('/lab/hero')({
+  ssr: false,
+  head: noIndexHead,
+  component: HeroLab,
+})
 
 const round3 = [
   {

@@ -21,9 +21,12 @@ import {
   ReviewSectioned,
   ReviewTiles,
 } from '@/features/lab/review-order-options'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: C06 orders as one white card each. Not part of the product. */
 export const Route = createFileRoute('/lab/review')({
+  ssr: false,
+  head: noIndexHead,
   component: ReviewLab,
 })
 

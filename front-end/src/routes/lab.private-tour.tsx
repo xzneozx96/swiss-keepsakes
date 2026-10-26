@@ -18,9 +18,12 @@ import {
   PrivateTapedCorners,
   PrivateTwoPolaroids,
 } from '@/features/lab/private-tour-options-v2'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: private-tour call-to-action options at phone width. Not part of the product. */
 export const Route = createFileRoute('/lab/private-tour')({
+  ssr: false,
+  head: noIndexHead,
   component: PrivateTourLab,
 })
 

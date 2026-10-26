@@ -30,9 +30,12 @@ import {
   CartSelectDemo,
 
 } from '@/features/lab/cart-select-options'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: more compact cart lines for C04. Not part of the product. */
 export const Route = createFileRoute('/lab/cart-line')({
+  ssr: false,
+  head: noIndexHead,
   component: CartLineLab,
 })
 

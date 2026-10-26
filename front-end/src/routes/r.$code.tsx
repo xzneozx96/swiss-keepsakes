@@ -4,12 +4,17 @@ import { useEffect, useRef } from 'react'
 import { useCommand } from '@/features/data-client'
 import { usePartners } from '@/features/partners/api/queries'
 import { partnerByCode } from '@/features/partners/referral'
+import { noIndexHead } from '@/lib/no-index'
 
 /**
  * Public referral link /r/{code} (UX spec §3.1, §4.1): records the visit, then shows the
  * discovery home. Nothing on screen says the guest was referred.
  */
-export const Route = createFileRoute('/r/$code')({ component: ReferralLink })
+export const Route = createFileRoute('/r/$code')({
+  ssr: false,
+  head: noIndexHead,
+  component: ReferralLink,
+})
 
 function ReferralLink() {
   const { code } = Route.useParams()

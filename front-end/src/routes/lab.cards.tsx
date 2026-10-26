@@ -18,9 +18,14 @@ import {
   OptionPricePill,
   OptionRow,
 } from '@/features/lab/card-options'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: compare gift-card layouts at phone width. Not part of the product. */
-export const Route = createFileRoute('/lab/cards')({ component: CardLab })
+export const Route = createFileRoute('/lab/cards')({
+  ssr: false,
+  head: noIndexHead,
+  component: CardLab,
+})
 
 const sampleIds = [
   'p-chocolate',

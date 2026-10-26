@@ -10,9 +10,12 @@ import {
   QuantityRow,
   QuantitySelect,
 } from '@/features/lab/quantity-options'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: compare quantity pickers for the C03 add-to-cart sheet. Not part of the product. */
 export const Route = createFileRoute('/lab/quantity')({
+  ssr: false,
+  head: noIndexHead,
   component: QuantityLab,
 })
 
