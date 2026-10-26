@@ -26,7 +26,7 @@ Each file sits here at its old path relative to `src/`. Move it back with `git m
 - `features/tours/components/booking-status.tsx`
 - `features/tours/merchant/attendance-actions.tsx` and `features/tours/merchant/payment-sheet.tsx`
 - `features/merchant/products/hooks/use-subcategories.ts` and `features/merchant/products/components/subcategory-sheet.tsx`
-- `features/requests/hooks/use-private-tour.ts`, with its test in `tests/submit.tsx` (renamed from `tests/submit.test.tsx`; rename it back on restore)
+- `features/requests/hooks/use-private-tour.ts`
 - `usePrivateTourRequests` now lives in `features/requests/api/queries.ts` here. On restore, copy it back into `src/features/requests/api/queries.ts` (it needs `PrivateTourRequest` from `@sk/domain/requests`).
 
 ## Code deleted, not moved
