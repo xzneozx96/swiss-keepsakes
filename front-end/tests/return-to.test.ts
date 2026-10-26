@@ -11,6 +11,9 @@ describe('safeReturnTo', () => {
     ['//evil.com'],
     ['https://evil.com'],
     ['/sign-in?returnTo=/x'],
+    ['/%2F%2Fevil.com'],
+    ['/%73ign-in'],
+    ['/Sign-in'],
     [undefined],
   ])('[E3.2] sends %j to /account', (value) => {
     expect(safeReturnTo(value)).toBe('/account')
