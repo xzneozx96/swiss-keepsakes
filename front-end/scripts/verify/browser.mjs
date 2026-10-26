@@ -1,25 +1,14 @@
 import { spawn } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync } from 'node:fs'
 import http from 'node:http'
-import { extname, join } from 'node:path'
+import { join } from 'node:path'
 import process from 'node:process'
 import { chromium } from '@playwright/test'
 
-const TYPES = {
-  '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.css': 'text/css',
-  '.json': 'application/json',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.mp3': 'audio/mpeg',
-}
+// Other agents and the root e2e suite use 5426 to 5429, so the verify scripts stay in 5420 to 5425.
+const PORTS = Array.from({ length: 6 }, (_, i) => 5420 + i)
 
-// 5429 is the default port of the root e2e suite, so the verify scripts leave it alone.
-const PORTS = Array.from({ length: 9 }, (_, i) => 5420 + i)
-
-/** The first free port in 5420 to 5428. */
+/** The first free port in 5420 to 5425. */
 async function freePort() {
   for (const port of PORTS) {
     const free = await new Promise((resolve) => {
@@ -58,84 +47,56 @@ function waitUntilUp(port, child) {
   })
 }
 
-/** True for a Nitro output folder (`server/index.mjs` beside `public/`), false for a static vite `dist`. */
-export function isNitroOutput(dir) {
-  return existsSync(join(dir, 'server', 'index.mjs'))
-}
-
-/**
- * The address of an app path in a served build. The E3.1 baseline uses hash history (`/index.html#/store`),
- * the Start build uses browser history (`/store`).
- */
+/** The address of an app path in a served build. */
 export function appUrl(served, path) {
-  return served.mode === 'nitro' ? `http://localhost:${served.port}${path}` : `http://localhost:${served.port}/index.html#${path}`
+  return `http://localhost:${served.port}${path}`
 }
 
-/** Moves a page to an app path without a reload, in the history form of the served build. */
+/** Moves a page to an app path without a reload. */
 export function goTo(page, served, path) {
-  return served.mode === 'nitro'
-    ? page.evaluate((p) => { window.history.pushState({}, '', p); window.dispatchEvent(new PopStateEvent('popstate')) }, path)
-    : page.evaluate((p) => { location.hash = p }, path)
+  return page.evaluate((p) => { window.history.pushState({}, '', p); window.dispatchEvent(new PopStateEvent('popstate')) }, path)
 }
 
 /**
- * Serves a built folder on a free port from 5420 to 5428 and resolves `{ server, port, mode }`.
- * The folder layout picks the mode:
- * - Nitro output (`<dir>/server/index.mjs`, the Start build): runs `node <dir>/server/index.mjs` with PORT set.
- *   `server.close()` kills that child by its PID.
- * - Static folder (a vite `dist`, the E3.1 baseline): a small server where unknown paths get index.html, like the static host.
+ * Serves a Nitro output folder (`<dir>/server/index.mjs`, the Start build) on a free port from 5420 to 5425
+ * and resolves `{ server, port }`. Runs `node <dir>/server/index.mjs` with PORT set.
+ * `server.close()` kills that child by its PID.
  */
 export async function serve(dir) {
+  if (!existsSync(join(dir, 'server', 'index.mjs')))
+    throw new Error(`${dir} is not a Nitro output: server/index.mjs is missing`)
+
   const port = await freePort()
-
-  if (isNitroOutput(dir)) {
-    const child = spawn(process.execPath, [join(dir, 'server', 'index.mjs')], {
-      env: { ...process.env, PORT: String(port), NITRO_PORT: String(port), HOST: '127.0.0.1' },
-      stdio: 'ignore',
-    })
-    const server = {
-      pid: child.pid,
-      // SIGKILL at once: the demo server holds no state, and a graceful stop waits up to 5 s for open connections.
-      close() {
-        if (child.exitCode === null && child.signalCode === null)
-          child.kill('SIGKILL')
-      },
-    }
-
-    // Backstop: a script that throws before it calls close() must not leave the server behind.
-    process.once('exit', () => server.close())
-
-    try {
-      await waitUntilUp(port, child)
-    }
-    catch (error) {
-      server.close()
-      throw error
-    }
-
-    return { server, port, mode: 'nitro' }
+  const child = spawn(process.execPath, [join(dir, 'server', 'index.mjs')], {
+    env: { ...process.env, PORT: String(port), NITRO_PORT: String(port), HOST: '127.0.0.1' },
+    stdio: 'ignore',
+  })
+  const server = {
+    pid: child.pid,
+    // SIGKILL at once: the demo server holds no state, and a graceful stop waits up to 5 s for open connections.
+    close() {
+      if (child.exitCode === null && child.signalCode === null)
+        child.kill('SIGKILL')
+    },
   }
 
-  if (!existsSync(join(dir, 'index.html')))
-    throw new Error(`${dir} is neither a Nitro output (server/index.mjs) nor a static build (index.html)`)
+  // Backstop: a script that throws before it calls close() must not leave the server behind.
+  process.once('exit', () => server.close())
 
-  const server = http.createServer((req, res) => {
-    let file = join(dir, decodeURIComponent(req.url.split('?')[0]))
+  try {
+    await waitUntilUp(port, child)
+  }
+  catch (error) {
+    server.close()
+    throw error
+  }
 
-    if (!existsSync(file) || file === `${dir}/`)
-      file = join(dir, 'index.html')
-    res.setHeader('content-type', TYPES[extname(file)] ?? 'application/octet-stream')
-    res.end(readFileSync(file))
-  })
-
-  await new Promise(resolve => server.listen(port, resolve))
-
-  return { server, port, mode: 'static' }
+  return { server, port }
 }
 
 /**
- * The app renders nothing on the server and on the first client render, so wait for the prototype bar (client-only today, because every route except the root and the test routes is client-only; E3.3 must change this wait when it sets ssr:true)
- * before reading text or storage.
+ * Waits for the prototype bar, which sits in the root layout, so a server-rendered route has it in the first HTML and a
+ * client-only route gets it on the first client render. Wait for it before reading text or storage.
  */
 export function waitForBoot(page) {
   return page.locator('[aria-label="Prototype controls"]').first().waitFor({ state: 'attached', timeout: 15_000 })

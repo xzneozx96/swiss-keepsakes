@@ -1,8 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 // Renders the same routes from two builds with a frozen clock and diffs the visible text.
-// Each folder is either a static vite `dist` (hash history, the E3.1 baseline) or a Nitro `.output` (browser history, the
-// Start build). The folder layout picks the server and the URL form, see README.md.
+// Each folder is a Nitro `.output` (the Start build), see README.md.
 // usage: node scripts/verify/compare-builds.mjs <baseDir> <newDir> <outDir>
 import process from 'node:process'
 import { appUrl, goTo, launchBrowser, serve, waitForBoot } from './browser.mjs'
@@ -40,7 +39,7 @@ async function capture(label, dir) {
 
     for (const lang of ['en', 'de']) {
       for (const set of SETS) {
-        const context = await browser.newContext({ viewport: { width: 430, height: 932 } })
+        const context = await browser.newContext({ viewport: { width: 430, height: 932 }, timezoneId: 'Europe/Zurich' })
 
         await context.clock.setFixedTime(FROZEN)
         const page = await context.newPage()
@@ -89,7 +88,7 @@ async function capture(label, dir) {
           // eslint-disable-next-line unicorn/prefer-dom-node-text-content -- innerText is the text a visitor can see; textContent would include hidden nodes
           result[key] = await page.evaluate(() => document.body.innerText)
           // A vacuous comparison (blank pages, or a navigation that never happened) would pass as "identical".
-          const at = await page.evaluate(() => (location.hash.startsWith('#/') ? location.hash.slice(1) : location.pathname + location.search))
+          const at = await page.evaluate(() => location.pathname + location.search)
 
           // The app may redirect (`?tab=tours` becomes `/store/products/tours`), so the final address is
           // not checked against the request here; it must be the same in both builds (below).

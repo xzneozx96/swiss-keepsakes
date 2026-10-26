@@ -2,14 +2,11 @@
 
 Two opt-in checks that drive a built copy of the app in a browser. They are too slow for every commit, so run them when you change rendering, routing, state or the build. Run them from `front-end/`.
 
-Each script takes a build folder and picks the server from its layout:
+Each script takes the Nitro output folder of a Start build (`front-end/.output` or a copy of it, with `server/index.mjs` inside). `serve()` runs `node <dir>/server/index.mjs` with `PORT` set, on the first free port in 5420 to 5425, and `server.close()` kills that process by its PID. A folder without `server/index.mjs` is an error.
 
-| Folder | Build | Served with | URL form |
-| :-- | :-- | :-- | :-- |
-| contains `server/index.mjs` | Nitro output of the Start build (`front-end/.output`) | `node <dir>/server/index.mjs` with `PORT` set, on the first free port in 5420 to 5428. `server.close()` kills that process by its PID | `/store/orders` |
-| contains `index.html` | Static `dist` of the E3.1 hash-history build (d52ce9e) | a small static server with an `index.html` fallback, same port range | `/index.html#/store/orders` |
+The baseline of a comparison is a Nitro build of the E3.2 head `b22a283`, copied to a scratch folder (see below). Home and the public routes render on the server, and the other routes render on the client. The scripts wait for the prototype bar (`aria-label="Prototype controls"`) before they read storage or text. The bar is in the root layout, so `waitForBoot` works for both kinds of route.
 
-So a comparison can take the E3.1 baseline and a Start build, or two builds of either kind. The app renders nothing on the server and on the first client render, so the scripts wait for the prototype bar (`aria-label="Prototype controls"`) before they read storage or text.
+Both scripts open the browser context in the time zone `Europe/Zurich`, the zone the app treats as the shop's. Server-rendered routes need one zone, so the article comment dates print the Zurich calendar day. Without it, a build compared on a host in another zone shows a different day (`/stories/musegg-morning` showed 06.10.2026 against 07.10.2026 on a +07 host).
 
 ## Build a Start output into a scratch folder
 
@@ -33,24 +30,25 @@ cp -r /tmp/sk-new/public/assets /tmp/sk-meas/assets
 node ../docs/front-end-audit/measure-initial-load.mjs /tmp/sk-meas
 ```
 
-## Build the E3.1 baseline outside the repo
+## Build the baseline outside the repo
 
-The baseline is the E3.1 commit `d52ce9e`. Do not use `git worktree`, `checkout` or `stash` for it. Export it into a scratch folder, install with the lockfile, and build a static `dist`:
+The baseline is the E3.2 head `b22a283`. Do not use `git worktree`, `checkout` or `stash` for it. Export it into a scratch folder, install with the lockfile, build, and copy the Nitro output:
 
 ```
-mkdir -p /tmp/sk-base-src
-git archive d52ce9e front-end api e2e spikes packages pnpm-lock.yaml pnpm-workspace.yaml package.json .pnpmfile.cjs .nvmrc | tar -x -C /tmp/sk-base-src
-cd /tmp/sk-base-src && pnpm install --frozen-lockfile
-cd front-end && pnpm exec vite build --outDir /tmp/sk-base-src/base-out
+mkdir -p /tmp/sk-e33-base-src
+git archive b22a283 | tar -x -C /tmp/sk-e33-base-src
+cd /tmp/sk-e33-base-src && pnpm install --frozen-lockfile
+cd front-end && pnpm exec vite build
+rm -rf /tmp/sk-e33-e32 && cp -r .output /tmp/sk-e33-e32
 ```
 
-`/tmp/sk-base-src/base-out` has `index.html`, so it is served as a static hash-history build. The install needs the whole workspace (`api`, `e2e`, `spikes`, `.pnpmfile.cjs`), or the frozen lockfile check fails.
+The install needs the whole workspace (`api`, `e2e`, `spikes`, `.pnpmfile.cjs`), or the frozen lockfile check fails. Use scratch names that no other session uses.
 
 | Command | What it proves |
 | :-- | :-- |
-| `pnpm verify:routes /tmp/sk-base-src/base-out /tmp/sk-new /tmp/sk-out` | The visible text of 86 routes, in English and German with a frozen clock, is identical in both builds, and each route ends at the same address in both (a difference fails the run). It prints every route that differs. The routes that only render NotFound (retired booking routes) are not in the list |
+| `pnpm verify:routes /tmp/sk-e33-e32 /tmp/sk-new /tmp/sk-out` | The visible text of 86 routes, in English and German with a frozen clock and the Zurich time zone, is identical in both builds, and each route ends at the same address in both (a difference fails the run). It prints every route that differs. The routes that only render NotFound (retired booking routes) are not in the list |
 | `pnpm verify:renders /tmp/sk-new` | Component renders, commits and CPU time at 4x throttle for seven scenarios. `PROFILE=S5` lists the top components for one scenario |
-| `node ../docs/front-end-audit/measure-initial-load.mjs <dir>` | First-load JavaScript and CSS, gzipped. It reads `<dir>/index.html`, so it works on the static baseline as is. A Start build has no `index.html`: see below |
+| `node ../docs/front-end-audit/measure-initial-load.mjs <dir>` | First-load JavaScript and CSS, gzipped. It reads `<dir>/index.html`. A Start build has no `index.html`: see above |
 
 Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Google Chrome. Without it the scripts use Playwright's Chromium (`pnpm exec playwright install chromium`). Render counts are stable between runs. CPU times are not, so run the CPU comparison with nothing else running and compare medians of three.
 

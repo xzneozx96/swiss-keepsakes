@@ -9,7 +9,7 @@ const { server } = served
 const browser = await launchBrowser()
 
 async function scenario(name, role, start, act) {
-  const context = await browser.newContext({ viewport: { width: 430, height: 932 } })
+  const context = await browser.newContext({ viewport: { width: 430, height: 932 }, timezoneId: 'Europe/Zurich' })
 
   await context.addInitScript(() => {
     const stats = { commits: 0, renders: 0, by: {} }

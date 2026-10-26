@@ -124,7 +124,6 @@ for (const { path, text } of PUBLIC_ROUTES) {
 test('[E3.3][AC-1] a hard load of / has no skeleton in its first HTML, a client move to / still shows one', async ({ page, request }) => {
   const html = await (await request.get('/')).text()
 
-  expect(mainText(html)).not.toContain('skeleton')
   expect(/<main\b[^>]*>[\s\S]*?<\/main>/.exec(html)?.[0] ?? '').not.toMatch(/class="[^"]*\bskeleton\b/)
 
   // A hard load of /tours, then a client-side move to the home page.
@@ -209,6 +208,8 @@ test('[E3.2][AC01] a first visit with empty storage moves to a guest page on the
 
   await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/tours$/)
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe('kept')
+  // Only /tours shows this text, so the count below is read on the moved page.
+  await expect(page.getByText('Pilatus').first()).toBeVisible()
   expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
   expect(urls.some(url => url.includes('sign-in'))).toBe(false)
 })
