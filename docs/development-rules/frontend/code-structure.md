@@ -34,7 +34,7 @@ TanStack Router's code splitting moves only the route's `component` into its own
 ## Server files and global middleware
 
 - A file that must never reach the browser is named `*.server.ts`. Start's import protection refuses the import from client code. See `tanstack-start.md`, rule 11.
-- A server route is a route file with `server.handlers`, and an escaped dot in its name stands for the dot in the address: `front-end/src/routes/sitemap[.]xml.ts` serves `/sitemap.xml`, and `robots[.]txt.ts` serves `/robots.txt`. A server route holds no business logic either. It reads through the same feature `api` module as a loader.
+- A server route is a route file with `server.handlers`, and an escaped dot in its name stands for the dot in the address: a file `sitemap[.]xml.ts` in `front-end/src/routes/` serves `/sitemap.xml`, and `robots[.]txt.ts` serves `/robots.txt`. Neither file exists yet. A server route holds no business logic either. It reads through the same feature `api` module as a loader.
 - Global middleware for every request lives in `front-end/src/start.ts`, in `createStart`'s `requestMiddleware`. Do not add a second file for it.
 
 ## Generated and shared files
