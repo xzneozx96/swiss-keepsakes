@@ -11,7 +11,7 @@ const ESCAPE = /%[0-9a-f]{2}/gi
 
 /**
  * The path as the router compares it: each valid %XX decoded on its own (a bad escape stays as written, as in the
- * router's decodePath) and lower case. The prefixes are ASCII, so this is enough to see an encoded prefix.
+ * router's decodePath), repeated slashes made one (`//partner/x` reaches the partner screen) and lower case. The prefixes are ASCII, so this is enough to see an encoded prefix.
  */
 function normalizePath(pathname: string): string {
   return pathname
@@ -23,6 +23,7 @@ function normalizePath(pathname: string): string {
         return escape
       }
     })
+    .replaceAll(/\/{2,}/g, '/')
     .toLowerCase()
 }
 

@@ -39,6 +39,18 @@ describe('private routes', () => {
     expect(privateHeaders(path)).toEqual({ 'X-Robots-Tag': 'noindex' })
   })
 
+  it.each(['//partner/abc', '///partner/abc', '/partner//abc', '//%50artner//abc'])('sends the partner headers for the repeated slashes in %s', (path) => {
+    expect(privateHeaders(path)).toEqual({ 'X-Robots-Tag': 'noindex', 'Referrer-Policy': 'no-referrer' })
+  })
+
+  it.each(['//store', '///admin/x', '//r/abc'])('treats %s as private', (path) => {
+    expect(isPrivatePath(path)).toBe(true)
+  })
+
+  it.each(['//stories', '//store-x'])('keeps %s public', (path) => {
+    expect(isPrivatePath(path)).toBe(false)
+  })
+
   it.each(['/Stories', '/STORE-X', '/%', '/%E0%A4%A', '/Labs'])('keeps %s public and does not throw on a bad escape', (path) => {
     expect(privateHeaders(path)).toEqual({})
   })
