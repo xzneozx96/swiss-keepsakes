@@ -53,7 +53,7 @@ export default antfu(
   },
   {
     // Hidden booking code sits outside the build (ADR-012). Live code must not import it.
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}', 'tests/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': ['error', {
         patterns: [{
@@ -61,6 +61,16 @@ export default antfu(
           message: 'Live code must not import from src/dormant (ADR-012)',
         }],
       }],
+      // Keeps antfu's two entries. `import()` is not covered by no-restricted-imports.
+      'no-restricted-syntax': [
+        'error',
+        'TSEnumDeclaration[const=true]',
+        'TSExportAssignment',
+        {
+          selector: 'ImportExpression[source.value=/dormant/]',
+          message: 'Live code must not import from src/dormant (ADR-012)',
+        },
+      ],
     },
   },
   {
