@@ -65,6 +65,8 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - The demo stays on Vercel static hosting until launch (owner gate H3, 2026-10-26, which amends H2). The Fly staging app hosts only the real app. Vercel is retired at launch, and `front-end/vercel.json` goes then.
 - A request for a server-rendered page costs one extra local call to the API.
 
+**Interim state and launch blocker (gate G-E33-D10, 2026-10-27).** E3.3 server-renders the prototype's guest routes as built, so their first HTML still carries CHF prices and guest comment and review text. This breaks the price rule and the review rule above until the pages are rebuilt. The Start server must not go live until E4.12 (tours), E4.13 (home), E4.14 (search, `ssr:false`) and E6.4 (product pages, with price and stock loaded in the browser) have removed prices and guest text from the server HTML. Each of those four stories has a spec check for it.
+
 ## Assumptions
 - Start 1.169.4 and the Nitro beta stay stable enough to pin and upgrade deliberately. If Nitro's beta blocks a deploy, the fallback is another Start deployment preset.
 - Real app providers (auth session, demo store, locale) run under server rendering. The spike did not test them. The owner moved this check to the start of the migration, with no separate spike (gate H1). Server rendering needs them to avoid `window` at render time (8 files use browser storage, 42 touch `window` or `document`, and dashboards stay `ssr:false`).
@@ -85,3 +87,4 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - 2026-10-26 revised, still proposed, for owner gates S1 and S1b and the two spikes
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-26 amended (gate H3)
+- 2026-10-27 amended (gate G-E33-D10): interim prices and guest text in prototype server HTML; launch blocked until E4.12, E4.13, E4.14, E6.4
