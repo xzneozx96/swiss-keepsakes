@@ -7,8 +7,19 @@ function isUnder(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(`${prefix}/`)
 }
 
+/** The router matches paths without case and decodes %-escapes, so compare the same way. A bad escape stays as written. */
+function normalizePath(pathname: string): string {
+  try {
+    return decodeURIComponent(pathname).toLowerCase()
+  }
+  catch {
+    return pathname.toLowerCase()
+  }
+}
+
 export function isPrivatePath(pathname: string): boolean {
-  return PRIVATE_PREFIXES.some(prefix => isUnder(pathname, prefix))
+  const path = normalizePath(pathname)
+  return PRIVATE_PREFIXES.some(prefix => isUnder(path, prefix))
 }
 
 /** Response headers for a path: noindex on every private path, and no referrer on the partner report (its token is in the address). */
@@ -16,7 +27,7 @@ export function privateHeaders(pathname: string): Record<string, string> {
   if (!isPrivatePath(pathname))
     return {}
 
-  return isUnder(pathname, PARTNER_PREFIX)
+  return isUnder(normalizePath(pathname), PARTNER_PREFIX)
     ? { 'X-Robots-Tag': 'noindex', 'Referrer-Policy': 'no-referrer' }
     : { 'X-Robots-Tag': 'noindex' }
 }

@@ -7,7 +7,6 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
-import { PRIVATE_PREFIXES, privateHeaders } from './src/lib/private-routes.ts'
 
 // The API's address for the dev server. The browser only ever calls /api on its own origin.
 const apiTarget = process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:5002'
@@ -16,11 +15,13 @@ const apiTarget = process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:5002'
 // The built server (`.output`, also what `vite preview` serves) has no forwarding: production forwarding belongs to hosting.
 const devApiRules = { '/api/**': { proxy: `${apiTarget}/api/**` } }
 
-// Private areas answer with noindex (and, for /partner, no-referrer) in dev and in the built server. Nitro applies these
-// rules to the document response before Start renders it, so the header does not depend on the route's `head`.
-const privateRules = Object.fromEntries(
-  PRIVATE_PREFIXES.flatMap(prefix => [prefix, `${prefix}/**`].map(route => [route, { headers: privateHeaders(prefix) }])),
-)
+function nitroOptions(command: 'build' | 'serve') {
+  return {
+    // Private areas answer with noindex (and, for /partner, no-referrer) in dev and in the built server, for every case of the path.
+    handlers: [{ route: '/**', middleware: true, handler: './src/server/private-headers.ts' }],
+    routeRules: command === 'serve' ? devApiRules : {},
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
@@ -33,7 +34,7 @@ export default defineConfig(({ command }) => ({
   plugins: [
     // TanStack Start (it includes the router plugin) must come before @vitejs/plugin-react.
     // Vitest renders components in jsdom and needs neither the server build nor its environments.
-    ...(process.env.VITEST ? [] : [tanstackStart(), nitro({ routeRules: { ...privateRules, ...(command === 'serve' ? devApiRules : {}) } })]),
+    ...(process.env.VITEST ? [] : [tanstackStart(), nitro(nitroOptions(command))]),
     react(),
     // React Compiler: memoizes every component and hook at build time, so no hand-written
     // memo is needed. The react-hooks lint rules keep the code compilable.

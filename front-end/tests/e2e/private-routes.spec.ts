@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
-const PRIVATE_PATHS = ['/store', '/store/orders', '/admin', '/partner', '/partner/some-token', '/lab', '/account', '/cart', '/plan', '/sign-in', '/invitation']
-const PARTNER_PATHS = ['/partner', '/partner/some-token']
+const PRIVATE_PATHS = ['/store', '/store/orders', '/admin', '/partner', '/partner/some-token', '/lab', '/account', '/cart', '/plan', '/sign-in', '/invitation', '/Partner/some-token', '/PARTNER/some-token', '/Store/orders', '/ADMIN']
+const PARTNER_PATHS = ['/partner', '/partner/some-token', '/Partner/some-token', '/PARTNER/some-token']
 
 for (const path of PRIVATE_PATHS) {
   test(`[E3.3][AC12] ${path} is a client shell with noindex`, async ({ page, request }) => {
