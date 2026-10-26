@@ -44,7 +44,12 @@ function useStore(): DemoStore {
 export function useDemoSelector<T>(select: (state: DemoState) => T): T {
   const store = useStore()
 
-  return useSyncExternalStore(store.subscribe, () => select(store.getState()))
+  // While React hydrates server HTML it reads the state the server rendered, whatever the store holds by then.
+  return useSyncExternalStore(
+    store.subscribe,
+    () => select(store.getState()),
+    () => select(store.getInitialState()),
+  )
 }
 
 /** The writers, without subscribing to any state. */
@@ -58,7 +63,7 @@ export function useDemoActions(): DemoActions {
 export function useStorageFull(): boolean {
   const store = useStore()
 
-  return useSyncExternalStore(store.subscribe, store.getStorageFull)
+  return useSyncExternalStore(store.subscribe, store.getStorageFull, () => false)
 }
 
 /** Current demo time, refreshed every 30 seconds for countdowns and "due in" labels. */

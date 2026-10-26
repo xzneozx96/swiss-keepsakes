@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
+import { useRouterState } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 import {
@@ -10,23 +11,23 @@ import {
 import { followSession } from '@/features/auth/lib/session-sync'
 import { DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
-import { startDemo } from '@/features/demo/data-client'
+import { startSeedDemo } from '@/features/demo/data-client'
 import { apiEnabled } from '@/lib/api-mode'
 
-type Demo = ReturnType<typeof startDemo>
+type Demo = ReturnType<typeof startSeedDemo>
 
-// The demo store and the saved-language dictionary start once, in the browser.
-let booting: Promise<Demo> | undefined
+// Restoring starts in an effect, which runs only in the browser; each demo restores once, even if React
+// runs the effect twice.
+const restoring = new WeakMap<Demo, Promise<void>>()
 
-function boot() {
-  booting ??= (() => {
-    const demo = startDemo()
+function restoreOnce(demo: Demo): Promise<void> {
+  const started = restoring.get(demo) ?? (
     // Whoever saved German waits for its chunk before the first paint; everyone else already has English.
     // If German cannot be fetched the app still starts, in English. If a demo collection cannot be
     // read, the app still starts too: its screen reads it again and shows RouteError if that fails.
-    return Promise.all([
+    Promise.all([
       loadDictionary(storedLanguage()).catch(() => undefined),
-      demo.ready.catch((error: unknown) =>
+      demo.restore().catch((error: unknown) =>
         console.error('A demo collection could not be read', error),
       ),
     ]).then(() => {
@@ -34,28 +35,40 @@ function boot() {
       // the API answers.
       if (apiEnabled)
         followSession(demo.store, demo.queryClient)
-      return demo
     })
-  })()
-  return booting
+  )
+
+  restoring.set(demo, started)
+
+  return started
 }
 
-/** Task 2 makes this server-safe. For now the server and the first client render show nothing. */
+/**
+ * The providers for the whole app. Their first render is the same on the server and in the browser: a seed
+ * demo store, English and no storage. A route that renders on the server (`ssr: true`) shows at once. Once
+ * the page is in the browser the saved state and language replace the seed, and a client-only route waits
+ * for them, then renders.
+ */
 export function AppProviders({ children }: { children: ReactNode }) {
-  const [demo, setDemo] = useState<Demo>()
+  const rendersOnServer = useRouterState({
+    select: state => state.matches.every(match => match.ssr !== false),
+  })
+  // The initializer runs once per server request, and once in the browser.
+  const [demo] = useState(startSeedDemo)
+  const [restored, setRestored] = useState(false)
 
   useEffect(() => {
     let current = true
-    void boot().then((started) => {
+    void restoreOnce(demo).then(() => {
       if (current)
-        setDemo(started)
+        setRestored(true)
     })
     return () => {
       current = false
     }
-  }, [])
+  }, [demo])
 
-  if (!demo)
+  if (!restored && !rendersOnServer)
     return null
 
   return (

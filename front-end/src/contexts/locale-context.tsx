@@ -10,6 +10,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from 'react'
 
 import { en } from '@/i18n/en'
@@ -97,8 +98,17 @@ function fill(text: string, vars?: Record<string, string | number>): string {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null)
 
+const subscribeToNothing = () => () => undefined
+
+/** False on the server and while React hydrates server HTML, true in every later render. */
+function usePastHydration(): boolean {
+  return useSyncExternalStore(subscribeToNothing, () => true, () => false)
+}
+
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(initialLanguage)
+  // English while hydrating, like the server's HTML; the saved language is applied after it (below).
+  const pastHydration = usePastHydration()
+  const [language, setLanguage] = useState<Language>(() => pastHydration ? initialLanguage() : 'en')
   const latestRequestRef = useRef(0)
 
   const changeLanguage = useCallback((next: Language) => {
@@ -112,6 +122,25 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
           return
         setLanguage(next)
         writeStored(STORAGE_KEY, next)
+      },
+      () => undefined,
+    )
+  }, [])
+
+  // A page rendered on the server and hydrated starts in English, like the server's HTML. The saved language
+  // arrives after that. A client-only page already starts in it, so this finds nothing to change there.
+  useEffect(() => {
+    const saved = storedLanguage()
+
+    if (saved === 'en')
+      return
+    const request = latestRequestRef.current
+
+    loadDictionary(saved).then(
+      () => {
+        // A tap on the language switch while the messages were on their way wins.
+        if (request === latestRequestRef.current)
+          setLanguage(saved)
       },
       () => undefined,
     )
