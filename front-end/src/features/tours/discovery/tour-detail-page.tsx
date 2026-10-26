@@ -39,7 +39,7 @@ const TourItineraryMap = lazy(() =>
   import('@/features/tours/map/tour-itinerary-map').then(m => ({ default: m.TourItineraryMap })),
 )
 
-/** Holds the map's place in the server HTML and while its chunk loads, at the map frame's height, so nothing jumps. */
+/** Stands in for the map in the server HTML and while its chunk loads. It only reserves the map frame's height; the map's heading and notes appear when it loads. */
 const mapPlaceholder = <div aria-hidden className="h-[min(72svh,640px)] min-h-[460px] rounded-3xl bg-surface-secondary" />
 
 export function TourDetailPage({ slug }: { slug: string }) {
@@ -333,11 +333,14 @@ export function TourDetail({
         {/* A tour added in M13 has no stops yet (no map positions): no itinerary section. */}
         {tour.itinerary.length > 0 && (
           <section className="flex flex-col gap-4 border-t border-separator py-7">
-            <ClientOnly fallback={mapPlaceholder}>
-              <Suspense fallback={mapPlaceholder}>
-                <TourItineraryMap key={tour.id} tour={tour} />
-              </Suspense>
-            </ClientOnly>
+            {/* `data-client-only` marks what the server does not render, so the e2e specs can leave it out when they compare text. */}
+            <div data-client-only>
+              <ClientOnly fallback={mapPlaceholder}>
+                <Suspense fallback={mapPlaceholder}>
+                  <TourItineraryMap key={tour.id} tour={tour} />
+                </Suspense>
+              </ClientOnly>
+            </div>
           </section>
         )}
         <TourSections checkedOn={tour.checkedOn} sections={tour.sections} />

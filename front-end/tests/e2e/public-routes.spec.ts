@@ -8,22 +8,23 @@ const PUBLIC_ROUTES: { path: string, text: string }[] = [
   { path: '/stories/musegg-morning', text: 'Climb the old town wall before the city wakes up' },
   { path: '/credits', text: 'Photo credits' },
   { path: '/tours', text: 'Pilatus' },
-  { path: '/tours/pilatus-above-the-city', text: 'Pilatus' },
+  { path: '/tours/pilatus-above-the-city', text: 'bus, gondola and the Dragon Ride to the summit' },
   { path: '/gifts', text: 'Luzerne gift box' },
   { path: '/gifts/lucerne-gift-box', text: 'Three small things from Luzerne makers' },
-  { path: '/search?q=Pilatus', text: 'Pilatus' },
+  // The no-results message repeats the query, so the expected text is a title that shows only on a hit.
+  { path: '/search?q=Pilatus', text: 'Pilatus keyring' },
 ]
 
 /**
  * Waits until React has committed the hydrated page. The root layout sets `data-hydrated` from an effect, which
  * runs after the root commit. `<main>` must then hold at least one element (an empty `<main>` must not pass) and every
- * element in it must carry `__reactFiber` (icon paths are set as markup, so not those): the lazily loaded `_guest`
+ * element in it must carry `__reactFiber` (icon paths are set as markup, and the map's canvas, controls and pins are made by maplibre, so not those): the lazily loaded `_guest`
  * layout and the routed content are hydrated or client-rendered. The nav is not used: detail pages hide it.
  * No single signal is enough.
  */
 async function waitForHydration(page: Page) {
   await page.waitForFunction(() => {
-    const inMain = [...document.querySelectorAll('main *:not(svg *)')]
+    const inMain = [...document.querySelectorAll('main *:not(svg *):not(.tour-map-frame *)')]
 
     return document.documentElement.dataset.hydrated === 'true'
       && inMain.length > 0
@@ -38,9 +39,24 @@ function mainText(html: string) {
   const inner = /<main\b[^>]*>([\s\S]*?)<\/main>/.exec(html)?.[1] ?? ''
 
   return inner
+    .replaceAll(/<div data-client-only[^>]*>(?:<div[^>]*><\/div>)*<\/div>/g, '')
     .replaceAll(/<!--.*?-->|<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]+>/g, '')
     .replaceAll(/&(?:#x([\da-f]+)|#(\d+)|(\w+));/gi, (whole, hex, dec, name) =>
       hex ? String.fromCodePoint(Number.parseInt(hex, 16)) : dec ? String.fromCodePoint(Number(dec)) : ENTITIES[name.toLowerCase()] ?? whole)
+}
+
+/**
+ * The visible text of the first `<main>` in the browser, without the client-only region (`data-client-only`, the tour
+ * map): the map's chunk may or may not have loaded yet, and the server does not render it.
+ */
+function clientText(page: Page) {
+  return page.locator('main').first().evaluate((main) => {
+    const copy = main.cloneNode(true) as HTMLElement
+
+    copy.querySelectorAll('[data-client-only]').forEach(region => region.remove())
+
+    return copy.textContent ?? ''
+  })
 }
 
 /** Collects console errors, warnings and page errors; a hydration mismatch shows up here. */
@@ -76,7 +92,7 @@ for (const { path, text } of PUBLIC_ROUTES) {
 
     expect(serverText).not.toBe('')
     // One read after the commit: the hydrated page must already show the server text. A mismatch also shows up as a console error.
-    expect((await page.locator('main').first().textContent()) ?? '').toBe(serverText)
+    expect(await clientText(page)).toBe(serverText)
     expect(problems).toEqual([])
   })
 
@@ -95,7 +111,7 @@ for (const { path, text } of PUBLIC_ROUTES) {
         await page.goto(path)
         await waitForHydration(page)
 
-        expect((await page.locator('main').first().textContent()) ?? '').toBe(serverText)
+        expect(await clientText(page)).toBe(serverText)
         expect(problems).toEqual([])
       }
       finally {
@@ -111,7 +127,7 @@ test('[E3.3][AC-1] a hard load of / has no skeleton in its first HTML, a client 
   expect(mainText(html)).not.toContain('skeleton')
   expect(/<main\b[^>]*>[\s\S]*?<\/main>/.exec(html)?.[0] ?? '').not.toMatch(/class="[^"]*\bskeleton\b/)
 
-  // /tours has no server HTML; this is a client-side move to the home page.
+  // A hard load of /tours, then a client-side move to the home page.
   await page.goto('/tours')
   await waitForHydration(page)
   await page.locator('nav a[href="/"]').first().click()
