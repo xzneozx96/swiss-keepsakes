@@ -15,6 +15,44 @@ const PUBLIC_ROUTES: { path: string, text: string }[] = [
   { path: '/search?q=Pilatus', text: 'Pilatus keyring' },
 ]
 
+/** Every seed story, tour and gift: its first HTML must carry its own title. The browser checks above stay on the sample slugs. */
+const SEED_DETAIL_ROUTES: { path: string, text: string }[] = [
+  { path: '/stories/musegg-morning', text: 'A morning on the Musegg wall' },
+  { path: '/stories/lion-monument', text: 'The story behind the Lion Monument' },
+  { path: '/stories/lake-steamboat', text: 'Crossing the lake by steamboat' },
+  { path: '/stories/water-tower', text: 'The Water Tower, older than the bridge' },
+  { path: '/stories/weinmarkt-oath', text: 'The square where Luzerne swore its oath' },
+  { path: '/stories/spreuer-bridge', text: 'Under the Dance of Death on the Spreuer Bridge' },
+  { path: '/stories/needle-dam', text: 'The wooden needles that hold back a lake' },
+  { path: '/stories/old-pharmacy', text: 'The pharmacy that has stayed on its corner since 1833' },
+  { path: '/stories/hammetschwand-lift', text: 'Europe’s highest outdoor lift, built in 1905' },
+  { path: '/stories/victorinox-story', text: 'The knife that began in Ibach' },
+  { path: '/tours/lucerne-the-things-that-remain', text: 'Luzerne: The Things That Remain' },
+  { path: '/tours/pilatus-above-the-city', text: 'Pilatus: Above the City' },
+  { path: '/tours/rigi-from-lake-to-sky', text: 'Rigi: From Lake to Sky' },
+  { path: '/gifts/victorinox-swan', text: 'Victorinox Swan on the lake' },
+  { path: '/gifts/victorinox-chapel-bridge', text: 'Victorinox Chapel Bridge' },
+  { path: '/gifts/victorinox-pilatus', text: 'Victorinox Pilatus' },
+  { path: '/gifts/victorinox-lion', text: 'Victorinox Lion Monument' },
+  { path: '/gifts/victorinox-old-town', text: 'Victorinox Old town on the Reuss' },
+  { path: '/gifts/victorinox-steamboat', text: 'Victorinox Paddle steamer' },
+  { path: '/gifts/victorinox-furka', text: 'Victorinox Furka Pass' },
+  { path: '/gifts/victorinox-grimsel', text: 'Victorinox Grimsel Pass' },
+  { path: '/gifts/victorinox-susten', text: 'Victorinox Susten Pass' },
+  { path: '/gifts/victorinox-gotthard', text: 'Victorinox Gotthard Pass' },
+  { path: '/gifts/victorinox-nufenen', text: 'Victorinox Nufenen Pass' },
+  { path: '/gifts/victorinox-finsterwald', text: 'Victorinox Finsterwald bees' },
+  { path: '/gifts/lucerne-gift-box', text: 'Luzerne gift box' },
+  { path: '/gifts/chocolate-set', text: 'Chocolate set' },
+  { path: '/gifts/limited-edition-print', text: 'Limited-edition print: Water Tower at dawn' },
+  { path: '/gifts/pilatus-keyring', text: 'Pilatus keyring' },
+  { path: '/gifts/lakeside-candle-box', text: 'Lakeside candle box' },
+  { path: '/gifts/dark-chocolate-trio', text: 'Dark chocolate trio' },
+  { path: '/gifts/old-town-facades-print', text: 'Old town façades print' },
+  { path: '/gifts/lucerne-postcard-set', text: 'Luzerne postcard set' },
+  { path: '/gifts/praline-gift-box', text: 'Praline gift box' },
+]
+
 /**
  * Waits until React has committed the hydrated page. The root layout sets `data-hydrated` from an effect, which
  * runs after the root commit. `<main>` must then hold at least one element (an empty `<main>` must not pass) and every
@@ -70,6 +108,15 @@ function collectProblems(page: Page) {
   page.on('pageerror', error => problems.push(`pageerror: ${error.message}`))
 
   return problems
+}
+
+for (const { path, text } of SEED_DETAIL_ROUTES) {
+  test(`[E3.3][AC-1] ${path} server HTML has its title`, async ({ request }) => {
+    const response = await request.get(path)
+
+    expect(response.status()).toBe(200)
+    expect(mainText(await response.text())).toContain(text)
+  })
 }
 
 for (const { path, text } of PUBLIC_ROUTES) {
@@ -129,8 +176,11 @@ test('[E3.3][AC-1] a hard load of / has no skeleton in its first HTML, a client 
   // A hard load of /tours, then a client-side move to the home page.
   await page.goto('/tours')
   await waitForHydration(page)
+  // Watch for the skeleton before the click: it lives for about 350 ms, which a slow poll can miss.
+  const skeleton = page.waitForSelector('.skeleton', { state: 'attached' })
+
   await page.locator('nav a[href="/"]').first().click()
-  await expect(page.locator('.skeleton').first()).toBeVisible()
+  await skeleton
   await expect(page.getByText('Come and see it for yourself')).toBeVisible()
   await expect(page.locator('.skeleton')).toHaveCount(0)
 })
