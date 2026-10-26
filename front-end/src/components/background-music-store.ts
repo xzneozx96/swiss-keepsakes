@@ -43,6 +43,16 @@ let state: MusicState = {
   stacked: 0,
 }
 const listeners = new Set<() => void>()
+// What the server renders and what the browser hydrates with, whatever this browser saved.
+const serverState: MusicState = {
+  enabled: true,
+  blocked: false,
+  playing: false,
+  sheetOpen: false,
+  level: DEFAULT_LEVEL,
+  muted: false,
+  stacked: 0,
+}
 
 export const getMusic = () => state
 
@@ -61,7 +71,9 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener)
 }
 
-export const useMusic = () => useSyncExternalStore(subscribe, getMusic)
+export const getServerMusic = () => serverState
+
+export const useMusic = () => useSyncExternalStore(subscribe, getMusic, getServerMusic)
 
 /** What the player does; BackgroundMusic fills these in while it is mounted. */
 export interface MusicControls {

@@ -44,8 +44,11 @@ function createClock(period: number): Clock {
   }
 }
 
-/** Real time in ms, refreshed every `period` ms. All components asking for one period share one timer. */
-export function useSharedClock(period: number): number {
+/**
+ * Real time in ms, refreshed every `period` ms. All components asking for one period share one timer.
+ * The server and the first client render, which hydrates the server HTML, read `initial`, so the text matches.
+ */
+export function useSharedClock(period: number, initial: number): number {
   let clock = clocks.get(period)
 
   if (!clock) {
@@ -53,5 +56,5 @@ export function useSharedClock(period: number): number {
     clocks.set(period, clock)
   }
 
-  return useSyncExternalStore(clock.subscribe, clock.read)
+  return useSyncExternalStore(clock.subscribe, clock.read, () => initial)
 }

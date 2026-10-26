@@ -4,7 +4,6 @@ import { useDemoNow } from '@/features/demo'
 import { DiscoveryHome } from '@/features/discovery/components/discovery-home'
 import { isFestiveSeason } from '@/features/discovery/components/snowfall'
 import { useDiscoveryView } from '@/features/discovery/hooks/use-discovery-view'
-import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 
 interface HomeSearch {
   /** Prototype only: `?season=christmas` previews the Christmas snow outside its dates. */
@@ -15,18 +14,19 @@ interface HomeSearch {
 export const Route = createFileRoute('/_guest/')({
   validateSearch: (search: Record<string, unknown>): HomeSearch =>
     search.season === 'christmas' ? { season: 'christmas' } : {},
+  ssr: true,
   component: ExplorePage,
 })
 
 function ExplorePage() {
   const view = useDiscoveryView()
-  const isLoading = useSimulatedLoading()
   const now = useDemoNow()
   const { season } = Route.useSearch()
 
   return (
     <DiscoveryHome
-      isLoading={isLoading}
+      // The server renders the page itself, so the first HTML holds its text and not a skeleton.
+      isLoading={false}
       snowing={season === 'christmas' || isFestiveSeason(now)}
       view={view}
     />

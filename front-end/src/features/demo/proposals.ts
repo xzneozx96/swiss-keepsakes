@@ -23,5 +23,5 @@ export function setShowProposals(next: boolean): void {
 }
 
 export function useShowProposals(): boolean {
-  return useSyncExternalStore(subscribe, () => showProposals)
+  return useSyncExternalStore(subscribe, () => showProposals, () => false)
 }

@@ -73,6 +73,8 @@ test('[E3.2][AC01] a first visit with empty storage moves to a guest page on the
   // A new browser context starts with empty storage.
   await page.goto('/')
   await expect(page.getByRole('navigation').first()).toBeVisible()
+  // The server HTML shows the links before React owns them; a click then would load the page again.
+  await page.waitForFunction(() => Object.keys(document.querySelector('nav a') ?? {}).some(key => key.startsWith('__reactProps')))
   await page.evaluate(() => {
     (window as unknown as { marker: string }).marker = 'kept'
   })

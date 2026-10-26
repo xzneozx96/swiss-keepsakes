@@ -70,5 +70,5 @@ export function useStorageFull(): boolean {
 export function useDemoNow(): Date {
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
 
-  return demoNow(clockStartedAt, useSharedClock(30_000))
+  return demoNow(clockStartedAt, useSharedClock(30_000, clockStartedAt))
 }

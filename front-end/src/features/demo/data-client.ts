@@ -25,6 +25,7 @@ import { reviewsQueries } from '@/features/reviews/api/queries'
 import { createStoresClient } from '@/features/stores/api/api-client'
 import { createToursDemoClient } from '@/features/tours/api/demo-client'
 import { toursQueries } from '@/features/tours/api/queries'
+import { createTourSeed } from '@/features/tours/seed'
 import { createSeedState } from './seed'
 import { createDemoStore, loadDemoState } from './store'
 
@@ -33,9 +34,18 @@ function collection<TData, TKey extends QueryKey>(
   query: (
     client: DataClient,
   ) => QueryExecuteOptions<TData, Error, TData, TData, TKey>,
+  /** What the query reads from a state, so a page can render before the read has run. */
+  initial: (data: DemoData) => TData,
 ) {
   return {
     queryKey: (client: DataClient) => query(client).queryKey,
+    prime: (queryClient: QueryClient, client: DataClient, data: DemoData) => {
+      // Built with the whole query, not set by key, so a later refetch has its read function.
+      queryClient
+        .getQueryCache()
+        .build(queryClient, queryClient.defaultQueryOptions(query(client)))
+        .setData(initial(data))
+    },
     read: (queryClient: QueryClient, client: DataClient) =>
       queryClient.query(query(client)),
   }
@@ -55,24 +65,28 @@ type StoreOnlyKey
     | 'nextOrderNumber'
 
 const collections = {
-  guests: collection(accountQueries.guests),
-  products: collection(catalogQueries.products),
-  subcategories: collection(catalogQueries.subcategories),
-  pickupPlaces: collection(catalogQueries.pickupPlaces),
-  articles: collection(contentQueries.articles),
-  comments: collection(contentQueries.comments),
-  mail: collection(notificationsQueries.mail),
-  orders: collection(ordersQueries.orders),
-  partners: collection(partnersQueries.partners),
-  referralVisits: collection(partnersQueries.referralVisits),
-  commissionAdjustments: collection(partnersQueries.commissionAdjustments),
-  partnerPayouts: collection(partnersQueries.partnerPayouts),
-  costs: collection(reportsQueries.costs),
-  adviceQuestions: collection(requestsQueries.adviceQuestions),
-  adviceRequests: collection(requestsQueries.adviceRequests),
-  privateTourRequests: collection(requestsQueries.privateTourRequests),
-  reviews: collection(reviewsQueries.reviews),
-  tours: collection(toursQueries.records),
+  guests: collection(accountQueries.guests, d => d.guests),
+  products: collection(catalogQueries.products, d => d.products),
+  subcategories: collection(catalogQueries.subcategories, d => d.subcategories),
+  pickupPlaces: collection(catalogQueries.pickupPlaces, d => d.pickupPlaces),
+  articles: collection(contentQueries.articles, d => d.articles),
+  comments: collection(contentQueries.comments, d => d.comments),
+  mail: collection(notificationsQueries.mail, d => d.mail),
+  orders: collection(ordersQueries.orders, d => d.orders),
+  partners: collection(partnersQueries.partners, d => d.partners),
+  referralVisits: collection(partnersQueries.referralVisits, d => d.referralVisits),
+  commissionAdjustments: collection(partnersQueries.commissionAdjustments, d => d.commissionAdjustments),
+  partnerPayouts: collection(partnersQueries.partnerPayouts, d => d.partnerPayouts),
+  costs: collection(reportsQueries.costs, d => d.costs),
+  adviceQuestions: collection(requestsQueries.adviceQuestions, d => d.adviceQuestions),
+  adviceRequests: collection(requestsQueries.adviceRequests, d => d.adviceRequests),
+  privateTourRequests: collection(requestsQueries.privateTourRequests, d => d.privateTourRequests),
+  reviews: collection(reviewsQueries.reviews, d => d.reviews),
+  tours: collection(toursQueries.records, (d) => {
+    const { tours, departures, bookings } = d.tours ?? createTourSeed()
+
+    return { tours, departures, bookings }
+  }),
 } satisfies Record<
   Exclude<keyof DemoData, StoreOnlyKey>,
   ReturnType<typeof collection>
@@ -196,6 +210,11 @@ export function startDemo() {
  */
 export function startSeedDemo() {
   const parts = assemble(createDemoStore(createSeedState(), { persist: false }))
+
+  // The seed is already in memory, so the cache holds it from the start: a screen renders its text at once
+  // on the server and in the browser's first render, and does not suspend on a read of the same seed.
+  for (const key of queriedKeys)
+    collections[key].prime(parts.queryClient, parts.dataClient, parts.store.getState().data)
 
   return {
     ...parts,
