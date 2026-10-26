@@ -135,3 +135,116 @@ test('[E3.3][AC-1] a hard load of / has no skeleton in its first HTML, a client 
   await expect(page.getByText('Come and see it for yourself')).toBeVisible()
   await expect(page.locator('.skeleton')).toHaveCount(0)
 })
+
+// The E3.2 provider and navigation checks, carried here from the former SSR test routes. The home page is the provider check:
+// the language shows on `<html lang>`, and the Account tab of the guest shell shows a photo only for a signed-in guest.
+
+/** The Account tab's link in the first HTML, or an empty string. */
+function accountTab(html: string) {
+  return /<a [^>]*href="\/account"[^>]*>[\s\S]*?<\/a>/.exec(html)?.[0] ?? ''
+}
+
+test('[E3.2][AC-2] server HTML contains the providers text', async ({ request }) => {
+  const response = await request.get('/')
+  const html = await response.text()
+
+  expect(response.status()).toBe(200)
+  expect(mainText(html)).toContain('Come and see it for yourself')
+  expect(html).toContain('<html lang="en"')
+  // Signed out: the Account tab is there with its icon and no profile photo.
+  expect(accountTab(html)).toContain('Account')
+  expect(accountTab(html)).not.toContain('<img')
+})
+
+test('[E3.2][AC-2] hydrates with no hydration or console error', async ({ page, request }) => {
+  const problems = collectProblems(page)
+  const serverText = mainText(await (await request.get('/')).text())
+
+  await page.goto('/')
+  await waitForHydration(page)
+
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  expect(serverText).not.toBe('')
+  // The first HTML carried the same visible text.
+  expect(await clientText(page)).toBe(serverText)
+  expect(problems).toEqual([])
+})
+
+test('[E3.2][AC01] a guest moves between two pages with no sign-in prompt', async ({ page }) => {
+  const urls: string[] = []
+
+  page.on('framenavigated', frame => urls.push(frame.url()))
+  await page.goto('/')
+  await waitForHydration(page)
+  await page.evaluate(() => {
+    (window as unknown as { marker: string }).marker = 'kept'
+  })
+  await expect(page.getByText('Come and see it for yourself')).toBeVisible()
+  expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
+
+  await page.locator('main a[href="/stories"]').first().click()
+
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/stories$/)
+  await expect(page.getByText('A morning on the Musegg wall').first()).toBeVisible()
+  expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe('kept')
+  expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
+  expect(urls.some(url => url.includes('sign-in'))).toBe(false)
+})
+
+test('[E3.2][AC01] a first visit with empty storage moves to a guest page on the client, with no sign-in prompt', async ({ page }) => {
+  const urls: string[] = []
+
+  page.on('framenavigated', frame => urls.push(frame.url()))
+  // A new browser context starts with empty storage.
+  await page.goto('/')
+  await expect(page.getByRole('navigation').first()).toBeVisible()
+  // The server HTML shows the links before React owns them; a click then would load the page again.
+  await page.waitForFunction(() => Object.keys(document.querySelector('nav a') ?? {}).some(key => key.startsWith('__reactProps')))
+  await page.evaluate(() => {
+    (window as unknown as { marker: string }).marker = 'kept'
+  })
+  expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
+
+  await page.locator('nav a[href="/tours"]').first().click()
+
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/tours$/)
+  expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe('kept')
+  expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
+  expect(urls.some(url => url.includes('sign-in'))).toBe(false)
+})
+
+test('[E3.2][AC-2] saved German and a saved sign-in hydrate with no error', async ({ page, request }) => {
+  const problems = collectProblems(page)
+
+  // Let the app write its own current saved state, then sign the demo guest in as the owner, with a profile photo.
+  await page.goto('/lab')
+  await page.waitForFunction(() => localStorage.getItem('sk.demo') !== null)
+  const saved = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('sk.demo') as string)
+
+    state.role = 'owner'
+    state.data.guests[0].avatar = 'sample:anna-k'
+    state.data.signedInGuestId = state.data.guests[0].id
+
+    return JSON.stringify(state)
+  })
+
+  await page.addInitScript((demo) => {
+    localStorage.setItem('sk.language', '"de"')
+    localStorage.setItem('sk.demo', demo)
+  }, saved)
+
+  // The server knows neither choice: its HTML is English and signed out.
+  const html = await (await request.get('/')).text()
+
+  expect(html).toContain('<html lang="en"')
+  expect(accountTab(html)).not.toContain('<img')
+
+  await page.goto('/')
+  await waitForHydration(page)
+  // The saved language and sign-in arrive after hydration.
+  await expect(page.locator('html')).toHaveAttribute('lang', 'de')
+  await expect(page.locator('nav a[href="/account"]').first()).toContainText('Konto')
+  await expect(page.locator('nav a[href="/account"] img').first()).toBeVisible()
+  expect(problems).toEqual([])
+})
