@@ -1,5 +1,7 @@
 # Prototype progress
 
+Superseded on 26 October 2026 by PRD v3. Screens are tracked in docs/development-plan/screen-inventory.md, and work in docs/development-plan/delivery-plan.md (one story per screen slice). Kept for history.
+
 How we work: one step at a time. I build a step, check it in the browser at 375px in EN and DE, and stop. You review it on the local Vite dev server (`cd front-end && npm run dev`), I revise it, and then I start the next step. A step is ticked only after your OK. The Artifact link is updated only when you ask for a client build.
 
 - Client preview link (private until shared, updated on request): https://claude.ai/artifact/3WgnyLf32Gtux2sy8qpJXf

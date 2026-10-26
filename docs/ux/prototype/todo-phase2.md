@@ -1,5 +1,7 @@
 # Phase 2 prototype checklist
 
+Superseded on 26 October 2026 by PRD v3. Screens are tracked in docs/development-plan/screen-inventory.md, and work in docs/development-plan/delivery-plan.md (one story per screen slice). Kept for history.
+
 Draft for owner review, 13 October 2026. Build the fixed-departure tour flow from discovery through booking, payment, attendance, and completion.
 
 Design work started on 13 October 2026. The three independent screen-design tasks are complete and await owner review. Open the [design gallery](design-phase2/index.html), [tour-flow outline](flow-2-outline.md), and [design progress](design-phase2/progress.md). App implementation status below remains separate from design progress.

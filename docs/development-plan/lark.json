@@ -28,11 +28,13 @@
         "E0 Spikes and harness foundation": "ba1e661d-8b82-4565-b292-166734f513b6",
         "E1 Monorepo and seams": "550729ba-9d36-4e69-977e-e13e3e48852f",
         "E2 Identity, catalogue and staging": "a5ce2568-81ed-48e0-8944-c45234387241",
-        "E3 Keepsake orders": "bb8dce40-2c68-41d2-a1a6-4d8b1b3236a6",
-        "E4 Tours and online payment": "9b8fad2c-531f-49ba-bb67-9f5fa28463ed",
-        "E5 Partners": "5bd50bac-4e1c-4b0c-93bc-60f22b675181",
-        "E6 Content, requests, reports and admin": "a33c4298-255a-4576-bce6-4961c8002d37",
-        "E7 Going live": "7c61c6a6-f048-4c88-9082-bb45158c71fd"
+        "E3 Platform move": "bb8dce40-2c68-41d2-a1a6-4d8b1b3236a6",
+        "E4 Content, map and onboarding": "9b8fad2c-531f-49ba-bb67-9f5fa28463ed",
+        "E5 Reviews": "5bd50bac-4e1c-4b0c-93bc-60f22b675181",
+        "E6 Catalog, inventory and cart": "a33c4298-255a-4576-bce6-4961c8002d37",
+        "E7 Orders and handovers": "7c61c6a6-f048-4c88-9082-bb45158c71fd",
+        "E8 Partners and analytics": "c37dfde5-4865-4590-854f-02acf512417c",
+        "E9 Going live": "83f79b9c-97b3-4006-aac4-c8c98cb94c78"
       }
     }
   },
@@ -54,6 +56,9 @@
     "14": "f97bb914-dd66-4013-ba26-d9b9bb0eb00a",
     "15": "5acdc862-b4e9-494b-be5b-062b49c33d30",
     "16": "0b91228e-1200-43cc-b79d-e575dc5ed89a",
-    "17": "da4126f2-1e52-4f76-b7bc-a395005872cf"
+    "17": "da4126f2-1e52-4f76-b7bc-a395005872cf",
+    "18": "12cd61b6-402b-4100-ae06-b1de8e951b33",
+    "19": "879a641a-c30d-4717-b812-80797e3d7e0f",
+    "20": "612376b4-c9b6-49e7-8ec4-a5ebfbc7cebe"
   }
 }

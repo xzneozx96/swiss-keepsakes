@@ -191,7 +191,7 @@ Merchant gắn một hoặc nhiều sở thích cho từng địa điểm, câu 
 | Owner                                 | Sở hữu cửa hàng, cấu hình cửa hàng, mời Store Manager; điều chỉnh hoặc hủy khoản thu bên ngoài đã ghi sai, kèm lý do và lịch sử                                        | Mỗi cửa hàng có dữ liệu, nhân sự và tài khoản nhận tiền riêng                                     |
 | Store Manager                         | Làm việc trong cửa hàng được cấp quyền: soạn câu chuyện, điểm, tour, PDF; quản lý tồn; ghi thu bên ngoài; hoàn tiền; ghi hoa hồng đã chi; ẩn review; đánh dấu hoàn tất | Không có quyền ở cửa hàng khác; không điều chỉnh hoặc hủy khoản thu đã ghi                        |
 | Đối tác giới thiệu (guide, khách sạn) | QR hoặc link giới thiệu; báo cáo riêng. **Guide** thêm quyền vận hành đơn nhóm của chính mình: giờ đến và đi, giờ nhận, giờ giao, tiền mặt đã thu (§10.4). Mọi cập nhật của guide lưu người ghi, thời điểm và lịch sử | Chỉ xem dữ liệu thuộc nguồn của mình; không xem thông tin liên hệ hay yêu cầu tùy chỉnh của khách |
-| Khách | Đọc nội dung, dùng bản đồ, onboarding, không cần tài khoản. Đăng nhập để mua, bình luận bài, đánh giá điểm tham quan, nhà hàng và nơi lưu trú (không cần mua hàng) | Không đánh giá điểm thực dụng; sửa hoặc xóa review của mình theo O25 |
+| Khách | Đọc nội dung, dùng bản đồ, onboarding, không cần tài khoản. Đăng nhập để mua, bình luận bài, đánh giá điểm tham quan, nhà hàng và nơi lưu trú (không cần mua hàng) | Không đánh giá điểm thực dụng; sửa hoặc xóa review của mình (cổng R1) |
 | Khách đã mua | Đánh giá sản phẩm sau khi đơn hoàn tất | Chỉ đánh giá dao đã mua và đã hoàn tất |
 
 
@@ -639,7 +639,14 @@ Khách có thể đánh giá và bình luận địa điểm, như một mạng 
 - Quyền xóa dữ liệu theo GDPR và luật bảo vệ dữ liệu Thụy Sĩ (nFADP) với review của khách và tài khoản bị xóa.
 - Tên hiển thị của người viết review.
 
-**Còn mở (O25):** thang điểm; sửa và xóa review của chính khách; tên hiển thị; khách có thấy review của mình sau khi bị ẩn không; thông báo review mới cho merchant; giới hạn độ dài hoặc ảnh.
+**Quy tắc review mặc định (cổng R1, 26/10/2026; O25):**
+
+- Mỗi khách có tối đa một review cho mỗi địa điểm.
+- Đánh giá theo thang 1 đến 5 sao.
+- Khách sửa hoặc xóa được review của chính mình.
+- Tên hiển thị là tên riêng và chữ cái đầu của họ, ví dụ "Anna K.".
+
+**Còn mở (O25):** khách có thấy review của mình sau khi bị ẩn không; thông báo review mới cho merchant; giới hạn độ dài hoặc ảnh. Quyền xóa dữ liệu theo GDPR và nFADP ở O33.
 
 ### 11.5 Lưu trú: review và liên kết
 
@@ -809,6 +816,7 @@ Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC
 | AC81 | Merchant đổi giá hoặc tồn của một SKU đang nằm trong giỏ | Khi giỏ đổi, hệ thống kiểm tra lại tồn và giá; ở checkout kiểm tra lại lần nữa; khách thấy món hết hàng hoặc giá mới trước khi gửi | Phase 1, cổng M7 |
 | AC82 | Giỏ có hai món khác điểm nhận, và một món qua lượt bàn giao | Khi gửi yêu cầu tạo đơn riêng cho từng điểm nhận hoặc lượt bàn giao; khách thấy các đơn sẽ tạo và số tiền của từng đơn trước khi gửi | Phase 1, cổng M7 |
 | AC83 | Khách bấm gửi hai lần hoặc tải lại trang checkout sau khi gửi | Không tạo đơn trùng; khách thấy các đơn đã tạo | Phase 1, cổng M7 |
+| AC84 | Khách đã đánh giá một địa điểm, rồi đánh giá lần nữa, rồi sửa và xóa review | Không tạo được review thứ hai cho cùng địa điểm; sao chỉ từ 1 đến 5; sửa và xóa được review của chính mình; tên hiển thị dạng "Anna K."; không sửa hoặc xóa được review người khác | Phase 1, cổng R1 |
 
 
 ## 16. Rủi ro và điều kiện phụ thuộc
@@ -877,7 +885,7 @@ Bảng này tập hợp lựa chọn ảnh hưởng phạm vi, hành vi hoặc l
 | O22 | Giá trị thời gian chuẩn bị (số giờ) và cách tính điều kiện tự chấp nhận. Mốc hủy N giờ và phí hủy đã gỡ khỏi Phase 1, xem O36 | Trước nhận đơn thật | Chủ sản phẩm, merchant |
 | O23 | Thiết kế hình ảnh bản đồ: chờ ảnh tham chiếu của chủ sản phẩm                                                                                                                                                                                                                  | Trước thiết kế bản đồ   | Chủ sản phẩm, thiết kế           |
 | O24 | Cách đối tác xác thực để ghi cập nhật bàn giao. Đã chốt (cổng D1, 26/10/2026; ADR-010 và ADR-019, đang ở trạng thái đề xuất): tài khoản đăng nhập theo luồng hiện có, vai trò đối tác chỉ qua lời mời của merchant, tự đăng ký chỉ ra vai trò khách, link báo cáo chỉ đọc. Các phần khác của O24 cũ đã chốt ở cổng G1 và G6 (§10.4) | Đã chốt | Chủ sản phẩm, kỹ thuật |
-| O25 | Quy tắc nội dung: nội dung chưa gắn thẻ nhóm khách (đề xuất: coi là cả hai); feed khi khách bỏ qua onboarding (đề xuất: chỉ xếp theo ngày); thang điểm review địa điểm (đề xuất 1 đến 5); sửa, xóa review của chính khách; tên hiển thị; khách thấy review của mình sau khi bị ẩn không; thông báo review mới cho merchant | Trước đặc tả review | Chủ sản phẩm, merchant |
+| O25 | Quy tắc review mặc định: **đã chốt (cổng R1, 26/10/2026)**: một review cho mỗi khách và địa điểm, 1 đến 5 sao, khách sửa hoặc xóa được review của mình, tên hiển thị là tên riêng và chữ cái đầu của họ (§11.4). Còn mở: khách thấy review của mình sau khi bị ẩn không; thông báo review mới cho merchant; giới hạn độ dài và ảnh; nội dung chưa gắn thẻ nhóm khách (đề xuất: coi là cả hai) và feed khi khách bỏ qua onboarding (đề xuất: chỉ xếp theo ngày) | Trước đặc tả review | Chủ sản phẩm, merchant |
 | O26 | Victorinox: danh sách màu, danh sách chủ đề, quyền sử dụng thiết kế, giá. Nếu quyền thiết kế chưa xác nhận, pilot chạy không có cửa hàng hay chỉ bán hàng Victorinox tiêu chuẩn. Tài nguyên cho Swiss limited edition giai đoạn sau | Trước nhập tồn | Merchant, nhà cung cấp |
 | O27 | Widget tư vấn: đã chốt giữ như biểu mẫu yêu cầu đơn giản (cổng G10, 26/10/2026) | Đã chốt | Chủ sản phẩm |
 | O28 | Việc gỡ đặt cọc và trả sau cho đơn lẻ. Việc chấp nhận trước khi thanh toán đã xử lý bằng tự chấp nhận (cổng G2) | Đã chốt (cổng PRD, 26/10/2026) | Chủ sản phẩm |
@@ -894,6 +902,7 @@ Bảng này tập hợp lựa chọn ảnh hưởng phạm vi, hành vi hoặc l
 | O39 | Khoảng trễ tối đa từ lúc merchant lưu đến lúc khách thấy nội dung (số phút chưa đặt); giá có hiện trong kết quả tìm kiếm của trang sản phẩm hay không; mức công bố nhãn quảng cáo cho liên kết đối tác | Trước đặc tả nội dung | Chủ sản phẩm, kỹ thuật |
 | O40 | Tiền mặt đối tác đang giữ: ứng dụng có theo dõi đối tác còn nợ merchant bao nhiêu, đối soát và thanh toán bù trừ hay không. Chủ sản phẩm đưa ra ngoài phạm vi ngày 26/10/2026; còn mở theo văn bản quyết định bàn giao. Liên quan O34 | Khi chủ sản phẩm quyết định | Chủ sản phẩm |
 | O41 | Giỏ hàng lưu trên máy chủ (cổng M7): giỏ của khách chưa đăng nhập giữ bằng định danh nào, hết hạn khi nào, và quan hệ với G4 và O32 | Trước đặc tả giỏ hàng | Chủ sản phẩm, kỹ thuật |
+| O42 | Xuất và xóa dữ liệu của khách (cổng P1, 26/10/2026): Phase 1 xử lý thủ công, chưa có chức năng tự phục vụ. Còn mở: quy trình, thời hạn trả lời và phạm vi dữ liệu (tên và email trên đơn, review, tài khoản). Gắn với O33 | Trước dữ liệu khách thật | Chủ sản phẩm, luật sư |
 
 
 Ưu tiên trước khi lập kế hoạch phát triển: O21, O22.
@@ -1006,3 +1015,5 @@ Các nguồn dưới đây đã được đối chiếu ngày 12/10/2026 để t
 | C1 | Hoa hồng chỉ ghi nhận khi đơn đã thu đủ tiền: khi "Đã giao" mà đã thu đủ, nếu chưa thì khi thanh toán hoàn tất | §6.2; §8; §10.2; §10.4; AC09; AC73 |
 | M9 | Danh mục dữ liệu hỗ trợ tùy chọn sản phẩm chung cho loại sản phẩm tương lai; Phase 1 chỉ bán dao Victorinox | §7.0 |
 | M10 | Danh mục sản phẩm có trong dữ liệu nhưng Phase 1 không có màn hình danh mục | §7.0 |
+| R1 | Review: một cho mỗi khách và địa điểm, 1 đến 5 sao, khách sửa hoặc xóa của mình, tên hiển thị tên riêng và chữ cái đầu | §5; §11.4; §17.2; AC84 |
+| P1 | Xuất và xóa dữ liệu khách xử lý thủ công trong Phase 1 | §17.2 |

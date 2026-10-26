@@ -1,5 +1,7 @@
 # Data model diagrams
 
+Review page: https://claude.ai/artifact/Mx8Gtciom3aruvgEyYyWFr (private; source review.html in this folder).
+
 These diagrams show the 44 new tables of the storytelling pivot. They are generated from the tested DDL (`.factory/runs/20261025-storytelling-pivot/data-model-checks/ddl.sql`), which matches section 4 of `../data-model.md` line for line. Each module has a Mermaid source (`.mmd`) and a rendered image (`.svg`). Open an SVG in a browser to zoom.
 
 How to read them:

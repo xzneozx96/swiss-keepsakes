@@ -62,7 +62,7 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - The migration is about 2 to 3 weeks for one developer (spine, "Migration from the prototype", from spike question 9, an estimate and not a measurement).
 - First load is smaller than with Next.js in the spike: 597,965 bytes against 632,574 bytes in total, and 162,551 against 191,552 bytes of non-map JavaScript, about 15 percent less.
 - Search engines get server HTML for public pages only. A visitor on a slow phone gets HTML first and the bundle after.
-- The demo moves to a Fly staging app, and Vercel static hosting is retired (owner gate H2, 2026-10-26). `front-end/vercel.json` goes when that happens.
+- The demo stays on Vercel static hosting until launch (owner gate H3, 2026-10-26, which amends H2). The Fly staging app hosts only the real app. Vercel is retired at launch, and `front-end/vercel.json` goes then.
 - A request for a server-rendered page costs one extra local call to the API.
 
 ## Assumptions
@@ -84,3 +84,4 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - 2026-10-26 proposed (API-built documents)
 - 2026-10-26 revised, still proposed, for owner gates S1 and S1b and the two spikes
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-26 amended (gate H3)

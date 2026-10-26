@@ -1,5 +1,7 @@
 # Phase 4 prototype checklist
 
+Superseded on 26 October 2026 by PRD v3. Screens are tracked in docs/development-plan/screen-inventory.md, and work in docs/development-plan/delivery-plan.md (one story per screen slice). Kept for history.
+
 Draft for owner review, 14 October 2026. Build discovery and content: the rest of the guest home page, stories, trip advice, private-tour requests, the trip profile, and the merchant screens that manage products and content.
 
 The owner chose on 14 October 2026 to build Phase 4 next and leave Phase 3 (money operations) for later. Phase 2 round 2 follow-ups stay open alongside this phase.

@@ -371,7 +371,7 @@ Step 3 in pieces (spike question 9, an estimate of about 2 to 3 weeks for one de
 Ordering rules:
 
 - No server-rendered page ships before its content is served from the database. The demo store cannot feed server rendering.
-- The demo moves to a Fly staging app, and Vercel static hosting is retired (owner gate H2, 2026-10-26).
+- The demo stays on Vercel static hosting until launch. The Fly staging app hosts only the real app, and Vercel is retired at launch (owner gate H3, 2026-10-26, amending H2).
 - The seed data keeps working during the move because each feature switches in full (backend.md section 14, last paragraph).
 
 ## Capability to architecture map
@@ -468,7 +468,7 @@ The owner answered these on 2026-10-26. Each is applied in the decision named. A
 | D9 | One PDF per tour covers all languages. | AD-5, ADR-004 |
 | D10 | No price in search snippets, JSON-LD offers, list pages, list JSON or public list responses. Price only on the product page. | AD-2, ADR-001, ADR-006 |
 | H1 | The Hono API and the web server run as two programs side by side in one Fly app, one image, two processes. The Start server forwards `/api` as the dev server does. No SP9 spike. The real-providers check moves to the start of the migration. | AD-1, AD-2, ADR-001, migration step 3 |
-| H2 | The demo moves to a Fly staging app. Vercel static hosting is retired. | ADR-001, migration |
+| H2, H3 | H2 moved the demo to a Fly staging app. Gate H3 amends it: the demo stays on Vercel static hosting until launch, Fly staging hosts only the real app, and Vercel is retired at launch. | ADR-001, migration |
 | G6 | Answered by the approved record `docs/decisions/2026-10-26-partner-handover.md`: partner handovers agreed between partner and merchant, orders tied to a handover occurrence. Module ownership: `orders` owns handovers and occurrences. | AD-11, ADR-010, ADR-009 |
 | S1, S1b | TanStack Start for the whole app, confirmed by a passing spike. If the spike had failed, the question would return to the owner. | AD-2, ADR-001, ADR-002 |
 | S2 | Own editor. Extend the Tiptap editor in the HeroUI dashboard. Payload, Sanity and Strapi rejected. | AD-4, ADR-003 |

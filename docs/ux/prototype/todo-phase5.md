@@ -1,5 +1,7 @@
 # Phase 5 prototype checklist
 
+Superseded on 26 October 2026 by PRD v3. Screens are tracked in docs/development-plan/screen-inventory.md, and work in docs/development-plan/delivery-plan.md (one story per screen slice). Kept for history.
+
 Draft for owner review, 14 October 2026. Build partners and reports: the merchant's partner list and partner detail with the commission ledger, the partner's email-code access, the full partner report, the merchant reports, and the cost data behind contribution margin.
 
 The owner started Phase 5 on 14 October 2026. Phase 4 is in progress in parallel, and Phase 3 (money operations) is still deferred.
