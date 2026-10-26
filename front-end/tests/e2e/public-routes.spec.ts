@@ -137,7 +137,7 @@ test('[E3.3][AC-1] a hard load of / has no skeleton in its first HTML, a client 
 })
 
 // The E3.2 provider and navigation checks, carried here from the former SSR test routes. The home page is the provider check:
-// the language shows on `<html lang>`, and the Account tab of the guest shell shows a photo only for a signed-in guest.
+// the Account tab of the guest shell shows the language (Account or Konto) and a photo only for a signed-in guest. `<html lang>` is fixed in the root shell, so only its value after hydration (de) is a language signal.
 
 /** The Account tab's link in the first HTML, or an empty string. */
 function accountTab(html: string) {
@@ -150,7 +150,6 @@ test('[E3.2][AC-2] server HTML contains the providers text', async ({ request })
 
   expect(response.status()).toBe(200)
   expect(mainText(html)).toContain('Come and see it for yourself')
-  expect(html).toContain('<html lang="en"')
   // Signed out: the Account tab is there with its icon and no profile photo.
   expect(accountTab(html)).toContain('Account')
   expect(accountTab(html)).not.toContain('<img')
@@ -163,7 +162,7 @@ test('[E3.2][AC-2] hydrates with no hydration or console error', async ({ page, 
   await page.goto('/')
   await waitForHydration(page)
 
-  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.locator('nav a[href="/account"]').first()).toContainText('Account')
   expect(serverText).not.toBe('')
   // The first HTML carried the same visible text.
   expect(await clientText(page)).toBe(serverText)
@@ -185,7 +184,8 @@ test('[E3.2][AC01] a guest moves between two pages with no sign-in prompt', asyn
   await page.locator('main a[href="/stories"]').first().click()
 
   await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/stories$/)
-  await expect(page.getByText('A morning on the Musegg wall').first()).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Local stories' })).toBeVisible()
+  await expect(page.getByText('Come and see it for yourself')).toHaveCount(0)
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe('kept')
   expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
   expect(urls.some(url => url.includes('sign-in'))).toBe(false)
@@ -237,7 +237,7 @@ test('[E3.2][AC-2] saved German and a saved sign-in hydrate with no error', asyn
   // The server knows neither choice: its HTML is English and signed out.
   const html = await (await request.get('/')).text()
 
-  expect(html).toContain('<html lang="en"')
+  expect(accountTab(html)).toContain('Account')
   expect(accountTab(html)).not.toContain('<img')
 
   await page.goto('/')
