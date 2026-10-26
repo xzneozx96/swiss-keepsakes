@@ -501,7 +501,6 @@ function MixCard({
                   {m.value}
                 </span>
                 <span className="text-sm text-muted">
-                  {t('salesOverview.mix.share', { share: m.shareText })} ·{' '}
                   {m.orders}
                 </span>
               </div>
