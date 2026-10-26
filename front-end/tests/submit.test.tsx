@@ -7,18 +7,17 @@ import { Suspense } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
-import { DataClientProvider } from '@/features/data-client'
+import { DataClientProvider, useSubmit } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { createDemoDataClient } from '@/features/demo/data-client'
 import { createSeedState } from '@/features/demo/seed'
 import { createDemoStore } from '@/features/demo/store'
-import { usePrivateTour } from '@/features/requests/hooks/use-private-tour'
 
 beforeEach(() => {
   window.localStorage.clear()
 })
 
-/** C22's hook over the demo client, with the send held until `release` is called (a slow network). */
+/** C06's submit over the demo client, with the send held until `release` is called (a slow network). */
 function renderSlowSend() {
   const store: DemoStore = createDemoStore(createSeedState())
   const demo = createDemoDataClient(store)
@@ -30,17 +29,17 @@ function renderSlowSend() {
     ...demo,
     requests: {
       ...demo.requests,
-      sendPrivateTourRequest: async (request) => {
+      sendAdviceRequest: async (request) => {
         await held
 
-        return demo.requests.sendPrivateTourRequest(request)
+        return demo.requests.sendAdviceRequest(request)
       },
     },
   }
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   })
-  const view = renderHook(() => usePrivateTour(), {
+  const view = renderHook(() => useSubmit('requests', 'sendAdviceRequest'), {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>
         <DataClientProvider client={client}>
@@ -53,21 +52,20 @@ function renderSlowSend() {
       </QueryClientProvider>
     ),
   })
-  const stored = () => store.getState().data.privateTourRequests.length
+  const stored = () => store.getState().data.adviceRequests.length
 
   return { ...view, release, stored }
 }
 
 const input = {
-  groupSize: 2,
-  dateFrom: '2026-10-20',
-  dateTo: undefined,
-  interests: '',
+  id: 'ar-submit-test',
+  language: 'en' as const,
   email: 'guest@example.com',
+  answers: [],
 }
 
 describe('a submit that leaves the screen (useSubmit)', () => {
-  it('[E1.11] C22: a second tap while the request is on its way sends nothing', async () => {
+  it('[E1.11] C06: a second tap while the request is on its way sends nothing', async () => {
     const { result, release, stored } = renderSlowSend()
 
     await waitFor(() => expect(result.current).not.toBeNull())
@@ -75,21 +73,21 @@ describe('a submit that leaves the screen (useSubmit)', () => {
     const onSent = vi.fn()
 
     act(() => {
-      result.current.send(input, onSent)
-      result.current.send(input, onSent)
+      result.current.submit(input, { onSuccess: onSent })
+      result.current.submit(input, { onSuccess: onSent })
     })
-    await waitFor(() => expect(result.current.isSending).toBe(true))
+    await waitFor(() => expect(result.current.isPending).toBe(true))
     act(() => {
-      result.current.send(input, onSent)
+      result.current.submit(input, { onSuccess: onSent })
     })
     release()
 
     await waitFor(() => expect(onSent).toHaveBeenCalledTimes(1))
     expect(stored()).toBe(before + 1)
-    expect(result.current.isSending).toBe(false)
+    expect(result.current.isPending).toBe(false)
   })
 
-  it('[E1.11] C22: leaving the screen while the request is on its way skips the navigation', async () => {
+  it('[E1.11] C06: leaving the screen while the request is on its way skips the navigation', async () => {
     const { result, release, stored, unmount } = renderSlowSend()
 
     await waitFor(() => expect(result.current).not.toBeNull())
@@ -97,7 +95,7 @@ describe('a submit that leaves the screen (useSubmit)', () => {
     const onSent = vi.fn()
 
     act(() => {
-      result.current.send(input, onSent)
+      result.current.submit(input, { onSuccess: onSent })
     })
     unmount()
     release()

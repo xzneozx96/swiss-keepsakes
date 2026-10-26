@@ -2,8 +2,6 @@ import type { DayRange, PeriodId, Polarity } from '@sk/domain/reporting'
 import type { MoneyMetric, ReportFilters } from '../lib/money'
 import type { DeltaView } from '@/components/stat-card'
 
-import { departureSeats } from '@sk/domain/bookings'
-
 import { zurichDate } from '@sk/domain/catalog'
 import { variantAvailable } from '@sk/domain/orders'
 import { deltaOf, periodRanges, PERIODS } from '@sk/domain/reporting'
@@ -11,7 +9,6 @@ import {
   calendarDay,
   dateTimeFormat,
   formatMoney,
-  formatShortDate,
   numberFormat,
   percentOf,
   pickText,
@@ -84,7 +81,6 @@ export interface MoneyCardView {
   label: string
   value: string
   goods: string
-  tours: string
   hint: string
   delta: DeltaView
   trend: number[]
@@ -166,7 +162,6 @@ export function useReports(
       label: t(`reports.money.${id}`),
       value: money(value),
       goods: t('reports.money.goods', { amount: money(summary.cur[id].goods) }),
-      tours: t('reports.money.tours', { amount: money(summary.cur[id].tours) }),
       hint: t(`reports.money.${id}.hint`),
       delta: {
         text: d.delta,
@@ -311,31 +306,6 @@ export function useReports(
       }))
       .filter(v => v.left <= 2),
   )
-  const soon = now.getTime() + 14 * 24 * 60 * 60 * 1000
-  const seats = (tours?.departures ?? [])
-    .filter(
-      d =>
-        !d.cancelledAt
-        && Date.parse(d.startsAt) > now.getTime()
-        && Date.parse(d.startsAt) < soon,
-    )
-    .sort((a, b) => Date.parse(a.startsAt) - Date.parse(b.startsAt))
-    .slice(0, 6)
-    .map((d) => {
-      const s = tours ? departureSeats(tours, d.id, now) : null
-
-      return {
-        id: d.id,
-        name: productName(d.tourId),
-        when: formatShortDate(
-          zurichDate(new Date(d.startsAt)),
-          today,
-          intlLocale,
-        ),
-        taken: s ? s.confirmed + s.held : 0,
-        capacity: s?.capacity ?? d.capacity,
-      }
-    })
   const outcome = (kind: 'goods' | 'tours', status: string) =>
     inPeriod.filter(tx => tx.kind === kind && tx.status === status).length
   const articles = storedArticles
@@ -403,10 +373,6 @@ export function useReports(
       id: p.id,
       label: pickText(p.name, language).text,
     })),
-    ...(tours?.tours ?? []).map(x => ({
-      id: x.id,
-      label: pickText(x.name, language).text,
-    })),
   ]
 
   return {
@@ -418,10 +384,6 @@ export function useReports(
     }),
     filterOptions: {
       source: sourceOptions,
-      type: (['all', 'goods', 'tours'] as const).map(id => ({
-        id,
-        label: t(`reports.filter.type.${id}`),
-      })),
       group: (['all', ...GUEST_GROUPS] as const).map(id => ({
         id,
         label: t(`reports.group.${id}`),
@@ -459,7 +421,6 @@ export function useReports(
       goods: sold('goods'),
       tours: sold('tours'),
       lowStock,
-      seats,
       outcomes: [
         {
           id: 'goods-completed',
@@ -470,21 +431,6 @@ export function useReports(
           id: 'goods-lost',
           label: t('reports.outcome.goodsLost'),
           value: outcome('goods', 'lost'),
-        },
-        {
-          id: 'tours-completed',
-          label: t('reports.outcome.toursCompleted'),
-          value: outcome('tours', 'completed'),
-        },
-        {
-          id: 'tours-noshow',
-          label: t('reports.outcome.toursNoShow'),
-          value: outcome('tours', 'no-show'),
-        },
-        {
-          id: 'tours-lost',
-          label: t('reports.outcome.toursLost'),
-          value: outcome('tours', 'lost'),
         },
       ],
       articles,
@@ -507,7 +453,7 @@ export function useReports(
       ],
     },
     margin: {
-      parts: [marginPart('goods'), marginPart('tours')],
+      parts: [marginPart('goods')],
       summary:
         allSales === 0
           ? null

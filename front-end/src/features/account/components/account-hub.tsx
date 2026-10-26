@@ -10,7 +10,6 @@ import {
   OrdersIcon,
   PayLaterIcon,
   ProfileEditIcon,
-  TourIcon,
 } from '@/components/icons'
 
 import { useLocale } from '@/contexts/locale-context'
@@ -70,13 +69,6 @@ export function AccountHub({
           section="orders"
           title={t('account.section.orders')}
           value={hub.orderCount || undefined}
-        />
-        <SectionRow
-          description={hub.bookings}
-          icon={TourIcon}
-          section="bookings"
-          title={t('account.section.bookings')}
-          value={hub.bookingCount || undefined}
         />
       </SettingsGroup>
 

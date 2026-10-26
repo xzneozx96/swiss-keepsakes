@@ -25,13 +25,13 @@ import { usePartnerDashboard } from './use-partner-dashboard'
 /** A change smaller than this either way counts as stable, as on the Sales overview. */
 const STABLE = 0.05
 
-/** One side of the keepsakes and tours split, with what the tile under the donut shows. */
+/** The keepsakes side of the split, with what the tile under the donut shows. */
 export interface MixSide extends MixPart {
   recorded: string
   estimated: string
   /** Recorded part of the side's commission, 0–1: the meter. */
   recordedShare: number
-  /** "16 keepsake orders" or "2 tour bookings", from the Sales engine. */
+  /** "16 keepsake orders", from the Sales engine. */
   orders: string
 }
 
@@ -46,7 +46,7 @@ export interface SingleBar {
   valueText: string
 }
 
-/** A figure that is one amount per bar (payouts, the running balance), not keepsakes and tours. */
+/** A figure that is one amount per bar (payouts, the running balance), not a keepsakes split. */
 export interface SingleFigure {
   id: 'paid' | 'to-pay'
   label: string
@@ -59,7 +59,7 @@ export interface SingleFigure {
 
 /**
  * The P02 dashboard for any range of days: the Sales overview's engine filtered to this
- * partner (commission and orders, keepsakes and tours stacked), the partner ledger for what
+ * partner (commission and orders), the partner ledger for what
  * was paid out and what was still owed, and the period report for the transactions, the
  * payments log, the all-time balance and the commission split.
  */
@@ -287,22 +287,17 @@ export function usePartnerOverview(
   }
 
   const groupsRaw = dash.raw.report.groups
-  const tourGroup = groupsRaw.find(g => g.subcategoryId === 'tours')
   const sum = (f: (g: (typeof groupsRaw)[number]) => number) =>
     groupsRaw.reduce((a, g) => a + f(g), 0)
   const side = {
     keepsakes: {
-      recorded: sum(g => g.recorded) - (tourGroup?.recorded ?? 0),
-      estimated: sum(g => g.estimated) - (tourGroup?.estimated ?? 0),
-    },
-    tours: {
-      recorded: tourGroup?.recorded ?? 0,
-      estimated: tourGroup?.estimated ?? 0,
+      recorded: sum(g => g.recorded),
+      estimated: sum(g => g.estimated),
     },
   }
   const mix = {
     ...dash.mix,
-    parts: dash.mix.parts.map((p, i): MixSide => {
+    parts: dash.mix.parts.map((p): MixSide => {
       const own = side[p.id]
       const both = own.recorded + own.estimated
 
@@ -311,7 +306,7 @@ export function usePartnerOverview(
         recorded: money(own.recorded),
         estimated: money(own.estimated),
         recordedShare: both ? own.recorded / both : 0,
-        orders: sales.mix[i].orders,
+        orders: sales.mix[0].orders,
       }
     }),
   }

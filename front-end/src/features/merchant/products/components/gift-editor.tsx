@@ -351,13 +351,6 @@ function PhotoCard({ editor }: { editor: Editor }) {
         {!subcategories.length && (
           <Description>
             {t('products.subcategory.none')}
-            {' '}
-            <Link
-              className="font-medium text-accent hover:underline"
-              to="/store/products/categories"
-            >
-              {t('categories.manage')}
-            </Link>
           </Description>
         )}
         <Select.Popover>

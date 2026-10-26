@@ -1,4 +1,3 @@
-import type { TourBooking } from '@sk/domain/bookings'
 import type { LocalizedText, Rappen } from '@sk/domain/catalog'
 import type { CommissionState } from '@sk/domain/orders'
 import type { QueriedData } from '@/features/demo/types'
@@ -13,10 +12,6 @@ import {
 import { calendarDay, dateTimeFormat } from '@sk/domain/shared'
 import { zurichWeek } from '@/features/merchant/today/lib/today'
 import { commissionLabel, progressLabel } from '@/features/orders/lib/labels'
-import {
-  partnerTourBookings,
-  tourReportRow,
-} from '@/features/tours/merchant/lib/report'
 
 export type ReportPeriod = 'day' | 'week' | 'month'
 
@@ -295,67 +290,18 @@ export function partnerReport(
     }
   })
 
-  // Tour bookings (step 2.13): same rules by booking date, in one "Tours" group, so the
-  // groups still add up to the headline numbers. Commission is recorded once at completion.
-  const tours: ReportGroup = {
-    subcategoryId: 'tours',
-    orders: 0,
-    value: 0,
-    recorded: 0,
-    estimated: 0,
-  }
-  const tourRows = partnerTourBookings(data.tours?.bookings ?? [], partnerId)
-    .filter((b) => {
-      const day = zurichDate(new Date(b.createdAt))
-
-      return day >= range.start && day <= range.end
-    })
-    .map((booking): ReportRow => {
-      const row = tourReportRow(booking, data.guests)
-      const placed = new Date(booking.createdAt)
-      const day = zurichDate(placed)
-      const bucket = buckets.find(b =>
-        b.hour === undefined
-          ? day >= b.start && day <= b.end
-          : b.hour === zurichHour(placed),
-      )!
-      const { state, amount } = row.commission
-
-      counts[state] += 1
-      bucket.orders += 1
-      if (state === 'recorded' || state === 'estimated') {
-        if (state === 'recorded') {
-          earned += amount
-          bucket.recorded += amount
-          tours.recorded += amount
-        }
-        else {
-          estimated += amount
-          bucket.estimated += amount
-          tours.estimated += amount
-        }
-        tours.orders += 1
-        tours.value += row.value
-      }
-
-      return row
-    })
-
   const paid = 0
 
   return {
     range,
-    rows: [...rows, ...tourRows].sort(
+    rows: rows.sort(
       (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
     ),
     earned,
     paid,
     toPay: earned - paid,
     estimated,
-    groups: [
-      ...data.subcategories.flatMap(c => groups.get(c.id) ?? []),
-      ...(tours.orders ? [tours] : []),
-    ],
+    groups: data.subcategories.flatMap(c => groups.get(c.id) ?? []),
     counts,
     buckets,
   }
@@ -389,18 +335,12 @@ export function partnerAllTime(
   orders: Pick<QueriedData, 'orders'>['orders'],
   partnerId: string,
   today: string,
-  tourBookings: TourBooking[] = [],
 ): PartnerAllTime | null {
-  // Orders and tour bookings (step 2.13) as one list of date + commission.
+  // Orders as one list of date + commission. Tour bookings are dormant (ADR-012).
   const mine = [
     ...orders
       .filter(o => o.partnerId === partnerId)
       .map(o => ({ createdAt: o.createdAt, fees: commission(o) })),
-    ...partnerTourBookings(tourBookings, partnerId).map((b) => {
-      const { state, amount } = tourReportRow(b, []).commission
-
-      return { createdAt: b.createdAt, fees: { state, total: amount } }
-    }),
   ]
 
   if (!mine.length)

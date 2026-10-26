@@ -1,7 +1,7 @@
 import type { RequestsTab } from '@/features/requests/merchant/lib/search-params'
 import type { MessageKey } from '@/i18n/en'
 
-import { Skeleton, toast } from '@heroui/react'
+import { Skeleton } from '@heroui/react'
 
 import { RequestsIcon } from '@/components/icons'
 
@@ -11,7 +11,6 @@ import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 
 import { useMerchantRequests } from '../hooks/use-merchant-requests'
 import { AdviceRows } from './advice-rows'
-import { PrivateTourRows } from './private-tour-rows'
 import { QuestionSetEditor } from './question-set-editor'
 
 /** The question set: a card per question with its text lines and a switch. */
@@ -35,33 +34,15 @@ function QuestionsSkeleton() {
 }
 
 /**
- * Requests (spec §3.2: M19 advice, M20 private tours; outline steps 15 and 16) in the M03
- * page shape: the title, then the page of its tab. Advice, Private tours and Questions are
- * pages under Inquiries (/store/requests, /private, /questions). Advice and private tours
- * are inboxes, phone cards and a table from 1024px; Questions holds the trip assistant's
- * question set (M19).
+ * Requests (spec §3.2: M19 advice; outline step 15) in the M03 page shape: the title, then
+ * the page of its tab. Advice and Questions are pages under Inquiries (/store/requests,
+ * /questions). Advice is an inbox, phone cards and a table from 1024px; Questions holds the
+ * trip assistant's question set (M19). Private tour requests are dormant (ADR-012).
  */
 export function MerchantRequests({ tab }: { tab: RequestsTab }) {
   const { t } = useLocale()
-  const { tabs, adviceRows, privateRows, markAnswered, undoAnswered }
-    = useMerchantRequests()
+  const { tabs, adviceRows } = useMerchantRequests()
   const isLoading = useSimulatedLoading()
-
-  const onMarkAnswered = (id: string) => {
-    markAnswered(id)
-    const toastId = toast.success(t('merchantRequests.private.marked'), {
-      actionProps: {
-        children: t('merchantRequests.private.undo'),
-        size: 'sm',
-        variant: 'tertiary',
-        onPress: () => {
-          toast.close(toastId)
-          undoAnswered(id)
-        },
-      },
-      timeout: 6000,
-    })
-  }
 
   const emptyState = (message: MessageKey) => ({
     action: {
@@ -86,15 +67,6 @@ export function MerchantRequests({ tab }: { tab: RequestsTab }) {
           isLoading={isLoading}
           label={label('advice')}
           rows={adviceRows}
-        />
-      )}
-      {tab === 'private' && (
-        <PrivateTourRows
-          empty={emptyState('merchantRequests.private.empty')}
-          isLoading={isLoading}
-          label={label('private')}
-          rows={privateRows}
-          onMarkAnswered={onMarkAnswered}
         />
       )}
       {tab === 'questions'

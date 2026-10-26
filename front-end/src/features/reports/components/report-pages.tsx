@@ -32,7 +32,7 @@ import { Donut, HBars, SplitBars, StepColumns } from './report-charts'
 
 const NON_DIGITS = /\D/g
 
-const FILTER_KEYS = ['source', 'type', 'group', 'item'] as const
+const FILTER_KEYS = ['source', 'group', 'item'] as const
 
 /** Payment methods are categories, not statuses or gifts/tours: their own calm set. */
 const METHOD_COLOURS: Record<string, string> = {
@@ -317,13 +317,6 @@ export function ReportsMoneyPage() {
                               {m.gifts}
                             </span>
                           </span>
-                          <span>
-                            {t('salesOverview.tours')}
-                            {' '}
-                            <span className="font-medium text-foreground">
-                              {m.tours}
-                            </span>
-                          </span>
                         </span>
                       </div>
                     </li>
@@ -544,7 +537,6 @@ export function ReportsGuestsPage() {
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const mixParts = [
     { key: 'gifts', label: t('salesOverview.gifts'), colour: MIX_COLOURS[0] },
-    { key: 'tours', label: t('salesOverview.tours'), colour: MIX_COLOURS[1] },
   ]
   const empty = useEmpty()
   const sources = report.funnel.sources
@@ -567,9 +559,9 @@ export function ReportsGuestsPage() {
           rows={sourceSplit.map(src => ({
             id: src.id,
             label: src.label,
-            values: [src.gifts, src.tours],
-            texts: [money(src.gifts), money(src.tours)],
-            totalText: money(src.gifts + src.tours),
+            values: [src.gifts],
+            texts: [money(src.gifts)],
+            totalText: money(src.gifts),
           }))}
         />
         <div className="mt-4 border-t border-separator pt-2">
@@ -589,16 +581,12 @@ export function ReportsGuestsPage() {
             parts={mixParts}
             rows={guestGroups.map(g => ({
               id: g.id,
-              // Keepsakes and tours stay split here too; the label says why it is apart.
               label:
                 g.id === 'unknown'
                   ? t('reportPages.guestGroups.unknown')
                   : g.label,
-              values: [g.amounts?.gifts ?? 0, g.amounts?.tours ?? 0],
-              texts: [
-                money(g.amounts?.gifts ?? 0),
-                money(g.amounts?.tours ?? 0),
-              ],
+              values: [g.amounts?.gifts ?? 0],
+              texts: [money(g.amounts?.gifts ?? 0)],
               totalText: g.value,
             }))}
           />
@@ -696,9 +684,7 @@ export function ReportsMarginPage() {
                       }),
                     empty: part.hasData
                       ? undefined
-                      : part.sales === 0 && part.id === 'tours'
-                        ? t('reportPages.margin.noTours')
-                        : t('reports.margin.noData'),
+                      : t('reports.margin.noData'),
                   }))}
                 />
               )
@@ -872,7 +858,6 @@ export function InquiriesAnalyticsPage() {
   const pct = (part: number, whole: number) =>
     percentOf(part, whole, intlLocale)
   const advice = inquiries.advice
-  const privateTours = inquiries.privateTours
 
   if (isLoading)
     return <PageSkeleton widgets={3} />
@@ -901,7 +886,7 @@ export function InquiriesAnalyticsPage() {
           }))}
         />
       </Widget>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4">
         <Widget
           className="h-full"
           description={t('reportPages.advice.requestsDescription')}
@@ -930,51 +915,6 @@ export function InquiriesAnalyticsPage() {
                 text: String(advice.read),
                 share: t('reportPages.advice.share', {
                   share: pct(advice.read, advice.read + advice.unread),
-                }),
-              },
-            ]}
-          />
-        </Widget>
-        <Widget
-          className="h-full"
-          description={t('reportPages.privateTours.description')}
-          footer={t(
-            privateTours.guests === 1
-              ? 'reportPages.privateTours.guests.one'
-              : 'reportPages.privateTours.guests.other',
-            { count: privateTours.guests },
-          )}
-          id="lab-private-tours"
-          title={t('reportPages.privateTours.title')}
-        >
-          <Donut
-            centerLabel={t('reportPages.advice.received')}
-            centerValue={String(privateTours.answered + privateTours.waiting)}
-            slices={[
-              {
-                id: 'waiting',
-                label: t('reportPages.privateTours.waiting'),
-                value: privateTours.waiting,
-                colour: 'var(--status-warning-fill)',
-                text: String(privateTours.waiting),
-                share: t('reportPages.advice.share', {
-                  share: pct(
-                    privateTours.waiting,
-                    privateTours.answered + privateTours.waiting,
-                  ),
-                }),
-              },
-              {
-                id: 'answered',
-                label: t('reportPages.privateTours.answered'),
-                value: privateTours.answered,
-                colour: 'var(--status-success-fill)',
-                text: String(privateTours.answered),
-                share: t('reportPages.advice.share', {
-                  share: pct(
-                    privateTours.answered,
-                    privateTours.answered + privateTours.waiting,
-                  ),
                 }),
               },
             ]}

@@ -45,7 +45,7 @@ export const reportPagesEn = {
   'reportPages.funnel.completed': 'Completed',
 
   'reportPages.ended.title': 'How the sales ended',
-  'reportPages.ended.description': 'Orders and bookings placed in the period',
+  'reportPages.ended.description': 'Orders placed in the period',
   'reportPages.ended.total': 'Placed',
   'reportPages.ended.completed': 'Completed',
   'reportPages.ended.open': 'Still running',
@@ -55,7 +55,7 @@ export const reportPagesEn = {
 
   'reportPages.groups.title': 'Total sales by product group',
   'reportPages.groups.description':
-    'Keepsake sub-categories, and tours as one group',
+    'Keepsake sub-categories',
 
   'reportPages.sources.title': 'Sources',
   'reportPages.sources.description':
@@ -63,7 +63,7 @@ export const reportPagesEn = {
   'reportPages.sources.source': 'Source',
   'reportPages.guestGroups.title': 'Guest groups',
   'reportPages.guestGroups.description':
-    'Total sales by the trip answers on each order or booking',
+    'Total sales by the trip answers on each order',
   'reportPages.guestGroups.unknown': 'Not determined (no trip answers)',
   'reportPages.places.title': 'Keepsake pickup places',
   'reportPages.places.description':

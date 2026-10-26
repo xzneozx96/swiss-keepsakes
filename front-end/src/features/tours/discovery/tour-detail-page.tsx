@@ -1,20 +1,13 @@
 import type { Tour } from '@sk/domain/bookings'
 
 import { Accordion, Button } from '@heroui/react'
-import {
-  availableSeats,
-  upcomingDepartures,
-} from '@sk/domain/bookings'
-import { zurichDate } from '@sk/domain/catalog'
-
-import { firstPhoto, formatMoney, formatShortDate, openingText, pickDoc, pickText } from '@sk/domain/shared'
+import { firstPhoto, openingText, pickDoc, pickText } from '@sk/domain/shared'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { EmptyState } from '@/components/empty-state'
 import {
   ClockIcon,
   InfoIcon,
-  PayLaterIcon,
   PickupIcon,
   TourIcon,
 } from '@/components/icons'
@@ -33,11 +26,8 @@ import { StorySheet } from '@/features/catalog/components/story-sheet'
 import { useFavourite } from '@/features/catalog/hooks/use-favourites'
 import { useProductReviews } from '@/features/catalog/hooks/use-product-reviews'
 import { shop } from '@/features/catalog/seed'
-import { ageBandLabels } from '@/features/tours/discovery/age-bands'
-import { MaintenanceNotice } from '@/features/tours/discovery/maintenance-notice'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
 import { TourSections } from '@/features/tours/discovery/tour-sections'
-import { TourSelectionSheet } from '@/features/tours/discovery/tour-selection-sheet'
 import { useTours } from '@/features/tours/hooks/use-tours'
 import { TourItineraryMap } from '@/features/tours/map/tour-itinerary-map'
 import { useBack } from '@/hooks/use-back'
@@ -45,14 +35,7 @@ import { useScrolledPast } from '@/hooks/use-scrolled-past'
 
 const WHITESPACE = /\s/g
 
-export function TourDetailPage({
-  slug,
-  isBooking,
-}: {
-  slug: string
-  /** C10, the departure and group sheet, is open (`?book=true`). */
-  isBooking: boolean
-}) {
+export function TourDetailPage({ slug }: { slug: string }) {
   const { tours } = useTours()
   const { t } = useLocale()
   const tour = tours.find(item => item.slug === slug)
@@ -67,7 +50,7 @@ export function TourDetailPage({
     )
   }
 
-  return <TourDetail isBooking={isBooking} tour={tour} />
+  return <TourDetail tour={tour} />
 }
 
 /**
@@ -76,15 +59,12 @@ export function TourDetailPage({
  */
 export function TourDetail({
   tour,
-  isBooking,
   preview = false,
 }: {
   tour: Tour
-  isBooking: boolean
   preview?: boolean
 }) {
   const { t, language, intlLocale } = useLocale()
-  const { data, now } = useTours()
   // The first pickup place is the shop itself, as on C03's seller row.
   const shopPlace = usePickupPlaces(places => places[0])
   const navigate = useNavigate()
@@ -116,27 +96,11 @@ export function TourDetail({
     title: text(tour.longStory.title),
     body: storyBody.doc,
   }
-  const upcoming = upcomingDepartures(data, tour.id, now)
-  const bookable = upcoming.filter(d => availableSeats(data, d.id, now) > 0)
-  const next = bookable[0]
-  const date = (iso: string) =>
-    formatShortDate(zurichDate(new Date(iso)), zurichDate(now), intlLocale)
-  // Departures may differ in payment policy; say so instead of showing only the next one.
-  const policies = [...new Set(bookable.map(d => d.policy))]
-  const policyTexts = policies.map(policy =>
-    t(`tourDiscovery.policy.${policy}`),
-  )
-  const policySummary
-    = policies.length > 1
-      ? t('tourDiscovery.policy.variesShort')
-      : (policyTexts[0] ?? t('tourDiscovery.noDates'))
-  const ages = ageBandLabels(tour.ageBands, t)
   const goBack = useBack(() => void navigate({ to: '/tours', replace: true }))
   const back = () => {
     if (!preview)
       goBack()
   }
-  const paused = !!tour.maintenance?.active
   const sections = [
     {
       id: 'meeting',
@@ -147,33 +111,6 @@ export function TourDetail({
       id: 'conditions',
       title: t('tourDiscovery.conditions'),
       body: text(tour.conditions),
-    },
-    {
-      id: 'payment',
-      title: t('tourDiscovery.payment'),
-      body:
-        policies.length > 1
-          ? (
-              <div className="flex flex-col gap-3">
-                <p>{t('tourDiscovery.policy.varies')}</p>
-                <ul className="flex flex-col gap-3">
-                  {policies.map((policy, index) => (
-                    <li key={policy} className="flex flex-col gap-0.5">
-                      <span className="font-semibold">
-                        {bookable
-                          .filter(d => d.policy === policy)
-                          .map(d => date(d.startsAt))
-                          .join(' · ')}
-                      </span>
-                      <span>{policyTexts[index]}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )
-          : (
-              policySummary
-            ),
     },
     {
       id: 'cancellation',
@@ -262,11 +199,6 @@ export function TourDetail({
           }}
           subtitle={text(tour.summary)}
         />
-        {tour.maintenance?.active && (
-          <div className="pt-5">
-            <MaintenanceNotice maintenance={tour.maintenance} />
-          </div>
-        )}
         <section className="py-5">
           <SellerRow
             address={shopPlace.address}
@@ -301,11 +233,6 @@ export function TourDetail({
               icon: PickupIcon,
               title: t('tourDiscovery.meeting'),
               body: text(tour.meetingPoint),
-            },
-            {
-              icon: PayLaterIcon,
-              title: t('tourDiscovery.payment'),
-              body: policySummary,
             },
           ].map(({ icon: Icon, title, body }) => (
             <li key={title} className="flex gap-4">
@@ -415,39 +342,6 @@ export function TourDetail({
           <h3 className="pt-2 font-semibold">{t('tourDiscovery.excluded')}</h3>
           <p className="text-sm text-muted">{text(tour.excluded)}</p>
         </section>
-        <section className="flex flex-col gap-3 border-t border-separator py-7">
-          <h2 className="font-serif text-title">{t('tourDiscovery.prices')}</h2>
-          <dl className="space-y-3 text-sm">
-            {[
-              {
-                label: t('tourDiscovery.adults'),
-                ages: ages.adults,
-                price: tour.adultPrice,
-              },
-              {
-                label: t('tourDiscovery.children'),
-                ages: ages.children,
-                price: tour.childPrice,
-              },
-              {
-                label: t('tourDiscovery.infants'),
-                ages: `${ages.infants} · ${t('tourDiscovery.noSeat')}`,
-                price: tour.infantPrice,
-              },
-            ].map(row => (
-              <div key={row.label} className="flex justify-between gap-3">
-                <dt className="flex flex-col">
-                  {row.label}
-                  <span className="text-xs text-muted">{row.ages}</span>
-                </dt>
-                <dd className="font-semibold tabular-nums">
-                  {formatMoney(row.price / 100, intlLocale)}
-                </dd>
-              </div>
-            ))}
-          </dl>
-          <p className="text-xs text-muted">{t('tourDiscovery.sample')}</p>
-        </section>
         <Accordion
           allowsMultipleExpanded
           className="border-t border-separator [&_.accordion\_\_body-inner]:px-0 [&_.accordion\_\_trigger]:px-0 [&_.accordion\_\_trigger]:py-5"
@@ -471,55 +365,7 @@ export function TourDetail({
           ))}
         </Accordion>
         <TourKeepsakes ids={tour.keepsakeIds} />
-        {!next && !paused && (
-          <EmptyState
-            action={{ label: t('tourDiscovery.browse'), to: '/tours' }}
-            icon={TourIcon}
-            message={t(
-              upcoming.length > 0
-                ? 'tourDiscovery.soldOutBody'
-                : 'tourDiscovery.noDatesBody',
-            )}
-          />
-        )}
       </div>
-      <div className="sticky bottom-0 z-30 flex items-center gap-3 border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="font-semibold tabular-nums">
-            {formatMoney(tour.adultPrice / 100, intlLocale)}
-          </span>
-          <span className="text-xs text-muted">
-            {paused
-              ? t('tourDiscovery.maintenance.label')
-              : next
-                ? date(next.startsAt)
-                : t(
-                    upcoming.length > 0
-                      ? 'tourDiscovery.soldOut'
-                      : 'tourDiscovery.noDates',
-                  )}
-          </span>
-        </div>
-        {/* Opens the C10 sheet over this entry, as C03's bar opens its sheet; closing it
-            steps back here. A button: RouterLink pushes twice on Enter. */}
-        <Button
-          isDisabled={!next || preview || paused}
-          size="lg"
-          onPress={() =>
-            void navigate({
-              to: '/tours/$slug',
-              params: { slug: tour.slug },
-              search: { book: true },
-              state: { bookOverDetail: true },
-              resetScroll: false,
-            })}
-        >
-          {t('tourDiscovery.choose')}
-        </Button>
-      </div>
-      {!preview && (
-        <TourSelectionSheet isOpen={isBooking && !paused} tour={tour} />
-      )}
     </div>
   )
 }

@@ -430,13 +430,13 @@ export const en = {
   'reports.filter.source': 'Source',
   'reports.filter.type': 'Keepsakes or tours',
   'reports.filter.group': 'Guest group',
-  'reports.filter.item': 'Product or tour',
+  'reports.filter.item': 'Product',
   'reports.filter.source.all': 'All sources',
   'reports.filter.source.direct': 'Direct (no partner)',
   'reports.filter.type.all': 'Keepsakes and tours',
   'reports.filter.type.goods': 'Keepsakes only',
   'reports.filter.type.tours': 'Tours only',
-  'reports.filter.item.all': 'All products and tours',
+  'reports.filter.item.all': 'All products',
   'reports.group.all': 'All guest groups',
   'reports.group.group-day': 'Group, day visit',
   'reports.group.group-multi': 'Group, several days',
@@ -446,7 +446,7 @@ export const en = {
   'reports.money.label': 'Money in the period',
   'reports.money.goods': 'Keepsakes {amount}',
   'reports.money.tours': 'Tours {amount}',
-  'reports.money.value': 'Order and booking value',
+  'reports.money.value': 'Order value',
   'reports.money.value.hint':
     'Placed in the period, without declined or cancelled ones.',
   'reports.money.collected': 'Collected',
@@ -469,8 +469,8 @@ export const en = {
     'Visits and views have no guest group or basket yet, so with these filters the funnel starts at the request.',
   'reports.funnel.visits': 'Visits (QR, links, direct)',
   'reports.funnel.viewed': 'Viewed a keepsake or tour',
-  'reports.funnel.started': 'Started an order or booking',
-  'reports.funnel.sent': 'Request or booking sent',
+  'reports.funnel.started': 'Started an order',
+  'reports.funnel.sent': 'Request sent',
   'reports.funnel.paid': 'Paid',
   'reports.funnel.completed': 'Completed',
   'reports.funnel.drop': '{share} dropped off',
@@ -478,7 +478,7 @@ export const en = {
     'Only {share} of visits in this period were measured: some visitors blocked tracking. Visits, views and starts are therefore low; sales are complete.',
   'reports.groups.title': 'Guest groups',
   'reports.groups.description':
-    'Sales value by the trip answers on each order or booking',
+    'Sales value by the trip answers on each order',
   'reports.groups.count': '{count} sales',
   'reports.sources.title': 'Sources',
   'reports.sources.description':
@@ -541,7 +541,7 @@ export const en = {
   'reports.margin.enterCosts': 'Enter costs',
   'costData.title': 'Cost data',
   'costData.intro':
-    'Actual costs per completed order and tour booking. Margin is calculated only when every cost is entered; an empty field counts as missing, never as 0.',
+    'Actual costs per completed order. Margin is calculated only when every cost is entered; an empty field counts as missing, never as 0.',
   'costData.meter': '{complete} of {total} transactions complete',
   'costData.more': '+{count} more',
   'costData.chart.title': 'Cost data per week',
@@ -582,7 +582,7 @@ export const en = {
   'costData.help.packaging': 'Boxes, paper, bags.',
   'costData.help.payment-fee': 'The provider\'s fee for online payments.',
   'costData.help.delivery': 'Courier or postage, if any.',
-  'costData.help.other': 'For tours, for example the guide or tickets.',
+  'costData.help.other': 'Any other cost of selling this keepsake.',
   'partnerAccess.invalid.title': 'This link no longer works',
   'partnerAccess.invalid.body':
     'The report link was replaced or switched off. Ask {shop} for your current link.',
@@ -593,7 +593,7 @@ export const en = {
   'partnerAccess.code.sent':
     'We sent a 6-digit code to {email}. It works for 10 minutes.',
   'partnerAccess.privacy':
-    'The report shows only orders and bookings that came through your link, with the guest\'s name and no contact details.',
+    'The report shows only orders that came through your link, with the guest\'s name and no contact details.',
   'partnerDetail.subtitle': '{kind} · code {code}',
   'partnerDetail.notFound': 'This partner doesn\'t exist or was deleted.',
   'partnerDetail.facts.label': 'Partner key facts',
@@ -632,7 +632,7 @@ export const en = {
   'partnerDetail.state.partlyPaid': 'Partly paid',
   'partnerDetail.transactions.title': 'Transactions ({count})',
   'partnerDetail.transactions.empty':
-    'No orders or bookings through this partner yet.',
+    'No orders through this partner yet.',
   'partnerDetail.links.title': 'QR code and links',
   'partnerDetail.links.qr': 'Show QR code',
   'partnerDetail.links.referral': 'Referral link',

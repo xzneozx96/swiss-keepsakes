@@ -112,7 +112,7 @@ export const tourDiscoveryEn = {
     'Bookings you already made are not affected.',
   'tourDiscovery.keepsakes.title': 'Take the story home',
   'tourDiscovery.keepsakes.intro':
-    'Keepsakes that continue this tour. They are ordered separately from your booking, and the tour has no shopping stop.',
+    'Keepsakes are ordered separately.',
   'tourDiscovery.keepsakes.confirmedTitle': 'A keepsake from this tour',
   'tourDiscovery.keepsakes.confirmedIntro':
     'Optional. Order it separately, any time before your tour.',

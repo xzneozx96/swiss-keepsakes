@@ -47,7 +47,8 @@ async function throttle(page: Page) {
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 4 });
 }
 
-test("[E1.11] tour: a successful booking never shows the capacity alert", async ({ seedDemo, language }) => {
+// E3.1 hides tour booking, see ADR-012. Restore these flows when booking returns.
+test.skip("[E1.11] tour: a successful booking never shows the capacity alert", async ({ seedDemo, language }) => {
   const w = words[language];
   const page = await seedDemo();
 
@@ -68,7 +69,8 @@ test("[E1.11] tour: a successful booking never shows the capacity alert", async 
   expect(await page.evaluate(() => (window as unknown as { seen: { capacity: boolean } }).seen.capacity)).toBe(false);
 });
 
-test("[E1.11] tour: tapping Continue to payment again books once", async ({ seedDemo, language }) => {
+// E3.1 hides tour booking, see ADR-012. Restore these flows when booking returns.
+test.skip("[E1.11] tour: tapping Continue to payment again books once", async ({ seedDemo, language }) => {
   const w = words[language];
   const page = await seedDemo();
 

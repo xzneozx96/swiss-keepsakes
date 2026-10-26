@@ -56,10 +56,9 @@ export interface TransactionRow {
   state: { text: string, tone: StatusTone }
 }
 
+/** The ledger holds orders only; tour bookings are dormant (ADR-012). */
 function hrefOf(item: CommissionItem) {
-  return item.transaction.kind === 'order'
-    ? `#/store/orders/${item.transaction.id}`
-    : `#/store/bookings/${item.transaction.id}`
+  return `#/store/orders/${item.transaction.id}`
 }
 
 /**

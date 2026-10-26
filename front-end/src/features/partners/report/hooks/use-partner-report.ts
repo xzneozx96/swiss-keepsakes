@@ -115,7 +115,6 @@ export function usePartnerReport(
   const today = zurichDate(now)
   const day = anchor ?? today
   const partner = partners.find(p => p.id === partnerId) ?? partners[0]
-  const tourBookings = tours.bookings
   // The 1.9s demo history counts here too (owner review 1.9t), so the all-time card and the
   // period report agree; only while the demo has orders, as on M02.
   const withHistory = useMemo(
@@ -152,8 +151,8 @@ export function usePartnerReport(
     ],
   )
   const allTimeData = useMemo(
-    () => partnerAllTime(withHistory, partner.id, today, tourBookings),
-    [withHistory, partner.id, today, tourBookings],
+    () => partnerAllTime(withHistory, partner.id, today),
+    [withHistory, partner.id, today],
   )
   // Payouts, refunds and offsets from the M15/M16 ledger (step 5.7), so P02 matches M16.
   const moneyIn = useMemo(
@@ -566,9 +565,7 @@ export function usePartnerReport(
   }
 
   const refOf = (id: string) =>
-    withHistory.find(o => o.id === id)?.ref
-    ?? tourBookings?.find(b => b.id === id)?.ref
-    ?? ''
+    withHistory.find(o => o.id === id)?.ref ?? ''
   const entryDate = (at: string) =>
     formatOrderDate(zurichDate(new Date(at)), intlLocale)
   const payments: PaymentsView | null

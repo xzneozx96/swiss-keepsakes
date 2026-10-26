@@ -33,16 +33,16 @@ export const salesOverviewEn = {
 
   'salesOverview.value': 'Total sales',
   'salesOverview.value.hint':
-    'The total price of orders and bookings placed, without declined or cancelled ones. It is not profit: costs, commission and refunds are not taken off, and part may still be unpaid.',
+    'The total price of orders placed, without declined or cancelled ones. It is not profit: costs, commission and refunds are not taken off, and part may still be unpaid.',
   'salesOverview.collected': 'Collected',
   'salesOverview.collected.hint':
     'Money actually received in the period, online or recorded by the shop, whenever the sale was placed.',
   'salesOverview.orders': 'Total orders',
   'salesOverview.orders.hint':
-    'How many orders and bookings were placed, without declined or cancelled ones.',
+    'How many orders were placed, without declined or cancelled ones.',
   'salesOverview.unpaid': 'Unpaid on these sales',
   'salesOverview.unpaid.hint':
-    'What is still owed today on the orders and bookings placed in the period.',
+    'What is still owed today on the orders placed in the period.',
   'salesOverview.unpaid.share': '{share} of total sales is still unpaid',
   'salesOverview.unpaidShort': 'Unpaid',
   'salesOverview.refunds': 'Refunds',
@@ -50,20 +50,20 @@ export const salesOverviewEn = {
   'salesOverview.commission': 'Commission',
   'salesOverview.commission.hint':
     'Partner commission recorded in the period. A refund takes its commission off on the day it happens, so a day with refunds can go below zero.',
-  'salesOverview.split': 'Keepsakes {gifts} · Tours {tours}',
+  'salesOverview.split': 'Keepsakes {gifts}',
   'salesOverview.giftOrders.one': '{count} keepsake order',
   'salesOverview.giftOrders.other': '{count} keepsake orders',
   'salesOverview.tourBookings.one': '{count} tour booking',
   'salesOverview.tourBookings.other': '{count} tour bookings',
 
-  'salesOverview.mix.title': 'Keepsakes and tours',
+  'salesOverview.mix.title': 'Keepsakes',
   'salesOverview.mix.description': 'Total sales in the period, split',
   'salesOverview.mix.share': '{share} of total sales',
 
   'salesOverview.top.title': 'Top sellers',
   'salesOverview.sellers.title': 'Best sellers',
   'salesOverview.top.description':
-    'Keepsakes and tours, by total sales in the period',
+    'Keepsakes, by total sales in the period',
   'salesOverview.top.empty': 'Nothing sold in this period.',
   'salesOverview.top.seeAll': 'See all',
   'salesOverview.top.product': 'Products',

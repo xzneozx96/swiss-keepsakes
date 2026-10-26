@@ -3,7 +3,6 @@ import type { TripRecord } from '@sk/domain/orders'
 import type { TransactionRef } from '@sk/domain/partners'
 import type { QueriedData } from '@/features/demo/types'
 
-import { bookingCommission } from '@sk/domain/bookings'
 import { zurichDayOf } from '@sk/domain/catalog'
 import { commission, lineTotal } from '@sk/domain/orders'
 import { prng } from '@/features/merchant/today/lib/demo-history'
@@ -91,7 +90,7 @@ function succeeded(payments: { status: string, amount: Rappen, at: string }[]) {
     .map(p => ({ day: zurichDayOf(p.at), amount: p.amount }))
 }
 
-/** Orders (with the generated history, D14) and tour bookings that became bookings. */
+/** Orders, with the generated history (D14). Tour bookings are dormant (ADR-012). */
 export function reportTransactions(
   data: Pick<QueriedData, 'orders' | 'tours'>,
 ): ReportTx[] {
@@ -134,50 +133,5 @@ export function reportTransactions(
       lines,
     }
   })
-  const bookings: ReportTx[] = (data.tours?.bookings ?? [])
-    .filter(b => b.status !== 'pending_payment' && b.status !== 'expired')
-    .map((b) => {
-      const lost = b.status === 'cancelled'
-      const payments = succeeded(b.payments)
-      const paid = payments.reduce((sum, p) => sum + p.amount, 0)
-      const c = bookingCommission(b)
-
-      return {
-        key: transactionKey({ kind: 'booking', id: b.id }),
-        transaction: { kind: 'booking', id: b.id },
-        kind: 'tours',
-        ref: b.ref,
-        day: zurichDayOf(b.createdAt),
-        partnerId: b.partnerId,
-        group: guestGroup(b.trip),
-        status: lost
-          ? 'lost'
-          : b.status === 'no_show'
-            ? 'no-show'
-            : b.status === 'completed'
-              ? 'completed'
-              : 'open',
-        value: lost ? 0 : b.total,
-        payments,
-        outstanding:
-          lost || b.status === 'completed' || b.status === 'no_show'
-            ? 0
-            : Math.max(0, b.total - paid),
-        commission: c.state === 'recorded' ? c.amount : 0,
-        commissionDay: b.commissionRecordedAt
-          ? zurichDayOf(b.commissionRecordedAt)
-          : null,
-        completedDay: b.status === 'completed' ? zurichDayOf(b.endsAt) : null,
-        lines: [
-          {
-            itemId: b.tourId,
-            kind: 'tours',
-            quantity: b.adults + b.children + b.infants,
-            value: b.total,
-          },
-        ],
-      }
-    })
-
-  return [...orders, ...bookings]
+  return orders
 }

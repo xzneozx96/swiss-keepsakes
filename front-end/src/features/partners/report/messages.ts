@@ -15,13 +15,12 @@ export const partnerDashboardEn = {
   'partnerDash.chart.hint': 'Select a column to see its orders',
   'partnerDash.chart.previous': 'Previous period',
   'partnerDash.chart.previousValue': 'Previous period: {amount}',
-  'partnerDash.mix.title': 'Keepsakes and tours',
+  'partnerDash.mix.title': 'Keepsakes',
   'partnerDash.mix.description':
     'Commission in the period, recorded and estimated',
   'partnerDash.mix.keepsakes': 'Keepsakes',
   'partnerDash.mix.tours': 'Tours',
   'partnerDash.mix.total': 'Total',
-  'partnerDash.mix.share': '{share} of the commission',
   'partnerDash.mix.empty': 'No commission in this period yet',
   'partnerDash.tabs.label': 'Details',
   'partnerDash.tabs.transactions': 'Transactions',
@@ -42,13 +41,13 @@ export const partnerDashboardEn = {
   'partnerDash.fig.toPay.hint':
     'What was still owed to you at the end of each bar: recorded commission minus what was paid out.',
   'partnerDash.fig.orders.hint':
-    'Orders and bookings you referred, without declined or cancelled ones.',
+    'Orders you referred, without declined or cancelled ones.',
   'partnerDash.fig.amount': 'Amount',
   'partnerDash.fig.balance': 'Still owed',
   'partnerDash.transactions.title': 'Transactions',
   'partnerDash.transactions.description':
-    'Orders and bookings you referred in this period',
+    'Orders you referred in this period',
   'partnerDash.balance.share': '{share} of the total',
   'partnerDash.fig.orders.hintExcluded':
-    'Orders and bookings you referred. {count} declined or cancelled are in the table but not counted here.',
+    'Orders you referred. {count} declined or cancelled are in the table but not counted here.',
 } as const

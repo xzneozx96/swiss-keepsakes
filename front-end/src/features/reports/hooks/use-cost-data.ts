@@ -15,7 +15,6 @@ import { useDemoNow } from '@/features/demo'
 import { useOrders } from '@/features/orders/api/queries'
 import { allOrders, transactionKey } from '@/features/partners/lib/ledger'
 import { useCosts } from '@/features/reports/api/queries'
-import { useTourRecords } from '@/features/tours/api/queries'
 import { COST_FILTERS } from '../lib/search-params'
 
 /** Weeks in the completeness chart, ending with the running week. */
@@ -68,7 +67,7 @@ function addDays(iso: string, days: number) {
 }
 
 /**
- * M24 Cost data (spec §4.13, R14): every completed order and tour booking with the actual
+ * M24 Cost data (spec §4.13, R14): every completed order with the actual
  * costs entered for it. An empty cost is missing, never 0; "does not apply" is entered as
  * such. Newest first. `week` (a Monday) narrows the list to one bar of the chart.
  */
@@ -76,14 +75,12 @@ export function useCostData(filter: CostFilter, week: string | null) {
   const { t, language, intlLocale } = useLocale()
   const costs = useCosts()
   const storedProducts = useProducts()
-  const tourRecords = useTourRecords()
   const guests = useGuests()
   const storedOrders = useOrders()
   const now = useDemoNow()
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
   const records = new Map(costs.map(r => [transactionKey(r.transaction), r]))
   const products = new Map(storedProducts.map(p => [p.id, p]))
-  const tours = new Map(tourRecords.tours.map(x => [x.id, x]))
   const guestName = (id: string) =>
     guests.find(g => g.id === id)?.name ?? ''
 
@@ -103,21 +100,7 @@ export function useCostData(filter: CostFilter, week: string | null) {
       guest: guestName(o.guestId),
       total: orderTotal(o),
     }))
-  const bookings = tourRecords.bookings
-    .filter(b => b.status === 'completed')
-    .map(b => ({
-      transaction: { kind: 'booking' as const, id: b.id },
-      ref: b.ref,
-      href: `#/store/bookings/${b.id}`,
-      at: b.endsAt,
-      title: pickText(b.tourName, language).text,
-      more: '',
-      photo: tours.get(b.tourId)?.photos[0],
-      guest: guestName(b.guestId) || b.contactName,
-      total: b.total,
-    }))
-
-  const all: CostRow[] = [...orders, ...bookings]
+  const all: CostRow[] = orders
     .filter(x => Date.parse(x.at) <= now.getTime() + 60_000)
     .sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
     .map((x) => {

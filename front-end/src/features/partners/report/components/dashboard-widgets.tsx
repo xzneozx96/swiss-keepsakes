@@ -267,9 +267,9 @@ export function MonthsWidget({
 }
 
 /**
- * Keepsakes and tours, in the Sales overview's split card: a donut with the period's total,
- * a tile per side (commission, share, how much is recorded against estimated), then each
- * product group ranked as divider rows in its side's colour.
+ * Keepsakes, in the Sales overview's split card: a donut with the period's total, a tile
+ * (commission, share, how much is recorded against estimated), then each product group
+ * ranked as divider rows in the keepsakes colour.
  */
 export function MixWidget({
   mix,
@@ -285,8 +285,7 @@ export function MixWidget({
   const { t } = useLocale()
   const [active, setActive] = useState<number | null>(null)
   const shown = active === null ? null : mix.parts[active]
-  const colourOf = (id: string) =>
-    mix.parts.find(p => p.id === (id === 'tours' ? 'tours' : 'keepsakes'))!
+  const keepsakesColour = mix.parts[0]
 
   return (
     <Widget
@@ -361,9 +360,7 @@ export function MixWidget({
                         />
                       </span>
                       <div className="flex flex-col gap-1 text-xs text-muted tabular-nums">
-                        <span>
-                          {p.share} · {p.orders}
-                        </span>
+                        <span>{p.orders}</span>
                         <span className="flex flex-wrap justify-between gap-x-4">
                           <span>
                             {t('partnerDash.filter.recorded')}
@@ -396,7 +393,7 @@ export function MixWidget({
                         <span
                           aria-hidden
                           className="size-3 shrink-0 rounded-full"
-                          style={{ background: colourOf(g.id).colour }}
+                          style={{ background: keepsakesColour.colour }}
                         />
                         <span className="flex min-w-0 flex-1 flex-col">
                           <span className="truncate font-medium">{g.name}</span>

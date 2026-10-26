@@ -7,7 +7,6 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import {
-  BookingsIcon,
   ChevronDownIcon,
   ContentIcon,
   LogoutIcon,
@@ -30,8 +29,7 @@ import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { avatarUrl } from '@/lib/avatars'
 
 export type MerchantSection
-  = | 'bookings'
-    | 'products'
+  = | 'products'
     | 'partners'
     | 'content'
     | 'requests'
@@ -85,10 +83,9 @@ const sidebarItems: NavItem[] = [
   {
     label: 'nav.operations',
     icon: OrdersIcon,
-    paths: ['/store/orders', '/store/bookings', '/store/calendar'],
+    paths: ['/store/orders', '/store/calendar'],
     pages: [
       { label: 'nav.orders', to: '/store/orders', exact: false },
-      { label: 'nav.bookings', to: '/store/bookings', exact: false },
       { label: 'nav.calendar', to: '/store/calendar', exact: false },
     ],
   },
@@ -123,8 +120,8 @@ const sidebarItems: NavItem[] = [
 ]
 
 /**
- * Phones keep the bottom bar they had: Today, Orders and Bookings, plus Calendar, with the other sections in
- * the More sheet. Dashboard's analytics pages are the Sales tab here and Analytics in More.
+ * Phones: Today, Orders and Calendar, with the other sections in the More sheet (Bookings left
+ * the bar with ADR-012; E4.1 redoes it). Dashboard's analytics pages are the Sales tab here and Analytics in More.
  */
 const phoneItems: NavItem[] = [
   {
@@ -139,12 +136,6 @@ const phoneItems: NavItem[] = [
     icon: OrdersIcon,
     paths: ['/store/orders'],
     to: '/store/orders',
-  },
-  {
-    label: 'nav.bookings',
-    icon: BookingsIcon,
-    paths: ['/store/bookings'],
-    to: '/store/bookings',
   },
   {
     label: 'nav.calendar',
@@ -190,8 +181,8 @@ const phoneItems: NavItem[] = [
   },
 ]
 
-const phonePrimary = phoneItems.slice(0, 4)
-const phoneMore = phoneItems.slice(4)
+const phonePrimary = phoneItems.slice(0, 3)
+const phoneMore = phoneItems.slice(3)
 
 function isUnder(pathname: string, base: string) {
   return base === '/store'
@@ -261,7 +252,7 @@ const tabLink
 
 /**
  * Merchant dashboard frame (UX spec §3.2). Phones: bottom navigation with Today,
- * Orders, Bookings and More (a sheet with the other sections). From 1024px: a sidebar.
+ * Orders and More (a sheet with the other sections). From 1024px: a sidebar.
  */
 export function MerchantShell({ children }: { children: React.ReactNode }) {
   const { t } = useLocale()
@@ -421,7 +412,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
           aria-label={t('nav.merchant.label')}
           className="fixed inset-x-0 bottom-0 z-20 border-t border-separator bg-surface pb-[env(safe-area-inset-bottom,0px)] lg:hidden"
         >
-          <ul className="grid grid-cols-5">
+          <ul className="grid grid-cols-4">
             {phonePrimary.map(item => (
               <li key={item.label}>
                 <NavLink className={tabLink} item={item}>

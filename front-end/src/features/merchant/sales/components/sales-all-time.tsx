@@ -146,16 +146,14 @@ function MonthlySales({
       title={t('salesOverview.months.title')}
     >
       <ul className="mb-3 flex gap-4 text-xs text-muted">
-        {[t('salesOverview.gifts'), t('salesOverview.tours')].map((name, p) => (
-          <li key={name} className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="size-2.5 rounded-sm"
-              style={{ background: MIX_COLOURS[p] }}
-            />
-            {name}
-          </li>
-        ))}
+        <li className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="size-2.5 rounded-sm"
+            style={{ background: MIX_COLOURS[0] }}
+          />
+          {t('salesOverview.gifts')}
+        </li>
       </ul>
       <div className="flex min-h-56 flex-1 items-stretch gap-2" role="group">
         {allTime.months.map((m) => {
@@ -186,19 +184,9 @@ function MonthlySales({
                       height: `${Math.max((m.total / max) * 100, 2).toFixed(2)}%`,
                     }}
                   >
-                    {m.tours > 0 && (
-                      <span
-                        className={`min-h-1 rounded-t-lg ${m.goods > 0 ? '' : 'rounded-b-lg'}`}
-                        style={{
-                          flexGrow: m.tours,
-                          flexBasis: 0,
-                          background: MIX_COLOURS[1],
-                        }}
-                      />
-                    )}
                     {m.goods > 0 && (
                       <span
-                        className={`min-h-1 rounded-b-lg ${m.tours > 0 ? '' : 'rounded-t-lg'}`}
+                        className="min-h-1 rounded-lg"
                         style={{
                           flexGrow: m.goods,
                           flexBasis: 0,

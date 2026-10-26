@@ -1,16 +1,13 @@
-import type { AdviceRequest, PrivateTourRequest } from '@sk/domain/requests'
+import type { AdviceRequest } from '@sk/domain/requests'
 import type { StatusTone } from '@/components/status-chip'
 import type { Language } from '@/contexts/locale-context'
 
 import { formatOrderDateTime } from '@sk/domain/orders'
 
-import { calendarDay, dateTimeFormat } from '@sk/domain/shared'
 import { useLocale } from '@/contexts/locale-context'
-import { useCommand } from '@/features/data-client'
-import { useAdviceQuestions, useAdviceRequests, usePrivateTourRequests } from '@/features/requests/api/queries'
+import { useAdviceQuestions, useAdviceRequests } from '@/features/requests/api/queries'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
-import { formatDateRange } from '../../lib/render-request-mail'
 
 /** How many answers an M19 card shows before "+n more". */
 const PREVIEW = 3
@@ -38,36 +35,12 @@ export interface AdviceRow {
   count: string
 }
 
-export interface PrivateTourRow {
-  id: string
-  email: string
-  meta: string
-  sentAt: string
-  languageName: string
-  status: RequestStatus
-  isAnswered: boolean
-  /** "Answered on 13.10.2026, 11:00", or null while new. */
-  answeredOn: string | null
-  group: string
-  dates: string
-  /** Null when the guest gave none. */
-  interests: string | null
-  /** The first preferred day as the M03 date tile. */
-  day: { weekday: string, day: string, month: string }
-  /** mailto: with a subject in the guest's language (D9: the reply goes by email). */
-  mailto: string
-}
-
 const guestCopy = { en, de }
 
 /** mailto: for a reply, the subject in the guest's language. */
-export function replyHref(email: string, language: Language, kind: 'advice' | 'private') {
+export function replyHref(email: string, language: Language) {
   return `mailto:${email}?subject=${encodeURIComponent(
-    guestCopy[language][
-      kind === 'advice'
-        ? 'merchantRequests.mailSubject.advice'
-        : 'merchantRequests.mailSubject.private'
-    ],
+    guestCopy[language]['merchantRequests.mailSubject.advice'],
   )}`
 }
 
@@ -76,15 +49,12 @@ function newestFirst<T extends { sentAt: string }>(items: T[]) {
 }
 
 /**
- * M19 and M20 inboxes (spec §3.2, outline steps 15 and 16). Newest first. An advice request
- * is new until a staff member opens it; a private-tour request is new until marked answered
- * by hand (D9). Tab counts are the requests in each tab, as on M03.
+ * M19 inbox (spec §3.2, outline step 15). Newest first. An advice request is new until a
+ * staff member opens it. Tab counts are the requests in each tab, as on M03.
  */
 export function useMerchantRequests() {
   const { t, intlLocale } = useLocale()
-  const { mutate: setPrivateTourAnswered } = useCommand('requests', 'setPrivateTourAnswered')
   const adviceRequests = useAdviceRequests()
-  const privateTourRequests = usePrivateTourRequests()
   const adviceQuestions = useAdviceQuestions()
 
   const plural = (count: number) =>
@@ -96,10 +66,6 @@ export function useMerchantRequests() {
         : 'merchantRequests.language.en',
     )
   const time = (iso: string) => formatOrderDateTime(iso, intlLocale)
-  const datePart = (iso: string, option: Intl.DateTimeFormatOptions) =>
-    dateTimeFormat(intlLocale, { ...option, timeZone: 'UTC' }).format(
-      calendarDay(iso),
-    )
 
   const adviceRow = (r: AdviceRequest): AdviceRow => {
     const rest = r.answers.length - PREVIEW
@@ -132,38 +98,6 @@ export function useMerchantRequests() {
     }
   }
 
-  const privateRow = (r: PrivateTourRequest): PrivateTourRow => ({
-    id: r.id,
-    email: r.email,
-    meta: t('merchantRequests.meta', {
-      language: languageName(r.language),
-      at: time(r.sentAt),
-    }),
-    sentAt: time(r.sentAt),
-    languageName: languageName(r.language),
-    status: r.answeredAt
-      ? { tone: 'success', text: t('merchantRequests.status.answered') }
-      : { tone: 'info', text: t('merchantRequests.status.new') },
-    isAnswered: !!r.answeredAt,
-    answeredOn: r.answeredAt
-      ? t('merchantRequests.private.answeredOn', { at: time(r.answeredAt) })
-      : null,
-    group: t(`merchantRequests.private.people.${plural(r.groupSize)}`, {
-      count: r.groupSize,
-    }),
-    dates: formatDateRange(r.dateFrom, r.dateTo, intlLocale),
-    interests: r.interests.trim() || null,
-    day: {
-      weekday: datePart(r.dateFrom, { weekday: 'short' }),
-      day: datePart(r.dateFrom, { day: 'numeric' }),
-      month: datePart(r.dateFrom, { month: 'short' }),
-    },
-    mailto: replyHref(r.email, r.language, 'private'),
-  })
-
-  const setAnswered = (id: string, answered: boolean) =>
-    setPrivateTourAnswered({ id, answered })
-
   return {
     tabs: [
       {
@@ -172,19 +106,11 @@ export function useMerchantRequests() {
         count: adviceRequests.length,
       },
       {
-        id: 'private' as const,
-        label: t('merchantRequests.tab.private'),
-        count: privateTourRequests.length,
-      },
-      {
         id: 'questions' as const,
         label: t('merchantRequests.tab.questions'),
         count: adviceQuestions.questions.length,
       },
     ],
     adviceRows: newestFirst(adviceRequests).map(adviceRow),
-    privateRows: newestFirst(privateTourRequests).map(privateRow),
-    markAnswered: (id: string) => setAnswered(id, true),
-    undoAnswered: (id: string) => setAnswered(id, false),
   }
 }

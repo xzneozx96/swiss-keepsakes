@@ -18,7 +18,6 @@ import {
 } from '@/components/filter-bar'
 import {
   GiftIcon,
-  OptionIcon,
   PickupIcon,
   PlusIcon,
   TourIcon,
@@ -275,17 +274,6 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
         description={t('products.intro')}
         title={t('products.title')}
       />
-      <Link
-        className={buttonVariants({
-          size: 'sm',
-          variant: 'tertiary',
-          className: 'w-fit',
-        })}
-        to="/store/products/categories"
-      >
-        <OptionIcon aria-hidden size={16} />
-        {t('categories.manage')}
-      </Link>
       <RouteTabs
         label={t('products.tabsLabel')}
         selected={tab}

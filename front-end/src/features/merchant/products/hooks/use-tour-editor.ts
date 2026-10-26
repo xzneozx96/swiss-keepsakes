@@ -636,7 +636,7 @@ export function useTourEditor(
       = tour
         ?? emptyTour(
           newId('tour'),
-          // C22 owns /tours/private-tour, so no tour may take that slug.
+          // Kept reserved: /tours/private-tour was the C22 page, now dormant (ADR-012).
           uniqueSlug(
             edit.name,
             [...data.tours.map(item => item.slug), 'private-tour'],

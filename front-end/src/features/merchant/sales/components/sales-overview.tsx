@@ -332,12 +332,6 @@ export function FigureChart({
             value: bar.giftsText,
           },
           {
-            key: 'tours',
-            colour: MIX_COLOURS[1],
-            label: t('salesOverview.tours'),
-            value: bar.toursText,
-          },
-          {
             key: 'now',
             colour: 'var(--foreground)',
             label: t('salesOverview.total'),
@@ -374,16 +368,14 @@ export function FigureChart({
         <span className="ms-auto text-xs text-muted">{view.bucketLabel}</span>
       </div>
       <ul className="mt-2 flex gap-4 text-xs text-muted">
-        {[t('salesOverview.gifts'), t('salesOverview.tours')].map((name, p) => (
-          <li key={name} className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className="size-2.5 rounded-sm"
-              style={{ background: MIX_COLOURS[p] }}
-            />
-            {name}
-          </li>
-        ))}
+        <li className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="size-2.5 rounded-sm"
+            style={{ background: MIX_COLOURS[0] }}
+          />
+          {t('salesOverview.gifts')}
+        </li>
       </ul>
       <div className="mt-3 h-40 min-w-0">
         <ResponsiveContainer height="100%" width="100%">
@@ -412,36 +404,21 @@ export function FigureChart({
               width={40}
             />
             <Tooltip content={tooltip} cursor={false} />
-            {(['gifts', 'tours'] as const).map((part, p) => (
-              <Bar
-                key={part}
-                {...noAnimation}
-                dataKey={part}
-                maxBarSize={24}
-                radius={p === 0 ? [0, 0, 6, 6] : [6, 6, 0, 0]}
-                stackId="mix"
-              >
-                {kpi.bars.map((b) => {
-                  // Round the outer ends only: the top of the upper part, the bottom of the
-                  // lower one, and both ends when the bar holds one part alone.
-                  const alone = p === 0 ? b.tours === 0 : b.gifts === 0
-                  const radius: [number, number, number, number] = alone
-                    ? [6, 6, 6, 6]
-                    : p === 0
-                      ? [0, 0, 6, 6]
-                      : [6, 6, 0, 0]
-
-                  return (
-                    <Cell
-                      key={b.key}
-                      fill={MIX_COLOURS[p]}
-                      fillOpacity={b.partial ? 0.45 : 1}
-                      radius={radius as unknown as number}
-                    />
-                  )
-                })}
-              </Bar>
-            ))}
+            <Bar
+              {...noAnimation}
+              dataKey="gifts"
+              maxBarSize={24}
+              radius={[6, 6, 6, 6]}
+              stackId="mix"
+            >
+              {kpi.bars.map(b => (
+                <Cell
+                  key={b.key}
+                  fill={MIX_COLOURS[0]}
+                  fillOpacity={b.partial ? 0.45 : 1}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -524,7 +501,6 @@ function MixCard({
                   {m.value}
                 </span>
                 <span className="text-sm text-muted">
-                  {t('salesOverview.mix.share', { share: m.shareText })} ·{' '}
                   {m.orders}
                 </span>
               </div>

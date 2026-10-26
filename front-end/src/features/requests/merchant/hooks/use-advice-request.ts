@@ -51,7 +51,7 @@ export function useAdviceRequest(id: string): AdviceRequestView | null {
         : 'merchantRequests.language.en',
     ),
     sentAt: formatOrderDateTime(request.sentAt, intlLocale),
-    mailto: replyHref(request.email, request.language, 'advice'),
+    mailto: replyHref(request.email, request.language),
     answers: request.answers.map(a => ({
       id: a.questionId,
       question: a.question,
