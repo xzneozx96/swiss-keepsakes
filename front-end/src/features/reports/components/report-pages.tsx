@@ -32,7 +32,7 @@ import { Donut, HBars, SplitBars, StepColumns } from './report-charts'
 
 const NON_DIGITS = /\D/g
 
-const FILTER_KEYS = ['source', 'type', 'group', 'item'] as const
+const FILTER_KEYS = ['source', 'group', 'item'] as const
 
 /** Payment methods are categories, not statuses or gifts/tours: their own calm set. */
 const METHOD_COLOURS: Record<string, string> = {

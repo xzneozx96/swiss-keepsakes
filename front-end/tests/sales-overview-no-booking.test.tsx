@@ -32,7 +32,7 @@ beforeEach(async () => {
 describe('sales overview copy', () => {
   it.each(['en', 'de'] as const)('[E3.1][AC50] cards name no tours or bookings (%s)', async (language) => {
     await loadDictionary(language)
-    localStorage.setItem('sk.language', language)
+    localStorage.setItem('sk.language', JSON.stringify(language))
     const { result } = renderHook(() => useSalesOverview('28d', null), {
       wrapper: ({ children }) => (
         <QueryClientProvider client={demo.queryClient}>
@@ -49,6 +49,8 @@ describe('sales overview copy', () => {
     const copy = strings({ kpis: result.current.kpis, mix: result.current.mix })
 
     expect(result.current.kpis.length).toBeGreaterThan(3)
+    if (language === 'de')
+      expect(copy.some(c => c.includes('Andenken'))).toBe(true)
     expect(copy.filter(c => /Tours|Touren|bookings|Buchung/i.test(c))).toEqual([])
   })
 })

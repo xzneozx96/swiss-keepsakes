@@ -373,10 +373,6 @@ export function useReports(
       id: p.id,
       label: pickText(p.name, language).text,
     })),
-    ...(tours?.tours ?? []).map(x => ({
-      id: x.id,
-      label: pickText(x.name, language).text,
-    })),
   ]
 
   return {
@@ -388,10 +384,6 @@ export function useReports(
     }),
     filterOptions: {
       source: sourceOptions,
-      type: (['all', 'goods'] as const).map(id => ({
-        id,
-        label: t(`reports.filter.type.${id}`),
-      })),
       group: (['all', ...GUEST_GROUPS] as const).map(id => ({
         id,
         label: t(`reports.group.${id}`),

@@ -11,7 +11,7 @@ import { NO_FILTERS } from '../lib/money'
 
 type FilterKey = 'source' | 'type' | 'group' | 'item'
 
-const FILTER_KEYS: FilterKey[] = ['source', 'type', 'group', 'item']
+const FILTER_KEYS: Exclude<FilterKey, 'type'>[] = ['source', 'group', 'item']
 
 /** The four filters in the M08 sheet frame; applied when the sheet closes with "Show". */
 export function FiltersSheet({
