@@ -30,11 +30,11 @@ async function expectNoBooking(page: Page, where: string) {
 const mainText = (page: Page) => page.locator("main").first().innerText().catch(() => "");
 
 // A route is a lazy chunk, so the old page stays up for a moment: wait until the main text changes.
-async function visit(page: Page, hash: string) {
+async function visit(page: Page, path: string) {
   const before = await mainText(page);
-  const already = await page.evaluate(h => location.hash === `#${h}`, hash);
+  const already = await page.evaluate(p => location.pathname + location.search === p, path);
 
-  await goto(page, hash);
+  await goto(page, path);
   if (!already) await page.waitForFunction(prev => (document.querySelector("main") as HTMLElement | null)?.innerText.trim() && (document.querySelector("main") as HTMLElement).innerText !== prev, before);
   // Skeletons come before the content: wait until the text stops changing.
   let last = "";
@@ -55,11 +55,11 @@ async function walk(page: Page, label: string, sources: Record<string, string[]>
   for (const [source, links] of Object.entries(sources)) {
     expect(links.length, `${label} ${source}: menu links found`).toBeGreaterThanOrEqual(minimum[source]);
     expect(links, `${label} ${source}: menu links`).not.toContainEqual(expect.stringMatching(bookingPath));
-    links.filter(href => href.startsWith("/#/")).forEach(href => all.add(href));
+    links.filter(href => href.startsWith("/")).forEach(href => all.add(href));
   }
   for (const href of all) {
-    await visit(page, href.slice(2));
-    expect(page.url(), `${label} ${href}`).toContain(href.slice(1));
+    await visit(page, href);
+    expect(page.url(), `${label} ${href}`).toContain(href);
     await expectNoBooking(page, `${label} ${href}`);
   }
 }
@@ -101,20 +101,20 @@ test("[E3.1][AC50] old booking addresses render no booking", async ({ seedDemo, 
     ["/tours/private-tour", notFound[language].tour],
   ];
 
-  for (const [hash, message] of expected) {
+  for (const [path, message] of expected) {
     // A fresh load each time, so the previous address's message cannot satisfy the next check.
     await page.goto("/favicon.png");
-    await page.goto(`/#${hash}`);
-    await expect(page.getByText(message), hash).toBeVisible();
-    await expect(page.getByRole("dialog"), hash).toHaveCount(0);
-    await expect(page.getByRole("button", { name: bookingButton }), hash).toHaveCount(0);
-    await expect(page.getByRole("textbox"), `${hash}: no booking form`).toHaveCount(0);
-    expect(await hrefs(page, "a[href]"), `${hash}: links`).not.toContainEqual(expect.stringMatching(bookingPath));
+    await page.goto(path);
+    await expect(page.getByText(message), path).toBeVisible();
+    await expect(page.getByRole("dialog"), path).toHaveCount(0);
+    await expect(page.getByRole("button", { name: bookingButton }), path).toHaveCount(0);
+    await expect(page.getByRole("textbox"), `${path}: no booking form`).toHaveCount(0);
+    expect(await hrefs(page, "a[href]"), `${path}: links`).not.toContainEqual(expect.stringMatching(bookingPath));
   }
 
   // The retired ?book=true parameter: the plain tour page, with no booking sheet.
   await page.goto("/favicon.png");
-  await page.goto(`/#/tours/${tour}?book=true`);
+  await page.goto(`/tours/${tour}?book=true`);
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible();
   await expect(page.getByText(about[language])).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);

@@ -1,10 +1,11 @@
 // Counts component renders (React's PerformedWork flag, as DevTools does) and CPU time at 4x throttle for a few scenarios.
 // usage: node scripts/verify/render-count.mjs <buildDir>     (PROFILE=S5 lists the top components for one scenario)
 import process from 'node:process'
-import { launchBrowser, serve } from './browser.mjs'
+import { appUrl, goTo, launchBrowser, serve, waitForBoot } from './browser.mjs'
 
 const [dir] = process.argv.slice(2)
-const { server, port } = await serve(dir)
+const served = await serve(dir)
+const { server } = served
 const browser = await launchBrowser()
 
 async function scenario(name, role, start, act) {
@@ -66,7 +67,8 @@ async function scenario(name, role, start, act) {
   const errors = []
 
   page.on('pageerror', e => errors.push(String(e.message).slice(0, 120)))
-  await page.goto(`http://localhost:${port}/index.html#/`)
+  await page.goto(appUrl(served, '/'))
+  await waitForBoot(page)
   await page.waitForTimeout(1200)
   await page.evaluate((role) => {
     const state = JSON.parse(localStorage.getItem('sk.demo'))
@@ -76,8 +78,9 @@ async function scenario(name, role, start, act) {
     localStorage.setItem('sk.demo', JSON.stringify(state))
   }, role)
   await page.reload()
+  await waitForBoot(page)
   await page.waitForTimeout(1000)
-  await page.evaluate((h) => { location.hash = h }, start)
+  await goTo(page, served, start)
   await page.waitForTimeout(1500)
   const cdp = await context.newCDPSession(page)
 

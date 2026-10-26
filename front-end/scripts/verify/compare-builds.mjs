@@ -1,11 +1,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-// Renders the same routes from two static vite builds with a frozen clock and diffs the visible text.
-// usage: node compare-builds.mjs <baseDir> <newDir> <outDir>
-// Renders the same routes from two static builds with a frozen clock and diffs the visible text.
+// Renders the same routes from two builds with a frozen clock and diffs the visible text.
+// Each folder is either a static vite `dist` (hash history, the E3.1 baseline) or a Nitro `.output` (browser history, the
+// Start build). The folder layout picks the server and the URL form, see README.md.
 // usage: node scripts/verify/compare-builds.mjs <baseDir> <newDir> <outDir>
 import process from 'node:process'
-import { launchBrowser, serve } from './browser.mjs'
+import { appUrl, goTo, launchBrowser, serve, waitForBoot } from './browser.mjs'
 
 const [baseDir, newDir, outDir] = process.argv.slice(2)
 
@@ -25,7 +25,8 @@ const SETS = [
 ]
 
 async function capture(label, dir) {
-  const { server, port } = await serve(dir)
+  const served = await serve(dir)
+  const { server } = served
   const browser = await launchBrowser()
   const result = {}
   const errors = {}
@@ -36,9 +37,9 @@ async function capture(label, dir) {
 
       await context.clock.setFixedTime(FROZEN)
       const page = await context.newPage()
-      const base = `http://localhost:${port}/index.html`
 
-      await page.goto(`${base}#/`)
+      await page.goto(appUrl(served, '/'))
+      await waitForBoot(page)
       await page.waitForTimeout(1200)
       const ids = await page.evaluate(
         ({ role, lang }) => {
@@ -66,6 +67,7 @@ async function capture(label, dir) {
       )
 
       await page.reload()
+      await waitForBoot(page)
       await page.waitForTimeout(1200)
 
       for (const route of set.routes) {
@@ -75,7 +77,7 @@ async function capture(label, dir) {
         const onError = e => messages.push(String(e.message).slice(0, 160))
 
         page.on('pageerror', onError)
-        await page.evaluate((p) => { location.hash = p }, path)
+        await goTo(page, served, path)
         await page.waitForTimeout(900)
         // eslint-disable-next-line unicorn/prefer-dom-node-text-content -- innerText is the text a visitor can see; textContent would include hidden nodes
         result[key] = await page.evaluate(() => document.body.innerText)
