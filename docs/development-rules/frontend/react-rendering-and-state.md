@@ -7,7 +7,7 @@ Read this when you write a component, design state, handle events or render a li
 - A component or hook returns the same output for the same props, state and context. During render, do not call `new Date()` or `Math.random()`, touch the DOM, storage or a global. Do that in an event handler or an effect. Refs have their own rule in `react-effects-and-refs.md`. Checked by ESLint (`react-hooks/purity`). One exception: a lazy `useState` initializer runs only on the first render, so it may read a value once, such as storage. Examples: `initialLanguage` in `front-end/src/contexts/locale-context.tsx` and the starting state in `front-end/src/features/content/components/article-page.tsx`.
 - Treat props, state, context, hook arguments and hook return values as read-only. Copy before you change. Do not change a value after you pass it to JSX or a hook.
 - Changing something you created in the same render is fine (`const items = []; items.push(...)`). A module-level value lives across renders, so never change it during render.
-- Keep React's Strict Mode on (`front-end/src/main.tsx`). It runs components twice in development, and duplicated output means something mutates during render.
+- Keep React's Strict Mode on (Start's default client entry wraps the app in `<StrictMode>`, `@tanstack/react-start/dist/plugin/default-entry/client.tsx`; the project has no `src/client.tsx` of its own). It runs components twice in development, and duplicated output means something mutates during render.
 - Render a component as `<Article />`. Never call it as a function (`{Article()}`). Never pass a hook around as a value or prop, and never wrap hooks in higher-order hooks.
 
 ## Rules of Hooks

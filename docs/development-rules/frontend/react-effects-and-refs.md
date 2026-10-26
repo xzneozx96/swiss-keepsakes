@@ -15,7 +15,7 @@ An effect synchronizes with something outside React: a browser API, the network,
 | Adjust part of the state when a prop changes | Store an id, or a guarded `setState` during render |
 | Logic caused by a click or submit | The event handler |
 | A chain of effects that set state | Compute the next state in one handler |
-| One-time app setup | Module level (`front-end/src/main.tsx`), not an effect |
+| One-time app setup | Module level (`front-end/src/router.tsx`, `front-end/src/start.ts`), not an effect |
 | Tell the parent about a change | Call it in the same handler, or lift the state |
 | The parent needs the child's data | Fetch in the parent and pass it down |
 | Read a mutable external store | `useSyncExternalStore` |
