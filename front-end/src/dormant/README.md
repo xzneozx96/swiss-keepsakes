@@ -16,13 +16,15 @@ This folder is outside `tsc`, `typecheck:tests` and the router. Nothing live imp
 
 ## Code deleted, not moved
 
-E3.1 also deleted booking code from kept files. The source of truth is commit `466657f`, the last commit before E3.1. For any path below, run `git diff 466657f -- front-end/<path>` to see exactly what went, and restore the hunks you want. Paths are under `front-end/src/`.
+E3.1 also deleted booking code from kept files. The source of truth is commit `466657f`, the last commit before E3.1. For any path below, run `git diff 466657f -- front-end/src/<path>` to see exactly what went, and restore the hunks you want. Paths are under `front-end/src/`.
 
 - Tour page, `features/tours/discovery/tour-detail-page.tsx`: price list, payment-policy rows, sticky price and departure bar, sold-out state. `routes/_guest/tours/$slug.tsx`: the `?book` search. `tour-list-page.tsx`: the private-tour entry. `tour-preview.tsx`: the booking prop.
 - Partner report, `features/partners/report/`: tours part of the mix and `colourOf` (`hooks/use-partner-dashboard.ts`, `hooks/use-partner-overview.ts`, `components/dashboard-widgets.tsx`); tour rows in `partnerReport` and bookings in `partnerAllTime` (`lib/report.ts`); the booking lookup in `hooks/use-partner-report.ts`.
 - Partner ledger, `features/partners/lib/ledger.ts`: booking items in `commissionItems`. `features/merchant/partners/hooks/use-partner-detail.ts`: the booking link.
 - Sales, `features/merchant/sales/`: tours split in the cards, charts and legends (`hooks/use-sales-overview.ts`, `components/sales-overview.tsx`, `components/sales-all-time.tsx`) and the split copy in `messages*.ts`.
 - Reports, `features/reports/`: the booking mapper in `reportTransactions` (`lib/transactions.ts`); bookings in `useCostData` (`hooks/use-cost-data.ts`); the seats widget, tours outcomes, tours margin part and type filter options in `useReports` (`hooks/use-reports.ts`); the type filter in `components/filters-sheet.tsx` and `components/report-pages.tsx`; the private-tours donut (`hooks/use-report-pages.tsx`, `components/report-pages.tsx`); wording in `pages-messages*.ts` and `i18n/{en,de}.ts`.
+- Inbox route, `routes/store/requests/index.tsx`: the `?tab=private` redirect and the `isRequestsTab` validation; `validateSearch` now accepts only `questions`.
+- Partner wording, `features/partners/report/messages.ts` and `messages.de.ts`: keepsakes-and-tours and orders-and-bookings wording became keepsakes and orders.
 - Requests, `features/requests/`: the private tab, `privateRow`, `PrivateTourRow` and the mark-answered toast (`merchant/components/merchant-requests.tsx`, `merchant/hooks/use-merchant-requests.ts`, `merchant/lib/search-params.ts`); the `'private'` branch of `replyHref` (`merchant/hooks/use-advice-request.ts`); the N17 link (`lib/render-request-mail.ts`).
 - Calendar, `features/merchant/calendar/`: the tour-event builder (`use-calendar-items.ts`) and the open-departure link (`calendar-overlays.tsx`).
 - Today, `features/merchant/today/components/today-overview.tsx`: the tours half and the `useOverdueCheck` call.
@@ -31,6 +33,9 @@ E3.1 also deleted booking code from kept files. The source of truth is commit `4
 
 ## Imports to fix on restore
 
+Paths in this list are the current locations inside `src/dormant/`, except where it says otherwise.
+
+- End-to-end specs `e2e/flows/tour.spec.ts` and `e2e/flows/tour-submit.spec.ts` (repo root `e2e/`) were switched to `test.skip`. Re-enable them on restore.
 - `features/tours/discovery/tour-selection-sheet.tsx` imports `@/dormant/features/tours/discovery/age-bands`. `age-bands.ts` was moved here too; put it back at `features/tours/discovery/age-bands.ts` and rewrite that import to `./age-bands`. This is the only import rewritten to a `@/dormant` path.
 - `features/requests/merchant/components/private-tour-rows.tsx` imports `PrivateTourRow` from the inbox hook; that type was deleted (see above).
 - Moved files with relative imports (for example `use-overdue-check.ts`) resolve again once moved back to their original folder.
