@@ -7,7 +7,6 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import {
-  BookingsIcon,
   ChevronDownIcon,
   ContentIcon,
   LogoutIcon,
@@ -85,10 +84,9 @@ const sidebarItems: NavItem[] = [
   {
     label: 'nav.operations',
     icon: OrdersIcon,
-    paths: ['/store/orders', '/store/bookings', '/store/calendar'],
+    paths: ['/store/orders', '/store/calendar'],
     pages: [
       { label: 'nav.orders', to: '/store/orders', exact: false },
-      { label: 'nav.bookings', to: '/store/bookings', exact: false },
       { label: 'nav.calendar', to: '/store/calendar', exact: false },
     ],
   },
@@ -139,12 +137,6 @@ const phoneItems: NavItem[] = [
     icon: OrdersIcon,
     paths: ['/store/orders'],
     to: '/store/orders',
-  },
-  {
-    label: 'nav.bookings',
-    icon: BookingsIcon,
-    paths: ['/store/bookings'],
-    to: '/store/bookings',
   },
   {
     label: 'nav.calendar',

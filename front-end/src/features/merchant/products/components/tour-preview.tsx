@@ -77,7 +77,7 @@ function PreviewFrame({ tour }: { tour: Tour }) {
       className="relative flex h-[min(760px,78vh)] w-full max-w-[430px] flex-col overflow-y-auto overscroll-contain rounded-[2rem] border border-separator bg-background shadow-surface [transform:translateZ(0)]"
       role="region"
     >
-      <TourDetail preview isBooking={false} tour={tour} />
+      <TourDetail preview tour={tour} />
     </div>
   )
 }

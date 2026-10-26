@@ -19,7 +19,6 @@ import { departureSeats } from '@sk/domain/bookings'
 import { hasText, languageStatus, storyText } from '@sk/domain/catalog'
 import { formatMoney, isEmptyDoc, numberFormat, pickText } from '@sk/domain/shared'
 
-import { Link } from '@tanstack/react-router'
 import { useId, useRef, useState } from 'react'
 import { DateTile } from '@/components/date-tile'
 import {
@@ -34,7 +33,7 @@ import {
 import { Media } from '@/components/media'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
-import { rowClass, RowIcon } from '@/features/account/components/settings-list'
+import { rowClass } from '@/features/account/components/settings-list'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
 
 import {
@@ -502,17 +501,6 @@ function DeparturesCard({ tour, error }: { tour: Tour, error?: string }) {
         />
       </div>
       <div className={separate}>
-        <Link className={`${rowClass} min-w-0`} to="/store/bookings">
-          <RowIcon icon={BookingsIcon} />
-          <span className="flex-1 font-medium">
-            {t('products.departures.all')}
-          </span>
-          <ChevronRightIcon
-            aria-hidden
-            className="shrink-0 text-muted"
-            size={20}
-          />
-        </Link>
       </div>
       {error && (
         <p data-visible className="field-error px-4 pb-3" role="alert">

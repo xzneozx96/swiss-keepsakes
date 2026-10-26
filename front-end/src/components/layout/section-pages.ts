@@ -51,11 +51,6 @@ export const SECTION_PAGES = {
       label: 'merchantRequests.tab.advice',
     },
     {
-      id: 'private',
-      to: '/store/requests/private',
-      label: 'merchantRequests.tab.private',
-    },
-    {
       id: 'questions',
       to: '/store/requests/questions',
       label: 'merchantRequests.tab.questions',

@@ -37,7 +37,6 @@ import { ageBandLabels } from '@/features/tours/discovery/age-bands'
 import { MaintenanceNotice } from '@/features/tours/discovery/maintenance-notice'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
 import { TourSections } from '@/features/tours/discovery/tour-sections'
-import { TourSelectionSheet } from '@/features/tours/discovery/tour-selection-sheet'
 import { useTours } from '@/features/tours/hooks/use-tours'
 import { TourItineraryMap } from '@/features/tours/map/tour-itinerary-map'
 import { useBack } from '@/hooks/use-back'
@@ -45,14 +44,7 @@ import { useScrolledPast } from '@/hooks/use-scrolled-past'
 
 const WHITESPACE = /\s/g
 
-export function TourDetailPage({
-  slug,
-  isBooking,
-}: {
-  slug: string
-  /** C10, the departure and group sheet, is open (`?book=true`). */
-  isBooking: boolean
-}) {
+export function TourDetailPage({ slug }: { slug: string }) {
   const { tours } = useTours()
   const { t } = useLocale()
   const tour = tours.find(item => item.slug === slug)
@@ -67,7 +59,7 @@ export function TourDetailPage({
     )
   }
 
-  return <TourDetail isBooking={isBooking} tour={tour} />
+  return <TourDetail tour={tour} />
 }
 
 /**
@@ -76,11 +68,9 @@ export function TourDetailPage({
  */
 export function TourDetail({
   tour,
-  isBooking,
   preview = false,
 }: {
   tour: Tour
-  isBooking: boolean
   preview?: boolean
 }) {
   const { t, language, intlLocale } = useLocale()
@@ -483,43 +473,6 @@ export function TourDetail({
           />
         )}
       </div>
-      <div className="sticky bottom-0 z-30 flex items-center gap-3 border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="font-semibold tabular-nums">
-            {formatMoney(tour.adultPrice / 100, intlLocale)}
-          </span>
-          <span className="text-xs text-muted">
-            {paused
-              ? t('tourDiscovery.maintenance.label')
-              : next
-                ? date(next.startsAt)
-                : t(
-                    upcoming.length > 0
-                      ? 'tourDiscovery.soldOut'
-                      : 'tourDiscovery.noDates',
-                  )}
-          </span>
-        </div>
-        {/* Opens the C10 sheet over this entry, as C03's bar opens its sheet; closing it
-            steps back here. A button: RouterLink pushes twice on Enter. */}
-        <Button
-          isDisabled={!next || preview || paused}
-          size="lg"
-          onPress={() =>
-            void navigate({
-              to: '/tours/$slug',
-              params: { slug: tour.slug },
-              search: { book: true },
-              state: { bookOverDetail: true },
-              resetScroll: false,
-            })}
-        >
-          {t('tourDiscovery.choose')}
-        </Button>
-      </div>
-      {!preview && (
-        <TourSelectionSheet isOpen={isBooking && !paused} tour={tour} />
-      )}
     </div>
   )
 }

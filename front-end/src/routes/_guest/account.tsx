@@ -16,7 +16,6 @@ import { SignInPrompt } from '@/features/auth/components/account-profile'
 import { useRequireSignIn } from '@/features/auth/hooks/use-require-sign-in'
 import { useSignOut } from '@/features/auth/hooks/use-sign-out'
 import { useDemoSelector } from '@/features/demo'
-import { TourBookingList } from '@/features/tours/booking'
 import { TransactionList } from '@/features/transactions/components/transaction-list'
 
 // Account tab: signed-out prompt opens C05 (step 1.6); signed in, the settings-style hub (1.12s)
@@ -79,7 +78,6 @@ function AccountPage() {
   return (
     <AccountScreen title={t(sectionTitle[tab])}>
       {tab === 'orders' && <TransactionList />}
-      {tab === 'bookings' && <TourBookingList />}
       {tab === 'payments' && <PaymentsPanel />}
       {tab === 'profile' && <ProfilePanel />}
       {tab === 'notifications' && (

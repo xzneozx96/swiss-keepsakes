@@ -145,13 +145,6 @@ function EventDetail({ item }: { item: CalendarItem }) {
           </dd>
         </div>
       </dl>
-      <Link
-        className={openClass}
-        params={{ departureId: item.departureId }}
-        to="/store/bookings/departures/$departureId"
-      >
-        {t('calendar.openDeparture')}
-      </Link>
     </div>
   )
 }
