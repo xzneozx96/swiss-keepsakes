@@ -54,7 +54,7 @@ test('[E3.2][AC01] a guest moves between two pages with no sign-in prompt', asyn
 
   await page.getByRole('link', { name: 'Go to page B' }).click()
 
-  await expect(page).toHaveURL(/\/ssr-check-b$/)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/ssr-check-b$/)
   await expect(page.getByRole('heading', { name: 'SSR check B' })).toBeVisible()
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe('kept')
   expect(await page.getByText('Sign in').count()).toBe(0)

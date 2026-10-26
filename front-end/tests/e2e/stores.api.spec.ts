@@ -19,7 +19,7 @@ test.beforeEach(async ({ page, context }, testInfo) => {
   )
 })
 
-// E3.4: browser history. Needs captureInvitations in the Start entry alone (the link is the fragment form the API mails).
+// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim (the API mails the fragment form, and a hash path alone is not turned into a route).
 test.fixme('[E2.3][S8] the token leaves the address before anything else, and a link the API does not know shows its own state before sign-in', async ({ page }, testInfo) => {
   const t = words[languageOf(testInfo)]
   const addresses: string[] = []

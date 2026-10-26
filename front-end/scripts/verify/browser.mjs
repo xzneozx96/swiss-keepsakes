@@ -42,7 +42,8 @@ function waitUntilUp(port, child) {
         return reject(new Error(`The server exited with code ${child.exitCode}`))
       const req = http.get({ port, path: '/', host: '127.0.0.1' }, (res) => {
         res.resume()
-        resolve()
+        // Something answered. If that was another process on the port (EADDRINUSE), our child exits a moment later.
+        setTimeout(() => (child.exitCode === null && child.signalCode === null ? resolve() : reject(new Error(`The server exited (code ${child.exitCode}); port ${port} may be taken`))), 400)
       })
 
       req.on('error', () => {
@@ -93,13 +94,15 @@ export async function serve(dir) {
     })
     const server = {
       pid: child.pid,
+      // SIGKILL at once: the demo server holds no state, and a graceful stop waits up to 5 s for open connections.
       close() {
         if (child.exitCode === null && child.signalCode === null)
-          child.kill('SIGTERM')
-        // The Nitro server waits up to 5 s for open connections; do not leave it behind.
-        setTimeout(() => child.kill('SIGKILL'), 1500).unref()
+          child.kill('SIGKILL')
       },
     }
+
+    // Backstop: a script that throws before it calls close() must not leave the server behind.
+    process.once('exit', () => server.close())
 
     try {
       await waitUntilUp(port, child)
@@ -111,6 +114,9 @@ export async function serve(dir) {
 
     return { server, port, mode: 'nitro' }
   }
+
+  if (!existsSync(join(dir, 'index.html')))
+    throw new Error(`${dir} is neither a Nitro output (server/index.mjs) nor a static build (index.html)`)
 
   const server = http.createServer((req, res) => {
     let file = join(dir, decodeURIComponent(req.url.split('?')[0]))

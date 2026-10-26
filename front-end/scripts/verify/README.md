@@ -17,16 +17,17 @@ Nitro writes to `front-end/.output` and ignores `vite build --outDir`. Build, th
 
 ```
 pnpm exec vite build
-cp -r .output /tmp/sk-new
+rm -rf /tmp/sk-new && cp -r .output /tmp/sk-new
 ```
 
-Copy it again after every build, because the next build replaces `.output`. `PORT=5421 node /tmp/sk-new/server/index.mjs` serves it. The production server has no `/api` forwarding (hosting owns it), so the demo checks need no API.
+Copy it again after every build, because the next build replaces `.output` (the `rm -rf` stops a second copy from nesting inside the first). `PORT=5421 node /tmp/sk-new/server/index.mjs` serves it. The production server has no `/api` forwarding (hosting owns it), so the demo checks need no API.
 
 ## Build the E3.1 baseline outside the repo
 
 The baseline is the E3.1 commit `d52ce9e`. Do not use `git worktree`, `checkout` or `stash` for it. Export it into a scratch folder, install with the lockfile, and build a static `dist`:
 
 ```
+mkdir -p /tmp/sk-base-src
 git archive d52ce9e front-end api e2e spikes packages pnpm-lock.yaml pnpm-workspace.yaml package.json .pnpmfile.cjs .nvmrc | tar -x -C /tmp/sk-base-src
 cd /tmp/sk-base-src && pnpm install --frozen-lockfile
 cd front-end && pnpm exec vite build --outDir /tmp/sk-base-src/base-out
@@ -42,6 +43,6 @@ cd front-end && pnpm exec vite build --outDir /tmp/sk-base-src/base-out
 
 Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Google Chrome. Without it the scripts use Playwright's Chromium (`pnpm exec playwright install chromium`). Render counts are stable between runs. CPU times are not, so run the CPU comparison with nothing else running and compare medians of three.
 
-Small render-count differences between the E3.1 baseline and the Start build (about 2 % in S2, S4 and S5) are expected: the router now uses browser history. `verify:renders` compares one build at a time.
+`verify:renders` measures one build at a time. To compare, run it on the baseline and on the new build. On E3.2 the Start build showed 1 to 2 % more renders in S2, S4 and S5; that difference was not investigated.
 
 Formatting-only changes cannot change compiled output. To prove a large reformat, build before and after and compare the CSS files byte for byte, as `docs/development-rules/frontend/linting.md` describes.
