@@ -1,5 +1,6 @@
 // Counts component renders (React's PerformedWork flag, as DevTools does) and CPU time at 4x throttle for a few scenarios.
 // usage: node scripts/verify/render-count.mjs <buildDir>     (PROFILE=S5 lists the top components for one scenario)
+// COMPARE_TZ=host leaves the browser in the host time zone instead of Europe/Zurich, as in compare-builds.mjs.
 import process from 'node:process'
 import { appUrl, goTo, launchBrowser, serve, waitForBoot } from './browser.mjs'
 
@@ -9,7 +10,7 @@ const { server } = served
 const browser = await launchBrowser()
 
 async function scenario(name, role, start, act) {
-  const context = await browser.newContext({ viewport: { width: 430, height: 932 }, timezoneId: 'Europe/Zurich' })
+  const context = await browser.newContext({ viewport: { width: 430, height: 932 }, ...(process.env.COMPARE_TZ === 'host' ? {} : { timezoneId: 'Europe/Zurich' }) })
 
   await context.addInitScript(() => {
     const stats = { commits: 0, renders: 0, by: {} }

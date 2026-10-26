@@ -8,6 +8,22 @@ The baseline of a comparison is a Nitro build of the E3.2 head `b22a283`, copied
 
 Both scripts open the browser context in the time zone `Europe/Zurich`, the zone the app treats as the shop's. Server-rendered routes need one zone, so the article comment dates print the Zurich calendar day. Without it, a build compared on a host in another zone shows a different day (`/stories/musegg-morning` showed 06.10.2026 against 07.10.2026 on a +07 host).
 
+Set `COMPARE_TZ=host` on either script to leave the browser in the host time zone instead of `Europe/Zurich`, to see text that depends on the zone.
+
+Accepted exception: with `COMPARE_TZ=host` (unpinned), `/stories/musegg-morning` in English and German shows the Zurich shop day, not the host's calendar day, because the business date is `Europe/Zurich` (ADR-024). The comment dates are therefore the same on every host, and a host-zone difference in them is expected, not a fault.
+
+## Run the e2e specs against a built server
+
+`E2E_BASE_URL` points the demo Playwright specs at a server that is already running, instead of the dev server Playwright starts. Serve a build and run the two route specs against it, from `front-end/`:
+
+```
+PORT=5422 node .output/server/index.mjs &
+E2E_BASE_URL=http://localhost:5422 pnpm exec playwright test tests/e2e/private-routes.spec.ts tests/e2e/public-routes.spec.ts
+kill %1
+```
+
+Use a port from 5420 to 5425, and kill the server by its PID if other sessions run too.
+
 ## Build a Start output into a scratch folder
 
 Nitro writes to `front-end/.output` and ignores `vite build --outDir`. Build, then copy the folder (it is self-contained, with no `node_modules`):
