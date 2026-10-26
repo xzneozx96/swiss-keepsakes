@@ -208,6 +208,7 @@ The owner answered on 2026-10-26. Each answer is applied in the plan.
 | M2 | Narrow blockers | Approved: O26 blocks only E6.5, O41 only E6.8, O22 only E7.20 and E7.21 | Section 6 |
 | M3 | Stories beyond the inventory | Approved: E4.16, E6.6 and E8.13 | Those rows |
 | M4 | Placeholder guest-cancel story | Keep E7.24 as a Blocked placeholder for O36 | E7.24 |
+| S4 | Order of sprints 4 to 6 (asked 26.10.2026: should the Start move come first?) | Move first. Sprint 4: E3.1 to E3.4 with E2.5 in parallel. Sprint 5: E3.5, E3.7, E2.6, E2.9 and E3.8, so staging is set up once on Start with both programs. Sprint 6: E2.7, E3.6, E3.9, E4.1. Staging now exists from Sprint 5 | Section 1, section 5 |
 
 ## Still open
 

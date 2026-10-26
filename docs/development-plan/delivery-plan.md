@@ -18,7 +18,7 @@ The Lark task list "Swiss Keepsakes" mirrors the story tables in this file, one 
 
 - **Sprint planning**, on the first day. Pick stories from the top of the backlog that meet the Definition of Ready. Split anything over 5 points. Refine the next sprint's stories to pull-request level.
 - **Daily note.** One comment per active story on its Lark task. There is no meeting for a team of one.
-- **Sprint review**, on the last day. The owner uses the sprint's stories on staging, or on screenshots and video before staging exists in Sprint 4. Each story the owner accepts moves to Done.
+- **Sprint review**, on the last day. The owner uses the sprint's stories on staging, or on screenshots and video before staging exists in Sprint 5. Each story the owner accepts moves to Done.
 - **Retro.** Three lines in `docs/development-plan/retro.md`. What to keep, what to change, and what to try.
 
 **Estimates.** Story points on the 1, 2, 3, 5, 8 scale. An 8 is split before it enters a sprint. The sprint map in section 5 is a guess until Sprint 2 ends. After that, it is rebuilt from the measured velocity.
@@ -52,7 +52,7 @@ A story is Verified only when all of these items have evidence. The evidence is 
 4. **The real surface works.** The behaviour was driven on the running app, local or staging, and a screenshot or log is linked. A front-end story runs its Playwright scenario at 375 px wide in English and German, with no missing translation keys.
 5. **No mock data remains for a moved feature.** When a feature moves to the API, its demo seed becomes a database seed, and its mock code is deleted in the same story. No feature reads from both sources.
 6. **Operations are covered.** A new failure path gets an alert and a runbook in `docs/ops/`.
-7. **It is deployed.** From Sprint 4 on, the story is on staging before sprint review.
+7. **It is deployed.** From Sprint 5 on, the story is on staging before sprint review.
 
 ### 1.3 Operator prerequisites for Sprint 0
 
@@ -298,7 +298,7 @@ O06 (payment provider and legal entity), O32 and O33 (lawyer), O34 and O40 (part
 
 This is a guess for one developer with Claude agents. Velocity is unknown, so each sprint holds about 20 to 24 points, which is the size the old Sprint 3 had. The map is rebuilt from measured velocity after Sprint 6, the end of the platform move. Sprints 0 to 3 are unchanged and finished.
 
-Both tracks start after the platform move (E3). From Sprint 7 each sprint carries track 1 (E4, E5 and the analytics stories of E8) and track 2 (E6, E7 and the partner stories of E8) side by side. Sprint 6 stays light because Start with Nitro is a beta, and the move is the riskiest step. Stories that O23, O26, O41, O22, O32 or O14 block sit in the sprint where section 6 says the answer is needed.
+Both tracks start after the platform move (E3). From Sprint 7 each sprint carries track 1 (E4, E5 and the analytics stories of E8) and track 2 (E6, E7 and the partner stories of E8) side by side. The move starts in Sprint 4, so the riskiest step comes first and staging is set up once, on Start with both programs (owner, 26.10.2026). Sprint 6 stays light because Start with Nitro is a beta. Stories that O23, O26, O41, O22, O32 or O14 block sit in the sprint where section 6 says the answer is needed.
 
 | Sprint | Goal | Stories |
 |---|---|---|
@@ -306,9 +306,9 @@ Both tracks start after the platform move (E3). From Sprint 7 each sprint carrie
 | 1 | Packages and domain rules | E1.1 to E1.7 |
 | 2 | API skeleton, platform layer, CI | E1.8 to E1.13 |
 | 3 | Better Auth in the API and the request guards first, then sign-in, stores and staff. Mail is already built | E2.2, E2.10, E2.1, E2.3, E2.4, E2.8 |
-| 4 | Content schema and reads, Fly staging, booking hidden | E2.5, E2.6, E2.9, E3.1 |
-| 5 | Media, Start entry, browser history, referral redirect | E2.7, E3.2, E3.3, E3.4, E3.7 |
-| 6 | Language routes, sitemap, two programs on Fly, merchant navigation. Light on purpose | E3.5, E3.6, E3.8, E3.9, E4.1 |
+| 4 | Booking hidden, Start entry, browser-only code guarded, browser history. Content schema in parallel | E3.1, E3.2, E3.3, E3.4, E2.5 |
+| 5 | Language routes, referral redirect, content reads, Fly staging set up once with both programs | E3.5, E3.7, E2.6, E2.9, E3.8 |
+| 6 | Media, sitemap, Start move exit check, merchant navigation. Light on purpose | E2.7, E3.6, E3.9, E4.1 |
 | 7 | Track 1: places and the story editor. Track 2: product editor, options and SKUs | E4.2, E4.3, E6.1, E6.2 |
 | 8 | Track 1: story pages and onboarding. Track 2: stock and the guest keepsake pages | E4.4, E4.5, E6.3, E6.4 |
 | 9 | Track 1: map, place sheet, place page. Track 2: catalogue data, pickup points, server cart | E4.6, E4.7, E4.8, E6.5, E6.6, E6.7 |
