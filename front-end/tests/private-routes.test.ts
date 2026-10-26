@@ -37,7 +37,7 @@ describe('private routes', () => {
     const { routeTree } = await import('@/routeTree.gen')
 
     // Building the router fills in each route's full path and parent.
-    routes = Object.values(createRouter({ routeTree }).routesById as Record<string, AnyRoute>)
+    routes = Object.values(createRouter({ routeTree }).routesById as unknown as Record<string, AnyRoute>)
       .filter(route => route.fullPath && route.fullPath !== '/')
   }, 60_000)
 

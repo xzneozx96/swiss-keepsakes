@@ -8,6 +8,7 @@ function isUnder(pathname: string, prefix: string) {
 }
 
 const ESCAPE = /%[0-9a-f]{2}/gi
+const REPEATED_SLASHES = /\/{2,}/g
 
 /**
  * The path as the router compares it: each valid %XX decoded on its own (a bad escape stays as written, as in the
@@ -23,7 +24,7 @@ function normalizePath(pathname: string): string {
         return escape
       }
     })
-    .replaceAll(/\/{2,}/g, '/')
+    .replace(REPEATED_SLASHES, '/')
     .toLowerCase()
 }
 
