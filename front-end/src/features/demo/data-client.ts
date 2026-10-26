@@ -177,8 +177,9 @@ function assemble(store: DemoStore) {
 }
 
 /**
- * The demo's store, data client and query client. `ready` settles once every collection has been
- * read into the cache, so no screen ever waits on a demo read; render after it.
+ * The demo's store, data client and query client, loaded from the browser's saved copy. `ready` settles
+ * once every collection has been read into the cache. No route uses it any more (a page starts with
+ * `startSeedDemo`); the unit tests use it to get a ready demo without a server render.
  */
 export function startDemo() {
   const parts = assemble(createDemoStore(loadDemoState()))
@@ -187,10 +188,11 @@ export function startDemo() {
 }
 
 /**
- * The same, for a page the server renders: the seed, with nothing read from or written to storage and no
- * collection read, so the server and the browser's first render show the same thing. Each call makes its own
- * store, so a server never shares one between requests. `restore` then puts the saved state in the store, once
- * the page has hydrated, and settles when every collection has been read, as `ready` does.
+ * The demo's store, data client and query client for a page the server renders: the seed, with nothing read
+ * from or written to storage and no collection read, so the server and the browser's first render show the
+ * same thing. Each call makes its own store, so a server never shares one between requests. `restore` then
+ * puts the saved state in the store and saves it, once the page has hydrated, and settles when every
+ * collection has been read.
  */
 export function startSeedDemo() {
   const parts = assemble(createDemoStore(createSeedState(), { persist: false }))

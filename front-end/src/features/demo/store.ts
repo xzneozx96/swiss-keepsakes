@@ -79,7 +79,7 @@ export interface DemoStore extends DemoActions {
   save: () => void
   /** The state the store started with: what the server rendered. */
   getInitialState: () => DemoState
-  /** Replaces the state with the saved one and starts saving (the next change writes it). */
+  /** Replaces the state with the saved one, starts saving and saves it now, so a first visit writes the copy and the clock survives a reload. */
   restore: (saved: DemoState) => void
 }
 
@@ -129,6 +129,7 @@ export function createDemoStore(initial: DemoState, { persist = true } = {}): De
     restore(saved) {
       state = saved
       persisting = true
+      save()
       listeners.forEach(notify => notify())
     },
     update,
