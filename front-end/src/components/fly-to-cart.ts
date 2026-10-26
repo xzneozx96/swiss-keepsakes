@@ -19,6 +19,11 @@ export function hasAddedToCart(): boolean {
   return added
 }
 
+/** For tests: forget that an add happened. */
+export function resetAddedToCart(): void {
+  added = false
+}
+
 /** Resolves when the current flight has landed (at once when nothing is flying). */
 export function cartFlight(): Promise<void> {
   return flight

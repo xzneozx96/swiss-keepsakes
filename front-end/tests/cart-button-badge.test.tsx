@@ -5,7 +5,7 @@ import { createMemoryHistory, createRootRoute, createRoute, createRouter, Router
 import { act, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { flyToCart } from '@/components/fly-to-cart'
+import { flyToCart, resetAddedToCart } from '@/components/fly-to-cart'
 import { CartButton } from '@/components/layout/cart-button'
 import { LocaleProvider } from '@/contexts/locale-context'
 import { DataClientProvider } from '@/features/data-client'
@@ -21,6 +21,7 @@ let demo: ReturnType<typeof startSeedDemo>
 beforeEach(() => {
   localStorage.clear()
   animate.mockClear()
+  resetAddedToCart()
   Object.assign(HTMLElement.prototype, { animate })
   demo = startSeedDemo()
 })
@@ -53,7 +54,6 @@ function save(quantity: number) {
   localStorage.setItem('sk.demo', JSON.stringify({ ...seed, data: { ...seed.data, cart: [{ ...line, quantity }] } }))
 }
 
-// The "added" flag lives in fly-to-cart for the page's lifetime, so the restore case must run before the add case.
 describe('cart badge', () => {
   it('[E3.3] shows a cart restored from storage without the pop', async () => {
     save(2)

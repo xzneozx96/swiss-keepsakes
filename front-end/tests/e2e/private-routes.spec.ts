@@ -29,3 +29,18 @@ test('[E3.3][AC12] a public path has neither header', async ({ request }) => {
   expect(response.headers()['x-robots-tag']).toBeUndefined()
   expect(response.headers()['referrer-policy']).toBeUndefined()
 })
+
+test('[E3.3][AC12] a bad %-escape is refused by the server before any screen is served', async ({ request }) => {
+  const response = await request.get('/%50artner/tok%E0', { maxRedirects: 0 })
+
+  expect(response.status()).toBe(400)
+  expect(await response.text()).not.toContain('<script')
+})
+
+test('[E3.3][AC12] a 404 under a private prefix carries the headers too', async ({ request }) => {
+  const response = await request.get('/partner/some-token/x', { maxRedirects: 0 })
+
+  expect(response.status()).toBe(404)
+  expect(response.headers()['x-robots-tag']).toBe('noindex')
+  expect(response.headers()['referrer-policy']).toBe('no-referrer')
+})

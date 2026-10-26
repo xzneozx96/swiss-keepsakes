@@ -7,14 +7,23 @@ function isUnder(pathname: string, prefix: string) {
   return pathname === prefix || pathname.startsWith(`${prefix}/`)
 }
 
-/** The router matches paths without case and decodes %-escapes, so compare the same way. A bad escape stays as written. */
+const ESCAPE = /%[0-9a-f]{2}/gi
+
+/**
+ * The path as the router compares it: each valid %XX decoded on its own (a bad escape stays as written, as in the
+ * router's decodePath) and lower case. The prefixes are ASCII, so this is enough to see an encoded prefix.
+ */
 function normalizePath(pathname: string): string {
-  try {
-    return decodeURIComponent(pathname).toLowerCase()
-  }
-  catch {
-    return pathname.toLowerCase()
-  }
+  return pathname
+    .replace(ESCAPE, (escape) => {
+      try {
+        return decodeURIComponent(escape)
+      }
+      catch {
+        return escape
+      }
+    })
+    .toLowerCase()
 }
 
 export function isPrivatePath(pathname: string): boolean {

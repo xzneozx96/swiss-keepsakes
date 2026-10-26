@@ -30,11 +30,11 @@ describe('private routes', () => {
     expect(privateHeaders('/store')).toEqual({ 'X-Robots-Tag': 'noindex' })
   })
 
-  it.each(['/Partner/abc', '/PARTNER', '/PARTNER/some-token/x', '/pArTnEr/abc', '/%50artner/x', '/%70artner/x', '/partner%2Fabc'])('sends the partner headers for %s', (path) => {
+  it.each(['/Partner/abc', '/PARTNER', '/PARTNER/some-token/x', '/pArTnEr/abc', '/%50artner/x', '/%70artner/x', '/partner%2Fabc', '/%50artner/abc%E0', '/%50ARTNER/abc%ZZ', '/%50artner/tok%'])('sends the partner headers for %s', (path) => {
     expect(privateHeaders(path)).toEqual({ 'X-Robots-Tag': 'noindex', 'Referrer-Policy': 'no-referrer' })
   })
 
-  it.each(['/Store/orders', '/STORE', '/ADMIN', '/Lab', '/%53tore', '/R/abc', '/Sign-In'])('sends noindex for the case variant %s', (path) => {
+  it.each(['/Store/orders', '/STORE', '/ADMIN', '/Lab', '/%53tore', '/R/abc', '/Sign-In', '/%53tore/%', '/%53tore/%E0%A4%A'])('sends noindex for the case variant %s', (path) => {
     expect(isPrivatePath(path)).toBe(true)
     expect(privateHeaders(path)).toEqual({ 'X-Robots-Tag': 'noindex' })
   })
