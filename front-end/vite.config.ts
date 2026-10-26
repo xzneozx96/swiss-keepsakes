@@ -17,8 +17,6 @@ const devApiRules = { '/api/**': { proxy: `${apiTarget}/api/**` } }
 
 function nitroOptions(command: 'build' | 'serve') {
   return {
-    // Private areas answer with noindex (and, for /partner, no-referrer) in dev and in the built server, for every case of the path.
-    handlers: [{ route: '/**', middleware: true, handler: './src/server/private-headers.ts' }],
     routeRules: command === 'serve' ? devApiRules : {},
   }
 }
