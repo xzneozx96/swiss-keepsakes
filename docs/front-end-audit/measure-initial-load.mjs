@@ -1,3 +1,4 @@
+// pre-Start only: reads index.html
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";

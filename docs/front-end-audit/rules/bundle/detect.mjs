@@ -1,3 +1,4 @@
+// pre-Start only: reads index.html
 // Detectors for the six bundle-* rules. Source checks use the TypeScript compiler API;
 // build checks read graph.json and the dist folder written by build-graph.mjs.
 //
