@@ -12,6 +12,7 @@ const [baseDir, newDir, outDir] = process.argv.slice(2)
 
 // A rendered route shows at least the prototype bar plus a heading; less means the page did not render.
 const MIN_TEXT = 40
+const SECTION_END = /[/?]/
 const FROZEN = new Date('2026-10-14T09:30:00+02:00')
 
 const SETS = [
@@ -92,8 +93,9 @@ async function capture(label, dir) {
           // A vacuous comparison (blank pages, or a navigation that never happened) would pass as "identical".
           const at = await page.evaluate(() => location.pathname + location.search)
 
-          // The app may redirect (`?tab=tours` becomes `/store/products/tours`), so the final address is
-          // not checked against the request here; it must be the same in both builds (below).
+          // The app may redirect (`?tab=tours` becomes `/store/products/tours`), so check the section, and compare the final address between builds below.
+          if (at.split(SECTION_END)[1] !== path.split(SECTION_END)[1])
+            problems.push(`${label} ${key}: the page is at ${at}, expected ${path}`)
           where[key] = at
           if (result[key].trim().length < MIN_TEXT)
             problems.push(`${label} ${key}: only ${result[key].trim().length} characters of text`)

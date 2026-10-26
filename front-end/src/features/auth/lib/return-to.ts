@@ -37,11 +37,19 @@ export function safeReturnTo(value: string | undefined): string {
   catch {
     return '/account'
   }
+  let path: string
+
+  try {
+    path = decodeURIComponent(url.pathname).toLowerCase()
+  }
+  catch {
+    return '/account'
+  }
   if (
     url.origin !== origin
-    || !url.pathname.startsWith('/')
-    || url.pathname.startsWith('//')
-    || url.pathname.startsWith('/sign-in')
+    || !path.startsWith('/')
+    || path.startsWith('//')
+    || path.startsWith('/sign-in')
   ) {
     return '/account'
   }

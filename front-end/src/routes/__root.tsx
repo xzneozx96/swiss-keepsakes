@@ -20,7 +20,7 @@ import '@/styles/globals.css'
 const fontsHref
   = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap'
 
-const fontsScript = `var l=document.createElement('link');l.rel='stylesheet';l.href=${JSON.stringify(fontsHref)};document.head.appendChild(l)`
+const fontsScript = `document.head.appendChild(Object.assign(document.createElement('link'),{rel:'stylesheet',href:${JSON.stringify(fontsHref)}}))`
 
 export const Route = createRootRoute({
   // The root renders the document shell on the server. A route is client-only unless it sets `ssr: true` (E3.3 turns the public routes on).
