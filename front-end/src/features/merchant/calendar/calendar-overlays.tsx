@@ -30,110 +30,46 @@ function EventDetail({ item }: { item: CalendarItem }) {
   }).format(calendarDay(item.date))
   const openClass = `${buttonVariants({ variant: 'secondary' })} mt-6 w-full`
 
-  if (item.kind === 'pickup') {
-    return (
-      <div className="mc-event-detail mc-detail-pickup">
-        <div className="mc-detail-row">
-          <ClockIcon aria-hidden="true" />
-          <div>
-            <p>{date}</p>
-            <span>
-              {item.requested
-                ? t('calendar.pickupRequested')
-                : t('calendar.pickupFixed')}
-            </span>
-          </div>
-        </div>
-        <div className="mc-detail-row">
-          <AccountIcon aria-hidden="true" />
-          <div>
-            <p>{item.customer}</p>
-            <span>
-              {t(
-                item.quantity === 1
-                  ? 'calendar.keepsakes.one'
-                  : 'calendar.keepsakes.other',
-                { count: item.quantity },
-              )}
-            </span>
-          </div>
-        </div>
-        {item.place && (
-          <div className="mc-detail-row">
-            <PickupIcon aria-hidden="true" />
-            <p>{item.place}</p>
-          </div>
-        )}
-        <dl className="mc-detail-status">
-          <div>
-            <dt>{t('calendar.status')}</dt>
-            <dd>
-              <StatusChip tone={item.progress.tone}>
-                {item.progress.text}
-              </StatusChip>
-            </dd>
-          </div>
-          <div>
-            <dt>{t('calendar.payment')}</dt>
-            <dd>
-              <StatusChip tone={item.payment.tone}>
-                {item.payment.text}
-              </StatusChip>
-            </dd>
-          </div>
-        </dl>
-        <p className="mc-preview-note">{item.ref}</p>
-        <Link
-          className={openClass}
-          params={{ orderId: item.orderId }}
-          to="/store/orders/$orderId"
-        >
-          {t('calendar.openOrder')}
-        </Link>
-      </div>
-    )
-  }
-
   return (
-    <div className="mc-event-detail mc-detail-tour">
+    <div className="mc-event-detail mc-detail-pickup">
       <div className="mc-detail-row">
         <ClockIcon aria-hidden="true" />
         <div>
           <p>{date}</p>
           <span>
-            {item.time}–{item.end} · Europe/Zurich
+            {item.requested
+              ? t('calendar.pickupRequested')
+              : t('calendar.pickupFixed')}
           </span>
         </div>
       </div>
       <div className="mc-detail-row">
         <AccountIcon aria-hidden="true" />
         <div>
-          <p>
-            {item.lead
-              ? item.more
-                ? t('calendar.plusMore', { name: item.lead, count: item.more })
-                : item.lead
-              : t('calendar.noBookings')}
-          </p>
+          <p>{item.customer}</p>
           <span>
-            {t('tourMerchant.seatsBooked', {
-              count: item.booked,
-              capacity: item.capacity,
-            })}
-            {item.held > 0
-              && ` · ${t('tourMerchant.onHold', { held: item.held })}`}
+            {t(
+              item.quantity === 1
+                ? 'calendar.keepsakes.one'
+                : 'calendar.keepsakes.other',
+              { count: item.quantity },
+            )}
           </span>
         </div>
       </div>
-      <div className="mc-detail-row">
-        <PickupIcon aria-hidden="true" />
-        <p>{item.meetingPoint}</p>
-      </div>
+      {item.place && (
+        <div className="mc-detail-row">
+          <PickupIcon aria-hidden="true" />
+          <p>{item.place}</p>
+        </div>
+      )}
       <dl className="mc-detail-status">
         <div>
           <dt>{t('calendar.status')}</dt>
           <dd>
-            <StatusChip tone={item.phase.tone}>{item.phase.text}</StatusChip>
+            <StatusChip tone={item.progress.tone}>
+              {item.progress.text}
+            </StatusChip>
           </dd>
         </div>
         <div>
@@ -145,6 +81,14 @@ function EventDetail({ item }: { item: CalendarItem }) {
           </dd>
         </div>
       </dl>
+      <p className="mc-preview-note">{item.ref}</p>
+      <Link
+        className={openClass}
+        params={{ orderId: item.orderId }}
+        to="/store/orders/$orderId"
+      >
+        {t('calendar.openOrder')}
+      </Link>
     </div>
   )
 }

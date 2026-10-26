@@ -1,4 +1,4 @@
-import type { CalendarItem, PickupItem } from './calendar-core'
+import type { PickupItem } from './calendar-core'
 
 import { pickText } from '@sk/domain/shared'
 
@@ -59,7 +59,7 @@ export function useCalendarItems() {
         } satisfies PickupItem
       })
 
-    return pickups as CalendarItem[]
+    return pickups
   }, [orders, guests, pickupPlaces, minute, language, intlLocale, t])
 
   const clock = new Date(minute * 60_000)

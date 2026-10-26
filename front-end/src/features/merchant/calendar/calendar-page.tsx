@@ -91,19 +91,11 @@ const CalendarScreen = memo(function CalendarScreen({
       items.map(item => ({
         id: item.id,
         title: item.title,
-        start: item.kind === 'tour' ? item.start : item.date,
-        end: item.kind === 'tour' ? item.stop : undefined,
-        allDay: item.kind === 'pickup',
-        extendedProps: { kindOrder: item.kind === 'tour' ? 0 : 1 },
+        start: item.date,
+        allDay: true,
       })),
     [items],
   )
-  const person = (item: CalendarItem) =>
-    item.kind === 'tour' && item.lead
-      ? item.more
-        ? t('calendar.plusMore', { name: item.lead, count: item.more })
-        : item.lead
-      : ''
 
   function updatePeriod(info: DatesSetInfo) {
     const date = info.view.calendar.getDate()
@@ -362,28 +354,19 @@ const CalendarScreen = memo(function CalendarScreen({
 
               return (
                 <div
-                  className={`mc-event mc-event-${item.kind} ${item.kind === 'pickup' ? 'mc-all-day-event' : ''}`}
-                  title={[
-                    item.title,
-                    person(item)
-                    || (item.kind === 'pickup' ? item.customer : ''),
-                  ]
+                  className="mc-event mc-event-pickup mc-all-day-event"
+                  title={[item.title, item.customer]
                     .filter(Boolean)
                     .join(' · ')}
                 >
-                  <span className="mc-event-time">
-                    {item.kind === 'tour' ? item.time : t('calendar.pickup')}
-                  </span>
+                  <span className="mc-event-time">{t('calendar.pickup')}</span>
                   <strong>{item.title}</strong>
-                  {view !== 'month' && person(item) && (
-                    <span className="mc-event-person">{person(item)}</span>
-                  )}
                 </div>
               )
             }}
             eventInnerClass="mc-event-inner"
             eventMinHeight={54}
-            eventOrder="kindOrder,start"
+            eventOrder="start"
             eventTimeFormat={{
               hour: '2-digit',
               minute: '2-digit',

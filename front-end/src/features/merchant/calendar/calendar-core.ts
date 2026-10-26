@@ -23,29 +23,6 @@ export interface ShownLabel {
   tone: StatusTone
 }
 
-/** One tour departure: one event, with the seats and the lead booking. */
-export interface TourItem {
-  kind: 'tour'
-  id: string
-  departureId: string
-  title: string
-  /** Europe/Zurich local date, "HH:mm" and the FullCalendar start and end. */
-  date: string
-  time: string
-  end: string
-  start: string
-  stop: string
-  booked: number
-  held: number
-  capacity: number
-  /** The first booking's contact, "" when nobody has booked. */
-  lead: string
-  more: number
-  meetingPoint: string
-  phase: ShownLabel
-  payment: ShownLabel
-}
-
 /** One keepsake order, on its pickup date. */
 export interface PickupItem {
   kind: 'pickup'
@@ -62,7 +39,7 @@ export interface PickupItem {
   payment: ShownLabel
 }
 
-export type CalendarItem = TourItem | PickupItem
+export type CalendarItem = PickupItem
 
 export type CalendarOverlay
   = { kind: 'date' } | { kind: 'event', item: CalendarItem } | null
