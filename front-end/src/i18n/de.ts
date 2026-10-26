@@ -604,7 +604,7 @@ export const de: Record<MessageKey, string> = {
   'costData.help.packaging': 'Schachteln, Papier, Taschen.',
   'costData.help.payment-fee': 'Die Gebühr des Anbieters für Online-Zahlungen.',
   'costData.help.delivery': 'Kurier oder Porto, falls nötig.',
-  'costData.help.other': 'Zum Beispiel Verpackung oder Versand.',
+  'costData.help.other': 'Alle anderen Kosten für dieses Andenken.',
   'partnerAccess.invalid.title': 'Dieser Link funktioniert nicht mehr',
   'partnerAccess.invalid.body':
     'Der Berichtslink wurde ersetzt oder abgeschaltet. Fragen Sie {shop} nach Ihrem aktuellen Link.',
