@@ -34,6 +34,11 @@ These come from the React team's docs (react.dev "Render and Commit" and the `us
 17. **Pair `useDeferredValue` with `memo`.** This extends item 7. Pass a primitive or an object made outside render. Wrap the slow child in `memo`, or the deferral does nothing. Compare `value !== deferred` to dim stale results. It does not make the slow render faster and does not delay network requests. Debouncing still helps there.
 18. **Place code splitting and Suspense deliberately.** Declare `lazy()` at module top level, because inside a component it resets state on every render. The module must default-export the component, and it renders under `<Suspense fallback>`. Put boundaries where the loading state should appear, and not around every component. Keep fallbacks light and shaped like the final layout. A fetch inside an effect never triggers Suspense. Give a boundary a `key` tied to the content id to reset it per item.
 
+## Server-rendered routes
+
+19. **Keep `ssr: true` layouts light.** A layout above a public route renders on the server for every visitor, and its code is in the first load. Keep heavy imports out of it and out of its route file. A part that needs the browser loads with `ClientOnly` and `lazy` (`tanstack-start.md`, rule 1).
+20. Guidance. **`<Hydrate>` is an experimental option for a below-the-fold block.** `<Hydrate when={visible()}>` from `@tanstack/react-start` delays hydration of its children until they scroll into view. Do not use it without an ADR (`tanstack-start.md`, rule 15). Measure first load before and after.
+
 ## Left as is in existing code
 
 The audit found violations that were left on purpose because the code is cold, the data tiny, or the loading state is simulated. New code must not copy them.
@@ -43,16 +48,10 @@ The audit found violations that were left on purpose because the code is cold, t
 
 ## Not worth doing here
 
-Do not wrap things in `useMemo` or `useCallback` by default (the compiler does it). Do not chase `rendering-svg-precision`, `rendering-hydration-*` or any `server-*` rule. This is a client-only app, and the audit found nothing to gain.
+Do not wrap things in `useMemo` or `useCallback` by default (the compiler does it). Do not chase `rendering-svg-precision`. The audit was done on a client-only app. Since E3.2 the public routes render on the server, so the `rendering-hydration-*` rules apply to them. The `server-*` rules from Vercel's list are about Next.js and stay out of scope. The rules for hydration and server code are in `tanstack-start.md`.
 
 ## How to check
 
 - Type check and lint: `pnpm exec tsc --noEmit`, `pnpm lint`.
-- First-load size: build into a scratch folder and measure it.
-  ```
-  cd front-end
-  pnpm exec vite build --outDir /tmp/sk-build --emptyOutDir
-  node ../docs/front-end-audit/measure-initial-load.mjs /tmp/sk-build
-  ```
-  On 2026-10-19 the result was 352,459 B of JavaScript and 62.0 KB of CSS, gzipped, in 32 files. Compare to that. A jump of more than a few KB needs an explanation.
+- First-load size: build, then follow the measuring steps in `front-end/scripts/verify/README.md`. Nitro writes its output to `front-end/.output`, so `--outDir` does not move it, and the measuring script needs the served `/` HTML saved as `index.html` next to the assets. The Start runtime added about 36 KB gzipped at E3.2 (368,640 B in 28 files before, 404,517 B in 37 files after). Compare to that. A jump of more than a few KB needs an explanation in the pull request.
 - Renders and CPU, and the text of 100 routes between two builds: `pnpm verify:renders` and `pnpm verify:routes`. How to use them is in `front-end/scripts/verify/README.md`.
