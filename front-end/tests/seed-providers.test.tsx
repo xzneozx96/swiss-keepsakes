@@ -26,7 +26,8 @@ describe('[E3.2] the providers on the server and in the first render', () => {
     expect(JSON.parse(localStorage.getItem('sk.demo') ?? '{}').role).toBe('owner')
 
     await first.restore()
-    expect(first.store.getState().role).toBe('owner')
+    // The update made before the restore replays on top of the saved state (E3.3).
+    expect(first.store.getState().role).toBe('manager')
     expect(first.store.getInitialState().role).toBe('guest')
     first.store.setRole('guest')
     first.store.save()

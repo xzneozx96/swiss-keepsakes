@@ -89,6 +89,9 @@ export function createDemoStore(initial: DemoState, { persist = true } = {}): De
   let state = initial
   let persisting = persist
   let storageFull = false
+  // Updates made before `restore` on a stand-in store (a mount effect during hydration): `restore`
+  // replaces the state wholesale, so they wait here and replay on top of the saved state.
+  const queued: Array<(state: DemoState) => DemoState> = []
 
   const save = () => {
     if (!persisting)
@@ -103,6 +106,11 @@ export function createDemoStore(initial: DemoState, { persist = true } = {}): De
   // Several updates in one event are saved once, after the last of them.
   let saveQueued = false
   const update: Update = (recipe) => {
+    if (!persisting) {
+      queued.push(recipe)
+
+      return
+    }
     state = recipe(state)
     if (!saveQueued) {
       saveQueued = true
@@ -127,7 +135,7 @@ export function createDemoStore(initial: DemoState, { persist = true } = {}): De
     save,
     getInitialState: () => initial,
     restore(saved) {
-      state = saved
+      state = queued.splice(0).reduce((current, recipe) => recipe(current), saved)
       persisting = true
       save()
       listeners.forEach(notify => notify())
