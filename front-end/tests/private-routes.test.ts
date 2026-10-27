@@ -60,7 +60,8 @@ describe('private routes', () => {
   })
 
   it('[E3.3][AC12] every route under a private prefix is client-only and yields the noindex meta', () => {
-    const privateRoutes = routes.filter(isPrivateRoute)
+    // A server-only route (`/r/$code`, a 302) has no screen to render; the middleware gives it the headers.
+    const privateRoutes = routes.filter(route => isPrivateRoute(route) && !route.options.server)
 
     expect(privateRoutes.length).toBeGreaterThan(20)
     expect(privateRoutes.filter(route => effectiveSsr(route) !== false).map(route => route.fullPath)).toEqual([])

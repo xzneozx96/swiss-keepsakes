@@ -98,14 +98,14 @@ export function PrototypeBar() {
     void navigate({ to: next.home })
   }
 
-  // Arriving through a partner QR records a visit; arriving directly keeps any source
-  // still inside its 30 days (PRD §10.1). A demo with no source starts from Reset.
+  // /r/{code} is a server redirect, not a client page, so a QR arrival is a full document request.
+  // It records no visit until E8.3; arriving directly keeps any source still inside its 30 days (PRD §10.1).
   const arrive = (code: string | null) => {
     setRole('guest')
     setOpen(false)
     setQrCode(null)
     if (code)
-      void navigate({ to: '/r/$code', params: { code } })
+      window.location.assign(`/r/${code}`)
     else void navigate({ to: '/$lang', params: { lang: language } })
   }
 
