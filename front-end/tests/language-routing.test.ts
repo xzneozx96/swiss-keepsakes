@@ -60,6 +60,15 @@ describe('legacyGuestTarget', () => {
     expect(legacyGuestTarget('/St%6Fries/a', 'de')).toBe('/de/stories/a')
   })
 
+  it('encodes non-ASCII and whitespace and leaves reserved escapes alone', () => {
+    expect(legacyGuestTarget('/stories/café', 'en')).toBe('/en/stories/caf%C3%A9')
+    expect(legacyGuestTarget('/stories/€', 'en')).toBe('/en/stories/%E2%82%AC')
+    expect(legacyGuestTarget('/gifts/日本', 'de')).toBe('/de/gifts/%E6%97%A5%E6%9C%AC')
+    expect(legacyGuestTarget('/stories/a b', 'en')).toBe('/en/stories/a%20b')
+    expect(legacyGuestTarget('/stories/a%20b', 'en')).toBe('/en/stories/a%20b')
+    expect(legacyGuestTarget('/stories/%2F%2Fevil.com', 'en')).toBe('/en/stories/%2F%2Fevil.com')
+  })
+
   it('returns null for a malformed escape', () => {
     expect(legacyGuestTarget('/st%E0/a', 'en')).toBeNull()
   })

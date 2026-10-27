@@ -66,6 +66,10 @@ describe('[E3.5] redirects to a language home', () => {
     ['/Stories', '/en/stories'],
     ['/STORIES/a', '/en/stories/a'],
     ['/St%6Fries/a', '/en/stories/a'],
+    ['/stories/caf%C3%A9', '/en/stories/caf%C3%A9'],
+    ['/stories/%E2%82%AC', '/en/stories/%E2%82%AC'],
+    ['/stories/a%20b', '/en/stories/a%20b'],
+    ['/stories/%2F%2Fevil.com', '/en/stories/%2F%2Fevil.com'],
   ])('sends %s to %s', async (url, href) => {
     expect(await landAt(url)).toBe(href)
   })
