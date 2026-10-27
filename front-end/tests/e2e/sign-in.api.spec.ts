@@ -214,6 +214,56 @@ test('[E2.1][AC01] a failed Google return shows an error and cleans the address'
   await expect(page.getByRole('button', { name: t.google })).toBeEnabled()
 })
 
+// [E3.4][AC01] Better Auth sends a failed Google sign-in to a path address, `/sign-in?returnTo=<path>&error=<code>`.
+// Google's own code exchange is not driven here: only the return leg of the SPA and the request it starts.
+test('[E3.4][AC01] a failed Google return keeps the return path, shows the error and drops it from the address', async ({ page }, testInfo) => {
+  const t = words[languageOf(testInfo)]
+
+  await page.goto('/sign-in?returnTo=%2Faccount&error=access_denied')
+
+  await expect(page.getByText(t.googleFailed)).toBeVisible()
+  await expect(page).toHaveURL(`${SPA_ORIGIN}/sign-in?returnTo=%2Faccount`)
+  await expect(page.getByText(t.googleFailed)).toBeVisible()
+  await expect(page.getByRole('button', { name: t.google })).toBeEnabled()
+})
+
+test('[E3.4][AC01] a failed Google return with a foreign returnTo signs in to the default screen, not to the foreign address', async ({ page }, testInfo) => {
+  const language = languageOf(testInfo)
+  const email = newEmail()
+
+  await page.goto('/sign-in?returnTo=%2F%2Fevil.example&error=x')
+  await expect(page.getByText(words[language].googleFailed)).toBeVisible()
+  await page.getByRole('textbox', { name: /e-?mail/i }).fill(email)
+  await page.getByRole('button', { name: words[language].send }).click()
+  await expect(page.locator('#sign-in-code')).toBeVisible()
+  await typeCode(page, (await latestCode(email)).code)
+
+  await expect(page).toHaveURL(`${SPA_ORIGIN}/account`)
+  expect(new URL(page.url()).host).toBe(new URL(SPA_ORIGIN).host)
+})
+
+test('[E3.4][AC01] a signed-in guest who opens the sign-in address lands on its returnTo', async ({ page }, testInfo) => {
+  await signIn(page, languageOf(testInfo))
+  await page.goto('/sign-in?returnTo=%2Faccount')
+
+  await expect(page).toHaveURL(`${SPA_ORIGIN}/account`)
+})
+
+test('[E3.4][AC01] the Google button asks for a callback and an error callback that are path addresses of the SPA', async ({ page }, testInfo) => {
+  const t = words[languageOf(testInfo)]
+
+  await page.route('https://accounts.google.com/**', route => route.abort())
+  await page.goto('/sign-in?returnTo=%2Fcart%2Freview')
+  const social = page.waitForRequest(request => new URL(request.url()).pathname === '/api/auth/sign-in/social')
+
+  await page.getByRole('button', { name: t.google }).click()
+
+  const body = (await social).postDataJSON() as { callbackURL?: string, errorCallbackURL?: string }
+
+  expect(body.callbackURL).toBe(`${SPA_ORIGIN}/sign-in?returnTo=%2Fcart%2Freview`)
+  expect(body.errorCallbackURL).toBe(`${SPA_ORIGIN}/sign-in?returnTo=%2Fcart%2Freview`)
+})
+
 test('[E2.1][AC01] the Google button is not stuck pending after a synthetic pageshow with persisted set (a real bfcache restore is not driven)', async ({ page }, testInfo) => {
   const t = words[languageOf(testInfo)]
 
