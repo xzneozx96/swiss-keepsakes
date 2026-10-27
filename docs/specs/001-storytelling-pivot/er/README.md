@@ -2,11 +2,11 @@
 
 Review page: https://claude.ai/artifact/Mx8Gtciom3aruvgEyYyWFr (private; source review.html in this folder).
 
-These diagrams show the 44 new tables of the storytelling pivot. They are generated from the tested DDL (`.factory/runs/20261025-storytelling-pivot/data-model-checks/ddl.sql`), which matches section 4 of `../data-model.md` line for line. Each module has a Mermaid source (`.mmd`) and a rendered image (`.svg`). Open an SVG in a browser to zoom.
+These diagrams show the 48 new tables of the storytelling pivot. The `.mmd` sources were first generated from the tested DDL (`.factory/runs/20261025-storytelling-pivot/data-model-checks/ddl.sql`). Since gate G11 (2026-10-27) the `content` and `reviews` sources are edited by hand to match section 4 of `../data-model.md`, and the `.svg` files and `review.html` are not regenerated yet (see Regenerate). Each module has a Mermaid source (`.mmd`) and a rendered image (`.svg`). Open an SVG in a browser to zoom.
 
 How to read them:
 
-- A solid line is a foreign key inside one schema. There are 50, and every one is drawn.
+- A solid line is a foreign key inside one schema. There are 54, and every one is drawn.
 - A dotted line is a plain id that points at another module (ADR-013). The database holds no key there, so the line is drawn from the column name, the DDL comments and the ER diagram in `data-model.md` section 2.
 - Boxes marked "(stub)" show only the `id` of a table from another module or from `identity`. They are not new tables.
 - Every table also has a `store_id`. It is a plain id to `identity.stores`, written in the column note and not drawn as a line.
@@ -15,19 +15,20 @@ How to read them:
 
 ## Overview
 
-All 44 tables with no columns. Colour shows the schema, and the table names carry the schema prefix. Dotted lines are the plain ids between modules, except those to `identity`, which the module diagrams show.
+All 48 tables with no columns. Colour shows the schema, and the table names carry the schema prefix. Dotted lines are the plain ids between modules, except those to `identity`, which the module diagrams show.
 
 ![All tables by schema](overview.svg)
 
 ## content
 
-Stories, places, tour guides and media. A story is a group with one version per language (`en`, `de`). The keepsake links and the related stories belong to the story group, so both languages share them. A place is a pin on the map and names one main story. A tour has a route of stops and one PDF. `media_refs` records which media a document uses, because a key cannot point into a JSON document.
+Stories, pins, tour guides and media. A story is a group with one version per language (`en`, `de`). The keepsake links, the related stories and the blog categories belong to the story group, so both languages share them. A place is a pin on the map. It has no type, an optional address and weekly hours, optional dates, map categories, one optional main story and one optional plain outbound link. A tour has a route of stops and one PDF. `media_refs` records which media a document uses, because a key cannot point into a JSON document.
 
 The rules that matter:
 
-- A published story pin must name a main story that has a published version. A CHECK covers the row, and a deferred trigger covers the other rows at commit. A second trigger stops the last published version of a main story from being unpublished or deleted.
-- A practical place has no main story, and a place changes from `draft` only once.
-- A place never changes type, and a published or hidden place or story version cannot be deleted. Hide it instead.
+- A pin publishes with or without a story (G11). A place changes from `draft` only once, and its first publish time is fixed.
+- A published or hidden place and a published story version cannot be deleted. Hide it instead.
+- A pin with dates is public only until its last date ends, in Europe/Zurich. The view `content.public_pins` holds that rule.
+- Map and blog categories have one level. A category with children or links cannot be deleted.
 - Published rows need their slug, name and coordinates, and a slug is unique per language.
 - A media row cannot be retired while a column or document still uses it. A cover or PDF key also checks the media kind.
 
@@ -61,12 +62,11 @@ The rules that matter:
 
 ## reviews
 
-Place reviews, story comments, product ratings and one moderation history over all three. A comment can have replies one level deep, and a reply stays under a comment of the same story. A product rating is one per guest, order and product.
+Story comments, product ratings and one moderation history over both. Guests do not review places (G11). A comment can have replies one level deep, and a reply stays under a comment of the same story. A product rating is one per guest, order and product.
 
 The rules that matter:
 
-- Only sights, restaurants and accommodation take reviews.
-- Nothing is deleted. A moderator hides or unhides through a `moderation_events` row, each naming exactly one target.
+- Nothing is deleted. A moderator hides or unhides through a `moderation_events` row, each naming exactly one target, a comment or a rating.
 - A trigger on that row sets the visible state of the target, and a direct change of `state` is refused.
 
 ![reviews schema](reviews.svg)
@@ -107,4 +107,4 @@ An anonymous event log and two daily roll-ups. The event table holds no account,
 
 ## Regenerate
 
-The `.mmd` files and the checks come from scripts kept in `.factory/runs/20261025-storytelling-pivot/diagram-tools/`. `render.sh` there turns every `.mmd` into an SVG with `@mermaid-js/mermaid-cli`, which is installed only in that folder.
+The `.mmd` files and the checks come from scripts kept in `.factory/runs/20261025-storytelling-pivot/diagram-tools/`. `render.sh` there turns every `.mmd` into an SVG with `@mermaid-js/mermaid-cli`, which is installed only in that folder. After G11 the `.svg` files and `review.html` in this folder still show 44 tables with place reviews and the typed place. Run `render.sh` to refresh the SVGs. `review.html` and the review page it was published as need a separate update.

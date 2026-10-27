@@ -2,7 +2,7 @@
 
 ## Product and audience
 
-Swiss Keepsakes tells emotional stories about Lucerne for free: history, culture, and high-quality reviews of sights, restaurants, and accommodation, linked to an interactive map. The stories build organic traffic and loyalty. Victorinox knives are introduced gently as a bonus. Guests primarily use a phone. Visitors choose a stay type (short-stay or multi-day) and interests, kept in the browser only. Merchant Owner and Manager roles run the store. Referral partners, including guides, receive a limited view of their transactions and run group orders (the order flow is still open). Tour booking is hidden. Tours are free information with a PDF guide and an advisory route set by the merchant. The product is not a route planner.
+Swiss Keepsakes tells emotional stories about Lucerne for free: history, culture, and the merchant's own reviews of sights, restaurants, and accommodation, written as stories. A curated interactive map shows the places and local events a local friend would point a visitor to. A pin needs no story; it links to stories when they exist. Guests do not review places. The stories build organic traffic and loyalty. Victorinox knives are introduced gently as a bonus. Guests primarily use a phone. Visitors choose a stay type (short-stay or multi-day) and interests, kept in the browser only. Merchant Owner and Manager roles run the store. Referral partners, including guides, receive a limited view of their transactions and run group orders (the order flow is still open). Tour booking is hidden. Tours are free information with a PDF guide and an advisory route set by the merchant. The product is not a route planner.
 
 Product authority is `docs/PRD/Swiss_keepsakes_PRD.md` (version 3, storytelling pivot) and `docs/ux/ux-spec-phase1.md`. The booking states, the 15-minute seat hold, deposit, pay-later and tour payment parts of `docs/ux/ux-spec-phase1.md` are superseded by the PRD and stay dormant. Prototype delivery order and owner approval are tracked in `docs/ux/prototype/todo.md` and `todo-phase2.md`.
 
@@ -16,6 +16,7 @@ This is a web prototype. `front-end/` uses React 19, HeroUI v3, Tailwind CSS v4,
 - Booking and payment status are separate facts. Confirmation does not imply full payment, and full payment does not imply service delivery.
 - Tour booking and every reservation service are out of scope and not shown to guests. The code stays dormant. The 15-minute seat hold, deposits, pay-later and tour completion rules are retired (PRD v3, section 18.2).
 - The shop sells Victorinox knives only, with stock per SKU (size x theme x colour). A zero-stock combination cannot be selected. Prices first appear on the product page, never in stories, the map or shop lists. Complete a keepsake order only after delivery and full payment.
+- Any map pin can be published without a story. Only the merchant edits pins. Pins with dates (local events) show from publish and disappear after the last date. Directions open in the visitor's own map app; the site never reads the visitor's location or draws a route.
 - Build and review steps separately. A built step stays awaiting review until the owner approves it. Update the client Artifact only when requested.
 
 ## Existing visual authority

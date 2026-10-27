@@ -5,6 +5,8 @@ Date: 2026-10-26
 Source: DM-3, DM-4
 Applies to: `api/src/modules/content/`, `api/src/modules/catalog/`, `packages/domain/src/content/`, `packages/api-contract/`
 
+**Amended 2026-10-27 (G11).** AC43 is retired (pins publish without a story, AC85), so the two rejections below cite AC51 and AC68 instead. The storage choice itself is unchanged.
+
 No new dependency, vendor or paid service. This fills the storage choice that ADR-003 left open ("separate columns or rows") and the slug rule of ADR-002. Detail is in `docs/specs/001-storytelling-pivot/data-model.md`, sections DM-3 and DM-4.
 
 ## Context
@@ -36,9 +38,10 @@ We will split each publishable row into structure and text.
 ## Considered options
 - **Revision rows** (one row per draft and per published copy). Fully typed drafts, but every child table needs a revision key, and the public query must pick the latest published row. Rejected as heavier than the data volume needs.
 - **Shadow `draft_*` tables.** Same cost as revision rows, plus duplicated constraints. Rejected.
-- **Two jsonb documents and no typed columns.** Simplest publish, but no constraints on slug, main story or PDF. Rejected, because AC43 and AC51 need typed columns.
-- **Draft everything, including structure.** Uniform, but the structural rules (AC43) would then hold only on the published projection and need a second set of checks on drafts. Rejected.
+- **Two jsonb documents and no typed columns.** Simplest publish, but no constraints on slug, main story or PDF. Rejected, because AC51 and the pin publish rules (AC68, AC85) need typed columns.
+- **Draft everything, including structure.** Uniform, but the structural rules (AC51, AC68) would then hold only on the published projection and need a second set of checks on drafts. Rejected.
 
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)

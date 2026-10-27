@@ -1,6 +1,7 @@
 ---
 status: accepted
 accepted: 2026-10-26
+amended: 2026-10-27 (gate G11, proposed until the owner approves the amended sections)
 spec: docs/PRD/Swiss_keepsakes_PRD.md
 architecture: docs/specs/001-storytelling-pivot/architecture.md
 postgres: 18
@@ -9,6 +10,8 @@ sql_executed: yes (postgres:18-alpine in Docker, PostgreSQL 18.6, scratch databa
 # Data model: storytelling pivot
 
 This document holds the PostgreSQL tables, constraints, indexes and migrations for PRD v3. The owner accepted it on 2026-10-26 (gate DESIGN). The ADRs it produces, ADR-013 to ADR-020, ADR-022 to ADR-023 and ADR-024 to ADR-025 and ADR-026 to ADR-028, are also `accepted`. The partner handover of `docs/decisions/2026-10-26-partner-handover.md` is modelled in DM-16 and DM-17. The owner's final data answers of 2026-10-26 (M1, M2, M3, M7 to M10 and C1) are applied: story links per group, a server cart, guest name and e-mail on orders, commission at completion, generic product options, and categories. Section 9 records what the model took from Medusa 2 and what it skipped.
+
+**Amended 2026-10-27 (gate G11).** The owner's record `docs/decisions/2026-10-27-map-pins-and-events.md` replaces the typed place with one pin model. A pin has no `type`, publishes with or without a story, and can carry an address, weekly hours, dates and map categories. Stories get blog categories. Guest reviews of places are dropped. Every changed passage below says G11. Section 4 shows the target model. The built migration `api/migrations/0008_content.sql` still has the earlier shape, and section 6 lists the new migration that moves it to the target. ADR-029 records the pin model and ADR-015 and ADR-018 carry amendment notes.
 
 The model follows the module ownership in `architecture.md` and the conventions of `docs/architecture/backend.md` section 5. Where the PRD, an ADR or the architecture disagree, the document says so in section 8 and keeps the DDL easy to switch.
 
@@ -26,6 +29,8 @@ No migration creates a catalog, order, booking, seat-hold, stock or tour table. 
 
 Accepted ADRs that constrain this work: none. `docs/adr/INDEX.md` lists ADR-001 to ADR-012 as `proposed`. This design reads ADR-002, 003, 004, 005, 007, 008, 009, 010, 011 and 012. Where it differs from one, section 8 says so.
 
+The built `content` schema (`0008_content`, E2.5) has the typed place of the earlier design: `places.type`, the story-required CHECK, the pin triggers and the composite keys on `(id, type)`. G11 removes them in a new migration after `0008` (section 6). Nothing reads or writes the table yet, because the content API (E2.6) is not built.
+
 ## 1. Requirements and volumes
 
 Nothing below is built, so "rows now" is zero for every new table. The 12-month figures are assumptions. The owner of each assumption is the product owner unless the table says otherwise.
@@ -35,7 +40,10 @@ Nothing below is built, so "rows now" is zero for every new table. The 12-month 
 | `content.media` | 0 | 600 to 1,500 | Photos in stories, places and routes, one PDF per tour | Prototype photos live in bundled assets |
 | `content.story_groups` | 0 | 40 to 150 | Merchant writes stories and editorial reviews | The seed has about 21 versions, about 11 stories |
 | `content.story_versions` | 0 | 80 to 300 | Two languages per group | One row per group and language |
-| `content.places` | 0 | 100 to 500 | Merchant picks the map points | ADR-006 assumes hundreds |
+| `content.places` | 0 | 100 to 500 | Merchant pins sights, food, free essentials and events (G11) | ADR-006 assumes hundreds. Each row is a pin of any kind |
+| `content.place_dates` | 0 | 0 to 300 | Dated pins such as markets and concerts, one to several entries each (G11) | Ended entries stay until the merchant deletes them |
+| `content.map_categories`, `content.blog_categories` | 0 | 5 to 40 and 5 to 30 | The merchant's two lists (G11) | One level of sub-categories |
+| `content.place_categories`, `content.story_categories` | 0 | 150 to 1,500 and 50 to 300 | One to three map categories per pin, one to two blog categories per story (G11) | Link rows |
 | `content.tours`, `tour_stops` | 0 | 3 to 11 tours, 30 to 120 stops | Merchant edits routes | The PRD says three seed tours, the client brief of October 2026 says 11 |
 | `catalog.skus`, `inventory.stock_items` | 0 | 150 to 800 | 12 designs, 3 sizes, a few colours (O26) | One stock row per SKU, three option values per SKU |
 | `catalog.product_options`, `product_option_values` | 0 | 3 options, 20 to 60 values for the one product | Merchant adds designs, sizes, colours | A second product line adds its own |
@@ -43,7 +51,7 @@ Nothing below is built, so "rows now" is zero for every new table. The 12-month 
 | `orders.carts`, `cart_lines` | 0 | 3,000 to 20,000 carts, most anonymous and abandoned | Every visitor who adds a knife | A job deletes stale anonymous carts |
 | `inventory.stock_holds` | 0 | 1,000 to 5,000 | One per order line | Rows stay as history |
 | `orders.orders`, `order_lines` | 0 | 500 to 3,000 orders | Pilot and guide groups | Owner estimate needed |
-| `reviews.*` | 0 | 500 to 5,000 | Guests after sign-in | Spam raises it |
+| `reviews.*` | 0 | 500 to 5,000 | Guests after sign-in, on stories and products (G11 removed place reviews) | Spam raises it. The range is the earlier estimate, not re-estimated without place reviews |
 | `partners.*` | 0 | 5 to 30 partners | The plan names about five guides at launch | |
 | `orders.handovers`, `handover_occurrences` | 0 | 100 to 1,500 handovers, 1,000 to 20,000 meetings | One-off handovers per tour group, and one meeting a day for each hotel desk | Repeating rules create meetings ahead (assumption 6) |
 | `orders.handover_proposals`, `handover_receipts` and items | 0 | 200 to 3,000 proposals, 1,000 to 20,000 receipt items | Two to four proposals per handover, one item per order | |
@@ -55,17 +63,17 @@ Access patterns. A rate is a peak and an average in requests per second. Every p
 
 | Id | Access pattern | R/W | Peak / avg | Rows | Latency | Consistency |
 |---|---|---|---|---|---|---|
-| AP-1 | Find a published story version, place, tour or product by language and slug (document and API) | R | 20 / 1 | 1 | 50 ms | A 60 s stale read is fine (D5) |
+| AP-1 | Find a published story version, pin, tour or product by language and slug (document and API). A `/:lang/map?place=<slug>` link finds a pin this way (G11) | R | 20 / 1 | 1 | 50 ms | A 60 s stale read is fine (D5) |
 | AP-2 | List every published page for the sitemap and hreflang | R | 1 per minute | 300 to 1,000 | 200 ms | Stale allowed |
-| AP-3 | All published places for the map | R | 5 / 0.5 | up to 500 | 100 ms | Stale allowed |
-| AP-4 | Place sheet: main story first, then other stories that mention the place, the outbound link, rating count and average | R | 5 / 0.5 | up to 20 | 100 ms | Stale allowed |
+| AP-3 | All pins the public may see, for the map: published, and either without dates or with a date that has not ended. Each with its categories, address, hours and next date (G11) | R | 5 / 0.5 | up to 500 | 100 ms | Stale allowed. A pin disappears after its last date without a write |
+| AP-4 | Pin card: the main story if it has a published version in the reader's language, then other published stories that mention the pin or review it, and the outbound link (G11) | R | 5 / 0.5 | up to 20 | 100 ms | Stale allowed |
 | AP-5 | Story document: version, mentioned places, up to 6 keepsake links, up to 3 related stories | R | 10 / 1 | up to 15 | 100 ms | Stale allowed |
 | AP-6 | Tour document: tour, stops in order, PDF media, up to 3 keepsake links | R | 5 / 0.5 | up to 40 | 100 ms | Stale allowed |
 | AP-7 | Staff read and save a draft with `If-Match` | R/W | 1 / 0.1 | 1 | 200 ms | Reads its own write |
-| AP-8 | Publish or unpublish a story version, place or tour, with the pin rule | W | 0.2 / 0.01 | few | 500 ms | Serial with the same story group |
-| AP-9 | Visible reviews of a place, newest first, and the rating summary | R | 5 / 0.5 | 20 per page | 100 ms | Stale allowed |
-| AP-10 | Post a review, comment or rating, after a count of the author's recent posts | W | 0.2 / 0.01 | 1 | 200 ms | Reads its own write |
-| AP-11 | Merchant hides or unhides, and lists newest reviews with hidden ones | R/W | 0.1 / 0.01 | 50 per page | 200 ms | Reads its own write |
+| AP-8 | Publish or unpublish a story version, pin or tour (G11: no pin rule) | W | 0.2 / 0.01 | few | 500 ms | Reads its own write |
+| AP-9 | Visible comments of a story, and the rating summary of a product (G11: no place reviews) | R | 5 / 0.5 | 20 per page | 100 ms | Stale allowed |
+| AP-10 | Post a comment or rating, after a count of the author's recent posts | W | 0.2 / 0.01 | 1 | 200 ms | Reads its own write |
+| AP-11 | Merchant hides or unhides, and lists newest comments and ratings with hidden ones | R/W | 0.1 / 0.01 | 50 per page | 200 ms | Reads its own write |
 | AP-12 | Product page: published SKUs of a product with price, and availability | R | 10 / 1 | up to 150 | 100 ms | A change shows within 60 s |
 | AP-13 | Auto-accept an order: reserve stock for each line | W | 1 / 0.05 | 1 to 5 | 200 ms | Strict. Two orders never take the last unit |
 | AP-14 | Release or issue the holds of an order | W | 0.5 / 0.02 | 1 to 5 | 200 ms | Strict |
@@ -96,16 +104,19 @@ Access patterns. A rate is a peak and an average in requests per second. Every p
 | AP-39 | Complete a cart into one or several orders, safe to repeat | W | 1 / 0.05 | 1 to 4 orders | 500 ms | Strict. A second completion returns the same orders |
 | AP-40 | A job deletes stale anonymous carts | W | hourly | up to 1,000 | seconds | Idempotent |
 | AP-41 | A product page lists its options, values and SKUs, and the category tree | R | 10 / 1 | up to 150 | 100 ms | Stale allowed |
+| AP-42 | Map category chips, blog category filter and the editor's tag pickers read the two category lists (G11) | R | 5 / 0.5 | up to 70 | 100 ms | Stale allowed |
+| AP-43 | Merchant creates, renames, reorders and deletes map and blog categories. A delete works only on an unused category (G11) | W | rare | 1 | 200 ms | Strict |
+| AP-44 | Merchant sets a pin's address, weekly hours, dates and map categories, and a story's blog categories. Structure is saved directly (G11) | W | 0.2 / 0.01 | up to 20 | 200 ms | Reads its own write |
 
-Every read has a write that feeds it. AP-37 and AP-39 read what AP-36 and AP-38 write. AP-40 reads AP-36. AP-41 reads what the merchant writes to products, options and categories. AP-26 to AP-30 read what AP-28, AP-32 and AP-33 write. AP-29 reads what AP-34 and AP-35 write. AP-31 reads AP-33 and AP-28. AP-1 to AP-6 read what AP-7 and AP-8 write. AP-9 reads AP-10 and AP-11. AP-12, AP-16 read AP-15 and AP-13 to AP-14. AP-19 reads AP-18, which reads AP-17. AP-20 reads AP-21. AP-22, AP-24 and AP-25 read AP-23.
+Every read has a write that feeds it. AP-37 and AP-39 read what AP-36 and AP-38 write. AP-40 reads AP-36. AP-41 reads what the merchant writes to products, options and categories. AP-26 to AP-30 read what AP-28, AP-32 and AP-33 write. AP-29 reads what AP-34 and AP-35 write. AP-31 reads AP-33 and AP-28. AP-1 to AP-6 read what AP-7, AP-8 and AP-44 write. AP-42 reads what AP-43 writes, and AP-3 also reads the category links that AP-44 writes. AP-9 reads AP-10 and AP-11. AP-12, AP-16 read AP-15 and AP-13 to AP-14. AP-19 reads AP-18, which reads AP-17. AP-20 reads AP-21. AP-22, AP-24 and AP-25 read AP-23.
 
 Assumptions, each with an owner:
 
 1. Product owner. Content stays in the hundreds of rows and orders stay in the low thousands in the first year.
-2. Product owner. One merchant and one store hold all places in Phase 1 (G8).
+2. Product owner. One merchant and one store hold all places in Phase 1 (G8; G11 removed G8's four place types, and this assumption stays).
 3. Product owner and lawyer. Raw events keep 14 months (O14, ADR-007).
 4. Product owner. The shop sells in CHF only (O01 is open).
-5. Developer. Neon runs PostgreSQL 18 at READ COMMITTED, so `uuidv7()` is native and the lock rules in DM-5 and DM-6 apply as tested.
+5. Developer. Neon runs PostgreSQL 18 at READ COMMITTED, so `uuidv7()` is native and the lock rules in DM-6 apply as tested. DM-5 no longer has a lock rule (G11).
 6. Developer and product owner. A job creates the meetings of a repeating handover 14 days ahead, so a handover link for day 3 and "roll to the next day" find a meeting. The 14 days are a guess.
 7. Product owner and merchant. `closes_orders_at` is one cut-off per meeting, the meeting time minus the preparation time. The record defines "can still take the order" per order from its preparation time, and a product's `preparation_hours` can be NULL (O22), so the meeting cut-off approximates it. The use case sets it, and a null preparation time means the merchant sets it by hand.
 8. Developer and product owner. Stale anonymous carts are deleted after 30 days without activity. The 30 days are a guess.
@@ -118,7 +129,7 @@ The diagrams are in `docs/specs/001-storytelling-pivot/er/README.md`. They are g
 
 ### DM-1 Repository conventions stay
 
-Decision. Primary keys are `uuid DEFAULT uuidv7()`. Money is `bigint` Rappen, not `numeric` (the data-model skill suggests `numeric`, but backend.md section 5 fixes Rappen and the shared domain code uses it). `commission_rate` is a ratio, so it is `numeric(5,4)`. Enumerations are `text` with a named CHECK, as in `identity.stores`. Times are `timestamptz`. Localized text is `jsonb` shaped `{en?, de?}` for places, tours and products, and rows per language for stories. Every mutable table has `created_at` and `updated_at` (the `timestamps()` helper). Three groups differ. The append-only tables (`moderation_events`, `stock_adjustments`, `analytics.*`) keep their own event time or the hourly bucket. `partner_accounts` has `created_at` and `revoked_at`. The link tables (`story_group_places`, `story_keepsake_links`, `story_related`, `tour_keepsake_links`, `product_media`) and `media_refs` have neither column, because a use case replaces them as a set. The last group goes beyond the exceptions that backend.md section 5 lists, and approving this model accepts it.
+Decision. Primary keys are `uuid DEFAULT uuidv7()`. Money is `bigint` Rappen, not `numeric` (the data-model skill suggests `numeric`, but backend.md section 5 fixes Rappen and the shared domain code uses it). `commission_rate` is a ratio, so it is `numeric(5,4)`. Enumerations are `text` with a named CHECK, as in `identity.stores`. Times are `timestamptz`. Localized text is `jsonb` shaped `{en?, de?}` for places, tours and products, and rows per language for stories. Every mutable table has `created_at` and `updated_at` (the `timestamps()` helper). Three groups differ. The append-only tables (`moderation_events`, `stock_adjustments`, `analytics.*`) keep their own event time or the hourly bucket. `partner_accounts` has `created_at` and `revoked_at`. The link tables (`story_group_places`, `story_keepsake_links`, `story_related`, `tour_keepsake_links`, `product_media`, and since G11 `place_categories`, `story_categories` and `place_dates`) and `media_refs` have neither column, because a use case replaces them as a set. The last group goes beyond the exceptions that backend.md section 5 lists, and approving this model accepts it.
 
 Why. It is the existing code. Alternatives rejected. `bigint identity` keys (the repository uses UUIDv7), `numeric` money.
 
@@ -130,7 +141,7 @@ Why. A Drizzle foreign key imports the other module's schema, which the module r
 
 ### DM-3 Published columns, one draft document, structure saved directly
 
-Decision. Structure (type, coordinates, tags, main story, PDF, stops, links, prices) is saved straight into typed columns and child rows, so CHECKs and keys hold at all times. Text has `published jsonb` and `draft jsonb`. Publishing copies one to the other in one transaction and bumps `row_version`. Media used inside documents is listed in `content.media_refs`. A trigger refuses to retire a media row that a column or a document still uses, and the cover, PDF and stop-photo keys also carry the media kind, so an image cannot be a PDF. A concurrent save can still add a reference during a retire, which the grace period of ADR-004 covers. The database has no guard against a save that points a cover, a PDF or a stop photo at media that is already `retired` (gate G-E25-RETIREDMEDIA, 2026-10-26). **Requirement on E2.6:** the content use cases that set a cover, a PDF or a stop photo must refuse media whose status is `retired`. Keepsake photos (`catalog.product_media`) hold plain media ids, and the cleanup job asks `catalog` before it removes a file. Serves AP-1 to AP-8. ADR: ADR-014.
+Decision. Structure (coordinates, address, weekly hours, dates, categories, tags, main story, PDF, stops, links, prices) is saved straight into typed columns and child rows, so CHECKs and keys hold at all times. Text has `published jsonb` and `draft jsonb`. Publishing copies one to the other in one transaction and bumps `row_version`. Media used inside documents is listed in `content.media_refs`. A trigger refuses to retire a media row that a column or a document still uses, and the cover, PDF and stop-photo keys also carry the media kind, so an image cannot be a PDF. A concurrent save can still add a reference during a retire, which the grace period of ADR-004 covers. The database has no guard against a save that points a cover, a PDF or a stop photo at media that is already `retired` (gate G-E25-RETIREDMEDIA, 2026-10-26). **Requirement on E2.6:** the content use cases that set a cover, a PDF or a stop photo must refuse media whose status is `retired`. Keepsake photos (`catalog.product_media`) hold plain media ids, and the cleanup job asks `catalog` before it removes a file. Serves AP-1 to AP-8. ADR: ADR-014.
 
 Why. Public reads need typed, indexed fields. The body changes shape often and cannot hold a key. Alternatives rejected. Revision rows, shadow tables, two jsonb documents with no typed columns, and drafting structure too (ADR-014 lists the reasons).
 
@@ -140,17 +151,30 @@ Decision. A story version is the row `(group_id, language)` with `UNIQUE (langua
 
 Why. ADR-002 wants a slug unique per type and language across the platform. Per-language expression indexes need no side table. The query must use the same expression, `slug->>'en'`. Alternative rejected. A `page_slugs` side table, which adds a second row to keep in step with every publish. A third language needs one more index, which is a migration the owner approves anyway.
 
-### DM-5 The pin rule in the database
+### DM-5 The publish and delete rules in the database
 
-Decision. AC43 splits in two. The row-local part is a CHECK (a published pin names its main story, a practical place names none). The cross-row part is two deferred constraint triggers that lock the story group row, `FOR SHARE` on the publish side and `FOR UPDATE` on the unpublish side. Place `type` is immutable. A draft place can be deleted. A published place can only be hidden (owner M6, 2026-10-26), and a published story version cannot be deleted either. `first_published_at` cannot change once it is set (gate G-E25-FIRSTPUB, 2026-10-26), because clearing it would let a published place go back to draft and then be deleted (AC79). Two more rules close the same gap (gates G-E25-STORYKEEP and G-E25-TRUNCATE, 2026-10-26). Rule 1: once a story version's `published` text is set, it is kept. Unpublishing sets `status = 'draft'` and keeps the document, because clearing `published` would let a published version be deleted, and then its group. Rule 2: TRUNCATE is refused on `content.places`, `content.story_versions` and `content.media_refs`, because TRUNCATE skips row triggers and the delete guards would not hold. Postgres already refuses a plain TRUNCATE of `places` because of its foreign keys, so the trigger stops `TRUNCATE ... CASCADE`. Test resets use DELETE, or a reset of the Neon branch. Tours have no delete guard, and this document does not decide one. A published version cannot move to another group. An editorial review names its subject place with a copy of the place type, which a composite key checks and a CHECK limits to sight, restaurant and accommodation. Serves AP-8. ADR: ADR-015.
+Decision (amended by G11, 2026-10-27). The pin rule is gone. AC43 is retired and AC62 and AC68 are rewritten as the pin publish rules, so a pin publishes with or without a main story. `content.places` has no `type`, no story-required CHECK, no constraint trigger that locks the story group, and no trigger that fixes the type. These rules stay:
 
-Requirements on E2.6, from the E2.5 gates (2026-10-26):
+- A place is a draft exactly until it is first published (CHECK `places_draft_means_unpublished_check`).
+- A draft place can be deleted. A published place can only be hidden (owner M6, 2026-10-26), and a published story version cannot be deleted either.
+- `first_published_at` cannot change once it is set (gate G-E25-FIRSTPUB, 2026-10-26), because clearing it would let a published place go back to draft and then be deleted (AC79).
+- Once a story version's `published` text is set, it is kept (gate G-E25-STORYKEEP, 2026-10-26). Unpublishing sets `status = 'draft'` and keeps the document, because clearing `published` would let a published version be deleted, and then its group.
+- TRUNCATE is refused on `content.places`, `content.story_versions` and `content.media_refs` (gate G-E25-TRUNCATE, 2026-10-26). TRUNCATE skips row triggers, so the delete guards would not hold. Postgres already refuses a plain TRUNCATE of `places` because of its foreign keys, so the trigger stops `TRUNCATE ... CASCADE`. Test resets use DELETE, or a reset of the Neon branch.
 
-- Publish a place as one UPDATE. The deferred publish trigger refuses a transaction that publishes and then re-points or hides the same place.
-- Keep E2.6's unit of work at READ COMMITTED. Under REPEATABLE READ the pin race lets both sides commit.
+Tours have no delete guard, and this document does not decide one. An editorial review can name any pin as its subject, because `story_groups.subject_place_type` is gone. Serves AP-8. ADR: ADR-015 (amended) and ADR-029.
+
+Two consequences of the removal.
+
+- A pin can name a main story group that has no published version, and a published version can be unpublished while a pin names its group. The record drops the triggers that stopped both, and nothing protects a pin's main story any more (ruling G11-R4, 2026-10-27, Q-43 settled). A story is unpublished or deleted under its own rules, and the read for AP-4 shows the main story link only when the group has a published version in the reader's language, as `story_related_readable` does for related stories. The earlier use case rule that listed the blocking pins is dropped, so E2.6 takes no story-group lock for it.
+- The sentence "a published version cannot move to another group" held only through the removed trigger. It is now a use case rule: the use case refuses the move, and the database no longer stops it.
+
+Requirements on E2.6, from the E2.5 gates (2026-10-26) and G11:
+
 - Refuse `retired` media when a use case sets a cover, a PDF or a stop photo (DM-3).
+- Read pins for the public through `content.public_pins` (DM-21), so the rule "hidden after the last date" has one definition.
+- The use case no longer checks a pin story rule. It still maps `restrict_violation` and `check_violation` from the remaining guards to editor messages.
 
-Why. A CHECK cannot read another table, and ADR-005 asks for the lock. The trigger puts the lock inside the database, so a missed code path cannot skip it. Alternative rejected. Application locks only. This is the first business-rule trigger in the repository, and section 8 returns it as a decision.
+Why. With the pin rule gone, no rule spans two rows except the delete guards, and each guard reads only its own row. A CHECK or a row trigger is enough, and the lock rules of the earlier design (`FOR SHARE` on publish, `FOR UPDATE` on unpublish) have nothing to protect. The earlier decision and its race test remain in ADR-015's history. Alternative rejected. Keeping the pin rule for pins that choose a story: it would make the "pin without a story" the exception and keep the triggers for little gain, and the record says a story is an optional extra.
 
 ### DM-6 Stock counters guarded by a CHECK
 
@@ -164,11 +188,11 @@ Decision. `catalog.product_options` (per product, localized name, position) and 
 
 Why. Medusa models options per product and links a variant to option values (section 9). The key gives the database the uniqueness that the three fixed columns gave, and the commit-time count gives the "every option has a value" rule. Alternatives rejected. A jsonb map of options on the SKU, which has no key to the values. A unique index over a trigger-less expression, which cannot join the option rows. The combination key is written by a deferred trigger, so it is NULL between the insert and the commit, and the unique index ignores NULLs. A drift query (`combination_key IS NULL`) can list a SKU that escaped the trigger.
 
-### DM-8 Three review tables, one history
+### DM-8 Two review tables, one history
 
-Decision. `place_reviews`, `story_comments` and `product_ratings` hold the content and the visible state. `moderation_events` is append-only, names its target through three nullable keys with an exactly-one CHECK, and a trigger sets the target's state (a direct write to `state` is refused). The trigger locks the target row before it stamps the event time, so two events on one review carry times in the order they changed the state. A place review keeps a `place_type` copy that a CHECK limits to sight, restaurant and accommodation. The copy is true only if the use case copies the real type, so the database proves the value and not the copying. Nothing is deleted. Serves AP-9 to AP-11. ADR: ADR-018.
+Decision (amended by G11, 2026-10-27). `story_comments` and `product_ratings` hold the content and the visible state. `moderation_events` is append-only, names its target through two nullable keys with an exactly-one CHECK, and a trigger sets the target's state (a direct write to `state` is refused). The trigger locks the target row before it stamps the event time, so two events on one comment or rating carry times in the order they changed the state. Nothing is deleted. `reviews.place_reviews`, its `place_type` copy and its moderation target are removed, because guests no longer review places. The merchant's own reviews of places stay as stories of kind `editorial_review` (DM-5). Serves AP-9 to AP-11. ADR: ADR-018 (amended).
 
-Why. One moderation rule, real foreign keys, and the "no review on a practical place" rule reaches the database across modules because place type never changes (DM-5). Alternatives rejected. A polymorphic target and state derived from the latest event.
+Why. One moderation rule and real foreign keys. The rule "no review on a practical place" and the type copy it needed are gone with the type. Alternatives rejected. A polymorphic target and state derived from the latest event.
 
 ### DM-9 Partner accounts only through an invitation
 
@@ -240,16 +264,40 @@ Decision. `catalog.product_categories` is a tree per store (localized name, slug
 
 Why. The owner wants the tables now so a second product line does not need a schema change. The cycle check does not lock the tree, so two concurrent moves that each look safe could make a loop. That is not tested.
 
+### DM-21 One pin model: no type, an address, weekly hours, dates and a plain link (G11)
+
+Decision. Every pin is a row of `content.places`, and the model has no place type (ADR-029). A pin needs a title in at least one language, a location and a slug to publish (ruling G11-R2). Photo, address, categories, story, link, hours and dates are optional. These are the choices that the record left to the builder, and each is a judgment call that the owner can overturn.
+
+- **Address.** One `address text` column, shared by both languages and optional. A viewpoint or a bench has no address, and directions use the coordinates. It is not required to publish (ruling G11-R2, Q-41 settled), so neither the editor nor the database asks for it.
+- **Weekly hours.** One `weekly_hours jsonb` column that holds an array of spans, each `{"day": 1, "opens": "08:00", "closes": "18:00"}`. Day 1 is Monday and day 7 is Sunday. `closes` may be `24:00`, so a pub that closes at midnight needs no second row. A span cannot cross midnight, as with `catalog.pickup_place_hours` (Q-33). A function `content.valid_weekly_hours` checks the shape in a CHECK. `pickup_place_hours` is a table because the orders module reads it to validate pickup times. Pin hours differ. The card only displays them, no query filters or joins on them, and a pin has none to about ten spans. A jsonb column keeps the pin one row and AP-3 one read. Alternative rejected. A `place_hours` child table, which adds a table and a join to every map read for no query that needs it. If a later "open now" filter appears, a generated table or index follows then.
+- **Dates.** A table `content.place_dates` with one row per entry. An entry is one day (`first_day = last_day`) with optional `start_time` and `end_time`, or a range of days with no times. Weekly hours apply inside a range. A pin can have several entries and overlaps are not refused. A generated column `ends_at` holds the moment the entry ends in Europe/Zurich: the end time on that day if one is set, otherwise the start of the next day. The date table is a table and not a jsonb array because AP-3 compares `ends_at` with `now()` and the index `place_dates_place_end_idx` serves it, and because CHECKs can hold the shape.
+- **After the last date.** The view `content.public_pins` is the one definition of what the public sees. A pin shows when it is published and either has no entries or has an entry with `ends_at > now()`. It carries the earliest such entry as the next date, and an entry that is running now counts as the next date. Nothing changes the pin's status, so no job is needed, the delete guard and the slug are untouched, and a new entry brings a pin back. A hidden pin is never in the view.
+- **End after midnight.** An entry requires `end_time > start_time`, so a concert that runs past midnight takes no end time, and the pin stays visible to the end of that day (ruling G11-R6, Q-39 settled). The editor says so beside the end-time field.
+- **Link.** `content.place_links` keeps one row per pin, for any pin, with `url` and the optional per-language `url_by_language`. The columns `kind`, `network` and `disclosure` and the `place_type` key are dropped, because the record defers paid links and the label. Columns that nothing writes carry CHECKs that nothing tests, and adding `kind text NOT NULL DEFAULT 'direct'` later is a metadata-only change on PostgreSQL 18. ADR-011's single renderer is unaffected. The drop makes ADR-011's field list outdated, and ADR-011 is amended in this change.
+- **Editorial review.** `story_groups.subject_place_id` may name any pin. The `subject_place_type` column, its CHECK and its composite key are dropped.
+
+Serves AP-3, AP-4, AP-44. ADR: ADR-029.
+
+Why. The record found that a place and an event differ only in the dates, so one table carries both and the dates are an optional child table. Alternatives rejected. Two entities (a table and an editor for events). Events under places, which contradicts the owner, because an event has its own location. A job that sets `status = 'hidden'` after the last date, which leaves a stale pin for up to one job interval and mixes the merchant's hide with the clock.
+
+### DM-22 Map categories and blog categories (G11)
+
+Decision. Two tables in the shape of `catalog.product_categories` (DM-20): `content.map_categories` for pins and `content.blog_categories` for stories. Each has a localized `name`, a `slug` that is unique per store, a `position` and an optional `parent_id`. The record allows one level of sub-categories, so a generated pair of columns and a composite foreign key force the parent to be a root, the same device as the replies of `story_comments`. That makes a cycle impossible and needs no trigger, unlike the product tree. `name` needs at least one of `en` and `de`, as `product_categories` does, because AC64 shows a language notice for a missing language. The link tables `content.place_categories` and `content.story_categories` hold `(place_id | group_id, category_id)` and have no position. The story link sits on the story group, so both languages share the categories, as the keepsake links do.
+
+A category with children or links cannot be deleted (G11-R10). The parent key and the category key of each link table are `ON DELETE RESTRICT`, so "delete only when unused" is a constraint. A link row goes with its pin or story (`ON DELETE CASCADE`), and a draft pin can be deleted. A pin with no category is valid and shows only under **All**. Serves AP-3, AP-42 to AP-44. ADR: ADR-030.
+
+Why. The merchant already knows the product category editor, and one shape means one editor component. Two tables and not one with a `kind` column, so a pin can never get a blog category and a foreign key proves it. Alternative rejected. One table with a `kind` column, which needs a trigger or a composite key to keep the two lists apart. A parent category chip also covers the pins tagged only with its children (ruling G11-R5, Q-40 settled): that is a read rule and not a constraint, and the read adds the child ids to each pin's category ids. A name needs at least one of EN and DE (R10, as AC30 for product categories).
+
 ### Module ownership cross-check
 
 Each table sits in the schema that `architecture.md` assigns to the module.
 
 | Module (architecture.md) | Schema | Tables in this model |
 |---|---|---|
-| content | `content` | `media`, `media_refs`, `story_groups`, `story_versions`, `story_group_places`, `story_keepsake_links`, `story_related`, `places`, `place_links`, `tours`, `tour_stops`, `tour_keepsake_links` |
+| content | `content` | `media`, `media_refs`, `story_groups`, `story_versions`, `story_group_places`, `story_keepsake_links`, `story_related`, `story_categories`, `places`, `place_dates`, `place_links`, `place_categories`, `map_categories`, `blog_categories`, `tours`, `tour_stops`, `tour_keepsake_links` |
 | catalog | `catalog` | `products`, `product_media`, `product_options`, `product_option_values`, `skus`, `sku_option_values`, `product_categories`, `product_category_links`, `pickup_places`, `pickup_place_hours` |
 | inventory | `inventory` | `stock_items`, `stock_holds`, `stock_adjustments` |
-| reviews | `reviews` | `place_reviews`, `story_comments`, `product_ratings`, `moderation_events` |
+| reviews | `reviews` | `story_comments`, `product_ratings`, `moderation_events` |
 | partners | `partners` | `partners`, `partner_invitations`, `partner_accounts` |
 | orders | `orders` | `orders`, `order_lines` (DM-14), `handovers`, `handover_occurrences`, `handover_proposals`, `handover_receipts`, `handover_receipt_items` (DM-16, DM-17), `carts`, `cart_lines` (DM-18) |
 | analytics | `analytics` | `events`, `daily_counts`, `daily_funnels` |
@@ -260,7 +308,7 @@ Two points differ from the architecture's wording. It lists the guide sign-in li
 
 ## 4. DDL
 
-The statements below ran top to bottom on an empty scratch database and, separately, on top of migrations 0000 to 0006 (section 7). `platform` already exists, so only its five new functions appear. The DDL is the proposal. It is not a migration file.
+The statements below ran top to bottom on an empty scratch database and, separately, on top of migrations 0000 to 0006 (section 7). `platform` already exists, so only its five new functions appear. The DDL is the proposal. It is not a migration file. Since G11 it shows the target model: the `content` and `reviews` parts follow the record of 2026-10-27, and the built `0008_content.sql` still has the earlier shape until the migration of section 6 runs.
 
 ```sql
 -- Shared helpers (schema platform already exists since migration 0000_platform)
@@ -337,7 +385,6 @@ CREATE TABLE content.story_groups (
   store_id         uuid NOT NULL,
   kind             text NOT NULL,
   subject_place_id uuid,
-  subject_place_type text,
   stay_tag         text NOT NULL DEFAULT 'both',
   interests        text[] NOT NULL DEFAULT '{}',
   row_version      integer NOT NULL DEFAULT 1,
@@ -346,21 +393,32 @@ CREATE TABLE content.story_groups (
   CONSTRAINT story_groups_store_id_id_key UNIQUE (store_id, id),
   CONSTRAINT story_groups_kind_check CHECK (kind IN ('story', 'editorial_review')),
   CONSTRAINT story_groups_subject_check CHECK ((kind = 'editorial_review') = (subject_place_id IS NOT NULL)),
-  -- an editorial review is about a sight, restaurant or accommodation. The type is a copy that a key checks.
-  CONSTRAINT story_groups_subject_type_check CHECK ((subject_place_id IS NULL) = (subject_place_type IS NULL)
-    AND (subject_place_type IS NULL OR subject_place_type IN ('sight', 'restaurant', 'accommodation'))),
+  -- G11: an editorial review is about any pin
   CONSTRAINT story_groups_stay_tag_check CHECK (stay_tag IN ('short_stay', 'multi_day', 'both')),
   CONSTRAINT story_groups_interests_check CHECK (platform.valid_interests(interests))
 );
 
+-- G11: weekly opening hours of a pin. day 1 is Monday. A span does not cross midnight, and closes may be 24:00.
+CREATE FUNCTION content.valid_weekly_hours(h jsonb) RETURNS boolean LANGUAGE sql IMMUTABLE AS $$
+  SELECT jsonb_typeof(h) = 'array' AND NOT EXISTS (
+    SELECT 1 FROM jsonb_array_elements(h) e
+    WHERE NOT coalesce(
+      jsonb_typeof(e) = 'object' AND (e - 'day' - 'opens' - 'closes') = '{}'::jsonb
+      AND jsonb_typeof(e->'day') = 'number' AND (e->>'day') ~ '^[1-7]$'
+      AND jsonb_typeof(e->'opens') = 'string' AND (e->>'opens') ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+      AND jsonb_typeof(e->'closes') = 'string' AND (e->>'closes') ~ '^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$'
+      AND (e->>'opens') < (e->>'closes'), false));
+$$;
+
 CREATE TABLE content.places (
   id                  uuid PRIMARY KEY DEFAULT uuidv7(),
   store_id            uuid NOT NULL,
-  type                text NOT NULL,
   status              text NOT NULL DEFAULT 'draft',
   slug                jsonb,
   latitude            double precision,
   longitude           double precision,
+  address             text,
+  weekly_hours        jsonb NOT NULL DEFAULT '[]',
   stay_tag            text NOT NULL DEFAULT 'both',
   interests           text[] NOT NULL DEFAULT '{}',
   main_story_group_id uuid,
@@ -373,8 +431,6 @@ CREATE TABLE content.places (
   created_at          timestamptz NOT NULL DEFAULT now(),
   updated_at          timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT places_store_id_id_key UNIQUE (store_id, id),
-  CONSTRAINT places_id_type_key UNIQUE (id, type),
-  CONSTRAINT places_type_check CHECK (type IN ('sight', 'restaurant', 'accommodation', 'practical')),
   CONSTRAINT places_status_check CHECK (status IN ('draft', 'published', 'hidden')),
   CONSTRAINT places_stay_tag_check CHECK (stay_tag IN ('short_stay', 'multi_day', 'both')),
   CONSTRAINT places_interests_check CHECK (platform.valid_interests(interests)),
@@ -382,10 +438,9 @@ CREATE TABLE content.places (
   CONSTRAINT places_longitude_check CHECK (longitude BETWEEN -180 AND 180),
   -- a place is a draft exactly until it is first published; after that it is published or hidden
   CONSTRAINT places_draft_means_unpublished_check CHECK ((status = 'draft') = (first_published_at IS NULL)),
-  -- AC62: a practical place has no main story
-  CONSTRAINT places_practical_no_story_check CHECK (type <> 'practical' OR main_story_group_id IS NULL),
-  -- AC43, row-local half: a published story pin names its main story
-  CONSTRAINT places_pin_has_story_check CHECK (status <> 'published' OR type = 'practical' OR main_story_group_id IS NOT NULL),
+  -- G11: no story is required to publish, and the main story is optional on every pin
+  CONSTRAINT places_address_check CHECK (address IS NULL OR (btrim(address) <> '' AND length(address) <= 300)),
+  CONSTRAINT places_weekly_hours_check CHECK (content.valid_weekly_hours(weekly_hours)),
   -- IS TRUE matters: a NULL inside a CHECK passes, so a missing key must count as false
   CONSTRAINT places_published_fields_check CHECK (status = 'draft' OR (
     slug IS NOT NULL AND platform.valid_slug_map(slug)
@@ -403,9 +458,6 @@ CREATE TABLE content.places (
 ALTER TABLE content.story_groups
   ADD CONSTRAINT story_groups_subject_place_fkey FOREIGN KEY (store_id, subject_place_id)
   REFERENCES content.places (store_id, id) ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED;
-ALTER TABLE content.story_groups
-  ADD CONSTRAINT story_groups_subject_type_fkey FOREIGN KEY (subject_place_id, subject_place_type)
-  REFERENCES content.places (id, type) ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED;
 
 CREATE TABLE content.story_versions (
   group_id     uuid NOT NULL,
@@ -483,28 +535,104 @@ CREATE VIEW content.story_related_readable AS
     JOIN content.story_versions src ON src.group_id = r.group_id AND src.status = 'published'
     JOIN content.story_versions tgt ON tgt.group_id = r.related_group_id AND tgt.language = src.language AND tgt.status = 'published';
 
--- ADR-011: one outbound link per accommodation. (place_id, place_type) pins the place to type 'accommodation'.
+-- ADR-011, G11: one plain outbound link per pin. kind, network and disclosure wait for the first paid link.
 CREATE TABLE content.place_links (
   place_id        uuid PRIMARY KEY,
-  place_type      text NOT NULL DEFAULT 'accommodation',
   store_id        uuid NOT NULL,
-  kind            text NOT NULL DEFAULT 'direct',
   url             text NOT NULL,
   url_by_language jsonb NOT NULL DEFAULT '{}',
-  network         text,
-  disclosure      boolean NOT NULL DEFAULT false,
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT place_links_place_fkey FOREIGN KEY (place_id, place_type)
-    REFERENCES content.places (id, type) ON DELETE CASCADE,
   CONSTRAINT place_links_store_fkey FOREIGN KEY (store_id, place_id)
     REFERENCES content.places (store_id, id) ON DELETE CASCADE,
-  CONSTRAINT place_links_type_check CHECK (place_type = 'accommodation'),
-  CONSTRAINT place_links_kind_check CHECK (kind IN ('direct', 'affiliate')),
   CONSTRAINT place_links_url_check CHECK (url ~ '^https://'),
-  CONSTRAINT place_links_network_check CHECK (kind = 'direct' OR network IS NOT NULL),
   CONSTRAINT place_links_overrides_check CHECK (jsonb_typeof(url_by_language) = 'object' AND (url_by_language - 'en' - 'de') = '{}'::jsonb
     AND coalesce(url_by_language->>'en', 'https://') ~ '^https://' AND coalesce(url_by_language->>'de', 'https://') ~ '^https://')
+);
+
+-- G11: dates of a pin. An entry is one day with optional times, or a range of days with no times.
+-- ends_at is when the entry ends in Europe/Zurich: the end time, or the start of the next day. A pin with entries
+-- is public only while one of them has not ended (view content.public_pins).
+CREATE TABLE content.place_dates (
+  id         uuid PRIMARY KEY DEFAULT uuidv7(),
+  place_id   uuid NOT NULL,
+  store_id   uuid NOT NULL,
+  first_day  date NOT NULL,
+  last_day   date NOT NULL,
+  start_time time,
+  end_time   time,
+  ends_at    timestamptz GENERATED ALWAYS AS (((last_day + COALESCE(end_time, TIME '24:00')) AT TIME ZONE 'Europe/Zurich')) STORED,
+  CONSTRAINT place_dates_place_fkey FOREIGN KEY (store_id, place_id)
+    REFERENCES content.places (store_id, id) ON DELETE CASCADE,
+  CONSTRAINT place_dates_days_check CHECK (last_day >= first_day),
+  CONSTRAINT place_dates_times_check CHECK ((start_time IS NULL AND end_time IS NULL) OR first_day = last_day),
+  CONSTRAINT place_dates_end_needs_start_check CHECK (end_time IS NULL OR start_time IS NOT NULL),
+  CONSTRAINT place_dates_end_after_start_check CHECK (end_time IS NULL OR end_time > start_time)
+);
+
+-- G11: map categories tag pins, blog categories tag stories. One level of parent, in the shape of catalog.product_categories.
+-- The generated pair and the composite key force the parent to be a root (the device of story_comments replies).
+CREATE TABLE content.map_categories (
+  id          uuid PRIMARY KEY DEFAULT uuidv7(),
+  store_id    uuid NOT NULL,
+  name        jsonb NOT NULL,
+  slug        text NOT NULL,
+  parent_id   uuid,
+  is_child    boolean GENERATED ALWAYS AS (parent_id IS NOT NULL) STORED,
+  parent_must_be_root boolean GENERATED ALWAYS AS (CASE WHEN parent_id IS NULL THEN NULL ELSE false END) STORED,
+  position    integer NOT NULL DEFAULT 1,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  updated_at  timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT map_categories_store_id_id_key UNIQUE (store_id, id),
+  CONSTRAINT map_categories_level_key UNIQUE (store_id, id, is_child),
+  CONSTRAINT map_categories_store_slug_key UNIQUE (store_id, slug),
+  CONSTRAINT map_categories_parent_fkey FOREIGN KEY (store_id, parent_id, parent_must_be_root)
+    REFERENCES content.map_categories (store_id, id, is_child) ON DELETE RESTRICT,
+  CONSTRAINT map_categories_name_check CHECK (jsonb_typeof(name) = 'object' AND name ?| ARRAY['en', 'de']),
+  CONSTRAINT map_categories_slug_check CHECK (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
+  CONSTRAINT map_categories_not_own_parent_check CHECK (parent_id IS DISTINCT FROM id),
+  CONSTRAINT map_categories_position_check CHECK (position >= 1)
+);
+CREATE TABLE content.blog_categories (
+  id          uuid PRIMARY KEY DEFAULT uuidv7(),
+  store_id    uuid NOT NULL,
+  name        jsonb NOT NULL,
+  slug        text NOT NULL,
+  parent_id   uuid,
+  is_child    boolean GENERATED ALWAYS AS (parent_id IS NOT NULL) STORED,
+  parent_must_be_root boolean GENERATED ALWAYS AS (CASE WHEN parent_id IS NULL THEN NULL ELSE false END) STORED,
+  position    integer NOT NULL DEFAULT 1,
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  updated_at  timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT blog_categories_store_id_id_key UNIQUE (store_id, id),
+  CONSTRAINT blog_categories_level_key UNIQUE (store_id, id, is_child),
+  CONSTRAINT blog_categories_store_slug_key UNIQUE (store_id, slug),
+  CONSTRAINT blog_categories_parent_fkey FOREIGN KEY (store_id, parent_id, parent_must_be_root)
+    REFERENCES content.blog_categories (store_id, id, is_child) ON DELETE RESTRICT,
+  CONSTRAINT blog_categories_name_check CHECK (jsonb_typeof(name) = 'object' AND name ?| ARRAY['en', 'de']),
+  CONSTRAINT blog_categories_slug_check CHECK (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
+  CONSTRAINT blog_categories_not_own_parent_check CHECK (parent_id IS DISTINCT FROM id),
+  CONSTRAINT blog_categories_position_check CHECK (position >= 1)
+);
+CREATE TABLE content.place_categories (
+  place_id    uuid NOT NULL,
+  category_id uuid NOT NULL,
+  store_id    uuid NOT NULL,
+  CONSTRAINT place_categories_pkey PRIMARY KEY (place_id, category_id),
+  CONSTRAINT place_categories_place_fkey FOREIGN KEY (store_id, place_id)
+    REFERENCES content.places (store_id, id) ON DELETE CASCADE,
+  CONSTRAINT place_categories_category_fkey FOREIGN KEY (store_id, category_id)
+    REFERENCES content.map_categories (store_id, id) ON DELETE RESTRICT
+);
+CREATE TABLE content.story_categories (
+  group_id    uuid NOT NULL,
+  category_id uuid NOT NULL,
+  store_id    uuid NOT NULL,
+  CONSTRAINT story_categories_pkey PRIMARY KEY (group_id, category_id),
+  CONSTRAINT story_categories_group_fkey FOREIGN KEY (store_id, group_id)
+    REFERENCES content.story_groups (store_id, id) ON DELETE CASCADE,
+  CONSTRAINT story_categories_category_fkey FOREIGN KEY (store_id, category_id)
+    REFERENCES content.blog_categories (store_id, id) ON DELETE RESTRICT
 );
 
 CREATE TABLE content.tours (
@@ -615,12 +743,6 @@ CREATE TRIGGER story_versions_keep_once_published BEFORE DELETE ON content.story
 CREATE TRIGGER story_versions_published_is_kept BEFORE UPDATE OF published ON content.story_versions
   FOR EACH ROW WHEN (OLD.published IS NOT NULL AND NEW.published IS NULL) EXECUTE FUNCTION platform.reject_column_change('published');
 
-CREATE FUNCTION content.reject_type_change() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  RAISE EXCEPTION 'the type of place % cannot change after it is created', OLD.id USING ERRCODE = 'restrict_violation';
-END $$;
-CREATE TRIGGER places_type_is_immutable BEFORE UPDATE OF type ON content.places
-  FOR EACH ROW WHEN (OLD.type IS DISTINCT FROM NEW.type) EXECUTE FUNCTION content.reject_type_change();
 -- AC79: first_published_at is what holds a place against deletion, so it is fixed once set.
 -- Without this, a published place could be put back to draft with the column cleared, then deleted.
 CREATE TRIGGER places_first_published_is_fixed BEFORE UPDATE OF first_published_at ON content.places
@@ -632,47 +754,6 @@ CREATE TRIGGER story_versions_no_truncate BEFORE TRUNCATE ON content.story_versi
   FOR EACH STATEMENT EXECUTE FUNCTION platform.reject_change();
 CREATE TRIGGER media_refs_no_truncate BEFORE TRUNCATE ON content.media_refs
   FOR EACH STATEMENT EXECUTE FUNCTION platform.reject_change();
-
--- AC43, cross-row half. Both checks run at commit and lock the story group row, so a publish
--- and an unpublish that race cannot both pass.
-CREATE FUNCTION content.assert_pin_has_published_story() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  IF NEW.status = 'published' AND NEW.type <> 'practical' THEN
-    PERFORM 1 FROM content.story_groups g WHERE g.id = NEW.main_story_group_id FOR SHARE;
-    IF NOT EXISTS (SELECT 1 FROM content.story_versions v
-                    WHERE v.group_id = NEW.main_story_group_id AND v.status = 'published') THEN
-      RAISE EXCEPTION 'place % cannot be published: its main story has no published version', NEW.id
-        USING ERRCODE = 'check_violation', CONSTRAINT = 'places_pin_has_published_story';
-    END IF;
-  END IF;
-  RETURN NULL;
-END $$;
-CREATE CONSTRAINT TRIGGER places_pin_has_published_story
-  AFTER INSERT OR UPDATE OF status, main_story_group_id ON content.places
-  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION content.assert_pin_has_published_story();
-
-CREATE FUNCTION content.assert_published_pins_keep_story() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  PERFORM 1 FROM content.story_groups g WHERE g.id = OLD.group_id FOR UPDATE;
-  IF EXISTS (SELECT 1 FROM content.places p
-              WHERE p.main_story_group_id = OLD.group_id AND p.status = 'published' AND p.type <> 'practical')
-     AND NOT EXISTS (SELECT 1 FROM content.story_versions v
-                      WHERE v.group_id = OLD.group_id AND v.status = 'published') THEN
-    RAISE EXCEPTION 'story group % is the main story of a published place and keeps no published version', OLD.group_id
-      USING ERRCODE = 'check_violation', CONSTRAINT = 'story_versions_keep_pin_story';
-  END IF;
-  RETURN NULL;
-END $$;
--- Fires when a published version leaves 'published', moves to another group, or is deleted.
-CREATE CONSTRAINT TRIGGER story_versions_keep_pin_story
-  AFTER UPDATE ON content.story_versions
-  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
-  WHEN (OLD.status = 'published' AND (NEW.status IS DISTINCT FROM OLD.status OR NEW.group_id IS DISTINCT FROM OLD.group_id))
-  EXECUTE FUNCTION content.assert_published_pins_keep_story();
-CREATE CONSTRAINT TRIGGER story_versions_keep_pin_story_on_delete
-  AFTER DELETE ON content.story_versions
-  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (OLD.status = 'published')
-  EXECUTE FUNCTION content.assert_published_pins_keep_story();
 
 -- A media row cannot be retired while a column or a document still uses it. A save that adds a reference at the
 -- same moment can still slip past, which the grace period of ADR-004 covers.
@@ -689,8 +770,9 @@ END $$;
 CREATE TRIGGER media_not_retired_while_used BEFORE UPDATE OF status ON content.media
   FOR EACH ROW WHEN (NEW.status = 'retired' AND OLD.status <> 'retired') EXECUTE FUNCTION content.reject_retire_if_used();
 
--- Place sheet (AP-4): main story first, then every other story that mentions the place or reviews it.
--- A story that is both the main story and listed on the place appears once, at rank 0.
+-- Pin card (AP-4): main story first, then every other story that mentions the pin or reviews it.
+-- A story that is both the main story and listed on the pin appears once, at rank 0. The read keeps only groups
+-- that have a published version in the reader's language (G11: a main story may have none).
 CREATE VIEW content.place_story_links AS
   SELECT u.place_id, u.group_id, min(u.rank) AS rank FROM (
     SELECT p.id AS place_id, p.main_story_group_id AS group_id, 0 AS rank
@@ -700,6 +782,19 @@ CREATE VIEW content.place_story_links AS
     UNION
     SELECT s.subject_place_id, s.id, 1 FROM content.story_groups s WHERE s.subject_place_id IS NOT NULL
   ) u GROUP BY u.place_id, u.group_id;
+
+-- G11, AP-3: what the public sees. The rule "hidden after the last date" lives here once. Nothing changes a pin's status.
+CREATE VIEW content.public_pins AS
+  SELECT p.id, p.store_id, p.slug, p.latitude, p.longitude, p.address, p.weekly_hours, p.published,
+         p.cover_media_id, p.main_story_group_id, p.stay_tag, p.interests,
+         n.first_day AS next_first_day, n.last_day AS next_last_day, n.start_time AS next_start_time, n.end_time AS next_end_time
+    FROM content.places p
+    LEFT JOIN LATERAL (
+      SELECT d.first_day, d.last_day, d.start_time, d.end_time FROM content.place_dates d
+       WHERE d.place_id = p.id AND d.ends_at > now()
+       ORDER BY d.first_day, d.start_time NULLS FIRST LIMIT 1) n ON true
+   WHERE p.status = 'published'
+     AND (n.first_day IS NOT NULL OR NOT EXISTS (SELECT 1 FROM content.place_dates d WHERE d.place_id = p.id));
 
 -- ===================================================================== catalog (Victorinox SKUs only)
 CREATE SCHEMA catalog;
@@ -1026,28 +1121,6 @@ CREATE TRIGGER stock_items_held_by_trigger_only BEFORE UPDATE OF held ON invento
 -- ===================================================================== reviews
 CREATE SCHEMA reviews;
 
-CREATE TABLE reviews.place_reviews (
-  id              uuid PRIMARY KEY DEFAULT uuidv7(),
-  store_id        uuid NOT NULL,
-  place_id        uuid NOT NULL,
-  place_type      text NOT NULL,
-  author_guest_id uuid NOT NULL,
-  author_name     text NOT NULL,
-  rating          smallint NOT NULL,
-  body            text NOT NULL,
-  state           text NOT NULL DEFAULT 'visible',
-  created_at      timestamptz NOT NULL DEFAULT now(),
-  updated_at      timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT place_reviews_store_id_id_key UNIQUE (store_id, id),
-  -- AC68: only sight, restaurant and accommodation take reviews. content.places.type never changes,
-  -- so this copy stays true. The use case reads the type from content/index.ts when it inserts.
-  CONSTRAINT place_reviews_type_check CHECK (place_type IN ('sight', 'restaurant', 'accommodation')),
-  CONSTRAINT place_reviews_rating_check CHECK (rating BETWEEN 1 AND 5),
-  CONSTRAINT place_reviews_body_check CHECK (btrim(body) <> '' AND length(body) <= 4000),
-  CONSTRAINT place_reviews_name_check CHECK (btrim(author_name) <> ''),
-  CONSTRAINT place_reviews_state_check CHECK (state IN ('visible', 'hidden'))
-);
-
 CREATE TABLE reviews.story_comments (
   id              uuid PRIMARY KEY DEFAULT uuidv7(),
   store_id        uuid NOT NULL,
@@ -1099,17 +1172,14 @@ CREATE TABLE reviews.product_ratings (
 CREATE TABLE reviews.moderation_events (
   id                uuid PRIMARY KEY DEFAULT uuidv7(),
   store_id          uuid NOT NULL,
-  place_review_id   uuid,
   story_comment_id  uuid,
   product_rating_id uuid,
   action            text NOT NULL,
   actor_user_id     uuid NOT NULL,
   reason            text,
   at                timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT moderation_events_one_target_check CHECK (num_nonnulls(place_review_id, story_comment_id, product_rating_id) = 1),
+  CONSTRAINT moderation_events_one_target_check CHECK (num_nonnulls(story_comment_id, product_rating_id) = 1),
   CONSTRAINT moderation_events_action_check CHECK (action IN ('hide', 'unhide')),
-  CONSTRAINT moderation_events_place_review_fkey FOREIGN KEY (store_id, place_review_id)
-    REFERENCES reviews.place_reviews (store_id, id) ON DELETE RESTRICT,
   CONSTRAINT moderation_events_story_comment_fkey FOREIGN KEY (store_id, story_comment_id)
     REFERENCES reviews.story_comments (store_id, id) ON DELETE RESTRICT,
   CONSTRAINT moderation_events_product_rating_fkey FOREIGN KEY (store_id, product_rating_id)
@@ -1117,9 +1187,7 @@ CREATE TABLE reviews.moderation_events (
 );
 CREATE TRIGGER moderation_events_append_only BEFORE UPDATE OR DELETE ON reviews.moderation_events
   FOR EACH ROW EXECUTE FUNCTION platform.reject_change();
--- Nobody deletes a review through the database either (AC47, AC69).
-CREATE TRIGGER place_reviews_never_deleted BEFORE DELETE ON reviews.place_reviews
-  FOR EACH ROW EXECUTE FUNCTION platform.reject_change();
+-- Nobody deletes a comment or rating through the database either (AC47, AC69).
 CREATE TRIGGER story_comments_never_deleted BEFORE DELETE ON reviews.story_comments
   FOR EACH ROW EXECUTE FUNCTION platform.reject_change();
 CREATE TRIGGER product_ratings_never_deleted BEFORE DELETE ON reviews.product_ratings
@@ -1130,9 +1198,7 @@ CREATE TRIGGER product_ratings_never_deleted BEFORE DELETE ON reviews.product_ra
 CREATE FUNCTION reviews.apply_moderation_event() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE target_state text := CASE NEW.action WHEN 'hide' THEN 'hidden' ELSE 'visible' END;
 BEGIN
-  IF NEW.place_review_id IS NOT NULL THEN
-    UPDATE reviews.place_reviews SET state = target_state, updated_at = now() WHERE id = NEW.place_review_id;
-  ELSIF NEW.story_comment_id IS NOT NULL THEN
+  IF NEW.story_comment_id IS NOT NULL THEN
     UPDATE reviews.story_comments SET state = target_state, updated_at = now() WHERE id = NEW.story_comment_id;
   ELSE
     UPDATE reviews.product_ratings SET state = target_state, updated_at = now() WHERE id = NEW.product_rating_id;
@@ -1142,8 +1208,6 @@ BEGIN
 END $$;
 CREATE TRIGGER moderation_events_apply BEFORE INSERT ON reviews.moderation_events
   FOR EACH ROW EXECUTE FUNCTION reviews.apply_moderation_event();
-CREATE TRIGGER place_reviews_state_by_trigger_only BEFORE UPDATE OF state ON reviews.place_reviews
-  FOR EACH ROW WHEN (OLD.state IS DISTINCT FROM NEW.state) EXECUTE FUNCTION platform.require_trigger_context();
 CREATE TRIGGER story_comments_state_by_trigger_only BEFORE UPDATE OF state ON reviews.story_comments
   FOR EACH ROW WHEN (OLD.state IS DISTINCT FROM NEW.state) EXECUTE FUNCTION platform.require_trigger_context();
 CREATE TRIGGER product_ratings_state_by_trigger_only BEFORE UPDATE OF state ON reviews.product_ratings
@@ -1832,6 +1896,12 @@ CREATE UNIQUE INDEX places_slug_en_key ON content.places ((slug->>'en')) WHERE s
 CREATE UNIQUE INDEX places_slug_de_key ON content.places ((slug->>'de')) WHERE slug ? 'de';
 CREATE INDEX places_main_story_idx ON content.places (store_id, main_story_group_id) WHERE main_story_group_id IS NOT NULL;
 CREATE INDEX places_cover_media_idx ON content.places (store_id, cover_media_id) WHERE cover_media_id IS NOT NULL;
+CREATE INDEX place_dates_place_end_idx ON content.place_dates (place_id, ends_at);
+CREATE INDEX place_dates_store_place_idx ON content.place_dates (store_id, place_id);
+CREATE INDEX map_categories_parent_idx ON content.map_categories (store_id, parent_id, position);
+CREATE INDEX blog_categories_parent_idx ON content.blog_categories (store_id, parent_id, position);
+CREATE INDEX place_categories_category_idx ON content.place_categories (store_id, category_id);
+CREATE INDEX story_categories_category_idx ON content.story_categories (store_id, category_id);
 CREATE INDEX story_groups_subject_idx ON content.story_groups (store_id, subject_place_id) WHERE subject_place_id IS NOT NULL;
 CREATE INDEX story_versions_published_idx ON content.story_versions (language, published_at DESC) WHERE status = 'published';
 CREATE INDEX story_group_places_place_idx ON content.story_group_places (store_id, place_id);
@@ -1851,14 +1921,10 @@ CREATE INDEX product_category_links_category_idx ON catalog.product_category_lin
 CREATE INDEX stock_holds_item_idx ON inventory.stock_holds (store_id, sku_id) WHERE state = 'held';
 CREATE INDEX stock_holds_order_idx ON inventory.stock_holds (order_id);
 CREATE INDEX stock_adjustments_item_idx ON inventory.stock_adjustments (store_id, sku_id, at DESC);
-CREATE INDEX place_reviews_place_idx ON reviews.place_reviews (place_id, created_at DESC) WHERE state = 'visible';
-CREATE INDEX place_reviews_author_idx ON reviews.place_reviews (author_guest_id, created_at DESC);
-CREATE INDEX place_reviews_store_recent_idx ON reviews.place_reviews (store_id, created_at DESC);
 CREATE INDEX story_comments_story_idx ON reviews.story_comments (story_group_id, created_at) WHERE state = 'visible';
 CREATE INDEX story_comments_author_idx ON reviews.story_comments (author_guest_id, created_at DESC) WHERE author_guest_id IS NOT NULL;
 CREATE INDEX story_comments_parent_idx ON reviews.story_comments (parent_id) WHERE parent_id IS NOT NULL;
 CREATE INDEX product_ratings_product_idx ON reviews.product_ratings (product_id) WHERE state = 'visible';
-CREATE INDEX moderation_events_place_review_idx ON reviews.moderation_events (store_id, place_review_id, at) WHERE place_review_id IS NOT NULL;
 CREATE INDEX moderation_events_story_comment_idx ON reviews.moderation_events (store_id, story_comment_id, at) WHERE story_comment_id IS NOT NULL;
 CREATE INDEX moderation_events_product_rating_idx ON reviews.moderation_events (store_id, product_rating_id, at) WHERE product_rating_id IS NOT NULL;
 CREATE INDEX partner_invitations_partner_idx ON partners.partner_invitations (store_id, partner_id);
@@ -1895,11 +1961,15 @@ Every primary key and unique constraint also makes an index. The table lists the
 | `story_versions_published_idx` | `(language, published_at DESC)`, partial on published | AP-2, story list | Small, a few hundred rows |
 | `places_slug_en_key`, `places_slug_de_key` | unique expression `(slug->>'en')`, partial where the key exists | AP-1 | One per language per place. Queries must use the same expression |
 | `tours_slug_en_key`, `tours_slug_de_key`, `products_slug_en_key`, `products_slug_de_key` | same form | AP-1 | Same |
-| `places_main_story_idx` | `(store_id, main_story_group_id)`, partial | AP-4, the trigger lookup of DM-5, foreign key | None that matters |
-| `story_groups_subject_idx` | `(store_id, subject_place_id)`, partial | AP-4 (editorial reviews of a place) | None that matters |
+| `places_main_story_idx` | `(store_id, main_story_group_id)`, partial | AP-4, foreign key | None that matters |
+| `story_groups_subject_idx` | `(store_id, subject_place_id)`, partial | AP-4 (editorial reviews of a pin) | None that matters |
 | `story_group_places` primary key and `story_group_places_place_idx` | `(group_id, place_id)` and `(store_id, place_id)` | AP-4, AP-5 | Link rows rarely change |
 | `story_keepsake_links` primary key | `(group_id, position)` | AP-5 | Caps the list at 6, shared by both languages (M1) |
 | `story_related` primary key and `story_related_target_idx` | `(group_id, position)` and `(store_id, related_group_id)` | AP-5, foreign key. The view `story_related_readable` hides a link whose target has no published version in the reader's language | Caps the list at 3 |
+| `place_dates_place_end_idx`, `place_dates_store_place_idx` | `(place_id, ends_at)`, `(store_id, place_id)` | AP-3 (the next date and the "not ended" test in `content.public_pins`), AP-44, the cascade foreign key (G11) | One per date entry, a few hundred rows |
+| `map_categories_parent_idx`, `blog_categories_parent_idx` | `(store_id, parent_id, position)` | AP-42, AP-43, the parent key (G11) | Tens of rows |
+| `place_categories` primary key and `place_categories_category_idx` | `(place_id, category_id)` and `(store_id, category_id)` | AP-3 (categories of a pin), AP-42 (a chip's pins), the `RESTRICT` check on a category delete (G11) | Link rows rarely change |
+| `story_categories` primary key and `story_categories_category_idx` | `(group_id, category_id)` and `(store_id, category_id)` | AP-42, the `RESTRICT` check on a category delete (G11) | Link rows rarely change |
 | `tour_stops_position_key` | unique `(tour_id, position)`, deferrable | AP-6, reordering in one transaction | Deferred check at commit |
 | `tour_keepsake_links` primary key | `(tour_id, position)` | AP-6 | Caps the list at 3 |
 | `media_refs_owner_key`, `media_refs_owner_idx`, `media_refs_media_fkey_idx` | unique `NULLS NOT DISTINCT`, `(owner_kind, owner_id)`, `(store_id, media_id)` | AP-7 (replace an owner's rows, check a retire) | Rows rewritten on each save |
@@ -1915,12 +1985,10 @@ Every primary key and unique constraint also makes an index. The table lists the
 | `stock_holds_item_idx` | `(store_id, sku_id)`, partial where `state = 'held'` | AP-16 (units held per SKU) | Smaller than a full index |
 | `stock_holds_order_idx`, `stock_holds_order_line_key` | `(order_id)`, unique `(order_line_id)` | AP-14 | One per hold |
 | `stock_adjustments_item_idx` | `(store_id, sku_id, at DESC)` | AP-16 (history) | Append only |
-| `place_reviews_place_idx` | `(place_id, created_at DESC)`, partial where visible | AP-9 | Hidden rows leave the index |
-| `place_reviews_author_idx`, `story_comments_author_idx` | `(author_guest_id, created_at DESC)` | AP-10 (the rate-limit count) | One per post |
-| `place_reviews_store_recent_idx` | `(store_id, created_at DESC)` | AP-11 | One per post |
+| `story_comments_author_idx` | `(author_guest_id, created_at DESC)` | AP-10 (the rate-limit count) | One per post |
 | `story_comments_story_idx`, `story_comments_parent_idx` | `(story_group_id, created_at)` partial visible, `(parent_id)` | AP-9, foreign key | One per post |
 | `product_ratings_product_idx`, `product_ratings_one_per_order_key` | `(product_id)` partial visible, unique `(author_guest_id, order_id, product_id)` | AP-9, AP-10 | One per rating |
-| `moderation_events_*_idx` (three) | `(store_id, <target>_id, at)`, partial | AP-11 (history of one review) | Append only |
+| `moderation_events_*_idx` (two) | `(store_id, <target>_id, at)`, partial | AP-11 (history of one comment or rating) | Append only |
 | `partner_invitations_one_open_idx`, `partner_invitations_token_hash_key`, `partner_invitations_partner_idx` | unique `(partner_id)` partial on open, unique `(token_hash)`, `(store_id, partner_id)` | AP-21 | Rare writes |
 | `partner_accounts` primary key, `partner_accounts_user_store_key`, `partner_accounts_invitation_key` | `(partner_id)`, unique `(user_id, store_id)`, unique `(invitation_id)` | AP-20 (the user key leads with `user_id`), AP-21 | Rare writes |
 | `orders_partner_idx` | `(store_id, partner_id, created_at DESC)`, partial | AP-22 | One per order |
@@ -1946,8 +2014,8 @@ Every primary key and unique constraint also makes an index. The table lists the
 Foreign keys with no index of their own, and why.
 
 - `stock_holds_item_fkey` and `stock_adjustments_item_fkey`. Stock rows are never deleted, so the parent-side check never runs. The partial indexes above cover the reads.
-- `moderation_events` keys to the three review tables. Reviews are never deleted, so the check never runs. The partial history indexes cover the reads.
-- `place_links_store_fkey` and `place_links_place_fkey`. The primary key on `place_id` serves them, and the table has at most one row per place.
+- `moderation_events` keys to the two review tables. Comments and ratings are never deleted, so the check never runs. The partial history indexes cover the reads.
+- `place_links_store_fkey`. The primary key on `place_id` serves it, and the table has at most one row per place.
 - `media_refs_media_fkey` is covered by `media_refs_media_fkey_idx`. `skus_product_fkey` is covered by the leading column of `skus_combination_key`. `story_versions_group_fkey`, `story_keepsake_links_group_fkey`, `story_related_group_fkey`, `tour_stops_tour_fkey`, `tour_keepsake_links_tour_fkey`, `product_media_product_fkey` and `partner_invitations_partner_fkey` lead with columns of their table's key or of an index above.
 
 No partitioning. The largest table, `analytics.events`, stays near 3 million rows in a year, far below the 100 million row threshold, and retention deletes by `bucket_hour`.
@@ -1969,7 +2037,7 @@ No partitioning. The largest table, `analytics.events`, stays near 3 million row
 | `tour_departures` | Dormant. Never created |
 | `bookings` and seat holds (`hold_until`) | Dormant. Never created |
 | `media` | Moved to `content.media` (ADR-004) |
-| `reviews` | Moved to `reviews.place_reviews`, `story_comments`, `product_ratings` |
+| `reviews` | Moved to `reviews.story_comments` and `product_ratings`. Guest reviews of places are dropped (G11) |
 | `articles`, `article_comments` | Replaced by `content.story_groups` and `story_versions`, and by `reviews.story_comments` |
 | `orders`, `order_lines` | Created in `orders` with the pivot's columns (DM-11) and the snapshots and total of DM-14. `ref` is generated, and lines are write-once |
 | `stock_holds` | Moved to `inventory.stock_holds` |
@@ -1983,7 +2051,7 @@ Dormant means the design stays in backend.md and no table exists. When booking r
 
 ### Steps
 
-Every step is additive. No step alters, locks or rewrites a live table, because the pivot's tables are new and the `platform`, `notifications` and `identity` tables are untouched (section 7 shows the schema dump before and after). The expand, migrate and contract phases therefore collapse. There is an expand for each new schema, one migrate step (the seed import), and no contract step in the database. The contract of the pivot happens in code, where ADR-012 moves the booking screens.
+Every step except the G11 step is additive. No other step alters, locks or rewrites a live table, because the pivot's tables are new and the `platform`, `notifications` and `identity` tables are untouched (section 7 shows the schema dump before and after). The expand, migrate and contract phases therefore collapse. There is an expand for each new schema and one migrate step (the seed import). The contract of the pivot happens in code, where ADR-012 moves the booking screens. The G11 step is the exception: it changes tables that `0008_content` built, and it drops columns, constraints and triggers.
 
 The numbers below are working names. Each migration takes the next free number when it is written, because other sessions add migrations to the same tree. Each migration starts with `SET lock_timeout = '3s'` so that a blocked statement fails and does not queue every query behind it.
 
@@ -1991,14 +2059,15 @@ The numbers below are working names. Each migration takes the next free number w
 |---|---|---|---|---|
 | `0007_platform_helpers` | Expand | The five functions in `platform` | None on a table. A short catalog lock | `DROP FUNCTION`. After `0008`, drop with the schemas that use them |
 | `0008_content` | Expand | Schema `content`: tables, deferred foreign key `story_groups_subject_place_fkey`, triggers, the `place_story_links` view, section 5 indexes | None on existing tables. New tables are empty | Development and staging: reset the Neon branch from its parent, which also clears Drizzle's applied-migration record, or write a down migration with `DROP SCHEMA content CASCADE` and delete the record. Production before real content: the same. Production after real content: irreversible, restore the Neon branch from before the step and replay |
+| `00NN_content_pins` (G11) | Expand and contract | The drop list and the additions below | `ACCESS EXCLUSIVE` on `content.places`, `story_groups`, `place_links` and `story_versions`, each for a catalog change only, under `lock_timeout = '3s'` | A down script re-creates the dropped objects from `0008_content.sql`. The values of `places.type`, `subject_place_type` and the paid-link columns would be lost, which is irreversible if rows hold them. None do today, and the first statement refuses to run if a paid link exists |
 | `0009_catalog` | Expand | Schema `catalog`: products, options and values, SKUs and their option values, categories, `pickup_places` and `pickup_place_hours`, the combination-key triggers | As above | As above |
 | `0010_inventory` | Expand | Schema `inventory`, the hold trigger | As above | As above |
-| `0011_reviews` | Expand | Schema `reviews`, triggers | As above | As above |
+| `0011_reviews` | Expand | Schema `reviews`: story comments, product ratings, the moderation history and its triggers. No place reviews table (G11, DM-8). This migration is unbuilt, so G11 changes its planned DDL and needs no drop | As above | As above |
 | `0012_partners` | Expand | Schema `partners` (waits for the owner's decision on ADR-019) | As above | As above |
 | `0013_analytics` | Expand | Schema `analytics` | As above | As above |
 | `0014_orders` | Expand | Schema `orders`: orders and lines (DM-11, DM-14), handovers, meetings, proposals and receipts (DM-16, DM-17), carts and cart lines (DM-18), the guest snapshot (DM-19), the commit-time triggers, the receipt and commission views. Ships with the orders slice, and `money` columns follow in their own migration | As above | As above |
 | Seed import (`db:seed`, a script, not a migration) | Migrate | Upsert the prototype's stories by `(language, slug)` and tours by `slug->>'en'`. Tours arrive as drafts with their stops, because no PDF exists yet, and the merchant uploads one before publishing. Places are not seeded from stops (ADR-005). SKUs wait for the colour list (O26) | Row locks on the rows it writes | Development and staging: `reset_from_parent` on the Neon branch. The seed writes no marker, so a selective undo is not offered |
-| None | Contract | No column or table is dropped | None | None |
+| None after G11 | Contract | The G11 step above is the only step that drops anything, and the plan does not separate its contract | | |
 
 Notes on the steps.
 
@@ -2008,6 +2077,32 @@ Notes on the steps.
 - Every constraint that Drizzle cannot express goes in the same migration as custom SQL (DM-13).
 - The runtime must finish `0007` before `0008`, because CHECKs call the platform functions. The other schemas need no order between them, since no key crosses a schema (DM-2).
 - Production data. The owner has said nothing is live (Q2). The "after real content" rollback row applies from the first real story onward.
+
+### The G11 migration: pins without a type, dates, categories
+
+Name. `00NN_content_pins`, named by intent. The number is the next free one when it is written, because `0009_catalog` is planned and other sessions add migrations. It runs after `0008_content`.
+
+Why one step with drops. The record's constraints say nothing reads `content.places` in production and the content API (E2.6) is not built, so no deployed code uses the dropped columns. The usual expand, migrate and contract split exists to keep old code working while new code rolls out, and no old code exists. The step is still guarded: it first refuses to run if `content.place_links` holds a paid link, the only data that would be lost with meaning. Rows in `places` and `story_groups` lose only the type copy, and the value is dead because the rules that used it go in the same step.
+
+Order inside the step, because dependent objects must go first.
+
+1. Drop the triggers `story_versions_keep_pin_story`, `story_versions_keep_pin_story_on_delete`, `places_pin_has_published_story` and `places_type_is_immutable`, then the functions `content.assert_published_pins_keep_story`, `content.assert_pin_has_published_story` and `content.reject_type_change`.
+2. On `content.story_groups`, drop the constraints `story_groups_subject_type_fkey` and `story_groups_subject_type_check`, then the column `subject_place_type`.
+3. On `content.place_links`, drop the constraints `place_links_place_fkey`, `place_links_type_check`, `place_links_kind_check` and `place_links_network_check`, then the columns `place_type`, `kind`, `network` and `disclosure`.
+4. On `content.places`, drop `places_practical_no_story_check`, `places_pin_has_story_check`, `places_type_check` and the unique key `places_id_type_key` (steps 2 and 3 removed the keys that referenced it), then the column `type`.
+5. Create `content.valid_weekly_hours`, add `address`, `weekly_hours` and their CHECKs to `content.places`.
+6. Create `place_dates`, `map_categories`, `blog_categories`, `place_categories`, `story_categories`, the view `content.public_pins` and the six indexes of section 5.
+
+Kept: `places_first_published_is_fixed`, `places_keep_once_published`, `story_versions_keep_once_published`, `story_versions_published_is_kept`, the three TRUNCATE guards and every delete guard.
+
+Tests. `api/test/integration/content-schema.test.ts` changes with the migration.
+
+- Remove or rewrite the tests that name the dropped objects: the helper `newPlace(store, type)` and its callers, `a practical place cannot name a main story` (`places_practical_no_story_check`), `[AC43] a story place cannot publish without a published main story, and a practical place can`, `[AC68] a place type cannot change after creation`, `an editorial review of a practical place is refused`, `an editorial review whose subject type does not match the place`, and the last-published-version tests that expect `story_versions_keep_pin_story`.
+- Add tests for a pin that publishes with no story and no category, a date entry shape, `ends_at` in Europe/Zurich, `content.public_pins` before, during and after the last date, `valid_weekly_hours`, the one-level category parent, the `RESTRICT` deletes, and a pin with two categories.
+- Update the lists that the test asserts: the expected index names (add the six, keep `places_main_story_idx`) and the expected table and view names (add the five tables and `public_pins`).
+- Update the `reviews` expectations when `0011_reviews` is built, not in this migration.
+
+The Drizzle `schema.ts` of the content module needs the same changes when E2.6 declares it.
 
 ### Step not chosen: a `partner` role on `identity.store_invitations`
 
@@ -2037,20 +2132,20 @@ Checklist.
 |---|---|
 | Every entity has volumes, every access pattern has rate, latency and consistency | Done in section 1 |
 | Every read has a feeding write and the reverse | Done in section 1, with one line of mapping |
-| 3NF unless a decision justifies the departure | Departures are DM-3 (`published` and `draft` documents), DM-6 (the `held` counter), DM-8 (`state` beside its history and the `place_type` copy) and the `story_comments` generated columns. Each names its pattern |
+| 3NF unless a decision justifies the departure | Departures are DM-3 (`published` and `draft` documents), DM-6 (the `held` counter), DM-8 (`state` beside its history) and the `story_comments` generated columns. Each names its pattern |
 | Business rules are constraints where possible | See the rule table below. Rules that cannot be constraints are named in section 8 |
 | Foreign keys indexed, every index serves a pattern | Section 5 |
 | No type from "Types to avoid", money is not floating point, times are `timestamptz` | Money is `bigint` Rappen by the repository rule (DM-1). `character varying`, `timestamp`, `money` and `serial` are absent |
 | No partitioning below the threshold | Section 5 |
 | Each migration step has lock, batch size where relevant and rollback | Section 6 |
 | DDL ran on a scratch database | Yes, results below |
-| Every major decision has a `proposed` ADR | ADR-013 to ADR-020 |
+| Every major decision has a `proposed` ADR | ADR-013 to ADR-020, and for G11 ADR-029 and ADR-030 |
 
 Results. All of them came from the DDL in section 4.
 
 1. The DDL applied without error on an empty database with only a `platform` schema.
 2. A second database took migrations `0000` to `0006` first, then the DDL. A `pg_dump --schema-only` of `platform`, `identity` and `notifications` before and after differs only by five new functions (`reject_change`, `reject_column_change`, `require_trigger_context`, `valid_interests`, `valid_slug_map`), with no line removed. No existing table changed. The new schemas hold 33 tables.
-3. 200 constraint checks ran, each with a statement that must fail or must pass. 200 passed and none failed. Two rounds found real defects, and the fixes are in the DDL above. First, a CHECK whose inner expression is NULL passes, so a published story with no `sections` key passed. The affected CHECKs now end in `IS TRUE`, which is a rule for every future jsonb CHECK. Second, the advisor pass found that the stock and pin triggers fired only on some columns, that a slug map accepted `{"en": null}`, that an analytics row could be ordered by its identity key, and that media could be retired while in use. Each now has a fix and a check.
+3. (History, before G11.) 200 constraint checks ran, each with a statement that must fail or must pass. 200 passed and none failed. Two rounds found real defects, and the fixes are in the DDL above. First, a CHECK whose inner expression is NULL passes, so a published story with no `sections` key passed. The affected CHECKs now end in `IS TRUE`, which is a rule for every future jsonb CHECK. Second, the advisor pass found that the stock and pin triggers fired only on some columns, that a slug map accepted `{"en": null}`, that an analytics row could be ordered by its identity key, and that media could be retired while in use. Each now has a fix and a check.
 
 | Rule | Mechanism | Test result |
 |---|---|---|
@@ -2065,10 +2160,8 @@ Results. All of them came from the DDL in section 4.
 | Stock never negative, held within on hand | `stock_items_held_within_on_hand` | Hold of 4 on 3 units refused. A second hold of 2 after a hold of 2 on 3 units refused. Set on hand below held refused. Set to exactly held accepted |
 | Handover and release | Hold trigger | After a hold of 2 on 3: on hand 3, held 2. After handover: on hand 1, held 0, one adjustment row. After a release of 5: on hand 5, held 0 |
 | Resolved holds, adjustments and holds are fixed, `held` has one writer | Triggers | Edit, delete refused. A direct write to `held` refused. A quantity change on a held hold refused |
-| Exactly one main story per story pin | `places_pin_has_story_check` and the trigger | Published sight without a story refused. With a story that has no published version refused. With one accepted |
-| A practical place has no main story, and publishes without one | `places_practical_no_story_check` | Refused with a story, accepted without |
-| A practical place has no reviews | `place_reviews_type_check` and the immutable type | Review with type `practical` refused. Type change refused |
-| Last published version of a pin story cannot go | `story_versions_keep_pin_story` | Refused when unpublished and when moved to another group while a pin is published. Accepted when a second version is published, or when the place is hidden |
+| A pin publishes without a story, a type or a category (G11, AC85) | The removal of the pin rule | Accepted. See result 9 |
+| A pin's weekly hours have a valid shape (G11) | `places_weekly_hours_check` and `content.valid_weekly_hours` | Day 8, opens after closes, an object instead of an array, `8:00` and an extra key refused. `24:00` as closing time accepted. See result 9 |
 | Published or hidden rows are not deleted | `reject_delete` and keys | Delete of a published place, of a published version, and of a group with versions refused. A draft place deleted |
 | A published place cannot clear `first_published_at` and then be deleted | `places_first_published_is_fixed` | Setting `status = 'draft'` with the column cleared on a published place refused, so the delete guard holds. Hiding a place accepted. Test `[E2.5][AC79]` in `api/test/integration/content-schema.test.ts` |
 | A story version keeps its published text once set | `story_versions_published_is_kept` | Setting `published` to NULL refused. Replacing the text accepted. `status = 'draft'` accepted, so the document stays. Delete of the version and of its group refused. Test `[E2.5][AC79] a published story version keeps its published text` in `api/test/integration/content-schema.test.ts` |
@@ -2078,11 +2171,13 @@ Results. All of them came from the DDL in section 4.
 | Slug unique per language | Unique key and expression indexes | Duplicate story slug and duplicate place slug refused |
 | A version exists only with its required fields | `*_published_fields_check` | Published story without `sections` refused. Published tour without a PDF refused. Name and slug languages that differ refused |
 | Lists capped, order unique | Position CHECKs and keys | Fourth tour keepsake and stop reordering behave as before |
-| Outbound link only on accommodation | Composite key with the place type | Link on a sight refused. On an accommodation accepted. Affiliate without network refused |
+| One plain outbound link on any pin (G11) | Primary key, `place_links_url_check` | A link on a pin accepted. A link that is not `https` refused. See result 9 |
+| Dates of a pin (G11, AC86) | CHECKs, generated `ends_at`, view `content.public_pins` | A range with times, an end before the start, an end with no start and a last day before the first refused. A pin with no entries is public, a pin whose only entry ended is not, a pin with a future entry is public with that entry as the next date. See result 9 |
+| Categories (G11, AC87, AC88) | Composite parent key, `RESTRICT` keys, unique slug | A child under a child, a duplicate slug and a category of another store refused. A parent with a child and a used category cannot be deleted. A pin takes two categories. See result 9 |
 | Reorder tour stops in one transaction | Deferrable unique key | Swap accepted |
 | A used media row cannot be retired, and kinds match | Trigger, kind in the keys | Retire of a tour's PDF refused. An image as a PDF and a PDF as a cover refused. An unused image retired |
 | A slug value is a string | `valid_slug_map` | `{"en": null}` and `{"en": 5}` refused |
-| An editorial review names a sight, restaurant or accommodation | CHECK and key on the type copy | A practical subject refused, a wrong copy refused |
+| An editorial review names any pin (G11) | `story_groups_subject_check`, foreign key | Accepted for a pin of any kind. See result 9 |
 | Review visibility state, history, no delete | Events table, trigger, delete trigger | A hide set the state to hidden. A direct write of `state` refused. Delete of a review, of an event, and an edit of an event refused. Event with two targets or none refused. Two events carry times in the order of their effect |
 | One level of replies, same story | Generated columns and a composite key | Reply to a reply refused. Reply under another story's comment refused |
 | One rating per author, order and product | Unique key | Second rating refused |
@@ -2104,14 +2199,16 @@ Results. All of them came from the DDL in section 4.
 | A SKU code is unique per store | `skus_store_sku_code_key` | Duplicate refused |
 | A partner account is not edited, deleted or left without an accepted invitation | Triggers | User edit, delete and un-accepting the invitation refused |
 
-4. Races. One session held the pin rule's lock for 3 seconds, and the other started 1 second later. In both orders, exactly one session committed and the other failed with the rule's message. Publish first: the unpublish failed, and the final state was place published, story published. Unpublish first: the publish failed, and the final state was place draft, story draft. A control run on the same DDL without the two row-lock statements let both sessions commit, and the final state was place published, story draft, which breaks AC43. The lock is what holds the rule. `run-all.sh` repeats all of this from a clean container.
+4. (History, before G11: the pin rule and its lock no longer exist.) Races. One session held the pin rule's lock for 3 seconds, and the other started 1 second later. In both orders, exactly one session committed and the other failed with the rule's message. Publish first: the unpublish failed, and the final state was place published, story published. Unpublish first: the publish failed, and the final state was place draft, story draft. A control run on the same DDL without the two row-lock statements let both sessions commit, and the final state was place published, story draft, which breaks AC43. The lock is what holds the rule. `run-all.sh` repeats all of this from a clean container.
 5. Cart races. The cart completes first and a line is added second: the line fails with "is completed and its lines cannot change". A second completion of the same cart: the second session fails on `orders_cart_split_unique`, and one order exists. The same first race on the DDL without the cart row lock lets the line land on a completed cart, which breaks the rule.
 6. Handover races, each pair started 1 second apart with the first session holding its lock for 3 seconds. The guest's order binds first and the merchant then moves the cut-off to the past: both commit, because the order was bound in time. The merchant moves the cut-off first and the order binds second: the order fails with `orders_handover_open`. The merchant cancels the meeting first and the order binds second: the order fails the same way. The merchant accepts a proposal while the partner counters it: the second answer fails with "was already answered as accepted", and the proposal ends as accepted. The same two order races on the DDL without the meeting's `FOR SHARE` lock let the order commit after the cut-off and after the cancellation, which breaks the rule.
 7. A stock race. Two orders took the last unit, the second one started 1 second after the first. The second failed with `stock_items_held_within_on_hand`. The final state was one unit on hand, one held, one hold row.
 8. The listing of `analytics` columns shows only the session id, `seq`, `bucket_hour`, event name, page type, content id, language, referrer class, segment, interests and device class on the log, and counts on the roll-ups. A catalog query found no foreign key into or out of the schema. The log has no surrogate id, the key is `(session_id, seq)`, and a product view names its product (owner M5). Order submits leave no raw row.
+9. G11 run, 2026-10-27. I applied `0007_platform_helpers.sql` and `0008_content.sql` from the repository and then the G11 migration of section 6 on `postgres:18-alpine` (PostgreSQL 18, a throwaway container, removed afterwards, no shared database). The migration applied without error. I then ran the section 4 DDL on a second empty database with only the `platform` schema. It applied with zero errors and produced 48 base tables (17 in `content`, 3 in `reviews`) and 27 foreign keys in those two schemas. About 40 statements checked the rows named above, and each refusal came from the named constraint. I also checked that the four dropped triggers are gone, that the delete guards, `first_published_at` guard and TRUNCATE guard still refuse, that a draft pin's delete removes its dates and categories, that a hidden pin is not in `public_pins`, and that a moderation event with no target or with a place target is refused. The scripts are in the session scratchpad and are not committed. `api/test/integration/content-schema.test.ts` has not been changed or run.
 
 Not verified.
 
+- The G11 migration as a file, the matching change to `content-schema.test.ts`, the Drizzle `schema.ts`, and the G11 SQL against Neon or against a table that holds rows. Nothing was run against Neon.
 - The Drizzle `schema.ts` and the generated migration. They do not exist yet, and DM-13 names what needs custom SQL.
 - Query plans. The tables are empty, so `EXPLAIN` would say nothing. Section 5 relies on the volumes in section 1.
 - Neon specifics (pooled connection, branch reset, point-in-time restore).
@@ -2155,6 +2252,8 @@ The orchestrator forwards these. The DDL follows the recommendation in each case
 6. **Settled by owner M7.** The checkout cart is a server table, Medusa-style (DM-18, ADR-026). The cart id lives in a cookie, an anonymous cart can later be linked to a guest, stock and price are re-checked at each change and at completion, one cart can complete into several orders, completion is safe to repeat, and a job deletes stale anonymous carts. A cart line holds no stock. The earlier recommendation of a browser cart is replaced.
 7. **Settled by owner M8.** Each order stores a snapshot of the guest's name and e-mail, overwritten on erasure (DM-19, ADR-028). The lawyer's answer on O33 can still change what stays.
 8. **Settled by the owner as option A, handovers in the orders schema.** It matches the architect's ADR-010. The question was: which module owns the handover tables? The record leaves it to the builder. Options. A, the `orders` schema, as in the DDL (ADR-024). B, a new `handovers` module. C, the `partners` module. Recommendation A, because it lets a composite key force the order's partner to equal the meeting's partner, and lets the binding check lock the meeting in the order's own transaction. Both rules would become cross-module rules under B or C, and they depend on decision 3 (plain ids), which is still open with the owner. Decision 4 (business-rule triggers) also stays open, and this model adds two commit-time triggers to the order path, the binding check and the receipt update, in the same way. The two commit-time triggers on the order path stay under decision 4.
+9. **Settled by owner G11 (2026-10-27).** One pin model replaces the typed place. The record `docs/decisions/2026-10-27-map-pins-and-events.md` removes the pin rule, the place type and guest reviews of places, and adds dates, categories, an address and weekly hours (DM-5, DM-8, DM-21, DM-22, ADR-029). The builder's choices (address and hours as columns, dates as a table, a plain link) are in DM-21 and can be overturned.
+10. **Settled after the G11 review (2026-10-27).** ADR-002, ADR-003, ADR-005, ADR-006, ADR-008, ADR-011, ADR-013, ADR-014, ADR-015 and ADR-018 carry G11 amendment notes, and ADR-029 and ADR-030 are new. Rulings G11-R1 to G11-R10 in the decision record settle Q-5 (display name), Q-39, Q-40, Q-41 and Q-43: nothing protects a pin's main story.
 
 ### Open questions
 
@@ -2164,7 +2263,7 @@ The orchestrator forwards these. The DDL follows the recommendation in each case
 | Q-2 | Settled by owner M9. A product may have no options, so no colour is forced. A SKU takes exactly one value of each option of its product. The colour list itself is still open (O26). | Settled, O26 open | The seed of option values |
 | Q-3 | May a slug change after the first publish? A change breaks the old address and no redirect table exists. Recommendation: lock the slug after first publish and add redirects when a rename is needed. | Product owner | A rule in the use case, a possible `slug_redirects` table |
 | Q-4 | A slug is checked for collision at publish, and the editor also checks while drafting. ADR-002 says "told at create time". Is a check at draft time enough? | Product owner | Nothing in the DDL |
-| Q-5 | Review rules (O25). One review per guest per place? Edit and delete of one's own? Scale 1 to 5, text limit 4000, display-name format, whether the text stays after erasure, whether the guest sees a hidden review (O33). | Product owner, lawyer | `UNIQUE (place_id, author_guest_id)`, erasure columns, the length CHECK |
+| Q-5 | Review rules (O25). Edit and delete of one's own comment? Scale 1 to 5 for product ratings (G11 removed place reviews), text limit 4000, display-name format (settled by R1: first name and initial, "Anna K."), whether the text stays after erasure, whether the guest sees a hidden review (O33). | Product owner, lawyer | Erasure columns, the length CHECK |
 | Q-6 | The hide of a product rating stays refused until O33. Only the use case enforces it. | Product owner, lawyer | Nothing in the DDL |
 | Q-7 | Preparation hours and store opening hours (O22). `catalog.products.preparation_hours` is a placeholder. No table holds opening hours, and ADR-009 lists them as an auto-accept input. | Product owner, merchant | The auto-accept data (AP-23) |
 | Q-8 | Analytics. Retention (14 months proposed), whether the dashboard hides a count below a threshold (a day's funnel count can be 1 in the pilot), and whether an in-memory session id needs consent (O14, O32). The owner accepted the product-id guess in a quiet hour on 2026-10-26 (M5). | Product owner, lawyer | Retention job, roll-up rules |
@@ -2200,6 +2299,11 @@ The orchestrator forwards these. The DDL follows the recommendation in each case
 | Q-36 | A cart line stores the unit price seen at the last check. A price change between the check and completion is caught by the re-check, and what the guest is told is a screen decision. | Product owner | Checkout copy |
 | Q-37 | Category slugs are unique per store and not per parent. Whether the same slug may repeat under different parents is not decided. | Product owner | `product_categories_store_slug_key` |
 | Q-38 | The order guest e-mail snapshot is a personal-data copy. How long it stays after the 10-year order retention and what erasure must keep wait for O33. | Lawyer | `guest_erased_at` rules |
+| Q-39 | Settled by ruling G11-R6 (2026-10-27). A date entry cannot cross midnight. For a late event leave the end time empty, and the pin stays visible to the end of that day. | Settled | None |
+| Q-40 | Settled by ruling G11-R5 (2026-10-27). A parent map category chip also covers pins tagged only with its sub-categories, and the read does it. | Settled | None |
+| Q-41 | Settled by ruling G11-R2 (2026-10-27). The address is optional. A pin needs a title in at least one language, a location and a slug to publish. | Settled | None |
+| Q-42 | G11. A slug change breaks shared `?place=<slug>` links. Q-3 already recommends locking the slug after the first publish. G11 strengthens that recommendation. | Product owner | A rule in the use case |
+| Q-43 | Settled by ruling G11-R4 (2026-10-27). Nothing protects a pin's main story. A story is unpublished or deleted under its own rules, and the pin card omits a story link that has no published version. "A published version cannot move to another group" is a use case rule. | Settled | None |
 
 The owner approved the partner handover record on 2026-10-26 as the answer to gate G6, so the flow is modelled. The record's six open questions are Q-23 to Q-28 with their owners. The PRD of 2026-10-26 settles Q-24, Q-25 and Q-26, the owner dropped Q-28, and Q-23 (O40) and Q-27 (O36) stay open.
 
@@ -2215,8 +2319,11 @@ Q-26 check. The two choices of AC78 need no new column. A guest who self-collect
 | An hour holds one order in the pilot | A reader could guess which session viewed the product that was later bought (owner accepted, M5) | No stored row links a session to an order. Roll-ups only for dashboards, and the small-count question Q-8 |
 | A SKU escapes the combination trigger | `combination_key` stays NULL and the unique key skips it | A drift query for `combination_key IS NULL` |
 | A cart completes while its lines are being edited | An order misses a line | The use case locks the cart row first, then reads its lines. The database refuses a line change after completion |
-| A plain id can dangle | A review names a place that does not exist | The use case checks, rows are never deleted, and an orphan view lists exceptions |
+| A plain id can dangle | A comment names a story that does not exist, or a rating a product | The use case checks, rows are never deleted, and an orphan view lists exceptions |
 | Hidden places keep their slugs | A new place cannot reuse an address | Intended. Revisit with Q-3 |
+| A pin's main story has no published version in the reader's language (G11) | The pin card would link to a missing page | The read for AP-4 shows the link only when a published version exists in the reader's language |
+| A pin whose dates ended stays `published` (G11) | It keeps its slug and the delete guard, and appears again if a date is added | Intended. `content.public_pins` is the only public read, so no other query may list pins |
+| The two category tables and ADR-030 are written in parallel (G11) | Column names may drift | The record says "shaped like `catalog.product_categories`". Reconcile with ADR-030 when both land |
 | The prototype data does not seed places | The map starts empty until the merchant adds places | ADR-005 chose this. Merchant content entry comes first (PRD O35) |
 
 ## 9. Lessons from Medusa

@@ -25,7 +25,6 @@ erDiagram
         uuid store_id "id -> identity.stores"
         text kind
         uuid subject_place_id FK "-> content.places"
-        text subject_place_type FK "-> content.places"
         text stay_tag
         text[] interests
         integer row_version
@@ -35,11 +34,12 @@ erDiagram
     content_places["content.places"] {
         uuid id PK
         uuid store_id "id -> identity.stores"
-        text type
         text status
         jsonb slug
         double_precision latitude
         double_precision longitude
+        text address
+        jsonb weekly_hours "array of day, opens, closes; day 1 is Monday"
         text stay_tag
         text[] interests
         uuid main_story_group_id FK "-> content.story_groups"
@@ -85,15 +85,55 @@ erDiagram
     }
     content_place_links["content.place_links"] {
         uuid place_id PK, FK "-> content.places"
-        text place_type FK "-> content.places"
         uuid store_id "id -> identity.stores"
-        text kind
         text url
         jsonb url_by_language
-        text network
-        boolean disclosure
         timestamptz created_at
         timestamptz updated_at
+    }
+    content_place_dates["content.place_dates"] {
+        uuid id PK
+        uuid place_id FK "-> content.places"
+        uuid store_id "id -> identity.stores"
+        date first_day
+        date last_day
+        time start_time "one day only"
+        time end_time "one day only"
+        timestamptz ends_at "generated, Europe/Zurich"
+    }
+    content_map_categories["content.map_categories"] {
+        uuid id PK
+        uuid store_id UK "unique with id, slug; id -> identity.stores"
+        jsonb name
+        text slug UK "unique with store_id"
+        uuid parent_id FK "-> content.map_categories; one level"
+        boolean is_child "generated"
+        boolean parent_must_be_root FK "-> content.map_categories; generated"
+        integer position
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    content_blog_categories["content.blog_categories"] {
+        uuid id PK
+        uuid store_id UK "unique with id, slug; id -> identity.stores"
+        jsonb name
+        text slug UK "unique with store_id"
+        uuid parent_id FK "-> content.blog_categories; one level"
+        boolean is_child "generated"
+        boolean parent_must_be_root FK "-> content.blog_categories; generated"
+        integer position
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    content_place_categories["content.place_categories"] {
+        uuid place_id PK, FK "-> content.places"
+        uuid category_id PK, FK "-> content.map_categories"
+        uuid store_id "id -> identity.stores"
+    }
+    content_story_categories["content.story_categories"] {
+        uuid group_id PK, FK "-> content.story_groups"
+        uuid category_id PK, FK "-> content.blog_categories"
+        uuid store_id "id -> identity.stores"
     }
     content_tours["content.tours"] {
         uuid id PK
@@ -149,8 +189,6 @@ erDiagram
 
     %% fk: story_groups_subject_place_fkey
     content_places |o--o{ content_story_groups : "review subject"
-    %% fk: story_groups_subject_type_fkey
-    content_places |o--o{ content_story_groups : "subject type copy"
     %% fk: places_main_story_fkey
     content_story_groups |o--o{ content_places : "main story"
     %% fk: places_cover_media_fkey
@@ -167,10 +205,22 @@ erDiagram
     content_story_groups ||--o{ content_story_related : "up to 3 related"
     %% fk: story_related_target_fkey
     content_story_groups ||--o{ content_story_related : "related story"
-    %% fk: place_links_place_fkey
-    content_places |o--o| content_place_links : "type pinned to accommodation"
     %% fk: place_links_store_fkey
     content_places |o--o| content_place_links : "outbound link"
+    %% fk: place_dates_place_fkey
+    content_places ||--o{ content_place_dates : "dates"
+    %% fk: map_categories_parent_fkey
+    content_map_categories |o--o{ content_map_categories : "parent (one level)"
+    %% fk: blog_categories_parent_fkey
+    content_blog_categories |o--o{ content_blog_categories : "parent (one level)"
+    %% fk: place_categories_place_fkey
+    content_places ||--o{ content_place_categories : "tagged with"
+    %% fk: place_categories_category_fkey
+    content_map_categories ||--o{ content_place_categories : "tags pins"
+    %% fk: story_categories_group_fkey
+    content_story_groups ||--o{ content_story_categories : "tagged with"
+    %% fk: story_categories_category_fkey
+    content_blog_categories ||--o{ content_story_categories : "tags stories"
     %% fk: tours_cover_media_fkey
     content_media |o--o{ content_tours : "cover image"
     %% fk: tours_pdf_media_fkey

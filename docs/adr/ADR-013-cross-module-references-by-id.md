@@ -5,6 +5,8 @@ Date: 2026-10-26
 Source: DM-2
 Applies to: `api/src/modules/*/adapters/schema.ts`, `api/migrations/`, `docs/specs/001-storytelling-pivot/data-model.md`
 
+**Amended 2026-10-27 (G11).** The one cross-module copy the third bullet named, the place type on `reviews.place_reviews`, is removed with that table. The rule stays and the example is replaced.
+
 No new dependency, vendor or paid service. The decision is the data-model counterpart of the module rule in `docs/architecture/backend.md` section 4 and the tenant rule D9. Design detail is in `docs/specs/001-storytelling-pivot/data-model.md`, section DM-2.
 
 ## Context
@@ -17,7 +19,7 @@ We will keep the existing convention and extend it.
 
 - Inside one module, every child row carries `store_id` and a composite foreign key `(store_id, parent_id)` to a parent that has `UNIQUE (store_id, id)`. Deletes are `RESTRICT` unless the child is a part of the parent, which then uses `CASCADE`.
 - Across modules, a column holds the other module's id as a plain `uuid` with no foreign key. The use case checks the target through the other module's `index.ts` in the same transaction.
-- Where a cross-module rule matters enough to enforce in the database, the owning table keeps a copy that a CHECK can read. The copy is safe only when the source column cannot change. `reviews.place_reviews.place_type` is the one case, and `content.places.type` is immutable for that reason (ADR-015).
+- Where a cross-module rule matters enough to enforce in the database, the owning table keeps a copy that a CHECK can read. The copy is safe only when the source column cannot change. No such copy exists after G11: `reviews.place_reviews.place_type` and `content.places.type` are gone (ADR-015, amended). `reviews.story_comments.story_group_id` is a live cross-module id, a plain `uuid` that the use case checks through the content `index.ts`.
 - The rows that other modules point at are never deleted once used: places and story versions are hidden or unpublished, SKUs are archived, partners are archived. A dangling id therefore needs a code defect, and a `reporting` view lists orphans so a test or job can find one.
 
 ## Consequences
@@ -37,3 +39,4 @@ We will keep the existing convention and extend it.
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)

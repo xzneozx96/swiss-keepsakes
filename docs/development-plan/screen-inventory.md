@@ -2,7 +2,7 @@
 id: screen-inventory-storytelling-pivot
 status: draft
 created: 2026-10-26
-sources: PRD v3 (approved), docs/specs/001-storytelling-pivot, ADR-001 to ADR-028, docs/decisions/2026-10-26-partner-handover.md
+sources: PRD v3 (approved), docs/specs/001-storytelling-pivot, ADR-001 to ADR-030, docs/decisions/2026-10-26-partner-handover.md, docs/decisions/2026-10-27-map-pins-and-events.md
 ---
 # Screen inventory for the storytelling pivot
 
@@ -12,7 +12,9 @@ Review page: https://claude.ai/artifact/XFvj2gvaJ3H4qGFyTXmC8o (private; source 
 
 It chooses no visual design. The owner's reference images are still pending (O23). Where a row says "layout", it means content blocks and order, not look.
 
-Accepted ADRs used: 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 014, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028. None is overturned. Owner answers and orchestrator rulings of 2026-10-26 that settle the open questions are in "Decisions" (D1 to D6). No question is open.
+Amended on 27.10.2026 for the map pins, local events and categories decision (owner gate G11): N03 and N17 change, N04 and N05 are removed, and N23 is new. The review page linked above shows the 26.10.2026 version until it is regenerated.
+
+Accepted ADRs used: 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 014, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030. ADR-002, 003, 005, 006, 008, 011, 013, 014, 015 and 018 are amended by the 27.10.2026 decision, and ADR-029 and 030 are new. None is overturned. Owner answers and orchestrator rulings of 2026-10-26 that settle the open questions are in "Decisions" (D1 to D6). No question is open.
 
 ## How to read the verdicts
 
@@ -33,7 +35,7 @@ Table 1 has 72 rows: the 72 non-lab route files. The 17 `lab.*` files are one li
 | Hide | 13 | 7 | 6 | 0 | 0 | 0 |
 | Redesign | 39 | 16 | 20 | 1 | 0 | 2 |
 | **All existing** | **72** | **27** | **39** | **2** | **1** | **3** |
-| **New** | **22** | **6** | **12** | **3** | **0** | **1** |
+| **New** | **21** | **4** | **13** | **3** | **0** | **1** |
 
 | By track | Track 1 | Track 2 | Platform |
 | --- | --- | --- | --- |
@@ -41,9 +43,9 @@ Table 1 has 72 rows: the 72 non-lab route files. The 17 `lab.*` files are one li
 | Hide | 5 | 8 | 0 |
 | Redesign | 17 | 17 | 5 |
 | **All existing** | **28** | **33** | **11** |
-| **New** | **11** | **10** | **1** |
+| **New** | **10** | **10** | **1** |
 
-"Shared" rows serve more than one audience: `__root.tsx`, `sign-in.tsx`, and `invitation.tsx`. Layout files count as rows. Sheets and in-page blocks in table 2 count as New screens because each needs its own design.
+"Shared" rows serve more than one audience: `__root.tsx`, `sign-in.tsx`, and `invitation.tsx`. Layout files count as rows. Sheets and in-page blocks in table 2 count as New screens because each needs its own design. N04 and N05 are removed and not counted, and their ids are not reused.
 
 ## Table 1. Existing route files
 
@@ -105,10 +107,10 @@ Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux
 | `store/products/tours/new.tsx` | `/store/content/tours/new` | M13 | merchant | **Redesign** | ssr:false | Tour guide editor: content blocks, route stops, one PDF, stay tag, interests, keepsake links. No price or departures (§7.3, AC45, AC51) | 003, 004, 005, 012 | 1 |
 | `store/products/tours/$tourId.tsx` | `/store/content/tours/$tourId` | M13 | merchant | **Redesign** | ssr:false | Same editor in edit mode, preview in EN and DE (§7.3, AC45) | 003, 004, 005, 012 | 1 |
 | `store/content/index.tsx` | `/store/content` | M17 | merchant | **Redesign** | ssr:false | Story list by language version, status, tags, review type (§11.2, §11.3) | 002, 003, 014 | 1 |
-| `store/content/articles/$articleId.tsx` | `/store/content/articles/$articleId` | M17 | merchant | **Redesign** | ssr:false | Place tags, stay tag, interests, up to 6 keepsakes, up to 3 related, language versions, publish rules (§11.2, AC31, AC33, AC41, AC43) | 003, 005, 011, 014 | 1 |
-| `store/content/comments.tsx` | `/store/content/comments` | M18 | merchant | **Redesign** | ssr:false | Hide and unhide only. No delete (§11.4, AC47) | 008, 018 | 1 |
-| `store/content/reviews.tsx` | `/store/content/reviews` | M23 | merchant | **Redesign** | ssr:false | Tabs for place reviews and product ratings. Hide only. Product-rating hide refused until O33 (§11.4, §11.6, AC47, AC69) | 008, 018 | 1 |
-| `store/content/analytics.tsx` | `/store/content/analytics` |  | merchant | **Redesign** | ssr:false | Content view: stories read, new place reviews, hidden reviews (§13.1) | 007, 020 | 1 |
+| `store/content/articles/$articleId.tsx` | `/store/content/articles/$articleId` | M17 | merchant | **Redesign** | ssr:false | Pin tags, blog categories, stay tag, interests, up to 6 keepsakes, up to 3 related, language versions, publish rules (§11.2, AC31, AC33, AC41, AC87) | 003, 005, 011, 014, 030 | 1 |
+| `store/content/comments.tsx` | `/store/content/comments` | M18 | merchant | **Redesign** | ssr:false | Hide and unhide story comments only. No delete (AC47) | 008, 018 | 1 |
+| `store/content/reviews.tsx` | `/store/content/reviews` | M23 | merchant | **Redesign** | ssr:false | Product ratings only. Hide only. Product-rating hide refused until O33 (§11.6, AC47, AC69) | 008, 018 | 1 |
+| `store/content/analytics.tsx` | `/store/content/analytics` |  | merchant | **Redesign** | ssr:false | Content view: stories read, new story comments, hidden comments (§13.1) | 007, 020 | 1 |
 | `store/partners/index.tsx` | `/store/partners` | M15 | merchant | **Redesign** | ssr:false | Partner type, account invitation state, handover count (§10, §10.4) | 010, 019, 024 | 2 |
 | `store/partners/$partnerId.tsx` | `/store/partners/$partnerId` | M16 | merchant | **Redesign** | ssr:false | Adds invite account and handover agreements. Report link stays read-only (§10.3, §10.4, AC58) | 010, 019, 024 | 2 |
 | `store/partners/analytics.tsx` | `/store/partners/analytics` |  | merchant | **Keep** | ssr:false | Partner analytics. Strip tour partners (§13.1) | 012 | 2 |
@@ -133,10 +135,10 @@ Routes follow ADR-002: `/$lang` is `en` or `de`, and only the public content rou
 | Id | Proposed route | Audience | Purpose | PRD, AC | ADR | Track | Render | Reused components |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | N01 | Prompt over any public page (no route). Reopen entry in the menu | guest | Two-step onboarding: visitor type, then interests. Dismissible, never blocks content, answers in `localStorage` `sk.onboarding` | §3.1 to §3.3; AC36, AC37, AC38, AC41 | 006, 007 | 1 | client only | `SheetFrame`, locale context, chips |
-| N02 | `/$lang/map` | guest | Interactive map: pins by place type, ranked not hidden, place-type chips (sights, restaurants, stays, practical) highlight matching pins and dim the rest, tap opens place sheet | §11.1; AC42, AC44, AC62, AC67 | 001, 006 | 1 | SSR page shell, map in browser | `tour-itinerary-map.tsx`, `aerial-style.ts` (O23), `lab.map` |
-| N03 | Sheet over N02 (deep link `/$lang/map?place=`) | guest | Place sheet: name, photo, hours, address, main story link, other stories, review summary. Practical pin shows details only | §11.1; AC42, AC62 | 006, 015 | 1 | client, data from `/api/public/places/:id` | `SheetFrame`, `story-card.tsx` |
-| N04 | `/$lang/places/$slug` | guest | Place page: details, main story, linked stories, editorial review, guest reviews, outbound link for accommodation | §11.1, §11.5; AC42, AC49, AC61, AC62, AC63, AC64 | 001, 002, 005, 011 | 1 | SSR (guest review text not in server HTML) | `story-card.tsx`, `article-blocks.tsx` |
-| N05 | Block in N04 and sheet | guest | Place reviews: list, rating and comment write sheet behind sign-in. Hidden for practical places | §11.4; AC46, AC47, AC48, AC68 | 008, 018 | 1 | client | `reviews-sheet.tsx`, `write-review-sheet.tsx`, `review-item.tsx`, sign-in route |
+| N02 | `/$lang/map` | guest | Interactive map: pins with merchant-edited map categories, ranked not hidden. Category chips highlight the chosen category and dim the other pins, and none hides a pin. A pin in several categories is highlighted under each chip, and a pin with none only under All. Flat swisstopo aerial style with OpenFreeMap names, no 3D. Tap opens the pin card | §11.1; AC42, AC44, AC67, AC88 | 001, 006, 029, 030 | 1 | SSR page shell, map in browser | `tour-itinerary-map.tsx`, `aerial-style.ts` (made flat, O23), `lab.map` |
+| N03 | Sheet over N02 (deep link `/$lang/map?place=<slug>`) | guest | Pin card: photo, tip, hours, address, next date for a dated pin, main story link (omitted when the story has no published version), other stories, outbound link, Open in Google or Apple Maps. No review summary and no practical variant. A deep link to a hidden, expired or unknown pin shows the map with the notice "This place is no longer on the map" | §11.1; AC42, AC62, AC89, AC90 | 006, 015, 029 | 1 | client, data from `/api/public/places/:id` | `SheetFrame`, `story-card.tsx` |
+| N04 | removed | guest | Removed on 27.10.2026. Pins have no page of their own and are not in the sitemap. The id is not reused | none | 002 | 1 | none | none |
+| N05 | removed | guest | Removed on 27.10.2026. Guests no longer review places. The id is not reused | none | 008, 018 | 1 | none | none |
 | N06 | Sheet over /cart/review | guest | Handover picker: today's meetings of the QR partner, or switch to self-collect | §10.4; AC70, AC71, AC76 | 024, 025, 026 | 2 | client | `pickup-date-field.tsx`, `SheetFrame` |
 | N07 | `/handover` | partner | My handovers and upcoming meetings, proposals awaiting reply (prefix by ruling D3) | §10.4, §6.5; AC58, AC77 | 010, 019, 024 | 2 | ssr:false | partner report shell, `RowActions` |
 | N08 | `/handover/new` | partner | Propose or counter-propose pickup point, time, repeat rule, group arrival and leaving times | §10.4; AC58, AC76 | 024 | 2 | ssr:false | pickup point list, date fields |
@@ -147,13 +149,14 @@ Routes follow ADR-002: `/$lang` is `en` or `de`, and only the public content rou
 | N13 | `/store/products/inventory` | merchant | Stock per SKU across products: on hand, held, available, out-of-stock filter, quick edit | §7.2, §13.1; AC05, AC53 | 009, 016, 022 | 2 | ssr:false | `filter-bar`, data table, `RowActions` |
 | N14 | Sheet inside M12 | merchant | Options and values: add option, add value, order values | §7.0, §7.1; AC52 | 017, 027 | 2 | ssr:false | `subcategory-sheet.tsx` pattern |
 | N15 | Section and sheet inside M12 | merchant | SKU combinations: sold combinations only, price, SKU code, stock, status | §7.2; AC52, AC53 | 009, 016, 017 | 2 | ssr:false | stock section of `gift-editor.tsx` |
-| N16 | `/store/content/places` | merchant | Places list: type, status (draft, published, hidden), tags, main story | §11.1; AC43, AC68, AC79 | 003, 005, 015 | 1 | ssr:false | `content-page.tsx`, data table |
-| N17 | /store/content/places/new and /$placeId | merchant | Place editor: type, coordinates picker, hours, address, EN and DE text, stay tag, interests, main story, outbound link, hide | §11.1, §11.5; AC39, AC41, AC43, AC45, AC62, AC63, AC68, AC79 | 003, 005, 011, 014, 015 | 1 | ssr:false | `article-editor.tsx` frame, map from N02 |
+| N16 | `/store/content/places` | merchant | Pins list: status (draft, published, hidden), map categories, next date, tags, main story. Add place and Add event both open N17 | §11.1; AC79, AC85, AC86 | 003, 005, 029 | 1 | ssr:false | `content-page.tsx`, data table |
+| N17 | /store/content/places/new and /$placeId | merchant | Pin editor, with no type choice: coordinates picker, slug, address (optional), weekly hours, optional date entries, map categories, photo with EN and DE alt text, EN and DE title and tip, stay tag, interests, optional main story, optional outbound link, hide. Required to publish: a title in one language, a location and a slug | §11.1, §11.5; AC39, AC41, AC45, AC62, AC63, AC68, AC79, AC85, AC86 | 003, 005, 011, 014, 015, 029, 030 | 1 | ssr:false | `article-editor.tsx` frame, map from N02 |
 | N18 | `/store/content/media` | merchant | Media library: upload, find, replace, see where used | §11.2, §7.3; AC32, AC51 | 004 | 1 | ssr:false | `media-sheets.tsx`, `photo-field.tsx` |
 | N19 | Sheet inside M13 | merchant | Tour PDF upload and replace, exactly one per tour | §7.3; AC51 | 004 | 1 | ssr:false | `media-sheets.tsx` |
 | N20 | `/store/reports/traffic` | merchant | SM-1: sessions, search sessions, by story and place | §1.3, §13.1; AC60 | 007, 020 | 1 | ssr:false | `report-charts.tsx`, `filters-sheet.tsx` |
 | N21 | `/store/reports/map` | merchant | SM-2: pin opens, pin-to-story clicks, by pin and segment | §1.3, §13.1; AC60 | 007, 020 | 1 | ssr:false | `report-charts.tsx` |
 | N22 | /sitemap.xml, /robots.txt | all | Server routes, no UI. Published pages with hreflang alternates, non-production disallow | §4.1; AC61 | 001, 002 | P | server route | none |
+| N23 | `/store/content/categories` | merchant | Category editor: two lists, map categories and blog categories, each with names in EN and DE, an order and one level of sub-categories. A category in use can't be deleted | §11.1, §11.2; AC87 | 003, 030 | 1 | ssr:false | `categories-page.tsx` pattern (dormant, ADR-012), `RowActions`, sheets |
 ## Merchant navigation after the pivot
 
 The owner's groups stay: Dashboard, Operations, Content. On 2026-10-26 the owner renamed Marketing to Content (D4); the 15.10.2026 grouping is otherwise unchanged. This is a proposal for the children, not a visual design. Tables, filters, sheets, and sticky phone tabs follow the dashboard preferences (`RowActions`, `filter-bar`, `route-tabs`, `sticky-tabs`).
@@ -164,7 +167,7 @@ The owner's groups stay: Dashboard, Operations, Content. On 2026-10-26 the owner
 | Operations | Orders, Handovers (N10 to N12), Calendar | Bookings leave. Handovers join |
 | Products | Keepsakes, Inventory (N13), Pickup points | Tours, Stays, Experiences, and Categories leave |
 | Partners | All partners, Analytics | Account invitation and handovers added to the detail page |
-| Content (was Marketing, D4) | Stories, Places (N16), Tours, Media (N18), Comments, Reviews, Inquiries, Analytics | Renamed by the owner. Places, Tours, and Media join the old Marketing children |
+| Content (was Marketing, D4) | Stories, Places (N16), Categories (N23), Tours, Media (N18), Comments, Reviews, Inquiries, Analytics | Renamed by the owner. Places, Tours, and Media join the old Marketing children. Categories added on 27.10.2026 |
 | Settings | Unchanged | Preparation time when O22 is decided |
 
 The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, More.
@@ -228,51 +231,54 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 
 **Guest side (C03).** Selectors come from the options and values of published SKUs. A combination with stock zero is shown as sold out and cannot be picked. The page shows price and availability loaded by the SPA, because no server text or list carries a price (ADR-001, owner gate D10).
 
-## Area 4. Guest map (N02 to N05)
+## Area 4. Guest map (N02, N03)
 
 **Today.** The only map is the 3D tour itinerary map (`tour-itinerary-map.tsx`, MapLibre, aerial style) inside the tour page. There is no place or pin screen.
 
-**What it is.** The most important screen of the product (PRD §11.1). It shows all published places in one cached list (`GET /api/public/map`). Opening a pin loads one place.
+**What it is.** The most important screen of the product (PRD §11.1). It shows all published pins in one cached list (`GET /api/public/map`). A pin is any place or event the merchant adds, with or without a story. A pin with dates is listed from the moment it is published and leaves the list after its last date. Opening a pin loads one pin.
 
 **States to design.**
 
 | State | Behaviour |
 | --- | --- |
 | Loading | Map shell and pin list load separately. MapLibre loads by dynamic import (AGENTS rule 9) |
-| Loaded | Pins by place type: sight, restaurant, accommodation, practical. Type styling waits for O23 |
-| Type chip selected | Pins of that type are highlighted, all others are dimmed. No pin disappears, so ranking and AC44 still hold (D7) |
+| Loaded | Pins in a flat style: swisstopo aerial photos with OpenFreeMap names, no tilt and no 3D terrain, with the swisstopo, OpenFreeMap, OpenMapTiles and OpenStreetMap credits. Pin styling waits for O23 |
+| Category chip selected | The chip highlights the pins of that map category and dims the others, and no pin is hidden. A parent chip also covers pins tagged only with its sub-categories. A pin in two categories is highlighted under both chips, and a pin with no category only under All (AC88, D7). Ranking by stay tag and interests still never hides a pin (AC44) |
 | Ranked | Order and prominence follow stay tag and interests. No pin is hidden (Q26, AC44) |
-| Pin open, story pin | Place sheet (N03): name, photo, hours, address, link to the main story, other stories that tag the place, review summary. No price (AC42) |
-| Pin open, practical pin | Details only. No story link, no review (AC62) |
-| Place has no version in the stored language | English or German version shows with a notice. No machine translation (AC64) |
-| Deep link | `/$lang/map?place=` opens the sheet. `/$lang/places/$slug` (N04) is the indexable twin |
+| Pin open | Pin card (N03): photo, tip, hours, address, the next date for a dated pin, the main story link if any, the other stories that tag the pin, the outbound link if any. No price (AC42). A pin with no story shows no story link (AC62) |
+| Directions | The card's Open in Google or Apple Maps button hands the pin's coordinates to the phone's map app. The site neither reads the visitor's location nor draws a route (AC89, G9) |
+| Pin has no version in the stored language | English or German version shows with a notice. No machine translation (AC64) |
+| Deep link | `/$lang/map?place=<slug>` opens the map with the card showing (AC90). If the pin is hidden, expired or unknown, the map opens normally with the notice "This place is no longer on the map". Pins have no page of their own, so no indexable twin exists |
 | Tour route | A tour page shows the merchant's route on the map. No route builder, no location prompt, no "you are here" (AC67, G9) |
 | Empty or failed | Short message with a retry. A map without network is not supported (O35 assumption) |
 
-**Against today.** The tour map moves from a feature of one screen to a shared component. Entry points: the Map tab (D5), a story's place tag, a tour's route stops, and the home block. Place-type chips (sights, restaurants, stays, practical) highlight the pins of a type and dim the rest, so no pin is hidden (owner answer, D7).
+**Against today.** The tour map moves from a feature of one screen to a shared component. Entry points: the Map tab (D5), a story's place tag, a tour's route stops, and the home block. Category chips come from the merchant's map categories and replace the fixed place-type chips of D7, which keeps its highlight-and-dim behaviour.
 
-## Area 5. Merchant map and pins (N16, N17)
+## Area 5. Merchant map and pins (N16, N17, N23)
 
 **Today.** No place model or screen. Tour stops exist only inside the tour editor.
 
-**Screens.** A places list (N16) and one editor (N17). The list shows type, status (draft, published, hidden), stay tag, interests, languages, and main story. The editor edits:
+**Screens.** A pins list (N16), one editor (N17) and a category editor (N23). The list shows status (draft, published, hidden), map categories, next date, stay tag, interests, languages, and main story. Add place and Add event are two ways into the same editor. The editor has no type choice and edits:
 
-- **Type**, one of sight, restaurant, accommodation, practical. The merchant picks it at creation. It is then read-only, because the database keeps place type immutable (ADR-015, AC68).
-- **Position** on a map picker, address, opening hours, photos, EN and DE text.
+- **Position** on a map picker, slug, address (optional), weekly opening hours, one photo with EN and DE alt text, EN and DE title and tip.
+- **Dates**, optional. Each entry is one day with optional start and end times, or a range of days. A pin with dates shows from the moment it is published and leaves the map after its last date (AC86). An entry cannot cross midnight, and the end time stays empty for a late event.
+- **Map categories** from the N23 list. None is required to publish, and a pin with none shows only under All (AC85, AC88).
 - **Stay tag** (short-stay, multi-day, both) and **interests** from the four fixed codes (AC39, AC41). No separate rank field for restaurants.
-- **Main story** picker for story pins. Publish is refused without a published main story (AC43). Practical pins hide this field and the review settings.
-- **Outbound link** for accommodation: kind (direct or affiliate), URL, network, disclosure. Changing it changes every page that shows the place (AC63, ADR-011).
+- **Main story**, optional. A pin publishes without one (AC85). To publish, a pin needs a title in at least one language, a location and a slug (AC68).
+- **Outbound link**, optional, one per pin. Changing it changes every page that shows the pin (AC63, ADR-011). Paid-link fields wait until the first paid link exists.
 
-**Lifecycle.** A draft can be deleted. A published place can only be hidden, and its reviews stay (AC79, owner gate M6). Publish rules run in the API as well as the UI (ADR-003). Edits show to guests within about 60 seconds, capped at 5 minutes (owner gate D5, O39).
+**Category editor (N23).** Two lists, map categories and blog categories. Each category has a name in EN or DE (one is enough), an order and one level of sub-categories. The merchant creates, renames and reorders them, and deletes one only while it has no sub-category and no pin or story uses it (AC87, ADR-030). Route `/store/content/categories`.
 
-**Other places the merchant touches pins.** The story editor tags places on a story. The tour editor lists route stops with their own coordinates and an optional place link. The reviews page hides guest place reviews.
+**Lifecycle.** A draft can be deleted. A published pin can only be hidden (AC79, owner gate M6). Publish rules run in the API as well as the UI (ADR-003). Edits show to guests within about 60 seconds, capped at 5 minutes (owner gate D5, O39).
+
+**Other places the merchant touches pins.** The story editor tags pins and blog categories on a story. The tour editor lists route stops with their own coordinates and an optional pin link.
 
 ## Other areas at a glance
 
 | Area | Screens involved | Main change |
 | --- | --- | --- |
-| Stories and editorial reviews | C19, C20, M17 | An editorial review is a story of a review type tied to one place, with writer and check date (§11.3). No new route |
-| Guest reviews and moderation | N05, M18, M23 | Sign-in only, shown at once, hide only, no delete, no report button (G7, AC47). Product rating hide is refused until O33 |
+| Stories and editorial reviews | C19, C20, M17 | An editorial review is a story of a review type tied to one pin, with writer and check date (§11.3). No new route |
+| Comments and moderation | M18, M23 | Story comments need sign-in, show at once, hide only, no delete, no report button (G7, AC47). Product rating hide is refused until O33. Guests do not review places |
 | Tour information | C08, C09, M13, N19 | Free information, route on a map, one PDF, no price or departure. Related keepsakes without price (AC50, AC51) |
 | Cart and checkout | C04, C06, C07, N06 | Server cart, one cart can become several orders, repeat-safe submit (AC80 to AC83). Guest cart without sign-in is O41 |
 | Order tracking | C15, M03, M04 | Partner-path states: placed, preparing, on the way, with partner, delivered. Payment label separate (§10.4) |
@@ -286,14 +292,14 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 
 | Id | Blocks | What is missing |
 | --- | --- | --- |
-| O23 | N02, N03, home, lab.map decision | Map visual design and the production tile source wait for the owner's reference images |
+| O23 | N02, N03, home, lab.map decision | Map visual design waits for the owner's reference images. The tile source is settled: swisstopo aerial photos with OpenFreeMap names (27.10.2026) |
 | O41 | C04, C06 | How a guest cart without sign-in is kept, and for how long |
 | O26 | C03, N14, N15 | Colour list, theme list, design rights, prices |
 | O22 | C06, N06, N11, settings | Preparation hours and the auto-accept rule |
-| O25 | N01, home, N05 | Feed order when onboarding is skipped (proposal: date only), untagged content, rating scale, display name, edit or delete of own review |
+| O25 | N01, home | Feed order when onboarding is skipped (proposal: date only), untagged content |
 | O32 | N01, tracking | Order of the onboarding prompt and the consent box, and what needs consent (referral memory, analytics, embedded video) |
 | O29 | `reports/guests.tsx` | Whether any guest-group view stays |
-| O33 | N05, M23 | Hiding product ratings, label for affiliate links, personal data on orders |
+| O33 | M23 | Hiding product ratings, label for affiliate links, personal data on orders |
 | O15 | C20, M23 | Product rating scale, edit, merchant reply |
 | O31 | C08, C09 | Whether a tour shows a reference price or a third-party provider |
 | O35 | home, N02 | Launch minimum content per language |
@@ -314,14 +320,14 @@ No question is open. Each row records who settled it. Answers carry the owner's 
 | D4 | Where the tour editor lives, and the group name | The tour editor moves to `/store/content/tours`. The group "Marketing" is renamed Content and holds Stories, Places, Tours, Media, Comments, Reviews, and Inquiries | Owner answer, 2026-10-26 |
 | D5 | Guest phone tabs | Explore, Map, Keepsakes, Account | Owner answer, 2026-10-26 |
 | D6 | Where a merchant previews a draft | An `ssr:false` preview route that reuses the public components, so drafts never enter the shared cache | Orchestrator ruling, 2026-10-26 |
-| D7 | Map filter by place type | Place-type chips for sights, restaurants, stays, and practical. A chip highlights the pins of that type and dims the others. No pin is hidden, so Q26 and AC44 hold | Owner answer, 2026-10-26 |
+| D7 | Map chips | Chips come from merchant-edited map categories and highlight the chosen category and dim the other pins. No pin is ever hidden by a chip. A pin has no fixed type, publishes without a story, and may have dates. Places and events have no page of their own, and guests do not review places (gate G11) | Owner answer, 2026-10-26 (chips that highlight and dim), kept for map categories on 2026-10-27 |
 
 Assumption that no source states: Stories and Tours are reached from Explore, because they no longer have a tab. The UX checklist should confirm it.
 
 ## Judgement calls made in this document
 
 - The SM-3 funnel reuses the existing Conversion page. SM-1 and SM-2 are new pages. A single tabbed analytics page would also fit (§13.1 does not say).
-- The Reviews page gets tabs for place reviews and product ratings. Story comments keep their own page.
+- The Reviews page shows product ratings only. Story comments keep their own page.
 - Verdict boundary: removing booking or price from a screen and moving it under `/$lang` is Keep. A change a user notices is Redesign.
 - Tracks. The referral link `/r/$code`, shell, auth, and report layout are Platform. Tour information and the advice form are Track 1. Partner report and handovers are Track 2.
 
@@ -332,5 +338,7 @@ Run on 2026-10-26 with `python3` (the script is not committed).
 - Route files under `front-end/src/routes`: 89. Of those, 17 are `lab.*` and 72 are inventoried. Each of the 72 appears exactly once in table 1, matched as a fixed string. No file is missing or extra.
 - Every AC id in tables 1 and 2 exists in the PRD §15 tables. The twelve removed ids (AC06, AC07, AC20 to AC23, AC27, AC28, AC35, AC40, AC56, AC57) are absent from those tables, so a citation would have failed.
 - Every O id, ADR id, and PRD section cited exists. Every new screen cites a PRD section, and every one except N01 also cites an AC.
+
+The 27.10.2026 amendment was checked by reading the decision record. The counts were updated by hand. The AC ids AC85 to AC90 exist in the PRD (section 15) and were read against it.
 
 Not verified: that a route listed as Keep has no booking import beyond the files named in ADR-012 (a `tsc` run after the move will list them), the content of the 17 lab files beyond their imports, and the guest-side behaviour in a running app. No code was run in the app, and nothing here was checked against the owner's reference images.
