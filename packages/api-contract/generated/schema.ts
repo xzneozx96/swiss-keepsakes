@@ -690,6 +690,257 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/pins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PinWriteBody"];
+                };
+            };
+            responses: {
+                /** @description The new draft pin */
+                201: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pin"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/pins/{pinId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    pinId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pin is deleted. Only a pin that was never published can be */
+                204: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    pinId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["PinWriteBody"];
+                };
+            };
+            responses: {
+                /** @description The pin with the change saved. A left-out field stays, null clears, a list replaces */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pin"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/store/{storeId}/pins/{pinId}/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    pinId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pin is hidden. Its published text is kept */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pin"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/pins/{pinId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    pinId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pin is live with its draft */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pin"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -829,6 +1080,16 @@ export interface components {
              */
             language?: "en" | "de";
         };
+        /** @description Text per language. A present key is non-empty and at most 20000 characters */
+        LocalizedLongText: {
+            de?: string;
+            en?: string;
+        };
+        /** @description Text per language. A present key is non-empty and at most 300 characters */
+        LocalizedText: {
+            de?: string;
+            en?: string;
+        };
         Me: {
             /**
              * Format: uuid
@@ -894,6 +1155,104 @@ export interface components {
             /** @enum {string} */
             state: "open" | "accepted" | "revoked" | "expired";
         } | null;
+        /** @description A map pin as the editor sees it, with its draft and its published text */
+        Pin: {
+            address: string | null;
+            categoryIds: string[];
+            /** Format: uuid */
+            coverMediaId: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            dates: {
+                endTime: string | null;
+                firstDay: string;
+                /** Format: uuid */
+                id: string;
+                lastDay: string;
+                startTime: string | null;
+            }[];
+            draft: {
+                tip: {
+                    de?: string;
+                    en?: string;
+                };
+                title: {
+                    de?: string;
+                    en?: string;
+                };
+            } | null;
+            /** Format: date-time */
+            firstPublishedAt: string | null;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            latitude: number | null;
+            longitude: number | null;
+            /** Format: uuid */
+            mainStoryGroupId: string | null;
+            published: {
+                tip: {
+                    de?: string;
+                    en?: string;
+                };
+                title: {
+                    de?: string;
+                    en?: string;
+                };
+            } | null;
+            rowVersion: number;
+            slug: {
+                de?: string;
+                en?: string;
+            } | null;
+            /** @enum {string} */
+            status: "draft" | "published" | "hidden";
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            /** Format: uuid */
+            storeId: string;
+            /** Format: date-time */
+            updatedAt: string;
+            weeklyHours: {
+                closes: string;
+                day: number;
+                opens: string;
+            }[];
+        };
+        /** @description Every field is optional. A pin has no type and no price */
+        PinWriteBody: {
+            address?: string | null;
+            categoryIds?: string[];
+            /** Format: uuid */
+            coverMediaId?: string | null;
+            dates?: {
+                endTime?: string | null;
+                /** Format: date */
+                firstDay: string;
+                /** Format: date */
+                lastDay: string;
+                startTime?: string | null;
+            }[];
+            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes")[];
+            latitude?: number | null;
+            longitude?: number | null;
+            /** Format: uuid */
+            mainStoryGroupId?: string | null;
+            slug?: {
+                de?: string;
+                en?: string;
+            } | null;
+            /** @enum {string} */
+            stayTag?: "short_stay" | "multi_day" | "both";
+            tip?: components["schemas"]["LocalizedLongText"];
+            title?: components["schemas"]["LocalizedText"];
+            weeklyHours?: {
+                closes: string;
+                /** @description 1 is Monday, 7 is Sunday */
+                day: number;
+                opens: string;
+            }[];
+        };
         PreviewInvitation: {
             /** @description The token from the invitation link. It travels in the body, never in the query string */
             token: string;

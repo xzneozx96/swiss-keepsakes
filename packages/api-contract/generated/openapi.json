@@ -254,6 +254,40 @@
         ],
         "type": "object"
       },
+      "LocalizedLongText": {
+        "additionalProperties": false,
+        "description": "Text per language. A present key is non-empty and at most 20000 characters",
+        "properties": {
+          "de": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LocalizedText": {
+        "additionalProperties": false,
+        "description": "Text per language. A present key is non-empty and at most 300 characters",
+        "properties": {
+          "de": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Me": {
         "properties": {
           "guestId": {
@@ -462,6 +496,426 @@
           "object",
           "null"
         ]
+      },
+      "Pin": {
+        "description": "A map pin as the editor sees it, with its draft and its published text",
+        "properties": {
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "coverMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dates": {
+            "items": {
+              "properties": {
+                "endTime": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "firstDay": {
+                  "type": "string"
+                },
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "lastDay": {
+                  "type": "string"
+                },
+                "startTime": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "firstDay",
+                "lastDay",
+                "startTime",
+                "endTime"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "draft": {
+            "properties": {
+              "tip": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "title": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "title",
+              "tip"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "firstPublishedAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "latitude": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "longitude": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "mainStoryGroupId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "published": {
+            "properties": {
+              "tip": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "title": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "title",
+              "tip"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "slug": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "hidden"
+            ],
+            "type": "string"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "weeklyHours": {
+            "items": {
+              "properties": {
+                "closes": {
+                  "type": "string"
+                },
+                "day": {
+                  "type": "integer"
+                },
+                "opens": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "day",
+                "opens",
+                "closes"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "storeId",
+          "status",
+          "slug",
+          "latitude",
+          "longitude",
+          "address",
+          "weeklyHours",
+          "stayTag",
+          "interests",
+          "coverMediaId",
+          "mainStoryGroupId",
+          "categoryIds",
+          "dates",
+          "draft",
+          "published",
+          "firstPublishedAt",
+          "rowVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "PinWriteBody": {
+        "additionalProperties": false,
+        "description": "Every field is optional. A pin has no type and no price",
+        "properties": {
+          "address": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "type": "array"
+          },
+          "coverMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dates": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "endTime": {
+                  "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "firstDay": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "lastDay": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "startTime": {
+                  "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "firstDay",
+                "lastDay"
+              ],
+              "type": "object"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
+          "interests": {
+            "items": {
+              "enum": [
+                "history-culture",
+                "food-drink",
+                "lake-mountains",
+                "shopping-keepsakes"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "type": "array"
+          },
+          "latitude": {
+            "maximum": 90,
+            "minimum": -90,
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "longitude": {
+            "maximum": 180,
+            "minimum": -180,
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "mainStoryGroupId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slug": {
+            "additionalProperties": false,
+            "properties": {
+              "de": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "tip": {
+            "$ref": "#/components/schemas/LocalizedLongText"
+          },
+          "title": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "weeklyHours": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "closes": {
+                  "pattern": "^(?:(?:[01]\\d|2[0-3]):[0-5]\\d|24:00)$",
+                  "type": "string"
+                },
+                "day": {
+                  "description": "1 is Monday, 7 is Sunday",
+                  "maximum": 7,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "opens": {
+                  "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "day",
+                "opens",
+                "closes"
+              ],
+              "type": "object"
+            },
+            "maxItems": 21,
+            "type": "array"
+          }
+        },
+        "type": "object"
       },
       "PreviewInvitation": {
         "properties": {
@@ -1341,6 +1795,342 @@
             },
             "description": "The store is live",
             "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pins": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinWriteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The new draft pin",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pins/{pinId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The pin is deleted. Only a pin that was never published can be",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinWriteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The pin with the change saved. A left-out field stays, null clears, a list replaces",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pins/{pinId}/hide": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The pin is hidden. Its published text is kept",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pins/{pinId}/publish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The pin is live with its draft",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

@@ -45,3 +45,9 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'in-use': return { status: 409, type: 'content-in-use', title: 'Other content still uses this item.' }
   }
 }
+
+export const invalidIfMatchProblem = {
+  status: 400,
+  type: 'validation-failed',
+  title: 'If-Match must be the version you opened, such as "3".',
+} as const satisfies { status: 400, type: ProblemType, title: string }
