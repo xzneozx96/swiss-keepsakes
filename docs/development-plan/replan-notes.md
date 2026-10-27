@@ -225,3 +225,5 @@ Run on 2026-10-26.
 - A diff of the E0 to E2 rows against `HEAD` shows changes only in E0.3 (suffix) and in the rewritten E2.5, E2.6, E2.7 and E2.9.
 
 Not verified: the points and the sprint map (guesses), that the inventory's "Keep" rows need no further change, the content of each ADR beyond its index line, and a live Lark sync (`--dry-run` ran and wrote nothing).
+
+Note of 27.10.2026. This file is a record of the 26.10.2026 re-cut, so its text is not rewritten. Migration `0009_pin_model` (E2.11, owner gate G11) took number 0009. The migration names in this record moved up by one in the plan and the data model: `0014_orders` is now `0015_orders` (row M1 above), and the others are `0010_catalog`, `0011_inventory`, `0012_reviews`, `0013_partners` and `0014_analytics`. The plan is the source.
