@@ -26,11 +26,14 @@ import {
   orderTabs,
 } from '@/features/transactions/order-detail/lib/search-params'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { noIndexHead } from '@/lib/no-index'
 
 // C15 Guest order detail (step 1.13). The trailing underscore keeps it out of account.tsx,
 // which has no <Outlet/>; C14 rows link here. `tab` is optional so every existing link still opens
 // on Overview.
 export const Route = createFileRoute('/_guest/account_/orders/$orderId')({
+  ssr: false,
+  head: noIndexHead,
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   validateSearch: (search: Record<string, unknown>): { tab?: OrderTab } =>
     orderTabs.includes(search.tab as OrderTab)

@@ -52,6 +52,7 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - A hash-link migration shim maps old `#/path` links to their path once, on the client, so shared prototype links keep working.
 - The invitation token stays in the URL fragment. `captureInvitations` is kept and tested under the new router. `takeGoogleReturn` is removed, because `/sign-in?error=` is now readable. Both flows need an end-to-end test, since each was written for hash history.
 - The partner report token stays a path segment (gate D7). `/partner/*` sends `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex`, and the access log scrubs the token.
+- A Start request middleware registered in `src/start.ts` sets these headers (and `noindex` on every private area) on pages, 404s and router redirects, matching the path the way the router does. Start answers a path that starts with two or more slashes or with a backslash (`//partner/x`, `/\partner/x`) with a 308 before any middleware runs, so that one redirect has no headers (its target has). An error thrown while rendering a private path is logged and answered with a 500 that carries them. Gate G-E33-STARTMW.
 - `/r/:code` records the visit and redirects to an optional same-origin target path, else `/:lang` (AC24).
 
 **Price rule (gate D10).** No document, meta tag, JSON-LD, list page, list JSON or public list response carries a price. Price elements carry `data-nosnippet`.
@@ -64,6 +65,8 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - Search engines get server HTML for public pages only. A visitor on a slow phone gets HTML first and the bundle after.
 - The demo stays on Vercel static hosting until launch (owner gate H3, 2026-10-26, which amends H2). The Fly staging app hosts only the real app. Vercel is retired at launch, and `front-end/vercel.json` goes then.
 - A request for a server-rendered page costs one extra local call to the API.
+
+**Interim state and launch blocker (gate G-E33-D10, 2026-10-27).** E3.3 server-renders the prototype's guest routes as built, so their first HTML still carries CHF prices and guest comment and review text. This breaks the price rule and the review rule above until the pages are rebuilt. The Start server must not go live until E4.12 (tours), E4.13 (home), E4.14 (search, `ssr:false`) and E6.4 (product pages, with price and stock loaded in the browser) have removed prices and guest text from the server HTML. Each of those four stories has a spec check for it.
 
 ## Assumptions
 - Start 1.169.4 and the Nitro beta stay stable enough to pin and upgrade deliberately. If Nitro's beta blocks a deploy, the fallback is another Start deployment preset.
@@ -85,3 +88,5 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - 2026-10-26 revised, still proposed, for owner gates S1 and S1b and the two spikes
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-26 amended (gate H3)
+- 2026-10-27 amended (gate G-E33-D10): interim prices and guest text in prototype server HTML; launch blocked until E4.12, E4.13, E4.14, E6.4
+- 2026-10-27 amended (gate G-E33-STARTMW): private-area headers set by Start request middleware

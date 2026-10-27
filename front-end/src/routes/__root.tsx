@@ -6,6 +6,7 @@ import {
   Scripts,
   useRouterState,
 } from '@tanstack/react-router'
+import { useEffect } from 'react'
 
 import { AppProviders } from '@/app-providers'
 import { AppToasts } from '@/components/app-toasts'
@@ -72,6 +73,11 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootLayout() {
   const storageFull = useStorageFull()
+
+  // Effects run after the commit, so the end-to-end specs wait on this to know React owns the page.
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = 'true'
+  }, [])
   const isCalendarLab = useRouterState({
     select: state => state.location.pathname === '/lab/calendar',
   })

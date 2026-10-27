@@ -10,6 +10,7 @@ const HTTP_PREFIX = /^https?:\/\//
  * cannot drift. CC BY and CC BY-SA photos require this attribution.
  */
 export const Route = createFileRoute('/_guest/credits')({
+  ssr: true,
   component: CreditsPage,
 })
 

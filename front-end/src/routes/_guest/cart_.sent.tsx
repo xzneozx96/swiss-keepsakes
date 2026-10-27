@@ -3,12 +3,15 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { RequestSent } from '@/features/checkout/components/request-sent'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { noIndexHead } from '@/lib/no-index'
 
 /**
  * C07 Request sent. C06 opens it with `replace`; `?orders=` holds the new order ids,
  * comma-separated (e.g. "sk-1043,sk-1044").
  */
 export const Route = createFileRoute('/_guest/cart_/sent')({
+  ssr: false,
+  head: noIndexHead,
   validateSearch: (search: Record<string, unknown>): { orders: string } => ({
     orders: typeof search.orders === 'string' ? search.orders : '',
   }),

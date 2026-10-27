@@ -2,8 +2,8 @@ import type { Tour } from '@sk/domain/bookings'
 
 import { Accordion, Button } from '@heroui/react'
 import { firstPhoto, openingText, pickDoc, pickText } from '@sk/domain/shared'
-import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { ClientOnly, useNavigate } from '@tanstack/react-router'
+import { lazy, Suspense, useState } from 'react'
 import { EmptyState } from '@/components/empty-state'
 import {
   ClockIcon,
@@ -29,11 +29,18 @@ import { shop } from '@/features/catalog/seed'
 import { TourKeepsakes } from '@/features/tours/discovery/tour-keepsakes'
 import { TourSections } from '@/features/tours/discovery/tour-sections'
 import { useTours } from '@/features/tours/hooks/use-tours'
-import { TourItineraryMap } from '@/features/tours/map/tour-itinerary-map'
 import { useBack } from '@/hooks/use-back'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 
 const WHITESPACE = /\s/g
+
+// The map needs the browser (WebGL) and a large library: its chunk loads on the client only (AGENTS rule 9).
+const TourItineraryMap = lazy(() =>
+  import('@/features/tours/map/tour-itinerary-map').then(m => ({ default: m.TourItineraryMap })),
+)
+
+/** Stands in for the map in the server HTML and while its chunk loads. It only reserves the map frame's height; the map's heading and notes appear when it loads. */
+const mapPlaceholder = <div aria-hidden className="h-[min(72svh,640px)] min-h-[460px] rounded-3xl bg-surface-secondary" />
 
 export function TourDetailPage({ slug }: { slug: string }) {
   const { tours } = useTours()
@@ -326,7 +333,14 @@ export function TourDetail({
         {/* A tour added in M13 has no stops yet (no map positions): no itinerary section. */}
         {tour.itinerary.length > 0 && (
           <section className="flex flex-col gap-4 border-t border-separator py-7">
-            <TourItineraryMap key={tour.id} tour={tour} />
+            {/* `data-client-only` marks what the server does not render, so the e2e specs can leave it out when they compare text. */}
+            <div data-client-only>
+              <ClientOnly fallback={mapPlaceholder}>
+                <Suspense fallback={mapPlaceholder}>
+                  <TourItineraryMap key={tour.id} tour={tour} />
+                </Suspense>
+              </ClientOnly>
+            </div>
           </section>
         )}
         <TourSections checkedOn={tour.checkedOn} sections={tour.sections} />

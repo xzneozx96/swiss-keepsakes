@@ -15,6 +15,7 @@ interface HomeSearch {
 export const Route = createFileRoute('/_guest/')({
   validateSearch: (search: Record<string, unknown>): HomeSearch =>
     search.season === 'christmas' ? { season: 'christmas' } : {},
+  ssr: true,
   component: ExplorePage,
 })
 

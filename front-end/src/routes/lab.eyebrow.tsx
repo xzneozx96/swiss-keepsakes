@@ -23,9 +23,14 @@ import {
   EyebrowTape,
   EyebrowTrailPin,
 } from '@/features/lab/eyebrow-options-2'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: styles for the eyebrow above each home part (01 READ IT …) at phone width. */
-export const Route = createFileRoute('/lab/eyebrow')({ component: EyebrowLab })
+export const Route = createFileRoute('/lab/eyebrow')({
+  ssr: false,
+  head: noIndexHead,
+  component: EyebrowLab,
+})
 
 const round2 = [
   {

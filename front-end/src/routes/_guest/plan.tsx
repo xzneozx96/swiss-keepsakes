@@ -6,9 +6,12 @@ import {
 } from '@tanstack/react-router'
 
 import { PlannerChat } from '@/features/planner/components/planner-chat'
+import { noIndexHead } from '@/lib/no-index'
 
 // C21 Trip planner demo (R19): the floating button and the C01 banner open it (D1).
 export const Route = createFileRoute('/_guest/plan')({
+  ssr: false,
+  head: noIndexHead,
   // The composer is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   component: PlanPage,

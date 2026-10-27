@@ -12,6 +12,17 @@ const SIZE = 40
 const DROP = 28
 
 let flight: Promise<void> = Promise.resolve()
+let added = false
+
+/** True once the guest has added something on this page, so the cart badge can tell an add from a restored cart. */
+export function hasAddedToCart(): boolean {
+  return added
+}
+
+/** For tests: forget that an add happened. */
+export function resetAddedToCart(): void {
+  added = false
+}
 
 /** Resolves when the current flight has landed (at once when nothing is flying). */
 export function cartFlight(): Promise<void> {
@@ -42,6 +53,8 @@ function visibleCartButton(): HTMLElement | undefined {
 
 /** Starts the flight from `from` (read now, before the caller closes a sheet). */
 export function flyToCart(from: Element, photo: string | undefined): void {
+  added = true
+
   const target = visibleCartButton()
 
   if (!target || prefersReducedMotion())

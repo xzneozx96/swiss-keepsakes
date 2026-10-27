@@ -54,7 +54,7 @@ export function useTours(precision: 'minute' | 'second' = 'minute') {
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const guestId = useDemoSelector(s => s.data.signedInGuestId)
   const role = useDemoSelector(s => s.role)
-  const tick = useSharedClock(precision === 'second' ? 1_000 : 60_000)
+  const tick = useSharedClock(precision === 'second' ? 1_000 : 60_000, clockStartedAt)
 
   return {
     data,

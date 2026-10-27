@@ -6,9 +6,14 @@ import { useEffect, useRef } from 'react'
 
 import { demSource, loadAerialStyle } from '@/features/tours/map/aerial-style'
 import { tourSeed } from '@/features/tours/seed'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: simple ways to make the 3D tour map look less like blocks. Not part of the product. */
-export const Route = createFileRoute('/lab/map')({ component: MapLab })
+export const Route = createFileRoute('/lab/map')({
+  ssr: false,
+  head: noIndexHead,
+  component: MapLab,
+})
 
 const LIBERTY = 'https://tiles.openfreemap.org/styles/liberty'
 const options = [

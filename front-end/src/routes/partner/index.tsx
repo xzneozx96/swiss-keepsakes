@@ -4,10 +4,15 @@ import { PartnerShell } from '@/components/layout/partner-shell'
 import { useDemoSelector } from '@/features/demo'
 import { PartnerAccessScreen } from '@/features/partners/access/partner-access-screen'
 import { usePartners } from '@/features/partners/api/queries'
+import { noIndexHead } from '@/lib/no-index'
 
 // /partner, the prototype bar's Partner role: the report link of the partner last verified on
 // this browser, else Hotel am See's current link (outline §3).
-export const Route = createFileRoute('/partner/')({ component: PartnerHome })
+export const Route = createFileRoute('/partner/')({
+  ssr: false,
+  head: noIndexHead,
+  component: PartnerHome,
+})
 
 function PartnerHome() {
   const partners = usePartners()

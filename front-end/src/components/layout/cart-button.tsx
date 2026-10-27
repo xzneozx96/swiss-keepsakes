@@ -2,7 +2,7 @@ import { pluralCategory } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
 
 import { useEffect, useRef, useState } from 'react'
-import { cartFlight, prefersReducedMotion } from '@/components/fly-to-cart'
+import { cartFlight, hasAddedToCart, prefersReducedMotion } from '@/components/fly-to-cart'
 import { BackIcon, CartIcon, SearchIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useCart } from '@/features/cart/hooks/use-cart'
@@ -27,6 +27,7 @@ const toneClass: Record<ActionTone, string> = {
 /**
  * Round cart action for a screen's top area; 44px touch target, item count as a badge.
  * After an add, the badge keeps the old count until the flying item lands, then pops.
+ * A count that arrives before any add (the saved cart, restored after hydration) shows at once, without the pop.
  */
 export function CartButton({ tone = 'floating' }: { tone?: ActionTone }) {
   const { t, intlLocale } = useLocale()
@@ -51,7 +52,7 @@ export function CartButton({ tone = 'floating' }: { tone?: ActionTone }) {
   }, [count, shown])
 
   useEffect(() => {
-    if (shown > previousRef.current && !prefersReducedMotion()) {
+    if (hasAddedToCart() && shown > previousRef.current && !prefersReducedMotion()) {
       badgeRef.current?.animate(
         [
           { transform: 'scale(1)' },

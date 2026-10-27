@@ -14,9 +14,12 @@ import { useRequireSignIn } from '@/features/auth/hooks/use-require-sign-in'
 import { CartView } from '@/features/cart/components/cart-view'
 import { useCartView } from '@/features/cart/hooks/use-cart-view'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { noIndexHead } from '@/lib/no-index'
 
 // C04 Cart.
 export const Route = createFileRoute('/_guest/cart')({
+  ssr: false,
+  head: noIndexHead,
   // The cart's bar is sticky in its own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   component: CartPage,

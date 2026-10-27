@@ -42,9 +42,12 @@ import {
   paymentLabel,
   progressLabel,
 } from '@/features/orders/lib/labels'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: roomier M03 order cards with a gift photo. Not part of the product. */
 export const Route = createFileRoute('/lab/order-cards')({
+  ssr: false,
+  head: noIndexHead,
   component: OrderCardsLab,
 })
 

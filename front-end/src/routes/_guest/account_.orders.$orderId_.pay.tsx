@@ -21,10 +21,13 @@ import {
 import { usePayment } from '@/features/payment/hooks/use-payment'
 import { useOwnOrder } from '@/features/transactions/order-detail/hooks/use-order-detail'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { noIndexHead } from '@/lib/no-index'
 
 // C12 Payment (step 1.14): the simulated provider C15's Pay opens. The trailing underscore after
 // $orderId keeps it from nesting under C15, which has no <Outlet/>.
 export const Route = createFileRoute('/_guest/account_/orders/$orderId_/pay')({
+  ssr: false,
+  head: noIndexHead,
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   component: PayPage,
 })

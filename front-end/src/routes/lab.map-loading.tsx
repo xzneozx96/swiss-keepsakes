@@ -8,9 +8,12 @@ import {
   LoadingPill,
   LoadingTopBar,
 } from '@/features/lab/map-loading-options'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: loading indicators for the tour map while the next stop's tiles load. Not part of the product. */
 export const Route = createFileRoute('/lab/map-loading')({
+  ssr: false,
+  head: noIndexHead,
   component: MapLoadingLab,
 })
 

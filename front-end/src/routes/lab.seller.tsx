@@ -13,11 +13,16 @@ import {
   SellerSheetRow,
   SellerStrip,
 } from '@/features/lab/seller-options'
+import { noIndexHead } from '@/lib/no-index'
 
 const WHITESPACE = /\s/g
 
 /** Lab: compact seller blocks for the C03 gift detail. Not part of the product. */
-export const Route = createFileRoute('/lab/seller')({ component: SellerLab })
+export const Route = createFileRoute('/lab/seller')({
+  ssr: false,
+  head: noIndexHead,
+  component: SellerLab,
+})
 
 const options = [
   {

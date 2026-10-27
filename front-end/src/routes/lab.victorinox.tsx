@@ -14,9 +14,12 @@ import {
   VxWorkshop,
 } from '@/features/lab/victorinox-options-2'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: Victorinox partner section options for the guest home (C01) at phone width. */
 export const Route = createFileRoute('/lab/victorinox')({
+  ssr: false,
+  head: noIndexHead,
   component: VictorinoxLab,
 })
 

@@ -15,6 +15,7 @@ import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 
 // C03 Gift detail.
 export const Route = createFileRoute('/_guest/gifts/$slug')({
+  ssr: true,
   // The bottom bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   component: GiftDetailPage,

@@ -6,6 +6,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { StoryListLab } from '@/features/lab/blog-home/options-v3'
 import { categories } from '@/features/lab/blog-home/search-params'
 import { LabTabBar } from '@/features/lab/blog-home/shared'
+import { noIndexHead } from '@/lib/no-index'
 
 interface StoryListSearch {
   category: CategoryFilter
@@ -14,6 +15,8 @@ interface StoryListSearch {
 
 /** Lab: the story list (C19) with category circles as its filter, opened from the lab home. */
 export const Route = createFileRoute('/lab/blog-home_/stories')({
+  ssr: false,
+  head: noIndexHead,
   validateSearch: (
     search: Partial<Record<keyof StoryListSearch, unknown>>,
   ): StoryListSearch => ({

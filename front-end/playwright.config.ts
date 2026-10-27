@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 import { API_PORT, INBOX_PORT, SPA_PORT } from './tests/e2e/api-server'
 
 // Own port with --strictPort, so a run never attaches to another session's dev server.
-const PORT = 5391
+const PORT = Number(process.env.E2E_PORT ?? 5391)
 
 // The `*.api.spec.ts` specs run against the real API, which makes its own sk_test_* database on the Neon
 // development branch (api/test/support/e2e-server.ts). They run only when DATABASE_URL and

@@ -19,6 +19,7 @@ import {
 } from '@/features/lab/blog-home/options-v2'
 import { JourneyHome } from '@/features/lab/blog-home/options-v3'
 import { LabTabBar } from '@/features/lab/blog-home/shared'
+import { noIndexHead } from '@/lib/no-index'
 
 const ADVENT_PREVIEW_DAY = 8
 
@@ -61,6 +62,8 @@ function pick<T extends string>(value: unknown, allowed: readonly T[], fallback:
  * The choices live in the URL so Back from the lab story list returns to the same view.
  */
 export const Route = createFileRoute('/lab/blog-home')({
+  ssr: false,
+  head: noIndexHead,
   validateSearch: (
     search: Partial<Record<keyof LabSearch, unknown>>,
   ): LabSearch => ({

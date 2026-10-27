@@ -1,7 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { noIndexHead } from '@/lib/no-index'
 
 /** Lab index: UI experiments kept outside the product screens. */
-export const Route = createFileRoute('/lab/')({ component: LabIndex })
+export const Route = createFileRoute('/lab/')({
+  ssr: false,
+  head: noIndexHead,
+  component: LabIndex,
+})
 
 const experiments = [
   {

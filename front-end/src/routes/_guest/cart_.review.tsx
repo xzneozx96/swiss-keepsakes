@@ -7,9 +7,12 @@ import { ReviewView } from '@/features/checkout/components/review-view'
 import { useReview } from '@/features/checkout/hooks/use-review'
 import { useBack } from '@/hooks/use-back'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { noIndexHead } from '@/lib/no-index'
 
 // C06 Review and send request.
 export const Route = createFileRoute('/_guest/cart_/review')({
+  ssr: false,
+  head: noIndexHead,
   // The bottom bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   component: ReviewPage,
