@@ -2,9 +2,9 @@ import type { Browser, Page } from '@playwright/test'
 import type { Language } from './invitation-flows'
 import { expect, test } from '@playwright/test'
 import { managerInvitationMail, newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
-import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, signedInSuperAdmin } from './invitation-flows'
+import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, openLink, say, signedInSuperAdmin, tokenOf } from './invitation-flows'
 
-// [E2.4][AC02] M22 and M01 against the real API on one origin, at 375x812, on WebKit and Chromium, EN and DE. The Owner
+// [E2.4][AC02] M22 and M01 against the real API on one origin, at 375x812, on Chromium in English (playwright.config.ts). The Owner
 // comes through the E2.3 path (the Super Admin creates the store, the N20 link, accept). The N18 link is the one
 // the real mail attempt builds for the Manager's invitation (api/test/support/e2e-server.ts, `template=N18`).
 test.afterEach(closeVisitors)
@@ -57,8 +57,7 @@ async function acceptAsManager(page: Page, language: Language, link: string, ema
   await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/store$/)
 }
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links.
-test.fixme('[E2.4][AC02] the Owner invites a Manager, another email is refused, the Manager accepts and sees only that store and no members tab, and a removed Manager loses access', async ({ browser }, testInfo) => {
+test('[E2.4][AC02][E3.4][AC02] the Owner invites a Manager, another email is refused, the Manager accepts and sees only that store and no members tab, and a removed Manager loses access', async ({ browser }, testInfo) => {
   testInfo.setTimeout(180_000)
   const language = languageOf(testInfo)
   const { owner } = await storeWithOwner(browser, language)
@@ -72,8 +71,8 @@ test.fixme('[E2.4][AC02] the Owner invites a Manager, another email is refused, 
   const mail = await managerInvitationMail(managerEmail)
 
   expect(mail.to).toBe(managerEmail)
-  expect(mail.link.startsWith(`${SPA_ORIGIN}/#/invitation?invitation=`)).toBe(true)
-  const token = new URL(mail.link.replace('/#/', '/')).searchParams.get('invitation') ?? ''
+  expect(mail.link.startsWith(`${SPA_ORIGIN}/invitation#invitation=`)).toBe(true)
+  const token = tokenOf(mail.link)
 
   // Another email is refused, and the invitation stays open for the right one.
   const other = await newVisitor(browser, language)
@@ -92,13 +91,14 @@ test.fixme('[E2.4][AC02] the Owner invites a Manager, another email is refused, 
     if (new URL(request.url()).pathname === '/api/me/invitations/accept')
       accepts.push(request.method())
   })
-  await manager.goto(mail.link)
+  await openLink(manager, mail.link)
   await expect(manager.getByText(say(language, 'stores.invite.roleManager'))).toBeVisible()
   await expect(manager.getByRole('button', { name: say(language, 'stores.invite.accept') })).toHaveCount(0)
   expect(accepts).toEqual([])
   expect(manager.url()).not.toContain(token)
   await acceptAsManager(manager, language, mail.link, managerEmail)
   expect(accepts).toHaveLength(1)
+  // No request address and no referer of either person held the token: followLinkAs and openLink watch, and the afterEach checks.
 
   const me = await (await manager.request.get('/api/me')).json() as { stores: Array<{ storeId: string, role: string }> }
 
@@ -128,8 +128,7 @@ test.fixme('[E2.4][AC02] the Owner invites a Manager, another email is refused, 
   expect(after.stores).toHaveLength(0)
 })
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links.
-test.fixme('[E2.4][AC02] revoke kills the link and a new invitation of the same address gets a new one, and send again kills the old link', async ({ browser }, testInfo) => {
+test('[E2.4][AC02] revoke kills the link and a new invitation of the same address gets a new one, and send again kills the old link', async ({ browser }, testInfo) => {
   testInfo.setTimeout(180_000)
   const language = languageOf(testInfo)
   const { owner } = await storeWithOwner(browser, language)
@@ -147,7 +146,7 @@ test.fixme('[E2.4][AC02] revoke kills the link and a new invitation of the same 
   await expect(owner.locator('[data-invitation]').filter({ hasText: revoked })).toHaveCount(0)
   const late = await newVisitor(browser, language)
 
-  await late.goto(revokedMail.link)
+  await openLink(late, revokedMail.link)
   await expect(late.getByRole('heading', { name: say(language, 'stores.refusal.revoked.manager.title') })).toBeVisible()
   await expect(late.getByText(say(language, 'stores.refusal.revoked.manager.text'))).toBeVisible()
   await expect(late.getByRole('button', { name: say(language, 'stores.invite.signIn') })).toHaveCount(0)
@@ -162,11 +161,11 @@ test.fixme('[E2.4][AC02] revoke kills the link and a new invitation of the same 
   expect(second.link).not.toBe(first.link)
   const stale = await newVisitor(browser, language)
 
-  await stale.goto(first.link)
+  await openLink(stale, first.link)
   await expect(stale.getByRole('heading', { name: say(language, 'stores.refusal.notFound.title') })).toBeVisible()
   const fresh = await newVisitor(browser, language)
 
-  await fresh.goto(second.link)
+  await openLink(fresh, second.link)
   await expect(fresh.getByText(say(language, 'stores.invite.roleManager'))).toBeVisible()
   await expect(fresh.getByRole('button', { name: say(language, 'stores.invite.signIn') })).toBeVisible()
 })

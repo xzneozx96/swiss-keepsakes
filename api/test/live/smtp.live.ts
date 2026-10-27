@@ -11,7 +11,7 @@ import { createSmtpTransport } from '../../src/platform/mail.ts'
 const testInbox = 'tuananhngyen218@gmail.com'
 
 // The N01 code is fake. The link is the shape InvitationLink builds, with a fake token.
-const link = 'https://swiss-keepsakes.example/#/invitation?invitation=live-check-fake-token-not-valid'
+const link = 'https://swiss-keepsakes.example/invitation#invitation=live-check-fake-token-not-valid'
 
 const invitationId = '00000000-0000-7000-8000-00000000e208'
 

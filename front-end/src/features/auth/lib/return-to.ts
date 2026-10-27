@@ -69,7 +69,7 @@ export function signInUrl(returnTo: string): string {
 
 /**
  * Where Better Auth sends the browser when Google sign-in fails, on our own origin. It adds `error=<code>`. The
- * path, not the hash, is what the API's `errorCallbackURL` can carry, so `takeGoogleReturn` moves it into the hash.
+ * address is a real `/sign-in` route, so the sign-in screen reads `error` from its search.
  */
 export function signInErrorUrl(returnTo: string): string {
   return `${window.location.origin}/sign-in?${new URLSearchParams({ returnTo })}`

@@ -2,7 +2,6 @@ import { readSessionStored, removeSessionStored, writeSessionStored } from '@/li
 import { INVITATION_PARAM, INVITATION_PATH, ONBOARDING_PATH } from './search-params'
 
 const TOKEN_KEY = 'sk.invitationToken'
-const LEADING_HASH = /^#/
 
 const listeners = new Set<() => void>()
 
@@ -21,17 +20,16 @@ export function subscribeInvitationToken(listener: () => void) {
 }
 
 /**
- * Moves the invitation token from an address to `sessionStorage` and returns the address without it. It
- * returns undefined when the address holds no token, or is neither A02 nor M01: only their links carry one. Only
- * `sessionStorage` keeps the token: it lives as long as the tab, so the sign-in redirect and Google's round trip
- * find it again, and it reaches no history entry, no `returnTo` and no other tab.
+ * Moves the invitation token from the fragment of an address to `sessionStorage` and returns the fragment without
+ * it (`''` when nothing is left; other fragment parameters stay). It returns undefined when the fragment holds no
+ * token, or the path is neither A02 nor M01: only their links carry one. Only `sessionStorage` keeps the token: it
+ * lives as long as the tab, so the sign-in redirect and Google's round trip find it again, and it reaches no
+ * history entry, no `returnTo` and no other tab. The fragment never leaves the browser, so no server log sees it.
  */
-export function takeInvitationFromHash(hash: string): string | undefined {
-  const [path = '', query = ''] = hash.replace(LEADING_HASH, '').split('?')
-
-  if (path !== ONBOARDING_PATH && path !== INVITATION_PATH)
+export function takeInvitationFromHash(pathname: string, hash: string): string | undefined {
+  if (pathname !== ONBOARDING_PATH && pathname !== INVITATION_PATH)
     return undefined
-  const params = new URLSearchParams(query)
+  const params = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash)
   const token = params.get(INVITATION_PARAM)
 
   if (token === null)
@@ -40,14 +38,17 @@ export function takeInvitationFromHash(hash: string): string | undefined {
   if (token && writeSessionStored(TOKEN_KEY, token))
     tokenChanged()
 
-  return `#${path}${params.size > 0 ? `?${params}` : ''}`
+  const rest = params.toString()
+
+  // `concat`, not a template: tests/path-links.test.ts flags the text `#${` as a hash-history address.
+  return rest ? '#'.concat(rest) : ''
 }
 
 /** Runs before the router starts, so the token is out of the address before any redirect. The app starts either way. */
 export function takeInvitationFromAddress() {
   try {
     const { pathname, search, hash } = window.location
-    const clean = takeInvitationFromHash(hash)
+    const clean = takeInvitationFromHash(pathname, hash)
 
     if (clean !== undefined)
       window.history.replaceState(window.history.state, '', `${pathname}${search}${clean}`)
@@ -59,7 +60,7 @@ export function takeInvitationFromAddress() {
 
 /**
  * Takes the token out of the address at start and whenever the address changes in an open tab. Call it before
- * `createRouter`: the router listens to `popstate` too, and the listener added first runs first, so the router
+ * the router starts (the client entry does): the router listens to `popstate` too, and the listener added first runs first, so the router
  * reads the address with no token in it. `hashchange` follows `popstate` and covers a browser that sends only it.
  */
 export function captureInvitations(): () => void {

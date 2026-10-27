@@ -27,7 +27,7 @@ describe('[E2.3] the identity module\'s InvitationLink', () => {
 
     const url = await link(tx, 'N20', owner.id)
 
-    expect(url).toBe('https://shop.example/#/store/onboarding?invitation=token-1')
+    expect(url).toBe('https://shop.example/store/onboarding#invitation=token-1')
     expect(fake.state.invitations.get(owner.id)?.tokenHash).toBe(hashInvitationToken('token-1'))
     expect(JSON.stringify([...fake.state.invitations.values()])).not.toContain('token-1')
   })
@@ -37,7 +37,7 @@ describe('[E2.3] the identity module\'s InvitationLink', () => {
     const url = new URL((await link(tx, 'N20', owner.id)) ?? '')
 
     expect(url.search).toBe('')
-    expect(url.pathname).toBe('/')
+    expect(url.pathname).toBe('/store/onboarding')
     expect(url.hash).toContain('invitation=token-1')
   })
 
@@ -74,7 +74,7 @@ describe('[E2.3] the identity module\'s InvitationLink', () => {
 
     expect(await withBoth(tx, 'N18', owner.id)).toBeUndefined()
     expect(await withBoth(tx, 'N20', manager.id)).toBeUndefined()
-    expect(await withBoth(tx, 'N18', manager.id)).toBe('https://shop.example/#/invitation?invitation=token-x')
+    expect(await withBoth(tx, 'N18', manager.id)).toBe('https://shop.example/invitation#invitation=token-x')
     expect(await link(tx, 'N20', owner.id)).toContain('/store/onboarding')
   })
 

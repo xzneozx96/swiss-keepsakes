@@ -5,10 +5,10 @@ import { brandName, renderMail } from '../../src/modules/notifications/applicati
 
 const invitationId = '0192f3a0-0000-7000-8000-000000000002'
 
-// A link as InvitationLink builds it: the SPA origin, the screen and a 256-bit token after the `#`.
+// A link as InvitationLink builds it: the SPA origin, the screen path, and a 256-bit token in the fragment.
 const token = 'q3J9mZ0vKf2xT7hYbN4sLw8dEaUc1RiPoG5tVnXyHkM'
-const link = `https://swiss-keepsakes.example/#/invitation?invitation=${token}`
-const ownerLink = `https://swiss-keepsakes.example/#/store/onboarding?invitation=${token}`
+const link = `https://swiss-keepsakes.example/invitation#invitation=${token}`
+const ownerLink = `https://swiss-keepsakes.example/store/onboarding#invitation=${token}`
 
 const longInviter = 'Ngọc Anh Trần-Müller von Hohenzollern-Sigmaringen-Wiedenbrück'
 

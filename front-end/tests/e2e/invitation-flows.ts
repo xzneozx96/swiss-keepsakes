@@ -1,4 +1,4 @@
-import type { Browser, BrowserContext, Page } from '@playwright/test'
+import type { Browser, BrowserContext, Locator, Page, Request } from '@playwright/test'
 import { expect } from '@playwright/test'
 import { storesEn } from '../../src/features/stores/messages'
 import { storesDe } from '../../src/features/stores/messages.de'
@@ -54,10 +54,24 @@ export function sayStart(language: Language, key: MessageKey, params: Record<str
 }
 
 const visitors: BrowserContext[] = []
+const tokenChecks: Array<() => Promise<void>> = []
+const watchedPages = new WeakSet<Page>()
 
-/** Closes every browser `newVisitor` opened. Each spec calls it after each test. */
+/**
+ * Runs the token-leak check of every page that opened a mailed link, then closes every browser `newVisitor`
+ * opened. Each spec calls it after each test. The checks run first, while the pages still hold their requests,
+ * and the browsers close even when one fails.
+ */
 export async function closeVisitors() {
-  await Promise.all(visitors.splice(0).map(context => context.close()))
+  const checks = tokenChecks.splice(0)
+
+  try {
+    for (const check of checks)
+      await check()
+  }
+  finally {
+    await Promise.all(visitors.splice(0).map(context => context.close()))
+  }
 }
 
 /** A browser of its own, at 375x812, with its own client address: a separate person on a separate phone. */
@@ -86,11 +100,58 @@ export async function newVisitor(browser: Browser, language: Language): Promise<
  * address of the link without its token (A02 or M01).
  */
 export async function followLinkAs(page: Page, language: Language, link: string, email: string, screen: '/store/onboarding' | '/invitation' = '/store/onboarding') {
-  await page.goto(link)
-  await page.getByRole('button', { name: say(language, 'stores.invite.signIn') }).click()
+  await openLink(page, link)
+  // A bounded wait, so a stall here fails at this step with a screenshot instead of running out the test timeout.
+  await page.getByRole('button', { name: say(language, 'stores.invite.signIn') }).click({ timeout: 30_000 })
   await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+/sign-in\\?returnTo=${encodeURIComponent(screen)}$`))
   await signInFromSheet(page, language, email)
   await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+${screen}$`))
+}
+
+/**
+ * Opens a mailed invitation link on `page` and watches the page for the token from then on: `closeVisitors` fails
+ * the test if any request address or referer of the page held it. Every load of a mailed link goes through here
+ * (`followLinkAs` included), so no spec can forget the check. The page must come from `newVisitor`, or the
+ * spec must call `closeVisitors` itself.
+ */
+export async function openLink(page: Page, link: string) {
+  if (!watchedPages.has(page)) {
+    watchedPages.add(page)
+    tokenChecks.push(watchForToken(page, tokenOf(link)))
+  }
+  await page.goto(link)
+}
+
+/** The token of a mailed link: the link keeps it in the fragment (`<screen>#invitation=<token>`), never in the path or the query. */
+export function tokenOf(link: string): string {
+  return new URLSearchParams(new URL(link).hash.slice(1)).get('invitation') ?? ''
+}
+
+/**
+ * Records every request of `page`: its address without the fragment, and its `referer` once the request is over
+ * (`headerValue` on a request that is still in flight can wait for a long time). A test then asserts that none
+ * held `token`. The preview and accept POST bodies carry the token by design (backend.md section 8: a body is not
+ * logged and not sent as a referrer), so only addresses and headers are checked, never bodies.
+ */
+export function watchForToken(page: Page, token: string) {
+  const addresses: string[] = []
+  const referers: Array<Promise<string | null>> = []
+  const over = (request: Request) => referers.push(request.headerValue('referer'))
+
+  // The fragment is never sent to a server, and the browser strips it from `referer`; `url()` may still show it.
+  page.on('request', request => addresses.push(request.url().split('#')[0]))
+  page.on('requestfinished', over)
+  page.on('requestfailed', over)
+
+  return async () => {
+    const seen = await Promise.all(referers)
+
+    // A watcher that saw no finished or failed request (both listeners gone) must fail, not pass on an empty list.
+    expect(seen.length).toBeGreaterThan(0)
+    expect(addresses.length).toBeGreaterThan(0)
+    expect(addresses.filter(address => address.includes(token))).toEqual([])
+    expect(seen.filter(referer => referer?.includes(token))).toEqual([])
+  }
 }
 
 export async function signedInSuperAdmin(browser: Browser, language: Language) {
@@ -121,6 +182,8 @@ export async function createStore(page: Page, language: Language, ownerEmail: st
   await sheet.getByRole('textbox', { name: say(language, 'stores.create.email') }).fill(ownerEmail)
   await sheet.getByRole('button', { name: say(language, 'stores.create.submit') }).click()
   await expect(sheet).toHaveCount(0)
+  // The submit button sits where the toast shows, and a toast under the pointer stays open and covers the card below.
+  await page.mouse.move(0, 0)
 
   const card = page.locator(`[data-store="${slug}"]`)
 
@@ -129,4 +192,10 @@ export async function createStore(page: Page, language: Language, ownerEmail: st
   await expect(card.getByText(sayStart(language, 'stores.invitation.open', { email: ownerEmail }))).toBeVisible()
 
   return { name, slug, card }
+}
+
+/** Clicks a button after scrolling it to the middle of the screen, clear of the fixed bottom navigation of the admin and store screens. */
+export async function clickInMiddle(button: Locator) {
+  await button.evaluate(element => element.scrollIntoView({ block: 'center' }))
+  await button.click()
 }

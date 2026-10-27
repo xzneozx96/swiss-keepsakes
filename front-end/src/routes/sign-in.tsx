@@ -6,7 +6,7 @@ import { noIndexHead } from '@/lib/no-index'
 
 // C05 Sign in (1.6r): a full screen outside the guest shell so it can take two columns from 1024px.
 // `returnTo` is where the guest lands after sign-in (default: Account). `error` is the code Better Auth
-// sends when a Google sign-in failed (`takeGoogleReturn` moved `/sign-in?error=` into the hash under hash history; E3.4 removes it).
+// sends when a Google sign-in failed (Better Auth's `errorCallbackURL` is `/sign-in?returnTo=<path>`, a real route).
 export const Route = createFileRoute('/sign-in')({
   ssr: false,
   head: noIndexHead,

@@ -11,6 +11,7 @@ import { BackButton } from '@/components/layout/cart-button'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoSelector } from '@/features/demo'
 import { useSignIn } from '../hooks/use-sign-in'
+import { rememberGoogleReturnFailure } from '../lib/google-return'
 import { SignInForm } from './sign-in-form'
 
 /**
@@ -37,6 +38,7 @@ export function SignInScreen({
   // The error has been read into the view, so the address drops it: a reload starts clean.
   useEffect(() => {
     if (googleFailed) {
+      rememberGoogleReturnFailure()
       void navigate({
         to: '/sign-in',
         search: search => ({ ...search, error: undefined }),

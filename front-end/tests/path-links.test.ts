@@ -26,12 +26,6 @@ const HASH_LINK = /#\/|(?<!href=\{`)#\$\{/
 const COMMENT_LINE = /^\s*(?:\/\/|\/\*|\*)/
 const TRAILING_COMMENT = /\s\/\/.*$/
 
-// Until E3.4 moves invitation and Google returns off the hash.
-const UNTIL_E3_4 = [
-  'features/stores/lib/invitation-token.ts', // until E3.4
-  'features/auth/lib/google-return.ts', // until E3.4
-]
-
 function hashLinkLines(text: string): number[] {
   return text.split('\n').flatMap((line, n) =>
     !COMMENT_LINE.test(line) && HASH_LINK.test(line.replace(TRAILING_COMMENT, '')) ? [n + 1] : [],
@@ -49,10 +43,9 @@ describe('[E3.2] in-app links are paths, not hash addresses', () => {
   })
   /* eslint-enable no-template-curly-in-string */
 
-  it('no live source builds a `#/` address, except the two files E3.4 replaces', () => {
+  it('no live source builds a `#/` address', () => {
     const offenders = sourceFiles(SRC)
       .filter(file => !file.endsWith('routeTree.gen.ts'))
-      .filter(file => !UNTIL_E3_4.includes(relative(SRC, file)))
       .flatMap(file => hashLinkLines(readFileSync(file, 'utf8')).map(n => `${relative(SRC, file)}:${n}`))
 
     expect(offenders, 'files that still build `#/` links').toEqual([])

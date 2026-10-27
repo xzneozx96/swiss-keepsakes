@@ -177,7 +177,7 @@ jobs:
       # The harness starts the API and drops the database when Playwright stops it.
       - name: Install Playwright browsers
         if: ${{ !cancelled() && steps.neon.outputs.available == 'true' }}
-        run: pnpm exec playwright install --with-deps chromium webkit
+        run: pnpm exec playwright install --with-deps chromium
         working-directory: front-end
       - name: Sign-in and stores end to end
         if: ${{ !cancelled() && steps.neon.outputs.available == 'true' }}

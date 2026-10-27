@@ -11,19 +11,18 @@ const PORT = Number(process.env.E2E_PORT ?? 5391)
 //   env $(grep -E '^DATABASE_URL(_UNPOOLED)?=' ../api/.env.local | xargs) INTEGRATION_ALLOW_REMOTE_DATABASE=1 pnpm test:e2e
 const withApi = Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL_UNPOOLED)
 const phone = { viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true }
-const apiProjects = (['chromium', 'webkit'] as const).flatMap(browserName =>
-  (['en', 'de'] as const).map(language => ({
-    name: `api-${browserName}-${language}`,
-    testMatch: '**/*.api.spec.ts',
-    use: {
-      browserName,
-      ...phone,
-      locale: language === 'de' ? 'de-CH' : 'en-CH',
-      baseURL: `http://localhost:${SPA_PORT}`,
-      channel: browserName === 'chromium' ? process.env.PLAYWRIGHT_CHANNEL : undefined,
-    },
-  })),
-)
+// API flows run on Chromium in English only (owner, 2026-10-27). German API flows are not run.
+const apiProject = {
+  name: 'api-chromium-en',
+  testMatch: '**/*.api.spec.ts',
+  use: {
+    browserName: 'chromium' as const,
+    ...phone,
+    locale: 'en-CH',
+    baseURL: `http://localhost:${SPA_PORT}`,
+    channel: process.env.PLAYWRIGHT_CHANNEL,
+  },
+}
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -49,7 +48,7 @@ export default defineConfig({
       testIgnore: '**/*.api.spec.ts',
       use: { ...devices['Desktop Chrome'], channel: process.env.PLAYWRIGHT_CHANNEL },
     },
-    ...(withApi ? apiProjects : []),
+    ...(withApi ? [apiProject] : []),
   ],
   webServer: [
     {
