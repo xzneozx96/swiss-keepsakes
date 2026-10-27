@@ -2,7 +2,7 @@ import type { Browser, Page } from '@playwright/test'
 import type { Language } from './invitation-flows'
 import { expect, test } from '@playwright/test'
 import { managerInvitationMail, newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
-import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, signedInSuperAdmin, tokenOf, watchForToken } from './invitation-flows'
+import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, openLink, say, signedInSuperAdmin, tokenOf } from './invitation-flows'
 
 // [E2.4][AC02] M22 and M01 against the real API on one origin, at 375x812, on WebKit and Chromium, EN and DE. The Owner
 // comes through the E2.3 path (the Super Admin creates the store, the N20 link, accept). The N18 link is the one
@@ -76,7 +76,6 @@ test('[E2.4][AC02][E3.4][AC02] the Owner invites a Manager, another email is ref
 
   // Another email is refused, and the invitation stays open for the right one.
   const other = await newVisitor(browser, language)
-  const otherLeaks = watchForToken(other, token)
 
   await followLinkAs(other, language, mail.link, newEmail(), '/invitation')
   await other.getByRole('button', { name: say(language, 'stores.invite.accept') }).click()
@@ -87,22 +86,19 @@ test('[E2.4][AC02][E3.4][AC02] the Owner invites a Manager, another email is ref
   // The Manager sees the store and the role before sign-in, and nothing is accepted until the button is tapped.
   const manager = await newVisitor(browser, language)
   const accepts: string[] = []
-  const managerLeaks = watchForToken(manager, token)
 
   manager.on('request', (request) => {
     if (new URL(request.url()).pathname === '/api/me/invitations/accept')
       accepts.push(request.method())
   })
-  await manager.goto(mail.link)
+  await openLink(manager, mail.link)
   await expect(manager.getByText(say(language, 'stores.invite.roleManager'))).toBeVisible()
   await expect(manager.getByRole('button', { name: say(language, 'stores.invite.accept') })).toHaveCount(0)
   expect(accepts).toEqual([])
   expect(manager.url()).not.toContain(token)
   await acceptAsManager(manager, language, mail.link, managerEmail)
   expect(accepts).toHaveLength(1)
-  // No request address and no referer of either person held the token (the fragment stays in the browser).
-  await managerLeaks()
-  await otherLeaks()
+  // No request address and no referer of either person held the token: followLinkAs and openLink watch, and the afterEach checks.
 
   const me = await (await manager.request.get('/api/me')).json() as { stores: Array<{ storeId: string, role: string }> }
 
@@ -150,7 +146,7 @@ test('[E2.4][AC02] revoke kills the link and a new invitation of the same addres
   await expect(owner.locator('[data-invitation]').filter({ hasText: revoked })).toHaveCount(0)
   const late = await newVisitor(browser, language)
 
-  await late.goto(revokedMail.link)
+  await openLink(late, revokedMail.link)
   await expect(late.getByRole('heading', { name: say(language, 'stores.refusal.revoked.manager.title') })).toBeVisible()
   await expect(late.getByText(say(language, 'stores.refusal.revoked.manager.text'))).toBeVisible()
   await expect(late.getByRole('button', { name: say(language, 'stores.invite.signIn') })).toHaveCount(0)
@@ -165,11 +161,11 @@ test('[E2.4][AC02] revoke kills the link and a new invitation of the same addres
   expect(second.link).not.toBe(first.link)
   const stale = await newVisitor(browser, language)
 
-  await stale.goto(first.link)
+  await openLink(stale, first.link)
   await expect(stale.getByRole('heading', { name: say(language, 'stores.refusal.notFound.title') })).toBeVisible()
   const fresh = await newVisitor(browser, language)
 
-  await fresh.goto(second.link)
+  await openLink(fresh, second.link)
   await expect(fresh.getByText(say(language, 'stores.invite.roleManager'))).toBeVisible()
   await expect(fresh.getByRole('button', { name: say(language, 'stores.invite.signIn') })).toBeVisible()
 })

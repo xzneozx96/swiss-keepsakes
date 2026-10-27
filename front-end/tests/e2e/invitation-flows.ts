@@ -54,10 +54,24 @@ export function sayStart(language: Language, key: MessageKey, params: Record<str
 }
 
 const visitors: BrowserContext[] = []
+const tokenChecks: Array<() => Promise<void>> = []
+const watchedPages = new WeakSet<Page>()
 
-/** Closes every browser `newVisitor` opened. Each spec calls it after each test. */
+/**
+ * Runs the token-leak check of every page that opened a mailed link, then closes every browser `newVisitor`
+ * opened. Each spec calls it after each test. The checks run first, while the pages still hold their requests,
+ * and the browsers close even when one fails.
+ */
 export async function closeVisitors() {
-  await Promise.all(visitors.splice(0).map(context => context.close()))
+  const checks = tokenChecks.splice(0)
+
+  try {
+    for (const check of checks)
+      await check()
+  }
+  finally {
+    await Promise.all(visitors.splice(0).map(context => context.close()))
+  }
 }
 
 /** A browser of its own, at 375x812, with its own client address: a separate person on a separate phone. */
@@ -86,11 +100,26 @@ export async function newVisitor(browser: Browser, language: Language): Promise<
  * address of the link without its token (A02 or M01).
  */
 export async function followLinkAs(page: Page, language: Language, link: string, email: string, screen: '/store/onboarding' | '/invitation' = '/store/onboarding') {
-  await page.goto(link)
-  await page.getByRole('button', { name: say(language, 'stores.invite.signIn') }).click()
+  await openLink(page, link)
+  // A bounded wait, so a stall here fails at this step with a screenshot instead of running out the test timeout.
+  await page.getByRole('button', { name: say(language, 'stores.invite.signIn') }).click({ timeout: 30_000 })
   await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+/sign-in\\?returnTo=${encodeURIComponent(screen)}$`))
   await signInFromSheet(page, language, email)
   await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+${screen}$`))
+}
+
+/**
+ * Opens a mailed invitation link on `page` and watches the page for the token from then on: `closeVisitors` fails
+ * the test if any request address or referer of the page held it. Every load of a mailed link goes through here
+ * (`followLinkAs` included), so no spec can forget the check. The page must come from `newVisitor`, or the
+ * spec must call `closeVisitors` itself.
+ */
+export async function openLink(page: Page, link: string) {
+  if (!watchedPages.has(page)) {
+    watchedPages.add(page)
+    tokenChecks.push(watchForToken(page, tokenOf(link)))
+  }
+  await page.goto(link)
 }
 
 /** The token of a mailed link: the link keeps it in the fragment (`<screen>#invitation=<token>`), never in the path or the query. */
@@ -117,6 +146,8 @@ export function watchForToken(page: Page, token: string) {
   return async () => {
     const seen = await Promise.all(referers)
 
+    // A watcher that saw no finished or failed request (both listeners gone) must fail, not pass on an empty list.
+    expect(seen.length).toBeGreaterThan(0)
     expect(addresses.length).toBeGreaterThan(0)
     expect(addresses.filter(address => address.includes(token))).toEqual([])
     expect(seen.filter(referer => referer?.includes(token))).toEqual([])

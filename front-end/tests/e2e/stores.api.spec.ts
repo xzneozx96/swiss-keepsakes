@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
-import { clickInMiddle, closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, sayStart, signedInSuperAdmin, signInFromSheet, tokenOf, watchForToken, words } from './invitation-flows'
+import { clickInMiddle, closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, openLink, say, sayStart, signedInSuperAdmin, signInFromSheet, tokenOf, words } from './invitation-flows'
 
 // [E2.3][S8] The invitation screens against the real API (Better Auth, its own database) on one origin, at 375x812,
 // on WebKit and Chromium, EN and DE. The first specs drive what a visitor can reach with no invitation: the token
@@ -61,8 +61,9 @@ test('[E2.3][S8] A01 sends a visitor who has not signed in to sign-in, and shows
 })
 
 test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follows the N20 link and accepts, another email is refused, a second accept by the Owner answers as the first did, and open for sale is refused with the checklist', async ({ browser }, testInfo) => {
-  // About 110 steps, each API call taking 2 to 6 s against the remote Neon branch: it took 2.2 min alone and 3.1 min with four workers on one dev server.
-  testInfo.setTimeout(300_000)
+  // About 110 steps, each API call taking 2 to 6 s against the remote Neon branch. Passing runs took 1.8 to 2.2 min
+  // (alone and with four workers on one dev server); 180 s leaves room, and a stalled step fails at its own bounded wait.
+  testInfo.setTimeout(180_000)
   const language = languageOf(testInfo)
   const ownerEmail = newEmail()
   const admin = await signedInSuperAdmin(browser, language)
@@ -79,10 +80,8 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
   expect(token.length).toBeGreaterThan(16)
   expect(mail.text).toContain(mail.link)
 
-  const adminLeaks = watchForToken(admin, token)
-
   // A Super Admin who follows the Owner's link gets a refusal with the sign-out alone, and the invitation stays open.
-  await admin.goto(mail.link)
+  await openLink(admin, mail.link)
   await expect(admin).toHaveURL(/^https?:\/\/[^/#]+\/store\/onboarding$/)
   await expect(admin.getByRole('heading', { name: say(language, 'stores.refusal.superAdmin.title') })).toBeVisible()
   await expect(admin.getByText(say(language, 'stores.refusal.superAdmin.text'))).toBeVisible()
@@ -93,7 +92,6 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
 
   // Another email is refused, and the invitation stays open for the right one.
   const other = await newVisitor(browser, language)
-  const otherLeaks = watchForToken(other, token)
 
   await followLinkAs(other, language, mail.link, newEmail())
   await expect(other.getByRole('heading', { name: say(language, 'stores.refusal.mismatch.title') })).toBeVisible()
@@ -105,7 +103,6 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
   // The Owner follows the link, signs in with the invited email and accepts.
   const owner = await newVisitor(browser, language)
   const keys: Array<string | undefined> = []
-  const ownerLeaks = watchForToken(owner, token)
 
   owner.on('request', (request) => {
     if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/me/invitations/accept')
@@ -122,18 +119,14 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
   // The screen read the session first and sent no accept before sign-in, so the one accept after sign-in took the invitation.
   expect(keys).toHaveLength(1)
   expect(keys.every(key => (key?.length ?? 0) > 10)).toBe(true)
-  // No request address and no referer of either person held the token (the fragment stays in the browser).
-  await ownerLeaks()
-  await otherLeaks()
+  // No request address and no referer of any person held the token (the fragment stays in the browser): followLinkAs and openLink watch, and the afterEach checks.
 
   // A second accept of the same link by the same Owner, on another phone, answers as the first did (E2.4, so a lost answer cannot strand the Owner).
   const phone = await newVisitor(browser, language)
-  const phoneLeaks = watchForToken(phone, token)
 
   await followLinkAs(phone, language, mail.link, ownerEmail)
   await expect(phone.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
   expect(await phone.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
-  await phoneLeaks()
 
   // Open for sale is refused by the API with the checklist. The screen is made to think the store may open, as a
   // screen that is out of date would, and the real 409 answers.
@@ -155,7 +148,6 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
   await admin.reload()
   await expect(card.getByText(say(language, 'stores.status.onboarding'), { exact: true })).toBeVisible()
   await expect(card.locator('[data-invitation]')).toHaveAttribute('data-invitation', 'accepted')
-  await adminLeaks()
 })
 
 test('[E2.3][S8] after the Super Admin sends the invitation again, the old link says the invitation is not found and the new one works', async ({ browser }, testInfo) => {
@@ -174,7 +166,7 @@ test('[E2.3][S8] after the Super Admin sends the invitation again, the old link 
 
   const stale = await newVisitor(browser, language)
 
-  await stale.goto(first.link)
+  await openLink(stale, first.link)
   await expect(stale.getByRole('heading', { name: say(language, 'stores.refusal.notFound.title') })).toBeVisible()
   await expect(stale.getByRole('button', { name: say(language, 'stores.invite.signIn') })).toHaveCount(0)
 
