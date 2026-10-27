@@ -4,8 +4,8 @@ const MAX_TARGET_LENGTH = 200
 const PRINTABLE_ASCII = /^[\x21-\x7E]+$/
 // The first segment is exactly en or de, then the end, a slash or a query.
 const LANGUAGE_SEGMENT = /^\/(?:en|de)(?:[/?]|$)/
-// An empty segment, a backslash, a dot segment, or an encoded dot, backslash or control character.
-const FORBIDDEN = /\/\/|\\|%2e|%5c|%[01][0-9a-f]|(?:^|\/)\.{1,2}(?:[/?]|$)/i
+// An empty segment, a backslash, a dot segment (also before a fragment), or an encoded dot, backslash or control character.
+const FORBIDDEN = /\/\/|\\|%2e|%5c|%[01][0-9a-f]|(?:^|\/)\.{1,2}(?:[/?#]|$)/i
 
 /** The path a referral link may send the guest to, or null. The `to` value is untrusted, so only same-site language paths pass. */
 export function referralTarget(to: string | null): string | null {

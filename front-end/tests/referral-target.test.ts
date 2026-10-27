@@ -36,6 +36,8 @@ describe('referralTarget and referralLocation', () => {
     '/en/%2E%2E/store',
     '/en/%5cevil',
     '/en/./x',
+    '/en/..#x',
+    '/de/..#',
     '/en//x',
     '/en/a b',
     '/en/x%0d%0aSet-Cookie:a=b',
