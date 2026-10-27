@@ -364,7 +364,7 @@ Step 3 in pieces (spike question 9, an estimate of about 2 to 3 weeks for one de
 |---|---|---|
 | Check real app providers (session, demo store, locale) under server rendering, first (owner gate H1) | 1 | Moved here from the dropped SP9. Includes `vite dev` and client navigation between stories |
 | Entry and router setup for Start and Nitro | 2 to 4 | The 194 router-importing files and the `search-params.ts` pattern stay |
-| Hash history to browser history | 1 to 2 | Main risk: `#/` links (shim), `takeGoogleReturn` (remove), `captureInvitations` (keep, test), invitation tokens |
+| Hash history to browser history | 1 to 2 | Main risk: `#/` links (not redirected, G-E34-NOSHIM), `takeGoogleReturn` (remove), `captureInvitations` (keep, test), invitation tokens |
 | Guard browser-only code on the server | 2 to 4 | 8 files use browser storage and 42 touch `window` or `document`. Dashboards stay `ssr: false` |
 | Content routes with real server rendering | 1 to 2 for the first type | Stories first, then places, tours, gifts. Language-prefixed routes add no days |
 | Deploy | 1 to 2 | Dockerfile, `fly.toml` with two processes (`web`, `api`), forwarding of `/api` and `/webhooks`, verify scripts |
