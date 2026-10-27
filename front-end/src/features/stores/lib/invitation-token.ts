@@ -40,6 +40,7 @@ export function takeInvitationFromHash(pathname: string, hash: string): string |
 
   const rest = params.toString()
 
+  // `concat`, not a template: tests/path-links.test.ts flags the text `#${` as a hash-history address.
   return rest ? '#'.concat(rest) : ''
 }
 

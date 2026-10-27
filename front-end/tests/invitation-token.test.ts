@@ -57,6 +57,11 @@ describe('[E2.3][S8] the invitation token leaves the address', () => {
     expect(heldInvitationToken()).toBeUndefined()
   })
 
+  it('decodes a percent-encoded token', () => {
+    expect(takeInvitationFromHash('/store/onboarding', '#invitation=a%2Bb%2F')).toBe('')
+    expect(heldInvitationToken()).toBe('a+b/')
+  })
+
   it('forgets the token on request', () => {
     takeInvitationFromHash('/store/onboarding', `#invitation=${token}`)
     dropInvitationToken()
@@ -129,5 +134,23 @@ describe('[E2.3][S8] a link opened in a tab that is already on A02', () => {
     window.dispatchEvent(new PopStateEvent('popstate'))
 
     expect(heldInvitationToken()).toBeUndefined()
+  })
+})
+
+describe('[E3.4] a newer link opened in a tab that already holds a token', () => {
+  it.each(['popstate', 'hashchange'])('replaces the held token on %s', (type) => {
+    const stop = captureInvitations()
+
+    try {
+      sessionStorage.setItem('sk.invitationToken', 'A')
+      window.history.pushState(null, '', '/store/onboarding#invitation=B')
+      window.dispatchEvent(type === 'popstate' ? new PopStateEvent('popstate') : new HashChangeEvent('hashchange'))
+
+      expect(heldInvitationToken()).toBe('B')
+      expect(window.location.hash).toBe('')
+    }
+    finally {
+      stop()
+    }
   })
 })
