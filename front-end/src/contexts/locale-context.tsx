@@ -109,9 +109,32 @@ function usePastHydration(): boolean {
 
 const settling: Partial<Record<Language, Promise<void>>> = {}
 
-/** One promise per language, for `use`: it settles when the messages are loaded or failed, and never rejects. */
+/** The marker React reads to return a settled promise's value from `use` without suspending. */
+function markFulfilled(promise: Promise<void>): void {
+  Object.assign(promise, { status: 'fulfilled', value: undefined })
+}
+
+/**
+ * One promise per language, for `use`: it settles when the messages are loaded or failed, and never rejects.
+ * Once the messages are in, it is marked fulfilled, so `use` returns at once instead of suspending. That lets
+ * `use` be called on every render (React requires the same hook calls each time) and suspend only until then.
+ */
 function settled(language: Language): Promise<void> {
-  return settling[language] ??= loadDictionary(language).then(() => undefined, () => undefined)
+  const known = settling[language]
+
+  if (known)
+    return known
+  const promise = loaded[language]
+    ? Promise.resolve()
+    : loadDictionary(language).then(() => undefined, () => undefined)
+
+  settling[language] = promise
+  if (loaded[language])
+    markFulfilled(promise)
+  else
+    void promise.then(() => markFulfilled(promise))
+
+  return promise
 }
 
 /** The language in the address (`/de/...`), or undefined on a page without one. Needs a router. */
@@ -129,6 +152,12 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 function RoutedLocaleProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const urlLanguage = useUrlLanguage()
+
+  // The browser hydrates server HTML that is already in the URL's language, before the route's `beforeLoad`
+  // has run there. Waiting here for its messages keeps the first client render equal to the server's.
+  // Called on every render, as React requires; a fulfilled promise returns at once.
+  use(settled(urlLanguage ?? 'en'))
+
   const navigateTo = useCallback((next: Language) => {
     const { pathname, search, hash } = router.state.location
     const target = switchLanguagePath(pathname, next)
@@ -153,10 +182,6 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
   // The address wins on a prefixed page. The route's `beforeLoad` has loaded its messages, so the first render is already in it.
   const wanted = urlLanguage ?? storedChoice
 
-  // The browser hydrates server HTML that is already in the URL's language, before any route loader has run
-  // there. Waiting here for its messages keeps the first client render equal to the server's.
-  if (urlLanguage && !loaded[urlLanguage])
-    use(settled(urlLanguage))
   // If the messages are still missing (a stale page, a failed load), English shows until they arrive.
   const language = useDictionary(wanted) ? wanted : 'en'
 
