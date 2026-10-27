@@ -1,7 +1,15 @@
 // What the composition root may use (architecture 4.1). main.ts builds the use cases with the repositories from
 // adapters/, and wraps them with guardUseCases.
 export { makeCreatePin } from './application/create-pin.ts'
+export { makeCreateStoryGroup } from './application/create-story-group.ts'
+export { makeCreateStoryVersion } from './application/create-story-version.ts'
 export { makeDeletePin } from './application/delete-pin.ts'
+export { makeDeleteStoryVersion } from './application/delete-story-version.ts'
 export { makeHidePin } from './application/hide-pin.ts'
+export { makeMoveStoryVersion } from './application/move-story-version.ts'
 export { makePublishPin } from './application/publish-pin.ts'
+export { makePublishStoryVersion } from './application/publish-story-version.ts'
 export { makeSavePin } from './application/save-pin.ts'
+export { makeSaveStoryGroup } from './application/save-story-group.ts'
+export { makeSaveStoryVersion } from './application/save-story-version.ts'
+export { makeUnpublishStoryVersion } from './application/unpublish-story-version.ts'

@@ -25,6 +25,14 @@ describe('mapDatabaseError', () => {
     expect(mapDatabaseError(pg('23001', undefined, 'a published place cannot be deleted'))).toEqual({ reason: 'published-cannot-be-deleted' })
   })
 
+  it('[E2.6] a cleared published text is a caller bug, not in-use', () => {
+    expect(mapDatabaseError(pg('23001', undefined, 'column published of content.story_versions cannot change after insert'))).toBeUndefined()
+  })
+
+  it('[E2.6] a story group with a subject place that does not fit its kind is reference-invalid', () => {
+    expect(mapDatabaseError(pg('23514', 'story_groups_subject_check'))).toEqual({ reason: 'reference-invalid' })
+  })
+
   it('[E2.6] another restrict violation is in-use', () => {
     expect(mapDatabaseError(pg('23001', 'x_fkey', 'update or delete on table "media" violates RESTRICT'))).toEqual({ reason: 'in-use' })
   })

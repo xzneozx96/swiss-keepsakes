@@ -41,6 +41,9 @@ export function mapDatabaseError(error: unknown): Failure | undefined {
   if (pg.code === '23505' && slugConstraints.has(constraint))
     return { reason: 'slug-taken' }
   if (pg.code === '23001') {
+    // platform.reject_column_change (a published text cleared) is a bug in the caller, not something a user can fix.
+    if (message.includes('cannot change after insert'))
+      return undefined
     return message.includes('cannot be deleted') ? { reason: 'published-cannot-be-deleted' } : { reason: 'in-use' }
   }
   if (pg.code === '23503') {
@@ -49,6 +52,9 @@ export function mapDatabaseError(error: unknown): Failure | undefined {
   }
   if (pg.code === '23514' && publishedFieldsChecks.has(constraint))
     return { reason: 'incomplete', gaps: [] }
+  // A story group: only an editorial review has a subject place, and it must have one.
+  if (pg.code === '23514' && constraint === 'story_groups_subject_check')
+    return { reason: 'reference-invalid' }
   return undefined
 }
 

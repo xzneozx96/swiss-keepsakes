@@ -1,4 +1,4 @@
-import type { Localized, Pin, PinDate, StayTag, WeeklySpan } from '@sk/domain/content'
+import type { ContentLanguage, Localized, Pin, PinDate, StayTag, StoryDraft, StoryGroup, StoryVersion, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -65,4 +65,39 @@ export interface PinRepository<T> {
   publish: (tx: T, pin: Pin, at: Date) => Promise<Pin>
   hide: (tx: T, pin: Pin, at: Date) => Promise<Pin>
   remove: (tx: T, storeId: string, pinId: string) => Promise<boolean>
+}
+
+// What a story group save may change. A list replaces the whole list, in the order given.
+export interface StoryGroupChanges {
+  stayTag?: StayTag
+  interests?: string[]
+  categoryIds?: string[]
+  placeIds?: string[]
+  keepsakeProductIds?: string[]
+  relatedGroupIds?: string[]
+}
+
+// What a story version save may change. A save replaces the whole draft document.
+export interface StoryVersionChanges {
+  slug?: string | null
+  draft?: StoryDraft
+}
+
+export interface StoryRepository<T> {
+  insertGroup: (tx: T, storeId: string, input: { kind: StoryGroup['kind'], subjectPlaceId: string | null } & StoryGroupChanges, at: Date) => Promise<StoryGroup>
+  // Locks the row; the lists come with it. An id of another store has no row.
+  findGroupForUpdate: (tx: T, storeId: string, groupId: string) => Promise<StoryGroup | undefined>
+  // Writes the typed columns, replaces the lists that are given (positions from 1), bumps row_version.
+  saveGroup: (tx: T, group: StoryGroup, changes: StoryGroupChanges, at: Date) => Promise<StoryGroup>
+  // undefined when the group already has a version in that language.
+  insertVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage, changes: StoryVersionChanges, at: Date) => Promise<StoryVersion | undefined>
+  findVersionForUpdate: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<StoryVersion | undefined>
+  // Writes slug and draft, replaces the draft media_refs of the version, bumps row_version.
+  saveVersion: (tx: T, version: StoryVersion, changes: StoryVersionChanges, at: Date) => Promise<StoryVersion>
+  // draft becomes published and is cleared; published_at is kept once set; media_refs move from the draft slot to the published slot.
+  publishVersion: (tx: T, version: StoryVersion, at: Date) => Promise<StoryVersion>
+  // status goes back to draft; the published text stays.
+  unpublishVersion: (tx: T, version: StoryVersion, at: Date) => Promise<StoryVersion>
+  moveVersion: (tx: T, version: StoryVersion, targetGroupId: string, at: Date) => Promise<StoryVersion>
+  removeVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<boolean>
 }
