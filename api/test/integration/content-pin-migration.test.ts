@@ -142,4 +142,20 @@ describe('[E2.11][AC68] the migration runs on top of 0008', () => {
     expect((await pool.query('select 1 from content.place_links where place_id = $1', [place])).rowCount).toBe(1)
     expect(await names(pool, columnsSql, ['places'])).toContain('type')
   })
+
+  it('[E2.11][AC68] the migration runs over a plain link and keeps it', async () => {
+    const pool = await databaseAt0008()
+    const store = randomUUID()
+    const place = await insertId(pool, `insert into content.places (store_id, type) values ($1, 'accommodation') returning id`, [store])
+    await pool.query(
+      `insert into content.place_links (place_id, store_id, kind, network, disclosure, url) values ($1, $2, 'direct', null, false, 'https://example.com/stay')`,
+      [place, store],
+    )
+
+    await runMigrations(pool, migrationsFolder)
+
+    const { rows } = await pool.query<{ url: string }>('select url from content.place_links where place_id = $1', [place])
+    expect(rows.map(row => row.url)).toEqual(['https://example.com/stay'])
+    expect(await names(pool, columnsSql, ['places'])).not.toContain('type')
+  })
 })

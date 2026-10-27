@@ -1,4 +1,5 @@
 SET lock_timeout = '3s';--> statement-breakpoint
+LOCK TABLE content.place_links IN SHARE MODE;--> statement-breakpoint
 -- G11 guard: the only data this step would lose with meaning is a paid link, so refuse to run while one exists.
 DO $$
 BEGIN

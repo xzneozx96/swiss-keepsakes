@@ -142,6 +142,25 @@ describe('[E2.5] content tables', () => {
     expect(refused).toMatchObject({ code: '23514', constraint: 'places_published_fields_check' })
   })
 
+  it('[E2.11][AC68] a pin lacking a longitude cannot publish', async () => {
+    const place = await newPlace(randomUUID())
+
+    const refused = await failure(pool.query(
+      `update content.places set status = 'published', first_published_at = now(), slug = $2, latitude = 47.05, longitude = NULL, published = '{"name":{"en":"A"}}' where id = $1`,
+      [place, JSON.stringify({ en: slugOf('pier') })],
+    ))
+
+    expect(refused).toMatchObject({ code: '23514', constraint: 'places_published_fields_check' })
+  })
+
+  it('[E2.11][AC68] a pin with only a German title and slug publishes', async () => {
+    const place = await newPlace(randomUUID())
+
+    await publishPlace(place, JSON.stringify({ de: slugOf('aussicht') }), '{"name":{"de":"Aussicht"}}')
+
+    expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'published'`, [place])).toBe(1)
+  })
+
   it('[E2.5] a published place with a NULL published document is refused (the IS TRUE path)', async () => {
     const place = await newPlace(randomUUID())
 
@@ -307,7 +326,7 @@ async function newDraftVersion(group: string, language: string, store: string): 
 }
 
 describe('[E2.5] content rules', () => {
-  it('[E2.11][AC79] a published place can be hidden and cannot be deleted, and a draft can be deleted', async () => {
+  it('[E2.5][AC79] [E2.11][AC79] a published place can be hidden and cannot be deleted, and a draft can be deleted', async () => {
     const store = randomUUID()
     const draft = await newPlace(store)
     const published = await newPlace(store)
@@ -326,7 +345,7 @@ describe('[E2.5] content rules', () => {
     expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'hidden'`, [published])).toBe(1)
   })
 
-  it('[E2.11][AC79] a published place cannot clear first_published_at and then be deleted', async () => {
+  it('[E2.5][AC79] [E2.11][AC79] a published place cannot clear first_published_at and then be deleted', async () => {
     const store = randomUUID()
     const place = await newPlace(store)
     const first = await publishPlace(place, JSON.stringify({ en: slugOf('pier') }), '{"name":{"en":"Pier"}}')
@@ -345,7 +364,7 @@ describe('[E2.5] content rules', () => {
     expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'published' and first_published_at is not null`, [place])).toBe(1)
   })
 
-  it('[E2.5] a published story version cannot be deleted, and a draft one can', async () => {
+  it('[E2.5][AC79] [E2.11][AC79] a published story version cannot be deleted, and a draft one can', async () => {
     const store = randomUUID()
     const group = await newGroup(store)
     await insertPublishedVersion(group, 'en', store, slugOf('story'))
@@ -359,7 +378,7 @@ describe('[E2.5] content rules', () => {
     expect(deleted.rowCount).toBe(1)
   })
 
-  it('[E2.5][AC79] a published story version keeps its published text', async () => {
+  it('[E2.5][AC79] [E2.11][AC79] a published story version keeps its published text', async () => {
     const store = randomUUID()
     const group = await newGroup(store)
     await insertPublishedVersion(group, 'en', store, slugOf('story'))
@@ -381,7 +400,7 @@ describe('[E2.5] content rules', () => {
 
   // CASCADE, because Postgres refuses a plain TRUNCATE of a referenced table before any trigger runs.
   // A cascade from places also reaches story_versions, so the message may name either table.
-  it.each(['places', 'story_versions', 'media_refs'])('[E2.11][AC79] TRUNCATE ... CASCADE on content.%s is refused by the trigger', async (table) => {
+  it.each(['places', 'story_versions', 'media_refs'])('[E2.5][AC79] [E2.11][AC79] TRUNCATE ... CASCADE on content.%s is refused by the trigger', async (table) => {
     const refused = await failure(pool.query(`truncate content.${table} cascade`))
 
     expect(refused).toMatchObject({ code: '23000' })
