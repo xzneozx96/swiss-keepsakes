@@ -60,6 +60,8 @@ rm -rf /tmp/sk-e33-e32 && cp -r .output /tmp/sk-e33-e32
 
 The install needs the whole workspace (`api`, `e2e`, `spikes`, `.pnpmfile.cjs`), or the frozen lockfile check fails. The `/tmp/sk-e33-*` names are examples. Use scratch names that no other session uses.
 
+Since E3.5 the guest routes sit under `/en` and `/de`. `verify:routes` opens each guest page at its old address in the baseline and under the page language in the new build (`/stories` and `/en/stories`, `/` and `/en`), and compares the text and the final address with the language prefix removed. A baseline from before E3.5 needs nothing else. Set `BASE_PREFIXED=1` when both builds have the prefix. For `verify:renders`, set `GUEST_LANG=en` when you measure a build with the prefix.
+
 | Command | What it proves |
 | :-- | :-- |
 | `pnpm verify:routes /tmp/sk-e33-e32 /tmp/sk-new /tmp/sk-out` | The visible text of 86 routes, in English and German with a frozen clock and the Zurich time zone, is identical in both builds, and each route ends at the same address in both (a difference fails the run). It prints every route that differs. The routes that only render NotFound (retired booking routes) are not in the list |
