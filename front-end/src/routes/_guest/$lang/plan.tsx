@@ -5,11 +5,12 @@ import {
   useRouter,
 } from '@tanstack/react-router'
 
+import { useLocale } from '@/contexts/locale-context'
 import { PlannerChat } from '@/features/planner/components/planner-chat'
 import { noIndexHead } from '@/lib/no-index'
 
 // C21 Trip planner demo (R19): the floating button and the C01 banner open it (D1).
-export const Route = createFileRoute('/_guest/plan')({
+export const Route = createFileRoute('/_guest/$lang/plan')({
   ssr: false,
   head: noIndexHead,
   // The composer is sticky in the screen's own flow, so the shell reserves no tab-bar space.
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/_guest/plan')({
 })
 
 function PlanPage() {
+  const { language } = useLocale()
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
@@ -25,7 +27,7 @@ function PlanPage() {
   return (
     <PlannerChat
       onLeave={() =>
-        canGoBack ? router.history.back() : void navigate({ to: '/' })}
+        canGoBack ? router.history.back() : void navigate({ to: '/$lang', params: { lang: language } })}
     />
   )
 }

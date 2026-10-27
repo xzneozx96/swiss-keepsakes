@@ -26,7 +26,7 @@ import { isClosedOrder, useTransactionRow } from '../hooks/use-transaction-row'
  * order opens C15.
  */
 export function TransactionList() {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const isLoading = useSimulatedLoading()
   const orders = useGuestOrders()
   const open = orders
@@ -47,7 +47,7 @@ export function TransactionList() {
   if (orders.length === 0) {
     return (
       <EmptyState
-        action={{ label: t('transactions.empty.action'), to: '/' }}
+        action={{ label: t('transactions.empty.action'), to: '/$lang', params: { lang: language } }}
         icon={OrdersIcon}
         message={t('transactions.empty.message')}
       />

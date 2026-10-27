@@ -7,9 +7,10 @@ import { memo } from 'react'
 import { ClockIcon, FavouriteIcon, RatingIcon } from '@/components/icons'
 import { Media } from '@/components/media'
 import { StatusChip } from '@/components/status-chip'
+import { useLocale } from '@/contexts/locale-context'
 
 export interface ListingCardProps {
-  to: '/gifts/$slug' | '/tours/$slug'
+  to: '/$lang/gifts/$slug' | '/$lang/tours/$slug'
   slug: string
   name: string
   photo?: string
@@ -88,6 +89,7 @@ export const ListingCard = memo(function ListingCard({
   layout = 'grid',
   disabled = false,
 }: ListingCardProps) {
+  const { language } = useLocale()
   const contentClass
     = 'flex h-full flex-col gap-2.5 rounded-3xl outline-none focus-visible:focus-ring transition-transform active:scale-[0.98]'
   const content = (
@@ -157,7 +159,7 @@ export const ListingCard = memo(function ListingCard({
             </div>
           )
         : (
-            <Link className={contentClass} params={{ slug }} to={to}>
+            <Link className={contentClass} params={{ lang: language, slug }} to={to}>
               {content}
             </Link>
           )}

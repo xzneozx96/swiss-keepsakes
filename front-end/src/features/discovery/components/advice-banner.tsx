@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 
 import { ArrowRightIcon } from '@/components/icons'
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 
 interface AdviceBannerProps {
   title: string
@@ -30,6 +31,7 @@ export function AdviceBanner({
   action,
   captions,
 }: AdviceBannerProps) {
+  const { language } = useLocale()
   return (
     <section className="flex flex-col items-center gap-5 rounded-3xl bg-hero-cream px-5 pt-6 pb-6 text-center">
       <div aria-hidden className="relative h-40 w-full">
@@ -51,7 +53,8 @@ export function AdviceBanner({
       </div>
       <Link
         className={`${buttonVariants({ variant: 'primary' })} transition-transform active:scale-[0.98]`}
-        to="/plan"
+        to="/$lang/plan"
+        params={{ lang: language }}
       >
         {action}
         <ArrowRightIcon size={18} />

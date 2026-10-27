@@ -93,12 +93,12 @@ function RootLayout() {
 }
 
 function NotFound() {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
 
   return (
     <div className="px-4 py-12">
       <EmptyState
-        action={{ label: t('placeholder.backHome'), to: '/' }}
+        action={{ label: t('placeholder.backHome'), to: '/$lang', params: { lang: language } }}
         icon={InfoIcon}
         message={t('notFound.message')}
       />

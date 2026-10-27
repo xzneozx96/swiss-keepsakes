@@ -2,14 +2,17 @@ import { Link } from '@tanstack/react-router'
 
 import brandLogo from '@/assets/brand/swiss-keepsakes-logo.png'
 import brandMark from '@/assets/brand/swiss-keepsakes-mark.png'
+import { useLocale } from '@/contexts/locale-context'
 
 /** The app logo, linking to the discovery home: the mark on phones, the wordmark wider. */
 export function BrandLogo({ label }: { label: string }) {
+  const { language } = useLocale()
   return (
     <Link
       aria-label={label}
       className="inline-flex max-w-full rounded-lg outline-none focus-visible:focus-ring"
-      to="/"
+      params={{ lang: language }}
+      to="/$lang"
     >
       <img
         alt=""

@@ -30,7 +30,7 @@ import { TripProfile } from './trip-profile'
  * at the current step, and the optional trip profile. No response time is promised.
  */
 export function RequestSent({ orderIds }: { orderIds: string[] }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const { orders, languageNotice } = useRequestSent(orderIds)
   // One answer for the whole send: saved on every order it created (2.17).
   const trip = useTripProfile({
@@ -43,7 +43,7 @@ export function RequestSent({ orderIds }: { orderIds: string[] }) {
       <div className="flex flex-col gap-6 px-6 pt-[calc(env(safe-area-inset-top,0px)+24px)]">
         <h1 className="font-serif text-display">{t('requestSent.title')}</h1>
         <EmptyState
-          action={{ label: t('requestSent.explore'), to: '/' }}
+          action={{ label: t('requestSent.explore'), to: '/$lang', params: { lang: language } }}
           icon={OrdersIcon}
           message={t('requestSent.empty')}
         />
@@ -111,7 +111,8 @@ export function RequestSent({ orderIds }: { orderIds: string[] }) {
       <div className="sticky bottom-0 z-30 flex border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
         <Link
           className={buttonVariants({ fullWidth: true, size: 'lg' })}
-          to="/"
+          params={{ lang: language }}
+          to="/$lang"
         >
           {t('requestSent.explore')}
         </Link>

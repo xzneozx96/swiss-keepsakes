@@ -28,7 +28,7 @@ export function SignInScreen({
   returnTo: string
   googleFailed: boolean
 }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)
   const router = useRouter()
   const navigate = useNavigate()
@@ -63,7 +63,7 @@ export function SignInScreen({
 
   // Leaving without signing in goes back to where the guest came from (C04, not C06).
   const back = () =>
-    canGoBack ? router.history.back() : void navigate({ to: '/' })
+    canGoBack ? router.history.back() : void navigate({ to: '/$lang', params: { lang: language } })
 
   return (
     <div className="flex flex-1 justify-center bg-default/60 lg:bg-background">

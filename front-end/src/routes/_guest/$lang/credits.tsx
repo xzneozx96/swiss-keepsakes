@@ -9,7 +9,7 @@ const HTTP_PREFIX = /^https?:\/\//
  * Photo credits, rendered from src/assets/photos/CREDITS.txt so the page and the file
  * cannot drift. CC BY and CC BY-SA photos require this attribution.
  */
-export const Route = createFileRoute('/_guest/credits')({
+export const Route = createFileRoute('/_guest/$lang/credits')({
   ssr: true,
   component: CreditsPage,
 })

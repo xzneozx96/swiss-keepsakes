@@ -73,7 +73,7 @@ export function OrderReviews({ order }: { order: Order }) {
  * C15 ticket card, so it is a borderless inset rather than a card of its own.
  */
 function PostedReview({ product }: { product: ReviewableProduct }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const review = useProductReviews(product.productId).items.find(
     r => r.id === product.reviewId,
   )
@@ -93,8 +93,8 @@ function PostedReview({ product }: { product: ReviewableProduct }) {
       {product.slug && (
         <Link
           className="text-sm font-semibold underline underline-offset-4"
-          params={{ slug: product.slug }}
-          to="/gifts/$slug"
+          params={{ lang: language, slug: product.slug }}
+          to="/$lang/gifts/$slug"
         >
           {t('review.viewOnGift')}
         </Link>

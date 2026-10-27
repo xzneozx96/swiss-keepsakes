@@ -24,6 +24,7 @@ const iconButton
   = 'flex size-10 items-center justify-center rounded-full bg-surface shadow-surface outline-none focus-visible:focus-ring active:scale-95'
 
 export function TopBar() {
+  const { language } = useLocale()
   const { c } = useBlogData()
 
   return (
@@ -35,7 +36,7 @@ export function TopBar() {
           src={logo}
         />
       </div>
-      <Link aria-label={c.search} className={iconButton} to="/search">
+      <Link aria-label={c.search} className={iconButton} to="/$lang/search" params={{ lang: language }}>
         <SearchIcon size={20} />
       </Link>
       <Link aria-label="Cart" className={iconButton} to="/cart">
@@ -71,6 +72,7 @@ export function StoryMeta({
 
 /** The quiet shop link under a story: one line, no button. */
 export function GentleLinkLine({ link }: { link: GentleLink }) {
+  const { language } = useLocale()
   const { c } = useBlogData()
   const label = (
     <>
@@ -89,13 +91,13 @@ export function GentleLinkLine({ link }: { link: GentleLink }) {
 
   return link.kind === 'tour'
     ? (
-        <Link className={className} params={{ slug: link.slug }} to="/tours/$slug">
+        <Link className={className} params={{ lang: language, slug: link.slug }} to="/$lang/tours/$slug">
           <TourIcon className="text-muted" size={14} />
           <span>{label}</span>
         </Link>
       )
     : (
-        <Link className={className} params={{ slug: link.slug }} to="/gifts/$slug">
+        <Link className={className} params={{ lang: language, slug: link.slug }} to="/$lang/gifts/$slug">
           <GiftIcon className="text-muted" size={14} />
           <span>{label}</span>
         </Link>
@@ -111,6 +113,7 @@ export function SectionHeading({
   subtitle?: string
   seeAll?: string
 }) {
+  const { language } = useLocale()
   return (
     <div className="flex items-end justify-between gap-4 px-4">
       <div className="flex min-w-0 flex-col gap-0.5">
@@ -120,7 +123,8 @@ export function SectionHeading({
       {seeAll && (
         <Link
           className="flex shrink-0 items-center gap-0.5 rounded-md py-1 text-sm font-medium text-muted outline-none focus-visible:focus-ring"
-          to="/stories"
+          to="/$lang/stories"
+          params={{ lang: language }}
         >
           {seeAll}
           <ChevronRightIcon size={16} />
@@ -160,6 +164,7 @@ export function CategoryChips({
 
 /** Big vertical feed card: photo, meta, serif title, excerpt and an optional shop line. */
 export function FeedCard({ article }: { article: Article }) {
+  const { language } = useLocale()
   const { linkOf } = useBlogData()
   const link = linkOf(article)
 
@@ -167,8 +172,8 @@ export function FeedCard({ article }: { article: Article }) {
     <article className="flex flex-col gap-2.5">
       <Link
         className="flex flex-col gap-2.5 rounded-3xl outline-none focus-visible:focus-ring active:scale-[0.99]"
-        params={{ slug: article.slug }}
-        to="/stories/$slug"
+        params={{ lang: language, slug: article.slug }}
+        to="/$lang/stories/$slug"
       >
         <Media
           alt=""
@@ -202,11 +207,12 @@ export function CompactRow({
   article: Article
   index?: number
 }) {
+  const { language } = useLocale()
   return (
     <Link
       className="flex items-start gap-3 rounded-2xl py-1 outline-none focus-visible:focus-ring active:opacity-70"
-      params={{ slug: article.slug }}
-      to="/stories/$slug"
+      params={{ lang: language, slug: article.slug }}
+      to="/$lang/stories/$slug"
     >
       {index !== undefined && (
         <span className="w-7 shrink-0 font-serif text-[26px] leading-8 text-accent">
@@ -273,7 +279,7 @@ export function ChristmasRail() {
 /** The shop, demoted to one calm section: Tours, Victorinox and Keepsakes as photo tiles. */
 export function ShopStrip() {
   const { c } = useBlogData()
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const tile
     = 'relative flex flex-col overflow-hidden rounded-3xl outline-none focus-visible:focus-ring active:scale-[0.98]'
   const label
@@ -286,7 +292,7 @@ export function ShopStrip() {
     <section className="flex flex-col gap-3">
       <SectionHeading subtitle={c.shopSub} title={c.shopTitle} />
       <div className="grid grid-cols-3 gap-2.5 px-4">
-        <Link className={tile} to="/tours">
+        <Link className={tile} to="/$lang/tours" params={{ lang: language }}>
           <Media alt="" className="aspect-[3/4]" photo="rigi-vitznau-train">
             {shade}
             <span className={label}>{t('nav.tours')}</span>
@@ -295,14 +301,15 @@ export function ShopStrip() {
         <Link
           className={tile}
           search={{ subcategory: 'victorinox' }}
-          to="/gifts"
+          to="/$lang/gifts"
+          params={{ lang: language }}
         >
           <Media alt="" className="aspect-[3/4]" photo="victorinox-spartan">
             {shade}
             <span className={label}>{c.victorinox}</span>
           </Media>
         </Link>
-        <Link className={tile} to="/gifts">
+        <Link className={tile} to="/$lang/gifts" params={{ lang: language }}>
           <Media alt="" className="aspect-[3/4]" photo="postcards">
             {shade}
             <span className={label}>{t('nav.gifts')}</span>
@@ -356,13 +363,13 @@ export function LabTabBar() {
           </span>
         </li>
         <li>
-          <Link className={item} to="/gifts">
+          <Link className={item} to="/$lang/gifts" params={{ lang: language }}>
             <GiftIcon size={26} />
             {t('nav.gifts')}
           </Link>
         </li>
         <li className="relative">
-          <Link className={`${item} justify-end pb-[7px]`} to="/plan">
+          <Link className={`${item} justify-end pb-[7px]`} to="/$lang/plan" params={{ lang: language }}>
             <span
               aria-hidden
               className="absolute -top-7 flex size-14 items-center justify-center rounded-full bg-assistant text-white shadow-[0_10px_18px_-6px_rgba(213,43,30,0.5)]"
@@ -377,7 +384,7 @@ export function LabTabBar() {
           </Link>
         </li>
         <li>
-          <Link className={item} to="/tours">
+          <Link className={item} to="/$lang/tours" params={{ lang: language }}>
             <TourIcon size={26} />
             {t('nav.tours')}
           </Link>

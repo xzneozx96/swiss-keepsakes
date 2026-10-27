@@ -17,7 +17,7 @@ import { ScreenFrame } from './screen-frame'
  * link (A02 or M01), where the second sign-in comes back to.
  */
 export function RefusalView({ refusal, audience = 'owner', returnTo = ONBOARDING_PATH, onRetry }: { refusal: AcceptRefusal, audience?: InviteRole, returnTo?: string, onRetry?: () => void }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const navigate = useNavigate()
   const { signOutThen, pending } = useSignOut()
   const keys = refusalKeys(refusal, audience)
@@ -54,7 +54,7 @@ export function RefusalView({ refusal, audience = 'owner', returnTo = ONBOARDING
           </Link>
         )}
         {!switchesAccount(refusal) && refusal !== 'failed' && refusal !== 'member' && (
-          <Link className={`${buttonVariants({ variant: 'secondary' })} min-h-11`} to="/">
+          <Link className={`${buttonVariants({ variant: 'secondary' })} min-h-11`} params={{ lang: language }} to="/$lang">
             {t('stores.onboarding.home')}
           </Link>
         )}

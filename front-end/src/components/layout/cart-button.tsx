@@ -103,14 +103,15 @@ export function SearchButton({
 }: {
   tone?: ActionTone
   label: string
-  to?: '/search'
+  to?: '/$lang/search'
   onPress?: () => void
 }) {
+  const { language } = useLocale()
   const className = `${roundAction} ${toneClass[tone]}`
 
   if (to) {
     return (
-      <Link aria-label={label} className={className} to={to}>
+      <Link aria-label={label} className={className} params={{ lang: language }} to={to}>
         <SearchIcon size={22} />
       </Link>
     )

@@ -97,7 +97,7 @@ function TopRow({
       <div className="min-w-0 flex-1">
         <BrandLogo label={appName} />
       </div>
-      <SearchButton label={searchLabel} to="/search" tone={tone} />
+      <SearchButton label={searchLabel} to="/$lang/search" tone={tone} />
       <CartButton tone={tone} />
     </div>
   )

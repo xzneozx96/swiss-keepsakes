@@ -46,7 +46,7 @@ export function StoriesPage({
   const articles = useArticles()
   const isLoading = useSimulatedLoading()
   const navigate = useNavigate()
-  const back = useBack(() => void navigate({ to: '/', replace: true }))
+  const back = useBack(() => void navigate({ to: '/$lang', params: { lang: language }, replace: true }))
   const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
 
   const published = publishedArticles(articles, language)
@@ -161,7 +161,7 @@ export function StoriesPage({
                   action={
                     category
                       ? undefined
-                      : { label: t('placeholder.backHome'), to: '/' }
+                      : { label: t('placeholder.backHome'), to: '/$lang', params: { lang: language } }
                   }
                   icon={ContentIcon}
                   message={t(category ? 'stories.emptyCategory' : 'stories.empty')}

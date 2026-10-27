@@ -8,7 +8,8 @@ export interface EmptyStateProps {
   icon: IconComponent
   message: string
   /** At most one next action (UX spec §5.5), shown as a secondary small button. */
-  action?: { label: string, to: LinkProps['to'] }
+  /** `params` fills the `$lang` of a language-prefixed `to`; the router types them per `to`, so they are not checked here. */
+  action?: { label: string, to: LinkProps['to'], params?: { lang: string } }
 }
 
 /**
@@ -29,6 +30,7 @@ export function EmptyState({ icon: Icon, message, action }: EmptyStateProps) {
       {action && (
         <Link
           className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+          params={action.params as never}
           to={action.to}
         >
           {action.label}
@@ -54,6 +56,7 @@ export function TableEmptyState({
       {action && (
         <Link
           className={buttonVariants({ variant: 'secondary', size: 'sm' })}
+          params={action.params as never}
           to={action.to}
         >
           {action.label}

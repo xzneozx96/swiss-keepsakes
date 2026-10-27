@@ -44,14 +44,14 @@ function CartPage() {
 }
 
 function CartScreen() {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
   const view = useCartView()
   const { requireSignIn, signInSheet } = useRequireSignIn()
   const back = () =>
-    canGoBack ? router.history.back() : void navigate({ to: '/' })
+    canGoBack ? router.history.back() : void navigate({ to: '/$lang', params: { lang: language } })
 
   if (!view) {
     return (
@@ -68,7 +68,7 @@ function CartScreen() {
         </header>
         <div className="pt-16">
           <EmptyState
-            action={{ label: t('cart.empty.action'), to: '/gifts' }}
+            action={{ label: t('cart.empty.action'), to: '/$lang/gifts', params: { lang: language } }}
             icon={CartIcon}
             message={t('cart.empty.message')}
           />

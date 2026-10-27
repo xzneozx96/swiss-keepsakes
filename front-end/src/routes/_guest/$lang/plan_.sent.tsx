@@ -4,7 +4,7 @@ import { AdviceSent } from '@/features/requests/components/advice-sent'
 import { noIndexHead } from '@/lib/no-index'
 
 /** C21 sent. The review step opens it with `replace`; `?request=` is the new request's id. */
-export const Route = createFileRoute('/_guest/plan_/sent')({
+export const Route = createFileRoute('/_guest/$lang/plan_/sent')({
   ssr: false,
   head: noIndexHead,
   validateSearch: (search: Record<string, unknown>): { request?: string } =>

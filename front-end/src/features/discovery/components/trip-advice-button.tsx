@@ -16,7 +16,7 @@ const offset = {
  * assistant's gradient like the tab bar button.
  */
 export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
 
   // On the tab-bar screen the spacer lets the last content scroll clear of the music button.
   // Above an action bar there is none: the buttons float over the content, as a FAB does,
@@ -33,7 +33,8 @@ export function TripAdviceButton({ above }: { above: keyof typeof offset }) {
           <Link
             aria-label={t('advice.fab')}
             className="group pointer-events-auto relative flex size-14 items-center justify-center rounded-full bg-assistant text-white shadow-overlay outline-none transition-transform focus-visible:focus-ring active:scale-95"
-            to="/plan"
+            to="/$lang/plan"
+            params={{ lang: language }}
           >
             {/* Two slow ripples, half a cycle apart, so one is always moving (owner, 14.10.2026). */}
             {[0, 1200].map(delay => (

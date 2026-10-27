@@ -19,7 +19,7 @@ import { useTourRecords } from '@/features/tours/api/queries'
 import { useUrlInput } from '@/hooks/use-url-input'
 
 // Global search from the discovery home (UX proposal: search is not in the spec).
-export const Route = createFileRoute('/_guest/search')({
+export const Route = createFileRoute('/_guest/$lang/search')({
   ssr: true,
   validateSearch: (search: Record<string, unknown>): { q?: string } =>
     typeof search.q === 'string' && search.q ? { q: search.q } : {},
@@ -33,7 +33,7 @@ function SearchPage() {
   const subcategories = useStoreSubcategories()
   const demoTours = useTourRecords()
   const { q = '' } = Route.useSearch()
-  const navigate = useNavigate({ from: '/search' })
+  const navigate = useNavigate({ from: '/$lang/search' })
   const router = useRouter()
   const toCard = useProductCard()
   const { value, setValue, deferred } = useUrlInput(
@@ -79,7 +79,7 @@ function SearchPage() {
           title: c.name,
           meta: `${c.fromLabel} ${c.price}`,
           photo: c.photo,
-          link: { to: '/gifts/$slug', params: { slug: c.slug } },
+          link: { to: '/$lang/gifts/$slug', params: { slug: c.slug } },
         })),
       })
     }
@@ -91,7 +91,7 @@ function SearchPage() {
           title: pickText(tour.name, language).text,
           meta: `${t('tourDiscovery.duration', { hours: tour.durationMinutes / 60 })} · ${t('home.from')} ${formatMoney(tour.adultPrice / 100, intlLocale)}`,
           photo: tour.photos[0],
-          link: { to: '/tours/$slug', params: { slug: tour.slug } },
+          link: { to: '/$lang/tours/$slug', params: { slug: tour.slug } },
         })),
       })
     }
@@ -103,7 +103,7 @@ function SearchPage() {
           title: story.title,
           meta: t('home.stories.read', { minutes: story.readMinutes }),
           photo: story.photo,
-          link: { to: '/stories/$slug', params: { slug: story.slug } },
+          link: { to: '/$lang/stories/$slug', params: { slug: story.slug } },
         })),
       })
     }
@@ -128,7 +128,7 @@ function SearchPage() {
               id: c.id,
               name: pickText(c.name, language).text,
               photo: c.photo ?? 'gift-box',
-              link: { to: '/gifts' as const, search: { subcategory: c.id } },
+              link: { to: '/$lang/gifts' as const, search: { subcategory: c.id } },
             })),
           ...categories
             .filter(c => c.id === 'tours')
@@ -136,7 +136,7 @@ function SearchPage() {
               id: c.id,
               name: pickText(c.name, language).text,
               photo: c.photo,
-              link: { to: '/tours' as const },
+              link: { to: '/$lang/tours' as const },
             })),
         ],
       }}

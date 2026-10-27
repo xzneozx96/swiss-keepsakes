@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 
 interface StoryCardProps {
   /** Opens C20; both language versions share the slug. */
@@ -25,13 +26,14 @@ export function StoryCard({
   excerpt,
   layout = 'list',
 }: StoryCardProps) {
+  const { language } = useLocale()
   const rail = layout === 'rail'
 
   return (
     <Link
       className={`flex flex-col rounded-3xl outline-none focus-visible:focus-ring transition-transform active:scale-[0.98] ${rail ? 'w-72 shrink-0 snap-start gap-2' : 'gap-2.5'}`}
-      params={{ slug }}
-      to="/stories/$slug"
+      params={{ lang: language, slug }}
+      to="/$lang/stories/$slug"
     >
       <Media
         alt=""

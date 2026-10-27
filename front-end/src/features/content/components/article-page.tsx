@@ -52,7 +52,7 @@ export function ArticlePage({
   slug: string
   onBack: () => void
 }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const view = useArticle(slug)
   const { signedIn, requireSignIn } = useRequireSignIn()
   const [coverEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
@@ -94,7 +94,7 @@ export function ArticlePage({
     return (
       <div className="pt-16">
         <EmptyState
-          action={{ label: t('article.allStories'), to: '/stories' }}
+          action={{ label: t('article.allStories'), to: '/$lang/stories', params: { lang: language } }}
           icon={ContentIcon}
           message={t('article.notFound')}
         />

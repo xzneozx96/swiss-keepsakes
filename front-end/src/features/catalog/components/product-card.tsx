@@ -36,7 +36,7 @@ export const ProductCard = memo(function ProductCard({
       {...props}
       metadata={pickupLine}
       statusLabel={soldOutLabel}
-      to="/gifts/$slug"
+      to="/$lang/gifts/$slug"
     />
   )
 }, sameListing)

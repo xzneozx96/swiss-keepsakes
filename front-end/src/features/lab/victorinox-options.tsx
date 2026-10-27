@@ -11,6 +11,7 @@ import { useState } from 'react'
 
 import { ChevronRightIcon } from '@/components/icons'
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 import { knifeArt, knifeDesigns } from '@/lib/victorinox-art'
 
 const VICTORINOX_NAME_PREFIX = /^Victorinox /
@@ -233,6 +234,7 @@ export function SeeAll({
   label: string
   variant?: 'red' | 'white' | 'outline'
 }) {
+  const { language } = useLocale()
   const classes = {
     red: ctaRed,
     white: `flex h-12 items-center justify-center gap-1 rounded-full bg-white px-5 text-base font-semibold text-foreground ${focusDark} focus-visible:ring-offset-transparent active:opacity-85`,
@@ -243,7 +245,8 @@ export function SeeAll({
     <Link
       className={classes[variant]}
       search={{ subcategory: 'victorinox' }}
-      to="/gifts"
+      to="/$lang/gifts"
+      params={{ lang: language }}
     >
       {label}
       <ChevronRightIcon aria-hidden size={18} />
@@ -259,6 +262,7 @@ export function StoryLink({
   story?: StoryView
   tone?: 'ink' | 'white'
 }) {
+  const { language } = useLocale()
   if (!story)
     return null
   const white = tone === 'white'
@@ -266,8 +270,8 @@ export function StoryLink({
   return (
     <Link
       className={`flex min-h-11 items-center gap-3 rounded-2xl py-1 select-none active:opacity-80 ${white ? focusDark : focusLight}`}
-      params={{ slug: story.slug }}
-      to="/stories/$slug"
+      params={{ lang: language, slug: story.slug }}
+      to="/$lang/stories/$slug"
     >
       <Media
         alt=""
@@ -350,6 +354,7 @@ export function VxMarquee({
   intro,
   story,
 }: VictorinoxOptionProps) {
+  const { language } = useLocale()
   const designs = toDesigns(items, isLoading)
 
   return (
@@ -399,8 +404,8 @@ export function VxMarquee({
             <li key={d.key} className="w-36 shrink-0 snap-start">
               <Link
                 className="flex flex-col gap-2 rounded-2xl bg-white p-2 pb-3 text-foreground outline-none select-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-accent active:opacity-85"
-                params={{ slug: d.slug }}
-                to="/gifts/$slug"
+                params={{ lang: language, slug: d.slug }}
+                to="/$lang/gifts/$slug"
               >
                 <span className="flex h-44 items-center justify-center rounded-xl bg-hero-cream">
                   <img
@@ -446,6 +451,7 @@ export function VxCabinet({
   subtitle,
   story,
 }: VictorinoxOptionProps) {
+  const { language } = useLocale()
   const designs = toDesigns(items, isLoading)
   const [selectedKey, setSelectedKey] = useState('chapel-bridge')
   const selected
@@ -496,8 +502,8 @@ export function VxCabinet({
             <Price className="text-sm text-white" design={selected} />
             <Link
               className="mt-2 flex h-11 items-center justify-center gap-1 rounded-full bg-accent px-4 text-sm font-semibold text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-foreground active:opacity-85"
-              params={{ slug: selected.slug }}
-              to="/gifts/$slug"
+              params={{ lang: language, slug: selected.slug }}
+              to="/$lang/gifts/$slug"
             >
               View design
               <ChevronRightIcon aria-hidden size={16} />

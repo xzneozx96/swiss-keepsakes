@@ -1,9 +1,8 @@
-import type { LinkProps } from '@tanstack/react-router'
-
 import { ScrollShadow } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 
 import { ChevronRightIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
 
 interface SectionProps {
   id: string
@@ -11,7 +10,7 @@ interface SectionProps {
   subtitle?: string
   seeAll?: {
     label: string
-    to: LinkProps['to']
+    to: '/$lang/gifts' | '/$lang/tours'
     /** Opens the keepsakes list filtered to one sub-category. */
     subcategory?: string
   }
@@ -29,6 +28,7 @@ export function Section({
   seeAll,
   children,
 }: SectionProps) {
+  const { language } = useLocale()
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
       <div className="flex items-end justify-between gap-4">
@@ -44,14 +44,15 @@ export function Section({
                 <Link
                   className={seeAllClass}
                   search={{ subcategory: seeAll.subcategory }}
-                  to="/gifts"
+                  to="/$lang/gifts"
+                  params={{ lang: language }}
                 >
                   {seeAll.label}
                   <ChevronRightIcon size={16} />
                 </Link>
               )
             : (
-                <Link className={seeAllClass} to={seeAll.to}>
+                <Link className={seeAllClass} params={{ lang: language }} to={seeAll.to}>
                   {seeAll.label}
                   <ChevronRightIcon size={16} />
                 </Link>
