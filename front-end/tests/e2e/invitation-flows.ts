@@ -1,4 +1,4 @@
-import type { Browser, BrowserContext, Page } from '@playwright/test'
+import type { Browser, BrowserContext, Locator, Page, Request } from '@playwright/test'
 import { expect } from '@playwright/test'
 import { storesEn } from '../../src/features/stores/messages'
 import { storesDe } from '../../src/features/stores/messages.de'
@@ -99,23 +99,27 @@ export function tokenOf(link: string): string {
 }
 
 /**
- * Records every request of `page` (its address without the fragment, and its `referer`) so a test can assert that
- * none carried `token`. The preview and accept POST bodies carry the token by design (backend.md section 8:
- * a body is not logged and not sent as a referrer), so only addresses and headers are checked, never bodies.
+ * Records every request of `page`: its address without the fragment, and its `referer` once the request is over
+ * (`headerValue` on a request that is still in flight can wait for a long time). A test then asserts that none
+ * held `token`. The preview and accept POST bodies carry the token by design (backend.md section 8: a body is not
+ * logged and not sent as a referrer), so only addresses and headers are checked, never bodies.
  */
 export function watchForToken(page: Page, token: string) {
-  const seen: Array<Promise<string>> = []
+  const addresses: string[] = []
+  const referers: Array<Promise<string | null>> = []
+  const over = (request: Request) => referers.push(request.headerValue('referer'))
 
-  page.on('request', (request) => {
-    // The fragment is never sent to a server, and the browser strips it from `referer`; `url()` may still show it.
-    seen.push(request.allHeaders().then(headers => `${request.url().split('#')[0]}\n${headers.referer ?? ''}`, () => ''))
-  })
+  // The fragment is never sent to a server, and the browser strips it from `referer`; `url()` may still show it.
+  page.on('request', request => addresses.push(request.url().split('#')[0]))
+  page.on('requestfinished', over)
+  page.on('requestfailed', over)
 
   return async () => {
-    const lines = await Promise.all(seen)
+    const seen = await Promise.all(referers)
 
-    expect(lines.length).toBeGreaterThan(0)
-    expect(lines.filter(line => line.includes(token))).toEqual([])
+    expect(addresses.length).toBeGreaterThan(0)
+    expect(addresses.filter(address => address.includes(token))).toEqual([])
+    expect(seen.filter(referer => referer?.includes(token))).toEqual([])
   }
 }
 
@@ -147,6 +151,8 @@ export async function createStore(page: Page, language: Language, ownerEmail: st
   await sheet.getByRole('textbox', { name: say(language, 'stores.create.email') }).fill(ownerEmail)
   await sheet.getByRole('button', { name: say(language, 'stores.create.submit') }).click()
   await expect(sheet).toHaveCount(0)
+  // The submit button sits where the toast shows, and a toast under the pointer stays open and covers the card below.
+  await page.mouse.move(0, 0)
 
   const card = page.locator(`[data-store="${slug}"]`)
 
@@ -155,4 +161,10 @@ export async function createStore(page: Page, language: Language, ownerEmail: st
   await expect(card.getByText(sayStart(language, 'stores.invitation.open', { email: ownerEmail }))).toBeVisible()
 
   return { name, slug, card }
+}
+
+/** Clicks a button after scrolling it to the middle of the screen, clear of the fixed bottom navigation of the admin and store screens. */
+export async function clickInMiddle(button: Locator) {
+  await button.evaluate(element => element.scrollIntoView({ block: 'center' }))
+  await button.click()
 }

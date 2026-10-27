@@ -223,6 +223,7 @@ test('[E3.4][AC01] a failed Google return keeps the return path, shows the error
 
   await expect(page.getByText(t.googleFailed)).toBeVisible()
   await expect(page).toHaveURL(`${SPA_ORIGIN}/sign-in?returnTo=%2Faccount`)
+  // Still shown after the address is cleaned: the screen kept the failure and did not read it from the address again.
   await expect(page.getByText(t.googleFailed)).toBeVisible()
   await expect(page.getByRole('button', { name: t.google })).toBeEnabled()
 })
@@ -233,6 +234,7 @@ test('[E3.4][AC01] a failed Google return with a foreign returnTo signs in to th
 
   await page.goto('/sign-in?returnTo=%2F%2Fevil.example&error=x')
   await expect(page.getByText(words[language].googleFailed)).toBeVisible()
+  await expect(page).toHaveURL(/^[^?]+\/sign-in\?returnTo=[^&]+$/)
   await page.getByRole('textbox', { name: /e-?mail/i }).fill(email)
   await page.getByRole('button', { name: words[language].send }).click()
   await expect(page.locator('#sign-in-code')).toBeVisible()
@@ -244,9 +246,10 @@ test('[E3.4][AC01] a failed Google return with a foreign returnTo signs in to th
 
 test('[E3.4][AC01] a signed-in guest who opens the sign-in address lands on its returnTo', async ({ page }, testInfo) => {
   await signIn(page, languageOf(testInfo))
-  await page.goto('/sign-in?returnTo=%2Faccount')
+  // Not the default (/account), so the landing proves that returnTo is honoured.
+  await page.goto('/sign-in?returnTo=%2Fcart%2Freview')
 
-  await expect(page).toHaveURL(`${SPA_ORIGIN}/account`)
+  await expect(page).toHaveURL(`${SPA_ORIGIN}/cart/review`)
 })
 
 test('[E3.4][AC01] the Google button asks for a callback and an error callback that are path addresses of the SPA', async ({ page }, testInfo) => {
