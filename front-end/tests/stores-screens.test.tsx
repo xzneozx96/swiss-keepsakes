@@ -979,7 +979,7 @@ describe('[E2.3][S8] the invitation survives a screen that is gone and a link op
 
     expect(await screen.findByRole('heading', { name: 'Open the link from your email' })).toBeInTheDocument()
     act(() => {
-      takeInvitationFromHash(`#/store/onboarding?invitation=${token}`)
+      takeInvitationFromHash('/store/onboarding', `#invitation=${token}`)
     })
 
     expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
@@ -1000,7 +1000,7 @@ describe('[E2.3][S8] the invitation survives a screen that is gone and a link op
 
     expect(await screen.findByRole('heading', { name: 'This invitation link is not valid' })).toBeInTheDocument()
     act(() => {
-      takeInvitationFromHash(`#/store/onboarding?invitation=${token}-newer-link`)
+      takeInvitationFromHash('/store/onboarding', `#invitation=${token}-newer-link`)
     })
 
     expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()

@@ -28,7 +28,6 @@ const TRAILING_COMMENT = /\s\/\/.*$/
 
 // Until E3.4 moves invitation and Google returns off the hash.
 const UNTIL_E3_4 = [
-  'features/stores/lib/invitation-token.ts', // until E3.4
   'features/auth/lib/google-return.ts', // until E3.4
 ]
 
