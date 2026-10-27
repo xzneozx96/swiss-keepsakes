@@ -13,8 +13,14 @@ const HEADINGS: Record<Lang, Record<string, string>> = {
   de: { '': 'Fühlen Sie sich wie zu Hause', '/stories': 'Geschichten aus Luzern', '/tours': 'Touren rund um Luzern', '/gifts': 'Andenken' },
 }
 
-/** A message key shown raw, such as `nav.account` or `cart.empty.message`. */
-const RAW_KEY = /(?:^|\s)[a-z]{2,}(?:\.[a-z]{2}[a-zA-Z0-9]*){1,3}(?=\s|$)/
+/** Words of the guest chrome (nav tabs) in each language: the other language's words must not show on a page. */
+const CHROME: Record<Lang, RegExp> = {
+  en: /\b(?:Explore|Keepsakes|Account)\b/,
+  de: /\b(?:Entdecken|Andenken|Konto)\b/,
+}
+
+/** What a missing or half-filled message looks like: a `{placeholder}` left in the text, or the word undefined. */
+const BROKEN_TEXT = /\{\w+\}|undefined/
 
 async function hydrated(page: Page) {
   await page.waitForFunction(() => document.documentElement.dataset.hydrated === 'true')
@@ -50,6 +56,7 @@ const REDIRECTS: { cookie?: string, accept?: string, path: string, target: strin
   { accept: 'de-CH', path: '/', target: '/de' },
   { cookie: 'sk_lang=en', accept: 'de-CH', path: '/', target: '/en' },
   { path: '/stories', target: '/en/stories' },
+  { path: '/plan', target: '/en/plan' },
   { cookie: 'sk_lang=de', path: '/tours', target: '/de/tours' },
   // Case and a %-escape in the old root are read as the router reads them.
   { path: '/Stories', target: '/en/stories' },
@@ -65,7 +72,9 @@ for (const { cookie, accept, path, target } of REDIRECTS) {
     const response = await request.get(path, { maxRedirects: 0, headers })
 
     expect(response.status()).toBe(302)
-    expect(new URL(response.headers().location!, 'http://x').pathname).toBe(target)
+    const location = new URL(response.headers().location!, 'http://x')
+
+    expect(location.pathname + location.search).toBe(target)
   })
 }
 
@@ -73,7 +82,7 @@ test('[E3.5][AC30] AC-1 a redirect keeps the query string', async ({ request }) 
   const response = await request.get('/search?q=Pilatus', { maxRedirects: 0 })
 
   expect(response.status()).toBe(302)
-  expect(response.headers().location).toMatch(/^\/en\/search\?q=Pilatus$|\/en\/search\?q=Pilatus$/)
+  expect(response.headers().location).toBe('/en/search?q=Pilatus')
 })
 
 for (const lang of LANGS) {
@@ -91,18 +100,22 @@ for (const lang of LANGS) {
 
 // AC-2
 for (const lang of LANGS) {
-  test(`[E3.5][AC30] AC-2 /${lang}/stories shows its chrome in ${lang} with no raw message key`, async ({ page }) => {
+  test(`[E3.5][AC30] AC-2 /${lang}/stories shows its chrome in ${lang}, with none of the other language and no broken text`, async ({ page }) => {
     await page.goto(`/${lang}/stories`)
     await hydrated(page)
 
-    await expect(page.locator('nav a[href$="/account"]').first()).toHaveText(lang === 'de' ? 'Konto' : 'Account')
-    await expect(page.locator('nav a[href$="/gifts"]').first()).toBeVisible()
+    // The cart and account links have no prefix; the list links keep the language.
+    await expect(page.locator('nav a[href="/account"]').first()).toHaveText(lang === 'de' ? 'Konto' : 'Account')
+    await expect(page.locator('a[href="/cart"]').first()).toBeVisible()
+    await expect(page.locator(`nav a[href="/${lang}/gifts"]`).first()).toBeVisible()
     await expect(page.locator('html')).toHaveAttribute('lang', lang)
     // Prototype bar excluded: it is not guest copy. innerText is the text a guest can see.
     // eslint-disable-next-line unicorn/prefer-dom-node-text-content -- visible text only
     const visible = await page.locator('main, nav').evaluateAll(parts => parts.map(part => (part as HTMLElement).innerText).join('\n'))
 
-    expect(visible).not.toMatch(RAW_KEY)
+    expect(visible).not.toMatch(CHROME[lang === 'en' ? 'de' : 'en'])
+    expect(visible).toMatch(CHROME[lang])
+    expect(visible).not.toMatch(BROKEN_TEXT)
     // The other language's list heading is not on the page.
     await expect(page.getByRole('heading', { level: 1, name: HEADINGS[lang === 'en' ? 'de' : 'en']['/stories'] })).toHaveCount(0)
   })
@@ -164,12 +177,12 @@ test('[E3.5][AC30] AC-4 with a stored de, /cart and /account stay unprefixed and
   await page.addInitScript(() => localStorage.setItem('sk.language', '"de"'))
 
   await page.goto('/cart')
-  await expect(page).toHaveURL(/\/cart$/)
+  expect(new URL(page.url()).pathname).toBe('/cart')
   await expect(page.getByText('Ihr Warenkorb ist leer.')).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'de')
 
   await page.goto('/account')
-  await expect(page).toHaveURL(/\/account$/)
+  expect(new URL(page.url()).pathname).toBe('/account')
   await expect(page.getByText('Anmelden und Bestellungen sehen')).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'de')
 })
@@ -182,7 +195,7 @@ test('[E3.5][AC30] AC-4 switching the language on /cart keeps the URL and stores
   await switchTo(page, 'en')
 
   await expect(page.getByText('Your cart is empty.')).toBeVisible()
-  await expect(page).toHaveURL(/\/cart$/)
+  expect(new URL(page.url()).pathname).toBe('/cart')
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
   expect(await stored(page)).toBe('"en"')
 })

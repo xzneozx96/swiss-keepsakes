@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const PRIVATE_PATHS = ['/store', '/store/orders', '/admin', '/partner', '/partner/some-token', '/lab', '/account', '/cart', '/sign-in', '/invitation', '/r/abc', '/Partner/some-token', '/PARTNER/some-token', '/%50artner/some-token', '/Store/orders', '/ADMIN']
+const PRIVATE_PATHS = ['/store', '/store/orders', '/admin', '/partner', '/partner/some-token', '/lab', '/account', '/cart', '/en/plan', '/de/plan', '/sign-in', '/invitation', '/r/abc', '/Partner/some-token', '/PARTNER/some-token', '/%50artner/some-token', '/Store/orders', '/ADMIN']
 const PARTNER_PATHS = ['/partner', '/partner/some-token', '/Partner/some-token', '/PARTNER/some-token', '/%50artner/some-token']
 
 /** A piece of each screen's own text, so the test can see the server did not render the screen. `/partner` shows none. */
@@ -11,6 +11,8 @@ const SCREEN_TEXT: Record<string, string> = {
   '/lab': 'UI experiments for the prototype',
   '/account': 'Sign in to see your orders',
   '/cart': 'Your cart is empty',
+  '/en/plan': 'Plan my day in Luzerne',
+  '/de/plan': 'Plan my day in Luzerne',
   '/sign-in': 'Sign in to continue',
   '/invitation': 'Join a store',
   '/r/abc': 'Make yourself at home',
