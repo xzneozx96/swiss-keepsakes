@@ -1,7 +1,8 @@
+SET lock_timeout = '3s';--> statement-breakpoint
 -- G11 guard: the only data this step would lose with meaning is a paid link, so refuse to run while one exists.
 DO $$
 BEGIN
-  IF EXISTS (SELECT 1 FROM content.place_links WHERE kind <> 'direct') THEN
+  IF EXISTS (SELECT 1 FROM content.place_links WHERE kind <> 'direct' OR network IS NOT NULL OR disclosure) THEN
     RAISE EXCEPTION '0009_pin_model refuses to run: content.place_links holds a paid link, and the paid columns are dropped here';
   END IF;
 END $$;--> statement-breakpoint
