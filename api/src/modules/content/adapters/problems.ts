@@ -1,0 +1,47 @@
+import type { ProblemType } from '@sk/api-contract'
+import type { PublishGap } from '@sk/domain/content'
+import type { Failure } from '../application/failure.ts'
+
+export interface FailureProblem {
+  status: 403 | 404 | 409 | 412 | 422
+  type: ProblemType
+  title: string
+  errors?: { in: 'body', path: string, message: string }[]
+}
+
+const gapMessages: Record<PublishGap, string> = {
+  title: 'Add a title in English or German',
+  location: 'Set the location on the map',
+  slug: 'Add a web address (slug) for each language that has a title',
+  pdf: 'Upload the PDF itinerary',
+}
+
+export const missingIfMatchProblem = {
+  status: 428,
+  type: 'precondition-required',
+  title: 'Send the version you opened in the If-Match header.',
+} as const satisfies { status: 428, type: ProblemType, title: string }
+
+export function failureProblem(failure: Failure): FailureProblem {
+  switch (failure.reason) {
+    case 'forbidden': return { status: 403, type: 'forbidden', title: 'You cannot change content in this store.' }
+    case 'not-found': return { status: 404, type: 'not-found', title: 'Not found.' }
+    case 'stale': return { status: 412, type: 'precondition-failed', title: 'Someone saved this after you opened it. Reload and apply your change again.' }
+    case 'incomplete':
+      return {
+        status: 422,
+        type: 'publish-incomplete',
+        title: 'This cannot be published yet.',
+        errors: failure.gaps.map(gap => ({ in: 'body' as const, path: gap, message: gapMessages[gap] })),
+      }
+    case 'media-retired': return { status: 422, type: 'media-retired', title: 'A file you chose has been removed. Choose another.' }
+    case 'media-invalid': return { status: 422, type: 'media-invalid', title: 'A file you chose is not available here.' }
+    case 'reference-invalid': return { status: 422, type: 'reference-invalid', title: 'Something you linked is not available here.' }
+    case 'slug-taken': return { status: 409, type: 'content-slug-taken', title: 'Another item already uses this web address. Choose a different one.' }
+    case 'published-cannot-be-deleted': return { status: 409, type: 'published-cannot-be-deleted', title: 'A published item cannot be deleted. Hide it instead.' }
+    case 'published-cannot-move': return { status: 409, type: 'published-version-cannot-move', title: 'A published story version cannot move to another group.' }
+    case 'version-exists': return { status: 409, type: 'version-exists', title: 'This group already has a version in that language.' }
+    case 'not-published': return { status: 409, type: 'not-published', title: 'This item is not published.' }
+    case 'in-use': return { status: 409, type: 'content-in-use', title: 'Other content still uses this item.' }
+  }
+}
