@@ -139,7 +139,7 @@ describe('story use cases', () => {
     expect(await s.move(owner, store, a.id, 'en', 1, foreign.id, null)).toEqual({ ok: false, reason: 'not-found' })
   })
 
-  it('[E2.6] AC-1 a story version saved with a stale If-Match is stale and a missing one never reaches the use case', async () => {
+  it('[E2.6] AC-1 a story version saved with a stale If-Match is stale and unchanged, and one saved with the matching If-Match is updated', async () => {
     const s = setup()
     const g = await group(s)
     const v = await version(s, g.id)
@@ -155,6 +155,13 @@ describe('story use cases', () => {
     s.stories.groups.set(g.id, { ...g, rowVersion: 3 })
     expect(await s.saveGroup(owner, store, g.id, 3, { placeIds: ['p1', 'p2'] }, null)).toMatchObject({ ok: true, value: { rowVersion: 4, placeIds: ['p1', 'p2'] } })
     expect(await s.saveGroup(owner, store, g.id, 3, { placeIds: [] }, null)).toEqual({ ok: false, reason: 'stale' })
+  })
+
+  it('[E2.6] a story group listing itself as related is reference-invalid and nothing changes', async () => {
+    const s = setup()
+    const g = await group(s)
+    expect(await s.saveGroup(owner, store, g.id, 1, { relatedGroupIds: [g.id] }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(s.stories.groups.get(g.id)?.rowVersion).toBe(1)
   })
 
   it('[E2.6] AC-6 a retired cover, a retired image block and a retired audio block are each media-retired', async () => {

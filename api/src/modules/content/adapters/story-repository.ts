@@ -132,7 +132,7 @@ async function replaceRefs(tx: Tx, version: Pick<StoryVersion, 'storeId' | 'grou
     await tx.execute(sql`
       insert into content.media_refs (store_id, media_id, owner_kind, owner_id, owner_language, slot)
       select ${version.storeId}, m, 'story_version', ${version.groupId}, ${version.language}, ${slot}
-        from unnest(${sql.param(used.map(u => u.id))}::uuid[]) as m`)
+        from unnest(${sql.param([...new Set(used.map(u => u.id.toLowerCase()))])}::uuid[]) as m`)
   }
 }
 

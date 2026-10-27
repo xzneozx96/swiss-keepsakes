@@ -29,6 +29,10 @@ describe('mapDatabaseError', () => {
     expect(mapDatabaseError(pg('23001', undefined, 'column published of content.story_versions cannot change after insert'))).toBeUndefined()
   })
 
+  it('[E2.6] a story related to itself is reference-invalid', () => {
+    expect(mapDatabaseError(pg('23514', 'story_related_not_self_check'))).toEqual({ reason: 'reference-invalid' })
+  })
+
   it('[E2.6] a story group with a subject place that does not fit its kind is reference-invalid', () => {
     expect(mapDatabaseError(pg('23514', 'story_groups_subject_check'))).toEqual({ reason: 'reference-invalid' })
   })

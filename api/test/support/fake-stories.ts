@@ -5,10 +5,9 @@ import { randomUUID } from 'node:crypto'
 const key = (groupId: string, language: string) => `${groupId}/${language}`
 
 // An in-memory story repository. It copies what the SQL one does, but none of the database guards.
-export function createFakeStories(): StoryRepository<null> & { groups: Map<string, StoryGroup>, versions: Map<string, StoryVersion>, removed: string[] } {
+export function createFakeStories(): StoryRepository<null> & { groups: Map<string, StoryGroup>, versions: Map<string, StoryVersion> } {
   const groups = new Map<string, StoryGroup>()
   const versions = new Map<string, StoryVersion>()
-  const removed: string[] = []
   const putGroup = (group: StoryGroup) => {
     groups.set(group.id, group)
     return group
@@ -20,7 +19,6 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
   return {
     groups,
     versions,
-    removed,
     async insertGroup(_tx, storeId, input, at) {
       return putGroup({
         id: randomUUID(),
@@ -87,7 +85,6 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
     async removeVersion(_tx, storeId, groupId, language) {
       if (versions.get(key(groupId, language))?.storeId !== storeId)
         return false
-      removed.push(key(groupId, language))
       return versions.delete(key(groupId, language))
     },
   }

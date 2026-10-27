@@ -178,6 +178,16 @@ describe('[E2.6] story repository on the real database', () => {
     await retire(loneCover)
   })
 
+  it('[E2.6] one media file written with different letter case in two blocks leaves one media_refs row', async () => {
+    const s = setup()
+    const image = await media(s.store)
+    const g = await group(s)
+    const block = (mediaId: string) => ({ type: 'image' as const, mediaId, caption: '' })
+    const draft = doc({ sections: [{ id: 's1', heading: '', blocks: [block(image), block(image.toUpperCase())] }] })
+    expect(await s.use.createVersion(s.actor, s.store, g.id, 'en', { slug: slug(), draft }, null)).toMatchObject({ ok: true })
+    expect(await refs(g.id, 'draft')).toBe(1)
+  })
+
   it('[E2.6] media of another store is media-invalid and nothing is written', async () => {
     const s = setup()
     const foreign = await media(randomUUID())
@@ -267,6 +277,7 @@ describe('[E2.6] story repository on the real database', () => {
     expect((await pool.query('select position from content.story_group_places where group_id = $1 order by position', [g.id])).rows).toEqual([{ position: 1 }, { position: 2 }])
 
     expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { categoryIds: [foreignCategory] }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+    expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { relatedGroupIds: [g.id] }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
     expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { placeIds: [randomUUID()] }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
     expect(await s.use.saveGroup(s.actor, s.store, g.id, 2, { relatedGroupIds: [randomUUID()] }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
     expect(await s.use.createGroup(s.actor, s.store, { kind: 'story', subjectPlaceId: null, categoryIds: [foreignCategory] }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
@@ -289,6 +300,7 @@ describe('[E2.6] story repository on the real database', () => {
     expect(await s.use.createGroup(s.actor, s.store, { kind: 'editorial_review', subjectPlaceId: foreign.id }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
     expect(await s.use.createGroup(s.actor, s.store, { kind: 'editorial_review', subjectPlaceId: randomUUID() }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
     // And the pin cannot be deleted while a review is about it.
-    expect(await count(pool, 'select count(*) from content.story_groups where subject_place_id = $1', [pin.id])).toBe(1)
+    const error2 = await thrown(() => s.uow.run(tx => pins.remove(tx, s.store, pin.id)))
+    expect(mapDatabaseError(error2)).toEqual({ reason: 'in-use' })
   })
 })
