@@ -11,10 +11,10 @@ export async function checkMedia<T>(
 ): Promise<Failure | undefined> {
   if (wanted.length === 0)
     return undefined
-  const rows = new Map((await media.find(tx, storeId, wanted.map(w => w.id))).map(r => [r.id, r]))
+  const rows = new Map((await media.find(tx, storeId, wanted.map(w => w.id))).map(r => [r.id.toLowerCase(), r]))
   let invalid = false
   for (const { id, kind } of wanted) {
-    const row = rows.get(id)
+    const row = rows.get(id.toLowerCase())
     if (row?.status === 'retired')
       return { reason: 'media-retired' }
     if (!row || row.kind !== kind)

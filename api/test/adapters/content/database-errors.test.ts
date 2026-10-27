@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { mapDatabaseError } from '../../../src/modules/content/adapters/database-errors.ts'
-import { fail, mappingDatabaseErrors, ok } from '../../../src/modules/content/application/failure.ts'
+import { guardUseCases, mapDatabaseError, mappingDatabaseErrors } from '../../../src/modules/content/adapters/database-errors.ts'
+import { fail, ok } from '../../../src/modules/content/application/failure.ts'
 
 function pg(code: string, constraint?: string, message = '') {
   return { cause: { code, constraint, message } }
@@ -78,5 +78,23 @@ describe('mappingDatabaseErrors', () => {
     await expect(mappingDatabaseErrors(async () => {
       throw boom
     })).rejects.toBe(boom)
+  })
+})
+
+describe('guardUseCases', () => {
+  it('[E2.6] guardUseCases maps a thrown known error and rethrows an unknown one, per function', async () => {
+    const boom = new Error('connection reset')
+    const guarded = guardUseCases({
+      fine: async (n: number) => ok(n + 1),
+      taken: async (_name: string) => {
+        throw pg('23505', 'tours_slug_de_key')
+      },
+      broken: async () => {
+        throw boom
+      },
+    })
+    expect(await guarded.fine(1)).toEqual({ ok: true, value: 2 })
+    expect(await guarded.taken('x')).toEqual({ ok: false, reason: 'slug-taken' })
+    await expect(guarded.broken()).rejects.toBe(boom)
   })
 })

@@ -1,4 +1,5 @@
-import type { Failure } from '../application/failure.ts'
+import type { Failure, Result } from '../application/failure.ts'
+import { fail } from '../application/failure.ts'
 
 const slugConstraints = new Set([
   'places_slug_en_key',
@@ -49,4 +50,27 @@ export function mapDatabaseError(error: unknown): Failure | undefined {
   if (pg.code === '23514' && publishedFieldsChecks.has(constraint))
     return { reason: 'incomplete', gaps: [] }
   return undefined
+}
+
+// Call it from outside the unit of work, as `mappingDatabaseErrors(() => uow.run(...))`, never around one
+// statement inside it: a caught pg error leaves the transaction aborted (25P02), and the deferrable constraints
+// report only at COMMIT, which `uow.run` throws. The thrown error rolled the transaction back, claim included,
+// so a retry with the same Idempotency-Key runs again.
+export async function mappingDatabaseErrors<V>(work: () => Promise<Result<V>>): Promise<Result<V>> {
+  try {
+    return await work()
+  }
+  catch (error) {
+    const failure = mapDatabaseError(error)
+    if (!failure)
+      throw error
+    return fail(failure)
+  }
+}
+
+// Wraps every use case so each call runs through `mappingDatabaseErrors`, from outside its unit of work.
+export function guardUseCases<U extends Record<string, (...args: never[]) => Promise<Result<unknown>>>>(useCases: U): U {
+  return Object.fromEntries(
+    Object.entries(useCases).map(([name, useCase]) => [name, (...args: never[]) => mappingDatabaseErrors(() => useCase(...args))]),
+  ) as U
 }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { checkMedia } from '../../../src/modules/content/application/check-media.ts'
 
 function fakeMedia(rows: MediaRow[]): MediaRepository<null> {
-  return { find: async (_tx, _storeId, ids) => rows.filter(r => ids.includes(r.id)) }
+  return { find: async (_tx, _storeId, ids) => rows.filter(r => ids.map(i => i.toLowerCase()).includes(r.id)) }
 }
 
 describe('checkMedia', () => {
@@ -28,6 +28,11 @@ describe('checkMedia', () => {
   it('[E2.6] a ready and a processing image pass', async () => {
     const media = fakeMedia([{ id: 'a', kind: 'image', status: 'ready' }, { id: 'b', kind: 'image', status: 'processing' }])
     expect(await checkMedia(media, null, 's1', [{ id: 'a', kind: 'image' }, { id: 'b', kind: 'image' }])).toBeUndefined()
+  })
+
+  it('[E2.6] an uppercase uuid matches the lowercase row', async () => {
+    const media = fakeMedia([{ id: '0198a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b', kind: 'image', status: 'ready' }])
+    expect(await checkMedia(media, null, 's1', [{ id: '0198A1B2-C3D4-7E5F-8A9B-0C1D2E3F4A5B', kind: 'image' }])).toBeUndefined()
   })
 
   it('[E2.6] an empty list passes without a lookup', async () => {
