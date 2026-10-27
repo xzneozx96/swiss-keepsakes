@@ -103,12 +103,11 @@ describe.each([
   })
 
   it('[E4.1][AC50] no menu link is a booking path or a raw key', async () => {
-    const { sidebar, phone } = await renderShop(language)
+    const { phone } = await renderShop(language)
     await userEvent.click(phone.querySelector('button')!)
     const links = screen.getAllByRole('link', { hidden: true })
 
-    expect(links.filter(a => /\/bookings\//.test(a.getAttribute('href') ?? ''))).toEqual([])
+    expect(links.filter(a => /\/bookings(?:\/|$)/.test(a.getAttribute('href') ?? ''))).toEqual([])
     expect(links.filter(a => /^(?:nav|sectionPages)\./.test(text(a)))).toEqual([])
-    expect(sidebar).toBeTruthy()
   })
 })
