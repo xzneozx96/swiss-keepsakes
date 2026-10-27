@@ -64,7 +64,7 @@ const contentPages = pagesOf('content')
 /**
  * The sidebar (owner review 15.10.2026): six items, four of them folding groups. Dashboard holds
  * Today and every analytics page of the shop; Operations the work on orders and departures;
- * Marketing the articles, guest voices and inquiries. Partners keeps its own analytics page.
+ * Content the articles, guest voices and inquiries. Partners keeps its own analytics page.
  */
 const sidebarItems: NavItem[] = [
   {
@@ -120,8 +120,8 @@ const sidebarItems: NavItem[] = [
 ]
 
 /**
- * Phones: Today, Orders and Calendar, with the other sections in the More sheet (Bookings left
- * the bar with ADR-012; E4.1 redoes it). Dashboard's analytics pages are the Sales tab here and Analytics in More.
+ * Phones: Dashboard, Operations and Calendar, with the other sections in the More sheet (Bookings
+ * left the bar with ADR-012). Dashboard's analytics pages are the Sales tab here and Analytics in More.
  */
 const phoneItems: NavItem[] = [
   {
@@ -132,7 +132,7 @@ const phoneItems: NavItem[] = [
     exact: true,
   },
   {
-    label: 'nav.orders',
+    label: 'nav.operations',
     icon: OrdersIcon,
     paths: ['/store/orders'],
     to: '/store/orders',
@@ -251,8 +251,8 @@ const tabLink
   = 'group relative flex h-16 w-full flex-col items-center justify-center gap-1 text-xs text-muted outline-none focus-visible:focus-ring data-[status=active]:font-semibold data-[status=active]:text-accent'
 
 /**
- * Merchant dashboard frame (UX spec §3.2). Phones: bottom navigation with Today,
- * Orders and More (a sheet with the other sections). From 1024px: a sidebar.
+ * Merchant dashboard frame (UX spec §3.2). Phones: bottom navigation with Dashboard,
+ * Operations, Calendar and More (a sheet with the other sections). From 1024px: a sidebar.
  */
 export function MerchantShell({ children }: { children: React.ReactNode }) {
   const { t } = useLocale()
