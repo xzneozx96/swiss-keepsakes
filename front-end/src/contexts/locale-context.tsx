@@ -2,6 +2,7 @@ import type { IntlLocale, Language } from '@sk/domain/shared'
 import type { MessageKey } from '@/i18n/en'
 
 import { I18nProvider } from '@heroui/react'
+import { useParams, useRouter } from '@tanstack/react-router'
 import {
   createContext,
   use,
@@ -14,6 +15,7 @@ import {
 } from 'react'
 
 import { en } from '@/i18n/en'
+import { isLanguage, switchLanguagePath, writeLanguageCookie } from '@/lib/language-routing'
 import { readStored, writeStored } from '@/lib/storage'
 
 export type { Language }
@@ -105,11 +107,58 @@ function usePastHydration(): boolean {
   return useSyncExternalStore(subscribeToNothing, () => true, () => false)
 }
 
+const settling: Partial<Record<Language, Promise<void>>> = {}
+
+/** One promise per language, for `use`: it settles when the messages are loaded or failed, and never rejects. */
+function settled(language: Language): Promise<void> {
+  return settling[language] ??= loadDictionary(language).then(() => undefined, () => undefined)
+}
+
+/** The language in the address (`/de/...`), or undefined on a page without one. Needs a router. */
+export function useUrlLanguage(): Language | undefined {
+  return useParams({ strict: false, select: params => isLanguage(params.lang) ? params.lang : undefined })
+}
+
+/** Reads the address when there is a router; a tree without one (a unit test, a preview) just has the saved language. */
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
+  return useRouter({ warn: false })
+    ? <RoutedLocaleProvider>{children}</RoutedLocaleProvider>
+    : <LocaleState navigateTo={undefined} urlLanguage={undefined}>{children}</LocaleState>
+}
+
+function RoutedLocaleProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const urlLanguage = useUrlLanguage()
+  const navigateTo = useCallback((next: Language) => {
+    const { pathname, search, hash } = router.state.location
+    const target = switchLanguagePath(pathname, next)
+
+    // On a prefixed page the language is part of the address, so the switch is a navigation.
+    if (target !== pathname)
+      void router.navigate({ to: target, search, hash })
+  }, [router])
+
+  return <LocaleState navigateTo={navigateTo} urlLanguage={urlLanguage}>{children}</LocaleState>
+}
+
+function LocaleState({ children, navigateTo, urlLanguage }: {
+  children: React.ReactNode
+  navigateTo: ((language: Language) => void) | undefined
+  urlLanguage: Language | undefined
+}) {
   // English while hydrating, like the server's HTML; the saved language is applied after it (below).
   const pastHydration = usePastHydration()
-  const [language, setLanguage] = useState<Language>(() => pastHydration ? initialLanguage() : 'en')
+  const [storedChoice, setStoredChoice] = useState<Language>(() => pastHydration ? initialLanguage() : 'en')
   const latestRequestRef = useRef(0)
+  // The address wins on a prefixed page. The route loader has loaded its messages, so the first render is already in it.
+  const wanted = urlLanguage ?? storedChoice
+
+  // The browser hydrates server HTML that is already in the URL's language, before any route loader has run
+  // there. Waiting here for its messages keeps the first client render equal to the server's.
+  if (urlLanguage && !loaded[urlLanguage])
+    use(settled(urlLanguage))
+  // If the messages are still missing (a stale page, a failed load), English shows until they arrive.
+  const language = useDictionary(wanted) ? wanted : 'en'
 
   const changeLanguage = useCallback((next: Language) => {
     // The last tap wins, even if an earlier language arrives after it. If the messages cannot
@@ -120,16 +169,22 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       () => {
         if (request !== latestRequestRef.current)
           return
-        setLanguage(next)
+        setStoredChoice(next)
         writeStored(STORAGE_KEY, next)
+        writeLanguageCookie(next)
+
+        navigateTo?.(next)
       },
       () => undefined,
     )
-  }, [])
+  }, [navigateTo])
 
   // A page rendered on the server and hydrated starts in English, like the server's HTML. The saved language
   // arrives after that. A client-only page already starts in it, so this finds nothing to change there.
+  // A prefixed page takes its language from the address and leaves the saved one alone.
   useEffect(() => {
+    if (urlLanguage)
+      return
     const saved = storedLanguage()
 
     if (saved === 'en')
@@ -140,11 +195,11 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       () => {
         // A tap on the language switch while the messages were on their way wins.
         if (request === latestRequestRef.current)
-          setLanguage(saved)
+          setStoredChoice(saved)
       },
       () => undefined,
     )
-  }, [])
+  }, [urlLanguage])
 
   useEffect(() => {
     document.documentElement.lang = language
