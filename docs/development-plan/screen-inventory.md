@@ -10,7 +10,7 @@ This file lists every route file of the app and every new screen that PRD v3 nee
 
 Review page: https://claude.ai/artifact/XFvj2gvaJ3H4qGFyTXmC8o (private; source docs/development-plan/screen-inventory.html, regenerate from this file).
 
-It chooses no visual design. The owner's reference images are still pending (O23). Where a row says "layout", it means content blocks and order, not look.
+It chooses no visual design. The owner has no reference images (O23 closed, 27.10.2026): pins and the map use the default style of the map stack. Where a row says "layout", it means content blocks and order, not look.
 
 Amended on 27.10.2026 for the map pins, local events and categories decision (owner gate G11): N03 and N17 change, N04 and N05 are removed, and N23 is new. The review page linked above shows the 26.10.2026 version until it is regenerated.
 
@@ -54,7 +54,7 @@ Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux
 | Route file | Target URL | Id | Audience | Verdict | Render | Why (PRD, AC) | ADR | Track |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `__root.tsx` | root |  | all | **Redesign** | SSR (root) | Start root: head tags, CSS side-effect import, providers made server-safe, browser history (§4.1, AC61) | 001, 002 | P |
-| `_guest.tsx` | guest layout |  | guest | **Redesign** | SSR for public children | Shell moves under `/$lang`. Phone tabs: Explore, Map, Keepsakes, Account (owner answer, 2026-10-26). Onboarding prompt and language notice mount here (§3.1, AC36, AC64) | 002, 006 | P |
+| `_guest.tsx` | guest layout |  | guest | **Redesign** | SSR for public children | Shell moves under `/$lang`. Phone tabs stay Explore, Keepsakes, Tours, Account, with the language prefix, until E4.6 swaps Tours for Map (owner answer D5, 2026-10-26; gate G-S5-MAPTAB, 27.10.2026). Onboarding prompt and language notice mount here (§3.1, AC36, AC64) | 002, 006 | P |
 | `_guest/index.tsx` | `/$lang` | C01 | guest | **Redesign** | SSR | Story and map first, shop gentle. Four-category rail, "Soon" and priced tour rail go (§1.2, §7.0, Q24, AC54) | 001, 002, 006 | 1 |
 | `_guest/stories/index.tsx` | `/$lang/stories` | C19 | guest | **Redesign** | SSR | Ranked by `rankItems`, tags for places, stay and interests (§3.2, §11.2, AC38) | 001, 002, 006 | 1 |
 | `_guest/stories/$slug.tsx` | `/$lang/stories/$slug` | C20 | guest | **Redesign** | SSR | Place tags, up to 6 keepsake cards without price, up to 3 "explore more", language notice (§11.2, AC31, AC32, AC33, AC54, AC64) | 001, 002, 005, 011 | 1 |
@@ -70,7 +70,7 @@ Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux
 | `_guest/cart.tsx` | `/cart` | C04 | guest | **Redesign** | ssr:false | Server cart, lines grouped by destination, re-check on each change (§8.1, AC80, AC81) | 021, 026 | 2 |
 | `_guest/cart_.review.tsx` | `/cart/review` | C06 | guest | **Redesign** | ssr:false | Preview of the orders the cart will create, handover line prefilled, pay online or cash (§8.1, §10.4, AC66, AC70, AC71, AC76, AC82) | 024, 025, 026 | 2 |
 | `_guest/cart_.sent.tsx` | `/cart/sent` | C07 | guest | **Redesign** | ssr:false | Lists created orders, repeat-safe, no trip profile (§3.4 removed, AC83) | 026 | 2 |
-| `_guest/account.tsx` | `/account` | C14 | guest | **Keep** | ssr:false | Account hub and order list. Strip the booking list and `features/tours/booking` import (§4.2, AC50) | 012 | 2 |
+| `_guest/account.tsx` | `/account` | C14 | guest | **Keep** | ssr:false | Account hub and order list. Strip the booking list and `features/tours/booking` import (§4.2, AC50). Built in E7.26 on real orders | 012 | 2 |
 | `_guest/account_.orders.$orderId.tsx` | `/account/orders/$orderId` | C15 | guest | **Redesign** | ssr:false | Tracking for self-collect and partner path states, order code, cash state, payment label (§6.2, §10.4, §8, AC25, AC65, AC66, AC72) | 025, 028 | 2 |
 | `_guest/account_.orders.$orderId_.pay.tsx` | `/account/orders/$orderId/pay` | C12 | guest | **Redesign** | ssr:false | Simulated provider page becomes the Stripe Payment Element. Not shown for cash orders (§9.1, AC65) | 021 | 2 |
 | `_guest/account_.bookings.$bookingId.tsx` | removed | C16 | guest | **Hide** | none | Booking detail hidden (§4.2, Q4) | 012 | 2 |
@@ -86,7 +86,7 @@ Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux
 | `admin.tsx` | `/admin` | A01, A02 | admin | **Keep** | ssr:false | Super Admin invites merchant, opening checklist (§5, AC03) | 001 | P |
 | `partner/index.tsx` | `/partner` | P01 | partner | **Redesign** | ssr:false | Entry splits: read-only report by link and code, and signed-in handover work (§10.3, §10.4, O24 closed) | 010, 019 | 2 |
 | `partner/$token.tsx` | `/partner/$token` | P02 | partner | **Keep** | ssr:false | Read-only report. Strip tour lines. `no-referrer`, `noindex`, token in path (§10.3, AC12) | 001, 010 | 2 |
-| `store.tsx` | merchant layout |  | merchant | **Redesign** | layout, ssr:false | Sidebar and phone bar gain Handovers, Places, Media, Traffic, Map. Bookings leave (§6.4, §13.1) | 012 | P |
+| `store.tsx` | merchant layout |  | merchant | **Redesign** | layout, ssr:false | Groups Dashboard, Operations, Products, Partners, Content, Settings. Marketing becomes Content and Bookings leave (E4.1). Handovers, Places, Categories, Media, Traffic and Map entries come with their own screens (§6.4, §13.1) | 012 | P |
 | `store/index.tsx` | `/store` | M02 | merchant | **Redesign** | ssr:false | Today cards: drop tours, add handover proposals, missing bags, pending prep (§6.4, §10.4, AC72, AC77) | 012, 025 | 2 |
 | `store/sales.tsx` | `/store/sales` |  | merchant | **Keep** | ssr:false | Sales overview. Strip tour figures (§13.1) | 012 | 2 |
 | `store/$section.tsx` | `/store/settings` | M22 | merchant | **Keep** | ssr:false | Store info, members, payout. Preparation time (O22) added when decided | 010 | P |
@@ -126,7 +126,7 @@ Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux
 | `store/requests/analytics.tsx` | `/store/requests/analytics` |  | merchant | **Keep** | ssr:false | Inquiry analytics |  | 1 |
 | `store/requests/private.tsx` | removed | M20 | merchant | **Hide** | none | Private tour requests out of scope (Q6). ADR-012 covers them in prose, not in its wrapper list. Extended by ruling D2 | 012 | 1 |
 
-**`lab.*` (17 files, not inventoried row by row).** They are design experiments at `/lab/*` and stay `ssr:false`, outside the product. They import product code (`features/discovery`, `features/checkout`, `features/tours/map`) and not the other way: no file outside `routes/lab.*` imports `features/lab`. So no lab component is reused by a product screen. Two are worth reading when the owner references arrive: `lab.map` and `lab.map-loading` for the map, and `lab.blog-home` for the home and the story list. `lab.map` hard-codes an aerial swisstopo style "chosen on 15.10.2026". That conflicts with O23 and with the tile decision that ADR-006 defers, so this inventory does not adopt it.
+**`lab.*` (17 files, not inventoried row by row).** They are design experiments at `/lab/*` and stay `ssr:false`, outside the product. They import product code (`features/discovery`, `features/checkout`, `features/tours/map`) and not the other way: no file outside `routes/lab.*` imports `features/lab`. So no lab component is reused by a product screen. Two are worth reading for the map and the home: `lab.map` and `lab.map-loading` for the map, and `lab.blog-home` for the home and the story list. `lab.map` hard-codes an aerial swisstopo style "chosen on 15.10.2026". That conflicts with the tile decision of G11, so this inventory does not adopt it.
 
 ## Table 2. New screens
 
@@ -242,7 +242,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 | State | Behaviour |
 | --- | --- |
 | Loading | Map shell and pin list load separately. MapLibre loads by dynamic import (AGENTS rule 9) |
-| Loaded | Pins in a flat style: swisstopo aerial photos with OpenFreeMap names, no tilt and no 3D terrain, with the swisstopo, OpenFreeMap, OpenMapTiles and OpenStreetMap credits. Pin styling waits for O23 |
+| Loaded | Pins in a flat style: swisstopo aerial photos with OpenFreeMap names, no tilt and no 3D terrain, with the swisstopo, OpenFreeMap, OpenMapTiles and OpenStreetMap credits. Pins use the default style of the map stack (O23 closed, 27.10.2026) |
 | Category chip selected | The chip highlights the pins of that map category and dims the others, and no pin is hidden. A parent chip also covers pins tagged only with its sub-categories. A pin in two categories is highlighted under both chips, and a pin with no category only under All (AC88, D7). Ranking by stay tag and interests still never hides a pin (AC44) |
 | Ranked | Order and prominence follow stay tag and interests. No pin is hidden (Q26, AC44) |
 | Pin open | Pin card (N03): photo, tip, hours, address, the next date for a dated pin, the main story link if any, the other stories that tag the pin, the outbound link if any. No price (AC42). A pin with no story shows no story link (AC62) |
@@ -252,7 +252,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 | Tour route | A tour page shows the merchant's route on the map. No route builder, no location prompt, no "you are here" (AC67, G9) |
 | Empty or failed | Short message with a retry. A map without network is not supported (O35 assumption) |
 
-**Against today.** The tour map moves from a feature of one screen to a shared component. Entry points: the Map tab (D5), a story's place tag, a tour's route stops, and the home block. Category chips come from the merchant's map categories and replace the fixed place-type chips of D7, which keeps its highlight-and-dim behaviour.
+**Against today.** The tour map moves from a feature of one screen to a shared component. Entry points: the Map tab (D5, after E4.6), a story's place tag, a tour's route stops, and the home block. Category chips come from the merchant's map categories and replace the fixed place-type chips of D7, which keeps its highlight-and-dim behaviour.
 
 ## Area 5. Merchant map and pins (N16, N17, N23)
 
@@ -292,7 +292,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 
 | Id | Blocks | What is missing |
 | --- | --- | --- |
-| O23 | N02, N03, home, lab.map decision | Map visual design waits for the owner's reference images. The tile source is settled: swisstopo aerial photos with OpenFreeMap names (27.10.2026) |
+| O23 | N02, N03, home, lab.map decision | Closed by the owner on 27.10.2026. There are no reference images. Pins and the map use the default style of the map stack: swisstopo aerial photos with OpenFreeMap names, flat 2D |
 | O41 | C04, C06 | How a guest cart without sign-in is kept, and for how long |
 | O26 | C03, N14, N15 | Colour list, theme list, design rights, prices |
 | O22 | C06, N06, N11, settings | Preparation hours and the auto-accept rule |
@@ -318,7 +318,7 @@ No question is open. Each row records who settled it. Answers carry the owner's 
 | D2 | How to hide `store/products/categories.tsx` and `store/requests/private.tsx` | Extend the ADR-012 dormant pattern to the categories and private-tour screens and their components (`categories-page.tsx`, `subcategory-sheet.tsx`, the private-tour request screens) | Orchestrator ruling, 2026-10-26 |
 | D3 | Route prefix of partner handover screens | `/handover/...` | Orchestrator ruling, 2026-10-26 |
 | D4 | Where the tour editor lives, and the group name | The tour editor moves to `/store/content/tours`. The group "Marketing" is renamed Content and holds Stories, Places, Tours, Media, Comments, Reviews, and Inquiries | Owner answer, 2026-10-26 |
-| D5 | Guest phone tabs | Explore, Map, Keepsakes, Account | Owner answer, 2026-10-26 |
+| D5 | Guest phone tabs | Explore, Map, Keepsakes, Account at launch of the map. Until E4.6 the tabs stay Explore, Keepsakes, Tours, Account, and Map replaces Tours (gate G-S5-MAPTAB) | Owner answer, 2026-10-26; sequence 2026-10-27 |
 | D6 | Where a merchant previews a draft | An `ssr:false` preview route that reuses the public components, so drafts never enter the shared cache | Orchestrator ruling, 2026-10-26 |
 | D7 | Map chips | Chips come from merchant-edited map categories and highlight the chosen category and dim the other pins. No pin is ever hidden by a chip. A pin has no fixed type, publishes without a story, and may have dates. Places and events have no page of their own, and guests do not review places (gate G11) | Owner answer, 2026-10-26 (chips that highlight and dim), kept for map categories on 2026-10-27 |
 
