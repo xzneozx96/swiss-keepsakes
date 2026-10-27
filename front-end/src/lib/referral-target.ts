@@ -1,7 +1,7 @@
 import { resolveLandingLanguage } from '@/lib/language-routing'
 
 const MAX_TARGET_LENGTH = 200
-const PRINTABLE_ASCII = /^[\x20-\x7E]+$/
+const PRINTABLE_ASCII = /^[\x21-\x7E]+$/
 // The first segment is exactly en or de, then the end, a slash or a query.
 const LANGUAGE_SEGMENT = /^\/(?:en|de)(?:[/?]|$)/
 // An empty segment, a backslash, a dot segment, or an encoded dot, backslash or control character.

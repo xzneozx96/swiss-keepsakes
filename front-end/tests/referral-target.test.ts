@@ -37,6 +37,8 @@ describe('referralTarget and referralLocation', () => {
     '/en/%5cevil',
     '/en/./x',
     '/en//x',
+    '/en/a b',
+    '/en/x%0d%0aSet-Cookie:a=b',
     `/en/${'a'.repeat(200)}`,
   ])('[E3.7][AC24] rejects %s and falls back to /en', (to) => {
     expect(referralTarget(to)).toBeNull()
@@ -48,6 +50,8 @@ describe('referralTarget and referralLocation', () => {
     ['double encoded', '?to=%252F%252Fevil.example'],
     ['decoded CRLF', '?to=/en/x%0d%0aSet-Cookie:a=b'],
     ['decoded non-ASCII', '?to=/en/%C3%A9'],
+    ['decoded space', '?to=/en/a%20b'],
+    ['plus as space', '?to=/en/a+b'],
     ['empty to', '?to='],
     ['no to', ''],
   ])('[E3.7][AC24] raw query %s falls back to /en', (_name, query) => {
