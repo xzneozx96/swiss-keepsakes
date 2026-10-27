@@ -1,4 +1,33 @@
 export { createApiClient } from './client.ts'
+export {
+  type LocalizedText,
+  localizedLongTextSchema,
+  localizedTextSchema,
+  type Pin,
+  pinSchema,
+  type PinWriteBody,
+  pinWriteBodySchema,
+  type StoryDraft,
+  storyDraftSchema,
+  type StoryGroup,
+  type StoryGroupCreateBody,
+  storyGroupCreateBodySchema,
+  type StoryGroupSaveBody,
+  storyGroupSaveBodySchema,
+  storyGroupSchema,
+  type StoryVersion,
+  type StoryVersionCreateBody,
+  storyVersionCreateBodySchema,
+  type StoryVersionMoveBody,
+  storyVersionMoveBodySchema,
+  type StoryVersionSaveBody,
+  storyVersionSaveBodySchema,
+  storyVersionSchema,
+  type TourGuide,
+  tourSchema,
+  type TourGuideWriteBody,
+  tourWriteBodySchema,
+} from './content.ts'
 export { healthSchema } from './health.ts'
 export { type Me, meSchema, type MeStore, meStoreSchema } from './me.ts'
 export { type Problem, problemSchema, type ProblemType, problemTypes } from './problem.ts'
