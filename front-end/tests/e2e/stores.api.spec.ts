@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
-import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, sayStart, signedInSuperAdmin, signInFromSheet, words } from './invitation-flows'
+import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, sayStart, signedInSuperAdmin, signInFromSheet, tokenOf, watchForToken, words } from './invitation-flows'
 
 // [E2.3][S8] The invitation screens against the real API (Better Auth, its own database) on one origin, at 375x812,
 // on WebKit and Chromium, EN and DE. The first specs drive what a visitor can reach with no invitation: the token
@@ -19,13 +19,12 @@ test.beforeEach(async ({ page, context }, testInfo) => {
   )
 })
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim (the API mails the fragment form, and a hash path alone is not turned into a route).
-test.fixme('[E2.3][S8] the token leaves the address before anything else, and a link the API does not know shows its own state before sign-in', async ({ page }, testInfo) => {
+test('[E2.3][S8] the token leaves the address before anything else, and a link the API does not know shows its own state before sign-in', async ({ page }, testInfo) => {
   const t = words[languageOf(testInfo)]
   const addresses: string[] = []
 
   page.on('framenavigated', frame => addresses.push(frame.url()))
-  await page.goto(`/#/store/onboarding?invitation=${token}`)
+  await page.goto(`/store/onboarding#invitation=${token}`)
 
   await expect(page.getByRole('heading', { name: t.unknownTitle })).toBeVisible()
   // The first address is the link as the mail holds it. Every address after it is the app's own, token-free.
@@ -61,8 +60,7 @@ test('[E2.3][S8] A01 sends a visitor who has not signed in to sign-in, and shows
   await expect(page.getByRole('textbox')).toHaveCount(0)
 })
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links.
-test.fixme('[E2.3][S8] the Super Admin creates the store, the Owner follows the N20 link and accepts, another email is refused, a second accept by the Owner answers as the first did, and open for sale is refused with the checklist', async ({ browser }, testInfo) => {
+test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follows the N20 link and accepts, another email is refused, a second accept by the Owner answers as the first did, and open for sale is refused with the checklist', async ({ browser }, testInfo) => {
   testInfo.setTimeout(120_000)
   const language = languageOf(testInfo)
   const ownerEmail = newEmail()
@@ -74,8 +72,8 @@ test.fixme('[E2.3][S8] the Super Admin creates the store, the Owner follows the 
 
   expect(mail.to).toBe(ownerEmail)
   expect(mail.subject).toContain(name)
-  expect(mail.link.startsWith(`${SPA_ORIGIN}/#/store/onboarding?invitation=`)).toBe(true)
-  const token = new URL(mail.link.replace('/#/', '/')).searchParams.get('invitation') ?? ''
+  expect(mail.link.startsWith(`${SPA_ORIGIN}/store/onboarding#invitation=`)).toBe(true)
+  const token = tokenOf(mail.link)
 
   expect(token.length).toBeGreaterThan(16)
   expect(mail.text).toContain(mail.link)
@@ -92,6 +90,7 @@ test.fixme('[E2.3][S8] the Super Admin creates the store, the Owner follows the 
 
   // Another email is refused, and the invitation stays open for the right one.
   const other = await newVisitor(browser, language)
+  const otherLeaks = watchForToken(other, token)
 
   await followLinkAs(other, language, mail.link, newEmail())
   await expect(other.getByRole('heading', { name: say(language, 'stores.refusal.mismatch.title') })).toBeVisible()
@@ -103,6 +102,7 @@ test.fixme('[E2.3][S8] the Super Admin creates the store, the Owner follows the 
   // The Owner follows the link, signs in with the invited email and accepts.
   const owner = await newVisitor(browser, language)
   const keys: Array<string | undefined> = []
+  const ownerLeaks = watchForToken(owner, token)
 
   owner.on('request', (request) => {
     if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/me/invitations/accept')
@@ -119,6 +119,9 @@ test.fixme('[E2.3][S8] the Super Admin creates the store, the Owner follows the 
   // The screen read the session first and sent no accept before sign-in, so the one accept after sign-in took the invitation.
   expect(keys).toHaveLength(1)
   expect(keys.every(key => (key?.length ?? 0) > 10)).toBe(true)
+  // No request address and no referer of either person held the token (the fragment stays in the browser).
+  await ownerLeaks()
+  await otherLeaks()
 
   // A second accept of the same link by the same Owner, on another phone, answers as the first did (E2.4, so a lost answer cannot strand the Owner).
   const phone = await newVisitor(browser, language)
@@ -149,8 +152,7 @@ test.fixme('[E2.3][S8] the Super Admin creates the store, the Owner follows the 
   await expect(card.locator('[data-invitation]')).toHaveAttribute('data-invitation', 'accepted')
 })
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links.
-test.fixme('[E2.3][S8] after the Super Admin sends the invitation again, the old link says the invitation is not found and the new one works', async ({ browser }, testInfo) => {
+test('[E2.3][S8] after the Super Admin sends the invitation again, the old link says the invitation is not found and the new one works', async ({ browser }, testInfo) => {
   testInfo.setTimeout(120_000)
   const language = languageOf(testInfo)
   const ownerEmail = newEmail()
@@ -176,16 +178,18 @@ test.fixme('[E2.3][S8] after the Super Admin sends the invitation again, the old
   await expect(fresh.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
 })
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links. The body still sets `location.hash`; E3.4 must rewrite it.
-test.fixme('[E2.3][S8] a link opened in a tab that already shows A02 leaves the address and is taken up and leaves the address', async ({ page }, testInfo) => {
+test('[E2.3][S8] a link opened in a tab that already shows A02 leaves the address and is taken up and leaves the address', async ({ page }, testInfo) => {
   const language = languageOf(testInfo)
   const addresses: string[] = []
 
-  await page.goto('/')
-  await expect(page.getByRole('main')).toBeVisible()
+  // A02 sends a visitor who has not signed in to sign-in, so sign in first: the tab then shows A02 with no link.
+  await page.goto('/store/onboarding')
+  await signInFromSheet(page, language, newEmail())
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/store\/onboarding$/)
+  await expect(page.getByRole('heading', { name: words[language].missingTitle })).toBeVisible()
   page.on('framenavigated', frame => addresses.push(frame.url()))
   await page.evaluate((value: string) => {
-    window.location.hash = `#/store/onboarding?invitation=${value}`
+    window.location.hash = `invitation=${value}`
   }, token)
 
   await expect(page.getByRole('heading', { name: say(language, 'stores.refusal.notFound.title') })).toBeVisible()

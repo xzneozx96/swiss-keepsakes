@@ -93,6 +93,32 @@ export async function followLinkAs(page: Page, language: Language, link: string,
   await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+${screen}$`))
 }
 
+/** The token of a mailed link: the link keeps it in the fragment (`<screen>#invitation=<token>`), never in the path or the query. */
+export function tokenOf(link: string): string {
+  return new URLSearchParams(new URL(link).hash.slice(1)).get('invitation') ?? ''
+}
+
+/**
+ * Records every request of `page` (its address without the fragment, and its `referer`) so a test can assert that
+ * none carried `token`. The preview and accept POST bodies carry the token by design (backend.md section 8:
+ * a body is not logged and not sent as a referrer), so only addresses and headers are checked, never bodies.
+ */
+export function watchForToken(page: Page, token: string) {
+  const seen: Array<Promise<string>> = []
+
+  page.on('request', (request) => {
+    // The fragment is never sent to a server, and the browser strips it from `referer`; `url()` may still show it.
+    seen.push(request.allHeaders().then(headers => `${request.url().split('#')[0]}\n${headers.referer ?? ''}`, () => ''))
+  })
+
+  return async () => {
+    const lines = await Promise.all(seen)
+
+    expect(lines.length).toBeGreaterThan(0)
+    expect(lines.filter(line => line.includes(token))).toEqual([])
+  }
+}
+
 export async function signedInSuperAdmin(browser: Browser, language: Language) {
   const page = await newVisitor(browser, language)
   const email = newEmail()

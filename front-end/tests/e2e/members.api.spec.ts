@@ -2,7 +2,7 @@ import type { Browser, Page } from '@playwright/test'
 import type { Language } from './invitation-flows'
 import { expect, test } from '@playwright/test'
 import { managerInvitationMail, newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
-import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, signedInSuperAdmin } from './invitation-flows'
+import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, signedInSuperAdmin, tokenOf, watchForToken } from './invitation-flows'
 
 // [E2.4][AC02] M22 and M01 against the real API on one origin, at 375x812, on WebKit and Chromium, EN and DE. The Owner
 // comes through the E2.3 path (the Super Admin creates the store, the N20 link, accept). The N18 link is the one
@@ -57,8 +57,7 @@ async function acceptAsManager(page: Page, language: Language, link: string, ema
   await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/store$/)
 }
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links.
-test.fixme('[E2.4][AC02] the Owner invites a Manager, another email is refused, the Manager accepts and sees only that store and no members tab, and a removed Manager loses access', async ({ browser }, testInfo) => {
+test('[E2.4][AC02][E3.4][AC02] the Owner invites a Manager, another email is refused, the Manager accepts and sees only that store and no members tab, and a removed Manager loses access', async ({ browser }, testInfo) => {
   testInfo.setTimeout(180_000)
   const language = languageOf(testInfo)
   const { owner } = await storeWithOwner(browser, language)
@@ -72,11 +71,12 @@ test.fixme('[E2.4][AC02] the Owner invites a Manager, another email is refused, 
   const mail = await managerInvitationMail(managerEmail)
 
   expect(mail.to).toBe(managerEmail)
-  expect(mail.link.startsWith(`${SPA_ORIGIN}/#/invitation?invitation=`)).toBe(true)
-  const token = new URL(mail.link.replace('/#/', '/')).searchParams.get('invitation') ?? ''
+  expect(mail.link.startsWith(`${SPA_ORIGIN}/invitation#invitation=`)).toBe(true)
+  const token = tokenOf(mail.link)
 
   // Another email is refused, and the invitation stays open for the right one.
   const other = await newVisitor(browser, language)
+  const otherLeaks = watchForToken(other, token)
 
   await followLinkAs(other, language, mail.link, newEmail(), '/invitation')
   await other.getByRole('button', { name: say(language, 'stores.invite.accept') }).click()
@@ -87,6 +87,7 @@ test.fixme('[E2.4][AC02] the Owner invites a Manager, another email is refused, 
   // The Manager sees the store and the role before sign-in, and nothing is accepted until the button is tapped.
   const manager = await newVisitor(browser, language)
   const accepts: string[] = []
+  const managerLeaks = watchForToken(manager, token)
 
   manager.on('request', (request) => {
     if (new URL(request.url()).pathname === '/api/me/invitations/accept')
@@ -99,6 +100,9 @@ test.fixme('[E2.4][AC02] the Owner invites a Manager, another email is refused, 
   expect(manager.url()).not.toContain(token)
   await acceptAsManager(manager, language, mail.link, managerEmail)
   expect(accepts).toHaveLength(1)
+  // No request address and no referer of either person held the token (the fragment stays in the browser).
+  await managerLeaks()
+  await otherLeaks()
 
   const me = await (await manager.request.get('/api/me')).json() as { stores: Array<{ storeId: string, role: string }> }
 
@@ -128,8 +132,7 @@ test.fixme('[E2.4][AC02] the Owner invites a Manager, another email is refused, 
   expect(after.stores).toHaveLength(0)
 })
 
-// E3.4: browser history. Needs captureInvitations in the Start entry and the `/#/` link shim; the API still mails `/#/` links.
-test.fixme('[E2.4][AC02] revoke kills the link and a new invitation of the same address gets a new one, and send again kills the old link', async ({ browser }, testInfo) => {
+test('[E2.4][AC02] revoke kills the link and a new invitation of the same address gets a new one, and send again kills the old link', async ({ browser }, testInfo) => {
   testInfo.setTimeout(180_000)
   const language = languageOf(testInfo)
   const { owner } = await storeWithOwner(browser, language)
