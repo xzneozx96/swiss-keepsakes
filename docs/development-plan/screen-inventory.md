@@ -10,7 +10,7 @@ This file lists every route file of the app and every new screen that PRD v3 nee
 
 Review page: https://claude.ai/artifact/XFvj2gvaJ3H4qGFyTXmC8o (private; source docs/development-plan/screen-inventory.html, regenerate from this file).
 
-It chooses no visual design. The owner's reference images are still pending (O23). Where a row says "layout", it means content blocks and order, not look.
+It chooses no visual design. The owner has no reference images (O23 closed, 27.10.2026): pins and the map use the default style of the map stack. Where a row says "layout", it means content blocks and order, not look.
 
 Amended on 27.10.2026 for the map pins, local events and categories decision (owner gate G11): N03 and N17 change, N04 and N05 are removed, and N23 is new. The review page linked above shows the 26.10.2026 version until it is regenerated.
 
@@ -70,7 +70,7 @@ Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux
 | `_guest/cart.tsx` | `/cart` | C04 | guest | **Redesign** | ssr:false | Server cart, lines grouped by destination, re-check on each change (§8.1, AC80, AC81) | 021, 026 | 2 |
 | `_guest/cart_.review.tsx` | `/cart/review` | C06 | guest | **Redesign** | ssr:false | Preview of the orders the cart will create, handover line prefilled, pay online or cash (§8.1, §10.4, AC66, AC70, AC71, AC76, AC82) | 024, 025, 026 | 2 |
 | `_guest/cart_.sent.tsx` | `/cart/sent` | C07 | guest | **Redesign** | ssr:false | Lists created orders, repeat-safe, no trip profile (§3.4 removed, AC83) | 026 | 2 |
-| `_guest/account.tsx` | `/account` | C14 | guest | **Keep** | ssr:false | Account hub and order list. Strip the booking list and `features/tours/booking` import (§4.2, AC50) | 012 | 2 |
+| `_guest/account.tsx` | `/account` | C14 | guest | **Keep** | ssr:false | Account hub and order list. Strip the booking list and `features/tours/booking` import (§4.2, AC50). Built in E7.26 on real orders | 012 | 2 |
 | `_guest/account_.orders.$orderId.tsx` | `/account/orders/$orderId` | C15 | guest | **Redesign** | ssr:false | Tracking for self-collect and partner path states, order code, cash state, payment label (§6.2, §10.4, §8, AC25, AC65, AC66, AC72) | 025, 028 | 2 |
 | `_guest/account_.orders.$orderId_.pay.tsx` | `/account/orders/$orderId/pay` | C12 | guest | **Redesign** | ssr:false | Simulated provider page becomes the Stripe Payment Element. Not shown for cash orders (§9.1, AC65) | 021 | 2 |
 | `_guest/account_.bookings.$bookingId.tsx` | removed | C16 | guest | **Hide** | none | Booking detail hidden (§4.2, Q4) | 012 | 2 |
@@ -126,7 +126,7 @@ Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux
 | `store/requests/analytics.tsx` | `/store/requests/analytics` |  | merchant | **Keep** | ssr:false | Inquiry analytics |  | 1 |
 | `store/requests/private.tsx` | removed | M20 | merchant | **Hide** | none | Private tour requests out of scope (Q6). ADR-012 covers them in prose, not in its wrapper list. Extended by ruling D2 | 012 | 1 |
 
-**`lab.*` (17 files, not inventoried row by row).** They are design experiments at `/lab/*` and stay `ssr:false`, outside the product. They import product code (`features/discovery`, `features/checkout`, `features/tours/map`) and not the other way: no file outside `routes/lab.*` imports `features/lab`. So no lab component is reused by a product screen. Two are worth reading when the owner references arrive: `lab.map` and `lab.map-loading` for the map, and `lab.blog-home` for the home and the story list. `lab.map` hard-codes an aerial swisstopo style "chosen on 15.10.2026". That conflicts with O23 and with the tile decision that ADR-006 defers, so this inventory does not adopt it.
+**`lab.*` (17 files, not inventoried row by row).** They are design experiments at `/lab/*` and stay `ssr:false`, outside the product. They import product code (`features/discovery`, `features/checkout`, `features/tours/map`) and not the other way: no file outside `routes/lab.*` imports `features/lab`. So no lab component is reused by a product screen. Two are worth reading for the map and the home: `lab.map` and `lab.map-loading` for the map, and `lab.blog-home` for the home and the story list. `lab.map` hard-codes an aerial swisstopo style "chosen on 15.10.2026". That conflicts with the tile decision of G11, so this inventory does not adopt it.
 
 ## Table 2. New screens
 
@@ -242,7 +242,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 | State | Behaviour |
 | --- | --- |
 | Loading | Map shell and pin list load separately. MapLibre loads by dynamic import (AGENTS rule 9) |
-| Loaded | Pins in a flat style: swisstopo aerial photos with OpenFreeMap names, no tilt and no 3D terrain, with the swisstopo, OpenFreeMap, OpenMapTiles and OpenStreetMap credits. Pin styling waits for O23 |
+| Loaded | Pins in a flat style: swisstopo aerial photos with OpenFreeMap names, no tilt and no 3D terrain, with the swisstopo, OpenFreeMap, OpenMapTiles and OpenStreetMap credits. Pins use the default style of the map stack (O23 closed, 27.10.2026) |
 | Category chip selected | The chip highlights the pins of that map category and dims the others, and no pin is hidden. A parent chip also covers pins tagged only with its sub-categories. A pin in two categories is highlighted under both chips, and a pin with no category only under All (AC88, D7). Ranking by stay tag and interests still never hides a pin (AC44) |
 | Ranked | Order and prominence follow stay tag and interests. No pin is hidden (Q26, AC44) |
 | Pin open | Pin card (N03): photo, tip, hours, address, the next date for a dated pin, the main story link if any, the other stories that tag the pin, the outbound link if any. No price (AC42). A pin with no story shows no story link (AC62) |
@@ -292,7 +292,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 
 | Id | Blocks | What is missing |
 | --- | --- | --- |
-| O23 | N02, N03, home, lab.map decision | Map visual design waits for the owner's reference images. The tile source is settled: swisstopo aerial photos with OpenFreeMap names (27.10.2026) |
+| O23 | N02, N03, home, lab.map decision | Closed by the owner on 27.10.2026. There are no reference images. Pins and the map use the default style of the map stack: swisstopo aerial photos with OpenFreeMap names, flat 2D |
 | O41 | C04, C06 | How a guest cart without sign-in is kept, and for how long |
 | O26 | C03, N14, N15 | Colour list, theme list, design rights, prices |
 | O22 | C06, N06, N11, settings | Preparation hours and the auto-accept rule |
