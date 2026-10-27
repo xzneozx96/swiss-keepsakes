@@ -2059,13 +2059,13 @@ The numbers below are working names. Each migration takes the next free number w
 |---|---|---|---|---|
 | `0007_platform_helpers` | Expand | The five functions in `platform` | None on a table. A short catalog lock | `DROP FUNCTION`. After `0008`, drop with the schemas that use them |
 | `0008_content` | Expand | Schema `content`: tables, deferred foreign key `story_groups_subject_place_fkey`, triggers, the `place_story_links` view, section 5 indexes | None on existing tables. New tables are empty | Development and staging: reset the Neon branch from its parent, which also clears Drizzle's applied-migration record, or write a down migration with `DROP SCHEMA content CASCADE` and delete the record. Production before real content: the same. Production after real content: irreversible, restore the Neon branch from before the step and replay |
-| `00NN_content_pins` (G11) | Expand and contract | The drop list and the additions below | `ACCESS EXCLUSIVE` on `content.places`, `story_groups`, `place_links` and `story_versions`, each for a catalog change only, under `lock_timeout = '3s'` | A down script re-creates the dropped objects from `0008_content.sql`. The values of `places.type`, `subject_place_type` and the paid-link columns would be lost, which is irreversible if rows hold them. None do today, and the first statement refuses to run if a paid link exists |
-| `0009_catalog` | Expand | Schema `catalog`: products, options and values, SKUs and their option values, categories, `pickup_places` and `pickup_place_hours`, the combination-key triggers | As above | As above |
-| `0010_inventory` | Expand | Schema `inventory`, the hold trigger | As above | As above |
-| `0011_reviews` | Expand | Schema `reviews`: story comments, product ratings, the moderation history and its triggers. No place reviews table (G11, DM-8). This migration is unbuilt, so G11 changes its planned DDL and needs no drop | As above | As above |
-| `0012_partners` | Expand | Schema `partners` (waits for the owner's decision on ADR-019) | As above | As above |
-| `0013_analytics` | Expand | Schema `analytics` | As above | As above |
-| `0014_orders` | Expand | Schema `orders`: orders and lines (DM-11, DM-14), handovers, meetings, proposals and receipts (DM-16, DM-17), carts and cart lines (DM-18), the guest snapshot (DM-19), the commit-time triggers, the receipt and commission views. Ships with the orders slice, and `money` columns follow in their own migration | As above | As above |
+| `0009_pin_model` (G11) | Expand and contract | The drop list and the additions below | `ACCESS EXCLUSIVE` on `content.places`, `story_groups`, `place_links` and `story_versions`, each for a catalog change only, under `lock_timeout = '3s'` | A down script re-creates the dropped objects from `0008_content.sql`. The values of `places.type`, `subject_place_type` and the paid-link columns would be lost, which is irreversible if rows hold them. None do today, and the first statement refuses to run if a paid link exists |
+| `0010_catalog` | Expand | Schema `catalog`: products, options and values, SKUs and their option values, categories, `pickup_places` and `pickup_place_hours`, the combination-key triggers | As above | As above |
+| `0011_inventory` | Expand | Schema `inventory`, the hold trigger | As above | As above |
+| `0012_reviews` | Expand | Schema `reviews`: story comments, product ratings, the moderation history and its triggers. No place reviews table (G11, DM-8). This migration is unbuilt, so G11 changes its planned DDL and needs no drop | As above | As above |
+| `0013_partners` | Expand | Schema `partners` (waits for the owner's decision on ADR-019) | As above | As above |
+| `0014_analytics` | Expand | Schema `analytics` | As above | As above |
+| `0015_orders` | Expand | Schema `orders`: orders and lines (DM-11, DM-14), handovers, meetings, proposals and receipts (DM-16, DM-17), carts and cart lines (DM-18), the guest snapshot (DM-19), the commit-time triggers, the receipt and commission views. Ships with the orders slice, and `money` columns follow in their own migration | As above | As above |
 | Seed import (`db:seed`, a script, not a migration) | Migrate | Upsert the prototype's stories by `(language, slug)` and tours by `slug->>'en'`. Tours arrive as drafts with their stops, because no PDF exists yet, and the merchant uploads one before publishing. Places are not seeded from stops (ADR-005). SKUs wait for the colour list (O26) | Row locks on the rows it writes | Development and staging: `reset_from_parent` on the Neon branch. The seed writes no marker, so a selective undo is not offered |
 | None after G11 | Contract | The G11 step above is the only step that drops anything, and the plan does not separate its contract | | |
 
@@ -2080,7 +2080,7 @@ Notes on the steps.
 
 ### The G11 migration: pins without a type, dates, categories
 
-Name. `00NN_content_pins`, named by intent. The number is the next free one when it is written, because `0009_catalog` is planned and other sessions add migrations. It runs after `0008_content`.
+Name. `0009_pin_model`, named by intent. It is the pin model change from G11, it takes number 0009 (the next free one after `0008_content`), and the later migrations in the plan moved up by one. It runs after `0008_content`.
 
 Why one step with drops. The record's constraints say nothing reads `content.places` in production and the content API (E2.6) is not built, so no deployed code uses the dropped columns. The usual expand, migrate and contract split exists to keep old code working while new code rolls out, and no old code exists. The step is still guarded: it first refuses to run if `content.place_links` holds a paid link, the only data that would be lost with meaning. Rows in `places` and `story_groups` lose only the type copy, and the value is dead because the rules that used it go in the same step.
 
@@ -2100,7 +2100,7 @@ Tests. `api/test/integration/content-schema.test.ts` changes with the migration.
 - Remove or rewrite the tests that name the dropped objects: the helper `newPlace(store, type)` and its callers, `a practical place cannot name a main story` (`places_practical_no_story_check`), `[AC43] a story place cannot publish without a published main story, and a practical place can`, `[AC68] a place type cannot change after creation`, `an editorial review of a practical place is refused`, `an editorial review whose subject type does not match the place`, and the last-published-version tests that expect `story_versions_keep_pin_story`.
 - Add tests for a pin that publishes with no story and no category, a date entry shape, `ends_at` in Europe/Zurich, `content.public_pins` before, during and after the last date, `valid_weekly_hours`, the one-level category parent, the `RESTRICT` deletes, and a pin with two categories.
 - Update the lists that the test asserts: the expected index names (add the six, keep `places_main_story_idx`) and the expected table and view names (add the five tables and `public_pins`).
-- Update the `reviews` expectations when `0011_reviews` is built, not in this migration.
+- Update the `reviews` expectations when `0012_reviews` is built, not in this migration.
 
 The Drizzle `schema.ts` of the content module needs the same changes when E2.6 declares it.
 
@@ -2116,7 +2116,7 @@ Rollback restores the old constraint, and fails while any row has `role = 'partn
 
 ### Superseded: the visit entity
 
-The earlier version of this plan carried an expand, migrate and contract change that moved `arrival_at`, `departure_at` and `group_ref` from the order to a visit entity once G6 was decided. The owner answered G6 with the partner handover (`docs/decisions/2026-10-26-partner-handover.md`). Those columns are not in the DDL any more, so nothing needs moving, and the handover tables are created with the orders schema in `0014_orders`. The earlier decision 5 is closed.
+The earlier version of this plan carried an expand, migrate and contract change that moved `arrival_at`, `departure_at` and `group_ref` from the order to a visit entity once G6 was decided. The owner answered G6 with the partner handover (`docs/decisions/2026-10-26-partner-handover.md`). Those columns are not in the DDL any more, so nothing needs moving, and the handover tables are created with the orders schema in `0015_orders`. The earlier decision 5 is closed.
 
 ### When a handover rule changes later
 
@@ -2276,7 +2276,7 @@ The orchestrator forwards these. The DDL follows the recommendation in each case
 | Q-15 | Several merchants share one public site, and slugs are unique across the platform (ADR-002). A second merchant meets collisions. | Product owner | A store segment in URLs |
 | Q-16 | Untagged content counts as `both` (O25 proposal), and the DDL stores `both` as the default. If the owner wants untagged to differ, the column becomes nullable. | Product owner | `stay_tag` default |
 | Q-17 | Closed by owner M6 on 2026-10-26. A draft place can be deleted and a published place can only be hidden, which the DDL already does. A tour has no delete guard, and that is not decided. | Product owner | Tours only |
-| Q-18 | `pickup_places` and `product_pickup_places` are in backend.md section 5 and the architecture, and this model does not redefine them. `orders.pickup_place_id` points at them by plain id. | Developer | `0009_catalog`, orders |
+| Q-18 | `pickup_places` and `product_pickup_places` are in backend.md section 5 and the architecture, and this model does not redefine them. `orders.pickup_place_id` points at them by plain id. | Developer | `0010_catalog`, orders |
 | Q-19 | Seed tours have no PDF, so none can publish until the merchant uploads one (AC51). Is a draft tour at launch acceptable? | Product owner, merchant | Seed and launch content |
 | Q-20 | The later limited-edition pre-order (Q23) needs `allow_backorder`. It cannot coexist with `CHECK (held <= on_hand)` as it stands. ADR-022 describes the change. | Product owner | The pre-order phase |
 | Q-21 | `ref` comes from one global sequence. A second merchant would see the first merchant's volume in its own numbers. Use a per-store counter then. | Product owner | The multi-merchant phase |
