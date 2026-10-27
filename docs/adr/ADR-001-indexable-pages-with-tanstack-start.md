@@ -8,7 +8,7 @@ Applies to: `front-end/src/main.tsx`, `front-end/src/routes/**`, `front-end/vite
 New dependencies, approved by the owner (gates S1 and S1b, 2026-10-26, confirmed by a passing spike): `@tanstack/react-start` 1.169.4 and `nitro` 3.0.260903-beta with its Node target. Nitro is a beta release. No new vendor or paid service.
 
 ## Context
-PRD AC61 requires that each story and place page has its own address per language, that the full text is in the first HTML response, that no `noindex` is set, and that the page is in the sitemap. SM-1 (search traffic) depends on it. Merchants edit content at any time without a release (AC45), and the owner set the visible delay to about 60 seconds, 5 minutes at most (gate D5).
+PRD AC61 requires that each story page has its own address per language, that the full text is in the first HTML response, that no `noindex` is set, and that the page is in the sitemap. SM-1 (search traffic) depends on it. Merchants edit content at any time without a release (AC45), and the owner set the visible delay to about 60 seconds, 5 minutes at most (gate D5).
 
 Today the SPA uses hash history (`front-end/src/main.tsx:41`), so search engines see one page, and `index.html` is an empty shell. The front-end is Vite 8 with TanStack Router file routes (89 route files, 25 with `validateSearch`, 194 files import the router), HeroUI 3.2.6, Tailwind 4.3 and the React Compiler.
 
@@ -18,7 +18,8 @@ The first version of this ADR proposed API-built HTML documents with an SPA take
 We will move the front-end to TanStack Start on Vite, server-render the public content routes, and keep every dashboard route client-rendered.
 
 **Routes**
-- Server-rendered: `/:lang` (home), `/:lang/stories`, `/:lang/stories/:slug`, `/:lang/places/:slug`, `/:lang/map`, `/:lang/tours`, `/:lang/tours/:slug`, `/:lang/gifts`, `/:lang/gifts/:slug`. Every one of these URLs must exist, including the home page and list pages that `/` redirects to.
+- Server-rendered: `/:lang` (home), `/:lang/stories`, `/:lang/stories/:slug`, `/:lang/map`, `/:lang/tours`, `/:lang/tours/:slug`, `/:lang/gifts`, `/:lang/gifts/:slug`. Every one of these URLs must exist, including the home page and list pages that `/` redirects to.
+- **Amended 2026-10-27 (G11).** The place route `/:lang/places/:slug` is removed. Places are pins on the map and have no page of their own (ADR-029). `/:lang/map` stays, and `/:lang/map?place=<slug>` opens the map with that pin's card. The query link is not indexed separately and is not in the sitemap.
 - `ssr: false`: `store/*`, `admin`, `partner/*`, `lab/*`, `account`, cart and checkout, `sign-in`, `invitation`. They send `noindex`.
 - Browser history replaces hash history. `base` in `vite.config.ts` is `/`.
 
@@ -90,3 +91,4 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - 2026-10-26 amended (gate H3)
 - 2026-10-27 amended (gate G-E33-D10): interim prices and guest text in prototype server HTML; launch blocked until E4.12, E4.13, E4.14, E6.4
 - 2026-10-27 amended (gate G-E33-STARTMW): private-area headers set by Start request middleware
+- 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)

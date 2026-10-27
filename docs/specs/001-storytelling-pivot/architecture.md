@@ -4,10 +4,10 @@ type: architecture-spine
 purpose: build-substrate
 altitude: initiative
 paradigm: 'Modular monolith in four clean-architecture layers (adopted from backend.md section 4), with server-rendered public routes (TanStack Start) over published content, and personalisation held in the browser'
-scope: 'PRD v3 (storytelling pivot): content, places and map, tour information, reviews, Victorinox SKU stock, guide and partner boundary, search visibility, anonymous analytics, hiding tour booking, and the path from the prototype'
+scope: 'PRD v3 (storytelling pivot): content, pins and map, tour information, reviews, Victorinox SKU stock, guide and partner boundary, search visibility, anonymous analytics, hiding tour booking, and the path from the prototype'
 status: accepted
 created: '2026-10-26'
-updated: '2026-10-26'
+updated: '2026-10-27'
 binds: ['PRD §3', 'PRD §4.1', 'PRD §4.2', 'PRD §5', 'PRD §7', 'PRD §10.4', 'PRD §11', 'PRD §13', 'PRD O21', 'PRD O39', 'AC24', 'AC36-AC39', 'AC41-AC55', 'AC58-AC69']
 sources: ['docs/PRD/Swiss_keepsakes_PRD.md', 'docs/architecture/backend.md', 'docs/development-rules/tech-stack.md', 'docs/development-plan/delivery-plan.md', '.factory/runs/20261025-storytelling-pivot/grilling-notes.md', '.factory/runs/20261025-storytelling-pivot/gates.md']
 ---
@@ -18,11 +18,13 @@ This spine fixes the decisions that separately built parts must share. It does n
 
 Status is `accepted`. The owner approved the design on 2026-10-26 (gates DESIGN and D8), and the ADRs moved to `accepted` with it.
 
+Amended 2026-10-27 (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`): places become pins that stand without a story, have no page and take no guest reviews; the map filters by merchant-edited categories; the base map style is settled. AD-6, AD-7, AD-9, AD-12, the route list, the capability map, the risks and decision D4 follow it. ADR-029 and ADR-030 record the new decisions.
+
 ## Goals and constraints
 
 The product is a free, phone-first site that tells stories about Lucerne, ties each story to a pin on an interactive map, and offers Victorinox knives as a light add-on (PRD §1). Four facts shape the architecture.
 
-1. Search engines must index each story and place page in each language (AC61, SM-1). Today the SPA uses hash URLs and an empty `index.html`. TanStack Start renders those pages on the server (owner gates S1 and S1b).
+1. Search engines must index each story page in each language (AC61, SM-1). Today the SPA uses hash URLs and an empty `index.html`. TanStack Start renders those pages on the server (owner gates S1 and S1b).
 2. The merchant edits content at any time without a release, and visitors see it within about 60 seconds, at most 5 minutes (AC45, AC51, O39, owner gate D5).
 3. Onboarding answers never leave the browser except as anonymous event values (Q12, G4).
 4. Tour booking is hidden, not deleted, and the tour page shows no price (Q4, Q24, AC50).
@@ -114,7 +116,7 @@ Each decision has a stable id. The ADR holds the options, costs and what would m
 
 - **Binds:** AC24, AC30, AC61, SM-1, PRD §4.1, O21(a), owner gates S1, S1b, D5, D7, D10.
 - **Prevents:** hash routes, a client-only public page, a second renderer for the same text, a dashboard route that renders on the server, and secrets in URLs that logs keep.
-- **Rule:** The app is TanStack Start on Vite with browser history. Public content routes (`/:lang`, stories, places, map, tours, gifts, and their lists) render on the server with their head tags, hreflang alternates and the sitemap. `store/*`, `admin`, `partner/*`, `lab/*`, account, cart, sign-in and invitation are `ssr: false` with `noindex`. Loaders redirect with `statusCode: 302`. `/` redirects to `/:lang`, and every `/:lang` home and list page exists. Content reads use a 60-second TTL per web instance and `Cache-Control: public, s-maxage=60, stale-while-revalidate=240`, with no publish broadcast. The server is the Nitro Node target on Fly. The Hono API runs as a second process, and the web server forwards `/api` and `/webhooks` to it with cookies, `Origin`, the raw body and `Fly-Client-IP` intact (owner gate H1). Loaders read the API over the local network with the generated client, and the web server caches those reads for 60 seconds. CSS loads by side-effect import in `__root.tsx`. Server-only code loads by dynamic import. CI runs `tsc --noEmit`. Start and Nitro versions are pinned. The invitation token stays in the fragment, and the partner report token stays a path segment with `Referrer-Policy: no-referrer`, `noindex` and log scrubbing (owner gate D7). No page text, meta tag, JSON-LD, list or public list response carries a price (owner gate D10). The SPA loads price and availability from the product detail route. Guest review text is not in the server text. `/r/:code` accepts a same-origin target path (AC24). A hash-link shim maps old `#/path` links.
+- **Rule:** The app is TanStack Start on Vite with browser history. Public content routes (`/:lang`, stories, map, tours, gifts, and their lists) render on the server with their head tags, hreflang alternates and the sitemap. `store/*`, `admin`, `partner/*`, `lab/*`, account, cart, sign-in and invitation are `ssr: false` with `noindex`. Loaders redirect with `statusCode: 302`. `/` redirects to `/:lang`, and every `/:lang` home and list page exists. Content reads use a 60-second TTL per web instance and `Cache-Control: public, s-maxage=60, stale-while-revalidate=240`, with no publish broadcast. The server is the Nitro Node target on Fly. The Hono API runs as a second process, and the web server forwards `/api` and `/webhooks` to it with cookies, `Origin`, the raw body and `Fly-Client-IP` intact (owner gate H1). Loaders read the API over the local network with the generated client, and the web server caches those reads for 60 seconds. CSS loads by side-effect import in `__root.tsx`. Server-only code loads by dynamic import. CI runs `tsc --noEmit`. Start and Nitro versions are pinned. The invitation token stays in the fragment, and the partner report token stays a path segment with `Referrer-Policy: no-referrer`, `noindex` and log scrubbing (owner gate D7). No page text, meta tag, JSON-LD, list or public list response carries a price (owner gate D10). The SPA loads price and availability from the product detail route. Guest review text is not in the server text. `/r/:code` accepts a same-origin target path (AC24). A hash-link shim maps old `#/path` links.
 - **Why:** The owner chose one framework after two spikes. Start kept the router and the 89 route files, passed every spike question, and sent about 15 percent less first-load JavaScript than Next.js.
 - **Alternatives rejected:** API-built HTML with a client takeover (a second renderer, a parity test). Next.js (a rewrite of the route files, 307 redirects, a cache handler for several instances). Next.js for the public site beside the SPA (two frameworks). Build-time prerender or a prerender service.
 - **ADR:** `docs/adr/ADR-001-indexable-pages-with-tanstack-start.md`
@@ -130,10 +132,10 @@ Each decision has a stable id. The ADR holds the options, costs and what would m
 
 ### AD-4 Authoring is the in-app merchant editor over Postgres, with draft and publish
 
-- **Binds:** AC16, AC31, AC43, AC45, AC51, AC68, PRD §4.1, §11, O21(b), O39.
+- **Binds:** AC16, AC31, AC45, AC51, AC68, AC85, PRD §4.1, §11, O21(b), O39.
 - **Prevents:** content stored in repository files or a second system, or a publish that bypasses the editor's rules.
 - **Rule:** Merchant staff author through the app. The `content` module stores draft and published content, uses `row_version` with `If-Match`, and writes `audit_log` rows on publish. Visitors read only published content. Structured blocks are the body format. Public JSON reads send `max-age=30`, server-rendered pages use a 60-second TTL, so the expected delay is about 30 to 60 seconds. The owner set O39 to about 60 seconds typical and a 5-minute cap (owner gate D5, 2026-10-26). The publish rules of AD-6 run in the use case, not only in the UI.
-- **Why:** It reuses the existing editor, adds no vendor, and keeps places next to reviews and keepsake links.
+- **Why:** It reuses the existing editor, adds no vendor, and keeps pins next to stories and keepsake links.
 - **Alternatives rejected:** Markdown files in the repository (an edit needs a deploy). Payload CMS (second Next.js deployable, pinned `drizzle-orm` and `pg`, integer ids, a locale per document and not a translation group, about 500 packages). Sanity (hosted, content leaves our database, USD 15 per seat a month). Strapi (a second server and admin users, paid SSO). The owner chose the own editor (gate S2).
 - **ADR:** `docs/adr/ADR-003-content-authoring-and-publishing.md`
 
@@ -146,20 +148,20 @@ Each decision has a stable id. The ADR holds the options, costs and what would m
 - **Alternatives rejected:** A private bucket with presigned GET (not shareable, not cacheable). Cloudflare R2 or S3 now (a second vendor, held as fallback). `bytea` in Postgres (database growth, API in every download).
 - **ADR:** `docs/adr/ADR-004-media-and-pdf-storage.md`
 
-### AD-6 Stories, places and tour guides are aggregates of the `content` module
+### AD-6 Stories, pins and tour guides are aggregates of the `content` module
 
-- **Binds:** AC31, AC42, AC43, AC49, AC50, AC62, AC67, AC68, PRD §7.3, §11.1 to §11.3, Q15, Q18, G8, G9.
-- **Prevents:** a pin's main story pointing at a language version, route stops that create pins, and prices or departures on a tour page.
-- **Rule:** A story group has language versions. Related stories and keepsake links sit once on the group and are shared by both languages (owner gate M1). A link to a story with no version in the reader's language is hidden. A place has one type, belongs to a store, and may have a main story group. A story pin publishes only when its main story group has a published version. A practical place has no story and no review. A tour guide has information, a route of stops (value objects with their own coordinates and an optional place reference), tags, linked keepsakes and exactly one PDF. It has no price, departure or seat. Stay tags are `short_stay`, `multi_day`, `both`. Interests are the four fixed codes. A place is `draft`, `published` or `hidden`. A place that was published or reviewed is hidden, never deleted, and its reviews stay. Publishing a story pin and unpublishing its main story group lock the story group row, so AC43 holds under concurrency.
-- **Why:** It matches the existing `Article` model and the seed routes, and it keeps AC43 checkable in one transaction.
-- **Alternatives rejected:** Route stops that reference places (every seed stop would need a story). A pin pointing at a version (breaks when one language is unpublished). A separate `places` module (cross-module transactions on every publish).
+- **Binds:** AC31, AC42, AC50, AC67, AC68, AC85, AC86, PRD §7.3, §11.1 to §11.3, Q15, Q18, G9, G11 (overturns G8's four types).
+- **Prevents:** a pin's main story pointing at a language version, route stops that create pins, a story forced on every pin, and prices or departures on a tour page.
+- **Rule:** A story group has language versions. Related stories and keepsake links sit once on the group and are shared by both languages (owner gate M1). A link to a story with no version in the reader's language is hidden. A pin is a place or an event on the map. It belongs to a store, has no fixed type, and publishes on its own: a main story group and an outbound link are optional (G11). It carries map categories, optional weekly hours and optional date entries, and a pin whose last date has passed drops off the map. A tour guide has information, a route of stops (value objects with their own coordinates and an optional place reference), tags, linked keepsakes and exactly one PDF. It has no price, departure or seat. Stay tags are `short_stay`, `multi_day`, `both`. Interests are the four fixed codes. A pin is `draft`, `published` or `hidden`. A pin that was published is hidden, never deleted. Nothing protects a pin's main story: a story is unpublished or deleted under its own rules, and the pin card omits a story link with no published version. Pins have no page and no guest reviews. The pin model is ADR-029.
+- **Why:** It matches the existing `Article` model and the seed routes. Once pages and reviews were dropped, a place and an event differ only in their dates, so one pin model serves both.
+- **Alternatives rejected:** Route stops that reference pins (every seed stop would have to become a pin). A pin pointing at a version (breaks when one language is unpublished). A separate `places` module (cross-module transactions on every publish).
 - **ADR:** `docs/adr/ADR-005-content-context-aggregates.md`
 
 ### AD-7 Onboarding and ranking stay in the browser, and the map loads pins as one cached list
 
-- **Binds:** AC36 to AC39, AC41, AC42, AC44, Q12, Q26, G3, G4, PRD §3, §11.1, O23.
+- **Binds:** AC36 to AC39, AC41, AC42, AC44, AC87 to AC90, Q12, Q26, G3, G4, G11, PRD §3, §11.1, O23.
 - **Prevents:** onboarding answers reaching a server route, personalised server output, and two ranking implementations.
-- **Rule:** `localStorage` key `sk.onboarding` holds the answers. One function `rankItems` implements the PRD §3.2 order, and the Explore list and map both use it. API lists and server-rendered pages are not personalised and carry public tags. `GET /api/public/map` returns all published places in one cached response, and a place detail loads on pin open. A contract test fails if `segment` or `interests` appears on any route except the event route. MapLibre loads by dynamic import. The SPA never asks for the visitor's location (AC67). A dismissed onboarding prompt does not return on its own, and the visitor reopens it from the menu (orchestrator ruling). The production tile source is decided later, with O23 (owner gate D4, 2026-10-26).
+- **Rule:** `localStorage` key `sk.onboarding` holds the answers. One function `rankItems` implements the PRD §3.2 order, and the Explore list and map both use it. API lists and server-rendered pages are not personalised and carry public tags. `GET /api/public/map` returns all published pins in one cached response, with their categories and next date, and omits a pin whose last date has passed. A pin detail loads on pin open (`GET /api/public/places/:id`). Category chips highlight the chosen category and dim the other pins, and a parent chip also covers pins tagged only with its sub-categories (AC88, ADR-030). `/:lang/map?place=<slug>` opens the map with that pin's card (AC90), or with the notice "This place is no longer on the map" when the pin is hidden, expired or unknown, and the card's directions button hands off to the phone's own map app (AC89, inside G9). A contract test fails if `segment` or `interests` appears on any route except the event route. MapLibre loads by dynamic import. The SPA never asks for the visitor's location (AC67). A dismissed onboarding prompt does not return on its own, and the visitor reopens it from the menu (orchestrator ruling). The base map is settled (G11): MapLibre with swisstopo SWISSIMAGE photos and OpenFreeMap text layers, flat 2D with no tilt, and the AWS Terrarium source removed. The map and the tour route map share this one style, with the credits "© swisstopo" and OpenFreeMap, OpenMapTiles and OpenStreetMap. Re-reading the SWISSIMAGE terms before launch stays an assumption (ADR-006). Merchant-edited map categories are the filter chips (ADR-030).
 - **Why:** It meets Q12 and G4 by construction and keeps server-rendered pages identical for every visitor and crawler.
 - **Alternatives rejected:** A preference cookie read by the server. A server-held profile. Viewport queries or vector tiles for Phase 1 (not needed at this size).
 - **ADR:** `docs/adr/ADR-006-browser-personalisation-and-map-data.md`
@@ -175,11 +177,11 @@ Each decision has a stable id. The ADR holds the options, costs and what would m
 
 ### AD-9 One `reviews` module owns all guest-written content
 
-- **Binds:** AC16, AC17, AC46 to AC49, AC69, PRD §11.4, §11.6, Q16, Q17, Q21, G7, O25, O33.
-- **Prevents:** three copies of the moderation rule, a delete path, and reviews on practical places.
-- **Rule:** Place reviews, story comments and product ratings live in `reviews`. Targets are ids, checked through `content/index.ts` and `orders/index.ts`. Insert is visible at once, merchants hide and unhide, nothing is deleted, and hide history is append-only. A per-account rate limit applies. Counts and averages use visible items only.
-- **Why:** PRD §11.4 defines one rule for three kinds, and a single module is the one place to change it when the lawyer answers O33.
-- **Alternatives rejected:** Reviews stay in `catalog` and `content`. Place reviews as `content` rows.
+- **Binds:** AC16, AC17, AC46, AC48, AC69, PRD §11.6, Q16, Q17, Q21, G7, G11, O25, O33.
+- **Prevents:** two copies of the moderation rule and a delete path.
+- **Rule:** Story comments and product ratings live in `reviews`. Places take no guest reviews (G11). Targets are ids, checked through `content/index.ts` and `orders/index.ts`. Insert is visible at once, merchants hide and unhide, nothing is deleted, and hide history is append-only. A per-account rate limit applies. Counts and averages use visible items only.
+- **Why:** One moderation rule serves both kinds, and a single module is the one place to change it when the lawyer answers O33.
+- **Alternatives rejected:** Reviews stay in `catalog` and `content`. Guest-written text as `content` rows.
 - **ADR:** `docs/adr/ADR-008-reviews-module.md`
 
 ### AD-10 One `inventory` module owns SKU stock and holds
@@ -200,12 +202,12 @@ Each decision has a stable id. The ADR holds the options, costs and what would m
 - **Alternatives rejected:** Writes through the report-link session. A per-visit token (replaced by handovers). Handovers owned by `partners` (needs a read of `orders` and makes a cycle with the commission call).
 - **ADR:** `docs/adr/ADR-010-guide-write-access-through-accounts.md`
 
-### AD-12 Accommodation links live on the place, rendered by one function
+### AD-12 Outbound links live on the pin, rendered by one function
 
-- **Binds:** AC49, AC63, PRD §11.5, Q30, O21(c), O33, O39.
-- **Prevents:** hotel URLs typed into stories and reviews, which an affiliate switch would have to edit.
-- **Rule:** An accommodation place has one outbound link value (`direct` or `affiliate`, `url`, optional `network`, `disclosure`). The server render and the browser render build the anchor through one function that sets `rel` and the disclosure text. Content refers to the place by id. Click counts go through the event log. An `/out/:placeId` redirect is reserved, not built.
-- **Why:** The switch to an affiliate link is one record edit and no content edit.
+- **Binds:** AC63, PRD §11.5, Q30, O21(c), O33, O39, G11.
+- **Prevents:** outbound URLs typed into stories, which a later affiliate switch would have to edit.
+- **Rule:** Any pin has at most one outbound link, a plain URL. The server render and the browser render build the anchor through one function that sets `rel`. The affiliate kind, network and disclosure fields wait until the first paid link exists (O33). A hotel is a pin in a category such as "Stays" and has nothing else special. Content refers to the place by id. Click counts go through the event log. An `/out/:placeId` redirect is reserved, not built.
+- **Why:** Adding paid links later is one renderer change and no content edit.
 - **Alternatives rejected:** A redirect route from day one (extra request and trust cost, held in reserve). A link-wrapping service (new vendor, rewrites links we do not control).
 - **ADR:** `docs/adr/ADR-011-outbound-link-by-place.md`
 
@@ -238,8 +240,8 @@ Each decision has a stable id. The ADR holds the options, costs and what would m
 | bookings | Not built (AD-13). Design stays in backend.md, marked dormant. | Nothing |
 | money | Booking kinds and seat-hold rules are dormant. A guide cash method is added. | Payment attempts, ledger, exceptions, cost records |
 | partners | Referral and commission unchanged, except that on the partner path the handover fixes the partner. Guide accounts (AD-11). Commission is recorded at `Delivered` when the order is fully paid, otherwise when payment completes (owner gate C1). | Partners, referral visits, report sessions, commission entries |
-| content | Grows: story groups and versions, places, tour guides with routes and PDF reference, media, outbound links, publication. Comments move out. | See AD-6 |
-| reviews (new) | AD-9 | Place reviews, story comments, product ratings, moderation history |
+| content | Grows: story groups and versions, pins, map and blog categories, tour guides with routes and PDF reference, media, outbound links, publication. Comments move out. | See AD-6 |
+| reviews (new) | AD-9 | Story comments, product ratings, moderation history |
 | analytics (new) | AD-8. Ingest and roll-up only. | Event log, roll-ups |
 | requests | Keeps the simple advice request form (G10). Private tour requests are dormant. | Advice question sets, advice requests |
 | notifications | New template for a new review. Booking templates stay unbuilt. | Templates, sent mail |
@@ -252,7 +254,7 @@ Each decision has a stable id. The ADR holds the options, costs and what would m
 |---|---|
 | Naming | Cookie `sk_lang` holds a language code only. Public URL slugs are lower-case letters, digits and single dashes. Event names are the snake_case names in AC60 plus `outbound_click`. Browser storage keys start with `sk.`. Module names are singular nouns for what they own. |
 | Page identity | A translation group id ties language versions. hreflang, the switcher and main-story references use it. A version row or localized field set exists per language. |
-| Data and formats | Ids are UUIDv7. Localized text is `{en?, de?}` for places, tours and keepsakes. Story versions are rows. Publication states are `draft` and `published`. Interests and stay tags are constants in `packages/domain`. |
+| Data and formats | Ids are UUIDv7. Localized text is `{en?, de?}` for pins, tours and keepsakes. Story versions are rows. Publication states are `draft` and `published`. Interests and stay tags are constants in `packages/domain`. |
 | Indexing | Only the server-rendered routes in ADR-001 are indexable. Every other app URL sends `noindex`. Staging and local builds send `noindex` and a disallow-all `robots.txt`, switched by one config value. |
 | Caching | Server-rendered pages use a 60-second TTL per instance and `s-maxage=60, stale-while-revalidate=240`. Public JSON lists use `max-age=30`. Media and PDFs use immutable versioned keys. |
 | State and cross-cutting | Commands keep `Idempotency-Key`, `If-Match` and RFC 9457 errors (D11). The event route is best-effort and takes no `Idempotency-Key`. Same-origin checks apply to it. Personalisation values never appear in a request outside the event route. |
@@ -290,8 +292,7 @@ URL scheme and server-rendered routes (ADR-001, ADR-002):
 /:lang                     home page
 /:lang/stories             story list
 /:lang/stories/:slug       story page
-/:lang/places/:slug        place page
-/:lang/map                 map page (title, description, links), the map loads in the browser
+/:lang/map                 map page (title, description, links), the map loads in the browser; ?place=<slug> opens a pin card, not indexed separately
 /:lang/tours               tour information list
 /:lang/tours/:slug         tour guide page, PDF link
 /:lang/gifts               Keepsakes list (path name unchanged, PRD §7.0)
@@ -348,11 +349,11 @@ The order matters. Each step names what it needs first. Phase numbers follow bac
 |---|---|---|---|
 | 0 | Run SP5 (Neon storage: public URL, CORS, cache headers, presigned PUT). There is no SP9 spike (owner gate H1). | Nothing | SP5 written up in `docs/spikes/` |
 | 1 | Hide booking (AD-13): move wrappers and screens, remove entry points and the `?book=true` sheet, split the `Tour` type into tour guide and booking rules, strip price and departures from tour info and the editor, skip the tour e2e flow. | Nothing. Can run in the prototype today. | `pnpm exec tsc --noEmit`, lint, tests green. No route or link to booking. AC50 and AC54 pass in demo mode. |
-| 2 | Content on the API: story groups, places, tour guides, media tables, publish rules, merchant editors for places and routes. Move the content demo seed into a database seed. | Backend phase 2 (identity, catalogue reads, staging). Neon storage decision (SP5). | Staff publish a story and a place on staging. AC43 and AC68 pass. No feature reads both sources. |
+| 2 | Content on the API: story groups, places, tour guides, media tables, publish rules, merchant editors for pins, categories and routes. Move the content demo seed into a database seed. | Backend phase 2 (identity, catalogue reads, staging). Neon storage decision (SP5). | Staff publish a story and a pin, with and without a story, on staging. AC85 passes. No feature reads both sources. |
 | 3 | Move the front-end to TanStack Start (ADR-001). Sub-steps and estimates in the table below. | Step 2 (content on the API) | AC61 passes on staging. A page loads with JavaScript off and is styled. Browser history works for every route. Invitation and Google sign-in flows pass their end-to-end tests. The `/partner/*` response sends no-referrer, and an access-log test finds no report token (owner gate D7). |
-| 4 | Map and personalisation: the pins endpoint, `rankItems`, onboarding prompt that never blocks, map screen on real data. | Step 2. Tile source decision when the owner's reference images exist (O23). | AC36 to AC38, AC42, AC44 pass. |
+| 4 | Map and personalisation: the pins endpoint, `rankItems`, onboarding prompt that never blocks, map screen on real data. | Step 2. The flat aerial style is settled (G11, ADR-006). | AC36 to AC38, AC42, AC44, AC86 to AC90 pass. |
 | 5 | Orders core for keepsakes: order creation and lifecycle, external collections in `money`, partner attribution on the order (backend.md phase 3, reduced to Victorinox). | Step 2, backend identity (done) | A keepsake order completes on staging with an external payment. |
-| 6 | Reviews module and sign-in-gated review flows. Move comments and product ratings. | Steps 2 and 5 (AC17 needs completed orders) | AC46 to AC49, AC69, AC17 pass. |
+| 6 | Reviews module and sign-in-gated review flows. Move comments and product ratings. | Steps 2 and 5 (AC17 needs completed orders) | AC46, AC48, AC69, AC17 pass. |
 | 7 | Inventory and SKU model, auto-accept and the guide cash path. | Step 5, O22, O26 | AC05, AC52, AC53, AC65, AC66 pass. |
 | 8 | Analytics: event route, sender, roll-up, dashboard views. | Step 3 | AC60 passes for a week of staging traffic. |
 | 9 | Guide accounts, handovers and their statuses (AD-11, the partner handover record). | Steps 5 and 7 | AC58 and AC59 pass. A handover is proposed, agreed, filled by the partner QR, received and delivered end to end on staging. |
@@ -366,7 +367,7 @@ Step 3 in pieces (spike question 9, an estimate of about 2 to 3 weeks for one de
 | Entry and router setup for Start and Nitro | 2 to 4 | The 194 router-importing files and the `search-params.ts` pattern stay |
 | Hash history to browser history | 1 to 2 | Main risk: `#/` links (not redirected, G-E34-NOSHIM), `takeGoogleReturn` (remove), `captureInvitations` (keep, test), invitation tokens |
 | Guard browser-only code on the server | 2 to 4 | 8 files use browser storage and 42 touch `window` or `document`. Dashboards stay `ssr: false` |
-| Content routes with real server rendering | 1 to 2 for the first type | Stories first, then places, tours, gifts. Language-prefixed routes add no days |
+| Content routes with real server rendering | 1 to 2 for the first type | Stories first, then tours, gifts. Language-prefixed routes add no days |
 | Deploy | 1 to 2 | Dockerfile, `fly.toml` with two processes (`web`, `api`), forwarding of `/api` and `/webhooks`, verify scripts |
 
 Ordering rules:
@@ -380,19 +381,19 @@ Ordering rules:
 | Capability or area | Lives in | Governed by |
 |---|---|---|
 | Story pages, indexable (AC61) | Start routes, `content` | AD-2, AD-3 |
-| Place pages and pins (AC42, AC43, AC62, AC68) | `content`, Start routes | AD-6, AD-2 |
+| Pins and the pin card (AC42, AC85, AC86) | `content`, SPA map | AD-6, AD-7 |
 | Language rules (AC30, AC64) | `packages/domain/src/content/` resolver | AD-3 |
 | Merchant editing and publish (AC45) | `content`, merchant editor | AD-4 |
 | Tour PDF and media (AC32, AC51) | `content`, Neon Object Storage | AD-5 |
 | Tour information, no booking (AC50, AC67) | `content`, SPA | AD-6, AD-13 |
 | Onboarding and ranking (AC36 to AC39, AC41, AC44) | Browser, `rankItems` | AD-7 |
-| Map data (AC42) | `content`, `/api/public/map` | AD-7 |
+| Map data and categories (AC42, AC87 to AC90) | `content`, `/api/public/map` | AD-7, AD-6 |
 | Analytics (AC37, AC60) | `analytics`, `reporting` | AD-8 |
-| Reviews and comments (AC46 to AC49, AC69) | `reviews` | AD-9 |
+| Comments and ratings (AC46, AC48, AC69) | `reviews` | AD-9 |
 | SKU stock and variants (AC52, AC53, AC55) | `catalog`, `inventory` | AD-10 |
 | Auto-accept and cash orders (AC65, AC66) | `orders`, `inventory`, `money` | AD-10 |
 | Guide operations (AC58, AC59) | `partners`, `orders`, `money` | AD-11 |
-| Accommodation link and affiliate readiness (AC49, AC63) | `content`, link renderer | AD-12 |
+| Outbound link and affiliate readiness (AC63) | `content`, link renderer | AD-12 |
 | Hiding booking (AC50, AC54) | SPA routes, `tours` feature | AD-13 |
 | Price first at the product page (AC52, AC54) | Product page, loaded by the SPA | AD-2, AD-13 |
 | Shop logic and payments (AC05, AC52 to AC55, AC65, AC66) | `catalog`, `inventory`, `orders`, `money`, Stripe | AD-10, AD-14 |
@@ -407,8 +408,8 @@ Ordering rules:
 | Two instances serve different edits for up to 60 seconds, or 120 seconds behind a CDN | A visitor sees an old story briefly | Inside the 5-minute cap (gate D5). A publish broadcast is the next step if needed. |
 | Neon Object Storage is newer than S3 and R2, implements a subset, can answer `503 SlowDown`, and has no documented undelete | Public URLs, CORS or cache headers fail SP5, or a deleted file is lost | SP5 first, including a delete test. Set cache headers at upload. R2 is the fallback (D14). |
 | Object storage backup is not described by Neon's restore history | A deleted published image cannot be restored | Open question. Test restore behaviour in SP5. Keep originals in `uploads`. |
-| Free map tiles have no SLA (swisstopo fair use, OpenFreeMap commercial use with attribution, Terrarium with no attribution shown) | The main screen goes blank or breaks terms | Decide the tile source with the owner after O23. Keep the style in configuration. Add the missing attribution. |
-| Merchant cannot manage a place and route editor | Content stays thin (PRD §16) | Usability test of the editor before pilot content entry. A headless CMS stays an option (ADR-003). |
+| Free map tiles have no SLA (swisstopo fair use, OpenFreeMap commercial use with attribution) | The main screen goes blank or breaks terms | The style is settled (G11): SWISSIMAGE and OpenFreeMap, flat, no Terrarium. Keep it in configuration. Show both credits. Re-read the SWISSIMAGE terms before launch (E9.4). |
+| Merchant cannot manage a pin and route editor | Content stays thin (PRD §16) | Usability test of the editor before pilot content entry. A headless CMS stays an option (ADR-003). |
 | Immediate guest reviews attract spam or abuse | Legal exposure (O33) and bad pages | Per-account rate limit, merchant hide, reviews outside the server-rendered text. Lawyer check before real reviews. |
 | Guide cash counts at once and can lead to the guide's own commission (O34) | Fraud or disputes | Distinct ledger method, Owner adjustment, reconciliation list. Guides sign in by invitation (owner gate D1). The cash risk stays open (O34). |
 | Staging gets indexed by mistake | Duplicate content and leaked drafts | One config value controls `noindex` and `robots.txt`. A test asserts staging sends both. |
@@ -462,7 +463,7 @@ The owner answered these on 2026-10-26. Each is applied in the decision named. A
 | D1 | Guide accounts by invitation only. The merchant invites a partner, who signs in through the existing Better Auth flow and gets the partner role from the accepted invitation. Self sign-up yields the guest role only. Report links stay read-only. | AD-11, ADR-010 |
 | D2 | First-party anonymous event log. Plausible and GA4 rejected. Retention and the lawyer's consent check stay open. | AD-8, ADR-007 |
 | D3 | `sharp` approved as a new dependency. | AD-5, ADR-004 |
-| D4 | Production map tiles decided later, tied to O23. The three sources are compared in ADR-006. | AD-7, ADR-006 |
+| D4 | Production map tiles were decided later, tied to O23. Settled by G11 (2026-10-27): SWISSIMAGE photos with OpenFreeMap labels, flat 2D, Terrarium removed. | AD-7, ADR-006 |
 | D5 | O39: about 60 seconds typical, 5-minute cap. | AD-4, ADR-003 |
 | D6 | O01: English is the default, German when `Accept-Language` asks for German, `x-default` is English. | AD-3, ADR-002 |
 | D7 | The partner report token stays in the path, with `Referrer-Policy: no-referrer` and token scrubbing in logs. | AD-2, ADR-001, migration step 3 |
@@ -484,7 +485,7 @@ Orchestrator rulings: a dismissed onboarding prompt does not return on its own a
 
 These need the owner or a named person.
 
-1. Production map tiles, tied to O23 (ADR-006, gate D4).
+1. Re-read the SWISSIMAGE terms before launch (ADR-006). The tile choice itself is settled (G11).
 2. Event retention period, and whether the `localStorage` preference, the `sk_lang` cookie and the in-memory-id event log need consent or only notice (O14, O32). A lawyer answers, for the EU and for Switzerland (ADR-007).
 3. Whether a guest can cancel an order on the partner path stays open under O36 (G5 removed the cutoff). The owner settled the other handover edge rules in the PRD: an unanswered proposal (AC77) and a cancelled handover, where guests choose self-collect or a full refund and the order keeps its partner (AC78). Cash the partner holds (O34) is out of scope for now (ADR-010).
 4. Colour and size lists for SKUs (O26), and the preparation time that lets auto-accept run (O22).
@@ -497,7 +498,7 @@ These need the owner or a named person.
 |---|---|
 | O21(a) address for search engines (Q5), gates S1 and S1b | AD-2, ADR-001, ADR-002 |
 | O21(b) authoring tool (Q7), gate S2 | AD-4, ADR-003 |
-| O21(c) affiliate-ready link model (Q30) | AD-12, ADR-011 |
+| O21(c) affiliate-ready link model (Q30), deferred to the first paid link | AD-12, ADR-011 |
 | O21(d) PDF storage (Q19) | AD-5, ADR-004 |
 | AC61 own address per language, full text, no noindex, in sitemap | AD-2, AD-3, ADR-001, ADR-002 |
 | AC45 edit shows without a release | AD-4, ADR-003 |
@@ -507,11 +508,12 @@ These need the owner or a named person.
 | O39(c) disclosure level | Open question 6 |
 | Calendar tool (PRD §13.1a) | Deferred, FullCalendar stays |
 | AC63 swap destination without content edits | AD-12, ADR-011 |
-| AC43, AC62, AC68 place rules | AD-6, ADR-005 |
+| AC68, AC85, AC86 pin rules (AC62 and AC68 rewritten, AC43 retired) | AD-6, ADR-005, ADR-029 |
 | AC64 missing language notice | AD-3, ADR-002 |
 | AC36 to AC38, AC44 onboarding and ranking | AD-7, ADR-006 |
+| AC87 to AC90 categories, directions, `?place=` link | AD-7, ADR-006, ADR-030 |
 | AC60, G4 events | AD-8, ADR-007 |
-| AC46 to AC49, AC69 reviews | AD-9, ADR-008 |
+| AC46, AC48, AC69 story comments and product ratings (place reviews retired) | AD-9, ADR-008 |
 | AC05, AC52, AC53, AC55, AC65, AC66 stock and cash path | AD-10, ADR-009 |
 | AC58, AC59 guide operations | AD-11, ADR-010 |
 | AC50, AC54, AC67 no booking, no price, no routing tool | AD-13, ADR-012, AD-6 |

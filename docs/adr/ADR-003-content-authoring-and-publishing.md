@@ -7,6 +7,8 @@ Applies to: `front-end/src/features/content/merchant/`, `front-end/src/features/
 
 No new dependency, vendor or paid service. The owner chose the in-app editor over Payload, Sanity and Strapi (gate S2, 2026-10-26, after the Payload spike).
 
+**Amended 2026-10-27 (G11).** The editor no longer refuses a pin without a main story (AC43 is retired) or without a type (pins have none, ADR-029). A pin needs a title in at least one language, a location and a slug to publish. Photo, address, categories, story, link, hours and dates are optional. The publish-rule bullet below is amended.
+
 ## Context
 The merchant (Chị Ngọc, not a developer) must edit stories, map points, tour routes and PDFs at any time without a release (PRD §4.1, AC45). A visitor must see the change within a maximum delay that the owner has not set (O39). Authoring has to cover English and German versions, drafts, publishing, hiding, a preview, and linking stories to places and keepsakes.
 
@@ -20,7 +22,7 @@ We will keep authoring in the app (owner gate S2). Merchant staff edit through t
 - The body stays structured blocks (not Markdown, not HTML). Rich text inside a paragraph block is deferred (see the spine, Deferred).
 - Staff permissions follow backend.md section 9: Owner and Manager can author. Super Admin cannot (PRD §5).
 - **Delay (O39).** The owner set the target on 2026-10-26 (gate D5): a change shows to visitors in about 60 seconds typically, and in 5 minutes at most. The API serves documents with revalidation (ADR-001) and public JSON reads with `Cache-Control: public, max-age=30`, so the expected delay is about 30 seconds and well inside the target. A CDN or longer cache must keep the 5-minute cap.
-- The editor refuses a publish that breaks a rule: a story pin without a published main story (AC43), a place without a type (AC68), a keepsake link that is not published (AC31).
+- The editor refuses a publish that breaks a rule: a pin without a title in at least one language, a location or a slug (AC68), a keepsake link that is not published (AC31). It no longer refuses a pin without a story or a type (G11).
 
 ## Consequences
 - No new vendor, no second source of truth, and place data can sit next to reviews and keepsake links in one database.
@@ -45,3 +47,4 @@ We will keep authoring in the app (owner gate S2). Merchant staff edit through t
 - 2026-10-26 proposed
 - 2026-10-26 revised, still proposed, for owner gate S2 and the Payload spike
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)

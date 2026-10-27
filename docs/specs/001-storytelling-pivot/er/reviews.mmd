@@ -3,19 +3,6 @@ title: schema reviews
 ---
 erDiagram
     direction TB
-    reviews_place_reviews["reviews.place_reviews"] {
-        uuid id PK
-        uuid store_id "id -> identity.stores"
-        uuid place_id "id -> content.places"
-        text place_type
-        uuid author_guest_id "id -> identity.guest_profiles"
-        text author_name
-        smallint rating
-        text body
-        text state
-        timestamptz created_at
-        timestamptz updated_at
-    }
     reviews_story_comments["reviews.story_comments"] {
         uuid id PK
         uuid store_id "id -> identity.stores"
@@ -48,16 +35,12 @@ erDiagram
     reviews_moderation_events["reviews.moderation_events"] {
         uuid id PK
         uuid store_id "id -> identity.stores"
-        uuid place_review_id FK "-> reviews.place_reviews"
         uuid story_comment_id FK "-> reviews.story_comments"
         uuid product_rating_id FK "-> reviews.product_ratings"
         text action
         uuid actor_user_id "id -> identity.user"
         text reason
         timestamptz at
-    }
-    content_places["content.places (stub)"] {
-        uuid id PK
     }
     identity_guest_profiles["identity.guest_profiles (stub)"] {
         uuid id PK
@@ -77,14 +60,10 @@ erDiagram
 
     %% fk: story_comments_parent_fkey
     reviews_story_comments |o--o{ reviews_story_comments : "reply to (one level)"
-    %% fk: moderation_events_place_review_fkey
-    reviews_place_reviews |o--o{ reviews_moderation_events : "history"
     %% fk: moderation_events_story_comment_fkey
     reviews_story_comments |o--o{ reviews_moderation_events : "history"
     %% fk: moderation_events_product_rating_fkey
     reviews_product_ratings |o--o{ reviews_moderation_events : "history"
-    content_places ||..o{ reviews_place_reviews : "place_id"
-    identity_guest_profiles ||..o{ reviews_place_reviews : "author_guest_id"
     content_story_groups ||..o{ reviews_story_comments : "story_group_id"
     identity_guest_profiles |o..o{ reviews_story_comments : "author_guest_id"
     identity_user |o..o{ reviews_story_comments : "staff_user_id"

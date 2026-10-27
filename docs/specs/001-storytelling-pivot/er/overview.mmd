@@ -1,5 +1,5 @@
 ---
-title: all 44 new tables by schema
+title: all 48 new tables by schema
 ---
 erDiagram
     direction LR
@@ -11,6 +11,11 @@ erDiagram
     content_story_keepsake_links["content.story_keepsake_links"]:::content
     content_story_related["content.story_related"]:::content
     content_place_links["content.place_links"]:::content
+    content_place_dates["content.place_dates"]:::content
+    content_map_categories["content.map_categories"]:::content
+    content_blog_categories["content.blog_categories"]:::content
+    content_place_categories["content.place_categories"]:::content
+    content_story_categories["content.story_categories"]:::content
     content_tours["content.tours"]:::content
     content_tour_stops["content.tour_stops"]:::content
     content_tour_keepsake_links["content.tour_keepsake_links"]:::content
@@ -28,7 +33,6 @@ erDiagram
     inventory_stock_items["inventory.stock_items"]:::inventory
     inventory_stock_holds["inventory.stock_holds"]:::inventory
     inventory_stock_adjustments["inventory.stock_adjustments"]:::inventory
-    reviews_place_reviews["reviews.place_reviews"]:::reviews
     reviews_story_comments["reviews.story_comments"]:::reviews
     reviews_product_ratings["reviews.product_ratings"]:::reviews
     reviews_moderation_events["reviews.moderation_events"]:::reviews
@@ -50,8 +54,6 @@ erDiagram
 
     %% fk: story_groups_subject_place_fkey
     content_places |o--o{ content_story_groups : " "
-    %% fk: story_groups_subject_type_fkey
-    content_places |o--o{ content_story_groups : " "
     %% fk: places_main_story_fkey
     content_story_groups |o--o{ content_places : " "
     %% fk: places_cover_media_fkey
@@ -68,10 +70,22 @@ erDiagram
     content_story_groups ||--o{ content_story_related : " "
     %% fk: story_related_target_fkey
     content_story_groups ||--o{ content_story_related : " "
-    %% fk: place_links_place_fkey
-    content_places |o--o| content_place_links : " "
     %% fk: place_links_store_fkey
     content_places |o--o| content_place_links : " "
+    %% fk: place_dates_place_fkey
+    content_places ||--o{ content_place_dates : " "
+    %% fk: map_categories_parent_fkey
+    content_map_categories |o--o{ content_map_categories : " "
+    %% fk: blog_categories_parent_fkey
+    content_blog_categories |o--o{ content_blog_categories : " "
+    %% fk: place_categories_place_fkey
+    content_places ||--o{ content_place_categories : " "
+    %% fk: place_categories_category_fkey
+    content_map_categories ||--o{ content_place_categories : " "
+    %% fk: story_categories_group_fkey
+    content_story_groups ||--o{ content_story_categories : " "
+    %% fk: story_categories_category_fkey
+    content_blog_categories ||--o{ content_story_categories : " "
     %% fk: tours_cover_media_fkey
     content_media |o--o{ content_tours : " "
     %% fk: tours_pdf_media_fkey
@@ -114,8 +128,6 @@ erDiagram
     inventory_stock_items ||--o{ inventory_stock_adjustments : " "
     %% fk: story_comments_parent_fkey
     reviews_story_comments |o--o{ reviews_story_comments : " "
-    %% fk: moderation_events_place_review_fkey
-    reviews_place_reviews |o--o{ reviews_moderation_events : " "
     %% fk: moderation_events_story_comment_fkey
     reviews_story_comments |o--o{ reviews_moderation_events : " "
     %% fk: moderation_events_product_rating_fkey
@@ -155,7 +167,6 @@ erDiagram
     orders_orders ||..o{ inventory_stock_holds : "order_id"
     orders_order_lines ||..o| inventory_stock_holds : "order_line_id"
     orders_orders |o..o{ inventory_stock_adjustments : "order_id"
-    content_places ||..o{ reviews_place_reviews : "place_id"
     content_story_groups ||..o{ reviews_story_comments : "story_group_id"
     catalog_products ||..o{ reviews_product_ratings : "product_id"
     orders_orders ||..o{ reviews_product_ratings : "order_id"

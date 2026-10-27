@@ -3,7 +3,7 @@ id: swiss-keepsakes-prd
 status: approved
 owner: Chủ sản phẩm (Chị Ngọc là merchant)
 created: 2026-10-12
-updated: 2026-10-26
+updated: 2026-10-27
 ---
 # Swiss Stories & Gifts / Lucerne Keepsake
 
@@ -15,20 +15,22 @@ Ngày 25/10/2026 chủ sản phẩm chuyển mục đích của sản phẩm t�
 
 Vòng sửa 1 ngày 26/10/2026 áp dụng mười câu trả lời của chủ sản phẩm tại các cổng quyết định G1 đến G10 và các phát hiện của vòng rà soát (xem §18.2 và Phụ lục A). Mỗi câu trả lời cổng ghi kèm mã cổng, ví dụ "(cổng G2, 26/10/2026)". Câu trả lời cổng có giá trị cao hơn Q1 đến Q30 khi khác nhau.
 
+Vòng sửa 5 ngày 27/10/2026 áp dụng cổng G11 (`docs/decisions/2026-10-27-map-pins-and-events.md`): điểm trên bản đồ đứng một mình không cần bài viết, có danh mục do merchant quản lý, có thể có ngày (hoạt động và sự kiện địa phương), và khách không còn đánh giá địa điểm. G11 thay phần loại địa điểm và review địa điểm của cổng G8.
+
 Phiên bản này chưa dẫn tới việc xây dựng. Hiện chưa xây gì; bước tiếp theo là rà soát công nghệ và kiến trúc (Q2, Q3).
 
 ## 1. Vấn đề và kết quả cần đạt
 
 Du khách tới Lucerne, nhất là khách đoàn chỉ ở vài giờ, không có nơi nào kể cho họ thành phố này một cách đáng nhớ và đáng tin. Thông tin ăn uống, tham quan, nhà vệ sinh và đồ lưu niệm nằm rải rác, thường là quảng cáo. Du khách ở nhiều ngày lại cần nội dung sâu hơn, chọn lọc hơn.
 
-Sản phẩm là một trang web miễn phí, dùng trên điện thoại, kể những câu chuyện cảm xúc về Lucerne: thành phố, lịch sử, văn hóa, kèm review chất lượng cao về điểm tham quan, nhà hàng và nơi lưu trú. Một bản đồ tương tác nối mọi địa điểm với bài viết liên quan. Nội dung miễn phí tạo lượng truy cập tự nhiên và lòng tin. Dao Victorinox được giới thiệu nhẹ nhàng như một món quà thêm, không phải trọng tâm.
+Sản phẩm là một trang web miễn phí, dùng trên điện thoại, kể những câu chuyện cảm xúc về Lucerne: thành phố, lịch sử, văn hóa, kèm review chất lượng cao về điểm tham quan, nhà hàng và nơi lưu trú. Một bản đồ tương tác chỉ ra những nơi và hoạt động địa phương đáng đi, nối tới bài viết khi có. Nội dung miễn phí tạo lượng truy cập tự nhiên và lòng tin. Dao Victorinox được giới thiệu nhẹ nhàng như một món quà thêm, không phải trọng tâm.
 
 Chị Ngọc là merchant duy nhất mở bán trong Phase 1. Sau đó nền tảng có thể mời thêm merchant độc lập, mỗi bên có cửa hàng, nhân sự, dữ liệu và tài khoản nhận tiền riêng.
 
 ### 1.1 Mục tiêu sản phẩm
 
 - Khách đọc được câu chuyện, lịch sử, văn hóa và review về Lucerne, miễn phí, không cần tài khoản.
-- Khách khám phá thành phố qua bản đồ tương tác. Mỗi điểm trên bản đồ dẫn tới bài viết liên quan. Bản đồ và câu chuyện là một trải nghiệm.
+- Khách khám phá thành phố qua bản đồ tương tác: các nơi và hoạt động địa phương do merchant chọn, lọc theo danh mục. Điểm nào có bài viết thì dẫn tới bài đó. Bản đồ và câu chuyện là một trải nghiệm.
 - Nội dung phù hợp với thời gian khách ở lại (vài giờ hay nhiều ngày) và sở thích của họ.
 - Khách tìm thấy trang qua công cụ tìm kiếm và nhớ câu chuyện. Việc khách quay lại chưa có chỉ số đo vì chủ sản phẩm không chọn chỉ số đó (Q28); nó là mong muốn, không phải mục tiêu đo được.
 - Khách mua được dao Victorinox có tồn kho và biến thể, đặt trước vài giờ, nhận qua guide hoặc điểm nhận.
@@ -40,7 +42,7 @@ Không còn mục tiêu bán tour, đặt chỗ hay dịch vụ nào trên nền
 
 ### 1.2 Nguyên tắc trải nghiệm
 
-Giao diện dùng tốt trên điện thoại và dễ hiểu với merchant và guide ít quen công nghệ. Nội dung đứng trước bán hàng: giá không xuất hiện trong câu chuyện, trên bản đồ hay trong danh sách cửa hàng (Q24). Khách phân biệt được đã gửi yêu cầu, đã thanh toán và đã hoàn tất. Hệ thống không hứa giao đúng giờ, không tạo lịch trình bằng AI và không cung cấp dịch vụ chưa có năng lực thực hiện được xác minh. Thiết kế hình ảnh của bản đồ chờ ảnh tham chiếu từ chủ sản phẩm; tài liệu này không quy định kiểu dáng (§17, O23).
+Giao diện dùng tốt trên điện thoại và dễ hiểu với merchant và guide ít quen công nghệ. Nội dung đứng trước bán hàng: giá không xuất hiện trong câu chuyện, trên bản đồ hay trong danh sách cửa hàng (Q24). Khách phân biệt được đã gửi yêu cầu, đã thanh toán và đã hoàn tất. Hệ thống không hứa giao đúng giờ, không tạo lịch trình bằng AI và không cung cấp dịch vụ chưa có năng lực thực hiện được xác minh. Nền bản đồ đã chốt (cổng G11, O23); kiểu điểm và màu chờ ảnh tham chiếu từ chủ sản phẩm, tài liệu này không quy định (§17, O23).
 
 ### 1.3 Chỉ số thành công
 
@@ -64,14 +66,14 @@ Các yêu cầu dưới đây dựa trên quyết định của chủ sản ph�
 | Cơ sở                                    | Cách sử dụng                                                                                                                        |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | Quyết định Q1 đến Q30 ngày 25/10/2026    | Ưu tiên cao nhất, thay v2 khi khác nhau                                                                                             |
-| Câu trả lời cổng G1 đến G10 ngày 26/10/2026 | Ưu tiên cao hơn Q1 đến Q30 khi khác nhau (G3 hoãn Q13, G5 gỡ Q11) |
+| Câu trả lời cổng G1 đến G11 (G1 đến G10 ngày 26/10/2026, G11 ngày 27/10/2026) | Ưu tiên cao hơn Q1 đến Q30 khi khác nhau (G3 hoãn Q13, G5 gỡ Q11, G11 thay Q18 và G8) |
 | Biên bản họp 24/10/2026                  | Chỉ các mục chủ sản phẩm đưa vào phạm vi (Q6, Q9 đến Q11, Q24, Q27). Tour do Erich báo giá và trải nghiệm mật ong nằm ngoài phạm vi |
 | PRD v2 (12/10/2026)                      | Giữ phần còn đúng; không tự khôi phục yêu cầu đã gỡ                                                                                 |
 | Kế hoạch kinh doanh Lucerne Keepsake     | Bối cảnh khách hàng; phần danh mục, phễu và lộ trình chưa cập nhật theo chuyển hướng (§14)                                          |
 | Đánh giá tham chiếu du lịch (24/10/2026) | Gợi ý về kỳ vọng nội dung và kể chuyện; không quy định thiết kế                                                                     |
 
 
-Trong tài liệu, **merchant** là bên sở hữu và vận hành cửa hàng. **Đối tác giới thiệu** là guide, khách sạn hoặc bên đưa khách tới trang; **guide** là một loại đối tác giới thiệu, không phải vai trò riêng (Q9). **Đơn hàng** dùng cho dao Victorinox. **Địa điểm (place)** là nơi thật trên bản đồ. **Điểm (pin)** là biểu tượng của địa điểm trên bản đồ. **Câu chuyện (story)** là bài viết trong blog. **Hoàn tất** có nghĩa đã giao hàng và đã thu đủ tiền. **Loại địa điểm (place type)** gồm bốn loại: sight (điểm tham quan), restaurant (nhà hàng), accommodation (nơi lưu trú) và practical (điểm thực dụng). **Thẻ lưu trú (stay tag)** là thẻ short-stay, multi-day hoặc cả hai do merchant gắn. **Màn hình Khám phá** là danh sách câu chuyện và địa điểm có thể lọc; **bản đồ** là màn hình thứ hai. "Feed" trong tài liệu này chỉ màn hình Khám phá. Việc đưa một đề xuất vào PRD không tự phê duyệt chi tiết đó.
+Trong tài liệu, **merchant** là bên sở hữu và vận hành cửa hàng. **Đối tác giới thiệu** là guide, khách sạn hoặc bên đưa khách tới trang; **guide** là một loại đối tác giới thiệu, không phải vai trò riêng (Q9). **Đơn hàng** dùng cho dao Victorinox. **Địa điểm** là nơi thật. **Điểm (pin)** là một mục trên bản đồ do merchant tạo: một nơi (quán, điểm tham quan, vòi nước uống) hoặc một hoạt động, có hoặc không có bài viết (cổng G11). **Danh mục bản đồ (map category)** là nhóm điểm do merchant tạo, hiện thành chip lọc trên bản đồ. **Danh mục blog (blog category)** là nhóm câu chuyện do merchant tạo. **Hoạt động hoặc sự kiện địa phương (local event)** là điểm có ngày, tự biến mất sau ngày cuối. **Câu chuyện (story)** là bài viết trong blog. **Hoàn tất** có nghĩa đã giao hàng và đã thu đủ tiền. **Thẻ lưu trú (stay tag)** là thẻ short-stay, multi-day hoặc cả hai do merchant gắn. **Màn hình Khám phá** là danh sách câu chuyện và địa điểm có thể lọc; **bản đồ** là màn hình thứ hai. "Feed" trong tài liệu này chỉ màn hình Khám phá. Việc đưa một đề xuất vào PRD không tự phê duyệt chi tiết đó.
 
 ## 3. Khách hàng mục tiêu và onboarding
 
@@ -84,7 +86,7 @@ Khách không cần tài khoản để dùng onboarding hay đọc nội dung.
 
 ### 3.1 Onboarding hai bước
 
-Khi khách chưa trả lời, trang hiện onboarding hai bước dưới dạng lời nhắc đóng được. Onboarding không bao giờ chặn trang khách đang mở, kể cả khi khách vào thẳng một câu chuyện, địa điểm hoặc sản phẩm qua link hay tìm kiếm: nội dung hiện ngay, lời nhắc nằm phía trên hoặc bên cạnh nội dung. Đóng lời nhắc tương đương bỏ qua. Thứ tự hiện của lời nhắc và hộp đồng ý theo dõi còn mở (O32).
+Khi khách chưa trả lời, trang hiện onboarding hai bước dưới dạng lời nhắc đóng được. Onboarding không bao giờ chặn trang khách đang mở, kể cả khi khách vào thẳng một câu chuyện, bản đồ hoặc sản phẩm qua link hay tìm kiếm: nội dung hiện ngay, lời nhắc nằm phía trên hoặc bên cạnh nội dung. Đóng lời nhắc tương đương bỏ qua. Thứ tự hiện của lời nhắc và hộp đồng ý theo dõi còn mở (O32).
 
 1. **Bước 1, loại khách:** short-stay hoặc multi-day.
 2. **Bước 2, sở thích:** chọn một hoặc nhiều mục trong danh sách cố định ở §3.3.
@@ -145,23 +147,23 @@ Merchant gắn một hoặc nhiều sở thích cho từng địa điểm, câu 
 | Năng lực                  | Phase 1                                                                                                                             | Giai đoạn sau                                          |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | Câu chuyện và blog        | Câu chuyện về thành phố, lịch sử, văn hóa, review biên tập về điểm tham quan, nhà hàng và nơi lưu trú, bằng EN và DE (§11.2, §11.3) | Ngôn ngữ khác theo lộ trình được duyệt                 |
-| Bản đồ tương tác          | Điểm chọn lọc, điểm câu chuyện và điểm thực dụng, mỗi điểm câu chuyện dẫn tới bài viết (§11.1)                                      | Thiết kế hình ảnh theo ảnh tham chiếu của chủ sản phẩm |
+| Bản đồ tương tác          | Điểm do merchant chọn, có hoặc không có bài viết; danh mục bản đồ; hoạt động và sự kiện địa phương có ngày, tự ẩn sau ngày cuối (§11.1, cổng G11) | Kiểu điểm và màu theo ảnh tham chiếu của chủ sản phẩm |
 | Onboarding và cá nhân hóa | Hai bước, lưu trên trình duyệt, sắp xếp theo nhóm khách và sở thích (§3)                                                            | Không có                                               |
-| Review của khách | Khách đăng nhập đánh giá và bình luận điểm tham quan, nhà hàng, nơi lưu trú (không phải điểm thực dụng), hiện ngay, merchant chỉ ẩn (§11.4, cổng G7, G8) | Báo cáo vi phạm: chưa quyết, rủi ro pháp lý ở O33 |
+| Bình luận của khách | Khách đăng nhập bình luận bài viết, hiện ngay, merchant chỉ ẩn (§11.6, cổng G7). Khách không đánh giá địa điểm (cổng G11) | Báo cáo vi phạm: chưa quyết, rủi ro pháp lý ở O33 |
 | Thông tin tour | Thông tin miễn phí, PDF tải về cho từng tour, lộ trình do merchant định nghĩa chỉ là lời khuyên (cổng G9), merchant sửa được (§7.3) | Tour làm cơ sở tri thức cho tác tử AI trả lời khách |
-| Lưu trú | Điểm trên bản đồ có review và liên kết tới trang của khách sạn (§11.5, cổng G8) | Liên kết affiliate (Booking.com hoặc tương tự) |
+| Lưu trú | Điểm trên bản đồ có liên kết ra khách sạn và review biên tập tùy chọn (§11.5, cổng G11) | Liên kết affiliate (Booking.com hoặc tương tự) và nhãn của nó |
 | Cửa hàng                  | Chỉ dao Victorinox, tồn kho theo SKU, biến thể kích cỡ, chủ đề, màu (§7)                                                            | Bộ sưu tập Swiss limited edition đặt trước; khắc tên   |
-| Khách và đơn hàng         | Đăng nhập Google hoặc mã email khi mua hoặc đánh giá; đơn quà theo vòng đời v2, khách tự nhận hoặc nhận qua đối tác (§6.2, §8, §10.4) | Giỏ nhiều merchant                                     |
+| Khách và đơn hàng         | Đăng nhập Google hoặc mã email khi mua hoặc bình luận; đơn quà theo vòng đời v2, khách tự nhận hoặc nhận qua đối tác (§6.2, §8, §10.4) | Giỏ nhiều merchant                                     |
 | Đối tác giới thiệu        | QR, hoa hồng, báo cáo; lượt bàn giao: thống nhất giờ, nhận đơn từ merchant, giao cho khách, ghi tiền mặt (§10, §10.4) | Mở rộng mạng lưới                                      |
 | Đo lường                  | Truy cập, bản đồ, từ câu chuyện sang cửa hàng (§1.3, §13)                                                                           | CRM, phân tích AI                                      |
 | Tư vấn chuyến đi | Biểu mẫu yêu cầu tư vấn đơn giản (§12, cổng G10) | Tác tử AI dựa trên nội dung tour |
 
 
-**Ngôn ngữ.** Giao diện, câu chuyện, chi tiết địa điểm và thông tin tour hỗ trợ tiếng Anh và tiếng Đức (Q22). Review của khách giữ nguyên ngôn ngữ họ viết, không dịch. Merchant được xuất bản nội dung khi có ít nhất một ngôn ngữ đầy đủ. Khi khách chọn ngôn ngữ chưa có bản, trang hiện bản có sẵn kèm thông báo rõ ngôn ngữ của bản đó, không tự dịch và không trộn hai ngôn ngữ (R02). Mỗi ngôn ngữ của một trang có địa chỉ riêng. Địa chỉ của ngôn ngữ chưa có bản không được hiện nội dung trùng với ngôn ngữ kia, để công cụ tìm kiếm không thấy hai bản sao (AC61). Ngôn ngữ mặc định còn mở (O01).
+**Ngôn ngữ.** Giao diện, câu chuyện, chi tiết địa điểm và thông tin tour hỗ trợ tiếng Anh và tiếng Đức (Q22). Bình luận của khách giữ nguyên ngôn ngữ họ viết, không dịch. Merchant được xuất bản nội dung khi có ít nhất một ngôn ngữ đầy đủ. Khi khách chọn ngôn ngữ chưa có bản, trang hiện bản có sẵn kèm thông báo rõ ngôn ngữ của bản đó, không tự dịch và không trộn hai ngôn ngữ (R02). Mỗi ngôn ngữ của một trang có địa chỉ riêng. Địa chỉ của ngôn ngữ chưa có bản không được hiện nội dung trùng với ngôn ngữ kia, để công cụ tìm kiếm không thấy hai bản sao (AC61). Ngôn ngữ mặc định còn mở (O01).
 
 **Nhiều merchant.** Quyền sở hữu cửa hàng, nhân sự và đơn hàng vẫn phải hỗ trợ nhiều merchant độc lập. Điều đó không bật bán nhiều merchant ở Phase 1.
 
-**Tiếp cận từ tìm kiếm.** Trang câu chuyện và trang địa điểm phải được công cụ tìm kiếm lập chỉ mục, mỗi trang có địa chỉ riêng theo từng ngôn ngữ và toàn văn có trong nội dung công cụ tìm kiếm tải về (AC61). Cách đạt yêu cầu này thuộc rà soát công nghệ (O21, Q5); PRD không chọn công nghệ.
+**Tiếp cận từ tìm kiếm.** Trang câu chuyện phải được công cụ tìm kiếm lập chỉ mục (điểm trên bản đồ không có trang riêng, cổng G11), mỗi trang có địa chỉ riêng theo từng ngôn ngữ và toàn văn có trong nội dung công cụ tìm kiếm tải về (AC61). Cách đạt yêu cầu này thuộc rà soát công nghệ (O21, Q5); PRD không chọn công nghệ.
 
 **Chỉnh sửa nội dung.** Merchant sửa được câu chuyện, điểm trên bản đồ, lộ trình tour và file PDF bất cứ lúc nào, không cần đợt phát hành. Thay đổi hiện cho khách trong một khoảng trễ tối đa; giá trị chưa đặt (O39, AC45). Công cụ soạn nội dung thuộc rà soát công nghệ (O21, Q7).
 
@@ -177,7 +179,10 @@ Merchant gắn một hoặc nhiều sở thích cho từng địa điểm, câu 
 - Không có AI tự tạo lịch trình hay trả lời khách trong Phase 1. Tác tử AI dựa trên nội dung tour là giai đoạn sau.
 - Không có Super Admin viết, duyệt hoặc quản lý nội dung của merchant.
 - Không tự động chuyển hoa hồng cho đối tác giới thiệu; không kế toán tổng hợp, ERP, POS, OTA; không phí nền tảng hay thuê bao.
-- Không có nút báo cáo review; merchant là người duy nhất ẩn review, và PRD không thêm chính sách review nào (Q21, cổng G7, 26/10/2026). Rủi ro pháp lý ở O33.
+- Không có nút báo cáo bình luận; merchant là người duy nhất ẩn bình luận, và PRD không thêm chính sách nào (Q21, cổng G7, 26/10/2026). Rủi ro pháp lý ở O33.
+- Khách không đánh giá hay viết review địa điểm (cổng G11, 27/10/2026). Khách không tạo, lưu hay sửa điểm của riêng mình.
+- Không có vé, đăng ký hay sức chứa cho sự kiện; không có nhắc ngày sự kiện đã cũ; không có sự kiện tự lặp hằng năm (cổng G11).
+- Không có nhãn "liên kết đối tác" và trường affiliate cho tới khi có liên kết trả phí đầu tiên (cổng G11, §11.5, O33).
 - Không có chính sách hủy theo mốc N giờ và phí hủy trong Phase 1 (cổng G5, §9.4).
 - Sản phẩm không phải công cụ lập lộ trình. Khách không tự dựng lộ trình giữa các điểm và sản phẩm không dẫn đường từ vị trí khách (cổng G9, 26/10/2026).
 - Không có nội dung dành riêng cho một nhóm khách trong Phase 1 (cổng G3, O37).
@@ -189,13 +194,13 @@ Merchant gắn một hoặc nhiều sở thích cho từng địa điểm, câu 
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | Super Admin                           | Mời merchant tham gia mạng lưới                                                                                                                                        | Không viết hoặc quản lý nội dung của merchant. Quyền hỗ trợ vận hành cần đặc tả riêng             |
 | Owner                                 | Sở hữu cửa hàng, cấu hình cửa hàng, mời Store Manager; điều chỉnh hoặc hủy khoản thu bên ngoài đã ghi sai, kèm lý do và lịch sử                                        | Mỗi cửa hàng có dữ liệu, nhân sự và tài khoản nhận tiền riêng                                     |
-| Store Manager                         | Làm việc trong cửa hàng được cấp quyền: soạn câu chuyện, điểm, tour, PDF; quản lý tồn; ghi thu bên ngoài; hoàn tiền; ghi hoa hồng đã chi; ẩn review; đánh dấu hoàn tất | Không có quyền ở cửa hàng khác; không điều chỉnh hoặc hủy khoản thu đã ghi                        |
+| Store Manager                         | Làm việc trong cửa hàng được cấp quyền: soạn câu chuyện, điểm, tour, PDF; quản lý tồn; ghi thu bên ngoài; hoàn tiền; ghi hoa hồng đã chi; ẩn bình luận; đánh dấu hoàn tất | Không có quyền ở cửa hàng khác; không điều chỉnh hoặc hủy khoản thu đã ghi                        |
 | Đối tác giới thiệu (guide, khách sạn) | QR hoặc link giới thiệu; báo cáo riêng. **Guide** thêm quyền vận hành đơn nhóm của chính mình: giờ đến và đi, giờ nhận, giờ giao, tiền mặt đã thu (§10.4). Mọi cập nhật của guide lưu người ghi, thời điểm và lịch sử | Chỉ xem dữ liệu thuộc nguồn của mình; không xem thông tin liên hệ hay yêu cầu tùy chỉnh của khách |
-| Khách | Đọc nội dung, dùng bản đồ, onboarding, không cần tài khoản. Đăng nhập để mua, bình luận bài, đánh giá điểm tham quan, nhà hàng và nơi lưu trú (không cần mua hàng) | Không đánh giá điểm thực dụng; sửa hoặc xóa review của mình (cổng R1) |
+| Khách | Đọc nội dung, dùng bản đồ, onboarding, không cần tài khoản. Đăng nhập để mua và bình luận bài (không cần mua hàng) | Không đánh giá địa điểm (cổng G11); không tạo hay sửa điểm trên bản đồ |
 | Khách đã mua | Đánh giá sản phẩm sau khi đơn hoàn tất | Chỉ đánh giá dao đã mua và đã hoàn tất |
 
 
-**Địa điểm thuộc cửa hàng** của merchant tạo ra chúng (cổng G8, 26/10/2026); Phase 1 chỉ có một cửa hàng. Khách đăng nhập bằng cơ chế đăng nhập hiện có: Google hoặc mã xác nhận gửi qua email (Q17). Owner mời Store Manager qua email; người nhận đăng nhập hoặc tạo tài khoản rồi chấp nhận lời mời.
+**Điểm trên bản đồ thuộc cửa hàng** của merchant tạo ra chúng, và chỉ merchant (Owner hoặc Manager) thêm, sửa, ẩn chúng (cổng G8, G11); Phase 1 chỉ có một cửa hàng. Khách đăng nhập bằng cơ chế đăng nhập hiện có: Google hoặc mã xác nhận gửi qua email (Q17). Owner mời Store Manager qua email; người nhận đăng nhập hoặc tạo tài khoản rồi chấp nhận lời mời.
 
 **Đề xuất phân quyền:** Owner giữ quản lý thành viên và tài khoản nhận tiền. Manager được cấp các nhóm quyền nội dung, tồn, đơn hàng, báo cáo. Một danh tính có thể thuộc nhiều cửa hàng; quyền gắn với từng quan hệ thành viên.
 
@@ -327,7 +332,7 @@ Khách mở một tour, đọc lộ trình, các điểm dừng, thời lượng
 
 ### 6.4 Merchant vận hành cửa hàng
 
-Merchant chuẩn bị nội dung (câu chuyện, điểm, thẻ nhóm khách và sở thích, tour, PDF), sản phẩm và tồn theo SKU, điểm nhận, tài khoản nhận tiền và đối tác giới thiệu. Khi có đơn, Owner hoặc Manager theo dõi việc sắp đến giờ, cập nhật thực hiện, ghi khoản thu hoặc xử lý hủy và hoàn tiền theo quyền. Với đơn qua đối tác, merchant chấp nhận hoặc đề xuất lại giờ bàn giao, mang đơn tới điểm nhận và xử lý cảnh báo thiếu túi hoặc túi khách không nhận (§10.4). Merchant cũng ẩn review của khách khi cần (§11.4). Dashboard phân biệt việc còn phải làm, tiền còn phải thu và hoa hồng còn phải trả. Lịch hiện các lượt bàn giao và giờ nhận của đơn (§13.1a).
+Merchant chuẩn bị nội dung (câu chuyện, điểm, thẻ nhóm khách và sở thích, tour, PDF), sản phẩm và tồn theo SKU, điểm nhận, tài khoản nhận tiền và đối tác giới thiệu. Khi có đơn, Owner hoặc Manager theo dõi việc sắp đến giờ, cập nhật thực hiện, ghi khoản thu hoặc xử lý hủy và hoàn tiền theo quyền. Với đơn qua đối tác, merchant chấp nhận hoặc đề xuất lại giờ bàn giao, mang đơn tới điểm nhận và xử lý cảnh báo thiếu túi hoặc túi khách không nhận (§10.4). Merchant cũng ẩn bình luận của khách khi cần (§11.6). Dashboard phân biệt việc còn phải làm, tiền còn phải thu và hoa hồng còn phải trả. Lịch hiện các lượt bàn giao và giờ nhận của đơn (§13.1a).
 
 **Ví dụ: ngày thứ Ba của chị Ngọc.**
 
@@ -579,26 +584,39 @@ Nội dung là trọng tâm của sản phẩm. Mỗi merchant tự viết và q
 
 ### 11.1 Bản đồ tương tác
 
-Bản đồ là tính năng quan trọng nhất của sản phẩm (chủ sản phẩm, 25/10/2026). Bản đồ và câu chuyện là một trải nghiệm.
+Bản đồ là tính năng quan trọng nhất của sản phẩm (chủ sản phẩm, 25/10/2026). Bản đồ là hướng dẫn địa phương chọn lọc về Lucerne: những nơi một người bạn bản địa sẽ chỉ cho khách, như điểm tham quan trên đường đi bộ, chỗ chụp ảnh, tiệm bánh và quán rượu, nhà vệ sinh và vòi nước miễn phí, chợ, buổi hòa nhạc và buổi gặp mặt miễn phí. Phần lớn những nơi này không có câu chuyện đi kèm, nên bản đồ và câu chuyện bổ sung cho nhau chứ không phụ thuộc nhau.
 
-**Loại địa điểm** (cổng G8, 26/10/2026). Địa điểm thuộc cửa hàng của merchant. Mỗi địa điểm có một trong bốn loại: sight (điểm tham quan), restaurant (nhà hàng), accommodation (nơi lưu trú) và practical (điểm thực dụng). Nơi lưu trú là điểm trên bản đồ như các loại khác. Hai loại điểm theo Q18:
+**Một mô hình điểm duy nhất** (cổng G11, 27/10/2026; thay cổng G8 và Q18). Điểm không có loại cố định. Một điểm có thể là nơi hoặc hoạt động. Màn hình merchant có hai lối vào cùng một biểu mẫu: **Thêm địa điểm** và **Thêm sự kiện**. Mỗi điểm có:
 
-- **Điểm câu chuyện (story pin):** địa điểm loại sight, restaurant hoặc accommodation, có một **bài viết chính** (Q15). Bắt buộc có bài viết chính mới xuất bản được điểm. Với nơi lưu trú, bài chính thường là review biên tập (§11.3).
-- **Điểm thực dụng (practical pin):** loại practical, như nhà vệ sinh, nước uống, máy ATM. Chỉ hiện chi tiết, không cần bài viết, khách không đánh giá được (Q6, Q18, cổng G8).
+- tiêu đề và mô tả (lời gợi ý của merchant) bằng EN và DE;
+- một ảnh dùng chung hai ngôn ngữ, kèm chú thích ảnh EN và DE (tùy chọn);
+- vị trí: tọa độ (bắt buộc) và địa chỉ (tùy chọn);
+- slug dùng cho liên kết bản đồ (bắt buộc);
+- **danh mục bản đồ**, không bắt buộc; điểm không có danh mục chỉ được làm nổi bật ở chip "Tất cả";
+- thẻ lưu trú và sở thích (§3.2, §3.3);
+- giờ mở theo tuần (tùy chọn);
+- ngày (tùy chọn, xem dưới);
+- một bài viết chính (tùy chọn) và một liên kết ra ngoài (tùy chọn);
+- trạng thái: nháp, đã xuất bản hoặc ẩn.
 
 **Quy tắc:**
 
-- Điểm do merchant chọn lọc và tạo; không tự động lấy toàn bộ địa điểm.
-- Nhấn một điểm mở chi tiết (tên, mô tả, giờ mở, địa chỉ nếu có). Với điểm câu chuyện, chi tiết liên kết tới bài viết chính.
-- Mỗi điểm câu chuyện có đúng một bài viết chính. Trang chi tiết liệt kê thêm các bài khác gắn thẻ địa điểm đó. Một bài có thể nhắc nhiều địa điểm (Q15).
-- Thứ tự và độ nổi bật của điểm theo thẻ nhóm khách và sở thích (§3.2). **Không điểm nào bị ẩn khỏi bản đồ** (Q26).
-- Chi tiết điểm không hiện giá (Q24).
-- Chi tiết điểm bằng EN và DE (Q22). Khi chi tiết chưa có ngôn ngữ khách chọn, hiện bản có sẵn kèm thông báo ngôn ngữ, không tự dịch (R02, AC64). Khách xem điểm, đọc bài, đánh giá địa điểm trên cùng màn hình khi có thể (§11.4).
+- **Bắt buộc để xuất bản một điểm:** tiêu đề bằng ít nhất một ngôn ngữ, vị trí và slug. Ảnh, địa chỉ, danh mục, bài viết, liên kết, giờ mở và ngày đều tùy chọn (AC68).
+- Điểm xuất bản được không cần bài viết chính (AC85). Không gì bảo vệ bài viết chính của điểm: bài được hủy xuất bản hoặc xóa theo quy tắc riêng của bài, và thẻ điểm bỏ liên kết tới bài chưa có bản đã xuất bản. Điểm do merchant chọn và tạo; không tự động lấy toàn bộ địa điểm. Mẹo không gắn vị trí cố định (thẻ du lịch miễn phí, vé rẻ) không phải điểm; đó là bài viết (§11.2).
+- **Ngày.** Một điểm có thể có nhiều mục ngày. Mỗi mục là một ngày kèm giờ bắt đầu và giờ kết thúc tùy chọn (ví dụ "14/11, 19:30 đến 21:00"), hoặc một khoảng ngày (ví dụ "20/11 đến 23/12"). Một mục ngày không được qua nửa đêm; với sự kiện kết thúc muộn, để trống giờ kết thúc và điểm hiện đến hết ngày đó. Giờ mở theo tuần áp dụng trong khoảng ngày. Điểm có ngày hiện từ lúc xuất bản, thẻ điểm hiện ngày kế tiếp, và biến mất khỏi bản đồ sau ngày cuối theo giờ Europe/Zurich mà merchant không phải làm gì (AC86). Điểm không có ngày hiện tới khi merchant ẩn.
+- **Danh mục.** Merchant tạo, đổi tên, sắp thứ tự danh mục bản đồ và danh mục blog (§11.2), có một cấp danh mục con. Danh mục bản đồ là các chip trên bản đồ, ví dụ Điểm đi bộ, Chỗ chụp ảnh, Ăn uống địa phương, Tiện ích miễn phí, Hoạt động địa phương. Chip làm nổi bật các điểm của danh mục được chọn và làm mờ các điểm còn lại; không điểm nào bị ẩn vì chip (quyết định D7 của chủ sản phẩm giữ nguyên, nay áp dụng cho danh mục bản đồ). Chip danh mục cha cũng bao gồm các điểm chỉ gắn với danh mục con của nó. Một điểm có thể thuộc nhiều danh mục và được làm nổi bật dưới từng chip tương ứng; điểm không có danh mục chỉ được làm nổi bật ở "Tất cả" (AC88). Danh mục làm nổi bật; sở thích chỉ xếp thứ tự (§3.2). Khách chỉ thấy danh mục làm chip. Tên danh mục cần ít nhất một trong hai ngôn ngữ EN hoặc DE (như danh mục sản phẩm, AC30), và danh mục còn danh mục con hoặc còn mục gắn thì không xóa được (AC87).
+- **Thẻ điểm.** Nhấn một điểm mở thẻ phía trên bản đồ: ảnh, lời gợi ý, giờ mở, địa chỉ, ngày kế tiếp (nếu có ngày), liên kết tới bài viết chính (nếu có), các bài đã xuất bản khác gắn thẻ điểm đó (Q15; một bài có thể nhắc nhiều điểm), liên kết ra ngoài (nếu có) và nút **Mở trong Google hoặc Apple Maps** (AC42, AC62).
+- Nút Mở trong Google hoặc Apple Maps chuyển điểm đến cho ứng dụng bản đồ của điện thoại. Trang không đọc vị trí của khách và không vẽ lộ trình, nên không trái cổng G9 (AC89). Bản đồ không dùng vị trí của khách.
+- Liên kết `/:lang/map?place=<slug>` mở bản đồ với thẻ của điểm đó (AC90). Nếu điểm đã ẩn, đã hết hạn hoặc không tồn tại, bản đồ vẫn mở bình thường kèm một thông báo ngắn "This place is no longer on the map" (bản DE tương ứng). Điểm không có trang riêng và không nằm trong danh sách trang gửi công cụ tìm kiếm. Tìm kiếm trong ứng dụng vẫn tìm thấy điểm; kết quả mở liên kết bản đồ ở trên.
+- Thứ tự và độ nổi bật của điểm theo thẻ nhóm khách và sở thích (§3.2). **Không điểm nào bị ẩn khỏi bản đồ vì nhóm khách hay sở thích** (Q26).
+- Thẻ điểm không hiện giá ở bất kỳ chỗ nào (Q24).
+- Nội dung điểm bằng EN và DE (Q22). Khi chưa có ngôn ngữ khách chọn, hiện bản có sẵn kèm thông báo ngôn ngữ, không tự dịch (R02, AC64).
 - Merchant thêm và sửa điểm bất cứ lúc nào. Điểm còn là bản nháp xóa được. Điểm đã xuất bản chỉ ẩn được, không xóa (cổng M6, 26/10/2026; AC79).
-- Khách mở bản đồ không cần tài khoản.
+- Khách mở bản đồ không cần tài khoản. Khách không tạo, lưu hay sửa điểm của riêng mình.
 - Bản đồ không lập lộ trình cho khách và không dùng vị trí của khách (cổng G9).
+- **Nền bản đồ** (cổng G11; đóng phần nền của O23). Bản đồ và bản đồ lộ trình tour dùng cùng một nền: ảnh swisstopo SWISSIMAGE phẳng 2D kèm tên địa danh từ OpenFreeMap, không nghiêng và không địa hình 3D. Bản đồ ghi nguồn "© swisstopo" và OpenFreeMap, OpenMapTiles, OpenStreetMap.
 
-**Còn mở:** thiết kế hình ảnh của bản đồ chờ ảnh tham chiếu của chủ sản phẩm (O23). PRD không quy định kiểu dáng, màu hay kiểu điểm. Dẫn đường chi tiết, gamification và audio chưa nằm trong quyết định (biên bản họp 24/10 có ý tưởng gamification, chủ sản phẩm chưa đưa vào phạm vi).
+**Còn mở:** kiểu điểm và màu chờ ảnh tham chiếu của chủ sản phẩm (O23). Màu nhãn và giới hạn zoom của nền phẳng, cách gom điểm khi quá đông, thứ tự chip và cách hiện danh mục rỗng thuộc người xây dựng. Dẫn đường chi tiết, gamification và audio chưa nằm trong quyết định (biên bản họp 24/10 có ý tưởng gamification, chủ sản phẩm chưa đưa vào phạm vi).
 
 ### 11.2 Câu chuyện (blog)
 
@@ -606,7 +624,8 @@ Câu chuyện kể về thành phố, lịch sử và văn hóa. Mục tiêu là
 
 - Mỗi bài có tác giả là nhân sự cửa hàng, ngày đăng, thời gian đọc, ảnh bìa, đoạn mở đầu, các phần có đề mục làm mục lục (R16, R17).
 - Thân bài gồm đoạn văn, ảnh kèm chú thích, video YouTube nhúng và audio thu sẵn do cửa hàng tải lên; không tạo audio bằng AI. Việc video nhúng cần đồng ý theo dõi hay không còn mở (O32).
-- Bài gắn thẻ **địa điểm** (một hoặc nhiều), **nhóm khách** (short-stay, multi-day hoặc cả hai) và **sở thích** (§3.3).
+- Bài thuộc một hoặc nhiều **danh mục blog** do merchant tạo và quản lý như danh mục bản đồ (§11.1, AC87), ví dụ Truyền thuyết, Lịch sử Thụy Sĩ, Mẹo thực tế. Mẹo không gắn vị trí cố định là bài viết, thường thuộc "Mẹo thực tế".
+- Bài gắn thẻ **điểm trên bản đồ** (một hoặc nhiều), **nhóm khách** (short-stay, multi-day hoặc cả hai) và **sở thích** (§3.3).
 - Merchant chọn tối đa 6 dao Victorinox đang xuất bản để liên kết với bài, chọn một lần cho mỗi bài và dùng chung mọi ngôn ngữ (cổng M1, 26/10/2026), tự đặt thứ tự. Thẻ liên kết **không hiện giá** (Q24). Liên kết không đổi nguồn giới thiệu hay hoa hồng.
 - Cuối bài có "Khám phá thêm" tối đa 3 bài khác do merchant chọn, chọn một lần cho mỗi bài và dùng chung mọi ngôn ngữ (cổng M1, 26/10/2026); mặc định là bài mới nhất (R18). Liên kết tới bài chưa có bản ngôn ngữ của người đọc thì bị ẩn.
 - Bài xuất bản riêng từng ngôn ngữ EN, DE (Q22). Thiếu ngôn ngữ thì hiện bản có sẵn kèm thông báo; mỗi ngôn ngữ có địa chỉ riêng và địa chỉ thiếu bản không trùng nội dung ngôn ngữ kia (§4.1).
@@ -617,46 +636,29 @@ Tư liệu hành trình từ Erich là cảm hứng nội dung. Văn bản ngôi
 
 ### 11.3 Review biên tập
 
-Merchant (host) viết review chất lượng cao về điểm tham quan, nhà hàng và nơi lưu trú (Q16). Review biên tập là một loại bài trong blog, gắn với một địa điểm trên bản đồ, có tên người viết và ngày kiểm tra thông tin. Bằng EN và DE (Q22). Hạng nhà hàng thể hiện bằng thẻ lưu trú (§3.2), không có trường riêng. Review nơi lưu trú có thể kèm liên kết tới khách sạn; việc ghi nhãn quảng cáo hoặc liên kết đối tác cho review do merchant viết còn mở (O33).
+Merchant (host) viết review chất lượng cao về điểm tham quan, nhà hàng và nơi lưu trú (Q16). Review biên tập là một loại bài trong blog, gắn với một điểm trên bản đồ (điểm nào cũng được) và liên kết từ thẻ điểm đó, có tên người viết và ngày kiểm tra thông tin. Bằng EN và DE (Q22). Hạng nhà hàng thể hiện bằng thẻ lưu trú (§3.2), không có trường riêng. Review nơi lưu trú có thể kèm liên kết ra khách sạn; việc ghi nhãn quảng cáo hoặc liên kết đối tác cho review do merchant viết còn mở (O33).
 
-### 11.4 Review của khách về địa điểm
+### 11.4 Đã gỡ
 
-Khách có thể đánh giá và bình luận địa điểm, như một mạng xã hội nhỏ (Q16, Q17).
+Cổng G11 (27/10/2026) gỡ phần khách đánh giá và viết review địa điểm; chỉ còn bình luận bài (§11.6, §18.2). Review của merchant về địa điểm vẫn có, là câu chuyện (§11.3).
 
-- Khách phải đăng nhập bằng cơ chế hiện có (Google hoặc mã email). Không cần mua hàng.
-- Khách đánh giá được địa điểm loại sight, restaurant và accommodation. Điểm thực dụng không nhận review (cổng G8, 26/10/2026).
-- Review **hiện ngay**, không duyệt trước (Q17).
-- Review gồm đánh giá và bình luận. Giữ nguyên ngôn ngữ khách viết, không dịch (Q22).
-- **Merchant là người duy nhất ẩn review.** Không có nút báo cáo và PRD không thêm chính sách review (Q21; cổng G7, 26/10/2026).
-- Review địa điểm tách khỏi đánh giá sản phẩm (§11.6): đánh giá sản phẩm chỉ mở sau khi đơn hoàn tất.
+### 11.5 Lưu trú: điểm có liên kết ra ngoài
 
-**Quy tắc kiểm duyệt chung** cho bình luận bài, review địa điểm và đánh giá sản phẩm: nội dung hiện ngay khi gửi (đánh giá sản phẩm chỉ gửi được sau khi đơn hoàn tất); merchant chỉ ẩn, không xóa; mỗi lần ẩn lưu người ẩn, thời điểm và lý do nếu có; không có nút báo cáo. Giữ rào chắn của v2: quyền ẩn bình luận không tự cho phép che đánh giá sản phẩm bất lợi. Khi nào merchant được ẩn đánh giá sản phẩm là mở (O33).
+Nơi lưu trú là một điểm trên bản đồ như mọi điểm khác, thường thuộc một danh mục như "Lưu trú", không có gì đặc biệt (cổng G11; thay cổng G8). Điểm này có thể có **một liên kết ra trang của khách sạn** (Q30) và một review biên tập tùy chọn (§11.3) liên kết từ thẻ điểm. Không có review của khách. Nền tảng không bán, không đặt phòng và không nhận thanh toán lưu trú; "chỉ đọc" trong Q30 có nghĩa đó.
+
+**Yêu cầu:** mọi điểm có thể có một liên kết ra ngoài, và mọi liên kết ra ngoài hiện qua cùng một chức năng (ADR-011). Hiện mọi liên kết là liên kết thường. Nhãn "liên kết đối tác" và các trường affiliate chờ tới khi có liên kết trả phí đầu tiên; thêm sau không buộc sửa lại bài viết, review hay điểm, và điểm đến phải thay được riêng khỏi nội dung. Việc ghi nhãn liên kết đối tác còn mở (O33). Cách thực hiện thuộc rà soát công nghệ (O21, Q30).
+
+### 11.6 Bình luận và đánh giá sản phẩm
+
+Khách đăng nhập bằng cơ chế hiện có (Google hoặc mã email, Q17), không cần mua hàng, bình luận được ở bài viết. Bình luận giữ nguyên ngôn ngữ khách viết, không dịch (Q22). Bình luận hiện tên riêng và chữ cái đầu của người viết, ví dụ "Anna K." (R1). Khách không đánh giá địa điểm (cổng G11). Khách đánh giá sao dao sau khi đơn hoàn tất; đánh giá gắn tài khoản đã mua. **Đề xuất:** thang 1 đến 5 sao, nhãn đã mua, một đánh giá cho mỗi sản phẩm trong đơn hợp lệ, cho sửa và cho merchant phản hồi (O15).
+
+**Quy tắc kiểm duyệt chung** cho bình luận bài và đánh giá sản phẩm (giữ từ cổng G7; chuyển về đây khi cổng G11 gỡ §11.4): nội dung hiện ngay khi gửi (đánh giá sản phẩm chỉ gửi được sau khi đơn hoàn tất); merchant chỉ ẩn, không xóa; mỗi lần ẩn lưu người ẩn, thời điểm và lý do nếu có; không có nút báo cáo. Giữ rào chắn của v2: quyền ẩn bình luận không tự cho phép che đánh giá sản phẩm bất lợi. Khi nào merchant được ẩn đánh giá sản phẩm là mở (O33).
 
 **Rủi ro pháp lý còn mở, cần luật sư (cổng G7, O33).** Danh sách này không phải yêu cầu:
 
 - Quy định thông báo và hành động đối với nội dung bất hợp pháp của EU (DSA), vì sản phẩm không có nút báo cáo.
-- Minh bạch review (chỉ thị Omnibus của EU) và luật chống cạnh tranh không lành mạnh của Thụy Sĩ (UWG), vì merchant vừa bán hàng vừa ẩn review.
-- Quyền xóa dữ liệu theo GDPR và luật bảo vệ dữ liệu Thụy Sĩ (nFADP) với review của khách và tài khoản bị xóa.
-- Tên hiển thị của người viết review.
-
-**Quy tắc review mặc định (cổng R1, 26/10/2026; O25):**
-
-- Mỗi khách có tối đa một review cho mỗi địa điểm.
-- Đánh giá theo thang 1 đến 5 sao.
-- Khách sửa hoặc xóa được review của chính mình.
-- Tên hiển thị là tên riêng và chữ cái đầu của họ, ví dụ "Anna K.".
-
-**Còn mở (O25):** khách có thấy review của mình sau khi bị ẩn không; thông báo review mới cho merchant; giới hạn độ dài hoặc ảnh. Quyền xóa dữ liệu theo GDPR và nFADP ở O33.
-
-### 11.5 Lưu trú: review và liên kết
-
-Nơi lưu trú là điểm trên bản đồ loại accommodation (cổng G8). Nơi lưu trú có review biên tập (§11.3), review của khách (§11.4), và **liên kết tới trang của khách sạn** (Q30). Nền tảng không bán, không đặt phòng và không nhận thanh toán lưu trú; "chỉ đọc" trong Q30 có nghĩa đó.
-
-**Yêu cầu:** thêm liên kết affiliate (Booking.com hoặc tương tự) về sau không được buộc sửa lại bài viết, review hay điểm trên bản đồ. Điểm đến của liên kết phải thay được riêng khỏi nội dung. Cách thực hiện thuộc rà soát công nghệ (O21, Q30). Việc ghi nhãn liên kết đối tác còn mở (O33).
-
-### 11.6 Bình luận và đánh giá sản phẩm
-
-Khách đăng nhập mới bình luận được ở bài viết; merchant chỉ ẩn bình luận theo quy tắc kiểm duyệt chung (§11.4). Khách đánh giá sao dao sau khi đơn hoàn tất; đánh giá gắn tài khoản đã mua. **Đề xuất:** thang 1 đến 5 sao, nhãn đã mua, một đánh giá cho mỗi sản phẩm trong đơn hợp lệ, cho sửa và cho merchant phản hồi (O15).
+- Minh bạch đánh giá (chỉ thị Omnibus của EU) và luật chống cạnh tranh không lành mạnh của Thụy Sĩ (UWG), vì merchant vừa bán hàng vừa ẩn nội dung của khách.
+- Quyền xóa dữ liệu theo GDPR và luật bảo vệ dữ liệu Thụy Sĩ (nFADP) với bình luận, đánh giá của khách và tài khoản bị xóa.
 
 ## 12. Widget tư vấn chuyến đi
 
@@ -673,14 +675,14 @@ Tác tử AI trò chuyện thật dựa trên nội dung tour là giai đoạn s
 
 | Góc nhìn                 | Thông tin cần theo dõi                                                                                  |
 | ------------------------ | ------------------------------------------------------------------------------------------------------- |
-| Lưu lượng                | Phiên, trang xem, nguồn truy cập, phiên từ công cụ tìm kiếm, theo trang câu chuyện và địa điểm (SM-1)   |
+| Lưu lượng                | Phiên, trang xem, nguồn truy cập, phiên từ công cụ tìm kiếm, theo trang câu chuyện (SM-1)   |
 | Bản đồ                   | Lượt mở điểm, lượt nhấn từ điểm sang bài viết, theo điểm và theo nhóm khách (SM-2)                      |
 | Câu chuyện sang cửa hàng | Phiên có đọc bài rồi mở trang sản phẩm, rồi gửi đơn (SM-3)                                              |
 | Nguồn bán                | Truy cập, đơn, giá trị và hoa hồng theo đối tác, loại đối tác và trang đích                             |
 | Sản phẩm                 | Số lượng bán theo SKU, tồn kho, SKU hết hàng                                                            |
 | Vận hành                 | Đơn sắp đến giờ giao, đơn nhóm theo guide, đã giao, hoàn tất, hủy                                       |
 | Tiền                     | Giá trị đơn, tiền đã thu (trực tuyến, tiền mặt do guide thu), hoàn tiền, hoa hồng đã ghi nhận và đã trả |
-| Nội dung                 | Bài được đọc, review địa điểm mới, review bị ẩn                                                         |
+| Nội dung                 | Bài được đọc, bình luận mới, bình luận bị ẩn                                                         |
 
 
 Kế hoạch kinh doanh yêu cầu theo dõi "QR scans". **Đề xuất:** phân biệt lượt mở URL có nguồn QR với lượt mở thông thường; một lượt tải URL không chứng minh một lần quét QR vật lý.
@@ -731,14 +733,14 @@ Ba ưu tiên v2 (hoàn thiện ba mẫu dao, một trang khám phá chung với 
 
 Các tiêu chí dưới đây cụ thể hóa yêu cầu để thiết kế và kiểm thử. Tiêu chí dựa trên chi tiết còn mở chỉ chốt sau quyết định tương ứng. Chưa có SLA hiệu năng hoặc độ sẵn sàng bằng số được duyệt. Yêu cầu chất lượng đề xuất: dùng tốt trên điện thoại, giữ dữ liệu nhập khi lỗi, kiểm soát quyền theo cửa hàng, ngăn bán vượt tồn, không ghi trùng tiền khi thông báo lặp, truy vết thay đổi tiền và trạng thái.
 
-Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC07, AC20, AC21, AC22, AC23, AC27, AC28, AC35** (§18.2), cùng **AC40** (cổng G3, nội dung độc quyền hoãn), **AC56** và **AC57** (cổng G5, chính sách hủy hoãn). Mã mới bắt đầu từ AC36.
+Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC07, AC20, AC21, AC22, AC23, AC27, AC28, AC35** (§18.2), cùng **AC40** (cổng G3, nội dung độc quyền hoãn), **AC56** và **AC57** (cổng G5, chính sách hủy hoãn), **AC43** (bắt buộc có bài viết chính; thay bằng AC85) và **AC84** (review địa điểm, tính duy nhất; cả hai gỡ bởi cổng G11, 27/10/2026). Mã mới bắt đầu từ AC36.
 
 ### 15.1 Tiêu chí giữ từ v2 (có chỉnh)
 
 
 | Mã   | Tình huống kiểm thử                                                                         | Kết quả cần đạt                                                                                                                                       | Phạm vi hoặc phụ thuộc          |
 | ---- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| AC01 | Khách vào qua guide, tìm kiếm hoặc trực tiếp                                                | Xem nội dung, bản đồ, onboarding không cần tài khoản; mua, đánh giá địa điểm và bình luận yêu cầu Google hoặc mã email                                | Phase 1                         |
+| AC01 | Khách vào qua guide, tìm kiếm hoặc trực tiếp                                                | Xem nội dung, bản đồ, onboarding không cần tài khoản; mua và bình luận yêu cầu Google hoặc mã email                                | Phase 1                         |
 | AC02 | Owner mời Manager; Manager thử mở dữ liệu cửa hàng khác                                     | Lời mời cấp quyền đúng cửa hàng; không truy cập cửa hàng khác                                                                                         | Phase 1; ma trận quyền cần chốt |
 | AC03 | Merchant chưa được mời hoặc chưa xác minh nhận tiền                                         | Không tự mở bán; chỉ Super Admin mời                                                                                                                  | Phase 1                         |
 | AC04 | Giỏ có hai món khác giờ nhận | Hệ thống tách thành hai đơn; mỗi đơn kiểm tra thời gian chuẩn bị (tính theo giờ) riêng | Phase 1; giá trị chuẩn bị O22 |
@@ -776,14 +778,13 @@ Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC
 | AC38 | Khách chọn short-stay và sở thích food-drink; bốn nhà hàng: A (short-stay, food-drink), B (multi-day, food-drink), C (cả hai, không sở thích), D (short-stay, không sở thích) | A đứng đầu và B đứng cuối; C và D theo ngày xuất bản mới nhất. Khách đổi sang multi-day: B đứng đầu. Trong cả hai trường hợp không nhà hàng nào biến mất khỏi danh sách và bản đồ | Phase 1; quy tắc §3.2 |
 | AC39 | Nhà hàng chỉ gắn thẻ short-stay và nhà hàng chỉ gắn thẻ multi-day | Hạng nhanh hoặc cao cấp lấy từ thẻ lưu trú; không có trường phân hạng thứ hai trong trình soạn | Phase 1 |
 | AC41 | Merchant gắn sở thích cho một địa điểm                                                 | Chỉ chọn được trong bốn sở thích cố định (history-culture, food-drink, lake-mountains, shopping-keepsakes); không thêm hay xóa được                             | Phase 1                                  |
-| AC42 | Khách nhấn một điểm câu chuyện trên bản đồ                                             | Mở chi tiết địa điểm có liên kết tới bài viết chính; chi tiết liệt kê các bài khác gắn thẻ địa điểm; không hiện giá                                             | Phase 1                                  |
-| AC43 | Merchant xuất bản điểm câu chuyện không có bài viết chính                              | Hệ thống từ chối và nêu thiếu bài viết chính; điểm thực dụng (ví dụ nhà vệ sinh) xuất bản được không cần bài                                                    | Phase 1                                  |
+| AC42 | Khách nhấn một điểm trên bản đồ | Mở thẻ điểm: ảnh, lời gợi ý của merchant, giờ mở, địa chỉ, ngày kế tiếp nếu điểm có ngày; liên kết tới bài viết chính nếu có; các bài đã xuất bản khác gắn thẻ điểm; liên kết ra ngoài nếu có; nút "Mở trong Google hoặc Apple Maps"; không hiện giá | Phase 1, cổng G11 |
 | AC44 | Có điểm gắn thẻ multi-day và khách chọn short-stay                                     | Điểm vẫn hiện trên bản đồ, chỉ xếp thứ tự thấp hơn                                                                                                              | Phase 1                                  |
 | AC45 | Merchant sửa một điểm, một bài, một lộ trình tour hoặc một PDF | Thay đổi hiện cho khách mà không cần đợt phát hành, trong khoảng trễ tối đa đã đặt | Phase 1; giá trị khoảng trễ O39; công cụ soạn theo O21 |
-| AC46 | Khách chưa đăng nhập muốn đánh giá một điểm tham quan, nhà hàng hoặc nơi lưu trú | Được yêu cầu đăng nhập bằng cơ chế hiện có; sau đăng nhập đăng được; review hiện ngay, không chờ duyệt | Phase 1 |
-| AC47 | Merchant ẩn một review địa điểm hoặc một bình luận bài | Nội dung biến mất khỏi khách khác; hệ thống lưu người ẩn, thời điểm và lý do nếu có; không có thao tác xóa; trang không có nút báo cáo | Phase 1, cổng G7 |
-| AC48 | Khách viết review bằng tiếng Việt trên trang EN                                        | Review hiện nguyên tiếng Việt, không dịch                                                                                                                       | Phase 1                                  |
-| AC49 | Khách mở một nơi lưu trú                                                               | Thấy review chỉ đọc và liên kết tới trang khách sạn; không có nút đặt phòng hay thanh toán                                                                      | Phase 1                                  |
+| AC46 | Khách chưa đăng nhập muốn bình luận một bài viết | Được yêu cầu đăng nhập bằng cơ chế hiện có; sau đăng nhập đăng được; bình luận hiện ngay, không chờ duyệt; không có chức năng đánh giá địa điểm | Phase 1, cổng G11 |
+| AC47 | Merchant ẩn một bình luận bài | Nội dung biến mất khỏi khách khác; hệ thống lưu người ẩn, thời điểm và lý do nếu có; không có thao tác xóa; trang không có nút báo cáo | Phase 1, cổng G7, G11 |
+| AC48 | Khách viết bình luận bằng tiếng Việt trên trang EN | Bình luận hiện nguyên tiếng Việt, không dịch | Phase 1, cổng G11 |
+| AC49 | Khách mở thẻ điểm của một nơi lưu trú | Thấy lời gợi ý của merchant, review biên tập nếu có và liên kết ra trang khách sạn nếu có; không có review của khách; không có nút đặt phòng hay thanh toán | Phase 1, cổng G11 |
 | AC50 | Khách mở một tour | Thấy lộ trình và bản đồ lộ trình; tải được PDF của tour; không có lịch khởi hành, chỗ trống, giá đặt hay nút đặt; không thấy đường dẫn tới chức năng đặt tour | Phase 1 |
 | AC51 | Merchant tải lên PDF thay thế cho một tour | Khách tải được bản mới trong khoảng trễ tối đa đã đặt; mỗi tour có đúng một PDF | Phase 1; giá trị O39; lưu trữ theo O21 |
 | AC52 | Khách mở trang sản phẩm Victorinox                                                     | Giá hiện lần đầu ở trang này; chọn được kích cỡ, chủ đề, màu; tổ hợp tồn 0 không chọn được                                                                      | Phase 1                                  |
@@ -793,14 +794,14 @@ Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC
 | AC58 | Đối tác đề xuất lượt bàn giao (điểm nhận, giờ); merchant đề xuất giờ khác; đối tác chấp nhận | Lượt chỉ nhận đơn sau khi hai bên thống nhất; mỗi bước lưu người ghi và thời điểm; đối tác dời muộn hơn không cần duyệt, dời sớm hơn cần merchant duyệt; khi giờ đổi, merchant hoặc đối tác và mọi khách có đơn được báo | Phase 1, cổng G6; xác thực đối tác O24 |
 | AC59 | Một lượt bàn giao có khách trả trực tuyến và khách trả tiền mặt cho đối tác | Cả hai cách được ghi; đơn trực tuyến được trả khi checkout; tiền mặt hiện đúng số đối tác ghi và tính ngay là đã thu (cổng G1); dashboard tách hai khoản | Phase 1, cổng G6; rủi ro O34 |
 | AC60 | Đo lường một tuần | Dashboard báo lượt truy cập và lượt từ tìm kiếm; lượt mở điểm và nhấn từ điểm sang bài; tỷ lệ từ bài sang trang sản phẩm và sang đơn; không có chỉ số khách quay lại. Sự kiện gồm page_view (kèm nguồn), pin_open, pin_to_story_click, story_view, product_view, order_submit, mỗi sự kiện có thể mang giá trị nhóm khách và sở thích ẩn danh | Phase 1; công cụ theo O14 |
-| AC61 | Công cụ tìm kiếm hoặc khách tải một trang câu chuyện hoặc địa điểm bằng một ngôn ngữ | Trang có địa chỉ riêng cho ngôn ngữ đó; toàn văn có trong nội dung tải về mà khách không cần thao tác; không có chỉ thị cấm lập chỉ mục; trang có trong danh sách trang gửi công cụ tìm kiếm; địa chỉ của ngôn ngữ chưa có bản không hiện nội dung trùng với ngôn ngữ kia | Phase 1; cách đạt theo O21 |
-| AC62 | Khách nhấn một điểm thực dụng, ví dụ nhà vệ sinh | Hiện chi tiết (tên, mô tả, giờ mở, địa chỉ nếu có); không bắt buộc có bài viết; không có chức năng đánh giá | Phase 1 |
-| AC63 | Merchant đổi điểm đến liên kết của một nơi lưu trú sang liên kết đối tác | Mọi bài, review và điểm bản đồ liên quan dẫn tới liên kết mới mà không phải sửa nội dung nào | Phase 1 (khả năng); liên kết đối tác thật ở giai đoạn sau; cách làm theo O21 |
+| AC61 | Công cụ tìm kiếm hoặc khách tải một trang câu chuyện bằng một ngôn ngữ | Trang có địa chỉ riêng cho ngôn ngữ đó; toàn văn có trong nội dung tải về mà khách không cần thao tác; không có chỉ thị cấm lập chỉ mục; trang có trong danh sách trang gửi công cụ tìm kiếm; địa chỉ của ngôn ngữ chưa có bản không hiện nội dung trùng với ngôn ngữ kia; điểm trên bản đồ không có trang riêng và không có trong danh sách đó | Phase 1; cách đạt theo O21 |
+| AC62 | Khách nhấn một điểm không có bài viết, ví dụ vòi nước uống hoặc một tiệm bánh | Hiện thẻ điểm đầy đủ (tên, mô tả, giờ mở, địa chỉ); không có liên kết bài viết; không có chức năng đánh giá | Phase 1, cổng G11 |
+| AC63 | Merchant đổi điểm đến liên kết ra ngoài của một điểm, ví dụ nơi lưu trú, sang liên kết đối tác | Mọi nơi hiện liên kết đó dẫn tới liên kết mới mà không phải sửa bài, review hay điểm nào khác | Phase 1 (khả năng); liên kết đối tác thật và nhãn ở giai đoạn sau; cách làm theo O21; cổng G11 |
 | AC64 | Khách chọn DE, chi tiết của một điểm chỉ có bản EN | Hiện bản EN kèm thông báo ngôn ngữ; không tự dịch | Phase 1 |
 | AC65 | Đơn qua đối tác trả tiền mặt, chưa có khoản thu nào | Sau khi chấp nhận, đơn vào "Đang chuẩn bị" ngay; không có hạn thanh toán và không tự hủy vì chưa trả; trạng thái thanh toán hiện riêng; khi đối tác ghi số tiền lúc giao, khoản thu tính ngay | Phase 1, cổng G1, G6 |
 | AC66 | SKU còn đủ tồn và thời gian chuẩn bị kịp giờ nhận; trường hợp khác SKU thiếu tồn | Trường hợp đủ: đơn tự chấp nhận và giữ tồn; merchant từ chối được trước khi chuẩn bị, tồn được giải phóng. Trường hợp thiếu: đơn không tự chấp nhận | Phase 1, cổng G2 |
 | AC67 | Khách mở một tour và bản đồ | Thấy lộ trình do merchant định nghĩa; không có chức năng dựng lộ trình, không xin quyền vị trí, không có "bạn đang ở đây" | Phase 1, cổng G9 |
-| AC68 | Merchant tạo một địa điểm | Phải chọn một trong bốn loại (sight, restaurant, accommodation, practical); địa điểm thuộc cửa hàng; chỉ ba loại đầu nhận review của khách | Phase 1, cổng G8 |
+| AC68 | Merchant tạo một điểm | Không phải chọn loại; điểm thuộc cửa hàng; bắt buộc có tiêu đề bằng ít nhất một ngôn ngữ, vị trí và slug mới xuất bản được; ảnh, địa chỉ, danh mục, bài viết, liên kết, giờ mở và ngày đều tùy chọn và có thể để trống; chọn được nhiều danh mục bản đồ | Phase 1, cổng G8, G11 |
 | AC69 | Merchant thử xóa đánh giá sản phẩm của khách | Không có thao tác xóa; việc ẩn đánh giá sản phẩm bất lợi theo quyết định mở O33 | Phase 1 |
 | AC70 | Đối tác có hai lượt đã thống nhất hôm nay và một lượt ngày mai; khách quét QR in sẵn của đối tác | Checkout điền sẵn lượt sớm nhất hôm nay còn đủ thời gian chuẩn bị cho đơn; khách chọn được lượt còn lại của hôm nay; lượt ngày mai không hiện; khách chuyển được sang tự nhận | Phase 1, cổng G6 |
 | AC71 | Khách mở link của một lượt bàn giao vào ngày khác | Checkout điền sẵn đúng lượt đó | Phase 1, cổng G6 |
@@ -816,7 +817,12 @@ Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC
 | AC81 | Merchant đổi giá hoặc tồn của một SKU đang nằm trong giỏ | Khi giỏ đổi, hệ thống kiểm tra lại tồn và giá; ở checkout kiểm tra lại lần nữa; khách thấy món hết hàng hoặc giá mới trước khi gửi | Phase 1, cổng M7 |
 | AC82 | Giỏ có hai món khác điểm nhận, và một món qua lượt bàn giao | Khi gửi yêu cầu tạo đơn riêng cho từng điểm nhận hoặc lượt bàn giao; khách thấy các đơn sẽ tạo và số tiền của từng đơn trước khi gửi | Phase 1, cổng M7 |
 | AC83 | Khách bấm gửi hai lần hoặc tải lại trang checkout sau khi gửi | Không tạo đơn trùng; khách thấy các đơn đã tạo | Phase 1, cổng M7 |
-| AC84 | Khách đã đánh giá một địa điểm, rồi đánh giá lần nữa, rồi sửa và xóa review | Không tạo được review thứ hai cho cùng địa điểm; sao chỉ từ 1 đến 5; sửa và xóa được review của chính mình; tên hiển thị dạng "Anna K."; không sửa hoặc xóa được review người khác | Phase 1, cổng R1 |
+| AC85 | Merchant xuất bản một điểm không có bài viết chính | Xuất bản được; điểm hiện trên bản đồ; thẻ điểm không có liên kết bài viết | Phase 1, cổng G11 (thay AC43) |
+| AC86 | Merchant xuất bản một điểm có ngày, trước ngày đầu tiên | Điểm hiện ngay từ lúc xuất bản và thẻ điểm hiện ngày kế tiếp; sau ngày cuối (giờ Europe/Zurich) điểm biến mất khỏi bản đồ mà merchant không phải làm gì; điểm không có ngày hiện tới khi merchant ẩn | Phase 1, cổng G11 |
+| AC87 | Merchant tạo, đổi tên, sắp thứ tự danh mục bản đồ và danh mục blog (một cấp danh mục con), rồi xóa một danh mục | Tên có EN và DE; thứ tự được lưu; xóa được danh mục không còn dùng; tên cần ít nhất một trong EN hoặc DE; danh mục còn danh mục con hoặc còn điểm hay bài đang dùng thì không xóa được | Phase 1, cổng G11 |
+| AC88 | Điểm A thuộc hai danh mục bản đồ; điểm B không thuộc danh mục nào | Chip làm nổi bật và làm mờ các điểm khác, không ẩn điểm nào; A được làm nổi bật dưới cả hai chip; B chỉ được làm nổi bật ở "Tất cả" | Phase 1, cổng G11 |
+| AC89 | Khách nhấn "Mở trong Google hoặc Apple Maps" trên thẻ điểm | Ứng dụng bản đồ của điện thoại mở tới điểm đó để dẫn đường; trang không xin quyền vị trí và không vẽ lộ trình | Phase 1, cổng G9, G11 |
+| AC90 | Khách mở liên kết `/:lang/map?place=<slug>` | Bản đồ mở với thẻ của điểm có slug đó. Nếu điểm đã ẩn, đã hết hạn hoặc không có, bản đồ mở bình thường kèm thông báo ngắn "This place is no longer on the map" | Phase 1, cổng G11 |
 
 
 ## 16. Rủi ro và điều kiện phụ thuộc
@@ -828,7 +834,7 @@ Bảng sau là đánh giá đề xuất, chưa phải kết quả kiểm chứng
 | ----------------------------------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | Địa chỉ dạng hash hiện tại không được công cụ tìm kiếm lập chỉ mục từng trang | Mục tiêu lượng truy cập tự nhiên (SM-1) không đạt               | Rà soát công nghệ chọn cách có địa chỉ riêng được lập chỉ mục (O21)                       |
 | Chất lượng và khối lượng nội dung không đủ                                    | Bản đồ nhiều điểm trống, ít lượt quay lại                       | Merchant chọn lọc điểm; kế hoạch nội dung theo từng đợt; công cụ soạn dễ dùng (O21)       |
-| Review của khách hiện ngay, merchant chỉ ẩn, không có nút báo cáo | Nội dung xúc phạm hoặc bất hợp pháp hiện trước khi merchant thấy; rủi ro pháp lý (DSA, Omnibus, UWG, GDPR, nFADP) | Chủ sản phẩm đã chọn (cổng G7); luật sư kiểm tra (O33) |
+| Bình luận của khách hiện ngay, merchant chỉ ẩn, không có nút báo cáo | Nội dung xúc phạm hoặc bất hợp pháp hiện trước khi merchant thấy; rủi ro pháp lý (DSA, Omnibus, UWG, GDPR, nFADP) | Chủ sản phẩm đã chọn (cổng G7); luật sư kiểm tra (O33) |
 | Tiền mặt do guide thu và ghi tay, tính ngay là đã thu | Guide tự xác nhận khoản dẫn tới hoa hồng của chính mình; sai lệch, gian lận, tranh chấp | Chủ sản phẩm đã chọn cách này (cổng G1); giữ lịch sử và người ghi; Owner điều chỉnh được; đối soát tiền mặt với tiền merchant nhận (O34) |
 | Khách đoàn rời thành phố trước khi đơn sẵn sàng                               | Lỡ nhận hàng, hủy, hỗ trợ khẩn                                  | Chốt thời gian chuẩn bị, mốc hủy, hướng dẫn nhận (O22, O36)                               |
 | Tồn theo SKU lệch với kho thật                                                | Xác nhận đơn không thực hiện được                               | Chốt người cập nhật tồn và nhịp cập nhật                                                  |
@@ -836,7 +842,7 @@ Bảng sau là đánh giá đề xuất, chưa phải kết quả kiểm chứng
 | Hoàn tiền và hoa hồng không đối soát nhất quán                                | Trả thừa, thiếu, sai lãi                                        | Chốt công thức, quyền thao tác, lịch sử                                                   |
 | Link báo cáo riêng bị lộ                                                      | Người khác xem báo cáo đối tác                                  | Mã email cho phiên mới; thu hồi link (O09)                                                |
 | Nội dung, thương hiệu hoặc ý tưởng dịch vụ chưa xác minh                      | Khách hiểu sai                                                  | Xác minh quyền Victorinox, ảnh, nguồn; không trình bày dịch vụ chưa xác nhận như bán được |
-| Merchant hoặc người vận hành chính vắng mặt                                   | Đơn chưa xử lý, review chưa ẩn                                  | Chốt người dự phòng và quyền Manager                                                      |
+| Merchant hoặc người vận hành chính vắng mặt                                   | Đơn chưa xử lý, bình luận chưa ẩn                                  | Chốt người dự phòng và quyền Manager                                                      |
 
 
 Điều kiện trước pilot: nội dung thật có ảnh và quyền sử dụng; danh sách điểm đầu tiên; SKU, giá, ảnh và quyền Victorinox; người nhận trách nhiệm giao hàng; tài khoản nhận tiền đã xác minh; danh sách guide và điều khoản hoa hồng; email thông báo; nguồn dữ liệu chi phí. Có PRD không đồng nghĩa đã ký hợp đồng hay đủ năng lực thực hiện.
@@ -883,9 +889,9 @@ Bảng này tập hợp lựa chọn ảnh hưởng phạm vi, hành vi hoặc l
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------- | -------------------------------- |
 | O21 | **Rà soát công nghệ (giai đoạn 2).** Bốn mục thuộc rà soát công nghệ và kiến trúc, PRD chỉ nêu yêu cầu: (a) địa chỉ cho công cụ tìm kiếm (Q5); (b) công cụ soạn câu chuyện, điểm, lộ trình (Q7); (c) mô hình liên kết sẵn sàng cho affiliate (Q30); (d) nơi lưu PDF tour (Q19) | Trước khi xây           | Kiến trúc sư, chủ sản phẩm       |
 | O22 | Giá trị thời gian chuẩn bị (số giờ) và cách tính điều kiện tự chấp nhận. Mốc hủy N giờ và phí hủy đã gỡ khỏi Phase 1, xem O36 | Trước nhận đơn thật | Chủ sản phẩm, merchant |
-| O23 | Thiết kế hình ảnh bản đồ: chờ ảnh tham chiếu của chủ sản phẩm                                                                                                                                                                                                                  | Trước thiết kế bản đồ   | Chủ sản phẩm, thiết kế           |
+| O23 | Thiết kế hình ảnh bản đồ. **Phần nền đã chốt (cổng G11, 27/10/2026):** ảnh swisstopo SWISSIMAGE phẳng 2D kèm tên địa danh OpenFreeMap, không 3D, dùng cho cả bản đồ và bản đồ lộ trình tour; ghi nguồn © swisstopo và OpenFreeMap, OpenMapTiles, OpenStreetMap. Còn mở: kiểu điểm và màu chờ ảnh tham chiếu của chủ sản phẩm | Trước thiết kế bản đồ | Chủ sản phẩm, thiết kế |
 | O24 | Cách đối tác xác thực để ghi cập nhật bàn giao. Đã chốt (cổng D1, 26/10/2026; ADR-010 và ADR-019, đang ở trạng thái đề xuất): tài khoản đăng nhập theo luồng hiện có, vai trò đối tác chỉ qua lời mời của merchant, tự đăng ký chỉ ra vai trò khách, link báo cáo chỉ đọc. Các phần khác của O24 cũ đã chốt ở cổng G1 và G6 (§10.4) | Đã chốt | Chủ sản phẩm, kỹ thuật |
-| O25 | Quy tắc review mặc định: **đã chốt (cổng R1, 26/10/2026)**: một review cho mỗi khách và địa điểm, 1 đến 5 sao, khách sửa hoặc xóa được review của mình, tên hiển thị là tên riêng và chữ cái đầu của họ (§11.4). Còn mở: khách thấy review của mình sau khi bị ẩn không; thông báo review mới cho merchant; giới hạn độ dài và ảnh; nội dung chưa gắn thẻ nhóm khách (đề xuất: coi là cả hai) và feed khi khách bỏ qua onboarding (đề xuất: chỉ xếp theo ngày) | Trước đặc tả review | Chủ sản phẩm, merchant |
+| O25 | Quy tắc review mặc định của cổng R1 (một review mỗi khách và địa điểm, 1 đến 5 sao) **đã gỡ cùng review địa điểm (cổng G11, 27/10/2026)**. Phần tên hiển thị (tên riêng và chữ cái đầu, ví dụ "Anna K.") vẫn áp dụng cho bình luận bài (R1). Còn mở: nội dung chưa gắn thẻ nhóm khách (đề xuất: coi là cả hai) và feed khi khách bỏ qua onboarding (đề xuất: chỉ xếp theo ngày) | Trước đặc tả cá nhân hóa | Chủ sản phẩm, merchant |
 | O26 | Victorinox: danh sách màu, danh sách chủ đề, quyền sử dụng thiết kế, giá. Nếu quyền thiết kế chưa xác nhận, pilot chạy không có cửa hàng hay chỉ bán hàng Victorinox tiêu chuẩn. Tài nguyên cho Swiss limited edition giai đoạn sau | Trước nhập tồn | Merchant, nhà cung cấp |
 | O27 | Widget tư vấn: đã chốt giữ như biểu mẫu yêu cầu đơn giản (cổng G10, 26/10/2026) | Đã chốt | Chủ sản phẩm |
 | O28 | Việc gỡ đặt cọc và trả sau cho đơn lẻ. Việc chấp nhận trước khi thanh toán đã xử lý bằng tự chấp nhận (cổng G2) | Đã chốt (cổng PRD, 26/10/2026) | Chủ sản phẩm |
@@ -914,6 +920,7 @@ Bảng này tập hợp lựa chọn ảnh hưởng phạm vi, hành vi hoặc l
 
 - Quyết định của chủ sản phẩm ngày 25/10/2026 (Q1 đến Q30) và bản tóm tắt thay đổi cùng ngày; ghi lại trong `.factory/runs/20261025-storytelling-pivot/grilling-notes.md`.
 - Biên bản họp ngày 24/10/2026 (`meeting-minutes-24-oct.md`).
+- Quyết định về điểm bản đồ, sự kiện địa phương và danh mục, ngày 27/10/2026 (`docs/decisions/2026-10-27-map-pins-and-events.md`, cổng G11).
 - Đánh giá tham chiếu du lịch của chủ sản phẩm (`docs/research/travel-reference-review-2026-10-24/report.md`).
 - `client-resources/Lucerne_Keepsake_Ke_hoach_kinh_doanh.pdf` và các tư liệu hành trình và hồ sơ khách trong `client-resources/`.
 - PRD v1 (`Swiss_Stories_and_Gifts_PRD_v1.md`) chỉ đối chiếu lịch sử; tệp còn trong lịch sử git.
@@ -931,6 +938,8 @@ Mục đích sản phẩm đổi từ "bán quà và tour" sang kể chuyện c�
 *Vòng sửa 3 (26/10/2026):* gộp văn bản quyết định bàn giao (`docs/decisions/2026-10-26-partner-handover.md`) và cổng D1 vào §5, §10.4, O24; thêm O40 và AC79; sửa §11.1 theo cổng M6 (bản nháp xóa được, điểm đã xuất bản chỉ ẩn); bỏ trích dẫn O28 đã chốt khỏi bảng rủi ro §16.
 
 *Vòng sửa 4 (26/10/2026):* áp dụng các câu trả lời cuối của chủ sản phẩm. M1: liên kết dao và bài khác dùng chung mọi ngôn ngữ (§11.2). M7: giỏ hàng lưu trên máy chủ (§8.1, §6.2; AC80 đến AC83). M8: đơn lưu tên và email khách (§13.3, O33). C1: hoa hồng chỉ ghi nhận khi đã thu đủ tiền (§6.2, §8, §10.2, §10.4). M9 và M10: danh mục và tùy chọn sản phẩm chung trong dữ liệu, không có màn hình danh mục (§7.0). Thêm O41.
+
+*Vòng sửa 5 (27/10/2026):* áp dụng cổng G11 (`docs/decisions/2026-10-27-map-pins-and-events.md`, chủ sản phẩm duyệt 27/10/2026). Điểm trên bản đồ có một mô hình duy nhất: xuất bản được không cần bài viết, không có loại cố định, có danh mục bản đồ do merchant quản lý, có thể có ngày và tự biến mất sau ngày cuối (§2, §11.1; AC85 đến AC88). Thêm danh mục blog (§11.2). Nút mở Google hoặc Apple Maps và liên kết `?place=` (AC89, AC90). Nền bản đồ phẳng swisstopo (O23). Gỡ review của khách về địa điểm: §11.4 gỡ, quy tắc kiểm duyệt chung chuyển sang §11.6, AC43 và AC84 gỡ, AC46 đến AC49 thu hẹp về bình luận bài, O25 và cổng R1 hết hiệu lực với review địa điểm. Điểm không có trang riêng (AC61). Nơi lưu trú là điểm có liên kết ra ngoài tùy chọn (§11.5); nhãn liên kết đối tác chờ liên kết trả phí đầu tiên (O33 vẫn mở). Viết lại AC42, AC62, AC63, AC68. Cổng G8 bị G11 thay phần loại địa điểm và review (xem Phụ lục A.2).
 
 *Mới:* mục đích và chỉ số (§1, SM-1 đến SM-3); onboarding hai bước, cá nhân hóa, danh sách sở thích cố định (§3); bản đồ tương tác, câu chuyện, review biên tập, review của khách, review lưu trú (§11.1 đến §11.5); thông tin tour miễn phí với PDF (§7.3); SKU theo kích cỡ, chủ đề, màu (§7.2); hủy trước giờ giao do merchant chỉnh (§9.4); đơn nhóm và vận hành của guide (§10.4); AC36 đến AC60; O21 đến O31.
 
@@ -977,14 +986,14 @@ Các nguồn dưới đây đã được đối chiếu ngày 12/10/2026 để t
 | Q12 | Onboarding chỉ lưu trên trình duyệt, bỏ qua được, đổi được                                | §3.1                     |
 | Q13 | Nội dung độc quyền chỉ trong feed multi-day. Hoãn bởi cổng G3 | §3.2; §17.2 |
 | Q14 | SKU theo kích cỡ, chủ đề, màu; tồn 0 không chọn được                                      | §7.1; §7.2               |
-| Q15 | Một bài chính cho mỗi điểm; bài khác theo thẻ địa điểm                                    | §11.1; §11.2             |
-| Q16 | Review biên tập và review của khách                                                       | §11.3; §11.4             |
-| Q17 | Đăng nhập hiện có, hiện ngay                                                              | §5; §11.4                |
-| Q18 | Điểm thực dụng không cần bài; điểm câu chuyện cần bài chính                               | §11.1                    |
+| Q15 | Bài chính của điểm (G11: tùy chọn); bài khác theo thẻ địa điểm                            | §11.1; §11.2             |
+| Q16 | Review biên tập; review của khách về địa điểm bị cổng G11 gỡ                              | §11.3; §11.4             |
+| Q17 | Đăng nhập hiện có, hiện ngay                                                              | §5; §11.6                |
+| Q18 | Điểm thực dụng không cần bài; điểm câu chuyện cần bài chính. Cổng G11 thay: mọi điểm xuất bản được không cần bài | §11.1                    |
 | Q19 | Merchant tải PDF cho từng tour                                                            | §7.3; §17.2              |
 | Q20 | Dùng lại lộ trình mẫu, merchant sửa được                                                  | §7.3                     |
-| Q21 | Chỉ merchant ẩn, không nút báo cáo                                                        | §4.2; §11.4              |
-| Q22 | EN và DE; review giữ ngôn ngữ đã viết; mỗi ngôn ngữ có địa chỉ riêng | §3.3; §4.1; §11.2; §11.4 |
+| Q21 | Chỉ merchant ẩn, không nút báo cáo                                                        | §4.2; §11.6              |
+| Q22 | EN và DE; bình luận giữ ngôn ngữ đã viết; mỗi ngôn ngữ có địa chỉ riêng | §3.3; §4.1; §11.2; §11.6 |
 | Q23 | Không khắc tên; limited edition sau                                                       | §4.2; §7.1; §7.2         |
 | Q24 | Giá chỉ hiện ở trang sản phẩm                                                             | §1.2; §7.2; §11.1; §11.2 |
 | Q25 | Danh sách sở thích cố định trong PRD                                                      | §3.3                     |
@@ -994,7 +1003,7 @@ Các nguồn dưới đây đã được đối chiếu ngày 12/10/2026 để t
 | Q29 | Bốn sở thích cố định                                                                      | §3.3                     |
 | Q30 | Review lưu trú chỉ đọc, liên kết khách sạn, sẵn sàng affiliate                            | §11.5; §17.2             |
 
-### A.2 Câu trả lời cổng G1 đến G10 (26/10/2026)
+### A.2 Câu trả lời cổng G1 đến G11 (G1 đến G10 ngày 26/10/2026; G11 ngày 27/10/2026)
 
 | Cổng | Câu trả lời của chủ sản phẩm (tóm tắt) | Mục trong PRD |
 | --- | --- | --- |
@@ -1004,10 +1013,11 @@ Các nguồn dưới đây đã được đối chiếu ngày 12/10/2026 để t
 | G4 | Giá trị nhóm khách và sở thích ẩn danh được đi kèm sự kiện phân tích, không gắn tài khoản, đơn, định danh bền vững | §1.3; §3.1; §13.3 |
 | G5 | Gỡ chính sách hủy theo mốc khỏi Phase 1; quyết định sau | §9.4; §17.2 |
 | G6 | Đã chốt sau brainstorm (vòng sửa 2): đối tác đề xuất lượt bàn giao, merchant chấp nhận hoặc đề xuất lại; QR in sẵn chọn lượt trong ngày, link của lượt cho ngày khác; đối tác xác nhận đã nhận và giao bằng mã đơn; hoa hồng ghi nhận khi "Đã giao" mà đã thu đủ tiền (cổng C1 điều chỉnh). Xem `docs/decisions/2026-10-26-partner-handover.md` | §6.2b; §6.5; §10.4 |
-| G7 | Merchant chỉ ẩn review như Q21; không nút báo cáo, không thêm chính sách; rủi ro pháp lý ghi là mở | §4.2; §11.4; §17.2 |
-| G8 | Địa điểm thuộc cửa hàng; bốn loại; nơi lưu trú là điểm; khách đánh giá sight, restaurant, accommodation, không đánh giá điểm thực dụng | §5; §11.1; §11.4; §11.5 |
+| G7 | Merchant chỉ ẩn bình luận và đánh giá như Q21; không nút báo cáo, không thêm chính sách; rủi ro pháp lý ghi là mở. G11 gỡ review địa điểm khỏi phạm vi | §4.2; §11.6; §17.2 |
+| G8 | **Bị G11 thay (27/10/2026) ở phần loại và review.** Ban đầu: địa điểm thuộc cửa hàng; bốn loại; nơi lưu trú là điểm; khách đánh giá sight, restaurant, accommodation, không đánh giá điểm thực dụng. Giữ lại: điểm thuộc cửa hàng, nơi lưu trú là điểm | §5; §11.1; §11.5 |
 | G9 | Lộ trình chỉ do merchant định nghĩa, hiển thị như lời khuyên; không lập lộ trình cho khách | §1.1; §4.2; §6.3; §7.3; §11.1 |
 | G10 | Giữ widget tư vấn như biểu mẫu yêu cầu đơn giản | §4.1; §6.6; §12 |
+| G11 | Điểm bản đồ có một mô hình: xuất bản được không cần bài viết, không có loại cố định; danh mục bản đồ và danh mục blog do merchant quản lý (một cấp con); điểm có ngày hiện từ lúc xuất bản và tự biến mất sau ngày cuối; nút mở Google hoặc Apple Maps; liên kết `?place=`; nền phẳng swisstopo; gỡ review của khách về địa điểm và trang địa điểm. Xem `docs/decisions/2026-10-27-map-pins-and-events.md` | §2; §11.1; §11.2; §11.4; §11.5; §11.6; §17.2; AC85 đến AC90 |
 | D1 | Đối tác ghi cập nhật qua tài khoản, vai trò đối tác chỉ qua lời mời, link báo cáo chỉ đọc (ADR-010) | §5; §10.4; §17.2 |
 | M6 | Bản nháp xóa được; điểm đã xuất bản chỉ ẩn | §11.1 |
 | M1 | Liên kết dao và bài "Khám phá thêm" chọn một lần cho mỗi bài, dùng chung mọi ngôn ngữ; liên kết tới bài thiếu ngôn ngữ của người đọc bị ẩn | §11.2; AC31; AC33 |
@@ -1016,5 +1026,5 @@ Các nguồn dưới đây đã được đối chiếu ngày 12/10/2026 để t
 | C1 | Hoa hồng chỉ ghi nhận khi đơn đã thu đủ tiền: khi "Đã giao" mà đã thu đủ, nếu chưa thì khi thanh toán hoàn tất | §6.2; §8; §10.2; §10.4; AC09; AC73 |
 | M9 | Danh mục dữ liệu hỗ trợ tùy chọn sản phẩm chung cho loại sản phẩm tương lai; Phase 1 chỉ bán dao Victorinox | §7.0 |
 | M10 | Danh mục sản phẩm có trong dữ liệu nhưng Phase 1 không có màn hình danh mục | §7.0 |
-| R1 | Review: một cho mỗi khách và địa điểm, 1 đến 5 sao, khách sửa hoặc xóa của mình, tên hiển thị tên riêng và chữ cái đầu | §5; §11.4; §17.2; AC84 |
+| R1 | Review: một cho mỗi khách và địa điểm, 1 đến 5 sao, tên hiển thị tên riêng và chữ cái đầu. **Hết hiệu lực khi cổng G11 gỡ review địa điểm (27/10/2026), trừ phần tên hiển thị vẫn áp dụng cho bình luận bài** | §17.2; AC84 đã gỡ |
 | P1 | Xuất và xóa dữ liệu khách xử lý thủ công trong Phase 1 | §17.2 |
