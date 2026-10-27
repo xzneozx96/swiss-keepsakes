@@ -35,7 +35,17 @@ export function switchLanguagePath(pathname: string, language: Language): string
   return `/${[language, ...rest].join('/')}`
 }
 
+/** The router matches the first segment without case and with each %XX decoded, so the target is built from the lower-case, decoded root. */
 export function legacyGuestTarget(pathname: string, language: Language): string | null {
-  const root = pathname.split('/')[1]
-  return LEGACY_GUEST_ROOTS.includes(root) ? `/${language}${pathname}` : null
+  const [, rawRoot = '', ...rest] = pathname.split('/')
+  let root: string
+
+  try {
+    root = decodeURIComponent(rawRoot).toLowerCase()
+  }
+  catch {
+    return null
+  }
+
+  return LEGACY_GUEST_ROOTS.includes(root) ? `/${[language, root, ...rest].join('/')}` : null
 }

@@ -54,6 +54,16 @@ describe('legacyGuestTarget', () => {
     expect(legacyGuestTarget('/stories/x', 'en')).toBe('/en/stories/x')
   })
 
+  it('matches the first segment without case and with %XX decoded, and builds the lower-case target', () => {
+    expect(legacyGuestTarget('/Stories', 'en')).toBe('/en/stories')
+    expect(legacyGuestTarget('/STORIES/a', 'en')).toBe('/en/stories/a')
+    expect(legacyGuestTarget('/St%6Fries/a', 'de')).toBe('/de/stories/a')
+  })
+
+  it('returns null for a malformed escape', () => {
+    expect(legacyGuestTarget('/st%E0/a', 'en')).toBeNull()
+  })
+
   it('returns null for other paths', () => {
     expect(legacyGuestTarget('/cart', 'en')).toBeNull()
     expect(legacyGuestTarget('/storiesx', 'en')).toBeNull()

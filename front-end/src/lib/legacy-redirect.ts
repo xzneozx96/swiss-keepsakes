@@ -1,5 +1,5 @@
 import type { Language } from '@sk/domain/shared'
-import { redirect } from '@tanstack/react-router'
+import { notFound, redirect } from '@tanstack/react-router'
 import { createIsomorphicFn } from '@tanstack/react-start'
 import { getRequestHeader } from '@tanstack/react-start/server'
 
@@ -16,10 +16,11 @@ export const requestLanguage = createIsomorphicFn()
     acceptLanguage: navigator.language,
   }))
 
+const QUERY_AND_HASH = /[?#].*$/
+
 interface RedirectLocation {
   pathname: string
-  searchStr: string
-  hash: string
+  href: string
 }
 
 /** Throws a 302 from an old guest path to the same path under the guest's language, keeping the query and the hash. */
@@ -27,11 +28,12 @@ export function redirectLegacyGuestPath(location: RedirectLocation): never {
   const target = legacyGuestTarget(location.pathname, requestLanguage())
 
   if (!target)
-    throw new Error(`Not a legacy guest path: ${location.pathname}`)
+    throw notFound()
 
-  const hash = location.hash ? '#'.concat(location.hash) : ''
+  // The query and the hash are everything in `href` from the first `?` or `#`. (`pathname` is decoded, so its length cannot cut `href`.)
+  const tail = QUERY_AND_HASH.exec(location.href)?.[0] ?? ''
 
-  throw redirect({ href: `${target}${location.searchStr}${hash}`, statusCode: 302 })
+  throw redirect({ href: `${target}${tail}`, statusCode: 302 })
 }
 
 /** Throws a 302 from `/` to the language home. */

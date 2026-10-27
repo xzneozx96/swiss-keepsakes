@@ -63,6 +63,9 @@ describe('[E3.5] redirects to a language home', () => {
     ['/plan/sent', '/en/plan/sent'],
     ['/credits', '/en/credits'],
     ['/stories#top', '/en/stories#top'],
+    ['/Stories', '/en/stories'],
+    ['/STORIES/a', '/en/stories/a'],
+    ['/St%6Fries/a', '/en/stories/a'],
   ])('sends %s to %s', async (url, href) => {
     expect(await landAt(url)).toBe(href)
   })
