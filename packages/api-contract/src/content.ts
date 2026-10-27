@@ -21,10 +21,16 @@ export const localizedLongTextSchema = z.strictObject({
   de: z.string().trim().min(1).max(20000).optional(),
 }).meta({ id: 'LocalizedLongText', description: 'Text per language. A present key is non-empty and at most 20000 characters' })
 
+// The database (platform.valid_slug_map) needs at least one key, so {} is refused and null clears the slug.
 const slugMapSchema = z.strictObject({
   en: z.string().max(200).regex(slugPattern, 'Lower-case letters and digits, separated by single dashes').optional(),
   de: z.string().max(200).regex(slugPattern, 'Lower-case letters and digits, separated by single dashes').optional(),
-})
+}).refine(map => map.en !== undefined || map.de !== undefined, 'Give a slug in at least one language')
+
+// A list of ids with no repeats: the link tables key on (owner, id).
+function idList(max: number) {
+  return z.array(z.uuid()).max(max).refine(ids => new Set(ids).size === ids.length, 'Each id may appear once')
+}
 
 // What a response carries: whatever is stored, no checks.
 const localizedView = z.object({ en: z.string().optional(), de: z.string().optional() })
@@ -56,16 +62,16 @@ const pinDateWriteSchema = z.strictObject({
 export const pinWriteBodySchema = z.strictObject({
   title: localizedTextSchema.optional(),
   tip: localizedLongTextSchema.optional(),
-  slug: slugMapSchema.optional(),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
+  slug: slugMapSchema.nullable().optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
   address: z.string().trim().min(1).max(300).nullable().optional(),
   weeklyHours: z.array(weeklySpanSchema).max(21).optional(),
   stayTag: stayTag.optional(),
   interests: interests.optional(),
   coverMediaId: z.uuid().nullable().optional(),
   mainStoryGroupId: z.uuid().nullable().optional(),
-  categoryIds: z.array(z.uuid()).max(20).optional(),
+  categoryIds: idList(20).optional(),
   dates: z.array(pinDateWriteSchema).max(50).optional(),
 }).meta({ id: 'PinWriteBody', description: 'Every field is optional. A pin has no type and no price' })
 
@@ -112,6 +118,7 @@ const storyBlockSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('audio'), mediaId: z.uuid(), title: z.string().max(300), caption: z.string().max(300) }),
 ])
 
+// The title may be empty: a draft is incomplete, and the publish gap (title) stops an untitled version going live.
 export const storyDraftSchema = z.strictObject({
   title: z.string().trim().max(300),
   excerpt: z.string().max(1000),
@@ -130,16 +137,22 @@ export const storyDraftSchema = z.strictObject({
 const storyGroupFields = {
   stayTag: stayTag.optional(),
   interests: interests.optional(),
-  categoryIds: z.array(z.uuid()).max(20).optional(),
-  placeIds: z.array(z.uuid()).max(50).optional(),
-  keepsakeProductIds: z.array(z.uuid()).max(6).optional(),
-  relatedGroupIds: z.array(z.uuid()).max(3).optional(),
+  categoryIds: idList(20).optional(),
+  placeIds: idList(50).optional(),
+  keepsakeProductIds: idList(6).optional(),
+  relatedGroupIds: idList(3).optional(),
 }
 
 export const storyGroupCreateBodySchema = z.strictObject({
   kind: z.enum(['story', 'editorial_review']).default('story'),
   subjectPlaceId: z.uuid().optional(),
   ...storyGroupFields,
+}).superRefine((body, ctx) => {
+  // story_groups_subject_check: only an editorial review has a subject place, and it must have one.
+  if (body.kind === 'editorial_review' && body.subjectPlaceId === undefined)
+    ctx.addIssue({ code: 'custom', message: 'An editorial review needs a subject place', path: ['subjectPlaceId'] })
+  if (body.kind === 'story' && body.subjectPlaceId !== undefined)
+    ctx.addIssue({ code: 'custom', message: 'Only an editorial review has a subject place', path: ['subjectPlaceId'] })
 }).meta({ id: 'StoryGroupCreateBody' })
 
 export const storyGroupSaveBodySchema = z.strictObject(storyGroupFields).meta({ id: 'StoryGroupSaveBody' })
@@ -177,14 +190,34 @@ export const storyVersionMoveBodySchema = z.strictObject({
   targetGroupId: z.uuid(),
 }).meta({ id: 'StoryVersionMoveBody' })
 
+const storyDraftViewSchema = z.object({
+  title: z.string(),
+  excerpt: z.string(),
+  intro: z.string(),
+  authorName: z.string(),
+  authorRole: z.string(),
+  readMinutes: z.int().nullable(),
+  coverMediaId: z.uuid().nullable(),
+  sections: z.array(z.object({
+    id: z.string(),
+    heading: z.string(),
+    blocks: z.array(z.discriminatedUnion('type', [
+      z.object({ type: z.literal('paragraph'), text: z.string() }),
+      z.object({ type: z.literal('image'), mediaId: z.uuid(), caption: z.string() }),
+      z.object({ type: z.literal('video'), youtubeId: z.string(), title: z.string(), caption: z.string() }),
+      z.object({ type: z.literal('audio'), mediaId: z.uuid(), title: z.string(), caption: z.string() }),
+    ])),
+  })),
+})
+
 export const storyVersionSchema = z.object({
   groupId: z.uuid(),
   storeId: z.uuid(),
   language,
   status: z.enum(['draft', 'published']),
   slug: z.string().nullable(),
-  draft: storyDraftSchema.nullable(),
-  published: storyDraftSchema.nullable(),
+  draft: storyDraftViewSchema.nullable(),
+  published: storyDraftViewSchema.nullable(),
   publishedAt: z.iso.datetime().nullable(),
   rowVersion: z.int(),
   createdAt: z.iso.datetime(),
@@ -202,13 +235,13 @@ const tourStopWriteSchema = z.strictObject({
 })
 
 export const tourWriteBodySchema = z.strictObject({
-  slug: slugMapSchema.optional(),
+  slug: slugMapSchema.nullable().optional(),
   stayTag: stayTag.optional(),
   interests: interests.optional(),
   durationMinutes: z.int().min(1).nullable().optional(),
   coverMediaId: z.uuid().nullable().optional(),
   pdfMediaId: z.uuid().nullable().optional(),
-  keepsakeProductIds: z.array(z.uuid()).max(3).optional(),
+  keepsakeProductIds: idList(3).optional(),
   stops: z.array(tourStopWriteSchema).max(50).optional(),
   draft: z.strictObject({
     title: localizedTextSchema.optional(),
