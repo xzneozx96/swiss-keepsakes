@@ -35,6 +35,14 @@ Read this before you call an API or read server data. Check `front-end/package.j
 - **A screen whose read suspends or fails** shows the router's `defaultPendingComponent` (a skeleton) or the root route's `errorComponent` (a message and Try again), both from `front-end/src/components/route-fallbacks.tsx`. One error boundary on the root, because one per route re-renders on every search change. Demo reads never suspend.
 - **Tests** wrap hooks in a fresh `QueryClientProvider` and `DataClientProvider` per test (`front-end/tests/data-client.test.tsx`).
 
+## Server-rendered routes
+
+These follow `tanstack-start.md`.
+
+- **A server-rendered loader only reads.** Commands run in the browser through `useCommand` or `useSubmit`, never in a loader. The Hono API owns commands, auth and jobs. A loader calls the generated client with an absolute server base (`tanstack-start.md`, rule 4).
+- **`Cache-Control` is `public` only when the response is identical for everyone.** Public content uses ADR-001's `public, s-maxage=60, stale-while-revalidate=240`. Anything that reads the session or a cookie is `private, no-store`, because a shared cache would serve one guest's answer to the next.
+- **The `QueryClient` is made per request**, never at module scope (`tanstack-start.md`, rule 12). `AppProviders` already holds it in `useState(startSeedDemo)`.
+
 ## Rules that apply today
 
 - Keep calls in a feature's hook or `api` module, never inside a presentational component.

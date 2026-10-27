@@ -23,13 +23,19 @@ Example: `front-end/src/features/catalog/` has `components/`, `hooks/`, `lib/`, 
 
 ## Routes are thin
 
-A file in `front-end/src/routes/` declares the route, its search validation and its page, and composes a screen from a feature. It holds no business logic and makes no API calls.
+A file in `front-end/src/routes/` declares the route, its search validation and its page, and composes a screen from a feature. It holds no business logic and no raw `fetch`. A loader may call a server-safe function in a feature's `api` module that takes its base from `apiOrigin()` (rule 4).
 Example: `front-end/src/routes/_guest/gifts/index.tsx`.
 
 TanStack Router's code splitting moves only the route's `component` into its own chunk. Everything else in the route file, including what `validateSearch` and `beforeLoad` import, loads on first paint for every visitor.
 - Put constants and types a route validator reads in `<feature>/lib/search-params.ts`. These files import nothing heavy.
 - Examples: `front-end/src/features/reports/lib/search-params.ts`, `front-end/src/features/merchant/products/lib/search-params.ts`.
 - `validateSearch` and `beforeLoad` must be pure. They also run on hover, because the router preloads on intent.
+
+## Server files and global middleware
+
+- A file that must never reach the browser is named `*.server.ts`. Start's import protection refuses the import from client code. See `tanstack-start.md`, rule 11.
+- A server route is a route file with `server.handlers`, and an escaped dot in its name stands for the dot in the address: a file `sitemap[.]xml.ts` in `front-end/src/routes/` serves `/sitemap.xml`, and `robots[.]txt.ts` serves `/robots.txt`. Neither file exists yet. A server route holds no business logic either. It reads through the same feature `api` module as a loader.
+- Global middleware for every request lives in `front-end/src/start.ts`, in `createStart`'s `requestMiddleware`. Do not add a second file for it.
 
 ## Generated and shared files
 

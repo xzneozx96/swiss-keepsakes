@@ -1,12 +1,17 @@
-# Stack notes: Vite and React (`front-end/`)
+# Stack notes: Vite, React and TanStack Start (`front-end/`)
 
-Versions and the full selected stack are in `../tech-stack.md`. This file keeps the facts and traps that are specific to Vite, React and TanStack Router.
+Versions and the full selected stack are in `../tech-stack.md`. This file keeps the facts and traps that are specific to Vite, React, TanStack Router and TanStack Start. The rules for routes, loaders and server code are in `tanstack-start.md`.
 
-## TanStack Router
+## TanStack Router and Start
 
-- File routes live in `front-end/src/routes/`. History is hash-based, so the app is served as static files with no server rewrites.
+- File routes live in `front-end/src/routes/`. History is browser history, so a deep link such as `/store/orders` is a real path. The built app is a Nitro Node server, started with `node .output/server/index.mjs`. It is not a static folder. `vite.config.ts` sets `base: '/'`, which browser history needs.
+- `vite dev` forwards `/api` to `API_PROXY_TARGET` through Nitro `routeRules`. The built server does not forward `/api` yet. ADR-001 has the Start web server forward `/api/**` and `/webhooks/**` in production. E3.8 builds that, and E3.8 is blocked by O43.
 - Automatic code splitting moves only a route's `component` into its own chunk. Anything else in the route file stays in the entry chunk. See `code-structure.md`.
 - `defaultPreload: "intent"`. Hovering or touching a link loads the route's chunks and runs `beforeLoad` and `validateSearch`.
+
+## Vite plugin order
+
+In `front-end/vite.config.ts` the order is `tanstackStart()`, `nitro()`, `react()`, then the React Compiler preset (`babel({ presets: [reactCompilerPreset()] })`). Start must come before `react()`, or route generation and server function compilation fail. Vitest skips `tanstackStart()` and `nitro()` (`process.env.VITEST`), because with them the suite fails (in `tests/auth-api.test.tsx`, `tests/cart-button-badge.test.tsx` and others, with `module is not defined`).
 
 ## React Compiler and lint
 
@@ -33,6 +38,11 @@ See `heroui-and-styling.md`.
 
 ## Known traps
 
+- `.validator()` is the server function method in Start 1.169.4. `.inputValidator()`, which the web docs show, is absent, and the wrong name returns 500 on every route. Only `pnpm exec tsc --noEmit` catches it.
+- A route's global CSS comes from a side-effect import in `src/routes/__root.tsx`. A `?url` import in `head().links`, which the Start Vite guide shows, gave an unstyled first paint in the spike.
+- The Nitro step of a build prints about 2,800 `"use client"` warnings (`MODULE_LEVEL_DIRECTIVE`), most of them from reicon-react and the rest from HeroUI, TanStack Router and Query, swr and tiptap. They are harmless, as are the chunk-size notice and the `codeSplitting` `debugName` notice. Any other warning needs a look.
+- `nitro` is a beta release and is pinned exactly (`3.0.260903-beta`), as is `@tanstack/react-start` (`1.169.4`). Start 1.169.4 requires an exact `@tanstack/react-router` version. When you upgrade Start, set `@tanstack/react-router` in `front-end/package.json` to the exact version the new Start depends on, and check with `pnpm why @tanstack/react-router` that only one copy resolves. `@tanstack/router-plugin` is not a direct dependency; it arrives through `start-plugin-core`.
+- `verbatimModuleSyntax` must stay off. `front-end/tsconfig.json` does not set it, so it is off. Start's own guide warns that turning it on leaks server bundles into the client bundle. `packages/api-contract` and `packages/i18n` set it to true in their own tsconfig; neither holds server functions, so it does not matter today.
 - The package manager is pnpm 10.33.4, pinned by `packageManager` in `front-end/package.json` and used by agentic-rag. Run `corepack enable` once. Do not add `legacy-peer-deps`: pnpm resolves peers itself. Do not fall back to vitest 4.0, which brings its own older Vite.
 - pnpm 10 skips dependency build scripts until approved. Only `unrs-resolver` is skipped today, and lint, tests and build work without it.
 - Files under `front-end/tests/` are outside `tsconfig.json`, so only the test config's `@` alias resolves their imports.
