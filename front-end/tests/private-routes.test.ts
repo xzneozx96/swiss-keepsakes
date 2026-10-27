@@ -3,7 +3,7 @@ import { createRouter } from '@tanstack/react-router'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { noIndexHead } from '@/lib/no-index'
-import { isPrivatePath, PRIVATE_PREFIXES, privateHeaders } from '@/lib/private-routes'
+import { isPrivatePath, PRIVATE_PREFIXES, privateHeaders, withPrivateHeaders } from '@/lib/private-routes'
 
 /** A route's own option wins; otherwise it inherits the nearest parent's, as the router does for `ssr`. */
 function effectiveSsr(route: AnyRoute): unknown {
@@ -111,5 +111,29 @@ describe('private routes', () => {
 
   it('[E3.3][AC12] adds a robots noindex meta', () => {
     expect(noIndexHead()).toEqual({ meta: [{ name: 'robots', content: 'noindex' }] })
+  })
+
+  it('[E3.3][AC12] sets the headers on the response of a private path', async () => {
+    const result = await withPrivateHeaders('/Partner/abc', async () => ({ response: new Response('ok') }))
+    expect(result.response.headers.get('X-Robots-Tag')).toBe('noindex')
+    expect(result.response.headers.get('Referrer-Policy')).toBe('no-referrer')
+  })
+
+  it('[E3.3][AC12] answers an error thrown on a partner path with a 500 that has the headers', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const thrown = await withPrivateHeaders('/partner/abc', () => Promise.reject(new Error('boom'))).catch((caught: unknown) => caught)
+
+    expect(thrown).toBeInstanceOf(Response)
+    expect((thrown as Response).status).toBe(500)
+    expect((thrown as Response).headers.get('X-Robots-Tag')).toBe('noindex')
+    expect((thrown as Response).headers.get('Referrer-Policy')).toBe('no-referrer')
+    expect(error).toHaveBeenCalledOnce()
+    error.mockRestore()
+  })
+
+  it('[E3.3][AC12] rethrows an error on a public path unchanged', async () => {
+    const boom = new Error('boom')
+    await expect(withPrivateHeaders('/tours', () => Promise.reject(boom))).rejects.toBe(boom)
   })
 })
