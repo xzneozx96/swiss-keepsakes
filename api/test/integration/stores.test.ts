@@ -274,7 +274,7 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
 
     // The mail attempt builds the link with the real InvitationLink, in the attempt's own transaction.
     const { mail, link, token } = await env.sendNewestMail(owner.email)
-    expect(link).toMatch(/^https:\/\/shop\.example\/#\/store\/onboarding\?invitation=[\w-]{43}/)
+    expect(link).toMatch(/^https:\/\/shop\.example\/store\/onboarding#invitation=[\w-]{43}/)
     expect(mail.to).toBe(owner.email)
     expect((await invitationRow(storeId))[0]?.token_hash).toMatch(/^[0-9a-f]{64}$/)
 

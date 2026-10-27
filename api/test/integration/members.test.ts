@@ -186,7 +186,7 @@ describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees o
     expect(JSON.stringify(job)).not.toMatch(/token|http|invitation=/i)
 
     const { mail, link, token } = await env.sendNewestMail(invitee.email)
-    expect(link).toMatch(/^https:\/\/shop\.example\/#\/invitation\?invitation=[\w-]{43}/)
+    expect(link).toMatch(/^https:\/\/shop\.example\/invitation#invitation=[\w-]{43}/)
     expect(mail.to).toBe(invitee.email)
     expect((await invitationRows(storeId))[0]?.token_hash).toBe(hashInvitationToken(token!))
 
