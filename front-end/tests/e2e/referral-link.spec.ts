@@ -17,7 +17,7 @@ test('[E3.7][AC24] a referral link with a target answers 302 to it, with nothing
   expect(response.status()).toBe(302)
   expect(response.headers().location).toBe('/en/stories/zytturm')
   expect(response.headers()['x-robots-tag']).toBe('noindex')
-  expect(await response.text()).not.toContain('<script')
+  expect(await response.text()).toBe('')
 })
 
 const HOSTILE = [
@@ -61,8 +61,10 @@ test('[E3.7][AC24] a known code and an unknown code get the same answer', async 
   const [known, unknown] = await Promise.all(['HOTELAMSEE', 'zzz-unknown'].map(code =>
     request.get(`/r/${code}?to=%2Fen%2Fstories%2Fzytturm`, { maxRedirects: 0 })))
 
-  expect(known.status()).toBe(unknown.status())
-  expect(known.headers().location).toBe(unknown.headers().location)
+  expect(known.status()).toBe(302)
+  expect(unknown.status()).toBe(302)
+  expect(known.headers().location).toBe('/en/stories/zytturm')
+  expect(unknown.headers().location).toBe('/en/stories/zytturm')
   expect(known.headers()['x-robots-tag']).toBe('noindex')
   expect(unknown.headers()['x-robots-tag']).toBe('noindex')
 })
@@ -79,8 +81,10 @@ test('[E3.7][AC24] opening the link in a browser lands on the language home and 
   await page.goto('/en')
   const before = await visitCount(page)
 
-  await page.goto('/r/abc')
+  // A seeded, active partner code: the old client route recorded a visit for it.
+  await page.goto('/r/HOTELAMSEE')
   await expect(page).toHaveURL(/\/en$/)
+  await page.waitForFunction(() => document.documentElement.dataset.hydrated === 'true')
   await expect(page.getByRole('region', { name: 'Prototype controls' })).toBeVisible()
   expect(await visitCount(page)).toBe(before)
   expect(problems).toEqual([])
@@ -89,6 +93,10 @@ test('[E3.7][AC24] opening the link in a browser lands on the language home and 
 test('[E3.7][AC24] the prototype bar partner QR lands on the language home and records no visit', async ({ page }) => {
   const problems: string[] = []
 
+  page.on('console', (message) => {
+    if (message.type() === 'error')
+      problems.push(message.text())
+  })
   page.on('pageerror', error => problems.push(error.message))
 
   await page.goto('/en')
@@ -99,7 +107,7 @@ test('[E3.7][AC24] the prototype bar partner QR lands on the language home and r
   const before = await visitCount(page)
 
   await bar.getByRole('button', { name: 'Guest' }).click()
-  await page.getByRole('button', { name: /^Via .* QR$/ }).first().click()
+  await page.getByRole('button', { name: 'Via Hotel am See QR' }).click()
   const referral = page.waitForRequest(/\/r\/[^/]+$/)
 
   await page.getByRole('button', { name: 'Open on this device' }).click()
@@ -107,6 +115,7 @@ test('[E3.7][AC24] the prototype bar partner QR lands on the language home and r
   expect((await referral).isNavigationRequest()).toBe(true)
 
   await expect(page).toHaveURL(/\/en$/)
+  await page.waitForFunction(() => document.documentElement.dataset.hydrated === 'true')
   await expect(page.getByRole('region', { name: 'Prototype controls' })).toBeVisible()
   expect(await visitCount(page)).toBe(before)
   expect(problems).toEqual([])
