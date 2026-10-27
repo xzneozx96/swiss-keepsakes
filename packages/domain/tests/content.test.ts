@@ -12,7 +12,7 @@ import {
   storyVersionPublishGaps,
   tourPublishGaps,
 } from '../src/content'
-import type { StoryDraft } from '../src/content'
+import type { StoryDraft, TourGuideDoc } from '../src/content'
 
 const okPin = { title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3 }
 
@@ -42,6 +42,11 @@ describe('[E2.6] content/pin', () => {
     expect(pinPublishGaps({ ...okPin, ...over })).toEqual([gap])
   })
 
+  it('[E2.6][AC68] a blank title with no slug reports both, with a slug only the title', () => {
+    expect(pinPublishGaps({ ...okPin, title: {}, slug: null })).toEqual(['title', 'slug'])
+    expect(pinPublishGaps({ ...okPin, title: {}, slug: { en: 'x' } })).toEqual(['title'])
+  })
+
   it('[E2.6][AC68] a title in DE only publishes with a DE-only slug', () => {
     expect(pinPublishGaps({ title: { de: 'Brücke' }, slug: { de: 'bruecke' }, latitude: 1, longitude: 2 })).toEqual([])
     expect(pinPublishGaps({ title: { de: 'Brücke' }, slug: { en: 'bridge' }, latitude: 1, longitude: 2 })).toEqual(['slug'])
@@ -63,6 +68,7 @@ describe('[E2.6] content/story', () => {
   it('[E2.6][AC30] a published story version cannot move to another group, a draft can', () => {
     expect(canMoveStoryVersion({ status: 'published', published: null })).toBe(false)
     expect(canMoveStoryVersion({ status: 'draft', published: null })).toBe(true)
+    expect(canMoveStoryVersion({ status: 'draft', published: { title: 't' } as StoryDraft })).toBe(true)
   })
 
   it('[E2.6] a story version that kept published text cannot be deleted', () => {
@@ -106,12 +112,14 @@ describe('[E2.6] content/tour', () => {
     const base = { title: { en: 'Old town' }, slug: { en: 'old-town' }, pdfMediaId: null }
     expect(tourPublishGaps(base)).toEqual(['pdf'])
     expect(tourPublishGaps({ ...base, pdfMediaId: 'pdf1' })).toEqual([])
-    expect(tourPublishGaps({ ...base, title: {}, slug: null, pdfMediaId: 'pdf1' })).toEqual(['title'])
+    expect(tourPublishGaps({ ...base, title: {}, slug: null, pdfMediaId: 'pdf1' })).toEqual(['title', 'slug'])
+    expect(tourPublishGaps({ ...base, title: {}, slug: { en: 'x' }, pdfMediaId: 'pdf1' })).toEqual(['title'])
     expect(tourPublishGaps({ ...base, slug: { de: 'x' }, pdfMediaId: 'pdf1' })).toEqual(['slug'])
   })
 
   it('[E2.6] only a draft tour that never published can be deleted', () => {
     expect(canDeleteTour({ status: 'draft', published: null })).toBe(true)
     expect(canDeleteTour({ status: 'published', published: null })).toBe(false)
+    expect(canDeleteTour({ status: 'draft', published: { title: {} } as TourGuideDoc })).toBe(false)
   })
 })

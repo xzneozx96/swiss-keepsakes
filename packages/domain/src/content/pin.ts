@@ -44,7 +44,7 @@ export function pinPublishGaps(pin: Pick<Pin, 'slug' | 'latitude' | 'longitude'>
   const gaps: PublishGap[] = []
   if (!hasText(pin.title)) gaps.push('title')
   if (pin.latitude === null || pin.longitude === null) gaps.push('location')
-  if (hasText(pin.title) && !slugCoversTitle(pin.slug, pin.title)) gaps.push('slug')
+  if (!hasText(pin.slug) || (hasText(pin.title) && !slugCoversTitle(pin.slug, pin.title))) gaps.push('slug')
   return gaps
 }
 

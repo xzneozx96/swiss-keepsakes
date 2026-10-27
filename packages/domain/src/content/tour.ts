@@ -44,7 +44,7 @@ export interface TourGuide {
 export function tourPublishGaps(input: { title: Localized, slug: Localized | null, pdfMediaId: string | null }): PublishGap[] {
   const gaps: PublishGap[] = []
   if (!hasText(input.title)) gaps.push('title')
-  if (hasText(input.title) && !slugCoversTitle(input.slug, input.title)) gaps.push('slug')
+  if (!hasText(input.slug) || (hasText(input.title) && !slugCoversTitle(input.slug, input.title))) gaps.push('slug')
   if (input.pdfMediaId === null) gaps.push('pdf')
   return gaps
 }

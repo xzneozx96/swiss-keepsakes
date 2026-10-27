@@ -24,7 +24,7 @@ export function hasText(l: Localized | null | undefined): boolean {
   return languagesOf(l).length > 0
 }
 
-/** The database CHECK demands the slug and the title cover the same languages. Callers skip it when the title is blank, so only the title gap shows. */
+/** The database CHECK demands the slug and the title cover the same languages. Callers skip it when the title is blank, but a missing slug is still a gap. */
 export function slugCoversTitle(slug: Localized | null | undefined, title: Localized): boolean {
   const slugLanguages = languagesOf(slug)
   const titleLanguages = languagesOf(title)
