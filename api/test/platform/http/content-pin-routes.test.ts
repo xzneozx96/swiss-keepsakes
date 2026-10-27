@@ -97,7 +97,7 @@ describe('[E2.6] the pin save: If-Match, ETag and rowVersion', () => {
     const response = await send(app, 'PATCH', pin, { 'If-Match': header }, {})
 
     expect(response.status).toBe(400)
-    expect(await response.json()).toMatchObject({ type: 'validation-failed' })
+    expect(await response.json()).toMatchObject({ type: 'validation-failed', errors: [{ in: 'header', path: 'If-Match' }] })
     expect(calls).toBe(0)
   })
 
@@ -128,6 +128,19 @@ describe('[E2.6][AC68] the body has no type and no price', () => {
     const response = await send(setup(), 'PATCH', pin, { 'If-Match': '1' }, { price: 1 })
 
     expect(response.status).toBe(400)
+  })
+
+  it('[E2.6] a date sent with no times reaches the use case with startTime null and endTime null', async () => {
+    const seen: unknown[] = []
+    const app = setup({ createPin: async (_actor, storeId, changes) => {
+      seen.push(changes.dates)
+      return { ok: true, value: { ...fakePin, storeId } }
+    } })
+
+    const response = await send(app, 'POST', pins, {}, { dates: [{ firstDay: '2026-12-01', lastDay: '2026-12-02' }] })
+
+    expect(response.status).toBe(201)
+    expect(seen).toEqual([[{ firstDay: '2026-12-01', lastDay: '2026-12-02', startTime: null, endTime: null }]])
   })
 
   it('[E2.6] a valid create answers 201 with the pin and ETag "1"', async () => {

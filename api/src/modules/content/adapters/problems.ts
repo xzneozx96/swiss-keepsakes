@@ -50,4 +50,5 @@ export const invalidIfMatchProblem = {
   status: 400,
   type: 'validation-failed',
   title: 'If-Match must be the version you opened, such as "3".',
-} as const satisfies { status: 400, type: ProblemType, title: string }
+  errors: [{ in: 'header', path: 'If-Match', message: 'Send the version you opened, such as "3".' }],
+} as const satisfies { status: 400, type: ProblemType, title: string, errors: { in: 'header', path: string, message: string }[] }
