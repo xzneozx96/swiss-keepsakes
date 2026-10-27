@@ -119,7 +119,7 @@ export function useUrlLanguage(): Language | undefined {
   return useParams({ strict: false, select: params => isLanguage(params.lang) ? params.lang : undefined })
 }
 
-/** Reads the address when there is a router; a tree without one (a unit test, a preview) just has the saved language. */
+/** Reads the address when there is a router; a tree without one (a test that renders the provider alone) just has the saved language. The merchant preview uses `LocaleOverride`. */
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   return useRouter({ warn: false })
     ? <RoutedLocaleProvider>{children}</RoutedLocaleProvider>
@@ -150,7 +150,7 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
   const pastHydration = usePastHydration()
   const [storedChoice, setStoredChoice] = useState<Language>(() => pastHydration ? initialLanguage() : 'en')
   const latestRequestRef = useRef(0)
-  // The address wins on a prefixed page. The route loader has loaded its messages, so the first render is already in it.
+  // The address wins on a prefixed page. The route's `beforeLoad` has loaded its messages, so the first render is already in it.
   const wanted = urlLanguage ?? storedChoice
 
   // The browser hydrates server HTML that is already in the URL's language, before any route loader has run
@@ -201,9 +201,11 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
     )
   }, [urlLanguage])
 
+  // `urlLanguage` is a dependency because the root shell writes `lang` from the address alone, so leaving
+  // a prefixed page resets it to English even when `language` (the saved one) does not change.
   useEffect(() => {
     document.documentElement.lang = language
-  }, [language])
+  }, [language, urlLanguage])
 
   const value = useMemo<LocaleContextValue>(
     () => ({

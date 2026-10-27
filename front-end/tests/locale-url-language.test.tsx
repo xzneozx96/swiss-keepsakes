@@ -1,8 +1,9 @@
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useRouterState } from '@tanstack/react-router'
 import { act, render, screen, waitFor } from '@testing-library/react'
+import { useLayoutEffect } from 'react'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { loadDictionary, LocaleOverride, LocaleProvider, useLocale } from '@/contexts/locale-context'
+import { loadDictionary, LocaleOverride, LocaleProvider, useLocale, useUrlLanguage } from '@/contexts/locale-context'
 
 function Probe() {
   const { language, setLanguage, t } = useLocale()
@@ -21,12 +22,25 @@ function Probe() {
   )
 }
 
+/** Stands in for RootShell, which writes `<html lang>` from the address alone on every render. */
+function ShellLang({ children }: { children: React.ReactNode }) {
+  const urlLanguage = useUrlLanguage()
+
+  useLayoutEffect(() => {
+    document.documentElement.lang = urlLanguage ?? 'en'
+  })
+
+  return children
+}
+
 function renderAt(url: string, children: React.ReactNode = <Probe />) {
   const root = createRootRoute({
     component: () => (
-      <LocaleProvider>
-        <Outlet />
-      </LocaleProvider>
+      <ShellLang>
+        <LocaleProvider>
+          <Outlet />
+        </LocaleProvider>
+      </ShellLang>
     ),
   })
   const page = (path: string) => createRoute({ getParentRoute: () => root, path, loader: ({ params }) => (params as { lang?: string }).lang === 'de' ? loadDictionary('de').then(() => null) : null, component: () => children })
@@ -66,6 +80,24 @@ describe('page language follows the URL', () => {
     expect(screen.getByTestId('shared-link')).toHaveAttribute('href', '/de/stories')
     expect(localStorage.getItem('sk.language')).toBe(JSON.stringify('en'))
     expect(document.documentElement.lang).toBe('de')
+  })
+
+  it('keeps html lang equal to the page language when leaving a prefixed page', async () => {
+    localStorage.setItem('sk.language', JSON.stringify('de'))
+    const router = renderAt('/de/stories')
+
+    await waitFor(() => expect(document.documentElement.lang).toBe('de'))
+    await act(async () => router.navigate({ to: '/cart' }))
+    await waitFor(() => expect(screen.getByTestId('language')).toHaveTextContent('de'))
+    expect(document.documentElement.lang).toBe('de')
+
+    await act(async () => router.navigate({ to: '/$lang/stories', params: { lang: 'en' } }))
+    await waitFor(() => expect(document.documentElement.lang).toBe('en'))
+    await act(async () => router.navigate({ to: '/cart' }))
+    await waitFor(() => expect(screen.getByTestId('language')).toHaveTextContent('de'))
+    expect(document.documentElement.lang).toBe('de')
+    await act(async () => router.navigate({ to: '/$lang/stories', params: { lang: 'de' } }))
+    await waitFor(() => expect(document.documentElement.lang).toBe('de'))
   })
 
   it('uses the stored language on an unprefixed page', async () => {
