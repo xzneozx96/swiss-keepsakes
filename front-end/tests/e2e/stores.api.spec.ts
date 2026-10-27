@@ -3,7 +3,7 @@ import { newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
 import { clickInMiddle, closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, openLink, say, sayStart, signedInSuperAdmin, signInFromSheet, tokenOf, words } from './invitation-flows'
 
 // [E2.3][S8] The invitation screens against the real API (Better Auth, its own database) on one origin, at 375x812,
-// on WebKit and Chromium, EN and DE. The first specs drive what a visitor can reach with no invitation: the token
+// on Chromium in English (playwright.config.ts). The first specs drive what a visitor can reach with no invitation: the token
 // leaving the address, the sign-in round trip, the real refusals, and the guard of A01. The last two drive the whole
 // path with a real Super Admin and a real N20 link: the test server grants the Super Admin through the use case
 // behind `admin:grant` and returns the link that the real mail attempt builds (api/test/support/e2e-server.ts).

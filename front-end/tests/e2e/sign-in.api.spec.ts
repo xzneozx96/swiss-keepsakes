@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 import { ageRateLimits, endSessions, expireCode, latestCode, newEmail, SPA_ORIGIN } from './api-server'
 
 // [E2.1][AC01] The sign-in sheet C05 against the real API (Better Auth, its own database) on one origin.
-// Only Google's side is stubbed. Run on WebKit and Chromium, EN and DE, at 375x812 (playwright.config.ts).
+// Only Google's side is stubbed. Run on Chromium in English at 375x812 (playwright.config.ts).
 const words = {
   en: { signOut: 'Sign out', send: 'Email me a code', newCode: 'Send a new code', google: 'Continue with Google', wrong: 'That code isn’t right', expired: 'This code has expired', locked: 'Too many wrong codes', googleFailed: 'Google sign-in didn’t finish', prompt: 'Sign in to see your orders', twoLeft: '2 tries left', oneLeft: '1 try left', waitMessage: /Try again in \d+ seconds/, submit: 'Continue', mailSubject: /sign-in code/, mailText: /works for 5 minutes/ },
   de: { signOut: 'Abmelden', send: 'Code per E-Mail senden', newCode: 'Neuen Code senden', google: 'Weiter mit Google', wrong: 'Dieser Code stimmt nicht', expired: 'Dieser Code ist abgelaufen', locked: 'Zu viele falsche Codes', googleFailed: 'Die Anmeldung mit Google wurde nicht abgeschlossen', prompt: 'Anmelden und Bestellungen sehen', twoLeft: 'Noch 2 Versuche', oneLeft: 'Noch 1 Versuch', waitMessage: /in \d+ Sekunden/, submit: 'Weiter', mailSubject: /Anmeldecode/, mailText: /5 Minuten gültig/ },

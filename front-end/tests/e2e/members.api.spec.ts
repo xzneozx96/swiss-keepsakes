@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
 import { managerInvitationMail, newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
 import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, openLink, say, signedInSuperAdmin, tokenOf } from './invitation-flows'
 
-// [E2.4][AC02] M22 and M01 against the real API on one origin, at 375x812, on WebKit and Chromium, EN and DE. The Owner
+// [E2.4][AC02] M22 and M01 against the real API on one origin, at 375x812, on Chromium in English (playwright.config.ts). The Owner
 // comes through the E2.3 path (the Super Admin creates the store, the N20 link, accept). The N18 link is the one
 // the real mail attempt builds for the Manager's invitation (api/test/support/e2e-server.ts, `template=N18`).
 test.afterEach(closeVisitors)
