@@ -1,4 +1,4 @@
-import type { Language } from '../shared/language'
+import type { Language } from '../shared/language.ts'
 
 /** A draft is visible only to the merchant (M17); publishing makes it show on C19 in its language. */
 export type ArticlePublication

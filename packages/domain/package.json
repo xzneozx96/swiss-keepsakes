@@ -10,6 +10,10 @@
       "sk-compiled": "./dist/src/identity/index.js",
       "default": "./src/identity/index.ts"
     },
+    "./content": {
+      "sk-compiled": "./dist/src/content/index.js",
+      "default": "./src/content/index.ts"
+    },
     "./*": "./src/*/index.ts"
   },
   "scripts": {

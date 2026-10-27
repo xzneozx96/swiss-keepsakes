@@ -1,12 +1,13 @@
 {
   "extends": "./tsconfig.json",
-  // Only src/identity, which the API imports. The other folders use extensionless imports that Node cannot load.
+  // Only src/identity and src/content, which the API imports. The other folders use extensionless imports that Node cannot load.
   "compilerOptions": {
     "rootDir": ".",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": false,
+    "rewriteRelativeImportExtensions": true,
     "outDir": "dist"
   },
-  "include": ["src/identity"]
+  "include": ["src/identity", "src/content", "src/shared/language.ts"]
 }
