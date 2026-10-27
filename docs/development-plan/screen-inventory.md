@@ -54,7 +54,7 @@ Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux
 | Route file | Target URL | Id | Audience | Verdict | Render | Why (PRD, AC) | ADR | Track |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `__root.tsx` | root |  | all | **Redesign** | SSR (root) | Start root: head tags, CSS side-effect import, providers made server-safe, browser history (§4.1, AC61) | 001, 002 | P |
-| `_guest.tsx` | guest layout |  | guest | **Redesign** | SSR for public children | Shell moves under `/$lang`. Phone tabs: Explore, Map, Keepsakes, Account (owner answer, 2026-10-26). Onboarding prompt and language notice mount here (§3.1, AC36, AC64) | 002, 006 | P |
+| `_guest.tsx` | guest layout |  | guest | **Redesign** | SSR for public children | Shell moves under `/$lang`. Phone tabs stay Explore, Keepsakes, Tours, Account, with the language prefix, until E4.6 swaps Tours for Map (owner answer D5, 2026-10-26; gate G-S5-MAPTAB, 27.10.2026). Onboarding prompt and language notice mount here (§3.1, AC36, AC64) | 002, 006 | P |
 | `_guest/index.tsx` | `/$lang` | C01 | guest | **Redesign** | SSR | Story and map first, shop gentle. Four-category rail, "Soon" and priced tour rail go (§1.2, §7.0, Q24, AC54) | 001, 002, 006 | 1 |
 | `_guest/stories/index.tsx` | `/$lang/stories` | C19 | guest | **Redesign** | SSR | Ranked by `rankItems`, tags for places, stay and interests (§3.2, §11.2, AC38) | 001, 002, 006 | 1 |
 | `_guest/stories/$slug.tsx` | `/$lang/stories/$slug` | C20 | guest | **Redesign** | SSR | Place tags, up to 6 keepsake cards without price, up to 3 "explore more", language notice (§11.2, AC31, AC32, AC33, AC54, AC64) | 001, 002, 005, 011 | 1 |
@@ -86,7 +86,7 @@ Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux
 | `admin.tsx` | `/admin` | A01, A02 | admin | **Keep** | ssr:false | Super Admin invites merchant, opening checklist (§5, AC03) | 001 | P |
 | `partner/index.tsx` | `/partner` | P01 | partner | **Redesign** | ssr:false | Entry splits: read-only report by link and code, and signed-in handover work (§10.3, §10.4, O24 closed) | 010, 019 | 2 |
 | `partner/$token.tsx` | `/partner/$token` | P02 | partner | **Keep** | ssr:false | Read-only report. Strip tour lines. `no-referrer`, `noindex`, token in path (§10.3, AC12) | 001, 010 | 2 |
-| `store.tsx` | merchant layout |  | merchant | **Redesign** | layout, ssr:false | Sidebar and phone bar gain Handovers, Places, Media, Traffic, Map. Bookings leave (§6.4, §13.1) | 012 | P |
+| `store.tsx` | merchant layout |  | merchant | **Redesign** | layout, ssr:false | Groups Dashboard, Operations, Products, Partners, Content, Settings. Marketing becomes Content and Bookings leave (E4.1). Handovers, Places, Categories, Media, Traffic and Map entries come with their own screens (§6.4, §13.1) | 012 | P |
 | `store/index.tsx` | `/store` | M02 | merchant | **Redesign** | ssr:false | Today cards: drop tours, add handover proposals, missing bags, pending prep (§6.4, §10.4, AC72, AC77) | 012, 025 | 2 |
 | `store/sales.tsx` | `/store/sales` |  | merchant | **Keep** | ssr:false | Sales overview. Strip tour figures (§13.1) | 012 | 2 |
 | `store/$section.tsx` | `/store/settings` | M22 | merchant | **Keep** | ssr:false | Store info, members, payout. Preparation time (O22) added when decided | 010 | P |
@@ -252,7 +252,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 | Tour route | A tour page shows the merchant's route on the map. No route builder, no location prompt, no "you are here" (AC67, G9) |
 | Empty or failed | Short message with a retry. A map without network is not supported (O35 assumption) |
 
-**Against today.** The tour map moves from a feature of one screen to a shared component. Entry points: the Map tab (D5), a story's place tag, a tour's route stops, and the home block. Category chips come from the merchant's map categories and replace the fixed place-type chips of D7, which keeps its highlight-and-dim behaviour.
+**Against today.** The tour map moves from a feature of one screen to a shared component. Entry points: the Map tab (D5, after E4.6), a story's place tag, a tour's route stops, and the home block. Category chips come from the merchant's map categories and replace the fixed place-type chips of D7, which keeps its highlight-and-dim behaviour.
 
 ## Area 5. Merchant map and pins (N16, N17, N23)
 
@@ -318,7 +318,7 @@ No question is open. Each row records who settled it. Answers carry the owner's 
 | D2 | How to hide `store/products/categories.tsx` and `store/requests/private.tsx` | Extend the ADR-012 dormant pattern to the categories and private-tour screens and their components (`categories-page.tsx`, `subcategory-sheet.tsx`, the private-tour request screens) | Orchestrator ruling, 2026-10-26 |
 | D3 | Route prefix of partner handover screens | `/handover/...` | Orchestrator ruling, 2026-10-26 |
 | D4 | Where the tour editor lives, and the group name | The tour editor moves to `/store/content/tours`. The group "Marketing" is renamed Content and holds Stories, Places, Tours, Media, Comments, Reviews, and Inquiries | Owner answer, 2026-10-26 |
-| D5 | Guest phone tabs | Explore, Map, Keepsakes, Account | Owner answer, 2026-10-26 |
+| D5 | Guest phone tabs | Explore, Map, Keepsakes, Account at launch of the map. Until E4.6 the tabs stay Explore, Keepsakes, Tours, Account, and Map replaces Tours (gate G-S5-MAPTAB) | Owner answer, 2026-10-26; sequence 2026-10-27 |
 | D6 | Where a merchant previews a draft | An `ssr:false` preview route that reuses the public components, so drafts never enter the shared cache | Orchestrator ruling, 2026-10-26 |
 | D7 | Map chips | Chips come from merchant-edited map categories and highlight the chosen category and dim the other pins. No pin is ever hidden by a chip. A pin has no fixed type, publishes without a story, and may have dates. Places and events have no page of their own, and guests do not review places (gate G11) | Owner answer, 2026-10-26 (chips that highlight and dim), kept for map categories on 2026-10-27 |
 
