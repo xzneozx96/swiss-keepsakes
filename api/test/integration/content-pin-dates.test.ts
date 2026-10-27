@@ -199,11 +199,25 @@ describe('[E2.11][AC86] content.public_pins lists by the live clock', () => {
   it('[E2.11][AC86] a day today with no end time is listed', async () => {
     const store = randomUUID()
     const place = await publishedPin(store)
-    const day = await zurichDays()
+    const client = await pool.connect()
 
-    await addDate(place, store, day.today, day.today, day.now_start)
+    // One transaction, so now() is the same for the day, the insert and the view read (no race with Zurich midnight).
+    try {
+      await client.query('begin')
+      const { rows: [day] } = await client.query<{ today: string, now_start: string }>(`
+        select (now() at time zone 'Europe/Zurich')::date::text as today, to_char(now() at time zone 'Europe/Zurich', 'HH24:MI') as now_start`)
+      await client.query(
+        'insert into content.place_dates (place_id, store_id, first_day, last_day, start_time) values ($1, $2, $3, $3, $4)',
+        [place, store, day!.today, day!.now_start],
+      )
+      const { rows } = await client.query('select next_first_day::text, next_last_day::text from content.public_pins where id = $1', [place])
 
-    expect(await listed(place)).toEqual([{ next_first_day: day.today, next_last_day: day.today }])
+      expect(rows).toEqual([{ next_first_day: day!.today, next_last_day: day!.today }])
+    }
+    finally {
+      await client.query('rollback')
+      client.release()
+    }
   })
 
   it('[E2.11][AC86] a future entry brings an ended pin back and its status stays published', async () => {
@@ -226,12 +240,14 @@ describe('[E2.11][AC86] content.public_pins lists by the live clock', () => {
     const draft = rows[0]!.id
     const hidden = await publishedPin(store)
     const visible = await publishedPin(store)
+    // every pin has a date that has not passed, so only its status can keep it out of the view
+    for (const place of [draft, hidden, visible])
+      await addDate(place, store, '2099-01-01', '2099-01-01', '19:30', '21:00')
     await pool.query(`update content.places set status = 'hidden' where id = $1`, [hidden])
 
     const { rows: seen } = await pool.query<{ id: string }>('select id from content.public_pins where store_id = $1', [store])
 
     expect(seen.map(row => row.id)).toEqual([visible])
-    expect(seen.map(row => row.id)).not.toContain(draft)
   })
 
   it('[E2.11][AC86] the view has the next-date columns', async () => {
@@ -246,7 +262,7 @@ describe('[E2.11][AC86] content.public_pins lists by the live clock', () => {
 describe('[E2.11][AC86] valid_weekly_hours', () => {
   async function hoursOk(value: string): Promise<boolean> {
     const { rows } = await pool.query<{ ok: boolean }>('select content.valid_weekly_hours($1::jsonb) as ok', [value])
-    return rows[0]?.ok === true
+    return rows[0]?.ok as boolean
   }
 
   it.each([
@@ -261,7 +277,7 @@ describe('[E2.11][AC86] valid_weekly_hours', () => {
     '[{"day":8,"opens":"08:00","closes":"18:00"}]',
     '[{"day":1,"opens":"18:00","closes":"08:00"}]',
     '{}',
-    '[{"day":1,"opens":"8:00","closes":"18:00"}]',
+    '[{"day":1,"opens":"08:00","closes":"9:00"}]',
     '[{"day":1,"opens":"08:00","closes":"18:00","note":"x"}]',
   ])('[E2.11][AC86] refuses %s', async (value) => {
     expect(await hoursOk(value)).toBe(false)
