@@ -17,7 +17,12 @@ export const categoriesQueries = {
     }),
 }
 
-/** One list of the store, `items` with the top level first, then sub-categories, each by position. */
-export function useCategories(storeId: string, kind: CategoryKind) {
-  return useQuery(categoriesQueries.list(useDataClient(), storeId, kind))
+/** One list of the store, `items` with the top level first, then sub-categories, each by position. Waits while the store id is unknown. */
+export function useCategories(storeId: string | undefined, kind: CategoryKind) {
+  const client = useDataClient()
+
+  return useQuery({
+    ...categoriesQueries.list(client, storeId ?? '', kind),
+    enabled: storeId !== undefined,
+  })
 }

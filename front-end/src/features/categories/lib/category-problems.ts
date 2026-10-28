@@ -10,7 +10,14 @@ const byProblemType: Record<string, MessageKey> = {
   'not-found': 'categories.problem.notFound',
 }
 
-/** The copy of an API problem on the category screen. An unknown type reads as the generic text. */
-export function problemTypeToMessageKey(type: string): MessageKey {
+/**
+ * The copy of an API problem on the category screen. An unknown type reads as the generic text. A reorder
+ * is refused with `validation-failed` when the siblings changed under it, which is no name problem, so pass
+ * `{ reorder: true }` for it.
+ */
+export function problemTypeToMessageKey(type: string, options: { reorder?: boolean } = {}): MessageKey {
+  if (options.reorder && type === 'validation-failed')
+    return 'categories.problem.listChanged'
+
   return byProblemType[type] ?? 'categories.problem.generic'
 }

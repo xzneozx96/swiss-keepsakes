@@ -4,7 +4,6 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useCategories } from '@/features/categories/api/queries'
-import { useIdempotencyKey } from '@/features/categories/hooks/use-idempotency-key'
 import { problemTypeToMessageKey } from '@/features/categories/lib/category-problems'
 import { DataClientProvider, useCommand } from '@/features/data-client'
 import { ApiProblem } from '@/features/data-client/errors'
@@ -79,30 +78,28 @@ describe('[E4.18][AC87] the category commands', () => {
   it('create, save, reorder and remove each send one keyed request', async () => {
     answer = call => call.method === 'DELETE' ? new Response(null, { status: 204 }) : Response.json(call.path.endsWith('/order') ? { items: [] } : category(childId))
     const { result } = renderHook(() => ({
-      key: useIdempotencyKey('x'),
       create: useCommand('categories', 'create'),
       save: useCommand('categories', 'save'),
       reorder: useCommand('categories', 'reorder'),
       remove: useCommand('categories', 'remove'),
     }), { wrapper })
-    const idempotencyKey = result.current.key.next()
 
     await act(async () => {
-      await result.current.create.mutateAsync({ storeId, kind: 'map', name: { en: 'Walks', de: '' }, parentId, idempotencyKey })
-      await result.current.save.mutateAsync({ storeId, kind: 'blog', id: childId, name: { de: 'Wanderungen' }, idempotencyKey })
-      await result.current.save.mutateAsync({ storeId, kind: 'blog', id: childId, parentId: null, idempotencyKey })
-      await result.current.reorder.mutateAsync({ storeId, kind: 'map', parentId: null, ids: [parentId, childId], idempotencyKey })
-      await result.current.remove.mutateAsync({ storeId, kind: 'map', id: childId, idempotencyKey })
+      await result.current.create.mutateAsync({ storeId, kind: 'map', name: { en: 'Walks', de: '' }, parentId, idempotencyKey: 'k1' })
+      await result.current.save.mutateAsync({ storeId, kind: 'blog', id: childId, name: { de: 'Wanderungen' }, idempotencyKey: 'k2' })
+      await result.current.save.mutateAsync({ storeId, kind: 'blog', id: childId, parentId: null, idempotencyKey: 'k3' })
+      await result.current.reorder.mutateAsync({ storeId, kind: 'map', parentId: null, ids: [parentId, childId], idempotencyKey: 'k4' })
+      await result.current.remove.mutateAsync({ storeId, kind: 'map', id: childId, idempotencyKey: 'k5' })
     })
 
     const base = `/api/store/${storeId}/categories`
 
     expect(calls.filter(c => c.method !== 'GET')).toEqual([
-      { method: 'POST', path: `${base}/map`, key: idempotencyKey, body: { name: { en: 'Walks', de: '' }, parentId } },
-      { method: 'PATCH', path: `${base}/blog/${childId}`, key: idempotencyKey, body: { name: { de: 'Wanderungen' } } },
-      { method: 'PATCH', path: `${base}/blog/${childId}`, key: idempotencyKey, body: { parentId: null } },
-      { method: 'PUT', path: `${base}/map/order`, key: idempotencyKey, body: { parentId: null, ids: [parentId, childId] } },
-      { method: 'DELETE', path: `${base}/map/${childId}`, key: idempotencyKey, body: undefined },
+      { method: 'POST', path: `${base}/map`, key: 'k1', body: { name: { en: 'Walks', de: '' }, parentId } },
+      { method: 'PATCH', path: `${base}/blog/${childId}`, key: 'k2', body: { name: { de: 'Wanderungen' } } },
+      { method: 'PATCH', path: `${base}/blog/${childId}`, key: 'k3', body: { parentId: null } },
+      { method: 'PUT', path: `${base}/map/order`, key: 'k4', body: { parentId: null, ids: [parentId, childId] } },
+      { method: 'DELETE', path: `${base}/map/${childId}`, key: 'k5', body: undefined },
     ])
   })
 
@@ -149,5 +146,14 @@ describe('[E4.18][AC87] the problem mapping', () => {
     expect(mapped).toBe(key)
     expect(en[mapped]).toBeTruthy()
     expect(de[mapped]).toBeTruthy()
+  })
+
+  it('a refused reorder reads as a changed list, not as a name problem', () => {
+    const mapped = problemTypeToMessageKey('validation-failed', { reorder: true })
+
+    expect(mapped).toBe('categories.problem.listChanged')
+    expect(en[mapped]).toMatch(/list changed/)
+    expect(de[mapped]).toBeTruthy()
+    expect(problemTypeToMessageKey('category-in-use', { reorder: true })).toBe('categories.problem.inUse')
   })
 })

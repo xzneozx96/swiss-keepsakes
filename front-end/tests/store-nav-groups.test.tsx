@@ -107,10 +107,13 @@ describe.each([
     const content = Array.from(sidebar.querySelectorAll(':scope > ul > li > button'), el => el).find(el => text(el) === dict['nav.content'])!
 
     await userEvent.click(content)
-    const link = Array.from(sidebar.querySelectorAll('a')).find(a => a.getAttribute('href') === '/store/content/categories')
+    const links = Array.from(sidebar.querySelectorAll('a'))
+    const hrefs = links.map(a => a.getAttribute('href'))
+    const link = links.find(a => a.getAttribute('href') === '/store/content/categories')
 
     expect(link && text(link)).toBe(dict['merchantContent.tab.categories'])
-    expect(text(link!)).not.toMatch(/^merchantContent\./)
+    expect(hrefs.indexOf('/store/content/categories')).toBeGreaterThan(hrefs.indexOf('/store/content/reviews'))
+    expect(hrefs.indexOf('/store/content/categories')).toBeLessThan(hrefs.indexOf('/store/content/analytics'))
   })
 
   it('[E4.1][AC50] no menu link is a booking path or a raw key', async () => {
