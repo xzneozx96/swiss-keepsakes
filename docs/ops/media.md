@@ -34,16 +34,16 @@ All four queues are created at every start, for every role, because confirm send
 
 | Queue | Job | Retries |
 | :-- | :-- | :-- |
-| `media-process` | Make the public files of one confirmed upload | 3 retries (4 attempts), exponential backoff from 30 s, so the last attempt runs about 2 to 4 minutes after the first. Then the job moves to `media-process-failed` |
-| `media-process-failed` | Retire the row and remove its objects, then log the alert | The same policy as above |
-| `media-retire` | Retire a replaced file after the grace period | The queue default |
-| `media-sweep` | The hourly clean-up of `uploads` | A schedule, `17 * * * *` (minute 17 of every hour) |
+| `media-process` | Make the public files of one confirmed upload | 3 retries (4 attempts), exponential backoff from 30 s. Before retry n (n = 0, 1, 2) pg-boss waits 30 s times 2^n, times a random factor from 1 to 2: 30 to 60 s, 60 to 120 s, then 120 to 240 s. The last attempt runs 3.5 to 7 minutes after the first. Then the job moves to `media-process-failed` |
+| `media-process-failed` | Retire the row and remove its objects, then log the alert. A row that a story or tour uses is not retired (see `media.failed-in-use` below) | The same policy as above |
+| `media-retire` | Retire a replaced tour PDF after the grace period | The same policy as `media-process` (`mediaRetry`: 3 retries, backoff from 30 s), so it waits out a storage outage of about 7 minutes |
+| `media-sweep` | The hourly clean-up of `uploads` | The same `mediaRetry` policy. It is a schedule, `17 * * * *` (minute 17 of every hour), so a run that fails is also replaced by the next hour's run |
 
 The alert is one error line with `"event":"media.failed"`, the store id and the media id. It never holds a file name, a key or a URL. A failed delete of the confirmed source after the file is already `ready` logs one warning with `"event":"media.source-delete-failed"` and does not fail the job. Until Sentry arrives (E2.9), those lines are the alert.
 
 ## A row stuck in `processing`
 
-A healthy row is `processing` for seconds, and for about 5 minutes at most while the job retries. A row older than 15 minutes is stuck:
+A healthy row is `processing` for seconds, and for about 7 minutes at most while the job retries. A row older than 15 minutes is stuck:
 
 ```sql
 select id, store_id, kind, storage_key, byte_size, created_at
@@ -64,15 +64,15 @@ Check, in this order:
    order by created_on;
    ```
 
-   `created` or `retry` with a `start_after` in the future is a job that waits for its next attempt. `failed` or a copy in `media-process-failed` means the attempts ran out: the handler retires the row, so the row is `retired` and no longer `processing`. If both the job and the dead-letter copy are gone and the row is still `processing`, the job was lost, which only happens when someone deleted it.
+   `created` or `retry` with a `start_after` in the future is a job that waits for its next attempt. `failed` or a copy in `media-process-failed` means the attempts ran out: the handler retires the row, so the row is `retired` and no longer `processing`. The exception is a row that a story or tour uses: it stays `processing` and the handler logs `media.failed-in-use` (see "A failed file that a story or tour uses" below). If both the job and the dead-letter copy are gone and the row is still `processing`, the job was lost, which only happens when someone deleted it.
 3. Is storage reachable? A worker that cannot reach it, or has no `AWS_*`, fails every attempt. Fix the setting and restart. Later attempts succeed.
-4. Is the confirmed source still there? The job needs `confirmed/{storeId}/{mediaId}/source.{ext}` in `uploads`. If the source is gone and the row is `processing`, the job can never succeed. Retire the row by hand with the statement in the next section and ask the merchant to upload the file again.
+4. Is the confirmed source still there? The job needs `confirmed/{storeId}/{mediaId}/source.{ext}` in `uploads`. If the source is gone and the row is `processing`, the job can never succeed. Retire the row by hand with the statement in the next section and ask the merchant to upload the file again. If a story or tour uses the row, the database refuses the hand retire (trigger `media_not_retired_while_used`). That row stays `processing`: follow "A failed file that a story or tour uses" below.
 
 To run a stuck job again, send a new `media-process` job with `{"storeId": "...", "mediaId": "..."}` from a script that uses `createJobQueue`. The job is safe to repeat: it overwrites the same keys, and a row that is already `ready` only has its source deleted.
 
 ## A `retired` row after failed processing
 
-A file the image library cannot decode, or one over the pixel limit, fails every attempt. After the last one the dead-letter handler sets the row `retired`, removes its objects from `media` and its source from `uploads`, and logs `media.failed`. A story or tour that tries to use the row is refused as `media-retired`. Nothing attaches it by accident, and nothing needs to be done for the row: it stays as a record. Ask the merchant to upload a fixed file, which makes a new row.
+A file the image library cannot decode, or one over the pixel limit, fails every attempt. After the last one the dead-letter handler sets the row `retired` (unless a story or tour uses it, see the section below), removes its objects from `media` and its source from `uploads`, and logs `media.failed`. A story or tour that tries to use the row is refused as `media-retired`. Nothing attaches it by accident, and nothing needs to be done for the row: it stays as a record. Ask the merchant to upload a fixed file, which makes a new row.
 
 Find these rows with the alert line, or:
 
@@ -108,7 +108,7 @@ select tour_id, position from content.tour_stops where media_id = '<media id>';
 select id from content.places where cover_media_id = '<media id>';
 ```
 
-Fix: the merchant uploads the file again (a fixed file, or a smaller image) and attaches the new row in the story or tour, then saves. After that nothing uses the old row. Retire it by hand with the statement in the section above, or leave it for the retire job, which runs after a replace. No object is left to remove. Do not print `AWS_*` while you check.
+Fix: the merchant uploads the file again (a fixed file, or a smaller image) and attaches the new row in the story or tour, then saves. After that nothing uses the old row. Only a replaced tour PDF queues a retire job (on save), so for a story cover, a story body file, a tour cover or a stop photo the old row stays `processing` until you retire it by hand, once nothing references it, with the statement in the section above (the trigger `media_not_retired_while_used` refuses it while something still does). A replaced tour PDF is retired by its job after the grace period. No object is left to remove. Do not print `AWS_*` while you check.
 
 ## Replacing a file, and the retire job
 
@@ -119,6 +119,17 @@ When the job runs, it looks at the old row under a lock:
 - A row that a tour or a story references again is left alone, with its files.
 - Otherwise the row becomes `retired` and every object under `{storeId}/{mediaId}/` in `media` is deleted. A job that runs again after a failed delete finishes the deletes.
 - A missing row is a no-op.
+
+The job uses the `mediaRetry` policy: 3 retries, exponential backoff from 30 s, 3.5 to 7 minutes in all. A retire job that fails after its last retry (storage down for longer than that) is not run again and raises no alert. The old row stays as it is and its files stay in `media`. Find such jobs and queue them again:
+
+```sql
+select id, data->>'mediaId' as media_id, data->>'storeId' as store_id, output
+from pgboss.job
+where name = 'media-retire' and state = 'failed'
+order by created_on;
+```
+
+Send a new `media-retire` job with the same `{"storeId": "...", "mediaId": "..."}` from a script that uses `createJobQueue`. The job is safe to repeat. Or retire the row by hand (see above) once nothing references it.
 
 Changing `MEDIA_GRACE_HOURS` applies to jobs queued after the restart. A job already queued keeps its due time. To see what is waiting:
 
