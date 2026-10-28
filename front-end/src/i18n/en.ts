@@ -39,6 +39,7 @@ export const en = {
   'language.label': 'Language',
   'shell.language.button': 'Language',
   'shell.language.title': 'Language',
+  'shell.language.close': 'Close',
   'shell.notice.onlyEn': 'This page is only available in English.',
   'shell.notice.onlyDe': 'This page is only available in German.',
 

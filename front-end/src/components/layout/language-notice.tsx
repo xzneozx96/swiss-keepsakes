@@ -22,15 +22,19 @@ export function LanguageNotice() {
     },
   })
 
-  if (!urlLanguage || !preferredLanguage || !available || available.includes(preferredLanguage))
-    return null
+  const shown = urlLanguage && preferredLanguage && available && !available.includes(preferredLanguage)
 
+  // The live region is always in the page and empty until the stored language is known, so screen readers announce the text when it arrives.
   return (
-    <div className="px-4 pt-[calc(env(safe-area-inset-top,0px)+8px)]" role="status">
-      <p className="flex items-start gap-2 rounded-xl bg-surface-secondary px-3 py-2 text-sm text-foreground">
-        <InfoIcon aria-hidden className="mt-0.5 shrink-0 text-muted" size={16} />
-        {t(urlLanguage === 'en' ? 'shell.notice.onlyEn' : 'shell.notice.onlyDe')}
-      </p>
+    <div aria-live="polite" role="status">
+      {shown && (
+        <div className="px-4 pt-[calc(env(safe-area-inset-top,0px)+8px)]">
+          <p className="flex items-start gap-2 rounded-xl bg-surface-secondary px-3 py-2 text-sm text-foreground">
+            <InfoIcon aria-hidden className="mt-0.5 shrink-0 text-muted" size={16} />
+            {t(urlLanguage === 'en' ? 'shell.notice.onlyEn' : 'shell.notice.onlyDe')}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

@@ -9,7 +9,7 @@ import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { de } from '@/i18n/de'
 import { en } from '@/i18n/en'
 
-function renderAt(url: string, availableLanguages?: ('en' | 'de')[]) {
+function buildRouter(url: string, availableLanguages?: ('en' | 'de')[]) {
   const root = createRootRoute({
     component: () => (
       <LocaleProvider>
@@ -25,7 +25,12 @@ function renderAt(url: string, availableLanguages?: ('en' | 'de')[]) {
     loader: ({ params }) => params.lang === 'de' ? loadDictionary('de').then(() => ({ availableLanguages })) : { availableLanguages },
     component: () => null,
   })
-  const router = createRouter({ routeTree: root.addChildren([page]), history: createMemoryHistory({ initialEntries: [url] }) })
+
+  return createRouter({ routeTree: root.addChildren([page]), history: createMemoryHistory({ initialEntries: [url] }) })
+}
+
+function renderAt(url: string, availableLanguages?: ('en' | 'de')[]) {
+  const router = buildRouter(url, availableLanguages)
 
   render(<RouterProvider router={router} />)
 
@@ -45,6 +50,36 @@ describe('language button', () => {
     expect(await screen.findByRole('dialog', { name: en['shell.language.title'] })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: 'Deutsch' })).toHaveAttribute('aria-checked', 'false')
+  })
+
+  it('announces a popup dialog, and whether it is open', async () => {
+    renderAt('/en/stories')
+    const button = await screen.findByRole('button', { name: en['shell.language.button'] })
+    expect(button).toHaveAttribute('aria-haspopup', 'dialog')
+    expect(button).toHaveAttribute('aria-expanded', 'false')
+
+    await userEvent.click(button)
+    await screen.findByRole('dialog')
+    expect(button).toHaveAttribute('aria-expanded', 'true')
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(button).toHaveAttribute('aria-expanded', 'false'))
+  })
+
+  it('names the sheet close button from its own key, in English and German', async () => {
+    expect(en['shell.language.close']).toBe('Close')
+    expect(de['shell.language.close']).toBe('Schliessen')
+
+    renderAt('/en/stories')
+    await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))
+    expect(within(await screen.findByRole('dialog')).getByRole('button', { name: en['shell.language.close'] })).toBeInTheDocument()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('names the sheet close button in German on a German page', async () => {
+    renderAt('/de/stories')
+    await userEvent.click(await screen.findByRole('button', { name: de['shell.language.button'] }))
+    expect(within(await screen.findByRole('dialog')).getByRole('button', { name: de['shell.language.close'] })).toBeInTheDocument()
   })
 
   it('returns focus to the button after Escape even when the click never focused it (Safari)', async () => {
@@ -175,6 +210,15 @@ describe('language button', () => {
 })
 
 describe('language notice', () => {
+  it('keeps one polite live region in the page, and the text lands in that same region', async () => {
+    localStorage.setItem('sk.language', JSON.stringify('de'))
+    renderAt('/en/stories', ['en'])
+    const region = await screen.findByRole('status')
+    expect(region).toHaveAttribute('aria-live', 'polite')
+    await waitFor(() => expect(region).toHaveTextContent(en['shell.notice.onlyEn']))
+    expect(screen.getByRole('status')).toBe(region)
+  })
+
   it('names the language shown when the stored language has no version', async () => {
     localStorage.setItem('sk.language', JSON.stringify('de'))
     renderAt('/en/stories', ['en'])
@@ -193,33 +237,33 @@ describe('language notice', () => {
     localStorage.setItem('sk.language', JSON.stringify('de'))
     renderAt('/en/stories', ['en', 'de'])
     await screen.findByRole('button', { name: en['shell.language.button'] })
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })
 
   it('stays out when the page has no loader data', async () => {
     localStorage.setItem('sk.language', JSON.stringify('de'))
     renderAt('/en/stories')
     await screen.findByRole('button', { name: en['shell.language.button'] })
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })
 
   it('stays out when the loader does not know the page (empty list)', async () => {
     localStorage.setItem('sk.language', JSON.stringify('de'))
     renderAt('/en/stories', [])
     await screen.findByRole('button', { name: en['shell.language.button'] })
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })
 
   it('stays out when the stored language is English and the page is English', async () => {
     localStorage.setItem('sk.language', JSON.stringify('en'))
     renderAt('/en/stories', ['en'])
     await screen.findByRole('button', { name: en['shell.language.button'] })
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })
 
   it('stays out when nothing is stored, on a German-only page', async () => {
     renderAt('/de/stories', ['de'])
     await screen.findByRole('button', { name: de['shell.language.button'] })
-    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.getByRole('status')).toBeEmptyDOMElement()
   })
 })

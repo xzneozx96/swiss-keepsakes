@@ -51,6 +51,8 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
     <>
       <button
         ref={buttonRef}
+        aria-expanded={open}
+        aria-haspopup="dialog"
         aria-label={t('shell.language.button')}
         className={`${roundAction} ${toneClass[tone]}`}
         type="button"
@@ -64,7 +66,7 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
             <Drawer.Handle />
             <Drawer.Header className="flex items-center justify-between">
               <Drawer.Heading className="text-title">{t('shell.language.title')}</Drawer.Heading>
-              <Drawer.CloseTrigger aria-label={t('merchantOrder.sheet.close')} />
+              <Drawer.CloseTrigger aria-label={t('shell.language.close')} />
             </Drawer.Header>
             <Drawer.Body className="pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
               <div

@@ -13,7 +13,7 @@ import {
 } from '@/components/icons'
 import { LanguageNotice } from '@/components/layout/language-notice'
 import { forgetPublicPath, rememberPublicPath } from '@/components/layout/last-public-path'
-import { useLocale, useUrlLanguage } from '@/contexts/locale-context'
+import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
 import { GuestAvatar } from '@/features/account/components/guest-avatar'
 import { useDemoSelector } from '@/features/demo'
@@ -51,7 +51,6 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
   const hideTabBar = useMatches({
     select: matches => matches.some(m => m.staticData.hideTabBar),
   })
-  const hasUrlLanguage = useUrlLanguage() !== undefined
   const publicPath = useLocation({
     select: l => isLanguage(l.pathname.split('/')[1]) ? l.pathname + l.searchStr : null,
   })
@@ -72,7 +71,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 justify-center bg-default/60">
       <div className="relative flex w-full max-w-[430px] flex-1 flex-col bg-background sm:shadow-overlay">
-        {hasUrlLanguage && <LanguageNotice />}
+        <LanguageNotice />
         <main
           className={
             ownsBottomSpace

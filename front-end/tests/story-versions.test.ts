@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { storyLanguages } from '@/features/content/lib/story-versions'
 import { articleSeed } from '@/features/content/seed'
@@ -29,6 +29,20 @@ describe('storyLanguages', () => {
 
   it('returns nothing for an unknown slug', () => {
     expect(storyLanguages('nope')).toEqual([])
+  })
+
+  it('falls back to the seed languages and logs once when the saved demo state is malformed', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      // Current version but no data: the upgrade step throws, which is the path that logs.
+      localStorage.setItem('sk.demo', JSON.stringify({ version: createSeedState().version, data: null }))
+
+      expect([...storyLanguages('musegg-morning')].sort()).toEqual(['de', 'en'])
+      expect(error).toHaveBeenCalledTimes(1)
+    }
+    finally {
+      error.mockRestore()
+    }
   })
 
   describe('in the browser, from the saved demo store', () => {
