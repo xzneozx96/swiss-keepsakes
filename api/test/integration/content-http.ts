@@ -1,14 +1,17 @@
+import type { CategoryRepository } from '../../src/modules/content/ports.ts'
 import type { Clock } from '../../src/platform/clock.ts'
+import type { Tx } from '../../src/platform/db/client.ts'
 import type { openTestDatabase } from './support.ts'
 import { randomUUID } from 'node:crypto'
-import { guardUseCases } from '../../src/modules/content/adapters/database-errors.ts'
+import { createCategoryRepository } from '../../src/modules/content/adapters/category-repository.ts'
+import { guardUseCases, mappingDatabaseErrors } from '../../src/modules/content/adapters/database-errors.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { createPinRepository } from '../../src/modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from '../../src/modules/content/adapters/public-repository.ts'
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -35,7 +38,8 @@ const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.flo
 // The wiring of main.ts over a real database. Better Auth is the real one; the sign-in code goes to a map
 // instead of a mail job, so no queue is needed.
 // `readClock` is the clock of the public reads, so a test can move the map cache's time.
-export function createContentHttp({ pool, db }: ReturnType<typeof openTestDatabase>, readClock: Clock = systemClock) {
+// `categories` lets a test stand in for the category repository (the delete race).
+export function createContentHttp({ pool, db }: ReturnType<typeof openTestDatabase>, readClock: Clock = systemClock, categories: CategoryRepository<Tx> = createCategoryRepository()) {
   const codes = new Map<string, string>()
   const uow = createUnitOfWork(db)
   const auth = createAuth({
@@ -50,6 +54,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
   const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit: createAuditLog(systemClock), clock: systemClock }
   const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
+  const categoryDeps = { uow, categories, audit: createAuditLog(systemClock), clock: systemClock, guard: mappingDatabaseErrors }
   const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock }
   const writeUseCases = guardUseCases({
     createPin: makeCreatePin(pinDeps),
@@ -70,6 +75,11 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     publishTour: makePublishTour(tourDeps),
     unpublishTour: makeUnpublishTour(tourDeps),
     deleteTour: makeDeleteTour(tourDeps),
+    createCategory: makeCreateCategory(categoryDeps),
+    saveCategory: makeSaveCategory(categoryDeps),
+    reorderCategories: makeReorderCategories(categoryDeps),
+    deleteCategory: makeDeleteCategory(categoryDeps),
+    listMerchantCategories: makeListMerchantCategories(categoryDeps),
   })
   // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
   const contentUseCases = {

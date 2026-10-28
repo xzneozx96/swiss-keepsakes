@@ -118,10 +118,14 @@ describe('category use cases', () => {
     expect(result.ok ? 'ok' : result.reason).toBe(expected)
   })
 
-  it('[E4.18][AC87] a parent of another list or store is not found', async () => {
+  it('[E4.18][AC87] a parent of another list or of another store is not found', async () => {
     const s = setup()
     const blogRoot = await made(s, { en: 'Blog root' }, undefined, 'blog')
     expect(await s.create(manager, store, 'map', { name: { en: 'New' }, parentId: blogRoot.id }, null)).toEqual({ ok: false, reason: 'not-found' })
+    const otherStoreRoot = await s.create({ ...manager, stores: new Map([['store-2', 'owner']]) }, 'store-2', 'map', { name: { en: 'Elsewhere' } }, null)
+    if (!otherStoreRoot.ok)
+      throw new Error('setup failed')
+    expect(await s.create(manager, store, 'map', { name: { en: 'New' }, parentId: otherStoreRoot.value.id }, null)).toEqual({ ok: false, reason: 'not-found' })
   })
 
   it('[E4.18][AC87] moves: a sub cannot take children, a parent with children cannot become a sub, a category is not its own parent', async () => {
