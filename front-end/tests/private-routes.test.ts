@@ -60,11 +60,20 @@ describe('private routes', () => {
   })
 
   it('[E3.3][AC12] every route under a private prefix is client-only and yields the noindex meta', () => {
-    const privateRoutes = routes.filter(isPrivateRoute)
+    // A server-only route (`/r/$code`, a 302) has no screen to render; the middleware gives it the headers.
+    const privateRoutes = routes.filter(route => isPrivateRoute(route) && route.fullPath !== '/r/$code')
 
     expect(privateRoutes.length).toBeGreaterThan(20)
     expect(privateRoutes.filter(route => effectiveSsr(route) !== false).map(route => route.fullPath)).toEqual([])
     expect(privateRoutes.filter(route => !hasNoIndex(route)).map(route => route.fullPath)).toEqual([])
+  })
+
+  it('[E3.7][AC24] serves the referral route from a server GET handler with no component', () => {
+    const referral = routes.find(route => route.fullPath === '/r/$code')
+    const options = referral?.options as { server?: { handlers?: { GET?: unknown } }, component?: unknown } | undefined
+
+    expect(typeof options?.server?.handlers?.GET).toBe('function')
+    expect(options?.component).toBeUndefined()
   })
 
   it.each(PRIVATE_PREFIXES)('[E3.3][AC12] treats %s and its sub-paths as private', (prefix) => {
