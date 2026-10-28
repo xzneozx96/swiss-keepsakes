@@ -82,6 +82,8 @@ function useDictionary(language: Language): Dictionary | undefined {
 
 interface LocaleContextValue {
   language: Language
+  /** The saved choice. On a prefixed page `language` follows the address and this can differ. It is English until the browser has hydrated, then the saved one. */
+  preferredLanguage: Language
   /** Intl locale for numbers, dates and HeroUI's date components. */
   intlLocale: IntlLocale
   setLanguage: (language: Language) => void
@@ -206,10 +208,8 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
 
   // A page rendered on the server and hydrated starts in English, like the server's HTML. The saved language
   // arrives after that. A client-only page already starts in it, so this finds nothing to change there.
-  // A prefixed page takes its language from the address and leaves the saved one alone.
+  // A prefixed page also reads it, for the language notice; the language shown still follows the address.
   useEffect(() => {
-    if (urlLanguage)
-      return
     const saved = storedLanguage()
 
     if (saved === 'en')
@@ -224,7 +224,7 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
       },
       () => undefined,
     )
-  }, [urlLanguage])
+  }, [])
 
   // `urlLanguage` is a dependency because the root shell writes `lang` from the address alone, so leaving
   // a prefixed page resets it to English even when `language` (the saved one) does not change.
@@ -235,11 +235,12 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
   const value = useMemo<LocaleContextValue>(
     () => ({
       language,
+      preferredLanguage: storedChoice,
       intlLocale: intlLocales[language],
       setLanguage: changeLanguage,
       t: (key, vars) => fill(dictionaryOf(language)[key], vars),
     }),
-    [language, changeLanguage],
+    [language, storedChoice, changeLanguage],
   )
 
   return (
@@ -266,6 +267,7 @@ export function LocaleOverride({
     () =>
       messages && {
         language,
+        preferredLanguage: language,
         intlLocale: intlLocales[language],
         setLanguage: () => undefined,
         t: (key, vars) => fill(messages[key], vars),

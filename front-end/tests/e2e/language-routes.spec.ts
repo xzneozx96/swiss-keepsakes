@@ -43,7 +43,7 @@ function htmlLang(html: string) {
 }
 
 function switchTo(page: Page, language: Lang) {
-  return page.getByRole('group', { name: 'Language' }).getByRole('button', { name: language.toUpperCase(), exact: true }).click()
+  return page.getByRole('group', { name: 'Language', exact: true }).getByRole('button', { name: language.toUpperCase(), exact: true }).click()
 }
 
 function stored(page: Page) {

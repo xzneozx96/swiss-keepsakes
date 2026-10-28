@@ -16,6 +16,7 @@ import { avatarUrl } from '@/lib/avatars'
 import { formatZurichInstant } from '@/lib/shop-dates'
 import { useArticles, useComments } from '../api/queries'
 import { publishedArticles } from '../lib/articles'
+import { fixtureArticles } from '../lib/story-versions'
 
 const WHITESPACE_RUN = /\s+/
 
@@ -73,7 +74,8 @@ export function useArticle(slug: string): ArticleView | null {
   const demoTours = useTourRecords()
   const toCard = useProductCard()
 
-  const versions = demoArticles.filter(a => a.slug === slug && published(a))
+  // Fixture stories (outside production) are not in the browser store; only this lookup sees them, so lists and search stay as they are.
+  const versions = [...demoArticles.filter(a => a.slug === slug && published(a)), ...fixtureArticles(slug)]
   const article = versions.find(a => a.language === language) ?? versions[0]
 
   if (!article)

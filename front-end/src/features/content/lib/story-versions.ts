@@ -14,3 +14,10 @@ export function storyLanguages(slug: string): Language[] {
     .map(story => story.language)
   return [...new Set(languages)]
 }
+
+/** The published fixture versions of a story, for the article page: the browser store does not hold them. Empty in a production build. */
+export function fixtureArticles(slug: string): Article[] {
+  return import.meta.env.MODE === 'production'
+    ? []
+    : storyFixtures.filter(story => story.slug === slug && story.publication.status === 'published')
+}
