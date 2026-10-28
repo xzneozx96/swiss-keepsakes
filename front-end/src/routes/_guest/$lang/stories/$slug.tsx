@@ -19,7 +19,7 @@ export const Route = createFileRoute('/_guest/$lang/stories/$slug')({
   // The comment bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
   // A story may exist in one language only. The address in the other language goes to the one that exists. A slug the static data does not know is a 404 on the server only: in the browser the store may hold a merchant-made story.
-  loader: ({ params }) => {
+  loader: ({ params, location }) => {
     const { lang, slug } = params
     if (!isLanguage(lang))
       throw notFound()
@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_guest/$lang/stories/$slug')({
     const rule = pageVersionRule(availableLanguages, lang)
 
     if (rule.kind === 'redirect')
-      throw redirect({ to: '/$lang/stories/$slug', params: { lang: rule.language, slug }, statusCode: 302 })
+      throw redirect({ to: '/$lang/stories/$slug', params: { lang: rule.language, slug }, search: location.search, hash: location.hash, statusCode: 302 })
     if (rule.kind === 'missing' && typeof window === 'undefined')
       throw notFound()
 

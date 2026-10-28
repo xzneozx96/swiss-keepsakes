@@ -19,6 +19,27 @@ test.describe('[E3.11][AC64] story with no version in the URL language', () => {
     expect(response.headers().location).toBe('/de/stories/ein-ruhiger-morgen-an-der-reuss')
   })
 
+  test('redirects the demo story water-tower the same way', async ({ request }) => {
+    const response = await request.get('/de/stories/water-tower', { maxRedirects: 0 })
+
+    expect(response.status()).toBe(302)
+    expect(response.headers().location).toBe('/en/stories/water-tower')
+  })
+
+  test('redirects the German-only demo story luzern-bei-nacht to its German address', async ({ request }) => {
+    const response = await request.get('/en/stories/luzern-bei-nacht', { maxRedirects: 0 })
+
+    expect(response.status()).toBe(302)
+    expect(response.headers().location).toBe('/de/stories/luzern-bei-nacht')
+  })
+
+  test('keeps the query string in the redirect', async ({ request }) => {
+    const response = await request.get('/de/stories/a-quiet-morning-on-the-reuss?utm_source=x', { maxRedirects: 0 })
+
+    expect(response.status()).toBe(302)
+    expect(response.headers().location).toBe('/en/stories/a-quiet-morning-on-the-reuss?utm_source=x')
+  })
+
   test('answers 404 for a story with no version in either language', async ({ request }) => {
     const response = await request.get('/de/stories/nope', { maxRedirects: 0 })
 

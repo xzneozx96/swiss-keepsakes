@@ -13,7 +13,7 @@ import {
 } from '@/components/icons'
 import { GuestLanguageSwitch } from '@/components/layout/guest-language-switch'
 import { LanguageNotice } from '@/components/layout/language-notice'
-import { rememberPublicPath } from '@/components/layout/last-public-path'
+import { forgetPublicPath, rememberPublicPath } from '@/components/layout/last-public-path'
 import { useLocale, useUrlLanguage } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
 import { GuestAvatar } from '@/features/account/components/guest-avatar'
@@ -56,12 +56,16 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
   const publicPath = useLocation({
     select: l => isLanguage(l.pathname.split('/')[1]) ? l.pathname + l.searchStr : null,
   })
+  const onAccount = useLocation({ select: l => l.pathname === '/account' })
 
-  // Profile returns here after a language change (it sits on the unprefixed /account).
+  // Profile returns here after a language change (it sits on the unprefixed /account). Any other
+  // unprefixed page (cart, checkout, orders) ends the public visit, so the memory is dropped.
   useEffect(() => {
     if (publicPath)
       rememberPublicPath(publicPath)
-  }, [publicPath])
+    else if (!onAccount)
+      forgetPublicPath()
+  }, [publicPath, onAccount])
   const ownsBottomSpace = useMatches({
     select: matches => matches.some(m => m.staticData.ownsBottomSpace),
   })

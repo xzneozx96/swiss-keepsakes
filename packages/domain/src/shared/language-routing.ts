@@ -1,6 +1,6 @@
 import type { Language } from './language.ts'
 
-const COOKIE_NAME = 'sk_lang'
+export const LANGUAGE_COOKIE = 'sk_lang'
 // The router hands over a decoded pathname (`decodeURI`: %20 is a space, %2F and other reserved escapes stay). Encode again what a Location header cannot carry, the way the router's `encodePathLikeUrl` does.
 const WHITESPACE_OR_NON_ASCII = /[\s\u{80}-\u{10FFFF}]/gu
 const LEGACY_GUEST_ROOTS = ['stories', 'tours', 'gifts', 'search', 'plan', 'credits']
@@ -12,7 +12,7 @@ export function isLanguage(value: unknown): value is Language {
 function readLanguageCookie(cookie: string): Language | null {
   for (const part of cookie.split(';')) {
     const [name, value] = part.trim().split('=')
-    if (name === COOKIE_NAME && isLanguage(value))
+    if (name === LANGUAGE_COOKIE && isLanguage(value))
       return value
   }
   return null

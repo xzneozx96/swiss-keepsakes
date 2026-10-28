@@ -107,4 +107,17 @@ test.describe('[E3.11][AC30] guest tabs and the Profile language change', () => 
     await expect.poll(() => page.evaluate(() => localStorage.getItem('sk.language'))).toBe('"de"')
     expect(problems).toEqual([])
   })
+
+  test('AC-5b: a visit to the cart ends the public context, so the profile stays put', async ({ page }) => {
+    await signIn(page)
+    await nav(page).getByRole('link', { name: 'Keepsakes', exact: true }).click()
+    await expect(page).toHaveURL('/en/gifts')
+    await page.getByRole('link', { name: /cart/i }).first().click()
+    await expect(page).toHaveURL(/\/cart/)
+    await nav(page).getByRole('link', { name: 'Account', exact: true }).click()
+    await page.getByRole('link', { name: /Language/ }).click()
+    await page.getByText('Deutsch', { exact: true }).click()
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('sk.language'))).toBe('"de"')
+    await expect(page).toHaveURL('/account?tab=profile')
+  })
 })

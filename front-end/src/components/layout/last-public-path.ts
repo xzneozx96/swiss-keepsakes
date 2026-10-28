@@ -7,6 +7,10 @@ export function rememberPublicPath(next: string): void {
   path = next
 }
 
+export function forgetPublicPath(): void {
+  path = null
+}
+
 export function lastPublicPath(): string | null {
   return path
 }
