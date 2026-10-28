@@ -2,19 +2,19 @@ export type MediaKind = 'image' | 'audio' | 'pdf'
 
 const MiB = 1024 * 1024
 
-export const MEDIA_RULES = {
-  types: {
+export const MEDIA_RULES = Object.freeze({
+  types: Object.freeze({
     'image/jpeg': { kind: 'image', ext: 'jpg', maxBytes: 10 * MiB },
     'image/png': { kind: 'image', ext: 'png', maxBytes: 10 * MiB },
     'image/webp': { kind: 'image', ext: 'webp', maxBytes: 10 * MiB },
     'audio/mpeg': { kind: 'audio', ext: 'mp3', maxBytes: 30 * MiB },
     'application/pdf': { kind: 'pdf', ext: 'pdf', maxBytes: 25 * MiB },
-  } as Readonly<Record<string, { kind: MediaKind, ext: string, maxBytes: number }>>,
-  variantWidths: [320, 640, 1280, 1920] as readonly number[],
+  }) as Readonly<Record<string, Readonly<{ kind: MediaKind, ext: string, maxBytes: number }>>>,
+  variantWidths: Object.freeze([320, 640, 1280, 1920]) as readonly number[],
   abandonedUploadHours: 24,
   orphanedSourceHours: 168,
   presignExpirySeconds: 900,
-}
+})
 
 export type UploadCheck
   = | { ok: true, kind: MediaKind, ext: string }
@@ -23,7 +23,7 @@ export type UploadCheck
 export function checkUploadRequest(input: { contentType: string, byteSize: number }): UploadCheck {
   const rule = Object.hasOwn(MEDIA_RULES.types, input.contentType) ? MEDIA_RULES.types[input.contentType] : undefined
   if (!rule) return { ok: false, reason: 'type-not-allowed' }
-  if (input.byteSize <= 0) return { ok: false, reason: 'empty' }
+  if (!Number.isInteger(input.byteSize) || input.byteSize <= 0) return { ok: false, reason: 'empty' }
   if (input.byteSize > rule.maxBytes) return { ok: false, reason: 'too-large' }
   return { ok: true, kind: rule.kind, ext: rule.ext }
 }
@@ -40,11 +40,25 @@ const WEBP = [0x57, 0x45, 0x42, 0x50]
 const ID3 = [0x49, 0x44, 0x33]
 const PDF = [0x25, 0x50, 0x44, 0x46, 0x2D]
 
+// Frame header: byte 0 is FF, byte 1 is 111VVLLP (version, layer), byte 2 is bitrate, sample rate, padding.
+function isMp3FrameHeader(bytes: Uint8Array): boolean {
+  if (bytes.length < 2 || bytes[0] !== 0xFF) return false
+  const b1 = bytes[1]!
+  if ((b1 & 0xE0) !== 0xE0) return false
+  if (((b1 >> 3) & 3) === 1) return false // reserved version
+  if (((b1 >> 1) & 3) !== 1) return false // not Layer III
+  if (bytes.length >= 3) {
+    const b2 = bytes[2]!
+    if (b2 >> 4 === 15 || ((b2 >> 2) & 3) === 3) return false // bad bitrate or sample rate
+  }
+  return true
+}
+
 export function sniffContentType(bytes: Uint8Array): SniffedContentType | undefined {
   if (startsWith(bytes, [0xFF, 0xD8, 0xFF])) return 'image/jpeg'
   if (startsWith(bytes, PNG)) return 'image/png'
   if (startsWith(bytes, RIFF) && startsWith(bytes, WEBP, 8)) return 'image/webp'
-  if (startsWith(bytes, ID3) || (bytes.length >= 2 && bytes[0] === 0xFF && (bytes[1]! & 0xE0) === 0xE0)) return 'audio/mpeg'
+  if (startsWith(bytes, ID3) || isMp3FrameHeader(bytes)) return 'audio/mpeg'
   if (startsWith(bytes, PDF)) return 'application/pdf'
   return undefined
 }

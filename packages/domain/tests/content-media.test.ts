@@ -27,6 +27,12 @@ describe('[E2.7] MEDIA_RULES', () => {
     expect(MEDIA_RULES.orphanedSourceHours).toBe(168)
     expect(MEDIA_RULES.presignExpirySeconds).toBe(900)
   })
+
+  it('[E2.7] is frozen', () => {
+    expect(Object.isFrozen(MEDIA_RULES)).toBe(true)
+    expect(Object.isFrozen(MEDIA_RULES.types)).toBe(true)
+    expect(Object.isFrozen(MEDIA_RULES.variantWidths)).toBe(true)
+  })
 })
 
 describe('[E2.7] checkUploadRequest', () => {
@@ -48,6 +54,10 @@ describe('[E2.7] checkUploadRequest', () => {
     expect(checkUploadRequest({ contentType, byteSize })).toEqual(expected)
   })
 
+  it.each([Number.NaN, 1.5, Number.POSITIVE_INFINITY])('[E2.7] byte size %s is empty', (byteSize) => {
+    expect(checkUploadRequest({ contentType: 'image/jpeg', byteSize })).toEqual({ ok: false, reason: 'empty' })
+  })
+
   it('[E2.7] an unknown type is not looked up on the object prototype', () => {
     expect(checkUploadRequest({ contentType: 'constructor', byteSize: 10 })).toEqual({ ok: false, reason: 'type-not-allowed' })
   })
@@ -61,6 +71,8 @@ describe('[E2.7] sniffContentType', () => {
     ['image/webp', [...ascii('RIFF'), 1, 2, 3, 4, ...ascii('WEBP'), 0]],
     ['audio/mpeg', [...ascii('ID3'), 4, 0, 0]],
     ['audio/mpeg', [0xFF, 0xFB, 0x90, 0x00]],
+    ['audio/mpeg', [0xFF, 0xF3, 0x90, 0x00]],
+    ['audio/mpeg', [0xFF, 0xE3, 0x90, 0x00]],
     ['application/pdf', [...ascii('%PDF-1.7')]],
   ])('[E2.7] recognises %s', (expected, bytes) => {
     expect(sniffContentType(new Uint8Array(bytes))).toBe(expected)
@@ -74,6 +86,18 @@ describe('[E2.7] sniffContentType', () => {
     ['empty', ''],
   ])('[E2.7] refuses %s', (_name, text) => {
     expect(sniffContentType(new Uint8Array(ascii(text)))).toBeUndefined()
+  })
+
+  it.each([
+    ['UTF-16 BOM', [0xFF, 0xFE]],
+    ['AAC ADTS', [0xFF, 0xF1, 0x50, 0x80]],
+    ['all ones', [0xFF, 0xFF]],
+    ['all ones long', [0xFF, 0xFF, 0xFF, 0xFF]],
+    ['bad bitrate index', [0xFF, 0xFB, 0xFF, 0x00]],
+    ['bad sample rate', [0xFF, 0xFB, 0x9C, 0x00]],
+    ['reserved version', [0xFF, 0xEB, 0x90, 0x00]],
+  ])('[E2.7] refuses %s as MP3', (_name, bytes) => {
+    expect(sniffContentType(new Uint8Array(bytes))).toBeUndefined()
   })
 
   it('[E2.7] refuses a truncated header', () => {
