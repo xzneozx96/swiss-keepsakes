@@ -125,7 +125,7 @@ test.describe('[E3.11][AC64] switch', () => {
     await control(page).getByRole('button', { name: 'DE', exact: true }).click()
 
     await expect(page.getByRole('status')).toHaveText(NOTICE_EN)
-    expect(new URL(page.url()).pathname).toBe(`/en/stories/${FIXTURE}`)
+    await expect(page).toHaveURL(new RegExp(`/en/stories/${FIXTURE}$`))
     expect(await stored(page)).toBe('"de"')
   })
 
