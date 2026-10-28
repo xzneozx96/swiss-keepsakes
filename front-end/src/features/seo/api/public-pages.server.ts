@@ -19,13 +19,15 @@ export class PublicPagesUnavailable extends Error {
 }
 
 let cached: { value: PublishedPages, expiresAt: number } | null = null
+let inFlight: Promise<PublishedPages> | null = null
 
 export function resetPublishedPagesCache(): void {
   cached = null
+  inFlight = null
 }
 
 function apiOrigin(): string {
-  return process.env.API_ORIGIN ?? process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:5002'
+  return process.env.API_ORIGIN || process.env.API_PROXY_TARGET || 'http://127.0.0.1:5002'
 }
 
 async function readCards(
@@ -50,10 +52,7 @@ async function readCards(
   }
 }
 
-export async function loadPublishedPages(now: () => number = Date.now): Promise<PublishedPages> {
-  if (cached && now() < cached.expiresAt)
-    return cached.value
-
+async function readAll(now: () => number): Promise<PublishedPages> {
   // The client reads globalThis.fetch when it is created, so build it per load.
   const client = createApiClient(apiOrigin())
   const [storiesEn, storiesDe, toursEn, toursDe] = await Promise.all(
@@ -65,4 +64,20 @@ export async function loadPublishedPages(now: () => number = Date.now): Promise<
   }
   cached = { value, expiresAt: now() + CACHE_MS }
   return value
+}
+
+/** Callers that arrive while a load runs share it; a failed load caches nothing, so the next call retries. */
+export function loadPublishedPages(now: () => number = Date.now): Promise<PublishedPages> {
+  if (cached && now() < cached.expiresAt)
+    return Promise.resolve(cached.value)
+
+  if (!inFlight) {
+    const load = readAll(now).finally(() => {
+      if (inFlight === load)
+        inFlight = null
+    })
+    inFlight = load
+  }
+
+  return inFlight
 }

@@ -69,16 +69,35 @@ describe('[E3.6][AC61] sitemap entries', () => {
       expect(e.alternates.map(a => a.path)).toContain(e.path)
   })
 
-  it('never lists a pin, event, map or place address', () => {
+  it('lists only homes, lists and story or tour pages: no query, no other segment', () => {
     const xml = sitemapXml(buildSitemapEntries(pages), SITE)
     const locs = Array.from(xml.matchAll(/<loc>(.*?)<\/loc>/g), m => m[1])
+    const allowed = /^https?:\/\/[^/]+\/(en|de)(\/(stories|tours|gifts)(\/[^/?#]+)?)?$/
 
     expect(locs.length).toBeGreaterThan(0)
-    for (const loc of locs) {
-      expect(loc).not.toContain('place')
-      expect(loc).not.toContain('/map')
-      expect(loc).not.toContain('pin')
+    for (const loc of locs)
+      expect(loc).toMatch(allowed)
+  })
+
+  it('lists two cards with the same id in one language once', () => {
+    const twice: PublishedPages = {
+      stories: { en: [card('dup', 'first', 'en'), card('dup', 'second', 'en')], de: [] },
+      tours: { en: [], de: [] },
     }
+    const paths = buildSitemapEntries(twice).map(e => e.path).filter(p => p.startsWith('/en/stories/'))
+
+    expect(paths).toHaveLength(1)
+  })
+
+  it('leaves fallback cards out of the other language, the way the API sends them', () => {
+    const fallbacks: PublishedPages = {
+      stories: { en: [card('f', 'f-en', 'en')], de: [card('f', 'f-en', 'en', true), card('g', 'g-de', 'de', true)] },
+      tours: { en: [], de: [] },
+    }
+    const paths = buildSitemapEntries(fallbacks).map(e => e.path)
+
+    expect(paths).toContain('/en/stories/f-en')
+    expect(paths.filter(p => p.startsWith('/de/stories/'))).toEqual([])
   })
 })
 
@@ -101,7 +120,8 @@ describe('[E3.6][AC61] sitemap xml', () => {
     expect(doc.getElementsByTagName('parsererror')).toHaveLength(0)
     expect(xml).toContain('/en/stories/a%26b&apos;s%20%C3%A9%3C%3E%22')
     expect(xml).toContain('&apos;')
-    expect(doc.getElementsByTagName('loc').item(8)?.textContent).toBe(`${SITE}/en/stories/${encodeURIComponent(slug)}`)
+    const locs = Array.from(doc.getElementsByTagName('loc'), loc => loc.textContent)
+    expect(locs).toContain(`${SITE}/en/stories/${encodeURIComponent(slug)}`)
   })
 
   it('escapes a siteUrl with special characters', () => {

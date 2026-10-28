@@ -27,8 +27,9 @@ export function seoHeaders(pathname: string, indexable: boolean): Record<string,
 }
 
 /**
- * Runs `next` and sets the noindex header on the response it yields, unless one is already set (the private-area
- * headers run first). A Response thrown by `next` passes through untouched.
+ * Runs `next` and sets the noindex header on the response it yields, unless one is already set. In start.ts the
+ * private-area middleware is the outer one: this one sets its header first and the private one then overwrites it with `set`,
+ * so the guard only protects a header set further in (by a route or by Start). A Response thrown by `next` passes through untouched.
  */
 export async function withSeoHeaders<T extends { response: Response }>(pathname: string, indexable: boolean, next: () => T | Promise<T>): Promise<T> {
   const result = await next()

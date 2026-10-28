@@ -1,7 +1,14 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { PublicPagesUnavailable } from '@/features/seo/api/public-pages.server'
 import { robotsResponse, sitemapResponse } from '@/features/seo/api/responses.server'
+import { readSiteConfig, withSeoHeaders } from '@/features/seo/lib/site-config'
 import { isPrivatePath } from '@/lib/private-routes'
+import { Route as RobotsRoute } from '@/routes/robots[.]txt'
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
+})
 
 const pages = {
   stories: { en: [{ id: 'a', slug: 'alpine', language: 'en' as const, fallback: false }], de: [] },
@@ -61,7 +68,7 @@ describe('robots.txt response', () => {
 
   it.each([
     ['staging', staging],
-    ['unset', { siteUrl: 'http://localhost:3002', indexable: false }],
+    ['unset', readSiteConfig({})],
   ])('[E3.6][AC61] %s disallows everything with no Sitemap line', async (_name, config) => {
     const response = robotsResponse(config)
     const body = await response.text()
@@ -71,13 +78,39 @@ describe('robots.txt response', () => {
     expect(body).not.toContain('Sitemap')
   })
 
-  it('[E3.6][AC61] stays 200 while the page source fails', async () => {
-    const failing = await sitemapResponse(production, async () => {
-      throw new PublicPagesUnavailable('down')
-    })
+  it('[E3.6][AC61] stays 200 while the page source fails, and never calls the API', async () => {
+    const fetchSpy = vi.fn(() => Promise.reject(new TypeError('API down')))
+    vi.stubGlobal('fetch', fetchSpy)
+    vi.stubEnv('VITE_SITE_ENV', 'production')
+    vi.stubEnv('VITE_SITE_URL', 'https://example.test')
+    const handler = (RobotsRoute.options as { server: { handlers: { GET: () => Response } } }).server.handlers.GET
+    const response = handler()
 
-    expect(failing.status).toBe(503)
-    expect(robotsResponse(production).status).toBe(200)
+    expect(response.status).toBe(200)
+    expect(await response.text()).toContain('Sitemap: https://example.test/sitemap.xml')
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+})
+
+describe('production switch through the real site config', () => {
+  const next = async () => ({ response: new Response('ok') })
+
+  it('[E3.6][AC61] VITE_SITE_ENV=production: pages are indexable and robots lists the sitemap', async () => {
+    vi.stubEnv('VITE_SITE_ENV', 'production')
+    vi.stubEnv('VITE_SITE_URL', 'https://example.test')
+    const { response } = await withSeoHeaders('/en', readSiteConfig().indexable, next)
+
+    expect(response.headers.has('X-Robots-Tag')).toBe(false)
+    expect(await robotsResponse(readSiteConfig()).text()).toContain('Sitemap: https://example.test/sitemap.xml')
+  })
+
+  it('[E3.6][AC61] env unset: pages get noindex and robots has no Sitemap line', async () => {
+    vi.stubEnv('VITE_SITE_ENV', '')
+    vi.stubEnv('VITE_SITE_URL', '')
+    const { response } = await withSeoHeaders('/en', readSiteConfig().indexable, next)
+
+    expect(response.headers.get('X-Robots-Tag')).toBe('noindex')
+    expect(await robotsResponse(readSiteConfig()).text()).not.toContain('Sitemap')
   })
 })
 

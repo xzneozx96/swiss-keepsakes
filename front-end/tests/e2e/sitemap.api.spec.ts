@@ -9,9 +9,10 @@ import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress,
 // store routes, then the sitemap is read once: the SPA server caches the published list for 60 s, so nothing may be
 // published after that read. A published tour needs a PDF, and no route uploads media, so the tour is a draft here.
 const SITE_URL = 'http://localhost:3002'
-const EVIDENCE = '/home/ross-geller/Projects/minastik/swiss-keepsakes/.factory/runs/20261028-sprint-6/evidence/T-E3.6/e2e-sitemap.xml'
+// No other spec may read /sitemap.xml in the same run: the dev server caches the published list for 60 s.
 
-test.describe.configure({ mode: 'serial' })
+// A retry would read the sitemap from the 60 s cache of the first attempt and fail for the wrong reason.
+test.describe.configure({ mode: 'serial', retries: 0 })
 test.afterEach(closeVisitors)
 
 test.beforeEach(async ({ page, context }, testInfo) => {
@@ -22,7 +23,7 @@ test.beforeEach(async ({ page, context }, testInfo) => {
   )
 })
 
-interface Versioned { rowVersion: number, id?: string }
+interface Versioned { rowVersion: number, id: string }
 
 async function send(owner: Page, method: 'post' | 'patch', path: string, body: unknown, version?: number): Promise<APIResponse> {
   return owner.request.fetch(`${SPA_ORIGIN}${path}`, {
@@ -99,9 +100,9 @@ test('[E3.6][AC61] the sitemap lists published story pages by language with alte
 
   const pins = `/api/store/${storeId}/pins`
   const pinBody = (name: string, extra: object) => ({ title: { en: name }, slug: { en: `${name.toLowerCase().replace(/ /g, '-')}-${tag}` }, latitude: 47.05, longitude: 8.31, ...extra })
-  const dated = await ok<Versioned & { id: string }>(await send(owner, 'post', pins, pinBody('Dated pin', { dates: [{ firstDay: '2030-05-01', lastDay: '2030-05-02' }] })), 201)
-  const linked = await ok<Versioned & { id: string }>(await send(owner, 'post', pins, pinBody('Linked pin', { mainStoryGroupId: pairGroup })), 201)
-  const hidden = await ok<Versioned & { id: string }>(await send(owner, 'post', pins, pinBody('Hidden pin', {})), 201)
+  const dated = await ok<Versioned>(await send(owner, 'post', pins, pinBody('Dated pin', { dates: [{ firstDay: '2030-05-01', lastDay: '2030-05-02' }] })), 201)
+  const linked = await ok<Versioned>(await send(owner, 'post', pins, pinBody('Linked pin', { mainStoryGroupId: pairGroup })), 201)
+  const hidden = await ok<Versioned>(await send(owner, 'post', pins, pinBody('Hidden pin', {})), 201)
 
   for (const pin of [dated, linked])
     await ok(await send(owner, 'post', `${pins}/${pin.id}/publish`, undefined, pin.rowVersion), 200)
@@ -114,7 +115,8 @@ test('[E3.6][AC61] the sitemap lists published story pages by language with alte
   const response = await request.get(`${SPA_ORIGIN}/sitemap.xml`)
   const xml = await response.text()
 
-  writeFileSync(EVIDENCE, xml)
+  writeFileSync(testInfo.outputPath('sitemap.xml'), xml)
+  await testInfo.attach('sitemap.xml', { body: xml, contentType: 'application/xml' })
   expect(response.status()).toBe(200)
   expect(response.headers()['content-type']).toContain('xml')
 
@@ -122,7 +124,6 @@ test('[E3.6][AC61] the sitemap lists published story pages by language with alte
   expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true)
   const all = locations(xml)
 
-  expect(all.length).toBeGreaterThan(0)
   expect(all.every(loc => loc.startsWith(`${SITE_URL}/`))).toBe(true)
   expect(all).toEqual(expect.arrayContaining([`${SITE_URL}/en`, `${SITE_URL}/de`, `${SITE_URL}/en/stories`, `${SITE_URL}/de/tours`]))
   expect(all).toEqual(expect.arrayContaining([`${SITE_URL}/en/stories/${both}`, `${SITE_URL}/de/stories/${both}-de`]))
@@ -140,14 +141,19 @@ test('[E3.6][AC61] the sitemap lists published story pages by language with alte
   expect(xml).not.toContain(`pin-${tag}`)
   expect(xml).not.toContain(`tour-${tag}`)
   expect(xml).not.toContain('/place')
+  expect(all.every(loc => !loc.includes('place') && !loc.includes('?'))).toBe(true)
+  expect(new Set(all).size).toBe(all.length)
   for (const id of [dated.id, linked.id, hidden.id, tour.id])
     expect(xml).not.toContain(id)
 
   // The e2e SPA has no VITE_SITE_ENV, so it is not production: robots.txt disallows everything, and pages carry noindex.
   const robots = await request.get(`${SPA_ORIGIN}/robots.txt`)
 
+  const robotsBody = await robots.text()
+
   expect(robots.headers()['content-type']).toContain('text/plain')
-  expect(await robots.text()).toContain('Disallow: /')
-  expect(await robots.text()).not.toContain('Allow: /\n')
+  expect(robotsBody).toContain('Disallow: /')
+  expect(robotsBody).not.toMatch(/^Allow: \/$/m)
+  expect(robotsBody).not.toContain('Sitemap:')
   expect((await request.get(`${SPA_ORIGIN}/en`)).headers()['x-robots-tag']).toContain('noindex')
 })

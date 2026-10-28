@@ -40,12 +40,17 @@ afterEach(() => {
 })
 
 describe('[E3.6][AC61] published pages reader', () => {
-  it('reads the four lists and keeps the cards of the asked language', async () => {
+  it('reads the four lists and puts each in its own slot', async () => {
+    data = {
+      stories: { en: [card('stories-en', 'en')], de: [card('stories-de', 'de')] },
+      tours: { en: [card('tours-en', 'en')], de: [card('tours-de', 'de')] },
+    }
     const pages = await loadPublishedPages()
     expect(urls).toHaveLength(4)
-    expect(pages.stories.en.map(c => c.slug)).toEqual(['x'])
-    expect(pages.tours.de.map(c => c.slug)).toEqual(['t'])
-    expect(pages.stories.de).toEqual([])
+    expect(pages.stories.en.map(c => c.slug)).toEqual(['stories-en'])
+    expect(pages.stories.de.map(c => c.slug)).toEqual(['stories-de'])
+    expect(pages.tours.en.map(c => c.slug)).toEqual(['tours-en'])
+    expect(pages.tours.de.map(c => c.slug)).toEqual(['tours-de'])
   })
 
   it('caches for 60 s, then reads again (AC-4)', async () => {
@@ -98,6 +103,70 @@ describe('[E3.6][AC61] published pages reader', () => {
     const pages = await loadPublishedPages()
     expect(urls.length).toBeGreaterThan(failedReads)
     expect(pages.stories.en.map(c => c.slug)).toEqual(['x'])
+  })
+
+  it('throws on a 500 that carries a valid body (the ok-check, not the parse, rejects it)', async () => {
+    override = () => Response.json({ items: [card('x', 'en')] }, { status: 500 })
+    await expect(loadPublishedPages()).rejects.toBeInstanceOf(PublicPagesUnavailable)
+  })
+
+  it('fails when one read of four fails, then a retry works', async () => {
+    let failOnce = true
+    override = (url) => {
+      if (failOnce && url.pathname.endsWith('/tours') && url.searchParams.get('lang') === 'de') {
+        failOnce = false
+        return new Response('boom', { status: 500 })
+      }
+    }
+    await expect(loadPublishedPages()).rejects.toBeInstanceOf(PublicPagesUnavailable)
+    const pages = await loadPublishedPages()
+    expect(pages.tours.de.map(c => c.slug)).toEqual(['t'])
+  })
+
+  it('shares one load between concurrent callers (4 reads, not 4 per caller)', async () => {
+    const [a, b] = await Promise.all([loadPublishedPages(), loadPublishedPages()])
+    expect(urls).toHaveLength(4)
+    expect(a).toBe(b)
+  })
+
+  it('shares a failing load, then reads again on the next call', async () => {
+    override = () => new Response('boom', { status: 503 })
+    const results = await Promise.allSettled([loadPublishedPages(), loadPublishedPages()])
+    expect(results.map(r => r.status)).toEqual(['rejected', 'rejected'])
+    expect(urls).toHaveLength(4)
+
+    override = undefined
+    await loadPublishedPages()
+    expect(urls).toHaveLength(8)
+  })
+
+  it('aborts a read that never replies after 5 s (the timeout reaches fetch)', async () => {
+    // Fake timers do not drive AbortSignal.timeout, so the 5 s signal is swapped for one the test fires.
+    const timeout = new AbortController()
+    const spy = vi.spyOn(AbortSignal, 'timeout').mockReturnValue(timeout.signal)
+    vi.stubGlobal('fetch', (input: Request) => new Promise<Response>((_resolve, reject) => {
+      input.signal.addEventListener('abort', () => reject(input.signal.reason))
+    }))
+    const outcome = loadPublishedPages().then(() => 'resolved', (error: unknown) => error)
+
+    await Promise.resolve()
+    expect(spy).toHaveBeenCalledWith(5000)
+    timeout.abort(new DOMException('timed out', 'TimeoutError'))
+    expect(await outcome).toBeInstanceOf(PublicPagesUnavailable)
+    spy.mockRestore()
+  })
+
+  it('falls through an empty API_ORIGIN and API_PROXY_TARGET', async () => {
+    vi.stubEnv('API_ORIGIN', '')
+    vi.stubEnv('API_PROXY_TARGET', 'http://proxy.test')
+    await loadPublishedPages()
+    expect(urls.every(u => u.startsWith('http://proxy.test/api/public/'))).toBe(true)
+
+    resetPublishedPagesCache()
+    urls = []
+    vi.stubEnv('API_PROXY_TARGET', '')
+    await loadPublishedPages()
+    expect(urls.every(u => u.startsWith('http://127.0.0.1:5002/api/public/'))).toBe(true)
   })
 
   it('uses API_ORIGIN, then API_PROXY_TARGET, then the local default', async () => {
