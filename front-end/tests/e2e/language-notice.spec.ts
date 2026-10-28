@@ -108,7 +108,7 @@ test.describe('[E3.11][AC64] notice', () => {
     await hydrated(page)
 
     await expect(page.getByRole('heading', { level: 1, name: 'A quiet morning on the Reuss' })).toBeVisible()
-    await expect(page.getByRole('status')).toHaveCount(0)
+    await expect(page.getByRole('status')).toBeEmpty()
   })
 
   test('a story with both versions opened at /en with stored de: no notice', async ({ page }) => {
@@ -117,7 +117,7 @@ test.describe('[E3.11][AC64] notice', () => {
     await hydrated(page)
 
     await expect(control(page)).toBeVisible()
-    await expect(page.getByRole('status')).toHaveCount(0)
+    await expect(page.getByRole('status')).toBeEmpty()
   })
 })
 
@@ -125,11 +125,14 @@ test.describe('[E3.11][AC64] German-only notice', () => {
   const DE_ONLY = 'ein-ruhiger-morgen-an-der-reuss'
   const NOTICE_DE = 'Diese Seite gibt es nur auf Deutsch.'
 
-  test('the server HTML has no notice, so a German guest never sees it flash', async ({ request }) => {
+  test('the server HTML has the empty live region and no notice, so a German guest never sees it flash', async ({ request }) => {
     const response = await request.get(`/de/stories/${DE_ONLY}`)
 
     expect(response.status()).toBe(200)
-    expect(await response.text()).not.toContain(NOTICE_DE)
+    const html = await response.text()
+
+    expect(html).toMatch(/<div[^>]*role="status"[^>]*><\/div>/)
+    expect(html).not.toContain(NOTICE_DE)
   })
 
   test('stored en: the notice shows in German after hydration', async ({ page }) => {
@@ -145,7 +148,7 @@ test.describe('[E3.11][AC64] German-only notice', () => {
     await hydrated(page)
 
     await expect(control(page, 'Sprache')).toBeVisible()
-    await expect(page.getByRole('status')).toHaveCount(0)
+    await expect(page.getByRole('status')).toBeEmpty()
   })
 })
 
@@ -182,7 +185,7 @@ test.describe('[E3.11][AC30] switch', () => {
     await expect(control(page, 'Sprache')).toBeVisible()
     expect(await stored(page)).toBe('"de"')
     expect(await page.evaluate(() => document.cookie)).toContain('sk_lang=de')
-    await expect(page.getByRole('status')).toHaveCount(0)
+    await expect(page.getByRole('status')).toBeEmpty()
 
     await expect(page.getByRole('heading', { level: 1, name: 'Ein Morgen auf der Museggmauer' })).toBeVisible()
 
@@ -333,7 +336,7 @@ test.describe('[E3.11][AC64] a version the merchant publishes in the browser', (
 
     await expect(page).toHaveURL(new RegExp(`/de/stories/${ENGLISH_ONLY}$`))
     await expect(page.getByRole('heading', { level: 1, name: 'Der Wasserturm, älter als die Brücke' })).toBeVisible()
-    await expect(page.getByRole('status')).toHaveCount(0)
+    await expect(page.getByRole('status')).toBeEmpty()
     expect(problems).toEqual([])
   })
 
