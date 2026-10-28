@@ -1,3 +1,4 @@
+export * from './body.ts'
 export * from './localized.ts'
 export * from './pin.ts'
 export * from './story.ts'

@@ -1,5 +1,8 @@
 export { createApiClient } from './client.ts'
 export {
+  BODY_LINK_PROTOCOLS,
+  BODY_MARK_TYPES,
+  BODY_NODE_TYPES,
   type LocalizedText,
   localizedLongTextSchema,
   localizedTextSchema,
@@ -9,6 +12,8 @@ export {
   pinPublishBodySchema,
   type PinWriteBody,
   pinWriteBodySchema,
+  STORY_BODY_LIMITS,
+  storyBodySchema,
   type StoryDraft,
   storyDraftSchema,
   type StoryGroup,
@@ -64,6 +69,7 @@ export {
   publicPinSchema,
   type PublicStory,
   type PublicStoryCard,
+  publicStoryBodySchema,
   publicStoryCardSchema,
   type PublicStoryList,
   publicStoryListSchema,

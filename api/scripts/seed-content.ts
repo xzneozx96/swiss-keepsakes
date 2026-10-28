@@ -1,7 +1,8 @@
-import type { ContentLanguage } from '@sk/domain/content'
+import type { ContentLanguage, StoryDraft } from '@sk/domain/content'
 import type { Database, Tx } from '../src/platform/db/client.ts'
-import type { SeedStory } from './seed-data/stories.ts'
+import type { SeedStory, SeedStoryDoc } from './seed-data/stories.ts'
 import type { SeedTour } from './seed-data/tours.ts'
+import { sectionsToBody } from '@sk/domain/content'
 import { sql } from 'drizzle-orm'
 import { createStoryRepository } from '../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../src/modules/content/adapters/tour-repository.ts'
@@ -16,6 +17,11 @@ const stories = createStoryRepository()
 const tours = createTourRepository()
 const languages: ContentLanguage[] = ['en', 'de']
 
+// The prototype's intro and sections become one body document, so the seed goes through the same shape as a write.
+export function seedStoryDraft({ intro, sections, readMinutes: _readMinutes, ...rest }: SeedStoryDoc): StoryDraft {
+  return { ...rest, body: sectionsToBody({ intro, sections }) }
+}
+
 async function seedStory(db: Database, storeId: string, story: SeedStory, at: Date): Promise<boolean> {
   const present = languages.filter(l => story.versions[l])
   return db.transaction(async (tx: Tx) => {
@@ -26,7 +32,7 @@ async function seedStory(db: Database, storeId: string, story: SeedStory, at: Da
     }
     const group = await stories.insertGroup(tx, storeId, { kind: 'story', subjectPlaceId: null }, at)
     for (const language of present)
-      await stories.insertVersion(tx, storeId, group.id, language, { slug: story.slug, draft: story.versions[language]! }, at)
+      await stories.insertVersion(tx, storeId, group.id, language, { slug: story.slug, draft: seedStoryDraft(story.versions[language]!) }, at)
     return true
   })
 }

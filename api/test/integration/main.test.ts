@@ -15,6 +15,11 @@ afterEach(() => {
 // A configured SMTP server that nothing sends to: no test here queues mail.
 const smtp = { SMTP_HOST: '127.0.0.1', SMTP_PORT: '2525', SMTP_SECURE: 'false', SMTP_USER: 'sender@example.com', SMTP_PASSWORD: 'unused', SMTP_FROM: 'sender@example.com' }
 
+// A worker with no AWS_* warns once at start, and may log a media job it could not clean up while it stops (the
+// database is shared, so jobs from other tests can be waiting). Neither is part of the lifecycle these tests pin.
+const mediaNoise = new Set(['AWS_* is not set: every upload and media job fails until it is', 'media source not deleted'])
+const lifecycle = (messages: string[]) => messages.filter(message => !mediaNoise.has(message))
+
 const env = (role: string) => ({ ROLE: role, PORT: '0', DATABASE_URL: inject('databaseUrl'), DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled'), ...smtp })
 
 describe('[E1.8] main: the ROLE switch and process lifecycle', () => {
@@ -40,7 +45,7 @@ describe('[E1.8] main: the ROLE switch and process lifecycle', () => {
     expect(run.find('jobs started')?.worker).toBe(true)
     run.child.kill('SIGTERM')
     expect(await run.exited).toBe(0)
-    expect(run.messages()).toEqual(['jobs started', 'started', 'shutting down', 'jobs stopped', 'stopped'])
+    expect(lifecycle(run.messages())).toEqual(['jobs started', 'started', 'shutting down', 'jobs stopped', 'stopped'])
   })
 
   it('[E1.8] ROLE=all starts the API on 0.0.0.0 and the worker in one process, and SIGINT stops the API before pg-boss', async () => {
@@ -53,7 +58,7 @@ describe('[E1.8] main: the ROLE switch and process lifecycle', () => {
 
     run.child.kill('SIGINT')
     expect(await run.exited).toBe(0)
-    expect(run.messages()).toEqual(['jobs started', 'api listening', 'started', 'shutting down', 'api stopped', 'jobs stopped', 'stopped'])
+    expect(lifecycle(run.messages())).toEqual(['jobs started', 'api listening', 'started', 'shutting down', 'api stopped', 'jobs stopped', 'stopped'])
   })
 
   it('[E1.8] a port already in use is a fatal startup failure logged through pino, with exit code 1', async () => {
@@ -78,7 +83,7 @@ describe('[E1.8] main: the ROLE switch and process lifecycle', () => {
     run.child.kill('SIGUSR2')
     expect(await run.exited).toBe(1)
     expect(run.find(msg)).toMatchObject({ level: 60, err: { type: 'Error' } })
-    expect(run.messages().slice(-4)).toEqual(['shutting down', 'api stopped', 'jobs stopped', 'stopped'])
+    expect(lifecycle(run.messages()).slice(-4)).toEqual(['shutting down', 'api stopped', 'jobs stopped', 'stopped'])
     expect(run.output()).not.toContain('anna@example.ch')
   })
 
@@ -97,7 +102,7 @@ describe('[E2.8] main: mail', () => {
     const run = startMain({ ROLE: 'worker', DATABASE_URL: inject('databaseUrl'), DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled') })
     await run.waitFor('started')
 
-    expect(run.logs().filter(line => line.level === 40)).toEqual([expect.objectContaining({ msg: 'SMTP_* is not set: every mail fails and retries until it is', event: 'mail.smtp-unset' })])
+    expect(run.logs().filter(line => line.level === 40 && !mediaNoise.has(line.msg as string))).toEqual([expect.objectContaining({ msg: 'SMTP_* is not set: every mail fails and retries until it is', event: 'mail.smtp-unset' })])
     run.child.kill('SIGTERM')
     expect(await run.exited).toBe(0)
     const pool = createPool(inject('databaseUrl'), createLogger('silent'))

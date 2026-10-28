@@ -66,7 +66,7 @@ async function newPlace(store: string, slug: string | null = null): Promise<stri
 function insertPublishedVersion(group: string, language: string, store: string, slug: string) {
   return pool.query(
     `insert into content.story_versions (group_id, language, store_id, status, slug, published_at, published)
-     values ($1, $2, $3, 'published', $4, now(), '{"title":"T","sections":[]}')`,
+     values ($1, $2, $3, 'published', $4, now(), '{"title":"T","body":{"type":"doc","content":[]}}')`,
     [group, language, store, slug],
   )
 }
@@ -232,13 +232,74 @@ describe('[E2.5] content tables', () => {
     expect(await count(pool, `select count(*) from content.story_groups where subject_place_id = $1`, [place])).toBe(1)
   })
 
-  it('[E2.5] a published story version without sections is refused', async () => {
+  it('[E2.13][AC30] a published story version with a body document is accepted on insert and on update', async () => {
+    const store = randomUUID()
+    const group = await newGroup(store)
+    const body = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Hi"}]}]}'
+
+    await pool.query(
+      `insert into content.story_versions (group_id, language, store_id, status, slug, published_at, published)
+       values ($1, 'en', $2, 'published', $3, now(), jsonb_build_object('title', 'T', 'body', $4::jsonb))`,
+      [group, store, slugOf('lion'), body],
+    )
+    const updated = await pool.query(
+      `update content.story_versions set published = jsonb_build_object('title', 'T2', 'body', $2::jsonb) where group_id = $1 and language = 'en'`,
+      [group, body],
+    )
+
+    expect(updated.rowCount).toBe(1)
+  })
+
+  it.each([
+    ['no body key', '{"title":"T"}'],
+    ['a body string', '{"title":"T","body":"text"}'],
+    ['a body array', '{"title":"T","body":[]}'],
+    ['a body null', '{"title":"T","body":null}'],
+    ['a body type other than doc', '{"title":"T","body":{"type":"paragraph","content":[]}}'],
+    ['a body object without type', '{"title":"T","body":{"content":[]}}'],
+    ['the old sections array and no body', '{"title":"T","sections":[]}'],
+  ])('[E2.13][AC30] a published story version with %s is refused by the check', async (_name, published) => {
     const store = randomUUID()
     const group = await newGroup(store)
 
     const refused = await failure(pool.query(
       `insert into content.story_versions (group_id, language, store_id, status, slug, published_at, published)
-       values ($1, 'en', $2, 'published', $3, now(), '{"title":"T"}')`,
+       values ($1, 'en', $2, 'published', $3, now(), $4::jsonb)`,
+      [group, store, slugOf('lion'), published],
+    ))
+
+    expect(refused).toMatchObject({ code: '23514', constraint: 'story_versions_published_fields_check' })
+  })
+
+  it.each([
+    ['the old sections array and no body', '{"title":"T","sections":[]}'],
+    ['a body string', '{"title":"T","body":"text"}'],
+    ['a body array', '{"title":"T","body":[]}'],
+  ])('[E2.13][AC30] an update of an existing published row to %s is refused by the check', async (_name, published) => {
+    const store = randomUUID()
+    const group = await newGroup(store)
+    await pool.query(
+      `insert into content.story_versions (group_id, language, store_id, status, slug, published_at, published)
+       values ($1, 'en', $2, 'published', $3, now(), '{"title":"T","body":{"type":"doc","content":[]}}')`,
+      [group, store, slugOf('lion')],
+    )
+
+    const refused = await failure(pool.query(
+      `update content.story_versions set published = $2::jsonb where group_id = $1 and language = 'en'`,
+      [group, published],
+    ))
+
+    expect(refused).toMatchObject({ code: '23514', constraint: 'story_versions_published_fields_check' })
+    expect(await count(pool, `select count(*) from content.story_versions where group_id = $1 and published ? 'body'`, [group])).toBe(1)
+  })
+
+  it('[E2.13][AC30] a published story version without a title is still refused', async () => {
+    const store = randomUUID()
+    const group = await newGroup(store)
+
+    const refused = await failure(pool.query(
+      `insert into content.story_versions (group_id, language, store_id, status, slug, published_at, published)
+       values ($1, 'en', $2, 'published', $3, now(), '{"body":{"type":"doc","content":[]}}')`,
       [group, store, slugOf('lion')],
     ))
 
@@ -384,7 +445,7 @@ describe('[E2.5] content rules', () => {
     await insertPublishedVersion(group, 'en', store, slugOf('story'))
 
     const cleared = await failure(pool.query(`update content.story_versions set published = NULL where group_id = $1 and language = 'en'`, [group]))
-    const replaced = await pool.query(`update content.story_versions set published = '{"title":"New","sections":[]}' where group_id = $1 and language = 'en'`, [group])
+    const replaced = await pool.query(`update content.story_versions set published = '{"title":"New","body":{"type":"doc","content":[]}}' where group_id = $1 and language = 'en'`, [group])
     const unpublished = await pool.query(`update content.story_versions set status = 'draft' where group_id = $1 and language = 'en'`, [group])
     const deletedVersion = await failure(pool.query(`delete from content.story_versions where group_id = $1 and language = 'en'`, [group]))
     const deletedGroup = await failure(pool.query('delete from content.story_groups where id = $1', [group]))

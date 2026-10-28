@@ -100,6 +100,8 @@ export interface PinRepository<T> {
   publish: (tx: T, pin: Pin, at: Date, slug: Localized) => Promise<Pin>
   hide: (tx: T, pin: Pin, at: Date) => Promise<Pin>
   remove: (tx: T, storeId: string, pinId: string) => Promise<boolean>
+  // The ids among the given ones that are pins of this store, whatever their status. An id of another store is left out.
+  idsInStore: (tx: T, storeId: string, ids: string[]) => Promise<string[]>
 }
 
 // What a story group save may change. A list replaces the whole list, in the order given.

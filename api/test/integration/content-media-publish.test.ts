@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { emptyStoryBody } from '@sk/domain/content'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { createContentHttp } from './content-http.ts'
 import { openTestDatabase } from './support.ts'
@@ -46,7 +47,7 @@ describe('[E2.7] publish while a file is still processing, over HTTP', () => {
     const staff = await env.storeWithStaff()
     const cover = await processingMedia(staff.storeId, 'image')
     const group = await (await env.call(staff.groups, { method: 'POST', headers: staff.owner.headers, body: {} })).json() as { id: string }
-    const draft = { title: 'A day on the lake', excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: cover, sections: [] }
+    const draft = { title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: cover, body: emptyStoryBody }
     const made = await env.call(`${staff.groups}/${group.id}/versions`, { method: 'POST', headers: staff.owner.headers, body: { language: 'en', slug: `story-${randomUUID().slice(0, 8)}`, draft } })
     expect(made.status).toBe(201)
     const publish = () => env.call(`${staff.groups}/${group.id}/versions/en/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })

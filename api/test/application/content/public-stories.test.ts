@@ -1,12 +1,11 @@
-import type { StoryDraft } from '@sk/domain/content'
-import type { PublicCategoryRow, PublicReadRepository, PublicStoryRow, PublicStoryVersionRow } from '../../../src/modules/content/read-ports.ts'
+import type { PublicCategoryRow, PublicReadRepository, PublicStoryRow, PublicStoryVersionRow, StoredStoryDoc } from '../../../src/modules/content/read-ports.ts'
 import { publicCategoryListSchema, publicStoryListSchema, publicStorySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { makeListCategories } from '../../../src/modules/content/application/read-categories.ts'
 import { makeGetStory, makeListStories } from '../../../src/modules/content/application/read-stories.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
 
-const doc = (title: string, over: Partial<StoryDraft> = {}): StoryDraft => ({ title, excerpt: `${title} excerpt`, intro: '', authorName: '', authorRole: '', readMinutes: 4, coverMediaId: null, sections: [], ...over })
+const doc = (title: string, over: Partial<StoredStoryDoc> = {}): StoredStoryDoc => ({ title, excerpt: `${title} excerpt`, authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [] }, ...over })
 
 function version(language: 'en' | 'de', slug: string, title: string, publishedAt = '2090-01-01T00:00:00Z', over: Partial<PublicStoryVersionRow> = {}): PublicStoryVersionRow {
   return { language, slug, published: doc(title), publishedAt: new Date(publishedAt), mediaKeys: {}, ...over }
@@ -87,10 +86,15 @@ describe('public stories', () => {
     expect(result.ok && result.value).toMatchObject({ language: 'en', requestedLanguage: 'de', fallback: true })
   })
 
-  it('[E2.12][AC45] a card carries the blog categories in the language carried, and the cover and image keys', async () => {
+  it('[E2.12][AC45] [E2.13][AC54] a card carries the blog categories, the cover key and a reading time; the detail carries the body with image keys', async () => {
     const mediaId = '0190a000-0000-7000-8000-0000000000aa'
+    const body = { type: 'doc', content: [
+      { type: 'image', attrs: { mediaId, alt: 'a lake', caption: 'c' } },
+      { type: 'audio', attrs: { mediaId: 'gone', title: 't', caption: '' } },
+      { type: 'paragraph', content: [{ type: 'text', text: 'p' }] },
+    ] }
     const s = setup([story(id1, [version('en', 'lake-day', 'A day', undefined, {
-      published: doc('A day', { coverMediaId: mediaId, sections: [{ id: 's1', heading: 'H', blocks: [{ type: 'image', mediaId, caption: 'c' }, { type: 'audio', mediaId: 'gone', title: 't', caption: '' }, { type: 'paragraph', text: 'p' }] }] }),
+      published: doc('A day', { coverMediaId: mediaId, body }),
       mediaKeys: { [mediaId]: 'store/key-1' },
     })], { categories: [{ id: id2, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, position: 1 }] })])
 
@@ -99,11 +103,15 @@ describe('public stories', () => {
 
     expect(items[0]!.categories).toEqual([{ id: id2, slug: 'food', name: 'Food' }])
     expect(items[0]!.coverKey).toBe('store/key-1')
-    expect(detail.ok && detail.value.sections[0]!.blocks).toEqual([
-      { type: 'image', key: 'store/key-1', caption: 'c' },
-      { type: 'audio', key: null, title: 't', caption: '' },
-      { type: 'paragraph', text: 'p' },
-    ])
+    expect(items[0]!.excerpt).toBe('A day excerpt')
+    expect(items[0]!.readMinutes).toBeGreaterThanOrEqual(1)
+    expect(detail.ok && detail.value.body).toEqual({ type: 'doc', content: [
+      { type: 'image', attrs: { key: 'store/key-1', alt: 'a lake', caption: 'c' } },
+      { type: 'audio', attrs: { key: null, title: 't', caption: '' } },
+      { type: 'paragraph', content: [{ type: 'text', text: 'p' }] },
+    ] })
+    expect(detail.ok && 'intro' in detail.value).toBe(false)
+    expect(detail.ok && 'sections' in detail.value).toBe(false)
   })
 
   it('[E2.12][AC45] a category with an English name only reads as null in German on a card and on the detail', async () => {
@@ -140,22 +148,124 @@ describe('public stories', () => {
     ])
   })
 
-  it('[E2.12][AC45] an odd stored document never throws: a block without an id, a null cover and blocks that are not a list', async () => {
-    const odd = { title: 'Odd', excerpt: 'e', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [
-      { id: 'a', heading: 'H', blocks: [{ type: 'image', caption: 'no id' }, { type: 'audio', mediaId: 42, title: 't', caption: '' }, { caption: 'no type' }, null, { type: 'paragraph', text: 'p' }] },
-      { id: 'b', heading: 'Broken', blocks: 'nope' },
-      null,
-    ] } as unknown as StoryDraft
-    const s = setup([story(id1, [version('en', 'odd', 'Odd', undefined, { published: odd })])])
+  it('[E2.13][AC54] the reading time comes from the words of the body, 200 a minute, at least 1', async () => {
+    const words = (n: number) => ({ type: 'paragraph', content: [{ type: 'text', text: Array.from<string>({ length: n }).fill('w').join(' ') }] })
+    const s = setup([
+      story(id1, [version('en', 'short', 'Short', undefined, { published: doc('Short', { body: { type: 'doc', content: [] } }) })]),
+      story(id2, [version('en', 'long', 'Long', '2090-02-01T00:00:00Z', { published: doc('Long', { body: { type: 'doc', content: [words(401)] } }) })]),
+    ])
 
     const { items } = await s.list('en')
+
+    expect(items.map(i => [i.slug, i.readMinutes])).toEqual([['long', 3], ['short', 1]])
+  })
+
+  it('[E2.13][AC54] a body that is not stored as a document gives an empty document, not an error', async () => {
+    const bodies: unknown[] = [undefined, null, 'text', 42, [], { type: 'paragraph' }, { type: 'doc' }, { type: 'doc', content: 'nope' }]
+    for (const body of bodies) {
+      const s = setup([story(id1, [version('en', 'odd', 'Odd', undefined, { published: doc('Odd', { body }) })])])
+      const detail = await s.get('odd', 'en')
+      expect(detail.ok && detail.value.body).toEqual({ type: 'doc', content: [] })
+      expect((await s.list('en')).items[0]!.readMinutes).toBe(1)
+    }
+  })
+
+  it('[E2.13][AC54] an odd stored body never throws: unknown nodes and marks are dropped, bad ids give no key, hrefs stay safe', async () => {
+    const pin = '0190a000-0000-7000-8000-0000000000bb'
+    const body = { type: 'doc', content: [
+      { type: 'iframe', attrs: { src: 'https://evil.example' } },
+      null,
+      42,
+      { type: 'image', attrs: { caption: 'no id' } },
+      { type: 'audio', attrs: { mediaId: 42, title: 't', extra: 'x' } },
+      { type: 'video', attrs: { youtubeId: 'dQw4w9WgXcQ', title: 'v', caption: '', onload: 'x' } },
+      { type: 'video', attrs: { youtubeId: 'not valid!', title: 'v', caption: '' } },
+      { type: 'heading', attrs: { level: 5 }, content: [{ type: 'text', text: 'H' }] },
+      { type: 'paragraph', attrs: { style: 'x' }, content: [
+        { type: 'text', text: 'a', marks: [{ type: 'bold' }, { type: 'underline' }, { type: 'link', attrs: { href: 'javascript:alert(1)' } }, { type: 'link', attrs: { href: 'https://example.com', target: '_blank' } }, { type: 'pinLink', attrs: { pinId: pin } }, { type: 'pinLink', attrs: { pinId: 'nope' } }] },
+        { type: 'text', text: 7 },
+        { type: 'image', attrs: {} },
+        { type: 'hardBreak' },
+      ] },
+      { type: 'bulletList', content: [{ type: 'listItem', content: [{ type: 'paragraph' }, { type: 'orderedList', content: [{ type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'deep' }] }] }] }] }, { type: 'paragraph' }] },
+    ] }
+    const s = setup([story(id1, [version('en', 'odd', 'Odd', undefined, { published: doc('Odd', { body }) })])])
+
     const detail = await s.get('odd', 'en')
 
-    expect(items[0]).toMatchObject({ title: 'Odd', coverKey: null })
-    expect(detail.ok && detail.value.sections.map(x => x.blocks)).toEqual([
-      [{ type: 'image', key: null, caption: 'no id' }, { type: 'audio', key: null, title: 't', caption: '' }, { type: 'paragraph', text: 'p' }],
-      [],
-      [],
+    expect(detail.ok && detail.value.body.content).toEqual([
+      { type: 'image', attrs: { key: null, alt: '', caption: 'no id' } },
+      { type: 'audio', attrs: { key: null, title: 't', caption: '' } },
+      { type: 'video', attrs: { youtubeId: 'dQw4w9WgXcQ', title: 'v', caption: '' } },
+      { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'H' }] },
+      { type: 'paragraph', content: [
+        { type: 'text', text: 'a', marks: [{ type: 'bold' }, { type: 'link', attrs: { href: 'https://example.com' } }, { type: 'pinLink', attrs: { pinId: pin } }] },
+        { type: 'hardBreak' },
+      ] },
+      { type: 'bulletList', content: [{ type: 'listItem', content: [{ type: 'paragraph' }, { type: 'orderedList', content: [{ type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'deep' }] }] }] }] }] },
     ])
+  })
+
+  it('[E2.13][AC54] a body nested far deeper than the limit is cut, not walked to the bottom', async () => {
+    let node: Record<string, unknown> = { type: 'paragraph', content: [{ type: 'text', text: 'bottom' }] }
+    for (let i = 0; i < 5000; i++)
+      node = { type: i % 2 === 0 ? 'listItem' : 'bulletList', content: [node] }
+    const s = setup([story(id1, [version('en', 'deep', 'Deep', undefined, { published: doc('Deep', { body: { type: 'doc', content: [node] } }) })])])
+
+    const detail = await s.get('deep', 'en')
+
+    // The list is returned, cut at the write depth: the doc is depth 1, so no node below depth 10 survives.
+    const depthOf = (nodes: unknown[], depth: number): number => nodes.reduce<number>((deepest, n) => {
+      const children = (n as { content?: unknown[] }).content ?? []
+      return Math.max(deepest, depth, depthOf(children, depth + 1))
+    }, 0)
+    const returned = detail.ok ? detail.value.body.content : []
+    expect(returned).toHaveLength(1)
+    expect(returned[0]).toMatchObject({ type: 'bulletList' })
+    expect(depthOf(returned, 2)).toBeLessThanOrEqual(10)
+  })
+
+  it('[E2.13][AC54] a body at the depth cap (lists at depths 2, 4, 6 and 8, a paragraph at 10) reads back unchanged', async () => {
+    let inner: Record<string, unknown> = { type: 'listItem', content: [{ type: 'paragraph' }] }
+    for (let i = 1; i < 4; i++)
+      inner = { type: 'listItem', content: [{ type: i % 2 === 0 ? 'bulletList' : 'orderedList', content: [inner] }] }
+    const body = { type: 'doc', content: [{ type: 'bulletList', content: [inner] }] }
+    const s = setup([story(id1, [version('en', 'cap', 'Cap', undefined, { published: doc('Cap', { body }) })])])
+
+    const detail = await s.get('cap', 'en')
+
+    expect(detail.ok && detail.value.body).toEqual(body)
+  })
+
+  it('[E2.13] an empty text node is dropped from the public body', async () => {
+    const body = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: '' }, { type: 'text', text: 'a' }] }, { type: 'paragraph', content: [{ type: 'text', text: '' }] }] }
+    const s = setup([story(id1, [version('en', 'empty', 'Empty', undefined, { published: doc('Empty', { body }) })])])
+
+    const detail = await s.get('empty', 'en')
+
+    expect(detail.ok && detail.value.body.content).toEqual([{ type: 'paragraph', content: [{ type: 'text', text: 'a' }] }, { type: 'paragraph' }])
+  })
+
+  it('[E2.13][AC30] script text comes back as a text node unchanged, and the response has no intro', async () => {
+    const script = '<script>alert(1)</script>'
+    const s = setup([story(id1, [version('en', 'xss', 'Xss', undefined, { published: doc('Xss', { body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: script }] }] } }) })])])
+
+    const detail = await s.get('xss', 'en')
+
+    expect(detail.ok && detail.value.body.content).toEqual([{ type: 'paragraph', content: [{ type: 'text', text: script }] }])
+    expect(JSON.stringify(detail.ok && detail.value)).not.toContain('"intro"')
+  })
+
+  it('[E2.13][AC54] no key of a story card or detail is named or shaped as a price', async () => {
+    const s = setup([story(id1, [version('en', 'lake-day', 'A day')])])
+
+    const detail = await s.get('lake-day', 'en')
+    const keys: string[] = []
+    JSON.parse(JSON.stringify(detail.ok && detail.value), function (key) {
+      keys.push(key)
+      return this[key]
+    })
+
+    expect(keys.filter(k => /price|amount|chf|currency|cost/i.test(k))).toEqual([])
   })
 })

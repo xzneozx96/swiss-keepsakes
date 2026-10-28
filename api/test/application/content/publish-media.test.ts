@@ -1,6 +1,7 @@
 import type { StoryDraft, TourGuideDoc } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AuditEntry, MediaRecord } from '../../../src/modules/content/ports.ts'
+import { emptyStoryBody } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 import { makeCreateStoryGroup } from '../../../src/modules/content/application/create-story-group.ts'
 import { makeCreateStoryVersion } from '../../../src/modules/content/application/create-story-version.ts'
@@ -29,13 +30,13 @@ function setup(seed: MediaRecord[]) {
   const auditLog = { record: async (_tx: null, entry: AuditEntry) => void audit.push(entry) }
   const stories = createFakeStories()
   const tours = createFakeTours()
-  const storyDeps = { uow, stories, media, audit: auditLog, clock }
+  const storyDeps = { uow, stories, media, pins: { idsInStore: async () => [] }, audit: auditLog, clock }
   const tourDeps = { uow, tours, media, audit: auditLog, clock, jobs: { send: async () => {} }, graceHours: 24 }
   const ready = (id: string) => media.markReady(tx, media.rows.get(id)!, undefined, clock.now())
   return { ready, stories, createGroup: makeCreateStoryGroup(storyDeps), createVersion: makeCreateStoryVersion(storyDeps), publishStory: makePublishStoryVersion(storyDeps), createTour: makeCreateTour(tourDeps), publishTour: makePublishTour(tourDeps) }
 }
 
-const storyDoc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [], ...over })
+const storyDoc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: emptyStoryBody, ...over })
 const tourDoc: TourGuideDoc = { title: { en: 'Old town walk' }, summary: {}, meetingPoint: {}, sections: [] }
 
 async function story(s: ReturnType<typeof setup>, draft: StoryDraft) {
@@ -67,7 +68,7 @@ describe('[E2.7] publish refuses media that is still processing', () => {
 
   it('[E2.7] a story whose body image or audio is processing is media-processing', async () => {
     const s = setup([row('img', 'image', 'ready'), row('mp3', 'audio', 'processing')])
-    const id = await story(s, storyDoc({ sections: [{ id: 's1', heading: '', blocks: [{ type: 'image', mediaId: 'img', caption: '' }, { type: 'audio', mediaId: 'mp3', title: '', caption: '' }] }] }))
+    const id = await story(s, storyDoc({ body: { type: 'doc', content: [{ type: 'image', attrs: { mediaId: 'img', alt: '', caption: '' } }, { type: 'audio', attrs: { mediaId: 'mp3', title: '', caption: '' } }] } }))
     expect(await s.publishStory(owner, store, id, 'en', 1, null)).toEqual({ ok: false, reason: 'media-processing' })
   })
 
