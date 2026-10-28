@@ -41,12 +41,12 @@ export const scenarios: { id: Scenario, label: string, expect: string }[] = [
   {
     id: 'story',
     label: 'Guest, first visit, from a story link',
-    expect: 'The story shows at once. Once the first paragraph has scrolled away, a card drops in at the top; it tucks away as the guest reads on and comes back on scroll up, and never moves the text. Its × or Escape hides it for this visit. Hiding it is not a skip: the full-screen flow still comes the first time the guest taps Explore. Only closing the full-screen flow is final.',
+    expect: 'The story shows at once. Ten seconds after the story opens, a card drops in at the top and stays there; it never moves the text. Its × or Escape hides it for this visit. Hiding it is not a skip: the full-screen flow still comes the first time the guest taps Explore. Only closing the full-screen flow is final.',
   },
   {
     id: 'qr',
     label: 'Guest, first visit, from a partner QR code',
-    expect: 'Same as a story link: the page the QR code opens shows at once, with the card while reading. Pages without a first paragraph (map pin, keepsake, short pages) never show the banner.',
+    expect: 'Same as a story link: the page the QR code opens shows at once, and the card comes after 10 seconds. The card appears 10 seconds after the page opens. Other pages (map pin, keepsake) never show it.',
   },
   {
     id: 'returning',
@@ -68,7 +68,7 @@ export const fsCopy = {
     save: 'Save',
     stepOf: (step: number) => `${step} of 2`,
     nudgeTitle: 'Find what you’ll love in Lucerne',
-    nudgeBody: 'Tell us a little about what you love, and discover places and stories picked just for you.',
+    nudgeBody: 'Tell us about what you love, and discover places picked just for you.',
     nudgeStart: 'Personalize my visit',
     nudgeHide: 'Hide for now',
   },
@@ -78,7 +78,7 @@ export const fsCopy = {
     save: 'Speichern',
     stepOf: (step: number) => `${step} von 2`,
     nudgeTitle: 'Entdecken Sie, was Sie in Luzern begeistern wird',
-    nudgeBody: 'Erzählen Sie uns ein wenig von Ihren Vorlieben und entdecken Sie Orte und Geschichten, die genau für Sie ausgewählt sind.',
+    nudgeBody: 'Erzählen Sie uns, was Sie lieben, und entdecken Sie Orte, die genau für Sie ausgewählt sind.',
     nudgeStart: 'Meinen Besuch personalisieren',
     nudgeHide: 'Vorerst ausblenden',
   },

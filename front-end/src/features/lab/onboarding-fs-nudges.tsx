@@ -14,8 +14,8 @@ import { fsCopy } from '@/features/lab/onboarding-fs-data'
 import { photoUrl } from '@/lib/photos'
 
 /**
- * The card while reading: drops in once the first paragraph has scrolled away, tucks away
- * while scrolling down and returns on scroll up. `shown` comes from the stage; while hidden it
+ * The card while reading: drops in 10 seconds after the story opens and stays until it is
+ * hidden. `shown` comes from the stage; while hidden it
  * is inert and aria-hidden. Under prefers-reduced-motion it appears and goes without sliding.
  */
 export function NudgeCard({
