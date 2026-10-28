@@ -10,6 +10,7 @@ import {
   storyVersionMoveBodySchema,
   storyVersionSaveBodySchema,
   storyVersionSchema,
+  tourPublishBodySchema,
   tourSchema,
   tourWriteBodySchema,
 } from '@sk/api-contract'
@@ -41,6 +42,16 @@ describe('[E2.6] content write schemas', () => {
     expect(ok(pinPublishBodySchema, { slug: { de: 'Not A Slug' } })).toBe(false)
     expect(ok(pinPublishBodySchema, { slug: { fr: 'pont' } })).toBe(false)
     expect(ok(pinPublishBodySchema, { title: { en: 'x' } })).toBe(false)
+  })
+
+  it('[E2.6][AC30] a tour publish body is optional in its slug, takes a slug in one or both languages and nothing else', () => {
+    expect(ok(tourPublishBodySchema, {})).toBe(true)
+    expect(ok(tourPublishBodySchema, { slug: { de: 'luzern-tour' } })).toBe(true)
+    expect(ok(tourPublishBodySchema, { slug: { en: 'a', de: 'b' } })).toBe(true)
+    expect(ok(tourPublishBodySchema, { slug: {} })).toBe(false)
+    expect(ok(tourPublishBodySchema, { slug: { de: 'Not A Slug' } })).toBe(false)
+    expect(ok(tourPublishBodySchema, { slug: { fr: 'pont' } })).toBe(false)
+    expect(ok(tourPublishBodySchema, { title: { en: 'x' } })).toBe(false)
   })
 
   it('[E2.6] a localized title of "" or "  " is refused, {} is accepted', () => {

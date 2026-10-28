@@ -93,7 +93,7 @@ describe('[E2.6] the tour save: If-Match, ETag and rowVersion', () => {
     const app = setup()
 
     expect((await send(app, 'PATCH', `${tours}/not-a-uuid`, { 'If-Match': '1' }, {})).status).toBe(400)
-    expect((await send(app, 'DELETE', `${tours}/not-a-uuid`)).status).toBe(400)
+    expect((await send(app, 'DELETE', `${tours}/not-a-uuid`, { 'If-Match': '1' })).status).toBe(400)
   })
 })
 
@@ -243,18 +243,37 @@ describe('[E2.6] the tour write routes', () => {
     expect(await refused.json()).toMatchObject({ type: 'not-published' })
   })
 
-  it('[E2.6][AC79] deleting a published tour answers 409, and a draft one 204 with no body and no If-Match', async () => {
+  it('[E2.6][AC79] deleting a published tour answers 409, and a draft one 204 with no body', async () => {
     const app = setup({ deleteTour: async (_actor, _storeId, id) => id === tourId
       ? { ok: true, value: { id } }
       : { ok: false, reason: 'published-cannot-be-deleted' } })
 
-    const removed = await send(app, 'DELETE', tour)
-    const refused = await send(app, 'DELETE', `${tours}/${photo}`)
+    const removed = await send(app, 'DELETE', tour, { 'If-Match': '1' })
+    const refused = await send(app, 'DELETE', `${tours}/${photo}`, { 'If-Match': '1' })
 
     expect(removed.status).toBe(204)
     expect(await removed.text()).toBe('')
     expect(refused.status).toBe(409)
     expect(await refused.json()).toMatchObject({ type: 'published-cannot-be-deleted' })
+  })
+
+  it('[E2.6] DELETE with no If-Match answers 428, a stale one 412, and the version reaches the use case', async () => {
+    const seen: number[] = []
+    const app = setup({ deleteTour: async (_actor, _storeId, id, ifMatch) => {
+      seen.push(ifMatch)
+      return ifMatch === 2 ? { ok: false, reason: 'stale' } : { ok: true, value: { id } }
+    } })
+
+    const missing = await send(app, 'DELETE', tour)
+    const stale = await send(app, 'DELETE', tour, { 'If-Match': '2' })
+    const removed = await send(app, 'DELETE', tour, { 'If-Match': '3' })
+
+    expect(missing.status).toBe(428)
+    expect(await missing.json()).toMatchObject({ type: 'precondition-required' })
+    expect(stale.status).toBe(412)
+    expect(await stale.json()).toMatchObject({ type: 'precondition-failed' })
+    expect(removed.status).toBe(204)
+    expect(seen).toEqual([2, 3])
   })
 
   it('[E2.6] AC-6 a retired PDF answers 422 media-retired and nothing is saved', async () => {

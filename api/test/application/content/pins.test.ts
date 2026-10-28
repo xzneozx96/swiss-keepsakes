@@ -96,15 +96,24 @@ describe('pin use cases', () => {
   it('[E2.6][AC79] a draft pin is deleted', async () => {
     const s = setup()
     const pin = await created(s)
-    expect(await s.remove(owner, store, pin.id, null)).toEqual({ ok: true, value: { id: pin.id } })
+    expect(await s.remove(owner, store, pin.id, 1, null)).toEqual({ ok: true, value: { id: pin.id } })
     expect(s.pins.rows.has(pin.id)).toBe(false)
+  })
+
+  it('[E2.6][AC79] a delete with a stale If-Match is stale and the pin stays, even a published one (stale before published-cannot-be-deleted)', async () => {
+    const s = setup()
+    const pin = await created(s)
+    expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: false, reason: 'stale' })
+    expect(s.pins.rows.has(pin.id)).toBe(true)
+    await s.publish(owner, store, pin.id, 1, null)
+    expect(await s.remove(owner, store, pin.id, 1, null)).toEqual({ ok: false, reason: 'stale' })
   })
 
   it('[E2.6][AC79] a published pin cannot be deleted and stays published', async () => {
     const s = setup()
     const pin = await created(s)
     await s.publish(owner, store, pin.id, 1, null)
-    expect(await s.remove(owner, store, pin.id, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
+    expect(await s.remove(owner, store, pin.id, 2, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
     expect(s.pins.rows.get(pin.id)?.status).toBe('published')
   })
 
@@ -255,7 +264,7 @@ describe('pin use cases', () => {
     expect(await s.save(other, 'store-2', pin.id, 1, { address: 'x' }, null)).toEqual({ ok: false, reason: 'not-found' })
     expect(await s.publish(other, 'store-2', pin.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
     expect(await s.hide(other, 'store-2', pin.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
-    expect(await s.remove(other, 'store-2', pin.id, null)).toEqual({ ok: false, reason: 'not-found' })
+    expect(await s.remove(other, 'store-2', pin.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
   })
 
   it('[E2.6] AC-7 an actor without manage-content is forbidden and nothing is written', async () => {
@@ -266,7 +275,7 @@ describe('pin use cases', () => {
       await s.save(outsider, store, pin.id, 1, { address: 'x' }, null),
       await s.publish(outsider, store, pin.id, 1, null),
       await s.hide(outsider, store, pin.id, 1, null),
-      await s.remove(outsider, store, pin.id, null),
+      await s.remove(outsider, store, pin.id, 1, null),
       await s.create({ kind: 'anonymous' }, store, complete, null),
     ]
     expect(failures).toEqual(Array.from<unknown>({ length: 6 }).fill({ ok: false, reason: 'forbidden' }))

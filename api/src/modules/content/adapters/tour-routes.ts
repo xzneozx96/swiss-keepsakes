@@ -19,7 +19,7 @@ export interface TourUseCases {
   saveTour: (actor: Actor, storeId: string, tourId: string, ifMatch: number, changes: TourChanges, requestId: string | null) => Promise<Result<TourGuide>>
   publishTour: (actor: Actor, storeId: string, tourId: string, ifMatch: number, requestId: string | null, slug?: Localized) => Promise<Result<TourGuide>>
   unpublishTour: (actor: Actor, storeId: string, tourId: string, ifMatch: number, requestId: string | null) => Promise<Result<TourGuide>>
-  deleteTour: (actor: Actor, storeId: string, tourId: string, requestId: string | null) => Promise<Result<{ id: string }>>
+  deleteTour: (actor: Actor, storeId: string, tourId: string, ifMatch: number, requestId: string | null) => Promise<Result<{ id: string }>>
 }
 
 const tourParams = z.object({ storeId: z.uuid(), tourId: z.uuid() })
@@ -68,7 +68,7 @@ const unpublishTourRoute = createRoute({
 const deleteTourRoute = createRoute({
   method: 'delete',
   path: '/api/store/{storeId}/tours/{tourId}',
-  request: { params: tourParams },
+  request: { params: tourParams, ...withIfMatch },
   responses: {
     204: { description: 'The tour guide is deleted with its stops. Only one that was never published can be', headers: requestIdHeader },
     ...problemResponses,
@@ -116,7 +116,10 @@ export function registerTourRoutes(app: OpenAPIHono<AppEnv>, useCases: TourUseCa
   })
 
   app.openapi(deleteTourRoute, async (c) => {
-    const result = await useCases.deleteTour(c.get('actor'), c.get('store').storeId, c.req.valid('param').tourId, c.get('requestId'))
+    const ifMatch = readIfMatch(c)
+    if (!ifMatch.ok)
+      return ifMatch.response
+    const result = await useCases.deleteTour(c.get('actor'), c.get('store').storeId, c.req.valid('param').tourId, ifMatch.version, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.body(null, 204)

@@ -238,14 +238,23 @@ describe('tour guide use cases', () => {
   it('[E2.6][AC79] a draft tour is deleted, a published or unpublished-after-publish tour is published-cannot-be-deleted', async () => {
     const s = setup()
     const draft = await created(s)
-    expect(await s.remove(owner, store, draft.id, null)).toEqual({ ok: true, value: { id: draft.id } })
+    expect(await s.remove(owner, store, draft.id, 1, null)).toEqual({ ok: true, value: { id: draft.id } })
     expect(s.tours.rows.has(draft.id)).toBe(false)
     const tour = await created(s)
     await s.publish(owner, store, tour.id, 1, null)
-    expect(await s.remove(owner, store, tour.id, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
+    expect(await s.remove(owner, store, tour.id, 2, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
     await s.unpublish(owner, store, tour.id, 2, null)
-    expect(await s.remove(owner, store, tour.id, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
+    expect(await s.remove(owner, store, tour.id, 3, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
     expect(s.tours.rows.has(tour.id)).toBe(true)
+  })
+
+  it('[E2.6][AC79] a delete with a stale If-Match is stale and the tour stays, even a published one (stale before published-cannot-be-deleted)', async () => {
+    const s = setup()
+    const tour = await created(s)
+    expect(await s.remove(owner, store, tour.id, 2, null)).toEqual({ ok: false, reason: 'stale' })
+    expect(s.tours.rows.has(tour.id)).toBe(true)
+    await s.publish(owner, store, tour.id, 1, null)
+    expect(await s.remove(owner, store, tour.id, 1, null)).toEqual({ ok: false, reason: 'stale' })
   })
 
   it('[E2.6] a save with 51 stops is refused by the schema, and a save with 3 stops keeps their order and coordinates', async () => {
@@ -264,7 +273,7 @@ describe('tour guide use cases', () => {
     expect(await s.save(other, 'store-2', tour.id, 1, { stayTag: 'multi_day' }, null)).toEqual({ ok: false, reason: 'not-found' })
     expect(await s.publish(other, 'store-2', tour.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
     expect(await s.unpublish(other, 'store-2', tour.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
-    expect(await s.remove(other, 'store-2', tour.id, null)).toEqual({ ok: false, reason: 'not-found' })
+    expect(await s.remove(other, 'store-2', tour.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
   })
 
   it('[E2.6] AC-7 an outsider is forbidden', async () => {
@@ -275,7 +284,7 @@ describe('tour guide use cases', () => {
       await s.save(outsider, store, tour.id, 1, { stayTag: 'multi_day' }, null),
       await s.publish(outsider, store, tour.id, 1, null),
       await s.unpublish(outsider, store, tour.id, 1, null),
-      await s.remove(outsider, store, tour.id, null),
+      await s.remove(outsider, store, tour.id, 1, null),
       await s.create({ kind: 'anonymous' }, store, complete, null),
     ]
     expect(failures).toEqual(Array.from<unknown>({ length: 6 }).fill({ ok: false, reason: 'forbidden' }))

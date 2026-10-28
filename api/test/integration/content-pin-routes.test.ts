@@ -58,7 +58,7 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     const { owner, pins } = await env.storeWithStaff()
 
     expect((await env.call(`${pins}/not-a-uuid`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: {} })).status).toBe(400)
-    expect((await env.call(`${pins}/not-a-uuid`, { method: 'DELETE', headers: owner.headers })).status).toBe(400)
+    expect((await env.call(`${pins}/not-a-uuid`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '1' } })).status).toBe(400)
     const missing = await env.call(`${pins}/${randomUUID()}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: {} })
     expect(missing.status).toBe(404)
     expect(await missing.json()).toMatchObject({ type: 'not-found' })
@@ -148,7 +148,7 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect((await env.call(`${lucerne.pins}/${theirs.id}`, { method: 'PATCH', headers, body: { address: 'mine now' } })).status).toBe(404)
     expect((await env.call(`${lucerne.pins}/${theirs.id}/publish`, { method: 'POST', headers })).status).toBe(404)
     expect((await env.call(`${lucerne.pins}/${theirs.id}/hide`, { method: 'POST', headers })).status).toBe(404)
-    expect((await env.call(`${lucerne.pins}/${theirs.id}`, { method: 'DELETE', headers: lucerne.owner.headers })).status).toBe(404)
+    expect((await env.call(`${lucerne.pins}/${theirs.id}`, { method: 'DELETE', headers })).status).toBe(404)
     expect(await count(pool, 'select count(*) from content.places where id = $1 and address is null', [theirs.id])).toBe(1)
   })
 
@@ -215,7 +215,7 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect(rows[1]).toMatchObject({ entity: 'pin', store_id: storeId })
     expect(rows[1]?.request_id).toMatch(uuidPattern)
 
-    const removed = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: owner.headers })
+    const removed = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '3' } })
     expect(removed.status).toBe(409)
     expect(await removed.json()).toMatchObject({ type: 'published-cannot-be-deleted', title: 'A published item cannot be deleted. Hide it instead.' })
   })
@@ -224,12 +224,20 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     const { owner, pins } = await env.storeWithStaff()
     const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Draft' } } })).json() as { id: string }
 
-    const removed = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: owner.headers })
+    const missing = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: owner.headers })
+    const stale = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '2' } })
+    expect(missing.status).toBe(428)
+    expect(await missing.json()).toMatchObject({ type: 'precondition-required' })
+    expect(stale.status).toBe(412)
+    expect(await stale.json()).toMatchObject({ type: 'precondition-failed' })
+    expect(await count(pool, 'select count(*) from content.places where id = $1', [created.id])).toBe(1)
+
+    const removed = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '1' } })
 
     expect(removed.status).toBe(204)
     expect(await removed.text()).toBe('')
     expect(await count(pool, 'select count(*) from content.places where id = $1', [created.id])).toBe(0)
-    expect((await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: owner.headers })).status).toBe(404)
+    expect((await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '1' } })).status).toBe(404)
   })
 
   it('[E2.6] a slug another pin of the store holds answers 409 content-slug-taken, never 500', async () => {

@@ -25,7 +25,7 @@ export interface StoryUseCases {
   publishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   unpublishStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<StoryVersion>>
   moveStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, targetGroupId: string, requestId: string | null) => Promise<Result<StoryVersion>>
-  deleteStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, requestId: string | null) => Promise<Result<{ groupId: string, language: Language }>>
+  deleteStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, ifMatch: number, requestId: string | null) => Promise<Result<{ groupId: string, language: Language }>>
 }
 
 const groupParams = z.object({ storeId: z.uuid(), groupId: z.uuid() })
@@ -107,7 +107,7 @@ const moveVersionRoute = createRoute({
 const deleteVersionRoute = createRoute({
   method: 'delete',
   path: versionPath,
-  request: { params: versionParams },
+  request: { params: versionParams, ...withIfMatch },
   responses: {
     204: { description: 'The version is deleted. Only a version that never held published text can be', headers: requestIdHeader },
     ...problemResponses,
@@ -188,8 +188,11 @@ export function registerStoryRoutes(app: OpenAPIHono<AppEnv>, useCases: StoryUse
   })
 
   app.openapi(deleteVersionRoute, async (c) => {
+    const ifMatch = readIfMatch(c)
+    if (!ifMatch.ok)
+      return ifMatch.response
     const { groupId, language } = c.req.valid('param')
-    const result = await useCases.deleteStoryVersion(c.get('actor'), c.get('store').storeId, groupId, language, c.get('requestId'))
+    const result = await useCases.deleteStoryVersion(c.get('actor'), c.get('store').storeId, groupId, language, ifMatch.version, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.body(null, 204)

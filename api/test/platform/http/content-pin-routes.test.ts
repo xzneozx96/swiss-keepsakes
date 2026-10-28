@@ -72,13 +72,14 @@ describe('[E2.6] the pin save: If-Match, ETag and rowVersion', () => {
     ['PATCH', pin, {}],
     ['POST', `${pin}/publish`, undefined],
     ['POST', `${pin}/hide`, undefined],
+    ['DELETE', pin, undefined],
   ])('[E2.6] AC-1 %s %s with no If-Match answers 428 type precondition-required and the use case is not called', async (method, path, body) => {
     let calls = 0
     const count = async () => {
       calls++
       return { ok: false, reason: 'stale' } as const
     }
-    const app = setup({ savePin: count, publishPin: count, hidePin: count })
+    const app = setup({ savePin: count, publishPin: count, hidePin: count, deletePin: count })
 
     const response = await send(app, method, path, {}, body)
 
@@ -105,7 +106,7 @@ describe('[E2.6] the pin save: If-Match, ETag and rowVersion', () => {
     const app = setup()
 
     expect((await send(app, 'PATCH', `${pins}/not-a-uuid`, { 'If-Match': '1' }, {})).status).toBe(400)
-    expect((await send(app, 'DELETE', `${pins}/not-a-uuid`)).status).toBe(400)
+    expect((await send(app, 'DELETE', `${pins}/not-a-uuid`, { 'If-Match': '1' })).status).toBe(400)
   })
 })
 
@@ -217,17 +218,33 @@ describe('[E2.6] publish, hide and delete answer the editor in its own words', (
   it('[E2.6][AC79] DELETE of a published pin answers 409 published-cannot-be-deleted with the editor message', async () => {
     const app = setup({ deletePin: async () => ({ ok: false, reason: 'published-cannot-be-deleted' }) })
 
-    const response = await send(app, 'DELETE', pin)
+    const response = await send(app, 'DELETE', pin, { 'If-Match': '1' })
 
     expect(response.status).toBe(409)
     expect(await response.json()).toMatchObject({ type: 'published-cannot-be-deleted', title: 'A published item cannot be deleted. Hide it instead.' })
   })
 
-  it('[E2.6] DELETE needs no If-Match and answers 204 with no body', async () => {
-    const response = await send(setup(), 'DELETE', pin)
+  it('[E2.6] DELETE with If-Match 3 passes the version to the use case and answers 204 with no body', async () => {
+    const seen: number[] = []
+    const app = setup({ deletePin: async (_actor, _storeId, id, ifMatch) => {
+      seen.push(ifMatch)
+      return { ok: true, value: { id } }
+    } })
+
+    const response = await send(app, 'DELETE', pin, { 'If-Match': '3' })
 
     expect(response.status).toBe(204)
     expect(await response.text()).toBe('')
+    expect(seen).toEqual([3])
+  })
+
+  it('[E2.6] DELETE with a stale If-Match answers 412 precondition-failed', async () => {
+    const app = setup({ deletePin: async () => ({ ok: false, reason: 'stale' }) })
+
+    const response = await send(app, 'DELETE', pin, { 'If-Match': '2' })
+
+    expect(response.status).toBe(412)
+    expect(await response.json()).toMatchObject({ type: 'precondition-failed', status: 412 })
   })
 
   it('[E2.6] a use case that finds no pin answers 404 not-found', async () => {

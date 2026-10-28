@@ -19,7 +19,7 @@ export interface PinUseCases {
   savePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
   publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null, slug?: Localized) => Promise<Result<Pin>>
   hidePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<Pin>>
-  deletePin: (actor: Actor, storeId: string, pinId: string, requestId: string | null) => Promise<Result<{ id: string }>>
+  deletePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<{ id: string }>>
 }
 
 const pinParams = z.object({ storeId: z.uuid(), pinId: z.uuid() })
@@ -68,7 +68,7 @@ const hidePinRoute = createRoute({
 const deletePinRoute = createRoute({
   method: 'delete',
   path: '/api/store/{storeId}/pins/{pinId}',
-  request: { params: pinParams },
+  request: { params: pinParams, ...withIfMatch },
   responses: {
     204: { description: 'The pin is deleted. Only a pin that was never published can be', headers: requestIdHeader },
     ...problemResponses,
@@ -116,7 +116,10 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
   })
 
   app.openapi(deletePinRoute, async (c) => {
-    const result = await useCases.deletePin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, c.get('requestId'))
+    const ifMatch = readIfMatch(c)
+    if (!ifMatch.ok)
+      return ifMatch.response
+    const result = await useCases.deletePin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.body(null, 204)

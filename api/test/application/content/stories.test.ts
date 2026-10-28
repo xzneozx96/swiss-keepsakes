@@ -197,6 +197,16 @@ describe('story use cases', () => {
     expect(s.stories.versions.get(`${g.id}/en`)?.rowVersion).toBe(v.rowVersion + 1)
   })
 
+  it('[E2.6][AC79] a delete with a stale If-Match is stale and the version stays, even a published one (stale before published-cannot-be-deleted)', async () => {
+    const s = setup()
+    const g = await group(s)
+    await version(s, g.id)
+    expect(await s.remove(owner, store, g.id, 'en', 2, null)).toEqual({ ok: false, reason: 'stale' })
+    expect(s.stories.versions.has(`${g.id}/en`)).toBe(true)
+    await s.publish(owner, store, g.id, 'en', 1, null)
+    expect(await s.remove(owner, store, g.id, 'en', 1, null)).toEqual({ ok: false, reason: 'stale' })
+  })
+
   it('[E2.6][AC79] a version that kept published text cannot be deleted, a never-published draft version can', async () => {
     const s = setup()
     const g = await group(s)
@@ -204,9 +214,9 @@ describe('story use cases', () => {
     await version(s, g.id, 'de', { slug: 'ein-tag' })
     await s.publish(owner, store, g.id, 'en', 1, null)
     await s.unpublish(owner, store, g.id, 'en', 2, null)
-    expect(await s.remove(owner, store, g.id, 'en', null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
+    expect(await s.remove(owner, store, g.id, 'en', 3, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
     expect(s.stories.versions.has(`${g.id}/en`)).toBe(true)
-    expect(await s.remove(owner, store, g.id, 'de', null)).toEqual({ ok: true, value: { groupId: g.id, language: 'de' } })
+    expect(await s.remove(owner, store, g.id, 'de', 1, null)).toEqual({ ok: true, value: { groupId: g.id, language: 'de' } })
     expect(s.stories.versions.has(`${g.id}/de`)).toBe(false)
   })
 
@@ -252,7 +262,7 @@ describe('story use cases', () => {
       s.publish(outsider2(), 'store-3', g.id, 'en', 1, null),
       s.unpublish(outsider2(), 'store-3', g.id, 'en', 1, null),
       s.move(outsider2(), 'store-3', g.id, 'en', 1, g.id, null),
-      s.remove(outsider2(), 'store-3', g.id, 'en', null),
+      s.remove(outsider2(), 'store-3', g.id, 'en', 1, null),
       s.saveGroup(outsider2(), 'store-3', g.id, 1, {}, null),
     ]
     for (const result of await Promise.all(calls))
@@ -271,7 +281,7 @@ describe('story use cases', () => {
       s.publish(outsider, store, g.id, 'en', 1, null),
       s.unpublish(outsider, store, g.id, 'en', 1, null),
       s.move(outsider, store, g.id, 'en', 1, g.id, null),
-      s.remove(outsider, store, g.id, 'en', null),
+      s.remove(outsider, store, g.id, 'en', 1, null),
     ]
     for (const result of await Promise.all(calls))
       expect(result).toEqual({ ok: false, reason: 'forbidden' })

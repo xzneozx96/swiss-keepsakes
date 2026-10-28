@@ -18,7 +18,7 @@ export type PublishSlugResult = { ok: true, slug: Localized } | { ok: false, rea
 // names, and the stored slug keeps the rest. On a live item a body slug that differs from the stored one is refused
 // (a live web address is renamed by a save, not a publish); an equal one is fine and one for a language with no stored
 // slug fills it. A slug for a language with no title is dropped, so on a live item a language that loses its title
-// loses its slug and the slug keeps covering the title (places_published_fields_check). A never-published item keeps
+// loses its slug and the slug keeps covering the title (places_published_fields_check, tours_published_fields_check). A never-published item keeps
 // its stored slug as it is, and a slug that misses a title language is a gap.
 export function mergePublishSlug({ stored, body, title, hasBeenPublished }: PublishSlugInput): PublishSlugResult {
   if (hasBeenPublished) {
