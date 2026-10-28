@@ -37,6 +37,11 @@ export const en = {
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototype · mock data',
   'language.label': 'Language',
+  'shell.language.button': 'Language',
+  'shell.language.title': 'Language',
+  'shell.language.close': 'Close',
+  'shell.notice.onlyEn': 'This page is only available in English.',
+  'shell.notice.onlyDe': 'This page is only available in German.',
 
   'nav.guest.label': 'Main',
   'nav.explore': 'Explore',

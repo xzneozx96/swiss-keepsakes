@@ -16,6 +16,7 @@ import { avatarUrl } from '@/lib/avatars'
 import { formatZurichInstant } from '@/lib/shop-dates'
 import { useArticles, useComments } from '../api/queries'
 import { publishedArticles } from '../lib/articles'
+import { fixtureArticles } from '../lib/story-versions'
 
 const WHITESPACE_RUN = /\s+/
 
@@ -31,8 +32,6 @@ export interface CommentView {
 
 export interface ArticleView {
   article: Article
-  /** Set when the guest's language has no version and the other one is shown (R02, D6). */
-  onlyInOtherLanguage: boolean
   meta: string
   authorAvatar: string
   /** Linked gifts and tours in the merchant's order (R16); unpublished ones drop out. */
@@ -58,8 +57,7 @@ function shortName(name: string) {
 const published = (a: Article) => a.publication.status === 'published'
 
 /**
- * C20 data (spec §4.11): the story in the guest's language, or the other language's version
- * with a notice; visible comment threads, most recently active first, replies oldest first; the linked gifts and
+ * C20 data (spec §4.11): the story in the guest's language (none when it has no published version in it); visible comment threads, most recently active first, replies oldest first; the linked gifts and
  * tours in the shop's order (R16); and posting, which needs a signed-in guest (AC16) and shows at once (D11).
  */
 export function useArticle(slug: string): ArticleView | null {
@@ -73,8 +71,10 @@ export function useArticle(slug: string): ArticleView | null {
   const demoTours = useTourRecords()
   const toCard = useProductCard()
 
-  const versions = demoArticles.filter(a => a.slug === slug && published(a))
-  const article = versions.find(a => a.language === language) ?? versions[0]
+  // Fixture stories (outside production) are not in the browser store; only this lookup sees them, so lists and search stay as they are.
+  // Only the guest's language: the other language's text never shows under this page's chrome. The route's loader sends an address with no version in its language to the one that has it.
+  const article = [...demoArticles.filter(a => a.slug === slug && published(a)), ...fixtureArticles(slug)]
+    .find(a => a.language === language)
 
   if (!article)
     return null
@@ -148,7 +148,6 @@ export function useArticle(slug: string): ArticleView | null {
 
   return {
     article,
-    onlyInOtherLanguage: article.language !== language,
     meta: t('article.meta', {
       date: date(publishedAt),
       minutes: article.readMinutes,

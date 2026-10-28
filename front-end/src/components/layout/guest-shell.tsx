@@ -1,6 +1,7 @@
 import type { IconComponent } from '@/components/icons'
 
-import { Link, useMatches } from '@tanstack/react-router'
+import { Link, useLocation, useMatches } from '@tanstack/react-router'
+import { useEffect } from 'react'
 
 import { BackgroundMusic } from '@/components/background-music'
 import {
@@ -10,10 +11,13 @@ import {
   SparkleIcon,
   TourIcon,
 } from '@/components/icons'
+import { LanguageNotice } from '@/components/layout/language-notice'
+import { forgetPublicPath, rememberPublicPath } from '@/components/layout/last-public-path'
 import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
 import { GuestAvatar } from '@/features/account/components/guest-avatar'
 import { useDemoSelector } from '@/features/demo'
+import { isLanguage } from '@/lib/language-routing'
 
 type GuestNavTarget = '/$lang' | '/$lang/gifts' | '/$lang/tours' | '/account'
 
@@ -47,6 +51,19 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
   const hideTabBar = useMatches({
     select: matches => matches.some(m => m.staticData.hideTabBar),
   })
+  const publicPath = useLocation({
+    select: l => isLanguage(l.pathname.split('/')[1]) ? l.pathname + l.searchStr : null,
+  })
+  const onAccount = useLocation({ select: l => l.pathname === '/account' })
+
+  // Profile returns here after a language change (it sits on the unprefixed /account). Any other
+  // unprefixed page (cart, checkout, orders) ends the public visit, so the memory is dropped.
+  useEffect(() => {
+    if (publicPath)
+      rememberPublicPath(publicPath)
+    else if (!onAccount)
+      forgetPublicPath()
+  }, [publicPath, onAccount])
   const ownsBottomSpace = useMatches({
     select: matches => matches.some(m => m.staticData.ownsBottomSpace),
   })
@@ -54,6 +71,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 justify-center bg-default/60">
       <div className="relative flex w-full max-w-[430px] flex-1 flex-col bg-background sm:shadow-overlay">
+        <LanguageNotice />
         <main
           className={
             ownsBottomSpace

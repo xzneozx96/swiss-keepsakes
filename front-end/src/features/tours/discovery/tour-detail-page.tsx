@@ -12,6 +12,7 @@ import {
   TourIcon,
 } from '@/components/icons'
 import { BackButton, CompactBar } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import {
   ListingDetailHeader,
   ListingFavouriteButton,
@@ -158,6 +159,7 @@ export function TourDetail({
         visible={scrolledPast}
       >
         <ListingFavouriteButton favourite={favourite} tone="bar" />
+        <LanguageButton tone="bar" />
       </CompactBar>
       <PhotoGallery
         className="aspect-[4/3.4]"
@@ -178,6 +180,7 @@ export function TourDetail({
           />
           <span className="flex-1" />
           <ListingFavouriteButton favourite={favourite} tone="pill" />
+          <LanguageButton tone="pill" />
         </div>
       </PhotoGallery>
       <div ref={photoEnd} aria-hidden className="h-px" />

@@ -42,8 +42,15 @@ function htmlLang(html: string) {
   return /<html\s[^>]*?\blang="([^"]*)"/.exec(html)?.[1]
 }
 
+// The prototype bar's switch, still the only language control on /cart and /account (no URL language).
 function switchTo(page: Page, language: Lang) {
-  return page.getByRole('group', { name: 'Language' }).getByRole('button', { name: language.toUpperCase(), exact: true }).click()
+  return page.getByRole('group', { name: 'Language', exact: true }).getByRole('button', { name: language.toUpperCase(), exact: true }).click()
+}
+
+// The guest language button and its sheet, on every page that has a language in its address.
+async function chooseInSheet(page: Page, language: Lang) {
+  await page.getByRole('button', { name: /^(Language|Sprache)$/ }).click()
+  await page.getByRole('dialog').getByRole('radio', { name: language === 'de' ? 'Deutsch' : 'English' }).click()
 }
 
 function stored(page: Page) {
@@ -154,7 +161,7 @@ test('[E3.5][AC30] AC-3 /de/stories hydrates with no console error or React #418
 test('[E3.5][AC30] AC-3 the language switch on /en/stories goes to /de/stories with lang de and a stored de', async ({ page }) => {
   await page.goto('/en/stories')
   await hydrated(page)
-  await switchTo(page, 'de')
+  await chooseInSheet(page, 'de')
 
   await expect(page).toHaveURL(/\/de\/stories$/)
   await expect(page.locator('html')).toHaveAttribute('lang', 'de')
@@ -166,7 +173,7 @@ test('[E3.5][AC30] AC-3 the language switch on /en/stories goes to /de/stories w
 test('[E3.5][AC30] AC-3 the language switch keeps the query string', async ({ page }) => {
   await page.goto('/en/search?q=Pilatus')
   await hydrated(page)
-  await switchTo(page, 'de')
+  await chooseInSheet(page, 'de')
 
   await expect(page).toHaveURL(/\/de\/search\?q=Pilatus$/)
   await expect(page.locator('html')).toHaveAttribute('lang', 'de')

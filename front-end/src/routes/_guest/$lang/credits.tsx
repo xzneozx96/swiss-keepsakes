@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import credits from '@/assets/photos/CREDITS.txt?raw'
+import { LanguageButton } from '@/components/layout/language-button'
 import { useLocale } from '@/contexts/locale-context'
 
 const HTTP_PREFIX = /^https?:\/\//
@@ -41,7 +42,10 @@ function CreditsPage() {
 
   return (
     <div className="flex flex-col gap-4 pb-8">
-      <h1 className="font-serif text-title">{t('credits.title')}</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="min-w-0 flex-1 font-serif text-title">{t('credits.title')}</h1>
+        <LanguageButton tone="bar" />
+      </div>
       <p className="text-body text-muted">{t('credits.intro')}</p>
       <ul className="flex flex-col gap-3">
         {blocks.map(block => (

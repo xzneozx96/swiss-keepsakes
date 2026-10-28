@@ -40,6 +40,7 @@ import {
   CartButton,
   CompactBar,
 } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import {
   ListingDetailHeader,
   ListingFavouriteButton,
@@ -217,6 +218,7 @@ export function GiftDetail(props: GiftDetailProps) {
       >
         <span className="flex-1" />
         {heart('bar')}
+        <LanguageButton tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
 
@@ -229,6 +231,7 @@ export function GiftDetail(props: GiftDetailProps) {
           <BackButton label={backLabel} tone="pill" onPress={onBack} />
           <span className="flex-1" />
           {heart('pill')}
+          <LanguageButton tone="pill" />
           <CartButton tone="pill" />
         </div>
       </PhotoGallery>

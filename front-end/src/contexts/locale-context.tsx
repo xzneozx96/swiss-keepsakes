@@ -43,6 +43,25 @@ export function storedLanguage(): Language {
   return readStored<unknown>(STORAGE_KEY, 'en') === 'de' ? 'de' : 'en'
 }
 
+/** The saved choice as it is, or undefined when the guest saved none. Loads nothing. */
+function savedLanguage(): Language | undefined {
+  const saved = readStored<unknown>(STORAGE_KEY, undefined)
+
+  return saved === 'en' || saved === 'de' ? saved : undefined
+}
+
+const savedListeners = new Set<() => void>()
+
+function subscribeToSaved(listener: () => void) {
+  savedListeners.add(listener)
+  window.addEventListener('storage', listener)
+
+  return () => {
+    savedListeners.delete(listener)
+    window.removeEventListener('storage', listener)
+  }
+}
+
 /** The saved language, or English when its messages could not be loaded (offline, a stale page). The saved choice stays, so the next visit tries again. */
 function initialLanguage(): Language {
   const saved = storedLanguage()
@@ -82,9 +101,12 @@ function useDictionary(language: Language): Dictionary | undefined {
 
 interface LocaleContextValue {
   language: Language
+  /** The saved choice, which on a prefixed page can differ from `language` (the address). Undefined on the server, while hydrating, and when the guest has saved none. */
+  preferredLanguage: Language | undefined
   /** Intl locale for numbers, dates and HeroUI's date components. */
   intlLocale: IntlLocale
-  setLanguage: (language: Language) => void
+  /** Switches once the messages are loaded; the last tap wins. `onChanged` runs after the switch, never for a tap that lost or whose load failed. */
+  setLanguage: (language: Language, onChanged?: () => void) => void
   /** Copy for the current language; `{name}` placeholders are filled from `vars`. */
   t: (key: MessageKey, vars?: Record<string, string | number>) => string
 }
@@ -185,7 +207,7 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
   // If the messages are still missing (a stale page, a failed load), English shows until they arrive.
   const language = useDictionary(wanted) ? wanted : 'en'
 
-  const changeLanguage = useCallback((next: Language) => {
+  const changeLanguage = useCallback((next: Language, onChanged?: () => void) => {
     // The last tap wins, even if an earlier language arrives after it. If the messages cannot
     // be loaded the guest stays in the current language.
     const request = ++latestRequestRef.current
@@ -197,8 +219,10 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
         setStoredChoice(next)
         writeStored(STORAGE_KEY, next)
         writeLanguageCookie(next)
+        savedListeners.forEach(listener => listener())
 
         navigateTo?.(next)
+        onChanged?.()
       },
       () => undefined,
     )
@@ -226,6 +250,9 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
     )
   }, [urlLanguage])
 
+  // Undefined on the server and while hydrating, so the server's HTML and the first client render agree.
+  const preferredLanguage = useSyncExternalStore(subscribeToSaved, savedLanguage, () => undefined)
+
   // `urlLanguage` is a dependency because the root shell writes `lang` from the address alone, so leaving
   // a prefixed page resets it to English even when `language` (the saved one) does not change.
   useEffect(() => {
@@ -235,11 +262,12 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
   const value = useMemo<LocaleContextValue>(
     () => ({
       language,
+      preferredLanguage,
       intlLocale: intlLocales[language],
       setLanguage: changeLanguage,
       t: (key, vars) => fill(dictionaryOf(language)[key], vars),
     }),
-    [language, changeLanguage],
+    [language, preferredLanguage, changeLanguage],
   )
 
   return (
@@ -266,6 +294,7 @@ export function LocaleOverride({
     () =>
       messages && {
         language,
+        preferredLanguage: undefined,
         intlLocale: intlLocales[language],
         setLanguage: () => undefined,
         t: (key, vars) => fill(messages[key], vars),

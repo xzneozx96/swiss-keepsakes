@@ -4,6 +4,7 @@ import heroPhoto from '@/assets/photos/lucerne-kapellbruecke-1200.jpg'
 import { SearchIcon } from '@/components/icons'
 import { BrandLogo } from '@/components/layout/brand-logo'
 import { CartButton, SearchButton } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import { useLocale } from '@/contexts/locale-context'
 
 interface HeroProps {
@@ -34,6 +35,7 @@ export function Hero({ ref: endRef, appName, hello, title, photoAlt, searchLabel
               <BrandLogo label={appName} />
             </div>
             <SearchButton label={searchLabel} to="/$lang/search" />
+            <LanguageButton />
             <CartButton />
           </div>
           <div className="flex flex-col gap-0.5 pt-1">

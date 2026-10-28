@@ -19,6 +19,7 @@ import {
   CompactBar,
   SearchButton,
 } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
@@ -113,6 +114,7 @@ export function GiftList({
                   <SearchField.ClearButton />
                 </SearchField.Group>
               </SearchField>
+              <LanguageButton tone="bar" />
             </CompactBar>
           )
         : (
@@ -122,6 +124,7 @@ export function GiftList({
                 tone="bar"
                 onPress={openSearch}
               />
+              <LanguageButton tone="bar" />
               <CartButton tone="bar" />
             </CompactBar>
           )}
@@ -135,6 +138,7 @@ export function GiftList({
         {!searchOpen && (
           <div className="absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center justify-end gap-2">
             <SearchButton label={search.openLabel} onPress={openSearch} />
+            <LanguageButton />
             <CartButton />
           </div>
         )}

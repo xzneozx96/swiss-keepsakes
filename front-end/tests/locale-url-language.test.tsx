@@ -1,7 +1,7 @@
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider, useRouterState } from '@tanstack/react-router'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import { useLayoutEffect } from 'react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { loadDictionary, LocaleOverride, LocaleProvider, useLocale, useUrlLanguage } from '@/contexts/locale-context'
 
@@ -55,6 +55,10 @@ function renderAt(url: string, children: React.ReactNode = <Probe />) {
 }
 
 const cookie = () => document.cookie
+
+// The first import of the German messages compiles the whole dictionary, which on a busy machine takes longer than
+// `waitFor`'s one second. Load it here, where the hook timeout is ten, so the tests only wait for the page.
+beforeAll(() => loadDictionary('de'))
 
 beforeEach(() => {
   localStorage.clear()
