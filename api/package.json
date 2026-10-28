@@ -21,6 +21,8 @@
     "test:smtp-live": "vitest run --config vitest.smtp-live.config.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1152.0",
+    "@aws-sdk/s3-request-presigner": "^3.1152.0",
     "@hono/node-server": "^2.1.5",
     "@hono/zod-openapi": "^1.6.3",
     "@neon/config": "^1.9.2",
@@ -35,6 +37,7 @@
     "pg": "^8.23.1",
     "pg-boss": "^12.38.0",
     "pino": "^10.4.0",
+    "sharp": "^0.35.5",
     "zod": "^4.6.7"
   },
   "devDependencies": {
