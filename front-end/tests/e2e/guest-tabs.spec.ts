@@ -114,7 +114,12 @@ test.describe('[E3.11][AC30] guest tabs and the Profile language change', () => 
     await expect(page).toHaveURL('/en/gifts')
     await page.getByRole('link', { name: /cart/i }).first().click()
     await expect(page).toHaveURL(/\/cart/)
-    await nav(page).getByRole('link', { name: 'Account', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Cart', level: 1 })).toBeVisible()
+    // The cart has no tab bar and no link to Account. A visitor goes from it to Account (the page the visit began on)
+    // by the browser's history, two entries back. The jump skips Keepsakes, so no public page is shown in between
+    // (its Back button would show Keepsakes again and put it back in the memory).
+    await page.evaluate(() => history.go(-2))
+    await expect(page).toHaveURL('/account')
     await page.getByRole('link', { name: /Language/ }).click()
     await page.getByText('Deutsch', { exact: true }).click()
     await expect.poll(() => page.evaluate(() => localStorage.getItem('sk.language'))).toBe('"de"')
