@@ -102,6 +102,7 @@ export const copy = {
   'interest.food-drink': ['Food and drink', 'Essen und Trinken'],
   'interest.lake-mountains': ['Lake and mountains', 'See und Berge'],
   'interest.shopping-keepsakes': ['Shopping and keepsakes', 'Shopping und Andenken'],
+  'interest.local-activities': ['Local activities', 'Lokale Aktivitäten'],
   'day.1': ['Mon', 'Mo'],
   'day.2': ['Tue', 'Di'],
   'day.3': ['Wed', 'Mi'],
@@ -160,6 +161,9 @@ export const copy = {
   'review.categories': ['Map categories', 'Kartenkategorien'],
   'review.stay': ['Stay', 'Aufenthalt'],
   'review.interests': ['Interests', 'Interessen'],
+  'review.free': ['Free to use', 'Gratis nutzbar'],
+  'review.yes': ['Yes', 'Ja'],
+  'review.no': ['No', 'Nein'],
   'review.story': ['Main story', 'Hauptgeschichte'],
   'review.website': ['Website', 'Website'],
   'review.none': ['None', 'Keine'],
@@ -254,6 +258,9 @@ export const copy = {
   'stay.help': ['Orders the map for each guest; nothing is hidden. For a restaurant, Short stay means quick and easy and Multi-day means upscale.', 'Ordnet die Karte für jeden Gast; nichts wird ausgeblendet. Bei einem Restaurant heisst Kurzaufenthalt schnell und einfach, Mehrere Tage gehoben.'],
   'interests.label': ['Interests', 'Interessen'],
   'interests.help': ['Puts the pin higher for guests who chose these. It never hides it.', 'Zeigt den Punkt weiter oben für Gäste mit diesen Interessen. Er wird nie ausgeblendet.'],
+
+  'free.label': ['Free to use (water, toilets, SIM card, free facilities)', 'Gratis nutzbar (Wasser, Toiletten, SIM-Karte, gratis Angebote)'],
+  'free.help': ['Shows the pin under Free and useful on the home.', 'Zeigt den Punkt auf der Startseite unter Gratis und nützlich.'],
 
   // Story and link
   'story.label': ['Main story', 'Hauptgeschichte'],

@@ -12,6 +12,7 @@ import {
   Radio,
   RadioGroup,
   SearchField,
+  Switch,
   Tag,
   TagGroup,
   TextArea,
@@ -308,7 +309,7 @@ export function ContentFields({ editor, language, onLanguage, inTabs = false }: 
   )
 }
 
-/** Map categories (one level of sub-categories), the stay tag and the four fixed interests. */
+/** Map categories (one level of sub-categories), the stay tag and the five fixed interests and the free switch. */
 export function TagFields({ editor }: { editor: PinEditor }) {
   const { c, language } = useCopy()
   const { pin } = editor
@@ -390,6 +391,16 @@ export function TagFields({ editor }: { editor: PinEditor }) {
           ))}
         </TagGroup.List>
       </TagGroup>
+
+      <Switch isSelected={pin.free} onChange={free => editor.patch({ free })}>
+        <Switch.Content>
+          <Switch.Control>
+            <Switch.Thumb />
+          </Switch.Control>
+          <Label>{c('free.label')}</Label>
+        </Switch.Content>
+        <Description>{c('free.help')}</Description>
+      </Switch>
     </>
   )
 }

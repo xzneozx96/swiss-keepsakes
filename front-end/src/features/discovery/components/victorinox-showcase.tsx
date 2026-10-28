@@ -23,6 +23,8 @@ export interface VictorinoxShowcaseProps {
   items: ProductCardProps[]
   story?: StoryView
   isLoading: boolean
+  /** Hide the price line (PRD: no price before the product page). */
+  hidePrice?: boolean
 }
 
 /** The ground of the section: a deep lake blue, so the cream tiles stand out without a harsh edge. */
@@ -54,6 +56,7 @@ export function VictorinoxShowcase({
   items,
   story,
   isLoading,
+  hidePrice = false,
 }: VictorinoxShowcaseProps) {
   const { language } = useLocale()
   const [fanRef, fanSeen] = useInView<HTMLDivElement>()
@@ -153,13 +156,15 @@ export function VictorinoxShowcase({
                       <span className="line-clamp-2 min-h-[2.5em] text-sm leading-tight font-semibold">
                         {item.name.replace(VICTORINOX_NAME_PREFIX, '')}
                       </span>
-                      <span className="mt-auto pt-0.5 text-label text-muted">
-                        {item.fromLabel}
-                        {' '}
-                        <span className="font-semibold text-foreground">
-                          {item.price}
+                      {!hidePrice && (
+                        <span className="mt-auto pt-0.5 text-label text-muted">
+                          {item.fromLabel}
+                          {' '}
+                          <span className="font-semibold text-foreground">
+                            {item.price}
+                          </span>
                         </span>
-                      </span>
+                      )}
                     </span>
                   </Link>
                 </li>

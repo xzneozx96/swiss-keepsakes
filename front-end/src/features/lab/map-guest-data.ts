@@ -22,8 +22,9 @@ import {
 
 export type Language = 'en' | 'de'
 export type Stay = 'short-stay' | 'multi-day' | 'both'
-export type Interest = 'history-culture' | 'food-drink' | 'lake-mountains' | 'shopping-keepsakes'
-export type Answers = 'none' | 'short-food' | 'multi-history'
+export type Interest = 'history-culture' | 'food-drink' | 'lake-mountains' | 'shopping-keepsakes' | 'local-activities'
+/** The lab's preset visitors: no answers, short-stay + food, multi-day + history, and two interests. */
+export type Answers = 'none' | 'short-food' | 'multi-history' | 'lake-shopping'
 export type Tier = 'lead' | 'normal' | 'quiet'
 export type LngLat = [lng: number, lat: number]
 export type Text = Partial<Record<Language, string>>
@@ -70,6 +71,8 @@ export interface Pin {
   categories: string[]
   stay?: Stay
   interests: Interest[]
+  /** Fixed flag: free to use (water, toilets, SIM card, free facilities). Sends the pin to Free and useful on the home. */
+  free: boolean
   hours?: WeeklySpan[]
   dates?: DateEntry[]
   mainStory?: string
@@ -301,6 +304,7 @@ export function toGuestPin(pin: MerchantPin): Pin | undefined {
     categories: pin.categories,
     stay: stayOf[pin.stay],
     interests: pin.interests,
+    free: pin.free,
     hours: hours.length > 0 ? hours : undefined,
     dates: dates.length > 0 ? dates : undefined,
     mainStory: mainStory?.slug,
@@ -336,6 +340,7 @@ const visitor: Record<Answers, { stay?: Stay, interests: Interest[] }> = {
   'none': { interests: [] },
   'short-food': { stay: 'short-stay', interests: ['food-drink'] },
   'multi-history': { stay: 'multi-day', interests: ['history-culture'] },
+  'lake-shopping': { stay: 'multi-day', interests: ['lake-mountains', 'shopping-keepsakes'] },
 }
 
 function stayScore(pin: Pin, stay: Stay | undefined) {

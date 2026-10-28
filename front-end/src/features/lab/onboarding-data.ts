@@ -12,6 +12,7 @@ export type Interest
     | 'food-drink'
     | 'lake-mountains'
     | 'shopping-keepsakes'
+    | 'local-activities'
 export type Phase = 'step1' | 'step2' | 'answered' | 'dismissed' | 'editing'
 export type Page = 'home' | 'story'
 
@@ -26,6 +27,7 @@ export const interests: Interest[] = [
   'food-drink',
   'lake-mountains',
   'shopping-keepsakes',
+  'local-activities',
 ]
 
 export const segmentPhotos: Record<Segment, string> = {
@@ -49,6 +51,7 @@ export const copy = {
       'food-drink': 'Food and drink',
       'lake-mountains': 'Lake and mountains',
       'shopping-keepsakes': 'Shopping and keepsakes',
+      'local-activities': 'Local activities',
     },
     skip: 'Skip',
     back: 'Back',
@@ -88,6 +91,7 @@ export const copy = {
       'food-drink': 'Essen und Trinken',
       'lake-mountains': 'See und Berge',
       'shopping-keepsakes': 'Shopping und Andenken',
+      'local-activities': 'Lokale Aktivitäten',
     },
     skip: 'Überspringen',
     back: 'Zurück',

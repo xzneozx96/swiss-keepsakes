@@ -133,7 +133,7 @@ export function FullscreenGuided({ flow, language, step, setStep, editing, title
         </Button>
       </div>
 
-      <div key={step} className="flex animate-rise flex-col pt-5">
+      <div key={step} className="flex min-h-0 flex-1 animate-rise flex-col pt-5">
         <div className="text-center">
           <Heading id={titleId} language={language} step={step}>
             {step === 1 ? c.stayQuestion : c.interestQuestion}
@@ -141,7 +141,8 @@ export function FullscreenGuided({ flow, language, step, setStep, editing, title
           <p className="mt-2 text-body text-muted">{step === 1 ? c.intro : c.interestHint}</p>
         </div>
 
-        <div className="mt-8">
+        {/* Five interest cards can outgrow a short phone: only the cards scroll, the heading and the button stay. */}
+        <div className="-mx-1 mt-8 min-h-0 overflow-y-auto px-1 py-1">
           {step === 1
             ? (
                 <ChoiceGroup

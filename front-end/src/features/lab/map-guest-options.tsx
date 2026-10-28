@@ -25,6 +25,7 @@ import { InfoNote } from '@/components/info-note'
 import { Media } from '@/components/media'
 import { PhotoGallery } from '@/components/photo-gallery'
 import { SheetFrame } from '@/components/sheet-frame'
+import { PinIconFace } from '@/features/lab/home-v9-pin-icon'
 import {
   DirectionsAction,
   PinFacts,
@@ -387,14 +388,13 @@ const CARD_WIDTH = 311
 
 function PhotoPin({ look, language, onSelect }: { look: PinLook, language: Language, onSelect: (id: string) => void }) {
   const size = look.selected ? 'size-14' : look.tier === 'lead' || look.lit ? 'size-12' : look.tier === 'quiet' ? 'size-8' : 'size-10'
-  const title = pickText(look.pin.title, language)?.value ?? ''
 
   return (
     <PinButton className="flex-col" label={pinLabel(look, language)} look={look} onSelect={onSelect}>
       <span className={`relative block overflow-hidden rounded-full border-[3px] bg-charcoal shadow-[0_4px_14px_rgb(31_24_17/0.35)] transition-[width,height] duration-200 motion-reduce:transition-none ${look.selected ? 'border-accent' : 'border-[#fffaf4]'} ${size}`}>
         {look.pin.photo
           ? <Media alt="" className="size-full" photo={look.pin.photo} />
-          : <span className="flex size-full items-center justify-center font-serif text-sm text-white">{title.slice(0, 1)}</span>}
+          : <PinIconFace pin={look.pin} size={look.selected ? 24 : 18} />}
       </span>
       {look.selected && <span aria-hidden className="-mt-1 size-2.5 rotate-45 bg-accent" />}
       <DateTag className="-bottom-1.5 left-1/2 -translate-x-1/2" language={language} pin={look.pin} />
@@ -413,7 +413,13 @@ function PhotoCluster({ members, zoomIn, language, map }: { members: Pin[], zoom
       onClick={zoomIn}
     >
       {members.slice(0, 2).map((m, i) => (
-        <Media key={m.id} alt="" className={`size-10 rounded-full border-[3px] border-[#fffaf4] bg-charcoal shadow-[0_4px_14px_rgb(31_24_17/0.3)] ${i > 0 ? '-ms-5' : ''}`} photo={m.photo} />
+        m.photo
+          ? <Media key={m.id} alt="" className={`size-10 rounded-full border-[3px] border-[#fffaf4] bg-charcoal shadow-[0_4px_14px_rgb(31_24_17/0.3)] ${i > 0 ? '-ms-5' : ''}`} photo={m.photo} />
+          : (
+              <span key={m.id} className={`block size-10 overflow-hidden rounded-full border-[3px] border-[#fffaf4] shadow-[0_4px_14px_rgb(31_24_17/0.3)] ${i > 0 ? '-ms-5' : ''}`}>
+                <PinIconFace pin={m} size={18} />
+              </span>
+            )
       ))}
       <span className="absolute -end-2 -top-1 flex min-w-6 items-center justify-center rounded-full bg-charcoal px-1.5 text-xs leading-6 font-bold text-white tabular-nums">
         {members.length}
@@ -446,17 +452,28 @@ function CompactCard({
       data-card={pin.id}
     >
       <div className="flex gap-3">
-        {pin.photo && <Media alt="" className="size-[84px] shrink-0 rounded-2xl" photo={pin.photo} />}
+        {/* The thumbnail slot is always there (an icon when the place has no photo), so every card in the row has one shape and one height. */}
+        {pin.photo
+          ? <Media alt="" className="size-[84px] shrink-0 rounded-2xl" photo={pin.photo} />
+          : (
+              <span className="size-[84px] shrink-0 overflow-hidden rounded-2xl">
+                <PinIconFace pin={pin} size={32} />
+              </span>
+            )}
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          {title?.fallback && <p className="text-xs text-muted">{c.onlyIn[title.lang]}</p>}
           <h2 className="truncate font-serif text-card-title outline-none" id={`b-card-${pin.id}`} lang={title?.lang} tabIndex={-1}>
             {title?.value}
           </h2>
-          {factLine(pin, language) && <p className="text-label text-muted tabular-nums">{factLine(pin, language)}</p>}
+          {/* The language notice shares the fact line, so the text always fits beside the 84 px thumbnail. */}
+          {(title?.fallback || factLine(pin, language)) && (
+            <p className="truncate text-label text-muted tabular-nums">
+              {[title?.fallback ? c.onlyIn[title.lang] : undefined, factLine(pin, language)].filter(Boolean).join(' · ')}
+            </p>
+          )}
           {tip && <p className="line-clamp-2 text-sm leading-5" lang={tip.lang}>{tip.value}</p>}
         </div>
       </div>
-      <div className="flex items-center gap-2" inert={!active}>
+      <div className="mt-auto flex items-center gap-2" inert={!active}>
         <Button className="min-h-11 flex-1" variant="secondary" onPress={onDetails}>
           {c.showMore}
         </Button>

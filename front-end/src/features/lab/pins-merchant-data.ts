@@ -18,6 +18,7 @@ export type Interest
     | 'food-drink'
     | 'lake-mountains'
     | 'shopping-keepsakes'
+    | 'local-activities'
 
 export const STAY_TAGS: StayTag[] = ['short_stay', 'multi_day', 'both']
 export const INTERESTS: Interest[] = [
@@ -25,6 +26,7 @@ export const INTERESTS: Interest[] = [
   'food-drink',
   'lake-mountains',
   'shopping-keepsakes',
+  'local-activities',
 ]
 /** Day 1 is Monday, as `content.valid_weekly_hours`. */
 export const WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const
@@ -70,6 +72,8 @@ export interface Pin {
   categories: string[]
   stay: StayTag
   interests: Interest[]
+  /** Fixed flag: free to use (water, toilets, SIM card, free facilities). Sends the pin to Free and useful on the home. */
+  free: boolean
   hours: HoursSpan[]
   dates: DateEntry[]
   storyId: string | null
@@ -156,6 +160,7 @@ function pin(fields: Partial<Pin> & Pick<Pin, 'id' | 'status' | 'slug'>): Pin {
     categories: [],
     stay: 'both',
     interests: [],
+    free: false,
     hours: [],
     dates: [],
     storyId: null,
@@ -238,6 +243,7 @@ export const seedPins: Pin[] = [
     alt: { en: 'The painted fountain on the Weinmarkt', de: 'Der bemalte Brunnen auf dem Weinmarkt' },
     categories: ['essentials'],
     stay: 'short_stay',
+    free: true,
     edited: '2026-10-05',
   }),
   pin({
@@ -250,6 +256,7 @@ export const seedPins: Pin[] = [
     title: { en: 'Public toilets, Schwanenplatz', de: 'Öffentliche WC, Schwanenplatz' },
     tip: { en: 'Free and clean. Closed for works until spring.', de: 'Gratis und sauber. Bis Frühling wegen Bauarbeiten geschlossen.' },
     categories: ['essentials'],
+    free: true,
     hours: spans([1, 2, 3, 4, 5, 6, 7], '06:00', '24:00'),
     edited: '2026-10-12',
   }),
@@ -265,7 +272,7 @@ export const seedPins: Pin[] = [
     photo: 'hofkirche',
     alt: { en: 'The twin towers of the Hofkirche', de: 'Die Doppeltürme der Hofkirche' },
     categories: ['happenings'],
-    interests: ['history-culture'],
+    interests: ['local-activities', 'history-culture'],
     dates: [day('2026-10-26', '19:30', '20:30')],
     edited: '2026-10-10',
   }),
@@ -278,7 +285,7 @@ export const seedPins: Pin[] = [
     title: { en: '', de: 'Weihnachtsmarkt Franziskanerplatz' },
     tip: { en: '', de: 'Glühwein, Raclette und Kerzen aus der Region.' },
     categories: ['happenings'],
-    interests: ['food-drink', 'shopping-keepsakes'],
+    interests: ['local-activities', 'food-drink', 'shopping-keepsakes'],
     hours: spans([1, 2, 3, 4, 5, 6, 7], '11:00', '20:00'),
     dates: [range('2026-11-20', '2026-12-23')],
     edited: '2026-10-27',
@@ -297,7 +304,7 @@ export const seedPins: Pin[] = [
     alt: { en: 'The lake promenade at night', de: 'Die Seepromenade am Abend' },
     categories: ['happenings'],
     stay: 'multi_day',
-    interests: ['lake-mountains'],
+    interests: ['local-activities'],
     dates: [day('2026-11-14', '19:30', '21:00'), day('2026-11-15', '19:30')],
     edited: '2026-10-26',
   }),
@@ -330,7 +337,8 @@ export const seedPins: Pin[] = [
     photo: 'stay',
     alt: { en: 'A hotel room with a view of the lake', de: 'Ein Hotelzimmer mit Blick auf den See' },
     stay: 'multi_day',
-    interests: ['lake-mountains'],
+    // A hotel fits none of the five interests: it is the lab's item for the home's "More in Lucerne" strip.
+    interests: [],
     link: 'https://hotel-am-see.example.ch/rooms',
     edited: '2026-10-09',
   }),
@@ -360,7 +368,7 @@ export const seedPins: Pin[] = [
     photo: 'postcards',
     alt: { en: 'Old postcards on a market table', de: 'Alte Postkarten auf einem Markttisch' },
     categories: ['happenings', 'walks'],
-    interests: ['shopping-keepsakes'],
+    interests: ['local-activities', 'shopping-keepsakes'],
     hours: spans([6], '08:00', '16:00'),
     dates: [range('2026-05-02', '2026-10-31')],
     edited: '2026-09-30',

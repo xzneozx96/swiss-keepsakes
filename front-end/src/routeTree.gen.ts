@@ -28,6 +28,7 @@ import { Route as LabCardsRouteImport } from './routes/lab.cards'
 import { Route as LabCartLineRouteImport } from './routes/lab.cart-line'
 import { Route as LabEyebrowRouteImport } from './routes/lab.eyebrow'
 import { Route as LabHeroRouteImport } from './routes/lab.hero'
+import { Route as LabHomeRouteImport } from './routes/lab.home'
 import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
 import { Route as LabOnboardingFullscreenRouteImport } from './routes/lab.onboarding-fullscreen'
@@ -187,6 +188,11 @@ const LabEyebrowRoute = LabEyebrowRouteImport.update({
 const LabHeroRoute = LabHeroRouteImport.update({
   id: '/lab/hero',
   path: '/lab/hero',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabHomeRoute = LabHomeRouteImport.update({
+  id: '/lab/home',
+  path: '/lab/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabMapRoute = LabMapRouteImport.update({
@@ -545,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/lab/cart-line': typeof LabCartLineRoute
   '/lab/eyebrow': typeof LabEyebrowRoute
   '/lab/hero': typeof LabHeroRoute
+  '/lab/home': typeof LabHomeRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
@@ -628,6 +635,7 @@ export interface FileRoutesByTo {
   '/lab/cart-line': typeof LabCartLineRoute
   '/lab/eyebrow': typeof LabEyebrowRoute
   '/lab/hero': typeof LabHeroRoute
+  '/lab/home': typeof LabHomeRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
@@ -715,6 +723,7 @@ export interface FileRoutesById {
   '/lab/cart-line': typeof LabCartLineRoute
   '/lab/eyebrow': typeof LabEyebrowRoute
   '/lab/hero': typeof LabHeroRoute
+  '/lab/home': typeof LabHomeRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
@@ -803,6 +812,7 @@ export interface FileRouteTypes {
     | '/lab/cart-line'
     | '/lab/eyebrow'
     | '/lab/hero'
+    | '/lab/home'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/onboarding-fullscreen'
@@ -886,6 +896,7 @@ export interface FileRouteTypes {
     | '/lab/cart-line'
     | '/lab/eyebrow'
     | '/lab/hero'
+    | '/lab/home'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/onboarding-fullscreen'
@@ -972,6 +983,7 @@ export interface FileRouteTypes {
     | '/lab/cart-line'
     | '/lab/eyebrow'
     | '/lab/hero'
+    | '/lab/home'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/onboarding-fullscreen'
@@ -1056,6 +1068,7 @@ export interface RootRouteChildren {
   LabCartLineRoute: typeof LabCartLineRoute
   LabEyebrowRoute: typeof LabEyebrowRoute
   LabHeroRoute: typeof LabHeroRoute
+  LabHomeRoute: typeof LabHomeRoute
   LabMapRoute: typeof LabMapRoute
   LabMapLoadingRoute: typeof LabMapLoadingRoute
   LabOnboardingFullscreenRoute: typeof LabOnboardingFullscreenRoute
@@ -1211,6 +1224,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/hero'
       fullPath: '/lab/hero'
       preLoaderRoute: typeof LabHeroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/home': {
+      id: '/lab/home'
+      path: '/lab/home'
+      fullPath: '/lab/home'
+      preLoaderRoute: typeof LabHomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/map': {
@@ -1839,6 +1859,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabCartLineRoute: LabCartLineRoute,
   LabEyebrowRoute: LabEyebrowRoute,
   LabHeroRoute: LabHeroRoute,
+  LabHomeRoute: LabHomeRoute,
   LabMapRoute: LabMapRoute,
   LabMapLoadingRoute: LabMapLoadingRoute,
   LabOnboardingFullscreenRoute: LabOnboardingFullscreenRoute,

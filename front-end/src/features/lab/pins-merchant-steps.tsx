@@ -150,6 +150,7 @@ function Review({ editor, steps, onGo }: { editor: PinEditor, steps: StepView[],
         <ReviewRow label={c('review.categories')}>{categoryNames || none}</ReviewRow>
         <ReviewRow label={c('review.stay')}>{c(`stay.${pin.stay}`)}</ReviewRow>
         <ReviewRow label={c('review.interests')}>{pin.interests.map(i => c(`interest.${i}`)).join(', ') || none}</ReviewRow>
+        <ReviewRow label={c('review.free')}>{c(pin.free ? 'review.yes' : 'review.no')}</ReviewRow>
       </Section>
       <Section {...shared} issues={fieldIssue(['link'])} step="links">
         <ReviewRow label={c('review.story')}>{story ? (story.title[language] || story.title.en || story.title.de) : none}</ReviewRow>
