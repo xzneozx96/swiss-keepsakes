@@ -114,6 +114,7 @@ export function GiftList({
                   <SearchField.ClearButton />
                 </SearchField.Group>
               </SearchField>
+              <LanguageButton tone="bar" />
             </CompactBar>
           )
         : (

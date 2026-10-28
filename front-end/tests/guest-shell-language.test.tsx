@@ -1,7 +1,7 @@
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LanguageButton } from '@/components/layout/language-button'
 import { LanguageNotice } from '@/components/layout/language-notice'
@@ -33,6 +33,7 @@ function renderAt(url: string, availableLanguages?: ('en' | 'de')[]) {
 }
 
 beforeEach(() => {
+  window.scrollTo = vi.fn()
   localStorage.clear()
 })
 

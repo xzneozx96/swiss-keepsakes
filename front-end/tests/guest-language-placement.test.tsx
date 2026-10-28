@@ -1,6 +1,6 @@
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AssistantHeader } from '@/components/assistant'
 import { LocaleProvider } from '@/contexts/locale-context'
@@ -16,6 +16,10 @@ function renderScreen(element: React.ReactNode) {
 }
 
 describe('language button placement', () => {
+  beforeEach(() => {
+    window.scrollTo = vi.fn()
+  })
+
   it('sits in the assistant header (plan, plan sent)', async () => {
     renderScreen(<AssistantHeader subtitle="Shop" onBack={() => {}} />)
 

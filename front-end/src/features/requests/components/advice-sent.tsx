@@ -5,6 +5,7 @@ import { AssistantHeader, AssistantSays } from '@/components/assistant'
 import { EmptyState } from '@/components/empty-state'
 
 import { MessageIcon } from '@/components/icons'
+import { LanguageButton } from '@/components/layout/language-button'
 import { useLocale } from '@/contexts/locale-context'
 import { shop } from '@/features/catalog/seed'
 import { useAdviceRequests } from '@/features/requests/api/queries'
@@ -23,7 +24,10 @@ export function AdviceSent({ requestId }: { requestId?: string }) {
   if (!request) {
     return (
       <div className="flex flex-col gap-6 px-6 pt-[calc(env(safe-area-inset-top,0px)+24px)]">
-        <h1 className="font-serif text-display">{t('advice.title')}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="min-w-0 flex-1 font-serif text-display">{t('advice.title')}</h1>
+          <LanguageButton tone="bar" />
+        </div>
         <EmptyState
           action={{ label: t('placeholder.backHome'), to: '/$lang', params: { lang: language } }}
           icon={MessageIcon}
