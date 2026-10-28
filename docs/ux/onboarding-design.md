@@ -1,7 +1,7 @@
-# Onboarding design: N01 full-screen flow and N24 deep-link banner
+# Onboarding design: N01 full-screen flow and N24 deep-link card
 
-- Status: **final** (chosen in chat on 2026-10-28): N01 is F1 "Guided", and N24 is N2, a thin banner shown at the top while the guest reads a story. Section 6 lists what is still open (none of it blocks building).
-- Screens: N01 (full-screen two-step flow) and N24 (thin floating banner). Slice S1, Track 1, story E4.5.
+- Status: **final** (chosen in chat on 2026-10-28): N01 is F1 "Guided", and N24 is N2, a card floating at the top while the guest reads a story. Section 6 lists what is still open (none of it blocks building).
+- Screens: N01 (full-screen two-step flow) and N24 (floating card). Slice S1, Track 1, story E4.5.
 - Read first: `docs/decisions/2026-10-28-onboarding-full-screen.md` (the rule and why), PRD §3.1 to §3.3, AC24, AC36, AC37, AC38, AC91, AC92, `docs/adr/ADR-006-browser-personalisation-and-map-data.md`.
 - Visual reference: the lab page `/lab/onboarding-fullscreen` (run the front end and open `/lab/onboarding-fullscreen`). The files are listed in "Lab files". **The lab is a design reference, not product code.** It keeps state in React, draws its own phone frame and builds its own dialog. Do not copy it. Build the screens in the product with the rules in "Build notes".
 - Owner references (structure only, not brand or colours): `docs/ux/references/onboarding/ref-1-interest-picker.webp`.
@@ -82,35 +82,39 @@ The guest shell has no menu. There are two entries, both open the same two steps
 - `prefers-reduced-motion`: no open, close or step animation.
 - Use the HeroUI `Modal` in the product. The lab builds its own dialog only to stay inside its phone frame.
 
-## 3. N24: the deep-link banner (option N2, a thin banner while reading)
+## 3. N24: the deep-link card (option N2, a card while reading)
 
-A thin banner that floats under the top edge of the screen while the guest reads a story. **It is never inserted into the content.** The text never moves or reflows when it appears, hides or returns. No backdrop, the page stays scrollable. It follows the guidance of Nielsen Norman Group ("a thin, easy-to-dismiss banner at the top of the page") and Google (banners that use only a small fraction of the screen).
+A card that floats under the top edge of the screen while the guest reads a story. **It is never inserted into the content.** The text never moves or reflows when it appears or hides. No backdrop, the page stays scrollable. Because it appears on a timer, it can float over text the guest is reading until they close it.
 
-### Anatomy (lab version: 359 × 52 px at 375 px wide, the same in EN and DE)
+Note on size: research (Nielsen Norman Group, Google) recommends a thin, easily dismissed banner. The owner tried a thin banner (359 × 52 px) on 2026-10-28 and rejected it as visually poor, then chose this card knowingly. Do not slim it again without asking the owner.
 
-- A floating `aside`, 8 px from the top and sides, `rounded-2xl`, surface fill, overlay shadow. `aria-label` is the title.
-- One row, items centred, 2 px apart: the title (14 px on an 18 px line, medium weight, balanced wrap, up to two lines), a compact red button (max 120 px wide, 13 px text, up to two lines, at least 44 px high), and a × button (44 × 44 px).
-- No photo and no description line. The title and button never clip. German is tight: the title fits two lines only because the button is 120 px wide with small padding. A longer German label pushes the banner to about 62 px. A shorter German button label such as „Personalisieren" would give room. The merchant should review the German.
-- The description "Tell us a little about what you love, and discover places and stories picked just for you." was chosen by the owner but does not fit a thin banner. It is not shown. It is kept in the copy table as a reserve.
+### Anatomy (lab version: 351 px wide and 168 px high in both EN and DE; the description wraps to two lines in each)
+
+- A floating `aside`, 12 px from the top and sides, `rounded-2xl`, surface fill, overlay shadow, 12 px padding, 12 px between rows. `aria-label` is the title.
+- Top row: a 44 px rounded photo (`lake-steamboat`), the title in the serif face (17 px on a 22 px line, balanced wrap, up to two lines), and a × button (44 × 44 px).
+- The description in muted small text across the full card width.
+- One full-width 44 px button.
+- The privacy line is not on the card. It is in the flow.
+- No text clips in EN or DE at 375 px.
 
 ### When it shows
 
-- Shows only when all of these hold: the visitor is a guest, unanswered, the visit began on a deep link, a partner QR or link, or a search landing (not the home), the guest has not hidden it this visit, and **the page is a story page**. On any page without a first paragraph (a map pin card, a keepsake page, a short page) it never shows. Those visitors still get N01 at their first Explore opening.
-- It is **not shown at load.** It drops in the first time the story has scrolled past the end of its first paragraph (the standfirst).
-- It tucks away after about 160 px of further scrolling down, and returns on any scroll up (4 px tolerance).
-- It hides again when the visitor is back above the end of the first paragraph.
-- Entry and exit: a 300 ms slide and fade. None under reduced motion.
-- Keep the scroll position in a ref and flip state only when the shown value changes (AGENTS.md rule 3: no `setState` on every frame).
+- Shows only when all of these hold: the visitor is a guest, unanswered, the visit began on a deep link, a partner QR or link, or a search landing (not the home), the guest has not hidden it this visit, and **the page is a story page**. On any other page (a map pin card, a keepsake page) it never shows. Those visitors still get N01 at their first Explore opening.
+- **It appears 10 seconds after the story page opens** (`NUDGE_DELAY_MS = 10_000` in the lab). It is not shown at load. The timer is the only trigger: there is no scroll logic. An earlier version appeared after the first paragraph scrolled away and tucked away on scrolling. The owner found it unstable and asked for the timer on 2026-10-28.
+- Once shown it **stays** until the guest hides it (× or Escape) or leaves the story page. Scrolling does not hide or return it.
+- The timer starts when the story page is shown, and is cancelled if the guest leaves the story page, hides the card or answers.
+- Entry: a 300 ms slide and fade. None under reduced motion.
+- Implement the timer in an effect with `setTimeout`, and clear it on cleanup.
 
 ### Actions
 
 - **Personalize my visit** opens N01 (the same two steps), focus on the heading.
-- **×** and **Escape** (with focus inside the banner) hide it for this visit only. It is not a skip. N01 still opens at the first Explore opening.
-- While hidden or tucked away the banner is `inert` and `aria-hidden`.
+- **×** and **Escape** (with focus inside the card) hide it for this visit only. It is not a skip. N01 still opens at the first Explore opening.
+- While hidden or tucked away the card is `inert` and `aria-hidden`.
 
 ### Rejected
 
-The inline card inside the story text, the 168 px card with a photo and a description (the first N2 version), a dark one-line pill above the tab bar (N1) and a corner button that expands into a panel (N3).
+The inline card inside the story text, the thin banner of 52 px (tried and rejected on 2026-10-28), a dark one-line pill above the tab bar (N1) and a corner button that expands into a panel (N3). The owner chose N2 as a card.
 
 ## 4. Copy (EN and DE)
 
@@ -118,8 +122,8 @@ DE marked "proposal" is not reviewed by the merchant. The DE rows without the ma
 
 | Screen | Element | EN | DE |
 | --- | --- | --- | --- |
-| N24 | Title, also the banner label | Find what you’ll love in Lucerne | Entdecken Sie, was Sie in Luzern begeistern wird (proposal) |
-| N24 | Description (chosen, **not shown** on the thin banner; reserve) | Tell us a little about what you love, and discover places and stories picked just for you. | Erzählen Sie uns ein wenig von Ihren Vorlieben und entdecken Sie Orte und Geschichten, die genau für Sie ausgewählt sind. (proposal) |
+| N24 | Title, also the card label | Find what you’ll love in Lucerne | Entdecken Sie, was Sie in Luzern begeistern wird (proposal) |
+| N24 | Description | Tell us about what you love, and discover places picked just for you. | Erzählen Sie uns, was Sie lieben, und entdecken Sie Orte, die genau für Sie ausgewählt sind. (proposal) |
 | N24 | Button | Personalize my visit | Meinen Besuch personalisieren (proposal) |
 | N24 | × label | Hide for now | Vorerst ausblenden (proposal) |
 | N01 | Back label | Back | Zurück |
@@ -148,21 +152,23 @@ DE marked "proposal" is not reviewed by the merchant. The DE rows without the ma
 - **The visit flag** that remembers "N24 hidden this visit" and the **entry** of the visit belong in `sessionStorage` or memory, separate from `sk.onboarding`. Use `readStored` and `writeStored` as in `docs/development-rules/frontend/error-handling.md`. Blocked storage stays silent and the app keeps working.
 - **Role gating** reads the session. Wait until the session is known before showing anything, so a signed-in merchant never sees a flash of the flow. Hide the Account "Your trip" row for staff.
 - **Client only.** Neither N01 nor N24 is in the server HTML (ADR-001, ADR-006).
-- **First load.** The flow shows only on a first visit, so load it as a lazy chunk and keep it out of the first-load path (`docs/development-rules/frontend/performance.md`, AGENTS.md). Load only the photos it uses, `lucerne-swan` and `rigi-kaltbad` for step 1, through `@/lib/photos`. The banner has no photo.
+- **First load.** The flow shows only on a first visit, so load it as a lazy chunk and keep it out of the first-load path (`docs/development-rules/frontend/performance.md`, AGENTS.md). Load only the photos it uses, `lucerne-swan` and `rigi-kaltbad` for step 1, through `@/lib/photos`. The card uses `lake-steamboat`.
 - **Layout shift.** The list re-ranks once after hydration. Re-rank only on first render and on an answer change (ADR-006), with the slide described above.
 - **Components.** HeroUI `Modal`, `TagGroup`, `Tag`, `Button`. Icons from `@/components/icons` (`SelectedIcon`, `PlusIcon`, `ChevronLeftIcon`, `CloseIcon`). Do not use `SheetFrame` (a modal drawer).
 - **Tests.** Playwright `[E4.5][AC24][AC36][AC37][AC44][AC91][AC92]` in EN and DE at 375 px. Cover: step 1 Skip lands on step 2 with focus on the heading, × and Escape rules, nothing returns after a skip, hide-then-Explore still opens the flow, staff see nothing, a returning guest sees only the sorted line.
 
 ## 6. Open points
 
-Decided on 2026-10-28 and no longer open: N24 shows on story pages only, N24 is a thin banner without the description, and in change mode a tapped stay saves at once.
+Decided on 2026-10-28 and no longer open: N24 shows on story pages only, N24 stays a card (the thin banner was tried and rejected), and in change mode a tapped stay saves at once.
 
-1. **Consent box (O32).** Order against N01 and the banner is open. Proposal: onboarding first, consent second, never both at once.
-2. **German copy** needs merchant review. The German banner title and button are tight (section 3). Consider a shorter button label.
-3. **Search engines.** Check a crawler render of the home before launch to see whether N01 covers it (E9.6).
-4. **The description line** chosen for N24 is not shown anywhere. If the owner wants it used, a place has to be designed (for example the step 1 subtitle).
-5. **Not tested in a real browser:** reduced motion, screen readers, touch, Shift+Tab wrapping, Escape pressed from the banner's button, and real-device font rendering of the German banner. Test them in E4.5.
-6. **The visit-scoped flag** (banner hidden for this visit) is not shown by the lab. Build it in `sessionStorage` or memory.
+1. **Timer details.** Whether to pause the 10 seconds while the tab is in the background, and whether the card should wait if the guest is in the middle of a scroll. The lab does neither.
+2. **Covering text.** The timed card can cover text the guest is reading. It is dismissible and floats at the top. The owner chose the timer knowingly.
+3. **Consent box (O32).** Order against N01 and the card is open. Proposal: onboarding first, consent second, never both at once.
+4. **German copy** needs merchant review.
+5. **Search engines.** Check a crawler render of the home before launch to see whether N01 covers it (E9.6).
+6. **Card size against guidance.** The card is larger than the thin banner that Nielsen Norman Group and Google favour. The owner chose it on purpose. Revisit only if a launch check (for example a crawler render or a search-landing review) flags it.
+7. **Not tested in a real browser:** reduced motion, screen readers, touch, Shift+Tab wrapping, Escape pressed from the card's button, and real-device font rendering of the German card. Test them in E4.5.
+8. **The visit-scoped flag** (card hidden for this visit) is not shown by the lab. Build it in `sessionStorage` or memory.
 
 ## 7. Lab files (visual reference)
 
@@ -171,7 +177,7 @@ All under `front-end/src/`:
 - `routes/lab.onboarding-fullscreen.tsx`: the page, with a visitor switcher that shows the rule matrix.
 - `features/lab/onboarding-fs-options.tsx`: F1 (steps, controls, choice cards).
 - `features/lab/onboarding-fs-nudges.tsx`: N2.
-- `features/lab/onboarding-fs-kit.tsx`: the dialog shell, the stage rules, the sorted line, the scroll logic of N2.
+- `features/lab/onboarding-fs-kit.tsx`: the dialog shell, the stage rules, the sorted line, the 10-second timer of N24.
 - `features/lab/onboarding-fs-data.ts` and `onboarding-data.ts`: copy, the AC38 fixture, a lab-only ranker, the flow hook.
 - `features/lab/onboarding-kit.tsx`: the phone frame, the ranked list and the mock story.
 

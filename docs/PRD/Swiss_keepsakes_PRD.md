@@ -90,7 +90,7 @@ Onboarding chỉ dành cho khách. Merchant, đối tác và Super Admin không 
 
 Khi khách chưa trả lời và chưa bỏ qua, nếu trang đầu tiên của lượt truy cập hiện tại là trang chủ (màn hình Khám phá) và khách không đến từ QR hoặc link đối tác hay từ kết quả tìm kiếm, ứng dụng hiện onboarding hai bước **toàn màn hình** trước nội dung. Nguồn của lượt truy cập chỉ tính cho lượt đó, không phải cửa sổ giới thiệu 30 ngày của §10.1; khách quay lại sau vài ngày bắt đầu một lượt mới. Khách bỏ qua được ở cả hai bước và đóng được bất cứ lúc nào. Đóng tương đương bỏ qua và onboarding không tự hiện lại.
 
-Khách vào một trang khác trang chủ (câu chuyện, điểm bản đồ, sản phẩm), hoặc đến từ QR hay link đối tác hoặc từ tìm kiếm, không bao giờ bị che trang đó: nội dung hiện ngay và chỉ có một lời nhắc nhỏ nổi trên màn hình, không chèn vào nội dung và không che phần đầu trang, đóng được, với cùng hai bước. Lời nhắc nhỏ chỉ hiện ở trang câu chuyện; trang khác (điểm bản đồ, sản phẩm) không hiện lời nhắc. Đóng lời nhắc nhỏ chỉ ẩn nó trong lượt truy cập đó, không phải bỏ qua. Onboarding toàn màn hình hiện ở lần đầu khách mở màn hình Khám phá từ trong ứng dụng, nếu khách chưa trả lời và chưa bỏ qua. Thứ tự giữa onboarding và hộp đồng ý theo dõi còn mở (O32).
+Khách vào một trang khác trang chủ (câu chuyện, điểm bản đồ, sản phẩm), hoặc đến từ QR hay link đối tác hoặc từ tìm kiếm, không bao giờ bị che trang đó: nội dung hiện ngay và chỉ có một lời nhắc nhỏ nổi trên màn hình, không chèn vào nội dung, đóng được, với cùng hai bước. Lời nhắc hiện 10 giây sau khi trang mở, nên trang đích hiện ngay và không bị che lúc đầu. Lời nhắc nhỏ chỉ hiện ở trang câu chuyện; trang khác (điểm bản đồ, sản phẩm) không hiện lời nhắc. Đóng lời nhắc nhỏ chỉ ẩn nó trong lượt truy cập đó, không phải bỏ qua. Onboarding toàn màn hình hiện ở lần đầu khách mở màn hình Khám phá từ trong ứng dụng, nếu khách chưa trả lời và chưa bỏ qua. Thứ tự giữa onboarding và hộp đồng ý theo dõi còn mở (O32).
 
 1. **Bước 1, loại khách:** short-stay hoặc multi-day.
 2. **Bước 2, sở thích:** chọn một hoặc nhiều mục trong danh sách cố định ở §3.3.
@@ -249,7 +249,7 @@ Mỗi đối tác có QR hoặc link riêng. QR hoặc link bài viết dẫn đ
 
 1. **Chủ nhật**, Tom nhận phòng ở khách sạn Seeblick. Lena đưa Tom tờ thông tin có QR của khách sạn. Tom quét thử rồi đóng trang.
 2. **Thứ Hai 21:00**, Tom tìm "Lucerne old town stories" trên Google và mở thẳng một câu chuyện về phố cổ.
-3. Câu chuyện hiện ngay. Lời nhắc onboarding nhỏ nổi trên màn hình khi Tom đọc xuống, không chặn nội dung. Tom mở lời nhắc, chọn multi-day, "Lịch sử và văn hóa" và "Cảnh quan thiên nhiên".
+3. Câu chuyện hiện ngay. Lời nhắc onboarding nhỏ nổi trên màn hình sau 10 giây, không chèn vào nội dung. Tom mở lời nhắc, chọn multi-day, "Lịch sử và văn hóa" và "Cảnh quan thiên nhiên".
 4. Tom quay lại màn hình Khám phá. Tour và nhà hàng có thẻ multi-day xếp trước.
 5. Lần này Tom vào thẳng, nhưng lượt mở link của khách sạn Seeblick hôm Chủ nhật vẫn còn trong 30 ngày. Nếu Tom mua, đơn ghi nguồn là khách sạn Seeblick (§10.1).
 
@@ -827,7 +827,7 @@ Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC
 | AC88 | Điểm A thuộc hai danh mục bản đồ; điểm B không thuộc danh mục nào | Chip làm nổi bật và làm mờ các điểm khác, không ẩn điểm nào; A được làm nổi bật dưới cả hai chip; B chỉ được làm nổi bật ở "Tất cả" | Phase 1, cổng G11 |
 | AC89 | Khách nhấn "Mở trong Google hoặc Apple Maps" trên thẻ điểm | Ứng dụng bản đồ của điện thoại mở tới điểm đó để dẫn đường; trang không xin quyền vị trí và không vẽ lộ trình | Phase 1, cổng G9, G11 |
 | AC90 | Khách mở liên kết `/:lang/map?place=<slug>` | Bản đồ mở với thẻ của điểm có slug đó. Nếu điểm đã ẩn, đã hết hạn hoặc không có, bản đồ mở bình thường kèm thông báo ngắn "This place is no longer on the map" | Phase 1, cổng G11 |
-| AC91 | Khách lần đầu mở trang qua QR hoặc link đối tác, kết quả tìm kiếm hoặc link sâu (câu chuyện, điểm bản đồ, sản phẩm) | Trang đích hiện ngay và không bị che; chỉ có lời nhắc nhỏ nổi trên màn hình ở trang câu chuyện, không chèn vào nội dung, đóng được (đóng chỉ ẩn lời nhắc trong lượt này); lần đầu khách mở Khám phá từ trong ứng dụng trong cùng lượt, nếu chưa trả lời và chưa bỏ qua, onboarding toàn màn hình hiện | Phase 1 |
+| AC91 | Khách lần đầu mở trang qua QR hoặc link đối tác, kết quả tìm kiếm hoặc link sâu (câu chuyện, điểm bản đồ, sản phẩm) | Trang đích hiện ngay và không bị che; 10 giây sau khi trang mở, ở trang câu chuyện, có một lời nhắc nhỏ nổi trên màn hình, không chèn vào nội dung, đóng được (đóng chỉ ẩn lời nhắc trong lượt này); lần đầu khách mở Khám phá từ trong ứng dụng trong cùng lượt, nếu chưa trả lời và chưa bỏ qua, onboarding toàn màn hình hiện | Phase 1 |
 | AC92 | Merchant, đối tác hoặc Super Admin đăng nhập mở trang công khai, hoặc bất kỳ ai mở `/store`, `/partner`, `/admin`, đăng nhập, lời mời | Onboarding không hiện; nội dung theo thứ tự mặc định (mới nhất trước) nếu không có câu trả lời | Phase 1 |
 
 

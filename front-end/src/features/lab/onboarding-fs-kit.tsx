@@ -7,11 +7,11 @@ import type { Answers, Flow, Language } from '@/features/lab/onboarding-data'
 import type { EndAction, Scenario, Step } from '@/features/lab/onboarding-fs-data'
 
 import { Button } from '@heroui/react'
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useState } from 'react'
 
 import { answerSummary, copy } from '@/features/lab/onboarding-data'
 import { closeAction } from '@/features/lab/onboarding-fs-data'
-import { NudgeBanner } from '@/features/lab/onboarding-fs-nudges'
+import { NudgeCard } from '@/features/lab/onboarding-fs-nudges'
 import { FullscreenGuided } from '@/features/lab/onboarding-fs-options'
 import { PhoneFrame } from '@/features/lab/onboarding-kit'
 
@@ -160,10 +160,13 @@ const arrival: Partial<Record<Scenario, string>> = {
   staff: 'Lab: signed in as store owner or partner',
 }
 
+/** How long after a story opens the nudge card appears (the owner asked for 10 s on 2026-10-28). */
+export const NUDGE_DELAY_MS = 10_000
+
 /**
  * One visitor. The rules: the full-screen flow opens by itself only for an unanswered guest on
- * Explore; a story deep link shows the thin nudge banner instead (only on a page with a first
- * paragraph) and the flow waits for the first tap on Explore. Hiding the nudge is for this visit only; closing the flow is final.
+ * Explore; a story deep link shows the nudge card instead (only on a story page, 10 s after
+ * it opens) and the flow waits for the first tap on Explore. Hiding the nudge is for this visit only; closing the flow is final.
  * Signed-in staff never see any of it.
  */
 export function OnboardingStage({
@@ -183,8 +186,7 @@ export function OnboardingStage({
   const [open, setOpen] = useState(scenario === 'home')
   const [step, setStep] = useState<Step>(1)
   const [nudgeHidden, setNudgeHidden] = useState(false)
-  const [bannerShown, setBannerShown] = useState(false)
-  const scrollRef = useRef({ last: 0, anchor: 0, revealed: false })
+  const [cardShown, setCardShown] = useState(false)
   // The list keeps the order it had when the flow opened, so the re-rank plays as it lifts.
   const [answersAtOpen, setAnswersAtOpen] = useState(flow.answers)
   const asking = flow.phase === 'step1' || flow.phase === 'step2'
@@ -224,32 +226,15 @@ export function OnboardingStage({
       openFlow()
   }
 
-  // The banner drops in once the first paragraph has scrolled away, tucks away after 160px more
-  // of scrolling down, returns on any scroll up. Positions live in a ref; state flips only on change.
-  const onScroll = (event: React.UIEvent<HTMLDivElement>) => {
+  // The card appears NUDGE_DELAY_MS after the story opens and stays until it is hidden or the
+  // visitor leaves the story. No scroll logic: the timer is the only trigger.
+  useEffect(() => {
     if (!showNudge)
       return
-    const scroller = event.currentTarget
-    const lede = scroller.querySelector<HTMLElement>('[data-story-lede]')
-    const top = scroller.scrollTop
-    const pos = scrollRef.current
-    let next = bannerShown
+    const timer = window.setTimeout(setCardShown, NUDGE_DELAY_MS, true)
 
-    if (!lede || top < lede.offsetTop + lede.offsetHeight) {
-      next = false
-    }
-    else if (!pos.revealed || top < pos.last - 4) {
-      pos.revealed = true
-      pos.anchor = top
-      next = true
-    }
-    else if (top > pos.anchor + 160) {
-      next = false
-    }
-    pos.last = top
-    if (next !== bannerShown)
-      setBannerShown(next)
-  }
+    return () => window.clearTimeout(timer)
+  }, [showNudge])
 
   return (
     <div className="relative h-[740px] w-[375px] max-w-full">
@@ -257,9 +242,9 @@ export function OnboardingStage({
         <PhoneFrame
           accountTrip={guest ? reopen : () => {}}
           dock={showNudge && (
-            <NudgeBanner
+            <NudgeCard
               language={language}
-              shown={bannerShown}
+              shown={cardShown}
               onHide={() => setNudgeHidden(true)}
               onStart={openFlow}
             />
@@ -274,7 +259,6 @@ export function OnboardingStage({
           top={arrival[scenario] && (page === 'story' || !guest)
             ? <LabNote>{arrival[scenario]}</LabNote>
             : undefined}
-          onScroll={onScroll}
           onTab={onTab}
         />
       </div>

@@ -45,8 +45,8 @@ function OnboardingFullscreenLab() {
           <h1 className="text-heading">Onboarding (N01) and nudge (N24)</h1>
           <p className="text-sm text-muted">
             F1 Guided, the chosen full-screen flow for a guest’s first visit to the home, and
-            the thin banner that floats in while a guest who arrived by a link reads. Pick a
-            visitor to see who gets the flow, who gets only the banner, and who gets nothing.
+            the card that floats in while a guest who arrived by a link reads. Pick a
+            visitor to see who gets the flow, who gets only the card, and who gets nothing.
             Nothing is saved.
           </p>
         </div>
