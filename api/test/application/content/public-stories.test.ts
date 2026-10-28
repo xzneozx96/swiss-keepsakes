@@ -21,6 +21,10 @@ function setup(stories: PublicStoryRow[], categories: PublicCategoryRow[] = []) 
     listPublishedStories: async () => stories,
     findPublishedStoryBySlug: async (_tx, slug) => stories.find(s => s.versions.some(v => v.slug === slug)),
     listCategories: async () => categories,
+    listVisiblePins: async () => [],
+    findVisiblePin: async () => undefined,
+    listPublishedTours: async () => [],
+    findPublishedTourBySlug: async () => undefined,
   }
   const deps = { uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) }, reads, clock: createManualClock(new Date('2026-10-27T10:00:00Z')) }
   const listStories = makeListStories(deps)
