@@ -33,6 +33,14 @@ export {
   tourWriteBodySchema,
 } from './content.ts'
 export { healthSchema } from './health.ts'
+export {
+  type Media,
+  mediaSchema,
+  type UploadGrant,
+  uploadGrantSchema,
+  type UploadRequest,
+  uploadRequestSchema,
+} from './media.ts'
 export { type Me, meSchema, type MeStore, meStoreSchema } from './me.ts'
 export { type Problem, problemSchema, type ProblemType, problemTypes } from './problem.ts'
 export {

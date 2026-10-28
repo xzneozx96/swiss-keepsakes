@@ -45,6 +45,13 @@ export const problemTypes = [
   'version-exists',
   'not-published',
   'content-in-use',
+  'media-type-not-allowed',
+  'media-too-large',
+  'media-empty',
+  'upload-missing',
+  'media-content-mismatch',
+  'media-processing',
+  'storage-unavailable',
 ] as const
 
 export type ProblemType = (typeof problemTypes)[number]

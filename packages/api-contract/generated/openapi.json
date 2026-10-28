@@ -1041,7 +1041,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -3482,6 +3482,75 @@
           }
         },
         "type": "object"
+      },
+      "UploadGrant": {
+        "description": "Where and how to upload one file",
+        "properties": {
+          "expiresAt": {
+            "description": "The URL stops working at this time",
+            "format": "date-time",
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Send these headers with the PUT",
+            "type": "object"
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "audio",
+              "pdf"
+            ],
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "PUT"
+            ],
+            "type": "string"
+          },
+          "uploadKey": {
+            "description": "Send this back to confirm the upload",
+            "type": "string"
+          },
+          "url": {
+            "description": "PUT the file bytes here",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uploadKey",
+          "url",
+          "method",
+          "headers",
+          "expiresAt",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "UploadRequest": {
+        "additionalProperties": false,
+        "description": "The file to upload. The type and size are checked before a URL is issued",
+        "properties": {
+          "byteSize": {
+            "description": "The size of the file in bytes",
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          "contentType": {
+            "description": "The type of the file: image/jpeg, image/png, image/webp, audio/mpeg or application/pdf",
+            "maxLength": 100,
+            "type": "string"
+          }
+        },
+        "required": [
+          "contentType",
+          "byteSize"
+        ],
+        "type": "object"
       }
     }
   },
@@ -4570,6 +4639,63 @@
               }
             },
             "description": "The store with its new information",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/media/uploads": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadGrant"
+                }
+              }
+            },
+            "description": "Where to PUT the file. The URL works once, for 15 minutes",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"

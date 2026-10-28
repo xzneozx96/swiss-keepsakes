@@ -95,6 +95,7 @@ export function createFakeContentUseCases(): ContentUseCases {
     publishTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, status: 'published', rowVersion: ifMatch + 1 } }),
     unpublishTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, rowVersion: ifMatch + 1 } }),
     deleteTour: async (_actor, _storeId, tourId) => ({ ok: true, value: { id: tourId } }),
+    requestUpload: async (_actor, storeId, input) => ({ ok: true, value: { uploadKey: `${storeId}/0190f0c2-0000-7000-8000-0000000000e1.jpg`, url: 'https://storage.test/uploads/fake', method: 'PUT', headers: { 'Content-Type': input.contentType }, expiresAt: '2026-10-28T10:15:00.000Z', kind: 'image' } }),
     listStories: async () => ({ items: [] }),
     getStory: async () => ({ ok: false, reason: 'not-found' }),
     getPin: async () => ({ ok: false, reason: 'not-found' }),

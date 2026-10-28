@@ -8,7 +8,7 @@ import { createPublicReadRepository } from '../../src/modules/content/adapters/p
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -20,6 +20,7 @@ import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createApp } from '../../src/platform/http/app.ts'
 import { idempotency, idempotencyActor } from '../../src/platform/http/idempotency.ts'
 import { createLogger } from '../../src/platform/logger.ts'
+import { createFakeStorage } from '../support/fake-storage.ts'
 import { insertStore } from '../support/identity-wiring.ts'
 import { silentLogger } from './support.ts'
 
@@ -74,6 +75,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
   const contentUseCases = {
     ...writeUseCases,
+    requestUpload: makeRequestUpload({ storage: createFakeStorage(systemClock), clock: systemClock, newId: () => randomUUID() }),
     listStories: makeListStories(readDeps),
     getStory: makeGetStory(readDeps),
     getPin: makeGetPin(readDeps),

@@ -901,6 +901,58 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/store/{storeId}/media/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Where to PUT the file. The URL works once, for 15 minutes */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UploadGrant"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/member-invitations": {
         parameters: {
             query?: never;
@@ -2540,7 +2592,7 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable. Show generic copy for any other */
             type: string;
         };
         PublicCategory: {
@@ -3120,6 +3172,33 @@ export interface components {
                 de?: string;
                 en?: string;
             };
+        };
+        /** @description Where and how to upload one file */
+        UploadGrant: {
+            /**
+             * Format: date-time
+             * @description The URL stops working at this time
+             */
+            expiresAt: string;
+            /** @description Send these headers with the PUT */
+            headers: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            kind: "image" | "audio" | "pdf";
+            /** @enum {string} */
+            method: "PUT";
+            /** @description Send this back to confirm the upload */
+            uploadKey: string;
+            /** @description PUT the file bytes here */
+            url: string;
+        };
+        /** @description The file to upload. The type and size are checked before a URL is issued */
+        UploadRequest: {
+            /** @description The size of the file in bytes */
+            byteSize: number;
+            /** @description The type of the file: image/jpeg, image/png, image/webp, audio/mpeg or application/pdf */
+            contentType: string;
         };
     };
     responses: never;

@@ -8,7 +8,7 @@ import { createPublicReadRepository } from './modules/content/adapters/public-re
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -42,6 +42,7 @@ import { startJobs } from './platform/jobs/boss.ts'
 import { createJobQueue } from './platform/jobs/queue.ts'
 import { createLogger } from './platform/logger.ts'
 import { createSmtpTransport } from './platform/mail.ts'
+import { createS3Storage, createUnconfiguredStorage } from './platform/storage.ts'
 
 // The shop name in the N01 subject, the sign-in code mail.
 const appName = brandName
@@ -178,8 +179,11 @@ async function main() {
       deleteTour: makeDeleteTour(tourDeps),
     })
     // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
+    // R5: with no AWS_* the service starts, and the media routes answer 503 storage-unavailable.
+    const storage = config.storage ? createS3Storage(config.storage) : createUnconfiguredStorage()
     const contentUseCases = {
       ...writeUseCases,
+      requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => crypto.randomUUID() }),
       listStories: makeListStories(readDeps),
       getStory: makeGetStory(readDeps),
       getPin: makeGetPin(readDeps),
