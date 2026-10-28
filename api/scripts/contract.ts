@@ -1,10 +1,12 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
 import type { OpenAPI3 } from 'openapi-typescript'
+import type { ContentUseCases } from '../src/modules/content/adapters/routes.ts'
 import type { IdentityUseCases } from '../src/modules/identity/adapters/routes.ts'
 import type { AppEnv } from '../src/platform/http/app.ts'
 import { fileURLToPath } from 'node:url'
 import openapiTS, { astToString } from 'openapi-typescript'
 import { z } from 'zod'
+import { registerContentRoutes } from '../src/modules/content/adapters/routes.ts'
 import { registerIdentityRoutes } from '../src/modules/identity/adapters/routes.ts'
 import { createApp } from '../src/platform/http/app.ts'
 import { createLogger } from '../src/platform/logger.ts'
@@ -20,7 +22,7 @@ const unreachable = new Proxy({}, {
   get: () => async () => {
     throw new Error('The contract build calls no use case')
   },
-}) as IdentityUseCases
+}) as IdentityUseCases & ContentUseCases
 
 // The real routes. Building the document calls neither the logger nor the health check.
 export function contractApp(): OpenAPIHono<AppEnv> {
@@ -35,7 +37,7 @@ export function contractApp(): OpenAPIHono<AppEnv> {
     idempotency: async (_c, next) => {
       await next()
     },
-    routes: [app => registerIdentityRoutes(app, unreachable)],
+    routes: [app => registerIdentityRoutes(app, unreachable), app => registerContentRoutes(app, unreachable)],
   })
 }
 

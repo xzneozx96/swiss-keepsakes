@@ -11,6 +11,7 @@
     "noUnusedParameters": true,
     "noEmit": true,
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
     // The API runs src/identity compiled, and Node 22.18 and later would run this source if the sk-compiled flag were missing.
     "erasableSyntaxOnly": true,
     "skipLibCheck": true

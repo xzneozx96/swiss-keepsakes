@@ -72,7 +72,7 @@ function stored(response: Response, bytes: Buffer | null): StoredResponse {
 }
 
 // Every command carries an Idempotency-Key (D11). The first request with a key runs. A repeat from the
-// same actor with the same method, path and body gets the first response again for 24 hours, a repeat with
+// same actor with the same method, path, body and If-Match gets the first response again for 24 hours, a repeat with
 // anything else gets 422, and a repeat while the first has not finished gets 409. See ../idempotency.ts for
 // how the claim joins the command's transaction.
 export function idempotency(deps: { db: Database, clock: Clock, actorId: (c: Context<AppEnv>) => string }): MiddlewareHandler<AppEnv> {
@@ -85,7 +85,7 @@ export function idempotency(deps: { db: Database, clock: Clock, actorId: (c: Con
 
     const scope: IdempotencyScope = { actorId: deps.actorId(c), key }
     const url = new URL(c.req.url)
-    const requestHash = hashRequest(c.req.method, url.pathname + url.search, await c.req.arrayBuffer())
+    const requestHash = hashRequest(c.req.method, url.pathname + url.search, await c.req.arrayBuffer(), c.req.header('If-Match'))
     const now = deps.clock.now()
     const lookup = () => findIdempotencyRecord(deps.db, scope, now)
 

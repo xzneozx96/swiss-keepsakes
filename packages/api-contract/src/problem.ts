@@ -32,6 +32,19 @@ export const problemTypes = [
   'invitation-already-open',
   'cannot-remove-owner',
   'member-not-found',
+  'precondition-failed',
+  'precondition-required',
+  'publish-incomplete',
+  'media-retired',
+  'media-invalid',
+  'reference-invalid',
+  'content-slug-taken',
+  'slug-conflict',
+  'published-cannot-be-deleted',
+  'published-version-cannot-move',
+  'version-exists',
+  'not-published',
+  'content-in-use',
 ] as const
 
 export type ProblemType = (typeof problemTypes)[number]

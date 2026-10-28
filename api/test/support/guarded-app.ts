@@ -2,19 +2,24 @@ import type { Access } from '@sk/domain/identity'
 import type { Logger } from 'pino'
 import type { Database } from '../../src/platform/db/client.ts'
 import type { CommandDeps } from '../../src/platform/http/app.ts'
+import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { invitationPreviewPath, registerIdentityRoutes } from '../../src/modules/identity/adapters/routes.ts'
 import { systemClock } from '../../src/platform/clock.ts'
 import { createApp } from '../../src/platform/http/app.ts'
 import { idempotency, idempotencyActor } from '../../src/platform/http/idempotency.ts'
 import { createLogger } from '../../src/platform/logger.ts'
 import { noCommands } from './commands.ts'
+import { createFakeContentUseCases } from './fake-content-use-cases.ts'
 import { createFakeIdentityUseCases } from './identity-use-cases.ts'
 
 const userCookie = /(?:^|;\s*)sk-test-user=([^;]+)/
 
 export const shopOrigin = 'https://shop.example'
 
-const routes: CommandDeps['routes'] = [app => registerIdentityRoutes(app, createFakeIdentityUseCases())]
+const routes: CommandDeps['routes'] = [
+  app => registerIdentityRoutes(app, createFakeIdentityUseCases()),
+  app => registerContentRoutes(app, createFakeContentUseCases()),
+]
 
 // The default: no Idempotency-Key check, so a test of a guard or of the Origin rule sends no key.
 export const guardedCommands: CommandDeps = { ...noCommands, routes }

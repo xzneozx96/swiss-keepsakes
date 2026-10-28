@@ -254,6 +254,40 @@
         ],
         "type": "object"
       },
+      "LocalizedLongText": {
+        "additionalProperties": false,
+        "description": "Text per language. A present key is non-empty and at most 20000 characters",
+        "properties": {
+          "de": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LocalizedText": {
+        "additionalProperties": false,
+        "description": "Text per language. A present key is non-empty and at most 300 characters",
+        "properties": {
+          "de": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "Me": {
         "properties": {
           "guestId": {
@@ -463,6 +497,449 @@
           "null"
         ]
       },
+      "Pin": {
+        "description": "A map pin as the editor sees it, with its draft and its published text",
+        "properties": {
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "coverMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dates": {
+            "items": {
+              "properties": {
+                "endTime": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "firstDay": {
+                  "type": "string"
+                },
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "lastDay": {
+                  "type": "string"
+                },
+                "startTime": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "firstDay",
+                "lastDay",
+                "startTime",
+                "endTime"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "draft": {
+            "properties": {
+              "tip": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "title": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "title",
+              "tip"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "firstPublishedAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "latitude": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "longitude": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "mainStoryGroupId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "published": {
+            "properties": {
+              "tip": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "title": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "title",
+              "tip"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "slug": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "hidden"
+            ],
+            "type": "string"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "weeklyHours": {
+            "items": {
+              "properties": {
+                "closes": {
+                  "type": "string"
+                },
+                "day": {
+                  "type": "integer"
+                },
+                "opens": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "day",
+                "opens",
+                "closes"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "storeId",
+          "status",
+          "slug",
+          "latitude",
+          "longitude",
+          "address",
+          "weeklyHours",
+          "stayTag",
+          "interests",
+          "coverMediaId",
+          "mainStoryGroupId",
+          "categoryIds",
+          "dates",
+          "draft",
+          "published",
+          "firstPublishedAt",
+          "rowVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "PinPublishBody": {
+        "additionalProperties": false,
+        "description": "Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save",
+        "properties": {
+          "slug": {
+            "additionalProperties": false,
+            "properties": {
+              "de": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "PinWriteBody": {
+        "additionalProperties": false,
+        "description": "Every field is optional. A pin has no type and no price",
+        "properties": {
+          "address": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "type": "array"
+          },
+          "coverMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dates": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "endTime": {
+                  "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "firstDay": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "lastDay": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "startTime": {
+                  "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "firstDay",
+                "lastDay"
+              ],
+              "type": "object"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
+          "interests": {
+            "items": {
+              "enum": [
+                "history-culture",
+                "food-drink",
+                "lake-mountains",
+                "shopping-keepsakes"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "type": "array"
+          },
+          "latitude": {
+            "maximum": 90,
+            "minimum": -90,
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "longitude": {
+            "maximum": 180,
+            "minimum": -180,
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "mainStoryGroupId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slug": {
+            "additionalProperties": false,
+            "properties": {
+              "de": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "tip": {
+            "$ref": "#/components/schemas/LocalizedLongText"
+          },
+          "title": {
+            "$ref": "#/components/schemas/LocalizedText"
+          },
+          "weeklyHours": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "closes": {
+                  "pattern": "^(?:(?:[01]\\d|2[0-3]):[0-5]\\d|24:00)$",
+                  "type": "string"
+                },
+                "day": {
+                  "description": "1 is Monday, 7 is Sunday",
+                  "maximum": 7,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                "opens": {
+                  "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "day",
+                "opens",
+                "closes"
+              ],
+              "type": "object"
+            },
+            "maxItems": 21,
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "PreviewInvitation": {
         "properties": {
           "token": {
@@ -529,7 +1006,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -624,6 +1101,1414 @@
             "maxLength": 120,
             "minLength": 1,
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "StoryDraft": {
+        "additionalProperties": false,
+        "description": "The text of one story version. The title may be empty until it is published",
+        "properties": {
+          "authorName": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "authorRole": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "coverMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "excerpt": {
+            "maxLength": 1000,
+            "type": "string"
+          },
+          "intro": {
+            "maxLength": 20000,
+            "type": "string"
+          },
+          "readMinutes": {
+            "maximum": 600,
+            "minimum": 1,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "sections": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "blocks": {
+                  "items": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "text": {
+                            "maxLength": 20000,
+                            "type": "string"
+                          },
+                          "type": {
+                            "enum": [
+                              "paragraph"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "text"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "caption": {
+                            "maxLength": 300,
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "type": {
+                            "enum": [
+                              "image"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "mediaId",
+                          "caption"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "caption": {
+                            "maxLength": 300,
+                            "type": "string"
+                          },
+                          "title": {
+                            "maxLength": 300,
+                            "type": "string"
+                          },
+                          "type": {
+                            "enum": [
+                              "video"
+                            ],
+                            "type": "string"
+                          },
+                          "youtubeId": {
+                            "pattern": "^[\\w-]{11}$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "youtubeId",
+                          "title",
+                          "caption"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "caption": {
+                            "maxLength": 300,
+                            "type": "string"
+                          },
+                          "mediaId": {
+                            "format": "uuid",
+                            "type": "string"
+                          },
+                          "title": {
+                            "maxLength": 300,
+                            "type": "string"
+                          },
+                          "type": {
+                            "enum": [
+                              "audio"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "mediaId",
+                          "title",
+                          "caption"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "maxItems": 200,
+                  "type": "array"
+                },
+                "heading": {
+                  "maxLength": 300,
+                  "type": "string"
+                },
+                "id": {
+                  "maxLength": 64,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "heading",
+                "blocks"
+              ],
+              "type": "object"
+            },
+            "maxItems": 60,
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 300,
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "excerpt",
+          "intro",
+          "authorName",
+          "authorRole",
+          "readMinutes",
+          "coverMediaId",
+          "sections"
+        ],
+        "type": "object"
+      },
+      "StoryGroup": {
+        "description": "The shared part of the language versions of one story",
+        "properties": {
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "keepsakeProductIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "story",
+              "editorial_review"
+            ],
+            "type": "string"
+          },
+          "placeIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "relatedGroupIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "subjectPlaceId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "storeId",
+          "kind",
+          "subjectPlaceId",
+          "stayTag",
+          "interests",
+          "categoryIds",
+          "placeIds",
+          "keepsakeProductIds",
+          "relatedGroupIds",
+          "rowVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "StoryGroupCreateBody": {
+        "additionalProperties": false,
+        "properties": {
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "type": "array"
+          },
+          "interests": {
+            "items": {
+              "enum": [
+                "history-culture",
+                "food-drink",
+                "lake-mountains",
+                "shopping-keepsakes"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "type": "array"
+          },
+          "keepsakeProductIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 6,
+            "type": "array"
+          },
+          "kind": {
+            "default": "story",
+            "enum": [
+              "story",
+              "editorial_review"
+            ],
+            "type": "string"
+          },
+          "placeIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
+          "relatedGroupIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 3,
+            "type": "array"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "subjectPlaceId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "StoryGroupSaveBody": {
+        "additionalProperties": false,
+        "properties": {
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "type": "array"
+          },
+          "interests": {
+            "items": {
+              "enum": [
+                "history-culture",
+                "food-drink",
+                "lake-mountains",
+                "shopping-keepsakes"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "type": "array"
+          },
+          "keepsakeProductIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 6,
+            "type": "array"
+          },
+          "placeIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
+          "relatedGroupIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 3,
+            "type": "array"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "StoryVersion": {
+        "description": "One language version of a story, with its draft and its published text",
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "draft": {
+            "properties": {
+              "authorName": {
+                "type": "string"
+              },
+              "authorRole": {
+                "type": "string"
+              },
+              "coverMediaId": {
+                "format": "uuid",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "excerpt": {
+                "type": "string"
+              },
+              "intro": {
+                "type": "string"
+              },
+              "readMinutes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "sections": {
+                "items": {
+                  "properties": {
+                    "blocks": {
+                      "items": {
+                        "oneOf": [
+                          {
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "enum": [
+                                  "paragraph"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "text"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "properties": {
+                              "caption": {
+                                "type": "string"
+                              },
+                              "mediaId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "type": {
+                                "enum": [
+                                  "image"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "mediaId",
+                              "caption"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "properties": {
+                              "caption": {
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "enum": [
+                                  "video"
+                                ],
+                                "type": "string"
+                              },
+                              "youtubeId": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "youtubeId",
+                              "title",
+                              "caption"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "properties": {
+                              "caption": {
+                                "type": "string"
+                              },
+                              "mediaId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "enum": [
+                                  "audio"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "mediaId",
+                              "title",
+                              "caption"
+                            ],
+                            "type": "object"
+                          }
+                        ]
+                      },
+                      "type": "array"
+                    },
+                    "heading": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "heading",
+                    "blocks"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "excerpt",
+              "intro",
+              "authorName",
+              "authorRole",
+              "readMinutes",
+              "coverMediaId",
+              "sections"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "groupId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "language": {
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          },
+          "published": {
+            "properties": {
+              "authorName": {
+                "type": "string"
+              },
+              "authorRole": {
+                "type": "string"
+              },
+              "coverMediaId": {
+                "format": "uuid",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "excerpt": {
+                "type": "string"
+              },
+              "intro": {
+                "type": "string"
+              },
+              "readMinutes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "sections": {
+                "items": {
+                  "properties": {
+                    "blocks": {
+                      "items": {
+                        "oneOf": [
+                          {
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "enum": [
+                                  "paragraph"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "text"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "properties": {
+                              "caption": {
+                                "type": "string"
+                              },
+                              "mediaId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "type": {
+                                "enum": [
+                                  "image"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "mediaId",
+                              "caption"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "properties": {
+                              "caption": {
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "enum": [
+                                  "video"
+                                ],
+                                "type": "string"
+                              },
+                              "youtubeId": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "youtubeId",
+                              "title",
+                              "caption"
+                            ],
+                            "type": "object"
+                          },
+                          {
+                            "properties": {
+                              "caption": {
+                                "type": "string"
+                              },
+                              "mediaId": {
+                                "format": "uuid",
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "enum": [
+                                  "audio"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "mediaId",
+                              "title",
+                              "caption"
+                            ],
+                            "type": "object"
+                          }
+                        ]
+                      },
+                      "type": "array"
+                    },
+                    "heading": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "heading",
+                    "blocks"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "excerpt",
+              "intro",
+              "authorName",
+              "authorRole",
+              "readMinutes",
+              "coverMediaId",
+              "sections"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "slug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "type": "string"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "groupId",
+          "storeId",
+          "language",
+          "status",
+          "slug",
+          "draft",
+          "published",
+          "publishedAt",
+          "rowVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "StoryVersionCreateBody": {
+        "additionalProperties": false,
+        "properties": {
+          "draft": {
+            "$ref": "#/components/schemas/StoryDraft"
+          },
+          "language": {
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 200,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "language"
+        ],
+        "type": "object"
+      },
+      "StoryVersionMoveBody": {
+        "additionalProperties": false,
+        "properties": {
+          "targetGroupId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "targetGroupId"
+        ],
+        "type": "object"
+      },
+      "StoryVersionSaveBody": {
+        "additionalProperties": false,
+        "properties": {
+          "draft": {
+            "$ref": "#/components/schemas/StoryDraft"
+          },
+          "slug": {
+            "maxLength": 200,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "TourGuide": {
+        "description": "A tour guide as the editor sees it, with its draft and its published text",
+        "properties": {
+          "coverMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "draft": {
+            "properties": {
+              "meetingPoint": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "sections": {
+                "items": {
+                  "properties": {
+                    "body": {
+                      "properties": {
+                        "de": {
+                          "type": "string"
+                        },
+                        "en": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "heading": {
+                      "properties": {
+                        "de": {
+                          "type": "string"
+                        },
+                        "en": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "heading",
+                    "body"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "summary": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "title": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "title",
+              "summary",
+              "meetingPoint",
+              "sections"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "durationMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "keepsakeProductIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "pdfMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "published": {
+            "properties": {
+              "meetingPoint": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "sections": {
+                "items": {
+                  "properties": {
+                    "body": {
+                      "properties": {
+                        "de": {
+                          "type": "string"
+                        },
+                        "en": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "heading": {
+                      "properties": {
+                        "de": {
+                          "type": "string"
+                        },
+                        "en": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "heading",
+                    "body"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "summary": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "title": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "required": [
+              "title",
+              "summary",
+              "meetingPoint",
+              "sections"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "slug": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "type": "string"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "stops": {
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "latitude": {
+                  "type": "number"
+                },
+                "longitude": {
+                  "type": "number"
+                },
+                "mediaId": {
+                  "format": "uuid",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "minutesFromStart": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "placeId": {
+                  "format": "uuid",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "position": {
+                  "type": "integer"
+                },
+                "text": {
+                  "properties": {
+                    "de": {
+                      "type": "string"
+                    },
+                    "en": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "title": {
+                  "properties": {
+                    "de": {
+                      "type": "string"
+                    },
+                    "en": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "required": [
+                "id",
+                "position",
+                "latitude",
+                "longitude",
+                "title",
+                "text",
+                "minutesFromStart",
+                "mediaId",
+                "placeId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "storeId",
+          "status",
+          "slug",
+          "stayTag",
+          "interests",
+          "durationMinutes",
+          "coverMediaId",
+          "pdfMediaId",
+          "keepsakeProductIds",
+          "stops",
+          "draft",
+          "published",
+          "rowVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "TourGuideWriteBody": {
+        "additionalProperties": false,
+        "description": "Every field is optional. A tour guide has no price and no departure",
+        "properties": {
+          "coverMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "draft": {
+            "additionalProperties": false,
+            "properties": {
+              "meetingPoint": {
+                "$ref": "#/components/schemas/LocalizedText"
+              },
+              "sections": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "body": {
+                      "$ref": "#/components/schemas/LocalizedLongText"
+                    },
+                    "heading": {
+                      "$ref": "#/components/schemas/LocalizedText"
+                    },
+                    "id": {
+                      "maxLength": 64,
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "heading",
+                    "body"
+                  ],
+                  "type": "object"
+                },
+                "maxItems": 40,
+                "type": "array"
+              },
+              "summary": {
+                "$ref": "#/components/schemas/LocalizedLongText"
+              },
+              "title": {
+                "$ref": "#/components/schemas/LocalizedText"
+              }
+            },
+            "type": "object"
+          },
+          "durationMinutes": {
+            "maximum": 10080,
+            "minimum": 1,
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "interests": {
+            "items": {
+              "enum": [
+                "history-culture",
+                "food-drink",
+                "lake-mountains",
+                "shopping-keepsakes"
+              ],
+              "type": "string"
+            },
+            "maxItems": 4,
+            "type": "array"
+          },
+          "keepsakeProductIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 3,
+            "type": "array"
+          },
+          "pdfMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slug": {
+            "additionalProperties": false,
+            "properties": {
+              "de": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "stops": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "latitude": {
+                  "maximum": 90,
+                  "minimum": -90,
+                  "type": "number"
+                },
+                "longitude": {
+                  "maximum": 180,
+                  "minimum": -180,
+                  "type": "number"
+                },
+                "mediaId": {
+                  "format": "uuid",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "minutesFromStart": {
+                  "maximum": 10080,
+                  "minimum": 0,
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "placeId": {
+                  "format": "uuid",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "text": {
+                  "$ref": "#/components/schemas/LocalizedLongText"
+                },
+                "title": {
+                  "$ref": "#/components/schemas/LocalizedText"
+                }
+              },
+              "required": [
+                "latitude",
+                "longitude"
+              ],
+              "type": "object"
+            },
+            "maxItems": 50,
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "TourPublishBody": {
+        "additionalProperties": false,
+        "description": "Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save",
+        "properties": {
+          "slug": {
+            "additionalProperties": false,
+            "properties": {
+              "de": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "type": "object"
           }
         },
         "type": "object"
@@ -1341,6 +3226,1360 @@
             },
             "description": "The store is live",
             "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pins": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinWriteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The new draft pin",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pins/{pinId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The pin is deleted. Only a pin that was never published can be",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinWriteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The pin with the change saved. A left-out field stays, null clears, a list replaces",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pins/{pinId}/hide": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The pin is hidden. Its published text is kept",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/pins/{pinId}/publish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinPublishBody"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The pin is live with its draft",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoryGroupCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryGroup"
+                }
+              }
+            },
+            "description": "The new story group, with no version yet",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/{groupId}": {
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoryGroupSaveBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryGroup"
+                }
+              }
+            },
+            "description": "The group with the change saved. A left-out field stays, a list replaces",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/{groupId}/versions": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoryVersionCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryVersion"
+                }
+              }
+            },
+            "description": "The new draft version in that language",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/{groupId}/versions/{language}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The version is deleted. Only a version that never held published text can be",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoryVersionSaveBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryVersion"
+                }
+              }
+            },
+            "description": "The version with the draft saved. A save replaces the whole draft document",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/{groupId}/versions/{language}/move": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoryVersionMoveBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryVersion"
+                }
+              }
+            },
+            "description": "The draft version now belongs to the target group. A published version cannot move",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/{groupId}/versions/{language}/publish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryVersion"
+                }
+              }
+            },
+            "description": "This language is live with its draft. Other languages are not touched",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/story-groups/{groupId}/versions/{language}/unpublish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryVersion"
+                }
+              }
+            },
+            "description": "The version is a draft again. Its published text is kept",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/tours": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TourGuideWriteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TourGuide"
+                }
+              }
+            },
+            "description": "The new draft tour guide",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/tours/{tourId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tourId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The tour guide is deleted with its stops. Only one that was never published can be",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tourId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TourGuideWriteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TourGuide"
+                }
+              }
+            },
+            "description": "The tour guide with the change saved. A left-out field stays, null clears, a list replaces",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/tours/{tourId}/publish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tourId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TourPublishBody"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TourGuide"
+                }
+              }
+            },
+            "description": "The tour guide is live with its draft",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/tours/{tourId}/unpublish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tourId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TourGuide"
+                }
+              }
+            },
+            "description": "The tour guide is a draft again. Its published text is kept",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
