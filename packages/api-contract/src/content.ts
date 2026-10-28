@@ -128,7 +128,7 @@ export const pinSchema = z.object({
 // strict attributes. The contract imports only zod, so these constants repeat packages/domain/src/content/body.ts;
 // a test fails when the two differ. The list nesting is unrolled to a fixed number of levels, so the check that
 // refuses a deep body never meets a deeper one (a recursive schema would walk it first).
-export const STORY_BODY_LIMITS = { maxBytes: 200_000, maxDepth: 8, maxMedia: 100 } as const
+export const STORY_BODY_LIMITS = { maxBytes: 200_000, maxDepth: 10, maxMedia: 100 } as const
 export const BODY_NODE_TYPES = ['paragraph', 'text', 'hardBreak', 'heading', 'blockquote', 'bulletList', 'orderedList', 'listItem', 'image', 'video', 'audio'] as const
 export const BODY_MARK_TYPES = ['bold', 'italic', 'link', 'pinLink'] as const
 export const BODY_LINK_PROTOCOLS = ['https:', 'http:', 'mailto:'] as const
@@ -166,19 +166,23 @@ const bodyBlockquoteSchema = z.strictObject({ type: z.literal('blockquote'), con
 
 // A list item holds paragraphs and nested lists; `levels` more list levels may open inside it. A nested list is
 // one schema with a two-value type, so the unrolled schema grows with the levels and not with their square.
+type BodyParagraph = z.infer<typeof bodyParagraphSchema>
+interface BodyListItem { type: 'listItem', content: (BodyParagraph | BodyNestedList)[] }
+interface BodyNestedList { type: 'bulletList' | 'orderedList', content: BodyListItem[] }
 const listTypes = z.enum(['bulletList', 'orderedList'])
-function bodyList(type: z.ZodType, levels: number): z.ZodType {
-  const item = z.strictObject({
+function bodyListItem(levels: number): z.ZodType<BodyListItem> {
+  return z.strictObject({
     type: z.literal('listItem'),
     content: z.array(levels > 0
-      ? z.discriminatedUnion('type', [bodyParagraphSchema, bodyList(listTypes, levels - 1) as never])
+      ? z.discriminatedUnion('type', [bodyParagraphSchema, z.strictObject({ type: listTypes, content: z.array(bodyListItem(levels - 1)) })])
       : bodyParagraphSchema),
   })
-  return z.strictObject({ type: type as never, content: z.array(item) })
 }
 
-// Depth 8 allows lists at depths 2, 4, 6 and 8; two more levels let a too-deep body reach the depth check.
+// Depth 10 allows lists at depths 2, 4, 6, 8 and 10; two more nested levels let a too-deep body reach the depth check.
 const listLevels = 5
+const bodyBulletListSchema = z.strictObject({ type: z.literal('bulletList'), content: z.array(bodyListItem(listLevels)) })
+const bodyOrderedListSchema = z.strictObject({ type: z.literal('orderedList'), content: z.array(bodyListItem(listLevels)) })
 
 const bodyImageSchema = z.strictObject({
   type: z.literal('image'),
@@ -197,8 +201,8 @@ const bodyNodeSchema = z.discriminatedUnion('type', [
   bodyParagraphSchema,
   bodyHeadingSchema,
   bodyBlockquoteSchema,
-  bodyList(z.literal('bulletList'), listLevels) as never,
-  bodyList(z.literal('orderedList'), listLevels) as never,
+  bodyBulletListSchema,
+  bodyOrderedListSchema,
   bodyImageSchema,
   bodyVideoSchema,
   bodyAudioSchema,
@@ -237,10 +241,10 @@ function firstCapFault(body: Walked): { path: Path, message: string } | undefine
         fault = { path: here, message: `Nesting is deeper than ${STORY_BODY_LIMITS.maxDepth} levels` }
         return
       }
-      if (node.type === 'image' || node.type === 'audio') {
+      if (node.type === 'image' || node.type === 'video' || node.type === 'audio') {
         media++
         if (media > STORY_BODY_LIMITS.maxMedia) {
-          fault = { path: here, message: `A body holds at most ${STORY_BODY_LIMITS.maxMedia} images and audio files` }
+          fault = { path: here, message: `A body holds at most ${STORY_BODY_LIMITS.maxMedia} images, videos and audio files` }
           return
         }
       }

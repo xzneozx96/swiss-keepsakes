@@ -1,3 +1,4 @@
+import type { StoryDraft } from '@sk/api-contract'
 import {
   BODY_LINK_PROTOCOLS,
   BODY_MARK_TYPES,
@@ -14,6 +15,7 @@ import {
   isSafeLinkHref,
 } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 
 const uuid = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
 const uuid2 = '4f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2e'
@@ -28,14 +30,6 @@ function firstIssue(body: unknown) {
   return result.success ? undefined : result.error.issues[0]
 }
 const pathOf = (body: unknown) => firstIssue(body)?.path.join('.')
-
-// One list nested `levels` deep: list depth 2, item 3, inner list 4, ...; the last paragraph and its text add 2.
-function nestedList(levels: number): unknown {
-  let inner: unknown = { type: 'listItem', content: [p('x')] }
-  for (let i = 1; i < levels; i++)
-    inner = { type: 'listItem', content: [{ type: 'bulletList', content: [inner] }] }
-  return { type: 'bulletList', content: [inner] }
-}
 
 const everything = doc(
   { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Two' }] },
@@ -58,6 +52,19 @@ const everything = doc(
   { type: 'video', attrs: { youtubeId: 'dQw4w9WgXcQ', title: 't', caption: 'c' } },
   { type: 'audio', attrs: { mediaId: uuid2, title: 't', caption: 'c' } },
 )
+
+describe('[E2.13][AC30] the inferred body type', () => {
+  it('holds the list nodes (compile-time: this file fails tsc if bulletList or orderedList leaves the union)', () => {
+    const list: StoryDraft['body']['content'][number] = {
+      type: 'bulletList',
+      content: [{ type: 'listItem', content: [{ type: 'paragraph' }, { type: 'orderedList', content: [{ type: 'listItem', content: [{ type: 'paragraph' }] }] }] }],
+    }
+    // @ts-expect-error a table is not a body node
+    const table: StoryDraft['body']['content'][number] = { type: 'table' }
+    expect(storyBodySchema.safeParse(doc(list)).success).toBe(true)
+    expect(table.type).toBe('table')
+  })
+})
 
 describe('[E2.13][AC30] the story body schema', () => {
   it('accepts a document with every node and mark, and an empty paragraph', () => {
@@ -120,22 +127,24 @@ describe('[E2.13][AC30] the story body schema', () => {
     expect(pathOf(doc({ type: 'image', attrs: { mediaId: uuid, alt: '', caption: '' }, content: [] }))).toBe('body.content.0')
   })
 
-  it('depth 8 is accepted and depth 9 is refused at the node of depth 9', () => {
-    // list 2, item 3, list 4, item 5, list 6, item 7, paragraph 8 (the text node below would be 9)
-    const deep = (levels: number, leaf: unknown) => {
+  it('depth 10 is accepted and depth 11 is refused at the node of depth 11 with the depth message', () => {
+    // list 2, item 3, list 4, item 5, list 6, item 7, list 8, item 9, then the leaf: a paragraph at 10, its text at 11
+    const deep = (lists: number, leaf: unknown) => {
       let inner: unknown = { type: 'listItem', content: [leaf] }
-      for (let i = 1; i < levels; i++)
-        inner = { type: 'listItem', content: [{ type: 'bulletList', content: [inner] }] }
+      for (let i = 1; i < lists; i++)
+        inner = { type: 'listItem', content: [{ type: i % 2 === 0 ? 'orderedList' : 'bulletList', content: [inner] }] }
       return { type: 'bulletList', content: [inner] }
     }
-    const emptyParagraph = { type: 'paragraph' }
-    // three lists, the empty paragraph at depth 8
-    expect(storyDraftSchema.safeParse(draftOf(doc(deep(3, emptyParagraph)))).success).toBe(true)
-    // the same with a text node inside it is depth 9
-    const issue = firstIssue(doc(deep(3, p('x'))))
-    expect(issue?.path.join('.')).toBe('body.content.0.content.0.content.0.content.0.content.0.content.0.content.0.content.0')
-    expect(issue?.message).toMatch(/deeper than 8/)
-    expect(pathOf(doc(nestedList(4)))).toMatch(/^body\.content\.0\./)
+    expect(storyDraftSchema.safeParse(draftOf(doc(deep(4, { type: 'paragraph' })))).success).toBe(true)
+    // three nested lists with text fit (text at depth 9)
+    expect(storyDraftSchema.safeParse(draftOf(doc(deep(3, p('x'))))).success).toBe(true)
+    const issue = firstIssue(doc(deep(4, p('x'))))
+    expect(issue?.path.join('.')).toBe(`body${'.content.0'.repeat(10)}`)
+    expect(issue?.message).toMatch(/deeper than 10/)
+    // a fifth list level still reaches the depth check at the first node past the cap
+    const five = firstIssue(doc(deep(5, { type: 'paragraph' })))
+    expect(five?.message).toMatch(/deeper than 10/)
+    expect(five?.path.join('.')).toBe(`body${'.content.0'.repeat(10)}`)
   })
 
   it('a body nested far past the cap is refused, not walked', () => {
@@ -147,16 +156,18 @@ describe('[E2.13][AC30] the story body schema', () => {
   })
 
   it('100 media nodes are accepted and 101 are refused at the 101st', () => {
-    const media = (n: number) => Array.from({ length: n }, (_, i) => (i % 2 === 0 ? image() : { type: 'audio', attrs: { mediaId: uuid2, title: '', caption: '' } }))
+    const kinds = [image(), { type: 'audio', attrs: { mediaId: uuid2, title: '', caption: '' } }, { type: 'video', attrs: { youtubeId: 'dQw4w9WgXcQ', title: '', caption: '' } }]
+    const media = (n: number) => Array.from({ length: n }, (_, i) => kinds[i % 3])
     expect(storyDraftSchema.safeParse(draftOf(doc(...media(STORY_BODY_LIMITS.maxMedia)))).success).toBe(true)
     const issue = firstIssue(doc(...media(STORY_BODY_LIMITS.maxMedia + 1)))
     expect(issue?.path.join('.')).toBe('body.content.100')
     expect(issue?.message).toMatch(/at most 100/)
   })
 
-  it('video nodes do not count as media', () => {
-    const videos = Array.from({ length: 150 }).fill({ type: 'video', attrs: { youtubeId: 'dQw4w9WgXcQ', title: '', caption: '' } })
-    expect(storyDraftSchema.safeParse(draftOf(doc(...videos))).success).toBe(true)
+  it('video nodes count toward the media cap', () => {
+    const videos = (n: number) => Array.from({ length: n }).fill({ type: 'video', attrs: { youtubeId: 'dQw4w9WgXcQ', title: '', caption: '' } })
+    expect(storyDraftSchema.safeParse(draftOf(doc(...videos(100)))).success).toBe(true)
+    expect(firstIssue(doc(...videos(101)))?.path.join('.')).toBe('body.content.100')
   })
 
   it('the size cap counts UTF-8 bytes of the JSON, not characters', () => {
@@ -206,6 +217,32 @@ describe('[E2.13][AC30] the schema and the domain constants do not drift', () =>
     expect([...seen].sort()).toEqual([...BODY_NODE_TYPES].sort())
     expect([...marks].sort()).toEqual([...BODY_MARK_TYPES].sort())
     expect(storyBodySchema.safeParse(doc({ type: 'horizontalRule' })).success).toBe(false)
+  })
+
+  it('the node and mark literals the schema declares are exactly the listed ones, both ways', () => {
+    const json = z.toJSONSchema(storyBodySchema, { io: 'input', unrepresentable: 'any' })
+    const literals = new Set<string>()
+    const walk = (value: unknown, key = ''): void => {
+      if (Array.isArray(value)) {
+        value.forEach(item => walk(item, key))
+        return
+      }
+      if (typeof value !== 'object' || value === null)
+        return
+      const object = value as Record<string, unknown>
+      if (key === 'type' && typeof object.const === 'string')
+        literals.add(object.const)
+      if (key === 'type' && Array.isArray(object.enum))
+        object.enum.forEach(item => literals.add(String(item)))
+      for (const [k, child] of Object.entries(object))
+        walk(child, k === 'properties' ? '' : k)
+      const properties = object.properties as Record<string, unknown> | undefined
+      if (properties?.type)
+        walk(properties.type, 'type')
+    }
+    walk(json)
+    literals.delete('doc')
+    expect([...literals].sort()).toEqual([...BODY_NODE_TYPES, ...BODY_MARK_TYPES].sort())
   })
 
   it('the schema and the domain agree on which hrefs are safe', () => {

@@ -1,5 +1,5 @@
 /** Caps for one story body. First guesses (story-editor decision, 2026-10-28). */
-export const STORY_BODY_LIMITS = { maxBytes: 200_000, maxDepth: 8, maxMedia: 100 } as const
+export const STORY_BODY_LIMITS = { maxBytes: 200_000, maxDepth: 10, maxMedia: 100 } as const
 
 export const BODY_NODE_TYPES = [
   'paragraph',

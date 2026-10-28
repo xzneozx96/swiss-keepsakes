@@ -20,7 +20,7 @@ const para = (text: string) => ({ type: 'paragraph', content: [{ type: 'text', t
 
 describe('[E2.13] story body constants', () => {
   it('[E2.13][AC30] exposes the limits and the allow-lists', () => {
-    expect(STORY_BODY_LIMITS).toEqual({ maxBytes: 200_000, maxDepth: 8, maxMedia: 100 })
+    expect(STORY_BODY_LIMITS).toEqual({ maxBytes: 200_000, maxDepth: 10, maxMedia: 100 })
     expect(BODY_LINK_PROTOCOLS).toEqual(['https:', 'http:', 'mailto:'])
     expect([...BODY_NODE_TYPES].sort()).toEqual([
       'audio',
