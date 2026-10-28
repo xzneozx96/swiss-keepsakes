@@ -21,11 +21,11 @@ export function makeRetireMedia<T>({ uow, media, storage, clock }: RetireMediaDe
         return false
       if (row.status !== 'retired')
         await media.retire(tx, row, clock.now())
-      return true
+      return row
     })
     if (!retiring)
       return
-    for (const { key } of await storage.list('media', mediaPrefix(storeId, mediaId)))
+    for (const { key } of await storage.list('media', mediaPrefix(retiring.storeId, retiring.id)))
       await storage.delete('media', key)
   }
 }

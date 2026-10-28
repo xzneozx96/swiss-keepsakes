@@ -8,6 +8,7 @@ import { makeDeleteTour } from '../../../src/modules/content/application/delete-
 import { makePublishTour } from '../../../src/modules/content/application/publish-tour.ts'
 import { makeSaveTour } from '../../../src/modules/content/application/save-tour.ts'
 import { makeUnpublishTour } from '../../../src/modules/content/application/unpublish-tour.ts'
+import { createFakeStorage } from '../../support/fake-storage.ts'
 import { createFakeTours } from '../../support/fake-tours.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
 
@@ -246,6 +247,32 @@ describe('tour guide use cases', () => {
     const tour = await created(s, { slug: { en: 'bare' } })
     await s.save(owner, store, tour.id, 1, { pdfMediaId: 'pdf1' }, null)
     expect(s.jobs).toEqual([])
+  })
+
+  it('[E2.7][AC51] an upper-case id of the same PDF queues nothing', async () => {
+    const s = setup([{ id: 'abc-pdf', kind: 'pdf', status: 'ready' }, ...media])
+    const tour = await created(s, { ...complete, pdfMediaId: 'abc-pdf' })
+    await s.save(owner, store, tour.id, 1, { pdfMediaId: 'ABC-PDF' }, null)
+    expect(s.jobs).toEqual([])
+  })
+
+  it('[E2.7][AC51] replacing the PDF of a published tour queues one retire job', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf2' }, null)).toMatchObject({ ok: true })
+    expect(s.jobs).toEqual([{ queue: 'media-retire', data: { storeId: store, mediaId: 'pdf1' }, options: { startAfter: new Date('2026-10-28T10:00:00Z') } }])
+  })
+
+  it('[E2.7][AC51] the old file still answers right after the replacing save, before the grace period', async () => {
+    const s = setup()
+    const clock = createManualClock(new Date('2026-10-27T10:00:00Z'))
+    const storage = createFakeStorage(clock)
+    storage.seed('media', 'store-1/pdf1/original.pdf', new Uint8Array([1]))
+    const tour = await created(s)
+    await s.save(owner, store, tour.id, 1, { pdfMediaId: 'pdf2' }, null)
+    expect(s.jobs).toHaveLength(1)
+    expect(await storage.head('media', 'store-1/pdf1/original.pdf')).toBeDefined()
   })
 
   it('[E2.6] a slug that drops a language of a published tour is incomplete naming slug', async () => {

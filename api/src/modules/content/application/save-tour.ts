@@ -37,7 +37,7 @@ export function makeSaveTour<T>({ uow, tours, media, clock, jobs, graceHours }: 
       const saved = await tours.save(tx, tour, changes, now)
       // Replacing a PDF retires the old file after the grace period. Clearing is not a replacement, and an
       // unchanged id still points at a file in use.
-      if (tour.pdfMediaId && changes.pdfMediaId && changes.pdfMediaId !== tour.pdfMediaId)
+      if (tour.pdfMediaId && changes.pdfMediaId && changes.pdfMediaId.toLowerCase() !== tour.pdfMediaId.toLowerCase())
         await jobs.send(tx, mediaQueues.retire, { storeId, mediaId: tour.pdfMediaId }, { startAfter: new Date(now.getTime() + graceHours * 3_600_000) })
       return ok(saved)
     })

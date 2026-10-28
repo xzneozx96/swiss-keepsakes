@@ -104,4 +104,11 @@ describe('[E2.7] the media job on real pg-boss', () => {
     expect(retired).toEqual([{ storeId: t.storeId, mediaId: t.mediaId }])
     expect((await jobs.boss.getSchedules(t.queues.sweep)).map(row => row.cron)).toEqual(['17 * * * *'])
   })
+
+  it('[E2.7] the retire and sweep queues carry the media retry policy, like the process queue', async () => {
+    const t = await setup(await jpegWithGps(100, 100))
+    for (const name of [t.queues.process, t.queues.retire, t.queues.sweep]) {
+      expect(await jobs.boss.getQueue(name), name).toMatchObject({ retryLimit: 1, retryDelay: 1, retryBackoff: false })
+    }
+  })
 })

@@ -197,6 +197,24 @@ describe('[E2.7] process-media limits and leftovers', () => {
   })
 })
 
+describe('[E2.7] process-media with overlapping runs', () => {
+  it('[E2.7] a row another run made ready meanwhile keeps its public files, only the source goes', async () => {
+    const t = await setup('jpg', await jpegWithGps(800, 600))
+    const realFind = t.media.findById
+    t.media.findById = async (tx, storeId, id, options) => {
+      if (options?.forUpdate)
+        t.media.rows.set(mediaId, { ...t.row, status: 'ready' })
+      return realFind(tx, storeId, id, options)
+    }
+
+    await t.processMedia({ storeId: store, mediaId })
+
+    expect(t.media.rows.get(mediaId)?.status).toBe('ready')
+    expect(t.keys()).toContain(originalKey(store, mediaId, 'jpg'))
+    expect(t.source()).toBe(false)
+  })
+})
+
 describe('[E2.7] process-media on PDF and audio', () => {
   it('[E2.7] a PDF is stored unchanged with inline disposition and no dimensions', async () => {
     const pdf = new TextEncoder().encode('%PDF-1.4\n1 0 obj\n')

@@ -20,8 +20,11 @@ export async function createMediaQueues(boss: PgBoss, queues: MediaQueues = medi
   await boss.updateQueue(queues.failed, retry)
   await boss.createQueue(queues.process, { ...retry, deadLetter: queues.failed })
   await boss.updateQueue(queues.process, { ...retry, deadLetter: queues.failed })
-  await boss.createQueue(queues.retire)
-  await boss.createQueue(queues.sweep)
+  // A retire job that fails when storage is down must wait out the outage, not exhaust its retries in seconds.
+  for (const name of [queues.retire, queues.sweep]) {
+    await boss.createQueue(name, retry)
+    await boss.updateQueue(name, retry)
+  }
 }
 
 export interface MediaHandlers {

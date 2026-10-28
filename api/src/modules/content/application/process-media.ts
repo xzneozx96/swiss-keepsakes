@@ -71,14 +71,19 @@ export function makeProcessMedia<T>({ uow, media, storage, clock, warn, maxInput
       await storage.put('media', row.storageKey, source, { contentType: row.contentType, ...headers })
     }
 
-    const marked = await uow.run(async (tx) => {
+    const outcome = await uow.run(async (tx) => {
       const locked = await media.findById(tx, storeId, mediaId, { forUpdate: true })
       if (locked?.status !== 'processing')
-        return false
+        return locked?.status ?? 'gone'
       await media.markReady(tx, locked, dims, clock.now())
-      return true
+      return 'marked'
     })
-    if (!marked) {
+    if (outcome === 'ready') {
+      // An overlapping run made it ready, and it may be published: its files stay.
+      await dropSource(sourceKey)
+      return
+    }
+    if (outcome !== 'marked') {
       // Retired or gone while the files were being made: nothing may stay public.
       for (const { key } of await storage.list('media', mediaPrefix(storeId, mediaId)))
         await storage.delete('media', key)
