@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { GuestLanguageSwitch } from '@/components/layout/guest-language-switch'
+import { LanguageButton } from '@/components/layout/language-button'
 import { LanguageNotice } from '@/components/layout/language-notice'
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { de } from '@/i18n/de'
@@ -13,7 +13,7 @@ function renderAt(url: string, availableLanguages?: ('en' | 'de')[]) {
   const root = createRootRoute({
     component: () => (
       <LocaleProvider>
-        <GuestLanguageSwitch />
+        <LanguageButton tone="floating" />
         <LanguageNotice />
         <Outlet />
       </LocaleProvider>
@@ -36,20 +36,59 @@ beforeEach(() => {
   localStorage.clear()
 })
 
-describe('guest language control', () => {
-  it('marks the URL language as pressed and switches with the other button', async () => {
-    const router = renderAt('/en/stories')
-    const group = await screen.findByRole('group', { name: en['shell.language.label'] })
+describe('language button', () => {
+  it('opens a sheet with both languages and the URL language checked', async () => {
+    renderAt('/en/stories')
+    await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))
 
-    expect(group.querySelector('[aria-pressed="true"]')).toHaveTextContent('EN')
-    await userEvent.click(screen.getByRole('button', { name: 'DE' }))
-    await waitFor(() => expect(router.state.location.pathname).toBe('/de/stories'))
-    expect(localStorage.getItem('sk.language')).toBe(JSON.stringify('de'))
+    expect(await screen.findByRole('dialog', { name: en['shell.language.title'] })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'English' })).toBeChecked()
+    expect(screen.getByRole('radio', { name: 'Deutsch' })).not.toBeChecked()
   })
 
-  it('has the label and notice keys in both dictionaries', () => {
+  it('switches with the other option, stores the choice and closes the sheet', async () => {
+    const router = renderAt('/en/stories')
+    await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))
+    await userEvent.click(await screen.findByRole('radio', { name: 'Deutsch' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/de/stories'))
+    expect(localStorage.getItem('sk.language')).toBe(JSON.stringify('de'))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(screen.getByRole('button', { name: de['shell.language.button'] })).toBeInTheDocument()
+  })
+
+  it('closes on Escape and returns focus to the button', async () => {
+    renderAt('/en/stories')
+    const button = await screen.findByRole('button', { name: en['shell.language.button'] })
+
+    await userEvent.click(button)
+    await screen.findByRole('dialog')
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    await waitFor(() => expect(button).toHaveFocus())
+  })
+
+  it('renders nothing without a URL language', async () => {
+    const root = createRootRoute({
+      component: () => (
+        <LocaleProvider>
+          <LanguageButton tone="floating" />
+          <Outlet />
+        </LocaleProvider>
+      ),
+    })
+    const page = createRoute({ getParentRoute: () => root, path: '/account', component: () => <p>account</p> })
+    const router = createRouter({ routeTree: root.addChildren([page]), history: createMemoryHistory({ initialEntries: ['/account'] }) })
+
+    render(<RouterProvider router={router} />)
+    await screen.findByText('account')
+    expect(screen.queryByRole('button')).toBeNull()
+  })
+
+  it('has the language and notice keys in both dictionaries', () => {
     for (const dictionary of [en, de]) {
-      expect(dictionary['shell.language.label']).toBeTruthy()
+      expect(dictionary['shell.language.button']).toBeTruthy()
+      expect(dictionary['shell.language.title']).toBeTruthy()
       expect(dictionary['shell.notice.onlyEn']).toBeTruthy()
       expect(dictionary['shell.notice.onlyDe']).toBeTruthy()
     }
@@ -74,34 +113,34 @@ describe('language notice', () => {
   it('stays out when the stored language has a version', async () => {
     localStorage.setItem('sk.language', JSON.stringify('de'))
     renderAt('/en/stories', ['en', 'de'])
-    await screen.findByRole('group')
+    await screen.findByRole('button', { name: en['shell.language.button'] })
     expect(screen.queryByRole('status')).toBeNull()
   })
 
   it('stays out when the page has no loader data', async () => {
     localStorage.setItem('sk.language', JSON.stringify('de'))
     renderAt('/en/stories')
-    await screen.findByRole('group')
+    await screen.findByRole('button', { name: en['shell.language.button'] })
     expect(screen.queryByRole('status')).toBeNull()
   })
 
   it('stays out when the loader does not know the page (empty list)', async () => {
     localStorage.setItem('sk.language', JSON.stringify('de'))
     renderAt('/en/stories', [])
-    await screen.findByRole('group')
+    await screen.findByRole('button', { name: en['shell.language.button'] })
     expect(screen.queryByRole('status')).toBeNull()
   })
 
   it('stays out when the stored language is English and the page is English', async () => {
     localStorage.setItem('sk.language', JSON.stringify('en'))
     renderAt('/en/stories', ['en'])
-    await screen.findByRole('group')
+    await screen.findByRole('button', { name: en['shell.language.button'] })
     expect(screen.queryByRole('status')).toBeNull()
   })
 
   it('stays out when nothing is stored, on a German-only page', async () => {
     renderAt('/de/stories', ['de'])
-    await screen.findByRole('group')
+    await screen.findByRole('button', { name: de['shell.language.button'] })
     expect(screen.queryByRole('status')).toBeNull()
   })
 })

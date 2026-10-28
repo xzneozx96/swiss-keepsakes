@@ -1,28 +1,14 @@
+import type { ActionTone } from '@/components/layout/action-style'
+
 import { pluralCategory } from '@sk/domain/shared'
 import { Link } from '@tanstack/react-router'
 
 import { useEffect, useRef, useState } from 'react'
 import { cartFlight, hasAddedToCart, prefersReducedMotion } from '@/components/fly-to-cart'
 import { BackIcon, CartIcon, SearchIcon } from '@/components/icons'
+import { roundAction, toneClass } from '@/components/layout/action-style'
 import { useLocale } from '@/contexts/locale-context'
 import { useCart } from '@/features/cart/hooks/use-cart'
-
-const roundAction
-  = 'flex size-11 items-center justify-center rounded-full outline-none transition-transform focus-visible:focus-ring active:scale-95'
-
-/**
- * "floating" sits on a banner (white pill with shadow); "pill" sits on a product photo
- * (the product card's pill, owner request); "glass" is the earlier frosted glass, kept
- * for the hero Lab; "bar" sits in the compact bar.
- */
-type ActionTone = 'floating' | 'pill' | 'glass' | 'bar'
-
-const toneClass: Record<ActionTone, string> = {
-  floating: 'bg-surface/90 text-foreground shadow-surface backdrop-blur',
-  pill: 'pill',
-  glass: 'glass',
-  bar: 'bg-transparent text-foreground',
-}
 
 /**
  * Round cart action for a screen's top area; 44px touch target, item count as a badge.

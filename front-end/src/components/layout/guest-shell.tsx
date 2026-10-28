@@ -11,7 +11,6 @@ import {
   SparkleIcon,
   TourIcon,
 } from '@/components/icons'
-import { GuestLanguageSwitch } from '@/components/layout/guest-language-switch'
 import { LanguageNotice } from '@/components/layout/language-notice'
 import { forgetPublicPath, rememberPublicPath } from '@/components/layout/last-public-path'
 import { useLocale, useUrlLanguage } from '@/contexts/locale-context'
@@ -73,12 +72,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 justify-center bg-default/60">
       <div className="relative flex w-full max-w-[430px] flex-1 flex-col bg-background sm:shadow-overlay">
-        {hasUrlLanguage && (
-          <>
-            <GuestLanguageSwitch />
-            <LanguageNotice />
-          </>
-        )}
+        {hasUrlLanguage && <LanguageNotice />}
         <main
           className={
             ownsBottomSpace

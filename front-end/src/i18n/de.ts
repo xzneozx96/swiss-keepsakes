@@ -39,7 +39,8 @@ export const de: Record<MessageKey, string> = {
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototyp · Beispieldaten',
   'language.label': 'Sprache',
-  'shell.language.label': 'Seitensprache',
+  'shell.language.button': 'Sprache',
+  'shell.language.title': 'Sprache',
   'shell.notice.onlyEn': 'Diese Seite gibt es nur auf Englisch.',
   'shell.notice.onlyDe': 'Diese Seite gibt es nur auf Deutsch.',
 

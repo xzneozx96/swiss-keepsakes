@@ -2,6 +2,7 @@ import { toast } from '@heroui/react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
+import { forgetPublicPath } from '@/components/layout/last-public-path'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoActions } from '@/features/demo'
 import { clearGuestData } from '@/features/demo/store'
@@ -43,6 +44,7 @@ export function useSignOut() {
         return
       }
       forgetStoresSession(queryClient)
+      forgetPublicPath()
       update(s => (apiEnabled ? clearGuestData(s) : { ...s, data: { ...s.data, signedInGuestId: null } }))
       onSignedOut?.()
     }
