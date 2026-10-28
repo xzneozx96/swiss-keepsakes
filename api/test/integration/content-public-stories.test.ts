@@ -150,6 +150,21 @@ describe('public story reads over the database', () => {
     expect(result.ok && result.value.sections[0]!.blocks[0]).toEqual({ type: 'image', key: null, caption: '' })
   })
 
+  it('[E2.12][AC45] a media id of another store is not resolved', async () => {
+    const store = randomUUID()
+    const other = randomUUID()
+    const g = await group(store)
+    const foreign = await pool.query<{ id: string }>(
+      `insert into content.media (store_id, kind, storage_key, content_type, byte_size, sha256, status) values ($1, 'image', $2, 'image/jpeg', 10, repeat('c', 64), 'ready') returning id`,
+      [other, `${other}/${randomUUID()}`],
+    )
+    const s = await version(store, g, 'en', 'published', 'Foreign picture', { published: doc('Foreign picture', { coverMediaId: foreign.rows[0]!.id }) })
+
+    const result = await get(s, 'en')
+
+    expect(result.ok && result.value.coverKey).toBeNull()
+  })
+
   it('[E2.12][AC45] the category lists carry both names, parents before children', async () => {
     const store = randomUUID()
     const parent = await blogCategory(store, { en: 'Food', de: 'Essen' })

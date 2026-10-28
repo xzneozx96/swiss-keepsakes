@@ -25,6 +25,7 @@ function storyMediaIds(doc: StoryDraft): string[] {
 
 interface VersionJoinRow {
   id: string
+  store_id: string
   stay_tag: StayTag
   interests: string[]
   language: ContentLanguage
@@ -45,7 +46,7 @@ interface CategoryJoinRow {
 // Published versions of the groups (all of them, or one), with the blog categories and the ready media keys.
 async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryRow[]> {
   const versions = await tx.execute<VersionJoinRow & Record<string, unknown>>(sql`
-    select g.id, g.stay_tag, g.interests, v.language, v.slug, v.published, v.published_at
+    select g.id, g.store_id, g.stay_tag, g.interests, v.language, v.slug, v.published, v.published_at
       from content.story_versions v
       join content.story_groups g on g.store_id = v.store_id and g.id = v.group_id
      where v.status = 'published' and v.published is not null${groupId ? sql` and g.id = ${groupId}` : sql``}
@@ -54,6 +55,7 @@ async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryR
     return []
 
   const groupIds = [...new Set(versions.rows.map(r => r.id))]
+  const storeIds = [...new Set(versions.rows.map(r => r.store_id))]
   const mediaIds = [...new Set(versions.rows.flatMap(r => storyMediaIds(r.published)))]
 
   const categoryRows = await tx.execute<CategoryJoinRow & Record<string, unknown>>(sql`
@@ -63,10 +65,11 @@ async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryR
      where sc.group_id = any(${sql.param(groupIds)}::uuid[])
      order by c.parent_id nulls first, c.position, c.id`)
   const media = mediaIds.length === 0
-    ? { rows: [] as { id: string, storage_key: string }[] }
-    : await tx.execute<{ id: string, storage_key: string } & Record<string, unknown>>(sql`
-        select id, storage_key from content.media where id = any(${sql.param(mediaIds)}::uuid[]) and status = 'ready'`)
-  const keys = new Map(media.rows.map(m => [m.id, m.storage_key]))
+    ? { rows: [] as { id: string, store_id: string, storage_key: string }[] }
+    : await tx.execute<{ id: string, store_id: string, storage_key: string } & Record<string, unknown>>(sql`
+        select id, store_id, storage_key from content.media where id = any(${sql.param(mediaIds)}::uuid[]) and store_id = any(${sql.param(storeIds)}::uuid[]) and status = 'ready'`)
+  // A story only resolves media of its own store.
+  const keys = new Map(media.rows.map(m => [`${m.store_id}/${m.id}`, m.storage_key]))
 
   const stories = new Map<string, PublicStoryRow>()
   for (const row of versions.rows) {
@@ -86,7 +89,7 @@ async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryR
       slug: row.slug,
       published: row.published,
       publishedAt: new Date(row.published_at),
-      mediaKeys: Object.fromEntries(storyMediaIds(row.published).flatMap(id => (keys.has(id) ? [[id, keys.get(id)!]] : []))),
+      mediaKeys: Object.fromEntries(storyMediaIds(row.published).flatMap(id => (keys.has(`${row.store_id}/${id}`) ? [[id, keys.get(`${row.store_id}/${id}`)!]] : []))),
     })
   }
   return [...stories.values()]
