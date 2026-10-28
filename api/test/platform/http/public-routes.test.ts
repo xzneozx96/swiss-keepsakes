@@ -154,8 +154,10 @@ describe('[E2.12] a renewed session cookie never rides on a public read', () => 
     const before = calls.readSession
 
     for (const path of [...listPaths, ...detailPaths]) {
-      for (const method of ['GET', 'HEAD'])
-        await app.request(`${path}?lang=en`, { method, headers: signedInAs('someone') })
+      for (const method of ['GET', 'HEAD']) {
+        const response = await app.request(`${path}?lang=en`, { method, headers: signedInAs('someone') })
+        expect(response.status, `${method} ${path}`).toBeLessThan(500)
+      }
     }
     expect(calls.readSession).toBe(before)
 

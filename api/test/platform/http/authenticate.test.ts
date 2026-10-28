@@ -195,6 +195,20 @@ describe('[E2.12][G-S5-PUBLICAUTH] authenticate: a public read skips the session
     expect(await response.json()).toEqual({ kind: 'guest', userId: 'user-1', guestId: 'guest-of-user-1' })
   })
 
+  it('[E2.12][G-S5-PUBLICAUTH] the prefix is /api/public/ exactly: /api/publicx and /api/public still read the session', async () => {
+    for (const path of ['/api/publicx', '/api/public']) {
+      let reads = 0
+      const { app } = setup(async () => {
+        reads++
+        return { headers: new Headers(), response: null }
+      })
+
+      await app.request(path)
+
+      expect(reads, path).toBe(1)
+    }
+  })
+
   it('[E2.12][G-S5-PUBLICAUTH] an authenticated route still renews the cookie and clears an expired one', async () => {
     const clearing = new Headers()
     clearing.append('Set-Cookie', 'better-auth.session_token=; Max-Age=0; Path=/; HttpOnly')

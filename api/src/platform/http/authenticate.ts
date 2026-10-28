@@ -20,8 +20,8 @@ export interface AuthenticateDeps {
 // Reads the session on every /api/* request except Better Auth's own routes and sets the actor: a guest, staff
 // with a role per store, or the Super Admin. A GET or HEAD of /api/public/* (G-S5-PUBLICAUTH) skips the session:
 // no read, no Set-Cookie, the actor is anonymous. The answer is the same for everyone and may be cached, so it
-// carries no cookie; the session is renewed by the next other /api request. No session, and an expired or revoked one, is anonymous. A route
-// that needs a session refuses an anonymous actor.
+// carries no cookie; the session is renewed by the next other /api request. No session, and an expired or
+// revoked one, is anonymous. A route that needs a session refuses an anonymous actor.
 export function authenticate({ readSession, loadIdentity }: AuthenticateDeps): MiddlewareHandler<AppEnv> {
   return async (c, next) => {
     if (c.req.path.startsWith('/api/auth/')) {
