@@ -7,7 +7,7 @@ import { nextDate, withParents } from './pin-dates.ts'
 // Rows to the public response shapes. Nothing here reads a store or a price. The application layer may not import
 // the API contract, so the shapes are written here; the tests parse every output with the contract schemas.
 
-export interface PublicCategory { id: string, slug: string, name: { en: string, de: string }, parentId: string | null, position: number }
+export interface PublicCategory { id: string, slug: string, name: { en: string | null, de: string | null }, parentId: string | null, position: number }
 export interface PublicCategoryList { items: PublicCategory[] }
 
 interface LanguageNotice { language: ContentLanguage, requestedLanguage: ContentLanguage, fallback: boolean, availableLanguages: ContentLanguage[] }
@@ -21,7 +21,7 @@ export interface PublicStoryCard extends LanguageNotice {
   coverKey: string | null
   stayTag: StayTag
   interests: string[]
-  categories: { id: string, slug: string, name: string }[]
+  categories: { id: string, slug: string, name: string | null }[]
   publishedAt: string
 }
 
@@ -46,8 +46,7 @@ const keyOf = (version: PublicStoryVersionRow, mediaId: unknown) => (typeof medi
 const str = (value: unknown) => (typeof value === 'string' ? value : '')
 
 export function toPublicCategory(row: PublicCategoryRow): PublicCategory {
-  const name = row.name.en ?? row.name.de ?? ''
-  return { id: row.id, slug: row.slug, name: { en: row.name.en ?? name, de: row.name.de ?? name }, parentId: row.parentId, position: row.position }
+  return { id: row.id, slug: row.slug, name: { en: row.name.en ?? null, de: row.name.de ?? null }, parentId: row.parentId, position: row.position }
 }
 
 // The version carried and the notice about it, or null when the story has no published version.
@@ -78,7 +77,7 @@ function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: Non
     coverKey: keyOf(version, published.coverMediaId),
     stayTag: row.stayTag,
     interests: row.interests,
-    categories: row.categories.map(c => ({ id: c.id, slug: c.slug, name: c.name[notice.language] ?? c.name.en ?? c.name.de ?? '' })),
+    categories: row.categories.map(c => ({ id: c.id, slug: c.slug, name: c.name[notice.language] ?? null })),
     publishedAt: version.publishedAt.toISOString(),
     ...notice,
   }
@@ -134,7 +133,7 @@ export interface PublicPin extends LanguageNotice {
   weeklyHours: { day: number, opens: string, closes: string }[]
   stayTag: StayTag
   interests: string[]
-  categories: { id: string, slug: string, name: string }[]
+  categories: { id: string, slug: string, name: string | null }[]
   nextDate: PublicNextDate | null
   hasMainStory: boolean
   mainStorySlug: string | null
@@ -216,7 +215,7 @@ export function toPublicPin(row: PublicPinRow, requested: ContentLanguage, now: 
     weeklyHours: row.weeklyHours,
     stayTag: row.stayTag,
     interests: row.interests,
-    categories: categories.map(c => ({ id: c.id, slug: c.slug, name: c.name[info.language] ?? c.name.en ?? c.name.de ?? '' })),
+    categories: categories.map(c => ({ id: c.id, slug: c.slug, name: c.name[info.language] ?? null })),
     nextDate: next,
     hasMainStory: Object.keys(row.mainStorySlugs).length > 0,
     mainStorySlug: row.mainStorySlugs[info.language] ?? null,

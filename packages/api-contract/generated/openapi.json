@@ -1063,10 +1063,16 @@
           "name": {
             "properties": {
               "de": {
-                "type": "string"
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "en": {
-                "type": "string"
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -1239,7 +1245,10 @@
                   "type": "string"
                 },
                 "name": {
-                  "type": "string"
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "slug": {
                   "type": "string"
@@ -1386,7 +1395,10 @@
                   "type": "string"
                 },
                 "name": {
-                  "type": "string"
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "slug": {
                   "type": "string"
@@ -1620,7 +1632,10 @@
                   "type": "string"
                 },
                 "name": {
-                  "type": "string"
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 },
                 "slug": {
                   "type": "string"

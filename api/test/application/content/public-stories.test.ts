@@ -106,6 +106,17 @@ describe('public stories', () => {
     ])
   })
 
+  it('[E2.12][AC45] a category with an English name only reads as null in German on a card and on the detail', async () => {
+    const s = setup([story(id1, [version('en', 'lake-day', 'A day'), version('de', 'seetag', 'Ein Tag')], { categories: [{ id: id2, slug: 'cafes', name: { en: 'Cafes' }, parentId: null, position: 1 }] })])
+
+    const card = (await s.list('de')).items[0]!
+    const detail = await s.get('seetag', 'de')
+
+    expect(card.language).toBe('de')
+    expect(card.categories).toEqual([{ id: id2, slug: 'cafes', name: null }])
+    expect(detail.ok && detail.value.categories).toEqual([{ id: id2, slug: 'cafes', name: null }])
+  })
+
   it('[E2.12][AC45] stories come newest first by the date of the version carried, as ISO text', async () => {
     const s = setup([
       story(id1, [version('en', 'old', 'Old', '2090-01-01T00:00:00Z')]),
@@ -118,14 +129,14 @@ describe('public stories', () => {
     expect(items[0]!.publishedAt).toBe('2090-02-01T00:00:00.000Z')
   })
 
-  it('[E2.12][AC45] categories keep the order given and show both names', async () => {
+  it('[E2.12][AC45] categories keep the order given and show the names that exist, with no fill', async () => {
     const s = setup([], [{ id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, position: 1 }, { id: id2, slug: 'cafes', name: { en: 'Cafes' }, parentId: id1, position: 1 }])
 
     const { items } = await s.categories('map')
 
     expect(items).toEqual([
       { id: id1, slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, position: 1 },
-      { id: id2, slug: 'cafes', name: { en: 'Cafes', de: 'Cafes' }, parentId: id1, position: 1 },
+      { id: id2, slug: 'cafes', name: { en: 'Cafes', de: null }, parentId: id1, position: 1 },
     ])
   })
 

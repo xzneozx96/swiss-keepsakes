@@ -238,6 +238,16 @@ describe('public pin card', () => {
     })
   })
 
+  it('[E2.12][AC88] a category with an English name only reads as null in German on the pin card', async () => {
+    const enOnly = cat(1, { name: { en: 'Cafes' } })
+    const p = pin(1, { categories: [enOnly] })
+    const s = setup({ pins: [p] })
+
+    const card = await s.pin(p.id, 'de')
+
+    expect(card.ok && card.value.categories).toEqual([{ id: enOnly.id, slug: 'cat-1', name: null }])
+  })
+
   it('[E2.12][AC64] English only, read as de, carries English and says so', async () => {
     const s = setup({ pins: [pin(1, { name: { en: 'Only EN' }, tip: { en: 'Tip EN' } })] })
 

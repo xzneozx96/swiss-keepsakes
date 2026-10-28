@@ -22,7 +22,7 @@ export const nextDateSchema = z.object({
   endTime: z.string().nullable(),
 }).meta({ id: 'NextDate', description: 'The next date of a pin, in Europe/Zurich' })
 
-const categoryRefSchema = z.object({ id: z.uuid(), slug: z.string(), name: z.string() })
+const categoryRefSchema = z.object({ id: z.uuid(), slug: z.string(), name: z.string().nullable() })
 
 const storyBlockSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('paragraph'), text: z.string() }),
@@ -135,7 +135,7 @@ export const publicTourSchema = publicTourCardSchema.extend({
 export const publicCategorySchema = z.object({
   id: z.uuid(),
   slug: z.string(),
-  name: z.object({ en: z.string(), de: z.string() }),
+  name: z.object({ en: z.string().nullable(), de: z.string().nullable() }),
   parentId: z.uuid().nullable(),
   position: z.int(),
 }).meta({ id: 'PublicCategory' })

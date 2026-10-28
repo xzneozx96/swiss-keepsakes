@@ -2547,8 +2547,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: {
-                de: string;
-                en: string;
+                de: string | null;
+                en: string | null;
             };
             /** Format: uuid */
             parentId: string | null;
@@ -2589,7 +2589,7 @@ export interface components {
             categories: {
                 /** Format: uuid */
                 id: string;
-                name: string;
+                name: string | null;
                 slug: string;
             }[];
             /** @description True when the item is in another language than the one asked for */
@@ -2623,7 +2623,7 @@ export interface components {
             categories: {
                 /** Format: uuid */
                 id: string;
-                name: string;
+                name: string | null;
                 slug: string;
             }[];
             coverKey: string | null;
@@ -2675,7 +2675,7 @@ export interface components {
             categories: {
                 /** Format: uuid */
                 id: string;
-                name: string;
+                name: string | null;
                 slug: string;
             }[];
             coverKey: string | null;
