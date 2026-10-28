@@ -32,6 +32,7 @@ describe('publishedStoryMediaIds', () => {
     for (let i = 0; i < 20000; i++)
       node = { type: 'blockquote', content: [node] }
 
-    expect(() => publishedStoryMediaIds({ body: { type: 'doc', content: [node] } })).not.toThrow()
+    // The image sits far below the depth cap, so it is not read.
+    expect(publishedStoryMediaIds({ body: { type: 'doc', content: [node] } })).toEqual([])
   })
 })

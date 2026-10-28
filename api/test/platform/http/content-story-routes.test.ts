@@ -339,6 +339,20 @@ describe('[E2.6] AC-7 who may write stories', () => {
   })
 })
 
+function paragraphOf(text: string) {
+  return { type: 'paragraph', content: [{ type: 'text', text }] }
+}
+
+function deepList(lists: number, leaf: unknown) {
+  let inner: unknown = { type: 'listItem', content: [leaf] }
+  for (let i = 1; i < lists; i++)
+    inner = { type: 'listItem', content: [{ type: 'bulletList', content: [inner] }] }
+  return { type: 'bulletList', content: [inner] }
+}
+
+// The filler that makes nine full paragraphs plus one paragraph exactly 200,000 bytes; one more character is over.
+const sizeFiller = 200_000 - new TextEncoder().encode(JSON.stringify({ type: 'doc', content: [...Array.from({ length: 9 }).fill(paragraphOf('a'.repeat(20000))), paragraphOf('')] })).length
+
 describe('[E2.13][AC30] a refused story body', () => {
   const badBodies: [string, unknown, string][] = [
     ['a node that is not on the list', { type: 'doc', content: [{ type: 'paragraph' }, { type: 'table' }] }, 'draft.body.content.1.type'],
@@ -346,6 +360,11 @@ describe('[E2.13][AC30] a refused story body', () => {
     ['a heading of level 1', { type: 'doc', content: [{ type: 'heading', attrs: { level: 1 }, content: [] }] }, 'draft.body.content.0.attrs.level'],
     ['a javascript: link', { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a', marks: [{ type: 'link', attrs: { href: 'JAVASCRIPT:alert(1)' } }] }] }] }, 'draft.body.content.0.content.0.marks.0.attrs.href'],
     ['a string of HTML', '<p>Hi</p>', 'draft.body'],
+    ['an unknown attribute on an image', { type: 'doc', content: [{ type: 'image', attrs: { mediaId: '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d', alt: '', caption: '', width: 9 } }] }, 'draft.body.content.0.attrs'],
+    ['an empty text node', { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: '' }] }] }, 'draft.body.content.0.content.0.text'],
+    ['depth 11', { type: 'doc', content: [deepList(4, { type: 'paragraph', content: [{ type: 'text', text: 'x' }] })] }, `draft.body${'.content.0'.repeat(10)}`],
+    ['101 media nodes', { type: 'doc', content: Array.from({ length: 101 }).fill({ type: 'image', attrs: { mediaId: '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d', alt: '', caption: '' } }) }, 'draft.body.content.100'],
+    ['a size of 200,001 bytes', { type: 'doc', content: [...Array.from({ length: 9 }).fill(paragraphOf('a'.repeat(20000))), paragraphOf('a'.repeat(sizeFiller + 1))] }, 'draft.body'],
   ]
 
   it.each(badBodies)('[E2.13][AC30] %s answers 422 with the path, the use case is not called, on a create and on a save', async (_name, body, path) => {
@@ -366,6 +385,16 @@ describe('[E2.13][AC30] a refused story body', () => {
       expect(await response.json()).toMatchObject({ type: 'validation-failed', errors: [{ in: 'json', path }] })
     }
     expect(calls).toBe(0)
+  })
+
+  it('[E2.13] a body with 50,000 faults answers with the first 20 issues only', async () => {
+    const app = setup()
+    const content = Array.from({ length: 50_000 }).fill({ type: 'x' })
+    const response = await send(app, 'PATCH', english, { 'If-Match': '1' }, { draft: { ...draft, body: { type: 'doc', content } } })
+    expect(response.status).toBe(422)
+    const problem = await response.json() as { errors: unknown[] }
+    expect(problem.errors).toHaveLength(20)
+    expect(JSON.stringify(problem).length).toBeLessThan(20_000)
   })
 
   it('[E2.13][AC30] a missing body is refused with the path draft.body', async () => {

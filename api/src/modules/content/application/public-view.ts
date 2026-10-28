@@ -95,7 +95,7 @@ function publicInline(nodes: unknown[]): PublicBodyInline[] {
       return []
     if (node.type === 'hardBreak')
       return [{ type: 'hardBreak' }]
-    if (node.type === 'text' && typeof node.text === 'string') {
+    if (node.type === 'text' && typeof node.text === 'string' && node.text !== '') {
       const marks = publicMarks(node.marks)
       return [marks.length > 0 ? { type: 'text', text: node.text, marks } : { type: 'text', text: node.text }]
     }
@@ -182,14 +182,14 @@ function carried(row: PublicStoryRow, requested: ContentLanguage) {
   }
 }
 
-function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: NonNullable<ReturnType<typeof carried>>['notice']): PublicStoryCard {
+function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: NonNullable<ReturnType<typeof carried>>['notice'], body: PublicStoryBody): PublicStoryCard {
   const { published } = version
   return {
     id: row.id,
     slug: version.slug,
     title: str(published.title),
     excerpt: str(published.excerpt),
-    readMinutes: storyBodyReadMinutes(publicBody(version)),
+    readMinutes: storyBodyReadMinutes(body),
     coverKey: keyOf(version, published.coverMediaId),
     stayTag: row.stayTag,
     interests: row.interests,
@@ -201,7 +201,7 @@ function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: Non
 
 export function toStoryCard(row: PublicStoryRow, requested: ContentLanguage): PublicStoryCard | null {
   const pick = carried(row, requested)
-  return pick && toCard(row, pick.version, pick.notice)
+  return pick && toCard(row, pick.version, pick.notice, publicBody(pick.version))
 }
 
 export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): PublicStory | null {
@@ -210,11 +210,12 @@ export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): 
     return null
   const { version } = pick
   const { published } = version
+  const body = publicBody(version)
   return {
-    ...toCard(row, version, pick.notice),
+    ...toCard(row, version, pick.notice, body),
     authorName: str(published.authorName),
     authorRole: str(published.authorRole),
-    body: publicBody(version),
+    body,
   }
 }
 

@@ -8,9 +8,13 @@ const stayTag = z.enum(['short_stay', 'multi_day', 'both'])
 const interests = z.array(z.enum(['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes'])).max(4)
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const time = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, 'A time as HH:MM')
-// Postgres text and jsonb refuse U+0000, so it is a 400 here and not a 500 there.
+// Postgres text and jsonb refuse U+0000, so it is a 400 here and not a 500 there. A lone UTF-16 surrogate cannot be
+// written as UTF-8 either, so it is refused with it (String.prototype.isWellFormed needs lib ES2024).
+const loneSurrogate = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/
 function noNul<T extends z.ZodString>(schema: T): T {
-  return schema.refine(value => !value.includes('\u0000'), 'Text may not contain a NUL character')
+  return schema
+    .refine(value => !value.includes('\u0000'), 'Text may not contain a NUL character')
+    .refine(value => !loneSurrogate.test(value), 'Text may not contain an unpaired surrogate') as T
 }
 const text = (max: number) => noNul(z.string().max(max))
 const closingTime = z.string().regex(/^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/, 'A time as HH:MM, or 24:00')
@@ -152,7 +156,7 @@ const bodyMarkSchema = z.discriminatedUnion('type', [
   z.strictObject({ type: z.literal('pinLink'), attrs: z.strictObject({ pinId: z.uuid() }) }),
 ])
 
-const bodyTextSchema = z.strictObject({ type: z.literal('text'), text: text(20000), marks: z.array(bodyMarkSchema).max(4).optional() })
+const bodyTextSchema = z.strictObject({ type: z.literal('text'), text: noNul(z.string().min(1).max(20000)), marks: z.array(bodyMarkSchema).max(4).optional() })
 const bodyHardBreakSchema = z.strictObject({ type: z.literal('hardBreak') })
 const inline = [bodyTextSchema, bodyHardBreakSchema] as const
 
@@ -179,7 +183,9 @@ function bodyListItem(levels: number): z.ZodType<BodyListItem> {
   })
 }
 
-// Depth 10 allows lists at depths 2, 4, 6, 8 and 10; two more nested levels let a too-deep body reach the depth check.
+// Depth 10 allows lists at depths 2, 4, 6, 8 and 10, but only three list levels can hold text (list 2, 4, 6, then item,
+// paragraph and text at 7, 8, 9; a fourth list level leaves room for an empty paragraph only). Two more nested levels
+// let a too-deep body reach the depth check.
 const listLevels = 5
 const bodyBulletListSchema = z.strictObject({ type: z.literal('bulletList'), content: z.array(bodyListItem(listLevels)) })
 const bodyOrderedListSchema = z.strictObject({ type: z.literal('orderedList'), content: z.array(bodyListItem(listLevels)) })

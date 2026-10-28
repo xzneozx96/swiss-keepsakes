@@ -1,7 +1,7 @@
 import type { StoryBodyNode, StoryDraft } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AuditEntry, MediaRow, StoryVersionChanges } from '../../../src/modules/content/ports.ts'
-import { emptyStoryBody, storyMediaIds } from '@sk/domain/content'
+import { emptyStoryBody } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 import { makeCreateStoryGroup } from '../../../src/modules/content/application/create-story-group.ts'
 import { makeCreateStoryVersion } from '../../../src/modules/content/application/create-story-version.ts'
@@ -312,11 +312,10 @@ describe('story use cases', () => {
       await version(s, g.id)
       const draft = bodyOf(image('img'))
       expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft }, null)).toMatchObject({ ok: true, value: { draft: { body: draft.body } } })
-      // The refs the repository stores come from this list.
-      expect(storyMediaIds(draft)).toContainEqual({ id: 'img', kind: 'image' })
+      // The media_refs rows themselves are asserted against the real repository in integration/content-stories.test.ts.
     })
 
-    it('an image of another store is media-invalid, a retired image media-retired, an audio node on an image row media-invalid', async () => {
+    it('an image this store has no row for is media-invalid (the fake lists only this store\'s rows; the cross-store lookup is integration-tested), a retired image media-retired, an audio node on an image row media-invalid', async () => {
       const s = withStores()
       const g = await group(s)
       await version(s, g.id)

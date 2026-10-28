@@ -4989,6 +4989,7 @@
                               },
                               "text": {
                                 "maxLength": 20000,
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "type": {
@@ -5157,6 +5158,7 @@
                               },
                               "text": {
                                 "maxLength": 20000,
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "type": {
@@ -5315,6 +5317,7 @@
                                     },
                                     "text": {
                                       "maxLength": 20000,
+                                      "minLength": 1,
                                       "type": "string"
                                     },
                                     "type": {
@@ -5493,6 +5496,7 @@
                                               },
                                               "text": {
                                                 "maxLength": 20000,
+                                                "minLength": 1,
                                                 "type": "string"
                                               },
                                               "type": {
@@ -5656,6 +5660,7 @@
                                                               },
                                                               "text": {
                                                                 "maxLength": 20000,
+                                                                "minLength": 1,
                                                                 "type": "string"
                                                               },
                                                               "type": {
@@ -5819,6 +5824,7 @@
                                                                               },
                                                                               "text": {
                                                                                 "maxLength": 20000,
+                                                                                "minLength": 1,
                                                                                 "type": "string"
                                                                               },
                                                                               "type": {
@@ -5982,6 +5988,7 @@
                                                                                               },
                                                                                               "text": {
                                                                                                 "maxLength": 20000,
+                                                                                                "minLength": 1,
                                                                                                 "type": "string"
                                                                                               },
                                                                                               "type": {
@@ -6145,6 +6152,7 @@
                                                                                                               },
                                                                                                               "text": {
                                                                                                                 "maxLength": 20000,
+                                                                                                                "minLength": 1,
                                                                                                                 "type": "string"
                                                                                                               },
                                                                                                               "type": {
@@ -6306,6 +6314,7 @@
                                                                                                                           },
                                                                                                                           "text": {
                                                                                                                             "maxLength": 20000,
+                                                                                                                            "minLength": 1,
                                                                                                                             "type": "string"
                                                                                                                           },
                                                                                                                           "type": {
@@ -6664,6 +6673,7 @@
                                               },
                                               "text": {
                                                 "maxLength": 20000,
+                                                "minLength": 1,
                                                 "type": "string"
                                               },
                                               "type": {
@@ -6827,6 +6837,7 @@
                                                               },
                                                               "text": {
                                                                 "maxLength": 20000,
+                                                                "minLength": 1,
                                                                 "type": "string"
                                                               },
                                                               "type": {
@@ -6990,6 +7001,7 @@
                                                                               },
                                                                               "text": {
                                                                                 "maxLength": 20000,
+                                                                                "minLength": 1,
                                                                                 "type": "string"
                                                                               },
                                                                               "type": {
@@ -7153,6 +7165,7 @@
                                                                                               },
                                                                                               "text": {
                                                                                                 "maxLength": 20000,
+                                                                                                "minLength": 1,
                                                                                                 "type": "string"
                                                                                               },
                                                                                               "type": {
@@ -7316,6 +7329,7 @@
                                                                                                               },
                                                                                                               "text": {
                                                                                                                 "maxLength": 20000,
+                                                                                                                "minLength": 1,
                                                                                                                 "type": "string"
                                                                                                               },
                                                                                                               "type": {
@@ -7477,6 +7491,7 @@
                                                                                                                           },
                                                                                                                           "text": {
                                                                                                                             "maxLength": 20000,
+                                                                                                                            "minLength": 1,
                                                                                                                             "type": "string"
                                                                                                                           },
                                                                                                                           "type": {

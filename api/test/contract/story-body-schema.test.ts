@@ -77,6 +77,18 @@ describe('[E2.13][AC30] the story body schema', () => {
     expect(pathOf(doc(p('x'.repeat(20001))))).toBe('body.content.0.content.0.text')
   })
 
+  it('an empty text node is refused at its text path', () => {
+    expect(pathOf(doc({ type: 'paragraph', content: [{ type: 'text', text: '' }] }))).toBe('body.content.0.content.0.text')
+    expect(pathOf(doc(p('a'), { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: '' }] }))).toBe('body.content.1.content.0.text')
+  })
+
+  it('an unpaired UTF-16 surrogate is refused, a pair is accepted', () => {
+    expect(pathOf(doc(p('a\uD83D')))).toBe('body.content.0.content.0.text')
+    expect(pathOf(doc(p('\uDE00b')))).toBe('body.content.0.content.0.text')
+    expect(storyDraftSchema.safeParse(draftOf(doc(p('ok \uD83D\uDE00')))).success).toBe(true)
+    expect(storyDraftSchema.safeParse({ ...draftOf(doc(p('a'))), title: 'bad\uD83D' }).success).toBe(false)
+  })
+
   it('a missing body, a null body and a string of HTML are refused', () => {
     const { body: _body, ...without } = draftOf(null)
     expect(storyDraftSchema.safeParse(without).error?.issues[0]?.path).toEqual(['body'])
@@ -179,6 +191,18 @@ describe('[E2.13][AC30] the story body schema', () => {
     const issue = firstIssue(wide)
     expect(issue?.path.join('.')).toBe('body')
     expect(issue?.message).toMatch(/larger than 200000 bytes/)
+  })
+
+  it('the size cap counts a 4-byte emoji as 4 bytes', () => {
+    const bytes = (value: unknown) => new TextEncoder().encode(JSON.stringify(value)).length
+    const emoji = '\u{1F600}'.repeat(5000)
+    const make = (paragraphs: number) => doc(...Array.from({ length: paragraphs }).fill(p(emoji)))
+    expect(bytes(make(9))).toBeLessThan(STORY_BODY_LIMITS.maxBytes)
+    expect(storyDraftSchema.safeParse(draftOf(make(9))).success).toBe(true)
+    // 11 paragraphs: about 110,000 UTF-16 units but about 220,000 bytes
+    expect(JSON.stringify(make(11)).length).toBeLessThan(STORY_BODY_LIMITS.maxBytes)
+    expect(bytes(make(11))).toBeGreaterThan(STORY_BODY_LIMITS.maxBytes)
+    expect(firstIssue(make(11))?.message).toMatch(/larger than 200000 bytes/)
   })
 
   it('a body of exactly 200,000 bytes is accepted and one byte more is refused', () => {

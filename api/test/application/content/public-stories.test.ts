@@ -214,7 +214,36 @@ describe('public stories', () => {
 
     const detail = await s.get('deep', 'en')
 
-    expect(detail.ok).toBe(true)
+    // The list is returned, cut at the write depth: the doc is depth 1, so no node below depth 10 survives.
+    const depthOf = (nodes: unknown[], depth: number): number => nodes.reduce<number>((deepest, n) => {
+      const children = (n as { content?: unknown[] }).content ?? []
+      return Math.max(deepest, depth, depthOf(children, depth + 1))
+    }, 0)
+    const returned = detail.ok ? detail.value.body.content : []
+    expect(returned).toHaveLength(1)
+    expect(returned[0]).toMatchObject({ type: 'bulletList' })
+    expect(depthOf(returned, 2)).toBeLessThanOrEqual(10)
+  })
+
+  it('[E2.13][AC54] a body at the depth cap (lists at depths 2, 4, 6 and 8, a paragraph at 10) reads back unchanged', async () => {
+    let inner: Record<string, unknown> = { type: 'listItem', content: [{ type: 'paragraph' }] }
+    for (let i = 1; i < 4; i++)
+      inner = { type: 'listItem', content: [{ type: i % 2 === 0 ? 'bulletList' : 'orderedList', content: [inner] }] }
+    const body = { type: 'doc', content: [{ type: 'bulletList', content: [inner] }] }
+    const s = setup([story(id1, [version('en', 'cap', 'Cap', undefined, { published: doc('Cap', { body }) })])])
+
+    const detail = await s.get('cap', 'en')
+
+    expect(detail.ok && detail.value.body).toEqual(body)
+  })
+
+  it('[E2.13] an empty text node is dropped from the public body', async () => {
+    const body = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: '' }, { type: 'text', text: 'a' }] }, { type: 'paragraph', content: [{ type: 'text', text: '' }] }] }
+    const s = setup([story(id1, [version('en', 'empty', 'Empty', undefined, { published: doc('Empty', { body }) })])])
+
+    const detail = await s.get('empty', 'en')
+
+    expect(detail.ok && detail.value.body.content).toEqual([{ type: 'paragraph', content: [{ type: 'text', text: 'a' }] }, { type: 'paragraph' }])
   })
 
   it('[E2.13][AC30] script text comes back as a text node unchanged, and the response has no intro', async () => {

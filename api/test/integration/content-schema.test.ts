@@ -271,6 +271,28 @@ describe('[E2.5] content tables', () => {
     expect(refused).toMatchObject({ code: '23514', constraint: 'story_versions_published_fields_check' })
   })
 
+  it.each([
+    ['the old sections array and no body', '{"title":"T","sections":[]}'],
+    ['a body string', '{"title":"T","body":"text"}'],
+    ['a body array', '{"title":"T","body":[]}'],
+  ])('[E2.13][AC30] an update of an existing published row to %s is refused by the check', async (_name, published) => {
+    const store = randomUUID()
+    const group = await newGroup(store)
+    await pool.query(
+      `insert into content.story_versions (group_id, language, store_id, status, slug, published_at, published)
+       values ($1, 'en', $2, 'published', $3, now(), '{"title":"T","body":{"type":"doc","content":[]}}')`,
+      [group, store, slugOf('lion')],
+    )
+
+    const refused = await failure(pool.query(
+      `update content.story_versions set published = $2::jsonb where group_id = $1 and language = 'en'`,
+      [group, published],
+    ))
+
+    expect(refused).toMatchObject({ code: '23514', constraint: 'story_versions_published_fields_check' })
+    expect(await count(pool, `select count(*) from content.story_versions where group_id = $1 and published ? 'body'`, [group])).toBe(1)
+  })
+
   it('[E2.13][AC30] a published story version without a title is still refused', async () => {
     const store = randomUUID()
     const group = await newGroup(store)
