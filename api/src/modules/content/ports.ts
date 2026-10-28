@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, Pin, PinDate, StayTag, StoryDraft, StoryGroup, StoryVersion, WeeklySpan } from '@sk/domain/content'
+import type { ContentLanguage, Localized, Pin, PinDate, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -100,4 +100,31 @@ export interface StoryRepository<T> {
   unpublishVersion: (tx: T, version: StoryVersion, at: Date) => Promise<StoryVersion>
   moveVersion: (tx: T, version: StoryVersion, targetGroupId: string, at: Date) => Promise<StoryVersion>
   removeVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<boolean>
+}
+
+// What a tour guide save may change. A tour guide has no price and no departure. `stops` and `keepsakeProductIds`
+// replace the whole list, in the order given; `draft` replaces the whole draft document.
+export interface TourChanges {
+  slug?: Localized | null
+  stayTag?: StayTag
+  interests?: string[]
+  durationMinutes?: number | null
+  coverMediaId?: string | null
+  pdfMediaId?: string | null
+  keepsakeProductIds?: string[]
+  stops?: Omit<TourGuideStop, 'id' | 'position'>[]
+  draft?: TourGuideDoc
+}
+
+export interface TourRepository<T> {
+  insert: (tx: T, storeId: string, changes: TourChanges, at: Date) => Promise<TourGuide>
+  // Locks the row; stops (by position) and keepsake ids come with it. An id of another store has no row.
+  findForUpdate: (tx: T, storeId: string, tourId: string) => Promise<TourGuide | undefined>
+  // Writes the typed columns and the draft, replaces the stops (positions from 1) and keepsake links when given, bumps row_version.
+  save: (tx: T, tour: TourGuide, changes: TourChanges, at: Date) => Promise<TourGuide>
+  // draft becomes published and is cleared.
+  publish: (tx: T, tour: TourGuide, at: Date) => Promise<TourGuide>
+  // status goes back to draft; the published text stays.
+  unpublish: (tx: T, tour: TourGuide, at: Date) => Promise<TourGuide>
+  remove: (tx: T, storeId: string, tourId: string) => Promise<boolean>
 }
