@@ -12,9 +12,17 @@ const staticStories: Article[] = isProduction ? articleSeed : [...articleSeed, .
 
 /** In the browser the saved demo store holds the stories, so a version the merchant published or made there counts. The fixtures are not in it. */
 function browserStories(): Article[] {
-  const { articles } = loadDemoState().data
+  try {
+    const { articles } = loadDemoState().data
 
-  return isProduction ? articles : [...articles, ...storyFixtures]
+    return isProduction ? articles : [...articles, ...storyFixtures]
+  }
+  catch (error) {
+    // Corrupt saved data: the app starts from the seed (as the demo's restore does), so the languages come from it too.
+    console.error('The saved demo state could not be read, using the seed for story languages', error)
+
+    return staticStories
+  }
 }
 
 /** Languages that have a published version of the story, in store order. */

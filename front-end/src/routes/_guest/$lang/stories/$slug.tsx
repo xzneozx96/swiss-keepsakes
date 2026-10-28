@@ -7,6 +7,7 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router'
+import { useEffect } from 'react'
 
 import { ArticlePage } from '@/features/content/components/article-page'
 import { storyLanguages } from '@/features/content/lib/story-versions'
@@ -18,7 +19,7 @@ export const Route = createFileRoute('/_guest/$lang/stories/$slug')({
   ssr: true,
   // The comment bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
-  // A story may exist in one language only. The address in the other language goes to the one that exists. A slug the static data does not know is a 404 on the server only: in the browser the store may hold a merchant-made story.
+  // A story may exist in one language only. The address in the other language goes to the one that exists. The server reads the seed, the browser reads the saved demo store. A slug with no published version is a 404 on the server only: in the browser it shows the page's own not-found state.
   loader: ({ params, location }) => {
     const { lang, slug } = params
     if (!isLanguage(lang))
@@ -43,6 +44,14 @@ function ArticleRoute() {
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
+
+  // A hard load is server-rendered from the seed, and the loader does not run again in the browser. If the saved store has no published version in this language, go to the one that exists (loader rule, ADR-002 step 6) instead of showing "not found".
+  useEffect(() => {
+    const rule = isLanguage(language) ? pageVersionRule(storyLanguages(slug), language) : undefined
+
+    if (rule?.kind === 'redirect')
+      void navigate({ to: '/$lang/stories/$slug', params: { lang: rule.language, slug }, search: true, hash: true, replace: true })
+  }, [language, slug, navigate])
 
   if (isLoading) {
     return (

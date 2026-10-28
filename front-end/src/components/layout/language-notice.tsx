@@ -17,7 +17,7 @@ export function LanguageNotice() {
     select: (matches) => {
       const data = matches.at(-1)?.loaderData
 
-      // An empty list means the loader does not know the page (a merchant-made story in the browser store): no notice.
+      // An empty list means no published version is known for the page: no notice.
       return hasAvailableLanguages(data) && data.availableLanguages.length > 0 ? data.availableLanguages : undefined
     },
   })

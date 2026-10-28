@@ -347,4 +347,27 @@ test.describe('[E3.11][AC64] a version the merchant publishes in the browser', (
     await expect(page.getByRole('heading', { level: 1, name: 'The Water Tower, older than the bridge' })).toBeVisible()
     await expect(page.getByRole('status')).toHaveText(NOTICE_EN)
   })
+
+  test('hard load of the German address when the saved store has the German version unpublished ends on the English story with the notice', async ({ page }) => {
+    await seedLanguage(page, 'de')
+    await page.goto(`/en/stories/${SHARED}`)
+    await hydrated(page)
+    await page.waitForFunction(() => localStorage.getItem('sk.demo') !== null)
+    await page.evaluate((slug) => {
+      const state = JSON.parse(localStorage.getItem('sk.demo')!)
+
+      for (const article of state.data.articles) {
+        if (article.slug === slug && article.language === 'de')
+          article.publication = { status: 'draft' }
+      }
+      localStorage.setItem('sk.demo', JSON.stringify(state))
+    }, SHARED)
+    await page.goto(`/de/stories/${SHARED}`)
+    await hydrated(page)
+
+    await expect(page).toHaveURL(new RegExp(`/en/stories/${SHARED}$`))
+    await expect(page.getByRole('heading', { level: 1, name: 'A morning on the Musegg wall' })).toBeVisible()
+    await expect(page.getByRole('status')).toHaveText(NOTICE_EN)
+    await expect(page.getByText('This story is not available.')).toHaveCount(0)
+  })
 })
