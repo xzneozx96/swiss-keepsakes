@@ -8,3 +8,5 @@ export const withIfMatch = { headers: z.object({ 'If-Match': ifMatchHeader }) }
 
 export const storeParams = z.object({ storeId: z.uuid() })
 export const etagHeaders = { ...requestIdHeader, ETag: { description: 'The row version, as `"<rowVersion>"`', schema: { type: 'string' } } } as const
+
+export const etag = (row: { rowVersion: number }) => ({ ETag: `"${row.rowVersion}"` })

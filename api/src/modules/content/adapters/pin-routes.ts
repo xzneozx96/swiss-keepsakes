@@ -11,7 +11,7 @@ import { problemResponses, requestIdHeader } from '../../../platform/http/respon
 import { readIfMatch } from './if-match.ts'
 import { pinChanges, pinView } from './pin-view.ts'
 import { failureProblem } from './problems.ts'
-import { etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
+import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
 
 // What the pin routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface PinUseCases {
@@ -73,8 +73,6 @@ const deletePinRoute = createRoute({
     ...problemResponses,
   },
 })
-
-const etag = (pin: Pin) => ({ ETag: `"${pin.rowVersion}"` })
 
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
 // verified store from `c.get('store')`, never from the path.

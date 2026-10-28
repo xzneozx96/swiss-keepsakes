@@ -1,6 +1,7 @@
 import type { TourGuide } from '@sk/domain/content'
 import type { TourRepository } from '../../src/modules/content/ports.ts'
 import { randomUUID } from 'node:crypto'
+import { mergeDraft } from '../../src/modules/content/adapters/tour-repository.ts'
 
 // An in-memory tour repository. It copies what the SQL one does with stops and drafts, but none of the database guards.
 export function createFakeTours(): TourRepository<null> & { rows: Map<string, TourGuide>, removed: string[] } {
@@ -30,7 +31,7 @@ export function createFakeTours(): TourRepository<null> & { rows: Map<string, To
         keepsakeProductIds: [],
         ...rest,
         stops: numbered(stops ?? []),
-        draft: draft ?? null,
+        draft: mergeDraft(null, draft),
         published: null,
         rowVersion: 1,
         createdAt: at,
@@ -43,7 +44,7 @@ export function createFakeTours(): TourRepository<null> & { rows: Map<string, To
     },
     async save(_tx, tour, changes, at) {
       const { stops, draft, ...rest } = changes
-      return store({ ...tour, ...rest, stops: stops ? numbered(stops) : tour.stops, draft: draft ?? tour.draft, rowVersion: tour.rowVersion + 1, updatedAt: at })
+      return store({ ...tour, ...rest, stops: stops ? numbered(stops) : tour.stops, draft: mergeDraft(tour.draft ?? tour.published, draft), rowVersion: tour.rowVersion + 1, updatedAt: at })
     },
     async publish(_tx, tour, at) {
       return store({ ...tour, status: 'published', published: tour.draft ?? tour.published, draft: null, rowVersion: tour.rowVersion + 1, updatedAt: at })

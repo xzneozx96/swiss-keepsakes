@@ -61,6 +61,27 @@ describe('tour guide use cases', () => {
     expect(s.tours.rows.get(tour.id)).toMatchObject({ rowVersion: 4, draft: { title: { en: 'Renamed' } } })
   })
 
+  it('[E2.6] a PATCH with only draft.summary keeps the stored title, meeting point and sections, and publishes with that title', async () => {
+    const s = setup()
+    const full = { title: { en: 'Old town walk' }, summary: { en: 'Before' }, meetingPoint: { en: 'Station' }, sections: [{ id: 'a', heading: { en: 'H' }, body: { en: 'B' } }] }
+    const tour = await created(s, { ...complete, draft: full })
+
+    const saved = await s.save(owner, store, tour.id, 1, { draft: { summary: { en: 'After' } } }, null)
+
+    expect(saved).toMatchObject({ ok: true, value: { draft: { ...full, summary: { en: 'After' } } } })
+    expect(await s.publish(owner, store, tour.id, 2, null)).toMatchObject({ ok: true, value: { status: 'published', published: { title: { en: 'Old town walk' }, summary: { en: 'After' } } } })
+  })
+
+  it('[E2.6] a PATCH of a draft field on a tour with no draft starts from empty, and on an unpublished tour from the published text', async () => {
+    const s = setup()
+    const bare = await created(s, { slug: { en: 'bare' } })
+    expect(await s.save(owner, store, bare.id, 1, { draft: { title: { en: 'T' } } }, null)).toMatchObject({ ok: true, value: { draft: { title: { en: 'T' }, summary: {}, meetingPoint: {}, sections: [] } } })
+
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    expect(await s.save(owner, store, tour.id, 2, { draft: { summary: { en: 'New' } } }, null)).toMatchObject({ ok: true, value: { draft: { title: { en: 'Old town walk' }, summary: { en: 'New' } }, published: { title: { en: 'Old town walk' } } } })
+  })
+
   it('[E2.6] a tour publishes with a slug, a title in one language and a PDF, and writes an audit row', async () => {
     const s = setup()
     const tour = await created(s)

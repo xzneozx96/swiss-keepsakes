@@ -105,6 +105,21 @@ function reload(tx: Tx, tour: Pick<TourGuide, 'storeId' | 'id'>): Promise<TourGu
   return load(tx, tour.storeId, tour.id, false).then(found => found!)
 }
 
+const emptyDoc: TourGuideDoc = { title: {}, summary: {}, meetingPoint: {}, sections: [] }
+
+// A save changes the fields it names and keeps the rest of the stored draft (or, with no draft, the published text).
+export function mergeDraft(base: TourGuideDoc | null, changes: Partial<TourGuideDoc> | undefined): TourGuideDoc | null {
+  if (changes === undefined)
+    return base
+  const from = base ?? emptyDoc
+  return {
+    title: changes.title ?? from.title,
+    summary: changes.summary ?? from.summary,
+    meetingPoint: changes.meetingPoint ?? from.meetingPoint,
+    sections: changes.sections ?? from.sections,
+  }
+}
+
 export function createTourRepository(): TourRepository<Tx> {
   return {
     async insert(tx, storeId, changes, at) {
@@ -112,7 +127,7 @@ export function createTourRepository(): TourRepository<Tx> {
         insert into content.tours (store_id, slug, stay_tag, interests, duration_minutes, cover_media_id, pdf_media_id, draft, created_at, updated_at)
         values (${storeId}, ${json(changes.slug)}::jsonb, ${changes.stayTag ?? 'both'}, ${sql.param(changes.interests ?? [])}::text[],
                 ${changes.durationMinutes ?? null}, ${changes.coverMediaId ?? null}, ${changes.pdfMediaId ?? null},
-                ${json(changes.draft)}::jsonb, ${at}, ${at})
+                ${json(mergeDraft(null, changes.draft))}::jsonb, ${at}, ${at})
         returning id`)
       const id = inserted.rows[0]!.id
       await replaceLists(tx, storeId, id, changes, at)
@@ -131,7 +146,7 @@ export function createTourRepository(): TourRepository<Tx> {
           duration_minutes = ${has('durationMinutes') ? changes.durationMinutes : tour.durationMinutes},
           cover_media_id = ${has('coverMediaId') ? changes.coverMediaId : tour.coverMediaId},
           pdf_media_id = ${has('pdfMediaId') ? changes.pdfMediaId : tour.pdfMediaId},
-          draft = ${json(changes.draft ?? tour.draft)}::jsonb,
+          draft = ${json(mergeDraft(tour.draft ?? tour.published, changes.draft))}::jsonb,
           row_version = row_version + 1, updated_at = ${at}
         where store_id = ${tour.storeId} and id = ${tour.id}`)
       await replaceLists(tx, tour.storeId, tour.id, changes, at)

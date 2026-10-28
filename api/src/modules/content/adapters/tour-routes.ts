@@ -10,7 +10,7 @@ import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
-import { etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
+import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
 import { tourChanges, tourView } from './tour-view.ts'
 
 // What the tour routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
@@ -73,8 +73,6 @@ const deleteTourRoute = createRoute({
     ...problemResponses,
   },
 })
-
-const etag = (tour: TourGuide) => ({ ETag: `"${tour.rowVersion}"` })
 
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
 // verified store from `c.get('store')`, never from the path.

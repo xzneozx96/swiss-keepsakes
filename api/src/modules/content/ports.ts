@@ -103,7 +103,7 @@ export interface StoryRepository<T> {
 }
 
 // What a tour guide save may change. A tour guide has no price and no departure. `stops` and `keepsakeProductIds`
-// replace the whole list, in the order given; `draft` replaces the whole draft document.
+// replace the whole list, in the order given; `draft` merges per field into the stored draft.
 export interface TourChanges {
   slug?: Localized | null
   stayTag?: StayTag
@@ -113,7 +113,8 @@ export interface TourChanges {
   pdfMediaId?: string | null
   keepsakeProductIds?: string[]
   stops?: Omit<TourGuideStop, 'id' | 'position'>[]
-  draft?: TourGuideDoc
+  // Each field present replaces that field of the draft; a field left out keeps its stored text.
+  draft?: Partial<TourGuideDoc>
 }
 
 export interface TourRepository<T> {

@@ -113,23 +113,38 @@ describe('[E2.6] the tour write routes', () => {
     expect(seen).toEqual([{ durationMinutes: 90, stops: [{ latitude: 47.05, longitude: 8.3, title: { en: 'Chapel Bridge' }, text: {}, minutesFromStart: 5, mediaId: null, placeId: null }] }])
   })
 
-  it('[E2.6] a stop with neither a title nor a text reaches the use case with empty maps, and a draft with only a title is filled', async () => {
+  it('[E2.6] a stop with neither a title nor a text reaches the use case with empty maps', async () => {
     const seen: unknown[] = []
     const app = setup({ saveTour: async (_actor, _storeId, _id, ifMatch, changes) => {
       seen.push(changes)
       return { ok: true, value: { ...fakeTour, rowVersion: ifMatch + 1 } }
     } })
 
-    const response = await send(app, 'PATCH', tour, { 'If-Match': '1' }, {
-      stops: [{ latitude: 47, longitude: 8 }],
-      draft: { title: { en: 'Old town' } },
-    })
+    const response = await send(app, 'PATCH', tour, { 'If-Match': '1' }, { stops: [{ latitude: 47, longitude: 8 }] })
 
     expect(response.status).toBe(200)
-    expect(seen).toEqual([{
-      stops: [{ latitude: 47, longitude: 8, title: {}, text: {}, minutesFromStart: null, mediaId: null, placeId: null }],
-      draft: { title: { en: 'Old town' }, summary: {}, meetingPoint: {}, sections: [] },
-    }])
+    expect(seen).toEqual([{ stops: [{ latitude: 47, longitude: 8, title: {}, text: {}, minutesFromStart: null, mediaId: null, placeId: null }] }])
+  })
+
+  it('[E2.6] a partial draft reaches the use case partial, so a left-out field is not wiped', async () => {
+    const seen: unknown[] = []
+    const app = setup({ saveTour: async (_actor, _storeId, _id, ifMatch, changes) => {
+      seen.push(changes)
+      return { ok: true, value: { ...fakeTour, rowVersion: ifMatch + 1 } }
+    } })
+
+    await send(app, 'PATCH', tour, { 'If-Match': '1' }, { draft: { summary: { en: 'Only this' } } })
+    await send(app, 'PATCH', tour, { 'If-Match': '1' }, { draft: {} })
+
+    expect(seen).toEqual([{ draft: { summary: { en: 'Only this' } } }, { draft: {} }])
+  })
+
+  it.each([
+    { draft: { price: 1 } },
+    { draft: { sections: [{ id: 'a', heading: {}, body: {}, price: 1 }] } },
+  ])('[E2.6] a price key inside a draft %j answers 400', async (body) => {
+    expect((await send(setup(), 'PATCH', tour, { 'If-Match': '1' }, body)).status).toBe(400)
+    expect((await send(setup(), 'POST', tours, {}, body)).status).toBe(400)
   })
 
   it('[E2.6] the view lists the stops and both documents with ISO dates', async () => {

@@ -251,6 +251,23 @@ describe('[E2.6] the tour routes over the real app and the database', () => {
     expect((await env.call(path, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '2' }, body: { price: 1 } })).status).toBe(400)
   }, timeout)
 
+  it('[E2.6] a PATCH sending only draft.summary leaves the stored title and sections', async () => {
+    const staff = await env.storeWithStaff()
+    const pdf = await media(staff.storeId, 'pdf')
+    const sections = [{ id: 'a', heading: { en: 'Start' }, body: { en: 'Walk' } }]
+    const made = await env.call(staff.tours, { method: 'POST', headers: staff.owner.headers, body: { slug: { en: slug() }, pdfMediaId: pdf, draft: { title: { en: 'Old town walk' }, meetingPoint: { en: 'Station' }, sections } } })
+    const { id } = await made.json() as { id: string }
+
+    const saved = await env.call(`${staff.tours}/${id}`, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': '1' }, body: { draft: { summary: { en: 'A short summary' } } } })
+
+    expect(saved.status).toBe(200)
+    expect(await saved.json()).toMatchObject({ rowVersion: 2, draft: { title: { en: 'Old town walk' }, summary: { en: 'A short summary' }, meetingPoint: { en: 'Station' }, sections } })
+    const { rows } = await pool.query<{ draft: TourGuideDoc }>('select draft from content.tours where id = $1', [id])
+    expect(rows[0]!.draft).toMatchObject({ title: { en: 'Old town walk' }, summary: { en: 'A short summary' }, sections })
+    const published = await env.call(`${staff.tours}/${id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '2' } })
+    expect(published.status).toBe(200)
+  }, timeout)
+
   it('[E2.6] publish writes an audit row', async () => {
     const staff = await env.storeWithStaff()
     const { made } = await publishableTour(staff)
@@ -265,7 +282,7 @@ describe('[E2.6] the tour routes over the real app and the database', () => {
     const [row, ...rest] = await auditRows(id)
     expect(rest).toEqual([])
     expect(row).toMatchObject({ entity: 'tour', action: 'published', actor: `staff:${staff.owner.userId}`, store_id: staff.storeId })
-    expect(row?.request_id).toMatch(/^[0-9a-f-]{36}$/)
+    expect(row?.request_id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/)
 
     const unpublished = await env.call(`${path}/unpublish`, { method: 'POST', headers: { ...staff.manager.headers, 'If-Match': '2' } })
     expect(unpublished.status).toBe(200)

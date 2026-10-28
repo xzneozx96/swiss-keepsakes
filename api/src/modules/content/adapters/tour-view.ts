@@ -43,13 +43,15 @@ export function tourView(tour: TourGuide): TourView {
   }
 }
 
-// The body leaves out a stop's texts and a draft's blocks; the repository wants each present, as an empty map
-// or list, and a stop's optional links as null.
+// The body leaves out a stop's texts and links; the repository wants each present, as an empty map or null.
+// A draft stays as sent: a field left out keeps its stored text, the repository merges.
 export function tourChanges(body: TourGuideWriteBody): TourChanges {
-  const { stops, draft, ...rest } = body
-  const changes: TourChanges = rest
-  if (stops !== undefined) {
-    changes.stops = stops.map(stop => ({
+  const { stops, ...rest } = body
+  if (stops === undefined)
+    return rest
+  return {
+    ...rest,
+    stops: stops.map(stop => ({
       latitude: stop.latitude,
       longitude: stop.longitude,
       title: stop.title ?? {},
@@ -57,9 +59,6 @@ export function tourChanges(body: TourGuideWriteBody): TourChanges {
       minutesFromStart: stop.minutesFromStart ?? null,
       mediaId: stop.mediaId ?? null,
       placeId: stop.placeId ?? null,
-    }))
+    })),
   }
-  if (draft !== undefined)
-    changes.draft = { title: draft.title ?? {}, summary: draft.summary ?? {}, meetingPoint: draft.meetingPoint ?? {}, sections: draft.sections ?? [] }
-  return changes
 }

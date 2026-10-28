@@ -11,7 +11,7 @@ import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
-import { etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
+import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
 import { storyGroupView, storyVersionView } from './story-view.ts'
 
 type Language = StoryVersion['language']
@@ -113,8 +113,6 @@ const deleteVersionRoute = createRoute({
     ...problemResponses,
   },
 })
-
-const etag = (row: { rowVersion: number }) => ({ ETag: `"${row.rowVersion}"` })
 
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
 // verified store from `c.get('store')`, never from the path.
