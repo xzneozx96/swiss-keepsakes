@@ -19,6 +19,7 @@ export const categoriesEn = {
   'categories.empty.map': 'No map categories yet. Add the first one.',
   'categories.empty.blog': 'No blog categories yet. Add the first one.',
   'categories.loading': 'Loading categories',
+  'categories.noStore': 'You do not belong to a store yet, so there are no categories to edit.',
   'categories.loadFailed': 'The categories could not be loaded.',
   'categories.retry': 'Try again',
   'categories.requestId': 'Reference: {id}',

@@ -203,6 +203,27 @@ describe('[E4.18][AC87] the category editor in English', () => {
     expect(within(dialog).getByText('This category has sub-categories, so it stays at the top level.')).toBeInTheDocument()
   })
 
+  it('reads the list again and says why when a move is refused because the list changed', async () => {
+    lists.map = [
+      category(walks, { name: { en: 'Walks', de: null }, position: 1 }),
+      category(food, { name: { en: 'Food', de: null }, position: 2 }),
+    ]
+    answer = call => call.method === 'PUT' ? problem(422, 'validation-failed') : undefined
+    renderScreen()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Move Walks down' }))
+
+    expect(await screen.findByText('The list changed. Reload it and move the category again.')).toBeInTheDocument()
+    await waitFor(() => expect(calls.filter(call => call.method === 'GET' && call.path.endsWith('/categories/map'))).toHaveLength(2))
+  })
+
+  it('says so when the account belongs to no store', async () => {
+    answer = call => call.path === '/api/me' ? Response.json({ guestId: storeId, stores: [] }) : undefined
+    renderScreen()
+
+    expect(await screen.findByText('You do not belong to a store yet, so there are no categories to edit.')).toBeInTheDocument()
+  })
+
   it('names the missing language on a row and falls back to the other one', async () => {
     lists.map = [category(walks, { name: { en: null, de: 'Wanderungen' } })]
     renderScreen()

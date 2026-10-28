@@ -2,6 +2,7 @@ import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
 
 import { Button } from '@heroui/react'
 
+import { ChevronDownIcon } from '@/components/icons'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { displayName, OTHER } from '../lib/category-name'
@@ -45,8 +46,12 @@ export function CategoryRow({ category, kind, parentName, canMoveUp, canMoveDown
         )}
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button aria-label={t('categories.moveUp', { name: primary })} className="min-h-11" isDisabled={!canMoveUp || busy} variant="secondary" onPress={() => onMove(-1)}>↑</Button>
-        <Button aria-label={t('categories.moveDown', { name: primary })} className="min-h-11" isDisabled={!canMoveDown || busy} variant="secondary" onPress={() => onMove(1)}>↓</Button>
+        <Button isIconOnly aria-label={t('categories.moveUp', { name: primary })} className="min-h-11 min-w-11" isDisabled={!canMoveUp || busy} variant="secondary" onPress={() => onMove(-1)}>
+          <ChevronDownIcon className="rotate-180" size={18} />
+        </Button>
+        <Button isIconOnly aria-label={t('categories.moveDown', { name: primary })} className="min-h-11 min-w-11" isDisabled={!canMoveDown || busy} variant="secondary" onPress={() => onMove(1)}>
+          <ChevronDownIcon size={18} />
+        </Button>
         <Button aria-label={t('categories.editLabel', { name: primary })} className="min-h-11" variant="secondary" onPress={onEdit}>{t('categories.edit')}</Button>
         <Button aria-label={t('categories.deleteLabel', { name: primary })} className="min-h-11" variant="tertiary" onPress={onDelete}>{t('categories.delete')}</Button>
       </div>

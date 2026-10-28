@@ -20,6 +20,7 @@ export const categoriesDe: Record<keyof typeof categoriesEn, string> = {
   'categories.empty.map': 'Noch keine Kartenkategorien. Fügen Sie die erste hinzu.',
   'categories.empty.blog': 'Noch keine Blogkategorien. Fügen Sie die erste hinzu.',
   'categories.loading': 'Kategorien werden geladen',
+  'categories.noStore': 'Sie gehören noch zu keinem Shop, daher gibt es keine Kategorien zu bearbeiten.',
   'categories.loadFailed': 'Die Kategorien konnten nicht geladen werden.',
   'categories.retry': 'Erneut versuchen',
   'categories.requestId': 'Referenz: {id}',

@@ -27,11 +27,13 @@ export function CategoriesScreen() {
 
   if (!apiEnabled)
     return <EmptyState icon={InfoIcon} message={t('categories.apiOnly')} />
-  if (me.isError || (!me.isPending && !current)) {
+  if (me.isError) {
     const status = me.error instanceof ApiProblem ? me.error.status : undefined
 
     return <EmptyState icon={InfoIcon} message={t(status === 401 || status === undefined ? 'categories.loadFailed' : 'categories.problem.forbidden')} />
   }
+  if (!me.isPending && !current)
+    return <EmptyState icon={InfoIcon} message={t('categories.noStore')} />
 
   return (
     <div className="flex flex-col gap-4" data-testid="categories-screen">

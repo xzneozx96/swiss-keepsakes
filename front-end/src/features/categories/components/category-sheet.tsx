@@ -81,7 +81,7 @@ export function CategorySheet({ storeId, kind, category, roots, onClose }: {
     <TextField
       fullWidth
       isInvalid={nameMissing}
-      maxLength={120}
+      maxLength={300}
       value={value}
       onChange={(next) => {
         set(next)
@@ -128,7 +128,12 @@ export function CategorySheet({ storeId, kind, category, roots, onClose }: {
               <Select
                 fullWidth
                 selectedKey={parent}
-                onSelectionChange={key => key !== null && setParent(String(key))}
+                onSelectionChange={(next) => {
+                  if (next === null)
+                    return
+                  setParent(String(next))
+                  reset()
+                }}
               >
                 <Label className="text-heading">{t('categories.sheet.parent')}</Label>
                 <Select.Trigger>

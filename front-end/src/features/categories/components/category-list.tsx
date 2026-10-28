@@ -73,8 +73,10 @@ export function CategoryList({ storeId, kind }: { storeId: string, kind: Categor
 
     ids.splice(to, 0, category.id)
 
-    // A tap is one intent and gets its own key. The list moves under it, so the same move is never the same request twice.
-    reorder.submit({ storeId, kind, parentId: category.parentId, ids, idempotencyKey: crypto.randomUUID() })
+    // A tap gets its own key. The body is the full target order, so sending it again, even under another key, leaves the same list.
+    reorder.submit({ storeId, kind, parentId: category.parentId, ids, idempotencyKey: crypto.randomUUID() }, {
+      onError: () => void categories.refetch(),
+    })
   }
 
   return (
