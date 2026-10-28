@@ -35,6 +35,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
 })
@@ -107,7 +108,7 @@ describe('[E3.6][AC61] published pages reader', () => {
 
   it('throws on a 500 that carries a valid body (the ok-check, not the parse, rejects it)', async () => {
     override = () => Response.json({ items: [card('x', 'en')] }, { status: 500 })
-    await expect(loadPublishedPages()).rejects.toBeInstanceOf(PublicPagesUnavailable)
+    await expect(loadPublishedPages()).rejects.toThrow(/answered 500/)
   })
 
   it('fails when one read of four fails, then a retry works', async () => {
@@ -133,6 +134,8 @@ describe('[E3.6][AC61] published pages reader', () => {
     override = () => new Response('boom', { status: 503 })
     const results = await Promise.allSettled([loadPublishedPages(), loadPublishedPages()])
     expect(results.map(r => r.status)).toEqual(['rejected', 'rejected'])
+    for (const result of results)
+      expect((result as PromiseRejectedResult).reason).toBeInstanceOf(PublicPagesUnavailable)
     expect(urls).toHaveLength(4)
 
     override = undefined
