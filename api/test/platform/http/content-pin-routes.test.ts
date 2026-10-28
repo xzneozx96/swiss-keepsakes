@@ -162,6 +162,37 @@ describe('[E2.6] publish, hide and delete answer the editor in its own words', (
     expect(await response.json()).toMatchObject({ type: 'publish-incomplete', errors: [{ in: 'body', path: 'slug' }] })
   })
 
+  it('[E2.6][AC30] publish reads an optional slug body: none, a slug for a new language, and nothing else', async () => {
+    const seen: unknown[] = []
+    const app = setup({ publishPin: async (_actor, _storeId, _id, ifMatch, _requestId, slug) => {
+      seen.push(slug)
+      return { ok: true, value: { ...fakePin, status: 'published', rowVersion: ifMatch + 1 } }
+    } })
+
+    expect((await send(app, 'POST', `${pin}/publish`, { 'If-Match': '1' })).status).toBe(200)
+    expect((await send(app, 'POST', `${pin}/publish`, { 'If-Match': '1' }, {})).status).toBe(200)
+    expect((await send(app, 'POST', `${pin}/publish`, { 'If-Match': '1' }, { slug: { de: 'kapellbruecke' } })).status).toBe(200)
+    expect(seen).toEqual([undefined, undefined, { de: 'kapellbruecke' }])
+  })
+
+  it.each([
+    ['a malformed slug', { slug: { de: 'Not A Slug' } }],
+    ['an empty slug map', { slug: {} }],
+    ['an unknown key in the slug', { slug: { fr: 'pont' } }],
+    ['an unknown key in the body', { slug: { de: 'ok' }, title: { en: 'x' } }],
+  ])('[E2.6][AC68] publish with %s answers 400 and the use case is not called', async (_name, body) => {
+    let calls = 0
+    const app = setup({ publishPin: async () => {
+      calls++
+      return { ok: false, reason: 'stale' }
+    } })
+
+    const response = await send(app, 'POST', `${pin}/publish`, { 'If-Match': '1' }, body)
+
+    expect(response.status).toBe(400)
+    expect(calls).toBe(0)
+  })
+
   it('[E2.6] publish and hide answer 200 with the new status and ETag', async () => {
     const app = setup()
 

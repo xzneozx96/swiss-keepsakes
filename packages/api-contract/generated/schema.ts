@@ -909,7 +909,11 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PinPublishBody"];
+                };
+            };
             responses: {
                 /** @description The pin is live with its draft */
                 200: {
@@ -1896,6 +1900,13 @@ export interface components {
                 day: number;
                 opens: string;
             }[];
+        };
+        /** @description Optional. The slug is the web address for a language the publish adds; a language already live keeps its own */
+        PinPublishBody: {
+            slug?: {
+                de?: string;
+                en?: string;
+            };
         };
         /** @description Every field is optional. A pin has no type and no price */
         PinWriteBody: {

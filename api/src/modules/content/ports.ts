@@ -61,8 +61,9 @@ export interface PinRepository<T> {
   findForUpdate: (tx: T, storeId: string, pinId: string) => Promise<Pin | undefined>
   // Writes the typed columns and the draft document, replaces the category and date lists when given, bumps row_version.
   save: (tx: T, pin: Pin, changes: PinChanges, at: Date) => Promise<Pin>
-  // draft becomes published and is cleared; first_published_at is kept once set.
-  publish: (tx: T, pin: Pin, at: Date) => Promise<Pin>
+  // draft becomes published and is cleared, and the slug is replaced in the same statement so it keeps covering the
+  // published languages (places_published_fields_check); first_published_at is kept once set.
+  publish: (tx: T, pin: Pin, at: Date, slug: Localized) => Promise<Pin>
   hide: (tx: T, pin: Pin, at: Date) => Promise<Pin>
   remove: (tx: T, storeId: string, pinId: string) => Promise<boolean>
 }

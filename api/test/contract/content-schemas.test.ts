@@ -1,4 +1,5 @@
 import {
+  pinPublishBodySchema,
   pinSchema,
   pinWriteBodySchema,
   problemTypes,
@@ -30,6 +31,16 @@ describe('[E2.6] content write schemas', () => {
 
   it('[E2.6][AC68] a pin body with a type is refused', () => {
     expect(ok(pinWriteBodySchema, { type: 'event' })).toBe(false)
+  })
+
+  it('[E2.6][AC30] a pin publish body is optional in its slug, takes a slug in one or both languages and nothing else', () => {
+    expect(ok(pinPublishBodySchema, {})).toBe(true)
+    expect(ok(pinPublishBodySchema, { slug: { de: 'kapellbruecke' } })).toBe(true)
+    expect(ok(pinPublishBodySchema, { slug: { en: 'a', de: 'b' } })).toBe(true)
+    expect(ok(pinPublishBodySchema, { slug: {} })).toBe(false)
+    expect(ok(pinPublishBodySchema, { slug: { de: 'Not A Slug' } })).toBe(false)
+    expect(ok(pinPublishBodySchema, { slug: { fr: 'pont' } })).toBe(false)
+    expect(ok(pinPublishBodySchema, { title: { en: 'x' } })).toBe(false)
   })
 
   it('[E2.6] a localized title of "" or "  " is refused, {} is accepted', () => {

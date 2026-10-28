@@ -167,6 +167,7 @@ describe('tour guide use cases', () => {
     expect(await s.unpublish(owner, store, tour.id, 3, null)).toEqual({ ok: false, reason: 'not-published' })
   })
 
+  // Gate G-S5-TOURDELETE (owner): only a never-published tour can be deleted; a once-published tour gets 409.
   it('[E2.6][AC79] a draft tour is deleted, a published or unpublished-after-publish tour is published-cannot-be-deleted', async () => {
     const s = setup()
     const draft = await created(s)

@@ -125,6 +125,31 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect(await count(pool, 'select count(*) from content.places where id = $1 and address is null', [theirs.id])).toBe(1)
   })
 
+  it('[E2.6][AC30] over HTTP a live English pin gains German with a slug body, and a taken or missing German slug is refused', async () => {
+    const { owner, pins } = await env.storeWithStaff()
+    const { id } = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Chapel Bridge' }, ...located, slug: { en: slugFor() } } })).json() as { id: string }
+    expect((await env.call(`${pins}/${id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' } })).status).toBe(200)
+    const bilingual = { title: { en: 'Chapel Bridge', de: 'Kapellbruecke' } }
+    await env.call(`${pins}/${id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '2' }, body: bilingual })
+    const publish = (body?: object) => env.call(`${pins}/${id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '3' }, body })
+
+    const missing = await publish()
+    expect(missing.status).toBe(422)
+    expect(await missing.json()).toMatchObject({ type: 'publish-incomplete', errors: [{ path: 'slug' }] })
+
+    const taken = slugFor()
+    await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Lion Monument', de: 'Loewendenkmal' }, slug: { en: slugFor(), de: taken } } })
+    const clash = await publish({ slug: { de: taken } })
+    expect(clash.status).toBe(409)
+    expect(await clash.json()).toMatchObject({ type: 'content-slug-taken' })
+    expect((await pool.query('select row_version, status from content.places where id = $1', [id])).rows[0]).toEqual({ row_version: 3, status: 'published' })
+
+    const de = slugFor()
+    const done = await publish({ slug: { de } })
+    expect(done.status).toBe(200)
+    expect(await done.json()).toMatchObject({ rowVersion: 4, slug: { de }, published: { title: { en: 'Chapel Bridge', de: 'Kapellbruecke' } } })
+  })
+
   it('[E2.6][AC85] publish end to end writes the audit row and the response has mainStoryGroupId null', async () => {
     const { owner, pins, storeId } = await env.storeWithStaff()
     const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Chapel Bridge' } } })).json() as { id: string }

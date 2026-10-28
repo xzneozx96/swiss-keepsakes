@@ -753,6 +753,29 @@
         ],
         "type": "object"
       },
+      "PinPublishBody": {
+        "additionalProperties": false,
+        "description": "Optional. The slug is the web address for a language the publish adds; a language already live keeps its own",
+        "properties": {
+          "slug": {
+            "additionalProperties": false,
+            "properties": {
+              "de": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "PinWriteBody": {
         "additionalProperties": false,
         "description": "Every field is optional. A pin has no type and no price",
@@ -3499,6 +3522,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinPublishBody"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {

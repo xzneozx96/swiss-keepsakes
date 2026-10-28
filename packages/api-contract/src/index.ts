@@ -5,6 +5,8 @@ export {
   localizedTextSchema,
   type Pin,
   pinSchema,
+  type PinPublishBody,
+  pinPublishBodySchema,
   type PinWriteBody,
   pinWriteBodySchema,
   type StoryDraft,

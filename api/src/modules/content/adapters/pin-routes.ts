@@ -1,11 +1,12 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { Pin } from '@sk/domain/content'
+import type { Localized, Pin } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
+import type { Context, Next } from 'hono'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { PinChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { pinSchema, pinWriteBodySchema } from '@sk/api-contract'
+import { pinPublishBodySchema, pinSchema, pinWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
@@ -17,7 +18,7 @@ import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts
 export interface PinUseCases {
   createPin: (actor: Actor, storeId: string, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
   savePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
-  publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<Pin>>
+  publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null, slug?: Localized) => Promise<Result<Pin>>
   hidePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<Pin>>
   deletePin: (actor: Actor, storeId: string, pinId: string, requestId: string | null) => Promise<Result<{ id: string }>>
 }
@@ -44,10 +45,24 @@ const savePinRoute = createRoute({
   },
 })
 
+// The publish body is optional. A client that sets the JSON Content-Type and sends nothing is sent on as one that set
+// no Content-Type, which the validator lets through, instead of a 400 for an empty JSON document (as the identity
+// module's acceptEmptyBody does).
+async function acceptEmptyBody(c: Context<AppEnv>, next: Next) {
+  if (c.req.header('Content-Type') !== undefined && (await c.req.arrayBuffer()).byteLength === 0) {
+    const headers = new Headers(c.req.raw.headers)
+    headers.delete('Content-Type')
+    // The body is read already, and a Request cannot be built from one that was, so build it from the parts.
+    c.req.raw = new Request(c.req.url, { method: c.req.method, headers })
+  }
+  await next()
+}
+
 const publishPinRoute = createRoute({
   method: 'post',
   path: '/api/store/{storeId}/pins/{pinId}/publish',
-  request: { params: pinParams, ...withIfMatch },
+  middleware: [acceptEmptyBody],
+  request: { params: pinParams, ...withIfMatch, body: { required: false, content: json(pinPublishBodySchema) } },
   responses: {
     200: { description: 'The pin is live with its draft', headers: etagHeaders, content: json(pinSchema) },
     ...problemResponses,
@@ -98,7 +113,7 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
     const ifMatch = readIfMatch(c)
     if (!ifMatch.ok)
       return ifMatch.response
-    const result = await useCases.publishPin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'))
+    const result = await useCases.publishPin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'), c.req.valid('json').slug)
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(pinView(result.value), 200, etag(result.value))
