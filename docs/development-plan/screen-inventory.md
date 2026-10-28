@@ -2,7 +2,7 @@
 id: screen-inventory-storytelling-pivot
 status: draft
 created: 2026-10-26
-sources: PRD v3 (approved), docs/specs/001-storytelling-pivot, ADR-001 to ADR-030, docs/decisions/2026-10-26-partner-handover.md, docs/decisions/2026-10-27-map-pins-and-events.md
+sources: PRD v3 (approved), docs/specs/001-storytelling-pivot, ADR-001 to ADR-030, docs/decisions/2026-10-26-partner-handover.md, docs/decisions/2026-10-27-map-pins-and-events.md, docs/decisions/2026-10-28-onboarding-full-screen.md
 ---
 # Screen inventory for the storytelling pivot
 
@@ -14,7 +14,7 @@ Review page: https://claude.ai/artifact/PZrVtEWF73EoQw5tMCMK1V (private; source 
 
 It chooses no visual design. The owner has no reference images (O23 closed, 27.10.2026): pins and the map use the default style of the map stack. Where a row says "layout", it means content blocks and order, not look.
 
-Amended on 28.10.2026: every screen has a slice id (S0 to S12) and a UI work value (Design, Edit, Wire, None). Tables 1 and 2 are grouped by slice and a slice index was added. No verdict changed.
+Amended on 28.10.2026: every screen has a slice id (S0 to S12) and a UI work value (Design, Edit, Wire, None). Tables 1 and 2 are grouped by slice and a slice index was added. No verdict changed. The same day the onboarding decision (`docs/decisions/2026-10-28-onboarding-full-screen.md`) made N01 the full-screen flow and added N24, the small prompt for deep links.
 
 Amended on 27.10.2026 for the map pins, local events and categories decision (owner gate G11): N03 and N17 change, N04 and N05 are removed, and N23 is new.
 
@@ -43,8 +43,8 @@ Each screen below carries a slice id in the first column of tables 1 and 2. The 
 
 | Slice | Feature | Track | Goal | Redesign | New | Keep | Hide | UI design | Blocked by |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S0 | Platform shell | P | Root, guest shell, merchant layout, sign-in and invitation, referral link and sitemap, which every other slice mounts on | 5 | 1 | 6 | 0 | 0 | O22 |
-| S1 | Onboarding and ranking | 1 | A two-step visitor prompt whose answers re-rank every public list | 0 | 1 | 0 | 0 | 1 | O25, O32 |
+| S0 | Platform shell | P | Root, guest shell, merchant layout, sign-in and invitation, referral link and sitemap, which every other slice mounts on | 5 | 1 | 6 | 0 | 1 | O22 |
+| S1 | Onboarding and ranking | 1 | A full-screen first-visit flow and a small deep-link prompt whose answers re-rank every public list | 0 | 2 | 0 | 0 | 2 | O25, O32 |
 | S2 | Home and discovery | 1 | A home that leads with stories and the map, and a search with no prices | 2 | 0 | 0 | 0 | 1 | O25, O35 |
 | S3 | Stories and moderation | 1 | Ranked story pages for guests. Story editor, comment moderation and product-rating moderation for the merchant | 6 | 0 | 0 | 0 | 2 | O15, O33, O39 |
 | S4 | Map and places | 1 | Guest map and pin card. Merchant pins, categories and media library | 0 | 6 | 0 | 0 | 6 | O35, O39 |
@@ -56,7 +56,7 @@ Each screen below carries a slice id in the first column of tables 1 and 2. The 
 | S10 | Partner handovers | 2 | Partner entry and report, handover meetings for partner and merchant, partner records | 3 | 6 | 2 | 0 | 7 | O22, O34, O40 |
 | S11 | Story analytics | 1 | The SM-1 to SM-3 pages: traffic, map and story-to-shop funnel | 3 | 2 | 0 | 0 | 4 | O14, O29, O32 |
 | S12 | Money reports | 2 | Sales, money, margin and costs with tour and booking money stripped | 0 | 0 | 4 | 0 | 0 | none |
-| | **Total** | | | **39** | **21** | **20** | **13** | **37** | |
+| | **Total** | | | **39** | **22** | **20** | **13** | **39** | |
 
 The two removed ids N04 and N05 sit in S4 and are not counted. Two things differ from a plain reading of the old tables: product-rating moderation (`reviews.tsx`) is in S3 with comment moderation because both follow ADR-008 and ADR-018, and the merchant handover screens (N10 to N12) are in S10 with the partner ones because they are two sides of one meeting.
 
@@ -70,7 +70,7 @@ Table 1 has 72 rows: the 72 non-lab route files. The 17 `lab.*` files are one li
 | Hide | 13 | 7 | 6 | 0 | 0 | 0 |
 | Redesign | 39 | 16 | 20 | 1 | 0 | 2 |
 | **All existing** | **72** | **27** | **39** | **2** | **1** | **3** |
-| **New** | **21** | **4** | **13** | **3** | **0** | **1** |
+| **New** | **22** | **5** | **13** | **3** | **0** | **1** |
 
 | By track | Track 1 | Track 2 | Platform |
 | --- | --- | --- | --- |
@@ -78,7 +78,7 @@ Table 1 has 72 rows: the 72 non-lab route files. The 17 `lab.*` files are one li
 | Hide | 5 | 8 | 0 |
 | Redesign | 17 | 17 | 5 |
 | **All existing** | **28** | **33** | **11** |
-| **New** | **10** | **10** | **1** |
+| **New** | **11** | **10** | **1** |
 
 "Shared" rows serve more than one audience: `__root.tsx`, `sign-in.tsx`, and `invitation.tsx`. Layout files count as rows. Sheets and in-page blocks in table 2 count as New screens because each needs its own design. N04 and N05 are removed and not counted, and their ids are not reused.
 
@@ -89,7 +89,7 @@ Rows are grouped by slice (first column). Paths are relative to `front-end/src/r
 | Slice | UI work | Route file | Target URL | Id | Audience | Verdict | Render | Why (PRD, AC) | ADR | Track  |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---  |
 | S0 | Wire | `__root.tsx` | root |  | all | **Redesign** | SSR (root) | Start root: head tags, CSS side-effect import, providers made server-safe, browser history (§4.1, AC61) | 001, 002 | P  |
-| S0 | Edit | `_guest.tsx` | guest layout |  | guest | **Redesign** | SSR for public children | Shell moves under `/$lang`. Phone tabs stay Explore, Keepsakes, Tours, Account, with the language prefix, until E4.6 swaps Tours for Map (owner answer D5, 2026-10-26; gate G-S5-MAPTAB, 27.10.2026). Onboarding prompt and language notice mount here (§3.1, AC36, AC64) | 002, 006 | P  |
+| S0 | Design | `_guest.tsx` | guest layout |  | guest | **Redesign** | SSR for public children | Shell moves under `/$lang`. Phone tabs stay Explore, Keepsakes, Tours, Account, with the language prefix, until E4.6 swaps Tours for Map (owner answer D5, 2026-10-26; gate G-S5-MAPTAB, 27.10.2026). Onboarding prompt and language notice mount here (§3.1, AC36, AC64) | 002, 006 | P  |
 | S0 | None | `_guest/credits.tsx` | `/credits` |  | guest | **Keep** | ssr:false (ruling D1) | Photo credits page. Not in the ADR-001 render lists | 001 | P  |
 | S0 | None | `sign-in.tsx` | `/sign-in` | C05 | all | **Keep** | ssr:false | Google or e-mail code (§5, Q17). `takeGoogleReturn` goes with hash history | 001 | P  |
 | S0 | Edit | `invitation.tsx` | `/invitation` | M01 | merchant, partner | **Redesign** | ssr:false | Reuse for partner invitations as well as staff. Token stays in the fragment (§5, §10.4) | 001, 010, 019 | P  |
@@ -170,7 +170,8 @@ Rows are grouped by slice (first column). Routes follow ADR-002: `/$lang` is `en
 | Slice | UI work | Id | Proposed route | Audience | Purpose | PRD, AC | ADR | Track | Render | Reused components  |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---  |
 | S0 | Wire | N22 | /sitemap.xml, /robots.txt | all | Server routes, no UI. Published pages with hreflang alternates, non-production disallow | §4.1; AC61 | 001, 002 | P | server route | none  |
-| S1 | Design | N01 | Prompt over any public page (no route). Reopen entry in the menu | guest | Two-step onboarding: visitor type, then interests. Dismissible, never blocks content, answers in `localStorage` `sk.onboarding` | §3.1 to §3.3; AC36, AC37, AC38, AC41 | 006, 007 | 1 | client only | `SheetFrame`, locale context, chips  |
+| S1 | Design | N01 | Full-screen layer over the whole guest shell, tab bar included (no route). Reopen entry on the Account tab and the home line | guest | Full-screen two-step onboarding on a guest's first visit when the visit began at the home: visitor type, then interests. Skippable at each step, closing counts as skipping. Guests only. Answers in `localStorage` `sk.onboarding` | §3.1 to §3.3; AC36, AC37, AC38, AC41, AC92 | 006, 007 | 1 | client only | locale context, chips (not `SheetFrame`) |
+| S1 | Design | N24 | Small prompt above or beside the content on a deep link, a partner QR or link, or a search landing (no route) | guest | The same two steps and copy as N01. Never covers the page. Closing hides it for this visit only and is not a skip. The full-screen flow shows at the next Explore opening | §3.1; AC24, AC91 | 006, 007 | 1 | client only | N01 steps and copy, chips |
 | S4 | Design | N02 | `/$lang/map` | guest | Interactive map: pins with merchant-edited map categories, ranked not hidden. Category chips highlight the chosen category and dim the other pins, and none hides a pin. A pin in several categories is highlighted under each chip, and a pin with none only under All. Flat swisstopo aerial style with OpenFreeMap names, no 3D. Tap opens the pin card | §11.1; AC42, AC44, AC67, AC88 | 001, 006, 029, 030 | 1 | SSR page shell, map in browser | `tour-itinerary-map.tsx`, `aerial-style.ts` (made flat, O23), `lab.map`  |
 | S4 | Design | N03 | Sheet over N02 (deep link `/$lang/map?place=<slug>`) | guest | Pin card: photo, tip, hours, address, next date for a dated pin, main story link (omitted when the story has no published version), other stories, outbound link, Open in Google or Apple Maps. No review summary and no practical variant. A deep link to a hidden, expired or unknown pin shows the map with the notice "This place is no longer on the map" | §11.1; AC42, AC62, AC89, AC90 | 006, 015, 029 | 1 | client, data from `/api/public/places/:id` | `SheetFrame`, `story-card.tsx`  |
 | S4 | None | N04 | removed | guest | Removed on 27.10.2026. Pins have no page of their own and are not in the sitemap. The id is not reused | none | 002 | 1 | none | none  |
@@ -207,25 +208,44 @@ The owner's groups stay: Dashboard, Operations, Content. On 2026-10-26 the owner
 
 The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, More.
 
+## Area 0. Guest shell (slice S0, `_guest.tsx`)
+
+**Today.** `GuestShell` is a phone-width column (max 430 px) with no website header and a tab bar of five slots: Explore, Keepsakes, a raised centre "Assistant" button (sparkle icon, links to `/$lang/plan`), Tours and Account. A music dock sits above the bar. The route file only wraps it.
+
+**Open design questions** (found on 28.10.2026 by reading the component, not stated in the PRD or an ADR):
+
+- **Language switch (E3.11, gate G-S5-LANGSWITCH).** The story says it matches the guest header if the owner supplies no design. The shell has no header, so its place is open.
+- **Language notice (AC64).** A banner for a page that exists only in the other language. It needs a slot in the shell and a look.
+- **Centre Assistant button and music dock.** Neither appears in PRD v3, the ADRs or E3.11. The advice page becomes a fixed-question form (G10, AC34), so a sparkle button labelled "Assistant" would mislead. The five-slot layout also has to hold the Map tab when E4.6 replaces Tours. This is an owner decision: keep, rename or remove.
+
+The onboarding layer (N01) and the small prompt (N24) mount here but are designed in S1.
+
 ## Area 1. Onboarding (slice S1, N01)
 
 **Today.** The guest app has no onboarding. `store_.onboarding.tsx` is the merchant's store setup and is unrelated.
 
-**What it is.** A dismissible prompt over any public page, not a route (PRD §3.1, ADR-006). Two steps: visitor type (short-stay or multi-day), then one or more of the four fixed interests (§3.3). Answers live in `localStorage` key `sk.onboarding`. The server never sees them, except as anonymous values on analytics events (G4, AC37).
+**What it is.** Two forms of one two-step flow, for guests only (PRD §3.1, ADR-006, decision record of 28.10.2026). N01 is a full-screen layer over the whole guest shell. N24 is a small prompt above or beside the content on a deep link. Step 1 is the visitor type (short-stay or multi-day), step 2 is one or more of the four fixed interests (§3.3). Both steps can be skipped. Answers live in `localStorage` key `sk.onboarding`. The server never sees them, except as anonymous values on analytics events (G4, AC37). Merchants, partners and Super Admins never see either form (AC92).
+
+**Which form shows.** The entry of the current visit decides, kept in memory or `sessionStorage` and not in `sk.onboarding`. A guest who is unanswered and whose visit began at the home with no partner QR or link and no search result sees N01. A guest whose visit began anywhere else, or through a partner QR or link or a search result, sees the page at once with N24, and N01 at the first Explore opening of that visit (AC24, AC36, AC91). A guest who returns days later straight to the home starts a new visit and sees N01.
 
 **States to design.**
 
 | State | Behaviour |
 | --- | --- |
-| First visit, any entry (home, a story, a place, a keepsake) | Content shows at once. The prompt sits above or beside it and never blocks (AC24, AC36) |
-| Step 1, step 2 | Step 2 allows several interests and a skip. Labels EN and DE from §3.3, DE labels need merchant review |
-| Answered | Prompt gone. A menu entry opens "change my answers". Ranking changes at once (§3.1) |
-| Dismissed | Counts as skipped. It does not return alone. The menu entry reopens it (ADR-006) |
+| First visit at the home | N01 covers the shell. Content loads behind it (AC36) |
+| First visit on a story, pin, keepsake, QR or search landing | The page shows at once. N24 sits above or beside the content and never covers it (AC24, AC91) |
+| Step 1, step 2 | Step 2 allows several interests. Skip on both. Labels EN and DE from §3.3, DE labels need merchant review |
+| N24 closed | Hidden for this visit only. N01 still shows at the next Explore opening while unanswered |
+| N01 skipped or closed | Counts as skipped. It does not return alone. The Account tab or the home line reopens it (ADR-006) |
+| Answered | Layer gone. The home line "Sorted for … Change" and the Account tab open "change my answers". Ranking changes at once (§3.1) |
 | Skipped, no answers | Content ranks by publish date only (O25 proposal) |
-| Browser data cleared, new device | Prompt shows again. No cross-device memory promised |
-| First-visit consent box | Order and position against the prompt are open (O32) |
+| Signed-in merchant, partner or Super Admin | Neither form shows. Default order (AC92) |
+| Browser data cleared, new device | The flow shows again. No cross-device memory promised |
+| First-visit consent box | Order against N01 and N24 is open (O32). Proposal: onboarding first, consent second, never both at once |
 
-**Against today.** All new. It touches every public list through `rankItems` (home, stories, tours, map). Server HTML and API lists stay unranked, so the same markup serves every visitor and crawler. The client re-ranks after hydration, so the list order can change once on load. The UX checklist should include that shift.
+**Design notes.** N01 is a modal dialog: focus moves in and returns, Escape and a visible Skip close it, the background is inert, reduced motion is respected. The references are in `docs/ux/references/onboarding/`. Lab pages: `/lab/onboarding` (N24 candidates) and `/lab/onboarding-fullscreen` (N01 candidates). The reopen entry sits on the Account tab and on the home line, because the guest shell has no menu.
+
+**Against today.** All new. It touches every public list through `rankItems` (home, stories, tours, map). Server HTML and API lists stay unranked, so the same markup serves every visitor and crawler, and neither form is in it. The client re-ranks after hydration, so the list order can change once on load. The UX checklist should include that shift.
 
 ## Area 2. Home (slice S2, C01 redesign)
 
@@ -234,7 +254,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 **Direction (PRD §1.1, §1.2, §6.1).** Story and map first, shop gentle, no price anywhere before the product page (Q24, AC54). Content blocks in order, with no layout implied:
 
 1. Entry block that says what the site is (the brand name is open, O01).
-2. The onboarding prompt (N01), when unanswered.
+2. The onboarding, when unanswered: N01 full screen on a first visit, N24 small prompt after a deep link.
 3. A way into the map (N02).
 4. Ranked feed of stories and places (`rankItems`, AC38). Home carries this feed (ruling D1).
 5. Tour information rail, no price, no departure (AC50).
@@ -331,8 +351,8 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 | O41 | C04, C06 | How a guest cart without sign-in is kept, and for how long |
 | O26 | C03, N14, N15 | Colour list, theme list, design rights, prices |
 | O22 | C06, N06, N11, settings | Preparation hours and the auto-accept rule |
-| O25 | N01, home | Feed order when onboarding is skipped (proposal: date only), untagged content |
-| O32 | N01, tracking | Order of the onboarding prompt and the consent box, and what needs consent (referral memory, analytics, embedded video) |
+| O25 | N01, N24, home | Feed order when onboarding is skipped (proposal: date only), untagged content |
+| O32 | N01, N24, tracking | Order of the onboarding prompt and the consent box, and what needs consent (referral memory, analytics, embedded video) |
 | O29 | `reports/guests.tsx` | Whether any guest-group view stays |
 | O33 | M23 | Hiding product ratings, label for affiliate links, personal data on orders |
 | O15 | C20, M23 | Product rating scale, edit, merchant reply |
@@ -356,6 +376,7 @@ No question is open. Each row records who settled it. Answers carry the owner's 
 | D5 | Guest phone tabs | Explore, Map, Keepsakes, Account at launch of the map. Until E4.6 the tabs stay Explore, Keepsakes, Tours, Account, and Map replaces Tours (gate G-S5-MAPTAB) | Owner answer, 2026-10-26; sequence 2026-10-27 |
 | D6 | Where a merchant previews a draft | An `ssr:false` preview route that reuses the public components, so drafts never enter the shared cache | Orchestrator ruling, 2026-10-26 |
 | D7 | Map chips | Chips come from merchant-edited map categories and highlight the chosen category and dim the other pins. No pin is ever hidden by a chip. A pin has no fixed type, publishes without a story, and may have dates. Places and events have no page of their own, and guests do not review places (gate G11) | Owner answer, 2026-10-26 (chips that highlight and dim), kept for map categories on 2026-10-27 |
+| D8 | Onboarding form | Full-screen flow on a guest's first visit at the home (N01). A small non-blocking prompt on a deep link, a partner QR or link, or a search landing (N24). Guests only. Closing N24 hides it for the visit and is not a skip. Reopen on the Account tab and the home line | Approved in chat on 2026-10-28, `docs/decisions/2026-10-28-onboarding-full-screen.md` |
 
 Assumption that no source states: Stories and Tours are reached from Explore, because they no longer have a tab. The UX checklist should confirm it.
 
