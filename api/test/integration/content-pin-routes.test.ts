@@ -85,7 +85,8 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect((await publish(`publish-${randomUUID()}`)).status).toBe(412)
   })
 
-  it('[E2.6] a retry after a 412 with the same key and body but the current If-Match runs, and then a repeat of it replays', async () => {
+  // D11: a 412 is stored and replayed like any refusal, and If-Match is part of the request hash.
+  it('[E2.6] a 412 is replayed for the same key and If-Match, a newer If-Match under that key is 422, and under a new key it runs', async () => {
     const { owner, pins } = await env.storeWithStaff()
     const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Museggmauer' }, ...located, slug: { en: slugFor() } } })).json() as { id: string }
     const publish = (key: string, version: string) => env.call(`${pins}/${created.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': version }, key })
@@ -93,23 +94,18 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
 
     const stale = await publish(key, '7')
     expect(stale.status).toBe(412)
-    // A 412 changed nothing, so it is not stored: the same stale retry runs again and is not a replay.
-    const staleAgain = await publish(key, '7')
-    expect(staleAgain.status).toBe(412)
-    expect(staleAgain.headers.get('Idempotent-Replayed')).toBeNull()
+    const replayed = await publish(key, '7')
+    expect(replayed.status).toBe(412)
+    expect(replayed.headers.get('Idempotent-Replayed')).toBe('true')
+    expect(await auditRows(created.id)).toHaveLength(0)
 
-    const retried = await publish(key, '1')
+    // The same key with the version the client has now is another request, not a replay of the 412.
+    expect((await publish(key, '1')).status).toBe(422)
+    const retried = await publish(`publish-${randomUUID()}`, '1')
     expect(retried.status).toBe(200)
     expect(retried.headers.get('Idempotent-Replayed')).toBeNull()
     expect((await pool.query<{ row_version: number, status: string }>('select row_version, status from content.places where id = $1', [created.id])).rows[0]).toEqual({ row_version: 2, status: 'published' })
-
-    const replayed = await publish(key, '1')
-    expect(replayed.status).toBe(200)
-    expect(replayed.headers.get('Idempotent-Replayed')).toBe('true')
     expect(await auditRows(created.id)).toHaveLength(1)
-    expect((await pool.query<{ row_version: number }>('select row_version from content.places where id = $1', [created.id])).rows[0]?.row_version).toBe(2)
-    // The same key with another If-Match is another request, not a replay of the success.
-    expect((await publish(key, '2')).status).toBe(422)
   })
 
   it('[E2.6] a create replayed with the same key makes one pin', async () => {

@@ -7,7 +7,7 @@ import type { IdempotencyRecord, IdempotencyScope, PendingClaim } from '../idemp
 import type { AppEnv } from './app.ts'
 import { Buffer } from 'node:buffer'
 import { setTimeout as sleep } from 'node:timers/promises'
-import { findIdempotencyRecord, hashRequest, IdempotencyKeyTaken, releaseIdempotencyKey, runWithClaim, saveIdempotentResponse } from '../idempotency.ts'
+import { findIdempotencyRecord, hashRequest, IdempotencyKeyTaken, runWithClaim, saveIdempotentResponse } from '../idempotency.ts'
 import { problem } from './problem.ts'
 
 const commandMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
@@ -105,13 +105,8 @@ export function idempotency(deps: { db: Database, clock: Clock, actorId: (c: Con
       c.res = answer(c, record, requestHash)
     }
     else if (claim.state === 'claimed') {
-      // Whatever the status: the command committed, so a repeat must not run it again. A 412 is the exception:
-      // it changed nothing, and the retry names a newer version.
+      // Whatever the status: the command committed, so a repeat must not run it again.
       try {
-        if (c.res.status === 412) {
-          await releaseIdempotencyKey(deps.db, scope)
-          return
-        }
         const bytes = await takeBody(c)
         await saveIdempotentResponse(deps.db, scope, stored(c.res, bytes))
       }

@@ -126,10 +126,3 @@ export async function saveIdempotentResponse(db: Database, scope: IdempotencySco
     .set({ response })
     .where(and(eq(idempotencyKeys.actorId, scope.actorId), eq(idempotencyKeys.key, scope.key)))
 }
-
-// A 412 means the command found a newer version and changed nothing, so its key is free for the retry that
-// names the version it has now.
-export async function releaseIdempotencyKey(db: Database, scope: IdempotencyScope): Promise<void> {
-  await db.delete(idempotencyKeys)
-    .where(and(eq(idempotencyKeys.actorId, scope.actorId), eq(idempotencyKeys.key, scope.key)))
-}
