@@ -18,7 +18,7 @@ describe('[E2.12] the public routes: input checks and the ETag', () => {
   it('[E2.12][AC64] lang=fr, a missing lang and a malformed place id are 400 problems, not 500', async () => {
     const app = setup()
 
-    for (const path of [...listPaths, ...detailPaths].filter(p => !p.includes('categories'))) {
+    for (const path of [...listPaths, ...detailPaths]) {
       const wrong = await app.request(`${path}?lang=fr`)
       const missing = await app.request(path)
       expect(wrong.status, path).toBe(400)
@@ -140,6 +140,11 @@ describe('[E2.12] a renewed session cookie never rides on a public read', () => 
     expect(again.status).toBe(304)
     expect(notFound.status).toBe(404)
     expect(first.headers.getSetCookie()).toEqual([])
+    const head = await app.request('/api/public/map?lang=en', { method: 'HEAD', headers: signedInAs('someone') })
+    const headAgain = await app.request('/api/public/map?lang=en', { method: 'HEAD', headers: { ...signedInAs('someone'), 'If-None-Match': first.headers.get('ETag')! } })
+    expect([head.status, headAgain.status]).toEqual([200, 304])
+    expect(head.headers.getSetCookie()).toEqual([])
+    expect(headAgain.headers.getSetCookie()).toEqual([])
     expect(again.headers.getSetCookie()).toEqual([])
     expect(notFound.headers.getSetCookie()).toEqual([])
     expect(me.headers.getSetCookie()).toEqual([renewed])

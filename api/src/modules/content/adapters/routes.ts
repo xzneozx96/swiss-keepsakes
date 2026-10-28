@@ -9,7 +9,8 @@ import { registerPublicRoutes } from './public-routes.ts'
 import { registerStoryRoutes } from './story-routes.ts'
 import { registerTourRoutes } from './tour-routes.ts'
 
-// What the routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
+// What the routes call. main.ts builds each from the module's use cases. The write use cases are wrapped by
+// guardUseCases; the public reads are not, because they return lists, not a Result.
 export type ContentUseCases = PinUseCases & StoryUseCases & TourUseCases & PublicUseCases
 
 // One register function per aggregate.
