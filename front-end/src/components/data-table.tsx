@@ -25,6 +25,27 @@ export interface DataTableColumn<T> {
   cellClassName?: string | ((row: T) => string)
 }
 
+/**
+ * Wide enough for the usual columns to keep their widths; below it the HeroUI scroll container
+ * scrolls sideways (HeroUI's docs give the table a min width for the same reason).
+ */
+const MIN_WIDTH_CLASS = 'min-w-[56rem]'
+/** A caller's own `min-w-*` replaces the default (the classes are not merged, so both would fight). */
+const HAS_MIN_WIDTH = /(?:^|\s)min-w-/
+
+/**
+ * Pins the Actions column at the end with Tailwind `sticky` (HeroUI v3 has no sticky props).
+ * The background repeats the table's own so scrolled cells pass under it: the header's, and the
+ * row's at rest and on hover (HeroUI: `bg-surface`, and `surface/40` or `default/50` over the
+ * backdrop, written here as the opaque mix).
+ */
+const PINNED_HEADER_CLASS = 'sticky end-0 z-10 bg-surface-secondary'
+const PINNED_CELL_CLASS = 'sticky end-0 z-10 bg-surface'
+const PINNED_CELL_HOVER = {
+  page: 'in-data-[hovered=true]:bg-[color-mix(in_oklab,var(--surface)_40%,var(--surface-secondary))]',
+  card: 'in-data-[hovered=true]:bg-[color-mix(in_oklab,var(--default)_50%,var(--surface))]',
+}
+
 interface DataTableProps<T> {
   /** Accessible name of the table: the selected tab or filter. */
   label: string
@@ -61,7 +82,7 @@ interface DataTableProps<T> {
    */
   variant?: 'page' | 'card'
   className?: string
-  /** Classes for the table element itself, e.g. "table-fixed". */
+  /** Classes for the table element itself, e.g. "table-fixed"; a `min-w-*` replaces the default minimum width. */
   contentClassName?: string
 }
 
@@ -94,13 +115,17 @@ export function DataTable<T>({
           id: 'actions',
           header: t('table.actions'),
           skeleton: 'action',
-          headerClassName: `${rowActions.headerClassName ?? 'w-24'} text-end`,
+          headerClassName: `${rowActions.headerClassName ?? 'w-24'} text-end ${PINNED_HEADER_CLASS}`,
+          cellClassName: `${PINNED_CELL_CLASS} ${PINNED_CELL_HOVER[isOnPage ? 'page' : 'card']}`,
           render: row => (
             <div className="flex justify-end">{rowActions.render(row)}</div>
           ),
         },
       ]
     : columns
+  const contentClasses = contentClassName && HAS_MIN_WIDTH.test(contentClassName)
+    ? contentClassName
+    : [MIN_WIDTH_CLASS, contentClassName].filter(Boolean).join(' ')
   const tableClass = [cards && 'hidden lg:block', className]
     .filter(Boolean)
     .join(' ')
@@ -130,7 +155,10 @@ export function DataTable<T>({
         variant={isOnPage ? undefined : 'secondary'}
       >
         <Table.ScrollContainer>
-          <Table.Content aria-label={label} className={contentClassName}>
+          <Table.Content
+            aria-label={label}
+            className={contentClasses}
+          >
             <Table.Header>
               {allColumns.map(column => (
                 <Table.Column
