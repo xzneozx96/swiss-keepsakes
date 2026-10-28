@@ -77,7 +77,7 @@ Marks.
 
 Not allowed: heading levels 1 and 4 to 6, code, code block, strike, underline, horizontal rule, tables, any HTML node, and any unknown node, mark or attribute. The editor's StarterKit configuration turns off every extension that is not listed, so the toolbar cannot produce what the server refuses.
 
-Limits. The serialised body is at most 200 KB, the nesting depth is at most 8, and there are at most 100 media nodes. These are first guesses that the E2.13 builder may tune (coordinator, 2026-10-28). They live in one constant in the contract package.
+Limits. The serialised body is at most 200 KB, the nesting depth is at most 10, and there are at most 100 media nodes. Image, video and audio nodes all count as media. These were first guesses that the E2.13 builder could tune (coordinator, 2026-10-28). E2.13 raised the depth from 8 to 10, because three nested list levels with text need 10, and counts video nodes toward the media cap (tuned in E2.13, 2026-10-29). They live in one constant in the contract package.
 
 ## Links
 
@@ -156,7 +156,7 @@ E4.4 and AC32 need a contents list and a reading time. Both come from the body a
 
 ## Decided by the coordinator (2026-10-28)
 
-- The caps (200 KB, depth 8, 100 media nodes) are first guesses. The E2.13 builder may tune them.
+- The caps started as 200 KB, depth 8 and 100 media nodes, and the E2.13 builder could tune them. Tuned in E2.13, 2026-10-29: depth 10, and video counts as media. The size and media caps are unchanged.
 - `intro` folds into the body. `excerpt` stays and serves lists and the page head.
 - Author name and role sit in Step 1.
 - A `pinLink` may target any pin of the store.
