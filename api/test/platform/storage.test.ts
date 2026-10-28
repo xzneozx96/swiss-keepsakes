@@ -113,6 +113,10 @@ describe('[E2.7] object storage: the S3 adapter', () => {
 
     await expect(declared.get('uploads', 'k', 10)).rejects.toBeInstanceOf(ObjectTooLargeError)
     expect(reads).toBe(0)
+    let destroyed = 0
+    const open = createS3Storage(config, { send: async () => ({ ContentLength: 11, Body: { destroy: () => void destroyed++, transformToByteArray: async () => new Uint8Array(11) } }) })
+    await expect(open.get('uploads', 'k', 10)).rejects.toBeInstanceOf(ObjectTooLargeError)
+    expect(destroyed).toBe(1)
     await expect(lying.get('uploads', 'k', 10)).rejects.toBeInstanceOf(ObjectTooLargeError)
     expect(reads).toBe(1)
     expect((await fitting.get('uploads', 'k', 10))?.byteLength).toBe(10)

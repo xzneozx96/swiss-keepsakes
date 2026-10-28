@@ -42,7 +42,9 @@ export function makeConfirmUpload<T>({ uow, media, storage, jobs, audit, clock, 
       return fail({ reason: 'upload-missing' })
     if (head.size === 0)
       return refuse(key, 'empty')
-    const declared = head.contentType !== undefined && Object.hasOwn(MEDIA_RULES.types, head.contentType) ? MEDIA_RULES.types[head.contentType] : undefined
+    // Parameters such as `; charset=binary` are not part of the type.
+    const storedType = head.contentType?.split(';')[0]?.trim().toLowerCase()
+    const declared = storedType !== undefined && Object.hasOwn(MEDIA_RULES.types, storedType) ? MEDIA_RULES.types[storedType] : undefined
     if (!declared)
       return refuse(key, 'type-not-allowed')
     if (head.size > declared.maxBytes)
@@ -62,7 +64,7 @@ export function makeConfirmUpload<T>({ uow, media, storage, jobs, audit, clock, 
     if (bytes.byteLength === 0)
       return refuse(key, 'empty')
     const sniffed = sniffContentType(bytes)
-    if (sniffed === undefined || sniffed !== head.contentType)
+    if (sniffed === undefined || sniffed !== storedType)
       return refuse(key, 'content-mismatch')
     if (bytes.byteLength > declared.maxBytes)
       return refuse(key, 'too-large')

@@ -263,6 +263,14 @@ describe('[E2.7] config: AWS_* is all four variables or none, and the grace peri
     })
   })
 
+  it('[E2.7] refuses an http AWS_ENDPOINT_URL_S3 when NODE_ENV is production, without printing it, and accepts it elsewhere', () => {
+    const http = { ...aws, AWS_ENDPOINT_URL_S3: 'http://storage.example.test' }
+    const message = failure({ ...urls, ...http, APP_URL: 'https://keepsakes.example', NODE_ENV: 'production', BETTER_AUTH_URL: 'https://keepsakes.example' })
+    expect(message).toContain('  AWS_ENDPOINT_URL_S3: Expected an https:// URL when NODE_ENV is production')
+    expect(message).not.toContain('storage.example.test')
+    expect(loadConfig({ ...urls, ...http })).toMatchObject({ ok: true })
+  })
+
   it('[E2.7] starts without storage when none is set, blank values included', () => {
     const result = loadConfig({ ...urls, AWS_REGION: '', AWS_ACCESS_KEY_ID: ' ' })
 

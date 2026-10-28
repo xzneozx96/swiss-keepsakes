@@ -192,6 +192,16 @@ describe('[E2.7] isReferenced', () => {
     expect(await referenced(store, id)).toBe(true)
   })
 
+  it('[E2.7] a story_version media_refs row counts, in the draft and the published slot', async () => {
+    for (const slot of ['draft', 'published']) {
+      const store = randomUUID()
+      const id = await readyMedia(store)
+      await pool.query(`insert into content.media_refs (store_id, media_id, owner_kind, owner_id, owner_language, slot) values ($1, $2, 'story_version', $3, 'en', $4)`, [store, id, randomUUID(), slot])
+
+      expect(await referenced(store, id), slot).toBe(true)
+    }
+  })
+
   it('[E2.7] a media_refs row counts, in either slot', async () => {
     const store = randomUUID()
     const id = await readyMedia(store)

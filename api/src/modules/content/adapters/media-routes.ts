@@ -28,7 +28,7 @@ const requestUploadRoute = createRoute({
   path: '/api/store/{storeId}/media/uploads',
   request: { params: storeParams, body: { required: true, content: json(uploadRequestSchema) } },
   responses: {
-    200: { description: 'Where to PUT the file. The URL works once, for 15 minutes', headers: requestIdHeader, content: json(uploadGrantSchema) },
+    200: { description: 'Where to PUT the file. The URL is valid for 15 minutes', headers: requestIdHeader, content: json(uploadGrantSchema) },
     ...problemResponses,
   },
 })

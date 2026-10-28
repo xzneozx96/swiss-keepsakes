@@ -176,8 +176,8 @@ export interface StoredObject {
 
 // Object storage (Neon Object Storage, S3 API). Keys are bucket-relative: the bucket is never part of a key.
 export interface ObjectStorage {
-  // A URL the browser PUTs the file to. The bucket is always `uploads`. The signed content type and length are a
-  // courtesy: the storage may not enforce them, so the confirm step re-checks the stored bytes.
+  // A URL the browser PUTs the file to. The bucket is always `uploads`. The content type and length are signed into
+  // the URL, but whether the storage enforces them is unverified on Neon, so the confirm step re-checks the stored bytes.
   presignPut: (input: { key: string, contentType: string, byteSize: number, expiresInSeconds: number }) => Promise<{ url: string, headers: Record<string, string> }>
   // undefined when the key does not exist.
   head: (bucket: Bucket, key: string) => Promise<StoredObject | undefined>

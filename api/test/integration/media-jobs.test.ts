@@ -50,6 +50,7 @@ async function setup(bytes: Uint8Array) {
   const uow = createUnitOfWork(db)
   const media = createMediaRepository()
   const alerts: MediaFailure[] = []
+  const retired: object[] = []
   const storeId = randomUUID()
   const mediaId = randomUUID()
   storage.seed('uploads', confirmedKey(storeId, mediaId, 'jpg'), bytes, { contentType: 'image/jpeg' })
@@ -57,10 +58,12 @@ async function setup(bytes: Uint8Array) {
   await startMediaWorkers(jobs.boss, {
     processMedia: makeProcessMedia({ uow, media, storage, clock }),
     failMedia: makeFailMedia({ uow, media, storage, clock, alert: failure => alerts.push(failure) }),
+    retireMedia: async job => void retired.push(job),
+    sweepMedia: async () => ({ removed: 0 }),
   }, queues)
   const status = async () => (await pool.query<{ status: string }>('select status from content.media where id = $1', [mediaId])).rows[0]?.status
   const send = () => uow.run(tx => createJobQueue(jobs.boss).send(tx, queues.process, { storeId, mediaId }))
-  return { queues, storage, uow, media, alerts, storeId, mediaId, status, send }
+  return { queues, storage, uow, media, alerts, retired, storeId, mediaId, status, send }
 }
 
 describe('[E2.7] the media job on real pg-boss', () => {
@@ -90,18 +93,11 @@ describe('[E2.7] the media job on real pg-boss', () => {
 
   it('[E2.7] the sweep runs from an hourly schedule, and a due retire job runs the handler', async () => {
     const t = await setup(await jpegWithGps(100, 100))
-    const retired: object[] = []
-    await startMediaWorkers(jobs.boss, {
-      processMedia: async () => {},
-      failMedia: async () => {},
-      retireMedia: async job => void retired.push(job),
-      sweepMedia: async () => ({ removed: 0 }),
-    }, t.queues)
 
     await t.uow.run(tx => createJobQueue(jobs.boss).send(tx, t.queues.retire, { storeId: t.storeId, mediaId: t.mediaId }, { startAfter: new Date(Date.now() - 1000) }))
-    await until(() => retired.length > 0)
+    await until(() => t.retired.length > 0)
 
-    expect(retired).toEqual([{ storeId: t.storeId, mediaId: t.mediaId }])
+    expect(t.retired).toEqual([{ storeId: t.storeId, mediaId: t.mediaId }])
     expect((await jobs.boss.getSchedules(t.queues.sweep)).map(row => row.cron)).toEqual(['17 * * * *'])
   })
 

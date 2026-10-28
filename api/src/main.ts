@@ -101,6 +101,8 @@ async function main() {
   // R5: with no AWS_* the service starts, and the media routes answer 503 storage-unavailable.
   const storage = config.storage ? createS3Storage(config.storage) : createUnconfiguredStorage()
   if (config.ROLE !== 'api') {
+    if (!config.storage)
+      logger.warn({ event: 'media.storage-unset' }, 'AWS_* is not set: every upload and media job fails until it is')
     await startMediaWorkers(jobs.boss, {
       processMedia: makeProcessMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, warn: event => logger.warn(event, 'media source not deleted') }),
       failMedia: makeFailMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, alert: createMediaLogAlert(logger) }),

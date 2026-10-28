@@ -1026,7 +1026,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Where to PUT the file. The URL works once, for 15 minutes */
+                /** @description Where to PUT the file. The URL is valid for 15 minutes */
                 200: {
                     headers: {
                         "X-Request-Id": components["headers"]["RequestId"];

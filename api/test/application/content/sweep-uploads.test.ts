@@ -33,6 +33,15 @@ describe('[E2.7] sweep-uploads', () => {
     expect(t.uploads()).toEqual([confirmedKey(store, id(1), 'jpg')])
   })
 
+  it('[E2.7] an object with no lastModified is kept, not a crash', async () => {
+    const t = setup()
+    t.storage.seed('uploads', `${store}/${id(1)}.jpg`, body, { lastModified: t.ago(99) })
+    const real = t.storage.list
+    t.storage.list = async (bucket, prefix) => (await real(bucket, prefix)).map(o => ({ ...o, lastModified: undefined as unknown as Date }))
+    expect(await t.sweep()).toEqual({ removed: 0 })
+    expect(t.uploads()).toHaveLength(1)
+  })
+
   it('[E2.7] a confirmed and processed media object is never touched, however old', async () => {
     const t = setup()
     const key = originalKey(store, id(1), 'jpg')

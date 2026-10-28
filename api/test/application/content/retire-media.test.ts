@@ -25,14 +25,14 @@ function setup(status: MediaRecord['status'] = 'ready') {
 }
 
 describe('[E2.7] retire-media', () => {
-  it('[E2.7] a file nothing references any more is retired and its objects leave the media bucket, the other file stays', async () => {
+  it('[E2.7][AC51] a file nothing references any more is retired and its objects leave the media bucket, the other file stays', async () => {
     const t = setup()
     await t.retire({ storeId: store, mediaId })
     expect(t.media.rows.get(mediaId)?.status).toBe('retired')
     expect(t.keys()).toEqual([originalKey(store, otherId, 'pdf')])
   })
 
-  it('[E2.7] a file a tour or a story still references stays, row and objects', async () => {
+  it('[E2.7][AC51] a file a tour or a story still references stays, row and objects', async () => {
     const t = setup()
     t.media.referenced.add(mediaId)
     await t.retire({ storeId: store, mediaId })
@@ -40,13 +40,13 @@ describe('[E2.7] retire-media', () => {
     expect(t.keys()).toHaveLength(3)
   })
 
-  it('[E2.7] a missing row is a no-op', async () => {
+  it('[E2.7][AC51] a missing row is a no-op', async () => {
     const t = setup()
     await t.retire({ storeId: store, mediaId: otherId })
     expect(t.keys()).toHaveLength(3)
   })
 
-  it('[E2.7] an already retired, unreferenced row is not updated again but the deletes still run, so a retry after a failed delete finishes', async () => {
+  it('[E2.7][AC51] an already retired, unreferenced row is not updated again but the deletes still run, so a retry after a failed delete finishes', async () => {
     const t = setup('retired')
     await t.retire({ storeId: store, mediaId })
     expect(t.media.retiredAt.has(mediaId)).toBe(false)

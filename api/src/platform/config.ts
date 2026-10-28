@@ -129,11 +129,14 @@ function appUrlProblems(present: Record<string, string>, parsed: Parsed | undefi
   return parsed.APP_URL?.startsWith('https:') ? [] : ['  APP_URL: Expected an https:// URL when NODE_ENV is production']
 }
 
-function storageProblems(present: Record<string, string>): string[] {
+function storageProblems(present: Record<string, string>, parsed: Parsed | undefined): string[] {
   const set = storageKeys.filter(key => key in present)
-  return set.length === 0 || set.length === storageKeys.length
-    ? []
-    : storageKeys.filter(key => !(key in present)).map(key => `  ${key}: Required when any AWS_* variable is set`)
+  if (set.length > 0 && set.length < storageKeys.length)
+    return storageKeys.filter(key => !(key in present)).map(key => `  ${key}: Required when any AWS_* variable is set`)
+  const endpoint = present.AWS_ENDPOINT_URL_S3
+  return parsed?.NODE_ENV === 'production' && endpoint !== undefined && !endpoint.startsWith('https:')
+    ? ['  AWS_ENDPOINT_URL_S3: Expected an https:// URL when NODE_ENV is production']
+    : []
 }
 
 function googleProblems(present: Record<string, string>): string[] {
@@ -152,7 +155,7 @@ export function loadConfig(env: Record<string, string | undefined>): ConfigResul
     ...(result.success ? [] : result.error.issues.map(issue => `  ${issue.path.join('.')}: ${issue.message}`)),
     ...smtpProblems(present, result.data),
     ...googleProblems(present),
-    ...storageProblems(present),
+    ...storageProblems(present, result.data),
     ...authProblems(present, result.data),
     ...appUrlProblems(present, result.data),
   ]

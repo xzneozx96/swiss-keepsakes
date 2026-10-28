@@ -106,6 +106,12 @@ type Setup = ReturnType<typeof setup>
 const seedRaw = (s: Setup, body: Uint8Array, contentType: string | undefined, key = rawKey) => s.storage.seed('uploads', key, body, { contentType })
 
 describe('[E2.7] confirming an upload', () => {
+  it('[E2.7] a stored Content-Type with parameters or capitals still matches the sniffed type', async () => {
+    const s = setup()
+    seedRaw(s, jpeg, 'Image/JPEG; charset=binary')
+    expect(await s.confirm(owner, store, { uploadKey: rawKey }, null)).toMatchObject({ ok: true, value: { contentType: 'image/jpeg' } })
+  })
+
   it('[E2.7] a JPEG with a matching type becomes a processing row, a queued job and a confirmed source', async () => {
     const s = setup()
     seedRaw(s, jpeg, 'image/jpeg')

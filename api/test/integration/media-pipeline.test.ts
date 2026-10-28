@@ -275,7 +275,23 @@ describe('[E2.7] queue wiring', () => {
     const { rows } = await pool.query<{ name: string, dead_letter: string | null, updated_on: Date }>(`select name, dead_letter, updated_on from pgboss.queue where name in ('media-process', 'media-process-failed', 'media-retire', 'media-sweep') order by name`)
     expect(rows.map(row => [row.name, row.dead_letter])).toEqual([['media-process', 'media-process-failed'], ['media-process-failed', null], ['media-retire', null], ['media-sweep', null]])
     expect(rows.find(row => row.name === 'media-process')!.updated_on.getTime()).toBeGreaterThanOrEqual(started!.now.getTime())
-    expect(run.output()).not.toContain('AWS_')
+    // The startup warning names AWS_*, never a variable's value.
+    expect(run.output()).not.toMatch(/AWS_[A-Z]/)
+  })
+
+  // Only the worker role starts the retire and sweep workers. pg-boss keeps no table of live workers, so the
+  // schedule row (written by startMediaWorkers) is what proves that main.ts reached it; the retire worker itself is
+  // proved by the media-jobs integration test.
+  it('[E2.7] ROLE=worker writes the hourly media-sweep schedule at startup', async () => {
+    const { rows: [started] } = await pool.query<{ now: Date }>('select now()')
+    const run = startMain({ ROLE: 'worker', PORT: '0', HOST: '127.0.0.1', DATABASE_URL: inject('databaseUrl'), DATABASE_URL_UNPOOLED: inject('databaseUrlUnpooled') })
+    await run.waitFor('started')
+    run.child.kill('SIGTERM')
+    expect(await run.exited).toBe(0)
+
+    const { rows } = await pool.query<{ cron: string, updated_on: Date }>(`select cron, updated_on from pgboss.schedule where name = 'media-sweep'`)
+    expect(rows.map(row => row.cron)).toEqual(['17 * * * *'])
+    expect(rows[0]!.updated_on.getTime()).toBeGreaterThanOrEqual(started!.now.getTime())
   })
 })
 

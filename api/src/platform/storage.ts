@@ -77,8 +77,11 @@ export function createS3Storage(config: StorageConfig, sender?: S3Sender): Objec
       try {
         const out = await guarded(() => s3.send(new GetObjectCommand({ Bucket: bucket, Key: key })))
         // Refuse from the declared length before reading the body, and again on what was read.
-        if (maxBytes !== undefined && (out.ContentLength ?? 0) > maxBytes)
+        if (maxBytes !== undefined && (out.ContentLength ?? 0) > maxBytes) {
+          // Release the connection: an unread body keeps the socket open.
+          out.Body?.destroy?.()
           throw new ObjectTooLargeError(`Object is larger than ${maxBytes} bytes`)
+        }
         const body: Uint8Array = await out.Body.transformToByteArray()
         if (maxBytes !== undefined && body.byteLength > maxBytes)
           throw new ObjectTooLargeError(`Object is larger than ${maxBytes} bytes`)
