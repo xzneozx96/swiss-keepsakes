@@ -45,6 +45,10 @@ export const problemTypes = [
   'version-exists',
   'not-published',
   'content-in-use',
+  'category-has-children',
+  'category-in-use',
+  'category-too-deep',
+  'category-parent-has-children',
 ] as const
 
 export type ProblemType = (typeof problemTypes)[number]
