@@ -20,4 +20,15 @@ describe('[E2.7] fake storage', () => {
     expect(storage.publicUrl('k.jpg')).toBe('https://storage.test/media/k.jpg')
     expect((await storage.presignPut({ key: 'k', contentType: 'image/png', byteSize: 1, expiresInSeconds: 900 })).url).toContain('/uploads/k')
   })
+
+  it('[E2.7] list sorts by key and leaves contentType undefined, as the S3 adapter does', async () => {
+    const storage = createFakeStorage(createManualClock(new Date('2026-10-01T10:00:00Z')))
+    await storage.put('uploads', 'p/b', new Uint8Array([1]), { contentType: 'image/png' })
+    await storage.put('uploads', 'p/a', new Uint8Array([1]), { contentType: 'image/png' })
+
+    const listed = await storage.list('uploads', 'p/')
+
+    expect(listed.map(o => o.key)).toEqual(['p/a', 'p/b'])
+    expect(listed.every(o => o.contentType === undefined)).toBe(true)
+  })
 })

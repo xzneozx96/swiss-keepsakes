@@ -40,7 +40,10 @@ export function createFakeStorage(clock: Clock, publicBase = 'https://storage.te
       buckets[bucket].delete(key)
     },
     async list(bucket, prefix) {
-      return [...buckets[bucket]].filter(([key]) => key.startsWith(prefix)).map(([key, o]) => stored(key, o))
+      return [...buckets[bucket]]
+        .filter(([key]) => key.startsWith(prefix))
+        .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+        .map(([key, o]) => ({ ...stored(key, o), contentType: undefined }))
     },
     publicUrl: key => `${publicBase}/media/${key}`,
   }

@@ -1,3 +1,5 @@
+// What the composition root may use (architecture 4.1). main.ts builds the use cases with the repositories from
+// adapters/, and wraps them with guardUseCases.
 export { makeCreatePin } from './application/create-pin.ts'
 export { makeCreateStoryGroup } from './application/create-story-group.ts'
 export { makeCreateStoryVersion } from './application/create-story-version.ts'
@@ -21,7 +23,5 @@ export { makeSaveStoryVersion } from './application/save-story-version.ts'
 export { makeSaveTour } from './application/save-tour.ts'
 export { makeUnpublishStoryVersion } from './application/unpublish-story-version.ts'
 export { makeUnpublishTour } from './application/unpublish-tour.ts'
-// What the composition root may use (architecture 4.1). main.ts builds the use cases with the repositories from
-// adapters/, and wraps them with guardUseCases.
 export { StorageUnavailableError } from './ports.ts'
 export type { Bucket, ObjectStorage, StoredObject } from './ports.ts'

@@ -1,4 +1,4 @@
-import type { Bucket, ObjectStorage, StoredObject } from '../modules/content/ports.ts'
+import type { ObjectStorage, StoredObject } from '../modules/content/ports.ts'
 import type { StorageConfig } from './config.ts'
 import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
@@ -35,14 +35,16 @@ function isMissing(error: unknown): boolean {
   return name === 'NoSuchKey' || name === 'NotFound' || statusOf(error) === 404
 }
 
-// After the SDK's retries, a server error means the storage is down. Other failures (403, 400) are our bug and surface as they are.
+// After the SDK's retries, a server error, or no answer at all (a refused connection, a timeout: no HTTP status), means
+// the storage is down. Other failures (403, 400) are our bug and surface as they are.
 async function guarded<R>(work: () => Promise<R>): Promise<R> {
   try {
     return await work()
   }
   catch (error) {
-    if ((statusOf(error) ?? 0) >= 500)
-      throw new StorageUnavailableError('Object storage answered with a server error', { cause: error })
+    const status = statusOf(error)
+    if (!isMissing(error) && (status === undefined || status >= 500))
+      throw new StorageUnavailableError(status === undefined ? 'Object storage did not answer' : 'Object storage answered with a server error', { cause: error })
     throw error
   }
 }
@@ -131,5 +133,3 @@ export function createUnconfiguredStorage(): ObjectStorage {
     publicUrl: fail,
   }
 }
-
-export type { Bucket }

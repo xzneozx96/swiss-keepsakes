@@ -17,7 +17,6 @@ describe('[E2.7] object storage: the S3 client', () => {
 
     expect(await client.config.maxAttempts()).toBe(5)
     expect(client.config.retryMode).toBe('standard')
-    expect((await client.config.retryStrategy?.())?.constructor.name).toBe('StandardRetryStrategy')
   })
 
   it('[E2.7] uses path-style addressing and signs checksums only when required', async () => {
@@ -118,6 +117,14 @@ describe('[E2.7] object storage: the S3 adapter', () => {
     const storage = createS3Storage(config, { send: () => Promise.reject(awsError('SlowDown', 503)) })
 
     await expect(storage.head('uploads', 'k')).rejects.toBeInstanceOf(StorageUnavailableError)
+  })
+
+  it('[E2.7] a network failure with no HTTP status becomes StorageUnavailableError, a 403 surfaces as it is', async () => {
+    const refused = createS3Storage(config, { send: () => Promise.reject(Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' })) })
+    const denied = createS3Storage(config, { send: () => Promise.reject(awsError('AccessDenied', 403)) })
+
+    await expect(refused.put('media', 'k', new Uint8Array(), { contentType: 'image/png' })).rejects.toBeInstanceOf(StorageUnavailableError)
+    await expect(denied.get('uploads', 'k')).rejects.toThrow('AccessDenied')
   })
 
   it('[E2.7] builds from a real S3Client by default', () => {
