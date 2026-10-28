@@ -8,9 +8,13 @@ sources: PRD v3 (approved), docs/specs/001-storytelling-pivot, ADR-001 to ADR-03
 
 This file lists every route file of the app and every new screen that PRD v3 needs. Each existing route gets a verdict: Keep, Hide, or Redesign. Each new screen gets a proposed route. The UX checklist and the delivery plan derive from it.
 
+Every screen also belongs to one feature slice (S0 to S12). A slice follows one feature from the guest screen through the merchant and partner screens that serve it, so a feature can be designed and built as a unit. The slice index comes first, then the two tables grouped by slice, then the detail areas.
+
 Review page: https://claude.ai/artifact/XFvj2gvaJ3H4qGFyTXmC8o (private; source docs/development-plan/screen-inventory.html, regenerate from this file).
 
 It chooses no visual design. The owner has no reference images (O23 closed, 27.10.2026): pins and the map use the default style of the map stack. Where a row says "layout", it means content blocks and order, not look.
+
+Amended on 28.10.2026: every screen has a slice id (S0 to S12) and a UI work value (Design, Edit, Wire, None). Tables 1 and 2 are grouped by slice and a slice index was added. No verdict changed.
 
 Amended on 27.10.2026 for the map pins, local events and categories decision (owner gate G11): N03 and N17 change, N04 and N05 are removed, and N23 is new. The review page linked above shows the 26.10.2026 version until it is regenerated.
 
@@ -23,7 +27,38 @@ Accepted ADRs used: 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 
 - **Redesign.** The layout, the flow, or the data of the screen changes in a way a user notices.
 - **New.** No route or screen exists today.
 
+**UI work** (column 2 of tables 1 and 2) says how much interface design a screen needs. It applies to Redesign and New rows. Keep and Hide rows are "None".
+
+- **Design.** New or changed layout, flow or content blocks. A designer should decide the screen before it is built. All New screens except N22 are Design.
+- **Edit.** The screen exists and keeps its shape. It loses prices or booking, gains a tag, state, filter or notice, or reuses a pattern that is already designed.
+- **Wire.** The change is server, data or provider behaviour. Nothing visible changes beyond small states.
+
+The split is a judgement from the "Why" text of each row, not a decision of the owner. Move a row if you read it differently, then rebuild the page.
+
 Tracks: **1** is map, stories, onboarding, and tour information. **2** is shop, cart, orders, and handovers. **P** is platform work that both tracks need (root, shell, auth, referral link).
+
+## Feature slices
+
+Each screen below carries a slice id in the first column of tables 1 and 2. The "UI design" column counts the Design rows of the slice (see "How to read the verdicts"). Both tables are sorted by slice. Slice S0 is platform work that every other slice mounts on. S1 to S6 are Track 1 and S7 to S10 are Track 2 (S11 is Track 1 and S12 is Track 2, both analytics and reports). Slice numbers are ids, not a build order. The release order is in the delivery plan, section 5.1.
+
+| Slice | Feature | Track | Goal | Redesign | New | Keep | Hide | UI design | Blocked by |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S0 | Platform shell | P | Root, guest shell, merchant layout, sign-in and invitation, referral link and sitemap, which every other slice mounts on | 5 | 1 | 6 | 0 | 0 | O22 |
+| S1 | Onboarding and ranking | 1 | A two-step visitor prompt whose answers re-rank every public list | 0 | 1 | 0 | 0 | 1 | O25, O32 |
+| S2 | Home and discovery | 1 | A home that leads with stories and the map, and a search with no prices | 2 | 0 | 0 | 0 | 1 | O25, O35 |
+| S3 | Stories and moderation | 1 | Ranked story pages for guests. Story editor, comment moderation and product-rating moderation for the merchant | 6 | 0 | 0 | 0 | 2 | O15, O33, O39 |
+| S4 | Map and places | 1 | Guest map and pin card. Merchant pins, categories and media library | 0 | 6 | 0 | 0 | 6 | O35, O39 |
+| S5 | Tour information | 1 | Tours as free information with a route map and one PDF. Booking removed | 5 | 1 | 1 | 4 | 4 | O31 |
+| S6 | Advice form | 1 | A fixed-question trip advice form for guests and the request inbox for the merchant | 1 | 0 | 5 | 1 | 1 | none |
+| S7 | Keepsake catalog and stock | 2 | Keepsake pages without price in lists. Options, SKU combinations and stock for the merchant | 5 | 3 | 1 | 1 | 6 | O26 |
+| S8 | Cart and payment | 2 | A server cart that becomes several orders, the handover picker, and Stripe payment | 4 | 1 | 0 | 0 | 3 | O22, O41 |
+| S9 | Orders and tracking | 2 | Guest order tracking, merchant orders, today and calendar. Booking screens hidden | 5 | 0 | 1 | 7 | 2 | O36 |
+| S10 | Partner handovers | 2 | Partner entry and report, handover meetings for partner and merchant, partner records | 3 | 6 | 2 | 0 | 7 | O22, O34, O40 |
+| S11 | Story analytics | 1 | The SM-1 to SM-3 pages: traffic, map and story-to-shop funnel | 3 | 2 | 0 | 0 | 4 | O14, O29, O32 |
+| S12 | Money reports | 2 | Sales, money, margin and costs with tour and booking money stripped | 0 | 0 | 4 | 0 | 0 | none |
+| | **Total** | | | **39** | **21** | **20** | **13** | **37** | |
+
+The two removed ids N04 and N05 sit in S4 and are not counted. Two things differ from a plain reading of the old tables: product-rating moderation (`reviews.tsx`) is in S3 with comment moderation because both follow ADR-008 and ADR-018, and the merchant handover screens (N10 to N12) are in S10 with the partner ones because they are two sides of one meeting.
 
 ## Counts
 
@@ -49,114 +84,114 @@ Table 1 has 72 rows: the 72 non-lab route files. The 17 `lab.*` files are one li
 
 ## Table 1. Existing route files
 
-Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux/ux-spec-phase1.md` where one exists. "Render" follows ADR-001: **SSR** for public content, **ssr:false** with `noindex` for everything else. Booking routes carry "none" because they leave the build. A "ruling D*n*" tag points to a decision in "Decisions".
+Rows are grouped by slice (first column). Paths are relative to `front-end/src/routes/`. "Id" is the screen id of `docs/ux/ux-spec-phase1.md` where one exists. "Render" follows ADR-001: **SSR** for public content, **ssr:false** with `noindex` for everything else. Booking routes carry "none" because they leave the build. A "ruling D*n*" tag points to a decision in "Decisions".
 
-| Route file | Target URL | Id | Audience | Verdict | Render | Why (PRD, AC) | ADR | Track |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `__root.tsx` | root |  | all | **Redesign** | SSR (root) | Start root: head tags, CSS side-effect import, providers made server-safe, browser history (§4.1, AC61) | 001, 002 | P |
-| `_guest.tsx` | guest layout |  | guest | **Redesign** | SSR for public children | Shell moves under `/$lang`. Phone tabs stay Explore, Keepsakes, Tours, Account, with the language prefix, until E4.6 swaps Tours for Map (owner answer D5, 2026-10-26; gate G-S5-MAPTAB, 27.10.2026). Onboarding prompt and language notice mount here (§3.1, AC36, AC64) | 002, 006 | P |
-| `_guest/index.tsx` | `/$lang` | C01 | guest | **Redesign** | SSR | Story and map first, shop gentle. Four-category rail, "Soon" and priced tour rail go (§1.2, §7.0, Q24, AC54) | 001, 002, 006 | 1 |
-| `_guest/stories/index.tsx` | `/$lang/stories` | C19 | guest | **Redesign** | SSR | Ranked by `rankItems`, tags for places, stay and interests (§3.2, §11.2, AC38) | 001, 002, 006 | 1 |
-| `_guest/stories/$slug.tsx` | `/$lang/stories/$slug` | C20 | guest | **Redesign** | SSR | Place tags, up to 6 keepsake cards without price, up to 3 "explore more", language notice (§11.2, AC31, AC32, AC33, AC54, AC64) | 001, 002, 005, 011 | 1 |
-| `_guest/tours.tsx` | tours layout |  | guest | **Keep** | layout | Outlet only. Moves under `/$lang` with its children | 002 | 1 |
-| `_guest/tours/index.tsx` | `/$lang/tours` | C08 | guest | **Redesign** | SSR | Information list. No price, "Soon", maintenance or next departure (§7.3, AC50, AC54) | 001, 005, 012 | 1 |
-| `_guest/tours/$slug.tsx` | `/$lang/tours/$slug` | C09 | guest | **Redesign** | SSR | Drops `?book=true` sheet and adult, child, infant prices. Adds route map, PDF download, keepsake cards (§6.3, §7.3, AC50, AC51, AC67) | 001, 004, 005, 012 | 1 |
-| `_guest/tours/$slug_.book.tsx` | removed | C10 | guest | **Hide** | none | Tour booking hidden, no path (§4.2, Q4, AC50) | 012 | 1 |
-| `_guest/tours/$slug_.book_.review.tsx` | removed | C11 | guest | **Hide** | none | Tour booking hidden (§4.2, Q4) | 012 | 1 |
-| `_guest/tours/private-tour.tsx` | removed | C22 | guest | **Hide** | none | Private tours out of scope (Q6, §4.2) | 012 | 1 |
-| `_guest/tours/private-tour_.sent.tsx` | removed | C22 | guest | **Hide** | none | Private tours out of scope (Q6, §4.2) | 012 | 1 |
-| `_guest/gifts/index.tsx` | `/$lang/gifts` | C02 | guest | **Redesign** | SSR | Keepsakes/Andenken list, no price and no "from" price, no sub-category filter, no category rail (§7.0, Q24, AC54) | 001, 002, 021 | 2 |
-| `_guest/gifts/$slug.tsx` | `/$lang/gifts/$slug` | C03 | guest | **Redesign** | SSR text, SPA price and stock | Option selectors from size, theme, colour. Sold-out combination not selectable. No engraving. Price first here (§7.2, AC52, AC53, AC55) | 001, 017, 022, 027 | 2 |
-| `_guest/cart.tsx` | `/cart` | C04 | guest | **Redesign** | ssr:false | Server cart, lines grouped by destination, re-check on each change (§8.1, AC80, AC81) | 021, 026 | 2 |
-| `_guest/cart_.review.tsx` | `/cart/review` | C06 | guest | **Redesign** | ssr:false | Preview of the orders the cart will create, handover line prefilled, pay online or cash (§8.1, §10.4, AC66, AC70, AC71, AC76, AC82) | 024, 025, 026 | 2 |
-| `_guest/cart_.sent.tsx` | `/cart/sent` | C07 | guest | **Redesign** | ssr:false | Lists created orders, repeat-safe, no trip profile (§3.4 removed, AC83) | 026 | 2 |
-| `_guest/account.tsx` | `/account` | C14 | guest | **Keep** | ssr:false | Account hub and order list. Strip the booking list and `features/tours/booking` import (§4.2, AC50). Built in E7.26 on real orders | 012 | 2 |
-| `_guest/account_.orders.$orderId.tsx` | `/account/orders/$orderId` | C15 | guest | **Redesign** | ssr:false | Tracking for self-collect and partner path states, order code, cash state, payment label (§6.2, §10.4, §8, AC25, AC65, AC66, AC72) | 025, 028 | 2 |
-| `_guest/account_.orders.$orderId_.pay.tsx` | `/account/orders/$orderId/pay` | C12 | guest | **Redesign** | ssr:false | Simulated provider page becomes the Stripe Payment Element. Not shown for cash orders (§9.1, AC65) | 021 | 2 |
-| `_guest/account_.bookings.$bookingId.tsx` | removed | C16 | guest | **Hide** | none | Booking detail hidden (§4.2, Q4) | 012 | 2 |
-| `_guest/account_.bookings.$bookingId_.pay.tsx` | removed | C12 | guest | **Hide** | none | Booking payment hidden (§4.2, Q4) | 012 | 2 |
-| `_guest/account_.bookings.$bookingId_.confirmed.tsx` | removed | C13 | guest | **Hide** | none | Booking confirmation hidden (§4.2, Q4) | 012 | 2 |
-| `_guest/credits.tsx` | `/credits` |  | guest | **Keep** | ssr:false (ruling D1) | Photo credits page. Not in the ADR-001 render lists | 001 | P |
-| `_guest/plan.tsx` | `/plan` | C21 | guest | **Redesign** | ssr:false (ruling D1) | Today an AI chat (`useChat`) with an itinerary card. Must become a fixed-question form with a review step (§12, G10, AC34). Itinerary building is out (G9, §4.2) | 001 | 1 |
-| `_guest/plan_.sent.tsx` | `/plan/sent` | C21 | guest | **Keep** | ssr:false (ruling D1) | Sent notice. Copy: store replies by e-mail, no deadline (AC34) |  | 1 |
-| `_guest/search.tsx` | `/search` |  | guest | **Redesign** | ssr:false (ruling D1) | Search over stories, places, keepsakes. Drop category browse and tour booking data, no price in results (§7.0, AC54) | 001, 006 | 1 |
-| `sign-in.tsx` | `/sign-in` | C05 | all | **Keep** | ssr:false | Google or e-mail code (§5, Q17). `takeGoogleReturn` goes with hash history | 001 | P |
-| `invitation.tsx` | `/invitation` | M01 | merchant, partner | **Redesign** | ssr:false | Reuse for partner invitations as well as staff. Token stays in the fragment (§5, §10.4) | 001, 010, 019 | P |
-| `r.$code.tsx` | `/r/$code` |  | guest | **Redesign** | server route (302) | Client `<Navigate>` becomes a server 302 to a same-origin target path, so a QR or link opens the shared story (§6.1, §10.1, AC24) | 001 | P |
-| `admin.tsx` | `/admin` | A01, A02 | admin | **Keep** | ssr:false | Super Admin invites merchant, opening checklist (§5, AC03) | 001 | P |
-| `partner/index.tsx` | `/partner` | P01 | partner | **Redesign** | ssr:false | Entry splits: read-only report by link and code, and signed-in handover work (§10.3, §10.4, O24 closed) | 010, 019 | 2 |
-| `partner/$token.tsx` | `/partner/$token` | P02 | partner | **Keep** | ssr:false | Read-only report. Strip tour lines. `no-referrer`, `noindex`, token in path (§10.3, AC12) | 001, 010 | 2 |
-| `store.tsx` | merchant layout |  | merchant | **Redesign** | layout, ssr:false | Groups Dashboard, Operations, Products, Partners, Content, Settings. Marketing becomes Content and Bookings leave (E4.1). Handovers, Places, Categories, Media, Traffic and Map entries come with their own screens (§6.4, §13.1) | 012 | P |
-| `store/index.tsx` | `/store` | M02 | merchant | **Redesign** | ssr:false | Today cards: drop tours, add handover proposals, missing bags, pending prep (§6.4, §10.4, AC72, AC77) | 012, 025 | 2 |
-| `store/sales.tsx` | `/store/sales` |  | merchant | **Keep** | ssr:false | Sales overview. Strip tour figures (§13.1) | 012 | 2 |
-| `store/$section.tsx` | `/store/settings` | M22 | merchant | **Keep** | ssr:false | Store info, members, payout. Preparation time (O22) added when decided | 010 | P |
-| `store_.onboarding.tsx` | `/store/onboarding` |  | merchant | **Keep** | ssr:false | Merchant store setup checklist. Not the guest onboarding (§3.1) |  | P |
-| `store/calendar.tsx` | `/store/calendar` | M27 | merchant | **Redesign** | ssr:false | Drop booking items. Show handover meetings and pickup times in Europe/Zurich (§13.1a) | 012, 024 | 2 |
-| `store/orders/index.tsx` | `/store/orders` | M03 | merchant | **Redesign** | ssr:false | Tabs and filters for partner-path statuses, handover and pending-accept (§8, §10.4, AC66) | 025 | 2 |
-| `store/orders/$orderId.tsx` | `/store/orders/$orderId` | M04 | merchant | **Redesign** | ssr:false | Handover binding, receipt and no-show, cash, guest name and e-mail, commission at completion (§10.4, §9, AC29, AC74) | 023, 025, 028 | 2 |
-| `store/bookings.tsx` | removed |  | merchant | **Hide** | none | Booking hub hidden (§4.2, Q4) | 012 | 2 |
-| `store/bookings/index.tsx` | removed | M05 | merchant | **Hide** | none | Departures hidden (§4.2, Q4) | 012 | 2 |
-| `store/bookings/$bookingId.tsx` | removed | M07 | merchant | **Hide** | none | Booking detail hidden (§4.2, Q4) | 012 | 2 |
-| `store/bookings/departures/$departureId.tsx` | removed | M06 | merchant | **Hide** | none | Departure guests hidden (§4.2, Q4) | 012 | 2 |
-| `store/products/index.tsx` | `/store/products` | M11 | merchant | **Redesign** | ssr:false | Only Keepsakes and Pickup points. Tours, Stays, Experiences tabs and category filter go (§7.0, §4.2) | 012, 027 | 2 |
-| `store/products/gifts/new.tsx` | `/store/products/gifts/new` | M12 | merchant | **Redesign** | ssr:false | Options, values, SKU combinations, stock per SKU. No engraving, no sub-category, no deposit or pay-later (§7.2, AC53, AC55) | 009, 016, 017, 027 | 2 |
-| `store/products/gifts/$productId.tsx` | `/store/products/gifts/$productId` | M12 | merchant | **Redesign** | ssr:false | Same editor in edit mode, held stock shown (§7.2, AC05, AC53) | 009, 016, 017, 027 | 2 |
-| `store/products/pickup.tsx` | `/store/products/pickup` | M14 | merchant | **Keep** | ssr:false | Pickup points with hours, shared by self-collect and handovers (§10.4) | 024 | 2 |
-| `store/products/categories.tsx` | removed (ruling D2) | M26 | merchant | **Hide** | none | No category UI in Phase 1. Tables stay (§7.0, M9, M10) | 021, 027 | 2 |
-| `store/products/tours/index.tsx` | `/store/content/tours` | M11 | merchant | **Redesign** | ssr:false | Tour guide list. Content, not product (§7.3). Moves to the Content group (owner answer, 2026-10-26) | 003, 005 | 1 |
-| `store/products/tours/new.tsx` | `/store/content/tours/new` | M13 | merchant | **Redesign** | ssr:false | Tour guide editor: content blocks, route stops, one PDF, stay tag, interests, keepsake links. No price or departures (§7.3, AC45, AC51) | 003, 004, 005, 012 | 1 |
-| `store/products/tours/$tourId.tsx` | `/store/content/tours/$tourId` | M13 | merchant | **Redesign** | ssr:false | Same editor in edit mode, preview in EN and DE (§7.3, AC45) | 003, 004, 005, 012 | 1 |
-| `store/content/index.tsx` | `/store/content` | M17 | merchant | **Redesign** | ssr:false | Story list by language version, status, tags, review type (§11.2, §11.3) | 002, 003, 014 | 1 |
-| `store/content/articles/$articleId.tsx` | `/store/content/articles/$articleId` | M17 | merchant | **Redesign** | ssr:false | Pin tags, blog categories, stay tag, interests, up to 6 keepsakes, up to 3 related, language versions, publish rules (§11.2, AC31, AC33, AC41, AC87) | 003, 005, 011, 014, 030 | 1 |
-| `store/content/comments.tsx` | `/store/content/comments` | M18 | merchant | **Redesign** | ssr:false | Hide and unhide story comments only. No delete (AC47) | 008, 018 | 1 |
-| `store/content/reviews.tsx` | `/store/content/reviews` | M23 | merchant | **Redesign** | ssr:false | Product ratings only. Hide only. Product-rating hide refused until O33 (§11.6, AC47, AC69) | 008, 018 | 1 |
-| `store/content/analytics.tsx` | `/store/content/analytics` |  | merchant | **Redesign** | ssr:false | Content view: stories read, new story comments, hidden comments (§13.1) | 007, 020 | 1 |
-| `store/partners/index.tsx` | `/store/partners` | M15 | merchant | **Redesign** | ssr:false | Partner type, account invitation state, handover count (§10, §10.4) | 010, 019, 024 | 2 |
-| `store/partners/$partnerId.tsx` | `/store/partners/$partnerId` | M16 | merchant | **Redesign** | ssr:false | Adds invite account and handover agreements. Report link stays read-only (§10.3, §10.4, AC58) | 010, 019, 024 | 2 |
-| `store/partners/analytics.tsx` | `/store/partners/analytics` |  | merchant | **Keep** | ssr:false | Partner analytics. Strip tour partners (§13.1) | 012 | 2 |
-| `store/reports/route.tsx` | reports layout |  | merchant | **Keep** | layout | Report page frame |  | P |
-| `store/reports/index.tsx` | `/store/reports` |  | merchant | **Keep** | ssr:false | Money view. Strip booking money, keep cash and refunds (§13.1, AC19) | 012 | 2 |
-| `store/reports/sales.tsx` | `/store/reports/sales` |  | merchant | **Redesign** | ssr:false | Conversion page becomes the SM-3 story-to-shop funnel (§1.3, §13.1, AC60) | 007, 020 | 1 |
-| `store/reports/guests.tsx` | `/store/reports/guests` |  | merchant | **Redesign** | ssr:false | Four guest groups are gone. Becomes anonymous segment split of SM-1 to SM-3, blocked by O29 (§13.3, G4) | 007, 020 | 1 |
-| `store/reports/margin.tsx` | `/store/reports/margin` |  | merchant | **Keep** | ssr:false | Contribution margin (R14, §13.2) |  | 2 |
-| `store/reports/costs.tsx` | `/store/reports/costs` | M24 | merchant | **Keep** | ssr:false | Actual cost entry (R14) |  | 2 |
-| `store/requests/index.tsx` | `/store/requests` | M19 | merchant | **Keep** | ssr:false | Advice request inbox. Drop the private-tour tab (§12, AC18) |  | 1 |
-| `store/requests/advice/$requestId.tsx` | `/store/requests/advice/$requestId` | M19 | merchant | **Keep** | ssr:false | Request detail, reply by e-mail outside the system (§12) |  | 1 |
-| `store/requests/questions.tsx` | `/store/requests/questions` | M19 | merchant | **Keep** | ssr:false | Fixed question set of the store (§12, AC34) |  | 1 |
-| `store/requests/analytics.tsx` | `/store/requests/analytics` |  | merchant | **Keep** | ssr:false | Inquiry analytics |  | 1 |
-| `store/requests/private.tsx` | removed | M20 | merchant | **Hide** | none | Private tour requests out of scope (Q6). ADR-012 covers them in prose, not in its wrapper list. Extended by ruling D2 | 012 | 1 |
+| Slice | UI work | Route file | Target URL | Id | Audience | Verdict | Render | Why (PRD, AC) | ADR | Track  |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---  |
+| S0 | Wire | `__root.tsx` | root |  | all | **Redesign** | SSR (root) | Start root: head tags, CSS side-effect import, providers made server-safe, browser history (§4.1, AC61) | 001, 002 | P  |
+| S0 | Edit | `_guest.tsx` | guest layout |  | guest | **Redesign** | SSR for public children | Shell moves under `/$lang`. Phone tabs stay Explore, Keepsakes, Tours, Account, with the language prefix, until E4.6 swaps Tours for Map (owner answer D5, 2026-10-26; gate G-S5-MAPTAB, 27.10.2026). Onboarding prompt and language notice mount here (§3.1, AC36, AC64) | 002, 006 | P  |
+| S0 | None | `_guest/credits.tsx` | `/credits` |  | guest | **Keep** | ssr:false (ruling D1) | Photo credits page. Not in the ADR-001 render lists | 001 | P  |
+| S0 | None | `sign-in.tsx` | `/sign-in` | C05 | all | **Keep** | ssr:false | Google or e-mail code (§5, Q17). `takeGoogleReturn` goes with hash history | 001 | P  |
+| S0 | Edit | `invitation.tsx` | `/invitation` | M01 | merchant, partner | **Redesign** | ssr:false | Reuse for partner invitations as well as staff. Token stays in the fragment (§5, §10.4) | 001, 010, 019 | P  |
+| S0 | Wire | `r.$code.tsx` | `/r/$code` |  | guest | **Redesign** | server route (302) | Client `<Navigate>` becomes a server 302 to a same-origin target path, so a QR or link opens the shared story (§6.1, §10.1, AC24) | 001 | P  |
+| S0 | None | `admin.tsx` | `/admin` | A01, A02 | admin | **Keep** | ssr:false | Super Admin invites merchant, opening checklist (§5, AC03) | 001 | P  |
+| S0 | Edit | `store.tsx` | merchant layout |  | merchant | **Redesign** | layout, ssr:false | Groups Dashboard, Operations, Products, Partners, Content, Settings. Marketing becomes Content and Bookings leave (E4.1). Handovers, Places, Categories, Media, Traffic and Map entries come with their own screens (§6.4, §13.1) | 012 | P  |
+| S0 | None | `store/$section.tsx` | `/store/settings` | M22 | merchant | **Keep** | ssr:false | Store info, members, payout. Preparation time (O22) added when decided | 010 | P  |
+| S0 | None | `store_.onboarding.tsx` | `/store/onboarding` |  | merchant | **Keep** | ssr:false | Merchant store setup checklist. Not the guest onboarding (§3.1) |  | P  |
+| S0 | None | `store/reports/route.tsx` | reports layout |  | merchant | **Keep** | layout | Report page frame |  | P  |
+| S2 | Design | `_guest/index.tsx` | `/$lang` | C01 | guest | **Redesign** | SSR | Story and map first, shop gentle. Four-category rail, "Soon" and priced tour rail go (§1.2, §7.0, Q24, AC54) | 001, 002, 006 | 1  |
+| S2 | Edit | `_guest/search.tsx` | `/search` |  | guest | **Redesign** | ssr:false (ruling D1) | Search over stories, places, keepsakes. Drop category browse and tour booking data, no price in results (§7.0, AC54) | 001, 006 | 1  |
+| S3 | Edit | `_guest/stories/index.tsx` | `/$lang/stories` | C19 | guest | **Redesign** | SSR | Ranked by `rankItems`, tags for places, stay and interests (§3.2, §11.2, AC38) | 001, 002, 006 | 1  |
+| S3 | Design | `_guest/stories/$slug.tsx` | `/$lang/stories/$slug` | C20 | guest | **Redesign** | SSR | Place tags, up to 6 keepsake cards without price, up to 3 "explore more", language notice (§11.2, AC31, AC32, AC33, AC54, AC64) | 001, 002, 005, 011 | 1  |
+| S3 | Edit | `store/content/index.tsx` | `/store/content` | M17 | merchant | **Redesign** | ssr:false | Story list by language version, status, tags, review type (§11.2, §11.3) | 002, 003, 014 | 1  |
+| S3 | Design | `store/content/articles/$articleId.tsx` | `/store/content/articles/$articleId` | M17 | merchant | **Redesign** | ssr:false | Pin tags, blog categories, stay tag, interests, up to 6 keepsakes, up to 3 related, language versions, publish rules (§11.2, AC31, AC33, AC41, AC87) | 003, 005, 011, 014, 030 | 1  |
+| S3 | Edit | `store/content/comments.tsx` | `/store/content/comments` | M18 | merchant | **Redesign** | ssr:false | Hide and unhide story comments only. No delete (AC47) | 008, 018 | 1  |
+| S3 | Edit | `store/content/reviews.tsx` | `/store/content/reviews` | M23 | merchant | **Redesign** | ssr:false | Product ratings only. Hide only. Product-rating hide refused until O33 (§11.6, AC47, AC69) | 008, 018 | 1  |
+| S5 | None | `_guest/tours.tsx` | tours layout |  | guest | **Keep** | layout | Outlet only. Moves under `/$lang` with its children | 002 | 1  |
+| S5 | Edit | `_guest/tours/index.tsx` | `/$lang/tours` | C08 | guest | **Redesign** | SSR | Information list. No price, "Soon", maintenance or next departure (§7.3, AC50, AC54) | 001, 005, 012 | 1  |
+| S5 | Design | `_guest/tours/$slug.tsx` | `/$lang/tours/$slug` | C09 | guest | **Redesign** | SSR | Drops `?book=true` sheet and adult, child, infant prices. Adds route map, PDF download, keepsake cards (§6.3, §7.3, AC50, AC51, AC67) | 001, 004, 005, 012 | 1  |
+| S5 | None | `_guest/tours/$slug_.book.tsx` | removed | C10 | guest | **Hide** | none | Tour booking hidden, no path (§4.2, Q4, AC50) | 012 | 1  |
+| S5 | None | `_guest/tours/$slug_.book_.review.tsx` | removed | C11 | guest | **Hide** | none | Tour booking hidden (§4.2, Q4) | 012 | 1  |
+| S5 | None | `_guest/tours/private-tour.tsx` | removed | C22 | guest | **Hide** | none | Private tours out of scope (Q6, §4.2) | 012 | 1  |
+| S5 | None | `_guest/tours/private-tour_.sent.tsx` | removed | C22 | guest | **Hide** | none | Private tours out of scope (Q6, §4.2) | 012 | 1  |
+| S5 | Edit | `store/products/tours/index.tsx` | `/store/content/tours` | M11 | merchant | **Redesign** | ssr:false | Tour guide list. Content, not product (§7.3). Moves to the Content group (owner answer, 2026-10-26) | 003, 005 | 1  |
+| S5 | Design | `store/products/tours/new.tsx` | `/store/content/tours/new` | M13 | merchant | **Redesign** | ssr:false | Tour guide editor: content blocks, route stops, one PDF, stay tag, interests, keepsake links. No price or departures (§7.3, AC45, AC51) | 003, 004, 005, 012 | 1  |
+| S5 | Design | `store/products/tours/$tourId.tsx` | `/store/content/tours/$tourId` | M13 | merchant | **Redesign** | ssr:false | Same editor in edit mode, preview in EN and DE (§7.3, AC45) | 003, 004, 005, 012 | 1  |
+| S6 | Design | `_guest/plan.tsx` | `/plan` | C21 | guest | **Redesign** | ssr:false (ruling D1) | Today an AI chat (`useChat`) with an itinerary card. Must become a fixed-question form with a review step (§12, G10, AC34). Itinerary building is out (G9, §4.2) | 001 | 1  |
+| S6 | None | `_guest/plan_.sent.tsx` | `/plan/sent` | C21 | guest | **Keep** | ssr:false (ruling D1) | Sent notice. Copy: store replies by e-mail, no deadline (AC34) |  | 1  |
+| S6 | None | `store/requests/index.tsx` | `/store/requests` | M19 | merchant | **Keep** | ssr:false | Advice request inbox. Drop the private-tour tab (§12, AC18) |  | 1  |
+| S6 | None | `store/requests/advice/$requestId.tsx` | `/store/requests/advice/$requestId` | M19 | merchant | **Keep** | ssr:false | Request detail, reply by e-mail outside the system (§12) |  | 1  |
+| S6 | None | `store/requests/questions.tsx` | `/store/requests/questions` | M19 | merchant | **Keep** | ssr:false | Fixed question set of the store (§12, AC34) |  | 1  |
+| S6 | None | `store/requests/analytics.tsx` | `/store/requests/analytics` |  | merchant | **Keep** | ssr:false | Inquiry analytics |  | 1  |
+| S6 | None | `store/requests/private.tsx` | removed | M20 | merchant | **Hide** | none | Private tour requests out of scope (Q6). ADR-012 covers them in prose, not in its wrapper list. Extended by ruling D2 | 012 | 1  |
+| S7 | Edit | `_guest/gifts/index.tsx` | `/$lang/gifts` | C02 | guest | **Redesign** | SSR | Keepsakes/Andenken list, no price and no "from" price, no sub-category filter, no category rail (§7.0, Q24, AC54) | 001, 002, 021 | 2  |
+| S7 | Design | `_guest/gifts/$slug.tsx` | `/$lang/gifts/$slug` | C03 | guest | **Redesign** | SSR text, SPA price and stock | Option selectors from size, theme, colour. Sold-out combination not selectable. No engraving. Price first here (§7.2, AC52, AC53, AC55) | 001, 017, 022, 027 | 2  |
+| S7 | Edit | `store/products/index.tsx` | `/store/products` | M11 | merchant | **Redesign** | ssr:false | Only Keepsakes and Pickup points. Tours, Stays, Experiences tabs and category filter go (§7.0, §4.2) | 012, 027 | 2  |
+| S7 | Design | `store/products/gifts/new.tsx` | `/store/products/gifts/new` | M12 | merchant | **Redesign** | ssr:false | Options, values, SKU combinations, stock per SKU. No engraving, no sub-category, no deposit or pay-later (§7.2, AC53, AC55) | 009, 016, 017, 027 | 2  |
+| S7 | Design | `store/products/gifts/$productId.tsx` | `/store/products/gifts/$productId` | M12 | merchant | **Redesign** | ssr:false | Same editor in edit mode, held stock shown (§7.2, AC05, AC53) | 009, 016, 017, 027 | 2  |
+| S7 | None | `store/products/pickup.tsx` | `/store/products/pickup` | M14 | merchant | **Keep** | ssr:false | Pickup points with hours, shared by self-collect and handovers (§10.4) | 024 | 2  |
+| S7 | None | `store/products/categories.tsx` | removed (ruling D2) | M26 | merchant | **Hide** | none | No category UI in Phase 1. Tables stay (§7.0, M9, M10) | 021, 027 | 2  |
+| S8 | Design | `_guest/cart.tsx` | `/cart` | C04 | guest | **Redesign** | ssr:false | Server cart, lines grouped by destination, re-check on each change (§8.1, AC80, AC81) | 021, 026 | 2  |
+| S8 | Design | `_guest/cart_.review.tsx` | `/cart/review` | C06 | guest | **Redesign** | ssr:false | Preview of the orders the cart will create, handover line prefilled, pay online or cash (§8.1, §10.4, AC66, AC70, AC71, AC76, AC82) | 024, 025, 026 | 2  |
+| S8 | Edit | `_guest/cart_.sent.tsx` | `/cart/sent` | C07 | guest | **Redesign** | ssr:false | Lists created orders, repeat-safe, no trip profile (§3.4 removed, AC83) | 026 | 2  |
+| S8 | Wire | `_guest/account_.orders.$orderId_.pay.tsx` | `/account/orders/$orderId/pay` | C12 | guest | **Redesign** | ssr:false | Simulated provider page becomes the Stripe Payment Element. Not shown for cash orders (§9.1, AC65) | 021 | 2  |
+| S9 | None | `_guest/account.tsx` | `/account` | C14 | guest | **Keep** | ssr:false | Account hub and order list. Strip the booking list and `features/tours/booking` import (§4.2, AC50). Built in E7.26 on real orders | 012 | 2  |
+| S9 | Design | `_guest/account_.orders.$orderId.tsx` | `/account/orders/$orderId` | C15 | guest | **Redesign** | ssr:false | Tracking for self-collect and partner path states, order code, cash state, payment label (§6.2, §10.4, §8, AC25, AC65, AC66, AC72) | 025, 028 | 2  |
+| S9 | None | `_guest/account_.bookings.$bookingId.tsx` | removed | C16 | guest | **Hide** | none | Booking detail hidden (§4.2, Q4) | 012 | 2  |
+| S9 | None | `_guest/account_.bookings.$bookingId_.pay.tsx` | removed | C12 | guest | **Hide** | none | Booking payment hidden (§4.2, Q4) | 012 | 2  |
+| S9 | None | `_guest/account_.bookings.$bookingId_.confirmed.tsx` | removed | C13 | guest | **Hide** | none | Booking confirmation hidden (§4.2, Q4) | 012 | 2  |
+| S9 | Edit | `store/index.tsx` | `/store` | M02 | merchant | **Redesign** | ssr:false | Today cards: drop tours, add handover proposals, missing bags, pending prep (§6.4, §10.4, AC72, AC77) | 012, 025 | 2  |
+| S9 | Edit | `store/calendar.tsx` | `/store/calendar` | M27 | merchant | **Redesign** | ssr:false | Drop booking items. Show handover meetings and pickup times in Europe/Zurich (§13.1a) | 012, 024 | 2  |
+| S9 | Edit | `store/orders/index.tsx` | `/store/orders` | M03 | merchant | **Redesign** | ssr:false | Tabs and filters for partner-path statuses, handover and pending-accept (§8, §10.4, AC66) | 025 | 2  |
+| S9 | Design | `store/orders/$orderId.tsx` | `/store/orders/$orderId` | M04 | merchant | **Redesign** | ssr:false | Handover binding, receipt and no-show, cash, guest name and e-mail, commission at completion (§10.4, §9, AC29, AC74) | 023, 025, 028 | 2  |
+| S9 | None | `store/bookings.tsx` | removed |  | merchant | **Hide** | none | Booking hub hidden (§4.2, Q4) | 012 | 2  |
+| S9 | None | `store/bookings/index.tsx` | removed | M05 | merchant | **Hide** | none | Departures hidden (§4.2, Q4) | 012 | 2  |
+| S9 | None | `store/bookings/$bookingId.tsx` | removed | M07 | merchant | **Hide** | none | Booking detail hidden (§4.2, Q4) | 012 | 2  |
+| S9 | None | `store/bookings/departures/$departureId.tsx` | removed | M06 | merchant | **Hide** | none | Departure guests hidden (§4.2, Q4) | 012 | 2  |
+| S10 | Design | `partner/index.tsx` | `/partner` | P01 | partner | **Redesign** | ssr:false | Entry splits: read-only report by link and code, and signed-in handover work (§10.3, §10.4, O24 closed) | 010, 019 | 2  |
+| S10 | None | `partner/$token.tsx` | `/partner/$token` | P02 | partner | **Keep** | ssr:false | Read-only report. Strip tour lines. `no-referrer`, `noindex`, token in path (§10.3, AC12) | 001, 010 | 2  |
+| S10 | Edit | `store/partners/index.tsx` | `/store/partners` | M15 | merchant | **Redesign** | ssr:false | Partner type, account invitation state, handover count (§10, §10.4) | 010, 019, 024 | 2  |
+| S10 | Edit | `store/partners/$partnerId.tsx` | `/store/partners/$partnerId` | M16 | merchant | **Redesign** | ssr:false | Adds invite account and handover agreements. Report link stays read-only (§10.3, §10.4, AC58) | 010, 019, 024 | 2  |
+| S10 | None | `store/partners/analytics.tsx` | `/store/partners/analytics` |  | merchant | **Keep** | ssr:false | Partner analytics. Strip tour partners (§13.1) | 012 | 2  |
+| S11 | Edit | `store/content/analytics.tsx` | `/store/content/analytics` |  | merchant | **Redesign** | ssr:false | Content view: stories read, new story comments, hidden comments (§13.1) | 007, 020 | 1  |
+| S11 | Design | `store/reports/sales.tsx` | `/store/reports/sales` |  | merchant | **Redesign** | ssr:false | Conversion page becomes the SM-3 story-to-shop funnel (§1.3, §13.1, AC60) | 007, 020 | 1  |
+| S11 | Design | `store/reports/guests.tsx` | `/store/reports/guests` |  | merchant | **Redesign** | ssr:false | Four guest groups are gone. Becomes anonymous segment split of SM-1 to SM-3, blocked by O29 (§13.3, G4) | 007, 020 | 1  |
+| S12 | None | `store/sales.tsx` | `/store/sales` |  | merchant | **Keep** | ssr:false | Sales overview. Strip tour figures (§13.1) | 012 | 2  |
+| S12 | None | `store/reports/index.tsx` | `/store/reports` |  | merchant | **Keep** | ssr:false | Money view. Strip booking money, keep cash and refunds (§13.1, AC19) | 012 | 2  |
+| S12 | None | `store/reports/margin.tsx` | `/store/reports/margin` |  | merchant | **Keep** | ssr:false | Contribution margin (R14, §13.2) |  | 2  |
+| S12 | None | `store/reports/costs.tsx` | `/store/reports/costs` | M24 | merchant | **Keep** | ssr:false | Actual cost entry (R14) |  | 2  |
 
 **`lab.*` (17 files, not inventoried row by row).** They are design experiments at `/lab/*` and stay `ssr:false`, outside the product. They import product code (`features/discovery`, `features/checkout`, `features/tours/map`) and not the other way: no file outside `routes/lab.*` imports `features/lab`. So no lab component is reused by a product screen. Two are worth reading for the map and the home: `lab.map` and `lab.map-loading` for the map, and `lab.blog-home` for the home and the story list. `lab.map` hard-codes an aerial swisstopo style "chosen on 15.10.2026". That conflicts with the tile decision of G11, so this inventory does not adopt it.
 
 ## Table 2. New screens
 
-Routes follow ADR-002: `/$lang` is `en` or `de`, and only the public content routes of ADR-001 carry it. Dashboard, partner, and cart routes have no prefix and read the stored language. Every `/$lang` route here comes from the ADR-001 list or sits under a listed one, except where a decision tag says otherwise.
+Rows are grouped by slice (first column). Routes follow ADR-002: `/$lang` is `en` or `de`, and only the public content routes of ADR-001 carry it. Dashboard, partner, and cart routes have no prefix and read the stored language. Every `/$lang` route here comes from the ADR-001 list or sits under a listed one, except where a decision tag says otherwise.
 
-| Id | Proposed route | Audience | Purpose | PRD, AC | ADR | Track | Render | Reused components |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| N01 | Prompt over any public page (no route). Reopen entry in the menu | guest | Two-step onboarding: visitor type, then interests. Dismissible, never blocks content, answers in `localStorage` `sk.onboarding` | §3.1 to §3.3; AC36, AC37, AC38, AC41 | 006, 007 | 1 | client only | `SheetFrame`, locale context, chips |
-| N02 | `/$lang/map` | guest | Interactive map: pins with merchant-edited map categories, ranked not hidden. Category chips highlight the chosen category and dim the other pins, and none hides a pin. A pin in several categories is highlighted under each chip, and a pin with none only under All. Flat swisstopo aerial style with OpenFreeMap names, no 3D. Tap opens the pin card | §11.1; AC42, AC44, AC67, AC88 | 001, 006, 029, 030 | 1 | SSR page shell, map in browser | `tour-itinerary-map.tsx`, `aerial-style.ts` (made flat, O23), `lab.map` |
-| N03 | Sheet over N02 (deep link `/$lang/map?place=<slug>`) | guest | Pin card: photo, tip, hours, address, next date for a dated pin, main story link (omitted when the story has no published version), other stories, outbound link, Open in Google or Apple Maps. No review summary and no practical variant. A deep link to a hidden, expired or unknown pin shows the map with the notice "This place is no longer on the map" | §11.1; AC42, AC62, AC89, AC90 | 006, 015, 029 | 1 | client, data from `/api/public/places/:id` | `SheetFrame`, `story-card.tsx` |
-| N04 | removed | guest | Removed on 27.10.2026. Pins have no page of their own and are not in the sitemap. The id is not reused | none | 002 | 1 | none | none |
-| N05 | removed | guest | Removed on 27.10.2026. Guests no longer review places. The id is not reused | none | 008, 018 | 1 | none | none |
-| N06 | Sheet over /cart/review | guest | Handover picker: today's meetings of the QR partner, or switch to self-collect | §10.4; AC70, AC71, AC76 | 024, 025, 026 | 2 | client | `pickup-date-field.tsx`, `SheetFrame` |
-| N07 | `/handover` | partner | My handovers and upcoming meetings, proposals awaiting reply (prefix by ruling D3) | §10.4, §6.5; AC58, AC77 | 010, 019, 024 | 2 | ssr:false | partner report shell, `RowActions` |
-| N08 | `/handover/new` | partner | Propose or counter-propose pickup point, time, repeat rule, group arrival and leaving times | §10.4; AC58, AC76 | 024 | 2 | ssr:false | pickup point list, date fields |
-| N09 | `/handover/meetings/$meetingId` | partner | Meeting day screen: receipt checklist "Received 5/6", deliver by order code, cash entry, return bag. Shows name, code, items, paid or cash due | §10.4; AC59, AC65, AC72, AC73, AC74 | 024, 025, 028 | 2 | ssr:false | order rows |
-| N10 | `/store/handovers` | merchant | Handover list: proposals to answer, agreed, repeat rules, pause or end | §10.4, §6.4; AC58, AC77 | 024 | 2 | ssr:false | `RowActions`, `filter-bar`, `route-tabs` |
-| N11 | `/store/handovers/$handoverId` | merchant | Accept, counter, create for partner, cancel one day, move meeting (lists orders without prep time) | §10.4; AC58, AC78 | 024, 025 | 2 | ssr:false | sheets pattern of M10 |
-| N12 | `/store/handovers/meetings/$meetingId` | merchant | Meeting view: orders to pack, mark "On the way", receipt alerts, returned bags, handover record | §10.4, §6.4; AC72, AC74, AC75 | 024, 025 | 2 | ssr:false | merchant order rows |
-| N13 | `/store/products/inventory` | merchant | Stock per SKU across products: on hand, held, available, out-of-stock filter, quick edit | §7.2, §13.1; AC05, AC53 | 009, 016, 022 | 2 | ssr:false | `filter-bar`, data table, `RowActions` |
-| N14 | Sheet inside M12 | merchant | Options and values: add option, add value, order values | §7.0, §7.1; AC52 | 017, 027 | 2 | ssr:false | `subcategory-sheet.tsx` pattern |
-| N15 | Section and sheet inside M12 | merchant | SKU combinations: sold combinations only, price, SKU code, stock, status | §7.2; AC52, AC53 | 009, 016, 017 | 2 | ssr:false | stock section of `gift-editor.tsx` |
-| N16 | `/store/content/places` | merchant | Pins list: status (draft, published, hidden), map categories, next date, tags, main story. Add place and Add event both open N17 | §11.1; AC79, AC85, AC86 | 003, 005, 029 | 1 | ssr:false | `content-page.tsx`, data table |
-| N17 | /store/content/places/new and /$placeId | merchant | Pin editor, with no type choice: coordinates picker, slug, address (optional), weekly hours, optional date entries, map categories, photo with EN and DE alt text, EN and DE title and tip, stay tag, interests, optional main story, optional outbound link, hide. Required to publish: a title in one language, a location and a slug | §11.1, §11.5; AC39, AC41, AC45, AC62, AC63, AC68, AC79, AC85, AC86 | 003, 005, 011, 014, 015, 029, 030 | 1 | ssr:false | `article-editor.tsx` frame, map from N02 |
-| N18 | `/store/content/media` | merchant | Media library: upload, find, replace, see where used | §11.2, §7.3; AC32, AC51 | 004 | 1 | ssr:false | `media-sheets.tsx`, `photo-field.tsx` |
-| N19 | Sheet inside M13 | merchant | Tour PDF upload and replace, exactly one per tour | §7.3; AC51 | 004 | 1 | ssr:false | `media-sheets.tsx` |
-| N20 | `/store/reports/traffic` | merchant | SM-1: sessions, search sessions, by story and place | §1.3, §13.1; AC60 | 007, 020 | 1 | ssr:false | `report-charts.tsx`, `filters-sheet.tsx` |
-| N21 | `/store/reports/map` | merchant | SM-2: pin opens, pin-to-story clicks, by pin and segment | §1.3, §13.1; AC60 | 007, 020 | 1 | ssr:false | `report-charts.tsx` |
-| N22 | /sitemap.xml, /robots.txt | all | Server routes, no UI. Published pages with hreflang alternates, non-production disallow | §4.1; AC61 | 001, 002 | P | server route | none |
-| N23 | `/store/content/categories` | merchant | Category editor: two lists, map categories and blog categories, each with names in EN and DE, an order and one level of sub-categories. A category in use can't be deleted | §11.1, §11.2; AC87 | 003, 030 | 1 | ssr:false | `categories-page.tsx` pattern (dormant, ADR-012), `RowActions`, sheets |
+| Slice | UI work | Id | Proposed route | Audience | Purpose | PRD, AC | ADR | Track | Render | Reused components  |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | ---  |
+| S0 | Wire | N22 | /sitemap.xml, /robots.txt | all | Server routes, no UI. Published pages with hreflang alternates, non-production disallow | §4.1; AC61 | 001, 002 | P | server route | none  |
+| S1 | Design | N01 | Prompt over any public page (no route). Reopen entry in the menu | guest | Two-step onboarding: visitor type, then interests. Dismissible, never blocks content, answers in `localStorage` `sk.onboarding` | §3.1 to §3.3; AC36, AC37, AC38, AC41 | 006, 007 | 1 | client only | `SheetFrame`, locale context, chips  |
+| S4 | Design | N02 | `/$lang/map` | guest | Interactive map: pins with merchant-edited map categories, ranked not hidden. Category chips highlight the chosen category and dim the other pins, and none hides a pin. A pin in several categories is highlighted under each chip, and a pin with none only under All. Flat swisstopo aerial style with OpenFreeMap names, no 3D. Tap opens the pin card | §11.1; AC42, AC44, AC67, AC88 | 001, 006, 029, 030 | 1 | SSR page shell, map in browser | `tour-itinerary-map.tsx`, `aerial-style.ts` (made flat, O23), `lab.map`  |
+| S4 | Design | N03 | Sheet over N02 (deep link `/$lang/map?place=<slug>`) | guest | Pin card: photo, tip, hours, address, next date for a dated pin, main story link (omitted when the story has no published version), other stories, outbound link, Open in Google or Apple Maps. No review summary and no practical variant. A deep link to a hidden, expired or unknown pin shows the map with the notice "This place is no longer on the map" | §11.1; AC42, AC62, AC89, AC90 | 006, 015, 029 | 1 | client, data from `/api/public/places/:id` | `SheetFrame`, `story-card.tsx`  |
+| S4 | None | N04 | removed | guest | Removed on 27.10.2026. Pins have no page of their own and are not in the sitemap. The id is not reused | none | 002 | 1 | none | none  |
+| S4 | None | N05 | removed | guest | Removed on 27.10.2026. Guests no longer review places. The id is not reused | none | 008, 018 | 1 | none | none  |
+| S4 | Design | N16 | `/store/content/places` | merchant | Pins list: status (draft, published, hidden), map categories, next date, tags, main story. Add place and Add event both open N17 | §11.1; AC79, AC85, AC86 | 003, 005, 029 | 1 | ssr:false | `content-page.tsx`, data table  |
+| S4 | Design | N17 | /store/content/places/new and /$placeId | merchant | Pin editor, with no type choice: coordinates picker, slug, address (optional), weekly hours, optional date entries, map categories, photo with EN and DE alt text, EN and DE title and tip, stay tag, interests, optional main story, optional outbound link, hide. Required to publish: a title in one language, a location and a slug | §11.1, §11.5; AC39, AC41, AC45, AC62, AC63, AC68, AC79, AC85, AC86 | 003, 005, 011, 014, 015, 029, 030 | 1 | ssr:false | `article-editor.tsx` frame, map from N02  |
+| S4 | Design | N18 | `/store/content/media` | merchant | Media library: upload, find, replace, see where used | §11.2, §7.3; AC32, AC51 | 004 | 1 | ssr:false | `media-sheets.tsx`, `photo-field.tsx`  |
+| S4 | Design | N23 | `/store/content/categories` | merchant | Category editor: two lists, map categories and blog categories, each with names in EN and DE, an order and one level of sub-categories. A category in use can't be deleted | §11.1, §11.2; AC87 | 003, 030 | 1 | ssr:false | `categories-page.tsx` pattern (dormant, ADR-012), `RowActions`, sheets  |
+| S5 | Design | N19 | Sheet inside M13 | merchant | Tour PDF upload and replace, exactly one per tour | §7.3; AC51 | 004 | 1 | ssr:false | `media-sheets.tsx`  |
+| S7 | Design | N13 | `/store/products/inventory` | merchant | Stock per SKU across products: on hand, held, available, out-of-stock filter, quick edit | §7.2, §13.1; AC05, AC53 | 009, 016, 022 | 2 | ssr:false | `filter-bar`, data table, `RowActions`  |
+| S7 | Design | N14 | Sheet inside M12 | merchant | Options and values: add option, add value, order values | §7.0, §7.1; AC52 | 017, 027 | 2 | ssr:false | `subcategory-sheet.tsx` pattern  |
+| S7 | Design | N15 | Section and sheet inside M12 | merchant | SKU combinations: sold combinations only, price, SKU code, stock, status | §7.2; AC52, AC53 | 009, 016, 017 | 2 | ssr:false | stock section of `gift-editor.tsx`  |
+| S8 | Design | N06 | Sheet over /cart/review | guest | Handover picker: today's meetings of the QR partner, or switch to self-collect | §10.4; AC70, AC71, AC76 | 024, 025, 026 | 2 | client | `pickup-date-field.tsx`, `SheetFrame`  |
+| S10 | Design | N07 | `/handover` | partner | My handovers and upcoming meetings, proposals awaiting reply (prefix by ruling D3) | §10.4, §6.5; AC58, AC77 | 010, 019, 024 | 2 | ssr:false | partner report shell, `RowActions`  |
+| S10 | Design | N08 | `/handover/new` | partner | Propose or counter-propose pickup point, time, repeat rule, group arrival and leaving times | §10.4; AC58, AC76 | 024 | 2 | ssr:false | pickup point list, date fields  |
+| S10 | Design | N09 | `/handover/meetings/$meetingId` | partner | Meeting day screen: receipt checklist "Received 5/6", deliver by order code, cash entry, return bag. Shows name, code, items, paid or cash due | §10.4; AC59, AC65, AC72, AC73, AC74 | 024, 025, 028 | 2 | ssr:false | order rows  |
+| S10 | Design | N10 | `/store/handovers` | merchant | Handover list: proposals to answer, agreed, repeat rules, pause or end | §10.4, §6.4; AC58, AC77 | 024 | 2 | ssr:false | `RowActions`, `filter-bar`, `route-tabs`  |
+| S10 | Design | N11 | `/store/handovers/$handoverId` | merchant | Accept, counter, create for partner, cancel one day, move meeting (lists orders without prep time) | §10.4; AC58, AC78 | 024, 025 | 2 | ssr:false | sheets pattern of M10  |
+| S10 | Design | N12 | `/store/handovers/meetings/$meetingId` | merchant | Meeting view: orders to pack, mark "On the way", receipt alerts, returned bags, handover record | §10.4, §6.4; AC72, AC74, AC75 | 024, 025 | 2 | ssr:false | merchant order rows  |
+| S11 | Design | N20 | `/store/reports/traffic` | merchant | SM-1: sessions, search sessions, by story and place | §1.3, §13.1; AC60 | 007, 020 | 1 | ssr:false | `report-charts.tsx`, `filters-sheet.tsx`  |
+| S11 | Design | N21 | `/store/reports/map` | merchant | SM-2: pin opens, pin-to-story clicks, by pin and segment | §1.3, §13.1; AC60 | 007, 020 | 1 | ssr:false | `report-charts.tsx`  |
 ## Merchant navigation after the pivot
 
 The owner's groups stay: Dashboard, Operations, Content. On 2026-10-26 the owner renamed Marketing to Content (D4); the 15.10.2026 grouping is otherwise unchanged. This is a proposal for the children, not a visual design. Tables, filters, sheets, and sticky phone tabs follow the dashboard preferences (`RowActions`, `filter-bar`, `route-tabs`, `sticky-tabs`).
@@ -172,7 +207,7 @@ The owner's groups stay: Dashboard, Operations, Content. On 2026-10-26 the owner
 
 The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, More.
 
-## Area 1. Onboarding (N01)
+## Area 1. Onboarding (slice S1, N01)
 
 **Today.** The guest app has no onboarding. `store_.onboarding.tsx` is the merchant's store setup and is unrelated.
 
@@ -192,7 +227,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 
 **Against today.** All new. It touches every public list through `rankItems` (home, stories, tours, map). Server HTML and API lists stay unranked, so the same markup serves every visitor and crawler. The client re-ranks after hydration, so the list order can change once on load. The UX checklist should include that shift.
 
-## Area 2. Home (C01 redesign)
+## Area 2. Home (slice S2, C01 redesign)
 
 **Today (`discovery-home.tsx`).** Hero, a block by local time of day, a rail of four categories with "Soon" on two, featured keepsakes, a tour rail, stories, a Victorinox showcase, an advice banner and floating button, and a seasonal snow effect. Tours and keepsakes show prices.
 
@@ -212,7 +247,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 
 **Render.** SSR at `/$lang` with title, description, canonical, and hreflang. `/` redirects with a 302 (ADR-002). The server order is newest first.
 
-## Area 3. Catalog, options, SKUs, and inventory (merchant)
+## Area 3. Catalog, options, SKUs, and inventory (slice S7, merchant)
 
 **Today.** `gift-editor.tsx` edits a flat list of variants. Each variant has a name, a price, a stock figure, and a for-sale flag, and held units set the lowest stock. The editor also has engraving, a sub-category, a payment policy with deposit and pay-later, and a cancellation policy. `categories-page.tsx` (M26) manages sub-categories. The product list has tabs for Tours, Stays, and Experiences.
 
@@ -231,7 +266,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 
 **Guest side (C03).** Selectors come from the options and values of published SKUs. A combination with stock zero is shown as sold out and cannot be picked. The page shows price and availability loaded by the SPA, because no server text or list carries a price (ADR-001, owner gate D10).
 
-## Area 4. Guest map (N02, N03)
+## Area 4. Guest map (slice S4, N02, N03)
 
 **Today.** The only map is the 3D tour itinerary map (`tour-itinerary-map.tsx`, MapLibre, aerial style) inside the tour page. There is no place or pin screen.
 
@@ -254,7 +289,7 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 
 **Against today.** The tour map moves from a feature of one screen to a shared component. Entry points: the Map tab (D5, after E4.6), a story's place tag, a tour's route stops, and the home block. Category chips come from the merchant's map categories and replace the fixed place-type chips of D7, which keeps its highlight-and-dim behaviour.
 
-## Area 5. Merchant map and pins (N16, N17, N23)
+## Area 5. Merchant map and pins (slice S4, N16, N17, N23)
 
 **Today.** No place model or screen. Tour stops exist only inside the tour editor.
 
@@ -275,18 +310,18 @@ The phone bar keeps the agreed future state: Dashboard, Operations, Calendar, Mo
 
 ## Other areas at a glance
 
-| Area | Screens involved | Main change |
-| --- | --- | --- |
-| Stories and editorial reviews | C19, C20, M17 | An editorial review is a story of a review type tied to one pin, with writer and check date (§11.3). No new route |
-| Comments and moderation | M18, M23 | Story comments need sign-in, show at once, hide only, no delete, no report button (G7, AC47). Product rating hide is refused until O33. Guests do not review places |
-| Tour information | C08, C09, M13, N19 | Free information, route on a map, one PDF, no price or departure. Related keepsakes without price (AC50, AC51) |
-| Cart and checkout | C04, C06, C07, N06 | Server cart, one cart can become several orders, repeat-safe submit (AC80 to AC83). Guest cart without sign-in is O41 |
-| Order tracking | C15, M03, M04 | Partner-path states: placed, preparing, on the way, with partner, delivered. Payment label separate (§10.4) |
-| Partner handovers | N07 to N09, N10 to N12, N06, M04, M16 | Handover record, repeating rule, receipt, no-show, commission at completion (ADR-024, ADR-025, ADR-028) |
-| Partner account | `invitation.tsx`, `sign-in.tsx`, P01 | Role comes only from an invitation. Self sign-up gives guest only (ADR-019). Report link stays read-only |
-| Analytics SM-1 to SM-3 | N20, N21, `reports/sales.tsx`, `reports/guests.tsx` | First-party events with no persistent id (ADR-007, ADR-020). Cookie consent for tracking is open (O32, O14) |
-| Hidden booking | 11 route files named by ADR-012, plus 2 more (ruling D2) | Removed with their entry points. Domain rules stay compiled (ADR-012) |
-| Advice form | C21, M19 | AI chat becomes a fixed-question form with review step and e-mail required (G10, AC34) |
+| Slice | Area | Screens involved | Main change |
+| --- | --- | --- | --- |
+| S3 | Stories and editorial reviews | C19, C20, M17 | An editorial review is a story of a review type tied to one pin, with writer and check date (§11.3). No new route |
+| S3 | Comments and moderation | M18, M23 | Story comments need sign-in, show at once, hide only, no delete, no report button (G7, AC47). Product rating hide is refused until O33. Guests do not review places |
+| S5 | Tour information | C08, C09, M13, N19 | Free information, route on a map, one PDF, no price or departure. Related keepsakes without price (AC50, AC51) |
+| S8 | Cart and checkout | C04, C06, C07, N06 | Server cart, one cart can become several orders, repeat-safe submit (AC80 to AC83). Guest cart without sign-in is O41 |
+| S9 | Order tracking | C15, M03, M04 | Partner-path states: placed, preparing, on the way, with partner, delivered. Payment label separate (§10.4) |
+| S10 | Partner handovers | N07 to N09, N10 to N12, N06, M04, M16 | Handover record, repeating rule, receipt, no-show, commission at completion (ADR-024, ADR-025, ADR-028) |
+| S0, S10 | Partner account | `invitation.tsx`, `sign-in.tsx`, P01 | Role comes only from an invitation. Self sign-up gives guest only (ADR-019). Report link stays read-only |
+| S11 | Analytics SM-1 to SM-3 | N20, N21, `reports/sales.tsx`, `reports/guests.tsx` | First-party events with no persistent id (ADR-007, ADR-020). Cookie consent for tracking is open (O32, O14) |
+| S5, S9 | Hidden booking | 11 route files named by ADR-012, plus 2 more (ruling D2) | Removed with their entry points. Domain rules stay compiled (ADR-012) |
+| S6 | Advice form | C21, M19 | AI chat becomes a fixed-question form with review step and e-mail required (G10, AC34) |
 
 ## Open items that block a screen
 
@@ -338,6 +373,8 @@ Run on 2026-10-26 with `python3` (the script is not committed).
 - Route files under `front-end/src/routes`: 89. Of those, 17 are `lab.*` and 72 are inventoried. Each of the 72 appears exactly once in table 1, matched as a fixed string. No file is missing or extra.
 - Every AC id in tables 1 and 2 exists in the PRD §15 tables. The twelve removed ids (AC06, AC07, AC20 to AC23, AC27, AC28, AC35, AC40, AC56, AC57) are absent from those tables, so a citation would have failed.
 - Every O id, ADR id, and PRD section cited exists. Every new screen cites a PRD section, and every one except N01 also cites an AC.
+
+The 28.10.2026 amendment is checked by `scripts/build-screen-inventory.mjs`: every row has a known slice and UI work value, the slice index counts match the rows, and each slice's "Blocked by" matches the "Blocks" column of the open items table. The slice and UI work assignments themselves are judgement calls, not owner decisions.
 
 The 27.10.2026 amendment was checked by reading the decision record. The counts were updated by hand. The AC ids AC85 to AC90 exist in the PRD (section 15) and were read against it.
 
