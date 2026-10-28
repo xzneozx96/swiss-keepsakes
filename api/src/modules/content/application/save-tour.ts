@@ -6,11 +6,12 @@ import type { TourDeps } from './tour-deps.ts'
 import { tourPublishGaps } from '@sk/domain/content'
 import { mayManageContent } from './access.ts'
 import { fail, ok } from './failure.ts'
+import { mediaQueues } from './media-queues.ts'
 import { checkTourMedia } from './tour-media.ts'
 
 // A save is a PATCH. On a published tour the database CHECK still reads the stored slug and PDF and the published
 // title, so the use case runs the same rule on the merged result and names the gap.
-export function makeSaveTour<T>({ uow, tours, media, clock }: TourDeps<T>) {
+export function makeSaveTour<T>({ uow, tours, media, clock, jobs, graceHours }: TourDeps<T>) {
   return async (actor: Actor, storeId: string, tourId: string, ifMatch: number, changes: TourChanges, _requestId: string | null): Promise<Result<TourGuide>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -32,7 +33,13 @@ export function makeSaveTour<T>({ uow, tours, media, clock }: TourDeps<T>) {
         if (gaps.length > 0)
           return fail({ reason: 'incomplete', gaps })
       }
-      return ok(await tours.save(tx, tour, changes, clock.now()))
+      const now = clock.now()
+      const saved = await tours.save(tx, tour, changes, now)
+      // Replacing a PDF retires the old file after the grace period. Clearing is not a replacement, and an
+      // unchanged id still points at a file in use.
+      if (tour.pdfMediaId && changes.pdfMediaId && changes.pdfMediaId !== tour.pdfMediaId)
+        await jobs.send(tx, mediaQueues.retire, { storeId, mediaId: tour.pdfMediaId }, { startAfter: new Date(now.getTime() + graceHours * 3_600_000) })
+      return ok(saved)
     })
   }
 }

@@ -87,4 +87,21 @@ describe('[E2.7] the media job on real pg-boss', () => {
     expect(t.storage.objects('uploads').size).toBe(0)
     expect(t.alerts).toEqual([])
   })
+
+  it('[E2.7] the sweep runs from an hourly schedule, and a due retire job runs the handler', async () => {
+    const t = await setup(await jpegWithGps(100, 100))
+    const retired: object[] = []
+    await startMediaWorkers(jobs.boss, {
+      processMedia: async () => {},
+      failMedia: async () => {},
+      retireMedia: async job => void retired.push(job),
+      sweepMedia: async () => ({ removed: 0 }),
+    }, t.queues)
+
+    await t.uow.run(tx => createJobQueue(jobs.boss).send(tx, t.queues.retire, { storeId: t.storeId, mediaId: t.mediaId }, { startAfter: new Date(Date.now() - 1000) }))
+    await until(() => retired.length > 0)
+
+    expect(retired).toEqual([{ storeId: t.storeId, mediaId: t.mediaId }])
+    expect((await jobs.boss.getSchedules(t.queues.sweep)).map(row => row.cron)).toEqual(['17 * * * *'])
+  })
 })

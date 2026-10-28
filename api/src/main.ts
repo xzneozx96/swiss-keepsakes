@@ -10,7 +10,7 @@ import { createPublicReadRepository } from './modules/content/adapters/public-re
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeRetireMedia, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -104,6 +104,8 @@ async function main() {
     await startMediaWorkers(jobs.boss, {
       processMedia: makeProcessMedia({ uow, media: createMediaRepository(), storage, clock: systemClock }),
       failMedia: makeFailMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, alert: createMediaLogAlert(logger) }),
+      retireMedia: makeRetireMedia({ uow, media: createMediaRepository(), storage, clock: systemClock }),
+      sweepMedia: makeSweepUploads({ storage, clock: systemClock }),
     })
     const sentMail = createSentMailRepository()
     if (!config.smtp)
@@ -166,7 +168,7 @@ async function main() {
     }
     const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit, clock: systemClock }
     const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), audit, clock: systemClock }
-    const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock }
+    const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock, jobs: createJobQueue(jobs.boss), graceHours: config.MEDIA_GRACE_HOURS }
     const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock }
     const writeUseCases = guardUseCases({
       createPin: makeCreatePin(pinDeps),

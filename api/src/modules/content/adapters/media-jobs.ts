@@ -27,9 +27,8 @@ export async function createMediaQueues(boss: PgBoss, queues: MediaQueues = medi
 export interface MediaHandlers {
   processMedia: (job: MediaJob) => Promise<void>
   failMedia: (job: MediaJob) => Promise<void>
-  // Added with the retire and sweep jobs.
   retireMedia?: (job: MediaJob) => Promise<void>
-  sweepMedia?: () => Promise<void>
+  sweepMedia?: () => Promise<unknown>
 }
 
 // Only the worker roles call this. pg-boss hands each handler one job at a time (batchSize 1, the default); a
@@ -53,5 +52,7 @@ export async function startMediaWorkers(boss: PgBoss, { processMedia, failMedia,
     await boss.work(queues.sweep, async () => {
       await sweepMedia()
     })
+    // Hourly. schedule() upserts by queue name, so every start leaves one schedule.
+    await boss.schedule(queues.sweep, '17 * * * *')
   }
 }
