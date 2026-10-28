@@ -124,6 +124,26 @@ describe('[E2.6] pin repository on the real database', () => {
     expect(await pinRow(pin.id)).toMatchObject({ status: 'published', row_version: 4, slug: { en }, published: { name: { en: 'Chapel Bridge' } } })
   })
 
+  it('[E2.6][AC30] a draft pin with a stored slug publishes with the body slug as its live slug', async () => {
+    const s = setup()
+    const stored = slug()
+    const chosen = slug()
+    const pin = await draft(s, { slug: { en: stored } })
+    const result = await s.use.publish(s.actor, s.store, pin.id, 1, null, { en: chosen })
+    expect(result).toMatchObject({ ok: true, value: { status: 'published', slug: { en: chosen } } })
+    expect(await pinRow(pin.id)).toMatchObject({ status: 'published', slug: { en: chosen } })
+  })
+
+  it('[E2.6][AC68] a live pin refuses a body slug that renames it as slug-conflict and the row and its version are unchanged', async () => {
+    const s = setup()
+    const pin = await draft(s)
+    await s.use.publish(s.actor, s.store, pin.id, 1, null)
+    const before = await pinRow(pin.id)
+    expect(await s.use.publish(s.actor, s.store, pin.id, 2, null, { en: slug() })).toEqual({ ok: false, reason: 'slug-conflict' })
+    expect(await pinRow(pin.id)).toEqual(before)
+    expect(before).toMatchObject({ status: 'published', row_version: 2 })
+  })
+
   it('[E2.6][AC68] removing the last complete language is refused naming title and the pin is unchanged', async () => {
     const s = setup()
     const en = slug()

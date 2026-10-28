@@ -171,12 +171,35 @@ describe('pin use cases', () => {
     expect(s.pins.rows.get(pin.id)).toBe(before)
   })
 
-  it('[E2.6][AC30] a body slug never renames a stored slug: a live English pin republished with {en: renamed} keeps its slug', async () => {
+  it('[E2.6][AC30] a never-published pin takes the body slug over the stored one for the language it names', async () => {
+    const s = setup()
+    const pin = await created(s, { ...complete, title: { en: 'A', de: 'B' }, slug: { en: 'old-a', de: 'old-b' } })
+    const result = await s.publish(owner, store, pin.id, 1, null, { en: 'new-a' })
+    expect(result).toMatchObject({ ok: true, value: { slug: { en: 'new-a', de: 'old-b' } } })
+  })
+
+  it('[E2.6][AC68] a live pin refuses a body slug that differs from its stored one as slug-conflict and stays unchanged', async () => {
     const s = setup()
     const pin = await created(s)
     await s.publish(owner, store, pin.id, 1, null)
-    const result = await s.publish(owner, store, pin.id, 2, null, { en: 'renamed' })
-    expect(result).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
+    const before = s.pins.rows.get(pin.id)
+    expect(await s.publish(owner, store, pin.id, 2, null, { en: 'renamed' })).toEqual({ ok: false, reason: 'slug-conflict' })
+    expect(s.pins.rows.get(pin.id)).toEqual(before)
+  })
+
+  it('[E2.6][AC68] a hidden pin refuses a different body slug as slug-conflict', async () => {
+    const s = setup()
+    const pin = await created(s)
+    await s.publish(owner, store, pin.id, 1, null)
+    await s.hide(owner, store, pin.id, 2, null)
+    expect(await s.publish(owner, store, pin.id, 3, null, { en: 'renamed' })).toEqual({ ok: false, reason: 'slug-conflict' })
+  })
+
+  it('[E2.6][AC30] a live pin accepts a body slug equal to its stored one', async () => {
+    const s = setup()
+    const pin = await created(s)
+    await s.publish(owner, store, pin.id, 1, null)
+    expect(await s.publish(owner, store, pin.id, 2, null, { en: 'chapel-bridge' })).toMatchObject({ ok: true, value: { slug: { en: 'chapel-bridge' } } })
   })
 
   it('[E2.6][AC30] a draft whose stored slug misses a title language is a slug gap, and a body slug fills the missing language', async () => {

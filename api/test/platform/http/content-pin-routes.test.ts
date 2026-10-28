@@ -162,6 +162,15 @@ describe('[E2.6] publish, hide and delete answer the editor in its own words', (
     expect(await response.json()).toMatchObject({ type: 'publish-incomplete', errors: [{ in: 'body', path: 'slug' }] })
   })
 
+  it('[E2.6][AC68] a publish that renames a live slug answers 409 slug-conflict', async () => {
+    const app = setup({ publishPin: async () => ({ ok: false, reason: 'slug-conflict' }) })
+
+    const response = await send(app, 'POST', `${pin}/publish`, { 'If-Match': '1' }, { slug: { en: 'renamed' } })
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ type: 'slug-conflict', status: 409 })
+  })
+
   it('[E2.6][AC30] publish reads an optional slug body: none, a slug for a new language, and nothing else', async () => {
     const seen: unknown[] = []
     const app = setup({ publishPin: async (_actor, _storeId, _id, ifMatch, _requestId, slug) => {

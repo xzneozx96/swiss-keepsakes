@@ -35,7 +35,7 @@ const slugMapSchema = z.strictObject({
 // What a pin publish may carry: the web address for each language the publish adds (ADR-015).
 export const pinPublishBodySchema = z.strictObject({
   slug: slugMapSchema.optional(),
-}).meta({ id: 'PinPublishBody', description: 'Optional. The slug is the web address for a language the publish adds; a language already live keeps its own' })
+}).meta({ id: 'PinPublishBody', description: 'Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save' })
 
 // A list of ids with no repeats: the link tables key on (owner, id).
 function idList(max: number) {
