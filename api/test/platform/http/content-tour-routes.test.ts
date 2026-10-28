@@ -188,6 +188,47 @@ describe('[E2.6] the tour write routes', () => {
     expect(seen).toEqual([{ storeId: lucerne, id: tourId, ifMatch: 1 }, { storeId: lucerne, id: tourId, ifMatch: 2 }])
   })
 
+  it('[E2.6][AC68] a publish that renames a live slug answers 409 slug-conflict', async () => {
+    const app = setup({ publishTour: async () => ({ ok: false, reason: 'slug-conflict' }) })
+
+    const response = await send(app, 'POST', `${tour}/publish`, { 'If-Match': '1' }, { slug: { en: 'renamed' } })
+
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ type: 'slug-conflict', status: 409 })
+  })
+
+  it('[E2.6][AC30] publish reads an optional slug body: none, a slug for a new language, and nothing else', async () => {
+    const seen: unknown[] = []
+    const app = setup({ publishTour: async (_actor, _storeId, _id, ifMatch, _requestId, slug) => {
+      seen.push(slug)
+      return { ok: true, value: { ...fakeTour, status: 'published', rowVersion: ifMatch + 1 } }
+    } })
+
+    expect((await send(app, 'POST', `${tour}/publish`, { 'If-Match': '1' })).status).toBe(200)
+    expect((await send(app, 'POST', `${tour}/publish`, { 'If-Match': '1' }, {})).status).toBe(200)
+    expect((await send(app, 'POST', `${tour}/publish`, { 'If-Match': '1' }, { slug: { de: 'altstadtrundgang' } })).status).toBe(200)
+    expect(seen).toEqual([undefined, undefined, { de: 'altstadtrundgang' }])
+  })
+
+  it.each([
+    ['a malformed slug', { slug: { de: 'Not A Slug' } }],
+    ['an empty slug map', { slug: {} }],
+    ['an unknown key in the slug', { slug: { fr: 'pont' } }],
+    ['an unknown key in the body', { slug: { de: 'ok' }, title: { en: 'x' } }],
+  ])('[E2.6][AC68] publish with %s answers 400 and the use case is not called', async (_name, body) => {
+    let calls = 0
+    const app = setup({ publishTour: async () => {
+      calls++
+      return { ok: false, reason: 'stale' }
+    } })
+
+    const response = await send(app, 'POST', `${tour}/publish`, { 'If-Match': '1' }, body)
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ type: 'validation-failed' })
+    expect(calls).toBe(0)
+  })
+
   it('[E2.6] unpublish answers 200 with status draft, and 409 not-published for a draft', async () => {
     const app = setup({ unpublishTour: async (_actor, _storeId, _id, ifMatch) => ifMatch === 1
       ? { ok: false, reason: 'not-published' }

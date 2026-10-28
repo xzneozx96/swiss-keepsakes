@@ -1537,7 +1537,11 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TourPublishBody"];
+                };
+            };
             responses: {
                 /** @description The tour guide is live with its draft */
                 200: {
@@ -2325,6 +2329,13 @@ export interface components {
                 text?: components["schemas"]["LocalizedLongText"];
                 title?: components["schemas"]["LocalizedText"];
             }[];
+        };
+        /** @description Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save */
+        TourPublishBody: {
+            slug?: {
+                de?: string;
+                en?: string;
+            };
         };
     };
     responses: never;

@@ -124,8 +124,8 @@ export interface TourRepository<T> {
   findForUpdate: (tx: T, storeId: string, tourId: string) => Promise<TourGuide | undefined>
   // Writes the typed columns and the draft, replaces the stops (positions from 1) and keepsake links when given, bumps row_version.
   save: (tx: T, tour: TourGuide, changes: TourChanges, at: Date) => Promise<TourGuide>
-  // draft becomes published and is cleared.
-  publish: (tx: T, tour: TourGuide, at: Date) => Promise<TourGuide>
+  // draft becomes published and is cleared; the slug is written in the same update.
+  publish: (tx: T, tour: TourGuide, at: Date, slug: Localized) => Promise<TourGuide>
   // status goes back to draft; the published text stays.
   unpublish: (tx: T, tour: TourGuide, at: Date) => Promise<TourGuide>
   remove: (tx: T, storeId: string, tourId: string) => Promise<boolean>

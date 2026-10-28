@@ -1,23 +1,23 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { TourGuide } from '@sk/domain/content'
+import type { Localized, TourGuide } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { TourChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { tourSchema, tourWriteBodySchema } from '@sk/api-contract'
+import { tourPublishBodySchema, tourSchema, tourWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
-import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
+import { acceptEmptyBody, etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
 import { tourChanges, tourView } from './tour-view.ts'
 
 // What the tour routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface TourUseCases {
   createTour: (actor: Actor, storeId: string, changes: TourChanges, requestId: string | null) => Promise<Result<TourGuide>>
   saveTour: (actor: Actor, storeId: string, tourId: string, ifMatch: number, changes: TourChanges, requestId: string | null) => Promise<Result<TourGuide>>
-  publishTour: (actor: Actor, storeId: string, tourId: string, ifMatch: number, requestId: string | null) => Promise<Result<TourGuide>>
+  publishTour: (actor: Actor, storeId: string, tourId: string, ifMatch: number, requestId: string | null, slug?: Localized) => Promise<Result<TourGuide>>
   unpublishTour: (actor: Actor, storeId: string, tourId: string, ifMatch: number, requestId: string | null) => Promise<Result<TourGuide>>
   deleteTour: (actor: Actor, storeId: string, tourId: string, requestId: string | null) => Promise<Result<{ id: string }>>
 }
@@ -47,7 +47,8 @@ const saveTourRoute = createRoute({
 const publishTourRoute = createRoute({
   method: 'post',
   path: '/api/store/{storeId}/tours/{tourId}/publish',
-  request: { params: tourParams, ...withIfMatch },
+  middleware: [acceptEmptyBody],
+  request: { params: tourParams, ...withIfMatch, body: { required: false, content: json(tourPublishBodySchema) } },
   responses: {
     200: { description: 'The tour guide is live with its draft', headers: etagHeaders, content: json(tourSchema) },
     ...problemResponses,
@@ -98,7 +99,7 @@ export function registerTourRoutes(app: OpenAPIHono<AppEnv>, useCases: TourUseCa
     const ifMatch = readIfMatch(c)
     if (!ifMatch.ok)
       return ifMatch.response
-    const result = await useCases.publishTour(c.get('actor'), c.get('store').storeId, c.req.valid('param').tourId, ifMatch.version, c.get('requestId'))
+    const result = await useCases.publishTour(c.get('actor'), c.get('store').storeId, c.req.valid('param').tourId, ifMatch.version, c.get('requestId'), c.req.valid('json').slug)
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(tourView(result.value), 200, etag(result.value))

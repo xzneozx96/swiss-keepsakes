@@ -260,7 +260,7 @@ describe('[E2.6] content write schemas', () => {
   })
 
   it('[E2.6] every new problem code is in problemTypes', () => {
-    for (const code of ['precondition-failed', 'precondition-required', 'publish-incomplete', 'media-retired', 'media-invalid', 'reference-invalid', 'content-slug-taken', 'published-cannot-be-deleted', 'published-version-cannot-move', 'version-exists', 'not-published', 'content-in-use'])
+    for (const code of ['precondition-failed', 'precondition-required', 'publish-incomplete', 'media-retired', 'media-invalid', 'reference-invalid', 'content-slug-taken', 'slug-conflict', 'published-cannot-be-deleted', 'published-version-cannot-move', 'version-exists', 'not-published', 'content-in-use'])
       expect(problemTypes).toContain(code)
   })
 })

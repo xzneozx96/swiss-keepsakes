@@ -1,7 +1,6 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
 import type { Localized, Pin } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
-import type { Context, Next } from 'hono'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { PinChanges } from '../ports.ts'
@@ -12,7 +11,7 @@ import { problemResponses, requestIdHeader } from '../../../platform/http/respon
 import { readIfMatch } from './if-match.ts'
 import { pinChanges, pinView } from './pin-view.ts'
 import { failureProblem } from './problems.ts'
-import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
+import { acceptEmptyBody, etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
 
 // What the pin routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface PinUseCases {
@@ -44,19 +43,6 @@ const savePinRoute = createRoute({
     ...problemResponses,
   },
 })
-
-// The publish body is optional. A client that sets the JSON Content-Type and sends nothing is sent on as one that set
-// no Content-Type, which the validator lets through, instead of a 400 for an empty JSON document (as the identity
-// module's acceptEmptyBody does).
-async function acceptEmptyBody(c: Context<AppEnv>, next: Next) {
-  if (c.req.header('Content-Type') !== undefined && (await c.req.arrayBuffer()).byteLength === 0) {
-    const headers = new Headers(c.req.raw.headers)
-    headers.delete('Content-Type')
-    // The body is read already, and a Request cannot be built from one that was, so build it from the parts.
-    c.req.raw = new Request(c.req.url, { method: c.req.method, headers })
-  }
-  await next()
-}
 
 const publishPinRoute = createRoute({
   method: 'post',

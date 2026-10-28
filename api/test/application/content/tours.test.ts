@@ -122,6 +122,73 @@ describe('tour guide use cases', () => {
     expect(await s.publish(owner, store, tour.id, 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
   })
 
+  it('[E2.6][AC30] a never-published tour takes the body slug over the stored one', async () => {
+    const s = setup()
+    const tour = await created(s)
+    expect(await s.publish(owner, store, tour.id, 1, null, { en: 'new-walk' })).toMatchObject({ ok: true, value: { slug: { en: 'new-walk' } } })
+  })
+
+  it('[E2.6][AC30] a live English tour gains German: the draft adds the title and the publish carries the German slug', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.save(owner, store, tour.id, 2, { draft: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } } }, null)
+    expect(await s.publish(owner, store, tour.id, 3, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
+    const result = await s.publish(owner, store, tour.id, 3, null, { de: 'altstadtrundgang' })
+    expect(result).toMatchObject({ ok: true, value: { slug: { en: 'old-town-walk', de: 'altstadtrundgang' }, published: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } }, draft: null } })
+  })
+
+  it('[E2.6][AC30] a draft that drops German takes the German slug with it and English stays live', async () => {
+    const s = setup()
+    const tour = await created(s, { ...complete, slug: { en: 'a', de: 'b' }, draft: { ...doc('A'), title: { en: 'A', de: 'B' } } })
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.save(owner, store, tour.id, 2, { draft: { title: { en: 'A' } } }, null)
+    expect(await s.publish(owner, store, tour.id, 3, null)).toMatchObject({ ok: true, value: { slug: { en: 'a' }, published: { title: { en: 'A' } } } })
+  })
+
+  it('[E2.6][AC68] a live tour refuses a body slug that differs from its stored one as slug-conflict and stays unchanged', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    const before = s.tours.rows.get(tour.id)
+    expect(await s.publish(owner, store, tour.id, 2, null, { en: 'renamed' })).toEqual({ ok: false, reason: 'slug-conflict' })
+    expect(s.tours.rows.get(tour.id)).toBe(before)
+    expect(await s.publish(owner, store, tour.id, 2, null, { en: 'old-town-walk' })).toMatchObject({ ok: true, value: { slug: { en: 'old-town-walk' } } })
+  })
+
+  it('[E2.6][AC68] a hidden tour refuses a different body slug as slug-conflict', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.unpublish(owner, store, tour.id, 2, null)
+    expect(await s.publish(owner, store, tour.id, 3, null, { en: 'renamed' })).toEqual({ ok: false, reason: 'slug-conflict' })
+  })
+
+  it('[E2.6][AC68] a live tour whose draft drops its last title language is incomplete naming title and unchanged', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.save(owner, store, tour.id, 2, { draft: { title: {} } }, null)
+    const before = s.tours.rows.get(tour.id)
+    expect(await s.publish(owner, store, tour.id, 3, null)).toMatchObject({ ok: false, reason: 'incomplete', gaps: expect.arrayContaining(['title']) })
+    expect(s.tours.rows.get(tour.id)).toBe(before)
+  })
+
+  it('[E2.6][AC68] a conflicting body slug for a language the draft is dropping is still slug-conflict', async () => {
+    const s = setup()
+    const tour = await created(s, { ...complete, slug: { en: 'a', de: 'b' }, draft: { ...doc('A'), title: { en: 'A', de: 'B' } } })
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.save(owner, store, tour.id, 2, { draft: { title: { en: 'A' } } }, null)
+    expect(await s.publish(owner, store, tour.id, 3, null, { de: 'other' })).toEqual({ ok: false, reason: 'slug-conflict' })
+  })
+
+  it('[E2.6] a draft title that adds a language does not block a PATCH of a live tour that leaves the slug alone', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    expect(await s.save(owner, store, tour.id, 2, { draft: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } } }, null)).toMatchObject({ ok: true })
+  })
+
   it('[E2.6] clearing the PDF of a published tour is incomplete naming pdf', async () => {
     const s = setup()
     const tour = await created(s)

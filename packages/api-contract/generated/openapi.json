@@ -2489,6 +2489,29 @@
           }
         },
         "type": "object"
+      },
+      "TourPublishBody": {
+        "additionalProperties": false,
+        "description": "Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save",
+        "properties": {
+          "slug": {
+            "additionalProperties": false,
+            "properties": {
+              "de": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
       }
     }
   },
@@ -4428,6 +4451,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TourPublishBody"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {

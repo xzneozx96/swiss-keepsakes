@@ -62,8 +62,8 @@ async function media(store: string, kind: 'image' | 'pdf', status: 'ready' | 're
 }
 
 async function tourRow(id: string) {
-  const { rows } = await pool.query<{ status: string, row_version: number, pdf_media_id: string | null }>(
-    'select status, row_version, pdf_media_id from content.tours where id = $1',
+  const { rows } = await pool.query<{ status: string, row_version: number, pdf_media_id: string | null, slug: Record<string, string> | null, published: { title: Record<string, string> } | null }>(
+    'select status, row_version, pdf_media_id, slug, published from content.tours where id = $1',
     [id],
   )
   return rows[0]
@@ -102,6 +102,73 @@ describe('[E2.6] tour guide repository on the real database', () => {
     const unpublished = await s.use.unpublish(s.actor, s.store, tour.id, 2, randomUUID())
     expect(unpublished).toMatchObject({ ok: true, value: { status: 'draft', rowVersion: 3, published: { title: { en: 'Old town walk' } } } })
     expect(await count(pool, `select count(*) from platform.audit_log where entity = 'tour' and entity_id = $1 and action = 'unpublished'`, [tour.id])).toBe(1)
+  })
+
+  it('[E2.6][AC30] a live English tour gains German: the slug column and the published text change in one publish', async () => {
+    const s = setup()
+    const en = slug()
+    const de = slug()
+    const tour = await draft(s, { slug: { en } })
+    await s.use.publish(s.actor, s.store, tour.id, 1, null)
+    await s.use.save(s.actor, s.store, tour.id, 2, { draft: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } } }, null)
+    const result = await s.use.publish(s.actor, s.store, tour.id, 3, randomUUID(), { de })
+    expect(result).toMatchObject({ ok: true, value: { status: 'published', slug: { en, de }, published: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } }, draft: null } })
+    expect(await tourRow(tour.id)).toMatchObject({ status: 'published', row_version: 4, slug: { en, de }, published: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } } })
+  })
+
+  it('[E2.6][AC30] a live English and German tour drops German: the slug goes with it, English stays live, no check error', async () => {
+    const s = setup()
+    const en = slug()
+    const tour = await draft(s, { slug: { en, de: slug() }, draft: { ...doc('Old town walk'), title: { en: 'Old town walk', de: 'Altstadtrundgang' } } })
+    await s.use.publish(s.actor, s.store, tour.id, 1, null)
+    await s.use.save(s.actor, s.store, tour.id, 2, { draft: { title: { en: 'Old town walk' } } }, null)
+    const result = await s.use.publish(s.actor, s.store, tour.id, 3, null)
+    expect(result).toMatchObject({ ok: true, value: { status: 'published', slug: { en }, published: { title: { en: 'Old town walk' } } } })
+    expect(await tourRow(tour.id)).toMatchObject({ status: 'published', row_version: 4, slug: { en }, published: { title: { en: 'Old town walk' } } })
+  })
+
+  it('[E2.6][AC30] a never-published tour publishes with the body slug as its live slug', async () => {
+    const s = setup()
+    const chosen = slug()
+    const tour = await draft(s)
+    const result = await s.use.publish(s.actor, s.store, tour.id, 1, null, { en: chosen })
+    expect(result).toMatchObject({ ok: true, value: { status: 'published', slug: { en: chosen } } })
+    expect(await tourRow(tour.id)).toMatchObject({ status: 'published', slug: { en: chosen } })
+  })
+
+  it('[E2.6][AC68] a live tour refuses a body slug that renames it as slug-conflict and the row and its version are unchanged', async () => {
+    const s = setup()
+    const tour = await draft(s)
+    await s.use.publish(s.actor, s.store, tour.id, 1, null)
+    const before = await tourRow(tour.id)
+    expect(await s.use.publish(s.actor, s.store, tour.id, 2, null, { en: slug() })).toEqual({ ok: false, reason: 'slug-conflict' })
+    expect(await tourRow(tour.id)).toEqual(before)
+    expect(before).toMatchObject({ status: 'published', row_version: 2 })
+  })
+
+  it('[E2.6][AC68] removing the last title language of a live tour is refused naming title and the tour is unchanged', async () => {
+    const s = setup()
+    const en = slug()
+    const tour = await draft(s, { slug: { en } })
+    await s.use.publish(s.actor, s.store, tour.id, 1, null)
+    await s.use.save(s.actor, s.store, tour.id, 2, { draft: { title: {} } }, null)
+    const before = await tourRow(tour.id)
+    expect(await s.use.publish(s.actor, s.store, tour.id, 3, null)).toMatchObject({ ok: false, reason: 'incomplete', gaps: expect.arrayContaining(['title']) })
+    expect(await tourRow(tour.id)).toEqual(before)
+    expect(before).toMatchObject({ row_version: 3, slug: { en }, published: { title: { en: 'Old town walk' } } })
+  })
+
+  it('[E2.6][AC68] adding German with a slug another tour owns is slug-taken and the tour is unchanged', async () => {
+    const s = setup()
+    const taken = slug()
+    await draft(s, { slug: { en: slug(), de: taken }, draft: { ...doc('Lake walk'), title: { en: 'Lake walk', de: 'Seespaziergang' } } })
+    const tour = await draft(s)
+    await s.use.publish(s.actor, s.store, tour.id, 1, null)
+    await s.use.save(s.actor, s.store, tour.id, 2, { draft: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } } }, null)
+    const before = await tourRow(tour.id)
+    expect(await s.use.publish(s.actor, s.store, tour.id, 3, null, { de: taken })).toEqual({ ok: false, reason: 'slug-taken' })
+    expect(await tourRow(tour.id)).toEqual(before)
+    expect(before).toMatchObject({ status: 'published', row_version: 3 })
   })
 
   it('[E2.6] slug and title languages that differ are incomplete before the database sees them', async () => {
