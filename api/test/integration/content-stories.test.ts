@@ -17,6 +17,7 @@ import { makeUnpublishStoryVersion } from '../../src/modules/content/application
 import { createAuditLog } from '../../src/platform/audit.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createManualClock } from '../support/manual-clock.ts'
+import { createContentHttp } from './content-http.ts'
 import { count, openTestDatabase } from './support.ts'
 
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 120_000 })
@@ -303,4 +304,176 @@ describe('[E2.6] story repository on the real database', () => {
     const error2 = await thrown(() => s.uow.run(tx => pins.remove(tx, s.store, pin.id)))
     expect(mapDatabaseError(error2)).toEqual({ reason: 'in-use' })
   })
+})
+
+// The story routes over the real app: real sessions, the real Idempotency-Key middleware and the real database.
+describe('[E2.6] the story routes over the real app and the database', () => {
+  // Every sign-in is two round trips and several statements, which is slow against a Neon branch.
+  const env = createContentHttp({ pool, db })
+  const timeout = 120_000
+
+  async function auditRows(entityId: string) {
+    return (await pool.query<{ entity: string, action: string, store_id: string, request_id: string }>(
+      `select entity, action, store_id, request_id from platform.audit_log where entity_id = $1 order by at, id`,
+      [entityId],
+    )).rows
+  }
+
+  async function groupAndVersion(staff: Awaited<ReturnType<typeof env.storeWithStaff>>, body: object = { slug: slug(), draft: doc() }) {
+    const { owner, groups } = staff
+    const created = await (await env.call(groups, { method: 'POST', headers: owner.headers, body: {} })).json() as { id: string }
+    const made = await env.call(`${groups}/${created.id}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'en', ...body } })
+    return { groupId: created.id, versionPath: `${groups}/${created.id}/versions/en`, made }
+  }
+
+  it('[E2.6] AC-1 end to end for a story version with real ETags', async () => {
+    const staff = await env.storeWithStaff()
+    const { owner, groups } = staff
+
+    const createdGroup = await env.call(groups, { method: 'POST', headers: owner.headers, body: { interests: ['food-drink'] } })
+    expect(createdGroup.status).toBe(201)
+    expect(createdGroup.headers.get('ETag')).toBe('"1"')
+    const groupBody = await createdGroup.json() as { id: string }
+    expect(groupBody).toMatchObject({ kind: 'story', interests: ['food-drink'], rowVersion: 1 })
+
+    const createdVersion = await env.call(`${groups}/${groupBody.id}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'en', slug: slug(), draft: doc() } })
+    expect(createdVersion.status).toBe(201)
+    expect(createdVersion.headers.get('ETag')).toBe('"1"')
+    const path = `${groups}/${groupBody.id}/versions/en`
+
+    const saved = await env.call(path, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': createdVersion.headers.get('ETag')! }, body: { draft: doc({ title: 'Second title' }) } })
+    expect(saved.status).toBe(200)
+    expect(saved.headers.get('ETag')).toBe('"2"')
+    expect(await saved.json()).toMatchObject({ status: 'draft', rowVersion: 2, draft: { title: 'Second title' } })
+
+    const stale = await env.call(path, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: { draft: doc({ title: 'Lost' }) } })
+    expect(stale.status).toBe(412)
+    expect(stale.headers.get('Content-Type')).toBe('application/problem+json')
+    expect(await stale.json()).toMatchObject({ type: 'precondition-failed' })
+    const none = await env.call(path, { method: 'PATCH', headers: owner.headers, body: { draft: doc({ title: 'Lost' }) } })
+    expect(none.status).toBe(428)
+    const bad = await env.call(path, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': 'abc' }, body: {} })
+    expect(bad.status).toBe(400)
+    expect(await versionRow(groupBody.id)).toMatchObject({ row_version: 2, draft: { title: 'Second title' } })
+
+    const savedGroup = await env.call(`${groups}/${groupBody.id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: { stayTag: 'multi_day' } })
+    expect(savedGroup.status).toBe(200)
+    expect(savedGroup.headers.get('ETag')).toBe('"2"')
+    const second = await env.call(`${groups}/${groupBody.id}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'en' } })
+    expect(second.status).toBe(409)
+    expect(await second.json()).toMatchObject({ type: 'version-exists' })
+  }, timeout)
+
+  it('[E2.6][AC30] publish end to end writes an audit row, and the other language is untouched', async () => {
+    const staff = await env.storeWithStaff()
+    const { groupId, versionPath } = await groupAndVersion(staff)
+
+    const published = await env.call(`${versionPath}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
+
+    expect(published.status).toBe(200)
+    expect(published.headers.get('ETag')).toBe('"2"')
+    expect(await published.json()).toMatchObject({ language: 'en', status: 'published', draft: null, published: { title: 'A day on the lake' }, rowVersion: 2 })
+    const [row, ...rest] = await auditRows(groupId)
+    expect(rest).toEqual([])
+    expect(row).toMatchObject({ entity: 'story-version', action: 'published', store_id: staff.storeId })
+    expect(row?.request_id).toMatch(/^[0-9a-f-]{36}$/)
+    expect(await count(pool, 'select count(*) from content.story_versions where group_id = $1', [groupId])).toBe(1)
+
+    const unpublished = await env.call(`${versionPath}/unpublish`, { method: 'POST', headers: { ...staff.manager.headers, 'If-Match': '2' } })
+    expect(unpublished.status).toBe(200)
+    expect(await unpublished.json()).toMatchObject({ status: 'draft', rowVersion: 3 })
+    expect((await auditRows(groupId)).map(r => r.action)).toEqual(['published', 'unpublished'])
+  }, timeout)
+
+  it('[E2.6] a publish with no slug answers 422 publish-incomplete and writes no audit row', async () => {
+    const staff = await env.storeWithStaff()
+    const { groupId, versionPath } = await groupAndVersion(staff, { draft: doc() })
+
+    const response = await env.call(`${versionPath}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
+
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ type: 'publish-incomplete', errors: [{ in: 'body', path: 'slug' }] })
+    expect(await auditRows(groupId)).toEqual([])
+  }, timeout)
+
+  it('[E2.6][AC79] deleting a published version answers 409, and a draft one 204', async () => {
+    const staff = await env.storeWithStaff()
+    const { groupId, versionPath } = await groupAndVersion(staff)
+    await env.call(`${versionPath}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
+
+    const refused = await env.call(versionPath, { method: 'DELETE', headers: staff.owner.headers })
+    expect(refused.status).toBe(409)
+    expect(await refused.json()).toMatchObject({ type: 'published-cannot-be-deleted' })
+    expect(await count(pool, 'select count(*) from content.story_versions where group_id = $1', [groupId])).toBe(1)
+
+    const draft = await groupAndVersion(staff)
+    const removed = await env.call(draft.versionPath, { method: 'DELETE', headers: staff.owner.headers })
+    expect(removed.status).toBe(204)
+    expect(await removed.text()).toBe('')
+    expect(await count(pool, 'select count(*) from content.story_versions where group_id = $1', [draft.groupId])).toBe(0)
+  }, timeout)
+
+  it('[E2.6][AC30] a published version answers 409 published-version-cannot-move, a draft one moves', async () => {
+    const staff = await env.storeWithStaff()
+    const { owner, groups } = staff
+    const published = await groupAndVersion(staff)
+    await env.call(`${published.versionPath}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' } })
+    const target = await (await env.call(groups, { method: 'POST', headers: owner.headers, body: {} })).json() as { id: string }
+
+    const refused = await env.call(`${published.versionPath}/move`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '2' }, body: { targetGroupId: target.id } })
+    expect(refused.status).toBe(409)
+    expect(await refused.json()).toMatchObject({ type: 'published-version-cannot-move' })
+
+    const draft = await groupAndVersion(staff)
+    const moved = await env.call(`${draft.versionPath}/move`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' }, body: { targetGroupId: target.id } })
+    expect(moved.status).toBe(200)
+    expect(moved.headers.get('ETag')).toBe('"2"')
+    expect(await moved.json()).toMatchObject({ groupId: target.id, language: 'en', rowVersion: 2 })
+  }, timeout)
+
+  it('[E2.6] AC-6 a retired cover answers 422 media-retired and the draft is unchanged', async () => {
+    const staff = await env.storeWithStaff()
+    const { groupId, versionPath } = await groupAndVersion(staff)
+    const cover = await media(staff.storeId)
+    await pool.query(`update content.media set status = 'retired', retired_at = now() where id = $1`, [cover])
+
+    const response = await env.call(versionPath, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': '1' }, body: { draft: doc({ coverMediaId: cover }) } })
+
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ type: 'media-retired' })
+    expect(await versionRow(groupId)).toMatchObject({ row_version: 1, draft: { coverMediaId: null } })
+  }, timeout)
+
+  it('[E2.6] AC-7 the other store\'s owner gets 403 and a group of another store is 404 through my store', async () => {
+    const lucerne = await env.storeWithStaff()
+    const zug = await env.storeWithStaff()
+    const theirs = await groupAndVersion(zug)
+
+    const refused = await env.call(lucerne.groups, { method: 'POST', headers: zug.owner.headers, body: {} })
+    expect(refused.status).toBe(403)
+    expect((await env.call(lucerne.groups, { method: 'POST', body: {} })).status).toBe(401)
+
+    const through = `${lucerne.groups}/${theirs.groupId}/versions/en`
+    const headers = { ...lucerne.owner.headers, 'If-Match': '1' }
+    expect((await env.call(through, { method: 'PATCH', headers, body: {} })).status).toBe(404)
+    expect((await env.call(`${through}/publish`, { method: 'POST', headers })).status).toBe(404)
+    expect((await env.call(through, { method: 'DELETE', headers: lucerne.owner.headers })).status).toBe(404)
+    expect((await env.call(`${lucerne.groups}/${theirs.groupId}`, { method: 'PATCH', headers, body: {} })).status).toBe(404)
+    expect(await versionRow(theirs.groupId)).toMatchObject({ row_version: 1 })
+  }, timeout)
+
+  it('[E2.6] a replayed publish with the same Idempotency-Key answers the first response and writes one audit row', async () => {
+    const staff = await env.storeWithStaff()
+    const { groupId, versionPath } = await groupAndVersion(staff)
+    const key = `publish-${randomUUID()}`
+    const publish = () => env.call(`${versionPath}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' }, key })
+
+    const first = await publish()
+    const again = await publish()
+
+    expect(first.status).toBe(200)
+    expect(again.headers.get('Idempotent-Replayed')).toBe('true')
+    expect(await again.json()).toEqual(await first.json())
+    expect(await auditRows(groupId)).toHaveLength(1)
+  }, timeout)
 })

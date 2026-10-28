@@ -1,4 +1,4 @@
-import type { Pin } from '@sk/domain/content'
+import type { Pin, StoryGroup, StoryVersion } from '@sk/domain/content'
 import type { ContentUseCases } from '../../src/modules/content/adapters/routes.ts'
 
 export const fakePin: Pin = {
@@ -24,6 +24,36 @@ export const fakePin: Pin = {
   updatedAt: new Date('2026-10-27T08:00:00Z'),
 }
 
+export const fakeStoryGroup: StoryGroup = {
+  id: '0190f0c2-0000-7000-8000-0000000000b1',
+  storeId: '0190f0c2-0000-7000-8000-00000000000a',
+  kind: 'story',
+  subjectPlaceId: null,
+  stayTag: 'both',
+  interests: [],
+  categoryIds: [],
+  placeIds: [],
+  keepsakeProductIds: [],
+  relatedGroupIds: [],
+  rowVersion: 1,
+  createdAt: new Date('2026-10-27T08:00:00Z'),
+  updatedAt: new Date('2026-10-27T08:00:00Z'),
+}
+
+export const fakeStoryVersion: StoryVersion = {
+  groupId: fakeStoryGroup.id,
+  storeId: fakeStoryGroup.storeId,
+  language: 'en',
+  status: 'draft',
+  slug: null,
+  draft: null,
+  published: null,
+  publishedAt: null,
+  rowVersion: 1,
+  createdAt: new Date('2026-10-27T08:00:00Z'),
+  updatedAt: new Date('2026-10-27T08:00:00Z'),
+}
+
 // Stand-ins for the content use cases, for tests of the routes' guards over createApp. Each answers as if the
 // row existed and the caller could do the thing, so a request that gets past the guard is not a 404 or a 403.
 export function createFakeContentUseCases(): ContentUseCases {
@@ -33,5 +63,13 @@ export function createFakeContentUseCases(): ContentUseCases {
     publishPin: async (_actor, storeId, pinId, ifMatch) => ({ ok: true, value: { ...fakePin, storeId, id: pinId, status: 'published', rowVersion: ifMatch + 1 } }),
     hidePin: async (_actor, storeId, pinId, ifMatch) => ({ ok: true, value: { ...fakePin, storeId, id: pinId, status: 'hidden', rowVersion: ifMatch + 1 } }),
     deletePin: async (_actor, _storeId, pinId) => ({ ok: true, value: { id: pinId } }),
+    createStoryGroup: async (_actor, storeId, input) => ({ ok: true, value: { ...fakeStoryGroup, ...input, storeId } }),
+    saveStoryGroup: async (_actor, storeId, groupId, ifMatch, changes) => ({ ok: true, value: { ...fakeStoryGroup, ...changes, storeId, id: groupId, rowVersion: ifMatch + 1 } }),
+    createStoryVersion: async (_actor, storeId, groupId, language, changes) => ({ ok: true, value: { ...fakeStoryVersion, slug: changes.slug ?? null, draft: changes.draft ?? null, storeId, groupId, language } }),
+    saveStoryVersion: async (_actor, storeId, groupId, language, ifMatch, changes) => ({ ok: true, value: { ...fakeStoryVersion, slug: changes.slug ?? null, draft: changes.draft ?? null, storeId, groupId, language, rowVersion: ifMatch + 1 } }),
+    publishStoryVersion: async (_actor, storeId, groupId, language, ifMatch) => ({ ok: true, value: { ...fakeStoryVersion, storeId, groupId, language, status: 'published', rowVersion: ifMatch + 1 } }),
+    unpublishStoryVersion: async (_actor, storeId, groupId, language, ifMatch) => ({ ok: true, value: { ...fakeStoryVersion, storeId, groupId, language, rowVersion: ifMatch + 1 } }),
+    moveStoryVersion: async (_actor, storeId, _groupId, language, ifMatch, targetGroupId) => ({ ok: true, value: { ...fakeStoryVersion, storeId, groupId: targetGroupId, language, rowVersion: ifMatch + 1 } }),
+    deleteStoryVersion: async (_actor, _storeId, groupId, language) => ({ ok: true, value: { groupId, language } }),
   }
 }

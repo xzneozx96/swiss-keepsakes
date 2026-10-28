@@ -941,6 +941,433 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/story-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StoryGroupCreateBody"];
+                };
+            };
+            responses: {
+                /** @description The new story group, with no version yet */
+                201: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryGroup"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/{groupId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    groupId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StoryGroupSaveBody"];
+                };
+            };
+            responses: {
+                /** @description The group with the change saved. A left-out field stays, a list replaces */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryGroup"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/{groupId}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StoryVersionCreateBody"];
+                };
+            };
+            responses: {
+                /** @description The new draft version in that language */
+                201: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryVersion"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/{groupId}/versions/{language}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    language: "en" | "de";
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The version is deleted. Only a version that never held published text can be */
+                204: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    groupId: string;
+                    language: "en" | "de";
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StoryVersionSaveBody"];
+                };
+            };
+            responses: {
+                /** @description The version with the draft saved. A save replaces the whole draft document */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryVersion"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/{groupId}/versions/{language}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    groupId: string;
+                    language: "en" | "de";
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["StoryVersionMoveBody"];
+                };
+            };
+            responses: {
+                /** @description The draft version now belongs to the target group. A published version cannot move */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryVersion"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/{groupId}/versions/{language}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    groupId: string;
+                    language: "en" | "de";
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description This language is live with its draft. Other languages are not touched */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryVersion"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/story-groups/{groupId}/versions/{language}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    groupId: string;
+                    language: "en" | "de";
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The version is a draft again. Its published text is kept */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryVersion"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -1306,6 +1733,202 @@ export interface components {
             /** @enum {string} */
             defaultLanguage?: "en" | "de";
             name?: string;
+        };
+        /** @description The text of one story version. The title may be empty until it is published */
+        StoryDraft: {
+            authorName: string;
+            authorRole: string;
+            /** Format: uuid */
+            coverMediaId: string | null;
+            excerpt: string;
+            intro: string;
+            readMinutes: number | null;
+            sections: {
+                blocks: ({
+                    text: string;
+                    /** @enum {string} */
+                    type: "paragraph";
+                } | {
+                    caption: string;
+                    /** Format: uuid */
+                    mediaId: string;
+                    /** @enum {string} */
+                    type: "image";
+                } | {
+                    caption: string;
+                    title: string;
+                    /** @enum {string} */
+                    type: "video";
+                    youtubeId: string;
+                } | {
+                    caption: string;
+                    /** Format: uuid */
+                    mediaId: string;
+                    title: string;
+                    /** @enum {string} */
+                    type: "audio";
+                })[];
+                heading: string;
+                id: string;
+            }[];
+            title: string;
+        };
+        /** @description The shared part of the language versions of one story */
+        StoryGroup: {
+            categoryIds: string[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            keepsakeProductIds: string[];
+            /** @enum {string} */
+            kind: "story" | "editorial_review";
+            placeIds: string[];
+            relatedGroupIds: string[];
+            rowVersion: number;
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            /** Format: uuid */
+            storeId: string;
+            /** Format: uuid */
+            subjectPlaceId: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        StoryGroupCreateBody: {
+            categoryIds?: string[];
+            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes")[];
+            keepsakeProductIds?: string[];
+            /**
+             * @default story
+             * @enum {string}
+             */
+            kind: "story" | "editorial_review";
+            placeIds?: string[];
+            relatedGroupIds?: string[];
+            /** @enum {string} */
+            stayTag?: "short_stay" | "multi_day" | "both";
+            /** Format: uuid */
+            subjectPlaceId?: string;
+        };
+        StoryGroupSaveBody: {
+            categoryIds?: string[];
+            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes")[];
+            keepsakeProductIds?: string[];
+            placeIds?: string[];
+            relatedGroupIds?: string[];
+            /** @enum {string} */
+            stayTag?: "short_stay" | "multi_day" | "both";
+        };
+        /** @description One language version of a story, with its draft and its published text */
+        StoryVersion: {
+            /** Format: date-time */
+            createdAt: string;
+            draft: {
+                authorName: string;
+                authorRole: string;
+                /** Format: uuid */
+                coverMediaId: string | null;
+                excerpt: string;
+                intro: string;
+                readMinutes: number | null;
+                sections: {
+                    blocks: ({
+                        text: string;
+                        /** @enum {string} */
+                        type: "paragraph";
+                    } | {
+                        caption: string;
+                        /** Format: uuid */
+                        mediaId: string;
+                        /** @enum {string} */
+                        type: "image";
+                    } | {
+                        caption: string;
+                        title: string;
+                        /** @enum {string} */
+                        type: "video";
+                        youtubeId: string;
+                    } | {
+                        caption: string;
+                        /** Format: uuid */
+                        mediaId: string;
+                        title: string;
+                        /** @enum {string} */
+                        type: "audio";
+                    })[];
+                    heading: string;
+                    id: string;
+                }[];
+                title: string;
+            } | null;
+            /** Format: uuid */
+            groupId: string;
+            /** @enum {string} */
+            language: "en" | "de";
+            published: {
+                authorName: string;
+                authorRole: string;
+                /** Format: uuid */
+                coverMediaId: string | null;
+                excerpt: string;
+                intro: string;
+                readMinutes: number | null;
+                sections: {
+                    blocks: ({
+                        text: string;
+                        /** @enum {string} */
+                        type: "paragraph";
+                    } | {
+                        caption: string;
+                        /** Format: uuid */
+                        mediaId: string;
+                        /** @enum {string} */
+                        type: "image";
+                    } | {
+                        caption: string;
+                        title: string;
+                        /** @enum {string} */
+                        type: "video";
+                        youtubeId: string;
+                    } | {
+                        caption: string;
+                        /** Format: uuid */
+                        mediaId: string;
+                        title: string;
+                        /** @enum {string} */
+                        type: "audio";
+                    })[];
+                    heading: string;
+                    id: string;
+                }[];
+                title: string;
+            } | null;
+            /** Format: date-time */
+            publishedAt: string | null;
+            rowVersion: number;
+            slug: string | null;
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: uuid */
+            storeId: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        StoryVersionCreateBody: {
+            draft?: components["schemas"]["StoryDraft"];
+            /** @enum {string} */
+            language: "en" | "de";
+            slug?: string;
+        };
+        StoryVersionMoveBody: {
+            /** Format: uuid */
+            targetGroupId: string;
+        };
+        StoryVersionSaveBody: {
+            draft?: components["schemas"]["StoryDraft"];
+            slug?: string;
         };
     };
     responses: never;
