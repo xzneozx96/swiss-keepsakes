@@ -182,6 +182,21 @@ describe('[E2.6] story repository on the real database', () => {
     await retire(loneCover)
   })
 
+  it('[E2.13][AC30] a body with an image saves, media_refs lists it, and retiring that image is refused by the database', async () => {
+    const s = setup()
+    const image = await media(s.store)
+    const g = await group(s)
+    const draft = doc({ body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello' }] }, imageNode(image)] } })
+
+    await version(s, g.id, 'en', { slug: slug(), draft })
+
+    const { rows } = await pool.query<{ media_id: string }>(`select media_id from content.media_refs where owner_id = $1 and slot = 'draft'`, [g.id])
+    expect(rows.map(r => r.media_id)).toEqual([image])
+    const refused = await thrown(() => pool.query(`update content.media set status = 'retired', retired_at = now() where id = $1`, [image]))
+    expect(refused).toMatchObject({ code: '23001' })
+    expect(mapDatabaseError(refused)).toMatchObject({ reason: 'in-use' })
+  })
+
   it('[E2.6] one media file written with different letter case in two blocks leaves one media_refs row', async () => {
     const s = setup()
     const image = await media(s.store)
@@ -366,6 +381,24 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     const second = await env.call(`${groups}/${groupBody.id}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'en' } })
     expect(second.status).toBe(409)
     expect(await second.json()).toMatchObject({ type: 'version-exists' })
+  }, timeout)
+
+  it('[E2.13][AC30] AC-1 a body with an image saves and publishes through the real app and the published row holds the body', async () => {
+    const staff = await env.storeWithStaff()
+    const image = await media(staff.storeId)
+    const body = { type: 'doc' as const, content: [{ type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Lake' }] }, imageNode(image)] }
+    const { groupId, versionPath } = await groupAndVersion(staff)
+
+    const saved = await env.call(versionPath, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': '1' }, body: { draft: doc({ body }) } })
+    expect(saved.status).toBe(200)
+    expect(await saved.json()).toMatchObject({ rowVersion: 2, draft: { body } })
+    expect(await count(pool, `select count(*) from content.media_refs where owner_id = $1 and slot = 'draft'`, [groupId])).toBe(1)
+
+    const published = await env.call(`${versionPath}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '2' } })
+    expect(published.status).toBe(200)
+    expect(await published.json()).toMatchObject({ status: 'published', draft: null, published: { body } })
+    expect(await versionRow(groupId)).toMatchObject({ status: 'published', published: { body } })
+    expect(await count(pool, `select count(*) from content.media_refs where owner_id = $1 and slot = 'published'`, [groupId])).toBe(1)
   }, timeout)
 
   it('[E2.6][AC30] publish end to end writes an audit row and unpublish another', async () => {

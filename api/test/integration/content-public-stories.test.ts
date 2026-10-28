@@ -225,10 +225,10 @@ describe('public story reads over the database', () => {
     expect(detail.ok && detail.value.body.content).toEqual([{ type: 'image', attrs: { key: null, alt: '', caption: 'no id' } }, { type: 'audio', attrs: { key: null, title: 't', caption: '' } }])
   })
 
-  it('[E2.12][AC45] a published document with only a title (the minimum the database accepts) reads', async () => {
+  it('[E2.12][AC45] a published document with only a title and an empty body (the minimum the database accepts) reads', async () => {
     const store = randomUUID()
     const g = await group(store)
-    const s = await version(store, g, 'en', 'published', 'Minimal', { published: { title: 'Minimal' } })
+    const s = await version(store, g, 'en', 'published', 'Minimal', { published: { title: 'Minimal', body: { type: 'doc' } } })
 
     const detail = await get(s, 'en')
 
