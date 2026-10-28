@@ -11,6 +11,8 @@ export const MEDIA_RULES = Object.freeze({
     'application/pdf': { kind: 'pdf', ext: 'pdf', maxBytes: 25 * MiB },
   }) as Readonly<Record<string, Readonly<{ kind: MediaKind, ext: string, maxBytes: number }>>>,
   variantWidths: Object.freeze([320, 640, 1280, 1920]) as readonly number[],
+  // Largest decoded image (width x height) the worker opens; sharp refuses a bigger one before it allocates.
+  maxInputPixels: 70_000_000,
   abandonedUploadHours: 24,
   orphanedSourceHours: 168,
   presignExpirySeconds: 900,

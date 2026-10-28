@@ -21,7 +21,7 @@ const kinds = {
   mp3: { kind: 'audio', contentType: 'audio/mpeg' },
 } as const
 
-async function setup(ext: keyof typeof kinds, bytes: Uint8Array | undefined) {
+async function setup(ext: keyof typeof kinds, bytes: Uint8Array | undefined, maxInputPixels?: number) {
   const clock = createManualClock(new Date('2026-10-28T10:00:00Z'))
   const storage = createFakeStorage(clock)
   const row: MediaRecord = { id: mediaId, storeId: store, ...kinds[ext], storageKey: originalKey(store, mediaId, ext), byteSize: bytes?.byteLength ?? 1, sha256: 'a'.repeat(64), width: null, height: null, status: 'processing' }
@@ -30,12 +30,14 @@ async function setup(ext: keyof typeof kinds, bytes: Uint8Array | undefined) {
     storage.seed('uploads', confirmedKey(store, mediaId, ext), bytes, { contentType: row.contentType })
   const uow = { run: <R>(work: (t: null) => Promise<R>) => work(tx) }
   const alerts: object[] = []
+  const warnings: object[] = []
   return {
     storage,
     media,
     row,
     alerts,
-    processMedia: makeProcessMedia({ uow, media, storage, clock }),
+    warnings,
+    processMedia: makeProcessMedia({ uow, media, storage, clock, warn: event => warnings.push(event), maxInputPixels }),
     failMedia: makeFailMedia({ uow, media, storage, clock, alert: failure => alerts.push(failure) }),
     stored: (key: string) => storage.objects('media').get(key),
     keys: () => [...storage.objects('media').keys()].sort(),
@@ -135,6 +137,66 @@ describe('[E2.7] process-media on images', () => {
   })
 })
 
+describe('[E2.7] process-media limits and leftovers', () => {
+  it('[E2.7] an image above the pixel limit throws and leaves the row processing', async () => {
+    const t = await setup('png', await pngImage(100, 100), 5_000)
+
+    await expect(t.processMedia({ storeId: store, mediaId })).rejects.toThrow(/pixel/i)
+
+    expect(t.media.rows.get(mediaId)?.status).toBe('processing')
+    expect(t.keys()).toEqual([])
+  })
+
+  it('[E2.7] an image at the pixel limit is processed', async () => {
+    const t = await setup('png', await pngImage(100, 100), 10_000)
+
+    await t.processMedia({ storeId: store, mediaId })
+
+    expect(t.media.rows.get(mediaId)?.status).toBe('ready')
+  })
+
+  it('[E2.7] reads the source with the row byte size as its cap', async () => {
+    const t = await setup('png', await pngImage(100, 100))
+    const caps: (number | undefined)[] = []
+    const realGet = t.storage.get
+    t.storage.get = async (...args) => {
+      caps.push(args[2])
+      return realGet(...args)
+    }
+
+    await t.processMedia({ storeId: store, mediaId })
+
+    expect(caps).toEqual([t.row.byteSize])
+  })
+
+  it('[E2.7] a failing source delete after markReady is warned about, not thrown, and the row is ready', async () => {
+    const t = await setup('jpg', await jpegWithGps(800, 600))
+    t.storage.delete = async () => {
+      throw new Error('storage down')
+    }
+
+    await t.processMedia({ storeId: store, mediaId })
+
+    expect(t.media.rows.get(mediaId)?.status).toBe('ready')
+    expect(t.warnings).toEqual([{ event: 'media.source-delete-failed', storeId: store, mediaId, error: 'Error' }])
+    expect(t.source()).toBe(true)
+  })
+
+  it('[E2.7] a row retired while its files were being made leaves nothing in the media bucket', async () => {
+    const t = await setup('jpg', await jpegWithGps(800, 600))
+    const realPut = t.storage.put
+    t.storage.put = async (...args) => {
+      await realPut(...args)
+      t.media.rows.set(mediaId, { ...t.row, status: 'retired' })
+    }
+
+    await t.processMedia({ storeId: store, mediaId })
+
+    expect(t.media.rows.get(mediaId)?.status).toBe('retired')
+    expect(t.keys()).toEqual([])
+  })
+})
+
 describe('[E2.7] process-media on PDF and audio', () => {
   it('[E2.7] a PDF is stored unchanged with inline disposition and no dimensions', async () => {
     const pdf = new TextEncoder().encode('%PDF-1.4\n1 0 obj\n')
@@ -176,6 +238,39 @@ describe('[E2.7] fail-media', () => {
     expect(t.keys()).toEqual([`${store}/other/original.jpg`])
     expect(t.alerts).toEqual([{ storeId: store, mediaId }])
     expect(await checkMedia(t.media, tx, store, [{ id: mediaId, kind: 'image' }])).toEqual({ reason: 'media-retired' })
+  })
+
+  it('[E2.7] a ready row survives: not retired, no purge, no alert, only the leftover source goes', async () => {
+    const t = await setup('jpg', await jpegWithGps(800, 600))
+    await t.processMedia({ storeId: store, mediaId })
+    const before = t.keys()
+    t.storage.seed('uploads', confirmedKey(store, mediaId, 'jpg'), new Uint8Array([1]))
+
+    await t.failMedia({ storeId: store, mediaId })
+
+    expect(t.media.rows.get(mediaId)?.status).toBe('ready')
+    expect(t.keys()).toEqual(before)
+    expect(before.length).toBeGreaterThan(1)
+    expect(t.alerts).toEqual([])
+    expect(t.source()).toBe(false)
+  })
+
+  it('[E2.7] when the source delete keeps failing after markReady, fail-media still keeps the ready row', async () => {
+    const t = await setup('jpg', await jpegWithGps(800, 600))
+    const realDelete = t.storage.delete
+    t.storage.delete = async () => {
+      throw new Error('storage down')
+    }
+    await t.processMedia({ storeId: store, mediaId })
+
+    await expect(t.failMedia({ storeId: store, mediaId })).rejects.toThrow('storage down')
+
+    expect(t.media.rows.get(mediaId)?.status).toBe('ready')
+    expect(t.keys().length).toBeGreaterThan(1)
+    t.storage.delete = realDelete
+    await t.failMedia({ storeId: store, mediaId })
+    expect(t.source()).toBe(false)
+    expect(t.media.rows.get(mediaId)?.status).toBe('ready')
   })
 
   it('[E2.7] a second run on a retired row still runs the deletes and does not retire again', async () => {

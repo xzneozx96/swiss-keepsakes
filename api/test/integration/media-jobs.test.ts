@@ -68,7 +68,7 @@ describe('[E2.7] the media job on real pg-boss', () => {
     const t = await setup(undecodableJpeg)
 
     await t.send()
-    await until(async () => await t.status() === 'retired')
+    await until(async () => await t.status() === 'retired' && t.alerts.length === 1)
 
     expect(t.alerts).toEqual([{ storeId: t.storeId, mediaId: t.mediaId }])
     expect(t.storage.objects('uploads').size).toBe(0)
@@ -80,7 +80,7 @@ describe('[E2.7] the media job on real pg-boss', () => {
     const t = await setup(await jpegWithGps(900, 600))
 
     await t.send()
-    await until(async () => await t.status() === 'ready')
+    await until(async () => await t.status() === 'ready' && t.storage.objects('uploads').size === 0)
 
     const { rows } = await pool.query('select width, height from content.media where id = $1', [t.mediaId])
     expect(rows[0]).toEqual({ width: 900, height: 600 })

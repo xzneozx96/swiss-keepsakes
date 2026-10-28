@@ -210,3 +210,6 @@ export interface MediaFailure {
 }
 
 export type MediaAlert = (failure: MediaFailure) => void
+
+// A leftover that needs no retry: ids and an error name only.
+export type MediaWarn = (event: { event: string, storeId: string, mediaId: string, error: string }) => void

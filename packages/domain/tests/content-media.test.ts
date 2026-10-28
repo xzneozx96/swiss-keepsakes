@@ -23,6 +23,7 @@ describe('[E2.7] MEDIA_RULES', () => {
     expect(MEDIA_RULES.types['audio/mpeg']).toEqual({ kind: 'audio', ext: 'mp3', maxBytes: 30 * MiB })
     expect(MEDIA_RULES.types['application/pdf']).toEqual({ kind: 'pdf', ext: 'pdf', maxBytes: 25 * MiB })
     expect(MEDIA_RULES.variantWidths).toEqual([320, 640, 1280, 1920])
+    expect(MEDIA_RULES.maxInputPixels).toBe(70_000_000)
     expect(MEDIA_RULES.abandonedUploadHours).toBe(24)
     expect(MEDIA_RULES.orphanedSourceHours).toBe(168)
     expect(MEDIA_RULES.presignExpirySeconds).toBe(900)

@@ -102,7 +102,7 @@ async function main() {
   const storage = config.storage ? createS3Storage(config.storage) : createUnconfiguredStorage()
   if (config.ROLE !== 'api') {
     await startMediaWorkers(jobs.boss, {
-      processMedia: makeProcessMedia({ uow, media: createMediaRepository(), storage, clock: systemClock }),
+      processMedia: makeProcessMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, warn: event => logger.warn(event, 'media source not deleted') }),
       failMedia: makeFailMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, alert: createMediaLogAlert(logger) }),
       retireMedia: makeRetireMedia({ uow, media: createMediaRepository(), storage, clock: systemClock }),
       sweepMedia: makeSweepUploads({ storage, clock: systemClock }),
