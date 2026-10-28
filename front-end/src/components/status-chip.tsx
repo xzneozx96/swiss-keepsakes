@@ -45,7 +45,7 @@ export function StatusChip({
       variant="soft"
     >
       <Icon className="shrink-0" size={14} />
-      <Chip.Label>{children}</Chip.Label>
+      <Chip.Label className="whitespace-nowrap">{children}</Chip.Label>
     </Chip>
   )
 }

@@ -24,7 +24,7 @@ We will split each publishable row into structure and text.
 - **Media inside documents** are listed in `content.media_refs` (media id, owner, slot). The use case replaces the owner's rows on save and publish. A trigger refuses to retire a media row while a document or a cover, PDF or stop-photo column uses it. Those columns have their own foreign keys, and the key carries the media kind, so an image cannot be a PDF. Keepsake photos in `catalog.product_media` hold plain media ids, and the cleanup job asks `catalog` before it removes a file.
 
 ## Consequences
-- Public reads, sitemap, hreflang and the map need no JSON search. Text stays flexible for new block types.
+- Public reads, sitemap, hreflang and the map need no JSON search. Text stays flexible for new node types. Amended 2026-10-28 (gate G-EDITOR): a story body is one Tiptap (ProseMirror) document under the key `body` of the `draft` and `published` jsonb, and a new node type is an addition to the API's allow-list. The column types do not change.
 - The editor handles two shapes (draft document and published columns), and publish is real work in a use case.
 - A third language needs a new expression index for slugs, which is a migration the owner approves anyway (PRD 4.1).
 - Slug changes after the first publish are not modelled. A changed slug breaks the old URL. The open question in the data model recommends locking the slug after first publish.
@@ -45,3 +45,4 @@ We will split each publishable row into structure and text.
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)
+- 2026-10-28 amended (gate G-EDITOR, `docs/decisions/2026-10-28-story-editor.md`)
