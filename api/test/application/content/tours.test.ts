@@ -72,7 +72,7 @@ describe('tour guide use cases', () => {
     expect(await s.publish(owner, store, tour.id, 2, null)).toMatchObject({ ok: true, value: { status: 'published', published: { title: { en: 'Old town walk' }, summary: { en: 'After' } } } })
   })
 
-  it('[E2.6] a PATCH of a draft field on a tour with no draft starts from empty, and on an unpublished tour from the published text', async () => {
+  it('[E2.6] a PATCH of a draft field on a tour with no draft starts from empty, and on a published tour from the published text', async () => {
     const s = setup()
     const bare = await created(s, { slug: { en: 'bare' } })
     expect(await s.save(owner, store, bare.id, 1, { draft: { title: { en: 'T' } } }, null)).toMatchObject({ ok: true, value: { draft: { title: { en: 'T' }, summary: {}, meetingPoint: {}, sections: [] } } })
@@ -80,6 +80,24 @@ describe('tour guide use cases', () => {
     const tour = await created(s)
     await s.publish(owner, store, tour.id, 1, null)
     expect(await s.save(owner, store, tour.id, 2, { draft: { summary: { en: 'New' } } }, null)).toMatchObject({ ok: true, value: { draft: { title: { en: 'Old town walk' }, summary: { en: 'New' } }, published: { title: { en: 'Old town walk' } } } })
+  })
+
+  it('[E2.6] a save with no draft on a published tour leaves draft null', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+
+    const saved = await s.save(owner, store, tour.id, 2, { stayTag: 'multi_day', stops: [stop(1)] }, null)
+
+    expect(saved).toMatchObject({ ok: true, value: { status: 'published', stayTag: 'multi_day', draft: null, published: { title: { en: 'Old town walk' } } } })
+    expect(s.tours.rows.get(tour.id)?.draft).toBeNull()
+  })
+
+  it('[E2.6] an explicit sections: [] clears the stored sections and keeps the title', async () => {
+    const s = setup()
+    const tour = await created(s, { ...complete, draft: { ...doc('Old town walk'), sections: [{ id: 'a', heading: { en: 'H' }, body: { en: 'B' } }] } })
+
+    expect(await s.save(owner, store, tour.id, 1, { draft: { sections: [] } }, null)).toMatchObject({ ok: true, value: { draft: { title: { en: 'Old town walk' }, sections: [] } } })
   })
 
   it('[E2.6] a tour publishes with a slug, a title in one language and a PDF, and writes an audit row', async () => {

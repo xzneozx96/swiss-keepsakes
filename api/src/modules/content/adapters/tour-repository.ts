@@ -146,7 +146,7 @@ export function createTourRepository(): TourRepository<Tx> {
           duration_minutes = ${has('durationMinutes') ? changes.durationMinutes : tour.durationMinutes},
           cover_media_id = ${has('coverMediaId') ? changes.coverMediaId : tour.coverMediaId},
           pdf_media_id = ${has('pdfMediaId') ? changes.pdfMediaId : tour.pdfMediaId},
-          draft = ${json(mergeDraft(tour.draft ?? tour.published, changes.draft))}::jsonb,
+          draft = ${json(changes.draft === undefined ? tour.draft : mergeDraft(tour.draft ?? tour.published, changes.draft))}::jsonb,
           row_version = row_version + 1, updated_at = ${at}
         where store_id = ${tour.storeId} and id = ${tour.id}`)
       await replaceLists(tx, tour.storeId, tour.id, changes, at)

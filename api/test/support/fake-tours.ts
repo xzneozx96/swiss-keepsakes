@@ -44,7 +44,7 @@ export function createFakeTours(): TourRepository<null> & { rows: Map<string, To
     },
     async save(_tx, tour, changes, at) {
       const { stops, draft, ...rest } = changes
-      return store({ ...tour, ...rest, stops: stops ? numbered(stops) : tour.stops, draft: mergeDraft(tour.draft ?? tour.published, draft), rowVersion: tour.rowVersion + 1, updatedAt: at })
+      return store({ ...tour, ...rest, stops: stops ? numbered(stops) : tour.stops, draft: draft === undefined ? tour.draft : mergeDraft(tour.draft ?? tour.published, draft), rowVersion: tour.rowVersion + 1, updatedAt: at })
     },
     async publish(_tx, tour, at) {
       return store({ ...tour, status: 'published', published: tour.draft ?? tour.published, draft: null, rowVersion: tour.rowVersion + 1, updatedAt: at })

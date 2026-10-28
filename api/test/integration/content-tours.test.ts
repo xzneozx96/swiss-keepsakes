@@ -268,6 +268,20 @@ describe('[E2.6] the tour routes over the real app and the database', () => {
     expect(published.status).toBe(200)
   }, timeout)
 
+  it('[E2.6] a PATCH without a draft on a published tour leaves draft null in the response and the row', async () => {
+    const staff = await env.storeWithStaff()
+    const { id } = await (await publishableTour(staff)).made.json() as { id: string }
+    const path = `${staff.tours}/${id}`
+    await env.call(`${path}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
+
+    const saved = await env.call(path, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': '2' }, body: { stayTag: 'multi_day', stops: [{ latitude: 47, longitude: 8 }] } })
+
+    expect(saved.status).toBe(200)
+    expect(await saved.json()).toMatchObject({ status: 'published', stayTag: 'multi_day', draft: null, published: { title: { en: 'Old town walk' } }, rowVersion: 3 })
+    const { rows } = await pool.query<{ draft: unknown }>('select draft from content.tours where id = $1', [id])
+    expect(rows[0]!.draft).toBeNull()
+  }, timeout)
+
   it('[E2.6] publish writes an audit row', async () => {
     const staff = await env.storeWithStaff()
     const { made } = await publishableTour(staff)
