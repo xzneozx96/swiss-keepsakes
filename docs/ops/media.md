@@ -152,6 +152,12 @@ To remove one earlier, delete only the object under `confirmed/{storeId}/{mediaI
 
 A browser PUT to a presigned URL needs the bucket to answer the CORS preflight. We could not set a rule. `PutBucketCors` and `DeleteBucketCors` answer `NoSuchBucket` (HTTP 404) on both buckets, even though `HeadBucket` works and both buckets are listed. Both buckets already carry a default rule that allows any origin (`*`) with the methods GET, PUT, POST, HEAD and DELETE, any header, and the `ETag` header, cached for 3000 seconds. A Chromium PUT from `http://localhost:3002` and the anonymous read back both worked through that rule (`spikes/sp5-object-storage/README.md`). Treat it as a Neon default that can change. If browser uploads fail with a CORS error in the console, check the rule first with `GetBucketCors`, which works, and tell the owner. ADR-004's fallback is Cloudflare R2, or an upload through the API.
 
+This item is accepted per G-S6-CORS. The existing wildcard rule is accepted for development. The owner raises the `NoSuchBucket` 404 on `PutBucketCors` and `DeleteBucketCors` with Neon.
+
+Launch checklist:
+
+- [ ] Lock the CORS rule of both buckets down to the production origin. Do not launch with origin `*`.
+
 ## Clean-up of test objects
 
 The development buckets are real. A live check uses a key prefix of its own for each run and deletes what it creates. Do not point a test at the buckets of a shared branch without a prefix.
