@@ -92,7 +92,7 @@ interface PinJoinRow {
   first_published_at: Date
 }
 
-type DateJoinRow = { [K in keyof PinDate]: PinDate[K] } & { place_id: string }
+type DateJoinRow = PinDate & { place_id: string }
 
 function asCategory(c: { id: string, slug: string, name: PublicCategoryRow['name'], parent_id: string | null, position: number }): PublicCategoryRow {
   return { id: c.id, slug: c.slug, name: c.name, parentId: c.parent_id, position: c.position }
@@ -285,7 +285,7 @@ export function createPublicReadRepository(): PublicReadRepository<Tx> {
       const found = await tx.execute<{ id: string }>(sql`
         select id from content.tours
          where status = 'published' and published is not null and (slug->>'en' = ${slug} or slug->>'de' = ${slug})
-         order by (slug->>${language} = ${slug}) desc limit 1`)
+         order by coalesce(slug->>${language} = ${slug}, false) desc limit 1`)
       const id = found.rows[0]?.id
       return id ? (await loadTours(tx, id, true))[0] : undefined
     },

@@ -104,4 +104,32 @@ describe('public tour guide reads over the database', () => {
 
     expect(detail.ok && detail.value).toMatchObject({ slug: t.slugs.de, title: 'Altstadtspaziergang', language: 'de', fallback: false })
   })
+
+  it('[E2.12][AC64] a guide with the slug in the asked language beats one with that slug in the other language', async () => {
+    const store = randomUUID()
+    const shared = slug()
+    const pdf = await media(store, 'pdf')
+    const insert = async (lang: 'en' | 'de') => (await pool.query<{ id: string }>(
+      `insert into content.tours (store_id, status, slug, pdf_media_id, published) values ($1, 'published', $2, $3, $4) returning id`,
+      [store, JSON.stringify({ [lang]: shared }), pdf.id, JSON.stringify({ title: { [lang]: `Tour ${lang}` }, summary: {}, meetingPoint: {}, sections: [] })],
+    )).rows[0]!.id
+    const a = await insert('en')
+    const b = await insert('de')
+
+    const de = await getTour(shared, 'de')
+    const en = await getTour(shared, 'en')
+
+    expect(de.ok && de.value).toMatchObject({ id: b, language: 'de', fallback: false })
+    expect(en.ok && en.value).toMatchObject({ id: a, language: 'en', fallback: false })
+  })
+
+  it('[E2.12][AC64] the list is newest first by id', async () => {
+    const store = randomUUID()
+    const first = await tour(store)
+    const second = await tour(store)
+
+    const ids = (await listTours('en')).items.map(i => i.id).filter(id => id === first.id || id === second.id)
+
+    expect(ids).toEqual([second.id, first.id])
+  })
 })

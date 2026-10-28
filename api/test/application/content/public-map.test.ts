@@ -236,6 +236,14 @@ describe('public pin card', () => {
     expect(result.ok && result.value).toMatchObject({ title: 'Only EN', tip: 'Tip EN', language: 'en', requestedLanguage: 'de', fallback: true, availableLanguages: ['en'] })
   })
 
+  it('[E2.12][AC64] a tip missing in the carried language is empty, not the other language', async () => {
+    const s = setup({ pins: [pin(1, { tip: { en: 'Tip EN' } })] })
+
+    const result = await s.pin(uuid(1), 'de')
+
+    expect(result.ok && result.value).toMatchObject({ title: 'Ort 1', tip: '', language: 'de' })
+  })
+
   it('[E2.12][AC45] an unknown id, and a pin whose dates have all ended, are 404', async () => {
     const ended = pin(1, { dates: [date({})] })
     const s = setup({ pins: [ended] }, '2090-11-15T12:00:00Z')
@@ -263,6 +271,21 @@ describe('public tour guides', () => {
     const detail = await s.tour('old-town', 'de')
 
     expect(detail.ok && detail.value).toMatchObject({ slug: 'altstadt', title: 'Altstadt', summary: 'Z', language: 'de', fallback: false })
+  })
+
+  it('[E2.12][AC64] a section or stop missing in the carried language is empty, not the other language', async () => {
+    const both = tour(1, {
+      slug: { en: 'old-town', de: 'altstadt' },
+      title: { en: 'Old town', de: 'Altstadt' },
+      summary: { en: 'S', de: 'Z' },
+      sections: [{ id: 's1', heading: { en: 'Heading' }, body: { en: 'Body' } }],
+      stops: [{ position: 1, latitude: 47, longitude: 8, title: { en: 'Stop' }, text: { en: 'Text' }, minutesFromStart: null, key: null, placeId: null }],
+    })
+    const s = setup({ pins: [], tours: [both] })
+
+    const detail = await s.tour('old-town', 'de')
+
+    expect(detail.ok && detail.value).toMatchObject({ sections: [{ id: 's1', heading: '', body: '' }], stops: [{ title: '', text: '' }] })
   })
 
   it('[E2.12][AC64] an unknown slug is a 404', async () => {

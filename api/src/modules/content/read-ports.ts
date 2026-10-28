@@ -93,7 +93,7 @@ export interface PublicReadRepository<T> {
   // Pins in `content.public_pins` (published, and dated in the future or undated), newest first.
   listVisiblePins: (tx: T) => Promise<PublicPinRow[]>
   findVisiblePin: (tx: T, id: string) => Promise<PublicPinRow | undefined>
-  // Tour guides with status `published`, newest first, without stops.
+  // Tour guides with status `published`, in creation order newest first (id desc; a tour has no publish timestamp), without stops.
   listPublishedTours: (tx: T) => Promise<PublicTourRow[]>
   // The tour whose published slug is this one in `language`, else in the other language, with its stops.
   findPublishedTourBySlug: (tx: T, slug: string, language: ContentLanguage) => Promise<PublicTourRow | undefined>
