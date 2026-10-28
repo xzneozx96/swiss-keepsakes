@@ -373,4 +373,16 @@ test.describe('[E3.11][AC64] a version the merchant publishes in the browser', (
     await expect(page.getByRole('status')).toHaveText(NOTICE_EN)
     await expect(page.getByText('This story is not available.')).toHaveCount(0)
   })
+
+  test('hard load of the English address of a story whose German version is in the saved store: no "only in English" notice', async ({ page }) => {
+    await seedLanguage(page, 'de')
+    await addGermanVersion(page, 'published')
+    await page.goto(`/en/stories/${ENGLISH_ONLY}`)
+    await hydrated(page)
+
+    await expect(page.getByRole('heading', { level: 1, name: 'The Water Tower, older than the bridge' })).toBeVisible()
+    // The notice shows once the saved language is known, after hydration; give it that moment to (wrongly) appear.
+    await page.waitForTimeout(1000)
+    await expect(page.getByText(NOTICE_EN)).toHaveCount(0)
+  })
 })

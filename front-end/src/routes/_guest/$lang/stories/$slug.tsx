@@ -40,18 +40,19 @@ export const Route = createFileRoute('/_guest/$lang/stories/$slug')({
 
 function ArticleRoute() {
   const { lang: language, slug } = Route.useParams()
+  const { availableLanguages } = Route.useLoaderData()
   const isLoading = useSimulatedLoading()
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
 
-  // A hard load is server-rendered from the seed, and the loader does not run again in the browser. If the saved store has no published version in this language, go to the one that exists (loader rule, ADR-002 step 6) instead of showing "not found".
+  // A hard load is server-rendered from the seed, and the browser copies the server's loader data without running the loader. If the saved store knows other languages for this story, run the loader again here: its redirect (ADR-002 step 6) and the notice's data then follow the store. Once the data matches the store this does nothing, so it cannot loop.
   useEffect(() => {
-    const rule = isLanguage(language) ? pageVersionRule(storyLanguages(slug), language) : undefined
+    const known = storyLanguages(slug)
 
-    if (rule?.kind === 'redirect')
-      void navigate({ to: '/$lang/stories/$slug', params: { lang: rule.language, slug }, search: true, hash: true, replace: true })
-  }, [language, slug, navigate])
+    if (known.length !== availableLanguages.length || known.some(l => !availableLanguages.includes(l)))
+      void router.invalidate()
+  }, [slug, availableLanguages, router])
 
   if (isLoading) {
     return (
