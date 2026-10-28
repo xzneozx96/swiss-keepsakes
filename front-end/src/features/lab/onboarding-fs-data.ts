@@ -1,6 +1,6 @@
 /**
  * Lab data for the full-screen guest onboarding (N01, F1 chosen 28.10.2026) and the deep-link
- * nudge (N24, the thin top banner while reading): extra copy and the visitor scenarios of the rule
+ * nudge (N24, the top card while reading): extra copy and the visitor scenarios of the rule
  * matrix. Builds on `onboarding-data.ts`. Design only: nothing is stored.
  */
 import type { Flow, Language } from '@/features/lab/onboarding-data'
@@ -41,12 +41,12 @@ export const scenarios: { id: Scenario, label: string, expect: string }[] = [
   {
     id: 'story',
     label: 'Guest, first visit, from a story link',
-    expect: 'The story shows at once. Once the first paragraph has scrolled away, a thin banner drops in at the top; it tucks away as the guest reads on and comes back on scroll up, and never moves the text. Its × or Escape hides it for this visit. Hiding it is not a skip: the full-screen flow still comes the first time the guest taps Explore. Only closing the full-screen flow is final.',
+    expect: 'The story shows at once. Once the first paragraph has scrolled away, a card drops in at the top; it tucks away as the guest reads on and comes back on scroll up, and never moves the text. Its × or Escape hides it for this visit. Hiding it is not a skip: the full-screen flow still comes the first time the guest taps Explore. Only closing the full-screen flow is final.',
   },
   {
     id: 'qr',
     label: 'Guest, first visit, from a partner QR code',
-    expect: 'Same as a story link: the page the QR code opens shows at once, with the banner while reading. Pages without a first paragraph (map pin, keepsake, short pages) never show the banner.',
+    expect: 'Same as a story link: the page the QR code opens shows at once, with the card while reading. Pages without a first paragraph (map pin, keepsake, short pages) never show the banner.',
   },
   {
     id: 'returning',
@@ -56,7 +56,7 @@ export const scenarios: { id: Scenario, label: string, expect: string }[] = [
   {
     id: 'staff',
     label: 'Signed-in merchant or partner',
-    expect: 'Never sees the flow, the banner or the sorted line (also true on /store, /partner, /admin, /sign-in, /invitation).',
+    expect: 'Never sees the flow, the card or the sorted line (also true on /store, /partner, /admin, /sign-in, /invitation).',
   },
 ]
 
@@ -68,6 +68,7 @@ export const fsCopy = {
     save: 'Save',
     stepOf: (step: number) => `${step} of 2`,
     nudgeTitle: 'Find what you’ll love in Lucerne',
+    nudgeBody: 'Tell us a little about what you love, and discover places and stories picked just for you.',
     nudgeStart: 'Personalize my visit',
     nudgeHide: 'Hide for now',
   },
@@ -77,6 +78,7 @@ export const fsCopy = {
     save: 'Speichern',
     stepOf: (step: number) => `${step} von 2`,
     nudgeTitle: 'Entdecken Sie, was Sie in Luzern begeistern wird',
+    nudgeBody: 'Erzählen Sie uns ein wenig von Ihren Vorlieben und entdecken Sie Orte und Geschichten, die genau für Sie ausgewählt sind.',
     nudgeStart: 'Meinen Besuch personalisieren',
     nudgeHide: 'Vorerst ausblenden',
   },
