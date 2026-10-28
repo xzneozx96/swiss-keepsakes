@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ObjectTooLargeError } from '../../src/modules/content/ports.ts'
 import { createFakeStorage } from '../support/fake-storage.ts'
 import { createManualClock } from '../support/manual-clock.ts'
 
@@ -19,6 +20,15 @@ describe('[E2.7] fake storage', () => {
     expect(storage.objects('uploads').size).toBe(1)
     expect(storage.publicUrl('k.jpg')).toBe('https://storage.test/media/k.jpg')
     expect((await storage.presignPut({ key: 'k', contentType: 'image/png', byteSize: 1, expiresInSeconds: 900 })).url).toContain('/uploads/k')
+  })
+
+  it('[E2.7] get with a cap throws ObjectTooLargeError for a larger object and returns one that fits', async () => {
+    const storage = createFakeStorage(createManualClock(new Date('2026-10-01T10:00:00Z')))
+    storage.seed('uploads', 'k', new Uint8Array(5))
+
+    await expect(storage.get('uploads', 'k', 4)).rejects.toBeInstanceOf(ObjectTooLargeError)
+    expect((await storage.get('uploads', 'k', 5))?.byteLength).toBe(5)
+    expect(await storage.get('uploads', 'missing', 5)).toBeUndefined()
   })
 
   it('[E2.7] list sorts by key and leaves contentType undefined, as the S3 adapter does', async () => {

@@ -37,10 +37,12 @@ function setup() {
   const events: string[] = []
   let failJob = false
   const reads = { get: 0, head: 0 }
+  const getCaps: (number | undefined)[] = []
   const realGet = storage.get
   const realHead = storage.head
   storage.get = async (...args) => {
     reads.get++
+    getCaps.push(args[2])
     events.push('storage.get')
     return realGet(...args)
   }
@@ -96,7 +98,7 @@ function setup() {
     clock,
     newId: () => mediaId,
   })
-  return { confirm, storage, media, sent, audit, events, reads, failJob: () => void (failJob = true) }
+  return { confirm, storage, media, sent, audit, events, reads, getCaps, failJob: () => void (failJob = true) }
 }
 
 type Setup = ReturnType<typeof setup>
@@ -167,6 +169,70 @@ describe('[E2.7] confirming an upload', () => {
     expect(s.reads.get).toBe(0)
     expect(s.storage.objects('uploads').size).toBe(0)
     expect(s.media.rows.size).toBe(0)
+  })
+
+  // The head said the object is in the cap; what the get returns is what the checks must catch.
+  describe('the bytes that come back from the get', () => {
+    const refused = (s: Setup) => {
+      expect(s.storage.objects('uploads').has(rawKey)).toBe(false)
+      expect(s.media.rows.size).toBe(0)
+      expect(s.sent).toEqual([])
+      expect(s.audit).toEqual([])
+    }
+
+    it('[E2.7] one byte over the cap, though the head was in the cap, is too-large and the raw upload is deleted', async () => {
+      const s = setup()
+      seedRaw(s, jpeg, 'image/jpeg')
+      const big = new Uint8Array(MEDIA_RULES.types['image/jpeg']!.maxBytes + 1)
+      big.set(jpeg)
+      s.storage.get = async () => big
+
+      expect(await s.confirm(owner, store, { uploadKey: rawKey }, null)).toEqual({ ok: false, reason: 'too-large' })
+      refused(s)
+    })
+
+    it('[E2.7] 0 bytes, though the head was not empty, is empty and the raw upload is deleted', async () => {
+      const s = setup()
+      seedRaw(s, jpeg, 'image/jpeg')
+      s.storage.get = async () => new Uint8Array(0)
+
+      expect(await s.confirm(owner, store, { uploadKey: rawKey }, null)).toEqual({ ok: false, reason: 'empty' })
+      refused(s)
+    })
+
+    it('[E2.7] nothing, though the head found the object, is upload-missing', async () => {
+      const s = setup()
+      seedRaw(s, jpeg, 'image/jpeg')
+      s.storage.get = async () => undefined
+
+      expect(await s.confirm(owner, store, { uploadKey: rawKey }, null)).toEqual({ ok: false, reason: 'upload-missing' })
+      expect(s.media.rows.size).toBe(0)
+      expect(s.sent).toEqual([])
+    })
+
+    it('[E2.7] the cap of the declared type goes to the storage, which refuses a larger object before reading it: too-large', async () => {
+      const s = setup()
+      const grown = new Uint8Array(MEDIA_RULES.types['image/jpeg']!.maxBytes + 1)
+      grown.set(jpeg)
+      seedRaw(s, grown, 'image/jpeg')
+      // The head saw a small object; the object grew before the get.
+      s.storage.head = async key => ({ key, size: jpeg.byteLength, contentType: 'image/jpeg', lastModified: new Date() })
+
+      expect(await s.confirm(owner, store, { uploadKey: rawKey }, null)).toEqual({ ok: false, reason: 'too-large' })
+      expect(s.getCaps).toEqual([MEDIA_RULES.types['image/jpeg']!.maxBytes])
+      refused(s)
+    })
+
+    it('[E2.7] a storage error that is not about size surfaces and nothing is deleted', async () => {
+      const s = setup()
+      seedRaw(s, jpeg, 'image/jpeg')
+      s.storage.get = async () => {
+        throw new Error('boom')
+      }
+
+      await expect(s.confirm(owner, store, { uploadKey: rawKey }, null)).rejects.toThrow('boom')
+      expect(s.storage.objects('uploads').has(rawKey)).toBe(true)
+    })
   })
 
   it('[E2.7] an object exactly at the cap is accepted', async () => {

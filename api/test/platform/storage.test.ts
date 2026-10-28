@@ -2,7 +2,7 @@ import type { ListObjectsV2Command } from '@aws-sdk/client-s3'
 import { Buffer } from 'node:buffer'
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { describe, expect, it } from 'vitest'
-import { StorageUnavailableError } from '../../src/modules/content/ports.ts'
+import { ObjectTooLargeError, StorageUnavailableError } from '../../src/modules/content/ports.ts'
 import { createS3Client, createS3Storage, createUnconfiguredStorage } from '../../src/platform/storage.ts'
 
 const config = { endpoint: 'https://storage.example.test', region: 'eu-central-1', accessKeyId: 'AKIDEXAMPLE', secretAccessKey: 'example-secret-key' }
@@ -99,6 +99,24 @@ describe('[E2.7] object storage: the S3 adapter', () => {
 
     expect(await found.get('uploads', 'k')).toEqual(new Uint8Array([1, 2, 3]))
     expect(await missing.get('uploads', 'k')).toBeUndefined()
+  })
+
+  it('[E2.7] get with a cap refuses from ContentLength without reading the body, and backstops on the bytes read', async () => {
+    let reads = 0
+    const body = (bytes: Uint8Array) => ({ transformToByteArray: async () => {
+      reads++
+      return bytes
+    } })
+    const declared = createS3Storage(config, { send: async () => ({ ContentLength: 11, Body: body(new Uint8Array(11)) }) })
+    const lying = createS3Storage(config, { send: async () => ({ ContentLength: 3, Body: body(new Uint8Array(11)) }) })
+    const fitting = createS3Storage(config, { send: async () => ({ ContentLength: 10, Body: body(new Uint8Array(10)) }) })
+
+    await expect(declared.get('uploads', 'k', 10)).rejects.toBeInstanceOf(ObjectTooLargeError)
+    expect(reads).toBe(0)
+    await expect(lying.get('uploads', 'k', 10)).rejects.toBeInstanceOf(ObjectTooLargeError)
+    expect(reads).toBe(1)
+    expect((await fitting.get('uploads', 'k', 10))?.byteLength).toBe(10)
+    expect((await declared.get('uploads', 'k'))?.byteLength).toBe(11)
   })
 
   it('[E2.7] put sends the body with its content type, cache control and disposition', async () => {

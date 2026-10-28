@@ -63,7 +63,8 @@ export function createMediaRepository(): MediaRepository<Tx> {
         set status = 'ready', width = ${dims?.width ?? null}, height = ${dims?.height ?? null}, updated_at = ${at}
         where store_id = ${row.storeId} and id = ${row.id}
         returning ${columns}`)
-      return record(result.rows[0]!)
+      const updated = result.rows[0]
+      return updated && record(updated)
     },
     async retire(tx, row, at) {
       const result = await tx.execute<Columns>(sql`
@@ -71,7 +72,8 @@ export function createMediaRepository(): MediaRepository<Tx> {
         set status = 'retired', retired_at = ${at}, updated_at = ${at}
         where store_id = ${row.storeId} and id = ${row.id}
         returning ${columns}`)
-      return record(result.rows[0]!)
+      const updated = result.rows[0]
+      return updated && record(updated)
     },
     async isReferenced(tx, storeId, mediaId) {
       const result = await tx.execute<{ referenced: boolean }>(sql`

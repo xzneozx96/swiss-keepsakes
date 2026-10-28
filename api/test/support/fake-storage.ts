@@ -1,5 +1,6 @@
 import type { Bucket, ObjectStorage } from '../../src/modules/content/ports.ts'
 import type { Clock } from '../../src/platform/clock.ts'
+import { ObjectTooLargeError } from '../../src/modules/content/ports.ts'
 
 export interface FakeObject {
   body: Uint8Array
@@ -30,8 +31,11 @@ export function createFakeStorage(clock: Clock, publicBase = 'https://storage.te
       const o = buckets[bucket].get(key)
       return o && stored(key, o)
     },
-    async get(bucket, key) {
-      return buckets[bucket].get(key)?.body
+    async get(bucket, key, maxBytes) {
+      const body = buckets[bucket].get(key)?.body
+      if (body && maxBytes !== undefined && body.byteLength > maxBytes)
+        throw new ObjectTooLargeError(`Object is larger than ${maxBytes} bytes`)
+      return body
     },
     async put(bucket, key, body, meta) {
       buckets[bucket].set(key, { body, contentType: meta.contentType, cacheControl: meta.cacheControl, contentDisposition: meta.contentDisposition, lastModified: clock.now() })

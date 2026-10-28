@@ -110,17 +110,27 @@ describe('[E2.7] the media repository', () => {
 
     const retired = await uow.run(tx => media.retire(tx, inserted, later))
 
-    expect(retired.status).toBe('retired')
+    expect(retired?.status).toBe('retired')
     expect(await rowOf(inserted.id)).toMatchObject({ status: 'retired', retired_at: later })
   })
 
-  it('[E2.7] retire and markReady only touch the row of their own store', async () => {
+  it('[E2.7] retire and markReady with the store of another tenant change nothing and answer undefined', async () => {
     const store = randomUUID()
     const inserted = await uow.run(tx => media.insert(tx, newRow(store), at))
     const foreign = { ...inserted, storeId: randomUUID() }
 
-    await expect(uow.run(tx => media.retire(tx, foreign, later))).rejects.toThrow()
-    expect(await rowOf(inserted.id)).toMatchObject({ status: 'processing' })
+    expect(await uow.run(tx => media.retire(tx, foreign, later))).toBeUndefined()
+    expect(await uow.run(tx => media.markReady(tx, foreign, { width: 10, height: 10 }, later))).toBeUndefined()
+    expect(await rowOf(inserted.id)).toMatchObject({ status: 'processing', retired_at: null, width: null })
+  })
+
+  it('[E2.7] retire and markReady on a row that does not exist answer undefined', async () => {
+    const store = randomUUID()
+    const inserted = await uow.run(tx => media.insert(tx, newRow(store), at))
+    const gone = { ...inserted, id: randomUUID() }
+
+    expect(await uow.run(tx => media.retire(tx, gone, later))).toBeUndefined()
+    expect(await uow.run(tx => media.markReady(tx, gone, undefined, later))).toBeUndefined()
   })
 })
 

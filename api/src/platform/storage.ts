@@ -2,7 +2,7 @@ import type { ObjectStorage, StoredObject } from '../modules/content/ports.ts'
 import type { StorageConfig } from './config.ts'
 import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { StorageUnavailableError } from '../modules/content/ports.ts'
+import { ObjectTooLargeError, StorageUnavailableError } from '../modules/content/ports.ts'
 
 const trailingSlashes = /\/+$/
 
@@ -73,10 +73,16 @@ export function createS3Storage(config: StorageConfig, sender?: S3Sender): Objec
         throw error
       }
     },
-    async get(bucket, key) {
+    async get(bucket, key, maxBytes) {
       try {
         const out = await guarded(() => s3.send(new GetObjectCommand({ Bucket: bucket, Key: key })))
-        return await out.Body.transformToByteArray()
+        // Refuse from the declared length before reading the body, and again on what was read.
+        if (maxBytes !== undefined && (out.ContentLength ?? 0) > maxBytes)
+          throw new ObjectTooLargeError(`Object is larger than ${maxBytes} bytes`)
+        const body: Uint8Array = await out.Body.transformToByteArray()
+        if (maxBytes !== undefined && body.byteLength > maxBytes)
+          throw new ObjectTooLargeError(`Object is larger than ${maxBytes} bytes`)
+        return body
       }
       catch (error) {
         if (isMissing(error))

@@ -3,6 +3,7 @@ import type { AuditLog, Clock, JobQueue, MediaRecord, MediaRepository, ObjectSto
 import type { Result } from './failure.ts'
 import { createHash } from 'node:crypto'
 import { confirmedKey, MEDIA_RULES, originalKey, parseUploadKey, sniffContentType } from '@sk/domain/content'
+import { ObjectTooLargeError } from '../ports.ts'
 import { mayManageContent, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { mediaQueues } from './media-queues.ts'
@@ -46,7 +47,16 @@ export function makeConfirmUpload<T>({ uow, media, storage, jobs, audit, clock, 
       return refuse(key, 'type-not-allowed')
     if (head.size > declared.maxBytes)
       return refuse(key, 'too-large')
-    const bytes = await storage.get('uploads', key)
+    // The cap goes to the storage too, so an object that grew since the head is never read whole.
+    let bytes: Uint8Array | undefined
+    try {
+      bytes = await storage.get('uploads', key, declared.maxBytes)
+    }
+    catch (error) {
+      if (error instanceof ObjectTooLargeError)
+        return refuse(key, 'too-large')
+      throw error
+    }
     if (!bytes)
       return fail({ reason: 'upload-missing' })
     if (bytes.byteLength === 0)

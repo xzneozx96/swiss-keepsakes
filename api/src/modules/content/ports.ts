@@ -54,9 +54,10 @@ export interface MediaRepository<T> {
   // An id of another store has no row. `forUpdate` locks the row until the transaction ends.
   findById: (tx: T, storeId: string, id: string, options?: { forUpdate?: boolean }) => Promise<MediaRecord | undefined>
   // `dims` for an image, none for audio and PDF (the table CHECK refuses a width on anything but an image).
-  markReady: (tx: T, row: MediaRecord, dims: { width: number, height: number } | undefined, at: Date) => Promise<MediaRecord>
-  // Sets status `retired` and `retired_at` together (media_retired_check).
-  retire: (tx: T, row: MediaRecord, at: Date) => Promise<MediaRecord>
+  // undefined when the row is gone (or belongs to another store).
+  markReady: (tx: T, row: MediaRecord, dims: { width: number, height: number } | undefined, at: Date) => Promise<MediaRecord | undefined>
+  // Sets status `retired` and `retired_at` together (media_retired_check). undefined when the row is gone (or belongs to another store).
+  retire: (tx: T, row: MediaRecord, at: Date) => Promise<MediaRecord | undefined>
   // True when a tour (PDF or cover), a tour stop, a pin cover or any media_refs row points at the id.
   isReferenced: (tx: T, storeId: string, mediaId: string) => Promise<boolean>
 }
@@ -180,7 +181,8 @@ export interface ObjectStorage {
   presignPut: (input: { key: string, contentType: string, byteSize: number, expiresInSeconds: number }) => Promise<{ url: string, headers: Record<string, string> }>
   // undefined when the key does not exist.
   head: (bucket: Bucket, key: string) => Promise<StoredObject | undefined>
-  get: (bucket: Bucket, key: string) => Promise<Uint8Array | undefined>
+  // With `maxBytes`, an object larger than that is never read into memory: it throws ObjectTooLargeError.
+  get: (bucket: Bucket, key: string, maxBytes?: number) => Promise<Uint8Array | undefined>
   put: (bucket: Bucket, key: string, body: Uint8Array, meta: { contentType: string, cacheControl?: string, contentDisposition?: string }) => Promise<void>
   // A missing key is not an error.
   delete: (bucket: Bucket, key: string) => Promise<void>
@@ -188,6 +190,11 @@ export interface ObjectStorage {
   list: (bucket: Bucket, prefix: string) => Promise<StoredObject[]>
   // `${endpoint}/media/${key}`
   publicUrl: (key: string) => string
+}
+
+// `get` found an object larger than the `maxBytes` it was given.
+export class ObjectTooLargeError extends Error {
+  override name = 'ObjectTooLargeError'
 }
 
 // The storage is not configured, or it answered with a server error after the SDK's own retries. Mapped to 503

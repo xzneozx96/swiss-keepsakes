@@ -37,9 +37,13 @@ export function createFakeMedia(seed: MediaRecord[] = []): FakeMedia {
       return own(storeId, id)
     },
     async markReady(_tx, row, dims) {
+      if (!own(row.storeId, row.id))
+        return undefined
       return store({ ...row, width: dims?.width ?? null, height: dims?.height ?? null, status: 'ready' })
     },
     async retire(_tx, row, at) {
+      if (!own(row.storeId, row.id))
+        return undefined
       retiredAt.set(row.id, at)
       return store({ ...row, status: 'retired' })
     },
