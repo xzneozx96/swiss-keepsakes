@@ -83,7 +83,7 @@ function StackedRows({ rows, label }: ArticleRowsProps) {
                 size={18}
               />
             </div>
-            <div className="flex flex-wrap gap-1.5 px-4 pb-4 [&_svg]:shrink-0">
+            <div className="flex flex-wrap gap-1.5 px-4 pb-4 [&_.chip]:max-w-full [&_.chip__label]:whitespace-normal [&_svg]:shrink-0">
               <Flags row={row} />
             </div>
             <dl className="flex flex-col gap-2 border-t border-dashed border-separator px-4 py-3.5 text-sm">
