@@ -59,6 +59,7 @@ export {
   publicPinSchema,
   type PublicStory,
   type PublicStoryCard,
+  publicStoryBodySchema,
   publicStoryCardSchema,
   type PublicStoryList,
   publicStoryListSchema,

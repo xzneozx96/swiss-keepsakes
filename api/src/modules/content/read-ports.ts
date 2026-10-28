@@ -14,16 +14,13 @@ export interface PublicCategoryRow {
 }
 
 // The published story document as stored. Stored JSON is read as written and not re-validated, so every field is
-// optional. Compile-only stand-in: E2.13 task 3 replaces the intro and sections fields with the body document.
+// optional and the body is unknown: the public view copies only what it knows.
 export interface StoredStoryDoc {
   title?: string
   excerpt?: string
-  intro?: string
   authorName?: string
   authorRole?: string
-  readMinutes?: number | null
   coverMediaId?: string | null
-  sections?: { id?: string, heading?: string, blocks?: { type?: string, mediaId?: string, caption?: string, title?: string, youtubeId?: string, text?: string }[] }[]
   body?: unknown
 }
 

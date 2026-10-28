@@ -2620,6 +2620,7 @@ export interface components {
             authorName: string;
             authorRole: string;
             availableLanguages: components["schemas"]["PublicLanguage"][];
+            body: components["schemas"]["PublicStoryBody"];
             categories: {
                 /** Format: uuid */
                 id: string;
@@ -2633,42 +2634,614 @@ export interface components {
             /** Format: uuid */
             id: string;
             interests: string[];
-            intro: string;
             language: components["schemas"]["PublicLanguage"];
             /** Format: date-time */
             publishedAt: string;
-            readMinutes: number | null;
+            readMinutes: number;
             requestedLanguage: components["schemas"]["PublicLanguage"];
-            sections: {
-                blocks: ({
-                    text: string;
-                    /** @enum {string} */
-                    type: "paragraph";
-                } | {
-                    caption: string;
-                    key: string | null;
-                    /** @enum {string} */
-                    type: "image";
-                } | {
-                    caption: string;
-                    title: string;
-                    /** @enum {string} */
-                    type: "video";
-                    youtubeId: string;
-                } | {
-                    caption: string;
-                    key: string | null;
-                    title: string;
-                    /** @enum {string} */
-                    type: "audio";
-                })[];
-                heading: string;
-                id: string;
-            }[];
             slug: string;
             /** @enum {string} */
             stayTag: "short_stay" | "multi_day" | "both";
             title: string;
+        };
+        /** @description The story text as one Tiptap document. Images and audio carry a storage key in place of a media id */
+        PublicStoryBody: {
+            content: ({
+                content?: ({
+                    marks?: ({
+                        /** @enum {string} */
+                        type: "bold";
+                    } | {
+                        /** @enum {string} */
+                        type: "italic";
+                    } | {
+                        attrs: {
+                            href: string;
+                        };
+                        /** @enum {string} */
+                        type: "link";
+                    } | {
+                        attrs: {
+                            /** Format: uuid */
+                            pinId: string;
+                        };
+                        /** @enum {string} */
+                        type: "pinLink";
+                    })[];
+                    text: string;
+                    /** @enum {string} */
+                    type: "text";
+                } | {
+                    /** @enum {string} */
+                    type: "hardBreak";
+                })[];
+                /** @enum {string} */
+                type: "paragraph";
+            } | {
+                attrs: {
+                    /** @enum {number} */
+                    level: 2;
+                };
+                content?: ({
+                    marks?: ({
+                        /** @enum {string} */
+                        type: "bold";
+                    } | {
+                        /** @enum {string} */
+                        type: "italic";
+                    } | {
+                        attrs: {
+                            href: string;
+                        };
+                        /** @enum {string} */
+                        type: "link";
+                    } | {
+                        attrs: {
+                            /** Format: uuid */
+                            pinId: string;
+                        };
+                        /** @enum {string} */
+                        type: "pinLink";
+                    })[];
+                    text: string;
+                    /** @enum {string} */
+                    type: "text";
+                } | {
+                    /** @enum {string} */
+                    type: "hardBreak";
+                })[];
+                /** @enum {string} */
+                type: "heading";
+            } | {
+                content: {
+                    content?: ({
+                        marks?: ({
+                            /** @enum {string} */
+                            type: "bold";
+                        } | {
+                            /** @enum {string} */
+                            type: "italic";
+                        } | {
+                            attrs: {
+                                href: string;
+                            };
+                            /** @enum {string} */
+                            type: "link";
+                        } | {
+                            attrs: {
+                                /** Format: uuid */
+                                pinId: string;
+                            };
+                            /** @enum {string} */
+                            type: "pinLink";
+                        })[];
+                        text: string;
+                        /** @enum {string} */
+                        type: "text";
+                    } | {
+                        /** @enum {string} */
+                        type: "hardBreak";
+                    })[];
+                    /** @enum {string} */
+                    type: "paragraph";
+                }[];
+                /** @enum {string} */
+                type: "blockquote";
+            } | {
+                content: {
+                    content: ({
+                        content?: ({
+                            marks?: ({
+                                /** @enum {string} */
+                                type: "bold";
+                            } | {
+                                /** @enum {string} */
+                                type: "italic";
+                            } | {
+                                attrs: {
+                                    href: string;
+                                };
+                                /** @enum {string} */
+                                type: "link";
+                            } | {
+                                attrs: {
+                                    /** Format: uuid */
+                                    pinId: string;
+                                };
+                                /** @enum {string} */
+                                type: "pinLink";
+                            })[];
+                            text: string;
+                            /** @enum {string} */
+                            type: "text";
+                        } | {
+                            /** @enum {string} */
+                            type: "hardBreak";
+                        })[];
+                        /** @enum {string} */
+                        type: "paragraph";
+                    } | {
+                        content: {
+                            content: ({
+                                content?: ({
+                                    marks?: ({
+                                        /** @enum {string} */
+                                        type: "bold";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "italic";
+                                    } | {
+                                        attrs: {
+                                            href: string;
+                                        };
+                                        /** @enum {string} */
+                                        type: "link";
+                                    } | {
+                                        attrs: {
+                                            /** Format: uuid */
+                                            pinId: string;
+                                        };
+                                        /** @enum {string} */
+                                        type: "pinLink";
+                                    })[];
+                                    text: string;
+                                    /** @enum {string} */
+                                    type: "text";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "hardBreak";
+                                })[];
+                                /** @enum {string} */
+                                type: "paragraph";
+                            } | {
+                                content: {
+                                    content: ({
+                                        content?: ({
+                                            marks?: ({
+                                                /** @enum {string} */
+                                                type: "bold";
+                                            } | {
+                                                /** @enum {string} */
+                                                type: "italic";
+                                            } | {
+                                                attrs: {
+                                                    href: string;
+                                                };
+                                                /** @enum {string} */
+                                                type: "link";
+                                            } | {
+                                                attrs: {
+                                                    /** Format: uuid */
+                                                    pinId: string;
+                                                };
+                                                /** @enum {string} */
+                                                type: "pinLink";
+                                            })[];
+                                            text: string;
+                                            /** @enum {string} */
+                                            type: "text";
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "hardBreak";
+                                        })[];
+                                        /** @enum {string} */
+                                        type: "paragraph";
+                                    } | {
+                                        content: {
+                                            content: ({
+                                                content?: ({
+                                                    marks?: ({
+                                                        /** @enum {string} */
+                                                        type: "bold";
+                                                    } | {
+                                                        /** @enum {string} */
+                                                        type: "italic";
+                                                    } | {
+                                                        attrs: {
+                                                            href: string;
+                                                        };
+                                                        /** @enum {string} */
+                                                        type: "link";
+                                                    } | {
+                                                        attrs: {
+                                                            /** Format: uuid */
+                                                            pinId: string;
+                                                        };
+                                                        /** @enum {string} */
+                                                        type: "pinLink";
+                                                    })[];
+                                                    text: string;
+                                                    /** @enum {string} */
+                                                    type: "text";
+                                                } | {
+                                                    /** @enum {string} */
+                                                    type: "hardBreak";
+                                                })[];
+                                                /** @enum {string} */
+                                                type: "paragraph";
+                                            } | {
+                                                content: {
+                                                    content: ({
+                                                        content?: ({
+                                                            marks?: ({
+                                                                /** @enum {string} */
+                                                                type: "bold";
+                                                            } | {
+                                                                /** @enum {string} */
+                                                                type: "italic";
+                                                            } | {
+                                                                attrs: {
+                                                                    href: string;
+                                                                };
+                                                                /** @enum {string} */
+                                                                type: "link";
+                                                            } | {
+                                                                attrs: {
+                                                                    /** Format: uuid */
+                                                                    pinId: string;
+                                                                };
+                                                                /** @enum {string} */
+                                                                type: "pinLink";
+                                                            })[];
+                                                            text: string;
+                                                            /** @enum {string} */
+                                                            type: "text";
+                                                        } | {
+                                                            /** @enum {string} */
+                                                            type: "hardBreak";
+                                                        })[];
+                                                        /** @enum {string} */
+                                                        type: "paragraph";
+                                                    } | {
+                                                        content: {
+                                                            content: {
+                                                                content?: ({
+                                                                    marks?: ({
+                                                                        /** @enum {string} */
+                                                                        type: "bold";
+                                                                    } | {
+                                                                        /** @enum {string} */
+                                                                        type: "italic";
+                                                                    } | {
+                                                                        attrs: {
+                                                                            href: string;
+                                                                        };
+                                                                        /** @enum {string} */
+                                                                        type: "link";
+                                                                    } | {
+                                                                        attrs: {
+                                                                            /** Format: uuid */
+                                                                            pinId: string;
+                                                                        };
+                                                                        /** @enum {string} */
+                                                                        type: "pinLink";
+                                                                    })[];
+                                                                    text: string;
+                                                                    /** @enum {string} */
+                                                                    type: "text";
+                                                                } | {
+                                                                    /** @enum {string} */
+                                                                    type: "hardBreak";
+                                                                })[];
+                                                                /** @enum {string} */
+                                                                type: "paragraph";
+                                                            }[];
+                                                            /** @enum {string} */
+                                                            type: "listItem";
+                                                        }[];
+                                                        /** @enum {string} */
+                                                        type: "bulletList" | "orderedList";
+                                                    })[];
+                                                    /** @enum {string} */
+                                                    type: "listItem";
+                                                }[];
+                                                /** @enum {string} */
+                                                type: "bulletList" | "orderedList";
+                                            })[];
+                                            /** @enum {string} */
+                                            type: "listItem";
+                                        }[];
+                                        /** @enum {string} */
+                                        type: "bulletList" | "orderedList";
+                                    })[];
+                                    /** @enum {string} */
+                                    type: "listItem";
+                                }[];
+                                /** @enum {string} */
+                                type: "bulletList" | "orderedList";
+                            })[];
+                            /** @enum {string} */
+                            type: "listItem";
+                        }[];
+                        /** @enum {string} */
+                        type: "bulletList" | "orderedList";
+                    })[];
+                    /** @enum {string} */
+                    type: "listItem";
+                }[];
+                /** @enum {string} */
+                type: "bulletList";
+            } | {
+                content: {
+                    content: ({
+                        content?: ({
+                            marks?: ({
+                                /** @enum {string} */
+                                type: "bold";
+                            } | {
+                                /** @enum {string} */
+                                type: "italic";
+                            } | {
+                                attrs: {
+                                    href: string;
+                                };
+                                /** @enum {string} */
+                                type: "link";
+                            } | {
+                                attrs: {
+                                    /** Format: uuid */
+                                    pinId: string;
+                                };
+                                /** @enum {string} */
+                                type: "pinLink";
+                            })[];
+                            text: string;
+                            /** @enum {string} */
+                            type: "text";
+                        } | {
+                            /** @enum {string} */
+                            type: "hardBreak";
+                        })[];
+                        /** @enum {string} */
+                        type: "paragraph";
+                    } | {
+                        content: {
+                            content: ({
+                                content?: ({
+                                    marks?: ({
+                                        /** @enum {string} */
+                                        type: "bold";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "italic";
+                                    } | {
+                                        attrs: {
+                                            href: string;
+                                        };
+                                        /** @enum {string} */
+                                        type: "link";
+                                    } | {
+                                        attrs: {
+                                            /** Format: uuid */
+                                            pinId: string;
+                                        };
+                                        /** @enum {string} */
+                                        type: "pinLink";
+                                    })[];
+                                    text: string;
+                                    /** @enum {string} */
+                                    type: "text";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "hardBreak";
+                                })[];
+                                /** @enum {string} */
+                                type: "paragraph";
+                            } | {
+                                content: {
+                                    content: ({
+                                        content?: ({
+                                            marks?: ({
+                                                /** @enum {string} */
+                                                type: "bold";
+                                            } | {
+                                                /** @enum {string} */
+                                                type: "italic";
+                                            } | {
+                                                attrs: {
+                                                    href: string;
+                                                };
+                                                /** @enum {string} */
+                                                type: "link";
+                                            } | {
+                                                attrs: {
+                                                    /** Format: uuid */
+                                                    pinId: string;
+                                                };
+                                                /** @enum {string} */
+                                                type: "pinLink";
+                                            })[];
+                                            text: string;
+                                            /** @enum {string} */
+                                            type: "text";
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "hardBreak";
+                                        })[];
+                                        /** @enum {string} */
+                                        type: "paragraph";
+                                    } | {
+                                        content: {
+                                            content: ({
+                                                content?: ({
+                                                    marks?: ({
+                                                        /** @enum {string} */
+                                                        type: "bold";
+                                                    } | {
+                                                        /** @enum {string} */
+                                                        type: "italic";
+                                                    } | {
+                                                        attrs: {
+                                                            href: string;
+                                                        };
+                                                        /** @enum {string} */
+                                                        type: "link";
+                                                    } | {
+                                                        attrs: {
+                                                            /** Format: uuid */
+                                                            pinId: string;
+                                                        };
+                                                        /** @enum {string} */
+                                                        type: "pinLink";
+                                                    })[];
+                                                    text: string;
+                                                    /** @enum {string} */
+                                                    type: "text";
+                                                } | {
+                                                    /** @enum {string} */
+                                                    type: "hardBreak";
+                                                })[];
+                                                /** @enum {string} */
+                                                type: "paragraph";
+                                            } | {
+                                                content: {
+                                                    content: ({
+                                                        content?: ({
+                                                            marks?: ({
+                                                                /** @enum {string} */
+                                                                type: "bold";
+                                                            } | {
+                                                                /** @enum {string} */
+                                                                type: "italic";
+                                                            } | {
+                                                                attrs: {
+                                                                    href: string;
+                                                                };
+                                                                /** @enum {string} */
+                                                                type: "link";
+                                                            } | {
+                                                                attrs: {
+                                                                    /** Format: uuid */
+                                                                    pinId: string;
+                                                                };
+                                                                /** @enum {string} */
+                                                                type: "pinLink";
+                                                            })[];
+                                                            text: string;
+                                                            /** @enum {string} */
+                                                            type: "text";
+                                                        } | {
+                                                            /** @enum {string} */
+                                                            type: "hardBreak";
+                                                        })[];
+                                                        /** @enum {string} */
+                                                        type: "paragraph";
+                                                    } | {
+                                                        content: {
+                                                            content: {
+                                                                content?: ({
+                                                                    marks?: ({
+                                                                        /** @enum {string} */
+                                                                        type: "bold";
+                                                                    } | {
+                                                                        /** @enum {string} */
+                                                                        type: "italic";
+                                                                    } | {
+                                                                        attrs: {
+                                                                            href: string;
+                                                                        };
+                                                                        /** @enum {string} */
+                                                                        type: "link";
+                                                                    } | {
+                                                                        attrs: {
+                                                                            /** Format: uuid */
+                                                                            pinId: string;
+                                                                        };
+                                                                        /** @enum {string} */
+                                                                        type: "pinLink";
+                                                                    })[];
+                                                                    text: string;
+                                                                    /** @enum {string} */
+                                                                    type: "text";
+                                                                } | {
+                                                                    /** @enum {string} */
+                                                                    type: "hardBreak";
+                                                                })[];
+                                                                /** @enum {string} */
+                                                                type: "paragraph";
+                                                            }[];
+                                                            /** @enum {string} */
+                                                            type: "listItem";
+                                                        }[];
+                                                        /** @enum {string} */
+                                                        type: "bulletList" | "orderedList";
+                                                    })[];
+                                                    /** @enum {string} */
+                                                    type: "listItem";
+                                                }[];
+                                                /** @enum {string} */
+                                                type: "bulletList" | "orderedList";
+                                            })[];
+                                            /** @enum {string} */
+                                            type: "listItem";
+                                        }[];
+                                        /** @enum {string} */
+                                        type: "bulletList" | "orderedList";
+                                    })[];
+                                    /** @enum {string} */
+                                    type: "listItem";
+                                }[];
+                                /** @enum {string} */
+                                type: "bulletList" | "orderedList";
+                            })[];
+                            /** @enum {string} */
+                            type: "listItem";
+                        }[];
+                        /** @enum {string} */
+                        type: "bulletList" | "orderedList";
+                    })[];
+                    /** @enum {string} */
+                    type: "listItem";
+                }[];
+                /** @enum {string} */
+                type: "orderedList";
+            } | {
+                attrs: {
+                    alt: string;
+                    caption: string;
+                    key: string | null;
+                };
+                /** @enum {string} */
+                type: "image";
+            } | {
+                attrs: {
+                    caption: string;
+                    title: string;
+                    youtubeId: string;
+                };
+                /** @enum {string} */
+                type: "video";
+            } | {
+                attrs: {
+                    caption: string;
+                    key: string | null;
+                    title: string;
+                };
+                /** @enum {string} */
+                type: "audio";
+            })[];
+            /** @enum {string} */
+            type: "doc";
         };
         PublicStoryCard: {
             availableLanguages: components["schemas"]["PublicLanguage"][];
@@ -2688,7 +3261,7 @@ export interface components {
             language: components["schemas"]["PublicLanguage"];
             /** Format: date-time */
             publishedAt: string;
-            readMinutes: number | null;
+            readMinutes: number;
             requestedLanguage: components["schemas"]["PublicLanguage"];
             slug: string;
             /** @enum {string} */
