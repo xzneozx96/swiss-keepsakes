@@ -12,7 +12,7 @@ No new dependency, vendor or paid service. The tables follow the shape of `catal
 ## Context
 The map is a curated local guide. Visitors need to find what they want: walking sights, photo spots, local food and drink, free essentials. The owner wants to create and rename these groups without a release. Pins no longer have a fixed type (ADR-005, ADR-029), so the old four types cannot serve as filters. Stories also need a grouping for the story list, for example Legends, Swiss history and Practical tips, which is where tips with no location now go.
 
-The four interests (PRD §3.3) already exist. Visitors answer them in onboarding, and they only change the order of items (PRD §3.2, ADR-006). They are fixed codes in `packages/domain`, not merchant data.
+The five interests (PRD §3.3; four, plus `local-activities` from 2026-10-28) already exist. Visitors answer them in onboarding, and they only change the order of items (PRD §3.2, ADR-006). They are fixed codes in `packages/domain`, not merchant data.
 
 ## Decision
 We will add two merchant-edited lists to the `content` module, and keep the interests as they are.
@@ -22,7 +22,7 @@ We will add two merchant-edited lists to the `content` module, and keep the inte
 - **Shape.** Both lists look like product categories: a name in EN and DE, an order, and one level of sub-categories. A name needs at least one of EN and DE, as for product categories (DM-22, AC30). A category that has sub-categories or tagged items cannot be deleted (AC87). The merchant can create, rename and reorder them. Only the Owner and Manager roles edit them.
 - **Many to many.** A pin can sit in several map categories and shows under each chip (AC88). A story can sit in several blog categories. No category is required to publish. A pin with no map category shows only under **All**.
 - **Chips style on the client.** The map response carries each pin's category ids. A chip changes the style of the pin layer (highlight or dim), not the data, and reloads nothing (ADR-006). A parent chip also covers pins tagged only with its sub-categories, and the read adds those ids. A pin with no category is highlighted only under **All**.
-- **Interests stay fixed.** They remain the four onboarding answers and rank items. Categories highlight, and interests rank. The merchant tags both. Visitors see only the categories as chips.
+- **Interests stay fixed.** They remain the five onboarding answers and rank items, and the home no longer groups by them (amended 2026-10-28: the home is a fixed-order briefing, `docs/decisions/2026-10-28-home-local-briefing.md`, which replaced the interest sections). Categories highlight, and interests rank. The merchant tags both. Visitors see only the categories as chips.
 - **Tables.** The data model names `content.map_categories`, `content.blog_categories` and the link tables `content.place_categories` and `content.story_categories` (decision record, "Data model"). The db-designer owns their columns and constraints.
 
 ## Consequences

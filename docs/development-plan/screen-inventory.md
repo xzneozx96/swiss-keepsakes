@@ -45,7 +45,7 @@ Each screen below carries a slice id in the first column of tables 1 and 2. The 
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | S0 | Platform shell | P | Root, guest shell, merchant layout, sign-in and invitation, referral link and sitemap, which every other slice mounts on | 5 | 1 | 6 | 0 | 1 | Not started | none | none | O22 |
 | S1 | Onboarding and ranking | 1 | A full-screen first-visit flow and a small deep-link prompt whose answers re-rank every public list | 0 | 2 | 0 | 0 | 2 | Approved | N01, N24 | `docs/ux/onboarding-design.md` | O25, O32 |
-| S2 | Home and discovery | 1 | A home that leads with stories and the map, and a search with no prices | 2 | 0 | 0 | 0 | 1 | In design | none | none | O25, O35 |
+| S2 | Home and discovery | 1 | A home that works as a local friend's briefing in one fixed order (hero with search, map invitation, services, must-visits, free routes, food map, events, Victorinox and advice), and a search with no prices | 2 | 0 | 0 | 0 | 2 | Approved | C01, C24 | `docs/ux/home-design.md` and `docs/ux/search-design.md` | O25, O35 |
 | S3 | Stories and moderation | 1 | Ranked story pages for guests. Story editor, comment moderation and product-rating moderation for the merchant | 6 | 0 | 0 | 0 | 2 | Not started | none | none | O15, O33, O39 |
 | S4 | Map and places | 1 | Guest map and pin card. Merchant pins, categories and media library | 0 | 6 | 0 | 0 | 6 | Partly approved | N02, N03, N16, N17 | `docs/ux/pins-design.md` | O35, O39 |
 | S5 | Tour information | 1 | Tours as free information with a route map and one PDF. Booking removed | 5 | 1 | 1 | 4 | 4 | Not started | none | none | O31 |
@@ -56,7 +56,7 @@ Each screen below carries a slice id in the first column of tables 1 and 2. The 
 | S10 | Partner handovers | 2 | Partner entry and report, handover meetings for partner and merchant, partner records | 3 | 6 | 2 | 0 | 7 | Not started | none | none | O22, O34, O40 |
 | S11 | Story analytics | 1 | The SM-1 to SM-3 pages: traffic, map and story-to-shop funnel | 3 | 2 | 0 | 0 | 4 | Not started | none | none | O14, O29, O32 |
 | S12 | Money reports | 2 | Sales, money, margin and costs with tour and booking money stripped | 0 | 0 | 4 | 0 | 0 | No design needed | none | none | none |
-| | **Total** | | | **39** | **22** | **20** | **13** | **39** | | | | |
+| | **Total** | | | **39** | **22** | **20** | **13** | **40** | | | | |
 
 **Design status** says where the redesign of a slice stands. The page shows it as a badge, and the build script checks it against the Design rows.
 
@@ -107,8 +107,8 @@ Rows are grouped by slice (first column). Paths are relative to `front-end/src/r
 | S0 | None | `store/$section.tsx` | `/store/settings` | M22 | merchant | **Keep** | ssr:false | Store info, members, payout. Preparation time (O22) added when decided | 010 | P  |
 | S0 | None | `store_.onboarding.tsx` | `/store/onboarding` |  | merchant | **Keep** | ssr:false | Merchant store setup checklist. Not the guest onboarding (§3.1) |  | P  |
 | S0 | None | `store/reports/route.tsx` | reports layout |  | merchant | **Keep** | layout | Report page frame |  | P  |
-| S2 | Design | `_guest/index.tsx` | `/$lang` | C01 | guest | **Redesign** | SSR | Story and map first, shop gentle. Four-category rail, "Soon" and priced tour rail go (§1.2, §7.0, Q24, AC54) | 001, 002, 006 | 1  |
-| S2 | Edit | `_guest/search.tsx` | `/search` |  | guest | **Redesign** | ssr:false (ruling D1) | Search over stories, places, keepsakes. Drop category browse and tour booking data, no price in results (§7.0, AC54) | 001, 006 | 1  |
+| S2 | Design | `_guest/index.tsx` | `/$lang` | C01 | guest | **Redesign** | SSR | A local friend's briefing in one fixed order for every visitor: hero with a search pill, map invitation, six service tiles, must-visit postcards, free routes, the guest map filtered to food and drink, events, then the Victorinox showcase (no prices) and the advice banner. Four-category rail, "Soon" and priced tour rail go (§1.2, §7.0, Q24, AC54). **Design approved 2026-10-28, see `docs/ux/home-design.md`** | 001, 002, 006 | 1  |
+| S2 | Design | `_guest/search.tsx` | `/search` | C24 | guest | **Redesign** | ssr:false (ruling D1) | Search over stories, places, tours and keepsakes in one list ordered by match, each row naming its kind, with a kind filter. An empty field shows the four fixed interests as photo tiles. No category browse, no tour booking data, no price in results (§7.0, AC54, AC94). **Design approved 2026-10-28 (S2 "One list"), see `docs/ux/search-design.md`** | 001, 006 | 1 |
 | S3 | Edit | `_guest/stories/index.tsx` | `/$lang/stories` | C19 | guest | **Redesign** | SSR | Ranked by `rankItems`, tags for places, stay and interests (§3.2, §11.2, AC38) | 001, 002, 006 | 1  |
 | S3 | Design | `_guest/stories/$slug.tsx` | `/$lang/stories/$slug` | C20 | guest | **Redesign** | SSR | Place tags, up to 6 keepsake cards without price, up to 3 "explore more", language notice (§11.2, AC31, AC32, AC33, AC54, AC64) | 001, 002, 005, 011 | 1  |
 | S3 | Edit | `store/content/index.tsx` | `/store/content` | M17 | merchant | **Redesign** | ssr:false | Story list by language version, status, tags, review type (§11.2, §11.3) | 002, 003, 014 | 1  |
@@ -262,21 +262,24 @@ The onboarding layer (N01) and the small prompt (N24) mount here but are designe
 
 **Today (`discovery-home.tsx`).** Hero, a block by local time of day, a rail of four categories with "Soon" on two, featured keepsakes, a tour rail, stories, a Victorinox showcase, an advice banner and floating button, and a seasonal snow effect. Tours and keepsakes show prices.
 
-**Direction (PRD §1.1, §1.2, §6.1).** Story and map first, shop gentle, no price anywhere before the product page (Q24, AC54). Content blocks in order, with no layout implied:
+**After (decision D13, `docs/decisions/2026-10-28-home-local-briefing.md`, specification `docs/ux/home-design.md`).** "A local friend's briefing" for a first-time visitor. Story and map first, shop gentle, no price anywhere before the product page (Q24, AC54). **The home has no selectors:** the guest already answered onboarding, so the home never asks again. One fixed page order for every visitor (AC95):
 
-1. Entry block that says what the site is (the brand name is open, O01).
-2. The onboarding, when unanswered: N01 full screen on a first visit, N24 small prompt after a deep link.
-3. A way into the map (N02).
-4. Ranked feed of stories and places (`rankItems`, AC38). Home carries this feed (ruling D1).
-5. Tour information rail, no price, no departure (AC50).
-6. Keepsakes, small and last: a few cards, no price, linking to `/$lang/gifts` (Q24).
-7. Trip advice form entry (C21, G10).
+1. The shipped Sky fade hero with a search pill that opens search (C24).
+2. "First time in Lucerne?": a static map invitation hanging from the pill, with the curated photo pins and "Open the map".
+3. "Sorted before you unpack": six service tiles (drinking water, free toilets, SIM and Wi-Fi, trains, buses and boats, luggage lockers, cash and cards). Each opens a map of only those places.
+4. "See these first": must-visit postcards with a local tip. The sort pill under this heading is the one personalisation signal.
+5. "Walk it the way we would": free routes in the tour-card rail look, no price and no booking.
+6. "Eat and drink like a local": the approved guest map (N02, N03) embedded and filtered to food and drink. The one live map on the home.
+7. "While you're in town": an ink-poster card for this week and a timeline of at most three later events.
+8. The shipped Victorinox showcase (prices hidden), a connecting line, then the shipped `AdviceBanner` (C21, G10).
 
-**Removed.** The four-category rail, the "Soon" labels, and the prices on tour cards, keepsake cards, and the Victorinox showcase. The seasonal snow and the time-of-day block are visual choices. They wait for the owner's references.
+**Order.** The sections never move. The onboarding answers only order cards inside sections: stay length orders the routes, interests order the must-visits and the food places. Nothing is hidden, and nothing above the services row depends on the answers, because the server HTML is the same for everyone and the client re-orders after load.
 
-**States.** First visit with prompt. Answered and ranked. Content missing in the stored language (notice, AC64). Fewer published items than the first-launch minimum (O35). Loading. Reached by a partner QR (looks the same, §6.1).
+**Removed.** The four-category rail, the stay switch and the need bars of the earlier directions, the "Soon" labels, the prices on tour cards, keepsake cards and the Victorinox showcase, the interest sections of the first D12 design, the seasonal snow and the time-of-day block.
 
-**Render.** SSR at `/$lang` with title, description, canonical, and hreflang. `/` redirects with a 302 (ADR-002). The server order is newest first.
+**States.** First visit with prompt. Answered and ranked. Content missing in the stored language (notice, AC64). Fewer published items than the first-launch minimum (O35). Loading. No events (the section is not drawn). Reached by a partner QR (looks the same, §6.1).
+
+**Render.** SSR at `/$lang` with title, description, canonical, and hreflang. `/` redirects with a 302 (ADR-002). The server order is the curated order.
 
 ## Area 3. Catalog, options, SKUs, and inventory (slice S7, merchant)
 
@@ -333,7 +336,7 @@ The onboarding layer (N01) and the small prompt (N24) mount here but are designe
 - **Position** on a map picker, slug, address (optional), weekly opening hours, one photo with EN and DE alt text, EN and DE title and tip.
 - **Dates**, optional. Each entry is one day with optional start and end times, or a range of days. A pin with dates shows from the moment it is published and leaves the map after its last date (AC86). An entry cannot cross midnight, and the end time stays empty for a late event.
 - **Map categories** from the N23 list. None is required to publish, and a pin with none shows only under All (AC85, AC88).
-- **Stay tag** (short-stay, multi-day, both) and **interests** from the four fixed codes (AC39, AC41). No separate rank field for restaurants.
+- **Stay tag** (short-stay, multi-day, both) and **interests** from the five fixed codes (AC39, AC41), and the fixed flag **Free to use** (AC95). No separate rank field for restaurants.
 - **Main story**, optional. A pin publishes without one (AC85). To publish, a pin needs a title in at least one language, a location and a slug (AC68).
 - **Outbound link**, optional, one per pin. Changing it changes every page that shows the pin (AC63, ADR-011). Paid-link fields wait until the first paid link exists.
 
@@ -394,6 +397,9 @@ No question is open. Each row records who settled it. Answers carry the owner's 
 | D8 | Onboarding form | Full-screen flow on a guest's first visit at the home (N01). A small non-blocking prompt on a deep link, a partner QR or link, or a search landing (N24). Guests only. Closing N24 hides it for the visit and is not a skip. Reopen on the Account tab and the home line | Approved in chat on 2026-10-28, `docs/decisions/2026-10-28-onboarding-full-screen.md` |
 | D9 | Onboarding design | N01 is F1 "Guided" (final). N24 is N2, a card floating at the top and never inserted into the content, on story pages only (final). Skip on step 1 goes to step 2. Close in change-my-answers mode keeps the changes | Chosen in chat on 2026-10-28, `docs/ux/onboarding-design.md` |
 | D10 | Map and pins design | Approved on 2026-10-28: guest map and pin card as option B "Cards", merchant pins list, and merchant editor as option S "Steps". The differences from the PRD were settled the same day (Google Maps link, several photos, Categories sheet, Map and List switch, details sheet); only the folded credits stay open. N23 and N18 are not designed | Approved in chat on 2026-10-28, `docs/decisions/2026-10-28-pins-and-map-design.md`, `docs/ux/pins-design.md` |
+| D11 | Search design | Approved on 2026-10-28: search option S2 "One list" (one result list ordered by match with a kind label and filter, an empty field with the five fixed interests as tiles, tours included, no price). S1 "Grouped" was rejected and removed. Tile photos must depict their labels | Approved in chat on 2026-10-28, `docs/decisions/2026-10-28-search-design.md`, `docs/ux/search-design.md` |
+| D12 | Home by interests (superseded by D13) | **Superseded on 2026-10-28 by D13 for the home layout.** The fifth interest and the no-selector rule still stand. Approved earlier the same day: the home has no selectors and is organised by the five fixed interests (a fifth, Local activities, is added), plus "Free and useful" (a fixed flag on a pin) and a "More in Lucerne" strip. Each item appears once, in the first section for the visitor. Default order: Lake and mountains, Free and useful, Food and drink, Local activities, History and culture, Shopping and keepsakes. Tours sit in their own interest. Earlier directions (stay switch, four doors, need bars, local's walk) were rejected. The layouts were never approved | Approved in chat on 2026-10-28, `docs/decisions/2026-10-28-home-by-interests.md` |
+| D13 | Home: a local friend's briefing | Approved on 2026-10-28: the home follows a first-time visitor's first day in one fixed order (hero with search, map invitation, services, must-visits, free routes, a food and drink map, events, Victorinox and advice). The answers only order cards inside sections. No price, no selectors, nothing hidden. One live map, in the food section. Replaces the home sections by interest of D12 | Approved in chat on 2026-10-28, `docs/decisions/2026-10-28-home-local-briefing.md`, `docs/ux/home-design.md` |
 
 Assumption that no source states: Stories and Tours are reached from Explore, because they no longer have a tab. The UX checklist should confirm it.
 

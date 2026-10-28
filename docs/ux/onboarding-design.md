@@ -36,7 +36,7 @@ The step content rises in on each step (short entrance, none under reduced motio
 | Step | Title | Choices | Main button |
 | --- | --- | --- | --- |
 | 1 | How long are you in Lucerne? | Single choice: "Just today" (value `short-stay`, photo `lucerne-swan`) or "A few days" (value `multi-day`, photo `rigi-kaltbad`). Each card has a 64 px photo, the label and a one-line hint | **Continue**, disabled until one is chosen. It saves the stay and goes to step 2 |
-| 2 | What would you like to see? | Multi-select of the four fixed interests, one per row: history-culture, food-drink, lake-mountains, shopping-keepsakes (labels in PRD §3.3) | **Show my Lucerne**, disabled until one interest is chosen. It saves and closes. In change mode the button is **Save** and is enabled |
+| 2 | What would you like to see? | Multi-select of the five fixed interests, one per row: history-culture, food-drink, lake-mountains, shopping-keepsakes, local-activities (labels in PRD §3.3). The fifth was added on 2026-10-28. Five cards still fit at 375 px; only the cards scroll, never the button | **Show my Lucerne**, disabled until one interest is chosen. It saves and closes. In change mode the button is **Save** and is enabled |
 
 ### Choice cards (the app's existing selected pattern)
 
@@ -137,7 +137,7 @@ DE marked "proposal" is not reviewed by the merchant. The DE rows without the ma
 | N01 step 1 | Main button | Continue | Weiter (proposal) |
 | N01 step 2 | Title | What would you like to see? | Was möchten Sie sehen? |
 | N01 step 2 | Subtitle | Pick one or more. | Wählen Sie eines oder mehrere. |
-| N01 step 2 | Interests | History and culture · Food and drink · Lake and mountains · Shopping and keepsakes | Geschichte und Kultur · Essen und Trinken · See und Berge · Shopping und Andenken (PRD §3.3; merchant review) |
+| N01 step 2 | Interests | History and culture · Food and drink · Lake and mountains · Shopping and keepsakes · Local activities | Geschichte und Kultur · Essen und Trinken · See und Berge · Shopping und Andenken · Lokale Aktivitäten (PRD §3.3; the last is a proposal; merchant review) |
 | N01 steps 1 and 2 | Privacy line | Your answers stay on this phone. | Ihre Antworten bleiben auf diesem Handy. |
 | N01 step 2 | Main button, first run | Show my Lucerne | Mein Luzern zeigen (proposal) |
 | N01 step 2 | Main button, change mode | Save | Speichern (proposal) |

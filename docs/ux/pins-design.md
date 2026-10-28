@@ -91,7 +91,7 @@ The editor uses the **tour editor's stepper** (M13, `features/merchant/products/
 | 1 Place on the map | A map picker on the guest map's flat style (a tap places the pin, the marker drags, the arrow keys nudge it about 5 m, or about 25 m with Shift), the slug (suggested from the title, editable, must be one no other pin uses; changing the slug of a published pin warns that links already shared will go to the map without the pin), and the optional address |
 | 2 Text and photo | Title and tip in EN and DE with a completeness indicator per language, the photo and alt text in EN and DE |
 | 3 Hours and dates | Weekly hours (per weekday, any number of spans, or closed) and optional date entries: one day with optional start and end times, or a range of days. An entry cannot cross midnight (for example 22:00 to 00:30 is an error); for a late event the end time stays empty. Times are Europe/Zurich. The step explains that the pin leaves the map after its last date |
-| 4 Categories and tags | Map categories (multi-select with one level of sub-categories; none is required, and no category means it shows only under All), stay tag (short-stay, multi-day or both) and the four fixed interests |
+| 4 Categories and tags | Map categories (multi-select with one level of sub-categories; none is required, and no category means it shows only under All), stay tag (short-stay, multi-day or both), the five fixed interests (the fifth, Local activities, was added on 2026-10-28) and a switch for the fixed flag "Free to use" that puts a pin in the home section "Free and useful" (added 2026-10-28; see `docs/decisions/2026-10-28-home-by-interests.md`) |
 | 5 Story and link | An optional main-story picker that shows which language versions are published, and one optional outbound link (a warning that changing it changes every page that shows the pin) |
 | 6 Review and publish | Each step's facts with **Edit**, and the publish rules |
 
@@ -113,6 +113,11 @@ The design differed from PRD v3 in seven places. The requester decided them on 2
 5. **Credits folded** to one short line with an info button in option B. **Still open:** check the providers' terms (swisstopo, OpenFreeMap, OpenMapTiles, OpenStreetMap). If folding is not allowed, show all four always.
 6. **The details sheet** with Previous and Next place is part of the screen.
 7. **Shared component edits** made for the lab: optional `container` and `tightBottom` on `SheetFrame`, an optional `quietTitle` on `StepLayout`, and `OpenInMapsIcon` in `components/icons.ts`. Accepted. They are additive, so review them when building.
+
+**Two changes to the approved guest map, made at the requester's request on 2026-10-28** (while the home's food section embedded this map, `docs/ux/home-design.md`). Both are in `front-end/src/features/lab/map-guest-options.tsx`:
+
+1. **A pin or cluster without a photo shows an icon, not an initial.** The icon is the pin's kind (pub, café, restaurant, market, walk, photo spot, essential, event, or a plain pin), white on the Victorinox lake blue `#173f52`. A card thumbnail without a photo shows the same icon. `PinIconFace` draws it and lives in `home-v9-pin-icon.tsx` for now. Move it to a shared file when building, and add the icons to `components/icons.ts`.
+2. **Every place card in the card row has the same height.** The 84 px thumbnail slot is always present (the kind icon when there is no photo), the language notice joins the fact line, and the buttons sit at the foot of the card.
 
 ## 6. Build notes (E4.2, E4.6, E4.7)
 
