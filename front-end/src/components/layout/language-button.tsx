@@ -1,6 +1,7 @@
+import type { KeyboardEvent } from 'react'
 import type { ActionTone } from '@/components/layout/action-style'
-import type { Language } from '@/contexts/locale-context'
 
+import type { Language } from '@/contexts/locale-context'
 import { Drawer } from '@heroui/react'
 import { useState } from 'react'
 
@@ -13,6 +14,17 @@ const languages: { id: Language, name: string }[] = [
   { id: 'en', name: 'English' },
   { id: 'de', name: 'Deutsch' },
 ]
+
+// Radio keyboard model: arrows only move focus, because choosing a language navigates away.
+// Space and Enter activate the focused row (native button click).
+function moveFocus(event: KeyboardEvent<HTMLButtonElement>) {
+  const step = ({ ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 } as Record<string, number | undefined>)[event.key]
+  if (step === undefined)
+    return
+  event.preventDefault()
+  const rows = [...event.currentTarget.parentElement!.querySelectorAll<HTMLElement>('[role="radio"]')]
+  rows[(rows.indexOf(event.currentTarget) + step + rows.length) % rows.length].focus()
+}
 
 /**
  * Round language action for a public screen's top area; 44px touch target. It opens a sheet with
@@ -57,17 +69,19 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
                     <button
                       key={l.id}
                       aria-checked={checked}
-                      className="flex min-h-12 w-full items-center justify-between gap-3 px-1 text-start text-base outline-none hover:bg-surface-secondary focus-visible:focus-ring active:bg-surface-secondary"
+                      className="flex min-h-12 w-full items-center justify-between gap-3 rounded-lg px-3 text-start text-base outline-none hover:bg-surface-secondary focus-visible:focus-ring active:bg-surface-secondary"
                       role="radio"
+                      tabIndex={checked ? 0 : -1}
                       type="button"
+                      onKeyDown={moveFocus}
                       onClick={() => {
                         if (!checked)
                           setLanguage(l.id)
                         setOpen(false)
                       }}
                     >
-                      {l.name}
-                      {checked && <CheckIcon aria-hidden className="shrink-0" size={20} />}
+                      <span lang={l.id}>{l.name}</span>
+                      {checked && <CheckIcon aria-hidden className="shrink-0" data-testid="language-tick" size={20} />}
                     </button>
                   )
                 })}

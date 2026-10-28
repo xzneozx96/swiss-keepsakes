@@ -56,8 +56,29 @@ describe('language button', () => {
     expect(rows.map(r => r.textContent)).toEqual(['English', 'Deutsch'])
     for (const row of rows)
       expect(row).toHaveClass('min-h-12')
-    expect(rows[0].querySelector('svg')).not.toBeNull()
-    expect(rows[1].querySelector('svg')).toBeNull()
+    expect(within(rows[0]).getByTestId('language-tick')).toBeInTheDocument()
+    expect(within(rows[1]).queryByTestId('language-tick')).toBeNull()
+    expect(within(rows[1]).getByText('Deutsch')).toHaveAttribute('lang', 'de')
+  })
+
+  it('moves focus with the arrow keys, wrapping, and keeps one tab stop on the checked row', async () => {
+    const router = renderAt('/en/stories')
+    await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))
+
+    const english = await screen.findByRole('radio', { name: 'English' })
+    const deutsch = screen.getByRole('radio', { name: 'Deutsch' })
+    expect(english).toHaveAttribute('tabindex', '0')
+    expect(deutsch).toHaveAttribute('tabindex', '-1')
+
+    english.focus()
+    await userEvent.keyboard('{ArrowDown}')
+    expect(deutsch).toHaveFocus()
+    await userEvent.keyboard('{ArrowDown}')
+    expect(english).toHaveFocus()
+    await userEvent.keyboard('{ArrowUp}')
+    expect(deutsch).toHaveFocus()
+    // Arrows only move focus: selecting navigates, so it waits for Space or Enter.
+    expect(router.state.location.pathname).toBe('/en/stories')
   })
 
   it('switches with the other option, stores the choice and closes the sheet', async () => {
