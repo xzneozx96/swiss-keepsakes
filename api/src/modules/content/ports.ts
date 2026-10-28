@@ -173,7 +173,7 @@ export interface StoredObject {
   key: string
   size: number
   contentType: string | undefined
-  lastModified: Date
+  lastModified: Date | undefined
 }
 
 // Object storage (Neon Object Storage, S3 API). Keys are bucket-relative: the bucket is never part of a key.

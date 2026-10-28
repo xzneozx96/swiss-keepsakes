@@ -31,7 +31,7 @@ function setup(rows: MediaRow[] = media, graceHours = 24) {
   const deps = {
     uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) },
     tours,
-    media: { find: async (_tx: null, _storeId: string, ids: string[]) => rows.filter(m => ids.includes(m.id)) },
+    media: { find: async (_tx: null, _storeId: string, ids: string[]) => rows.filter(m => ids.some(id => id.toLowerCase() === m.id.toLowerCase())) },
     audit: { record: async (_tx: null, entry: AuditEntry) => void audit.push(entry) },
     jobs: { send: async (_tx: null, queue: string, data: object, options?: { startAfter?: Date }) => void jobs.push({ queue, data, options }) },
     graceHours,
@@ -251,7 +251,7 @@ describe('tour guide use cases', () => {
   it('[E2.7][AC51] an upper-case id of the same PDF queues nothing', async () => {
     const s = setup([{ id: 'abc-pdf', kind: 'pdf', status: 'ready' }, ...media])
     const tour = await created(s, { ...complete, pdfMediaId: 'abc-pdf' })
-    await s.save(owner, store, tour.id, 1, { pdfMediaId: 'ABC-PDF' }, null)
+    expect(await s.save(owner, store, tour.id, 1, { pdfMediaId: 'ABC-PDF' }, null)).toMatchObject({ ok: true })
     expect(s.jobs).toEqual([])
   })
 

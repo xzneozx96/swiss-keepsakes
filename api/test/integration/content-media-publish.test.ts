@@ -37,7 +37,7 @@ describe('[E2.7] publish while a file is still processing, over HTTP', () => {
 
     const refused = await publish()
     expect(refused.status).toBe(422)
-    expect(await refused.json()).toMatchObject({ type: 'media-processing', title: 'A file is still being processed. Publish again in a moment.' })
+    expect(await refused.json()).toMatchObject({ type: 'media-processing', title: 'A file is still being processed. Try again in a moment.' })
 
     await markReady(pdf)
     expect((await publish()).status).toBe(200)

@@ -9,7 +9,7 @@ export interface MediaQueues {
   sweep: string
 }
 
-// Four attempts. Before retry n pg-boss waits 30 * 2^n seconds, less up to half of it as jitter.
+// Four attempts. Before retry n (from 0) pg-boss waits 30 * 2^n seconds times a random factor from 1 to 2.
 export const mediaRetry = { retryLimit: 3, retryDelay: 30, retryBackoff: true }
 
 // Every role creates the queues at startup, because confirm sends a job and a send to an unknown queue fails.

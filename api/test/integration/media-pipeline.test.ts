@@ -277,6 +277,11 @@ describe('[E2.7] queue wiring', () => {
     expect(rows.find(row => row.name === 'media-process')!.updated_on.getTime()).toBeGreaterThanOrEqual(started!.now.getTime())
     // The startup warning names AWS_*, never a variable's value.
     expect(run.output()).not.toMatch(/AWS_[A-Z]/)
+    // Only a worker role warns about the missing storage settings; the test environment sets no AWS_*.
+    if (role === 'worker')
+      expect(run.output()).toContain('media.storage-unset')
+    else
+      expect(run.output()).not.toContain('media.storage-unset')
   })
 
   // Only the worker role starts the retire and sweep workers. pg-boss keeps no table of live workers, so the

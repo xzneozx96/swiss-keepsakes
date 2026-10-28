@@ -17,7 +17,7 @@ export function makeSweepUploads({ storage, clock }: SweepUploadsDeps) {
     let removed = 0
     for (const { key, lastModified } of await storage.list('uploads', '')) {
       // An object with no timestamp cannot be aged, so it stays.
-      if (!(lastModified as Date | undefined))
+      if (!lastModified)
         continue
       const hours = key.startsWith('confirmed/') ? MEDIA_RULES.orphanedSourceHours : MEDIA_RULES.abandonedUploadHours
       if (now - lastModified.getTime() > hours * HOUR) {

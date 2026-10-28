@@ -49,7 +49,7 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'empty': return { status: 422, type: 'media-empty', title: 'This file is empty.' }
     case 'upload-missing': return { status: 404, type: 'upload-missing', title: 'The upload was not found. It may have expired. Upload the file again.' }
     case 'content-mismatch': return { status: 422, type: 'media-content-mismatch', title: 'The file is not the type it says it is.' }
-    case 'media-processing': return { status: 422, type: 'media-processing', title: 'A file is still being processed. Publish again in a moment.' }
+    case 'media-processing': return { status: 422, type: 'media-processing', title: 'A file is still being processed. Try again in a moment.' }
   }
 }
 

@@ -37,7 +37,7 @@ describe('[E2.7] sweep-uploads', () => {
     const t = setup()
     t.storage.seed('uploads', `${store}/${id(1)}.jpg`, body, { lastModified: t.ago(99) })
     const real = t.storage.list
-    t.storage.list = async (bucket, prefix) => (await real(bucket, prefix)).map(o => ({ ...o, lastModified: undefined as unknown as Date }))
+    t.storage.list = async (bucket, prefix) => (await real(bucket, prefix)).map(o => ({ ...o, lastModified: undefined }))
     expect(await t.sweep()).toEqual({ removed: 0 })
     expect(t.uploads()).toHaveLength(1)
   })
