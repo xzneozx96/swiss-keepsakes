@@ -10,7 +10,7 @@ import { ArticlePage } from '@/features/content/components/article-page'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 
 // C20 Article.
-export const Route = createFileRoute('/_guest/stories/$slug')({
+export const Route = createFileRoute('/_guest/$lang/stories/$slug')({
   ssr: true,
   // The comment bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/_guest/stories/$slug')({
 })
 
 function ArticleRoute() {
-  const { slug } = Route.useParams()
+  const { lang: language, slug } = Route.useParams()
   const isLoading = useSimulatedLoading()
   const router = useRouter()
   const navigate = useNavigate()
@@ -43,7 +43,7 @@ function ArticleRoute() {
       key={slug}
       slug={slug}
       onBack={() =>
-        canGoBack ? router.history.back() : void navigate({ to: '/stories' })}
+        canGoBack ? router.history.back() : void navigate({ to: '/$lang/stories', params: { lang: language } })}
     />
   )
 }

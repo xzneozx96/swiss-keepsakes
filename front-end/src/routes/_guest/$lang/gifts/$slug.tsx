@@ -14,7 +14,7 @@ import { useGiftDetail } from '@/features/catalog/hooks/use-gift-detail'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 
 // C03 Gift detail.
-export const Route = createFileRoute('/_guest/gifts/$slug')({
+export const Route = createFileRoute('/_guest/$lang/gifts/$slug')({
   ssr: true,
   // The bottom bar is sticky in the screen's own flow, so the shell reserves no tab-bar space.
   staticData: { hideTabBar: true, ownsBottomSpace: true },
@@ -44,7 +44,7 @@ function GiftDetailPage() {
 }
 
 function GiftDetailScreen({ slug }: { slug: string }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const router = useRouter()
   const navigate = useNavigate()
   const canGoBack = useCanGoBack()
@@ -54,7 +54,7 @@ function GiftDetailScreen({ slug }: { slug: string }) {
     return (
       <div className="pt-16">
         <EmptyState
-          action={{ label: t('gifts.showAll'), to: '/gifts' }}
+          action={{ label: t('gifts.showAll'), to: '/$lang/gifts' }}
           icon={GiftIcon}
           message={t('detail.notFound')}
         />
@@ -66,7 +66,7 @@ function GiftDetailScreen({ slug }: { slug: string }) {
     <GiftDetail
       {...view}
       onBack={() =>
-        canGoBack ? router.history.back() : void navigate({ to: '/gifts' })}
+        canGoBack ? router.history.back() : void navigate({ to: '/$lang/gifts', params: { lang: language } })}
     />
   )
 }

@@ -20,7 +20,7 @@ interface GiftsSearch {
 }
 
 // C02 Gifts: list, category filter and search.
-export const Route = createFileRoute('/_guest/gifts/')({
+export const Route = createFileRoute('/_guest/$lang/gifts/')({
   ssr: true,
   validateSearch: (search: Record<string, unknown>): GiftsSearch => {
     // The store's own sub-categories are in demo state, so the page checks the id.
@@ -41,7 +41,7 @@ function GiftsPage() {
   const products = useProducts()
   const subcategories = useStoreSubcategories()
   const { subcategory, q = '' } = Route.useSearch()
-  const navigate = useNavigate({ from: '/gifts/' })
+  const navigate = useNavigate({ from: '/$lang/gifts/' })
   const toCard = useProductCard()
   const isLoading = useSimulatedLoading()
   const { value, setValue, deferred } = useUrlInput(

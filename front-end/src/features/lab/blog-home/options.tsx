@@ -7,9 +7,10 @@ import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 import { useDemoNow } from '@/features/demo'
-import { categories, categoryPhoto, useBlogData } from './data'
 
+import { categories, categoryPhoto, useBlogData } from './data'
 import { CoverEffects } from './effects'
 import {
   AuthorsCard,
@@ -41,6 +42,7 @@ function useFeed(cover: Article | undefined, filter: CategoryFilter) {
 
 /** A · Cover story: one full-bleed story, category chips, a vertical feed, then the shop. */
 export function CoverHome({ effect }: BlogHomeOptionProps) {
+  const { language } = useLocale()
   const { c, articles, linkOf } = useBlogData()
   const [filter, setFilter] = useState<CategoryFilter>('all')
   const cover
@@ -56,8 +58,8 @@ export function CoverHome({ effect }: BlogHomeOptionProps) {
           <section className="flex flex-col gap-2 px-4">
             <Link
               className="relative block overflow-hidden rounded-[28px] outline-none focus-visible:focus-ring"
-              params={{ slug: cover.slug }}
-              to="/stories/$slug"
+              params={{ lang: language, slug: cover.slug }}
+              to="/$lang/stories/$slug"
             >
               <Media alt="" className="aspect-[4/5]" photo={cover.photo}>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/5" />
@@ -107,6 +109,7 @@ export function CoverHome({ effect }: BlogHomeOptionProps) {
 
 /** B · Story circles: category circles like Instagram, a swipeable featured deck, then a compact list. */
 export function CirclesHome({ effect }: BlogHomeOptionProps) {
+  const { language } = useLocale()
   const { c, articles } = useBlogData()
   const [filter, setFilter] = useState<CategoryFilter>('all')
   const featured = articles.slice(0, 4)
@@ -162,8 +165,8 @@ export function CirclesHome({ effect }: BlogHomeOptionProps) {
                   <li key={article.id} className="w-[82%] shrink-0 snap-center">
                     <Link
                       className="block overflow-hidden rounded-[28px] outline-none focus-visible:focus-ring"
-                      params={{ slug: article.slug }}
-                      to="/stories/$slug"
+                      params={{ lang: language, slug: article.slug }}
+                      to="/$lang/stories/$slug"
                     >
                       <Media
                         alt=""
@@ -250,8 +253,8 @@ export function EditionHome({ effect }: BlogHomeOptionProps) {
           <section className="flex flex-col gap-3 px-4">
             <Link
               className="flex flex-col gap-3 rounded-3xl outline-none focus-visible:focus-ring"
-              params={{ slug: lead.slug }}
-              to="/stories/$slug"
+              params={{ lang: language, slug: lead.slug }}
+              to="/$lang/stories/$slug"
             >
               <Media
                 alt=""
@@ -297,8 +300,8 @@ export function EditionHome({ effect }: BlogHomeOptionProps) {
               <Link
                 key={author.name}
                 className="flex flex-col gap-2 rounded-3xl outline-none focus-visible:focus-ring"
-                params={{ slug: article.slug }}
-                to="/stories/$slug"
+                params={{ lang: language, slug: article.slug }}
+                to="/$lang/stories/$slug"
               >
                 <Media
                   alt=""
@@ -330,6 +333,7 @@ export function EditionHome({ effect }: BlogHomeOptionProps) {
 
 /** D · Advent edition: December only. The calendar is the hero; one door opens per day. */
 export function AdventHome({ effect, today = 1 }: BlogHomeOptionProps) {
+  const { language } = useLocale()
   const { c, articles } = useBlogData()
   const doorStory = (day: number) => articles[(day - 1) % articles.length]
   const todays = doorStory(today)
@@ -360,8 +364,8 @@ export function AdventHome({ effect, today = 1 }: BlogHomeOptionProps) {
                         <Link
                           aria-label={`${c.door(day)}: ${story.title}`}
                           className={`block overflow-hidden rounded-xl outline-none focus-visible:focus-ring ${day === today ? 'ring-2 ring-[#ffd27a] ring-offset-2 ring-offset-[#1d2433]' : ''}`}
-                          params={{ slug: story.slug }}
-                          to="/stories/$slug"
+                          params={{ lang: language, slug: story.slug }}
+                          to="/$lang/stories/$slug"
                         >
                           <Media
                             alt=""

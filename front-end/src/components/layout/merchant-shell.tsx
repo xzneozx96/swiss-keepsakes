@@ -255,7 +255,7 @@ const tabLink
  * Operations, Calendar and More (a sheet with the other sections). From 1024px: a sidebar.
  */
 export function MerchantShell({ children }: { children: React.ReactNode }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const { setRole } = useDemoActions()
   const demoRole = useDemoSelector(s => s.role)
   const staffName = demoRole === 'manager' ? 'Lukas' : shop.ownerName
@@ -382,7 +382,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
             variant="ghost"
             onPress={() => {
               setRole('guest')
-              void navigate({ to: '/' })
+              void navigate({ to: '/$lang', params: { lang: language } })
             }}
           >
             <LogoutIcon aria-hidden size={18} />

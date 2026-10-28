@@ -14,14 +14,15 @@ import {
   CompactBar,
   SearchButton,
 } from '@/components/layout/cart-button'
+import { useLocale } from '@/contexts/locale-context'
 import { ProductCard } from '@/features/catalog/components/product-card'
 import { TourCard } from '@/features/tours/discovery/tour-card'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { AdviceBanner } from './advice-banner'
 import { Hero } from './hero'
 import { JourneySteps } from './journey-steps'
-import { MovingStoryRail } from './moving-story-rail'
 
+import { MovingStoryRail } from './moving-story-rail'
 import { PartHeading } from './part-heading'
 import { Rail } from './section'
 import { Snowfall } from './snowfall'
@@ -121,6 +122,7 @@ export function DiscoveryHome({
   isLoading: boolean
   snowing: boolean
 }) {
+  const { language } = useLocale()
   const { hero, journey, stories, tours, keep, victorinox, keepsakes, advice }
     = view
 
@@ -133,7 +135,8 @@ export function DiscoveryHome({
           <Link
             aria-label={hero.appName}
             className="flex rounded-lg outline-none focus-visible:focus-ring"
-            to="/"
+            params={{ lang: language }}
+            to="/$lang"
           >
             <img
               alt=""
@@ -144,7 +147,7 @@ export function DiscoveryHome({
             />
           </Link>
         </div>
-        <SearchButton label={hero.searchLabel} to="/search" tone="bar" />
+        <SearchButton label={hero.searchLabel} to="/$lang/search" tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
       <div className="flex flex-col gap-10 px-4 pb-4">
@@ -181,7 +184,8 @@ export function DiscoveryHome({
           {/* Same treatment as "Show all {count} reviews" and the comments' show-all. */}
           <Link
             className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform active:scale-[0.98]`}
-            to="/stories"
+            to="/$lang/stories"
+            params={{ lang: language }}
           >
             {stories.showAll}
           </Link>
@@ -196,7 +200,7 @@ export function DiscoveryHome({
             color={journey.steps[1]?.color ?? 'var(--accent)'}
             eyebrow={tours.eyebrow}
             id="walk-title"
-            seeAll={{ label: tours.seeAll, to: '/tours' }}
+            seeAll={{ label: tours.seeAll, to: '/$lang/tours' }}
             subtitle={tours.subtitle}
             title={tours.title}
           />
@@ -215,8 +219,8 @@ export function DiscoveryHome({
                         {story && (
                           <Link
                             className="flex w-60 items-start gap-2 rounded-xl px-1 text-label outline-none focus-visible:focus-ring"
-                            params={{ slug: story.slug }}
-                            to="/stories/$slug"
+                            params={{ lang: language, slug: story.slug }}
+                            to="/$lang/stories/$slug"
                           >
                             <StoryIcon
                               className="mt-0.5 shrink-0 text-accent"
@@ -259,7 +263,8 @@ export function DiscoveryHome({
             </div>
             <Link
               className="flex shrink-0 items-center gap-0.5 rounded-md py-1 text-sm font-medium text-muted outline-none select-none focus-visible:focus-ring active:opacity-60"
-              to="/gifts"
+              to="/$lang/gifts"
+              params={{ lang: language }}
             >
               {keepsakes.seeAll}
               <ChevronRightIcon size={16} />

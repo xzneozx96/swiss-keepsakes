@@ -22,7 +22,7 @@ const restoring = new WeakMap<Demo, Promise<void>>()
 
 // This is the client-only path: it loads the saved language and the saved demo state before the first paint.
 // Its partner on the server-rendered path is the effect in `LocaleProvider` (`contexts/locale-context.tsx`),
-// which applies the saved language after hydration; the saved demo state comes from `demo.restore` here too.
+// which applies the saved language after hydration on a page without a language prefix (a prefixed page takes it from the address); the saved demo state comes from `demo.restore` here too.
 // Change one and check the other.
 function restoreOnce(demo: Demo): Promise<void> {
   const started = restoring.get(demo) ?? (

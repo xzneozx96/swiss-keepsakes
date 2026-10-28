@@ -106,7 +106,7 @@ export function PrototypeBar() {
     setQrCode(null)
     if (code)
       void navigate({ to: '/r/$code', params: { code } })
-    else void navigate({ to: '/' })
+    else void navigate({ to: '/$lang', params: { lang: language } })
   }
 
   const sourceId = attributedPartnerId(referralVisits, demoNow(clockStartedAt))
@@ -223,7 +223,8 @@ export function PrototypeBar() {
                   Sample photos are credited on the{" "}
                   <Link
                     className="underline underline-offset-4"
-                    to="/credits"
+                    to="/$lang/credits"
+                    params={{ lang: language }}
                     onClick={() => setOpen(false)}
                   >
                     photo credits page

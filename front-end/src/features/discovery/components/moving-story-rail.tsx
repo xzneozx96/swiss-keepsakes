@@ -2,6 +2,7 @@ import { ScrollShadow } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 
 import { PickupIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
 import { avatarUrl } from '@/lib/avatars'
 import { photoUrl } from '@/lib/photos'
 
@@ -27,6 +28,7 @@ export function MovingStoryRail({
   label: string
   stories: MovingStory[]
 }) {
+  const { language } = useLocale()
   return (
     <ScrollShadow
       hideScrollBar
@@ -41,8 +43,8 @@ export function MovingStoryRail({
           <li key={story.slug} className="w-[64%] shrink-0 snap-start">
             <Link
               className="block rounded-[28px] outline-none focus-visible:focus-ring transition-transform active:scale-[0.98]"
-              params={{ slug: story.slug }}
-              to="/stories/$slug"
+              params={{ lang: language, slug: story.slug }}
+              to="/$lang/stories/$slug"
             >
               <div className="relative aspect-[2/3] overflow-hidden rounded-[28px] bg-gradient-to-b from-hero-sky to-surface-tertiary">
                 <img

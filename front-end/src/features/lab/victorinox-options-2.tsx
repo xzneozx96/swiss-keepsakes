@@ -17,6 +17,7 @@ import {
 } from '@/components/icons'
 
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 import { knifeArt } from '@/lib/victorinox-art'
 import {
   collections,
@@ -57,14 +58,15 @@ const chapterStyle: Record<
 }
 
 function ChapterKnives({ designs }: { designs: Design[] }) {
+  const { language } = useLocale()
   if (designs.length === 1) {
     const d = designs[0]
 
     return (
       <Link
         className="flex items-center gap-5 rounded-2xl px-4 outline-none focus-visible:focus-ring active:opacity-85"
-        params={{ slug: d.slug }}
-        to="/gifts/$slug"
+        params={{ lang: language, slug: d.slug }}
+        to="/$lang/gifts/$slug"
       >
         <img
           alt=""
@@ -95,8 +97,8 @@ function ChapterKnives({ designs }: { designs: Design[] }) {
             <Link
               aria-label={`${d.name}, ${d.line}`}
               className="flex flex-col items-center gap-1.5 rounded-xl pb-1 outline-none focus-visible:ring-2 focus-visible:ring-white active:opacity-85"
-              params={{ slug: d.slug }}
-              to="/gifts/$slug"
+              params={{ lang: language, slug: d.slug }}
+              to="/$lang/gifts/$slug"
             >
               <img
                 alt=""
@@ -244,6 +246,7 @@ export function VxHeritage({
   subtitle,
   story,
 }: VictorinoxOptionProps) {
+  const { language } = useLocale()
   const designs = toDesigns(items, isLoading)
 
   return (
@@ -311,8 +314,8 @@ export function VxHeritage({
             <li key={d.key} className="w-[15.5rem] shrink-0 snap-start">
               <Link
                 className="flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-surface outline-none select-none focus-visible:focus-ring active:opacity-85"
-                params={{ slug: d.slug }}
-                to="/gifts/$slug"
+                params={{ lang: language, slug: d.slug }}
+                to="/$lang/gifts/$slug"
               >
                 <span className="relative block h-60">
                   <Media alt="" className="h-40 w-full" photo={d.scene} />
@@ -357,6 +360,7 @@ export function VxWorkshop({
   seeAll,
   story,
 }: VictorinoxOptionProps) {
+  const { language } = useLocale()
   const designs = toDesigns(items, isLoading)
   const [index, setIndex] = useState(1)
   const [text, setText] = useState('Anna 16.10.2026')
@@ -483,8 +487,8 @@ export function VxWorkshop({
           <Price className="text-sm" design={current} />
           <Link
             className={`${ctaRed} h-11 text-sm`}
-            params={{ slug: current.slug }}
-            to="/gifts/$slug"
+            params={{ lang: language, slug: current.slug }}
+            to="/$lang/gifts/$slug"
           >
             Engrave this design
           </Link>

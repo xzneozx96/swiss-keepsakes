@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 
 export interface TrailStop {
   key: string
@@ -14,6 +15,7 @@ export interface TrailStop {
 
 /** Numbered round photos on a dotted path that zigzags down the page. */
 export function TrailList({ stops }: { stops: TrailStop[] }) {
+  const { language } = useLocale()
   return (
     <ol className="flex flex-col">
       {stops.map((stop, i) => {
@@ -59,8 +61,8 @@ export function TrailList({ stops }: { stops: TrailStop[] }) {
               ? (
                   <Link
                     className={className}
-                    params={{ slug: stop.action.slug }}
-                    to="/stories/$slug"
+                    params={{ lang: language, slug: stop.action.slug }}
+                    to="/$lang/stories/$slug"
                   >
                     {body}
                   </Link>

@@ -13,7 +13,7 @@ import { AppToasts } from '@/components/app-toasts'
 import { EmptyState } from '@/components/empty-state'
 import { InfoIcon } from '@/components/icons'
 import { RouteError } from '@/components/route-fallbacks'
-import { useLocale } from '@/contexts/locale-context'
+import { useLocale, useUrlLanguage } from '@/contexts/locale-context'
 import { PrototypeBar, useStorageFull } from '@/features/demo'
 import '@/styles/globals.css'
 
@@ -54,8 +54,10 @@ export const Route = createRootRoute({
 })
 
 function RootShell({ children }: { children: ReactNode }) {
+  const urlLanguage = useUrlLanguage()
+
   return (
-    <html lang="en" data-theme="swiss-keepsakes">
+    <html lang={urlLanguage ?? 'en'} data-theme="swiss-keepsakes">
       <head>
         <HeadContent />
         <noscript>
@@ -93,12 +95,12 @@ function RootLayout() {
 }
 
 function NotFound() {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
 
   return (
     <div className="px-4 py-12">
       <EmptyState
-        action={{ label: t('placeholder.backHome'), to: '/' }}
+        action={{ label: t('placeholder.backHome'), to: '/$lang', params: { lang: language } }}
         icon={InfoIcon}
         message={t('notFound.message')}
       />

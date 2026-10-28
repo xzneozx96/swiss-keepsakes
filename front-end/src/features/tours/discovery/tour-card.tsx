@@ -104,7 +104,7 @@ export const TourCard = memo(function TourCard({
                   </div>
                 )
       }
-      to="/tours/$slug"
+      to="/$lang/tours/$slug"
     />
   )
 })

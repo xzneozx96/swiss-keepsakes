@@ -9,6 +9,7 @@ import {
   EmailIcon,
   ShopIcon,
 } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
 import { SellerRow } from '@/features/catalog/components/seller-row'
 
 /** Lab only: compact seller blocks for C03. Same data as the built seller card. */
@@ -66,12 +67,14 @@ const roundIcon
 
 /** A · Host row + round icon actions: one 56px row, icons on the right. */
 export function SellerIconRow(p: SellerOptionProps) {
+  const { language } = useLocale()
   return (
     <div className="flex items-center gap-3">
       <Avatar initial={p.initial} />
       <Link
         className="flex min-w-0 flex-1 flex-col rounded outline-none focus-visible:focus-ring"
-        to="/gifts"
+        to="/$lang/gifts"
+        params={{ lang: language }}
       >
         <span className="truncate font-semibold">{p.title}</span>
         <span className="truncate text-xs text-muted">
@@ -114,6 +117,7 @@ export function SellerSheetRow(p: SellerOptionProps) {
 
 /** C · Info line + small chips: name and address, then four soft pills in one row. */
 export function SellerChips(p: SellerOptionProps) {
+  const { language } = useLocale()
   const chip
     = 'flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-surface-secondary px-3 text-xs font-medium outline-none focus-visible:focus-ring active:scale-95'
 
@@ -144,7 +148,7 @@ export function SellerChips(p: SellerOptionProps) {
             </a>
           )
         })}
-        <Link className={chip} to="/gifts">
+        <Link className={chip} to="/$lang/gifts" params={{ lang: language }}>
           <ShopIcon aria-hidden size={14} />
           {p.visitLabel}
         </Link>
@@ -155,12 +159,14 @@ export function SellerChips(p: SellerOptionProps) {
 
 /** D · Row + "Contact" menu: one row, a small button opens a menu of actions. */
 export function SellerMenu(p: SellerOptionProps) {
+  const { language } = useLocale()
   return (
     <div className="flex items-center gap-3">
       <Avatar initial={p.initial} />
       <Link
         className="flex min-w-0 flex-1 flex-col rounded outline-none focus-visible:focus-ring"
-        to="/gifts"
+        to="/$lang/gifts"
+        params={{ lang: language }}
       >
         <span className="truncate font-semibold">{p.title}</span>
         <span className="truncate text-xs text-muted">{p.address}</span>
@@ -196,6 +202,7 @@ export function SellerMenu(p: SellerOptionProps) {
 
 /** E · Contact strip (iOS contact card): name row, then one joined bar of four actions. */
 export function SellerStrip(p: SellerOptionProps) {
+  const { language } = useLocale()
   const cell
     = 'flex flex-1 flex-col items-center gap-1 py-2 text-[11px] font-medium outline-none focus-visible:focus-ring active:bg-default'
 
@@ -226,7 +233,7 @@ export function SellerStrip(p: SellerOptionProps) {
             </a>
           )
         })}
-        <Link className={cell} to="/gifts">
+        <Link className={cell} to="/$lang/gifts" params={{ lang: language }}>
           <ShopIcon aria-hidden size={18} />
           {p.visitLabel}
         </Link>

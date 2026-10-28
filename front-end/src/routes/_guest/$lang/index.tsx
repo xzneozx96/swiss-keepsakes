@@ -12,7 +12,7 @@ interface HomeSearch {
 }
 
 // C01 Discovery home: the platform's home page (spec §4.1, decision D6).
-export const Route = createFileRoute('/_guest/')({
+export const Route = createFileRoute('/_guest/$lang/')({
   validateSearch: (search: Record<string, unknown>): HomeSearch =>
     search.season === 'christmas' ? { season: 'christmas' } : {},
   ssr: true,

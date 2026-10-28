@@ -11,7 +11,7 @@ interface StoriesSearch {
 }
 
 // C19 Stories.
-export const Route = createFileRoute('/_guest/stories/')({
+export const Route = createFileRoute('/_guest/$lang/stories/')({
   ssr: true,
   validateSearch: (search: Record<string, unknown>): StoriesSearch =>
     isStoryCategory(search.category) ? { category: search.category } : {},

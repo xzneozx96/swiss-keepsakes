@@ -6,9 +6,10 @@ import { Link } from '@tanstack/react-router'
 
 import { PickupIcon } from '@/components/icons'
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 import { CategoryPill, tint } from './chips'
-import { categoryPhoto, useBlogData } from './data'
 
+import { categoryPhoto, useBlogData } from './data'
 import { Reels } from './reels'
 import { TrailList } from './trail'
 
@@ -28,12 +29,13 @@ function StoryLink({
   style?: React.CSSProperties
   children: React.ReactNode
 }) {
+  const { language } = useLocale()
   return (
     <Link
       className={`block outline-none focus-visible:focus-ring ${className ?? ''}`}
-      params={{ slug: article.slug }}
+      params={{ lang: language, slug: article.slug }}
       style={style}
-      to="/stories/$slug"
+      to="/$lang/stories/$slug"
     >
       {children}
     </Link>

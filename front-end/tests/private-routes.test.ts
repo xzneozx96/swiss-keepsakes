@@ -28,6 +28,11 @@ function hasNoIndex(route: AnyRoute): boolean {
   return false
 }
 
+/** A route's `$lang` stands for any language; the real paths are checked with `en`. */
+function isPrivateRoute(route: AnyRoute): boolean {
+  return isPrivatePath(route.fullPath.replace('/$lang', '/en'))
+}
+
 describe('private routes', () => {
   let routes: AnyRoute[] = []
 
@@ -49,13 +54,13 @@ describe('private routes', () => {
   it('[E3.3][AC12] every client-only route with the noindex head sits under a private prefix', () => {
     const strays = routes
       .filter(route => effectiveSsr(route) === false && hasNoIndex(route))
-      .filter(route => !isPrivatePath(route.fullPath))
+      .filter(route => !isPrivateRoute(route))
 
     expect(strays.map(route => route.fullPath)).toEqual([])
   })
 
   it('[E3.3][AC12] every route under a private prefix is client-only and yields the noindex meta', () => {
-    const privateRoutes = routes.filter(route => isPrivatePath(route.fullPath))
+    const privateRoutes = routes.filter(isPrivateRoute)
 
     expect(privateRoutes.length).toBeGreaterThan(20)
     expect(privateRoutes.filter(route => effectiveSsr(route) !== false).map(route => route.fullPath)).toEqual([])
@@ -103,6 +108,15 @@ describe('private routes', () => {
 
   it.each(['//stories', '//store-x'])('[E3.3][AC12] keeps %s public', (path) => {
     expect(isPrivatePath(path)).toBe(false)
+  })
+
+  it.each(['/en/stories', '/de/gifts'])('[E3.5] keeps %s public', (path) => {
+    expect(isPrivatePath(path)).toBe(false)
+  })
+
+  it('[E3.5] treats the language-prefixed trip planner as private', () => {
+    for (const path of ['/en/plan', '/de/plan', '/de/plan/sent'])
+      expect(privateHeaders(path)).toEqual({ 'X-Robots-Tag': 'noindex' })
   })
 
   it.each(['/Stories', '/STORE-X', '/%', '/%E0%A4%A', '/Labs'])('[E3.3][AC12] keeps %s public and does not throw on a bad escape', (path) => {

@@ -11,6 +11,7 @@ import {
   EmailIcon,
   ShopIcon,
 } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
 import { photoUrl } from '@/lib/photos'
 
 export interface SellerRowProps {
@@ -64,6 +65,7 @@ export function SellerRow({
   contacts,
   visitLabel,
 }: SellerRowProps) {
+  const { language } = useLocale()
   const [open, setOpen] = useState(false)
 
   return (
@@ -129,7 +131,7 @@ export function SellerRow({
                 )
               })}
               {visitLabel && (
-                <Link className={rowClass} to="/gifts">
+                <Link className={rowClass} to="/$lang/gifts" params={{ lang: language }}>
                   <ShopIcon aria-hidden size={22} />
                   <span className="flex-1 font-medium">{visitLabel}</span>
                   <ChevronRightIcon aria-hidden size={18} />
