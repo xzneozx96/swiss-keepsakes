@@ -8,7 +8,7 @@ import { createPublicReadRepository } from '../../src/modules/content/adapters/p
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeConfirmUpload, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -73,9 +73,14 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     deleteTour: makeDeleteTour(tourDeps),
   })
   // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
+  // No pg-boss here, so the job send is a no-op; the job and the transaction are tested with the use case.
+  const storage = createFakeStorage(systemClock)
   const contentUseCases = {
     ...writeUseCases,
-    requestUpload: makeRequestUpload({ storage: createFakeStorage(systemClock), clock: systemClock, newId: () => randomUUID() }),
+    requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => randomUUID() }),
+    confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: { send: async () => {} }, audit: createAuditLog(systemClock), clock: systemClock, newId: () => randomUUID() }),
+    getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+    publicUrl: storage.publicUrl,
     listStories: makeListStories(readDeps),
     getStory: makeGetStory(readDeps),
     getPin: makeGetPin(readDeps),

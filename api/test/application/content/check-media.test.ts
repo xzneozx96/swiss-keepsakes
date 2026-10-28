@@ -1,8 +1,8 @@
-import type { MediaRepository, MediaRow } from '../../../src/modules/content/ports.ts'
+import type { MediaLookup, MediaRow } from '../../../src/modules/content/ports.ts'
 import { describe, expect, it } from 'vitest'
 import { checkMedia } from '../../../src/modules/content/application/check-media.ts'
 
-function fakeMedia(rows: MediaRow[]): MediaRepository<null> {
+function fakeMedia(rows: MediaRow[]): MediaLookup<null> {
   return { find: async (_tx, _storeId, ids) => rows.filter(r => ids.map(i => i.toLowerCase()).includes(r.id)) }
 }
 
@@ -36,7 +36,7 @@ describe('checkMedia', () => {
   })
 
   it('[E2.6] an empty list passes without a lookup', async () => {
-    const media: MediaRepository<null> = {
+    const media: MediaLookup<null> = {
       find: async () => {
         throw new Error('no lookup expected')
       },

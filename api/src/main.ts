@@ -8,7 +8,7 @@ import { createPublicReadRepository } from './modules/content/adapters/public-re
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -184,6 +184,10 @@ async function main() {
     const contentUseCases = {
       ...writeUseCases,
       requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => crypto.randomUUID() }),
+      // They touch storage, so guardUseCases does not wrap them: the media routes map a StorageUnavailableError.
+      confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, newId: () => crypto.randomUUID() }),
+      getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+      publicUrl: storage.publicUrl,
       listStories: makeListStories(readDeps),
       getStory: makeGetStory(readDeps),
       getPin: makeGetPin(readDeps),

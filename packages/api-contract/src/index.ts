@@ -34,6 +34,8 @@ export {
 } from './content.ts'
 export { healthSchema } from './health.ts'
 export {
+  type ConfirmUpload,
+  confirmUploadSchema,
   type Media,
   mediaSchema,
   type UploadGrant,

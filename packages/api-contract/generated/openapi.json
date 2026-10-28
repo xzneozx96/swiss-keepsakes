@@ -139,6 +139,22 @@
         ],
         "type": "string"
       },
+      "ConfirmUpload": {
+        "additionalProperties": false,
+        "description": "The upload to confirm",
+        "properties": {
+          "uploadKey": {
+            "description": "The uploadKey of the grant, after the file was PUT",
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "uploadKey"
+        ],
+        "type": "object"
+      },
       "CreateStore": {
         "properties": {
           "defaultLanguage": {
@@ -336,6 +352,87 @@
           "storeId",
           "role",
           "status"
+        ],
+        "type": "object"
+      },
+      "Media": {
+        "description": "A file in the library",
+        "properties": {
+          "byteSize": {
+            "type": "integer"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "height": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "audio",
+              "pdf"
+            ],
+            "type": "string"
+          },
+          "publicUrl": {
+            "description": "The public URL of the original. Null until the file is ready",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "processing",
+              "ready",
+              "retired"
+            ],
+            "type": "string"
+          },
+          "variants": {
+            "description": "Resized copies of an image. Empty until the file is ready",
+            "items": {
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "width",
+                "url"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "contentType",
+          "byteSize",
+          "width",
+          "height",
+          "publicUrl",
+          "variants"
         ],
         "type": "object"
       },
@@ -4663,6 +4760,63 @@
         }
       }
     },
+    "/api/store/{storeId}/media/confirm": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmUpload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Media"
+                }
+              }
+            },
+            "description": "The file was checked and is being processed. Read it until its status is ready",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/store/{storeId}/media/uploads": {
       "post": {
         "parameters": [
@@ -4696,6 +4850,62 @@
               }
             },
             "description": "Where to PUT the file. The URL works once, for 15 minutes",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/media/{mediaId}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Media"
+                }
+              }
+            },
+            "description": "The file. The URLs are set when its status is ready",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"

@@ -1,5 +1,6 @@
 import type { Pin, StoryGroup, StoryVersion, TourGuide } from '@sk/domain/content'
 import type { ContentUseCases } from '../../src/modules/content/adapters/routes.ts'
+import type { MediaRecord } from '../../src/modules/content/ports.ts'
 
 export const fakePin: Pin = {
   id: '0190f0c2-0000-7000-8000-0000000000a1',
@@ -54,6 +55,19 @@ export const fakeStoryVersion: StoryVersion = {
   updatedAt: new Date('2026-10-27T08:00:00Z'),
 }
 
+export const fakeMedia: MediaRecord = {
+  id: '0190f0c2-0000-7000-8000-0000000000f1',
+  storeId: '0190f0c2-0000-7000-8000-00000000000a',
+  kind: 'image',
+  storageKey: 'fake',
+  contentType: 'image/jpeg',
+  byteSize: 1,
+  sha256: 'a'.repeat(64),
+  width: null,
+  height: null,
+  status: 'processing',
+}
+
 export const fakeTour: TourGuide = {
   id: '0190f0c2-0000-7000-8000-0000000000c1',
   storeId: '0190f0c2-0000-7000-8000-00000000000a',
@@ -96,6 +110,9 @@ export function createFakeContentUseCases(): ContentUseCases {
     unpublishTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, rowVersion: ifMatch + 1 } }),
     deleteTour: async (_actor, _storeId, tourId) => ({ ok: true, value: { id: tourId } }),
     requestUpload: async (_actor, storeId, input) => ({ ok: true, value: { uploadKey: `${storeId}/0190f0c2-0000-7000-8000-0000000000e1.jpg`, url: 'https://storage.test/uploads/fake', method: 'PUT', headers: { 'Content-Type': input.contentType }, expiresAt: '2026-10-28T10:15:00.000Z', kind: 'image' } }),
+    confirmUpload: async (_actor, storeId) => ({ ok: true, value: { ...fakeMedia, storeId } }),
+    getMedia: async (_actor, storeId, mediaId) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId } }),
+    publicUrl: key => `https://storage.test/media/${key}`,
     listStories: async () => ({ items: [] }),
     getStory: async () => ({ ok: false, reason: 'not-found' }),
     getPin: async () => ({ ok: false, reason: 'not-found' }),

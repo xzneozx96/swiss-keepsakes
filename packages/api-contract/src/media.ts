@@ -19,6 +19,10 @@ export const uploadGrantSchema = z.object({
   kind: mediaKind,
 }).meta({ id: 'UploadGrant', description: 'Where and how to upload one file' })
 
+export const confirmUploadSchema = z.strictObject({
+  uploadKey: z.string().min(1).max(300).meta({ description: 'The uploadKey of the grant, after the file was PUT' }),
+}).meta({ id: 'ConfirmUpload', description: 'The upload to confirm' })
+
 export const mediaSchema = z.object({
   id: z.uuid(),
   kind: mediaKind,
@@ -31,6 +35,7 @@ export const mediaSchema = z.object({
   variants: z.array(z.object({ width: z.int(), url: z.string() })).meta({ description: 'Resized copies of an image. Empty until the file is ready' }),
 }).meta({ id: 'Media', description: 'A file in the library' })
 
+export type ConfirmUpload = z.infer<typeof confirmUploadSchema>
 export type UploadRequest = z.infer<typeof uploadRequestSchema>
 export type UploadGrant = z.infer<typeof uploadGrantSchema>
 export type Media = z.infer<typeof mediaSchema>

@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, Pin, PinDate, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
+import type { ContentLanguage, Localized, MediaKind, Pin, PinDate, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -32,9 +32,42 @@ export interface MediaRow {
   status: 'processing' | 'ready' | 'retired'
 }
 
+// One row of content.media, as the use cases see it.
+export interface MediaRecord {
+  id: string
+  storeId: string
+  kind: MediaKind
+  storageKey: string
+  contentType: string
+  byteSize: number
+  sha256: string
+  width: number | null
+  height: number | null
+  status: 'processing' | 'ready' | 'retired'
+}
+
 export interface MediaRepository<T> {
   // The rows of this store among the ids. An id of another store has no row.
   find: (tx: T, storeId: string, ids: string[]) => Promise<MediaRow[]>
+  // A new row, status `processing`.
+  insert: (tx: T, row: { id: string, storeId: string, kind: MediaKind, storageKey: string, contentType: string, byteSize: number, sha256: string }, at: Date) => Promise<MediaRecord>
+  // An id of another store has no row. `forUpdate` locks the row until the transaction ends.
+  findById: (tx: T, storeId: string, id: string, options?: { forUpdate?: boolean }) => Promise<MediaRecord | undefined>
+  // `dims` for an image, none for audio and PDF (the table CHECK refuses a width on anything but an image).
+  markReady: (tx: T, row: MediaRecord, dims: { width: number, height: number } | undefined, at: Date) => Promise<MediaRecord>
+  // Sets status `retired` and `retired_at` together (media_retired_check).
+  retire: (tx: T, row: MediaRecord, at: Date) => Promise<MediaRecord>
+  // True when a tour (PDF or cover), a tour stop, a pin cover or any media_refs row points at the id.
+  isReferenced: (tx: T, storeId: string, mediaId: string) => Promise<boolean>
+}
+
+// What the save and read use cases need of the media table: they only look rows up.
+export type MediaLookup<T> = Pick<MediaRepository<T>, 'find'>
+
+// The job queue, as the identity and notifications modules also define it. `send` writes the job through the
+// caller's transaction, so a rollback removes it with the business change.
+export interface JobQueue<T> {
+  send: (tx: T, queue: string, data: object, options?: { startAfter?: Date, id?: string, retryLimit?: number, retryDelay?: number, retryBackoff?: boolean, expireInSeconds?: number, retentionSeconds?: number, deleteAfterSeconds?: number }) => Promise<void>
 }
 
 // What a pin save may change. `title` and `tip` together form the draft document; the repository stores it with
