@@ -92,17 +92,12 @@ async function startAtHome(page: Page, owner: boolean, signedIn = true) {
     await page.reload()
     await hydrated(page)
   }
-  else {
-    await page.goto(HOME)
-    await hydrated(page)
-  }
   await expectScreen(page)
 
   return ids
 }
 
-/** A real click on a visible link to the route when the home has one, else the client navigation of scripts/verify/browser.mjs goTo. */
-/** The way taken is kept as the `follow` annotation of the test. */
+/** A real click on a visible link to the route when the home has one, else the client navigation of scripts/verify/browser.mjs goTo. The way taken is kept as the `follow` annotation of the test. */
 async function follow(page: Page, route: string) {
   // The home keeps an aria-hidden copy of its header while it loads: only a link outside it is one a visitor can press.
   const link = page.locator(`a[href="${route}"]:visible:not([aria-hidden="true"] a)`).first()
@@ -128,17 +123,25 @@ for (const set of SETS) {
         const ids = await startAtHome(page, set.owner)
         const path = fill(route, ids)
 
+        const homeLine = await firstLine(page)
+
         await follow(page, path)
-        await expect(page).toHaveURL(new RegExp(`${path.replaceAll('/', '\\/')}$`))
+        await expect.poll(() => new URL(page.url()).pathname).toBe(path)
         await expectScreen(page)
+        // The home has a `main` too, so the route's screen is told from it by its first line of text.
+        await expect.poll(() => firstLine(page)).not.toBe(homeLine)
+        const routeLine = await firstLine(page)
 
         await page.goBack()
         await expect.poll(() => new URL(page.url()).pathname).toBe(HOME)
         await expectScreen(page)
 
+        await expect.poll(() => firstLine(page)).toBe(homeLine)
+
         await page.goForward()
         await expect.poll(() => new URL(page.url()).pathname).toBe(path)
         await expectScreen(page)
+        await expect.poll(() => firstLine(page)).toBe(routeLine)
       })
 
       test(`[E3.9] AC-1 a typed ${route} and a reload open the same screen (${set.name})`, async ({ page }) => {
