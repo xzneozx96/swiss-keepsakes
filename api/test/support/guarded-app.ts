@@ -37,7 +37,7 @@ export const noAccess: Access = { platformAdmin: false, memberships: [] }
 // The real createApp over stand-ins for Better Auth and the identity tables. A request is signed in as the user
 // named by its `sk-test-user` cookie, and what that user may do comes from `people`. Everything after the
 // session, the Origin rule, `authenticate`, the guards, `can()`, is the real code.
-export function createGuardedApp(people: Record<string, Access> = {}, logger: Logger = createLogger('silent'), commands: CommandDeps = guardedCommands) {
+export function createGuardedApp(people: Record<string, Access> = {}, logger: Logger = createLogger('silent'), commands: CommandDeps = guardedCommands, renewedCookie?: string) {
   const calls = { authHandler: 0, readSession: 0, listMyStores: 0 }
   const app = createApp(logger, async () => ({ database: true, jobs: true }), {
     origin: shopOrigin,
@@ -48,7 +48,9 @@ export function createGuardedApp(people: Record<string, Access> = {}, logger: Lo
     readSession: async (headers) => {
       calls.readSession++
       const userId = userCookie.exec(headers.get('cookie') ?? '')?.[1]
-      return { headers: new Headers(), response: userId ? { user: { id: userId } } : null }
+      // A renewed session: Better Auth hands back a Set-Cookie that `authenticate` appends to the response.
+      const renewed = new Headers(renewedCookie ? { 'Set-Cookie': renewedCookie } : {})
+      return { headers: renewed, response: userId ? { user: { id: userId } } : null }
     },
     loadIdentity: async userId => ({ guestId: `guest-of-${userId}`, access: people[userId] ?? noAccess }),
     listMyStores: async (userId) => {

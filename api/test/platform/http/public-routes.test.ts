@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { contractApp, openApiDocument } from '../../../scripts/contract.ts'
 import { registerContentRoutes } from '../../../src/modules/content/adapters/routes.ts'
 import { createFakeContentUseCases } from '../../support/fake-content-use-cases.ts'
-import { createGuardedApp, guardedCommands, signedInAs } from '../../support/guarded-app.ts'
+import { createGuardedApp, guardedCommands, noAccess, signedInAs } from '../../support/guarded-app.ts'
 
 function setup(overrides: Partial<ContentUseCases> = {}) {
   const useCases = { ...createFakeContentUseCases(), ...overrides }
@@ -123,5 +123,25 @@ describe('[E2.12] the generated document for the public routes', () => {
 
     expect(all.length).toBeGreaterThan(40)
     expect(all.filter(key => moneyKey.test(key))).toEqual([])
+  })
+})
+
+describe('[E2.12] a renewed session cookie never rides on a public read', () => {
+  const renewed = 'better-auth.session_token=renewed; Path=/; HttpOnly'
+  const app = createGuardedApp({ someone: noAccess }, undefined, { ...guardedCommands, routes: [routes => registerContentRoutes(routes, createFakeContentUseCases())] }, renewed).app
+
+  it('[E2.12][AC54] the 200 and the 304 of /api/public/map carry no Set-Cookie, and /api/me still passes it', async () => {
+    const first = await app.request('/api/public/map?lang=en', { headers: signedInAs('someone') })
+    const again = await app.request('/api/public/map?lang=en', { headers: { ...signedInAs('someone'), 'If-None-Match': first.headers.get('ETag')! } })
+    const notFound = await app.request(`/api/public/places/${pinId}?lang=en`, { headers: signedInAs('someone') })
+    const me = await app.request('/api/me', { headers: signedInAs('someone') })
+
+    expect(first.status).toBe(200)
+    expect(again.status).toBe(304)
+    expect(notFound.status).toBe(404)
+    expect(first.headers.getSetCookie()).toEqual([])
+    expect(again.headers.getSetCookie()).toEqual([])
+    expect(notFound.headers.getSetCookie()).toEqual([])
+    expect(me.headers.getSetCookie()).toEqual([renewed])
   })
 })
