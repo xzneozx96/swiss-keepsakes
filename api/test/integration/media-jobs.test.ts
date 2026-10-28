@@ -79,6 +79,19 @@ describe('[E2.7] the media job on real pg-boss', () => {
     expect(await t.uow.run(tx => checkMedia(t.media, tx, t.storeId, [{ id: t.mediaId, kind: 'image' }]))).toEqual({ reason: 'media-retired' })
   })
 
+  it('[E2.7] a failed file that a story uses stays processing, is purged, and raises the in-use alert without a trigger error', async () => {
+    const t = await setup(undecodableJpeg)
+    await pool.query(`insert into content.media_refs (store_id, media_id, owner_kind, owner_id, owner_language, slot) values ($1, $2, 'story_version', $3, 'en', 'draft')`, [t.storeId, t.mediaId, randomUUID()])
+
+    await t.send()
+    await until(() => t.alerts.length === 1)
+
+    expect(t.alerts).toEqual([{ storeId: t.storeId, mediaId: t.mediaId, inUse: true }])
+    expect(await t.status()).toBe('processing')
+    expect(t.storage.objects('uploads').size).toBe(0)
+    expect(t.storage.objects('media').size).toBe(0)
+  })
+
   it('[E2.7] a readable image is made ready by the worker', async () => {
     const t = await setup(await jpegWithGps(900, 600))
 

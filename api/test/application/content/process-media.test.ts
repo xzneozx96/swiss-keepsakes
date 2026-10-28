@@ -258,6 +258,31 @@ describe('[E2.7] fail-media', () => {
     expect(await checkMedia(t.media, tx, store, [{ id: mediaId, kind: 'image' }])).toEqual({ reason: 'media-retired' })
   })
 
+  it('[E2.7] a processing row that a story or tour uses stays processing, is purged, and raises only the in-use alert', async () => {
+    const t = await setup('jpg', undecodableJpeg)
+    t.media.referenced.add(mediaId)
+    t.storage.seed('media', originalKey(store, mediaId, 'jpg'), new Uint8Array([1]))
+    t.storage.seed('media', `${store}/other/original.jpg`, new Uint8Array([1]))
+
+    await t.failMedia({ storeId: store, mediaId })
+
+    expect(t.media.rows.get(mediaId)?.status).toBe('processing')
+    expect(t.media.retiredAt.has(mediaId)).toBe(false)
+    expect(t.source()).toBe(false)
+    expect(t.keys()).toEqual([`${store}/other/original.jpg`])
+    expect(t.alerts).toEqual([{ storeId: store, mediaId, inUse: true }])
+  })
+
+  it('[E2.7] an unreferenced processing row is retired and raises the plain alert without the in-use flag', async () => {
+    const t = await setup('jpg', undecodableJpeg)
+
+    await t.failMedia({ storeId: store, mediaId })
+
+    expect(t.media.rows.get(mediaId)?.status).toBe('retired')
+    expect(t.alerts).toHaveLength(1)
+    expect(t.alerts[0]).not.toHaveProperty('inUse')
+  })
+
   it('[E2.7] a ready row survives: not retired, no purge, no alert, only the leftover source goes', async () => {
     const t = await setup('jpg', await jpegWithGps(800, 600))
     await t.processMedia({ storeId: store, mediaId })

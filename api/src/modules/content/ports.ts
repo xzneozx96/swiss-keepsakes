@@ -206,9 +206,11 @@ export class StorageUnavailableError extends Error {
 }
 
 // Raised once for a media file that will not be processed: its job used all its attempts. Ids only.
+// `inUse` is set when a story or tour still uses the file: the row stays processing and the merchant must replace it.
 export interface MediaFailure {
   storeId: string
   mediaId: string
+  inUse?: true
 }
 
 export type MediaAlert = (failure: MediaFailure) => void

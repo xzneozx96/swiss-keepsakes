@@ -92,6 +92,24 @@ update content.media set status = 'retired', retired_at = now()
 where id = '<media id>' and status <> 'retired';
 ```
 
+## A failed file that a story or tour uses: `media.failed-in-use`
+
+The dead-letter handler cannot retire a row that a story or tour uses, because the database refuses it. For such a row the handler leaves it `processing`, removes its objects from `media` and its source from `uploads`, and logs one error line, `media.failed-in-use`, with `storeId` and `mediaId`. The row never becomes `ready`, so a publish that uses it answers 422 `media-processing` for ever. This is also the cause when a merchant reports that publish never works.
+
+Find the row and what uses it:
+
+```sql
+select id, store_id, kind, status, created_at from content.media where id = '<media id>';
+
+select owner_kind, owner_id, owner_language, slot from content.media_refs where media_id = '<media id>';
+select id, 'pdf' as slot from content.tours where pdf_media_id = '<media id>'
+union all select id, 'cover' from content.tours where cover_media_id = '<media id>';
+select tour_id, position from content.tour_stops where media_id = '<media id>';
+select id from content.places where cover_media_id = '<media id>';
+```
+
+Fix: the merchant uploads the file again (a fixed file, or a smaller image) and attaches the new row in the story or tour, then saves. After that nothing uses the old row. Retire it by hand with the statement in the section above, or leave it for the retire job, which runs after a replace. No object is left to remove. Do not print `AWS_*` while you check.
+
 ## Replacing a file, and the retire job
 
 Saving a tour with a different PDF queues one `media-retire` job for the old row, due `MEDIA_GRACE_HOURS` after the save. Until then the old file stays where it is, so a guest with the old address or a cached page still gets a PDF. Clearing the PDF of a draft tour, or saving the same PDF again, queues nothing.
