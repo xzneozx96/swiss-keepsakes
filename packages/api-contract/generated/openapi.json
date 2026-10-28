@@ -426,6 +426,41 @@
         ],
         "type": "object"
       },
+      "NextDate": {
+        "description": "The next date of a pin, in Europe/Zurich",
+        "properties": {
+          "endTime": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "firstDay": {
+            "format": "date",
+            "type": "string"
+          },
+          "lastDay": {
+            "format": "date",
+            "type": "string"
+          },
+          "startTime": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "firstDay",
+          "lastDay",
+          "startTime",
+          "endTime"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
       "Onboarding": {
         "properties": {
           "conditions": {
@@ -993,6 +1028,926 @@
           "title",
           "instance",
           "requestId"
+        ],
+        "type": "object"
+      },
+      "PublicCategory": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "de"
+            ],
+            "type": "object"
+          },
+          "parentId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "position": {
+            "type": "integer"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "parentId",
+          "position"
+        ],
+        "type": "object"
+      },
+      "PublicCategoryList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicCategory"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PublicLanguage": {
+        "enum": [
+          "en",
+          "de"
+        ],
+        "type": "string"
+      },
+      "PublicMap": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicMapItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PublicMapItem": {
+        "description": "One pin on the map list",
+        "properties": {
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "hasMainStory": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "language": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "mainStorySlug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nextDate": {
+            "$ref": "#/components/schemas/NextDate"
+          },
+          "photoKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "latitude",
+          "longitude",
+          "title",
+          "language",
+          "categoryIds",
+          "stayTag",
+          "interests",
+          "nextDate",
+          "hasMainStory",
+          "mainStorySlug",
+          "photoKey"
+        ],
+        "type": "object"
+      },
+      "PublicPin": {
+        "description": "The pin card",
+        "properties": {
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "availableLanguages": {
+            "items": {
+              "$ref": "#/components/schemas/PublicLanguage"
+            },
+            "type": "array"
+          },
+          "categories": {
+            "description": "The pin categories, with the parent of each sub-category included",
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "slug",
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "fallback": {
+            "description": "True when the item is in another language than the one asked for",
+            "type": "boolean"
+          },
+          "hasMainStory": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "language": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "latitude": {
+            "type": "number"
+          },
+          "longitude": {
+            "type": "number"
+          },
+          "mainStorySlug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nextDate": {
+            "$ref": "#/components/schemas/NextDate"
+          },
+          "photoKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requestedLanguage": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "slug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "tip": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "weeklyHours": {
+            "items": {
+              "properties": {
+                "closes": {
+                  "type": "string"
+                },
+                "day": {
+                  "type": "integer"
+                },
+                "opens": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "day",
+                "opens",
+                "closes"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "tip",
+          "latitude",
+          "longitude",
+          "address",
+          "weeklyHours",
+          "stayTag",
+          "interests",
+          "categories",
+          "nextDate",
+          "hasMainStory",
+          "mainStorySlug",
+          "photoKey",
+          "language",
+          "requestedLanguage",
+          "fallback",
+          "availableLanguages"
+        ],
+        "type": "object"
+      },
+      "PublicStory": {
+        "properties": {
+          "authorName": {
+            "type": "string"
+          },
+          "authorRole": {
+            "type": "string"
+          },
+          "availableLanguages": {
+            "items": {
+              "$ref": "#/components/schemas/PublicLanguage"
+            },
+            "type": "array"
+          },
+          "categories": {
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "slug",
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "coverKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "excerpt": {
+            "type": "string"
+          },
+          "fallback": {
+            "description": "True when the item is in another language than the one asked for",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "intro": {
+            "type": "string"
+          },
+          "language": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "readMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "requestedLanguage": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "sections": {
+            "items": {
+              "properties": {
+                "blocks": {
+                  "items": {
+                    "oneOf": [
+                      {
+                        "properties": {
+                          "text": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "enum": [
+                              "paragraph"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "text"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "properties": {
+                          "caption": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "type": {
+                            "enum": [
+                              "image"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "key",
+                          "caption"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "properties": {
+                          "caption": {
+                            "type": "string"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "enum": [
+                              "video"
+                            ],
+                            "type": "string"
+                          },
+                          "youtubeId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "youtubeId",
+                          "title",
+                          "caption"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "properties": {
+                          "caption": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "enum": [
+                              "audio"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "key",
+                          "title",
+                          "caption"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "type": "array"
+                },
+                "heading": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "heading",
+                "blocks"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "excerpt",
+          "readMinutes",
+          "coverKey",
+          "stayTag",
+          "interests",
+          "categories",
+          "publishedAt",
+          "language",
+          "requestedLanguage",
+          "fallback",
+          "availableLanguages",
+          "intro",
+          "authorName",
+          "authorRole",
+          "sections"
+        ],
+        "type": "object"
+      },
+      "PublicStoryCard": {
+        "properties": {
+          "availableLanguages": {
+            "items": {
+              "$ref": "#/components/schemas/PublicLanguage"
+            },
+            "type": "array"
+          },
+          "categories": {
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "slug",
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "coverKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "excerpt": {
+            "type": "string"
+          },
+          "fallback": {
+            "description": "True when the item is in another language than the one asked for",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "language": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "publishedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "readMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "requestedLanguage": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "excerpt",
+          "readMinutes",
+          "coverKey",
+          "stayTag",
+          "interests",
+          "categories",
+          "publishedAt",
+          "language",
+          "requestedLanguage",
+          "fallback",
+          "availableLanguages"
+        ],
+        "type": "object"
+      },
+      "PublicStoryList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicStoryCard"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PublicTour": {
+        "properties": {
+          "availableLanguages": {
+            "items": {
+              "$ref": "#/components/schemas/PublicLanguage"
+            },
+            "type": "array"
+          },
+          "coverKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "durationMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "fallback": {
+            "description": "True when the item is in another language than the one asked for",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "keepsakeProductIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "language": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "meetingPoint": {
+            "type": "string"
+          },
+          "pdfKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "requestedLanguage": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "sections": {
+            "items": {
+              "properties": {
+                "body": {
+                  "type": "string"
+                },
+                "heading": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "heading",
+                "body"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "stops": {
+            "items": {
+              "properties": {
+                "key": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "latitude": {
+                  "type": "number"
+                },
+                "longitude": {
+                  "type": "number"
+                },
+                "minutesFromStart": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "placeId": {
+                  "format": "uuid",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "position": {
+                  "type": "integer"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "position",
+                "latitude",
+                "longitude",
+                "title",
+                "text",
+                "minutesFromStart",
+                "key",
+                "placeId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "stayTag",
+          "interests",
+          "durationMinutes",
+          "coverKey",
+          "language",
+          "requestedLanguage",
+          "fallback",
+          "availableLanguages",
+          "summary",
+          "meetingPoint",
+          "sections",
+          "stops",
+          "pdfKey",
+          "keepsakeProductIds"
+        ],
+        "type": "object"
+      },
+      "PublicTourCard": {
+        "properties": {
+          "availableLanguages": {
+            "items": {
+              "$ref": "#/components/schemas/PublicLanguage"
+            },
+            "type": "array"
+          },
+          "coverKey": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "durationMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "fallback": {
+            "description": "True when the item is in another language than the one asked for",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "language": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "requestedLanguage": {
+            "$ref": "#/components/schemas/PublicLanguage"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "stayTag",
+          "interests",
+          "durationMinutes",
+          "coverKey",
+          "language",
+          "requestedLanguage",
+          "fallback",
+          "availableLanguages"
+        ],
+        "type": "object"
+      },
+      "PublicTourList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PublicTourCard"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
         ],
         "type": "object"
       },
@@ -2731,6 +3686,90 @@
         }
       }
     },
+    "/api/public/blog-categories": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCategoryList"
+                }
+              }
+            },
+            "description": "Every blog category, parents first",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/public/invitations/preview": {
       "post": {
         "requestBody": {
@@ -2753,6 +3792,666 @@
               }
             },
             "description": "The store, the role, the inviter's name and the state of the invitation. Never the invited address",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/map": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicMap"
+                }
+              }
+            },
+            "description": "The visible pins of all stores, newest first. Cached 60 s on the server",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/map-categories": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCategoryList"
+                }
+              }
+            },
+            "description": "Every map category, parents first",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/places/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPin"
+                }
+              }
+            },
+            "description": "The card of one visible pin",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No such published item",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/stories": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStoryList"
+                }
+              }
+            },
+            "description": "The published stories, newest first",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/stories/{slug}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStory"
+                }
+              }
+            },
+            "description": "One published story",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No such published item",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/tours": {
+      "get": {
+        "parameters": [
+          {
+            "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicTourList"
+                }
+              }
+            },
+            "description": "The published tour guides",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/tours/{slug}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          {
+            "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+            "in": "query",
+            "name": "lang",
+            "required": true,
+            "schema": {
+              "description": "The language asked for. An item that has no version in it comes back in the other language, marked `fallback`",
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicTour"
+                }
+              }
+            },
+            "description": "One published tour guide",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "304": {
+            "description": "The If-None-Match tag still matches. No body",
+            "headers": {
+              "Cache-Control": {
+                "description": "`max-age=30`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "ETag": {
+                "description": "A strong tag of the body. Send it back in If-None-Match",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "No such published item",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"

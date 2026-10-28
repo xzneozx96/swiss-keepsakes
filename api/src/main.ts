@@ -4,10 +4,11 @@ import process from 'node:process'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
 import { createMediaRepository } from './modules/content/adapters/media-repository.ts'
 import { createPinRepository } from './modules/content/adapters/pin-repository.ts'
+import { createPublicReadRepository } from './modules/content/adapters/public-repository.ts'
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeHidePin, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -155,7 +156,8 @@ async function main() {
     const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit, clock: systemClock }
     const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), audit, clock: systemClock }
     const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock }
-    const contentUseCases = guardUseCases({
+    const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock }
+    const writeUseCases = guardUseCases({
       createPin: makeCreatePin(pinDeps),
       savePin: makeSavePin(pinDeps),
       publishPin: makePublishPin(pinDeps),
@@ -175,6 +177,17 @@ async function main() {
       unpublishTour: makeUnpublishTour(tourDeps),
       deleteTour: makeDeleteTour(tourDeps),
     })
+    // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
+    const contentUseCases = {
+      ...writeUseCases,
+      listStories: makeListStories(readDeps),
+      getStory: makeGetStory(readDeps),
+      getPin: makeGetPin(readDeps),
+      listTours: makeListTours(readDeps),
+      getTour: makeGetTour(readDeps),
+      listCategories: makeListCategories(readDeps),
+      getMap: makeGetMap(readDeps),
+    }
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
       withoutIdempotencyKey: [invitationPreviewPath],
