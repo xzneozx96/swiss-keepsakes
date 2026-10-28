@@ -23,7 +23,7 @@ export type UploadCheck
     | { ok: false, reason: 'type-not-allowed' | 'too-large' | 'empty' }
 
 export function checkUploadRequest(input: { contentType: string, byteSize: number }): UploadCheck {
-  const rule = Object.hasOwn(MEDIA_RULES.types, input.contentType) ? MEDIA_RULES.types[input.contentType] : undefined
+  const rule = Object.keys(MEDIA_RULES.types).includes(input.contentType) ? MEDIA_RULES.types[input.contentType] : undefined
   if (!rule) return { ok: false, reason: 'type-not-allowed' }
   if (!Number.isInteger(input.byteSize) || input.byteSize <= 0) return { ok: false, reason: 'empty' }
   if (input.byteSize > rule.maxBytes) return { ok: false, reason: 'too-large' }

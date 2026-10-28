@@ -1,3 +1,4 @@
+// @ts-nocheck -- Playwright is a front-end dependency, loaded through that package (see `require` below), so the spikes project has no types for it.
 // Browser check (T-E2.7 AC-7): a page at origin http://localhost:3002 (served through page.route, no dev server)
 // PUTs a small file to a presigned URL of the `uploads` bucket with fetch, then reads it back.
 // Run: flock <e2e.lock> node --env-file=../../api/.env.local --import tsx browser-put.ts <evidence-dir>
