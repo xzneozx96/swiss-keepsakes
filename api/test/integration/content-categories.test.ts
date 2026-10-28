@@ -137,6 +137,7 @@ describe.each(['map', 'blog'] as const)('[E4.18][AC87] the %s category list over
     expect((await s.list(kind)).find(c => c.id === tagged.id)).toMatchObject({ useCount: 1 })
 
     expect((await env.call(s.url(kind, `/${free.id}`), { method: 'DELETE', headers: s.as })).status).toBe(204)
+    expect((await publicNames(kind)).has(free.id)).toBe(false)
     expect((await env.call(s.url(kind, `/${child.id}`), { method: 'DELETE', headers: s.as })).status).toBe(204)
     expect((await env.call(s.url(kind, `/${parent.id}`), { method: 'DELETE', headers: s.as })).status).toBe(204)
     expect((await s.list(kind)).map(c => `${c.name.en}:${c.position}`)).toEqual(['Tagged:1'])
@@ -168,7 +169,7 @@ describe.each(['map', 'blog'] as const)('[E4.18][AC87] the %s category list over
     expect(await count(pool, `select count(*) from content.${table(kind)} where id = $1`, [tagged.id])).toBe(1)
   })
 
-  it('[E4.18][AC87] AC-5 reorder: the ids must be exactly the siblings; three rows come back in the new order', async () => {
+  it('[E4.18][AC87] reorder: the ids must be exactly the siblings; three rows come back in the new order', async () => {
     const s = await setup()
     const [a, b, c] = [await s.made(kind, { name: { en: 'A' } }), await s.made(kind, { name: { en: 'B' } }), await s.made(kind, { name: { en: 'C' } })]
     const order = (parentId: string | null, ids: string[]) => env.call(s.url(kind, '/order'), { method: 'PUT', headers: s.as, body: { parentId, ids } })
@@ -183,17 +184,19 @@ describe.each(['map', 'blog'] as const)('[E4.18][AC87] the %s category list over
     expect((await s.list(kind)).map(x => `${x.name.en}:${x.position}`)).toEqual(['C:1', 'A:2', 'B:3'])
   })
 
-  it('nesting rules: a sub cannot hold a category, a parent with children cannot become a sub, a category is not its own parent', async () => {
+  it('[E4.18][AC87] AC-5 nesting rules: a sub cannot hold a category, a parent with children cannot become a sub, a category is not its own parent', async () => {
     const s = await setup()
     const a = await s.made(kind, { name: { en: 'A' } })
     const b = await s.made(kind, { name: { en: 'B' } })
     const sub = await s.made(kind, { name: { en: 'Sub' }, parentId: a.id })
     const patch = (id: string, parentId: string) => env.call(s.url(kind, `/${id}`), { method: 'PATCH', headers: s.as, body: { parentId } })
 
+    const before = await s.list(kind)
     expect(await (await patch(b.id, sub.id)).json()).toMatchObject({ type: 'category-too-deep' })
     expect(await (await patch(a.id, b.id)).json()).toMatchObject({ type: 'category-parent-has-children' })
     expect(await (await patch(a.id, a.id)).json()).toMatchObject({ type: 'category-too-deep' })
     expect(await (await s.create(kind, { name: { en: 'X' }, parentId: sub.id })).json()).toMatchObject({ type: 'category-too-deep' })
+    expect(await s.list(kind)).toEqual(before)
   })
 
   it('a parent from another store or from the other list is 404, and nothing is linked across', async () => {
