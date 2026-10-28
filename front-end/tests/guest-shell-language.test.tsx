@@ -64,15 +64,43 @@ describe('language notice', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(en['shell.notice.onlyEn'])
   })
 
-  it('stays out when the stored language has a version or the page has no loader data', async () => {
+  it('names German on a German-only page when the stored language is English', async () => {
+    localStorage.setItem('sk.language', JSON.stringify('en'))
+    renderAt('/de/stories', ['de'])
+
+    expect(await screen.findByRole('status')).toHaveTextContent(de['shell.notice.onlyDe'])
+  })
+
+  it('stays out when the stored language has a version', async () => {
     localStorage.setItem('sk.language', JSON.stringify('de'))
     renderAt('/en/stories', ['en', 'de'])
     await screen.findByRole('group')
     expect(screen.queryByRole('status')).toBeNull()
   })
 
-  it('stays out when the stored language is English', async () => {
+  it('stays out when the page has no loader data', async () => {
+    localStorage.setItem('sk.language', JSON.stringify('de'))
+    renderAt('/en/stories')
+    await screen.findByRole('group')
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('stays out when the loader does not know the page (empty list)', async () => {
+    localStorage.setItem('sk.language', JSON.stringify('de'))
+    renderAt('/en/stories', [])
+    await screen.findByRole('group')
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('stays out when the stored language is English and the page is English', async () => {
+    localStorage.setItem('sk.language', JSON.stringify('en'))
     renderAt('/en/stories', ['en'])
+    await screen.findByRole('group')
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('stays out when nothing is stored, on a German-only page', async () => {
+    renderAt('/de/stories', ['de'])
     await screen.findByRole('group')
     expect(screen.queryByRole('status')).toBeNull()
   })

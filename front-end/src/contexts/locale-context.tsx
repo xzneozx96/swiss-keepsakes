@@ -43,6 +43,25 @@ export function storedLanguage(): Language {
   return readStored<unknown>(STORAGE_KEY, 'en') === 'de' ? 'de' : 'en'
 }
 
+/** The saved choice as it is, or undefined when the guest saved none. Loads nothing. */
+function savedLanguage(): Language | undefined {
+  const saved = readStored<unknown>(STORAGE_KEY, undefined)
+
+  return saved === 'en' || saved === 'de' ? saved : undefined
+}
+
+const savedListeners = new Set<() => void>()
+
+function subscribeToSaved(listener: () => void) {
+  savedListeners.add(listener)
+  window.addEventListener('storage', listener)
+
+  return () => {
+    savedListeners.delete(listener)
+    window.removeEventListener('storage', listener)
+  }
+}
+
 /** The saved language, or English when its messages could not be loaded (offline, a stale page). The saved choice stays, so the next visit tries again. */
 function initialLanguage(): Language {
   const saved = storedLanguage()
@@ -82,8 +101,8 @@ function useDictionary(language: Language): Dictionary | undefined {
 
 interface LocaleContextValue {
   language: Language
-  /** The saved choice. On a prefixed page `language` follows the address and this can differ. It is English until the browser has hydrated, then the saved one. */
-  preferredLanguage: Language
+  /** The saved choice, which on a prefixed page can differ from `language` (the address). Undefined on the server, while hydrating, and when the guest has saved none. */
+  preferredLanguage: Language | undefined
   /** Intl locale for numbers, dates and HeroUI's date components. */
   intlLocale: IntlLocale
   setLanguage: (language: Language) => void
@@ -199,6 +218,7 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
         setStoredChoice(next)
         writeStored(STORAGE_KEY, next)
         writeLanguageCookie(next)
+        savedListeners.forEach(listener => listener())
 
         navigateTo?.(next)
       },
@@ -208,8 +228,10 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
 
   // A page rendered on the server and hydrated starts in English, like the server's HTML. The saved language
   // arrives after that. A client-only page already starts in it, so this finds nothing to change there.
-  // A prefixed page also reads it, for the language notice; the language shown still follows the address.
+  // A prefixed page takes its language from the address and leaves the saved one alone.
   useEffect(() => {
+    if (urlLanguage)
+      return
     const saved = storedLanguage()
 
     if (saved === 'en')
@@ -224,7 +246,10 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
       },
       () => undefined,
     )
-  }, [])
+  }, [urlLanguage])
+
+  // Undefined on the server and while hydrating, so the server's HTML and the first client render agree.
+  const preferredLanguage = useSyncExternalStore(subscribeToSaved, savedLanguage, () => undefined)
 
   // `urlLanguage` is a dependency because the root shell writes `lang` from the address alone, so leaving
   // a prefixed page resets it to English even when `language` (the saved one) does not change.
@@ -235,12 +260,12 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
   const value = useMemo<LocaleContextValue>(
     () => ({
       language,
-      preferredLanguage: storedChoice,
+      preferredLanguage,
       intlLocale: intlLocales[language],
       setLanguage: changeLanguage,
       t: (key, vars) => fill(dictionaryOf(language)[key], vars),
     }),
-    [language, storedChoice, changeLanguage],
+    [language, preferredLanguage, changeLanguage],
   )
 
   return (
@@ -267,7 +292,7 @@ export function LocaleOverride({
     () =>
       messages && {
         language,
-        preferredLanguage: language,
+        preferredLanguage: undefined,
         intlLocale: intlLocales[language],
         setLanguage: () => undefined,
         t: (key, vars) => fill(messages[key], vars),

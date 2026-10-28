@@ -90,6 +90,34 @@ test.describe('[E3.11][AC64] notice', () => {
   })
 })
 
+test.describe('[E3.11][AC64] German-only notice', () => {
+  const DE_ONLY = 'ein-ruhiger-morgen-an-der-reuss'
+  const NOTICE_DE = 'Diese Seite gibt es nur auf Deutsch.'
+
+  test('the server HTML has no notice, so a German guest never sees it flash', async ({ request }) => {
+    const response = await request.get(`/de/stories/${DE_ONLY}`)
+
+    expect(response.status()).toBe(200)
+    expect(await response.text()).not.toContain(NOTICE_DE)
+  })
+
+  test('stored en: the notice shows in German after hydration', async ({ page }) => {
+    await seedLanguage(page, 'en')
+    await page.goto(`/de/stories/${DE_ONLY}`)
+    await hydrated(page)
+
+    await expect(page.getByRole('status')).toHaveText(NOTICE_DE)
+  })
+
+  test('nothing stored: no notice', async ({ page }) => {
+    await page.goto(`/de/stories/${DE_ONLY}`)
+    await hydrated(page)
+
+    await expect(page.getByRole('group', { name: 'Seitensprache', exact: true })).toBeVisible()
+    await expect(page.getByRole('status')).toHaveCount(0)
+  })
+})
+
 test.describe('[E3.11][AC64] switch', () => {
   test('choosing DE on the English-only story stays at the English address with the notice and stores de', async ({ page }) => {
     await page.goto(`/en/stories/${FIXTURE}`)
@@ -125,11 +153,16 @@ test.describe('[E3.11][AC30] switch', () => {
     expect(await page.evaluate(() => document.cookie)).toContain('sk_lang=de')
     await expect(page.getByRole('status')).toHaveCount(0)
 
+    await expect(page.getByRole('heading', { level: 1, name: 'Ein Morgen auf der Museggmauer' })).toBeVisible()
+
     await page.goto('/cart')
     expect(new URL(page.url()).pathname).toBe('/cart')
     await expect(page.getByText('Ihr Warenkorb ist leer.')).toBeVisible()
+    await expect(page.getByRole('group', { name: /Seitensprache|Page language/ })).toHaveCount(0)
     await page.goto('/account')
     expect(new URL(page.url()).pathname).toBe('/account')
+    await expect(page.getByText(/Entdecken|Andenken|Konto/).first()).toBeVisible()
+    await expect(page.getByRole('group', { name: /Seitensprache|Page language/ })).toHaveCount(0)
 
     await page.goto(`/de/stories/${SHARED}`)
     await hydrated(page)

@@ -1,4 +1,4 @@
-import type { Language } from '@sk/domain/shared'
+import type { Language } from '@/contexts/locale-context'
 
 import { useMatches } from '@tanstack/react-router'
 
@@ -17,11 +17,12 @@ export function LanguageNotice() {
     select: (matches) => {
       const data = matches.at(-1)?.loaderData
 
-      return hasAvailableLanguages(data) ? data.availableLanguages : undefined
+      // An empty list means the loader does not know the page (a merchant-made story in the browser store): no notice.
+      return hasAvailableLanguages(data) && data.availableLanguages.length > 0 ? data.availableLanguages : undefined
     },
   })
 
-  if (!urlLanguage || !available || available.includes(preferredLanguage))
+  if (!urlLanguage || !preferredLanguage || !available || available.includes(preferredLanguage))
     return null
 
   return (
