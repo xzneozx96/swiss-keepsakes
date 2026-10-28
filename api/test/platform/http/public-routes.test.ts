@@ -128,7 +128,7 @@ describe('[E2.12] the generated document for the public routes', () => {
 
 describe('[E2.12] a renewed session cookie never rides on a public read', () => {
   const renewed = 'better-auth.session_token=renewed; Path=/; HttpOnly'
-  const app = createGuardedApp({ someone: noAccess }, undefined, { ...guardedCommands, routes: [routes => registerContentRoutes(routes, createFakeContentUseCases())] }, renewed).app
+  const { app, calls } = createGuardedApp({ someone: noAccess }, undefined, { ...guardedCommands, routes: [routes => registerContentRoutes(routes, createFakeContentUseCases())] }, renewed)
 
   it('[E2.12] the 200 and the 304 of /api/public/map carry no Set-Cookie, and /api/me still passes it', async () => {
     const first = await app.request('/api/public/map?lang=en', { headers: signedInAs('someone') })
@@ -148,5 +148,18 @@ describe('[E2.12] a renewed session cookie never rides on a public read', () => 
     expect(again.headers.getSetCookie()).toEqual([])
     expect(notFound.headers.getSetCookie()).toEqual([])
     expect(me.headers.getSetCookie()).toEqual([renewed])
+  })
+
+  it('[E2.12][G-S5-PUBLICAUTH] a GET or HEAD of any public route reads no session, and /api/me does', async () => {
+    const before = calls.readSession
+
+    for (const path of [...listPaths, ...detailPaths]) {
+      for (const method of ['GET', 'HEAD'])
+        await app.request(`${path}?lang=en`, { method, headers: signedInAs('someone') })
+    }
+    expect(calls.readSession).toBe(before)
+
+    await app.request('/api/me', { headers: signedInAs('someone') })
+    expect(calls.readSession).toBe(before + 1)
   })
 })

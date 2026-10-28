@@ -150,6 +150,16 @@ describe('public map list', () => {
     expect(Object.keys(byId(sub)).sort()).toEqual(Object.keys(publicMapItemSchema.shape).sort())
   })
 
+  it('[E2.12][AC88][D-5] a pin that falls back to English keeps the English main story slug, not the reader\'s language', async () => {
+    const s = setup({ pins: [pin(1, { name: { en: 'Only EN' }, tip: { en: 'Tip EN' }, mainStorySlugs: { en: 'story-en', de: 'geschichte' } })] })
+
+    const item = (await s.map('de')).items[0]!
+    const detail = await s.pin(uuid(1), 'de')
+
+    expect(item).toMatchObject({ language: 'en', hasMainStory: true, mainStorySlug: 'story-en' })
+    expect(detail.ok && detail.value).toMatchObject({ language: 'en', fallback: true, hasMainStory: true, mainStorySlug: 'story-en' })
+  })
+
   it('[E2.12][AC88] hasMainStory and mainStorySlug follow the main story versions in the carried language', async () => {
     const withBoth = pin(1, { mainStorySlugs: { en: 'story-en', de: 'geschichte' } })
     const enOnly = pin(2, { mainStorySlugs: { en: 'story-en-2' }, name: { en: 'Pin 2', de: 'Ort 2' } })

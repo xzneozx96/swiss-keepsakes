@@ -74,15 +74,6 @@ const mapRoute = publicGet('/api/public/map', 'The visible pins of all stores, n
 
 // Anonymous: no guard sits on /api/public, and a stranger sees only published content. The handlers read no store.
 export function registerPublicRoutes(app: OpenAPIHono<AppEnv>, useCases: PublicUseCases): void {
-  // `authenticate` appends the Set-Cookie of a session Better Auth renewed. A public answer is the same for everyone
-  // and may be cached, so it never carries a cookie: drop it here, for the 200, the 304 and the problems alike.
-  // Tradeoff: a session is not renewed by a public read, only by the next other /api request. HEAD is routed to the GET handlers.
-  app.use('/api/public/*', async (c, next) => {
-    await next()
-    if (c.req.method === 'GET' || c.req.method === 'HEAD')
-      c.res.headers.delete('Set-Cookie')
-  })
-
   app.openapi(storiesRoute, async c => conditionalJson(c, await useCases.listStories(c.req.valid('query').lang)))
 
   app.openapi(storyRoute, async (c) => {

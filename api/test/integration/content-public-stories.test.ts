@@ -51,6 +51,19 @@ async function tag(store: string, groupId: string, categoryId: string) {
 }
 
 describe('public story reads over the database', () => {
+  it('[E2.12][G-S5-REVIEWSLIST] a published editorial_review group is listed in /api/public/stories like a story', async () => {
+    // Owner gate G-S5-REVIEWSLIST: editorial reviews stay in the public list. Do not filter on kind.
+    const store = randomUUID()
+    const place = (await pool.query<{ id: string }>(`insert into content.places (store_id) values ($1) returning id`, [store])).rows[0]!.id
+    const { rows } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind, subject_place_id) values ($1, 'editorial_review', $2) returning id`, [store, place])
+    const g = rows[0]!.id
+    const s = await version(store, g, 'en', 'published', 'Chapel Bridge review')
+
+    const listed = (await list('en')).items.find(i => i.id === g)
+
+    expect(listed).toMatchObject({ slug: s, title: 'Chapel Bridge review' })
+  })
+
   it('[E2.12][AC45] a story edited and republished reads the new text at once', async () => {
     const store = randomUUID()
     const g = await group(store)

@@ -17,6 +17,7 @@ function setup(readSession: SessionReader, loadAccess: (userId: string) => Promi
     },
   }) as never)
   app.get('/api/who', c => c.json(c.get('actor') ?? null))
+  app.all('/api/public/anything', c => c.json(c.get('actor') ?? null))
   app.get('/api/auth/ping', c => c.json(c.get('actor') ?? null))
   return { app, ensured }
 }
@@ -156,5 +157,54 @@ describe('[E2.10] authenticate: the actor gains its roles', () => {
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual({ userId: 'user-1', guestId: 'guest-of-user-1' })
     }
+  })
+})
+
+describe('[E2.12][G-S5-PUBLICAUTH] authenticate: a public read skips the session', () => {
+  const renewed = new Headers()
+  renewed.append('Set-Cookie', 'better-auth.session_token=renewed; Max-Age=604800; HttpOnly')
+
+  it('[E2.12][G-S5-PUBLICAUTH] GET and HEAD of /api/public/* never call readSession, are anonymous and set no cookie', async () => {
+    let reads = 0
+    const { app, ensured } = setup(async () => {
+      reads++
+      return { headers: renewed, response: { user: { id: 'user-1' } } }
+    })
+
+    for (const method of ['GET', 'HEAD']) {
+      const response = await app.request('/api/public/anything', { method, headers: { Cookie: 'better-auth.session_token=abc' } })
+      expect(response.status, method).toBe(200)
+      expect(response.headers.getSetCookie(), method).toEqual([])
+      if (method === 'GET')
+        expect(await response.json()).toEqual({ kind: 'anonymous' })
+    }
+    expect(reads).toBe(0)
+    expect(ensured).toEqual([])
+  })
+
+  it('[E2.12][G-S5-PUBLICAUTH] a POST to /api/public/* still reads the session', async () => {
+    let reads = 0
+    const { app } = setup(async () => {
+      reads++
+      return { headers: new Headers(), response: { user: { id: 'user-1' } } }
+    })
+
+    const response = await app.request('/api/public/anything', { method: 'POST' })
+
+    expect(reads).toBe(1)
+    expect(await response.json()).toEqual({ kind: 'guest', userId: 'user-1', guestId: 'guest-of-user-1' })
+  })
+
+  it('[E2.12][G-S5-PUBLICAUTH] an authenticated route still renews the cookie and clears an expired one', async () => {
+    const clearing = new Headers()
+    clearing.append('Set-Cookie', 'better-auth.session_token=; Max-Age=0; Path=/; HttpOnly')
+    const signedIn = setup(async () => ({ headers: renewed, response: { user: { id: 'user-1' } } }))
+    const expired = setup(async () => ({ headers: clearing, response: null }))
+
+    const renewal = await signedIn.app.request('/api/who')
+    const cleared = await expired.app.request('/api/who')
+
+    expect(renewal.headers.getSetCookie()).toEqual(['better-auth.session_token=renewed; Max-Age=604800; HttpOnly'])
+    expect(cleared.headers.getSetCookie()).toEqual(['better-auth.session_token=; Max-Age=0; Path=/; HttpOnly'])
   })
 })
