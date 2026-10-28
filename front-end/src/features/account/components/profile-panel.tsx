@@ -28,11 +28,9 @@ export function ProfilePanel() {
     const path = lastPublicPath()
 
     if (path) {
-      const queryAt = path.indexOf('?')
-      const pathname = queryAt === -1 ? path : path.slice(0, queryAt)
-      const query = queryAt === -1 ? '' : path.slice(queryAt)
+      const [pathname, ...query] = path.split('?')
 
-      router.history.push(switchLanguagePath(pathname, next) + query)
+      void router.navigate({ href: [switchLanguagePath(pathname, next), ...query].join('?') })
     }
   }
 

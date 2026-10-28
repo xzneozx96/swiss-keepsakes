@@ -6,22 +6,20 @@ test.use({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true
 
 type Lang = 'en' | 'de'
 
-const TABS: Record<Lang, { label: string, to: string }[]> = {
+const TABS: Record<Lang, { label: string, to: string, heading: string }[]> = {
   en: [
-    { label: 'Explore', to: '/en' },
-    { label: 'Keepsakes', to: '/en/gifts' },
-    { label: 'Tours', to: '/en/tours' },
-    { label: 'Account', to: '/account' },
+    { label: 'Explore', to: '/en', heading: 'Make yourself at home' },
+    { label: 'Keepsakes', to: '/en/gifts', heading: 'Keepsakes' },
+    { label: 'Tours', to: '/en/tours', heading: 'Tours around Luzerne' },
+    { label: 'Account', to: '/account', heading: 'Account' },
   ],
   de: [
-    { label: 'Entdecken', to: '/de' },
-    { label: 'Andenken', to: '/de/gifts' },
-    { label: 'Touren', to: '/de/tours' },
-    { label: 'Konto', to: '/account' },
+    { label: 'Entdecken', to: '/de', heading: 'Fühlen Sie sich wie zu Hause' },
+    { label: 'Andenken', to: '/de/gifts', heading: 'Andenken' },
+    { label: 'Touren', to: '/de/tours', heading: 'Touren rund um Luzern' },
+    { label: 'Konto', to: '/account', heading: 'Konto' },
   ],
 }
-
-const BROKEN_TEXT = /\{\w+\}|undefined|\b(?:nav|account)\.[a-z.]+\b/
 
 async function hydrated(page: Page) {
   await page.waitForFunction(() => document.documentElement.dataset.hydrated === 'true')
@@ -56,16 +54,18 @@ test.describe('[E3.11][AC30] guest tabs and the Profile language change', () => 
     test(`AC-6: the tabs keep the ${lang} prefix`, async ({ page }) => {
       const problems = problemsOf(page)
 
+      // The Account tab has no prefix, so its language is the saved one.
+      await page.addInitScript(language => localStorage.setItem('sk.language', JSON.stringify(language)), lang)
       await page.goto(start)
       await hydrated(page)
-      for (const { label, to } of TABS[lang]) {
+      for (const { label, to, heading } of TABS[lang]) {
         const tab = nav(page).getByRole('link', { name: label, exact: true })
 
         await expect(tab).toBeVisible()
         await expect(tab).toHaveAttribute('href', to)
         await tab.click()
-        await expect(page).toHaveURL(new RegExp(`${to === '/en' || to === '/de' ? `${to}/?` : to}(?:\\?.*)?$`))
-        await expect(nav(page)).not.toContainText(BROKEN_TEXT)
+        await expect(page).toHaveURL(new RegExp(`${to}/?$`))
+        await expect(page.getByRole('heading', { name: heading, level: 1 })).toBeVisible()
       }
       expect(problems).toEqual([])
     })
@@ -93,20 +93,17 @@ test.describe('[E3.11][AC30] guest tabs and the Profile language change', () => 
     const problems = problemsOf(page)
 
     await signIn(page)
-    await nav(page).getByRole('link', { name: 'Explore', exact: true }).click()
-    await expect(page).toHaveURL(/\/en\/?$/)
-    await page.locator('a[href^="/en/stories/"]').first().click()
-    await expect(page).toHaveURL(/\/en\/stories\/[^/]+$/)
-    const story = new URL(page.url()).pathname.split('/').pop()
-    // The story page hides the tab bar; step to the profile with a client-side history entry, as a link would.
-    await page.evaluate(() => {
-      history.pushState({}, '', '/account?tab=profile')
-      dispatchEvent(new PopStateEvent('popstate'))
-    })
-    await expect(page.getByRole('radio', { name: 'English' })).toBeVisible()
+    await nav(page).getByRole('link', { name: 'Keepsakes', exact: true }).click()
+    await expect(page).toHaveURL('/en/gifts')
+    await nav(page).getByRole('link', { name: 'Account', exact: true }).click()
+    await expect(page).toHaveURL('/account')
+    await page.getByRole('link', { name: /Language/ }).click()
+    await expect(page).toHaveURL('/account?tab=profile')
 
     await page.getByText('Deutsch', { exact: true }).click()
-    await expect(page).toHaveURL(`/de/stories/${story}`)
+    await expect(page).toHaveURL('/de/gifts')
+    await expect(page.locator('html')).toHaveAttribute('lang', 'de')
+    await expect(page.getByRole('heading', { name: 'Andenken', level: 1, exact: true })).toBeVisible()
     await expect.poll(() => page.evaluate(() => localStorage.getItem('sk.language'))).toBe('"de"')
     expect(problems).toEqual([])
   })
