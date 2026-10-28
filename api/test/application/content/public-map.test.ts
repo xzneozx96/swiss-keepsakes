@@ -123,6 +123,19 @@ describe('public map list', () => {
     expect((await s3.map('en')).items).toEqual([])
   })
 
+  it('[E2.12][AC86] a warm cache still drops a pin whose end passes, and keeps one with a later date', async () => {
+    const today = pin(1, { dates: [date({ firstDay: '2090-11-14', lastDay: '2090-11-14' })] })
+    const later = pin(2, { dates: [date({ firstDay: '2090-11-20', lastDay: '2090-11-20' })] })
+    // 23:59:30 Zurich (CET), the cache fills.
+    const s = setup({ pins: [today, later] }, '2090-11-14T22:59:30Z')
+    expect((await s.map('en')).items.map(i => i.id).sort()).toEqual([today.id, later.id].sort())
+
+    // 00:00:00 Zurich next day, 30 s later, inside the 60 s TTL.
+    s.clock.advance(30_000)
+    expect((await s.map('en')).items.map(i => i.id)).toEqual([later.id])
+    expect(s.loads()).toBe(1)
+  })
+
   it('[E2.12][AC86] a pin with one past and one future date lists the future date', async () => {
     const mixed = pin(1, { dates: [date({ id: 'p', firstDay: '2090-11-01', lastDay: '2090-11-01' }), date({ id: 'f', firstDay: '2090-12-01', lastDay: '2090-12-01' })] })
     const s = setup({ pins: [mixed] }, '2090-11-10T12:00:00Z')
