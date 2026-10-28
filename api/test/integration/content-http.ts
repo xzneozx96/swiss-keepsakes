@@ -5,7 +5,8 @@ import { createMediaRepository } from '../../src/modules/content/adapters/media-
 import { createPinRepository } from '../../src/modules/content/adapters/pin-repository.ts'
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
-import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeDeletePin, makeDeleteStoryVersion, makeHidePin, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeUnpublishStoryVersion } from '../../src/modules/content/index.ts'
+import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
+import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeHidePin, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -45,6 +46,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   })
   const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
   const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
+  const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
   const contentUseCases = guardUseCases({
     createPin: makeCreatePin(pinDeps),
     savePin: makeSavePin(pinDeps),
@@ -59,6 +61,11 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     unpublishStoryVersion: makeUnpublishStoryVersion(storyDeps),
     moveStoryVersion: makeMoveStoryVersion(storyDeps),
     deleteStoryVersion: makeDeleteStoryVersion(storyDeps),
+    createTour: makeCreateTour(tourDeps),
+    saveTour: makeSaveTour(tourDeps),
+    publishTour: makePublishTour(tourDeps),
+    unpublishTour: makeUnpublishTour(tourDeps),
+    deleteTour: makeDeleteTour(tourDeps),
   })
   const app = createApp(createLogger('silent'), async () => ({ database: true, jobs: true }), {
     authHandler: auth.handler,
@@ -96,7 +103,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     await insertStore(pool, storeId, 'live')
     const [owner, manager] = await Promise.all([signIn(), signIn()])
     await pool.query(`insert into identity.store_memberships (user_id, store_id, role, accepted_at) values ($1, $2, 'owner', now()), ($3, $2, 'manager', now())`, [owner.userId, storeId, manager.userId])
-    return { storeId, owner, manager, pins: `/api/store/${storeId}/pins`, groups: `/api/store/${storeId}/story-groups` }
+    return { storeId, owner, manager, pins: `/api/store/${storeId}/pins`, groups: `/api/store/${storeId}/story-groups`, tours: `/api/store/${storeId}/tours` }
   }
 
   return { call, signIn, storeWithStaff }

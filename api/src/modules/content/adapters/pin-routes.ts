@@ -11,7 +11,7 @@ import { problemResponses, requestIdHeader } from '../../../platform/http/respon
 import { readIfMatch } from './if-match.ts'
 import { pinChanges, pinView } from './pin-view.ts'
 import { failureProblem } from './problems.ts'
-import { json, withIfMatch } from './route-parts.ts'
+import { etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
 
 // What the pin routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface PinUseCases {
@@ -22,16 +22,14 @@ export interface PinUseCases {
   deletePin: (actor: Actor, storeId: string, pinId: string, requestId: string | null) => Promise<Result<{ id: string }>>
 }
 
-const storeParams = z.object({ storeId: z.uuid() })
 const pinParams = z.object({ storeId: z.uuid(), pinId: z.uuid() })
-const pinHeaders = { ...requestIdHeader, ETag: { description: 'The row version, as `"<rowVersion>"`', schema: { type: 'string' } } } as const
 
 const createPinRoute = createRoute({
   method: 'post',
   path: '/api/store/{storeId}/pins',
   request: { params: storeParams, body: { required: true, content: json(pinWriteBodySchema) } },
   responses: {
-    201: { description: 'The new draft pin', headers: pinHeaders, content: json(pinSchema) },
+    201: { description: 'The new draft pin', headers: etagHeaders, content: json(pinSchema) },
     ...problemResponses,
   },
 })
@@ -41,7 +39,7 @@ const savePinRoute = createRoute({
   path: '/api/store/{storeId}/pins/{pinId}',
   request: { params: pinParams, ...withIfMatch, body: { required: true, content: json(pinWriteBodySchema) } },
   responses: {
-    200: { description: 'The pin with the change saved. A left-out field stays, null clears, a list replaces', headers: pinHeaders, content: json(pinSchema) },
+    200: { description: 'The pin with the change saved. A left-out field stays, null clears, a list replaces', headers: etagHeaders, content: json(pinSchema) },
     ...problemResponses,
   },
 })
@@ -51,7 +49,7 @@ const publishPinRoute = createRoute({
   path: '/api/store/{storeId}/pins/{pinId}/publish',
   request: { params: pinParams, ...withIfMatch },
   responses: {
-    200: { description: 'The pin is live with its draft', headers: pinHeaders, content: json(pinSchema) },
+    200: { description: 'The pin is live with its draft', headers: etagHeaders, content: json(pinSchema) },
     ...problemResponses,
   },
 })
@@ -61,7 +59,7 @@ const hidePinRoute = createRoute({
   path: '/api/store/{storeId}/pins/{pinId}/hide',
   request: { params: pinParams, ...withIfMatch },
   responses: {
-    200: { description: 'The pin is hidden. Its published text is kept', headers: pinHeaders, content: json(pinSchema) },
+    200: { description: 'The pin is hidden. Its published text is kept', headers: etagHeaders, content: json(pinSchema) },
     ...problemResponses,
   },
 })

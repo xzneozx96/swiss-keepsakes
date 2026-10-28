@@ -1,4 +1,4 @@
-import type { Pin, StoryGroup, StoryVersion } from '@sk/domain/content'
+import type { Pin, StoryGroup, StoryVersion, TourGuide } from '@sk/domain/content'
 import type { ContentUseCases } from '../../src/modules/content/adapters/routes.ts'
 
 export const fakePin: Pin = {
@@ -54,6 +54,25 @@ export const fakeStoryVersion: StoryVersion = {
   updatedAt: new Date('2026-10-27T08:00:00Z'),
 }
 
+export const fakeTour: TourGuide = {
+  id: '0190f0c2-0000-7000-8000-0000000000c1',
+  storeId: '0190f0c2-0000-7000-8000-00000000000a',
+  status: 'draft',
+  slug: null,
+  stayTag: 'both',
+  interests: [],
+  durationMinutes: null,
+  coverMediaId: null,
+  pdfMediaId: null,
+  keepsakeProductIds: [],
+  stops: [],
+  draft: null,
+  published: null,
+  rowVersion: 1,
+  createdAt: new Date('2026-10-27T08:00:00Z'),
+  updatedAt: new Date('2026-10-27T08:00:00Z'),
+}
+
 // Stand-ins for the content use cases, for tests of the routes' guards over createApp. Each answers as if the
 // row existed and the caller could do the thing, so a request that gets past the guard is not a 404 or a 403.
 export function createFakeContentUseCases(): ContentUseCases {
@@ -71,5 +90,10 @@ export function createFakeContentUseCases(): ContentUseCases {
     unpublishStoryVersion: async (_actor, storeId, groupId, language, ifMatch) => ({ ok: true, value: { ...fakeStoryVersion, storeId, groupId, language, rowVersion: ifMatch + 1 } }),
     moveStoryVersion: async (_actor, storeId, _groupId, language, ifMatch, targetGroupId) => ({ ok: true, value: { ...fakeStoryVersion, storeId, groupId: targetGroupId, language, rowVersion: ifMatch + 1 } }),
     deleteStoryVersion: async (_actor, _storeId, groupId, language) => ({ ok: true, value: { groupId, language } }),
+    createTour: async (_actor, storeId) => ({ ok: true, value: { ...fakeTour, storeId } }),
+    saveTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, rowVersion: ifMatch + 1 } }),
+    publishTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, status: 'published', rowVersion: ifMatch + 1 } }),
+    unpublishTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, rowVersion: ifMatch + 1 } }),
+    deleteTour: async (_actor, _storeId, tourId) => ({ ok: true, value: { id: tourId } }),
   }
 }

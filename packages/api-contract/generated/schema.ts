@@ -1368,6 +1368,257 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/tours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TourGuideWriteBody"];
+                };
+            };
+            responses: {
+                /** @description The new draft tour guide */
+                201: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TourGuide"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/tours/{tourId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                    tourId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The tour guide is deleted with its stops. Only one that was never published can be */
+                204: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    storeId: string;
+                    tourId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TourGuideWriteBody"];
+                };
+            };
+            responses: {
+                /** @description The tour guide with the change saved. A left-out field stays, null clears, a list replaces */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TourGuide"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/store/{storeId}/tours/{tourId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    storeId: string;
+                    tourId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The tour guide is live with its draft */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TourGuide"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/tours/{tourId}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    storeId: string;
+                    tourId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The tour guide is a draft again. Its published text is kept */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TourGuide"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -1929,6 +2180,140 @@ export interface components {
         StoryVersionSaveBody: {
             draft?: components["schemas"]["StoryDraft"];
             slug?: string;
+        };
+        /** @description A tour guide as the editor sees it, with its draft and its published text */
+        TourGuide: {
+            /** Format: uuid */
+            coverMediaId: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            draft: {
+                meetingPoint: {
+                    de?: string;
+                    en?: string;
+                };
+                sections: {
+                    body: {
+                        de?: string;
+                        en?: string;
+                    };
+                    heading: {
+                        de?: string;
+                        en?: string;
+                    };
+                    id: string;
+                }[];
+                summary: {
+                    de?: string;
+                    en?: string;
+                };
+                title: {
+                    de?: string;
+                    en?: string;
+                };
+            } | null;
+            durationMinutes: number | null;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            keepsakeProductIds: string[];
+            /** Format: uuid */
+            pdfMediaId: string | null;
+            published: {
+                meetingPoint: {
+                    de?: string;
+                    en?: string;
+                };
+                sections: {
+                    body: {
+                        de?: string;
+                        en?: string;
+                    };
+                    heading: {
+                        de?: string;
+                        en?: string;
+                    };
+                    id: string;
+                }[];
+                summary: {
+                    de?: string;
+                    en?: string;
+                };
+                title: {
+                    de?: string;
+                    en?: string;
+                };
+            } | null;
+            rowVersion: number;
+            slug: {
+                de?: string;
+                en?: string;
+            } | null;
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            stops: {
+                /** Format: uuid */
+                id: string;
+                latitude: number;
+                longitude: number;
+                /** Format: uuid */
+                mediaId: string | null;
+                minutesFromStart: number | null;
+                /** Format: uuid */
+                placeId: string | null;
+                position: number;
+                text: {
+                    de?: string;
+                    en?: string;
+                };
+                title: {
+                    de?: string;
+                    en?: string;
+                };
+            }[];
+            /** Format: uuid */
+            storeId: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @description Every field is optional. A tour guide has no price and no departure */
+        TourGuideWriteBody: {
+            /** Format: uuid */
+            coverMediaId?: string | null;
+            draft?: {
+                meetingPoint?: components["schemas"]["LocalizedText"];
+                sections?: {
+                    body: components["schemas"]["LocalizedLongText"];
+                    heading: components["schemas"]["LocalizedText"];
+                    id: string;
+                }[];
+                summary?: components["schemas"]["LocalizedLongText"];
+                title?: components["schemas"]["LocalizedText"];
+            };
+            durationMinutes?: number | null;
+            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes")[];
+            keepsakeProductIds?: string[];
+            /** Format: uuid */
+            pdfMediaId?: string | null;
+            slug?: {
+                de?: string;
+                en?: string;
+            } | null;
+            /** @enum {string} */
+            stayTag?: "short_stay" | "multi_day" | "both";
+            stops?: {
+                latitude: number;
+                longitude: number;
+                /** Format: uuid */
+                mediaId?: string | null;
+                minutesFromStart?: number | null;
+                /** Format: uuid */
+                placeId?: string | null;
+                text?: components["schemas"]["LocalizedLongText"];
+                title?: components["schemas"]["LocalizedText"];
+            }[];
         };
     };
     responses: never;

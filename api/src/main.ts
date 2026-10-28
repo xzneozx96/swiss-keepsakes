@@ -6,7 +6,8 @@ import { createMediaRepository } from './modules/content/adapters/media-reposito
 import { createPinRepository } from './modules/content/adapters/pin-repository.ts'
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
-import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeDeletePin, makeDeleteStoryVersion, makeHidePin, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeUnpublishStoryVersion } from './modules/content/index.ts'
+import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
+import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeHidePin, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -153,6 +154,7 @@ async function main() {
     }
     const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit, clock: systemClock }
     const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), audit, clock: systemClock }
+    const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock }
     const contentUseCases = guardUseCases({
       createPin: makeCreatePin(pinDeps),
       savePin: makeSavePin(pinDeps),
@@ -167,6 +169,11 @@ async function main() {
       unpublishStoryVersion: makeUnpublishStoryVersion(storyDeps),
       moveStoryVersion: makeMoveStoryVersion(storyDeps),
       deleteStoryVersion: makeDeleteStoryVersion(storyDeps),
+      createTour: makeCreateTour(tourDeps),
+      saveTour: makeSaveTour(tourDeps),
+      publishTour: makePublishTour(tourDeps),
+      unpublishTour: makeUnpublishTour(tourDeps),
+      deleteTour: makeDeleteTour(tourDeps),
     })
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),

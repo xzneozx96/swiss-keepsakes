@@ -15,6 +15,7 @@ import { makeUnpublishTour } from '../../src/modules/content/application/unpubli
 import { createAuditLog } from '../../src/platform/audit.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createManualClock } from '../support/manual-clock.ts'
+import { createContentHttp } from './content-http.ts'
 import { count, openTestDatabase } from './support.ts'
 
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 120_000 })
@@ -205,3 +206,118 @@ async function uowInsertPlace(store: string): Promise<string> {
   const pin = await createUnitOfWork(db).run(tx => pins.insert(tx, store, { title: { en: 'Place' } }, new Date()))
   return pin.id
 }
+
+// The tour routes over the real app: real sessions, the real Idempotency-Key middleware and the real database.
+describe('[E2.6] the tour routes over the real app and the database', () => {
+  const env = createContentHttp({ pool, db })
+  const timeout = 120_000
+
+  async function auditRows(entityId: string) {
+    return (await pool.query<{ entity: string, action: string, actor: string, store_id: string, request_id: string }>(
+      `select entity, action, actor, store_id, request_id from platform.audit_log where entity_id = $1 order by at, id`,
+      [entityId],
+    )).rows
+  }
+
+  async function publishableTour(staff: Awaited<ReturnType<typeof env.storeWithStaff>>) {
+    const pdf = await media(staff.storeId, 'pdf')
+    const made = await env.call(staff.tours, { method: 'POST', headers: staff.owner.headers, body: { slug: { en: slug() }, pdfMediaId: pdf, draft: { title: { en: 'Old town walk' } } } })
+    return { made, pdf }
+  }
+
+  it('[E2.6] AC-1 end to end for a tour with real ETags', async () => {
+    const staff = await env.storeWithStaff()
+    const { owner, tours } = staff
+
+    const { made, pdf } = await publishableTour(staff)
+    expect(made.status).toBe(201)
+    expect(made.headers.get('ETag')).toBe('"1"')
+    const created = await made.json() as { id: string }
+    expect(created).toMatchObject({ status: 'draft', rowVersion: 1, pdfMediaId: pdf, draft: { title: { en: 'Old town walk' }, summary: {}, sections: [] } })
+    const path = `${tours}/${created.id}`
+
+    const saved = await env.call(path, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': made.headers.get('ETag')! }, body: { stops: [{ latitude: 47.05, longitude: 8.3 }, { latitude: 47.06, longitude: 8.31, title: { en: 'Bridge' } }] } })
+    expect(saved.status).toBe(200)
+    expect(saved.headers.get('ETag')).toBe('"2"')
+    expect(await saved.json()).toMatchObject({ rowVersion: 2, stops: [{ position: 1, title: {}, text: {} }, { position: 2, title: { en: 'Bridge' } }] })
+
+    const stale = await env.call(path, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: { stayTag: 'multi_day' } })
+    expect(stale.status).toBe(412)
+    expect(stale.headers.get('Content-Type')).toBe('application/problem+json')
+    expect(await stale.json()).toMatchObject({ type: 'precondition-failed' })
+    expect((await env.call(path, { method: 'PATCH', headers: owner.headers, body: { stayTag: 'multi_day' } })).status).toBe(428)
+    expect((await env.call(path, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': 'abc' }, body: {} })).status).toBe(400)
+    expect(await tourRow(created.id)).toMatchObject({ row_version: 2 })
+    expect((await env.call(path, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '2' }, body: { price: 1 } })).status).toBe(400)
+  }, timeout)
+
+  it('[E2.6] publish writes an audit row', async () => {
+    const staff = await env.storeWithStaff()
+    const { made } = await publishableTour(staff)
+    const { id } = await made.json() as { id: string }
+    const path = `${staff.tours}/${id}`
+
+    const published = await env.call(`${path}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
+
+    expect(published.status).toBe(200)
+    expect(published.headers.get('ETag')).toBe('"2"')
+    expect(await published.json()).toMatchObject({ status: 'published', draft: null, published: { title: { en: 'Old town walk' } }, rowVersion: 2 })
+    const [row, ...rest] = await auditRows(id)
+    expect(rest).toEqual([])
+    expect(row).toMatchObject({ entity: 'tour', action: 'published', actor: `staff:${staff.owner.userId}`, store_id: staff.storeId })
+    expect(row?.request_id).toMatch(/^[0-9a-f-]{36}$/)
+
+    const unpublished = await env.call(`${path}/unpublish`, { method: 'POST', headers: { ...staff.manager.headers, 'If-Match': '2' } })
+    expect(unpublished.status).toBe(200)
+    expect(await unpublished.json()).toMatchObject({ status: 'draft', rowVersion: 3 })
+    expect((await auditRows(id)).map(r => r.action)).toEqual(['published', 'unpublished'])
+  }, timeout)
+
+  it('[E2.6][AC79] deleting a published tour answers 409, and a draft one 204', async () => {
+    const staff = await env.storeWithStaff()
+    const { id } = await (await publishableTour(staff)).made.json() as { id: string }
+    await env.call(`${staff.tours}/${id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
+
+    const refused = await env.call(`${staff.tours}/${id}`, { method: 'DELETE', headers: staff.owner.headers })
+    expect(refused.status).toBe(409)
+    expect(await refused.json()).toMatchObject({ type: 'published-cannot-be-deleted' })
+    expect(await count(pool, 'select count(*) from content.tours where id = $1', [id])).toBe(1)
+
+    const draftId = (await (await publishableTour(staff)).made.json() as { id: string }).id
+    const removed = await env.call(`${staff.tours}/${draftId}`, { method: 'DELETE', headers: staff.owner.headers })
+    expect(removed.status).toBe(204)
+    expect(await removed.text()).toBe('')
+    expect(await count(pool, 'select count(*) from content.tours where id = $1', [draftId])).toBe(0)
+  }, timeout)
+
+  it('[E2.6] AC-6 a retired PDF answers 422 media-retired and the tour is unchanged', async () => {
+    const staff = await env.storeWithStaff()
+    const { id } = await (await publishableTour(staff)).made.json() as { id: string }
+    const retired = await media(staff.storeId, 'pdf', 'retired')
+
+    const response = await env.call(`${staff.tours}/${id}`, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': '1' }, body: { pdfMediaId: retired } })
+
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ type: 'media-retired' })
+    expect(await tourRow(id)).toMatchObject({ row_version: 1 })
+  }, timeout)
+
+  it('[E2.6] AC-7 a manager of the store writes, an owner of another store gets 403', async () => {
+    const lucerne = await env.storeWithStaff()
+    const zug = await env.storeWithStaff()
+    const { id } = await (await publishableTour(zug)).made.json() as { id: string }
+
+    const byManager = await env.call(lucerne.tours, { method: 'POST', headers: lucerne.manager.headers, body: {} })
+    expect(byManager.status).toBe(201)
+    expect(await byManager.json()).toMatchObject({ storeId: lucerne.storeId })
+    expect((await env.call(lucerne.tours, { method: 'POST', headers: zug.owner.headers, body: {} })).status).toBe(403)
+    expect((await env.call(lucerne.tours, { method: 'POST', body: {} })).status).toBe(401)
+
+    const through = `${lucerne.tours}/${id}`
+    const headers = { ...lucerne.owner.headers, 'If-Match': '1' }
+    expect((await env.call(through, { method: 'PATCH', headers, body: {} })).status).toBe(404)
+    expect((await env.call(`${through}/publish`, { method: 'POST', headers })).status).toBe(404)
+    expect((await env.call(through, { method: 'DELETE', headers: lucerne.owner.headers })).status).toBe(404)
+    expect(await tourRow(id)).toMatchObject({ row_version: 1 })
+  }, timeout)
+})

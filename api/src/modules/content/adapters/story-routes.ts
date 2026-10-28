@@ -11,7 +11,7 @@ import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { failureProblem } from './problems.ts'
-import { json, withIfMatch } from './route-parts.ts'
+import { etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
 import { storyGroupView, storyVersionView } from './story-view.ts'
 
 type Language = StoryVersion['language']
@@ -28,10 +28,8 @@ export interface StoryUseCases {
   deleteStoryVersion: (actor: Actor, storeId: string, groupId: string, language: Language, requestId: string | null) => Promise<Result<{ groupId: string, language: Language }>>
 }
 
-const storeParams = z.object({ storeId: z.uuid() })
 const groupParams = z.object({ storeId: z.uuid(), groupId: z.uuid() })
 const versionParams = z.object({ storeId: z.uuid(), groupId: z.uuid(), language: z.enum(['en', 'de']) })
-const etagHeaders = { ...requestIdHeader, ETag: { description: 'The row version, as `"<rowVersion>"`', schema: { type: 'string' } } } as const
 
 const groupsPath = '/api/store/{storeId}/story-groups'
 const versionPath = `${groupsPath}/{groupId}/versions/{language}`
