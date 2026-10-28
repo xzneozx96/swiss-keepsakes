@@ -10,6 +10,11 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/pins' as const,
+    title: 'Pins: dashboard editor and guest map together (S4)',
+    note: 'The merchant’s pins list and pin editor (N16, N17, three editor structures) beside the guest’s Map tab and pin card (N02, N03, three map structures), on one list of pins: edit a pin and watch it on the map (28.10.2026).',
+  },
+  {
     to: '/lab/onboarding-fullscreen' as const,
     title: 'Onboarding (N01) and deep-link nudge (N24)',
     note: 'F1 Guided, the chosen full-screen two-step flow for a guest’s first visit to the home, and N2, the card shown while reading a story reached by a link or a partner QR code. Visitor switcher for the rule matrix (28.10.2026). Spec: docs/ux/onboarding-design.md.',
