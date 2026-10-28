@@ -17,6 +17,8 @@ test('[E3.7][AC24] a referral link with a target answers 302 to it, with nothing
   expect(response.status()).toBe(302)
   expect(response.headers().location).toBe('/en/stories/zytturm')
   expect(response.headers()['x-robots-tag']).toBe('noindex')
+  expect(response.headers()['cache-control']).toBe('private, no-store')
+  expect(response.headers().vary).toBe('Cookie, Accept-Language')
   expect(await response.text()).toBe('')
 })
 
