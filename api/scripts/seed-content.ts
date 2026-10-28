@@ -18,7 +18,7 @@ const tours = createTourRepository()
 const languages: ContentLanguage[] = ['en', 'de']
 
 // The prototype's intro and sections become one body document, so the seed goes through the same shape as a write.
-function toDraft({ intro, sections, readMinutes: _readMinutes, ...rest }: SeedStoryDoc): StoryDraft {
+export function seedStoryDraft({ intro, sections, readMinutes: _readMinutes, ...rest }: SeedStoryDoc): StoryDraft {
   return { ...rest, body: sectionsToBody({ intro, sections }) }
 }
 
@@ -32,7 +32,7 @@ async function seedStory(db: Database, storeId: string, story: SeedStory, at: Da
     }
     const group = await stories.insertGroup(tx, storeId, { kind: 'story', subjectPlaceId: null }, at)
     for (const language of present)
-      await stories.insertVersion(tx, storeId, group.id, language, { slug: story.slug, draft: toDraft(story.versions[language]!) }, at)
+      await stories.insertVersion(tx, storeId, group.id, language, { slug: story.slug, draft: seedStoryDraft(story.versions[language]!) }, at)
     return true
   })
 }

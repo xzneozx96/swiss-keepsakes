@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, describe, expect, it, vi } from 'vitest'
-import { seedContent } from '../../scripts/seed-content.ts'
+import { seedContent, seedStoryDraft } from '../../scripts/seed-content.ts'
 import { seedStories } from '../../scripts/seed-data/stories.ts'
 import { seedTours } from '../../scripts/seed-data/tours.ts'
 import { insertStore } from '../support/identity-wiring.ts'
@@ -38,7 +38,7 @@ describe('db:seed', () => {
     const { rows: group } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [storeId])
     await pool.query(
       `insert into content.story_versions (group_id, language, store_id, slug, draft) values ($1, 'en', $2, $3, $4::jsonb)`,
-      [group[0]!.id, storeId, taken.slug, JSON.stringify({ ...taken.versions.en, title: 'Hand-written' })],
+      [group[0]!.id, storeId, taken.slug, JSON.stringify({ ...seedStoryDraft(taken.versions.en!), title: 'Hand-written' })],
     )
     const preExisting = await pool.query(`select md5(t::text) as hash from content.story_versions t where store_id = $1 and slug = $2`, [storeId, taken.slug])
     // Two prototype tour slugs held by other tours: one by its en slug, one by its de slug only. Both tours are skipped.
@@ -54,13 +54,18 @@ describe('db:seed', () => {
     expect(second).toEqual({ stories: 0, tours: 0 })
     expect(await snapshot()).toEqual(afterFirst)
 
-    const versions = await pool.query<{ status: string, published: unknown, published_at: Date | null, language: string, slug: string }>(
-      `select status, published, published_at, language, slug from content.story_versions where store_id = $1`,
+    const versions = await pool.query<{ status: string, published: unknown, published_at: Date | null, language: string, slug: string, draft: Record<string, unknown>, row_version: number }>(
+      `select status, published, published_at, language, slug, draft, row_version from content.story_versions where store_id = $1`,
       [storeId],
     )
     const expected = seedStories.reduce((n, s) => n + Object.keys(s.versions).length, 0) - Object.keys(taken.versions).length + 1
     expect(versions.rows).toHaveLength(expected)
     expect(versions.rows.every(v => v.status === 'draft' && v.published === null && v.published_at === null)).toBe(true)
+    // [E2.13] Seeded drafts hold a body document, and a second run bumped no row_version.
+    const seeded = versions.rows.filter(v => v.slug !== taken.slug || v.language !== 'en')
+    expect(seeded.length).toBeGreaterThan(0)
+    expect(seeded.every(v => (v.draft.body as { type?: string }).type === 'doc' && !('intro' in v.draft) && !('sections' in v.draft) && !('readMinutes' in v.draft))).toBe(true)
+    expect(versions.rows.every(v => v.row_version === 1)).toBe(true)
     expect(versions.rows.filter(v => v.slug === taken.slug)).toHaveLength(1)
     const after = await pool.query(`select md5(t::text) as hash from content.story_versions t where store_id = $1 and slug = $2`, [storeId, taken.slug])
     expect(after.rows).toEqual(preExisting.rows)
