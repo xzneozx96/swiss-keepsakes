@@ -86,6 +86,16 @@ describe('language button', () => {
     expect(within(rows[1]).getByText('Deutsch')).toHaveAttribute('lang', 'de')
   })
 
+  it('draws flat rows and an accent tick', async () => {
+    renderAt('/en/stories')
+    await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))
+
+    const group = await screen.findByRole('radiogroup', { name: en['shell.language.title'] })
+    const [english] = within(group).getAllByRole('radio')
+    expect(english.className).not.toMatch(/rounded|shadow|focus-ring|\bring/)
+    expect(within(english).getByTestId('language-tick')).toHaveClass('text-accent')
+  })
+
   it('moves focus with the arrow keys, wrapping, and keeps one tab stop on the checked row', async () => {
     const router = renderAt('/en/stories')
     await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))

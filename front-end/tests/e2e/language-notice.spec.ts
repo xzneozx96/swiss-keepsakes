@@ -264,3 +264,37 @@ test.describe('[E3.11][AC30] language sheet', () => {
     expect(await stored(page)).toBe(before)
   })
 })
+
+test.describe('[E3.11] language sheet rows', () => {
+  for (const [lang, button, current] of [['en', 'Language', 'English'], ['de', 'Sprache', 'Deutsch']] as const) {
+    test(`${lang}: rows are flat after a tap, and the tick is the accent colour`, async ({ page }) => {
+      await seedLanguage(page, lang)
+      await page.goto(`/${lang}/stories/${SHARED}`)
+      await hydrated(page)
+
+      await control(page, button).click()
+      const row = page.getByRole('dialog').getByRole('radio', { name: current })
+
+      await expect(row).toBeVisible()
+      const flat = await row.evaluate((el) => {
+        const style = getComputedStyle(el)
+
+        return { shadow: style.boxShadow, radius: style.borderRadius }
+      })
+
+      expect(flat).toEqual({ shadow: 'none', radius: '0px' })
+      const colours = await page.evaluate(() => {
+        const probe = document.createElement('span')
+
+        probe.className = 'text-accent'
+        document.body.append(probe)
+        const accent = getComputedStyle(probe).color
+
+        probe.remove()
+        return accent
+      })
+
+      await expect(row.getByTestId('language-tick')).toHaveCSS('color', colours)
+    })
+  }
+})

@@ -78,7 +78,7 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
                     <button
                       key={l.id}
                       aria-checked={checked}
-                      className="flex min-h-12 w-full items-center justify-between gap-3 rounded-lg px-3 text-start text-base outline-none hover:bg-surface-secondary focus-visible:focus-ring active:bg-surface-secondary"
+                      className="flex min-h-12 w-full items-center justify-between gap-3 px-3 text-start text-base text-foreground outline-none hover:bg-surface-secondary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus active:bg-surface-secondary"
                       role="radio"
                       tabIndex={checked ? 0 : -1}
                       type="button"
@@ -89,8 +89,8 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
                         handleOpenChange(false)
                       }}
                     >
-                      <span lang={l.id}>{l.name}</span>
-                      {checked && <CheckIcon aria-hidden className="shrink-0" data-testid="language-tick" size={20} />}
+                      <span className={checked ? 'font-semibold' : undefined} lang={l.id}>{l.name}</span>
+                      {checked && <CheckIcon aria-hidden className="shrink-0 text-accent" data-testid="language-tick" size={20} />}
                     </button>
                   )
                 })}
