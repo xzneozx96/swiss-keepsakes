@@ -128,4 +128,23 @@ describe('public stories', () => {
       { id: id2, slug: 'cafes', name: { en: 'Cafes', de: 'Cafes' }, parentId: id1, position: 1 },
     ])
   })
+
+  it('[E2.12][AC45] an odd stored document never throws: a block without an id, a null cover and blocks that are not a list', async () => {
+    const odd = { title: 'Odd', excerpt: 'e', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [
+      { id: 'a', heading: 'H', blocks: [{ type: 'image', caption: 'no id' }, { type: 'audio', mediaId: 42, title: 't', caption: '' }, { caption: 'no type' }, null, { type: 'paragraph', text: 'p' }] },
+      { id: 'b', heading: 'Broken', blocks: 'nope' },
+      null,
+    ] } as unknown as StoryDraft
+    const s = setup([story(id1, [version('en', 'odd', 'Odd', undefined, { published: odd })])])
+
+    const { items } = await s.list('en')
+    const detail = await s.get('odd', 'en')
+
+    expect(items[0]).toMatchObject({ title: 'Odd', coverKey: null })
+    expect(detail.ok && detail.value.sections.map(x => x.blocks)).toEqual([
+      [{ type: 'image', key: null, caption: 'no id' }, { type: 'audio', key: null, title: 't', caption: '' }, { type: 'paragraph', text: 'p' }],
+      [],
+      [],
+    ])
+  })
 })

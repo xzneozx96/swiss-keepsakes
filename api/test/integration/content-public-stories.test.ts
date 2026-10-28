@@ -183,4 +183,27 @@ describe('public story reads over the database', () => {
 
     expect(result.ok && result.value).toMatchObject({ title: 'English', language: 'en', requestedLanguage: 'de', fallback: true, availableLanguages: ['en'] })
   })
+
+  it('[E2.12][AC45] a stored document with a block that has no media id does not break the reads', async () => {
+    const store = randomUUID()
+    const g = await group(store)
+    const odd = doc('Odd shape', { sections: [{ id: 'a', heading: 'H', blocks: [{ type: 'image', caption: 'no id' }, { type: 'audio', mediaId: 'not-a-uuid', title: 't', caption: '' }] }, { id: 'b', heading: 'x', blocks: 'nope' }] } as unknown as Partial<StoryDraft>)
+    const s = await version(store, g, 'en', 'published', 'Odd shape', { published: odd })
+
+    const detail = await get(s, 'en')
+    const listed = (await list('en')).items.find(i => i.id === g)
+
+    expect(listed?.title).toBe('Odd shape')
+    expect(detail.ok && detail.value.sections[0]!.blocks).toEqual([{ type: 'image', key: null, caption: 'no id' }, { type: 'audio', key: null, title: 't', caption: '' }])
+  })
+
+  it('[E2.12][AC45] a published document with only a title and sections (the minimum the database accepts) reads', async () => {
+    const store = randomUUID()
+    const g = await group(store)
+    const s = await version(store, g, 'en', 'published', 'Minimal', { published: { title: 'Minimal', sections: [] } as unknown as StoryDraft })
+
+    const detail = await get(s, 'en')
+
+    expect(detail.ok && detail.value).toMatchObject({ title: 'Minimal', excerpt: '', coverKey: null, readMinutes: null, sections: [] })
+  })
 })

@@ -40,7 +40,10 @@ export interface PublicStory extends PublicStoryCard {
 
 export interface PublicStoryList { items: PublicStoryCard[] }
 
-const keyOf = (version: PublicStoryVersionRow, mediaId: string | null) => (mediaId ? version.mediaKeys[mediaId.toLowerCase()] ?? null : null)
+// The stored document is not trusted: a media id that is missing or not a string gives no key.
+const keyOf = (version: PublicStoryVersionRow, mediaId: unknown) => (typeof mediaId === 'string' ? version.mediaKeys[mediaId.toLowerCase()] ?? null : null)
+
+const str = (value: unknown) => (typeof value === 'string' ? value : '')
 
 export function toPublicCategory(row: PublicCategoryRow): PublicCategory {
   const name = row.name.en ?? row.name.de ?? ''
@@ -69,9 +72,9 @@ function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: Non
   return {
     id: row.id,
     slug: version.slug,
-    title: published.title,
-    excerpt: published.excerpt,
-    readMinutes: published.readMinutes,
+    title: str(published.title),
+    excerpt: str(published.excerpt),
+    readMinutes: typeof published.readMinutes === 'number' ? published.readMinutes : null,
     coverKey: keyOf(version, published.coverMediaId),
     stayTag: row.stayTag,
     interests: row.interests,
@@ -94,20 +97,25 @@ export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): 
   const { published } = version
   return {
     ...toCard(row, version, pick.notice),
-    intro: published.intro,
-    authorName: published.authorName,
-    authorRole: published.authorRole,
-    sections: published.sections.map(section => ({
-      id: section.id,
-      heading: section.heading,
-      blocks: section.blocks.map((block) => {
-        if (block.type === 'image')
-          return { type: 'image' as const, key: keyOf(version, block.mediaId), caption: block.caption }
-        if (block.type === 'audio')
-          return { type: 'audio' as const, key: keyOf(version, block.mediaId), title: block.title, caption: block.caption }
-        if (block.type === 'video')
-          return { type: 'video' as const, youtubeId: block.youtubeId, title: block.title, caption: block.caption }
-        return { type: 'paragraph' as const, text: block.text }
+    intro: str(published.intro),
+    authorName: str(published.authorName),
+    authorRole: str(published.authorRole),
+    sections: (Array.isArray(published.sections) ? published.sections : []).map(section => ({
+      id: str(section?.id),
+      heading: str(section?.heading),
+      blocks: (Array.isArray(section?.blocks) ? section.blocks : []).flatMap((block): PublicStoryBlock[] => {
+        switch (block?.type) {
+          case 'image':
+            return [{ type: 'image', key: keyOf(version, block.mediaId), caption: str(block.caption) }]
+          case 'audio':
+            return [{ type: 'audio', key: keyOf(version, block.mediaId), title: str(block.title), caption: str(block.caption) }]
+          case 'video':
+            return [{ type: 'video', youtubeId: str(block.youtubeId), title: str(block.title), caption: str(block.caption) }]
+          case 'paragraph':
+            return [{ type: 'paragraph', text: str(block.text) }]
+          default:
+            return []
+        }
       }),
     })),
   }
@@ -266,7 +274,7 @@ export function toPublicTour(row: PublicTourRow, requested: ContentLanguage): Pu
     ...toTourCard(row, info),
     summary: text(row.summary, language),
     meetingPoint: text(row.meetingPoint, language),
-    sections: row.sections.map(s => ({ id: s.id, heading: text(s.heading, language), body: text(s.body, language) })),
+    sections: (Array.isArray(row.sections) ? row.sections : []).map(s => ({ id: s.id, heading: text(s.heading, language), body: text(s.body, language) })),
     stops: row.stops.map(s => ({
       position: s.position,
       latitude: s.latitude,

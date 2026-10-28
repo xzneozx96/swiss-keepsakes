@@ -1,8 +1,27 @@
 import type { ContentLanguage, Localized, PinDate, StayTag, StoryDraft, TourGuideDoc } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
 import type { PublicCategoryRow, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow } from '../read-ports.ts'
-import { storyMediaIds } from '@sk/domain/content'
 import { sql } from 'drizzle-orm'
+
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// The media ids a stored story document points at, lowercased. The JSON is not trusted: a missing or odd id, a
+// section list that is not an array and a block without an id are skipped, and a value that is no uuid never reaches the query.
+function storyMediaIds(doc: StoryDraft): string[] {
+  const ids = new Set<string>()
+  const add = (value: unknown) => {
+    if (typeof value === 'string' && uuidPattern.test(value))
+      ids.add(value.toLowerCase())
+  }
+  add(doc?.coverMediaId)
+  for (const section of Array.isArray(doc?.sections) ? doc.sections : []) {
+    for (const block of Array.isArray(section?.blocks) ? section.blocks : []) {
+      if (block && (block.type === 'image' || block.type === 'audio'))
+        add(block.mediaId)
+    }
+  }
+  return [...ids]
+}
 
 interface VersionJoinRow {
   id: string
@@ -35,7 +54,7 @@ async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryR
     return []
 
   const groupIds = [...new Set(versions.rows.map(r => r.id))]
-  const mediaIds = [...new Set(versions.rows.flatMap(r => storyMediaIds(r.published).map(m => m.id)))]
+  const mediaIds = [...new Set(versions.rows.flatMap(r => storyMediaIds(r.published)))]
 
   const categoryRows = await tx.execute<CategoryJoinRow & Record<string, unknown>>(sql`
     select sc.group_id, c.id, c.slug, c.name, c.parent_id, c.position
@@ -67,11 +86,7 @@ async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryR
       slug: row.slug,
       published: row.published,
       publishedAt: new Date(row.published_at),
-      mediaKeys: Object.fromEntries(storyMediaIds(row.published).flatMap(({ id }) => {
-        // The JSON may hold capitals; content.media.id comes back lowercase.
-        const key = keys.get(id.toLowerCase())
-        return key === undefined ? [] : [[id.toLowerCase(), key]]
-      })),
+      mediaKeys: Object.fromEntries(storyMediaIds(row.published).flatMap(id => (keys.has(id) ? [[id, keys.get(id)!]] : []))),
     })
   }
   return [...stories.values()]
@@ -231,10 +246,10 @@ async function loadTours(tx: Tx, tourId: string | null, withStops: boolean): Pro
     stayTag: row.stay_tag,
     interests: row.interests,
     durationMinutes: row.duration_minutes,
-    title: row.published.title,
+    title: row.published.title ?? {},
     summary: row.published.summary ?? {},
     meetingPoint: row.published.meetingPoint ?? {},
-    sections: row.published.sections ?? [],
+    sections: Array.isArray(row.published.sections) ? row.published.sections : [],
     coverKey: keyOf(row.cover_media_id),
     pdfKey: keyOf(row.pdf_media_id),
     keepsakeProductIds: links.rows.filter(l => l.tour_id === row.id).map(l => l.product_id),
