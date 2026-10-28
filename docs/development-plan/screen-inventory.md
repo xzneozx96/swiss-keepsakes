@@ -10,13 +10,13 @@ This file lists every route file of the app and every new screen that PRD v3 nee
 
 Every screen also belongs to one feature slice (S0 to S12). A slice follows one feature from the guest screen through the merchant and partner screens that serve it, so a feature can be designed and built as a unit. The slice index comes first, then the two tables grouped by slice, then the detail areas.
 
-Review page: https://claude.ai/artifact/XFvj2gvaJ3H4qGFyTXmC8o (private; source docs/development-plan/screen-inventory.html, regenerate from this file).
+Review page: https://claude.ai/artifact/PZrVtEWF73EoQw5tMCMK1V (private; source docs/development-plan/screen-inventory.html, regenerate from this file).
 
 It chooses no visual design. The owner has no reference images (O23 closed, 27.10.2026): pins and the map use the default style of the map stack. Where a row says "layout", it means content blocks and order, not look.
 
 Amended on 28.10.2026: every screen has a slice id (S0 to S12) and a UI work value (Design, Edit, Wire, None). Tables 1 and 2 are grouped by slice and a slice index was added. No verdict changed.
 
-Amended on 27.10.2026 for the map pins, local events and categories decision (owner gate G11): N03 and N17 change, N04 and N05 are removed, and N23 is new. The review page linked above shows the 26.10.2026 version until it is regenerated.
+Amended on 27.10.2026 for the map pins, local events and categories decision (owner gate G11): N03 and N17 change, N04 and N05 are removed, and N23 is new.
 
 Accepted ADRs used: 001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 014, 015, 016, 017, 018, 019, 020, 021, 022, 023, 024, 025, 026, 027, 028, 029, 030. ADR-002, 003, 005, 006, 008, 011, 013, 014, 015 and 018 are amended by the 27.10.2026 decision, and ADR-029 and 030 are new. None is overturned. Owner answers and orchestrator rulings of 2026-10-26 that settle the open questions are in "Decisions" (D1 to D6). No question is open.
 
