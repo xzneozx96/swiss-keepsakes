@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 
-import { ContentIcon, InfoIcon } from '@/components/icons'
+import { ContentIcon } from '@/components/icons'
 import {
   BackButton,
   CartButton,
@@ -156,17 +156,6 @@ export function ArticlePage({
       <div ref={coverEnd} aria-hidden className="h-px" />
 
       <div className="relative -mt-6 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pt-7 pb-4">
-        {view.onlyInOtherLanguage && (
-          <p className="mb-6 flex items-start gap-2 text-sm">
-            <InfoIcon aria-hidden className="mt-0.5 shrink-0" size={16} />
-            {t(
-              article.language === 'en'
-                ? 'article.onlyIn.en'
-                : 'article.onlyIn.de',
-            )}
-          </p>
-        )}
-
         <div className="flex items-center gap-3">
           <img
             alt=""

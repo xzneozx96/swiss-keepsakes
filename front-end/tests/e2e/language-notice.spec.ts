@@ -298,3 +298,53 @@ test.describe('[E3.11] language sheet rows', () => {
     })
   }
 })
+
+test.describe('[E3.11][AC64] a version the merchant publishes in the browser', () => {
+  const ENGLISH_ONLY = 'water-tower'
+
+  /** Adds a German version of the English-only demo story to the saved demo store, with the given publication. */
+  async function addGermanVersion(page: Page, publication: 'published' | 'draft') {
+    await page.goto(`/en/stories/${ENGLISH_ONLY}`)
+    await hydrated(page)
+    await page.waitForFunction(() => localStorage.getItem('sk.demo') !== null)
+    await page.evaluate((status) => {
+      const state = JSON.parse(localStorage.getItem('sk.demo')!)
+      const english = state.data.articles.find((a: { id: string }) => a.id === 'water-tower-en')
+
+      state.data.articles.push({
+        ...english,
+        id: 'water-tower-de',
+        language: 'de',
+        title: 'Der Wasserturm, älter als die Brücke',
+        publication: status === 'published' ? { status, publishedAt: '2026-10-02T08:00:00.000Z' } : { status },
+      })
+      localStorage.setItem('sk.demo', JSON.stringify(state))
+    }, publication)
+  }
+
+  test('a published German version opens in German at the German address, with no notice', async ({ page }) => {
+    const problems = problemsOf(page)
+
+    await seedLanguage(page, 'de')
+    await addGermanVersion(page, 'published')
+    await page.goto(`/en/stories/${ENGLISH_ONLY}`)
+    await hydrated(page)
+    await choose(page, 'Language', 'Deutsch')
+
+    await expect(page).toHaveURL(new RegExp(`/de/stories/${ENGLISH_ONLY}$`))
+    await expect(page.getByRole('heading', { level: 1, name: 'Der Wasserturm, älter als die Brücke' })).toBeVisible()
+    await expect(page.getByRole('status')).toHaveCount(0)
+    expect(problems).toEqual([])
+  })
+
+  test('a German version that is a draft sends the German address back to the English story', async ({ page }) => {
+    await addGermanVersion(page, 'draft')
+    await page.goto(`/en/stories/${ENGLISH_ONLY}`)
+    await hydrated(page)
+    await choose(page, 'Language', 'Deutsch')
+
+    await expect(page).toHaveURL(new RegExp(`/en/stories/${ENGLISH_ONLY}$`))
+    await expect(page.getByRole('heading', { level: 1, name: 'The Water Tower, older than the bridge' })).toBeVisible()
+    await expect(page.getByRole('status')).toHaveText(NOTICE_EN)
+  })
+})

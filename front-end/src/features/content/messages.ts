@@ -17,8 +17,6 @@ export const contentEn = {
     'No stories here yet. The first ones are on their way.',
   'article.meta': '{date} · {minutes} min read',
   'article.contents': 'In this story',
-  'article.onlyIn.en': 'This story is only available in English.',
-  'article.onlyIn.de': 'This story is only available in German.',
   'article.linked': 'Bring a piece of it home',
   'article.more': 'More to discover',
   'article.comments': 'Comments',
