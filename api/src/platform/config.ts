@@ -43,10 +43,19 @@ const configSchema = z.object({
   // The origin of the SPA, which an invitation link opens (E2.3). Required with NODE_ENV=production, where it must
   // be https. Elsewhere it defaults to the Vite dev server's. Only its origin is used.
   APP_URL: z.url({ protocol: /^https?$/, hostname: /./, error: 'Expected an http:// or https:// URL' }).optional(),
+  // Object storage (Neon, S3 API). The names are the ones the AWS SDK reads. loadConfig takes all four or none.
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_ENDPOINT_URL_S3: z.url({ protocol: /^https?$/, hostname: /./, error: 'Expected an http:// or https:// URL' }).optional(),
+  AWS_REGION: z.string().optional(),
+  // How long a replaced or removed media file stays before it is deleted (E2.7). Whole hours, at least 1.
+  MEDIA_GRACE_HOURS: z.string().regex(/^\d+$/, 'Expected a positive whole number').transform(Number).pipe(z.number().int().min(1, 'Expected a positive whole number')).default(24),
   // Google sign-in is on only when both are set (loadConfig takes both or neither).
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 })
+
+const storageKeys = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_ENDPOINT_URL_S3', 'AWS_REGION'] as const
 
 const googleKeys = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'] as const
 
@@ -69,6 +78,13 @@ export interface SmtpConfig {
   fromName: string
 }
 
+export interface StorageConfig {
+  endpoint: string
+  region: string
+  accessKeyId: string
+  secretAccessKey: string
+}
+
 export interface GoogleConfig {
   clientId: string
   clientSecret: string
@@ -76,7 +92,7 @@ export interface GoogleConfig {
 
 // Without `smtp` the worker still starts, and every mail fails and retries until SMTP_* is set (main.ts).
 // Without `google` Better Auth registers no Google provider.
-export type Config = Omit<Parsed, typeof smtpKeys[number] | typeof googleKeys[number] | 'APP_URL' | 'SMTP_FROM_NAME'> & { APP_URL: string, smtp?: SmtpConfig, google?: GoogleConfig }
+export type Config = Omit<Parsed, typeof smtpKeys[number] | typeof googleKeys[number] | typeof storageKeys[number] | 'APP_URL' | 'SMTP_FROM_NAME'> & { APP_URL: string, smtp?: SmtpConfig, google?: GoogleConfig, storage?: StorageConfig }
 
 export type ConfigResult = { ok: true, config: Config } | { ok: false, message: string }
 
@@ -113,6 +129,13 @@ function appUrlProblems(present: Record<string, string>, parsed: Parsed | undefi
   return parsed.APP_URL?.startsWith('https:') ? [] : ['  APP_URL: Expected an https:// URL when NODE_ENV is production']
 }
 
+function storageProblems(present: Record<string, string>): string[] {
+  const set = storageKeys.filter(key => key in present)
+  return set.length === 0 || set.length === storageKeys.length
+    ? []
+    : storageKeys.filter(key => !(key in present)).map(key => `  ${key}: Required when any AWS_* variable is set`)
+}
+
 function googleProblems(present: Record<string, string>): string[] {
   const set = googleKeys.filter(key => key in present)
   return set.length === 0 || set.length === googleKeys.length
@@ -129,15 +152,19 @@ export function loadConfig(env: Record<string, string | undefined>): ConfigResul
     ...(result.success ? [] : result.error.issues.map(issue => `  ${issue.path.join('.')}: ${issue.message}`)),
     ...smtpProblems(present, result.data),
     ...googleProblems(present),
+    ...storageProblems(present),
     ...authProblems(present, result.data),
     ...appUrlProblems(present, result.data),
   ]
   if (!result.success || lines.length > 0)
     return { ok: false, message: ['Invalid environment, the service did not start:', ...lines, 'Values are never printed.'].join('\n') }
-  const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASSWORD, SMTP_FROM, SMTP_FROM_NAME, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, APP_URL, ...rest } = result.data
+  const { SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASSWORD, SMTP_FROM, SMTP_FROM_NAME, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ENDPOINT_URL_S3, AWS_REGION, APP_URL, ...rest } = result.data
   const base = { ...rest, APP_URL: new URL(APP_URL ?? developmentAppUrl).origin }
   const google = GOOGLE_CLIENT_ID !== undefined && GOOGLE_CLIENT_SECRET !== undefined ? { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET } : undefined
-  const config: Config = google ? { ...base, google } : base
+  const storage = AWS_ACCESS_KEY_ID !== undefined && AWS_SECRET_ACCESS_KEY !== undefined && AWS_ENDPOINT_URL_S3 !== undefined && AWS_REGION !== undefined
+    ? { endpoint: AWS_ENDPOINT_URL_S3, region: AWS_REGION, accessKeyId: AWS_ACCESS_KEY_ID, secretAccessKey: AWS_SECRET_ACCESS_KEY }
+    : undefined
+  const config: Config = { ...base, ...(google ? { google } : {}), ...(storage ? { storage } : {}) }
   if (SMTP_HOST === undefined || SMTP_PORT === undefined || SMTP_SECURE === undefined || SMTP_USER === undefined || SMTP_PASSWORD === undefined || SMTP_FROM === undefined)
     return { ok: true, config }
   return { ok: true, config: { ...config, smtp: { host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_SECURE, user: SMTP_USER, password: SMTP_PASSWORD, from: SMTP_FROM, fromName: SMTP_FROM_NAME } } }

@@ -18,14 +18,14 @@ describe('[E1.8] config: one Zod schema read at startup', () => {
   it('[E1.8] accepts a complete environment and turns PORT into a number', () => {
     expect(loadConfig({ ROLE: 'api', HOST: '127.0.0.1', PORT: '8080', LOG_LEVEL: 'debug', ...urls, UNRELATED: 'x' })).toEqual({
       ok: true,
-      config: { ROLE: 'api', HOST: '127.0.0.1', PORT: 8080, LOG_LEVEL: 'debug', ...urls, APP_URL: 'http://localhost:3002' },
+      config: { ROLE: 'api', HOST: '127.0.0.1', PORT: 8080, LOG_LEVEL: 'debug', ...urls, APP_URL: 'http://localhost:3002', MEDIA_GRACE_HOURS: 24 },
     })
   })
 
   it('[E1.8] defaults ROLE to all, HOST to 0.0.0.0, PORT to 5002 and LOG_LEVEL to info, and treats blank values as unset', () => {
     expect(loadConfig({ ...urls, ROLE: ' ', PORT: '' })).toEqual({
       ok: true,
-      config: { ROLE: 'all', HOST: '0.0.0.0', PORT: 5002, LOG_LEVEL: 'info', ...urls, APP_URL: 'http://localhost:3002' },
+      config: { ROLE: 'all', HOST: '0.0.0.0', PORT: 5002, LOG_LEVEL: 'info', ...urls, APP_URL: 'http://localhost:3002', MEDIA_GRACE_HOURS: 24 },
     })
   })
 
@@ -107,6 +107,7 @@ describe('[E2.8] config: SMTP_* is all six variables or none', () => {
         HOST: '0.0.0.0',
         PORT: 5002,
         APP_URL: 'http://localhost:3002',
+        MEDIA_GRACE_HOURS: 24,
         LOG_LEVEL: 'info',
         ...urls,
         smtp: { host: 'smtp.gmail.com', port: 465, secure: true, user: 'keepsakes.test@gmail.com', password: 'abcd efgh ijkl mnop', from: 'keepsakes.test@gmail.com', fromName: 'Swiss Keepsakes' },
@@ -244,5 +245,56 @@ describe('[E2.3] config: APP_URL is the origin an invitation link opens', () => 
   it('[E2.3] refuses a value that is not an http or https URL', () => {
     expect(failure({ ...urls, APP_URL: 'ftp://keepsakes.example' })).toContain('  APP_URL: Expected an http:// or https:// URL')
     expect(failure({ ...urls, APP_URL: 'not a url' })).toContain('  APP_URL: Expected an http:// or https:// URL')
+  })
+})
+
+describe('[E2.7] config: AWS_* is all four variables or none, and the grace period', () => {
+  const aws = {
+    AWS_ACCESS_KEY_ID: 'AKIDEXAMPLE',
+    AWS_SECRET_ACCESS_KEY: 'example-secret-key',
+    AWS_ENDPOINT_URL_S3: 'https://storage.example.test',
+    AWS_REGION: 'eu-central-1',
+  }
+
+  it('[E2.7] turns all four into one storage setting', () => {
+    expect(loadConfig({ ...urls, ...aws })).toMatchObject({
+      ok: true,
+      config: { storage: { endpoint: 'https://storage.example.test', region: 'eu-central-1', accessKeyId: 'AKIDEXAMPLE', secretAccessKey: 'example-secret-key' } },
+    })
+  })
+
+  it('[E2.7] starts without storage when none is set, blank values included', () => {
+    const result = loadConfig({ ...urls, AWS_REGION: '', AWS_ACCESS_KEY_ID: ' ' })
+
+    expect(result).toMatchObject({ ok: true })
+    expect(result.ok && result.config.storage).toBeUndefined()
+  })
+
+  it('[E2.7] refuses a partial setting and names the missing variables, without printing the ones that are set', () => {
+    const message = failure({ ...urls, AWS_ACCESS_KEY_ID: 'AKIDEXAMPLE', AWS_REGION: 'eu-central-1' })
+
+    expect(message).toBe([
+      'Invalid environment, the service did not start:',
+      '  AWS_SECRET_ACCESS_KEY: Required when any AWS_* variable is set',
+      '  AWS_ENDPOINT_URL_S3: Required when any AWS_* variable is set',
+      'Values are never printed.',
+    ].join('\n'))
+    expect(message).not.toContain('AKIDEXAMPLE')
+  })
+
+  it('[E2.7] rejects an endpoint that is not a URL, without printing it', () => {
+    const message = failure({ ...urls, ...aws, AWS_ENDPOINT_URL_S3: 'not a url' })
+
+    expect(message).toContain('  AWS_ENDPOINT_URL_S3:')
+    expect(message).not.toContain('not a url')
+  })
+
+  it('[E2.7] MEDIA_GRACE_HOURS defaults to 24 and takes a positive whole number', () => {
+    expect(loadConfig(urls)).toMatchObject({ ok: true, config: { MEDIA_GRACE_HOURS: 24 } })
+    expect(loadConfig({ ...urls, MEDIA_GRACE_HOURS: '48' })).toMatchObject({ ok: true, config: { MEDIA_GRACE_HOURS: 48 } })
+  })
+
+  it.each(['0', '-1', '1.5', 'abc', '1e2'])('[E2.7] refuses MEDIA_GRACE_HOURS=%s', (value) => {
+    expect(failure({ ...urls, MEDIA_GRACE_HOURS: value })).toContain('  MEDIA_GRACE_HOURS:')
   })
 })

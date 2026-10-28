@@ -130,3 +130,35 @@ export interface TourRepository<T> {
   unpublish: (tx: T, tour: TourGuide, at: Date) => Promise<TourGuide>
   remove: (tx: T, storeId: string, tourId: string) => Promise<boolean>
 }
+
+export type Bucket = 'uploads' | 'media'
+
+export interface StoredObject {
+  key: string
+  size: number
+  contentType: string | undefined
+  lastModified: Date
+}
+
+// Object storage (Neon Object Storage, S3 API). Keys are bucket-relative: the bucket is never part of a key.
+export interface ObjectStorage {
+  // A URL the browser PUTs the file to. The bucket is always `uploads`. The signed content type and length are a
+  // courtesy: the storage may not enforce them, so the confirm step re-checks the stored bytes.
+  presignPut: (input: { key: string, contentType: string, byteSize: number, expiresInSeconds: number }) => Promise<{ url: string, headers: Record<string, string> }>
+  // undefined when the key does not exist.
+  head: (bucket: Bucket, key: string) => Promise<StoredObject | undefined>
+  get: (bucket: Bucket, key: string) => Promise<Uint8Array | undefined>
+  put: (bucket: Bucket, key: string, body: Uint8Array, meta: { contentType: string, cacheControl?: string, contentDisposition?: string }) => Promise<void>
+  // A missing key is not an error.
+  delete: (bucket: Bucket, key: string) => Promise<void>
+  // Follows continuation tokens.
+  list: (bucket: Bucket, prefix: string) => Promise<StoredObject[]>
+  // `${endpoint}/media/${key}`
+  publicUrl: (key: string) => string
+}
+
+// The storage is not configured, or it answered with a server error after the SDK's own retries. Mapped to 503
+// `storage-unavailable`.
+export class StorageUnavailableError extends Error {
+  override name = 'StorageUnavailableError'
+}
