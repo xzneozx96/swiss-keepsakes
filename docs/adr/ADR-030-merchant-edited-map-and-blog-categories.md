@@ -7,6 +7,8 @@ Applies to: `api/src/modules/content/`, `packages/domain/src/content/`, `package
 
 No new dependency, vendor or paid service. The tables follow the shape of `catalog.product_categories`.
 
+**Amended 2026-10-28** (`docs/decisions/2026-10-28-pins-and-map-design.md`). On the guest map the map categories are a Categories sheet with checkboxes for top-level categories, not a chip rail. The map dims the pins outside the chosen categories and hides none. The list and the card row hold only the chosen ones. A pin with no category is dimmed while a category is chosen and normal under All. Everything else in this ADR stands. The design is in `docs/ux/pins-design.md`.
+
 ## Context
 The map is a curated local guide. Visitors need to find what they want: walking sights, photo spots, local food and drink, free essentials. The owner wants to create and rename these groups without a release. Pins no longer have a fixed type (ADR-005, ADR-029), so the old four types cannot serve as filters. Stories also need a grouping for the story list, for example Legends, Swiss history and Practical tips, which is where tips with no location now go.
 

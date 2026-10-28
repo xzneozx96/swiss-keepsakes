@@ -410,6 +410,9 @@ CREATE FUNCTION content.valid_weekly_hours(h jsonb) RETURNS boolean LANGUAGE sql
       AND (e->>'opens') < (e->>'closes'), false));
 $$;
 
+-- Amended 2026-10-28: a pin has a main photo and optional more photos (a carousel in the pin
+-- details sheet). This table keeps the one cover; an ordered table for the extra photos is
+-- designed in E4.2 (ADR-029, docs/ux/pins-design.md).
 CREATE TABLE content.places (
   id                  uuid PRIMARY KEY DEFAULT uuidv7(),
   store_id            uuid NOT NULL,
