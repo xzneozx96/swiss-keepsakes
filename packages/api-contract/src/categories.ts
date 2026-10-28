@@ -29,7 +29,7 @@ export const categoryPatchBodySchema = z.strictObject({
 
 export const categoryOrderBodySchema = z.strictObject({
   parentId: z.uuid().nullable(),
-  ids: z.array(z.uuid()).max(500).refine(ids => new Set(ids.map(id => id.toLowerCase())).size === ids.length, 'Each id may appear once'),
+  ids: z.array(z.uuid()).max(500),
 }).meta({ id: 'CategoryOrderBody', description: 'The new order of the siblings under parentId (null for the top level). ids must be exactly the current siblings' })
 
 export const merchantCategorySchema = z.object({

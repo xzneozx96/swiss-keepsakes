@@ -44,6 +44,14 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'version-exists': return { status: 409, type: 'version-exists', title: 'This group already has a version in that language.' }
     case 'not-published': return { status: 409, type: 'not-published', title: 'This item is not published.' }
     case 'in-use': return { status: 409, type: 'content-in-use', title: 'Other content still uses this item.' }
+    case 'name-missing':
+      return { status: 422, type: 'validation-failed', title: 'Give the category a name in English or German.', errors: [{ in: 'body', path: 'name', message: 'Give a name in English or German' }] }
+    case 'order-mismatch':
+      return { status: 422, type: 'validation-failed', title: 'The list changed. Reload it and move the category again.', errors: [{ in: 'body', path: 'ids', message: 'Send exactly the categories that are in this group now' }] }
+    case 'category-has-children': return { status: 409, type: 'category-has-children', title: 'This category has sub-categories. Move or delete them first.' }
+    case 'category-in-use': return { status: 409, type: 'category-in-use', title: 'This category is still used by content. Remove it from that content first.' }
+    case 'category-too-deep': return { status: 409, type: 'category-too-deep', title: 'A sub-category cannot hold other categories. Choose a top-level category.' }
+    case 'category-parent-has-children': return { status: 409, type: 'category-parent-has-children', title: 'This category has sub-categories, so it cannot become a sub-category itself.' }
   }
 }
 

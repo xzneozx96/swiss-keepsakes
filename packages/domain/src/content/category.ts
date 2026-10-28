@@ -12,9 +12,9 @@ export function normalizeCategoryName(input: { en?: string | null, de?: string |
   return Object.keys(name).length > 0 ? name : undefined
 }
 
-/** The slug is made once from the EN name, else the DE name. */
+/** The slug is made once from the EN name, else the DE name (also when the EN name folds to nothing). */
 export function categorySlugBase(name: Localized): string {
-  return slugify(name.en?.trim() || name.de?.trim() || '') || 'category'
+  return slugify(name.en ?? '') || slugify(name.de ?? '') || 'category'
 }
 
 export function nextFreeSlug(base: string, taken: ReadonlySet<string>): string {

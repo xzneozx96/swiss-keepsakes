@@ -33,6 +33,9 @@ describe('[E4.18][AC87] categorySlugBase', () => {
   it('falls back to DE', () => {
     expect(categorySlugBase({ de: 'Küche' })).toBe('kueche')
   })
+  it('falls back to DE when the EN name folds to nothing', () => {
+    expect(categorySlugBase({ en: '???', de: 'Küche' })).toBe('kueche')
+  })
   it('falls back to "category" when nothing survives folding', () => {
     expect(categorySlugBase({ en: '???' })).toBe('category')
     expect(categorySlugBase({})).toBe('category')

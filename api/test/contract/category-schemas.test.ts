@@ -50,13 +50,13 @@ describe('[E4.18][AC87] merchant category schemas', () => {
     expect(categoryPatchBodySchema.safeParse({ position: 1 }).success).toBe(false)
   })
 
-  it('an order body needs a parent (id or null) and a list of uuids with no repeats', () => {
+  it('an order body needs a parent (id or null) and a list of uuids (repeats are left to the use case)', () => {
     expect(categoryOrderBodySchema.safeParse({ parentId: null, ids: [uuid, uuid2] }).success).toBe(true)
     expect(categoryOrderBodySchema.safeParse({ parentId: uuid, ids: [] }).success).toBe(true)
     expect(categoryOrderBodySchema.safeParse({ ids: [uuid] }).success).toBe(false)
     expect(categoryOrderBodySchema.safeParse({ parentId: null }).success).toBe(false)
     expect(categoryOrderBodySchema.safeParse({ parentId: null, ids: ['nope'] }).success).toBe(false)
-    expect(categoryOrderBodySchema.safeParse({ parentId: null, ids: [uuid, uuid] }).success).toBe(false)
+    expect(categoryOrderBodySchema.safeParse({ parentId: null, ids: [uuid, uuid] }).success).toBe(true)
   })
 
   it('a merchant category carries counts and nullable names', () => {
