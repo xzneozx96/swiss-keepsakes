@@ -1,4 +1,4 @@
-import type { Clock } from '../../../platform/clock.ts'
+import type { Clock } from '../ports.ts'
 
 interface Entry<V> {
   loadedAt: number

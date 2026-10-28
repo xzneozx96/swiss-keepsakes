@@ -154,4 +154,33 @@ describe('public story reads over the database', () => {
     ])
     expect((await categories('map')).items.some(i => i.id === parent.id)).toBe(false)
   })
+
+  it('[E2.12][AC45] a media id saved in capitals still finds its key', async () => {
+    const store = randomUUID()
+    const g = await group(store)
+    const { rows } = await pool.query<{ id: string, storage_key: string }>(
+      `insert into content.media (store_id, kind, storage_key, content_type, byte_size, sha256, status) values ($1, 'image', $2, 'image/jpeg', 10, repeat('c', 64), 'ready') returning id, storage_key`,
+      [store, `${store}/${randomUUID()}`],
+    )
+    const upper = rows[0]!.id.toUpperCase()
+    const s = await version(store, g, 'en', 'published', 'Capitals', {
+      published: doc('Capitals', { coverMediaId: upper, sections: [{ id: 'a', heading: 'H', blocks: [{ type: 'image', mediaId: upper, caption: '' }] }] }),
+    })
+
+    const result = await get(s, 'en')
+
+    expect(result.ok && result.value.coverKey).toBe(rows[0]!.storage_key)
+    expect(result.ok && result.value.sections[0]!.blocks[0]).toEqual({ type: 'image', key: rows[0]!.storage_key, caption: '' })
+  })
+
+  it('[E2.12][AC64] an unpublished German version with old text does not count: English is carried and only English is available', async () => {
+    const store = randomUUID()
+    const g = await group(store)
+    const enSlug = await version(store, g, 'en', 'published', 'English')
+    await version(store, g, 'de', 'draft', 'Alt', { published: doc('Alter Text') })
+
+    const result = await get(enSlug, 'de')
+
+    expect(result.ok && result.value).toMatchObject({ title: 'English', language: 'en', requestedLanguage: 'de', fallback: true, availableLanguages: ['en'] })
+  })
 })

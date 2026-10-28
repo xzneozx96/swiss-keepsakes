@@ -67,7 +67,11 @@ async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryR
       slug: row.slug,
       published: row.published,
       publishedAt: new Date(row.published_at),
-      mediaKeys: Object.fromEntries(storyMediaIds(row.published).flatMap(({ id }) => (keys.has(id) ? [[id, keys.get(id)!]] : []))),
+      mediaKeys: Object.fromEntries(storyMediaIds(row.published).flatMap(({ id }) => {
+        // The JSON may hold capitals; content.media.id comes back lowercase.
+        const key = keys.get(id.toLowerCase())
+        return key === undefined ? [] : [[id.toLowerCase(), key]]
+      })),
     })
   }
   return [...stories.values()]

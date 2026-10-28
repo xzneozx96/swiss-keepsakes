@@ -38,7 +38,7 @@ export interface PublicStory extends PublicStoryCard {
 
 export interface PublicStoryList { items: PublicStoryCard[] }
 
-const keyOf = (version: PublicStoryVersionRow, mediaId: string | null) => (mediaId ? version.mediaKeys[mediaId] ?? null : null)
+const keyOf = (version: PublicStoryVersionRow, mediaId: string | null) => (mediaId ? version.mediaKeys[mediaId.toLowerCase()] ?? null : null)
 
 export function toPublicCategory(row: PublicCategoryRow): PublicCategory {
   const name = row.name.en ?? row.name.de ?? ''
@@ -103,7 +103,9 @@ export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): 
           return { type: 'image' as const, key: keyOf(version, block.mediaId), caption: block.caption }
         if (block.type === 'audio')
           return { type: 'audio' as const, key: keyOf(version, block.mediaId), title: block.title, caption: block.caption }
-        return block
+        if (block.type === 'video')
+          return { type: 'video' as const, youtubeId: block.youtubeId, title: block.title, caption: block.caption }
+        return { type: 'paragraph' as const, text: block.text }
       }),
     })),
   }
