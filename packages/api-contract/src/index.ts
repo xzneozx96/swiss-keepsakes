@@ -30,6 +30,7 @@ export {
 } from './content.ts'
 export { healthSchema } from './health.ts'
 export { type Me, meSchema, type MeStore, meStoreSchema } from './me.ts'
+export { type Problem, problemSchema, type ProblemType, problemTypes } from './problem.ts'
 export {
   type LanguageNotice,
   languageNoticeSchema,
@@ -60,7 +61,6 @@ export {
   publicTourListSchema,
   publicTourSchema,
 } from './public.ts'
-export { type Problem, problemSchema, type ProblemType, problemTypes } from './problem.ts'
 export {
   type AcceptedInvitation,
   acceptedInvitationSchema,

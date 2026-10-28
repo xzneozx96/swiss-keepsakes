@@ -41,7 +41,7 @@ export const publicStoryCardSchema = z.object({
   stayTag,
   interests: z.array(z.string()),
   categories: z.array(categoryRefSchema),
-  publishedAt: z.iso.datetime().nullable(),
+  publishedAt: z.iso.datetime(),
   ...languageNoticeSchema.shape,
 }).meta({ id: 'PublicStoryCard' })
 
