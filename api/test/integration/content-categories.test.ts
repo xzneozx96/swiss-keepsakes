@@ -83,6 +83,14 @@ describe.each(['map', 'blog'] as const)('[E4.18][AC87] the %s category list over
     expect(await renamed.json()).toMatchObject({ slug: 'food', name: { en: null, de: 'Essen' } })
     expect((await publicNames(kind)).get(food.id)).toMatchObject({ slug: 'food', name: { en: null, de: 'Essen' } })
 
+    // A rename with both languages replaces both keys, over a name that already holds two.
+    const both = await env.call(s.url(kind, `/${walks.id}`), { method: 'PATCH', headers: s.as, body: { name: { en: 'Local walks', de: 'Lokale Wanderungen' } } })
+    expect(both.status).toBe(200)
+    expect(await both.json()).toMatchObject({ slug: 'walks', name: { en: 'Local walks', de: 'Lokale Wanderungen' } })
+    expect((await s.list(kind)).find(c => c.id === walks.id)).toMatchObject({ slug: 'walks', name: { en: 'Local walks', de: 'Lokale Wanderungen' } })
+    expect((await publicNames(kind)).get(walks.id)).toMatchObject({ slug: 'walks', name: { en: 'Local walks', de: 'Lokale Wanderungen' } })
+    expect((await pool.query(`select slug, name from content.${table(kind)} where id = $1`, [walks.id])).rows[0]).toEqual({ slug: 'walks', name: { en: 'Local walks', de: 'Lokale Wanderungen' } })
+
     // Move Food above Walks.
     const ordered = await env.call(s.url(kind, '/order'), { method: 'PUT', headers: s.as, body: { parentId: null, ids: [food.id, walks.id] } })
     expect(ordered.status).toBe(200)
@@ -94,7 +102,7 @@ describe.each(['map', 'blog'] as const)('[E4.18][AC87] the %s category list over
     expect(nested.status).toBe(200)
     expect(await nested.json()).toMatchObject({ parentId: food.id, position: 1 })
     const reloaded = await s.list(kind)
-    expect(reloaded.map(c => `${c.name.en ?? c.name.de}${c.parentId ? '^' : ''}:${c.position}:${c.childCount}`)).toEqual(['Essen:1:1', 'Walks^:1:0'])
+    expect(reloaded.map(c => `${c.name.en ?? c.name.de}${c.parentId ? '^' : ''}:${c.position}:${c.childCount}`)).toEqual(['Essen:1:1', 'Local walks^:1:0'])
     expect((await publicNames(kind)).get(walks.id)).toMatchObject({ parentId: food.id, position: 1 })
 
     // A patch that changes nothing (same parent) saves and answers 200.

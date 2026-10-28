@@ -10,6 +10,11 @@ import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress,
 // Owner's own session through the merchant API.
 const EVIDENCE = '/home/ross-geller/Projects/minastik/swiss-keepsakes/.factory/runs/20261028-sprint-6/evidence/T-E4.18'
 const WIDTH = 375
+// The first load of a page and of its API answers is slow on the remote Neon branch.
+const FIRST_LOAD = 60_000
+
+// A failed run keeps its trace, so a stalled request can be told from a product bug.
+test.use({ trace: 'retain-on-failure' })
 
 test.afterEach(closeVisitors)
 
@@ -71,14 +76,27 @@ async function expectFits(page: Page) {
   expect(found.clipped).toEqual([])
 }
 
+function answered(owner: Page, path: string) {
+  return owner.waitForResponse(
+    response => new URL(response.url()).pathname.endsWith(path) && response.request().method() === 'GET',
+    { timeout: FIRST_LOAD },
+  )
+}
+
 async function openCategories(owner: Page) {
   await owner.goto('/store')
   await owner.getByRole('navigation', { name: 'Shop' }).getByRole('button', { name: 'More' }).click()
   await owner.getByRole('link', { name: 'Content' }).click()
   await expect(owner).toHaveURL(/\/store\/content$/)
+  // The dashboard does not ask for /api/me; the Categories screen does, then reads the list.
+  const me = answered(owner, '/api/me')
+  const map = answered(owner, '/categories/map')
+
   await owner.getByRole('tab', { name: categoriesEn['merchantContent.tab.categories'] }).click()
   await expect(owner).toHaveURL(/\/store\/content\/categories$/)
-  await expect(owner.getByRole('button', { name: categoriesEn['categories.add'] })).toBeVisible()
+  expect((await me).ok()).toBe(true)
+  expect((await map).ok()).toBe(true)
+  await expect(owner.getByRole('button', { name: categoriesEn['categories.add'] })).toBeVisible({ timeout: FIRST_LOAD })
   await expect(owner.getByRole('tab', { name: categoriesEn['categories.tab.map'] })).toHaveAttribute('aria-selected', 'true')
 }
 
@@ -131,6 +149,17 @@ test('[E4.18][AC87] the Owner adds, nests and deletes map categories on a phone,
   await expect(row(owner, 'Walks').getByText(categoriesEn['categories.count.children'].replace('{n}', '1'))).toBeVisible()
   await expectFits(owner)
 
+  // Move Walks below Museums, and see the order and the nesting again after a reload.
+  const ordered = owner.waitForResponse(response => response.url().endsWith('/categories/map/order') && response.request().method() === 'PUT')
+
+  await owner.getByRole('button', { name: categoriesEn['categories.moveDown'].replace('{name}', 'Walks') }).click()
+  expect((await ordered).ok()).toBe(true)
+  await owner.reload()
+  await expect(owner.locator('[data-category]')).toHaveCount(4, { timeout: FIRST_LOAD })
+  await expect(owner.locator('[data-category]')).toContainText(['Museums', 'Walks', 'Trails', 'Cafes'])
+  await expect(row(owner, 'Trails').getByText(categoriesEn['categories.parentOf'].replace('{name}', 'Walks'))).toBeVisible()
+  await expectFits(owner)
+
   // A published or draft pin tagged with Museums blocks its delete.
   const list = await (await owner.request.get(`/api/store/${storeId}/categories/map`)).json() as { items: Array<{ id: string, slug: string }> }
   const museums = list.items.find(item => item.slug === 'museums')
@@ -162,6 +191,8 @@ test('[E4.18][AC87] the Owner adds, nests and deletes map categories on a phone,
   await expect(row(owner, 'Walks')).toBeVisible()
   await expect(row(owner, 'Museums')).toBeVisible()
   await expect(row(owner, 'Cafes')).toHaveCount(0)
+  await expect(owner.locator('[data-category]')).toContainText(['Museums', 'Walks', 'Trails'])
+  await expect(row(owner, 'Trails').getByText(categoriesEn['categories.parentOf'].replace('{name}', 'Walks'))).toBeVisible()
   await expectFits(owner)
 
   // The Blog tab, empty for this store.
