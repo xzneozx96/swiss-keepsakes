@@ -1,4 +1,3 @@
-import type { PoolClient } from 'pg'
 import { randomUUID } from 'node:crypto'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { count, openTestDatabase } from './support.ts'
@@ -59,8 +58,8 @@ async function newGroup(store: string): Promise<string> {
   return rows[0]!.id
 }
 
-async function newPlace(store: string, type: string, slug: string | null = null): Promise<string> {
-  const { rows } = await pool.query<{ id: string }>('insert into content.places (store_id, type, slug) values ($1, $2, $3) returning id', [store, type, slug])
+async function newPlace(store: string, slug: string | null = null): Promise<string> {
+  const { rows } = await pool.query<{ id: string }>('insert into content.places (store_id, slug) values ($1, $2) returning id', [store, slug])
   return rows[0]!.id
 }
 
@@ -96,27 +95,17 @@ describe('[E2.5] content tables', () => {
   it('[E2.5][ADR-014] a place slug is unique per language', async () => {
     const store = randomUUID()
     const word = `x${randomUUID().replaceAll('-', '').slice(0, 10)}`
-    await newPlace(store, 'sight', JSON.stringify({ en: word }))
+    await newPlace(store, JSON.stringify({ en: word }))
 
-    const clash = await failure(newPlace(store, 'sight', JSON.stringify({ en: word })))
-    await newPlace(store, 'sight', JSON.stringify({ de: word }))
+    const clash = await failure(newPlace(store, JSON.stringify({ en: word })))
+    await newPlace(store, JSON.stringify({ de: word }))
 
     expect(clash).toMatchObject({ code: '23505', constraint: 'places_slug_en_key' })
     expect(await count(pool, 'select count(*) from content.places where store_id = $1', [store])).toBe(2)
   })
 
-  it('[E2.5] a practical place cannot name a main story', async () => {
-    const store = randomUUID()
-    const group = await newGroup(store)
-    const place = await newPlace(store, 'practical')
-
-    const refused = await failure(pool.query('update content.places set main_story_group_id = $2 where id = $1', [place, group]))
-
-    expect(refused).toMatchObject({ code: '23514', constraint: 'places_practical_no_story_check' })
-  })
-
   it('[E2.5] a published place with an {"en": null} slug is refused', async () => {
-    const place = await newPlace(randomUUID(), 'practical')
+    const place = await newPlace(randomUUID())
 
     const refused = await failure(publishPlace(place, '{"en":null}', '{"name":{"en":"A"}}'))
 
@@ -126,7 +115,7 @@ describe('[E2.5] content tables', () => {
   })
 
   it.each(['{"en":null}', '{"en":"Old Town"}'])('[E2.5] a draft place with the slug %s is refused by the slug-shape check', async (slug) => {
-    const refused = await failure(newPlace(randomUUID(), 'sight', slug))
+    const refused = await failure(newPlace(randomUUID(), slug))
 
     expect(refused).toMatchObject({ code: '23514', constraint: 'places_slug_shape_check' })
   })
@@ -137,19 +126,43 @@ describe('[E2.5] content tables', () => {
     expect(refused).toMatchObject({ code: '23514', constraint: 'tours_slug_shape_check' })
   })
 
-  it('[E2.5] a published place without a latitude is refused by the published-fields check', async () => {
-    const place = await newPlace(randomUUID(), 'practical')
+  it.each([
+    ['a title', { slug: '{"en":"x"}', latitude: 47.05, published: '{}' }],
+    ['a location', { slug: '{"en":"x"}', latitude: null, published: '{"name":{"en":"A"}}' }],
+    ['a slug', { slug: null, latitude: 47.05, published: '{"name":{"en":"A"}}' }],
+  ])('[E2.11][AC68] a pin lacking %s cannot publish', async (_what, fields) => {
+    const place = await newPlace(randomUUID())
+    const slug = fields.slug === null ? null : JSON.stringify({ en: slugOf('pier') })
 
     const refused = await failure(pool.query(
-      `update content.places set status = 'published', first_published_at = now(), slug = $2, longitude = 8.3, published = '{"name":{"en":"A"}}' where id = $1`,
+      `update content.places set status = 'published', first_published_at = now(), slug = $2, latitude = $3, longitude = 8.3, published = $4 where id = $1`,
+      [place, slug, fields.latitude, fields.published],
+    ))
+
+    expect(refused).toMatchObject({ code: '23514', constraint: 'places_published_fields_check' })
+  })
+
+  it('[E2.11][AC68] a pin lacking a longitude cannot publish', async () => {
+    const place = await newPlace(randomUUID())
+
+    const refused = await failure(pool.query(
+      `update content.places set status = 'published', first_published_at = now(), slug = $2, latitude = 47.05, longitude = NULL, published = '{"name":{"en":"A"}}' where id = $1`,
       [place, JSON.stringify({ en: slugOf('pier') })],
     ))
 
     expect(refused).toMatchObject({ code: '23514', constraint: 'places_published_fields_check' })
   })
 
+  it('[E2.11][AC68] a pin with only a German title and slug publishes', async () => {
+    const place = await newPlace(randomUUID())
+
+    await publishPlace(place, JSON.stringify({ de: slugOf('aussicht') }), '{"name":{"de":"Aussicht"}}')
+
+    expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'published'`, [place])).toBe(1)
+  })
+
   it('[E2.5] a published place with a NULL published document is refused (the IS TRUE path)', async () => {
-    const place = await newPlace(randomUUID(), 'practical')
+    const place = await newPlace(randomUUID())
 
     const refused = await failure(pool.query(
       `update content.places set status = 'published', first_published_at = now(), slug = $2, latitude = 47.05, longitude = 8.3, published = NULL where id = $1`,
@@ -174,20 +187,49 @@ describe('[E2.5] content tables', () => {
 
   it('[E2.5] a published place whose name and slug languages differ is refused', async () => {
     const store = randomUUID()
-    const place = await newPlace(store, 'practical')
+    const place = await newPlace(store)
 
     const refused = await failure(publishPlace(place, '{"en":"a","de":"b"}', '{"name":{"en":"A"}}'))
 
     expect(refused).toMatchObject({ code: '23514', constraint: 'places_published_fields_check' })
   })
 
-  it('[E2.5] a practical place publishes with matching slug and name languages', async () => {
+  it('[E2.5] a pin publishes with matching slug and name languages', async () => {
     const store = randomUUID()
-    const place = await newPlace(store, 'practical')
+    const place = await newPlace(store)
 
     await publishPlace(place, JSON.stringify({ en: slugOf('pier') }), '{"name":{"en":"A"}}')
 
     expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'published'`, [place])).toBe(1)
+  })
+
+  it('[E2.11][AC85] a pin publishes with no story and no category', async () => {
+    const store = randomUUID()
+    const place = await newPlace(store)
+
+    await publishPlace(place, JSON.stringify({ en: slugOf('pier') }), '{"name":{"en":"Pier"}}')
+
+    expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'published' and first_published_at is not null and main_story_group_id is null`, [place])).toBe(1)
+    expect(await count(pool, 'select count(*) from content.place_categories where place_id = $1', [place])).toBe(0)
+    expect(await count(pool, 'select count(*) from content.story_group_places where place_id = $1', [place])).toBe(0)
+  })
+
+  it('[E2.11][AC68] a pin with only an English title, a location and a slug publishes, and places have no type column', async () => {
+    const place = await newPlace(randomUUID())
+
+    await publishPlace(place, JSON.stringify({ en: slugOf('lookout') }), '{"name":{"en":"Lookout"}}')
+
+    expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'published'`, [place])).toBe(1)
+    expect(await count(pool, `select count(*) from information_schema.columns where table_schema = 'content' and table_name = 'places' and column_name = 'type'`)).toBe(0)
+  })
+
+  it('[E2.11] an editorial review may be about any pin', async () => {
+    const store = randomUUID()
+    const place = await newPlace(store)
+
+    await pool.query(`insert into content.story_groups (store_id, kind, subject_place_id) values ($1, 'editorial_review', $2)`, [store, place])
+
+    expect(await count(pool, `select count(*) from content.story_groups where subject_place_id = $1`, [place])).toBe(1)
   })
 
   it('[E2.5] a published story version without sections is refused', async () => {
@@ -212,36 +254,6 @@ describe('[E2.5] content tables', () => {
     expect(refused).toMatchObject({ code: '23514', constraint: 'story_versions_language_check' })
   })
 
-  it('[E2.5] an editorial review of a practical place is refused', async () => {
-    const store = randomUUID()
-    const place = await newPlace(store, 'practical')
-
-    const refused = await failure(pool.query(
-      `insert into content.story_groups (store_id, kind, subject_place_id, subject_place_type) values ($1, 'editorial_review', $2, 'practical')`,
-      [store, place],
-    ))
-
-    expect(refused).toMatchObject({ code: '23514', constraint: 'story_groups_subject_type_check' })
-  })
-
-  it('[E2.5] an editorial review whose subject type does not match the place is refused at commit, and accepted when fixed before it', async () => {
-    const store = randomUUID()
-    const place = await newPlace(store, 'sight')
-    const mismatched = `insert into content.story_groups (store_id, kind, subject_place_id, subject_place_type) values ($1, 'editorial_review', $2, 'restaurant') returning id`
-
-    const refused = await failure(inTransaction(async (client) => {
-      await client.query(mismatched, [store, place])
-    }))
-    await inTransaction(async (client) => {
-      // the insert itself passes: only the commit-time check sees the mismatch
-      const { rows } = await client.query<{ id: string }>(mismatched, [store, place])
-      await client.query(`update content.story_groups set subject_place_type = 'sight' where id = $1`, [rows[0]!.id])
-    })
-
-    expect(refused).toMatchObject({ code: '23503', constraint: 'story_groups_subject_type_fkey' })
-    expect(await count(pool, `select count(*) from content.story_groups where subject_place_id = $1`, [place])).toBe(1)
-  })
-
   it('[E2.5] no foreign key leaves schema content', async () => {
     const { rows } = await pool.query(`
       select c.conname from pg_constraint c
@@ -258,6 +270,12 @@ describe('[E2.5] content tables', () => {
       'places_slug_en_key',
       'places_slug_de_key',
       'places_main_story_idx',
+      'place_dates_place_end_idx',
+      'place_dates_store_place_idx',
+      'map_categories_parent_idx',
+      'blog_categories_parent_idx',
+      'place_categories_category_idx',
+      'story_categories_category_idx',
       'places_cover_media_idx',
       'story_groups_subject_idx',
       'story_versions_published_idx',
@@ -282,6 +300,12 @@ describe('[E2.5] content tables', () => {
       'media',
       'media_refs',
       'place_links',
+      'place_dates',
+      'map_categories',
+      'blog_categories',
+      'place_categories',
+      'story_categories',
+      'public_pins',
       'place_story_links',
       'places',
       'story_group_places',
@@ -297,93 +321,15 @@ describe('[E2.5] content tables', () => {
   })
 })
 
-async function inTransaction(work: (client: PoolClient) => Promise<void>): Promise<void> {
-  const client = await pool.connect()
-  let failed: Error | undefined
-  try {
-    await client.query('begin')
-    await work(client)
-    await client.query('commit')
-  }
-  catch (error) {
-    failed = error as Error
-    await client.query('rollback').catch(() => undefined)
-    throw error
-  }
-  finally {
-    client.release(failed)
-  }
-}
-
 async function newDraftVersion(group: string, language: string, store: string): Promise<void> {
   await pool.query('insert into content.story_versions (group_id, language, store_id) values ($1, $2, $3)', [group, language, store])
 }
 
-function publishVersion(client: Pick<PoolClient, 'query'>, group: string, language: string) {
-  return client.query(
-    `update content.story_versions set status = 'published', slug = $3, published_at = now(), published = '{"title":"T","sections":[]}' where group_id = $1 and language = $2`,
-    [group, language, slugOf('story')],
-  )
-}
-
-function publishSight(client: Pick<PoolClient, 'query'>, place: string, group: string) {
-  return client.query(
-    `update content.places set status = 'published', first_published_at = now(), main_story_group_id = $2, slug = $3, latitude = 47.05, longitude = 8.3, published = '{"name":{"en":"Old Town"}}' where id = $1`,
-    [place, group, JSON.stringify({ en: slugOf('sight') })],
-  )
-}
-
-// A sight published on a group whose English version is published.
-async function publishedPin(store: string): Promise<{ group: string, place: string }> {
-  const group = await newGroup(store)
-  await insertPublishedVersion(group, 'en', store, slugOf('story'))
-  const place = await newPlace(store, 'sight')
-  await publishSight(pool, place, group)
-  return { group, place }
-}
-
 describe('[E2.5] content rules', () => {
-  it('[E2.5][AC43] a story place cannot publish without a published main story, and a practical place can', async () => {
+  it('[E2.5][AC79] [E2.11][AC79] a published place can be hidden and cannot be deleted, and a draft can be deleted', async () => {
     const store = randomUUID()
-    const group = await newGroup(store)
-    await newDraftVersion(group, 'en', store)
-    const sight = await newPlace(store, 'sight')
-
-    const refused = await failure(inTransaction(async (client) => {
-      await publishSight(client, sight, group)
-    }))
-    await inTransaction(async (client) => {
-      // sight first, version second: only a deferred check accepts this order
-      await publishSight(client, sight, group)
-      await publishVersion(client, group, 'en')
-    })
-    const practical = await newPlace(store, 'practical')
-    await publishPlace(practical, JSON.stringify({ en: slugOf('toilets') }), '{"name":{"en":"Toilets"}}')
-
-    expect(refused).toMatchObject({ code: '23514', constraint: 'places_pin_has_published_story' })
-    expect(await count(pool, `select count(*) from content.places where store_id = $1 and status = 'published'`, [store])).toBe(2)
-  })
-
-  it('[E2.5][AC43] a place may publish on a version published earlier', async () => {
-    const store = randomUUID()
-    const { place } = await publishedPin(store)
-
-    expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'published'`, [place])).toBe(1)
-  })
-
-  it('[E2.5][AC68] a place type cannot change after creation', async () => {
-    const place = await newPlace(randomUUID(), 'sight')
-
-    const refused = await failure(pool.query(`update content.places set type = 'practical' where id = $1`, [place]))
-
-    expect(refused).toMatchObject({ code: '23001' })
-    expect(refused.message).toContain('cannot change after it is created')
-  })
-
-  it('[E2.5][AC79] a published place can be hidden and cannot be deleted, and a draft can be deleted', async () => {
-    const store = randomUUID()
-    const draft = await newPlace(store, 'sight')
-    const published = await newPlace(store, 'practical')
+    const draft = await newPlace(store)
+    const published = await newPlace(store)
     await publishPlace(published, JSON.stringify({ en: slugOf('pier') }), '{"name":{"en":"Pier"}}')
 
     const deleted = await pool.query('delete from content.places where id = $1', [draft])
@@ -399,9 +345,9 @@ describe('[E2.5] content rules', () => {
     expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'hidden'`, [published])).toBe(1)
   })
 
-  it('[E2.5][AC79] a published place cannot clear first_published_at and then be deleted', async () => {
+  it('[E2.5][AC79] [E2.11][AC79] a published place cannot clear first_published_at and then be deleted', async () => {
     const store = randomUUID()
-    const place = await newPlace(store, 'practical')
+    const place = await newPlace(store)
     const first = await publishPlace(place, JSON.stringify({ en: slugOf('pier') }), '{"name":{"en":"Pier"}}')
 
     const cleared = await failure(pool.query(`update content.places set status = 'draft', first_published_at = NULL where id = $1`, [place]))
@@ -418,7 +364,7 @@ describe('[E2.5] content rules', () => {
     expect(await count(pool, `select count(*) from content.places where id = $1 and status = 'published' and first_published_at is not null`, [place])).toBe(1)
   })
 
-  it('[E2.5] a published story version cannot be deleted, and a draft one can', async () => {
+  it('[E2.5][AC79] [E2.11][AC79] a published story version cannot be deleted, and a draft one can', async () => {
     const store = randomUUID()
     const group = await newGroup(store)
     await insertPublishedVersion(group, 'en', store, slugOf('story'))
@@ -432,7 +378,7 @@ describe('[E2.5] content rules', () => {
     expect(deleted.rowCount).toBe(1)
   })
 
-  it('[E2.5][AC79] a published story version keeps its published text', async () => {
+  it('[E2.5][AC79] [E2.11][AC79] a published story version keeps its published text', async () => {
     const store = randomUUID()
     const group = await newGroup(store)
     await insertPublishedVersion(group, 'en', store, slugOf('story'))
@@ -454,7 +400,7 @@ describe('[E2.5] content rules', () => {
 
   // CASCADE, because Postgres refuses a plain TRUNCATE of a referenced table before any trigger runs.
   // A cascade from places also reaches story_versions, so the message may name either table.
-  it.each(['places', 'story_versions', 'media_refs'])('[E2.5][AC79] TRUNCATE ... CASCADE on content.%s is refused by the trigger', async (table) => {
+  it.each(['places', 'story_versions', 'media_refs'])('[E2.5][AC79] [E2.11][AC79] TRUNCATE ... CASCADE on content.%s is refused by the trigger', async (table) => {
     const refused = await failure(pool.query(`truncate content.${table} cascade`))
 
     expect(refused).toMatchObject({ code: '23000' })
@@ -469,57 +415,6 @@ describe('[E2.5] content rules', () => {
     const refused = await failure(pool.query('delete from content.story_groups where id = $1', [group]))
 
     expect(refused).toMatchObject({ code: '23001', constraint: 'story_versions_group_fkey' })
-  })
-
-  it('[E2.5][AC43] the last published version of a pin story cannot be unpublished while a published pin uses it', async () => {
-    const store = randomUUID()
-    const { group } = await publishedPin(store)
-
-    const refused = await failure(inTransaction(async (client) => {
-      await client.query(`update content.story_versions set status = 'draft' where group_id = $1 and language = 'en'`, [group])
-    }))
-
-    expect(refused).toMatchObject({ code: '23514', constraint: 'story_versions_keep_pin_story' })
-    expect(await count(pool, `select count(*) from content.story_versions where group_id = $1 and status = 'published'`, [group])).toBe(1)
-  })
-
-  it('[E2.5][AC43] the last published version of a pin story cannot move to another group', async () => {
-    const store = randomUUID()
-    const { group } = await publishedPin(store)
-    const other = await newGroup(store)
-
-    const refused = await failure(inTransaction(async (client) => {
-      await client.query(`update content.story_versions set group_id = $2 where group_id = $1 and language = 'en'`, [group, other])
-    }))
-
-    expect(refused).toMatchObject({ code: '23514', constraint: 'story_versions_keep_pin_story' })
-  })
-
-  it('[E2.5][AC43] a pin story may drop a version when a second one is published in the same transaction', async () => {
-    const store = randomUUID()
-    const { group } = await publishedPin(store)
-    await newDraftVersion(group, 'de', store)
-
-    await inTransaction(async (client) => {
-      // unpublish first, publish second: only a deferred check accepts this order
-      await client.query(`update content.story_versions set status = 'draft' where group_id = $1 and language = 'en'`, [group])
-      await publishVersion(client, group, 'de')
-    })
-
-    expect(await count(pool, `select count(*) from content.story_versions where group_id = $1 and status = 'published' and language = 'de'`, [group])).toBe(1)
-  })
-
-  it('[E2.5][AC43] a pin story may drop its last version once the place is hidden', async () => {
-    const store = randomUUID()
-    const { group, place } = await publishedPin(store)
-
-    await inTransaction(async (client) => {
-      // unpublish first, hide second: only a deferred check accepts this order
-      await client.query(`update content.story_versions set status = 'draft' where group_id = $1 and language = 'en'`, [group])
-      await client.query(`update content.places set status = 'hidden' where id = $1`, [place])
-    })
-
-    expect(await count(pool, `select count(*) from content.story_versions where group_id = $1 and status = 'published'`, [group])).toBe(0)
   })
 
   it('[E2.5] a used media row cannot be retired, and an unused one can', async () => {
@@ -551,12 +446,12 @@ describe('[E2.5] content rules', () => {
 
   it('[E2.5] place_story_links lists the main story at rank 0 and a linked or reviewed story at rank 1', async () => {
     const store = randomUUID()
-    const place = await newPlace(store, 'sight')
+    const place = await newPlace(store)
     const [main, mention, review] = [await newGroup(store), await newGroup(store), randomUUID()] as [string, string, string]
     await pool.query('update content.places set main_story_group_id = $2 where id = $1', [place, main])
     await pool.query('insert into content.story_group_places (group_id, place_id, store_id, position) values ($1, $2, $3, 1)', [mention, place, store])
     await pool.query(
-      `insert into content.story_groups (id, store_id, kind, subject_place_id, subject_place_type) values ($1, $2, 'editorial_review', $3, 'sight')`,
+      `insert into content.story_groups (id, store_id, kind, subject_place_id) values ($1, $2, 'editorial_review', $3)`,
       [review, store, place],
     )
 
@@ -570,7 +465,7 @@ describe('[E2.5] content rules', () => {
 
   it('[E2.5] place_story_links lists a main story that is also linked on the place once, at rank 0', async () => {
     const store = randomUUID()
-    const place = await newPlace(store, 'sight')
+    const place = await newPlace(store)
     const group = await newGroup(store)
     await pool.query('update content.places set main_story_group_id = $2 where id = $1', [place, group])
     await pool.query('insert into content.story_group_places (group_id, place_id, store_id, position) values ($1, $2, $3, 1)', [group, place, store])

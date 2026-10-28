@@ -86,7 +86,11 @@ Khách không cần tài khoản để dùng onboarding hay đọc nội dung.
 
 ### 3.1 Onboarding hai bước
 
-Khi khách chưa trả lời, trang hiện onboarding hai bước dưới dạng lời nhắc đóng được. Onboarding không bao giờ chặn trang khách đang mở, kể cả khi khách vào thẳng một câu chuyện, bản đồ hoặc sản phẩm qua link hay tìm kiếm: nội dung hiện ngay, lời nhắc nằm phía trên hoặc bên cạnh nội dung. Đóng lời nhắc tương đương bỏ qua. Thứ tự hiện của lời nhắc và hộp đồng ý theo dõi còn mở (O32).
+Onboarding chỉ dành cho khách. Merchant, đối tác và Super Admin không bao giờ thấy onboarding, kể cả khi mở trang công khai, và các màn hình `/store`, `/partner`, `/admin`, đăng nhập và lời mời không hiện onboarding.
+
+Khi khách chưa trả lời và chưa bỏ qua, nếu trang đầu tiên của lượt truy cập hiện tại là trang chủ (màn hình Khám phá) và khách không đến từ QR hoặc link đối tác hay từ kết quả tìm kiếm, ứng dụng hiện onboarding hai bước **toàn màn hình** trước nội dung. Nguồn của lượt truy cập chỉ tính cho lượt đó, không phải cửa sổ giới thiệu 30 ngày của §10.1; khách quay lại sau vài ngày bắt đầu một lượt mới. Khách bỏ qua được ở cả hai bước và đóng được bất cứ lúc nào. Đóng tương đương bỏ qua và onboarding không tự hiện lại.
+
+Khách vào một trang khác trang chủ (câu chuyện, điểm bản đồ, sản phẩm), hoặc đến từ QR hay link đối tác hoặc từ tìm kiếm, không bao giờ bị che trang đó: nội dung hiện ngay và chỉ có một lời nhắc nhỏ nổi trên màn hình, không chèn vào nội dung và không che phần đầu trang, đóng được, với cùng hai bước. Lời nhắc nhỏ chỉ hiện ở trang câu chuyện; trang khác (điểm bản đồ, sản phẩm) không hiện lời nhắc. Đóng lời nhắc nhỏ chỉ ẩn nó trong lượt truy cập đó, không phải bỏ qua. Onboarding toàn màn hình hiện ở lần đầu khách mở màn hình Khám phá từ trong ứng dụng, nếu khách chưa trả lời và chưa bỏ qua. Thứ tự giữa onboarding và hộp đồng ý theo dõi còn mở (O32).
 
 1. **Bước 1, loại khách:** short-stay hoặc multi-day.
 2. **Bước 2, sở thích:** chọn một hoặc nhiều mục trong danh sách cố định ở §3.3.
@@ -226,7 +230,7 @@ Các ví dụ dùng chung một nhóm nhân vật, cùng một ngày thứ Ba:
 
 Khách vào trang từ ba hướng: tìm kiếm, QR hoặc link của guide hoặc khách sạn, hoặc vào thẳng. Trong cả ba, khách đọc được nội dung ngay, không đăng nhập. Hành trình điển hình:
 
-1. Khách mở trang, nội dung hiện ngay. Khách trả lời onboarding hoặc đóng lời nhắc (§3.1).
+1. Khách mở trang qua QR, link hoặc tìm kiếm: nội dung hiện ngay, khách trả lời lời nhắc nhỏ hoặc đóng nó. Khách mở thẳng màn hình Khám phá lần đầu thấy onboarding toàn màn hình (§3.1).
 2. Khách mở bản đồ hoặc màn hình Khám phá, nhấn một điểm, đọc câu chuyện của điểm đó (§11.1, §11.2).
 3. Trong hoặc sau câu chuyện, khách thấy dao Victorinox liên quan, không kèm giá. Khách mở trang sản phẩm, nơi giá hiện lần đầu (Q24).
 4. Khách đặt dao (§6.2).
@@ -237,7 +241,7 @@ Mỗi đối tác có QR hoặc link riêng. QR hoặc link bài viết dẫn đ
 
 1. **10:05**, trên xe buýt, Anna phát tờ rơi "Lucerne miễn phí: chỗ ăn, nhà vệ sinh, điểm tham quan". Mai quét QR trên tờ rơi.
 2. Trang chủ mở ngay, không cần đăng nhập. Hệ thống ghi một lượt mở link của Anna (§10.1).
-3. Lời nhắc onboarding nằm phía trên nội dung. Mai chọn short-stay và "Mua sắm và đồ lưu niệm". Màn hình Khám phá xếp các mục short-stay lên trước (§3.2).
+3. Lời nhắc onboarding nhỏ nổi trên màn hình, không che nội dung. Mai mở lời nhắc, chọn short-stay và "Mua sắm và đồ lưu niệm". Màn hình Khám phá xếp các mục short-stay lên trước (§3.2).
 4. Mai mở bản đồ, nhấn điểm Kapellbrücke và đọc câu chuyện về cây cầu.
 5. Cuối câu chuyện có thẻ dao Victorinox chủ đề Kapellbrücke, không có giá. Mai nhấn thẻ và sang trang sản phẩm (tiếp ở §6.2b).
 
@@ -245,7 +249,7 @@ Mỗi đối tác có QR hoặc link riêng. QR hoặc link bài viết dẫn đ
 
 1. **Chủ nhật**, Tom nhận phòng ở khách sạn Seeblick. Lena đưa Tom tờ thông tin có QR của khách sạn. Tom quét thử rồi đóng trang.
 2. **Thứ Hai 21:00**, Tom tìm "Lucerne old town stories" trên Google và mở thẳng một câu chuyện về phố cổ.
-3. Câu chuyện hiện ngay. Lời nhắc onboarding nằm bên cạnh, không chặn nội dung. Tom chọn multi-day, "Lịch sử và văn hóa" và "Cảnh quan thiên nhiên".
+3. Câu chuyện hiện ngay. Lời nhắc onboarding nhỏ nổi trên màn hình khi Tom đọc xuống, không chặn nội dung. Tom mở lời nhắc, chọn multi-day, "Lịch sử và văn hóa" và "Cảnh quan thiên nhiên".
 4. Tom quay lại màn hình Khám phá. Tour và nhà hàng có thẻ multi-day xếp trước.
 5. Lần này Tom vào thẳng, nhưng lượt mở link của khách sạn Seeblick hôm Chủ nhật vẫn còn trong 30 ngày. Nếu Tom mua, đơn ghi nguồn là khách sạn Seeblick (§10.1).
 
@@ -757,7 +761,7 @@ Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC
 | AC17 | Khách chưa hoàn tất đơn hoặc mở đơn người khác                                              | Không tạo được đánh giá sản phẩm không hợp lệ                                                                                                         | Phase 1                         |
 | AC18 | Khách chưa đăng nhập gửi yêu cầu tư vấn | Không cần đăng nhập; cần email; bộ câu hỏi cố định; yêu cầu được lưu và gửi email merchant | Phase 1, cổng G10 |
 | AC19 | Dashboard có đơn trực tuyến, đơn tiền mặt của guide và đơn thiếu chi phí thực tế            | Tách giá trị đơn, tiền thu, tiền mặt guide thu; không cộng trùng; thiếu chi phí thì nêu khoản thiếu, không coi là 0                                   | Phase 1                         |
-| AC24 | Khách mở trang qua QR đối tác, tìm kiếm hoặc trực tiếp, kể cả link sâu vào một câu chuyện | Nội dung hiện ngay, khách không phải chọn gì trước; onboarding chỉ là lời nhắc đóng được; referral ghi theo cửa sổ 30 ngày | Phase 1 |
+| AC24 | Khách mở trang qua QR đối tác, tìm kiếm hoặc trực tiếp, kể cả link sâu vào một câu chuyện | Nội dung hiện ngay, khách không phải chọn gì trước; trên trang đích onboarding chỉ là lời nhắc nhỏ đóng được, không toàn màn hình; referral ghi theo cửa sổ 30 ngày | Phase 1 |
 | AC25 | Khách gửi yêu cầu mua dao mà điều kiện tự chấp nhận không đạt, với giờ nhận mong muốn | Chưa thu tiền; hiện đang chờ người bán xác nhận, không có thời gian phản hồi dự kiến; chỉ sau khi merchant chấp nhận mới yêu cầu thanh toán | Phase 1 |
 | AC26 | Merchant cấu hình nhiều điểm nhận; khách gửi yêu cầu                                        | Khách chọn một phương án; đơn lưu lựa chọn; merchant xác nhận giờ và phương án trước khi yêu cầu thanh toán                                           | Phase 1                         |
 | AC29 | Manager ghi thu ngoài, hoàn tất đơn; sau đó cần sửa khoản thu sai                           | Manager làm được hai thao tác đầu, không sửa hoặc hủy khoản thu; chỉ Owner sửa hoặc hủy với lý do; giữ lịch sử                                        | Phase 1                         |
@@ -773,7 +777,7 @@ Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC
 
 | Mã   | Khi (Given/When)                                                                       | Thì (Then)                                                                                                                                                      | Phạm vi hoặc phụ thuộc                   |
 | ---- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| AC36 | Khách mở trang lần đầu, kể cả qua link tới một câu chuyện | Trang đích hiện ngay; onboarding hiện như lời nhắc đóng được, không chặn nội dung; bước 1 (short-stay hoặc multi-day) rồi bước 2 (bốn sở thích, chọn một hoặc nhiều); không cần tài khoản | Phase 1 |
+| AC36 | Khách mở ứng dụng lần đầu và vào thẳng trang chủ, không qua QR, link đối tác hay tìm kiếm | Onboarding toàn màn hình hiện trước nội dung: bước 1 (short-stay hoặc multi-day) rồi bước 2 (bốn sở thích, chọn một hoặc nhiều); bỏ qua được ở cả hai bước; đóng hoặc bỏ qua thì không hiện lại; không cần tài khoản. Khách quay lại sau vài ngày vào thẳng trang chủ khi vẫn chưa trả lời cũng thấy onboarding toàn màn hình | Phase 1 |
 | AC37 | Khách hoàn tất onboarding rồi tải lại trang | Câu trả lời còn; máy chủ không lưu câu trả lời gắn với tài khoản, đơn hàng hoặc định danh bền vững; sự kiện phân tích, nếu có, chỉ mang giá trị nhóm khách và sở thích ẩn danh; xóa dữ liệu trình duyệt thì onboarding hiện lại | Phase 1, cổng G4 |
 | AC38 | Khách chọn short-stay và sở thích food-drink; bốn nhà hàng: A (short-stay, food-drink), B (multi-day, food-drink), C (cả hai, không sở thích), D (short-stay, không sở thích) | A đứng đầu và B đứng cuối; C và D theo ngày xuất bản mới nhất. Khách đổi sang multi-day: B đứng đầu. Trong cả hai trường hợp không nhà hàng nào biến mất khỏi danh sách và bản đồ | Phase 1; quy tắc §3.2 |
 | AC39 | Nhà hàng chỉ gắn thẻ short-stay và nhà hàng chỉ gắn thẻ multi-day | Hạng nhanh hoặc cao cấp lấy từ thẻ lưu trú; không có trường phân hạng thứ hai trong trình soạn | Phase 1 |
@@ -823,6 +827,8 @@ Mã AC giữ nguyên số của v2. Mã đã gỡ không dùng lại: **AC06, AC
 | AC88 | Điểm A thuộc hai danh mục bản đồ; điểm B không thuộc danh mục nào | Chip làm nổi bật và làm mờ các điểm khác, không ẩn điểm nào; A được làm nổi bật dưới cả hai chip; B chỉ được làm nổi bật ở "Tất cả" | Phase 1, cổng G11 |
 | AC89 | Khách nhấn "Mở trong Google hoặc Apple Maps" trên thẻ điểm | Ứng dụng bản đồ của điện thoại mở tới điểm đó để dẫn đường; trang không xin quyền vị trí và không vẽ lộ trình | Phase 1, cổng G9, G11 |
 | AC90 | Khách mở liên kết `/:lang/map?place=<slug>` | Bản đồ mở với thẻ của điểm có slug đó. Nếu điểm đã ẩn, đã hết hạn hoặc không có, bản đồ mở bình thường kèm thông báo ngắn "This place is no longer on the map" | Phase 1, cổng G11 |
+| AC91 | Khách lần đầu mở trang qua QR hoặc link đối tác, kết quả tìm kiếm hoặc link sâu (câu chuyện, điểm bản đồ, sản phẩm) | Trang đích hiện ngay và không bị che; chỉ có lời nhắc nhỏ nổi trên màn hình ở trang câu chuyện, không chèn vào nội dung, đóng được (đóng chỉ ẩn lời nhắc trong lượt này); lần đầu khách mở Khám phá từ trong ứng dụng trong cùng lượt, nếu chưa trả lời và chưa bỏ qua, onboarding toàn màn hình hiện | Phase 1 |
+| AC92 | Merchant, đối tác hoặc Super Admin đăng nhập mở trang công khai, hoặc bất kỳ ai mở `/store`, `/partner`, `/admin`, đăng nhập, lời mời | Onboarding không hiện; nội dung theo thứ tự mặc định (mới nhất trước) nếu không có câu trả lời | Phase 1 |
 
 
 ## 16. Rủi ro và điều kiện phụ thuộc
@@ -898,7 +904,7 @@ Bảng này tập hợp lựa chọn ảnh hưởng phạm vi, hành vi hoặc l
 | O29 | Dữ liệu chuyến đi phía máy chủ và bốn nhóm khách trên dashboard còn dùng không                                                                                                                                                                                                 | Trước đặc tả analytics  | Chủ sản phẩm                     |
 | O30 | Cập nhật §14 (mốc 180 ngày, mạng lưới pilot, ưu tiên làm ngay) theo chuyển hướng                                                                                                                                                                                               | Trước lập lịch          | Chủ sản phẩm                     |
 | O31 | Tour có hiển thị giá tham khảo hoặc nhà cung cấp bên thứ ba không; cách ghi nguồn khi lộ trình được dùng lại                                                                                                                                                                   | Trước đặc tả trang tour | Chủ sản phẩm, merchant           |
-| O32 | Thứ tự và vị trí giữa lời nhắc onboarding và hộp đồng ý theo dõi lần đầu; phần nào của sản phẩm cần đồng ý (theo dõi nguồn giới thiệu 30 ngày, phân tích, video nhúng); đồng ý cần luật sư kiểm tra | Trước đặc tả lần mở đầu | Chủ sản phẩm, luật sư |
+| O32 | Thứ tự giữa onboarding (toàn màn hình hoặc lời nhắc nhỏ) và hộp đồng ý theo dõi lần đầu (đề xuất: onboarding trước, hộp đồng ý sau, không bao giờ cùng lúc); phần nào của sản phẩm cần đồng ý (theo dõi nguồn giới thiệu 30 ngày, phân tích, video nhúng); đồng ý cần luật sư kiểm tra | Trước đặc tả lần mở đầu | Chủ sản phẩm, luật sư |
 | O33 | Rủi ro pháp lý cần luật sư (cổng G7): thông báo và hành động với nội dung bất hợp pháp (DSA), minh bạch review (Omnibus), UWG, GDPR và nFADP (xóa dữ liệu, tên hiển thị); nhãn quảng cáo hoặc liên kết đối tác trên review do merchant viết; khi nào ẩn đánh giá sản phẩm bất lợi; dữ liệu cá nhân trên đơn (tên và email, cổng M8): thời hạn lưu, xóa và ẩn danh hóa | Trước bật review thật | Chủ sản phẩm, luật sư |
 | O34 | Rủi ro guide tự xác nhận tiền mặt dẫn tới hoa hồng của chính mình (cổng G1): cách đối soát tiền guide ghi với tiền merchant nhận, giới hạn, cảnh báo | Trước tiền thật | Chủ sản phẩm, merchant |
 | O35 | Nội dung tối thiểu khi ra mắt (số bài, số điểm, hai ngôn ngữ); các giả định ở §16 (CHF, Europe/Zurich, dữ liệu di động, bản đồ ngoại tuyến) | Trước pilot | Chủ sản phẩm, merchant |
@@ -942,6 +948,8 @@ Mục đích sản phẩm đổi từ "bán quà và tour" sang kể chuyện c�
 *Vòng sửa 5 (27/10/2026):* áp dụng cổng G11 (`docs/decisions/2026-10-27-map-pins-and-events.md`, chủ sản phẩm duyệt 27/10/2026). Điểm trên bản đồ có một mô hình duy nhất: xuất bản được không cần bài viết, không có loại cố định, có danh mục bản đồ do merchant quản lý, có thể có ngày và tự biến mất sau ngày cuối (§2, §11.1; AC85 đến AC88). Thêm danh mục blog (§11.2). Nút mở Google hoặc Apple Maps và liên kết `?place=` (AC89, AC90). Nền bản đồ phẳng swisstopo (O23). Gỡ review của khách về địa điểm: §11.4 gỡ, quy tắc kiểm duyệt chung chuyển sang §11.6, AC43 và AC84 gỡ, AC46 đến AC49 thu hẹp về bình luận bài, O25 và cổng R1 hết hiệu lực với review địa điểm. Điểm không có trang riêng (AC61). Nơi lưu trú là điểm có liên kết ra ngoài tùy chọn (§11.5); nhãn liên kết đối tác chờ liên kết trả phí đầu tiên (O33 vẫn mở). Viết lại AC42, AC62, AC63, AC68. Cổng G8 bị G11 thay phần loại địa điểm và review (xem Phụ lục A.2).
 
 *Vòng sửa 6 (27/10/2026):* chủ sản phẩm đóng O23 (cổng G-O23-CLOSED). Không có ảnh tham chiếu; điểm và bản đồ dùng kiểu mặc định của bộ bản đồ đã chốt (MapLibre, ảnh swisstopo SWISSIMAGE kèm tên địa danh OpenFreeMap, phẳng 2D, cổng G11). Màu nhãn, giới hạn zoom và cách gom điểm vẫn thuộc người xây dựng (§11.1).
+
+*Vòng sửa 7 (28/10/2026):* áp dụng quyết định onboarding toàn màn hình (`docs/decisions/2026-10-28-onboarding-full-screen.md`, người yêu cầu duyệt 28/10/2026). Onboarding chỉ dành cho khách. Lần đầu khách vào trang chủ thấy onboarding toàn màn hình; khách vào bằng QR, link đối tác, tìm kiếm hoặc link sâu chỉ thấy lời nhắc nhỏ, đóng lời nhắc chỉ ẩn nó trong lượt đó (§3.1, §6.1; viết lại AC24, AC36; thêm AC91, AC92; O32). Thiết kế cuối cùng của onboarding: `docs/ux/onboarding-design.md`.
 
 *Mới:* mục đích và chỉ số (§1, SM-1 đến SM-3); onboarding hai bước, cá nhân hóa, danh sách sở thích cố định (§3); bản đồ tương tác, câu chuyện, review biên tập, review của khách, review lưu trú (§11.1 đến §11.5); thông tin tour miễn phí với PDF (§7.3); SKU theo kích cỡ, chủ đề, màu (§7.2); hủy trước giờ giao do merchant chỉnh (§9.4); đơn nhóm và vận hành của guide (§10.4); AC36 đến AC60; O21 đến O31.
 

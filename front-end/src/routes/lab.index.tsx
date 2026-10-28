@@ -10,6 +10,11 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/onboarding-fullscreen' as const,
+    title: 'Onboarding (N01) and deep-link nudge (N24)',
+    note: 'F1 Guided, the chosen full-screen two-step flow for a guest’s first visit to the home, and N2, the thin banner shown while reading a story reached by a link or a partner QR code. Visitor switcher for the rule matrix (28.10.2026). Spec: docs/ux/onboarding-design.md.',
+  },
+  {
     to: '/lab/eyebrow' as const,
     title: 'Home part heading: eyebrow styles',
     note: 'Six styles for the label above Read it, Walk it and Keep it on the home (17.10.2026).',
