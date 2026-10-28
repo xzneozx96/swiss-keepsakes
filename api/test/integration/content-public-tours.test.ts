@@ -83,7 +83,7 @@ describe('public tour guide reads over the database', () => {
     })
   })
 
-  it('[E2.12][AC64] a draft guide is not listed and its slug is a 404', async () => {
+  it('[E2.12][AC45] a draft guide is not listed and its slug is a 404', async () => {
     const store = randomUUID()
     const draft = await tour(store, { status: 'draft' })
     const published = await tour(store)
@@ -123,7 +123,7 @@ describe('public tour guide reads over the database', () => {
     expect(en.ok && en.value).toMatchObject({ id: a, language: 'en', fallback: false })
   })
 
-  it('[E2.12][AC64] the list is newest first by id', async () => {
+  it('[E2.12][AC45] the list is newest first by id', async () => {
     const store = randomUUID()
     const first = await tour(store)
     const second = await tour(store)

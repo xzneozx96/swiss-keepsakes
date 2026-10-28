@@ -2,23 +2,13 @@ import process from 'node:process'
 import { Pool } from 'pg'
 import { createDatabase } from '../src/platform/db/client.ts'
 import { seedContent } from './seed-content.ts'
+import { isLocalDatabaseUrl } from './seed-guard.ts'
 
 // `pnpm --filter @sk/api db:seed` imports the prototype's stories and tour guides as drafts into one store. The
 // store is SEED_STORE_ID, else the only store; none, or several without the id, stops with nothing written. It
 // prints counts and never the connection string. Run it again and nothing changes.
 // It reads only DATABASE_URL, because `--env-file-if-exists=.env.local` can pull in the shared development
-// database. It refuses a host that is not local unless SEED_ALLOW_REMOTE_DATABASE=1 is set.
-const localHosts = new Set(['localhost', '127.0.0.1', '::1', '[::1]'])
-
-function isLocalHost(url: string): boolean {
-  try {
-    return localHosts.has(new URL(url).hostname)
-  }
-  catch {
-    return false
-  }
-}
-
+// database. It refuses a host that is not local (or a URL with a host, hostaddr or service parameter) unless SEED_ALLOW_REMOTE_DATABASE=1 is set.
 async function pickStore(pool: Pool): Promise<string | undefined> {
   const wanted = process.env.SEED_STORE_ID
   if (wanted) {
@@ -39,7 +29,7 @@ async function main(): Promise<number> {
     process.stderr.write('DATABASE_URL is not set.\n')
     return 2
   }
-  if (!isLocalHost(url) && process.env.SEED_ALLOW_REMOTE_DATABASE !== '1') {
+  if (!isLocalDatabaseUrl(url) && process.env.SEED_ALLOW_REMOTE_DATABASE !== '1') {
     process.stderr.write('Refused: host is not local. Set SEED_ALLOW_REMOTE_DATABASE=1 to seed a remote database. Nothing was written.\n')
     return 2
   }

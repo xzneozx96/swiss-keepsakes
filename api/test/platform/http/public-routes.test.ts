@@ -15,7 +15,7 @@ const listPaths = ['/api/public/stories', '/api/public/tours', '/api/public/map-
 const detailPaths = [`/api/public/stories/old-town`, `/api/public/tours/old-town`, `/api/public/places/${pinId}`]
 
 describe('[E2.12] the public routes: input checks and the ETag', () => {
-  it('[E2.12][AC64] lang=fr, a missing lang and a malformed place id are 400 problems, not 500', async () => {
+  it('[E2.12] lang=fr, a missing lang and a malformed place id are 400 problems, not 500', async () => {
     const app = setup()
 
     for (const path of [...listPaths, ...detailPaths]) {
@@ -30,7 +30,7 @@ describe('[E2.12] the public routes: input checks and the ETag', () => {
     expect((await badId.json() as { type: string }).type).toBe('validation-failed')
   })
 
-  it('[E2.12][AC54] a 200 carries Cache-Control exactly max-age=30 and a strong quoted ETag, and a repeat with it is 304 with no body', async () => {
+  it('[E2.12] a 200 carries Cache-Control exactly max-age=30 and a strong quoted ETag, and a repeat with it is 304 with no body', async () => {
     const app = setup()
 
     for (const path of listPaths) {
@@ -52,7 +52,7 @@ describe('[E2.12] the public routes: input checks and the ETag', () => {
     }
   })
 
-  it('[E2.12][AC54] a detail 200 is conditional too, and an unknown item is a 404 problem', async () => {
+  it('[E2.12] a detail 200 is conditional too, and an unknown item is a 404 problem', async () => {
     const app = setup({ getStory: async () => ({ ok: true, value: { id: pinId, slug: 'old-town', title: 'Old town', excerpt: '', readMinutes: null, coverKey: null, stayTag: 'both', interests: [], categories: [], publishedAt: '2090-01-01T00:00:00.000Z', language: 'en', requestedLanguage: 'en', fallback: false, availableLanguages: ['en'], intro: '', authorName: '', authorRole: '', sections: [] } }) })
 
     const found = await app.request('/api/public/stories/old-town?lang=en')
@@ -66,7 +66,7 @@ describe('[E2.12] the public routes: input checks and the ETag', () => {
     expect(missing.headers.get('Cache-Control')).toBeNull()
   })
 
-  it('[E2.12][AC45] the routes are anonymous and take no store, so a request without a session is served', async () => {
+  it('[E2.12] the routes are anonymous and take no store, so a request without a session is served', async () => {
     const app = setup()
 
     const anonymous = await app.request('/api/public/map?lang=de')
@@ -103,7 +103,7 @@ describe('[E2.12] the generated document for the public routes', () => {
   const document = openApiDocument(contractApp())
   const paths = ['/api/public/stories', '/api/public/stories/{slug}', '/api/public/places/{id}', '/api/public/tours', '/api/public/tours/{slug}', '/api/public/map-categories', '/api/public/blog-categories', '/api/public/map']
 
-  it('[E2.12][AC54] all 8 public paths are present, hold no store, and declare 200, 304 and a problem default', () => {
+  it('[E2.12] all 8 public paths are present, hold no store, and declare 200, 304 and a problem default', () => {
     // /api/public/invitations/preview is an identity POST, not one of these reads.
     const present = Object.entries(document.paths ?? {}).filter(([path, item]) => path.startsWith('/api/public/') && 'get' in item).map(([path]) => path)
 
@@ -130,7 +130,7 @@ describe('[E2.12] a renewed session cookie never rides on a public read', () => 
   const renewed = 'better-auth.session_token=renewed; Path=/; HttpOnly'
   const app = createGuardedApp({ someone: noAccess }, undefined, { ...guardedCommands, routes: [routes => registerContentRoutes(routes, createFakeContentUseCases())] }, renewed).app
 
-  it('[E2.12][AC54] the 200 and the 304 of /api/public/map carry no Set-Cookie, and /api/me still passes it', async () => {
+  it('[E2.12] the 200 and the 304 of /api/public/map carry no Set-Cookie, and /api/me still passes it', async () => {
     const first = await app.request('/api/public/map?lang=en', { headers: signedInAs('someone') })
     const again = await app.request('/api/public/map?lang=en', { headers: { ...signedInAs('someone'), 'If-None-Match': first.headers.get('ETag')! } })
     const notFound = await app.request(`/api/public/places/${pinId}?lang=en`, { headers: signedInAs('someone') })

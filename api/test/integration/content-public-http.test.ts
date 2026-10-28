@@ -192,7 +192,7 @@ describe('[E2.12] the public routes over the real app and the database', () => {
     }
   })
 
-  it('[E2.12][AC54] a repeat with the ETag is 304 with no body over the real database', async () => {
+  it('[E2.12] a repeat with the ETag is 304 with no body over the real database', async () => {
     const env = createContentHttp({ pool, db })
     const s = await seed(randomUUID())
     const path = `/api/public/tours/${s.tour.slug}?lang=en`
@@ -205,7 +205,7 @@ describe('[E2.12] the public routes over the real app and the database', () => {
     expect(again.headers.get('ETag')).toBe(first.headers.get('ETag'))
   })
 
-  it('[E2.12][AC54] no public response sets a cookie, for an anonymous or a signed-in request', async () => {
+  it('[E2.12] no public response sets a cookie, for an anonymous or a signed-in request', async () => {
     const env = createContentHttp({ pool, db })
     const s = await seed(randomUUID())
     const { headers } = await env.signIn()
@@ -220,5 +220,33 @@ describe('[E2.12] the public routes over the real app and the database', () => {
     }
     const map = await get(env, '/api/public/map?lang=en', headers)
     expect(map.status).toBe(200)
+  })
+
+  // Drift guard: what E2.6's publish writes is what the public read lists.
+  it('[E2.12][AC45] a pin and a story version created and published through the E2.6 routes show up in the public reads', async () => {
+    const env = createContentHttp({ pool, db })
+    const { owner, pins, groups } = await env.storeWithStaff()
+
+    const createdPin = await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Drift pin' }, latitude: 47.0502, longitude: 8.3093, slug: { en: slug() } } })
+    expect(createdPin.status).toBe(201)
+    const pinBody = await createdPin.json() as { id: string }
+    const publishedPin = await env.call(`${pins}/${pinBody.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': createdPin.headers.get('ETag')! } })
+    expect(publishedPin.status).toBe(200)
+
+    const createdGroup = await env.call(groups, { method: 'POST', headers: owner.headers, body: {} })
+    const groupBody = await createdGroup.json() as { id: string }
+    const storySlug = slug()
+    const createdVersion = await env.call(`${groups}/${groupBody.id}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'en', slug: storySlug, draft: JSON.parse(storyDoc('Drift story')) } })
+    expect(createdVersion.status).toBe(201)
+    const publishedVersion = await env.call(`${groups}/${groupBody.id}/versions/en/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': createdVersion.headers.get('ETag')! } })
+    expect(publishedVersion.status).toBe(200)
+
+    const map = await (await get(env, '/api/public/map?lang=en')).json() as { items: { id: string }[] }
+    expect(map.items.map(i => i.id)).toContain(pinBody.id)
+    const stories = await (await get(env, '/api/public/stories?lang=en')).json() as { items: { id: string }[] }
+    expect(stories.items.map(i => i.id)).toContain(groupBody.id)
+    const detail = await get(env, `/api/public/stories/${storySlug}?lang=en`)
+    expect(detail.status).toBe(200)
+    expect(await detail.json()).toMatchObject({ title: 'Drift story' })
   })
 })
