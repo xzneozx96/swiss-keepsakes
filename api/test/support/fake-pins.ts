@@ -13,6 +13,9 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
   return {
     rows,
     removed,
+    async idsInStore(_tx, storeId, ids) {
+      return ids.filter(id => rows.get(id)?.storeId === storeId)
+    },
     async insert(_tx, storeId, changes, at) {
       const { title, tip, dates, ...rest } = changes
       return store({

@@ -1,13 +1,13 @@
-import type { ContentLanguage, Localized, PinDate, StayTag, StoryDraft, TourGuideDoc } from '@sk/domain/content'
+import type { ContentLanguage, Localized, PinDate, StayTag, TourGuideDoc } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PublicCategoryRow, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow } from '../read-ports.ts'
+import type { PublicCategoryRow, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow, StoredStoryDoc } from '../read-ports.ts'
 import { sql } from 'drizzle-orm'
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // The media ids a stored story document points at, lowercased. The JSON is not trusted: a missing or odd id, a
 // section list that is not an array and a block without an id are skipped, and a value that is no uuid never reaches the query.
-function storyMediaIds(doc: StoryDraft): string[] {
+function storyMediaIds(doc: StoredStoryDoc): string[] {
   const ids = new Set<string>()
   const add = (value: unknown) => {
     if (typeof value === 'string' && uuidPattern.test(value))
@@ -30,7 +30,7 @@ interface VersionJoinRow {
   interests: string[]
   language: ContentLanguage
   slug: string
-  published: StoryDraft
+  published: StoredStoryDoc
   published_at: Date
 }
 

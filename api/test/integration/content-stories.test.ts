@@ -1,6 +1,7 @@
 import type { StoryDraft } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import { randomUUID } from 'node:crypto'
+import { emptyStoryBody } from '@sk/domain/content'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { guardUseCases, mapDatabaseError } from '../../src/modules/content/adapters/database-errors.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
@@ -34,7 +35,7 @@ function setup() {
   const clock = createManualClock(new Date('2026-10-27T10:00:00Z'))
   const uow = createUnitOfWork(db)
   const stories = createStoryRepository()
-  const deps = { uow, stories, media: createMediaRepository(), audit: createAuditLog(clock), clock }
+  const deps = { uow, stories, media: createMediaRepository(), pins: createPinRepository(), audit: createAuditLog(clock), clock }
   const use = guardUseCases({
     createGroup: makeCreateStoryGroup(deps),
     saveGroup: makeSaveStoryGroup(deps),
@@ -51,7 +52,9 @@ function setup() {
 type Setup = ReturnType<typeof setup>
 
 const slug = () => `story-${randomUUID().slice(0, 8)}`
-const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [], ...over })
+const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: emptyStoryBody, ...over })
+const imageNode = (mediaId: string) => ({ type: 'image', attrs: { mediaId, alt: '', caption: '' } })
+const audioNode = (mediaId: string) => ({ type: 'audio', attrs: { mediaId, title: '', caption: '' } })
 
 async function media(store: string, kind: 'image' | 'audio' = 'image'): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(
@@ -153,7 +156,7 @@ describe('[E2.6] story repository on the real database', () => {
     const voice = await media(s.store, 'audio')
     const next = await media(s.store)
     const g = await group(s)
-    const withMedia = doc({ coverMediaId: cover, sections: [{ id: 's1', heading: 'H', blocks: [{ type: 'audio', mediaId: voice, title: '', caption: '' }, { type: 'image', mediaId: cover, caption: '' }] }] })
+    const withMedia = doc({ coverMediaId: cover, body: { type: 'doc', content: [audioNode(voice), imageNode(cover)] } })
     await version(s, g.id, 'en', { slug: slug(), draft: withMedia })
     expect(await refs(g.id, 'draft')).toBe(2)
     const retire = (id: string) => pool.query(`update content.media set status = 'retired', retired_at = now() where id = $1`, [id])
@@ -183,8 +186,7 @@ describe('[E2.6] story repository on the real database', () => {
     const s = setup()
     const image = await media(s.store)
     const g = await group(s)
-    const block = (mediaId: string) => ({ type: 'image' as const, mediaId, caption: '' })
-    const draft = doc({ sections: [{ id: 's1', heading: '', blocks: [block(image), block(image.toUpperCase())] }] })
+    const draft = doc({ body: { type: 'doc', content: [imageNode(image), imageNode(image.toUpperCase())] } })
     expect(await s.use.createVersion(s.actor, s.store, g.id, 'en', { slug: slug(), draft }, null)).toMatchObject({ ok: true })
     expect(await refs(g.id, 'draft')).toBe(1)
   })

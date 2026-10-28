@@ -1,4 +1,4 @@
-import type { OpenAPIHono } from '@hono/zod-openapi'
+import type { Hook, OpenAPIHono } from '@hono/zod-openapi'
 import type { StoryGroup, StoryVersion } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
@@ -30,6 +30,21 @@ export interface StoryUseCases {
 
 const groupParams = z.object({ storeId: z.uuid(), groupId: z.uuid() })
 const versionParams = z.object({ storeId: z.uuid(), groupId: z.uuid(), language: z.enum(['en', 'de']) })
+
+// A body document outside the allow-list is 422 (the request is well formed and the content is refused), with the
+// path of the first fault. Every other validation fault keeps the platform's 400 and its shape.
+function bodyRefused<I>(...[result, c]: Parameters<Hook<I, AppEnv, string, never>>): never | undefined {
+  if (result.success)
+    return undefined
+  const first = result.error.issues[0]
+  // The route's own document lists only its success status, so the problem response is typed as never, as with the defaultHook.
+  return problem(c, {
+    type: 'validation-failed',
+    status: first?.path[0] === 'draft' && first.path[1] === 'body' ? 422 : 400,
+    title: 'The request is not valid',
+    errors: result.error.issues.map(issue => ({ in: result.target, path: issue.path.join('.'), message: issue.message })),
+  }) as never
+}
 
 const groupsPath = '/api/store/{storeId}/story-groups'
 const versionPath = `${groupsPath}/{groupId}/versions/{language}`
@@ -141,7 +156,7 @@ export function registerStoryRoutes(app: OpenAPIHono<AppEnv>, useCases: StoryUse
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(storyVersionView(result.value), 201, etag(result.value))
-  })
+  }, bodyRefused)
 
   app.openapi(saveVersionRoute, async (c) => {
     const ifMatch = readIfMatch(c)
@@ -152,7 +167,7 @@ export function registerStoryRoutes(app: OpenAPIHono<AppEnv>, useCases: StoryUse
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(storyVersionView(result.value), 200, etag(result.value))
-  })
+  }, bodyRefused)
 
   app.openapi(publishVersionRoute, async (c) => {
     const ifMatch = readIfMatch(c)

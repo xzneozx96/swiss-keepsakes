@@ -157,5 +157,10 @@ export function createPinRepository(): PinRepository<Tx> {
       const deleted = await tx.execute(sql`delete from content.places where store_id = ${storeId} and id = ${pinId} returning id`)
       return deleted.rows.length > 0
     },
+    async idsInStore(tx, storeId, ids) {
+      const found = await tx.execute<{ id: string }>(sql`
+        select id from content.places where store_id = ${storeId} and id = any(${sql.param(ids)}::uuid[])`)
+      return found.rows.map(row => row.id)
+    },
   }
 }

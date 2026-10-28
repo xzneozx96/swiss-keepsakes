@@ -1,12 +1,11 @@
-import type { StoryDraft } from '@sk/domain/content'
-import type { PublicCategoryRow, PublicReadRepository, PublicStoryRow, PublicStoryVersionRow } from '../../../src/modules/content/read-ports.ts'
+import type { PublicCategoryRow, PublicReadRepository, PublicStoryRow, PublicStoryVersionRow, StoredStoryDoc } from '../../../src/modules/content/read-ports.ts'
 import { publicCategoryListSchema, publicStoryListSchema, publicStorySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { makeListCategories } from '../../../src/modules/content/application/read-categories.ts'
 import { makeGetStory, makeListStories } from '../../../src/modules/content/application/read-stories.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
 
-const doc = (title: string, over: Partial<StoryDraft> = {}): StoryDraft => ({ title, excerpt: `${title} excerpt`, intro: '', authorName: '', authorRole: '', readMinutes: 4, coverMediaId: null, sections: [], ...over })
+const doc = (title: string, over: Partial<StoredStoryDoc> = {}): StoredStoryDoc => ({ title, excerpt: `${title} excerpt`, intro: '', authorName: '', authorRole: '', readMinutes: 4, coverMediaId: null, sections: [], ...over })
 
 function version(language: 'en' | 'de', slug: string, title: string, publishedAt = '2090-01-01T00:00:00Z', over: Partial<PublicStoryVersionRow> = {}): PublicStoryVersionRow {
   return { language, slug, published: doc(title), publishedAt: new Date(publishedAt), mediaKeys: {}, ...over }
@@ -145,7 +144,7 @@ describe('public stories', () => {
       { id: 'a', heading: 'H', blocks: [{ type: 'image', caption: 'no id' }, { type: 'audio', mediaId: 42, title: 't', caption: '' }, { caption: 'no type' }, null, { type: 'paragraph', text: 'p' }] },
       { id: 'b', heading: 'Broken', blocks: 'nope' },
       null,
-    ] } as unknown as StoryDraft
+    ] } as unknown as StoredStoryDoc
     const s = setup([story(id1, [version('en', 'odd', 'Odd', undefined, { published: odd })])])
 
     const { items } = await s.list('en')

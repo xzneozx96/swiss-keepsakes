@@ -1,4 +1,4 @@
-import type { StoryDraft } from '@sk/domain/content'
+import type { StoredStoryDoc } from '../../src/modules/content/read-ports.ts'
 import { randomUUID } from 'node:crypto'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { createPublicReadRepository } from '../../src/modules/content/adapters/public-repository.ts'
@@ -22,14 +22,14 @@ const get = makeGetStory(deps)
 const categories = makeListCategories(deps)
 
 const slug = () => `s-${randomUUID().slice(0, 8)}`
-const doc = (title: string, over: Partial<StoryDraft> = {}): StoryDraft => ({ title, excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [], ...over })
+const doc = (title: string, over: Partial<StoredStoryDoc> = {}): StoredStoryDoc => ({ title, excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [], ...over })
 
 async function group(store: string): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store])
   return rows[0]!.id
 }
 
-async function version(store: string, groupId: string, language: 'en' | 'de', status: 'draft' | 'published', title: string, over: { slug?: string, published?: StoryDraft | null, draft?: StoryDraft | null } = {}): Promise<string> {
+async function version(store: string, groupId: string, language: 'en' | 'de', status: 'draft' | 'published', title: string, over: { slug?: string, published?: StoredStoryDoc | null, draft?: StoredStoryDoc | null } = {}): Promise<string> {
   const s = over.slug ?? slug()
   const published = over.published === undefined ? (status === 'published' ? doc(title) : null) : over.published
   await pool.query(
@@ -215,7 +215,7 @@ describe('public story reads over the database', () => {
   it('[E2.12][AC45] a stored document with a block that has no media id does not break the reads', async () => {
     const store = randomUUID()
     const g = await group(store)
-    const odd = doc('Odd shape', { sections: [{ id: 'a', heading: 'H', blocks: [{ type: 'image', caption: 'no id' }, { type: 'audio', mediaId: 'not-a-uuid', title: 't', caption: '' }] }, { id: 'b', heading: 'x', blocks: 'nope' }] } as unknown as Partial<StoryDraft>)
+    const odd = doc('Odd shape', { sections: [{ id: 'a', heading: 'H', blocks: [{ type: 'image', caption: 'no id' }, { type: 'audio', mediaId: 'not-a-uuid', title: 't', caption: '' }] }, { id: 'b', heading: 'x', blocks: 'nope' }] } as unknown as Partial<StoredStoryDoc>)
     const s = await version(store, g, 'en', 'published', 'Odd shape', { published: odd })
 
     const detail = await get(s, 'en')
@@ -228,7 +228,7 @@ describe('public story reads over the database', () => {
   it('[E2.12][AC45] a published document with only a title and sections (the minimum the database accepts) reads', async () => {
     const store = randomUUID()
     const g = await group(store)
-    const s = await version(store, g, 'en', 'published', 'Minimal', { published: { title: 'Minimal', sections: [] } as unknown as StoryDraft })
+    const s = await version(store, g, 'en', 'published', 'Minimal', { published: { title: 'Minimal', sections: [] } as unknown as StoredStoryDoc })
 
     const detail = await get(s, 'en')
 
