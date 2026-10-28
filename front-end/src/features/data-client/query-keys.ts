@@ -8,6 +8,9 @@ export const queryKeys = {
     subcategories: ['catalog', 'subcategories'],
     pickupPlaces: ['catalog', 'pickupPlaces'],
   },
+  categories: {
+    list: ['categories', 'list'],
+  },
   content: {
     articles: ['content', 'articles'],
     comments: ['content', 'comments'],

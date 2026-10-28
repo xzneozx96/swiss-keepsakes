@@ -18,6 +18,7 @@ export type CommandName<F extends Feature> = Exclude<
 /** Reads that take a parameter, such as a cursor or a store id. They are not commands, whatever their signature. */
 interface ReadsWithInput {
   stores: 'onboarding' | 'members' | 'previewInvitation'
+  categories: 'list'
 }
 
 /**
@@ -40,6 +41,12 @@ export const commandAffects: {
     moveSubcategory: [queryKeys.catalog.subcategories],
     removeSubcategory: [queryKeys.catalog.subcategories],
     savePickupPlace: [queryKeys.catalog.pickupPlaces],
+  },
+  categories: {
+    create: [queryKeys.categories.list],
+    save: [queryKeys.categories.list],
+    reorder: [queryKeys.categories.list],
+    remove: [queryKeys.categories.list],
   },
   content: {
     createArticle: [queryKeys.content.articles],

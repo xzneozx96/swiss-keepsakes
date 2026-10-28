@@ -8,6 +8,7 @@ import { createAccountDemoClient } from '@/features/account/api/demo-client'
 import { accountQueries } from '@/features/account/api/queries'
 import { createCatalogDemoClient } from '@/features/catalog/api/demo-client'
 import { catalogQueries } from '@/features/catalog/api/queries'
+import { createCategoriesClient } from '@/features/categories/api/api-client'
 import { createContentDemoClient } from '@/features/content/api/demo-client'
 import { contentQueries } from '@/features/content/api/queries'
 import { createNotificationsDemoClient } from '@/features/notifications/api/demo-client'
@@ -110,6 +111,7 @@ export function createDemoDataClient(store: DemoStore): DataClient {
   return {
     account: createAccountDemoClient(store),
     catalog: createCatalogDemoClient(store),
+    categories: createCategoriesClient(),
     content: createContentDemoClient(store),
     notifications: createNotificationsDemoClient(store),
     orders: createOrdersDemoClient(store),

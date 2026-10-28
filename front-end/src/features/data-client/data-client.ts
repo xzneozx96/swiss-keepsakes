@@ -1,5 +1,6 @@
 import type { AccountClient } from '@/features/account/api/client'
 import type { CatalogClient } from '@/features/catalog/api/client'
+import type { CategoriesClient } from '@/features/categories/api/client'
 import type { ContentClient } from '@/features/content/api/client'
 import type { NotificationsClient } from '@/features/notifications/api/client'
 import type { OrdersClient } from '@/features/orders/api/client'
@@ -18,6 +19,7 @@ import type { ToursClient } from '@/features/tours/api/client'
 export interface DataClient {
   account: AccountClient
   catalog: CatalogClient
+  categories: CategoriesClient
   content: ContentClient
   notifications: NotificationsClient
   orders: OrdersClient
