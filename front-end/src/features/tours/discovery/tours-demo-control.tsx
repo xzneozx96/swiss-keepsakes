@@ -1,6 +1,7 @@
 import { Button } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 
+import { useLocale } from '@/contexts/locale-context'
 import { useDemoActions } from '@/features/demo'
 import { useTours } from '@/features/tours/hooks/use-tours'
 
@@ -10,6 +11,7 @@ import { useTours } from '@/features/tours/hooks/use-tours'
  * Reset restores the fixtures.
  */
 export function ToursDemoControl({ onDone }: { onDone: () => void }) {
+  const { language } = useLocale()
   const { update } = useDemoActions()
   const { tours } = useTours()
   const navigate = useNavigate()
@@ -40,7 +42,7 @@ export function ToursDemoControl({ onDone }: { onDone: () => void }) {
               : s,
           )
           onDone()
-          void navigate({ to: '/tours' })
+          void navigate({ to: '/$lang/tours', params: { lang: language } })
         }}
       >
         Empty the tour list

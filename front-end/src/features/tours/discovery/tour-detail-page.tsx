@@ -44,13 +44,13 @@ const mapPlaceholder = <div aria-hidden className="h-[min(72svh,640px)] min-h-[4
 
 export function TourDetailPage({ slug }: { slug: string }) {
   const { tours } = useTours()
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const tour = tours.find(item => item.slug === slug)
 
   if (!tour?.published) {
     return (
       <EmptyState
-        action={{ label: t('tourDiscovery.browse'), to: '/tours' }}
+        action={{ label: t('tourDiscovery.browse'), to: '/$lang/tours', params: { lang: language } }}
         icon={TourIcon}
         message={t('tourDiscovery.notFound')}
       />
@@ -103,7 +103,7 @@ export function TourDetail({
     title: text(tour.longStory.title),
     body: storyBody.doc,
   }
-  const goBack = useBack(() => void navigate({ to: '/tours', replace: true }))
+  const goBack = useBack(() => void navigate({ to: '/$lang/tours', params: { lang: language }, replace: true }))
   const back = () => {
     if (!preview)
       goBack()

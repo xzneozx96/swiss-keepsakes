@@ -3,54 +3,54 @@ import { expect, test } from '@playwright/test'
 
 /** Public pages the server renders. `text` is real visible text that must be in the first HTML. */
 const PUBLIC_ROUTES: { path: string, text: string }[] = [
-  { path: '/', text: 'Come and see it for yourself' },
-  { path: '/stories', text: 'A morning on the Musegg wall' },
-  { path: '/stories/musegg-morning', text: 'Climb the old town wall before the city wakes up' },
-  { path: '/credits', text: 'Photo credits' },
-  { path: '/tours', text: 'Pilatus' },
-  { path: '/tours/pilatus-above-the-city', text: 'bus, gondola and the Dragon Ride to the summit' },
-  { path: '/gifts', text: 'Luzerne gift box' },
-  { path: '/gifts/lucerne-gift-box', text: 'Three small things from Luzerne makers' },
+  { path: '/en', text: 'Come and see it for yourself' },
+  { path: '/en/stories', text: 'A morning on the Musegg wall' },
+  { path: '/en/stories/musegg-morning', text: 'Climb the old town wall before the city wakes up' },
+  { path: '/en/credits', text: 'Photo credits' },
+  { path: '/en/tours', text: 'Pilatus' },
+  { path: '/en/tours/pilatus-above-the-city', text: 'bus, gondola and the Dragon Ride to the summit' },
+  { path: '/en/gifts', text: 'Luzerne gift box' },
+  { path: '/en/gifts/lucerne-gift-box', text: 'Three small things from Luzerne makers' },
   // The no-results message repeats the query, so the expected text is a title that shows only on a hit.
-  { path: '/search?q=Pilatus', text: 'Pilatus keyring' },
+  { path: '/en/search?q=Pilatus', text: 'Pilatus keyring' },
 ]
 
 /** Every seed story, tour and gift: its first HTML must carry its own title. The browser checks above stay on the sample slugs. */
 const SEED_DETAIL_ROUTES: { path: string, text: string }[] = [
-  { path: '/stories/musegg-morning', text: 'A morning on the Musegg wall' },
-  { path: '/stories/lion-monument', text: 'The story behind the Lion Monument' },
-  { path: '/stories/lake-steamboat', text: 'Crossing the lake by steamboat' },
-  { path: '/stories/water-tower', text: 'The Water Tower, older than the bridge' },
-  { path: '/stories/weinmarkt-oath', text: 'The square where Luzerne swore its oath' },
-  { path: '/stories/spreuer-bridge', text: 'Under the Dance of Death on the Spreuer Bridge' },
-  { path: '/stories/needle-dam', text: 'The wooden needles that hold back a lake' },
-  { path: '/stories/old-pharmacy', text: 'The pharmacy that has stayed on its corner since 1833' },
-  { path: '/stories/hammetschwand-lift', text: 'Europe’s highest outdoor lift, built in 1905' },
-  { path: '/stories/victorinox-story', text: 'The knife that began in Ibach' },
-  { path: '/tours/lucerne-the-things-that-remain', text: 'Luzerne: The Things That Remain' },
-  { path: '/tours/pilatus-above-the-city', text: 'Pilatus: Above the City' },
-  { path: '/tours/rigi-from-lake-to-sky', text: 'Rigi: From Lake to Sky' },
-  { path: '/gifts/victorinox-swan', text: 'Victorinox Swan on the lake' },
-  { path: '/gifts/victorinox-chapel-bridge', text: 'Victorinox Chapel Bridge' },
-  { path: '/gifts/victorinox-pilatus', text: 'Victorinox Pilatus' },
-  { path: '/gifts/victorinox-lion', text: 'Victorinox Lion Monument' },
-  { path: '/gifts/victorinox-old-town', text: 'Victorinox Old town on the Reuss' },
-  { path: '/gifts/victorinox-steamboat', text: 'Victorinox Paddle steamer' },
-  { path: '/gifts/victorinox-furka', text: 'Victorinox Furka Pass' },
-  { path: '/gifts/victorinox-grimsel', text: 'Victorinox Grimsel Pass' },
-  { path: '/gifts/victorinox-susten', text: 'Victorinox Susten Pass' },
-  { path: '/gifts/victorinox-gotthard', text: 'Victorinox Gotthard Pass' },
-  { path: '/gifts/victorinox-nufenen', text: 'Victorinox Nufenen Pass' },
-  { path: '/gifts/victorinox-finsterwald', text: 'Victorinox Finsterwald bees' },
-  { path: '/gifts/lucerne-gift-box', text: 'Luzerne gift box' },
-  { path: '/gifts/chocolate-set', text: 'Chocolate set' },
-  { path: '/gifts/limited-edition-print', text: 'Limited-edition print: Water Tower at dawn' },
-  { path: '/gifts/pilatus-keyring', text: 'Pilatus keyring' },
-  { path: '/gifts/lakeside-candle-box', text: 'Lakeside candle box' },
-  { path: '/gifts/dark-chocolate-trio', text: 'Dark chocolate trio' },
-  { path: '/gifts/old-town-facades-print', text: 'Old town façades print' },
-  { path: '/gifts/lucerne-postcard-set', text: 'Luzerne postcard set' },
-  { path: '/gifts/praline-gift-box', text: 'Praline gift box' },
+  { path: '/en/stories/musegg-morning', text: 'A morning on the Musegg wall' },
+  { path: '/en/stories/lion-monument', text: 'The story behind the Lion Monument' },
+  { path: '/en/stories/lake-steamboat', text: 'Crossing the lake by steamboat' },
+  { path: '/en/stories/water-tower', text: 'The Water Tower, older than the bridge' },
+  { path: '/en/stories/weinmarkt-oath', text: 'The square where Luzerne swore its oath' },
+  { path: '/en/stories/spreuer-bridge', text: 'Under the Dance of Death on the Spreuer Bridge' },
+  { path: '/en/stories/needle-dam', text: 'The wooden needles that hold back a lake' },
+  { path: '/en/stories/old-pharmacy', text: 'The pharmacy that has stayed on its corner since 1833' },
+  { path: '/en/stories/hammetschwand-lift', text: 'Europe’s highest outdoor lift, built in 1905' },
+  { path: '/en/stories/victorinox-story', text: 'The knife that began in Ibach' },
+  { path: '/en/tours/lucerne-the-things-that-remain', text: 'Luzerne: The Things That Remain' },
+  { path: '/en/tours/pilatus-above-the-city', text: 'Pilatus: Above the City' },
+  { path: '/en/tours/rigi-from-lake-to-sky', text: 'Rigi: From Lake to Sky' },
+  { path: '/en/gifts/victorinox-swan', text: 'Victorinox Swan on the lake' },
+  { path: '/en/gifts/victorinox-chapel-bridge', text: 'Victorinox Chapel Bridge' },
+  { path: '/en/gifts/victorinox-pilatus', text: 'Victorinox Pilatus' },
+  { path: '/en/gifts/victorinox-lion', text: 'Victorinox Lion Monument' },
+  { path: '/en/gifts/victorinox-old-town', text: 'Victorinox Old town on the Reuss' },
+  { path: '/en/gifts/victorinox-steamboat', text: 'Victorinox Paddle steamer' },
+  { path: '/en/gifts/victorinox-furka', text: 'Victorinox Furka Pass' },
+  { path: '/en/gifts/victorinox-grimsel', text: 'Victorinox Grimsel Pass' },
+  { path: '/en/gifts/victorinox-susten', text: 'Victorinox Susten Pass' },
+  { path: '/en/gifts/victorinox-gotthard', text: 'Victorinox Gotthard Pass' },
+  { path: '/en/gifts/victorinox-nufenen', text: 'Victorinox Nufenen Pass' },
+  { path: '/en/gifts/victorinox-finsterwald', text: 'Victorinox Finsterwald bees' },
+  { path: '/en/gifts/lucerne-gift-box', text: 'Luzerne gift box' },
+  { path: '/en/gifts/chocolate-set', text: 'Chocolate set' },
+  { path: '/en/gifts/limited-edition-print', text: 'Limited-edition print: Water Tower at dawn' },
+  { path: '/en/gifts/pilatus-keyring', text: 'Pilatus keyring' },
+  { path: '/en/gifts/lakeside-candle-box', text: 'Lakeside candle box' },
+  { path: '/en/gifts/dark-chocolate-trio', text: 'Dark chocolate trio' },
+  { path: '/en/gifts/old-town-facades-print', text: 'Old town façades print' },
+  { path: '/en/gifts/lucerne-postcard-set', text: 'Luzerne postcard set' },
+  { path: '/en/gifts/praline-gift-box', text: 'Praline gift box' },
 ]
 
 /**
@@ -168,25 +168,25 @@ for (const { path, text } of PUBLIC_ROUTES) {
   })
 }
 
-test('[E3.3][AC-1] a hard load of / has no skeleton in its first HTML, a client move to / still shows one', async ({ page, request }) => {
-  const html = await (await request.get('/')).text()
+test('[E3.3][AC-1] a hard load of /en has no skeleton in its first HTML, a client move to /en still shows one', async ({ page, request }) => {
+  const html = await (await request.get('/en')).text()
 
   expect(/<main\b[^>]*>[\s\S]*?<\/main>/.exec(html)?.[0] ?? '').not.toMatch(/class="[^"]*\bskeleton\b/)
 
   // A hard load of /tours, then a client-side move to the home page.
-  await page.goto('/tours')
+  await page.goto('/en/tours')
   await waitForHydration(page)
   // Watch for the skeleton before the click: it lives for about 350 ms, which a slow poll can miss.
   const skeleton = page.waitForSelector('.skeleton', { state: 'attached' })
 
-  await page.locator('nav a[href="/"]').first().click()
+  await page.locator('nav a[href="/en"]').first().click()
   await skeleton
   await expect(page.getByText('Come and see it for yourself')).toBeVisible()
   await expect(page.locator('.skeleton')).toHaveCount(0)
 })
 
 // The E3.2 provider and navigation checks, carried here from the former SSR test routes. The home page is the provider check:
-// the Account tab of the guest shell shows the language (Account or Konto) and a photo only for a signed-in guest. `<html lang>` is fixed in the root shell, so only its value after hydration (de) is a language signal.
+// the Account tab of the guest shell shows the language (Account or Konto) and a photo only for a signed-in guest. `<html lang>` follows the address.
 
 /** The Account tab's link in the first HTML, or an empty string. */
 function accountTab(html: string) {
@@ -194,7 +194,7 @@ function accountTab(html: string) {
 }
 
 test('[E3.2][AC-2] server HTML contains the providers text', async ({ request }) => {
-  const response = await request.get('/')
+  const response = await request.get('/en')
   const html = await response.text()
 
   expect(response.status()).toBe(200)
@@ -206,9 +206,9 @@ test('[E3.2][AC-2] server HTML contains the providers text', async ({ request })
 
 test('[E3.2][AC-2] hydrates with no hydration or console error', async ({ page, request }) => {
   const problems = collectProblems(page)
-  const serverText = mainText(await (await request.get('/')).text())
+  const serverText = mainText(await (await request.get('/en')).text())
 
-  await page.goto('/')
+  await page.goto('/en')
   await waitForHydration(page)
 
   await expect(page.locator('nav a[href="/account"]').first()).toContainText('Account')
@@ -222,7 +222,7 @@ test('[E3.2][AC01] a guest moves between two pages with no sign-in prompt', asyn
   const urls: string[] = []
 
   page.on('framenavigated', frame => urls.push(frame.url()))
-  await page.goto('/')
+  await page.goto('/en')
   await waitForHydration(page)
   await page.evaluate(() => {
     (window as unknown as { marker: string }).marker = 'kept'
@@ -230,9 +230,9 @@ test('[E3.2][AC01] a guest moves between two pages with no sign-in prompt', asyn
   await expect(page.getByText('Come and see it for yourself')).toBeVisible()
   expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
 
-  await page.locator('main a[href="/stories"]').first().click()
+  await page.locator('main a[href="/en/stories"]').first().click()
 
-  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/stories$/)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/en\/stories$/)
   await expect(page.getByRole('heading', { level: 1, name: 'Local stories' })).toBeVisible()
   await expect(page.getByText('Come and see it for yourself')).toHaveCount(0)
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe('kept')
@@ -245,7 +245,7 @@ test('[E3.2][AC01] a first visit with empty storage moves to a guest page on the
 
   page.on('framenavigated', frame => urls.push(frame.url()))
   // A new browser context starts with empty storage.
-  await page.goto('/')
+  await page.goto('/en')
   await expect(page.getByRole('navigation').first()).toBeVisible()
   // The server HTML shows the links before React owns them; a click then would load the page again.
   await page.waitForFunction(() => Object.keys(document.querySelector('nav a') ?? {}).some(key => key.startsWith('__reactProps')))
@@ -254,9 +254,9 @@ test('[E3.2][AC01] a first visit with empty storage moves to a guest page on the
   })
   expect(await page.getByText('Sign in', { exact: true }).count()).toBe(0)
 
-  await page.locator('nav a[href="/tours"]').first().click()
+  await page.locator('nav a[href="/en/tours"]').first().click()
 
-  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/tours$/)
+  await expect(page).toHaveURL(/^https?:\/\/[^/#]+\/en\/tours$/)
   expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe('kept')
   // Only /tours has this heading, so the count below is read on the moved page.
   await expect(page.getByRole('heading', { level: 1, name: 'Tours around Luzerne' })).toBeVisible()
@@ -264,7 +264,7 @@ test('[E3.2][AC01] a first visit with empty storage moves to a guest page on the
   expect(urls.some(url => url.includes('sign-in'))).toBe(false)
 })
 
-test('[E3.2][AC-2] saved German and a saved sign-in hydrate with no error', async ({ page, request }) => {
+test('[E3.2][AC-2] saved German leaves /en English, a saved sign-in shows, and it hydrates with no error', async ({ page, request }) => {
   const problems = collectProblems(page)
 
   // Let the app write its own current saved state, then sign the demo guest in as the owner, with a profile photo.
@@ -285,17 +285,17 @@ test('[E3.2][AC-2] saved German and a saved sign-in hydrate with no error', asyn
     localStorage.setItem('sk.demo', demo)
   }, saved)
 
-  // The server knows neither choice: its HTML is English and signed out.
-  const html = await (await request.get('/')).text()
+  // The server knows neither choice: its HTML is signed out, and English because the address says so.
+  const html = await (await request.get('/en')).text()
 
   expect(accountTab(html)).toContain('Account')
   expect(accountTab(html)).not.toContain('<img')
 
-  await page.goto('/')
+  await page.goto('/en')
   await waitForHydration(page)
-  // The saved language and sign-in arrive after hydration.
-  await expect(page.locator('html')).toHaveAttribute('lang', 'de')
-  await expect(page.locator('nav a[href="/account"]').first()).toContainText('Konto')
+  // The saved sign-in arrives after hydration. The saved language does not: the address decides (E3.5).
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.locator('nav a[href="/account"]').first()).toContainText('Account')
   await expect(page.locator('nav a[href="/account"] img').first()).toBeVisible()
   expect(problems).toEqual([])
 })
@@ -315,7 +315,7 @@ test('[E3.3][AC-1] a returning visit with a saved cart of 3 shows the badge coun
   })
 
   await page.addInitScript(demo => localStorage.setItem('sk.demo', demo), saved)
-  await page.goto('/gifts')
+  await page.goto('/en/gifts')
   await waitForHydration(page)
 
   const cart = page.locator('a[data-cart-target]').first()

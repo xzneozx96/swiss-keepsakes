@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 
 import { ChevronRightIcon } from '@/components/icons'
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 
 interface StoryRowProps {
   /** Opens C20; both language versions share the slug. */
@@ -16,11 +17,12 @@ interface StoryRowProps {
  * the rail stays the block's main content and no card sits inside another.
  */
 export function StoryRow({ slug, photo, title, meta }: StoryRowProps) {
+  const { language } = useLocale()
   return (
     <Link
       className="flex min-h-11 items-center gap-3 rounded-2xl py-1 outline-none select-none focus-visible:focus-ring active:opacity-70"
-      params={{ slug }}
-      to="/stories/$slug"
+      params={{ lang: language, slug }}
+      to="/$lang/stories/$slug"
     >
       <Media alt="" className="size-16 shrink-0 rounded-2xl" photo={photo} />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">

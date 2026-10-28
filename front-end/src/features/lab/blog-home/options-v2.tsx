@@ -130,7 +130,7 @@ function ChapterHeading({
 }: {
   chapter: Chapter
   number: number
-  seeAll?: { label: string, to: '/stories' | '/tours' | '/gifts' }
+  seeAll?: { label: string, to: '/$lang/stories' | '/$lang/tours' | '/$lang/gifts' }
 }) {
   const { language } = useBlogData()
   const c = chapterCopy[language][chapter]
@@ -152,6 +152,7 @@ function ChapterHeading({
       {seeAll && (
         <Link
           className="flex shrink-0 items-center gap-0.5 rounded-md py-1 text-sm font-medium text-muted outline-none focus-visible:focus-ring"
+          params={{ lang: language }}
           to={seeAll.to}
         >
           {seeAll.label}
@@ -279,7 +280,7 @@ function DiscoverTiles({
               )
             : t.id === 'tours'
               ? (
-                  <Link key={t.id} className={tileClass} to="/tours">
+                  <Link key={t.id} className={tileClass} to="/$lang/tours" params={{ lang: language }}>
                     {face(t)}
                   </Link>
                 )
@@ -290,7 +291,8 @@ function DiscoverTiles({
                     search={
                       t.id === 'victorinox' ? { subcategory: 'victorinox' } : {}
                     }
-                    to="/gifts"
+                    to="/$lang/gifts"
+                    params={{ lang: language }}
                   >
                     {face(t)}
                   </Link>
@@ -343,7 +345,7 @@ function ToursChapter({
       <ChapterHeading
         chapter="tours"
         number={number}
-        seeAll={{ label: view.tours.seeAll, to: '/tours' }}
+        seeAll={{ label: view.tours.seeAll, to: '/$lang/tours' }}
       />
       {withStory && view.tours.story && <StoryRow {...view.tours.story} />}
       <Rail label={view.tours.title}>
@@ -390,7 +392,7 @@ function KeepsakesChapter({
       <ChapterHeading
         chapter="keepsakes"
         number={number}
-        seeAll={{ label: view.keepsakes.seeAll, to: '/gifts' }}
+        seeAll={{ label: view.keepsakes.seeAll, to: '/$lang/gifts' }}
       />
       {withStory && giftStory && (
         <StoryRow
@@ -437,7 +439,7 @@ export function ChaptersHome({ effect }: StoryHomeProps) {
         <ChapterHeading
           chapter="stories"
           number={1}
-          seeAll={{ label: c.allStories, to: '/stories' }}
+          seeAll={{ label: c.allStories, to: '/$lang/stories' }}
         />
         <StoryCircles value={filter} onChange={setFilter} />
         <div aria-live="polite" className="flex flex-col gap-5">
@@ -458,11 +460,12 @@ export function ChaptersHome({ effect }: StoryHomeProps) {
 }
 
 function PortraitStory({ article }: { article: Article }) {
+  const { language } = useLocale()
   return (
     <Link
       className="block overflow-hidden rounded-[28px] outline-none focus-visible:focus-ring"
-      params={{ slug: article.slug }}
-      to="/stories/$slug"
+      params={{ lang: language, slug: article.slug }}
+      to="/$lang/stories/$slug"
     >
       <Media alt="" className="aspect-[4/5]" photo={article.photo}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
@@ -497,7 +500,7 @@ export function StorybookHome({ effect }: StoryHomeProps) {
         <ChapterHeading
           chapter="stories"
           number={1}
-          seeAll={{ label: c.allStories, to: '/stories' }}
+          seeAll={{ label: c.allStories, to: '/$lang/stories' }}
         />
         {stories.length > 0
           ? (
@@ -538,6 +541,7 @@ export function StorybookHome({ effect }: StoryHomeProps) {
  * so the page reads as one walk from the stories to the shop.
  */
 export function ThreadsHome({ effect }: StoryHomeProps) {
+  const { language } = useLocale()
   const { c } = useBlogData()
   const [filter, setFilter] = useState<CategoryFilter>('all')
   const stories = useStories(filter).slice(0, 4)
@@ -550,7 +554,7 @@ export function ThreadsHome({ effect }: StoryHomeProps) {
         <ChapterHeading
           chapter="stories"
           number={1}
-          seeAll={{ label: c.allStories, to: '/stories' }}
+          seeAll={{ label: c.allStories, to: '/$lang/stories' }}
         />
         <StoryCircles value={filter} onChange={setFilter} />
         <div aria-live="polite" className="grid grid-cols-2 gap-x-3 gap-y-5">
@@ -558,8 +562,8 @@ export function ThreadsHome({ effect }: StoryHomeProps) {
             <Link
               key={article.id}
               className="flex flex-col gap-2 rounded-3xl outline-none focus-visible:focus-ring"
-              params={{ slug: article.slug }}
-              to="/stories/$slug"
+              params={{ lang: language, slug: article.slug }}
+              to="/$lang/stories/$slug"
             >
               <Media
                 alt=""

@@ -29,6 +29,7 @@ import {
 import { ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { AssistantHeader } from '@/components/assistant'
 
+import { useLocale } from '@/contexts/locale-context'
 import { shop } from '@/features/catalog/seed'
 import { useCommand } from '@/features/data-client'
 import { useDemoActions } from '@/features/demo'
@@ -244,6 +245,7 @@ function TracePanel({
  * The chat lives outside this component, so closing the assistant keeps the conversation.
  */
 export function PlannerChat({ onLeave }: { onLeave: () => void }) {
+  const { language } = useLocale()
   const navigate = useNavigate()
   const { setRole } = useDemoActions()
   const { mutate: sendAdviceRequest } = useCommand('requests', 'sendAdviceRequest')
@@ -393,7 +395,7 @@ export function PlannerChat({ onLeave }: { onLeave: () => void }) {
         input={part.input ?? {}}
         onSubmit={(output) => {
           if (name === 'ask_next' && output.id === 'tours') {
-            void navigate({ to: '/tours' })
+            void navigate({ to: '/$lang/tours', params: { lang: language } })
 
             return
           }

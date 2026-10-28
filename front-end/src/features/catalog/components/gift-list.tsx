@@ -20,6 +20,7 @@ import {
   SearchButton,
 } from '@/components/layout/cart-button'
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { CategoryThumb, categoryThumbItemClass } from './category-thumb'
 import { ProductCard } from './product-card'
@@ -69,6 +70,7 @@ export function GiftList({
   empty,
   isLoading,
 }: GiftListProps) {
+  const { language } = useLocale()
   const [searchOpen, setSearchOpen] = useState(search.value !== '')
   const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
 
@@ -189,7 +191,7 @@ export function GiftList({
           : empty
             ? (
                 <EmptyState
-                  action={{ label: empty.actionLabel, to: '/gifts' }}
+                  action={{ label: empty.actionLabel, to: '/$lang/gifts', params: { lang: language } }}
                   icon={GiftIcon}
                   message={empty.message}
                 />

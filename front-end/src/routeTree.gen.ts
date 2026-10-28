@@ -9,18 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as InvitationRouteImport } from './routes/invitation'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as StoreRouteImport } from './routes/store'
-import { Route as GuestIndexRouteImport } from './routes/_guest/index'
+import { Route as GuestLangRouteImport } from './routes/_guest/$lang'
 import { Route as GuestAccountRouteImport } from './routes/_guest/account'
 import { Route as GuestCartRouteImport } from './routes/_guest/cart'
-import { Route as GuestCreditsRouteImport } from './routes/_guest/credits'
-import { Route as GuestPlanRouteImport } from './routes/_guest/plan'
-import { Route as GuestSearchRouteImport } from './routes/_guest/search'
-import { Route as GuestToursRouteImport } from './routes/_guest/tours'
+import { Route as CreditsSplatRouteImport } from './routes/credits.$'
+import { Route as GiftsSplatRouteImport } from './routes/gifts.$'
 import { Route as LabIndexRouteImport } from './routes/lab.index'
 import { Route as LabAdviceRouteImport } from './routes/lab.advice'
 import { Route as LabBlogHomeRouteImport } from './routes/lab.blog-home'
@@ -31,7 +30,9 @@ import { Route as LabEyebrowRouteImport } from './routes/lab.eyebrow'
 import { Route as LabHeroRouteImport } from './routes/lab.hero'
 import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
+import { Route as LabOnboardingFullscreenRouteImport } from './routes/lab.onboarding-fullscreen'
 import { Route as LabOrderCardsRouteImport } from './routes/lab.order-cards'
+import { Route as LabPinsRouteImport } from './routes/lab.pins'
 import { Route as LabPrivateTourRouteImport } from './routes/lab.private-tour'
 import { Route as LabQuantityRouteImport } from './routes/lab.quantity'
 import { Route as LabReviewRouteImport } from './routes/lab.review'
@@ -39,22 +40,24 @@ import { Route as LabSellerRouteImport } from './routes/lab.seller'
 import { Route as LabVictorinoxRouteImport } from './routes/lab.victorinox'
 import { Route as PartnerIndexRouteImport } from './routes/partner/index'
 import { Route as PartnerTokenRouteImport } from './routes/partner/$token'
+import { Route as PlanSplatRouteImport } from './routes/plan.$'
 import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as SearchSplatRouteImport } from './routes/search.$'
 import { Route as StoreIndexRouteImport } from './routes/store/index'
 import { Route as StoreSectionRouteImport } from './routes/store/$section'
 import { Route as StoreCalendarRouteImport } from './routes/store/calendar'
 import { Route as StoreReportsRouteRouteImport } from './routes/store/reports/route'
 import { Route as StoreSalesRouteImport } from './routes/store/sales'
 import { Route as StoreOnboardingRouteImport } from './routes/store_.onboarding'
+import { Route as StoriesSplatRouteImport } from './routes/stories.$'
+import { Route as ToursSplatRouteImport } from './routes/tours.$'
+import { Route as GuestLangIndexRouteImport } from './routes/_guest/$lang/index'
+import { Route as GuestLangCreditsRouteImport } from './routes/_guest/$lang/credits'
+import { Route as GuestLangPlanRouteImport } from './routes/_guest/$lang/plan'
+import { Route as GuestLangSearchRouteImport } from './routes/_guest/$lang/search'
+import { Route as GuestLangToursRouteImport } from './routes/_guest/$lang/tours'
 import { Route as GuestCartReviewRouteImport } from './routes/_guest/cart_.review'
 import { Route as GuestCartSentRouteImport } from './routes/_guest/cart_.sent'
-import { Route as GuestGiftsIndexRouteImport } from './routes/_guest/gifts/index'
-import { Route as GuestGiftsSlugRouteImport } from './routes/_guest/gifts/$slug'
-import { Route as GuestPlanSentRouteImport } from './routes/_guest/plan_.sent'
-import { Route as GuestStoriesIndexRouteImport } from './routes/_guest/stories/index'
-import { Route as GuestStoriesSlugRouteImport } from './routes/_guest/stories/$slug'
-import { Route as GuestToursIndexRouteImport } from './routes/_guest/tours/index'
-import { Route as GuestToursSlugRouteImport } from './routes/_guest/tours/$slug'
 import { Route as LabBlogHomeStoriesRouteImport } from './routes/lab.blog-home_.stories'
 import { Route as StoreContentIndexRouteImport } from './routes/store/content/index'
 import { Route as StoreContentAnalyticsRouteImport } from './routes/store/content/analytics'
@@ -75,6 +78,13 @@ import { Route as StoreReportsSalesRouteImport } from './routes/store/reports/sa
 import { Route as StoreRequestsIndexRouteImport } from './routes/store/requests/index'
 import { Route as StoreRequestsAnalyticsRouteImport } from './routes/store/requests/analytics'
 import { Route as StoreRequestsQuestionsRouteImport } from './routes/store/requests/questions'
+import { Route as GuestLangGiftsIndexRouteImport } from './routes/_guest/$lang/gifts/index'
+import { Route as GuestLangGiftsSlugRouteImport } from './routes/_guest/$lang/gifts/$slug'
+import { Route as GuestLangPlanSentRouteImport } from './routes/_guest/$lang/plan_.sent'
+import { Route as GuestLangStoriesIndexRouteImport } from './routes/_guest/$lang/stories/index'
+import { Route as GuestLangStoriesSlugRouteImport } from './routes/_guest/$lang/stories/$slug'
+import { Route as GuestLangToursIndexRouteImport } from './routes/_guest/$lang/tours/index'
+import { Route as GuestLangToursSlugRouteImport } from './routes/_guest/$lang/tours/$slug'
 import { Route as GuestAccountOrdersOrderIdRouteImport } from './routes/_guest/account_.orders.$orderId'
 import { Route as StoreContentArticlesArticleIdRouteImport } from './routes/store/content/articles/$articleId'
 import { Route as StoreProductsGiftsProductIdRouteImport } from './routes/store/products/gifts/$productId'
@@ -85,6 +95,11 @@ import { Route as StoreProductsToursNewRouteImport } from './routes/store/produc
 import { Route as StoreRequestsAdviceRequestIdRouteImport } from './routes/store/requests/advice/$requestId'
 import { Route as GuestAccountOrdersOrderIdPayRouteImport } from './routes/_guest/account_.orders.$orderId_.pay'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GuestRoute = GuestRouteImport.update({
   id: '/_guest',
   getParentRoute: () => rootRouteImport,
@@ -109,9 +124,9 @@ const StoreRoute = StoreRouteImport.update({
   path: '/store',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GuestIndexRoute = GuestIndexRouteImport.update({
-  id: '/',
-  path: '/',
+const GuestLangRoute = GuestLangRouteImport.update({
+  id: '/$lang',
+  path: '/$lang',
   getParentRoute: () => GuestRoute,
 } as any)
 const GuestAccountRoute = GuestAccountRouteImport.update({
@@ -124,25 +139,15 @@ const GuestCartRoute = GuestCartRouteImport.update({
   path: '/cart',
   getParentRoute: () => GuestRoute,
 } as any)
-const GuestCreditsRoute = GuestCreditsRouteImport.update({
-  id: '/credits',
-  path: '/credits',
-  getParentRoute: () => GuestRoute,
+const CreditsSplatRoute = CreditsSplatRouteImport.update({
+  id: '/credits/$',
+  path: '/credits/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const GuestPlanRoute = GuestPlanRouteImport.update({
-  id: '/plan',
-  path: '/plan',
-  getParentRoute: () => GuestRoute,
-} as any)
-const GuestSearchRoute = GuestSearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => GuestRoute,
-} as any)
-const GuestToursRoute = GuestToursRouteImport.update({
-  id: '/tours',
-  path: '/tours',
-  getParentRoute: () => GuestRoute,
+const GiftsSplatRoute = GiftsSplatRouteImport.update({
+  id: '/gifts/$',
+  path: '/gifts/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const LabIndexRoute = LabIndexRouteImport.update({
   id: '/lab/',
@@ -194,9 +199,19 @@ const LabMapLoadingRoute = LabMapLoadingRouteImport.update({
   path: '/lab/map-loading',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LabOnboardingFullscreenRoute = LabOnboardingFullscreenRouteImport.update({
+  id: '/lab/onboarding-fullscreen',
+  path: '/lab/onboarding-fullscreen',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LabOrderCardsRoute = LabOrderCardsRouteImport.update({
   id: '/lab/order-cards',
   path: '/lab/order-cards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabPinsRoute = LabPinsRouteImport.update({
+  id: '/lab/pins',
+  path: '/lab/pins',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabPrivateTourRoute = LabPrivateTourRouteImport.update({
@@ -234,9 +249,19 @@ const PartnerTokenRoute = PartnerTokenRouteImport.update({
   path: '/partner/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanSplatRoute = PlanSplatRouteImport.update({
+  id: '/plan/$',
+  path: '/plan/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RCodeRoute = RCodeRouteImport.update({
   id: '/r/$code',
   path: '/r/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchSplatRoute = SearchSplatRouteImport.update({
+  id: '/search/$',
+  path: '/search/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoreIndexRoute = StoreIndexRouteImport.update({
@@ -269,6 +294,41 @@ const StoreOnboardingRoute = StoreOnboardingRouteImport.update({
   path: '/store/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StoriesSplatRoute = StoriesSplatRouteImport.update({
+  id: '/stories/$',
+  path: '/stories/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToursSplatRoute = ToursSplatRouteImport.update({
+  id: '/tours/$',
+  path: '/tours/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuestLangIndexRoute = GuestLangIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GuestLangRoute,
+} as any)
+const GuestLangCreditsRoute = GuestLangCreditsRouteImport.update({
+  id: '/credits',
+  path: '/credits',
+  getParentRoute: () => GuestLangRoute,
+} as any)
+const GuestLangPlanRoute = GuestLangPlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => GuestLangRoute,
+} as any)
+const GuestLangSearchRoute = GuestLangSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => GuestLangRoute,
+} as any)
+const GuestLangToursRoute = GuestLangToursRouteImport.update({
+  id: '/tours',
+  path: '/tours',
+  getParentRoute: () => GuestLangRoute,
+} as any)
 const GuestCartReviewRoute = GuestCartReviewRouteImport.update({
   id: '/cart_/review',
   path: '/cart/review',
@@ -278,41 +338,6 @@ const GuestCartSentRoute = GuestCartSentRouteImport.update({
   id: '/cart_/sent',
   path: '/cart/sent',
   getParentRoute: () => GuestRoute,
-} as any)
-const GuestGiftsIndexRoute = GuestGiftsIndexRouteImport.update({
-  id: '/gifts/',
-  path: '/gifts/',
-  getParentRoute: () => GuestRoute,
-} as any)
-const GuestGiftsSlugRoute = GuestGiftsSlugRouteImport.update({
-  id: '/gifts/$slug',
-  path: '/gifts/$slug',
-  getParentRoute: () => GuestRoute,
-} as any)
-const GuestPlanSentRoute = GuestPlanSentRouteImport.update({
-  id: '/plan_/sent',
-  path: '/plan/sent',
-  getParentRoute: () => GuestRoute,
-} as any)
-const GuestStoriesIndexRoute = GuestStoriesIndexRouteImport.update({
-  id: '/stories/',
-  path: '/stories/',
-  getParentRoute: () => GuestRoute,
-} as any)
-const GuestStoriesSlugRoute = GuestStoriesSlugRouteImport.update({
-  id: '/stories/$slug',
-  path: '/stories/$slug',
-  getParentRoute: () => GuestRoute,
-} as any)
-const GuestToursIndexRoute = GuestToursIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => GuestToursRoute,
-} as any)
-const GuestToursSlugRoute = GuestToursSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => GuestToursRoute,
 } as any)
 const LabBlogHomeStoriesRoute = LabBlogHomeStoriesRouteImport.update({
   id: '/lab/blog-home_/stories',
@@ -414,6 +439,41 @@ const StoreRequestsQuestionsRoute = StoreRequestsQuestionsRouteImport.update({
   path: '/requests/questions',
   getParentRoute: () => StoreRoute,
 } as any)
+const GuestLangGiftsIndexRoute = GuestLangGiftsIndexRouteImport.update({
+  id: '/gifts/',
+  path: '/gifts/',
+  getParentRoute: () => GuestLangRoute,
+} as any)
+const GuestLangGiftsSlugRoute = GuestLangGiftsSlugRouteImport.update({
+  id: '/gifts/$slug',
+  path: '/gifts/$slug',
+  getParentRoute: () => GuestLangRoute,
+} as any)
+const GuestLangPlanSentRoute = GuestLangPlanSentRouteImport.update({
+  id: '/plan_/sent',
+  path: '/plan/sent',
+  getParentRoute: () => GuestLangRoute,
+} as any)
+const GuestLangStoriesIndexRoute = GuestLangStoriesIndexRouteImport.update({
+  id: '/stories/',
+  path: '/stories/',
+  getParentRoute: () => GuestLangRoute,
+} as any)
+const GuestLangStoriesSlugRoute = GuestLangStoriesSlugRouteImport.update({
+  id: '/stories/$slug',
+  path: '/stories/$slug',
+  getParentRoute: () => GuestLangRoute,
+} as any)
+const GuestLangToursIndexRoute = GuestLangToursIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GuestLangToursRoute,
+} as any)
+const GuestLangToursSlugRoute = GuestLangToursSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => GuestLangToursRoute,
+} as any)
 const GuestAccountOrdersOrderIdRoute =
   GuestAccountOrdersOrderIdRouteImport.update({
     id: '/account_/orders/$orderId',
@@ -467,18 +527,17 @@ const GuestAccountOrdersOrderIdPayRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof GuestIndexRoute
+  '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
   '/sign-in': typeof SignInRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
+  '/$lang': typeof GuestLangRouteWithChildren
   '/account': typeof GuestAccountRoute
   '/cart': typeof GuestCartRoute
-  '/credits': typeof GuestCreditsRoute
-  '/plan': typeof GuestPlanRoute
-  '/search': typeof GuestSearchRoute
-  '/tours': typeof GuestToursRouteWithChildren
+  '/credits/$': typeof CreditsSplatRoute
+  '/gifts/$': typeof GiftsSplatRoute
   '/lab/advice': typeof LabAdviceRoute
   '/lab/blog-home': typeof LabBlogHomeRoute
   '/lab/calendar': typeof LabCalendarRoute
@@ -488,27 +547,33 @@ export interface FileRoutesByFullPath {
   '/lab/hero': typeof LabHeroRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
+  '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
+  '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
   '/lab/seller': typeof LabSellerRoute
   '/lab/victorinox': typeof LabVictorinoxRoute
   '/partner/$token': typeof PartnerTokenRoute
+  '/plan/$': typeof PlanSplatRoute
   '/r/$code': typeof RCodeRoute
+  '/search/$': typeof SearchSplatRoute
   '/store/$section': typeof StoreSectionRoute
   '/store/calendar': typeof StoreCalendarRoute
   '/store/sales': typeof StoreSalesRoute
   '/store/onboarding': typeof StoreOnboardingRoute
+  '/stories/$': typeof StoriesSplatRoute
+  '/tours/$': typeof ToursSplatRoute
   '/lab/': typeof LabIndexRoute
   '/partner/': typeof PartnerIndexRoute
   '/store/': typeof StoreIndexRoute
+  '/$lang/credits': typeof GuestLangCreditsRoute
+  '/$lang/plan': typeof GuestLangPlanRoute
+  '/$lang/search': typeof GuestLangSearchRoute
+  '/$lang/tours': typeof GuestLangToursRouteWithChildren
   '/cart/review': typeof GuestCartReviewRoute
   '/cart/sent': typeof GuestCartSentRoute
-  '/gifts/$slug': typeof GuestGiftsSlugRoute
-  '/plan/sent': typeof GuestPlanSentRoute
-  '/stories/$slug': typeof GuestStoriesSlugRoute
-  '/tours/$slug': typeof GuestToursSlugRoute
   '/lab/blog-home/stories': typeof LabBlogHomeStoriesRoute
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
@@ -523,15 +588,17 @@ export interface FileRoutesByFullPath {
   '/store/reports/sales': typeof StoreReportsSalesRoute
   '/store/requests/analytics': typeof StoreRequestsAnalyticsRoute
   '/store/requests/questions': typeof StoreRequestsQuestionsRoute
-  '/gifts/': typeof GuestGiftsIndexRoute
-  '/stories/': typeof GuestStoriesIndexRoute
-  '/tours/': typeof GuestToursIndexRoute
+  '/$lang/': typeof GuestLangIndexRoute
   '/store/content/': typeof StoreContentIndexRoute
   '/store/orders/': typeof StoreOrdersIndexRoute
   '/store/partners/': typeof StorePartnersIndexRoute
   '/store/products/': typeof StoreProductsIndexRoute
   '/store/reports/': typeof StoreReportsIndexRoute
   '/store/requests/': typeof StoreRequestsIndexRoute
+  '/$lang/gifts/$slug': typeof GuestLangGiftsSlugRoute
+  '/$lang/plan/sent': typeof GuestLangPlanSentRoute
+  '/$lang/stories/$slug': typeof GuestLangStoriesSlugRoute
+  '/$lang/tours/$slug': typeof GuestLangToursSlugRoute
   '/account/orders/$orderId': typeof GuestAccountOrdersOrderIdRoute
   '/store/content/articles/$articleId': typeof StoreContentArticlesArticleIdRoute
   '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
@@ -539,18 +606,21 @@ export interface FileRoutesByFullPath {
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
   '/store/products/tours/new': typeof StoreProductsToursNewRoute
   '/store/requests/advice/$requestId': typeof StoreRequestsAdviceRequestIdRoute
+  '/$lang/gifts/': typeof GuestLangGiftsIndexRoute
+  '/$lang/stories/': typeof GuestLangStoriesIndexRoute
+  '/$lang/tours/': typeof GuestLangToursIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
   '/sign-in': typeof SignInRoute
   '/account': typeof GuestAccountRoute
   '/cart': typeof GuestCartRoute
-  '/credits': typeof GuestCreditsRoute
-  '/plan': typeof GuestPlanRoute
-  '/search': typeof GuestSearchRoute
+  '/credits/$': typeof CreditsSplatRoute
+  '/gifts/$': typeof GiftsSplatRoute
   '/lab/advice': typeof LabAdviceRoute
   '/lab/blog-home': typeof LabBlogHomeRoute
   '/lab/calendar': typeof LabCalendarRoute
@@ -560,28 +630,32 @@ export interface FileRoutesByTo {
   '/lab/hero': typeof LabHeroRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
+  '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
+  '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
   '/lab/seller': typeof LabSellerRoute
   '/lab/victorinox': typeof LabVictorinoxRoute
   '/partner/$token': typeof PartnerTokenRoute
+  '/plan/$': typeof PlanSplatRoute
   '/r/$code': typeof RCodeRoute
+  '/search/$': typeof SearchSplatRoute
   '/store/$section': typeof StoreSectionRoute
   '/store/calendar': typeof StoreCalendarRoute
   '/store/sales': typeof StoreSalesRoute
   '/store/onboarding': typeof StoreOnboardingRoute
-  '/': typeof GuestIndexRoute
+  '/stories/$': typeof StoriesSplatRoute
+  '/tours/$': typeof ToursSplatRoute
   '/lab': typeof LabIndexRoute
   '/partner': typeof PartnerIndexRoute
   '/store': typeof StoreIndexRoute
+  '/$lang/credits': typeof GuestLangCreditsRoute
+  '/$lang/plan': typeof GuestLangPlanRoute
+  '/$lang/search': typeof GuestLangSearchRoute
   '/cart/review': typeof GuestCartReviewRoute
   '/cart/sent': typeof GuestCartSentRoute
-  '/gifts/$slug': typeof GuestGiftsSlugRoute
-  '/plan/sent': typeof GuestPlanSentRoute
-  '/stories/$slug': typeof GuestStoriesSlugRoute
-  '/tours/$slug': typeof GuestToursSlugRoute
   '/lab/blog-home/stories': typeof LabBlogHomeStoriesRoute
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
@@ -596,15 +670,17 @@ export interface FileRoutesByTo {
   '/store/reports/sales': typeof StoreReportsSalesRoute
   '/store/requests/analytics': typeof StoreRequestsAnalyticsRoute
   '/store/requests/questions': typeof StoreRequestsQuestionsRoute
-  '/gifts': typeof GuestGiftsIndexRoute
-  '/stories': typeof GuestStoriesIndexRoute
-  '/tours': typeof GuestToursIndexRoute
+  '/$lang': typeof GuestLangIndexRoute
   '/store/content': typeof StoreContentIndexRoute
   '/store/orders': typeof StoreOrdersIndexRoute
   '/store/partners': typeof StorePartnersIndexRoute
   '/store/products': typeof StoreProductsIndexRoute
   '/store/reports': typeof StoreReportsIndexRoute
   '/store/requests': typeof StoreRequestsIndexRoute
+  '/$lang/gifts/$slug': typeof GuestLangGiftsSlugRoute
+  '/$lang/plan/sent': typeof GuestLangPlanSentRoute
+  '/$lang/stories/$slug': typeof GuestLangStoriesSlugRoute
+  '/$lang/tours/$slug': typeof GuestLangToursSlugRoute
   '/account/orders/$orderId': typeof GuestAccountOrdersOrderIdRoute
   '/store/content/articles/$articleId': typeof StoreContentArticlesArticleIdRoute
   '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
@@ -612,23 +688,26 @@ export interface FileRoutesByTo {
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
   '/store/products/tours/new': typeof StoreProductsToursNewRoute
   '/store/requests/advice/$requestId': typeof StoreRequestsAdviceRequestIdRoute
+  '/$lang/gifts': typeof GuestLangGiftsIndexRoute
+  '/$lang/stories': typeof GuestLangStoriesIndexRoute
+  '/$lang/tours': typeof GuestLangToursIndexRoute
   '/store/products/tours': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_guest': typeof GuestRouteWithChildren
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
   '/sign-in': typeof SignInRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
+  '/_guest/$lang': typeof GuestLangRouteWithChildren
   '/_guest/account': typeof GuestAccountRoute
   '/_guest/cart': typeof GuestCartRoute
-  '/_guest/credits': typeof GuestCreditsRoute
-  '/_guest/plan': typeof GuestPlanRoute
-  '/_guest/search': typeof GuestSearchRoute
-  '/_guest/tours': typeof GuestToursRouteWithChildren
+  '/credits/$': typeof CreditsSplatRoute
+  '/gifts/$': typeof GiftsSplatRoute
   '/lab/advice': typeof LabAdviceRoute
   '/lab/blog-home': typeof LabBlogHomeRoute
   '/lab/calendar': typeof LabCalendarRoute
@@ -638,28 +717,33 @@ export interface FileRoutesById {
   '/lab/hero': typeof LabHeroRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
+  '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
+  '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
   '/lab/seller': typeof LabSellerRoute
   '/lab/victorinox': typeof LabVictorinoxRoute
   '/partner/$token': typeof PartnerTokenRoute
+  '/plan/$': typeof PlanSplatRoute
   '/r/$code': typeof RCodeRoute
+  '/search/$': typeof SearchSplatRoute
   '/store/$section': typeof StoreSectionRoute
   '/store/calendar': typeof StoreCalendarRoute
   '/store/sales': typeof StoreSalesRoute
   '/store_/onboarding': typeof StoreOnboardingRoute
-  '/_guest/': typeof GuestIndexRoute
+  '/stories/$': typeof StoriesSplatRoute
+  '/tours/$': typeof ToursSplatRoute
   '/lab/': typeof LabIndexRoute
   '/partner/': typeof PartnerIndexRoute
   '/store/': typeof StoreIndexRoute
+  '/_guest/$lang/credits': typeof GuestLangCreditsRoute
+  '/_guest/$lang/plan': typeof GuestLangPlanRoute
+  '/_guest/$lang/search': typeof GuestLangSearchRoute
+  '/_guest/$lang/tours': typeof GuestLangToursRouteWithChildren
   '/_guest/cart_/review': typeof GuestCartReviewRoute
   '/_guest/cart_/sent': typeof GuestCartSentRoute
-  '/_guest/gifts/$slug': typeof GuestGiftsSlugRoute
-  '/_guest/plan_/sent': typeof GuestPlanSentRoute
-  '/_guest/stories/$slug': typeof GuestStoriesSlugRoute
-  '/_guest/tours/$slug': typeof GuestToursSlugRoute
   '/lab/blog-home_/stories': typeof LabBlogHomeStoriesRoute
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
@@ -674,15 +758,17 @@ export interface FileRoutesById {
   '/store/reports/sales': typeof StoreReportsSalesRoute
   '/store/requests/analytics': typeof StoreRequestsAnalyticsRoute
   '/store/requests/questions': typeof StoreRequestsQuestionsRoute
-  '/_guest/gifts/': typeof GuestGiftsIndexRoute
-  '/_guest/stories/': typeof GuestStoriesIndexRoute
-  '/_guest/tours/': typeof GuestToursIndexRoute
+  '/_guest/$lang/': typeof GuestLangIndexRoute
   '/store/content/': typeof StoreContentIndexRoute
   '/store/orders/': typeof StoreOrdersIndexRoute
   '/store/partners/': typeof StorePartnersIndexRoute
   '/store/products/': typeof StoreProductsIndexRoute
   '/store/reports/': typeof StoreReportsIndexRoute
   '/store/requests/': typeof StoreRequestsIndexRoute
+  '/_guest/$lang/gifts/$slug': typeof GuestLangGiftsSlugRoute
+  '/_guest/$lang/plan_/sent': typeof GuestLangPlanSentRoute
+  '/_guest/$lang/stories/$slug': typeof GuestLangStoriesSlugRoute
+  '/_guest/$lang/tours/$slug': typeof GuestLangToursSlugRoute
   '/_guest/account_/orders/$orderId': typeof GuestAccountOrdersOrderIdRoute
   '/store/content/articles/$articleId': typeof StoreContentArticlesArticleIdRoute
   '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
@@ -690,6 +776,9 @@ export interface FileRoutesById {
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
   '/store/products/tours/new': typeof StoreProductsToursNewRoute
   '/store/requests/advice/$requestId': typeof StoreRequestsAdviceRequestIdRoute
+  '/_guest/$lang/gifts/': typeof GuestLangGiftsIndexRoute
+  '/_guest/$lang/stories/': typeof GuestLangStoriesIndexRoute
+  '/_guest/$lang/tours/': typeof GuestLangToursIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/_guest/account_/orders/$orderId_/pay': typeof GuestAccountOrdersOrderIdPayRoute
 }
@@ -702,12 +791,11 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/store'
     | '/store/reports'
+    | '/$lang'
     | '/account'
     | '/cart'
-    | '/credits'
-    | '/plan'
-    | '/search'
-    | '/tours'
+    | '/credits/$'
+    | '/gifts/$'
     | '/lab/advice'
     | '/lab/blog-home'
     | '/lab/calendar'
@@ -717,27 +805,33 @@ export interface FileRouteTypes {
     | '/lab/hero'
     | '/lab/map'
     | '/lab/map-loading'
+    | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
+    | '/lab/pins'
     | '/lab/private-tour'
     | '/lab/quantity'
     | '/lab/review'
     | '/lab/seller'
     | '/lab/victorinox'
     | '/partner/$token'
+    | '/plan/$'
     | '/r/$code'
+    | '/search/$'
     | '/store/$section'
     | '/store/calendar'
     | '/store/sales'
     | '/store/onboarding'
+    | '/stories/$'
+    | '/tours/$'
     | '/lab/'
     | '/partner/'
     | '/store/'
+    | '/$lang/credits'
+    | '/$lang/plan'
+    | '/$lang/search'
+    | '/$lang/tours'
     | '/cart/review'
     | '/cart/sent'
-    | '/gifts/$slug'
-    | '/plan/sent'
-    | '/stories/$slug'
-    | '/tours/$slug'
     | '/lab/blog-home/stories'
     | '/store/content/analytics'
     | '/store/content/comments'
@@ -752,15 +846,17 @@ export interface FileRouteTypes {
     | '/store/reports/sales'
     | '/store/requests/analytics'
     | '/store/requests/questions'
-    | '/gifts/'
-    | '/stories/'
-    | '/tours/'
+    | '/$lang/'
     | '/store/content/'
     | '/store/orders/'
     | '/store/partners/'
     | '/store/products/'
     | '/store/reports/'
     | '/store/requests/'
+    | '/$lang/gifts/$slug'
+    | '/$lang/plan/sent'
+    | '/$lang/stories/$slug'
+    | '/$lang/tours/$slug'
     | '/account/orders/$orderId'
     | '/store/content/articles/$articleId'
     | '/store/products/gifts/$productId'
@@ -768,18 +864,21 @@ export interface FileRouteTypes {
     | '/store/products/tours/$tourId'
     | '/store/products/tours/new'
     | '/store/requests/advice/$requestId'
+    | '/$lang/gifts/'
+    | '/$lang/stories/'
+    | '/$lang/tours/'
     | '/store/products/tours/'
     | '/account/orders/$orderId/pay'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/admin'
     | '/invitation'
     | '/sign-in'
     | '/account'
     | '/cart'
-    | '/credits'
-    | '/plan'
-    | '/search'
+    | '/credits/$'
+    | '/gifts/$'
     | '/lab/advice'
     | '/lab/blog-home'
     | '/lab/calendar'
@@ -789,28 +888,32 @@ export interface FileRouteTypes {
     | '/lab/hero'
     | '/lab/map'
     | '/lab/map-loading'
+    | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
+    | '/lab/pins'
     | '/lab/private-tour'
     | '/lab/quantity'
     | '/lab/review'
     | '/lab/seller'
     | '/lab/victorinox'
     | '/partner/$token'
+    | '/plan/$'
     | '/r/$code'
+    | '/search/$'
     | '/store/$section'
     | '/store/calendar'
     | '/store/sales'
     | '/store/onboarding'
-    | '/'
+    | '/stories/$'
+    | '/tours/$'
     | '/lab'
     | '/partner'
     | '/store'
+    | '/$lang/credits'
+    | '/$lang/plan'
+    | '/$lang/search'
     | '/cart/review'
     | '/cart/sent'
-    | '/gifts/$slug'
-    | '/plan/sent'
-    | '/stories/$slug'
-    | '/tours/$slug'
     | '/lab/blog-home/stories'
     | '/store/content/analytics'
     | '/store/content/comments'
@@ -825,15 +928,17 @@ export interface FileRouteTypes {
     | '/store/reports/sales'
     | '/store/requests/analytics'
     | '/store/requests/questions'
-    | '/gifts'
-    | '/stories'
-    | '/tours'
+    | '/$lang'
     | '/store/content'
     | '/store/orders'
     | '/store/partners'
     | '/store/products'
     | '/store/reports'
     | '/store/requests'
+    | '/$lang/gifts/$slug'
+    | '/$lang/plan/sent'
+    | '/$lang/stories/$slug'
+    | '/$lang/tours/$slug'
     | '/account/orders/$orderId'
     | '/store/content/articles/$articleId'
     | '/store/products/gifts/$productId'
@@ -841,22 +946,25 @@ export interface FileRouteTypes {
     | '/store/products/tours/$tourId'
     | '/store/products/tours/new'
     | '/store/requests/advice/$requestId'
+    | '/$lang/gifts'
+    | '/$lang/stories'
+    | '/$lang/tours'
     | '/store/products/tours'
     | '/account/orders/$orderId/pay'
   id:
     | '__root__'
+    | '/'
     | '/_guest'
     | '/admin'
     | '/invitation'
     | '/sign-in'
     | '/store'
     | '/store/reports'
+    | '/_guest/$lang'
     | '/_guest/account'
     | '/_guest/cart'
-    | '/_guest/credits'
-    | '/_guest/plan'
-    | '/_guest/search'
-    | '/_guest/tours'
+    | '/credits/$'
+    | '/gifts/$'
     | '/lab/advice'
     | '/lab/blog-home'
     | '/lab/calendar'
@@ -866,28 +974,33 @@ export interface FileRouteTypes {
     | '/lab/hero'
     | '/lab/map'
     | '/lab/map-loading'
+    | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
+    | '/lab/pins'
     | '/lab/private-tour'
     | '/lab/quantity'
     | '/lab/review'
     | '/lab/seller'
     | '/lab/victorinox'
     | '/partner/$token'
+    | '/plan/$'
     | '/r/$code'
+    | '/search/$'
     | '/store/$section'
     | '/store/calendar'
     | '/store/sales'
     | '/store_/onboarding'
-    | '/_guest/'
+    | '/stories/$'
+    | '/tours/$'
     | '/lab/'
     | '/partner/'
     | '/store/'
+    | '/_guest/$lang/credits'
+    | '/_guest/$lang/plan'
+    | '/_guest/$lang/search'
+    | '/_guest/$lang/tours'
     | '/_guest/cart_/review'
     | '/_guest/cart_/sent'
-    | '/_guest/gifts/$slug'
-    | '/_guest/plan_/sent'
-    | '/_guest/stories/$slug'
-    | '/_guest/tours/$slug'
     | '/lab/blog-home_/stories'
     | '/store/content/analytics'
     | '/store/content/comments'
@@ -902,15 +1015,17 @@ export interface FileRouteTypes {
     | '/store/reports/sales'
     | '/store/requests/analytics'
     | '/store/requests/questions'
-    | '/_guest/gifts/'
-    | '/_guest/stories/'
-    | '/_guest/tours/'
+    | '/_guest/$lang/'
     | '/store/content/'
     | '/store/orders/'
     | '/store/partners/'
     | '/store/products/'
     | '/store/reports/'
     | '/store/requests/'
+    | '/_guest/$lang/gifts/$slug'
+    | '/_guest/$lang/plan_/sent'
+    | '/_guest/$lang/stories/$slug'
+    | '/_guest/$lang/tours/$slug'
     | '/_guest/account_/orders/$orderId'
     | '/store/content/articles/$articleId'
     | '/store/products/gifts/$productId'
@@ -918,16 +1033,22 @@ export interface FileRouteTypes {
     | '/store/products/tours/$tourId'
     | '/store/products/tours/new'
     | '/store/requests/advice/$requestId'
+    | '/_guest/$lang/gifts/'
+    | '/_guest/$lang/stories/'
+    | '/_guest/$lang/tours/'
     | '/store/products/tours/'
     | '/_guest/account_/orders/$orderId_/pay'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   GuestRoute: typeof GuestRouteWithChildren
   AdminRoute: typeof AdminRoute
   InvitationRoute: typeof InvitationRoute
   SignInRoute: typeof SignInRoute
   StoreRoute: typeof StoreRouteWithChildren
+  CreditsSplatRoute: typeof CreditsSplatRoute
+  GiftsSplatRoute: typeof GiftsSplatRoute
   LabAdviceRoute: typeof LabAdviceRoute
   LabBlogHomeRoute: typeof LabBlogHomeRoute
   LabCalendarRoute: typeof LabCalendarRoute
@@ -937,15 +1058,21 @@ export interface RootRouteChildren {
   LabHeroRoute: typeof LabHeroRoute
   LabMapRoute: typeof LabMapRoute
   LabMapLoadingRoute: typeof LabMapLoadingRoute
+  LabOnboardingFullscreenRoute: typeof LabOnboardingFullscreenRoute
   LabOrderCardsRoute: typeof LabOrderCardsRoute
+  LabPinsRoute: typeof LabPinsRoute
   LabPrivateTourRoute: typeof LabPrivateTourRoute
   LabQuantityRoute: typeof LabQuantityRoute
   LabReviewRoute: typeof LabReviewRoute
   LabSellerRoute: typeof LabSellerRoute
   LabVictorinoxRoute: typeof LabVictorinoxRoute
   PartnerTokenRoute: typeof PartnerTokenRoute
+  PlanSplatRoute: typeof PlanSplatRoute
   RCodeRoute: typeof RCodeRoute
+  SearchSplatRoute: typeof SearchSplatRoute
   StoreOnboardingRoute: typeof StoreOnboardingRoute
+  StoriesSplatRoute: typeof StoriesSplatRoute
+  ToursSplatRoute: typeof ToursSplatRoute
   LabIndexRoute: typeof LabIndexRoute
   PartnerIndexRoute: typeof PartnerIndexRoute
   LabBlogHomeStoriesRoute: typeof LabBlogHomeStoriesRoute
@@ -953,6 +1080,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_guest': {
       id: '/_guest'
       path: ''
@@ -988,11 +1122,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_guest/': {
-      id: '/_guest/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof GuestIndexRouteImport
+    '/_guest/$lang': {
+      id: '/_guest/$lang'
+      path: '/$lang'
+      fullPath: '/$lang'
+      preLoaderRoute: typeof GuestLangRouteImport
       parentRoute: typeof GuestRoute
     }
     '/_guest/account': {
@@ -1009,33 +1143,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestCartRouteImport
       parentRoute: typeof GuestRoute
     }
-    '/_guest/credits': {
-      id: '/_guest/credits'
-      path: '/credits'
-      fullPath: '/credits'
-      preLoaderRoute: typeof GuestCreditsRouteImport
-      parentRoute: typeof GuestRoute
+    '/credits/$': {
+      id: '/credits/$'
+      path: '/credits/$'
+      fullPath: '/credits/$'
+      preLoaderRoute: typeof CreditsSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_guest/plan': {
-      id: '/_guest/plan'
-      path: '/plan'
-      fullPath: '/plan'
-      preLoaderRoute: typeof GuestPlanRouteImport
-      parentRoute: typeof GuestRoute
-    }
-    '/_guest/search': {
-      id: '/_guest/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof GuestSearchRouteImport
-      parentRoute: typeof GuestRoute
-    }
-    '/_guest/tours': {
-      id: '/_guest/tours'
-      path: '/tours'
-      fullPath: '/tours'
-      preLoaderRoute: typeof GuestToursRouteImport
-      parentRoute: typeof GuestRoute
+    '/gifts/$': {
+      id: '/gifts/$'
+      path: '/gifts/$'
+      fullPath: '/gifts/$'
+      preLoaderRoute: typeof GiftsSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lab/': {
       id: '/lab/'
@@ -1107,11 +1227,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LabMapLoadingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lab/onboarding-fullscreen': {
+      id: '/lab/onboarding-fullscreen'
+      path: '/lab/onboarding-fullscreen'
+      fullPath: '/lab/onboarding-fullscreen'
+      preLoaderRoute: typeof LabOnboardingFullscreenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lab/order-cards': {
       id: '/lab/order-cards'
       path: '/lab/order-cards'
       fullPath: '/lab/order-cards'
       preLoaderRoute: typeof LabOrderCardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/pins': {
+      id: '/lab/pins'
+      path: '/lab/pins'
+      fullPath: '/lab/pins'
+      preLoaderRoute: typeof LabPinsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/private-tour': {
@@ -1163,11 +1297,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PartnerTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plan/$': {
+      id: '/plan/$'
+      path: '/plan/$'
+      fullPath: '/plan/$'
+      preLoaderRoute: typeof PlanSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/r/$code': {
       id: '/r/$code'
       path: '/r/$code'
       fullPath: '/r/$code'
       preLoaderRoute: typeof RCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search/$': {
+      id: '/search/$'
+      path: '/search/$'
+      fullPath: '/search/$'
+      preLoaderRoute: typeof SearchSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/store/': {
@@ -1212,6 +1360,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreOnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stories/$': {
+      id: '/stories/$'
+      path: '/stories/$'
+      fullPath: '/stories/$'
+      preLoaderRoute: typeof StoriesSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tours/$': {
+      id: '/tours/$'
+      path: '/tours/$'
+      fullPath: '/tours/$'
+      preLoaderRoute: typeof ToursSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_guest/$lang/': {
+      id: '/_guest/$lang/'
+      path: '/'
+      fullPath: '/$lang/'
+      preLoaderRoute: typeof GuestLangIndexRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
+    '/_guest/$lang/credits': {
+      id: '/_guest/$lang/credits'
+      path: '/credits'
+      fullPath: '/$lang/credits'
+      preLoaderRoute: typeof GuestLangCreditsRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
+    '/_guest/$lang/plan': {
+      id: '/_guest/$lang/plan'
+      path: '/plan'
+      fullPath: '/$lang/plan'
+      preLoaderRoute: typeof GuestLangPlanRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
+    '/_guest/$lang/search': {
+      id: '/_guest/$lang/search'
+      path: '/search'
+      fullPath: '/$lang/search'
+      preLoaderRoute: typeof GuestLangSearchRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
+    '/_guest/$lang/tours': {
+      id: '/_guest/$lang/tours'
+      path: '/tours'
+      fullPath: '/$lang/tours'
+      preLoaderRoute: typeof GuestLangToursRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
     '/_guest/cart_/review': {
       id: '/_guest/cart_/review'
       path: '/cart/review'
@@ -1225,55 +1422,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/cart/sent'
       preLoaderRoute: typeof GuestCartSentRouteImport
       parentRoute: typeof GuestRoute
-    }
-    '/_guest/gifts/': {
-      id: '/_guest/gifts/'
-      path: '/gifts'
-      fullPath: '/gifts/'
-      preLoaderRoute: typeof GuestGiftsIndexRouteImport
-      parentRoute: typeof GuestRoute
-    }
-    '/_guest/gifts/$slug': {
-      id: '/_guest/gifts/$slug'
-      path: '/gifts/$slug'
-      fullPath: '/gifts/$slug'
-      preLoaderRoute: typeof GuestGiftsSlugRouteImport
-      parentRoute: typeof GuestRoute
-    }
-    '/_guest/plan_/sent': {
-      id: '/_guest/plan_/sent'
-      path: '/plan/sent'
-      fullPath: '/plan/sent'
-      preLoaderRoute: typeof GuestPlanSentRouteImport
-      parentRoute: typeof GuestRoute
-    }
-    '/_guest/stories/': {
-      id: '/_guest/stories/'
-      path: '/stories'
-      fullPath: '/stories/'
-      preLoaderRoute: typeof GuestStoriesIndexRouteImport
-      parentRoute: typeof GuestRoute
-    }
-    '/_guest/stories/$slug': {
-      id: '/_guest/stories/$slug'
-      path: '/stories/$slug'
-      fullPath: '/stories/$slug'
-      preLoaderRoute: typeof GuestStoriesSlugRouteImport
-      parentRoute: typeof GuestRoute
-    }
-    '/_guest/tours/': {
-      id: '/_guest/tours/'
-      path: '/'
-      fullPath: '/tours/'
-      preLoaderRoute: typeof GuestToursIndexRouteImport
-      parentRoute: typeof GuestToursRoute
-    }
-    '/_guest/tours/$slug': {
-      id: '/_guest/tours/$slug'
-      path: '/$slug'
-      fullPath: '/tours/$slug'
-      preLoaderRoute: typeof GuestToursSlugRouteImport
-      parentRoute: typeof GuestToursRoute
     }
     '/lab/blog-home_/stories': {
       id: '/lab/blog-home_/stories'
@@ -1415,6 +1563,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreRequestsQuestionsRouteImport
       parentRoute: typeof StoreRoute
     }
+    '/_guest/$lang/gifts/': {
+      id: '/_guest/$lang/gifts/'
+      path: '/gifts'
+      fullPath: '/$lang/gifts/'
+      preLoaderRoute: typeof GuestLangGiftsIndexRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
+    '/_guest/$lang/gifts/$slug': {
+      id: '/_guest/$lang/gifts/$slug'
+      path: '/gifts/$slug'
+      fullPath: '/$lang/gifts/$slug'
+      preLoaderRoute: typeof GuestLangGiftsSlugRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
+    '/_guest/$lang/plan_/sent': {
+      id: '/_guest/$lang/plan_/sent'
+      path: '/plan/sent'
+      fullPath: '/$lang/plan/sent'
+      preLoaderRoute: typeof GuestLangPlanSentRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
+    '/_guest/$lang/stories/': {
+      id: '/_guest/$lang/stories/'
+      path: '/stories'
+      fullPath: '/$lang/stories/'
+      preLoaderRoute: typeof GuestLangStoriesIndexRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
+    '/_guest/$lang/stories/$slug': {
+      id: '/_guest/$lang/stories/$slug'
+      path: '/stories/$slug'
+      fullPath: '/$lang/stories/$slug'
+      preLoaderRoute: typeof GuestLangStoriesSlugRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
+    '/_guest/$lang/tours/': {
+      id: '/_guest/$lang/tours/'
+      path: '/'
+      fullPath: '/$lang/tours/'
+      preLoaderRoute: typeof GuestLangToursIndexRouteImport
+      parentRoute: typeof GuestLangToursRoute
+    }
+    '/_guest/$lang/tours/$slug': {
+      id: '/_guest/$lang/tours/$slug'
+      path: '/$slug'
+      fullPath: '/$lang/tours/$slug'
+      preLoaderRoute: typeof GuestLangToursSlugRouteImport
+      parentRoute: typeof GuestLangToursRoute
+    }
     '/_guest/account_/orders/$orderId': {
       id: '/_guest/account_/orders/$orderId'
       path: '/account/orders/$orderId'
@@ -1481,54 +1678,66 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface GuestToursRouteChildren {
-  GuestToursSlugRoute: typeof GuestToursSlugRoute
-  GuestToursIndexRoute: typeof GuestToursIndexRoute
+interface GuestLangToursRouteChildren {
+  GuestLangToursSlugRoute: typeof GuestLangToursSlugRoute
+  GuestLangToursIndexRoute: typeof GuestLangToursIndexRoute
 }
 
-const GuestToursRouteChildren: GuestToursRouteChildren = {
-  GuestToursSlugRoute: GuestToursSlugRoute,
-  GuestToursIndexRoute: GuestToursIndexRoute,
+const GuestLangToursRouteChildren: GuestLangToursRouteChildren = {
+  GuestLangToursSlugRoute: GuestLangToursSlugRoute,
+  GuestLangToursIndexRoute: GuestLangToursIndexRoute,
 }
 
-const GuestToursRouteWithChildren = GuestToursRoute._addFileChildren(
-  GuestToursRouteChildren,
+const GuestLangToursRouteWithChildren = GuestLangToursRoute._addFileChildren(
+  GuestLangToursRouteChildren,
+)
+
+interface GuestLangRouteChildren {
+  GuestLangCreditsRoute: typeof GuestLangCreditsRoute
+  GuestLangPlanRoute: typeof GuestLangPlanRoute
+  GuestLangSearchRoute: typeof GuestLangSearchRoute
+  GuestLangToursRoute: typeof GuestLangToursRouteWithChildren
+  GuestLangIndexRoute: typeof GuestLangIndexRoute
+  GuestLangGiftsSlugRoute: typeof GuestLangGiftsSlugRoute
+  GuestLangPlanSentRoute: typeof GuestLangPlanSentRoute
+  GuestLangStoriesSlugRoute: typeof GuestLangStoriesSlugRoute
+  GuestLangGiftsIndexRoute: typeof GuestLangGiftsIndexRoute
+  GuestLangStoriesIndexRoute: typeof GuestLangStoriesIndexRoute
+}
+
+const GuestLangRouteChildren: GuestLangRouteChildren = {
+  GuestLangCreditsRoute: GuestLangCreditsRoute,
+  GuestLangPlanRoute: GuestLangPlanRoute,
+  GuestLangSearchRoute: GuestLangSearchRoute,
+  GuestLangToursRoute: GuestLangToursRouteWithChildren,
+  GuestLangIndexRoute: GuestLangIndexRoute,
+  GuestLangGiftsSlugRoute: GuestLangGiftsSlugRoute,
+  GuestLangPlanSentRoute: GuestLangPlanSentRoute,
+  GuestLangStoriesSlugRoute: GuestLangStoriesSlugRoute,
+  GuestLangGiftsIndexRoute: GuestLangGiftsIndexRoute,
+  GuestLangStoriesIndexRoute: GuestLangStoriesIndexRoute,
+}
+
+const GuestLangRouteWithChildren = GuestLangRoute._addFileChildren(
+  GuestLangRouteChildren,
 )
 
 interface GuestRouteChildren {
+  GuestLangRoute: typeof GuestLangRouteWithChildren
   GuestAccountRoute: typeof GuestAccountRoute
   GuestCartRoute: typeof GuestCartRoute
-  GuestCreditsRoute: typeof GuestCreditsRoute
-  GuestPlanRoute: typeof GuestPlanRoute
-  GuestSearchRoute: typeof GuestSearchRoute
-  GuestToursRoute: typeof GuestToursRouteWithChildren
-  GuestIndexRoute: typeof GuestIndexRoute
   GuestCartReviewRoute: typeof GuestCartReviewRoute
   GuestCartSentRoute: typeof GuestCartSentRoute
-  GuestGiftsSlugRoute: typeof GuestGiftsSlugRoute
-  GuestPlanSentRoute: typeof GuestPlanSentRoute
-  GuestStoriesSlugRoute: typeof GuestStoriesSlugRoute
-  GuestGiftsIndexRoute: typeof GuestGiftsIndexRoute
-  GuestStoriesIndexRoute: typeof GuestStoriesIndexRoute
   GuestAccountOrdersOrderIdRoute: typeof GuestAccountOrdersOrderIdRoute
   GuestAccountOrdersOrderIdPayRoute: typeof GuestAccountOrdersOrderIdPayRoute
 }
 
 const GuestRouteChildren: GuestRouteChildren = {
+  GuestLangRoute: GuestLangRouteWithChildren,
   GuestAccountRoute: GuestAccountRoute,
   GuestCartRoute: GuestCartRoute,
-  GuestCreditsRoute: GuestCreditsRoute,
-  GuestPlanRoute: GuestPlanRoute,
-  GuestSearchRoute: GuestSearchRoute,
-  GuestToursRoute: GuestToursRouteWithChildren,
-  GuestIndexRoute: GuestIndexRoute,
   GuestCartReviewRoute: GuestCartReviewRoute,
   GuestCartSentRoute: GuestCartSentRoute,
-  GuestGiftsSlugRoute: GuestGiftsSlugRoute,
-  GuestPlanSentRoute: GuestPlanSentRoute,
-  GuestStoriesSlugRoute: GuestStoriesSlugRoute,
-  GuestGiftsIndexRoute: GuestGiftsIndexRoute,
-  GuestStoriesIndexRoute: GuestStoriesIndexRoute,
   GuestAccountOrdersOrderIdRoute: GuestAccountOrdersOrderIdRoute,
   GuestAccountOrdersOrderIdPayRoute: GuestAccountOrdersOrderIdPayRoute,
 }
@@ -1615,11 +1824,14 @@ const StoreRouteChildren: StoreRouteChildren = {
 const StoreRouteWithChildren = StoreRoute._addFileChildren(StoreRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   GuestRoute: GuestRouteWithChildren,
   AdminRoute: AdminRoute,
   InvitationRoute: InvitationRoute,
   SignInRoute: SignInRoute,
   StoreRoute: StoreRouteWithChildren,
+  CreditsSplatRoute: CreditsSplatRoute,
+  GiftsSplatRoute: GiftsSplatRoute,
   LabAdviceRoute: LabAdviceRoute,
   LabBlogHomeRoute: LabBlogHomeRoute,
   LabCalendarRoute: LabCalendarRoute,
@@ -1629,15 +1841,21 @@ const rootRouteChildren: RootRouteChildren = {
   LabHeroRoute: LabHeroRoute,
   LabMapRoute: LabMapRoute,
   LabMapLoadingRoute: LabMapLoadingRoute,
+  LabOnboardingFullscreenRoute: LabOnboardingFullscreenRoute,
   LabOrderCardsRoute: LabOrderCardsRoute,
+  LabPinsRoute: LabPinsRoute,
   LabPrivateTourRoute: LabPrivateTourRoute,
   LabQuantityRoute: LabQuantityRoute,
   LabReviewRoute: LabReviewRoute,
   LabSellerRoute: LabSellerRoute,
   LabVictorinoxRoute: LabVictorinoxRoute,
   PartnerTokenRoute: PartnerTokenRoute,
+  PlanSplatRoute: PlanSplatRoute,
   RCodeRoute: RCodeRoute,
+  SearchSplatRoute: SearchSplatRoute,
   StoreOnboardingRoute: StoreOnboardingRoute,
+  StoriesSplatRoute: StoriesSplatRoute,
+  ToursSplatRoute: ToursSplatRoute,
   LabIndexRoute: LabIndexRoute,
   PartnerIndexRoute: PartnerIndexRoute,
   LabBlogHomeStoriesRoute: LabBlogHomeStoriesRoute,

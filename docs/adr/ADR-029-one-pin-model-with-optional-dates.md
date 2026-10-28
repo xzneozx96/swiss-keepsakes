@@ -7,6 +7,8 @@ Applies to: `api/src/modules/content/`, `packages/domain/src/content/`, `package
 
 No new dependency, vendor or paid service. Detail is in `docs/specs/001-storytelling-pivot/data-model.md`, sections DM-5, DM-21 and DM-22. It amends ADR-005 (the content aggregates), ADR-015 and ADR-018 (the database rules and the review tables), and ADR-011 (the outbound link). The categories are ADR-030.
 
+**Amended 2026-10-28** (`docs/decisions/2026-10-28-pins-and-map-design.md`). A pin has a main photo and optional more photos, shown as a carousel in the pin details sheet. The model below stores one cover (`cover_media_id`); the extra photos need an ordered child table, which E4.2 designs. The design is in `docs/ux/pins-design.md`.
+
 ## Context
 The map is a curated local guide: sights on a walk, photo spots, bakeries, free toilets, markets and free concerts. Most of these places have no story. The built model (`api/migrations/0008_content.sql`) gives a place a fixed type and refuses to publish a sight or restaurant without a published main story (AC43). That would force an article for every bakery. Once guest reviews and place pages are dropped, a place and an event differ in one thing, the dates. A flea market has weekly hours and could be filed either way.
 

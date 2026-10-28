@@ -1,5 +1,5 @@
 /** Areas that stay client-only and out of search results (ADR-001). */
-export const PRIVATE_PREFIXES: readonly string[] = ['/store', '/admin', '/partner', '/lab', '/account', '/cart', '/plan', '/sign-in', '/invitation', '/r']
+export const PRIVATE_PREFIXES: readonly string[] = ['/store', '/admin', '/partner', '/lab', '/account', '/cart', '/en/plan', '/de/plan', '/sign-in', '/invitation', '/r']
 
 const PARTNER_PREFIX = '/partner'
 

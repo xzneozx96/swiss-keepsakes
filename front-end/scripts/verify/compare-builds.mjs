@@ -4,9 +4,11 @@ import { join } from 'node:path'
 // Each folder is a Nitro `.output` (the Start build), see README.md.
 // usage: node scripts/verify/compare-builds.mjs <baseDir> <newDir> <outDir>
 // The exit code is 1 when any text differs, any page error occurs or any final address differs.
+// The base build has guest routes at the root (`/stories`) and the new one under the page language (`/en/stories`, E3.5):
+// the same page is compared, and a final address must be the base address with the language in front. BASE_PREFIXED=1 compares two builds that both have the prefix.
 // COMPARE_TZ=host leaves the browser in the host time zone instead of Europe/Zurich (to see zone-dependent text).
 import process from 'node:process'
-import { appUrl, goTo, launchBrowser, serve, waitForBoot } from './browser.mjs'
+import { appUrl, goTo, guestPath, launchBrowser, serve, waitForBoot } from './browser.mjs'
 
 const [baseDir, newDir, outDir] = process.argv.slice(2)
 
@@ -28,7 +30,15 @@ const SETS = [
   },
 ]
 
-async function capture(label, dir) {
+/** The address with its language prefix removed, or a marker when a guest page is not under its language. */
+function unprefix(address, lang) {
+  if (address === `/${lang}` || address.startsWith(`/${lang}/`) || address.startsWith(`/${lang}?`))
+    return address.slice(lang.length + 1) || '/'
+
+  return address.startsWith('/en') || address.startsWith('/de') ? `WRONG-LANGUAGE ${address}` : address
+}
+
+async function capture(label, dir, prefixed) {
   const served = await serve(dir)
   const { server } = served
   const result = {}
@@ -80,7 +90,8 @@ async function capture(label, dir) {
         await page.waitForTimeout(1200)
 
         for (const route of set.routes) {
-          const path = route.replace(':gift', route.includes('/store/') ? ids.giftId : ids.gift).replace(':booking', ids.booking).replace(':departure', ids.departure).replace(':tour', ids.tour).replace(':order', ids.order).replace(':partner', ids.partner)
+          const plain = route.replace(':gift', route.includes('/store/') ? ids.giftId : ids.gift).replace(':booking', ids.booking).replace(':departure', ids.departure).replace(':tour', ids.tour).replace(':order', ids.order).replace(':partner', ids.partner)
+          const path = guestPath(plain, prefixed ? lang : undefined)
           const key = `${lang}${set.name}${route.replaceAll('/', '_')}`
           const messages = []
           const onError = e => messages.push(String(e.message).slice(0, 160))
@@ -96,7 +107,8 @@ async function capture(label, dir) {
           // The app may redirect (`?tab=tours` becomes `/store/products/tours`), so check the section, and compare the final address between builds below.
           if (at.split(SECTION_END)[1] !== path.split(SECTION_END)[1])
             problems.push(`${label} ${key}: the page is at ${at}, expected ${path}`)
-          where[key] = at
+          // The key and the address are the plain ones, so a prefixed build compares with an unprefixed one.
+          where[key] = prefixed ? unprefix(at, lang) : at
           if (result[key].trim().length < MIN_TEXT)
             problems.push(`${label} ${key}: only ${result[key].trim().length} characters of text`)
           errors[key] = messages
@@ -122,8 +134,8 @@ async function capture(label, dir) {
 }
 
 mkdirSync(outDir, { recursive: true })
-const a = await capture('base', baseDir)
-const b = await capture('new', newDir)
+const a = await capture('base', baseDir, process.env.BASE_PREFIXED === '1')
+const b = await capture('new', newDir, true)
 let same = 0
 const diffs = []
 

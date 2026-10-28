@@ -5,8 +5,9 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { CloseIcon, PickupIcon, PlayIcon } from '@/components/icons'
-import { photoUrl } from '@/lib/photos'
+import { useLocale } from '@/contexts/locale-context'
 
+import { photoUrl } from '@/lib/photos'
 import { AuthorChip, CategoryPill } from './chips'
 import { useBlogData } from './data'
 
@@ -172,6 +173,7 @@ const railClass
 
 /** 1 · Auto-play rail: the rail plays itself, one story every five seconds, and loops. */
 function AutoRail({ articles }: { articles: Article[] }) {
+  const { language } = useLocale()
   const [index, setIndex] = useState(0)
   const [held, hold] = useHold()
   const [sectionRef, visible] = useVisible<HTMLDivElement>()
@@ -230,8 +232,8 @@ function AutoRail({ articles }: { articles: Article[] }) {
           <li key={article.id} className="w-[64%] shrink-0 snap-start">
             <Link
               className="block rounded-[28px] outline-none focus-visible:focus-ring"
-              params={{ slug: article.slug }}
-              to="/stories/$slug"
+              params={{ lang: language, slug: article.slug }}
+              to="/$lang/stories/$slug"
             >
               <ReelCard
                 article={article}
@@ -366,8 +368,8 @@ function StoryPlayer({
         </div>
         <Link
           className="flex h-11 items-center justify-center self-start rounded-full bg-white px-5 text-sm font-semibold text-foreground outline-none focus-visible:focus-ring active:scale-95"
-          params={{ slug: article.slug }}
-          to="/stories/$slug"
+          params={{ lang: language, slug: article.slug }}
+          to="/$lang/stories/$slug"
         >
           {l.read}
         </Link>
@@ -440,14 +442,15 @@ function ViewerRail({ articles }: { articles: Article[] }) {
 
 /** 4 · Moving photos: no timer at all; each photo drifts slowly so the rail feels alive. */
 function MovingRail({ articles }: { articles: Article[] }) {
+  const { language } = useLocale()
   return (
     <ul className={railClass}>
       {articles.map((article, i) => (
         <li key={article.id} className="w-[64%] shrink-0 snap-start">
           <Link
             className="block rounded-[28px] outline-none focus-visible:focus-ring active:scale-[0.98]"
-            params={{ slug: article.slug }}
-            to="/stories/$slug"
+            params={{ lang: language, slug: article.slug }}
+            to="/$lang/stories/$slug"
           >
             <ReelCard moving article={article} delay={-i * 2.3} />
           </Link>

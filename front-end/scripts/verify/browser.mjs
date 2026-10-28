@@ -109,3 +109,20 @@ export function waitForBoot(page) {
 export function launchBrowser() {
   return chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL, args: ['--no-sandbox'] })
 }
+
+const ROOT_END = /[/?]/
+const GUEST_ROOTS = new Set(['gifts', 'tours', 'stories', 'search', 'plan', 'credits'])
+
+/**
+ * The address of a guest page in a build whose guest routes sit under `/en` or `/de` (E3.5): `/stories` becomes `/en/stories`,
+ * `/` becomes `/en`. The cart, account, store and other routes keep their address. With no language the path is returned as it is (the older builds).
+ */
+export function guestPath(path, language) {
+  if (!language)
+    return path
+  const [root] = path.slice(1).split(ROOT_END)
+
+  if (path === '/')
+    return `/${language}`
+  return GUEST_ROOTS.has(root) ? `/${language}${path}` : path
+}
