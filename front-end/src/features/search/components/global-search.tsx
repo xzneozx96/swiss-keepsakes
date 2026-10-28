@@ -5,6 +5,7 @@ import { Link } from '@tanstack/react-router'
 
 import { ChevronRightIcon } from '@/components/icons'
 import { BackButton } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import { Media } from '@/components/media'
 import {
   CategoryThumb,
@@ -74,6 +75,7 @@ export function GlobalSearch({
             <SearchField.ClearButton />
           </SearchField.Group>
         </SearchField>
+        <LanguageButton tone="bar" />
       </div>
 
       <div className="flex flex-col gap-6 px-4 pt-2 pb-4">

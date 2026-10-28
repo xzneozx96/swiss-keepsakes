@@ -58,7 +58,7 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     const { owner, pins } = await env.storeWithStaff()
 
     expect((await env.call(`${pins}/not-a-uuid`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: {} })).status).toBe(400)
-    expect((await env.call(`${pins}/not-a-uuid`, { method: 'DELETE', headers: owner.headers })).status).toBe(400)
+    expect((await env.call(`${pins}/not-a-uuid`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '1' } })).status).toBe(400)
     const missing = await env.call(`${pins}/${randomUUID()}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: {} })
     expect(missing.status).toBe(404)
     expect(await missing.json()).toMatchObject({ type: 'not-found' })
@@ -83,6 +83,29 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect((await pool.query<{ row_version: number }>('select row_version from content.places where id = $1', [created.id])).rows[0]?.row_version).toBe(2)
     // A different key is a new command, and the version it names is stale now.
     expect((await publish(`publish-${randomUUID()}`)).status).toBe(412)
+  })
+
+  // D11: a 412 is stored and replayed like any refusal, and If-Match is part of the request hash.
+  it('[E2.6] a 412 is replayed for the same key and If-Match, a newer If-Match under that key is 422, and under a new key it runs', async () => {
+    const { owner, pins } = await env.storeWithStaff()
+    const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Museggmauer' }, ...located, slug: { en: slugFor() } } })).json() as { id: string }
+    const publish = (key: string, version: string) => env.call(`${pins}/${created.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': version }, key })
+    const key = `publish-${randomUUID()}`
+
+    const stale = await publish(key, '7')
+    expect(stale.status).toBe(412)
+    const replayed = await publish(key, '7')
+    expect(replayed.status).toBe(412)
+    expect(replayed.headers.get('Idempotent-Replayed')).toBe('true')
+    expect(await auditRows(created.id)).toHaveLength(0)
+
+    // The same key with the version the client has now is another request, not a replay of the 412.
+    expect((await publish(key, '1')).status).toBe(422)
+    const retried = await publish(`publish-${randomUUID()}`, '1')
+    expect(retried.status).toBe(200)
+    expect(retried.headers.get('Idempotent-Replayed')).toBeNull()
+    expect((await pool.query<{ row_version: number, status: string }>('select row_version, status from content.places where id = $1', [created.id])).rows[0]).toEqual({ row_version: 2, status: 'published' })
+    expect(await auditRows(created.id)).toHaveLength(1)
   })
 
   it('[E2.6] a create replayed with the same key makes one pin', async () => {
@@ -121,8 +144,33 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect((await env.call(`${lucerne.pins}/${theirs.id}`, { method: 'PATCH', headers, body: { address: 'mine now' } })).status).toBe(404)
     expect((await env.call(`${lucerne.pins}/${theirs.id}/publish`, { method: 'POST', headers })).status).toBe(404)
     expect((await env.call(`${lucerne.pins}/${theirs.id}/hide`, { method: 'POST', headers })).status).toBe(404)
-    expect((await env.call(`${lucerne.pins}/${theirs.id}`, { method: 'DELETE', headers: lucerne.owner.headers })).status).toBe(404)
+    expect((await env.call(`${lucerne.pins}/${theirs.id}`, { method: 'DELETE', headers })).status).toBe(404)
     expect(await count(pool, 'select count(*) from content.places where id = $1 and address is null', [theirs.id])).toBe(1)
+  })
+
+  it('[E2.6][AC30] over HTTP a live English pin gains German with a slug body, and a taken or missing German slug is refused', async () => {
+    const { owner, pins } = await env.storeWithStaff()
+    const { id } = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Chapel Bridge' }, ...located, slug: { en: slugFor() } } })).json() as { id: string }
+    expect((await env.call(`${pins}/${id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' } })).status).toBe(200)
+    const bilingual = { title: { en: 'Chapel Bridge', de: 'Kapellbruecke' } }
+    await env.call(`${pins}/${id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '2' }, body: bilingual })
+    const publish = (body?: object) => env.call(`${pins}/${id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '3' }, body })
+
+    const missing = await publish()
+    expect(missing.status).toBe(422)
+    expect(await missing.json()).toMatchObject({ type: 'publish-incomplete', errors: [{ path: 'slug' }] })
+
+    const taken = slugFor()
+    await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Lion Monument', de: 'Loewendenkmal' }, slug: { en: slugFor(), de: taken } } })
+    const clash = await publish({ slug: { de: taken } })
+    expect(clash.status).toBe(409)
+    expect(await clash.json()).toMatchObject({ type: 'content-slug-taken' })
+    expect((await pool.query('select row_version, status from content.places where id = $1', [id])).rows[0]).toEqual({ row_version: 3, status: 'published' })
+
+    const de = slugFor()
+    const done = await publish({ slug: { de } })
+    expect(done.status).toBe(200)
+    expect(await done.json()).toMatchObject({ rowVersion: 4, slug: { de }, published: { title: { en: 'Chapel Bridge', de: 'Kapellbruecke' } } })
   })
 
   it('[E2.6][AC85] publish end to end writes the audit row and the response has mainStoryGroupId null', async () => {
@@ -163,7 +211,7 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect(rows[1]).toMatchObject({ entity: 'pin', store_id: storeId })
     expect(rows[1]?.request_id).toMatch(uuidPattern)
 
-    const removed = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: owner.headers })
+    const removed = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '3' } })
     expect(removed.status).toBe(409)
     expect(await removed.json()).toMatchObject({ type: 'published-cannot-be-deleted', title: 'A published item cannot be deleted. Hide it instead.' })
   })
@@ -172,12 +220,20 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     const { owner, pins } = await env.storeWithStaff()
     const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Draft' } } })).json() as { id: string }
 
-    const removed = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: owner.headers })
+    const missing = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: owner.headers })
+    const stale = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '2' } })
+    expect(missing.status).toBe(428)
+    expect(await missing.json()).toMatchObject({ type: 'precondition-required' })
+    expect(stale.status).toBe(412)
+    expect(await stale.json()).toMatchObject({ type: 'precondition-failed' })
+    expect(await count(pool, 'select count(*) from content.places where id = $1', [created.id])).toBe(1)
+
+    const removed = await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '1' } })
 
     expect(removed.status).toBe(204)
     expect(await removed.text()).toBe('')
     expect(await count(pool, 'select count(*) from content.places where id = $1', [created.id])).toBe(0)
-    expect((await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: owner.headers })).status).toBe(404)
+    expect((await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '1' } })).status).toBe(404)
   })
 
   it('[E2.6] a slug another pin of the store holds answers 409 content-slug-taken, never 500', async () => {

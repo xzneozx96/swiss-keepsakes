@@ -404,7 +404,7 @@ function ActHeading({
   act: Act
   number: number
   voice: Voice
-  seeAll?: { label: string, to: '/tours' | '/gifts' }
+  seeAll?: { label: string, to: '/$lang/tours' | '/$lang/gifts' }
 }) {
   const { language } = useLocale()
   const copy = voices[language][voice].acts[act]
@@ -426,6 +426,7 @@ function ActHeading({
       {seeAll && (
         <Link
           className="flex shrink-0 items-center gap-0.5 rounded-md py-1 text-sm font-medium text-muted outline-none focus-visible:focus-ring"
+          params={{ lang: language }}
           to={seeAll.to}
         >
           {seeAll.label}
@@ -509,7 +510,7 @@ function Recap({ voice }: { voice: Voice }) {
         <p className="text-label text-muted">{v.recapSubtitle}</p>
       </div>
       <div className="grid grid-cols-3 gap-2.5">
-        <Link className={tileClass} to="/tours">
+        <Link className={tileClass} to="/$lang/tours" params={{ lang: language }}>
           <TileFace
             caption={k.toursCaption}
             label={k.tours}
@@ -519,7 +520,8 @@ function Recap({ voice }: { voice: Voice }) {
         <Link
           className={tileClass}
           search={{ subcategory: 'victorinox' }}
-          to="/gifts"
+          to="/$lang/gifts"
+          params={{ lang: language }}
         >
           <TileFace
             caption={k.vxCaption}
@@ -527,7 +529,7 @@ function Recap({ voice }: { voice: Voice }) {
             photo="victorinox-spartan"
           />
         </Link>
-        <Link className={tileClass} to="/gifts">
+        <Link className={tileClass} to="/$lang/gifts" params={{ lang: language }}>
           <TileFace
             caption={k.keepsakesCaption}
             label={k.keepsakes}
@@ -637,7 +639,7 @@ export function JourneyHome({
         <ActHeading
           act="walk"
           number={2}
-          seeAll={{ label: view.tours.seeAll, to: '/tours' }}
+          seeAll={{ label: view.tours.seeAll, to: '/$lang/tours' }}
           voice={voice}
         />
         <Rail label={v.acts.walk.title}>
@@ -650,8 +652,8 @@ export function JourneyHome({
                 {story && (
                   <Link
                     className="flex w-60 items-center gap-2 rounded-xl px-1 text-label outline-none focus-visible:focus-ring"
-                    params={{ slug: story.slug }}
-                    to="/stories/$slug"
+                    params={{ lang: language, slug: story.slug }}
+                    to="/$lang/stories/$slug"
                   >
                     <StoryIcon className="shrink-0 text-accent" size={16} />
                     <span className="min-w-0">
@@ -675,7 +677,8 @@ export function JourneyHome({
           <h3 className="text-heading">{k.moreKeepsakes}</h3>
           <Link
             className="flex shrink-0 items-center gap-0.5 rounded-md py-1 text-sm font-medium text-muted outline-none focus-visible:focus-ring"
-            to="/gifts"
+            to="/$lang/gifts"
+            params={{ lang: language }}
           >
             {view.keepsakes.seeAll}
             <ChevronRightIcon size={16} />

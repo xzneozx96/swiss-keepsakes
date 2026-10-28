@@ -3,6 +3,7 @@ import type { StoryCategory } from '@sk/domain/content'
 import { ScrollShadow } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 
+import { useLocale } from '@/contexts/locale-context'
 import {
   CategoryThumb,
   categoryThumbItemClass,
@@ -26,6 +27,7 @@ export function StoryCategories({
   label: string
   items: StoryCategoryLink[]
 }) {
+  const { language } = useLocale()
   return (
     <nav aria-label={label}>
       <ScrollShadow
@@ -40,7 +42,8 @@ export function StoryCategories({
               <Link
                 className={`${categoryThumbItemClass} text-foreground`}
                 search={id ? { category: id } : {}}
-                to="/stories"
+                to="/$lang/stories"
+                params={{ lang: language }}
               >
                 <CategoryThumb name={name} photo={photo} />
               </Link>

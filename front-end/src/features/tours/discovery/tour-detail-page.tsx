@@ -12,6 +12,7 @@ import {
   TourIcon,
 } from '@/components/icons'
 import { BackButton, CompactBar } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import {
   ListingDetailHeader,
   ListingFavouriteButton,
@@ -44,13 +45,13 @@ const mapPlaceholder = <div aria-hidden className="h-[min(72svh,640px)] min-h-[4
 
 export function TourDetailPage({ slug }: { slug: string }) {
   const { tours } = useTours()
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const tour = tours.find(item => item.slug === slug)
 
   if (!tour?.published) {
     return (
       <EmptyState
-        action={{ label: t('tourDiscovery.browse'), to: '/tours' }}
+        action={{ label: t('tourDiscovery.browse'), to: '/$lang/tours', params: { lang: language } }}
         icon={TourIcon}
         message={t('tourDiscovery.notFound')}
       />
@@ -103,7 +104,7 @@ export function TourDetail({
     title: text(tour.longStory.title),
     body: storyBody.doc,
   }
-  const goBack = useBack(() => void navigate({ to: '/tours', replace: true }))
+  const goBack = useBack(() => void navigate({ to: '/$lang/tours', params: { lang: language }, replace: true }))
   const back = () => {
     if (!preview)
       goBack()
@@ -158,6 +159,7 @@ export function TourDetail({
         visible={scrolledPast}
       >
         <ListingFavouriteButton favourite={favourite} tone="bar" />
+        <LanguageButton tone="bar" />
       </CompactBar>
       <PhotoGallery
         className="aspect-[4/3.4]"
@@ -178,6 +180,7 @@ export function TourDetail({
           />
           <span className="flex-1" />
           <ListingFavouriteButton favourite={favourite} tone="pill" />
+          <LanguageButton tone="pill" />
         </div>
       </PhotoGallery>
       <div ref={photoEnd} aria-hidden className="h-px" />

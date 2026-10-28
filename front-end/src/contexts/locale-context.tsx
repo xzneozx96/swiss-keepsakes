@@ -2,6 +2,7 @@ import type { IntlLocale, Language } from '@sk/domain/shared'
 import type { MessageKey } from '@/i18n/en'
 
 import { I18nProvider } from '@heroui/react'
+import { useParams, useRouter } from '@tanstack/react-router'
 import {
   createContext,
   use,
@@ -14,6 +15,7 @@ import {
 } from 'react'
 
 import { en } from '@/i18n/en'
+import { isLanguage, switchLanguagePath, writeLanguageCookie } from '@/lib/language-routing'
 import { readStored, writeStored } from '@/lib/storage'
 
 export type { Language }
@@ -39,6 +41,25 @@ export function loadDictionary(language: Language): Promise<Dictionary> {
 
 export function storedLanguage(): Language {
   return readStored<unknown>(STORAGE_KEY, 'en') === 'de' ? 'de' : 'en'
+}
+
+/** The saved choice as it is, or undefined when the guest saved none. Loads nothing. */
+function savedLanguage(): Language | undefined {
+  const saved = readStored<unknown>(STORAGE_KEY, undefined)
+
+  return saved === 'en' || saved === 'de' ? saved : undefined
+}
+
+const savedListeners = new Set<() => void>()
+
+function subscribeToSaved(listener: () => void) {
+  savedListeners.add(listener)
+  window.addEventListener('storage', listener)
+
+  return () => {
+    savedListeners.delete(listener)
+    window.removeEventListener('storage', listener)
+  }
 }
 
 /** The saved language, or English when its messages could not be loaded (offline, a stale page). The saved choice stays, so the next visit tries again. */
@@ -80,9 +101,12 @@ function useDictionary(language: Language): Dictionary | undefined {
 
 interface LocaleContextValue {
   language: Language
+  /** The saved choice, which on a prefixed page can differ from `language` (the address). Undefined on the server, while hydrating, and when the guest has saved none. */
+  preferredLanguage: Language | undefined
   /** Intl locale for numbers, dates and HeroUI's date components. */
   intlLocale: IntlLocale
-  setLanguage: (language: Language) => void
+  /** Switches once the messages are loaded; the last tap wins. `onChanged` runs after the switch, never for a tap that lost or whose load failed. */
+  setLanguage: (language: Language, onChanged?: () => void) => void
   /** Copy for the current language; `{name}` placeholders are filled from `vars`. */
   t: (key: MessageKey, vars?: Record<string, string | number>) => string
 }
@@ -105,13 +129,85 @@ function usePastHydration(): boolean {
   return useSyncExternalStore(subscribeToNothing, () => true, () => false)
 }
 
+const settling: Partial<Record<Language, Promise<void>>> = {}
+
+/** The marker React reads to return a settled promise's value from `use` without suspending. */
+function markFulfilled(promise: Promise<void>): void {
+  Object.assign(promise, { status: 'fulfilled', value: undefined })
+}
+
+/**
+ * One promise per language, for `use`: it settles when the messages are loaded or failed, and never rejects.
+ * Once the messages are in, it is marked fulfilled, so `use` returns at once instead of suspending. That lets
+ * `use` be called on every render (React requires the same hook calls each time) and suspend only until then.
+ */
+function settled(language: Language): Promise<void> {
+  const known = settling[language]
+
+  if (known)
+    return known
+  const promise = loaded[language]
+    ? Promise.resolve()
+    : loadDictionary(language).then(() => undefined, () => undefined)
+
+  settling[language] = promise
+  if (loaded[language])
+    markFulfilled(promise)
+  else
+    void promise.then(() => markFulfilled(promise))
+
+  return promise
+}
+
+/** The language in the address (`/de/...`), or undefined on a page without one. Needs a router. */
+export function useUrlLanguage(): Language | undefined {
+  return useParams({ strict: false, select: params => isLanguage(params.lang) ? params.lang : undefined })
+}
+
+/** Reads the address when there is a router; a tree without one (a test that renders the provider alone) just has the saved language. The merchant preview uses `LocaleOverride`. */
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
+  return useRouter({ warn: false })
+    ? <RoutedLocaleProvider>{children}</RoutedLocaleProvider>
+    : <LocaleState navigateTo={undefined} urlLanguage={undefined}>{children}</LocaleState>
+}
+
+function RoutedLocaleProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const urlLanguage = useUrlLanguage()
+
+  // The browser hydrates server HTML that is already in the URL's language, before the route's `beforeLoad`
+  // has run there. Waiting here for its messages keeps the first client render equal to the server's.
+  // Called on every render, as React requires; a fulfilled promise returns at once.
+  use(settled(urlLanguage ?? 'en'))
+
+  const navigateTo = useCallback((next: Language) => {
+    const { pathname, search, hash } = router.state.location
+    const target = switchLanguagePath(pathname, next)
+
+    // On a prefixed page the language is part of the address, so the switch is a navigation.
+    if (target !== pathname)
+      void router.navigate({ to: target, search, hash })
+  }, [router])
+
+  return <LocaleState navigateTo={navigateTo} urlLanguage={urlLanguage}>{children}</LocaleState>
+}
+
+function LocaleState({ children, navigateTo, urlLanguage }: {
+  children: React.ReactNode
+  navigateTo: ((language: Language) => void) | undefined
+  urlLanguage: Language | undefined
+}) {
   // English while hydrating, like the server's HTML; the saved language is applied after it (below).
   const pastHydration = usePastHydration()
-  const [language, setLanguage] = useState<Language>(() => pastHydration ? initialLanguage() : 'en')
+  const [storedChoice, setStoredChoice] = useState<Language>(() => pastHydration ? initialLanguage() : 'en')
   const latestRequestRef = useRef(0)
+  // The address wins on a prefixed page. The route's `beforeLoad` has loaded its messages, so the first render is already in it.
+  const wanted = urlLanguage ?? storedChoice
 
-  const changeLanguage = useCallback((next: Language) => {
+  // If the messages are still missing (a stale page, a failed load), English shows until they arrive.
+  const language = useDictionary(wanted) ? wanted : 'en'
+
+  const changeLanguage = useCallback((next: Language, onChanged?: () => void) => {
     // The last tap wins, even if an earlier language arrives after it. If the messages cannot
     // be loaded the guest stays in the current language.
     const request = ++latestRequestRef.current
@@ -120,16 +216,24 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       () => {
         if (request !== latestRequestRef.current)
           return
-        setLanguage(next)
+        setStoredChoice(next)
         writeStored(STORAGE_KEY, next)
+        writeLanguageCookie(next)
+        savedListeners.forEach(listener => listener())
+
+        navigateTo?.(next)
+        onChanged?.()
       },
       () => undefined,
     )
-  }, [])
+  }, [navigateTo])
 
   // A page rendered on the server and hydrated starts in English, like the server's HTML. The saved language
   // arrives after that. A client-only page already starts in it, so this finds nothing to change there.
+  // A prefixed page takes its language from the address and leaves the saved one alone.
   useEffect(() => {
+    if (urlLanguage)
+      return
     const saved = storedLanguage()
 
     if (saved === 'en')
@@ -140,24 +244,30 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
       () => {
         // A tap on the language switch while the messages were on their way wins.
         if (request === latestRequestRef.current)
-          setLanguage(saved)
+          setStoredChoice(saved)
       },
       () => undefined,
     )
-  }, [])
+  }, [urlLanguage])
 
+  // Undefined on the server and while hydrating, so the server's HTML and the first client render agree.
+  const preferredLanguage = useSyncExternalStore(subscribeToSaved, savedLanguage, () => undefined)
+
+  // `urlLanguage` is a dependency because the root shell writes `lang` from the address alone, so leaving
+  // a prefixed page resets it to English even when `language` (the saved one) does not change.
   useEffect(() => {
     document.documentElement.lang = language
-  }, [language])
+  }, [language, urlLanguage])
 
   const value = useMemo<LocaleContextValue>(
     () => ({
       language,
+      preferredLanguage,
       intlLocale: intlLocales[language],
       setLanguage: changeLanguage,
       t: (key, vars) => fill(dictionaryOf(language)[key], vars),
     }),
-    [language, changeLanguage],
+    [language, preferredLanguage, changeLanguage],
   )
 
   return (
@@ -184,6 +294,7 @@ export function LocaleOverride({
     () =>
       messages && {
         language,
+        preferredLanguage: undefined,
         intlLocale: intlLocales[language],
         setLanguage: () => undefined,
         t: (key, vars) => fill(messages[key], vars),

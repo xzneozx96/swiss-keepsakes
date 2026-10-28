@@ -788,6 +788,29 @@
         ],
         "type": "object"
       },
+      "PinPublishBody": {
+        "additionalProperties": false,
+        "description": "Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save",
+        "properties": {
+          "slug": {
+            "additionalProperties": false,
+            "properties": {
+              "de": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "PinWriteBody": {
         "additionalProperties": false,
         "description": "Every field is optional. A pin has no type and no price",
@@ -1018,7 +1041,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -3421,6 +3444,29 @@
           }
         },
         "type": "object"
+      },
+      "TourPublishBody": {
+        "additionalProperties": false,
+        "description": "Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save",
+        "properties": {
+          "slug": {
+            "additionalProperties": false,
+            "properties": {
+              "de": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 200,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
       }
     }
   },
@@ -4985,6 +5031,16 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5198,6 +5254,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinPublishBody"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {
@@ -5485,6 +5551,16 @@
                 "en",
                 "de"
               ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
               "type": "string"
             }
           }
@@ -5953,6 +6029,16 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6094,6 +6180,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TourPublishBody"
+              }
+            }
+          },
+          "required": false
+        },
         "responses": {
           "200": {
             "content": {

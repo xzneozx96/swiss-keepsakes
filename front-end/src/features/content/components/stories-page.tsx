@@ -13,6 +13,7 @@ import {
   CartButton,
   CompactBar,
 } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
@@ -46,7 +47,7 @@ export function StoriesPage({
   const articles = useArticles()
   const isLoading = useSimulatedLoading()
   const navigate = useNavigate()
-  const back = useBack(() => void navigate({ to: '/', replace: true }))
+  const back = useBack(() => void navigate({ to: '/$lang', params: { lang: language }, replace: true }))
   const [bannerEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
 
   const published = publishedArticles(articles, language)
@@ -87,6 +88,7 @@ export function StoriesPage({
         title={title}
         visible={scrolledPast}
       >
+        <LanguageButton tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
       <Media
@@ -101,6 +103,7 @@ export function StoriesPage({
         <div className="absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center gap-2">
           <BackButton label={t('detail.back')} tone="pill" onPress={back} />
           <span className="flex-1" />
+          <LanguageButton />
           <CartButton />
         </div>
         <header className="absolute inset-x-4 bottom-10 flex flex-col gap-1 text-white">
@@ -161,7 +164,7 @@ export function StoriesPage({
                   action={
                     category
                       ? undefined
-                      : { label: t('placeholder.backHome'), to: '/' }
+                      : { label: t('placeholder.backHome'), to: '/$lang', params: { lang: language } }
                   }
                   icon={ContentIcon}
                   message={t(category ? 'stories.emptyCategory' : 'stories.empty')}

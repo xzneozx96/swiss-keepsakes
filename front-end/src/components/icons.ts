@@ -60,6 +60,7 @@ export { Xmark as CloseIcon } from 'reicon-react'
 
 // Option tiles: the chosen tile's corner check (C03, C10; use weight="Filled")
 export { TickCircle as SelectedIcon } from 'reicon-react'
+export { Check as CheckIcon } from 'reicon-react'
 export { Copy as CopyIcon } from 'reicon-react'
 export { CopySuccess as CopiedIcon } from 'reicon-react'
 
@@ -74,6 +75,7 @@ export { Tag as OptionIcon } from 'reicon-react'
 export { Call as CallIcon } from 'reicon-react'
 export { Sms as EmailIcon } from 'reicon-react'
 export { Routing as DirectionsIcon } from 'reicon-react'
+export { Pin2 as OpenInMapsIcon } from 'reicon-react'
 export { Shop as ShopIcon } from 'reicon-react'
 
 // Cart line

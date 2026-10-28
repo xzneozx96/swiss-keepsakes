@@ -1,4 +1,5 @@
 import {
+  pinPublishBodySchema,
   pinSchema,
   pinWriteBodySchema,
   problemTypes,
@@ -9,6 +10,7 @@ import {
   storyVersionMoveBodySchema,
   storyVersionSaveBodySchema,
   storyVersionSchema,
+  tourPublishBodySchema,
   tourSchema,
   tourWriteBodySchema,
 } from '@sk/api-contract'
@@ -30,6 +32,26 @@ describe('[E2.6] content write schemas', () => {
 
   it('[E2.6][AC68] a pin body with a type is refused', () => {
     expect(ok(pinWriteBodySchema, { type: 'event' })).toBe(false)
+  })
+
+  it('[E2.6][AC30] a pin publish body is optional in its slug, takes a slug in one or both languages and nothing else', () => {
+    expect(ok(pinPublishBodySchema, {})).toBe(true)
+    expect(ok(pinPublishBodySchema, { slug: { de: 'kapellbruecke' } })).toBe(true)
+    expect(ok(pinPublishBodySchema, { slug: { en: 'a', de: 'b' } })).toBe(true)
+    expect(ok(pinPublishBodySchema, { slug: {} })).toBe(false)
+    expect(ok(pinPublishBodySchema, { slug: { de: 'Not A Slug' } })).toBe(false)
+    expect(ok(pinPublishBodySchema, { slug: { fr: 'pont' } })).toBe(false)
+    expect(ok(pinPublishBodySchema, { title: { en: 'x' } })).toBe(false)
+  })
+
+  it('[E2.6][AC30] a tour publish body is optional in its slug, takes a slug in one or both languages and nothing else', () => {
+    expect(ok(tourPublishBodySchema, {})).toBe(true)
+    expect(ok(tourPublishBodySchema, { slug: { de: 'luzern-tour' } })).toBe(true)
+    expect(ok(tourPublishBodySchema, { slug: { en: 'a', de: 'b' } })).toBe(true)
+    expect(ok(tourPublishBodySchema, { slug: {} })).toBe(false)
+    expect(ok(tourPublishBodySchema, { slug: { de: 'Not A Slug' } })).toBe(false)
+    expect(ok(tourPublishBodySchema, { slug: { fr: 'pont' } })).toBe(false)
+    expect(ok(tourPublishBodySchema, { title: { en: 'x' } })).toBe(false)
   })
 
   it('[E2.6] a localized title of "" or "  " is refused, {} is accepted', () => {
@@ -249,7 +271,7 @@ describe('[E2.6] content write schemas', () => {
   })
 
   it('[E2.6] every new problem code is in problemTypes', () => {
-    for (const code of ['precondition-failed', 'precondition-required', 'publish-incomplete', 'media-retired', 'media-invalid', 'reference-invalid', 'content-slug-taken', 'published-cannot-be-deleted', 'published-version-cannot-move', 'version-exists', 'not-published', 'content-in-use'])
+    for (const code of ['precondition-failed', 'precondition-required', 'publish-incomplete', 'media-retired', 'media-invalid', 'reference-invalid', 'content-slug-taken', 'slug-conflict', 'published-cannot-be-deleted', 'published-version-cannot-move', 'version-exists', 'not-published', 'content-in-use'])
       expect(problemTypes).toContain(code)
   })
 })

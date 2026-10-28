@@ -114,7 +114,7 @@ describe('[E2.6] the story version save: If-Match, ETag and rowVersion', () => {
 
     expect((await send(app, 'PATCH', `${groups}/not-a-uuid`, { 'If-Match': '1' }, {})).status).toBe(400)
     expect((await send(app, 'PATCH', `${versions}/fr`, { 'If-Match': '1' }, {})).status).toBe(400)
-    expect((await send(app, 'DELETE', `${versions}/fr`)).status).toBe(400)
+    expect((await send(app, 'DELETE', `${versions}/fr`, { 'If-Match': '1' })).status).toBe(400)
     expect((await send(app, 'POST', `${versions}/en/move`, { 'If-Match': '1' }, { targetGroupId: 'nope' })).status).toBe(400)
   })
 })
@@ -233,18 +233,37 @@ describe('[E2.6] the story write routes', () => {
     expect((await send(setup(), 'POST', `${english}/move`, { 'If-Match': '1' }, body)).status).toBe(400)
   })
 
-  it('[E2.6][AC79] DELETE of a published version answers 409, and a draft one 204 with no body and no If-Match', async () => {
+  it('[E2.6][AC79] DELETE of a published version answers 409, and a draft one 204 with no body', async () => {
     const app = setup({ deleteStoryVersion: async (_actor, _storeId, id, language) => language === 'de'
       ? { ok: false, reason: 'published-cannot-be-deleted' }
       : { ok: true, value: { groupId: id, language } } })
 
-    const refused = await send(app, 'DELETE', `${versions}/de`)
-    const removed = await send(app, 'DELETE', english)
+    const refused = await send(app, 'DELETE', `${versions}/de`, { 'If-Match': '1' })
+    const removed = await send(app, 'DELETE', english, { 'If-Match': '1' })
 
     expect(refused.status).toBe(409)
     expect(await refused.json()).toMatchObject({ type: 'published-cannot-be-deleted' })
     expect(removed.status).toBe(204)
     expect(await removed.text()).toBe('')
+  })
+
+  it('[E2.6] DELETE with no If-Match answers 428, a stale one 412, and the version reaches the use case', async () => {
+    const seen: number[] = []
+    const app = setup({ deleteStoryVersion: async (_actor, _storeId, id, language, ifMatch) => {
+      seen.push(ifMatch)
+      return ifMatch === 2 ? { ok: false, reason: 'stale' } : { ok: true, value: { groupId: id, language } }
+    } })
+
+    const missing = await send(app, 'DELETE', english)
+    const stale = await send(app, 'DELETE', english, { 'If-Match': '2' })
+    const removed = await send(app, 'DELETE', english, { 'If-Match': '3' })
+
+    expect(missing.status).toBe(428)
+    expect(await missing.json()).toMatchObject({ type: 'precondition-required' })
+    expect(stale.status).toBe(412)
+    expect(await stale.json()).toMatchObject({ type: 'precondition-failed' })
+    expect(removed.status).toBe(204)
+    expect(seen).toEqual([2, 3])
   })
 
   it('[E2.6] AC-6 a retired cover answers 422 media-retired and the draft is unchanged', async () => {

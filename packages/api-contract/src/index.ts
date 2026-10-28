@@ -5,6 +5,8 @@ export {
   localizedTextSchema,
   type Pin,
   pinSchema,
+  type PinPublishBody,
+  pinPublishBodySchema,
   type PinWriteBody,
   pinWriteBodySchema,
   type StoryDraft,
@@ -26,6 +28,8 @@ export {
   type TourGuide,
   tourSchema,
   type TourGuideWriteBody,
+  type TourPublishBody,
+  tourPublishBodySchema,
   tourWriteBodySchema,
 } from './content.ts'
 export { healthSchema } from './health.ts'

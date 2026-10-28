@@ -40,6 +40,7 @@ import {
   CartButton,
   CompactBar,
 } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import {
   ListingDetailHeader,
   ListingFavouriteButton,
@@ -49,6 +50,7 @@ import { Media } from '@/components/media'
 import { PhotoGallery } from '@/components/photo-gallery'
 import { QuantityStepper } from '@/components/quantity-stepper'
 import { StatusChip } from '@/components/status-chip'
+import { useLocale } from '@/contexts/locale-context'
 import { useScrolledPast } from '@/hooks/use-scrolled-past'
 import { photoUrl } from '@/lib/photos'
 import { PickupDateField } from './pickup-date-field'
@@ -173,6 +175,7 @@ const highlightIcon: Record<
  * sheet opened from the sticky price bar or the pickup date row.
  */
 export function GiftDetail(props: GiftDetailProps) {
+  const { language } = useLocale()
   const {
     name,
     photos,
@@ -215,6 +218,7 @@ export function GiftDetail(props: GiftDetailProps) {
       >
         <span className="flex-1" />
         {heart('bar')}
+        <LanguageButton tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
 
@@ -227,6 +231,7 @@ export function GiftDetail(props: GiftDetailProps) {
           <BackButton label={backLabel} tone="pill" onPress={onBack} />
           <span className="flex-1" />
           {heart('pill')}
+          <LanguageButton tone="pill" />
           <CartButton tone="pill" />
         </div>
       </PhotoGallery>
@@ -426,7 +431,8 @@ export function GiftDetail(props: GiftDetailProps) {
                   search={
                     soldOut.subcategory ? { subcategory: soldOut.subcategory } : {}
                   }
-                  to="/gifts"
+                  to="/$lang/gifts"
+                  params={{ lang: language }}
                 >
                   {soldOut.actionLabel}
                 </Link>

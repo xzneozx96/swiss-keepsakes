@@ -138,10 +138,10 @@ export function createPinRepository(): PinRepository<Tx> {
       return reload(tx, pin)
     },
 
-    async publish(tx, pin, at) {
+    async publish(tx, pin, at, slug) {
       await tx.execute(sql`
         update content.places set status = 'published', published = coalesce(draft, published), draft = null,
-          first_published_at = coalesce(first_published_at, ${at}), row_version = row_version + 1, updated_at = ${at}
+          slug = ${json(slug)}::jsonb, first_published_at = coalesce(first_published_at, ${at}), row_version = row_version + 1, updated_at = ${at}
         where store_id = ${pin.storeId} and id = ${pin.id}`)
       return reload(tx, pin)
     },

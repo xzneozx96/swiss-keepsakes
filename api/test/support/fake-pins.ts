@@ -55,8 +55,8 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
         updatedAt: at,
       })
     },
-    async publish(_tx, pin, at) {
-      return store({ ...pin, status: 'published', published: pin.draft ?? pin.published, draft: null, firstPublishedAt: pin.firstPublishedAt ?? at, rowVersion: pin.rowVersion + 1, updatedAt: at })
+    async publish(_tx, pin, at, slug) {
+      return store({ ...pin, status: 'published', slug, published: pin.draft ?? pin.published, draft: null, firstPublishedAt: pin.firstPublishedAt ?? at, rowVersion: pin.rowVersion + 1, updatedAt: at })
     },
     async hide(_tx, pin, at) {
       return store({ ...pin, status: 'hidden', rowVersion: pin.rowVersion + 1, updatedAt: at })

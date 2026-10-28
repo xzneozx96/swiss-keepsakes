@@ -39,6 +39,7 @@ export const problemTypes = [
   'media-invalid',
   'reference-invalid',
   'content-slug-taken',
+  'slug-conflict',
   'published-cannot-be-deleted',
   'published-version-cannot-move',
   'version-exists',

@@ -6,6 +6,7 @@ import { Link } from '@tanstack/react-router'
 
 import { ChevronRightIcon } from '@/components/icons'
 import { Media } from '@/components/media'
+import { useLocale } from '@/contexts/locale-context'
 import { useInView } from '@/hooks/use-in-view'
 import { knifeArt } from '@/lib/victorinox-art'
 
@@ -54,6 +55,7 @@ export function VictorinoxShowcase({
   story,
   isLoading,
 }: VictorinoxShowcaseProps) {
+  const { language } = useLocale()
   const [fanRef, fanSeen] = useInView<HTMLDivElement>()
 
   return (
@@ -135,8 +137,8 @@ export function VictorinoxShowcase({
                 <li key={item.slug} className="flex w-36 shrink-0 snap-start">
                   <Link
                     className="flex w-full flex-col gap-2 rounded-2xl bg-white p-2 pb-3 text-foreground outline-none select-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#173f52] active:opacity-85"
-                    params={{ slug: item.slug }}
-                    to="/gifts/$slug"
+                    params={{ lang: language, slug: item.slug }}
+                    to="/$lang/gifts/$slug"
                   >
                     <span className="flex h-44 items-center justify-center rounded-xl bg-hero-cream">
                       <img
@@ -170,7 +172,8 @@ export function VictorinoxShowcase({
         <Link
           className={`${buttonVariants({ variant: 'secondary', size: 'lg', fullWidth: true })} transition-transform focus-visible:ring-offset-[#173f52] active:scale-[0.98]`}
           search={{ subcategory: 'victorinox' }}
-          to="/gifts"
+          to="/$lang/gifts"
+          params={{ lang: language }}
         >
           {seeAll}
         </Link>
@@ -178,8 +181,8 @@ export function VictorinoxShowcase({
         {story && (
           <Link
             className="flex min-h-11 items-center gap-3 rounded-2xl py-1 outline-none focus-visible:ring-2 focus-visible:ring-white active:opacity-80"
-            params={{ slug: story.slug }}
-            to="/stories/$slug"
+            params={{ lang: language, slug: story.slug }}
+            to="/$lang/stories/$slug"
           >
             <Media
               alt=""

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-const PRIVATE_PATHS = ['/store', '/store/orders', '/admin', '/partner', '/partner/some-token', '/lab', '/account', '/cart', '/plan', '/sign-in', '/invitation', '/r/abc', '/Partner/some-token', '/PARTNER/some-token', '/%50artner/some-token', '/Store/orders', '/ADMIN']
+const PRIVATE_PATHS = ['/store', '/store/orders', '/admin', '/partner', '/partner/some-token', '/lab', '/account', '/cart', '/en/plan', '/de/plan', '/sign-in', '/invitation', '/Partner/some-token', '/PARTNER/some-token', '/%50artner/some-token', '/Store/orders', '/ADMIN']
 const PARTNER_PATHS = ['/partner', '/partner/some-token', '/Partner/some-token', '/PARTNER/some-token', '/%50artner/some-token']
 
 /** A piece of each screen's own text, so the test can see the server did not render the screen. `/partner` shows none. */
@@ -11,10 +11,10 @@ const SCREEN_TEXT: Record<string, string> = {
   '/lab': 'UI experiments for the prototype',
   '/account': 'Sign in to see your orders',
   '/cart': 'Your cart is empty',
-  '/plan': 'Plan my day in Luzerne',
+  '/en/plan': 'Plan my day in Luzerne',
+  '/de/plan': 'Plan my day in Luzerne',
   '/sign-in': 'Sign in to continue',
   '/invitation': 'Join a store',
-  '/r/abc': 'Make yourself at home',
 }
 
 /** The screen text for a path: its family's, with case and a %-escape in the first segment read as the router does. */
@@ -52,6 +52,18 @@ for (const path of PRIVATE_PATHS) {
       await expect(page.getByText(text).first()).toBeVisible()
   })
 }
+
+test('[E3.7][AC24] /r/abc is a 302 with noindex and no shell', async ({ request }) => {
+  const response = await request.get('/r/abc', { maxRedirects: 0 })
+  const body = await response.text()
+
+  expect(response.status()).toBe(302)
+  expect(response.headers()['x-robots-tag']).toBe('noindex')
+  expect(response.headers()['referrer-policy']).toBeUndefined()
+  expect(body).not.toContain('<script')
+  expect(body).not.toMatch(/<main\b/)
+  expect(body).not.toContain('Make yourself at home')
+})
 
 test('[E3.3][AC12] a public path has neither header', async ({ request }) => {
   const response = await request.get('/')

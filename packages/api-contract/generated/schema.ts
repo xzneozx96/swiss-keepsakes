@@ -1313,7 +1313,10 @@ export interface paths {
         delete: {
             parameters: {
                 query?: never;
-                header?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
                 path: {
                     pinId: string;
                     storeId: string;
@@ -1465,7 +1468,11 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PinPublishBody"];
+                };
+            };
             responses: {
                 /** @description The pin is live with its draft */
                 200: {
@@ -1677,7 +1684,10 @@ export interface paths {
         delete: {
             parameters: {
                 query?: never;
-                header?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
                 path: {
                     groupId: string;
                     language: "en" | "de";
@@ -1991,7 +2001,10 @@ export interface paths {
         delete: {
             parameters: {
                 query?: never;
-                header?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
                 path: {
                     storeId: string;
                     tourId: string;
@@ -2089,7 +2102,11 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["TourPublishBody"];
+                };
+            };
             responses: {
                 /** @description The tour guide is live with its draft */
                 200: {
@@ -2462,6 +2479,13 @@ export interface components {
                 opens: string;
             }[];
         };
+        /** @description Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save */
+        PinPublishBody: {
+            slug?: {
+                de?: string;
+                en?: string;
+            };
+        };
         /** @description Every field is optional. A pin has no type and no price */
         PinWriteBody: {
             address?: string | null;
@@ -2516,7 +2540,7 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use. Show generic copy for any other */
             type: string;
         };
         PublicCategory: {
@@ -3089,6 +3113,13 @@ export interface components {
                 text?: components["schemas"]["LocalizedLongText"];
                 title?: components["schemas"]["LocalizedText"];
             }[];
+        };
+        /** @description Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save */
+        TourPublishBody: {
+            slug?: {
+                de?: string;
+                en?: string;
+            };
         };
     };
     responses: never;

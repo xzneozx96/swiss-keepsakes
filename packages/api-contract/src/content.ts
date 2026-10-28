@@ -32,6 +32,16 @@ const slugMapSchema = z.strictObject({
   de: z.string().max(200).regex(slugPattern, 'Lower-case letters and digits, separated by single dashes').optional(),
 }).refine(map => map.en !== undefined || map.de !== undefined, 'Give a slug in at least one language')
 
+// What a pin publish may carry: the web address for each language the publish adds (ADR-015).
+export const pinPublishBodySchema = z.strictObject({
+  slug: slugMapSchema.optional(),
+}).meta({ id: 'PinPublishBody', description: 'Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save' })
+
+// What a tour publish may carry: the same as a pin publish.
+export const tourPublishBodySchema = z.strictObject({
+  slug: slugMapSchema.optional(),
+}).meta({ id: 'TourPublishBody', description: 'Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save' })
+
 // A list of ids with no repeats: the link tables key on (owner, id).
 function idList(max: number) {
   return z.array(z.uuid()).max(max).refine(ids => new Set(ids.map(id => id.toLowerCase())).size === ids.length, 'Each id may appear once')
@@ -300,6 +310,8 @@ export const tourSchema = z.object({
 }).meta({ id: 'TourGuide', description: 'A tour guide as the editor sees it, with its draft and its published text' })
 
 export type LocalizedText = z.infer<typeof localizedTextSchema>
+export type PinPublishBody = z.infer<typeof pinPublishBodySchema>
+export type TourPublishBody = z.infer<typeof tourPublishBodySchema>
 export type PinWriteBody = z.infer<typeof pinWriteBodySchema>
 export type Pin = z.infer<typeof pinSchema>
 export type StoryDraft = z.infer<typeof storyDraftSchema>

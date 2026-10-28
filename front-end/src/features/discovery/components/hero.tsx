@@ -4,6 +4,8 @@ import heroPhoto from '@/assets/photos/lucerne-kapellbruecke-1200.jpg'
 import { SearchIcon } from '@/components/icons'
 import { BrandLogo } from '@/components/layout/brand-logo'
 import { CartButton, SearchButton } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
+import { useLocale } from '@/contexts/locale-context'
 
 interface HeroProps {
   appName: string
@@ -23,6 +25,7 @@ interface HeroProps {
  * The forwarded ref marks the hero's bottom edge for the collapsing header.
  */
 export function Hero({ ref: endRef, appName, hello, title, photoAlt, searchLabel, searchPrompt }: HeroProps & { ref?: React.RefObject<HTMLDivElement | null> }) {
+  const { language } = useLocale()
   return (
     <section className="relative -mx-4 flex flex-col">
       <div className="bg-gradient-to-b from-hero-sky to-hero-sky/40">
@@ -31,7 +34,8 @@ export function Hero({ ref: endRef, appName, hello, title, photoAlt, searchLabel
             <div className="min-w-0 flex-1">
               <BrandLogo label={appName} />
             </div>
-            <SearchButton label={searchLabel} to="/search" />
+            <SearchButton label={searchLabel} to="/$lang/search" />
+            <LanguageButton />
             <CartButton />
           </div>
           <div className="flex flex-col gap-0.5 pt-1">
@@ -54,7 +58,8 @@ export function Hero({ ref: endRef, appName, hello, title, photoAlt, searchLabel
       </div>
       <Link
         className="relative z-10 mx-4 -mt-7 flex h-14 items-center gap-3 rounded-full bg-surface px-5 text-muted shadow-overlay outline-none transition-transform focus-visible:focus-ring active:scale-[0.98]"
-        to="/search"
+        to="/$lang/search"
+        params={{ lang: language }}
       >
         <SearchIcon className="shrink-0" size={22} />
         <span className="truncate text-body">{searchPrompt}</span>

@@ -20,8 +20,6 @@ export const contentDe: Record<keyof typeof contentEn, string> = {
     'Hier gibt es noch keine Geschichten. Die ersten folgen bald.',
   'article.meta': '{date} · {minutes} Min. Lesezeit',
   'article.contents': 'In dieser Geschichte',
-  'article.onlyIn.en': 'Diese Geschichte gibt es nur auf Englisch.',
-  'article.onlyIn.de': 'Diese Geschichte gibt es nur auf Deutsch.',
   'article.linked': 'Ein Stück davon mitnehmen',
   'article.more': 'Mehr entdecken',
   'article.comments': 'Kommentare',

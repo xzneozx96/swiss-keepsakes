@@ -61,8 +61,9 @@ export interface PinRepository<T> {
   findForUpdate: (tx: T, storeId: string, pinId: string) => Promise<Pin | undefined>
   // Writes the typed columns and the draft document, replaces the category and date lists when given, bumps row_version.
   save: (tx: T, pin: Pin, changes: PinChanges, at: Date) => Promise<Pin>
-  // draft becomes published and is cleared; first_published_at is kept once set.
-  publish: (tx: T, pin: Pin, at: Date) => Promise<Pin>
+  // draft becomes published and is cleared, and the slug is replaced in the same statement so it keeps covering the
+  // published languages (places_published_fields_check); first_published_at is kept once set.
+  publish: (tx: T, pin: Pin, at: Date, slug: Localized) => Promise<Pin>
   hide: (tx: T, pin: Pin, at: Date) => Promise<Pin>
   remove: (tx: T, storeId: string, pinId: string) => Promise<boolean>
 }
@@ -123,8 +124,8 @@ export interface TourRepository<T> {
   findForUpdate: (tx: T, storeId: string, tourId: string) => Promise<TourGuide | undefined>
   // Writes the typed columns and the draft, replaces the stops (positions from 1) and keepsake links when given, bumps row_version.
   save: (tx: T, tour: TourGuide, changes: TourChanges, at: Date) => Promise<TourGuide>
-  // draft becomes published and is cleared.
-  publish: (tx: T, tour: TourGuide, at: Date) => Promise<TourGuide>
+  // draft becomes published and is cleared; the slug is written in the same update.
+  publish: (tx: T, tour: TourGuide, at: Date, slug: Localized) => Promise<TourGuide>
   // status goes back to draft; the published text stays.
   unpublish: (tx: T, tour: TourGuide, at: Date) => Promise<TourGuide>
   remove: (tx: T, storeId: string, tourId: string) => Promise<boolean>

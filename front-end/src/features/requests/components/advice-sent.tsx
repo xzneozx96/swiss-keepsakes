@@ -5,6 +5,7 @@ import { AssistantHeader, AssistantSays } from '@/components/assistant'
 import { EmptyState } from '@/components/empty-state'
 
 import { MessageIcon } from '@/components/icons'
+import { LanguageButton } from '@/components/layout/language-button'
 import { useLocale } from '@/contexts/locale-context'
 import { shop } from '@/features/catalog/seed'
 import { useAdviceRequests } from '@/features/requests/api/queries'
@@ -15,7 +16,7 @@ import { useAdviceRequests } from '@/features/requests/api/queries'
  * listed as sent.
  */
 export function AdviceSent({ requestId }: { requestId?: string }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const request = useAdviceRequests(requests =>
     requests.find(r => r.id === requestId),
   )
@@ -23,9 +24,12 @@ export function AdviceSent({ requestId }: { requestId?: string }) {
   if (!request) {
     return (
       <div className="flex flex-col gap-6 px-6 pt-[calc(env(safe-area-inset-top,0px)+24px)]">
-        <h1 className="font-serif text-display">{t('advice.title')}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="min-w-0 flex-1 font-serif text-display">{t('advice.title')}</h1>
+          <LanguageButton tone="bar" />
+        </div>
         <EmptyState
-          action={{ label: t('placeholder.backHome'), to: '/' }}
+          action={{ label: t('placeholder.backHome'), to: '/$lang', params: { lang: language } }}
           icon={MessageIcon}
           message={t('advice.sent.missing')}
         />
@@ -63,7 +67,8 @@ export function AdviceSent({ requestId }: { requestId?: string }) {
       <div className="sticky bottom-0 z-30 flex border-t border-separator bg-background px-6 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
         <Link
           className={buttonVariants({ fullWidth: true, size: 'lg' })}
-          to="/"
+          params={{ lang: language }}
+          to="/$lang"
         >
           {t('placeholder.backHome')}
         </Link>

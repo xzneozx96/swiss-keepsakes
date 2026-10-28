@@ -1,8 +1,7 @@
-import type { LinkProps } from '@tanstack/react-router'
-
 import { Link } from '@tanstack/react-router'
 
 import { ChevronRightIcon } from '@/components/icons'
+import { useLocale } from '@/contexts/locale-context'
 
 /**
  * Heading of one home part (owner, 17.10.2026): a short label in the step's colour (the
@@ -21,8 +20,10 @@ export function PartHeading({
   color: string
   title: string
   subtitle: string
-  seeAll?: { label: string, to: LinkProps['to'] }
+  seeAll?: { label: string, to: '/$lang/tours' }
 }) {
+  const { language } = useLocale()
+
   return (
     <div className="flex items-end justify-between gap-4">
       <div className="flex min-w-0 flex-col gap-1">
@@ -40,6 +41,7 @@ export function PartHeading({
       {seeAll && (
         <Link
           className="flex shrink-0 items-center gap-0.5 rounded-md py-1 text-sm font-medium text-muted outline-none select-none focus-visible:focus-ring active:opacity-60"
+          params={{ lang: language }}
           to={seeAll.to}
         >
           {seeAll.label}

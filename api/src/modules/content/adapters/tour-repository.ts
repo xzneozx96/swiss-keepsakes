@@ -153,10 +153,10 @@ export function createTourRepository(): TourRepository<Tx> {
       return reload(tx, tour)
     },
 
-    async publish(tx, tour, at) {
+    async publish(tx, tour, at, slug) {
       await tx.execute(sql`
         update content.tours set status = 'published', published = coalesce(draft, published), draft = null,
-          row_version = row_version + 1, updated_at = ${at}
+          slug = ${json(slug)}::jsonb, row_version = row_version + 1, updated_at = ${at}
         where store_id = ${tour.storeId} and id = ${tour.id}`)
       return reload(tx, tour)
     },

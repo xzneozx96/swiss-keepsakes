@@ -101,7 +101,7 @@ function renderAt(path: string, Screen: () => React.ReactNode) {
     path: '/sign-in',
     component: () => <p>Sign-in screen</p>,
   })
-  const home = createRoute({ getParentRoute: () => root, path: '/', component: () => <p>Home</p> })
+  const home = createRoute({ getParentRoute: () => root, path: '/$lang', component: () => <p>Home</p> })
   const invitation = createRoute({ getParentRoute: () => root, path: '/invitation', component: () => <p>Manager invitation</p> })
   const router = createRouter({
     routeTree: root.addChildren([page, signIn, home, invitation]),

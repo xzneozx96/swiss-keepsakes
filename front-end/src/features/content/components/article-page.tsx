@@ -5,12 +5,13 @@ import { useEffect, useRef, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 
-import { ContentIcon, InfoIcon } from '@/components/icons'
+import { ContentIcon } from '@/components/icons'
 import {
   BackButton,
   CartButton,
   CompactBar,
 } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import { Media } from '@/components/media'
 
 import { useLocale } from '@/contexts/locale-context'
@@ -52,7 +53,7 @@ export function ArticlePage({
   slug: string
   onBack: () => void
 }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const view = useArticle(slug)
   const { signedIn, requireSignIn } = useRequireSignIn()
   const [coverEnd, scrolledPast] = useScrolledPast<HTMLDivElement>()
@@ -94,7 +95,7 @@ export function ArticlePage({
     return (
       <div className="pt-16">
         <EmptyState
-          action={{ label: t('article.allStories'), to: '/stories' }}
+          action={{ label: t('article.allStories'), to: '/$lang/stories', params: { lang: language } }}
           icon={ContentIcon}
           message={t('article.notFound')}
         />
@@ -127,6 +128,7 @@ export function ArticlePage({
         title={article.title}
         visible={scrolledPast}
       >
+        <LanguageButton tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
 
@@ -138,6 +140,7 @@ export function ArticlePage({
         <div className="absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center gap-2">
           <BackButton label={t('detail.back')} tone="pill" onPress={onBack} />
           <span className="flex-1" />
+          <LanguageButton tone="pill" />
           <CartButton tone="pill" />
         </div>
         <header
@@ -153,17 +156,6 @@ export function ArticlePage({
       <div ref={coverEnd} aria-hidden className="h-px" />
 
       <div className="relative -mt-6 flex flex-1 flex-col rounded-t-3xl bg-background px-6 pt-7 pb-4">
-        {view.onlyInOtherLanguage && (
-          <p className="mb-6 flex items-start gap-2 text-sm">
-            <InfoIcon aria-hidden className="mt-0.5 shrink-0" size={16} />
-            {t(
-              article.language === 'en'
-                ? 'article.onlyIn.en'
-                : 'article.onlyIn.de',
-            )}
-          </p>
-        )}
-
         <div className="flex items-center gap-3">
           <img
             alt=""

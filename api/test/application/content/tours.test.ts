@@ -122,6 +122,73 @@ describe('tour guide use cases', () => {
     expect(await s.publish(owner, store, tour.id, 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
   })
 
+  it('[E2.6][AC30] a never-published tour takes the body slug over the stored one', async () => {
+    const s = setup()
+    const tour = await created(s)
+    expect(await s.publish(owner, store, tour.id, 1, null, { en: 'new-walk' })).toMatchObject({ ok: true, value: { slug: { en: 'new-walk' } } })
+  })
+
+  it('[E2.6][AC30] a live English tour gains German: the draft adds the title and the publish carries the German slug', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.save(owner, store, tour.id, 2, { draft: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } } }, null)
+    expect(await s.publish(owner, store, tour.id, 3, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
+    const result = await s.publish(owner, store, tour.id, 3, null, { de: 'altstadtrundgang' })
+    expect(result).toMatchObject({ ok: true, value: { slug: { en: 'old-town-walk', de: 'altstadtrundgang' }, published: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } }, draft: null } })
+  })
+
+  it('[E2.6][AC30] a draft that drops German takes the German slug with it and English stays live', async () => {
+    const s = setup()
+    const tour = await created(s, { ...complete, slug: { en: 'a', de: 'b' }, draft: { ...doc('A'), title: { en: 'A', de: 'B' } } })
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.save(owner, store, tour.id, 2, { draft: { title: { en: 'A' } } }, null)
+    expect(await s.publish(owner, store, tour.id, 3, null)).toMatchObject({ ok: true, value: { slug: { en: 'a' }, published: { title: { en: 'A' } } } })
+  })
+
+  it('[E2.6][AC68] a live tour refuses a body slug that differs from its stored one as slug-conflict and stays unchanged', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    const before = s.tours.rows.get(tour.id)
+    expect(await s.publish(owner, store, tour.id, 2, null, { en: 'renamed' })).toEqual({ ok: false, reason: 'slug-conflict' })
+    expect(s.tours.rows.get(tour.id)).toBe(before)
+    expect(await s.publish(owner, store, tour.id, 2, null, { en: 'old-town-walk' })).toMatchObject({ ok: true, value: { slug: { en: 'old-town-walk' } } })
+  })
+
+  it('[E2.6][AC68] a hidden tour refuses a different body slug as slug-conflict', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.unpublish(owner, store, tour.id, 2, null)
+    expect(await s.publish(owner, store, tour.id, 3, null, { en: 'renamed' })).toEqual({ ok: false, reason: 'slug-conflict' })
+  })
+
+  it('[E2.6][AC68] a live tour whose draft drops its last title language is incomplete naming title and unchanged', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.save(owner, store, tour.id, 2, { draft: { title: {} } }, null)
+    const before = s.tours.rows.get(tour.id)
+    expect(await s.publish(owner, store, tour.id, 3, null)).toMatchObject({ ok: false, reason: 'incomplete', gaps: expect.arrayContaining(['title']) })
+    expect(s.tours.rows.get(tour.id)).toBe(before)
+  })
+
+  it('[E2.6][AC68] a conflicting body slug for a language the draft is dropping is still slug-conflict', async () => {
+    const s = setup()
+    const tour = await created(s, { ...complete, slug: { en: 'a', de: 'b' }, draft: { ...doc('A'), title: { en: 'A', de: 'B' } } })
+    await s.publish(owner, store, tour.id, 1, null)
+    await s.save(owner, store, tour.id, 2, { draft: { title: { en: 'A' } } }, null)
+    expect(await s.publish(owner, store, tour.id, 3, null, { de: 'other' })).toEqual({ ok: false, reason: 'slug-conflict' })
+  })
+
+  it('[E2.6] a draft title that adds a language does not block a PATCH of a live tour that leaves the slug alone', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    expect(await s.save(owner, store, tour.id, 2, { draft: { title: { en: 'Old town walk', de: 'Altstadtrundgang' } } }, null)).toMatchObject({ ok: true })
+  })
+
   it('[E2.6] clearing the PDF of a published tour is incomplete naming pdf', async () => {
     const s = setup()
     const tour = await created(s)
@@ -167,17 +234,27 @@ describe('tour guide use cases', () => {
     expect(await s.unpublish(owner, store, tour.id, 3, null)).toEqual({ ok: false, reason: 'not-published' })
   })
 
+  // Gate G-S5-TOURDELETE (owner): only a never-published tour can be deleted; a once-published tour gets 409.
   it('[E2.6][AC79] a draft tour is deleted, a published or unpublished-after-publish tour is published-cannot-be-deleted', async () => {
     const s = setup()
     const draft = await created(s)
-    expect(await s.remove(owner, store, draft.id, null)).toEqual({ ok: true, value: { id: draft.id } })
+    expect(await s.remove(owner, store, draft.id, 1, null)).toEqual({ ok: true, value: { id: draft.id } })
     expect(s.tours.rows.has(draft.id)).toBe(false)
     const tour = await created(s)
     await s.publish(owner, store, tour.id, 1, null)
-    expect(await s.remove(owner, store, tour.id, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
+    expect(await s.remove(owner, store, tour.id, 2, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
     await s.unpublish(owner, store, tour.id, 2, null)
-    expect(await s.remove(owner, store, tour.id, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
+    expect(await s.remove(owner, store, tour.id, 3, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
     expect(s.tours.rows.has(tour.id)).toBe(true)
+  })
+
+  it('[E2.6][AC79] a delete with a stale If-Match is stale and the tour stays, even a published one (stale before published-cannot-be-deleted)', async () => {
+    const s = setup()
+    const tour = await created(s)
+    expect(await s.remove(owner, store, tour.id, 2, null)).toEqual({ ok: false, reason: 'stale' })
+    expect(s.tours.rows.has(tour.id)).toBe(true)
+    await s.publish(owner, store, tour.id, 1, null)
+    expect(await s.remove(owner, store, tour.id, 1, null)).toEqual({ ok: false, reason: 'stale' })
   })
 
   it('[E2.6] a save with 51 stops is refused by the schema, and a save with 3 stops keeps their order and coordinates', async () => {
@@ -196,7 +273,7 @@ describe('tour guide use cases', () => {
     expect(await s.save(other, 'store-2', tour.id, 1, { stayTag: 'multi_day' }, null)).toEqual({ ok: false, reason: 'not-found' })
     expect(await s.publish(other, 'store-2', tour.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
     expect(await s.unpublish(other, 'store-2', tour.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
-    expect(await s.remove(other, 'store-2', tour.id, null)).toEqual({ ok: false, reason: 'not-found' })
+    expect(await s.remove(other, 'store-2', tour.id, 1, null)).toEqual({ ok: false, reason: 'not-found' })
   })
 
   it('[E2.6] AC-7 an outsider is forbidden', async () => {
@@ -207,7 +284,7 @@ describe('tour guide use cases', () => {
       await s.save(outsider, store, tour.id, 1, { stayTag: 'multi_day' }, null),
       await s.publish(outsider, store, tour.id, 1, null),
       await s.unpublish(outsider, store, tour.id, 1, null),
-      await s.remove(outsider, store, tour.id, null),
+      await s.remove(outsider, store, tour.id, 1, null),
       await s.create({ kind: 'anonymous' }, store, complete, null),
     ]
     expect(failures).toEqual(Array.from<unknown>({ length: 6 }).fill({ ok: false, reason: 'forbidden' }))

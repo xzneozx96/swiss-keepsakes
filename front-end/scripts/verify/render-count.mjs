@@ -1,8 +1,9 @@
 // Counts component renders (React's PerformedWork flag, as DevTools does) and CPU time at 4x throttle for a few scenarios.
 // usage: node scripts/verify/render-count.mjs <buildDir>     (PROFILE=S5 lists the top components for one scenario)
+// GUEST_LANG=en measures a build whose guest routes sit under /en (E3.5); leave it unset for an older build.
 // COMPARE_TZ=host leaves the browser in the host time zone instead of Europe/Zurich, as in compare-builds.mjs.
 import process from 'node:process'
-import { appUrl, goTo, launchBrowser, serve, waitForBoot } from './browser.mjs'
+import { appUrl, goTo, guestPath, launchBrowser, serve, waitForBoot } from './browser.mjs'
 
 const [dir] = process.argv.slice(2)
 const served = await serve(dir)
@@ -81,7 +82,7 @@ async function scenario(name, role, start, act) {
   await page.reload()
   await waitForBoot(page)
   await page.waitForTimeout(1000)
-  await goTo(page, served, start)
+  await goTo(page, served, guestPath(start, process.env.GUEST_LANG))
   await page.waitForTimeout(1500)
   const cdp = await context.newCDPSession(page)
 

@@ -1,6 +1,7 @@
 import type { IconComponent } from '@/components/icons'
 
-import { Link, useMatches } from '@tanstack/react-router'
+import { Link, useLocation, useMatches } from '@tanstack/react-router'
+import { useEffect } from 'react'
 
 import { BackgroundMusic } from '@/components/background-music'
 import {
@@ -10,12 +11,15 @@ import {
   SparkleIcon,
   TourIcon,
 } from '@/components/icons'
+import { LanguageNotice } from '@/components/layout/language-notice'
+import { forgetPublicPath, rememberPublicPath } from '@/components/layout/last-public-path'
 import { useLocale } from '@/contexts/locale-context'
 import { useGuests } from '@/features/account/api/queries'
 import { GuestAvatar } from '@/features/account/components/guest-avatar'
 import { useDemoSelector } from '@/features/demo'
+import { isLanguage } from '@/lib/language-routing'
 
-type GuestNavTarget = '/' | '/gifts' | '/tours' | '/account'
+type GuestNavTarget = '/$lang' | '/$lang/gifts' | '/$lang/tours' | '/account'
 
 interface NavItem {
   to: GuestNavTarget
@@ -24,11 +28,11 @@ interface NavItem {
 }
 
 const leftItems: NavItem[] = [
-  { to: '/', label: 'nav.explore', icon: ExploreIcon },
-  { to: '/gifts', label: 'nav.gifts', icon: GiftIcon },
+  { to: '/$lang', label: 'nav.explore', icon: ExploreIcon },
+  { to: '/$lang/gifts', label: 'nav.gifts', icon: GiftIcon },
 ]
 const rightItems: NavItem[] = [
-  { to: '/tours', label: 'nav.tours', icon: TourIcon },
+  { to: '/$lang/tours', label: 'nav.tours', icon: TourIcon },
   { to: '/account', label: 'nav.account', icon: AccountIcon },
 ]
 
@@ -39,7 +43,7 @@ const rightItems: NavItem[] = [
  * Detail screens (route staticData `hideTabBar`) hide the tab bar for their own action bar.
  */
 export function GuestShell({ children }: { children: React.ReactNode }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const guests = useGuests()
   const signedInGuestId = useDemoSelector(s => s.data.signedInGuestId)
   // 1.12s: a signed-in guest with a profile photo sees it on the Account tab (Instagram pattern).
@@ -47,6 +51,19 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
   const hideTabBar = useMatches({
     select: matches => matches.some(m => m.staticData.hideTabBar),
   })
+  const publicPath = useLocation({
+    select: l => isLanguage(l.pathname.split('/')[1]) ? l.pathname + l.searchStr : null,
+  })
+  const onAccount = useLocation({ select: l => l.pathname === '/account' })
+
+  // Profile returns here after a language change (it sits on the unprefixed /account). Any other
+  // unprefixed page (cart, checkout, orders) ends the public visit, so the memory is dropped.
+  useEffect(() => {
+    if (publicPath)
+      rememberPublicPath(publicPath)
+    else if (!onAccount)
+      forgetPublicPath()
+  }, [publicPath, onAccount])
   const ownsBottomSpace = useMatches({
     select: matches => matches.some(m => m.staticData.ownsBottomSpace),
   })
@@ -54,6 +71,7 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 justify-center bg-default/60">
       <div className="relative flex w-full max-w-[430px] flex-1 flex-col bg-background sm:shadow-overlay">
+        <LanguageNotice />
         <main
           className={
             ownsBottomSpace
@@ -97,7 +115,8 @@ export function GuestShell({ children }: { children: React.ReactNode }) {
               <li className="relative">
                 <Link
                   className="group flex h-[60px] flex-col items-center justify-end gap-0.5 pb-[7px] text-[11px] leading-4 font-medium text-muted data-[status=active]:text-accent outline-none select-none focus-visible:focus-ring"
-                  to="/plan"
+                  to="/$lang/plan"
+                  params={{ lang: language }}
                 >
                   <span
                     aria-hidden
@@ -130,13 +149,14 @@ function TabItem({
   item: NavItem
   photoGuest: React.ComponentProps<typeof GuestAvatar>['guest'] | undefined
 }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
 
   return (
     <li>
       <Link
-        activeOptions={{ exact: to === '/' }}
+        activeOptions={{ exact: to === '/$lang' }}
         className="flex h-[60px] flex-col items-center justify-center gap-0.5 text-[11px] leading-4 font-medium text-muted select-none outline-none focus-visible:focus-ring active:opacity-70 data-[status=active]:text-accent"
+        params={to === '/account' ? undefined : { lang: language }}
         to={to}
       >
         {({ isActive }) => (

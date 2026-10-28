@@ -1,5 +1,6 @@
 export * from './format'
 export * from './language'
+export * from './language-routing'
 export * from './localized'
 export * from './rich-text'
 export * from './slug'

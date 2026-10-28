@@ -22,13 +22,13 @@ const tabLink
  * with the page and an account sheet. Stores is the only page, so no other link is shown.
  */
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const { t } = useLocale()
+  const { language, t } = useLocale()
   const navigate = useNavigate()
   const session = useQuery(sessionUserQuery)
   const { signOutThen, pending } = useSignOut()
   const [accountOpen, setAccountOpen] = useState(false)
   const email = session.data?.email ?? ''
-  const signOut = () => signOutThen(() => void navigate({ to: '/' }))
+  const signOut = () => signOutThen(() => void navigate({ to: '/$lang', params: { lang: language } }))
 
   return (
     <div className="flex flex-1">

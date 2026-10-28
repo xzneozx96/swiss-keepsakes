@@ -1,25 +1,25 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { Pin } from '@sk/domain/content'
+import type { Localized, Pin } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { PinChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { pinSchema, pinWriteBodySchema } from '@sk/api-contract'
+import { pinPublishBodySchema, pinSchema, pinWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
 import { pinChanges, pinView } from './pin-view.ts'
 import { failureProblem } from './problems.ts'
-import { etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
+import { acceptEmptyBody, etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
 
 // What the pin routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface PinUseCases {
   createPin: (actor: Actor, storeId: string, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
   savePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
-  publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<Pin>>
+  publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null, slug?: Localized) => Promise<Result<Pin>>
   hidePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<Pin>>
-  deletePin: (actor: Actor, storeId: string, pinId: string, requestId: string | null) => Promise<Result<{ id: string }>>
+  deletePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<{ id: string }>>
 }
 
 const pinParams = z.object({ storeId: z.uuid(), pinId: z.uuid() })
@@ -47,7 +47,8 @@ const savePinRoute = createRoute({
 const publishPinRoute = createRoute({
   method: 'post',
   path: '/api/store/{storeId}/pins/{pinId}/publish',
-  request: { params: pinParams, ...withIfMatch },
+  middleware: [acceptEmptyBody],
+  request: { params: pinParams, ...withIfMatch, body: { required: false, content: json(pinPublishBodySchema) } },
   responses: {
     200: { description: 'The pin is live with its draft', headers: etagHeaders, content: json(pinSchema) },
     ...problemResponses,
@@ -67,7 +68,7 @@ const hidePinRoute = createRoute({
 const deletePinRoute = createRoute({
   method: 'delete',
   path: '/api/store/{storeId}/pins/{pinId}',
-  request: { params: pinParams },
+  request: { params: pinParams, ...withIfMatch },
   responses: {
     204: { description: 'The pin is deleted. Only a pin that was never published can be', headers: requestIdHeader },
     ...problemResponses,
@@ -98,7 +99,7 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
     const ifMatch = readIfMatch(c)
     if (!ifMatch.ok)
       return ifMatch.response
-    const result = await useCases.publishPin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'))
+    const result = await useCases.publishPin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'), c.req.valid('json').slug)
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(pinView(result.value), 200, etag(result.value))
@@ -115,7 +116,10 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
   })
 
   app.openapi(deletePinRoute, async (c) => {
-    const result = await useCases.deletePin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, c.get('requestId'))
+    const ifMatch = readIfMatch(c)
+    if (!ifMatch.ok)
+      return ifMatch.response
+    const result = await useCases.deletePin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.body(null, 204)

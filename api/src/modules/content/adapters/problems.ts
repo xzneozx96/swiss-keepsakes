@@ -38,6 +38,7 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'media-invalid': return { status: 422, type: 'media-invalid', title: 'A file you chose is not available here.' }
     case 'reference-invalid': return { status: 422, type: 'reference-invalid', title: 'Something you linked is not available here.' }
     case 'slug-taken': return { status: 409, type: 'content-slug-taken', title: 'Another item already uses this web address. Choose a different one.' }
+    case 'slug-conflict': return { status: 409, type: 'slug-conflict', title: 'A live web address cannot be renamed by publishing. Save the new address instead.' }
     case 'published-cannot-be-deleted': return { status: 409, type: 'published-cannot-be-deleted', title: 'A published item cannot be deleted. Hide it instead.' }
     case 'published-cannot-move': return { status: 409, type: 'published-version-cannot-move', title: 'A published story version cannot move to another group.' }
     case 'version-exists': return { status: 409, type: 'version-exists', title: 'This group already has a version in that language.' }
