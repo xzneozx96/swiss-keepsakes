@@ -41,7 +41,7 @@ async function withStorage<V>(work: () => Promise<Result<V>>): Promise<Result<V>
   }
 }
 
-const isUnavailable = (result: object): result is typeof storageUnavailable => 'status' in result
+const isUnavailable = (result: object): result is typeof storageUnavailable => result === storageUnavailable
 
 // The store guard sits before these (createApp), so handlers read the verified store from `c.get('store')`.
 export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, useCases: MediaUseCases): void {

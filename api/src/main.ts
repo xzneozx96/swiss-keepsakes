@@ -178,9 +178,9 @@ async function main() {
       unpublishTour: makeUnpublishTour(tourDeps),
       deleteTour: makeDeleteTour(tourDeps),
     })
-    // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
     // R5: with no AWS_* the service starts, and the media routes answer 503 storage-unavailable.
     const storage = config.storage ? createS3Storage(config.storage) : createUnconfiguredStorage()
+    // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
     const contentUseCases = {
       ...writeUseCases,
       requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => crypto.randomUUID() }),
