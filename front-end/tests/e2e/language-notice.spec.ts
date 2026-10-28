@@ -68,8 +68,18 @@ function problemsOf(page: Page) {
   return problems
 }
 
-function control(page: Page) {
-  return page.getByRole('group', { name: 'Page language', exact: true })
+// The new round button, by its own name. Not the prototype bar's group, which is also named "Language".
+function control(page: Page, name: 'Language' | 'Sprache' = 'Language') {
+  return page.getByRole('button', { name, exact: true })
+}
+
+async function choose(page: Page, current: 'Language' | 'Sprache', option: 'English' | 'Deutsch') {
+  await control(page, current).click()
+  const sheet = page.getByRole('dialog')
+
+  await expect(sheet).toBeVisible()
+  await sheet.getByRole('radio', { name: option }).click()
+  await expect(sheet).toHaveCount(0)
 }
 
 const stored = (page: Page) => page.evaluate(() => localStorage.getItem('sk.language'))
@@ -134,7 +144,7 @@ test.describe('[E3.11][AC64] German-only notice', () => {
     await page.goto(`/de/stories/${DE_ONLY}`)
     await hydrated(page)
 
-    await expect(page.getByRole('group', { name: 'Seitensprache', exact: true })).toBeVisible()
+    await expect(control(page, 'Sprache')).toBeVisible()
     await expect(page.getByRole('status')).toHaveCount(0)
   })
 })
@@ -143,7 +153,7 @@ test.describe('[E3.11][AC64] switch', () => {
   test('choosing DE on the English-only story stays at the English address with the notice and stores de', async ({ page }) => {
     await page.goto(`/en/stories/${FIXTURE}`)
     await hydrated(page)
-    await control(page).getByRole('button', { name: 'DE', exact: true }).click()
+    await choose(page, 'Language', 'Deutsch')
 
     await expect(page.getByRole('status')).toHaveText(NOTICE_EN)
     await expect(page).toHaveURL(new RegExp(`/en/stories/${FIXTURE}$`))
@@ -164,12 +174,12 @@ test.describe('[E3.11][AC30] switch', () => {
   test('EN to DE and back keeps the page, stores the choice and leaves /cart and /account unprefixed', async ({ page }) => {
     await page.goto(`/en/stories/${SHARED}`)
     await hydrated(page)
-    await control(page).getByRole('button', { name: 'DE', exact: true }).click()
+    await choose(page, 'Language', 'Deutsch')
 
     await expect(page).toHaveURL(new RegExp(`/de/stories/${SHARED}$`))
     await expect(page.locator('html')).toHaveAttribute('lang', 'de')
     await expect(control(page)).toHaveCount(0)
-    await expect(page.getByRole('group', { name: 'Seitensprache', exact: true })).toBeVisible()
+    await expect(control(page, 'Sprache')).toBeVisible()
     expect(await stored(page)).toBe('"de"')
     expect(await page.evaluate(() => document.cookie)).toContain('sk_lang=de')
     await expect(page.getByRole('status')).toHaveCount(0)
@@ -179,19 +189,75 @@ test.describe('[E3.11][AC30] switch', () => {
     await page.goto('/cart')
     expect(new URL(page.url()).pathname).toBe('/cart')
     await expect(page.getByText('Ihr Warenkorb ist leer.')).toBeVisible()
-    await expect(page.getByRole('group', { name: /Seitensprache|Page language/ })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /^(Sprache|Language)$/ })).toHaveCount(0)
     await page.goto('/account')
     expect(new URL(page.url()).pathname).toBe('/account')
     await expect(page.getByText(/Entdecken|Andenken|Konto/).first()).toBeVisible()
-    await expect(page.getByRole('group', { name: /Seitensprache|Page language/ })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /^(Sprache|Language)$/ })).toHaveCount(0)
 
     await page.goto(`/de/stories/${SHARED}`)
     await hydrated(page)
-    await page.getByRole('group', { name: 'Seitensprache', exact: true }).getByRole('button', { name: 'EN', exact: true }).click()
+    await choose(page, 'Sprache', 'English')
     await expect(page).toHaveURL(new RegExp(`/en/stories/${SHARED}$`))
     expect(await stored(page)).toBe('"en"')
     await page.goto('/cart')
     expect(new URL(page.url()).pathname).toBe('/cart')
     await expect(page.getByText('Your cart is empty.')).toBeVisible()
+  })
+})
+
+test.describe('[E3.11][AC30] language sheet', () => {
+  test('opens with the current language checked and closes on Escape with focus back on the button', async ({ page }) => {
+    await page.goto(`/en/stories/${SHARED}`)
+    await hydrated(page)
+    const button = control(page)
+
+    await button.click()
+    const sheet = page.getByRole('dialog')
+
+    await expect(sheet).toBeVisible()
+    await expect(sheet.getByRole('radio', { name: 'English' })).toBeChecked()
+    await expect(sheet.getByRole('radio', { name: 'Deutsch' })).not.toBeChecked()
+    await page.keyboard.press('Escape')
+    await expect(sheet).toHaveCount(0)
+    await expect(button).toBeFocused()
+    await expect(page).toHaveURL(new RegExp(`/en/stories/${SHARED}$`))
+  })
+
+  test('in German the button and the sheet are German and the German option is checked', async ({ page }) => {
+    await page.goto(`/de/stories/${SHARED}`)
+    await hydrated(page)
+    await control(page, 'Sprache').click()
+    const sheet = page.getByRole('dialog', { name: 'Sprache' })
+
+    await expect(sheet.getByRole('radio', { name: 'Deutsch' })).toBeChecked()
+    await page.keyboard.press('Escape')
+    await expect(sheet).toHaveCount(0)
+    await expect(control(page, 'Sprache')).toBeFocused()
+  })
+
+  test('arrow keys move focus between the language rows without choosing', async ({ page }) => {
+    await page.goto(`/en/stories/${SHARED}`)
+    await hydrated(page)
+    await control(page).click()
+    const sheet = page.getByRole('dialog')
+    const english = sheet.getByRole('radio', { name: 'English' })
+    const german = sheet.getByRole('radio', { name: 'Deutsch' })
+
+    await english.focus()
+    await page.keyboard.press('ArrowDown')
+    await expect(german).toBeFocused()
+    await expect(english).toBeChecked()
+    await page.keyboard.press('ArrowUp')
+    await expect(english).toBeFocused()
+    await expect(page).toHaveURL(new RegExp(`/en/stories/${SHARED}$`))
+  })
+
+  test('tapping the checked language only closes the sheet', async ({ page }) => {
+    await page.goto(`/en/stories/${SHARED}`)
+    await hydrated(page)
+    await choose(page, 'Language', 'English')
+
+    await expect(page).toHaveURL(new RegExp(`/en/stories/${SHARED}$`))
   })
 })
