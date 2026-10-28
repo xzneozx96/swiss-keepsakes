@@ -1,4 +1,7 @@
+import type { ObjectStorage } from '../../src/modules/content/ports.ts'
 import type { Clock } from '../../src/platform/clock.ts'
+import type { Tx } from '../../src/platform/db/client.ts'
+import type { JobQueue } from '../../src/platform/jobs/queue.ts'
 import type { openTestDatabase } from './support.ts'
 import { randomUUID } from 'node:crypto'
 import { guardUseCases } from '../../src/modules/content/adapters/database-errors.ts'
@@ -36,7 +39,12 @@ const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.flo
 // The wiring of main.ts over a real database. Better Auth is the real one; the sign-in code goes to a map
 // instead of a mail job, so no queue is needed.
 // `readClock` is the clock of the public reads, so a test can move the map cache's time.
-export function createContentHttp({ pool, db }: ReturnType<typeof openTestDatabase>, readClock: Clock = systemClock) {
+// `media` swaps the fake storage, the job queue (default: sends nothing) and the clock of the write use cases.
+export interface MediaWiring { storage?: ObjectStorage, jobs?: JobQueue<Tx>, clock?: Clock }
+
+export function createContentHttp({ pool, db }: ReturnType<typeof openTestDatabase>, readClock: Clock = systemClock, media: MediaWiring = {}) {
+  const writeClock = media.clock ?? systemClock
+  const jobs: JobQueue<Tx> = media.jobs ?? { send: async () => {} }
   const codes = new Map<string, string>()
   const uow = createUnitOfWork(db)
   const auth = createAuth({
@@ -48,9 +56,9 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     },
     logger: silentLogger,
   })
-  const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
-  const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
-  const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock, jobs: { send: async () => {} }, graceHours: 24 }
+  const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit: createAuditLog(writeClock), clock: writeClock }
+  const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), audit: createAuditLog(writeClock), clock: writeClock }
+  const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(writeClock), clock: writeClock, jobs, graceHours: 24 }
   const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock }
   const writeUseCases = guardUseCases({
     createPin: makeCreatePin(pinDeps),
@@ -74,11 +82,11 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   })
   // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
   // No pg-boss here, so the job send is a no-op; the job and the transaction are tested with the use case.
-  const storage = createFakeStorage(systemClock)
+  const storage = media.storage ?? createFakeStorage(systemClock)
   const contentUseCases = {
     ...writeUseCases,
-    requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => randomUUID() }),
-    confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: { send: async () => {} }, audit: createAuditLog(systemClock), clock: systemClock, newId: () => randomUUID() }),
+    requestUpload: makeRequestUpload({ storage, clock: writeClock, newId: () => randomUUID() }),
+    confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs, audit: createAuditLog(writeClock), clock: writeClock, newId: () => randomUUID() }),
     getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
     publicUrl: storage.publicUrl,
     listStories: makeListStories(readDeps),
