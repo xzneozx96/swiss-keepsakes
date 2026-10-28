@@ -1,5 +1,5 @@
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -43,8 +43,21 @@ describe('language button', () => {
     await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))
 
     expect(await screen.findByRole('dialog', { name: en['shell.language.title'] })).toBeInTheDocument()
-    expect(screen.getByRole('radio', { name: 'English' })).toBeChecked()
-    expect(screen.getByRole('radio', { name: 'Deutsch' })).not.toBeChecked()
+    expect(screen.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true')
+    expect(screen.getByRole('radio', { name: 'Deutsch' })).toHaveAttribute('aria-checked', 'false')
+  })
+
+  it('shows each language as one tall row, with a tick only on the current one', async () => {
+    renderAt('/en/stories')
+    await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))
+
+    const group = await screen.findByRole('radiogroup', { name: en['shell.language.title'] })
+    const rows = within(group).getAllByRole('radio')
+    expect(rows.map(r => r.textContent)).toEqual(['English', 'Deutsch'])
+    for (const row of rows)
+      expect(row).toHaveClass('min-h-12')
+    expect(rows[0].querySelector('svg')).not.toBeNull()
+    expect(rows[1].querySelector('svg')).toBeNull()
   })
 
   it('switches with the other option, stores the choice and closes the sheet', async () => {

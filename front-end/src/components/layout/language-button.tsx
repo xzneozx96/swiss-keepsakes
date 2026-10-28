@@ -1,13 +1,12 @@
 import type { ActionTone } from '@/components/layout/action-style'
 import type { Language } from '@/contexts/locale-context'
 
-import { Drawer, Label, Radio, RadioGroup } from '@heroui/react'
+import { Drawer } from '@heroui/react'
 import { useState } from 'react'
 
-import { LanguageIcon } from '@/components/icons'
+import { CheckIcon, LanguageIcon } from '@/components/icons'
 import { roundAction, toneClass } from '@/components/layout/action-style'
 import { useLocale, useUrlLanguage } from '@/contexts/locale-context'
-import { isLanguage } from '@/lib/language-routing'
 
 // Language names stay in their own language, so they are not dictionary keys.
 const languages: { id: Language, name: string }[] = [
@@ -47,29 +46,32 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
               <Drawer.CloseTrigger aria-label={t('merchantOrder.sheet.close')} />
             </Drawer.Header>
             <Drawer.Body className="pb-[calc(env(safe-area-inset-bottom,0px)+16px)]">
-              <RadioGroup
+              <div
                 aria-label={t('shell.language.title')}
-                name="language"
-                value={language}
-                onChange={(id) => {
-                  if (!isLanguage(id))
-                    return
-                  setLanguage(id)
-                  setOpen(false)
-                }}
+                className="flex flex-col divide-y divide-separator"
+                role="radiogroup"
               >
-                {languages.map(l => (
-                  // onChange does not fire for the checked option; tapping it just closes.
-                  <Radio key={l.id} value={l.id} onClick={() => l.id === language && setOpen(false)}>
-                    <Radio.Control>
-                      <Radio.Indicator />
-                    </Radio.Control>
-                    <Radio.Content>
-                      <Label>{l.name}</Label>
-                    </Radio.Content>
-                  </Radio>
-                ))}
-              </RadioGroup>
+                {languages.map((l) => {
+                  const checked = l.id === language
+                  return (
+                    <button
+                      key={l.id}
+                      aria-checked={checked}
+                      className="flex min-h-12 w-full items-center justify-between gap-3 px-1 text-start text-base outline-none hover:bg-surface-secondary focus-visible:focus-ring active:bg-surface-secondary"
+                      role="radio"
+                      type="button"
+                      onClick={() => {
+                        if (!checked)
+                          setLanguage(l.id)
+                        setOpen(false)
+                      }}
+                    >
+                      {l.name}
+                      {checked && <CheckIcon aria-hidden className="shrink-0" size={20} />}
+                    </button>
+                  )
+                })}
+              </div>
             </Drawer.Body>
           </Drawer.Dialog>
         </Drawer.Content>

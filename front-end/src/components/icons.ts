@@ -60,6 +60,7 @@ export { Xmark as CloseIcon } from 'reicon-react'
 
 // Option tiles: the chosen tile's corner check (C03, C10; use weight="Filled")
 export { TickCircle as SelectedIcon } from 'reicon-react'
+export { Check as CheckIcon } from 'reicon-react'
 export { Copy as CopyIcon } from 'reicon-react'
 export { CopySuccess as CopiedIcon } from 'reicon-react'
 
