@@ -10,7 +10,7 @@ import { seedTours } from './seed-data/tours.ts'
 
 // Imports the prototype's stories and tour guides into one store as drafts (T-E2.12). It never publishes, makes no
 // media, category or pin rows, and leaves a row that exists alone: no update and no row_version bump. A story is
-// skipped when any of its versions (language, slug) exists, a tour when its first slug (en, else de) exists. Slugs
+// skipped when any of its versions (language, slug) exists, a tour when any of its slugs (en, de) exists. Slugs
 // are unique across stores, so a slug that another store holds counts as existing too.
 const stories = createStoryRepository()
 const tours = createTourRepository()
@@ -32,11 +32,16 @@ async function seedStory(db: Database, storeId: string, story: SeedStory, at: Da
 }
 
 async function seedTour(db: Database, storeId: string, tour: SeedTour, at: Date): Promise<boolean> {
-  const identity = (['en', 'de'] as const).find(l => tour.slug[l])!
   return db.transaction(async (tx: Tx) => {
-    const found = await tx.execute(sql`select 1 from content.tours where slug->>${identity} = ${tour.slug[identity]!}`)
-    if (found.rows.length > 0)
-      return false
+    // Every slug the tour carries, since each language has its own unique index.
+    for (const language of languages) {
+      const value = tour.slug[language]
+      if (!value)
+        continue
+      const found = await tx.execute(sql`select 1 from content.tours where slug->>${language} = ${value}`)
+      if (found.rows.length > 0)
+        return false
+    }
     await tours.insert(tx, storeId, {
       slug: tour.slug,
       durationMinutes: tour.durationMinutes,

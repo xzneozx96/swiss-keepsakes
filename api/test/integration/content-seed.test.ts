@@ -41,9 +41,13 @@ describe('db:seed', () => {
       [group[0]!.id, storeId, taken.slug, JSON.stringify({ ...taken.versions.en, title: 'Hand-written' })],
     )
     const preExisting = await pool.query(`select md5(t::text) as hash from content.story_versions t where store_id = $1 and slug = $2`, [storeId, taken.slug])
+    // Two prototype tour slugs held by other tours: one by its en slug, one by its de slug only. Both tours are skipped.
+    const [heldEn, heldDe] = seedTours
+    await pool.query(`insert into content.tours (store_id, slug) values ($1, $2::jsonb), ($1, $3::jsonb)`, [storeId, JSON.stringify({ en: heldEn!.slug.en }), JSON.stringify({ de: heldDe!.slug.de })])
+    const preTours = await pool.query(`select md5(t::text) as hash from content.tours t where store_id = $1 order by 1`, [storeId])
 
     const first = await seedContent(db, storeId)
-    expect(first).toEqual({ stories: seedStories.length - 1, tours: seedTours.length })
+    expect(first).toEqual({ stories: seedStories.length - 1, tours: seedTours.length - 2 })
     const afterFirst = await snapshot()
 
     const second = await seedContent(db, storeId)
@@ -66,9 +70,12 @@ describe('db:seed', () => {
       [storeId],
     )
     expect(tours.rows).toHaveLength(seedTours.length)
+    const keptTours = await pool.query(`select md5(t::text) as hash from content.tours t where store_id = $1 and md5(t::text) = any($2) order by 1`, [storeId, preTours.rows.map(r => r.hash)])
+    expect(keptTours.rows).toEqual(preTours.rows)
+    expect(tours.rows.filter(t => t.slug.en === heldEn!.slug.en || t.slug.de === heldDe!.slug.de)).toHaveLength(2)
     expect(tours.rows.every(t => t.status === 'draft' && t.published === null && t.row_version === 1)).toBe(true)
     const stops = await pool.query<{ count: string }>(`select count(*) from content.tour_stops where store_id = $1`, [storeId])
-    expect(Number(stops.rows[0]!.count)).toBe(seedTours.reduce((n, t) => n + t.stops.length, 0))
+    expect(Number(stops.rows[0]!.count)).toBe(seedTours.slice(2).reduce((n, t) => n + t.stops.length, 0))
     const media = await pool.query<{ count: string }>(`select count(*) from content.media where store_id = $1`, [storeId])
     expect(Number(media.rows[0]!.count)).toBe(0)
   })
