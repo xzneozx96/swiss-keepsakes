@@ -1,6 +1,6 @@
 import type { ContentLanguage } from '@sk/domain/content'
 
-// TODO(E3.11): reuse `pageVersionRule` from packages/domain/src/shared once E3.11 merges.
+// Not `pageVersionRule` (packages/domain/src/shared/language-routing.ts): the API only compiles src/identity, src/content and shared/language.ts (tsconfig.build.json), so reusing it needs a package build change.
 // A version exists in the requested language, else the other one, else there is nothing to show (ADR-002).
 export function pickLanguage(
   available: ContentLanguage[],
