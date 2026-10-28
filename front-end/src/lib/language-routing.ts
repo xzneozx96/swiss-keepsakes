@@ -51,3 +51,13 @@ export function legacyGuestTarget(pathname: string, language: Language): string 
 
   return LEGACY_GUEST_ROOTS.includes(root) ? `/${[language, root, ...rest].join('/')}`.replace(WHITESPACE_OR_NON_ASCII, encodeURIComponent) : null
 }
+
+export type VersionRule = { kind: 'show' } | { kind: 'redirect', language: Language } | { kind: 'missing' }
+
+/** What a page does for a URL language, given the languages that have a version of it. */
+export function pageVersionRule(available: readonly Language[], urlLanguage: Language): VersionRule {
+  if (available.includes(urlLanguage))
+    return { kind: 'show' }
+  const [first] = available
+  return first ? { kind: 'redirect', language: first } : { kind: 'missing' }
+}

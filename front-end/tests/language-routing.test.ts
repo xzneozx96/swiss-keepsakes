@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   isLanguage,
   legacyGuestTarget,
+  pageVersionRule,
   resolveLandingLanguage,
   switchLanguagePath,
 } from '@/lib/language-routing'
@@ -87,5 +88,21 @@ describe('switchLanguagePath', () => {
 
   it('leaves unprefixed paths unchanged', () => {
     expect(switchLanguagePath('/cart', 'de')).toBe('/cart')
+  })
+})
+
+describe('pageVersionRule', () => {
+  it('shows the page when the URL language has a version', () => {
+    expect(pageVersionRule(['en', 'de'], 'de')).toEqual({ kind: 'show' })
+    expect(pageVersionRule(['en'], 'en')).toEqual({ kind: 'show' })
+  })
+
+  it('redirects to the language that has a version', () => {
+    expect(pageVersionRule(['en'], 'de')).toEqual({ kind: 'redirect', language: 'en' })
+    expect(pageVersionRule(['de'], 'en')).toEqual({ kind: 'redirect', language: 'de' })
+  })
+
+  it('reports a page with no version in any language as missing', () => {
+    expect(pageVersionRule([], 'de')).toEqual({ kind: 'missing' })
   })
 })
