@@ -17,7 +17,7 @@ We will store the link once, on the pin, and render every outbound link through 
 
 - **Outbound link value (amended).** Any pin has at most one outbound link: a `url`. A different URL per language is allowed as an optional override. `kind` (`direct` or `affiliate`), `network` and `disclosure` are added when the first paid link exists.
 - **One renderer.** The server render and the browser render both build the anchor through one function in `packages/domain/src/content/`. It adds `rel="noopener"`. For an affiliate link, added later, it adds `rel="sponsored noopener"` and the disclosure text.
-- **Content holds references.** Stories name the pin by id. A story block that links to a venue is a pin reference block, not a typed URL. The editor warns on a raw URL that matches a pin's link host.
+- **Content holds references.** Stories name the pin by id. A story body links to a venue with a `pinLink` mark (amended 2026-10-28, gate G-EDITOR, which replaced blocks with one document), not a typed URL. The editor warns on a raw URL that matches a pin's link host.
 - **Swap.** Changing the link on the pin changes every place that shows it. No story or pin text is edited (AC63).
 - **Measurement.** The browser sends an `outbound_click` event (ADR-007). It carries the pin id and no identifier.
 - **Reserved route.** If click tracking, link rotation or network switching needs server control later, an `/out/{pinId}` redirect can sit behind the same renderer. No content changes then either.
@@ -43,3 +43,4 @@ We will store the link once, on the pin, and render every outbound link through 
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)
+- 2026-10-28 amended (gate G-EDITOR, `docs/decisions/2026-10-28-story-editor.md`): the pin reference block becomes a `pinLink` mark

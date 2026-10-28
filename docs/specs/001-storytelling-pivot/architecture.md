@@ -134,7 +134,7 @@ Each decision has a stable id. The ADR holds the options, costs and what would m
 
 - **Binds:** AC16, AC31, AC45, AC51, AC68, AC85, PRD §4.1, §11, O21(b), O39.
 - **Prevents:** content stored in repository files or a second system, or a publish that bypasses the editor's rules.
-- **Rule:** Merchant staff author through the app. The `content` module stores draft and published content, uses `row_version` with `If-Match`, and writes `audit_log` rows on publish. Visitors read only published content. Structured blocks are the body format. Public JSON reads send `max-age=30`, server-rendered pages use a 60-second TTL, so the expected delay is about 30 to 60 seconds. The owner set O39 to about 60 seconds typical and a 5-minute cap (owner gate D5, 2026-10-26). The publish rules of AD-6 run in the use case, not only in the UI.
+- **Rule:** Merchant staff author through the app. The `content` module stores draft and published content, uses `row_version` with `If-Match`, and writes `audit_log` rows on publish. Visitors read only published content. A story body is one Tiptap (ProseMirror) JSON document, and a tour guide keeps its free sections (amended 2026-10-28, gate G-EDITOR). Public JSON reads send `max-age=30`, server-rendered pages use a 60-second TTL, so the expected delay is about 30 to 60 seconds. The owner set O39 to about 60 seconds typical and a 5-minute cap (owner gate D5, 2026-10-26). The publish rules of AD-6 run in the use case, not only in the UI.
 - **Why:** It reuses the existing editor, adds no vendor, and keeps pins next to stories and keepsake links.
 - **Alternatives rejected:** Markdown files in the repository (an edit needs a deploy). Payload CMS (second Next.js deployable, pinned `drizzle-orm` and `pg`, integer ids, a locale per document and not a translation group, about 500 packages). Sanity (hosted, content leaves our database, USD 15 per seat a month). Strapi (a second server and admin users, paid SSO). The owner chose the own editor (gate S2).
 - **ADR:** `docs/adr/ADR-003-content-authoring-and-publishing.md`
@@ -419,7 +419,7 @@ Ordering rules:
 
 ## Deferred
 
-- **Rich text inside paragraph blocks.** Today a paragraph is plain text. A block-level change does not affect the route contract. Decide with the editor work.
+- ~~**Rich text inside paragraph blocks.**~~ Decided 2026-10-28 (gate G-EDITOR): a story body is one Tiptap (ProseMirror) JSON document per language version, validated against an allow-list and rendered on the server from the JSON. See `docs/decisions/2026-10-28-story-editor.md` and the amended ADR-003. Built in E2.13 (contract) and E4.3 (editor).
 - **Structured data beyond basic JSON-LD and any review markup.** Rules for self-serving and user-written reviews need a separate check.
 - **Server-side personalised first paint.** Not possible without a cookie or profile (ADR-006).
 - **A CDN in front of the API.** Revisit when measured traffic or SP5 shows a need.
