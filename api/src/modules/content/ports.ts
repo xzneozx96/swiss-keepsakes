@@ -202,3 +202,11 @@ export class ObjectTooLargeError extends Error {
 export class StorageUnavailableError extends Error {
   override name = 'StorageUnavailableError'
 }
+
+// Raised once for a media file that will not be processed: its job used all its attempts. Ids only.
+export interface MediaFailure {
+  storeId: string
+  mediaId: string
+}
+
+export type MediaAlert = (failure: MediaFailure) => void

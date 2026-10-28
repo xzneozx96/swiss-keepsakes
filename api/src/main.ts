@@ -2,13 +2,15 @@ import type { Tx } from './platform/db/client.ts'
 import type { CommandDeps } from './platform/http/app.ts'
 import process from 'node:process'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
+import { createMediaLogAlert } from './modules/content/adapters/media-alert.ts'
+import { createMediaQueues, startMediaWorkers } from './modules/content/adapters/media-jobs.ts'
 import { createMediaRepository } from './modules/content/adapters/media-repository.ts'
 import { createPinRepository } from './modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from './modules/content/adapters/public-repository.ts'
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -94,7 +96,15 @@ async function main() {
   stops.unshift(jobs.stop)
   const uow = createUnitOfWork(createDatabase(pool))
   await createMailQueues(jobs.boss)
+  // Confirm sends a media job, so the queues exist before the first send, for every role.
+  await createMediaQueues(jobs.boss)
+  // R5: with no AWS_* the service starts, and the media routes answer 503 storage-unavailable.
+  const storage = config.storage ? createS3Storage(config.storage) : createUnconfiguredStorage()
   if (config.ROLE !== 'api') {
+    await startMediaWorkers(jobs.boss, {
+      processMedia: makeProcessMedia({ uow, media: createMediaRepository(), storage, clock: systemClock }),
+      failMedia: makeFailMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, alert: createMediaLogAlert(logger) }),
+    })
     const sentMail = createSentMailRepository()
     if (!config.smtp)
       logger.warn({ event: 'mail.smtp-unset' }, 'SMTP_* is not set: every mail fails and retries until it is')
@@ -178,8 +188,6 @@ async function main() {
       unpublishTour: makeUnpublishTour(tourDeps),
       deleteTour: makeDeleteTour(tourDeps),
     })
-    // R5: with no AWS_* the service starts, and the media routes answer 503 storage-unavailable.
-    const storage = config.storage ? createS3Storage(config.storage) : createUnconfiguredStorage()
     // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
     const contentUseCases = {
       ...writeUseCases,
