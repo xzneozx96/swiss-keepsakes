@@ -256,8 +256,11 @@ test.describe('[E3.11][AC30] language sheet', () => {
   test('tapping the checked language only closes the sheet', async ({ page }) => {
     await page.goto(`/en/stories/${SHARED}`)
     await hydrated(page)
+    const before = await stored(page)
+
     await choose(page, 'Language', 'English')
 
     await expect(page).toHaveURL(new RegExp(`/en/stories/${SHARED}$`))
+    expect(await stored(page)).toBe(before)
   })
 })

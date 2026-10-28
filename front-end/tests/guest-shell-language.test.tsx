@@ -1,5 +1,5 @@
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -45,6 +45,31 @@ describe('language button', () => {
     expect(await screen.findByRole('dialog', { name: en['shell.language.title'] })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: 'Deutsch' })).toHaveAttribute('aria-checked', 'false')
+  })
+
+  it('returns focus to the button after Escape even when the click never focused it (Safari)', async () => {
+    renderAt('/en/stories')
+    const button = await screen.findByRole('button', { name: en['shell.language.button'] })
+
+    expect(button).not.toHaveFocus()
+    fireEvent.click(button)
+    await screen.findByRole('dialog')
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    await waitFor(() => expect(document.activeElement).toBe(button))
+  })
+
+  it('closes when the backdrop is tapped, without switching', async () => {
+    const router = renderAt('/en/stories')
+    await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))
+    const dialog = await screen.findByRole('dialog')
+    const backdrop = dialog.closest('[data-slot="drawer__backdrop"]') ?? dialog.parentElement!.parentElement!
+
+    await userEvent.click(backdrop)
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(router.state.location.pathname).toBe('/en/stories')
   })
 
   it('shows each language as one tall row, with a tick only on the current one', async () => {

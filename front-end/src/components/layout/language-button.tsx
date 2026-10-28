@@ -3,7 +3,7 @@ import type { ActionTone } from '@/components/layout/action-style'
 
 import type { Language } from '@/contexts/locale-context'
 import { Drawer } from '@heroui/react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { CheckIcon, LanguageIcon } from '@/components/icons'
 import { roundAction, toneClass } from '@/components/layout/action-style'
@@ -35,6 +35,14 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
   const { language, setLanguage, t } = useLocale()
   const hasUrlLanguage = useUrlLanguage() !== undefined
   const [open, setOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+
+  // Safari does not focus a button on click, so the sheet has no remembered opener to return to. Focus it ourselves after the sheet's own focus handling.
+  function handleOpenChange(next: boolean) {
+    setOpen(next)
+    if (!next)
+      requestAnimationFrame(() => buttonRef.current?.focus())
+  }
 
   if (!hasUrlLanguage)
     return null
@@ -42,6 +50,7 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
   return (
     <>
       <button
+        ref={buttonRef}
         aria-label={t('shell.language.button')}
         className={`${roundAction} ${toneClass[tone]}`}
         type="button"
@@ -49,7 +58,7 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
       >
         <LanguageIcon size={22} />
       </button>
-      <Drawer.Backdrop isOpen={open} onOpenChange={setOpen}>
+      <Drawer.Backdrop isOpen={open} onOpenChange={handleOpenChange}>
         <Drawer.Content className="mx-auto max-w-[560px]" placement="bottom">
           <Drawer.Dialog>
             <Drawer.Handle />
@@ -77,7 +86,7 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
                       onClick={() => {
                         if (!checked)
                           setLanguage(l.id)
-                        setOpen(false)
+                        handleOpenChange(false)
                       }}
                     >
                       <span lang={l.id}>{l.name}</span>
