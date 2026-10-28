@@ -59,4 +59,22 @@ describe('[E2.7] publish while a file is still processing, over HTTP', () => {
     await markReady(cover)
     expect((await publish()).status).toBe(200)
   })
+
+  it('[E2.7] saving a published tour that points at a processing PDF answers 422 media-processing, then 200 once it is ready', async () => {
+    const staff = await env.storeWithStaff()
+    const pdf = await processingMedia(staff.storeId, 'pdf')
+    const next = await processingMedia(staff.storeId, 'pdf')
+    await markReady(pdf)
+    const made = await env.call(staff.tours, { method: 'POST', headers: staff.owner.headers, body: { slug: { en: `tour-${randomUUID().slice(0, 8)}` }, pdfMediaId: pdf, draft: { title: { en: 'Old town walk' } } } })
+    const tour = await made.json() as { id: string }
+    expect((await env.call(`${staff.tours}/${tour.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(200)
+    const save = () => env.call(`${staff.tours}/${tour.id}`, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': '2' }, body: { pdfMediaId: next } })
+
+    const refused = await save()
+    expect(refused.status).toBe(422)
+    expect(await refused.json()).toMatchObject({ type: 'media-processing' })
+
+    await markReady(next)
+    expect((await save()).status).toBe(200)
+  })
 })

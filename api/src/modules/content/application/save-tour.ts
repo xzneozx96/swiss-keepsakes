@@ -5,6 +5,7 @@ import type { Result } from './failure.ts'
 import type { TourDeps } from './tour-deps.ts'
 import { tourPublishGaps } from '@sk/domain/content'
 import { mayManageContent } from './access.ts'
+import { ensureMediaReady } from './ensure-media-ready.ts'
 import { fail, ok } from './failure.ts'
 import { mediaQueues } from './media-queues.ts'
 import { checkTourMedia } from './tour-media.ts'
@@ -25,6 +26,17 @@ export function makeSaveTour<T>({ uow, tours, media, clock, jobs, graceHours }: 
       if (refused)
         return fail(refused)
       if (tour.status === 'published') {
+        // A live tour serves its files, so the ids the save leaves it with must be finished. A draft may hold a
+        // file that is still processing. This runs before the write and the retire job, so a refusal changes nothing.
+        const stops = changes.stops ?? tour.stops
+        const files = [
+          changes.coverMediaId !== undefined ? changes.coverMediaId : tour.coverMediaId,
+          changes.pdfMediaId !== undefined ? changes.pdfMediaId : tour.pdfMediaId,
+          ...stops.map(stop => stop.mediaId),
+        ].filter(id => id !== null && id !== undefined)
+        const processing = await ensureMediaReady(media, tx, storeId, files)
+        if (processing)
+          return fail(processing)
         const gaps = tourPublishGaps({
           slug: changes.slug !== undefined ? changes.slug : tour.slug,
           pdfMediaId: changes.pdfMediaId !== undefined ? changes.pdfMediaId : tour.pdfMediaId,

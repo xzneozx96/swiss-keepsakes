@@ -367,3 +367,69 @@ describe('tour guide use cases', () => {
     expect(tourWriteBodySchema.safeParse({ departureAt: '2026-11-01T10:00:00Z' }).success).toBe(false)
   })
 })
+
+describe('[E2.7] saving a published tour refuses media that is still processing', () => {
+  const rows = (): MediaRow[] => [
+    { id: 'pdf1', kind: 'pdf', status: 'ready' },
+    { id: 'img1', kind: 'image', status: 'ready' },
+    { id: 'pdf-new', kind: 'pdf', status: 'processing' },
+    { id: 'img-new', kind: 'image', status: 'processing' },
+  ]
+  const live = async (s: ReturnType<typeof setup>) => {
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    return tour
+  }
+  const unchanged = (s: ReturnType<typeof setup>, id: string) => {
+    expect(s.tours.rows.get(id)?.rowVersion).toBe(2)
+    expect(s.jobs).toEqual([])
+  }
+
+  it('[E2.7] a processing PDF is media-processing, nothing changes and no retire job is queued', async () => {
+    const s = setup(rows())
+    const tour = await live(s)
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf-new' }, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(s.tours.rows.get(tour.id)?.pdfMediaId).toBe('pdf1')
+    unchanged(s, tour.id)
+  })
+
+  it('[E2.7] a processing cover is media-processing', async () => {
+    const s = setup(rows())
+    const tour = await live(s)
+    expect(await s.save(owner, store, tour.id, 2, { coverMediaId: 'img-new' }, null)).toEqual({ ok: false, reason: 'media-processing' })
+    unchanged(s, tour.id)
+  })
+
+  it('[E2.7] a processing stop photo is media-processing', async () => {
+    const s = setup(rows())
+    const tour = await live(s)
+    expect(await s.save(owner, store, tour.id, 2, { stops: [{ ...stop(1), mediaId: 'img-new' }] }, null)).toEqual({ ok: false, reason: 'media-processing' })
+    unchanged(s, tour.id)
+  })
+
+  it('[E2.7] a stored file that is still processing refuses an unrelated change until it is ready', async () => {
+    const data = rows()
+    const s = setup(data)
+    const tour = await live(s)
+    data.find(m => m.id === 'pdf1')!.status = 'processing'
+    expect(await s.save(owner, store, tour.id, 2, { stayTag: 'multi_day' }, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf1' }, null)).toEqual({ ok: false, reason: 'media-processing' })
+    data.find(m => m.id === 'pdf1')!.status = 'ready'
+    expect(await s.save(owner, store, tour.id, 2, { stayTag: 'multi_day' }, null)).toMatchObject({ ok: true })
+  })
+
+  it('[E2.7] a draft tour still accepts processing files', async () => {
+    const s = setup(rows())
+    const tour = await created(s, { ...complete, pdfMediaId: 'pdf-new', coverMediaId: 'img-new' })
+    expect(await s.save(owner, store, tour.id, 1, { stops: [{ ...stop(1), mediaId: 'img-new' }] }, null)).toMatchObject({ ok: true })
+  })
+
+  it('[E2.7] a published tour saves with ready files, and replacing the PDF queues the retire job', async () => {
+    const data = rows()
+    const s = setup(data)
+    const tour = await live(s)
+    data.find(m => m.id === 'pdf-new')!.status = 'ready'
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf-new', coverMediaId: 'img1', stops: [{ ...stop(1), mediaId: 'img1' }] }, null)).toMatchObject({ ok: true, value: { pdfMediaId: 'pdf-new' } })
+    expect(s.jobs).toHaveLength(1)
+  })
+})
