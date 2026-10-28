@@ -42,8 +42,15 @@ const lockNotAvailable = '55P03'
 
 const pendingClaim = new AsyncLocalStorage<PendingClaim>()
 
-export function hashRequest(method: string, pathAndQuery: string, body: ArrayBuffer): string {
-  return createHash('sha256').update(`${method} ${pathAndQuery}\n`).update(new Uint8Array(body)).digest('hex')
+// `ifMatch` joins the hash only when the request sends it, so a retry that names a newer version is a new
+// request and not a replay of the stored 412. Requests without the header hash as they always did.
+export function hashRequest(method: string, pathAndQuery: string, body: ArrayBuffer, ifMatch?: string | null): string {
+  const hash = createHash('sha256').update(`${method} ${pathAndQuery}\n`)
+  // Before the body, so no body can imitate the header.
+  if (ifMatch != null)
+    hash.update(`If-Match: ${ifMatch}\n`)
+  hash.update(new Uint8Array(body))
+  return hash.digest('hex')
 }
 
 export function runWithClaim<R>(claim: PendingClaim, next: () => Promise<R>): Promise<R> {
@@ -117,5 +124,12 @@ export async function findIdempotencyRecord(db: Database, scope: IdempotencyScop
 export async function saveIdempotentResponse(db: Database, scope: IdempotencyScope, response: StoredResponse): Promise<void> {
   await db.update(idempotencyKeys)
     .set({ response })
+    .where(and(eq(idempotencyKeys.actorId, scope.actorId), eq(idempotencyKeys.key, scope.key)))
+}
+
+// A 412 means the command found a newer version and changed nothing, so its key is free for the retry that
+// names the version it has now.
+export async function releaseIdempotencyKey(db: Database, scope: IdempotencyScope): Promise<void> {
+  await db.delete(idempotencyKeys)
     .where(and(eq(idempotencyKeys.actorId, scope.actorId), eq(idempotencyKeys.key, scope.key)))
 }

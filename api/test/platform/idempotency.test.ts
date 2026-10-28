@@ -18,4 +18,14 @@ describe('[E1.9] the Idempotency-Key request hash', () => {
   ])('[E1.9] differs for %s', (_, method, path, text) => {
     expect(hashRequest(method, path, body(text))).not.toBe(base)
   })
+
+  it('[E2.6] differs by the If-Match header, and is the old hash when the header is absent', () => {
+    const text = '{"departureId":"d1","seats":2}'
+    const withVersion = hashRequest('POST', '/api/holds', body(text), '1')
+    expect(withVersion).not.toBe(base)
+    expect(hashRequest('POST', '/api/holds', body(text), '2')).not.toBe(withVersion)
+    expect(hashRequest('POST', '/api/holds', body(text), '1')).toBe(withVersion)
+    expect(hashRequest('POST', '/api/holds', body(text), undefined)).toBe(base)
+    expect(hashRequest('POST', '/api/holds', body(text), null)).toBe(base)
+  })
 })
