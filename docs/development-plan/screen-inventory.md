@@ -41,22 +41,30 @@ Tracks: **1** is map, stories, onboarding, and tour information. **2** is shop, 
 
 Each screen below carries a slice id in the first column of tables 1 and 2. The "UI design" column counts the Design rows of the slice (see "How to read the verdicts"). Both tables are sorted by slice. Slice S0 is platform work that every other slice mounts on. S1 to S6 are Track 1 and S7 to S10 are Track 2 (S11 is Track 1 and S12 is Track 2, both analytics and reports). Slice numbers are ids, not a build order. The release order is in the delivery plan, section 5.1.
 
-| Slice | Feature | Track | Goal | Redesign | New | Keep | Hide | UI design | Blocked by |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| S0 | Platform shell | P | Root, guest shell, merchant layout, sign-in and invitation, referral link and sitemap, which every other slice mounts on | 5 | 1 | 6 | 0 | 1 | O22 |
-| S1 | Onboarding and ranking | 1 | A full-screen first-visit flow and a small deep-link prompt whose answers re-rank every public list | 0 | 2 | 0 | 0 | 2 | O25, O32 |
-| S2 | Home and discovery | 1 | A home that leads with stories and the map, and a search with no prices | 2 | 0 | 0 | 0 | 1 | O25, O35 |
-| S3 | Stories and moderation | 1 | Ranked story pages for guests. Story editor, comment moderation and product-rating moderation for the merchant | 6 | 0 | 0 | 0 | 2 | O15, O33, O39 |
-| S4 | Map and places | 1 | Guest map and pin card. Merchant pins, categories and media library | 0 | 6 | 0 | 0 | 6 | O35, O39 |
-| S5 | Tour information | 1 | Tours as free information with a route map and one PDF. Booking removed | 5 | 1 | 1 | 4 | 4 | O31 |
-| S6 | Advice form | 1 | A fixed-question trip advice form for guests and the request inbox for the merchant | 1 | 0 | 5 | 1 | 1 | none |
-| S7 | Keepsake catalog and stock | 2 | Keepsake pages without price in lists. Options, SKU combinations and stock for the merchant | 5 | 3 | 1 | 1 | 6 | O26 |
-| S8 | Cart and payment | 2 | A server cart that becomes several orders, the handover picker, and Stripe payment | 4 | 1 | 0 | 0 | 3 | O22, O41 |
-| S9 | Orders and tracking | 2 | Guest order tracking, merchant orders, today and calendar. Booking screens hidden | 5 | 0 | 1 | 7 | 2 | O36 |
-| S10 | Partner handovers | 2 | Partner entry and report, handover meetings for partner and merchant, partner records | 3 | 6 | 2 | 0 | 7 | O22, O34, O40 |
-| S11 | Story analytics | 1 | The SM-1 to SM-3 pages: traffic, map and story-to-shop funnel | 3 | 2 | 0 | 0 | 4 | O14, O29, O32 |
-| S12 | Money reports | 2 | Sales, money, margin and costs with tour and booking money stripped | 0 | 0 | 4 | 0 | 0 | none |
-| | **Total** | | | **39** | **22** | **20** | **13** | **39** | |
+| Slice | Feature | Track | Goal | Redesign | New | Keep | Hide | UI design | Design status | Approved screens | Spec | Blocked by |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S0 | Platform shell | P | Root, guest shell, merchant layout, sign-in and invitation, referral link and sitemap, which every other slice mounts on | 5 | 1 | 6 | 0 | 1 | Not started | none | none | O22 |
+| S1 | Onboarding and ranking | 1 | A full-screen first-visit flow and a small deep-link prompt whose answers re-rank every public list | 0 | 2 | 0 | 0 | 2 | Approved | N01, N24 | `docs/ux/onboarding-design.md` | O25, O32 |
+| S2 | Home and discovery | 1 | A home that leads with stories and the map, and a search with no prices | 2 | 0 | 0 | 0 | 1 | In design | none | none | O25, O35 |
+| S3 | Stories and moderation | 1 | Ranked story pages for guests. Story editor, comment moderation and product-rating moderation for the merchant | 6 | 0 | 0 | 0 | 2 | Not started | none | none | O15, O33, O39 |
+| S4 | Map and places | 1 | Guest map and pin card. Merchant pins, categories and media library | 0 | 6 | 0 | 0 | 6 | Partly approved | N02, N03, N16, N17 | `docs/ux/pins-design.md` | O35, O39 |
+| S5 | Tour information | 1 | Tours as free information with a route map and one PDF. Booking removed | 5 | 1 | 1 | 4 | 4 | Not started | none | none | O31 |
+| S6 | Advice form | 1 | A fixed-question trip advice form for guests and the request inbox for the merchant | 1 | 0 | 5 | 1 | 1 | Not started | none | none | none |
+| S7 | Keepsake catalog and stock | 2 | Keepsake pages without price in lists. Options, SKU combinations and stock for the merchant | 5 | 3 | 1 | 1 | 6 | Not started | none | none | O26 |
+| S8 | Cart and payment | 2 | A server cart that becomes several orders, the handover picker, and Stripe payment | 4 | 1 | 0 | 0 | 3 | Not started | none | none | O22, O41 |
+| S9 | Orders and tracking | 2 | Guest order tracking, merchant orders, today and calendar. Booking screens hidden | 5 | 0 | 1 | 7 | 2 | Not started | none | none | O36 |
+| S10 | Partner handovers | 2 | Partner entry and report, handover meetings for partner and merchant, partner records | 3 | 6 | 2 | 0 | 7 | Not started | none | none | O22, O34, O40 |
+| S11 | Story analytics | 1 | The SM-1 to SM-3 pages: traffic, map and story-to-shop funnel | 3 | 2 | 0 | 0 | 4 | Not started | none | none | O14, O29, O32 |
+| S12 | Money reports | 2 | Sales, money, margin and costs with tour and booking money stripped | 0 | 0 | 4 | 0 | 0 | No design needed | none | none | none |
+| | **Total** | | | **39** | **22** | **20** | **13** | **39** | | | | |
+
+**Design status** says where the redesign of a slice stands. The page shows it as a badge, and the build script checks it against the Design rows.
+
+- **Approved.** Every Design screen of the slice has an approved design, and the "Spec" column names the file a coding agent reads.
+- **Partly approved.** Some Design screens are approved (listed in "Approved screens") and the rest are not designed yet.
+- **In design.** A design is being made or reviewed. Nothing is approved yet.
+- **Not started.** No design work has begun.
+- **No design needed.** The slice has no Design screen (all rows are Keep, Edit or Wire).
 
 The two removed ids N04 and N05 sit in S4 and are not counted. Two things differ from a plain reading of the old tables: product-rating moderation (`reviews.tsx`) is in S3 with comment moderation because both follow ADR-008 and ADR-018, and the merchant handover screens (N10 to N12) are in S10 with the partner ones because they are two sides of one meeting.
 

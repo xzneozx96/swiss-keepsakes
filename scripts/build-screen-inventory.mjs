@@ -37,8 +37,8 @@ function tableRows(lines, heading, columns) {
 
 const lines = readFileSync(mdPath, 'utf8').split('\n')
 
-const slices = tableRows(lines, '## Feature slices', 10).map(([slice, name, track, goal, redesign, nw, keep, hide, design, blocked]) =>
-  ({ slice, name, track, goal, counts: { Redesign: +redesign, New: +nw, Keep: +keep, Hide: +hide }, design: +design, blocked }))
+const slices = tableRows(lines, '## Feature slices', 13).map(([slice, name, track, goal, redesign, nw, keep, hide, design, status, approved, spec, blocked]) =>
+  ({ slice, name, track, goal, counts: { Redesign: +redesign, New: +nw, Keep: +keep, Hide: +hide }, design: +design, status, approved: approved === 'none' ? [] : approved.split(',').map(x => x.trim()), spec: spec === 'none' ? '' : spec, blocked }))
 
 const ex = tableRows(lines, '## Table 1.', 11).map(([slice, ui, route, url, id, aud, verdict, render, why, adr, track]) =>
   ({ slice, ui, route, url, id, aud, verdict, render, why, adr, track }))
@@ -108,6 +108,32 @@ for (const s of slices) {
   const have = s.blocked.split(',').map(x => x.trim()).sort(byNumber).join(', ')
   if (want !== have)
     throw new Error(`slice ${s.slice} says blocked by "${s.blocked}", open items say "${want}"`)
+}
+
+// Design status: must agree with the Design rows of the slice.
+const statuses = ['Approved', 'Partly approved', 'In design', 'Not started', 'No design needed']
+for (const s of slices) {
+  if (!statuses.includes(s.status))
+    throw new Error(`slice ${s.slice} has unknown design status "${s.status}"`)
+  const designIds = [...ex, ...nw].filter(r => r.slice === s.slice && r.ui === 'Design').map(r => r.id).filter(Boolean)
+  const unknown = s.approved.filter(id => !designIds.includes(id))
+  if (unknown.length)
+    throw new Error(`slice ${s.slice} approves ${unknown.join(', ')}, which are not Design screens of the slice`)
+  const all = s.approved.length === s.design
+  const some = s.approved.length > 0
+  const ok = {
+    'Approved': all && some,
+    'Partly approved': some && !all,
+    'In design': !some && s.design > 0,
+    'Not started': !some && s.design > 0,
+    'No design needed': s.design === 0 && !some,
+  }[s.status]
+  if (!ok)
+    throw new Error(`slice ${s.slice} says "${s.status}" but ${s.approved.length} of ${s.design} Design screens are approved`)
+  if (s.status === 'Approved' || s.status === 'Partly approved') {
+    if (!s.spec)
+      throw new Error(`slice ${s.slice} is ${s.status} but names no spec file`)
+  }
 }
 
 const data = JSON.stringify({ ex, nw, slices })
