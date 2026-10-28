@@ -15,6 +15,8 @@ No new dependency, vendor or paid service for the personalisation and the pins l
 
 **Amended 2026-10-28 (home map)** (`docs/decisions/2026-10-28-home-local-briefing.md`). The home (C01) has one live map: the food and drink section embeds the approved guest map, filtered to food and drink. It mounts only when the section nears the viewport, loads MapLibre by dynamic `import()`, and uses cooperative gestures (one finger scrolls the page, two fingers move the map). The map invitation at the top of the home stays a static image. The same pins list and visibility rule apply. Personalisation still only orders cards.
 
+**Amended 2026-10-28 (T-E2.12 ruling D-4).** Each item of `GET /api/public/map` carries exactly these fields and no others: `id`, `slug` (null when the pin has no slug in that language), `latitude`, `longitude`, `title`, `language`, `categoryIds` (the pin's categories plus their parents), `stayTag`, `interests`, `nextDate` (null for a pin without dates), `hasMainStory`, `mainStorySlug` and `photoKey`. It has no `requestedLanguage`, `fallback`, `availableLanguages`, `tip` or `publishedAt`, and no price. Tour guides have no `publishedAt` in public reads: the tour card carries `id`, `slug`, `title`, `stayTag`, `interests`, `durationMinutes` and `coverKey` with the language notice. This narrows "the public tags (`stay`, `interests`, `publishedAt`) on every item" in the decision below to the items that have a `publishedAt`. Coordinator ruling inside the approved design, 2026-10-28, built in E2.12 (`api/src/modules/content/application/read-map.ts`, `packages/api-contract/src/public.ts`).
+
 ## Context
 Onboarding asks two questions: short-stay or multi-day, and one or more of five fixed interests (a fifth, `local-activities`, was added on 2026-10-28; `docs/decisions/2026-10-28-home-by-interests.md`). The answers stay on the visitor's device and are not linked to an account or an order (Q12, G4). Feeds and the map order by stay tag and interests and hide nothing (Q26, G3, AC38, AC44). Pages must be indexable and the same for every crawler (ADR-001). The map is the most important screen. The prototype map uses MapLibre GL 6 with swisstopo SWISSIMAGE tiles, AWS Terrarium elevation tiles and OpenFreeMap labels, all without a key. After G11 the terrain source goes.
 
@@ -65,3 +67,4 @@ A fourth path is a paid tile provider or tiles self-hosted on object storage. It
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)
 - 2026-10-28 amended (`docs/decisions/2026-10-28-onboarding-full-screen.md`)
+- 2026-10-28 amended (T-E2.12 ruling D-4): map item fields, no `publishedAt` on tour guides
