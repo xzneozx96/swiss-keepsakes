@@ -4,7 +4,7 @@ import { Radio, RadioGroup } from '@heroui/react'
 import { useRouter } from '@tanstack/react-router'
 
 import { lastPublicPath } from '@/components/layout/last-public-path'
-import { loadDictionary, useLocale } from '@/contexts/locale-context'
+import { useLocale } from '@/contexts/locale-context'
 import { switchLanguagePath } from '@/lib/language-routing'
 
 import { plainItemClass } from './settings-list'
@@ -20,20 +20,19 @@ export function ProfilePanel() {
   const router = useRouter()
 
   // /account has no language prefix, so the change does not move the page by itself. If the guest came
-  // from a public page, return there in the new language, once the messages are loaded (below).
+  // from a public page, return there in the new language, once the messages are loaded.
+  // `setLanguage` does that load with the last tap winning, so the address and the saved choice end in the same language;
+  // on a failed load the guest stays here.
   const change = (next: Language) => {
-    setLanguage(next)
-    const path = lastPublicPath()
+    setLanguage(next, () => {
+      const path = lastPublicPath()
 
-    if (path) {
+      if (!path)
+        return
       const [pathname, ...query] = path.split('?')
 
-      // Only once the messages are in: the target's route needs them, and on a failed load the guest stays here.
-      loadDictionary(next).then(
-        () => void router.navigate({ href: [switchLanguagePath(pathname, next), ...query].join('?') }),
-        () => undefined,
-      )
-    }
+      void router.navigate({ href: [switchLanguagePath(pathname, next), ...query].join('?') })
+    })
   }
 
   return (

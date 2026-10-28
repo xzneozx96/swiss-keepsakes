@@ -105,7 +105,8 @@ interface LocaleContextValue {
   preferredLanguage: Language | undefined
   /** Intl locale for numbers, dates and HeroUI's date components. */
   intlLocale: IntlLocale
-  setLanguage: (language: Language) => void
+  /** Switches once the messages are loaded; the last tap wins. `onChanged` runs after the switch, never for a tap that lost or whose load failed. */
+  setLanguage: (language: Language, onChanged?: () => void) => void
   /** Copy for the current language; `{name}` placeholders are filled from `vars`. */
   t: (key: MessageKey, vars?: Record<string, string | number>) => string
 }
@@ -206,7 +207,7 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
   // If the messages are still missing (a stale page, a failed load), English shows until they arrive.
   const language = useDictionary(wanted) ? wanted : 'en'
 
-  const changeLanguage = useCallback((next: Language) => {
+  const changeLanguage = useCallback((next: Language, onChanged?: () => void) => {
     // The last tap wins, even if an earlier language arrives after it. If the messages cannot
     // be loaded the guest stays in the current language.
     const request = ++latestRequestRef.current
@@ -221,6 +222,7 @@ function LocaleState({ children, navigateTo, urlLanguage }: {
         savedListeners.forEach(listener => listener())
 
         navigateTo?.(next)
+        onChanged?.()
       },
       () => undefined,
     )

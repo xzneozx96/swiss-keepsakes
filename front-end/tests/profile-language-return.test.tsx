@@ -7,10 +7,14 @@ import { rememberPublicPath } from '@/components/layout/last-public-path'
 import { LocaleProvider } from '@/contexts/locale-context'
 import { ProfilePanel } from '@/features/account/components/profile-panel'
 
-// The German messages fail to load, as on a lost connection.
-vi.mock('@/i18n/de', () => {
-  throw new Error('chunk failed')
-})
+// The German messages fail to load, as on a lost connection. The module exists and fails on read, so every
+// import fails the same way. A factory that throws does not: vitest rejects only the first of several
+// imports made while it is still running, and the later ones get an empty module.
+vi.mock('@/i18n/de', () => ({
+  get de(): never {
+    throw new Error('chunk failed')
+  },
+}))
 
 describe('profile language change', () => {
   it('stays on the profile when the new language cannot be loaded', async () => {
