@@ -6,7 +6,7 @@ import {
   pageVersionRule,
   resolveLandingLanguage,
   switchLanguagePath,
-} from '@/lib/language-routing'
+} from '../src/shared'
 
 describe('isLanguage', () => {
   it('accepts only lowercase en and de', () => {
