@@ -74,6 +74,7 @@ export { Tag as OptionIcon } from 'reicon-react'
 export { Call as CallIcon } from 'reicon-react'
 export { Sms as EmailIcon } from 'reicon-react'
 export { Routing as DirectionsIcon } from 'reicon-react'
+export { Pin2 as OpenInMapsIcon } from 'reicon-react'
 export { Shop as ShopIcon } from 'reicon-react'
 
 // Cart line

@@ -162,12 +162,15 @@ export function StepLayout({
   canGo,
   onGo,
   children,
+  quietTitle = false,
 }: {
   steps: StepView[]
   current: string
   canGo: (id: string) => boolean
   onGo: (id: string) => void
   children: React.ReactNode
+  /** From 1024px the step list already names the step, so its title is kept for screen readers only. */
+  quietTitle?: boolean
 }) {
   const { t } = useLocale()
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -283,7 +286,7 @@ export function StepLayout({
           beside "All steps", with an ink progress bar under it. */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="min-w-0 text-heading" id="step-title">
+            <h2 className={`min-w-0 text-heading ${quietTitle ? 'lg:sr-only' : ''}`} id="step-title">
               <span className="lg:hidden">
                 {t('products.steps.of', { n: index + 1, total: steps.length })}
                 {' '}

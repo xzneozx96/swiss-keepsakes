@@ -32,6 +32,7 @@ import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
 import { Route as LabOnboardingFullscreenRouteImport } from './routes/lab.onboarding-fullscreen'
 import { Route as LabOrderCardsRouteImport } from './routes/lab.order-cards'
+import { Route as LabPinsRouteImport } from './routes/lab.pins'
 import { Route as LabPrivateTourRouteImport } from './routes/lab.private-tour'
 import { Route as LabQuantityRouteImport } from './routes/lab.quantity'
 import { Route as LabReviewRouteImport } from './routes/lab.review'
@@ -206,6 +207,11 @@ const LabOnboardingFullscreenRoute = LabOnboardingFullscreenRouteImport.update({
 const LabOrderCardsRoute = LabOrderCardsRouteImport.update({
   id: '/lab/order-cards',
   path: '/lab/order-cards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabPinsRoute = LabPinsRouteImport.update({
+  id: '/lab/pins',
+  path: '/lab/pins',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabPrivateTourRoute = LabPrivateTourRouteImport.update({
@@ -543,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
+  '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
@@ -625,6 +632,7 @@ export interface FileRoutesByTo {
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
+  '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
@@ -711,6 +719,7 @@ export interface FileRoutesById {
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
+  '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
@@ -798,6 +807,7 @@ export interface FileRouteTypes {
     | '/lab/map-loading'
     | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
+    | '/lab/pins'
     | '/lab/private-tour'
     | '/lab/quantity'
     | '/lab/review'
@@ -880,6 +890,7 @@ export interface FileRouteTypes {
     | '/lab/map-loading'
     | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
+    | '/lab/pins'
     | '/lab/private-tour'
     | '/lab/quantity'
     | '/lab/review'
@@ -965,6 +976,7 @@ export interface FileRouteTypes {
     | '/lab/map-loading'
     | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
+    | '/lab/pins'
     | '/lab/private-tour'
     | '/lab/quantity'
     | '/lab/review'
@@ -1048,6 +1060,7 @@ export interface RootRouteChildren {
   LabMapLoadingRoute: typeof LabMapLoadingRoute
   LabOnboardingFullscreenRoute: typeof LabOnboardingFullscreenRoute
   LabOrderCardsRoute: typeof LabOrderCardsRoute
+  LabPinsRoute: typeof LabPinsRoute
   LabPrivateTourRoute: typeof LabPrivateTourRoute
   LabQuantityRoute: typeof LabQuantityRoute
   LabReviewRoute: typeof LabReviewRoute
@@ -1226,6 +1239,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/order-cards'
       fullPath: '/lab/order-cards'
       preLoaderRoute: typeof LabOrderCardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/pins': {
+      id: '/lab/pins'
+      path: '/lab/pins'
+      fullPath: '/lab/pins'
+      preLoaderRoute: typeof LabPinsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/private-tour': {
@@ -1823,6 +1843,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabMapLoadingRoute: LabMapLoadingRoute,
   LabOnboardingFullscreenRoute: LabOnboardingFullscreenRoute,
   LabOrderCardsRoute: LabOrderCardsRoute,
+  LabPinsRoute: LabPinsRoute,
   LabPrivateTourRoute: LabPrivateTourRoute,
   LabQuantityRoute: LabQuantityRoute,
   LabReviewRoute: LabReviewRoute,
