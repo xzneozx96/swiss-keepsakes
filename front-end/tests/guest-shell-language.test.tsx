@@ -57,6 +57,15 @@ describe('language button', () => {
     expect(screen.getByRole('button', { name: de['shell.language.button'] })).toBeInTheDocument()
   })
 
+  it('closes when the already checked language is tapped, without navigating', async () => {
+    const router = renderAt('/en/stories')
+    await userEvent.click(await screen.findByRole('button', { name: en['shell.language.button'] }))
+    await userEvent.click(await screen.findByRole('radio', { name: 'English' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(router.state.location.pathname).toBe('/en/stories')
+  })
+
   it('closes on Escape and returns focus to the button', async () => {
     renderAt('/en/stories')
     const button = await screen.findByRole('button', { name: en['shell.language.button'] })

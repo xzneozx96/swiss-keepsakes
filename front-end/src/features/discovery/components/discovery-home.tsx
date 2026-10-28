@@ -14,6 +14,7 @@ import {
   CompactBar,
   SearchButton,
 } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import { useLocale } from '@/contexts/locale-context'
 import { ProductCard } from '@/features/catalog/components/product-card'
 import { TourCard } from '@/features/tours/discovery/tour-card'
@@ -148,6 +149,7 @@ export function DiscoveryHome({
           </Link>
         </div>
         <SearchButton label={hero.searchLabel} to="/$lang/search" tone="bar" />
+        <LanguageButton tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
       <div className="flex flex-col gap-10 px-4 pb-4">

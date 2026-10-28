@@ -11,6 +11,7 @@ import {
   CartButton,
   CompactBar,
 } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import { Media } from '@/components/media'
 
 import { useLocale } from '@/contexts/locale-context'
@@ -127,6 +128,7 @@ export function ArticlePage({
         title={article.title}
         visible={scrolledPast}
       >
+        <LanguageButton tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
 
@@ -138,6 +140,7 @@ export function ArticlePage({
         <div className="absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center gap-2">
           <BackButton label={t('detail.back')} tone="pill" onPress={onBack} />
           <span className="flex-1" />
+          <LanguageButton tone="pill" />
           <CartButton tone="pill" />
         </div>
         <header

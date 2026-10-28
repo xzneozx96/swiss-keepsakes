@@ -2,6 +2,7 @@ import { Chip } from '@heroui/react'
 
 import { AssistantIcon } from '@/components/icons'
 import { BackButton } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 
 import { useLocale } from '@/contexts/locale-context'
 
@@ -71,6 +72,9 @@ export function AssistantHeader({ subtitle, onBack }: { subtitle: string, onBack
         </span>
         <span className="truncate text-xs text-muted">{subtitle}</span>
       </div>
+      <span className="ms-auto shrink-0">
+        <LanguageButton tone="bar" />
+      </span>
     </header>
   )
 }

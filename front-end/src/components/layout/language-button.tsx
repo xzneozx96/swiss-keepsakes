@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { LanguageIcon } from '@/components/icons'
 import { roundAction, toneClass } from '@/components/layout/action-style'
 import { useLocale, useUrlLanguage } from '@/contexts/locale-context'
+import { isLanguage } from '@/lib/language-routing'
 
 // Language names stay in their own language, so they are not dictionary keys.
 const languages: { id: Language, name: string }[] = [
@@ -51,12 +52,15 @@ export function LanguageButton({ tone = 'floating' }: { tone?: ActionTone }) {
                 name="language"
                 value={language}
                 onChange={(id) => {
-                  setLanguage(id as Language)
+                  if (!isLanguage(id))
+                    return
+                  setLanguage(id)
                   setOpen(false)
                 }}
               >
                 {languages.map(l => (
-                  <Radio key={l.id} value={l.id}>
+                  // onChange does not fire for the checked option; tapping it just closes.
+                  <Radio key={l.id} value={l.id} onClick={() => l.id === language && setOpen(false)}>
                     <Radio.Control>
                       <Radio.Indicator />
                     </Radio.Control>

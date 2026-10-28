@@ -2,6 +2,7 @@ import { EmptyState } from '@/components/empty-state'
 
 import { TourIcon } from '@/components/icons'
 import { CartButton, CompactBar } from '@/components/layout/cart-button'
+import { LanguageButton } from '@/components/layout/language-button'
 import { Media } from '@/components/media'
 import { useLocale } from '@/contexts/locale-context'
 import { useTours } from '@/features/tours/hooks/use-tours'
@@ -20,6 +21,7 @@ export function TourListPage() {
   return (
     <div className="flex flex-1 flex-col">
       <CompactBar title={t('tourDiscovery.title')} visible={scrolledPast}>
+        <LanguageButton tone="bar" />
         <CartButton tone="bar" />
       </CompactBar>
       <Media alt="" className="h-[260px]" photo={tours[0]?.photos[0]}>
@@ -28,6 +30,7 @@ export function TourListPage() {
           className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-black/70"
         />
         <div className="absolute inset-x-4 top-[calc(env(safe-area-inset-top,0px)+12px)] flex items-center justify-end gap-2">
+          <LanguageButton />
           <CartButton />
         </div>
         <header className="absolute inset-x-4 bottom-10 flex flex-col gap-1 text-white">
