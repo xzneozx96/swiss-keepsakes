@@ -364,7 +364,7 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     expect(await second.json()).toMatchObject({ type: 'version-exists' })
   }, timeout)
 
-  it('[E2.6][AC30] publish end to end writes an audit row, and the other language is untouched', async () => {
+  it('[E2.6][AC30] publish end to end writes an audit row and unpublish another', async () => {
     const staff = await env.storeWithStaff()
     const { groupId, versionPath } = await groupAndVersion(staff)
 

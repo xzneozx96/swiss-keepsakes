@@ -42,7 +42,7 @@ async function ids(tx: Tx, query: ReturnType<typeof sql>): Promise<string[]> {
 
 async function loadGroup(tx: Tx, storeId: string, groupId: string, lock: boolean): Promise<StoryGroup | undefined> {
   const found = await tx.execute<GroupRow & Record<string, unknown>>(sql`
-    select ${groupColumns} from content.story_groups where store_id = ${storeId} and id = ${groupId}${lock ? sql` for update` : sql``}`)
+    select ${groupColumns} from content.story_groups where store_id = ${storeId} and id = ${groupId}${lock ? sql` for no key update` : sql``}`)
   const row = found.rows[0]
   if (!row)
     return undefined
@@ -102,7 +102,7 @@ async function replaceLists(tx: Tx, storeId: string, groupId: string, changes: S
 async function loadVersion(tx: Tx, storeId: string, groupId: string, language: string, lock: boolean): Promise<StoryVersion | undefined> {
   const found = await tx.execute<VersionRow & Record<string, unknown>>(sql`
     select ${versionColumns} from content.story_versions
-     where store_id = ${storeId} and group_id = ${groupId} and language = ${language}${lock ? sql` for update` : sql``}`)
+     where store_id = ${storeId} and group_id = ${groupId} and language = ${language}${lock ? sql` for no key update` : sql``}`)
   const row = found.rows[0]
   if (!row)
     return undefined

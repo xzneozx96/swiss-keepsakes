@@ -100,6 +100,15 @@ describe('story use cases', () => {
     expect(s.stories.versions.get(`${g.id}/en`)).toMatchObject({ slug: 'a-day-on-the-lake', rowVersion: 2 })
   })
 
+  it('[E2.6][AC30] a published version saves a draft with an empty title, the published title is what the CHECK reads', async () => {
+    const s = setup()
+    const g = await group(s)
+    await version(s, g.id)
+    await s.publish(owner, store, g.id, 'en', 1, null)
+    const result = await s.saveVersion(owner, store, g.id, 'en', 2, { draft: doc({ title: '' }) }, null)
+    expect(result).toMatchObject({ ok: true, value: { status: 'published', rowVersion: 3, draft: { title: '' } } })
+  })
+
   it('[E2.6][AC30] a published story version cannot move to another group and nothing changes', async () => {
     const s = setup()
     const a = await group(s)

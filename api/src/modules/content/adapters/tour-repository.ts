@@ -38,7 +38,7 @@ const json = (value: unknown) => (value === null || value === undefined ? null :
 
 async function load(tx: Tx, storeId: string, tourId: string, lock: boolean): Promise<TourGuide | undefined> {
   const found = await tx.execute<TourRow & Record<string, unknown>>(sql`
-    select ${columns} from content.tours where store_id = ${storeId} and id = ${tourId}${lock ? sql` for update` : sql``}`)
+    select ${columns} from content.tours where store_id = ${storeId} and id = ${tourId}${lock ? sql` for no key update` : sql``}`)
   const row = found.rows[0]
   if (!row)
     return undefined

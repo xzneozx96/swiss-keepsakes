@@ -72,7 +72,7 @@ describe('[E2.6] content write schemas', () => {
     expect(ok(pinWriteBodySchema, { slug: { en: 'Chapel Bridge' } })).toBe(false)
     expect(ok(pinWriteBodySchema, { interests: ['food-drink'] })).toBe(true)
     expect(ok(pinWriteBodySchema, { interests: ['nightlife'] })).toBe(false)
-    expect(ok(pinWriteBodySchema, { categoryIds: Array.from({ length: 21 }).fill(uuid) })).toBe(false)
+    expect(ok(pinWriteBodySchema, { categoryIds: distinct(21) })).toBe(false)
   })
 
   it('[E2.6] every content write body (pin, story group, story version, tour) refuses a price key', () => {
@@ -103,7 +103,7 @@ describe('[E2.6] content write schemas', () => {
   it('[E2.6] a story group with 4 related stories is refused', () => {
     expect(ok(storyGroupSaveBodySchema, { relatedGroupIds: [uuid, uuid2, uuid3] })).toBe(true)
     expect(ok(storyGroupSaveBodySchema, { relatedGroupIds: [uuid, uuid2, uuid3, distinct(1)[0]] })).toBe(false)
-    expect(ok(storyGroupSaveBodySchema, { keepsakeProductIds: Array.from({ length: 7 }).fill(uuid) })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { keepsakeProductIds: distinct(7) })).toBe(false)
     expect(storyGroupCreateBodySchema.parse({}).kind).toBe('story')
     expect(ok(storyGroupCreateBodySchema, { kind: 'editorial_review', subjectPlaceId: uuid })).toBe(true)
     expect(ok(storyGroupSaveBodySchema, { kind: 'story' })).toBe(false)
@@ -200,6 +200,44 @@ describe('[E2.6] content write schemas', () => {
     expect(ok(pinWriteBodySchema, { categoryIds: once })).toBe(true)
     expect(ok(tourWriteBodySchema, { keepsakeProductIds: twice })).toBe(false)
     expect(ok(tourWriteBodySchema, { keepsakeProductIds: once })).toBe(true)
+  })
+
+  it('[E2.6] ids that differ only in letter case are one id', () => {
+    expect(ok(pinWriteBodySchema, { categoryIds: [uuid, uuid.toUpperCase()] })).toBe(false)
+    expect(ok(storyGroupSaveBodySchema, { placeIds: [uuid, uuid.toUpperCase()] })).toBe(false)
+  })
+
+  it('[E2.6] durations and stop offsets have a ceiling, the boundary passes', () => {
+    const stop = { latitude: 47, longitude: 8 }
+    expect(ok(tourWriteBodySchema, { durationMinutes: 10080 })).toBe(true)
+    expect(ok(tourWriteBodySchema, { durationMinutes: 10081 })).toBe(false)
+    expect(ok(tourWriteBodySchema, { durationMinutes: 2147483648 })).toBe(false)
+    expect(ok(tourWriteBodySchema, { stops: [{ ...stop, minutesFromStart: 10080 }] })).toBe(true)
+    expect(ok(tourWriteBodySchema, { stops: [{ ...stop, minutesFromStart: 10081 }] })).toBe(false)
+  })
+
+  it('[E2.6] a pin date is within 2000 to 2100', () => {
+    const day = (firstDay: string, lastDay = firstDay) => ({ dates: [{ firstDay, lastDay }] })
+    expect(ok(pinWriteBodySchema, day('2000-01-01'))).toBe(true)
+    expect(ok(pinWriteBodySchema, day('2100-12-31'))).toBe(true)
+    expect(ok(pinWriteBodySchema, day('0000-01-01', '2026-01-01'))).toBe(false)
+    expect(ok(pinWriteBodySchema, day('1999-12-31'))).toBe(false)
+    expect(ok(pinWriteBodySchema, day('2026-01-01', '2101-01-01'))).toBe(false)
+  })
+
+  it('[E2.6] text with a NUL character is refused in every free-text field, a slug may be cleared with null', () => {
+    const nul = 'a\u0000b'
+    const draft = { title: 'T', excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [] }
+    expect(ok(pinWriteBodySchema, { title: { en: nul } })).toBe(false)
+    expect(ok(pinWriteBodySchema, { tip: { de: nul } })).toBe(false)
+    expect(ok(pinWriteBodySchema, { address: nul })).toBe(false)
+    expect(ok(tourWriteBodySchema, { draft: { summary: { en: nul } } })).toBe(false)
+    expect(ok(storyDraftSchema, { ...draft, title: nul })).toBe(false)
+    expect(ok(storyDraftSchema, { ...draft, intro: nul })).toBe(false)
+    expect(ok(storyDraftSchema, { ...draft, sections: [{ id: 's1', heading: nul, blocks: [] }] })).toBe(false)
+    expect(ok(storyDraftSchema, { ...draft, sections: [{ id: 's1', heading: 'H', blocks: [{ type: 'paragraph', text: nul }] }] })).toBe(false)
+    expect(ok(storyDraftSchema, draft)).toBe(true)
+    expect(ok(storyVersionSaveBodySchema, { slug: null })).toBe(true)
   })
 
   it('[E2.6] a story version view carries a draft without write limits', () => {

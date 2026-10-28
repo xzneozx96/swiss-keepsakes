@@ -8,17 +8,22 @@ const stayTag = z.enum(['short_stay', 'multi_day', 'both'])
 const interests = z.array(z.enum(['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes'])).max(4)
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const time = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, 'A time as HH:MM')
+// Postgres text and jsonb refuse U+0000, so it is a 400 here and not a 500 there.
+function noNul<T extends z.ZodString>(schema: T): T {
+  return schema.refine(value => !value.includes('\u0000'), 'Text may not contain a NUL character')
+}
+const text = (max: number) => noNul(z.string().max(max))
 const closingTime = z.string().regex(/^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/, 'A time as HH:MM, or 24:00')
 
 // Trimmed first, so "  " is empty and refused. A key left out means no text in that language.
 export const localizedTextSchema = z.strictObject({
-  en: z.string().trim().min(1).max(300).optional(),
-  de: z.string().trim().min(1).max(300).optional(),
+  en: noNul(z.string().trim().min(1).max(300)).optional(),
+  de: noNul(z.string().trim().min(1).max(300)).optional(),
 }).meta({ id: 'LocalizedText', description: 'Text per language. A present key is non-empty and at most 300 characters' })
 
 export const localizedLongTextSchema = z.strictObject({
-  en: z.string().trim().min(1).max(20000).optional(),
-  de: z.string().trim().min(1).max(20000).optional(),
+  en: noNul(z.string().trim().min(1).max(20000)).optional(),
+  de: noNul(z.string().trim().min(1).max(20000)).optional(),
 }).meta({ id: 'LocalizedLongText', description: 'Text per language. A present key is non-empty and at most 20000 characters' })
 
 // The database (platform.valid_slug_map) needs at least one key, so {} is refused and null clears the slug.
@@ -29,7 +34,7 @@ const slugMapSchema = z.strictObject({
 
 // A list of ids with no repeats: the link tables key on (owner, id).
 function idList(max: number) {
-  return z.array(z.uuid()).max(max).refine(ids => new Set(ids).size === ids.length, 'Each id may appear once')
+  return z.array(z.uuid()).max(max).refine(ids => new Set(ids.map(id => id.toLowerCase())).size === ids.length, 'Each id may appear once')
 }
 
 // What a response carries: whatever is stored, no checks.
@@ -41,9 +46,12 @@ const weeklySpanSchema = z.strictObject({
   closes: closingTime,
 }).refine(span => span.opens < span.closes, { message: 'opens must be before closes', path: ['closes'] })
 
+// Postgres has no year 0 and the stored dates are real ones, so a day is within 2000 to 2100.
+const pinDay = z.iso.date().refine(day => day >= '2000-01-01' && day <= '2100-12-31', 'A date from 2000 to 2100')
+
 const pinDateWriteSchema = z.strictObject({
-  firstDay: z.iso.date(),
-  lastDay: z.iso.date(),
+  firstDay: pinDay,
+  lastDay: pinDay,
   startTime: time.nullable().optional(),
   endTime: time.nullable().optional(),
 }).superRefine((date, ctx) => {
@@ -65,7 +73,7 @@ export const pinWriteBodySchema = z.strictObject({
   slug: slugMapSchema.nullable().optional(),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
-  address: z.string().trim().min(1).max(300).nullable().optional(),
+  address: noNul(z.string().trim().min(1).max(300)).nullable().optional(),
   weeklyHours: z.array(weeklySpanSchema).max(21).optional(),
   stayTag: stayTag.optional(),
   interests: interests.optional(),
@@ -107,29 +115,29 @@ export const pinSchema = z.object({
 }).meta({ id: 'Pin', description: 'A map pin as the editor sees it, with its draft and its published text' })
 
 const storyBlockSchema = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('paragraph'), text: z.string().max(20000) }),
-  z.strictObject({ type: z.literal('image'), mediaId: z.uuid(), caption: z.string().max(300) }),
+  z.strictObject({ type: z.literal('paragraph'), text: text(20000) }),
+  z.strictObject({ type: z.literal('image'), mediaId: z.uuid(), caption: text(300) }),
   z.strictObject({
     type: z.literal('video'),
     youtubeId: z.string().regex(/^[\w-]{11}$/, 'A YouTube video id'),
-    title: z.string().max(300),
-    caption: z.string().max(300),
+    title: text(300),
+    caption: text(300),
   }),
-  z.strictObject({ type: z.literal('audio'), mediaId: z.uuid(), title: z.string().max(300), caption: z.string().max(300) }),
+  z.strictObject({ type: z.literal('audio'), mediaId: z.uuid(), title: text(300), caption: text(300) }),
 ])
 
 // The title may be empty: a draft is incomplete, and the publish gap (title) stops an untitled version going live.
 export const storyDraftSchema = z.strictObject({
-  title: z.string().trim().max(300),
-  excerpt: z.string().max(1000),
-  intro: z.string().max(20000),
-  authorName: z.string().max(120),
-  authorRole: z.string().max(120),
+  title: noNul(z.string().trim().max(300)),
+  excerpt: text(1000),
+  intro: text(20000),
+  authorName: text(120),
+  authorRole: text(120),
   readMinutes: z.int().min(1).max(600).nullable(),
   coverMediaId: z.uuid().nullable(),
   sections: z.array(z.strictObject({
-    id: z.string().min(1).max(64),
-    heading: z.string().max(300),
+    id: noNul(z.string().min(1).max(64)),
+    heading: text(300),
     blocks: z.array(storyBlockSchema).max(200),
   })).max(60),
 }).meta({ id: 'StoryDraft', description: 'The text of one story version. The title may be empty until it is published' })
@@ -182,7 +190,7 @@ export const storyVersionCreateBodySchema = z.strictObject({
 }).meta({ id: 'StoryVersionCreateBody' })
 
 export const storyVersionSaveBodySchema = z.strictObject({
-  slug: storySlug.optional(),
+  slug: storySlug.nullable().optional(),
   draft: storyDraftSchema.optional(),
 }).meta({ id: 'StoryVersionSaveBody' })
 
@@ -229,7 +237,7 @@ const tourStopWriteSchema = z.strictObject({
   longitude: z.number().min(-180).max(180),
   title: localizedTextSchema.optional(),
   text: localizedLongTextSchema.optional(),
-  minutesFromStart: z.int().min(0).nullable().optional(),
+  minutesFromStart: z.int().min(0).max(10080).nullable().optional(),
   mediaId: z.uuid().nullable().optional(),
   placeId: z.uuid().nullable().optional(),
 })
@@ -238,7 +246,7 @@ export const tourWriteBodySchema = z.strictObject({
   slug: slugMapSchema.nullable().optional(),
   stayTag: stayTag.optional(),
   interests: interests.optional(),
-  durationMinutes: z.int().min(1).nullable().optional(),
+  durationMinutes: z.int().min(1).max(10080).nullable().optional(),
   coverMediaId: z.uuid().nullable().optional(),
   pdfMediaId: z.uuid().nullable().optional(),
   keepsakeProductIds: idList(3).optional(),
@@ -248,7 +256,7 @@ export const tourWriteBodySchema = z.strictObject({
     summary: localizedLongTextSchema.optional(),
     meetingPoint: localizedTextSchema.optional(),
     sections: z.array(z.strictObject({
-      id: z.string().min(1).max(64),
+      id: noNul(z.string().min(1).max(64)),
       heading: localizedTextSchema,
       body: localizedLongTextSchema,
     })).max(40).optional(),

@@ -2179,7 +2179,7 @@ export interface components {
         };
         StoryVersionSaveBody: {
             draft?: components["schemas"]["StoryDraft"];
-            slug?: string;
+            slug?: string | null;
         };
         /** @description A tour guide as the editor sees it, with its draft and its published text */
         TourGuide: {

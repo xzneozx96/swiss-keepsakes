@@ -2,7 +2,7 @@ import type { MediaRepository } from '../ports.ts'
 import type { Failure } from './failure.ts'
 
 // A retired file is reported before an unusable one, so the editor hears first about what it can fix by choosing
-// another file. Processing files pass: the publish check, not this one, decides when a file must be ready.
+// another file. Processing files pass: no publish check looks at media status, so only a retired file is refused.
 export async function checkMedia<T>(
   media: MediaRepository<T>,
   tx: T,

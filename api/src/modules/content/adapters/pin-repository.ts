@@ -39,7 +39,7 @@ const json = (value: unknown) => (value === null ? null : JSON.stringify(value))
 
 async function load(tx: Tx, storeId: string, pinId: string, lock: boolean): Promise<Pin | undefined> {
   const found = await tx.execute<PinRow & Record<string, unknown>>(sql`
-    select ${columns} from content.places where store_id = ${storeId} and id = ${pinId}${lock ? sql` for update` : sql``}`)
+    select ${columns} from content.places where store_id = ${storeId} and id = ${pinId}${lock ? sql` for no key update` : sql``}`)
   const row = found.rows[0]
   if (!row)
     return undefined

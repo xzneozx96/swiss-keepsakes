@@ -8,8 +8,8 @@ import { mayManageContent } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkStoryMedia } from './story-media.ts'
 
-// A save replaces the whole draft document. On a published version the database CHECK still reads the stored slug,
-// so the use case runs the publish rule on the merged slug and title and names the gap.
+// A save replaces the whole draft document. On a published version the database CHECK still reads the slug and the
+// published title, so the use case runs the publish rule on the merged slug and the published title and names the gap.
 export function makeSaveStoryVersion<T>({ uow, stories, media, clock }: StoryDeps<T>) {
   return async (actor: Actor, storeId: string, groupId: string, language: ContentLanguage, ifMatch: number, changes: StoryVersionChanges, _requestId: string | null): Promise<Result<StoryVersion>> => {
     if (!mayManageContent(actor, storeId))
@@ -26,7 +26,7 @@ export function makeSaveStoryVersion<T>({ uow, stories, media, clock }: StoryDep
       if (version.status === 'published') {
         const gaps = storyVersionPublishGaps({
           slug: changes.slug !== undefined ? changes.slug : version.slug,
-          title: (changes.draft ?? version.draft ?? version.published)?.title ?? '',
+          title: version.published?.title ?? '',
         })
         if (gaps.length > 0)
           return fail({ reason: 'incomplete', gaps })

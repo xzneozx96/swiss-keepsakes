@@ -1940,7 +1940,10 @@
           "slug": {
             "maxLength": 200,
             "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "type": "object"
@@ -2347,6 +2350,7 @@
             "type": "object"
           },
           "durationMinutes": {
+            "maximum": 10080,
             "minimum": 1,
             "type": [
               "integer",
@@ -2430,6 +2434,7 @@
                   ]
                 },
                 "minutesFromStart": {
+                  "maximum": 10080,
                   "minimum": 0,
                   "type": [
                     "integer",
