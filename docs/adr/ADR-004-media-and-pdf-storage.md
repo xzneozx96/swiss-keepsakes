@@ -23,6 +23,8 @@ We will store uploads in Neon Object Storage, as backend.md D14 plans, with thes
 - The owner decided that one PDF per tour covers all languages (gate D9, 2026-10-26). The PDF has no language field.
 - The PDF link on the page is the public object URL. It needs no signing and no account, and it can be cached by the browser and any CDN.
 - A tour that needs separate German and English guides puts both in the one PDF.
+- **Amended 2026-10-28 (gate G-S6-S3CLIENT).** The API uses `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` to talk to Neon Object Storage, which implements only a subset of the S3 API, and to sign presigned PUT and GET URLs. Hand-written SigV4 signing is security-sensitive and would be code we own and must keep correct, so we do not write it. Other S3 packages were not chosen, because spike SP5 already ran on these two (`spikes/package.json`, with `requestChecksumCalculation: 'WHEN_REQUIRED'` so the SDK adds no checksum headers that a presigned URL would have to carry; see `spikes/sp5-object-storage/README.md`). Both enter `api/package.json` in E2.7. Coordinator answer under the owner's delegation for Sprint 6, 2026-10-28.
+- **Amended 2026-10-28 (gate G-S6-UPLOADROW).** No database row exists between the presign and the confirm. The `content.media` row is created at confirm, after the API has checked the object in `uploads`. An abandoned upload leaves only an object in `uploads`, which the cleanup job removes. Coordinator answer under the owner's delegation for Sprint 6, 2026-10-28.
 
 ## Consequences
 - Public reads bypass the API, and versioned keys remove stale-cache problems, so the O39 delay for PDFs and images is the time it takes the page to point at the new key.
@@ -47,3 +49,5 @@ We will store uploads in Neon Object Storage, as backend.md D14 plans, with thes
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-28 amended (gate G-S6-S3CLIENT): the API uses the AWS SDK S3 client and presigner
+- 2026-10-28 amended (gate G-S6-UPLOADROW): the media row is created at confirm, not at presign
