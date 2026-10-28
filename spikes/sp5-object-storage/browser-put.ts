@@ -34,8 +34,8 @@ try {
   ok = result.put === 200 && result.get === 200 && result.text === body
   await page.screenshot({ path: `${evidence}/browser-put.png` })
 } finally {
+  await s3.send(new DeleteObjectCommand({ Bucket: 'uploads', Key: key })).then(() => console.log('deleted the test object'), (e) => console.log(`delete of the test object FAILED: ${(e as Error).name}`))
   await browser.close()
-  await s3.send(new DeleteObjectCommand({ Bucket: 'uploads', Key: key })).catch(() => undefined)
   console.log(log.join('\n'))
   console.log(ok ? 'ok   browser presigned PUT and read-back from origin ' + ORIGIN : 'FAIL browser presigned PUT and read-back')
 }
