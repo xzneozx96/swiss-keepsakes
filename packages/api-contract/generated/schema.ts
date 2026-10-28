@@ -243,6 +243,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/blog-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Every blog category, parents first */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicCategoryList"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/invitations/preview": {
         parameters: {
             query?: never;
@@ -287,6 +352,497 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The visible pins of all stores, newest first. Cached 60 s on the server */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicMap"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/map-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Every map category, parents first */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicCategoryList"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/places/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The card of one visible pin */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicPin"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such published item */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The published stories, newest first */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicStoryList"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/stories/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One published story */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicStory"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such published item */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/tours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The published tour guides */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicTourList"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/tours/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description The language asked for. An item that has no version in it comes back in the other language, marked `fallback` */
+                    lang: "en" | "de";
+                };
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One published tour guide */
+                200: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicTour"];
+                    };
+                };
+                /** @description The If-None-Match tag still matches. No body */
+                304: {
+                    headers: {
+                        /** @description `max-age=30` */
+                        "Cache-Control"?: string;
+                        /** @description A strong tag of the body. Send it back in If-None-Match */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such published item */
+                404: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1832,6 +2388,15 @@ export interface components {
             /** Format: uuid */
             storeId: string;
         };
+        /** @description The next date of a pin, in Europe/Zurich */
+        NextDate: {
+            endTime: string | null;
+            /** Format: date */
+            firstDay: string;
+            /** Format: date */
+            lastDay: string;
+            startTime: string | null;
+        } | null;
         Onboarding: {
             conditions: {
                 /** @enum {string} */
@@ -1977,6 +2542,216 @@ export interface components {
             title: string;
             /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use. Show generic copy for any other */
             type: string;
+        };
+        PublicCategory: {
+            /** Format: uuid */
+            id: string;
+            name: {
+                de: string | null;
+                en: string | null;
+            };
+            /** Format: uuid */
+            parentId: string | null;
+            position: number;
+            slug: string;
+        };
+        PublicCategoryList: {
+            items: components["schemas"]["PublicCategory"][];
+        };
+        /** @enum {string} */
+        PublicLanguage: "en" | "de";
+        PublicMap: {
+            items: components["schemas"]["PublicMapItem"][];
+        };
+        /** @description One pin on the map list */
+        PublicMapItem: {
+            categoryIds: string[];
+            hasMainStory: boolean;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            language: components["schemas"]["PublicLanguage"];
+            latitude: number;
+            longitude: number;
+            mainStorySlug: string | null;
+            nextDate: components["schemas"]["NextDate"];
+            photoKey: string | null;
+            slug: string | null;
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            title: string;
+        };
+        /** @description The pin card */
+        PublicPin: {
+            address: string | null;
+            availableLanguages: components["schemas"]["PublicLanguage"][];
+            /** @description The pin categories, with the parent of each sub-category included */
+            categories: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+                slug: string;
+            }[];
+            /** @description True when the item is in another language than the one asked for */
+            fallback: boolean;
+            hasMainStory: boolean;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            language: components["schemas"]["PublicLanguage"];
+            latitude: number;
+            longitude: number;
+            mainStorySlug: string | null;
+            nextDate: components["schemas"]["NextDate"];
+            photoKey: string | null;
+            requestedLanguage: components["schemas"]["PublicLanguage"];
+            slug: string | null;
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            tip: string;
+            title: string;
+            weeklyHours: {
+                closes: string;
+                day: number;
+                opens: string;
+            }[];
+        };
+        PublicStory: {
+            authorName: string;
+            authorRole: string;
+            availableLanguages: components["schemas"]["PublicLanguage"][];
+            categories: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+                slug: string;
+            }[];
+            coverKey: string | null;
+            excerpt: string;
+            /** @description True when the item is in another language than the one asked for */
+            fallback: boolean;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            intro: string;
+            language: components["schemas"]["PublicLanguage"];
+            /** Format: date-time */
+            publishedAt: string;
+            readMinutes: number | null;
+            requestedLanguage: components["schemas"]["PublicLanguage"];
+            sections: {
+                blocks: ({
+                    text: string;
+                    /** @enum {string} */
+                    type: "paragraph";
+                } | {
+                    caption: string;
+                    key: string | null;
+                    /** @enum {string} */
+                    type: "image";
+                } | {
+                    caption: string;
+                    title: string;
+                    /** @enum {string} */
+                    type: "video";
+                    youtubeId: string;
+                } | {
+                    caption: string;
+                    key: string | null;
+                    title: string;
+                    /** @enum {string} */
+                    type: "audio";
+                })[];
+                heading: string;
+                id: string;
+            }[];
+            slug: string;
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            title: string;
+        };
+        PublicStoryCard: {
+            availableLanguages: components["schemas"]["PublicLanguage"][];
+            categories: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+                slug: string;
+            }[];
+            coverKey: string | null;
+            excerpt: string;
+            /** @description True when the item is in another language than the one asked for */
+            fallback: boolean;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            language: components["schemas"]["PublicLanguage"];
+            /** Format: date-time */
+            publishedAt: string;
+            readMinutes: number | null;
+            requestedLanguage: components["schemas"]["PublicLanguage"];
+            slug: string;
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            title: string;
+        };
+        PublicStoryList: {
+            items: components["schemas"]["PublicStoryCard"][];
+        };
+        PublicTour: {
+            availableLanguages: components["schemas"]["PublicLanguage"][];
+            coverKey: string | null;
+            durationMinutes: number | null;
+            /** @description True when the item is in another language than the one asked for */
+            fallback: boolean;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            keepsakeProductIds: string[];
+            language: components["schemas"]["PublicLanguage"];
+            meetingPoint: string;
+            pdfKey: string | null;
+            requestedLanguage: components["schemas"]["PublicLanguage"];
+            sections: {
+                body: string;
+                heading: string;
+                id: string;
+            }[];
+            slug: string;
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            stops: {
+                key: string | null;
+                latitude: number;
+                longitude: number;
+                minutesFromStart: number | null;
+                /** Format: uuid */
+                placeId: string | null;
+                position: number;
+                text: string;
+                title: string;
+            }[];
+            summary: string;
+            title: string;
+        };
+        PublicTourCard: {
+            availableLanguages: components["schemas"]["PublicLanguage"][];
+            coverKey: string | null;
+            durationMinutes: number | null;
+            /** @description True when the item is in another language than the one asked for */
+            fallback: boolean;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            language: components["schemas"]["PublicLanguage"];
+            requestedLanguage: components["schemas"]["PublicLanguage"];
+            slug: string;
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            title: string;
+        };
+        PublicTourList: {
+            items: components["schemas"]["PublicTourCard"][];
         };
         ResendManagerInvitation: {
             /**

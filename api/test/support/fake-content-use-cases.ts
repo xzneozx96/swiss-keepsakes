@@ -95,5 +95,12 @@ export function createFakeContentUseCases(): ContentUseCases {
     publishTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, status: 'published', rowVersion: ifMatch + 1 } }),
     unpublishTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, rowVersion: ifMatch + 1 } }),
     deleteTour: async (_actor, _storeId, tourId) => ({ ok: true, value: { id: tourId } }),
+    listStories: async () => ({ items: [] }),
+    getStory: async () => ({ ok: false, reason: 'not-found' }),
+    getPin: async () => ({ ok: false, reason: 'not-found' }),
+    listTours: async () => ({ items: [] }),
+    getTour: async () => ({ ok: false, reason: 'not-found' }),
+    listCategories: async () => ({ items: [] }),
+    getMap: async () => ({ items: [] }),
   }
 }
