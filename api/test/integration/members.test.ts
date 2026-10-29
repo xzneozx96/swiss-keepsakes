@@ -168,6 +168,7 @@ async function insertUser(email: string, verified = true) {
 }
 
 describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees only that store', () => {
+  // ~85 sequential Neon round trips plus 17 HTTP calls: ~60 s at ~0.3 s per query (measured 2026-10-29: origin/main bacbf7c timed out at 60 s twice, the same 85 queries passed at 59.6 s on another tree)
   it('[E2.4][AC02] the whole path over HTTP: invite, queued job without a token, M01 link, wrong address refused, right address accepts once, removal closes the store at once', async () => {
     const [owner, invitee, stranger] = await Promise.all([env.signIn(), env.person(), env.person()])
     const storeId = await env.storeOf(owner)
@@ -246,7 +247,7 @@ describe('[E2.4][AC02] the Owner invites a Store Manager, who accepts and sees o
 
     const { rows: audit } = await pool.query<{ entity: string, action: string }>(`select entity, action from platform.audit_log where store_id = $1 order by at, id`, [storeId])
     expect(audit.map(entry => `${entry.entity}:${entry.action}`)).toEqual(expect.arrayContaining(['store_invitation:created', 'store_invitation:accepted', 'store_membership:removed']))
-  })
+  }, 120_000)
 
   it('[E2.4][AC02] a resend kills the old link at once, and only the newest mail\'s link works', async () => {
     const [owner, invitee] = await Promise.all([env.person(), env.person()])

@@ -2,6 +2,7 @@ import type { ChildProcess } from 'node:child_process'
 import { spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import { createServer } from 'node:http'
+import { resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { Client } from 'pg'
@@ -39,6 +40,9 @@ const apiPort = process.env.E2E_API_PORT ?? '5394'
 const inboxPort = Number(process.env.E2E_INBOX_PORT ?? '5393')
 const origin = process.env.E2E_ORIGIN ?? 'http://localhost:5392'
 const apiDir = fileURLToPath(new URL('../..', import.meta.url))
+// The worktree this server runs from. GET /ready reports it, so a reuse run (E2E_REUSE=1, front-end/tests/e2e/reuse.ts)
+// can refuse to test another worktree's code.
+const root = resolve(apiDir, '..')
 
 const refused = refusedDatabaseTarget({ DATABASE_URL: pooledEnv, DATABASE_URL_UNPOOLED: directEnv }, process.env)
 if (refused || !pooledEnv || !directEnv) {
@@ -180,7 +184,7 @@ async function main() {
       const url = new URL(request.url ?? '/', 'http://localhost')
       const email = url.searchParams.get('email') ?? ''
       if (url.pathname === '/ready')
-        return json(response, ready ? 200 : 503, { ready })
+        return json(response, ready ? 200 : 503, { ready, root })
       if (url.pathname === '/code' && request.method === 'GET') {
         const { rows } = await pool.query<{ data: Parameters<typeof renderMail>[0] }>(
           `select data from pgboss.job where name = $1 and data->>'to' = $2 order by created_on desc limit 1`,

@@ -77,7 +77,7 @@ Marks.
 
 Not allowed: heading levels 1 and 4 to 6, code, code block, strike, underline, horizontal rule, tables, any HTML node, and any unknown node, mark or attribute. The editor's StarterKit configuration turns off every extension that is not listed, so the toolbar cannot produce what the server refuses.
 
-Limits. The serialised body is at most 200 KB, the nesting depth is at most 8, and there are at most 100 media nodes. These are first guesses that the E2.13 builder may tune (coordinator, 2026-10-28). They live in one constant in the contract package.
+Limits. The serialised body is at most 200 KB, the nesting depth is at most 10, and there are at most 100 media nodes. Image, video and audio nodes all count as media. These were first guesses that the E2.13 builder could tune (coordinator, 2026-10-28). E2.13 raised the depth from 8 to 10, because three nested list levels with text need 10, and counts video nodes toward the media cap (tuned in E2.13, 2026-10-29). They live in one constant in the contract package.
 
 ## Links
 
@@ -156,7 +156,7 @@ E4.4 and AC32 need a contents list and a reading time. Both come from the body a
 
 ## Decided by the coordinator (2026-10-28)
 
-- The caps (200 KB, depth 8, 100 media nodes) are first guesses. The E2.13 builder may tune them.
+- The caps started as 200 KB, depth 8 and 100 media nodes, and the E2.13 builder could tune them. Tuned in E2.13, 2026-10-29: depth 10, and video counts as media. The size and media caps are unchanged.
 - `intro` folds into the body. `excerpt` stays and serves lists and the page head.
 - Author name and role sit in Step 1.
 - A `pinLink` may target any pin of the store.
@@ -167,3 +167,13 @@ E4.4 and AC32 need a contents list and a reading time. Both come from the body a
 - The Claude Design mock. The owner may review one before Sprint 8. It can change the layout of the steps and not the body shape.
 - Not checked. The behaviour of each Tiptap 3.32 extension was not run in this session. The E4.3 builder confirms that the editor cannot output a node outside the allow-list.
 - Not checked. The exact drizzle-kit command that regenerates the 0008 snapshot, and how the Neon development branch is reset, were not run. The E2.13 builder follows the repo's own steps.
+
+## Note, 2026-10-29: the layout is now designed
+
+The owner approved the editor's design on 2026-10-29 (`docs/decisions/2026-10-29-story-editor-design.md`, specification `docs/ux/story-editor-design.md`). The body shape, the allow-list, the links and the validation above do not change. Three things in this record are different now.
+
+- **Layout.** The editor has two screens, Write and Review and publish. Details are no longer a step. They are eight collapsible cards in a side panel on the Review screen, shared by both languages, and the Language version card is gone. The language switch sits in the Write header and heads the publish card.
+- **No author fields.** The byline is the display name of the signed-in account. The author name and role leave Step 1 and leave the document ("Body shape" above still lists them). The contract, the API and the seed drop both (follow-up E2.13).
+- **Wider publish rules.** "Publishing keeps its rules: a title and a slug" is replaced by the owner's rule. The cover, the title, the excerpt and the link stop publishing. An editorial review also needs its place and check date. Everything else warns.
+
+Drafts save themselves, and there is no Save draft button.

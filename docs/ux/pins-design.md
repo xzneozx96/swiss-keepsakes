@@ -1,7 +1,7 @@
 # Map and pins design: N02, N03, N16 and N17
 
 - Status: **design approved** on 2026-10-28 (chat approval of the lab page `/lab/pins` as it opens). The seven differences from the original PRD v3 were settled the same day and the PRD now matches (section 5). One is still open: whether the map credits may be folded.
-- Screens: N02 guest map, N03 pin card, N16 merchant pins list, N17 merchant pin editor. Slice S4, Track 1, stories E4.2, E4.6 and E4.7. N23 (categories) and N18 (media library) are **not designed yet**.
+- Screens: N02 guest map, N03 pin card, N16 merchant pins list, N17 merchant pin editor. Slice S4, Track 1, stories E4.2, E4.6 and E4.7. N18 (media library) is now designed (`docs/ux/media-design.md`, approved 2026-10-29). N23 (categories) is **not designed yet**.
 - Read first: `docs/decisions/2026-10-28-pins-and-map-design.md` (what was approved and the open differences), `docs/decisions/2026-10-27-map-pins-and-events.md` (the pin model), PRD §11.1 and AC42, AC62, AC63, AC64, AC67, AC68, AC79, AC85 to AC90, `docs/adr/ADR-006-browser-personalisation-and-map-data.md`, `ADR-029-one-pin-model-with-optional-dates.md`, `ADR-030-merchant-edited-map-and-blog-categories.md`.
 - Visual reference: the lab page `/lab/pins` (run the front end and open `/lab/pins`). The files are in section 8. **The lab is a design reference, not product code.** It keeps state in React, uses mock data, draws the merchant dashboard in an iframe and builds some pieces only to fit its phone frame. Do not copy it. Build the screens in the product with the rules in section 6.
 - Copy source (EN and DE): `front-end/src/features/lab/pins-merchant-copy.ts` for the merchant screens and the `copy` constants in `front-end/src/features/lab/map-guest-data.ts` for the guest screens. The German has not been reviewed by the merchant.
@@ -107,7 +107,7 @@ The editor uses the **tour editor's stepper** (M13, `features/merchant/products/
 The design differed from PRD v3 in seven places. The requester decided them on 2026-10-28, and the PRD, ADRs and plan now say what the design shows. The table is in `docs/decisions/2026-10-28-pins-and-map-design.md`. In short:
 
 1. **Directions** is one "Open in Google Maps" link. Decided: Google Maps only (PRD §11.1, AC89).
-2. **Several photos** per pin: a main photo and more, shown as a carousel in the details sheet. Decided: yes. The data model and N18 need follow-up work in E4.2.
+2. **Several photos** per pin: a main photo and more, shown as a carousel in the details sheet. Decided: yes. The data model needs follow-up work in E4.2. N18 is designed (`docs/ux/media-design.md`) and leaves the order of a pin's extra photos to the pin editor.
 3. **A Categories sheet with checkboxes** replaces the chip rail. Decided: keep the sheet (AC88, ADR-030).
 4. **A Map | List switch** is part of the screen (AC93).
 5. **Credits folded** to one short line with an info button in option B. **Still open:** check the providers' terms (swisstopo, OpenFreeMap, OpenMapTiles, OpenStreetMap). If folding is not allowed, show all four always.
@@ -134,7 +134,7 @@ The design differed from PRD v3 in seven places. The requester decided them on 2
 ## 7. Open points
 
 - The folded credits (section 5, point 5).
-- N23 (category editor) and N18 (media library) are not designed. N18 is also where several photos per pin would be managed.
+- N23 (category editor) is not designed. N18 (media library) is designed (`docs/decisions/2026-10-29-media-library-design.md`, `docs/ux/media-design.md`). It lists the pins that use a photo, but who orders a pin's extra photos, N18 or the pin editor N17, is open.
 - **Not tested:** the lab page on a real phone, with a screen reader, and with reduced motion. I did not click through every lab state when writing this.
 - German copy has not been reviewed by the merchant.
 - The first-load cost of MapLibre and the photo pins has not been measured.

@@ -20,6 +20,7 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 **Routes**
 - Server-rendered: `/:lang` (home), `/:lang/stories`, `/:lang/stories/:slug`, `/:lang/map`, `/:lang/tours`, `/:lang/tours/:slug`, `/:lang/gifts`, `/:lang/gifts/:slug`. Every one of these URLs must exist, including the home page and list pages that `/` redirects to.
 - **Amended 2026-10-27 (G11).** The place route `/:lang/places/:slug` is removed. Places are pins on the map and have no page of their own (ADR-029). `/:lang/map` stays, and `/:lang/map?place=<slug>` opens the map with that pin's card. The query link is not indexed separately and is not in the sitemap.
+- **Amended 2026-10-28 (gate G-S5-PUBLICAUTH).** `GET` and `HEAD` requests to `/api/public/*` skip session handling: the API does not read the session and sets no `Set-Cookie`, and the actor is anonymous. Sessions still renew, and an expired session cookie is still cleared, on authenticated routes. A cacheable public response must never carry a login cookie. A signed-in visitor who only reads public pages gets no renewal or clearing from those requests. Implemented in `api/src/platform/http/authenticate.ts` and tested in `api/test/platform/http/public-routes.test.ts`. Owner ruling, 2026-10-28.
 - `ssr: false`: `store/*`, `admin`, `partner/*`, `lab/*`, `account`, cart and checkout, `sign-in`, `invitation`. They send `noindex`.
 - Browser history replaces hash history. `base` in `vite.config.ts` is `/`.
 
@@ -92,3 +93,4 @@ We will move the front-end to TanStack Start on Vite, server-render the public c
 - 2026-10-27 amended (gate G-E33-D10): interim prices and guest text in prototype server HTML; launch blocked until E4.12, E4.13, E4.14, E6.4
 - 2026-10-27 amended (gate G-E33-STARTMW): private-area headers set by Start request middleware
 - 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)
+- 2026-10-28 amended (gate G-S5-PUBLICAUTH): public GET and HEAD routes skip session handling

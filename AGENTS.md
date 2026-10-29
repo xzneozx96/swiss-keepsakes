@@ -17,6 +17,7 @@ The chosen stack, and what is in use versus only planned, is in `docs/developmen
 - Unit tests: `pnpm test` (Vitest, about 2 s). Type-check the tests: `pnpm typecheck:tests`
 - Rendering, routing or state change: compare builds with `pnpm verify:routes` and `pnpm verify:renders` (`front-end/scripts/verify/README.md`)
 - End-to-end: `pnpm test:e2e` runs the demo specs on their own dev server (port 5391). With the Neon variables set it also runs the real-API specs (`*.api.spec.ts`, SPA on port 5392) against the Neon development branch (setup in `docs/development-rules/shared/testing.md`). Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Chrome
+- Faster real-API e2e while iterating: `pnpm e2e:servers` (keeps the servers and one test database up), then `E2E_REUSE=1 pnpm test:e2e <spec> --project api-chromium-en --workers=2` (no Neon variables needed in that shell); a guard refuses servers of another worktree; specs must use unique data (`docs/development-rules/shared/testing.md`)
 - Never run `pnpm lint:fix`. It rewrites every file, and other sessions are editing them. Fix your own files with `pnpm exec eslint --fix <files>`.
 - Tests live in `front-end/tests/`. Setup and examples are in `docs/development-rules/shared/testing.md`.
 

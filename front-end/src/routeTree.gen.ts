@@ -13,7 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as InvitationRouteImport } from './routes/invitation'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as GuestLangRouteImport } from './routes/_guest/$lang'
 import { Route as GuestAccountRouteImport } from './routes/_guest/account'
@@ -31,6 +33,7 @@ import { Route as LabHeroRouteImport } from './routes/lab.hero'
 import { Route as LabHomeRouteImport } from './routes/lab.home'
 import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
+import { Route as LabMediaRouteImport } from './routes/lab.media'
 import { Route as LabOnboardingFullscreenRouteImport } from './routes/lab.onboarding-fullscreen'
 import { Route as LabOrderCardsRouteImport } from './routes/lab.order-cards'
 import { Route as LabPinsRouteImport } from './routes/lab.pins'
@@ -38,6 +41,7 @@ import { Route as LabPrivateTourRouteImport } from './routes/lab.private-tour'
 import { Route as LabQuantityRouteImport } from './routes/lab.quantity'
 import { Route as LabReviewRouteImport } from './routes/lab.review'
 import { Route as LabSellerRouteImport } from './routes/lab.seller'
+import { Route as LabStoryEditorRouteImport } from './routes/lab.story-editor'
 import { Route as LabVictorinoxRouteImport } from './routes/lab.victorinox'
 import { Route as PartnerIndexRouteImport } from './routes/partner/index'
 import { Route as PartnerTokenRouteImport } from './routes/partner/$token'
@@ -116,9 +120,19 @@ const InvitationRoute = InvitationRouteImport.update({
   path: '/invitation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoreRoute = StoreRouteImport.update({
@@ -206,6 +220,11 @@ const LabMapLoadingRoute = LabMapLoadingRouteImport.update({
   path: '/lab/map-loading',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LabMediaRoute = LabMediaRouteImport.update({
+  id: '/lab/media',
+  path: '/lab/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LabOnboardingFullscreenRoute = LabOnboardingFullscreenRouteImport.update({
   id: '/lab/onboarding-fullscreen',
   path: '/lab/onboarding-fullscreen',
@@ -239,6 +258,11 @@ const LabReviewRoute = LabReviewRouteImport.update({
 const LabSellerRoute = LabSellerRouteImport.update({
   id: '/lab/seller',
   path: '/lab/seller',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabStoryEditorRoute = LabStoryEditorRouteImport.update({
+  id: '/lab/story-editor',
+  path: '/lab/story-editor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabVictorinoxRoute = LabVictorinoxRouteImport.update({
@@ -542,7 +566,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sign-in': typeof SignInRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
   '/$lang': typeof GuestLangRouteWithChildren
@@ -560,6 +586,7 @@ export interface FileRoutesByFullPath {
   '/lab/home': typeof LabHomeRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
+  '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
@@ -567,6 +594,7 @@ export interface FileRoutesByFullPath {
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
   '/lab/seller': typeof LabSellerRoute
+  '/lab/story-editor': typeof LabStoryEditorRoute
   '/lab/victorinox': typeof LabVictorinoxRoute
   '/partner/$token': typeof PartnerTokenRoute
   '/plan/$': typeof PlanSplatRoute
@@ -630,7 +658,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sign-in': typeof SignInRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof GuestAccountRoute
   '/cart': typeof GuestCartRoute
   '/credits/$': typeof CreditsSplatRoute
@@ -645,6 +675,7 @@ export interface FileRoutesByTo {
   '/lab/home': typeof LabHomeRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
+  '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
@@ -652,6 +683,7 @@ export interface FileRoutesByTo {
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
   '/lab/seller': typeof LabSellerRoute
+  '/lab/story-editor': typeof LabStoryEditorRoute
   '/lab/victorinox': typeof LabVictorinoxRoute
   '/partner/$token': typeof PartnerTokenRoute
   '/plan/$': typeof PlanSplatRoute
@@ -716,7 +748,9 @@ export interface FileRoutesById {
   '/_guest': typeof GuestRouteWithChildren
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sign-in': typeof SignInRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
   '/_guest/$lang': typeof GuestLangRouteWithChildren
@@ -734,6 +768,7 @@ export interface FileRoutesById {
   '/lab/home': typeof LabHomeRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
+  '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
@@ -741,6 +776,7 @@ export interface FileRoutesById {
   '/lab/quantity': typeof LabQuantityRoute
   '/lab/review': typeof LabReviewRoute
   '/lab/seller': typeof LabSellerRoute
+  '/lab/story-editor': typeof LabStoryEditorRoute
   '/lab/victorinox': typeof LabVictorinoxRoute
   '/partner/$token': typeof PartnerTokenRoute
   '/plan/$': typeof PlanSplatRoute
@@ -806,7 +842,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/invitation'
+    | '/robots.txt'
     | '/sign-in'
+    | '/sitemap.xml'
     | '/store'
     | '/store/reports'
     | '/$lang'
@@ -824,6 +862,7 @@ export interface FileRouteTypes {
     | '/lab/home'
     | '/lab/map'
     | '/lab/map-loading'
+    | '/lab/media'
     | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
     | '/lab/pins'
@@ -831,6 +870,7 @@ export interface FileRouteTypes {
     | '/lab/quantity'
     | '/lab/review'
     | '/lab/seller'
+    | '/lab/story-editor'
     | '/lab/victorinox'
     | '/partner/$token'
     | '/plan/$'
@@ -894,7 +934,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/invitation'
+    | '/robots.txt'
     | '/sign-in'
+    | '/sitemap.xml'
     | '/account'
     | '/cart'
     | '/credits/$'
@@ -909,6 +951,7 @@ export interface FileRouteTypes {
     | '/lab/home'
     | '/lab/map'
     | '/lab/map-loading'
+    | '/lab/media'
     | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
     | '/lab/pins'
@@ -916,6 +959,7 @@ export interface FileRouteTypes {
     | '/lab/quantity'
     | '/lab/review'
     | '/lab/seller'
+    | '/lab/story-editor'
     | '/lab/victorinox'
     | '/partner/$token'
     | '/plan/$'
@@ -979,7 +1023,9 @@ export interface FileRouteTypes {
     | '/_guest'
     | '/admin'
     | '/invitation'
+    | '/robots.txt'
     | '/sign-in'
+    | '/sitemap.xml'
     | '/store'
     | '/store/reports'
     | '/_guest/$lang'
@@ -997,6 +1043,7 @@ export interface FileRouteTypes {
     | '/lab/home'
     | '/lab/map'
     | '/lab/map-loading'
+    | '/lab/media'
     | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
     | '/lab/pins'
@@ -1004,6 +1051,7 @@ export interface FileRouteTypes {
     | '/lab/quantity'
     | '/lab/review'
     | '/lab/seller'
+    | '/lab/story-editor'
     | '/lab/victorinox'
     | '/partner/$token'
     | '/plan/$'
@@ -1069,7 +1117,9 @@ export interface RootRouteChildren {
   GuestRoute: typeof GuestRouteWithChildren
   AdminRoute: typeof AdminRoute
   InvitationRoute: typeof InvitationRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SignInRoute: typeof SignInRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StoreRoute: typeof StoreRouteWithChildren
   CreditsSplatRoute: typeof CreditsSplatRoute
   GiftsSplatRoute: typeof GiftsSplatRoute
@@ -1083,6 +1133,7 @@ export interface RootRouteChildren {
   LabHomeRoute: typeof LabHomeRoute
   LabMapRoute: typeof LabMapRoute
   LabMapLoadingRoute: typeof LabMapLoadingRoute
+  LabMediaRoute: typeof LabMediaRoute
   LabOnboardingFullscreenRoute: typeof LabOnboardingFullscreenRoute
   LabOrderCardsRoute: typeof LabOrderCardsRoute
   LabPinsRoute: typeof LabPinsRoute
@@ -1090,6 +1141,7 @@ export interface RootRouteChildren {
   LabQuantityRoute: typeof LabQuantityRoute
   LabReviewRoute: typeof LabReviewRoute
   LabSellerRoute: typeof LabSellerRoute
+  LabStoryEditorRoute: typeof LabStoryEditorRoute
   LabVictorinoxRoute: typeof LabVictorinoxRoute
   PartnerTokenRoute: typeof PartnerTokenRoute
   PlanSplatRoute: typeof PlanSplatRoute
@@ -1133,11 +1185,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvitationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sign-in': {
       id: '/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/store': {
@@ -1259,6 +1325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LabMapLoadingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lab/media': {
+      id: '/lab/media'
+      path: '/lab/media'
+      fullPath: '/lab/media'
+      preLoaderRoute: typeof LabMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lab/onboarding-fullscreen': {
       id: '/lab/onboarding-fullscreen'
       path: '/lab/onboarding-fullscreen'
@@ -1306,6 +1379,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/seller'
       fullPath: '/lab/seller'
       preLoaderRoute: typeof LabSellerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/story-editor': {
+      id: '/lab/story-editor'
+      path: '/lab/story-editor'
+      fullPath: '/lab/story-editor'
+      preLoaderRoute: typeof LabStoryEditorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/victorinox': {
@@ -1869,7 +1949,9 @@ const rootRouteChildren: RootRouteChildren = {
   GuestRoute: GuestRouteWithChildren,
   AdminRoute: AdminRoute,
   InvitationRoute: InvitationRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SignInRoute: SignInRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StoreRoute: StoreRouteWithChildren,
   CreditsSplatRoute: CreditsSplatRoute,
   GiftsSplatRoute: GiftsSplatRoute,
@@ -1883,6 +1965,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabHomeRoute: LabHomeRoute,
   LabMapRoute: LabMapRoute,
   LabMapLoadingRoute: LabMapLoadingRoute,
+  LabMediaRoute: LabMediaRoute,
   LabOnboardingFullscreenRoute: LabOnboardingFullscreenRoute,
   LabOrderCardsRoute: LabOrderCardsRoute,
   LabPinsRoute: LabPinsRoute,
@@ -1890,6 +1973,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabQuantityRoute: LabQuantityRoute,
   LabReviewRoute: LabReviewRoute,
   LabSellerRoute: LabSellerRoute,
+  LabStoryEditorRoute: LabStoryEditorRoute,
   LabVictorinoxRoute: LabVictorinoxRoute,
   PartnerTokenRoute: PartnerTokenRoute,
   PlanSplatRoute: PlanSplatRoute,
