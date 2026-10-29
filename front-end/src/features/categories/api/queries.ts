@@ -3,10 +3,7 @@ import type { DataClient } from '@/features/data-client'
 
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { queryKeys, useDataClient } from '@/features/data-client'
-
-// The demo QueryClient never refetches and never retries. This read comes from the API, where the next read
-// must be a fresh one: another session may have changed the list.
-const fromApi = { staleTime: 0, gcTime: 5 * 60_000, retry: false, networkMode: 'online', structuralSharing: true } as const
+import { fromApi } from '@/features/data-client/api-transport'
 
 export const categoriesQueries = {
   list: (client: DataClient, storeId: string, kind: CategoryKind) =>
