@@ -11,7 +11,7 @@ const credits = [
  */
 export function MapCredits({ className = '' }: { className?: string }) {
   return (
-    <p className={`pointer-events-auto flex w-fit max-w-full flex-wrap items-center gap-x-1.5 rounded-2xl bg-surface/85 px-2.5 py-0.5 text-[11px] leading-4 text-foreground/80 backdrop-blur-sm ${className}`} data-map-credits="">
+    <p className={`pointer-events-auto flex w-fit flex-wrap items-center gap-x-1.5 rounded-2xl bg-surface/85 px-2.5 py-0.5 text-[11px] leading-4 text-foreground/80 backdrop-blur-sm ${className}`} data-map-credits="">
       {credits.map((credit, i) => (
         <span key={credit.label} className="flex items-center gap-1.5">
           {i > 0 && <span aria-hidden className="text-muted">·</span>}

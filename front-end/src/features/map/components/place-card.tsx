@@ -101,7 +101,7 @@ export function PlaceCardRow({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the row
     <section
       aria-label={t(pins.length === 1 ? 'map.places.one' : 'map.places.other', { count: pins.length })}
-      className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+96px)] z-20"
+      className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+124px)] z-20"
       onKeyDown={(event) => {
         if (event.key === 'Escape')
           onClose()

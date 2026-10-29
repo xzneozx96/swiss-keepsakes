@@ -22,7 +22,9 @@ const NO_PINS: PublicMapItem[] = []
 /** The tab bar without the home-indicator inset (px): the camera keeps pins clear of it. */
 const TAB_BAR = 64
 const CONTROLS = 60
-const CARD_ROW = 210
+/** The card row sits above the background-music button (px from the bottom), so neither covers the other. */
+const CARD_ROW_BOTTOM = 124
+const CARD_ROW_HEIGHT = 190
 const LUCERNE: [number, number] = [8.3068, 47.0535]
 const MAP_OPTIONS = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
 
@@ -112,7 +114,7 @@ export function MapScreen() {
       })
 
   return (
-    <section aria-labelledby={headingId} className="relative h-dvh overflow-hidden">
+    <section aria-labelledby={headingId} className="relative min-h-[28rem] flex-1 overflow-hidden">
       <h1 className="sr-only" id={headingId}>{t('map.heading')}</h1>
 
       {status === 'map-loading' || status === 'pins-loading'
@@ -137,7 +139,7 @@ export function MapScreen() {
       </div>
       <PinMap
         filtered={chosenCount > 0}
-        insetBottom={openId ? CARD_ROW + TAB_BAR : TAB_BAR}
+        insetBottom={openId ? CARD_ROW_BOTTOM + CARD_ROW_HEIGHT : TAB_BAR}
         insetTop={CONTROLS}
         litIds={litIds}
         map={map}
@@ -158,7 +160,7 @@ export function MapScreen() {
       <p aria-live="polite" className="sr-only">{pinsReady ? announce : ''}</p>
 
       {view === 'map' && (
-        <MapCredits className={`absolute start-3 z-10 ${openId ? 'top-14' : 'bottom-[calc(env(safe-area-inset-bottom,0px)+72px)]'}`} />
+        <MapCredits className={`absolute start-3 z-10 max-w-[calc(100%-6rem)] ${openId ? 'top-14' : 'bottom-[calc(env(safe-area-inset-bottom,0px)+108px)]'}`} />
       )}
 
       {openId && (

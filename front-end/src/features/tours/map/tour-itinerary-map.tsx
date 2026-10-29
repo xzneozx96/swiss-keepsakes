@@ -398,7 +398,10 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
                 ref={frameRef}
                 className="tour-map-frame relative overflow-hidden rounded-3xl bg-surface-secondary"
               >
-                <div ref={canvasRef} className="tour-map-canvas" />
+                {/* MapLibre makes its container `position: relative` (unlayered CSS), so it sits in a sized box. */}
+                <div className="tour-map-canvas">
+                  <div ref={canvasRef} className="size-full" />
+                </div>
                 <div className="absolute start-3 top-3 flex flex-wrap gap-2">
                   <Button
                     className="pill min-h-11 shadow-sm"
