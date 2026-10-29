@@ -5,7 +5,7 @@ import type { IconComponent } from '@/components/icons'
 import type { AllTimeCardProps } from '@/components/stat-card'
 import type { ShownLabel } from '@/features/orders/hooks/use-orders'
 
-import { Button, Skeleton, Tabs } from '@heroui/react'
+import { Button, Skeleton } from '@heroui/react'
 import { useState } from 'react'
 
 import { DataTable } from '@/components/data-table'
@@ -20,7 +20,7 @@ import {
   PayLaterIcon,
   ReportsIcon,
 } from '@/components/icons'
-import { STICKY_TABS } from '@/components/layout/sticky-tabs'
+import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { AllTimeCard, StatCard } from '@/components/stat-card'
 import { StatusChip } from '@/components/status-chip'
 import { Widget } from '@/features/merchant/today/components/overview-analytics'
@@ -698,25 +698,12 @@ export function PartnerReport({
         : (
             allTime && <AllTimeCard {...allTime} />
           )}
-      <Tabs
-        className="w-full"
-        selectedKey={period}
-        onSelectionChange={key => onPeriodChange(key as ReportPeriod)}
-      >
-        <div
-          className={`flex flex-col gap-3 max-lg:py-2 sm:flex-row-reverse sm:items-center sm:justify-between ${STICKY_TABS}`}
-        >
-          <Tabs.ListContainer className="sm:w-80">
-            <Tabs.List aria-label={copy.periodsLabel}>
-              {periods.map((p, index) => (
-                <Tabs.Tab key={p.id} id={p.id}>
-                  {index > 0 && <Tabs.Separator />}
-                  {p.label}
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-          </Tabs.ListContainer>
+      <PageTabs
+        split
+        label={copy.periodsLabel}
+        selected={period}
+        tabs={periods.map(p => ({ id: p.id, label: p.label }))}
+        trailing={(
           <div className="flex items-center justify-between gap-1 sm:justify-start">
             <Button
               isIconOnly
@@ -744,13 +731,15 @@ export function PartnerReport({
               <ChevronRightIcon size={18} />
             </Button>
           </div>
-        </div>
+        )}
+        onSelect={onPeriodChange}
+      >
         {periods.map(p => (
-          <Tabs.Panel key={p.id} className="px-0 pt-4 pb-0" id={p.id}>
+          <TabPanel key={p.id} className="pt-4" id={p.id}>
             {content}
-          </Tabs.Panel>
+          </TabPanel>
         ))}
-      </Tabs>
+      </PageTabs>
       {demoNote && !isLoading && (
         <p className="text-xs text-muted">{demoNote}</p>
       )}

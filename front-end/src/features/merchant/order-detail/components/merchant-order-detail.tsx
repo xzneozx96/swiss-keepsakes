@@ -4,10 +4,9 @@ import type {
   MerchantOrderView,
 } from '../hooks/use-merchant-order-detail'
 
-import { Tabs } from '@heroui/react'
 import { useState } from 'react'
 
-import { STICKY_TABS_BELOW_BAR } from '@/components/layout/sticky-tabs'
+import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
 
@@ -84,49 +83,30 @@ export function MerchantOrderDetail({
                 </>
               )
             : (
-                <Tabs
-                  className="w-full"
-                  selectedKey={tab}
-                  onSelectionChange={key => setTab(key as TabId)}
+                <PageTabs
+                  belowBar
+                  label={t('merchantOrder.tabs.label')}
+                  selected={tab}
+                  tabs={[
+                    { id: 'details', label: t('merchantOrder.tabs.details') },
+                    { id: 'money', label: t('merchantOrder.tabs.money') },
+                    { id: 'activity', label: t('merchantOrder.tabs.activity') },
+                  ]}
+                  onSelect={setTab}
                 >
-                  <div className={`max-lg:py-2 ${STICKY_TABS_BELOW_BAR}`}>
-                    <Tabs.ListContainer>
-                      <Tabs.List aria-label={t('merchantOrder.tabs.label')}>
-                        {(
-                          [
-                            ['details', t('merchantOrder.tabs.details')],
-                            ['money', t('merchantOrder.tabs.money')],
-                            ['activity', t('merchantOrder.tabs.activity')],
-                          ] as const
-                        ).map(([id, label], index) => (
-                          <Tabs.Tab key={id} className="whitespace-nowrap" id={id}>
-                            {index > 0 && <Tabs.Separator />}
-                            {label}
-                            <Tabs.Indicator />
-                          </Tabs.Tab>
-                        ))}
-                      </Tabs.List>
-                    </Tabs.ListContainer>
-                  </div>
-                  <Tabs.Panel
-                    className="flex flex-col gap-5 px-0 pb-0"
-                    id="details"
-                  >
+                  <TabPanel className="flex flex-col gap-5" id="details">
                     <ItemsCard view={view} />
                     <GuestCard view={view} />
-                  </Tabs.Panel>
-                  <Tabs.Panel className="flex flex-col gap-5 px-0 pb-0" id="money">
+                  </TabPanel>
+                  <TabPanel className="flex flex-col gap-5" id="money">
                     <PaymentsCard view={view} />
                     <PartnerCard view={view} />
                     <PolicyCard view={view} />
-                  </Tabs.Panel>
-                  <Tabs.Panel
-                    className="flex flex-col gap-5 px-0 pb-0"
-                    id="activity"
-                  >
+                  </TabPanel>
+                  <TabPanel className="flex flex-col gap-5" id="activity">
                     <ActivityCard view={view} />
-                  </Tabs.Panel>
-                </Tabs>
+                  </TabPanel>
+                </PageTabs>
               )}
         </div>
         {isWide && (

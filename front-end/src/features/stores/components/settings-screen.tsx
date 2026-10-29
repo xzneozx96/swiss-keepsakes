@@ -1,8 +1,9 @@
-import { Skeleton, Tabs } from '@heroui/react'
+import { Skeleton } from '@heroui/react'
 import { useEffect, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { MoreIcon } from '@/components/icons'
+import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { apiEnabled } from '@/lib/api-mode'
@@ -57,25 +58,20 @@ export function SettingsScreen() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-title">{t('nav.settings')}</h1>
-      <Tabs className="w-full" selectedKey={tab} onSelectionChange={key => setTab(key as SettingsTab)}>
-        <Tabs.ListContainer className="w-fit max-w-full">
-          <Tabs.List aria-label={t('stores.members.tabs')}>
-            <Tabs.Tab className="min-h-11 whitespace-nowrap" id="general">
-              {t('stores.members.general')}
-              <Tabs.Indicator />
-            </Tabs.Tab>
-            <Tabs.Tab className="min-h-11 whitespace-nowrap" id="members">
-              <Tabs.Separator />
-              {t('stores.members.title')}
-              <Tabs.Indicator />
-            </Tabs.Tab>
-          </Tabs.List>
-        </Tabs.ListContainer>
-        <Tabs.Panel className="px-0 pb-0" id="general">{placeholder}</Tabs.Panel>
-        <Tabs.Panel className="px-0 pb-0" id="members">
+      <PageTabs
+        label={t('stores.members.tabs')}
+        selected={tab}
+        tabs={[
+          { id: 'general', label: t('stores.members.general') },
+          { id: 'members', label: t('stores.members.title') },
+        ]}
+        onSelect={setTab}
+      >
+        <TabPanel id="general">{placeholder}</TabPanel>
+        <TabPanel id="members">
           <MembersTab storeId={current.storeId} />
-        </Tabs.Panel>
-      </Tabs>
+        </TabPanel>
+      </PageTabs>
     </div>
   )
 }

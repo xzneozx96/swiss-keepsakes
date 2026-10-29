@@ -14,7 +14,6 @@ import {
   FieldError,
   Input,
   Label,
-  Tabs,
   TextField,
 } from '@heroui/react'
 import { hasText, LANGUAGES, languageStatus } from '@sk/domain/catalog'
@@ -27,6 +26,7 @@ import { AutoTextArea } from '@/components/auto-textarea'
 import { BackIcon } from '@/components/icons'
 import { EditorFormSkeleton } from '@/components/layout/detail-skeletons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
+import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { LanguageChip, MaintenanceChip, PublishChip } from './status-chips'
@@ -180,44 +180,29 @@ export function LanguageTabs({
     )
 
   return (
-    <Tabs
-      className="w-full"
-      selectedKey={selected}
-      onSelectionChange={key => onChange(key as Language)}
+    <PageTabs
+      label={t('products.text.tabsLabel')}
+      selected={selected}
+      tabs={LANGUAGES.map(language => ({
+        id: language,
+        label: t(`products.lang.${language}`),
+        marker: missing[language].length > 0 && (
+          <>
+            {/* A warning dot, as the M03 ticket marks status; the chip's clock means "waiting". */}
+            <span
+              aria-hidden
+              className="ms-1.5 size-2 shrink-0 rounded-full bg-warning"
+            />
+            <span className="sr-only">
+              {t(`products.lang.${language}-missing`)}
+            </span>
+          </>
+        ),
+      }))}
+      onSelect={onChange}
     >
-      <Tabs.ListContainer className="w-fit max-w-full">
-        <Tabs.List aria-label={t('products.text.tabsLabel')}>
-          {LANGUAGES.map((language, index) => (
-            <Tabs.Tab
-              key={language}
-              className="whitespace-nowrap"
-              id={language}
-            >
-              {index > 0 && <Tabs.Separator />}
-              {t(`products.lang.${language}`)}
-              {missing[language].length > 0 && (
-                <>
-                  {/* A warning dot, as the M03 ticket marks status; the chip's clock means "waiting". */}
-                  <span
-                    aria-hidden
-                    className="ms-1.5 size-2 shrink-0 rounded-full bg-warning"
-                  />
-                  <span className="sr-only">
-                    {t(`products.lang.${language}-missing`)}
-                  </span>
-                </>
-              )}
-              <Tabs.Indicator />
-            </Tabs.Tab>
-          ))}
-        </Tabs.List>
-      </Tabs.ListContainer>
       {LANGUAGES.map(language => (
-        <Tabs.Panel
-          key={language}
-          className="flex flex-col gap-5 px-0 pt-4 pb-0"
-          id={language}
-        >
+        <TabPanel key={language} className="flex flex-col gap-5 pt-4" id={language}>
           {stepAlerts
             ? (
                 gaps(language).length > 0 && (
@@ -267,9 +252,9 @@ export function LanguageTabs({
                   )
                 )}
           {children(language)}
-        </Tabs.Panel>
+        </TabPanel>
       ))}
-    </Tabs>
+    </PageTabs>
   )
 }
 

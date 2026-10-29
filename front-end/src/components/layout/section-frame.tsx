@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react'
 import type { SECTION_PAGES } from '@/components/layout/section-pages'
 
-import { Tabs } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 
 import { SECTION_PAGES as PAGES } from '@/components/layout/section-pages'
-import { STICKY_TABS } from '@/components/layout/sticky-tabs'
+import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
 
 type Section = keyof typeof SECTION_PAGES
@@ -47,38 +46,22 @@ export function SectionFrame({
           {title}: {label(current)}
         </h1>
       )}
-      <Tabs
-        className="w-full"
-        selectedKey={page}
-        variant="secondary"
-        onSelectionChange={key =>
+      <PageTabs
+        equal
+        className={TABS_ON_DESKTOP.includes(section) ? undefined : 'lg:hidden'}
+        dense={pages.length > 3}
+        label={t('sectionPages.label', { section: title })}
+        selected={page}
+        tabs={pages.map(p => ({ id: p.id, label: label(p) }))}
+        onSelect={id =>
           void navigate({
-            to: (pages.find(p => p.id === key) ?? pages[0]).to as never,
+            to: (pages.find(p => p.id === id) ?? pages[0]).to as never,
           })}
       >
-        <Tabs.ListContainer
-          className={`${TABS_ON_DESKTOP.includes(section) ? '' : 'lg:hidden'} ${STICKY_TABS}`}
-        >
-          <Tabs.List
-            aria-label={t('sectionPages.label', { section: title })}
-            className="w-full"
-          >
-            {pages.map(p => (
-              <Tabs.Tab
-                key={p.id}
-                className={`h-11 min-w-0 whitespace-nowrap ${pages.length > 3 ? 'flex-auto px-1.5 text-[13px]' : 'flex-1 px-1'}`}
-                id={p.id}
-              >
-                {label(p)}
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs.ListContainer>
-        <Tabs.Panel className="px-0 pt-2 pb-0 lg:pt-0" id={page}>
+        <TabPanel className="pt-2 lg:pt-0" id={page}>
           {children}
-        </Tabs.Panel>
-      </Tabs>
+        </TabPanel>
+      </PageTabs>
     </div>
   )
 }

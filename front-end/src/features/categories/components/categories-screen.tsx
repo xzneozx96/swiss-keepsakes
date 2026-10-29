@@ -1,11 +1,10 @@
 import type { CategoryKind } from '@sk/api-contract'
 
-import { Tabs } from '@heroui/react'
 import { useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { InfoIcon } from '@/components/icons'
-import { STICKY_TABS } from '@/components/layout/sticky-tabs'
+import { PageTabs } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useMe } from '@/features/stores/api/queries'
@@ -37,22 +36,13 @@ export function CategoriesScreen() {
     return <EmptyState icon={InfoIcon} message={t('categories.noStore')} />
 
   const tabs = (
-    <Tabs className="w-full" selectedKey={tab} onSelectionChange={key => setTab(key as CategoryKind)}>
-      {/* Full width on phones and pinned at the top; sized to its tabs from 1024 px, like the orders screen. */}
-      <div className={`max-lg:py-2 ${STICKY_TABS}`}>
-        <Tabs.ListContainer className="w-full lg:w-fit">
-          <Tabs.List aria-label={t('categories.tabs')}>
-            {KINDS.map((kind, index) => (
-              <Tabs.Tab key={kind} className="min-h-11 whitespace-nowrap" id={kind}>
-                {index > 0 && <Tabs.Separator />}
-                {t(`categories.tab.${kind}`)}
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs.ListContainer>
-      </div>
-    </Tabs>
+    <PageTabs
+      fill
+      label={t('categories.tabs')}
+      selected={tab}
+      tabs={KINDS.map(kind => ({ id: kind, label: t(`categories.tab.${kind}`) }))}
+      onSelect={setTab}
+    />
   )
 
   return (
