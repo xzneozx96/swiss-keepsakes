@@ -305,7 +305,7 @@ export const en = {
   'cart.empty.action': 'Browse keepsakes',
 
   'auth.title': 'Sign in to continue',
-  'auth.intro': 'No password needed. Anything in your cart stays there.',
+  'auth.intro': 'No password needed. Sign in and start exploring Lucerne: its stories, places and local tips.',
   'auth.close': 'Close',
   'auth.google': 'Continue with Google',
   'auth.google.failed':
