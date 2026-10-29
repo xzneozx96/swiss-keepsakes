@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { InfoIcon } from '@/components/icons'
@@ -10,17 +10,20 @@ import { apiEnabled } from '@/lib/api-mode'
 import { useMe, useOnboarding } from '../api/queries'
 import { useAcceptInvitation } from '../hooks/use-accept-invitation'
 import { useGoToSignIn } from '../hooks/use-go-to-sign-in'
+import { useHeldStoreName } from '../hooks/use-held-store-name'
 import { currentStore } from '../lib/current-store'
 import { ONBOARDING_PATH } from '../lib/search-params'
 import { DisplayNamePrompt } from './display-name-form'
+import { InvitationFrame } from './invitation-frame'
 import { InvitationPreview } from './invitation-preview'
+import { InvitationLoading, InvitationProblem } from './invitation-states'
 import { OnboardingChecklist } from './onboarding-checklist'
 import { OpenForSale } from './open-for-sale'
 import { ProblemNotice } from './problem-notice'
 import { RefusalView } from './refusal-view'
 import { ScreenFrame } from './screen-frame'
 import { StoreInformationForm } from './store-information-form'
-import { InvitationCardSkeleton, OnboardingSkeleton } from './store-skeletons'
+import { OnboardingSkeleton } from './store-skeletons'
 
 /**
  * A02 (UX 4.12): the invited Owner accepts the invitation after sign-in, sees the four conditions for opening
@@ -40,41 +43,49 @@ export function OnboardingScreen() {
   return <InvitationFlow />
 }
 
+/** "Sign out and use another account" starts the flow again from the held token, which now meets no session and shows the embedded sign-in. */
 function InvitationFlow() {
+  const [round, setRound] = useState(0)
+
+  return <InvitationFlowRound key={round} focusTitle={round > 0} onSignedOut={() => setRound(count => count + 1)} />
+}
+
+function InvitationFlowRound({ focusTitle, onSignedOut }: { focusTitle: boolean, onSignedOut: () => void }) {
   const { t } = useLocale()
-  const { state, token, retry, signIn } = useAcceptInvitation()
+  const { state, token, retry } = useAcceptInvitation()
+  const storeName = useHeldStoreName(token)
 
   if (state.kind === 'accepting') {
     return (
-      <ScreenFrame title={t('stores.onboarding.title')}>
-        <p aria-live="polite" className="text-sm text-muted" role="status">{t('stores.onboarding.accepting')}</p>
-        <InvitationCardSkeleton />
-      </ScreenFrame>
+      <InvitationFrame photo="colour" audience="owner">
+        <InvitationLoading text={t('stores.onboarding.accepting')} title={t('stores.onboarding.title')} />
+      </InvitationFrame>
     )
   }
   if (state.kind === 'signIn' && token) {
     return (
       <InvitationPreview
-        actionLabel={t('stores.invite.signIn')}
         returnTo={ONBOARDING_PATH}
         audience="owner"
+        focusTitle={focusTitle}
         signedOut
         token={token}
-        onAction={signIn}
+        onAccept={retry}
+        onSignedIn={retry}
       />
     )
   }
   if (state.kind === 'previewFailed') {
     return (
-      <ScreenFrame title={t('stores.onboarding.title')}>
-        <ProblemNotice error={state.error} onRetry={retry} />
-      </ScreenFrame>
+      <InvitationFrame photo="colour" audience="owner">
+        <InvitationProblem error={state.error} title={t('stores.onboarding.title')} onRetry={retry} />
+      </InvitationFrame>
     )
   }
   if (state.kind === 'accepted' && state.accepted.role === 'owner')
     return <OnboardingView storeId={state.accepted.storeId} />
   if (state.kind === 'refused') {
-    const refusal = <RefusalView audience={state.role} refusal={state.refusal} onRetry={retry} />
+    const refusal = <RefusalView audience={state.role} refusal={state.refusal} storeName={storeName} onRetry={retry} onSignedOut={onSignedOut} />
 
     return state.refusal === 'member' ? <OwnerStore fallback={refusal} /> : refusal
   }

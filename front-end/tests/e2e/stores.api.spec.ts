@@ -155,10 +155,11 @@ test('[E2.3][S8] after the Super Admin sends the invitation again, the old link 
   const language = languageOf(testInfo)
   const ownerEmail = newEmail()
   const admin = await signedInSuperAdmin(browser, language)
-  const { card } = await createStore(admin, language, ownerEmail)
+  const { name, card } = await createStore(admin, language, ownerEmail)
   const first = await ownerInvitationMail(ownerEmail)
 
-  await clickInMiddle(card.getByRole('button', { name: say(language, 'stores.resend.action') }))
+  await clickInMiddle(card.getByRole('button', { name: say(language, 'stores.actions.label', { name }) }))
+  await admin.getByRole('menuitem', { name: say(language, 'stores.resend.action') }).click()
   await expect(admin.getByText(say(language, 'stores.resend.done', { email: ownerEmail }))).toBeVisible()
   const second = await ownerInvitationMail(ownerEmail)
 
@@ -168,7 +169,8 @@ test('[E2.3][S8] after the Super Admin sends the invitation again, the old link 
 
   await openLink(stale, first.link)
   await expect(stale.getByRole('heading', { name: say(language, 'stores.refusal.notFound.title') })).toBeVisible()
-  await expect(stale.getByRole('button', { name: say(language, 'stores.invite.signIn') })).toHaveCount(0)
+  // A link that can never work again offers no sign-in.
+  await expect(stale.getByRole('button', { name: words[language].send })).toHaveCount(0)
 
   const fresh = await newVisitor(browser, language)
 

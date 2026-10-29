@@ -4,6 +4,7 @@ import type { AuditLog, Clock, ConditionSource, InvitationRepository, PlatformAd
 import type { AdminStoreView } from './admin-store-view.ts'
 import { invitationLifetimeMs, normaliseEmail } from '@sk/domain/identity'
 import { adminStoreView } from './admin-store-view.ts'
+import { onboardingConditions } from './get-onboarding.ts'
 
 export interface CreateStoreDeps<T> {
   uow: UnitOfWork<T>
@@ -43,10 +44,10 @@ export function makeCreateStore<T>({ uow, stores, invitations, conditions, users
     if (!store)
       return { ok: false, reason: 'slug-taken' }
     const invitation = await invitations.insert(tx, { storeId: store.id, email, role: 'owner', expiresAt: new Date(now.getTime() + invitationLifetimeMs), invitedBy: actor.userId })
-    await queueMail(tx, { template: 'N20', to: email, language: input.language ?? store.defaultLanguage, storeId: store.id, params: { store: store.name, invitationId: invitation.id } })
+    await queueMail(tx, { template: 'N20', to: email, language: input.language ?? store.defaultLanguage, storeId: store.id, params: { store: store.name, invitationId: invitation.id, expiresOn: invitation.expiresAt.toISOString() } })
     const by = `super_admin:${actor.userId}`
     await audit.record(tx, { storeId: store.id, actor: by, entity: 'store', entityId: store.id, action: 'created', after: { status: store.status }, requestId })
     await audit.record(tx, { storeId: store.id, actor: by, entity: 'store_invitation', entityId: invitation.id, action: 'created', after: { role: 'owner' }, requestId })
-    return { ok: true, store: adminStoreView(store, invitation, await conditions.laterConditions(tx, store.id), now) }
+    return { ok: true, store: adminStoreView(store, invitation, await onboardingConditions(conditions, tx, store), now) }
   })
 }

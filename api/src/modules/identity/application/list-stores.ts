@@ -1,6 +1,7 @@
 import type { Clock, ConditionSource, InvitationRepository, StoreRepository, UnitOfWork } from '../ports.ts'
 import type { AdminStoreView } from './admin-store-view.ts'
 import { adminStoreView } from './admin-store-view.ts'
+import { onboardingConditions } from './get-onboarding.ts'
 
 export interface ListStoresDeps<T> {
   uow: UnitOfWork<T>
@@ -26,7 +27,7 @@ export function makeListStores<T>({ uow, stores, invitations, conditions, clock 
     // One query at a time, because a transaction runs one statement at once.
     const items: AdminStoreView[] = []
     for (const store of shown)
-      items.push(adminStoreView(store, newest.get(store.id), await conditions.laterConditions(tx, store.id), now))
+      items.push(adminStoreView(store, newest.get(store.id), await onboardingConditions(conditions, tx, store), now))
     return { items, nextCursor: found.length > page.limit ? (shown.at(-1)?.id ?? null) : null }
   })
 }

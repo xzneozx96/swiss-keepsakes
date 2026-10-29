@@ -1,7 +1,7 @@
 import type { AcceptedInvitation } from '@sk/api-contract'
 import type { AcceptRefusal, InviteRole } from '../lib/refusals'
 
-import { useQueryClient } from '@tanstack/react-query'
+import { isCancelledError, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useEffectEvent, useRef, useState, useSyncExternalStore } from 'react'
 
@@ -99,6 +99,13 @@ export function useAcceptInvitation(returnTo: string = ONBOARDING_PATH, { manual
     catch (error) {
       if (cancelled())
         return
+      // A sign-out cancels the stores queries (`forgetStoresSession`), also the one of the round that just began. The read was dropped, not refused, so it starts again.
+      if (isCancelledError(error)) {
+        startedRef.current = undefined
+        setAttempt(count => count + 1)
+
+        return
+      }
       decide()
       const unknown = error instanceof ApiProblem && (error.status === 404 || error.status === 400)
 

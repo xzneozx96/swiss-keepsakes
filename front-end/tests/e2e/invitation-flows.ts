@@ -95,16 +95,17 @@ export async function newVisitor(browser: Browser, language: Language): Promise<
 }
 
 /**
- * Opens an invitation link. The screen shows the store from the preview first, and the sign-in button takes the
- * visitor to sign-in. It signs in with this email and waits for the screen to come back to `screen`, the
- * address of the link without its token (A02 or M01).
+ * Opens an invitation link and signs in on the invitation itself, with the embedded emailed-code form under the
+ * store's name. It waits for the code field to go away, which means the sign-in finished on `screen`, the address
+ * of the link without its token (A02 or M01): A02 then accepts by itself, and M01 shows its accept button.
  */
 export async function followLinkAs(page: Page, language: Language, link: string, email: string, screen: '/store/onboarding' | '/invitation' = '/store/onboarding') {
   await openLink(page, link)
   // A bounded wait, so a stall here fails at this step with a screenshot instead of running out the test timeout.
-  await page.getByRole('button', { name: say(language, 'stores.invite.signIn') }).click({ timeout: 30_000 })
-  await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+/sign-in\\?returnTo=${encodeURIComponent(screen)}$`))
+  await expect(page.getByRole('textbox', { name: EMAIL_FIELD })).toBeVisible({ timeout: 30_000 })
+  await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+${screen}$`))
   await signInFromSheet(page, language, email)
+  await expect(page.locator('#sign-in-code')).toBeHidden({ timeout: 30_000 })
   await expect(page).toHaveURL(new RegExp(`^https?://[^/#]+${screen}$`))
 }
 

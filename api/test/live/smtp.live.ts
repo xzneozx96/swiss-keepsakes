@@ -20,7 +20,7 @@ const accepted = /^250 /
 const requests: Record<'N01' | 'N18' | 'N20', (language: 'en' | 'de') => MailRequest> = {
   N01: language => ({ template: 'N01', to: testInbox, language, storeId: null, params: { shop: 'Swiss Keepsakes', code: '000000' } }),
   N18: language => ({ template: 'N18', to: testInbox, language, storeId: null, params: { inviter: 'E2.8 live check', store: 'Swiss Keepsakes test store', invitationId } }),
-  N20: language => ({ template: 'N20', to: testInbox, language, storeId: null, params: { store: 'Swiss Keepsakes test store', invitationId } }),
+  N20: language => ({ template: 'N20', to: testInbox, language, storeId: null, params: { store: 'Swiss Keepsakes test store', invitationId, expiresOn: '2026-11-05T09:00:00.000Z' } }),
 }
 
 function smtpConfig() {

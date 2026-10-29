@@ -157,11 +157,12 @@ describe('[E2.4][AC02] M01, the Store Manager accepts an invitation', () => {
     answer = () => preview()
     renderAt('/invitation', InvitationScreen)
 
-    expect(await screen.findByRole('heading', { name: 'Chi Ngoc' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Join Chi Ngoc' })).toBeInTheDocument()
     expect(screen.getByText('Ngoc invited you to Chi Ngoc as a Store Manager.')).toBeInTheDocument()
-    expect(screen.getByText('Role: Store Manager')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sign in to continue' })).toBeInTheDocument()
-    expect(calls.map(call => call.path)).toEqual(['/api/public/invitations/preview'])
+    expect(screen.getByText('Store Manager invitation')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument()
+    // The preview, and the session (the form shows only once it answered null). No accept.
+    expect(calls.map(call => call.path).sort()).toEqual(['/api/auth/get-session', '/api/public/invitations/preview'])
   })
 
   it('sends no accept for a signed-in Manager before the tap', async () => {
@@ -192,17 +193,19 @@ describe('[E2.4][AC02] M01, the Store Manager accepts an invitation', () => {
     expect(await screen.findByText('You are invited to Chi Ngoc as a Store Manager.')).toBeInTheDocument()
   })
 
-  it('goes to sign-in from the sign-in button and comes back to /invitation with no token in the return', async () => {
+  it('signs in on the invitation itself, with no token in the address, and the Accept button follows', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     answer = () => preview()
     const router = renderAt('/invitation', InvitationScreen)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Sign in to continue' }))
-
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
-    expect(router.state.location.search).toEqual({ returnTo: '/invitation' })
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/invitation')
     expect(router.state.location.href).not.toContain(token)
     expect(heldInvitationToken()).toBe(token)
+    signedIn()
+
+    expect(await screen.findByRole('button', { name: 'Accept invitation' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Email')).not.toBeInTheDocument()
   })
 
   it('accepts only when the Manager taps Accept invitation, once, with an Idempotency-Key, and goes to the store', async () => {
@@ -300,7 +303,7 @@ describe('[E2.4][AC02] M01, the Store Manager accepts an invitation', () => {
     expect(heldInvitationToken()).toBe(spent ? undefined : token)
   })
 
-  it('offers sign-out and switch for a wrong account, and the sign-in comes back to /invitation', async () => {
+  it('offers sign-out and switch for a wrong account, and the embedded sign-in shows on /invitation with the token held', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     signedIn()
     answer = (call) => {
@@ -314,8 +317,8 @@ describe('[E2.4][AC02] M01, the Store Manager accepts an invitation', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Accept invitation' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Sign out and use another account' }))
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
-    expect(router.state.location.search).toEqual({ returnTo: '/invitation' })
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/invitation')
     expect(heldInvitationToken()).toBe(token)
   })
 

@@ -172,7 +172,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(screen.getByText('Finish every step above to open for sale.')).toBeInTheDocument()
   })
 
-  it('shows the store from the preview and a sign-in button when the API answers 401, and the button goes to sign-in with the fixed returnTo, the token in sessionStorage only', async () => {
+  it('shows the store from the preview and the embedded sign-in when the API answers 401, on the same address, the token in sessionStorage only', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     answer = (call) => {
       if (call.path === '/api/public/invitations/preview')
@@ -182,8 +182,8 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     }
     const router = renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByRole('heading', { name: 'Chi Ngoc Shop' })).toBeInTheDocument()
-    expect(screen.getByText('You are invited to open Chi Ngoc Shop.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'You’re invited to open Chi Ngoc Shop' })).toBeInTheDocument()
+    expect(screen.getByText('Owner invitation')).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/store/onboarding')
     const preview = calls.find(call => call.path === '/api/public/invitations/preview')
 
@@ -191,10 +191,9 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(preview?.key).toBeNull()
     expect(calls.some(call => call.path === '/api/me/invitations/accept')).toBe(false)
     expect(calls.map(call => call.path).join('\n')).not.toContain(token)
-    await userEvent.click(screen.getByRole('button', { name: 'Sign in to continue' }))
-
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
-    expect(router.state.location.search).toEqual({ returnTo: '/store/onboarding' })
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Email')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/store/onboarding')
     expect(router.state.location.href).not.toContain(token)
     expect(heldInvitationToken()).toBe(token)
   })
@@ -218,15 +217,27 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(heldInvitationToken()).toBe(spent ? undefined : token)
   })
 
-  it('offers sign-out for a wrong account, and the invitation stays open for the right one', async () => {
+  it('offers sign-out for a wrong account, and the invitation stays open with the embedded sign-in for the right one', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
-    answer = call => call.path.startsWith('/api/auth/') && call.path !== '/api/auth/get-session' ? Response.json({ success: true }) : acceptAnswers(() => problem(403, 'invitation-email-mismatch'))(call)
+    let signedOut = false
+
+    answer = (call) => {
+      if (call.path === '/api/auth/sign-out') {
+        signedOut = true
+
+        return Response.json({ success: true })
+      }
+      if (call.path === '/api/auth/get-session' && signedOut)
+        return Response.json(null)
+
+      return acceptAnswers(() => problem(403, 'invitation-email-mismatch'))(call)
+    }
     const router = renderAt('/store/onboarding', OnboardingScreen)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Sign out and use another account' }))
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
-    expect(router.state.location.search).toEqual({ returnTo: '/store/onboarding' })
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/store/onboarding')
     expect(heldInvitationToken()).toBe(token)
   })
 
@@ -258,12 +269,12 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(heldInvitationToken()).toBe(token)
   })
 
-  it('sends no accept for a visitor whose session is gone, and shows the sign-in button', async () => {
+  it('sends no accept for a visitor whose session is gone, and shows the embedded sign-in', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     answer = call => call.path === '/api/auth/get-session' ? Response.json(null) : onboardingAnswers()(call)
     renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByRole('button', { name: 'Sign in to continue' })).toBeInTheDocument()
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument()
     expect(calls.some(call => call.path === '/api/me/invitations/accept')).toBe(false)
   })
 
@@ -447,9 +458,9 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
 
 const listed = adminStoreListSchema.parse({
   items: [
-    { ...store, status: 'invited', invitation: { email: 'owner@example.ch', state: 'open', expiresAt: '2026-10-29T10:00:00.000Z' }, paymentAccount: 'pending' },
-    { ...store, id: '0198a000-0000-7000-8000-000000000002', slug: 'old', name: 'Old Shop', status: 'invited', createdAt: '2026-09-15T08:00:00.000Z', invitation: { email: 'late@example.ch', state: 'expired', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'pending' },
-    { ...store, id: '0198a000-0000-7000-8000-000000000003', slug: 'live', name: 'Live Shop', status: 'live', createdAt: '2026-08-03T08:00:00.000Z', invitation: { email: 'done@example.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'met' },
+    { ...store, status: 'invited', invitation: { email: 'owner@example.ch', state: 'open', expiresAt: '2026-10-29T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' } },
+    { ...store, id: '0198a000-0000-7000-8000-000000000002', slug: 'old', name: 'Old Shop', status: 'invited', createdAt: '2026-09-15T08:00:00.000Z', invitation: { email: 'late@example.ch', state: 'expired', expiresAt: '2026-10-01T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' } },
+    { ...store, id: '0198a000-0000-7000-8000-000000000003', slug: 'live', name: 'Live Shop', status: 'live', createdAt: '2026-08-03T08:00:00.000Z', invitation: { email: 'done@example.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'met', 'catalogue': 'met', 'policies': 'met' } },
   ],
   nextCursor: null,
 })
@@ -468,6 +479,13 @@ async function openInviteSheet() {
   return screen.findByRole('dialog', { name: 'Invite an Owner' })
 }
 
+/** Opens the ⋯ menu of a store inside `scope` (the table or the cards) and returns the menu. */
+async function openRowMenu(scope: HTMLElement, name: string) {
+  await userEvent.click(within(scope).getByRole('button', { name: `Actions for ${name}` }))
+
+  return screen.findByRole('menu', { name: `Actions for ${name}` })
+}
+
 const storeCards = () => screen.getByRole('list', { name: 'All stores' })
 const storeTable = () => screen.getByRole('grid', { name: 'All stores' })
 
@@ -479,19 +497,23 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     expect(await screen.findByText('Invitation sent to owner@example.ch. It expires on 29.10.2026.')).toBeInTheDocument()
     expect(screen.getByText('Invitation to late@example.ch expired on 01.10.2026.')).toBeInTheDocument()
     expect(screen.getByText('done@example.ch accepted the invitation.')).toBeInTheDocument()
-    expect(within(storeCards()).getAllByRole('button', { name: 'Send invitation again' })).toHaveLength(2)
     expect(within(storeCards()).getByText('Created 15.09.2026')).toBeInTheDocument()
-    expect(within(storeTable()).getAllByRole('button', { name: 'Send invitation again' })).toHaveLength(2)
+    const open = within(await openRowMenu(storeCards(), 'Chi Ngoc')).getByRole('menuitem', { name: 'Resend invitation' })
+
+    expect(open).not.toHaveAttribute('aria-disabled', 'true')
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('menu')).not.toBeInTheDocument())
+    expect(within(await openRowMenu(storeCards(), 'Live Shop')).getByRole('menuitem', { name: 'Resend invitation' })).toHaveAttribute('aria-disabled', 'true')
   })
 
-  it('lists the stores in a table with the Owner, the status, the invitation and its expiry, and the payment account', async () => {
+  it('lists the stores in a table with the status, the invitation and its expiry, and the Owner under the store', async () => {
     answer = () => Response.json(listed)
     renderAt('/admin', AdminStoresScreen)
 
     await within(await screen.findByRole('grid', { name: 'All stores' })).findByText('Old Shop')
     const table = within(storeTable())
 
-    expect(table.getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Store', 'Owner', 'Status', 'Invitation', 'Payment account', 'Created', 'Actions'])
+    expect(table.getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Store', 'Status', 'Invitation', 'Before opening', 'Created', 'Actions'])
     const [, first, second, third] = table.getAllByRole('row')
 
     expect(within(first).getByText('owner@example.ch')).toBeInTheDocument()
@@ -504,11 +526,11 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     expect(within(second).getByText('15.09.2026')).toBeInTheDocument()
     expect(within(third).getByText('03.08.2026')).toBeInTheDocument()
     expect(within(third).getByText('Open for sale')).toBeInTheDocument()
-    expect(within(third).getByText('Done')).toBeInTheDocument()
-    expect(within(third).queryByRole('button', { name: 'Send invitation again' })).not.toBeInTheDocument()
+    expect(within(third).queryByRole('progressbar')).not.toBeInTheDocument()
+    expect(within(first).getByText('Not started')).toBeInTheDocument()
   })
 
-  it('shows one card per store for a phone, with the store address name and the invitation sentence', async () => {
+  it('shows one card per store for a phone, with the invitation sentence and the setup bar only while the store is being set up', async () => {
     answer = () => Response.json(listed)
     renderAt('/admin', AdminStoresScreen)
 
@@ -519,7 +541,7 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     expect(cards[1]).toHaveAttribute('data-store', 'old')
     expect(cards[1].querySelector('[data-invitation]')).toHaveAttribute('data-invitation', 'expired')
     expect(within(cards[2]).getByText('Open for sale')).toBeInTheDocument()
-    expect(within(cards[2]).getByText('Done')).toBeInTheDocument()
+    expect(within(cards[2]).queryByRole('progressbar')).not.toBeInTheDocument()
   })
 
   it('counts the stores of the list in four tiles', async () => {
@@ -531,7 +553,7 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
 
     expect(within(tiles).getByText('Stores')).toBeInTheDocument()
     expect(within(tiles).getByText('Waiting for the Owner')).toBeInTheDocument()
-    expect(within(tiles).getByText('Onboarding')).toBeInTheDocument()
+    expect(within(tiles).getByText('Setting up')).toBeInTheDocument()
     expect(within(tiles).getByText('Open for sale')).toBeInTheDocument()
     expect(tiles.querySelector('[data-tile=total]')).toHaveTextContent('3')
     expect(tiles.querySelector('[data-tile=waiting]')).toHaveTextContent('2')
@@ -703,11 +725,10 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     renderAt('/admin', AdminStoresScreen)
 
     await screen.findByText('Old Shop', { selector: 'h3' })
-    const [button] = within(storeCards()).getAllByRole('button', { name: 'Send invitation again' })
 
-    await userEvent.click(button)
+    await userEvent.click(within(await openRowMenu(storeCards(), 'Chi Ngoc')).getByRole('menuitem', { name: 'Resend invitation' }))
     await waitFor(() => expect(calls.filter(call => call.method === 'POST')).toHaveLength(1))
-    await userEvent.click(within(storeTable()).getAllByRole('button', { name: 'Send invitation again' })[0])
+    await userEvent.click(within(await openRowMenu(storeTable(), 'Chi Ngoc')).getByRole('menuitem', { name: 'Resend invitation' }))
     await waitFor(() => expect(calls.filter(call => call.method === 'POST')).toHaveLength(2))
 
     const [first, second] = calls.filter(call => call.method === 'POST')
@@ -895,10 +916,11 @@ describe('[E2.3][S8] a double tap sends one request', () => {
     renderAt('/admin', AdminStoresScreen)
 
     await screen.findByText('Old Shop', { selector: 'h3' })
-    const [button] = within(storeCards()).getAllByRole('button', { name: 'Send invitation again' })
     let release = () => {}
 
     hold = new Promise<void>((resolve) => { release = resolve })
+    const button = within(await openRowMenu(storeCards(), 'Chi Ngoc')).getByRole('menuitem', { name: 'Resend invitation' })
+
     act(() => {
       fireEvent.click(button)
       fireEvent.click(button)
@@ -1008,16 +1030,14 @@ describe('[E2.3][S8] the invitation survives a screen that is gone and a link op
 })
 
 describe('[E2.3][S8] a 401 marks the app signed out before sign-in', () => {
-  it('clears the signed-in flag the sign-in screen would bounce back from, on accept', async () => {
+  it('clears the signed-in flag the embedded sign-in would not notice finishing, on accept', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     demo.store.update(s => ({ ...s, data: { ...s.data, signedInGuestId: 'stale-guest' } }))
     answer = call => call.path === '/api/public/invitations/preview' ? previewBody() : problem(401, 'unauthenticated')
-    const router = renderAt('/store/onboarding', OnboardingScreen)
+    renderAt('/store/onboarding', OnboardingScreen)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Sign in to continue' }))
-
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
-    expect(demo.store.getState().data.signedInGuestId).toBeNull()
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument()
+    await waitFor(() => expect(demo.store.getState().data.signedInGuestId).toBeNull())
   })
 
   it('clears it on A01 reads too', async () => {
@@ -1074,7 +1094,7 @@ describe('[E2.3][S8] refusals and failed reads', () => {
     renderAt('/admin', AdminStoresScreen)
 
     await screen.findByText('Old Shop', { selector: 'h3' })
-    await userEvent.click(within(storeCards()).getAllByRole('button', { name: 'Send invitation again' })[0])
+    await userEvent.click(within(await openRowMenu(storeCards(), 'Chi Ngoc')).getByRole('menuitem', { name: 'Resend invitation' }))
 
     expect(await screen.findByRole('alert')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Invite an Owner' })).toBeEnabled()

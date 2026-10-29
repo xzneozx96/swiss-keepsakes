@@ -80,7 +80,7 @@ describe('[E2.8] SMTP adapter', () => {
   it('[E2.8] a repeat of the same mail carries the same text and HTML', async () => {
     const { transport, messages } = capturingTransport()
     const mailer = createSmtpMailer(transport, 'keepsakes.test@gmail.com', 'Swiss Keepsakes')
-    const request = { template: 'N20', to: 'ngoc.tran@example.ch', language: 'en', storeId: null, params: { store: 'Zürich Andenken', invitationId: mailId } } as const
+    const request = { template: 'N20', to: 'ngoc.tran@example.ch', language: 'en', storeId: null, params: { store: 'Zürich Andenken', invitationId: mailId, expiresOn: '2026-11-05T09:00:00.000Z' } } as const
 
     await mailer.send({ id: mailId, ...renderMail(request, 'https://swiss-keepsakes.example/i/7f3c') })
     await mailer.send({ id: mailId, ...renderMail(request, 'https://swiss-keepsakes.example/i/7f3c') })

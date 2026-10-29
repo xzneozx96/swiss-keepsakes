@@ -1,13 +1,16 @@
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoSelector } from '@/features/demo'
 import { apiEnabled } from '@/lib/api-mode'
+import { sessionUserQuery } from '../api/queries'
 import { useAcceptInvitation } from '../hooks/use-accept-invitation'
 import { useDisplayName } from '../hooks/use-display-name'
+import { useHeldStoreName } from '../hooks/use-held-store-name'
 import { INVITATION_PATH, ONBOARDING_PATH, STORE_PATH } from '../lib/search-params'
 import { DisplayNameForm } from './display-name-form'
 import { InvitationPreview } from './invitation-preview'
@@ -33,27 +36,38 @@ export function InvitationScreen() {
   return <InvitationFlow />
 }
 
+/** "Sign out and use another account" starts the flow again from the held token, which now meets no session and shows the embedded sign-in. */
 function InvitationFlow() {
-  const { t } = useLocale()
-  const { state, token, accept, signIn, retry } = useAcceptInvitation(INVITATION_PATH, { manual: true })
+  const [round, setRound] = useState(0)
+
+  return <InvitationFlowRound key={round} focusTitle={round > 0} onSignedOut={() => setRound(count => count + 1)} />
+}
+
+function InvitationFlowRound({ focusTitle, onSignedOut }: { focusTitle: boolean, onSignedOut: () => void }) {
+  const { state, token, accept, retry } = useAcceptInvitation(INVITATION_PATH, { manual: true })
   const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)
+  const session = useQuery({ ...sessionUserQuery, enabled: token !== undefined && !signedIn })
+  // The demo flag follows the session only after the first paint, so a visitor whose session has not answered yet is not shown the sign-in form. A user the API found waits for the flag.
+  const sessionKnown = signedIn || (!session.isPending && !session.data)
+  const storeName = useHeldStoreName(token)
 
   if (state.kind === 'accepted')
     return <Welcome role={state.accepted.role} />
   if (state.kind === 'refused')
-    return <RefusalView refusal={state.refusal} returnTo={INVITATION_PATH} audience={state.role ?? 'manager'} onRetry={retry} />
+    return <RefusalView refusal={state.refusal} audience={state.role ?? 'manager'} storeName={storeName} onRetry={retry} onSignedOut={onSignedOut} />
   if (!token)
-    return <RefusalView refusal="missing" returnTo={INVITATION_PATH} audience="manager" />
+    return <RefusalView refusal="missing" audience="manager" />
 
   return (
     <InvitationPreview
-      actionLabel={t(signedIn ? 'stores.invite.accept' : 'stores.invite.signIn')}
       pending={state.kind === 'accepting'}
       returnTo={INVITATION_PATH}
       audience="manager"
+      focusTitle={focusTitle}
+      checking={!sessionKnown}
       signedOut={!signedIn}
       token={token}
-      onAction={signedIn ? accept : signIn}
+      onAccept={accept}
     />
   )
 }

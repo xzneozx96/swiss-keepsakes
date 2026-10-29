@@ -76,8 +76,8 @@ export const mailEn = {
   'mail.N18.button': 'Accept invitation',
   'mail.N20.subject': 'You’re invited to open {store}',
   'mail.N20.invited': 'You’re invited to run {store} as its Owner.',
-  'mail.N20.setup':
-    'Open the invitation, sign in and complete the steps your store needs before it can sell',
+  'mail.N20.box': 'Invitation to open',
+  'mail.N20.validUntil': 'Valid until {date}',
   'mail.N20.button': 'Set up your store',
 
   'tourMail.greeting': 'Hello {guest},',
