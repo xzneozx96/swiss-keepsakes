@@ -9,11 +9,11 @@ import { useState } from 'react'
 
 import { ConfirmDialog, useConfirm } from '@/components/confirm-dialog'
 import { BackIcon, ChevronDownIcon, StatusDangerIcon, StatusSuccessIcon, StatusWarningIcon } from '@/components/icons'
+import { LanguageVersionSwitch } from '@/components/language-version-switch'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { LANG_NAME } from './keepsake-editor-data'
 import { fullLanguages, label, languageState } from './keepsake-editor-rules'
-import { LanguageVersionSwitch } from './language-version-switch'
 import { mediaOf } from './story-editor-data'
 import { OrderedRows } from './story-editor-ordered'
 

@@ -1,44 +1,9 @@
-import type { GiftStep } from '@/features/merchant/products/lib/search-params'
+import { createFileRoute } from '@tanstack/react-router'
 
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { EditorSkeleton } from '@/features/merchant/products/components/editor-parts'
-import { GiftEditor } from '@/features/merchant/products/components/gift-editor'
-import {
-  GIFT_STEPS,
+import { CreateKeepsake } from '@/features/keepsakes/components/create-flow'
 
-} from '@/features/merchant/products/lib/search-params'
-import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
-
-// "Add gift" on M11 (owner, 15.10.2026): the M12 stepper with a blank draft, walked with
-// Back and Next. It is stored at its first save and then opens at
-// /store/products/gifts/$productId on the same step. A static segment, so it wins.
+// Create on M11: Details, then the variant, then a draft keepsake that opens at /store/products/gifts/$productId.
+// A static segment, so it wins over $productId.
 export const Route = createFileRoute('/store/products/gifts/new')({
-  validateSearch: (search: Record<string, unknown>): { step?: GiftStep } => ({
-    step: GIFT_STEPS.includes(search.step as GiftStep)
-      ? (search.step as GiftStep)
-      : undefined,
-  }),
-  component: NewGiftPage,
+  component: CreateKeepsake,
 })
-
-function NewGiftPage() {
-  const isLoading = useSimulatedLoading()
-  const { step = 'basics' } = Route.useSearch()
-  const navigate = useNavigate({ from: Route.fullPath })
-
-  return isLoading
-    ? (
-        <EditorSkeleton />
-      )
-    : (
-        <GiftEditor
-          product={null}
-          step={step}
-          onStep={next =>
-            void navigate({
-              search: next === 'basics' ? {} : { step: next },
-              replace: true,
-            })}
-        />
-      )
-}

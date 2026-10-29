@@ -2002,6 +2002,349 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The keepsakes of the store, newest first */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProductList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ProductCreateBody"];
+                };
+            };
+            responses: {
+                /** @description The new draft keepsake with its one variant for sale */
+                201: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/products/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The keepsake with its working copy and publish checks */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    productId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ProductSaveBody"];
+                };
+            };
+            responses: {
+                /** @description The keepsake with the change saved. A left-out field stays, a list replaces */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/store/{storeId}/products/{productId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    productId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The keepsake is live with its working copy */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/products/{productId}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    productId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The keepsake is a draft again. Its live text is kept */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/products/{productId}/variants/{skuId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                    skuId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VariantSaveBody"];
+                };
+            };
+            responses: {
+                /** @description The keepsake with the variant changed. The change is live at once and takes no row version */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/store/{storeId}/story-groups": {
         parameters: {
             query?: never;
@@ -2868,6 +3211,23 @@ export interface components {
              */
             language?: "en" | "de";
         };
+        /** @description The name per language, at most 90 characters each. A present key is non-empty */
+        KeepsakeName: {
+            de?: string;
+            en?: string;
+        };
+        /** @description The text per language, at most 1200 characters each. A present key is non-empty */
+        KeepsakeText: {
+            de?: string;
+            en?: string;
+        };
+        /** @description A variant to create: a code and a price. It is for sale */
+        KeepsakeVariantWrite: {
+            /** @description The price in Rappen, above 0 */
+            priceRappen: number;
+            /** @description Letters and digits joined by - _ or ., unique in the shop */
+            skuCode: string;
+        };
         /** @description Text per language. A present key is non-empty and at most 20000 characters */
         LocalizedLongText: {
             de?: string;
@@ -3228,8 +3588,117 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
             type: string;
+        };
+        /** @description A keepsake with its working copy, variants and publish checks */
+        Product: {
+            /** @description What stops publishing, empty when it can go live */
+            blocking: components["schemas"]["PublishCheck"][];
+            commissionRate: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** @description A published keepsake whose draft differs from the live copy */
+            hasUnpublishedEdits: boolean;
+            /** Format: uuid */
+            id: string;
+            /** @description The working copy: the draft, else the published text */
+            name: {
+                de?: string;
+                en?: string;
+            };
+            /** @description The working photos in order, the first is the cover */
+            photos: components["schemas"]["Media"][];
+            rowVersion: number;
+            /** @description The web address per language, set at the first publish */
+            slug: {
+                de?: string;
+                en?: string;
+            } | null;
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: uuid */
+            storeId: string;
+            text: {
+                de?: string;
+                en?: string;
+            };
+            /** Format: date-time */
+            updatedAt: string;
+            variants: components["schemas"]["ProductVariant"][];
+            warnings: components["schemas"]["PublishCheck"][];
+        };
+        /** @description A new keepsake as a draft, with its one variant */
+        ProductCreateBody: {
+            /** @description The share of a sale that a referral partner earns, from 0 to 0.5 */
+            commissionRate?: number;
+            name: components["schemas"]["KeepsakeName"];
+            photoIds?: string[];
+            text?: components["schemas"]["KeepsakeText"];
+            /** @description Exactly one variant until options exist (E6.2) */
+            variants: components["schemas"]["KeepsakeVariantWrite"][];
+        };
+        /** @description The keepsakes of the store, newest first */
+        ProductList: {
+            items: components["schemas"]["ProductListItem"][];
+        };
+        /** @description One row of the keepsake list */
+        ProductListItem: {
+            /** @description The first photo */
+            cover: {
+                byteSize: number;
+                contentType: string;
+                height: number | null;
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "image" | "audio" | "pdf";
+                /** @description The public URL of the original. Null until the file is ready */
+                publicUrl: string | null;
+                /** @enum {string} */
+                status: "processing" | "ready" | "retired";
+                /** @description Resized copies of an image. Empty until the file is ready */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+                width: number | null;
+            } | null;
+            hasUnpublishedEdits: boolean;
+            /** Format: uuid */
+            id: string;
+            name: {
+                de?: string;
+                en?: string;
+            };
+            /** @description Variants with no unit available. Always 0 until stock exists (E6.3) */
+            soldOutCount: number;
+            /** @enum {string} */
+            status: "draft" | "published";
+            /** Format: date-time */
+            updatedAt: string;
+            /** @description Variants that are not archived */
+            variantCount: number;
+        };
+        /** @description The autosave. name, text and photoIds replace the draft. commissionRate is saved live */
+        ProductSaveBody: {
+            /** @description The share of a sale that a referral partner earns, from 0 to 0.5 */
+            commissionRate?: number;
+            name?: components["schemas"]["KeepsakeName"];
+            photoIds?: string[];
+            text?: components["schemas"]["KeepsakeText"];
+        };
+        /** @description A variant (SKU) of a keepsake */
+        ProductVariant: {
+            /** Format: uuid */
+            id: string;
+            priceRappen: number;
+            skuCode: string;
+            /**
+             * @description published is for sale, draft is hidden from guests
+             * @enum {string}
+             */
+            status: "published" | "draft";
         };
         PublicCategory: {
             /** Format: uuid */
@@ -4013,6 +4482,24 @@ export interface components {
         };
         PublicTourList: {
             items: components["schemas"]["PublicTourCard"][];
+        };
+        /** @description One thing the publish card reports */
+        PublishCheck: {
+            /**
+             * @description The card of the edit screen that fixes it
+             * @enum {string}
+             */
+            card: "basics" | "photos" | "variants" | "commission";
+            /** @enum {string} */
+            code: "language" | "photos" | "variant-for-sale" | "other-language" | "hidden" | "commission-zero";
+            /** @description SKU codes the check names */
+            codes?: string[];
+            count?: number;
+            /**
+             * @description With other-language: the language that has no full text
+             * @enum {string}
+             */
+            language?: "en" | "de";
         };
         ResendManagerInvitation: {
             /**
@@ -4946,6 +5433,16 @@ export interface components {
             byteSize: number;
             /** @description The type of the file: image/jpeg, image/png, image/webp, audio/mpeg or application/pdf */
             contentType: string;
+        };
+        /** @description A change to one variant */
+        VariantSaveBody: {
+            priceRappen?: number;
+            skuCode?: string;
+            /**
+             * @description published is for sale, draft is hidden from guests
+             * @enum {string}
+             */
+            status?: "published" | "draft";
         };
     };
     responses: never;

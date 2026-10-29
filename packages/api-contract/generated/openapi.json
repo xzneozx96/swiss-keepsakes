@@ -377,6 +377,63 @@
         ],
         "type": "object"
       },
+      "KeepsakeName": {
+        "additionalProperties": false,
+        "description": "The name per language, at most 90 characters each. A present key is non-empty",
+        "properties": {
+          "de": {
+            "maxLength": 90,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 90,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "KeepsakeText": {
+        "additionalProperties": false,
+        "description": "The text per language, at most 1200 characters each. A present key is non-empty",
+        "properties": {
+          "de": {
+            "maxLength": 1200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 1200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "KeepsakeVariantWrite": {
+        "additionalProperties": false,
+        "description": "A variant to create: a code and a price. It is for sale",
+        "properties": {
+          "priceRappen": {
+            "description": "The price in Rappen, above 0",
+            "maximum": 100000000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "skuCode": {
+            "description": "Letters and digits joined by - _ or ., unique in the shop",
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "skuCode",
+          "priceRappen"
+        ],
+        "type": "object"
+      },
       "LocalizedLongText": {
         "additionalProperties": false,
         "description": "Text per language. A present key is non-empty and at most 20000 characters",
@@ -1755,7 +1812,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -1765,6 +1822,373 @@
           "title",
           "instance",
           "requestId"
+        ],
+        "type": "object"
+      },
+      "Product": {
+        "description": "A keepsake with its working copy, variants and publish checks",
+        "properties": {
+          "blocking": {
+            "description": "What stops publishing, empty when it can go live",
+            "items": {
+              "$ref": "#/components/schemas/PublishCheck"
+            },
+            "type": "array"
+          },
+          "commissionRate": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "hasUnpublishedEdits": {
+            "description": "A published keepsake whose draft differs from the live copy",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "description": "The working copy: the draft, else the published text",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "photos": {
+            "description": "The working photos in order, the first is the cover",
+            "items": {
+              "$ref": "#/components/schemas/Media"
+            },
+            "type": "array"
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "slug": {
+            "description": "The web address per language, set at the first publish",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "type": "string"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "text": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/ProductVariant"
+            },
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/PublishCheck"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "storeId",
+          "status",
+          "name",
+          "text",
+          "photos",
+          "commissionRate",
+          "slug",
+          "hasUnpublishedEdits",
+          "variants",
+          "blocking",
+          "warnings",
+          "rowVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ProductCreateBody": {
+        "additionalProperties": false,
+        "description": "A new keepsake as a draft, with its one variant",
+        "properties": {
+          "commissionRate": {
+            "description": "The share of a sale that a referral partner earns, from 0 to 0.5",
+            "maximum": 0.5,
+            "minimum": 0,
+            "type": "number"
+          },
+          "name": {
+            "$ref": "#/components/schemas/KeepsakeName"
+          },
+          "photoIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 12,
+            "type": "array"
+          },
+          "text": {
+            "$ref": "#/components/schemas/KeepsakeText"
+          },
+          "variants": {
+            "description": "Exactly one variant until options exist (E6.2)",
+            "items": {
+              "$ref": "#/components/schemas/KeepsakeVariantWrite"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "variants"
+        ],
+        "type": "object"
+      },
+      "ProductList": {
+        "description": "The keepsakes of the store, newest first",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "ProductListItem": {
+        "description": "One row of the keepsake list",
+        "properties": {
+          "cover": {
+            "description": "The first photo",
+            "properties": {
+              "byteSize": {
+                "type": "integer"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "height": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "pdf"
+                ],
+                "type": "string"
+              },
+              "publicUrl": {
+                "description": "The public URL of the original. Null until the file is ready",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "processing",
+                  "ready",
+                  "retired"
+                ],
+                "type": "string"
+              },
+              "variants": {
+                "description": "Resized copies of an image. Empty until the file is ready",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "width": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "status",
+              "contentType",
+              "byteSize",
+              "width",
+              "height",
+              "publicUrl",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "hasUnpublishedEdits": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "soldOutCount": {
+            "description": "Variants with no unit available. Always 0 until stock exists (E6.3)",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "variantCount": {
+            "description": "Variants that are not archived",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "hasUnpublishedEdits",
+          "cover",
+          "variantCount",
+          "soldOutCount",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ProductSaveBody": {
+        "additionalProperties": false,
+        "description": "The autosave. name, text and photoIds replace the draft. commissionRate is saved live",
+        "properties": {
+          "commissionRate": {
+            "description": "The share of a sale that a referral partner earns, from 0 to 0.5",
+            "maximum": 0.5,
+            "minimum": 0,
+            "type": "number"
+          },
+          "name": {
+            "$ref": "#/components/schemas/KeepsakeName"
+          },
+          "photoIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 12,
+            "type": "array"
+          },
+          "text": {
+            "$ref": "#/components/schemas/KeepsakeText"
+          }
+        },
+        "type": "object"
+      },
+      "ProductVariant": {
+        "description": "A variant (SKU) of a keepsake",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "priceRappen": {
+            "type": "integer"
+          },
+          "skuCode": {
+            "type": "string"
+          },
+          "status": {
+            "description": "published is for sale, draft is hidden from guests",
+            "enum": [
+              "published",
+              "draft"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "skuCode",
+          "priceRappen",
+          "status"
         ],
         "type": "object"
       },
@@ -5500,6 +5924,55 @@
         },
         "required": [
           "items"
+        ],
+        "type": "object"
+      },
+      "PublishCheck": {
+        "description": "One thing the publish card reports",
+        "properties": {
+          "card": {
+            "description": "The card of the edit screen that fixes it",
+            "enum": [
+              "basics",
+              "photos",
+              "variants",
+              "commission"
+            ],
+            "type": "string"
+          },
+          "code": {
+            "enum": [
+              "language",
+              "photos",
+              "variant-for-sale",
+              "other-language",
+              "hidden",
+              "commission-zero"
+            ],
+            "type": "string"
+          },
+          "codes": {
+            "description": "SKU codes the check names",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "language": {
+            "description": "With other-language: the language that has no full text",
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "card"
         ],
         "type": "object"
       },
@@ -9738,6 +10211,31 @@
           "byteSize"
         ],
         "type": "object"
+      },
+      "VariantSaveBody": {
+        "additionalProperties": false,
+        "description": "A change to one variant",
+        "properties": {
+          "priceRappen": {
+            "maximum": 100000000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "skuCode": {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "description": "published is for sale, draft is hidden from guests",
+            "enum": [
+              "published",
+              "draft"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
       }
     }
   },
@@ -12184,6 +12682,481 @@
               }
             },
             "description": "The pin is live with its draft",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductList"
+                }
+              }
+            },
+            "description": "The keepsakes of the store, newest first",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The new draft keepsake with its one variant for sale",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/{productId}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake with its working copy and publish checks",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductSaveBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake with the change saved. A left-out field stays, a list replaces",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/{productId}/publish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake is live with its working copy",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/{productId}/unpublish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake is a draft again. Its live text is kept",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/{productId}/variants/{skuId}": {
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "skuId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VariantSaveBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake with the variant changed. The change is live at once and takes no row version",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",

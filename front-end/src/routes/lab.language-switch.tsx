@@ -1,11 +1,11 @@
-import type { LanguageStatus } from '@/features/lab/language-version-switch'
+import type { LanguageStatus } from '@/components/language-version-switch'
 
 import { Button, Chip, Input, Label, TextField } from '@heroui/react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import { BackIcon } from '@/components/icons'
-import { LanguageVersionSwitch } from '@/features/lab/language-version-switch'
+import { LanguageVersionSwitch } from '@/components/language-version-switch'
 import { noIndexHead } from '@/lib/no-index'
 
 /** Lab: the chosen design of the merchant language version switch (story and keepsake editors). Not part of the product. */

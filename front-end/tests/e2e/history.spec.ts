@@ -15,7 +15,7 @@ const HOME = '/en'
 const SIGN_IN = 'Sign in to continue'
 
 const GUEST_ROUTES = ['/en/gifts', '/en/gifts/:gift', '/en/tours', '/en/stories', '/en/stories/musegg-morning', '/en/search', '/cart', '/en/plan', '/en/credits', '/account', '/account/orders/:order']
-const OWNER_ROUTES = ['/store', '/store/orders', '/store/orders/:order', '/store/calendar', '/store/sales', '/store/reports', '/store/reports/sales', '/store/reports/costs', '/store/reports/guests', '/store/reports/margin', '/store/partners', '/store/partners/:partner', '/store/partners/analytics', '/store/products', '/store/products/gifts/:gift', '/store/products/tours', '/store/products/tours/:tour', '/store/content', '/store/content/analytics', '/store/content/reviews', '/store/requests', '/store/requests/analytics', '/store/requests/questions']
+const OWNER_ROUTES = ['/store', '/store/orders', '/store/orders/:order', '/store/calendar', '/store/sales', '/store/reports', '/store/reports/sales', '/store/reports/costs', '/store/reports/guests', '/store/reports/margin', '/store/partners', '/store/partners/:partner', '/store/partners/analytics', '/store/products', '/store/products/tours/:tour', '/store/content', '/store/content/analytics', '/store/content/reviews', '/store/requests', '/store/requests/analytics', '/store/requests/questions']
 
 interface Ids { gift: string, giftId: string, tour: string, order: string, partner: string }
 
@@ -86,8 +86,6 @@ const ENTRIES: Record<string, Entry> = {
   // The cost data page is not a tab: the margin report links to it ("Enter costs").
   '/store/reports/costs': { parent: '/store/reports/margin' },
   '/store/partners/:partner': { parent: '/store/partners' },
-  '/store/products/gifts/:gift': { parent: '/store/products' },
-  '/store/products/tours': { parent: '/store/products', tab: /^Tours/ },
   '/store/products/tours/:tour': { parent: '/store/products/tours' },
   '/store/requests/analytics': { parent: '/store/requests', tab: /^Analytics/ },
   '/store/requests/questions': { parent: '/store/requests', tab: /^Questions/ },
