@@ -1,12 +1,12 @@
 import { meSchema, problemSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { LocaleProvider } from '@/contexts/locale-context'
-import { DataClientProvider } from '@/features/data-client'
+import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
+import { DataClientProvider, queryKeys } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 import { OnboardingScreen } from '@/features/stores/components/onboarding-screen'
@@ -39,6 +39,7 @@ function renderAt(path: string, { realOnboarding = false } = {}) {
   const root = createRootRoute({ component: Outlet, notFoundComponent: () => <p>No such page</p> })
   const store = createRoute({ getParentRoute: () => root, path: '/store', component: StoreRoute.options.component })
   const children = createRoute({ getParentRoute: () => store, path: '/', component: () => <p>Shell children</p> })
+  const calendar = createRoute({ getParentRoute: () => store, path: '/calendar', component: () => <p>Calendar page</p> })
   const categories = createRoute({ getParentRoute: () => store, path: '/content/categories', component: () => <p>Categories page</p> })
   const onboarding = createRoute({
     getParentRoute: () => root,
@@ -47,7 +48,7 @@ function renderAt(path: string, { realOnboarding = false } = {}) {
   })
   const signIn = createRoute({ getParentRoute: () => root, path: '/sign-in', component: () => <p>Sign-in screen</p> })
   const router = createRouter({
-    routeTree: root.addChildren([store.addChildren([children, categories]), onboarding, signIn]),
+    routeTree: root.addChildren([store.addChildren([children, categories, calendar]), onboarding, signIn]),
     history: createMemoryHistory({ initialEntries: [path] }),
     disableGlobalCatchBoundary: true,
   })
@@ -65,6 +66,12 @@ function renderAt(path: string, { realOnboarding = false } = {}) {
   )
 
   return router
+}
+
+/** GET /api/me has answered, whatever it said, and the screen has drawn the answer: what a "no link" test needs before it looks. */
+async function meSettled() {
+  await waitFor(() => expect(demo.queryClient.getQueryState(queryKeys.stores.me)).toMatchObject({ fetchStatus: 'idle', status: expect.stringMatching(/^(success|error)$/) }))
+  await act(async () => {})
 }
 
 describe('the /store area while the store is onboarding [E2.16][E2.3]', () => {
@@ -90,13 +97,37 @@ describe('the /store area while the store is onboarding [E2.16][E2.3]', () => {
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0)
   })
 
+  it('does not show the notice on the Calendar, which fills the content area to the edge, and keeps the menu', async () => {
+    answer = () => meBody([entry('owner', 'onboarding')])
+    renderAt('/store/calendar')
+
+    expect(await screen.findByText('Calendar page')).toBeInTheDocument()
+    await meSettled()
+    expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Open your store' })).not.toBeInTheDocument()
+  })
+
+  it('shows the notice in German, with the link in German', async () => {
+    await loadDictionary('de')
+    localStorage.setItem('sk.language', JSON.stringify('de'))
+    answer = () => meBody([entry('owner', 'onboarding')])
+    renderAt('/store')
+
+    expect(await screen.findByText(/Ihr Shop ist noch nicht im Verkauf\./)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ihren Shop eröffnen' })).toHaveAttribute('href', '/store/onboarding')
+    expect(document.body.textContent).not.toMatch(/\bstores\.[a-z]/)
+  })
+
   it('shows the shell to the Owner of a live store, with no link to Open your store', async () => {
     answer = () => meBody([entry('owner', 'live')])
     renderAt('/store')
 
     expect(await screen.findByText('Shell children')).toBeInTheDocument()
+    await meSettled()
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0)
-    await waitFor(() => expect(screen.queryByRole('link', { name: 'Open your store' })).not.toBeInTheDocument())
+    expect(screen.queryByRole('link', { name: 'Open your store' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
   })
 
   it('shows the shell to a Manager of an onboarding store, with no link to Open your store', async () => {
@@ -104,7 +135,9 @@ describe('the /store area while the store is onboarding [E2.16][E2.3]', () => {
     renderAt('/store')
 
     expect(await screen.findByText('Shell children')).toBeInTheDocument()
+    await meSettled()
     expect(screen.queryByRole('link', { name: 'Open your store' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
   })
 
   it.each([401, 500])('shows the shell when GET /api/me answers %i', async (status) => {
@@ -112,7 +145,9 @@ describe('the /store area while the store is onboarding [E2.16][E2.3]', () => {
     renderAt('/store')
 
     expect(await screen.findByText('Shell children')).toBeInTheDocument()
+    await meSettled()
     expect(screen.queryByRole('link', { name: 'Open your store' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
   })
 })
 
@@ -146,5 +181,6 @@ describe('the Open your store screen for someone who does not belong [E2.16][E2.
     const router = renderAt('/store/onboarding', { realOnboarding: true })
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
+    expect(router.state.location.search).toEqual({ returnTo: '/store/onboarding' })
   })
 })
