@@ -2,7 +2,7 @@ import type { Tx } from './platform/db/client.ts'
 import type { CommandDeps } from './platform/http/app.ts'
 import process from 'node:process'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
-import { guardUseCases, mappingDatabaseErrors } from './modules/content/adapters/database-errors.ts'
+import { guardUseCases } from './modules/content/adapters/database-errors.ts'
 import { createMediaRepository } from './modules/content/adapters/media-repository.ts'
 import { createPinRepository } from './modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from './modules/content/adapters/public-repository.ts'
@@ -157,7 +157,7 @@ async function main() {
     const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit, clock: systemClock }
     const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit, clock: systemClock }
     const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock }
-    const categoryDeps = { uow, categories: createCategoryRepository(), audit, clock: systemClock, guard: mappingDatabaseErrors }
+    const categoryDeps = { uow, categories: createCategoryRepository(), audit, clock: systemClock }
     const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock }
     const writeUseCases = guardUseCases({
       createPin: makeCreatePin(pinDeps),

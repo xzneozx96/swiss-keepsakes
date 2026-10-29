@@ -4,7 +4,7 @@ import type { Tx } from '../../src/platform/db/client.ts'
 import type { openTestDatabase } from './support.ts'
 import { randomUUID } from 'node:crypto'
 import { createCategoryRepository } from '../../src/modules/content/adapters/category-repository.ts'
-import { guardUseCases, mappingDatabaseErrors } from '../../src/modules/content/adapters/database-errors.ts'
+import { guardUseCases } from '../../src/modules/content/adapters/database-errors.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { createPinRepository } from '../../src/modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from '../../src/modules/content/adapters/public-repository.ts'
@@ -54,7 +54,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
   const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit: createAuditLog(systemClock), clock: systemClock }
   const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
-  const categoryDeps = { uow, categories, audit: createAuditLog(systemClock), clock: systemClock, guard: mappingDatabaseErrors }
+  const categoryDeps = { uow, categories, audit: createAuditLog(systemClock), clock: systemClock }
   const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock }
   const writeUseCases = guardUseCases({
     createPin: makeCreatePin(pinDeps),

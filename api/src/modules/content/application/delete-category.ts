@@ -7,13 +7,13 @@ import { categoryEntity, siblingsOf } from './category-deps.ts'
 import { fail, ok } from './failure.ts'
 
 // Refused while it has a sub-category, or a pin or story group tagged with it (whatever their status). A link added
-// after the count makes the database refuse; `guard` turns that into in-use, which is category-in-use here.
-export function makeDeleteCategory<T>({ uow, categories, audit, clock, guard }: CategoryDeps<T>) {
+// after the count makes the database refuse; guardUseCases maps that to in-use, and the delete route words it category-in-use.
+export function makeDeleteCategory<T>({ uow, categories, audit, clock }: CategoryDeps<T>) {
   return async (actor: Actor, storeId: string, kind: CategoryKind, id: string, requestId: string | null): Promise<Result<{ id: string }>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
     const categoryId = id.toLowerCase()
-    const result = await guard(() => uow.run(async (tx): Promise<Result<{ id: string }>> => {
+    return uow.run(async (tx): Promise<Result<{ id: string }>> => {
       await categories.lockList(tx, storeId, kind)
       const rows = await categories.list(tx, storeId, kind)
       const category = rows.find(row => row.id === categoryId)
@@ -36,7 +36,6 @@ export function makeDeleteCategory<T>({ uow, categories, audit, clock, guard }: 
         requestId,
       })
       return ok({ id: categoryId })
-    }))
-    return !result.ok && result.reason === 'in-use' ? fail({ reason: 'category-in-use' }) : result
+    })
   }
 }

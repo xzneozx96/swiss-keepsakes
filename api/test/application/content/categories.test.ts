@@ -1,7 +1,7 @@
 import type { Actor } from '@sk/domain/identity'
 import type { AuditEntry } from '../../../src/modules/content/ports.ts'
 import { describe, expect, it } from 'vitest'
-import { mappingDatabaseErrors } from '../../../src/modules/content/adapters/database-errors.ts'
+import { guardUseCases } from '../../../src/modules/content/adapters/database-errors.ts'
 import { failureProblem } from '../../../src/modules/content/adapters/problems.ts'
 import { makeCreateCategory } from '../../../src/modules/content/application/create-category.ts'
 import { makeDeleteCategory } from '../../../src/modules/content/application/delete-category.ts'
@@ -25,7 +25,6 @@ function setup() {
     categories,
     audit: { record: async (_tx: null, entry: AuditEntry) => void audit.push(entry) },
     clock: createManualClock(new Date('2026-10-28T10:00:00Z')),
-    guard: mappingDatabaseErrors,
   }
   return {
     categories,
@@ -34,7 +33,7 @@ function setup() {
     create: makeCreateCategory(deps),
     save: makeSaveCategory(deps),
     reorder: makeReorderCategories(deps),
-    remove: makeDeleteCategory(deps),
+    remove: guardUseCases({ remove: makeDeleteCategory(deps) }).remove,
   }
 }
 type S = ReturnType<typeof setup>
@@ -213,12 +212,12 @@ describe('category use cases', () => {
     expect(await s.remove(manager, store, 'map', a.id, null)).toEqual({ ok: false, reason: 'not-found' })
   })
 
-  it('[E4.18][AC87] AC-4 a link added after the count makes the database refuse; the answer is category-in-use, not an error', async () => {
+  it('[E4.18][AC87] AC-4 a link added after the count makes the database refuse; the guarded answer is in-use (the route words it category-in-use), not an error', async () => {
     const s = setup()
     const target = await made(s, { en: 'Target' })
     s.categories.removeRefused.add(target.id)
     const result = await s.remove(manager, store, 'map', target.id, null)
-    expect(result).toEqual({ ok: false, reason: 'category-in-use' })
+    expect(result).toEqual({ ok: false, reason: 'in-use' })
     expect(s.categories.rows.has(target.id)).toBe(true)
   })
 
