@@ -186,8 +186,125 @@ describe('[E2.6] story repository on the real database', () => {
     const other = await version(s, b.id, 'en', { slug: slug() })
     expect(await s.use.saveVersion(s.actor, s.store, b.id, 'en', other.rowVersion, { slug: taken }, null)).toEqual({ ok: false, reason: 'slug-taken' })
     expect((await versionRow(b.id))?.row_version).toBe(1)
-    // The same slug in the other language is another URL.
-    expect(await s.use.createVersion(s.actor, s.store, b.id, 'de', { slug: taken }, null)).toMatchObject({ ok: true })
+    // Another story may use the same link in the other language only while this story has no version there.
+    const lone = await group(s)
+    expect(await s.use.createVersion(s.actor, s.store, lone.id, 'de', { slug: taken }, null)).toMatchObject({ ok: true })
+  })
+
+  describe('[E2.14][AC30] both language versions carry one link on the real database', () => {
+    const links = async (groupId: string) => (await pool.query<{ language: string, slug: string | null, row_version: number }>(
+      'select language, slug, row_version from content.story_versions where group_id = $1 order by language',
+      [groupId],
+    )).rows
+
+    it('[E2.14][AC30] a version created second takes the link, and a given link is written to both', async () => {
+      const s = setup()
+      const first = slug()
+      const g = await group(s)
+      await version(s, g.id, 'en', { slug: first, draft: doc() })
+      expect(await s.use.createVersion(s.actor, s.store, g.id, 'de', { draft: doc() }, null)).toMatchObject({ ok: true, value: { slug: first } })
+      expect(await links(g.id)).toEqual([{ language: 'de', slug: first, row_version: 1 }, { language: 'en', slug: first, row_version: 1 }])
+      const other = slug()
+      const h = await group(s)
+      await version(s, h.id, 'en', { slug: slug(), draft: doc() })
+      expect(await s.use.createVersion(s.actor, s.store, h.id, 'de', { slug: other, draft: doc() }, null)).toMatchObject({ ok: true, value: { slug: other } })
+      expect(await links(h.id)).toEqual([{ language: 'de', slug: other, row_version: 1 }, { language: 'en', slug: other, row_version: 2 }])
+    })
+
+    it('[E2.14][AC30] a save in either language writes both versions and bumps the other one', async () => {
+      const s = setup()
+      const g = await group(s)
+      const link = slug()
+      await version(s, g.id, 'en', { slug: link, draft: doc() })
+      await version(s, g.id, 'de', { draft: doc() })
+      const next = slug()
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'de', 1, { slug: next }, null)).toMatchObject({ ok: true, value: { slug: next, rowVersion: 2 } })
+      expect(await links(g.id)).toEqual([{ language: 'de', slug: next, row_version: 2 }, { language: 'en', slug: next, row_version: 2 }])
+      const last = slug()
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'en', 2, { slug: last }, null)).toMatchObject({ ok: true })
+      expect(await links(g.id)).toEqual([{ language: 'de', slug: last, row_version: 3 }, { language: 'en', slug: last, row_version: 3 }])
+    })
+
+    it('[E2.14][AC30] a link another story holds in either language is refused, and neither version changes', async () => {
+      const s = setup()
+      const [bothTaken, enOnly, deOnly] = [slug(), slug(), slug()]
+      const a = await group(s)
+      await version(s, a.id, 'en', { slug: bothTaken, draft: doc() })
+      await version(s, a.id, 'de', { draft: doc() })
+      const en = await group(s)
+      await version(s, en.id, 'en', { slug: enOnly, draft: doc() })
+      const de = await group(s)
+      await version(s, de.id, 'de', { slug: deOnly, draft: doc() })
+
+      const mine = slug()
+      const b = await group(s)
+      await version(s, b.id, 'en', { slug: mine, draft: doc() })
+      await version(s, b.id, 'de', { draft: doc() })
+      const before = await links(b.id)
+      // Taken in both languages, only in English (the clash is on the saved row), only in German (the clash is on the
+      // row beside it, so the saved row must not stay half written).
+      for (const taken of [bothTaken, enOnly, deOnly]) {
+        for (const language of ['en', 'de'] as const) {
+          expect(await s.use.saveVersion(s.actor, s.store, b.id, language, 1, { slug: taken }, null)).toEqual({ ok: false, reason: 'slug-taken' })
+          expect(await links(b.id)).toEqual(before)
+        }
+      }
+      // A new version whose link clashes in the other language creates nothing and changes nothing.
+      const c = await group(s)
+      await version(s, c.id, 'en', { slug: slug(), draft: doc() })
+      const beforeC = await links(c.id)
+      expect(await s.use.createVersion(s.actor, s.store, c.id, 'de', { slug: deOnly, draft: doc() }, null)).toEqual({ ok: false, reason: 'slug-taken' })
+      expect(await links(c.id)).toEqual(beforeC)
+    })
+
+    it('[E2.14][AC30] stories whose links differ are aligned by the next save of the link', async () => {
+      const s = setup()
+      const g = await group(s)
+      const [enLink, deLink] = [slug(), slug()]
+      await version(s, g.id, 'en', { slug: enLink, draft: doc() })
+      await version(s, g.id, 'de', { draft: doc() })
+      await pool.query(`update content.story_versions set slug = $2 where group_id = $1 and language = 'de'`, [g.id, deLink])
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'en', 1, { draft: doc({ title: 'Edited' }) }, null)).toMatchObject({ ok: true })
+      expect((await links(g.id)).map(l => l.slug)).toEqual([deLink, enLink])
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'en', 2, { slug: enLink }, null)).toMatchObject({ ok: true })
+      expect((await links(g.id)).map(l => l.slug)).toEqual([enLink, enLink])
+    })
+
+    it('[E2.14][AC30] clearing the link is refused while the other language is published, and a draft pair clears together', async () => {
+      const s = setup()
+      const g = await group(s)
+      const ready = await complete(s.store)
+      await version(s, g.id, 'en', ready)
+      await version(s, g.id, 'de', { draft: ready.draft })
+      await s.use.publish(s.actor, s.store, g.id, 'de', 1, null)
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'en', 1, { slug: null }, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
+      expect((await links(g.id)).map(l => l.slug)).toEqual([ready.slug, ready.slug])
+      const d = await group(s)
+      await version(s, d.id, 'en', { slug: slug(), draft: doc() })
+      await version(s, d.id, 'de', { draft: doc() })
+      expect(await s.use.saveVersion(s.actor, s.store, d.id, 'en', 1, { slug: null }, null)).toMatchObject({ ok: true })
+      expect((await links(d.id)).map(l => l.slug)).toEqual([null, null])
+    })
+
+    it('[E2.14][AC30] a draft moved into a group takes the link of the other language there, or is refused when another story holds it', async () => {
+      const s = setup()
+      const [target, taken] = [slug(), slug()]
+      const a = await group(s)
+      const b = await group(s)
+      await version(s, a.id, 'de', { slug: slug(), draft: doc() })
+      await version(s, b.id, 'en', { slug: target, draft: doc() })
+      expect(await s.use.move(s.actor, s.store, a.id, 'de', 1, b.id, null)).toMatchObject({ ok: true, value: { groupId: b.id, slug: target } })
+      expect((await links(b.id)).map(l => l.slug)).toEqual([target, target])
+      const holder = await group(s)
+      await version(s, holder.id, 'de', { slug: taken, draft: doc() })
+      const c = await group(s)
+      const d = await group(s)
+      await version(s, c.id, 'de', { slug: slug(), draft: doc() })
+      await version(s, d.id, 'en', { slug: taken, draft: doc() })
+      expect(await s.use.move(s.actor, s.store, c.id, 'de', 1, d.id, null)).toEqual({ ok: false, reason: 'slug-taken' })
+      expect((await links(c.id)).map(l => l.language)).toEqual(['de'])
+      expect((await links(d.id)).map(l => l.language)).toEqual(['en'])
+    })
   })
 
   it('[E2.6] media_refs follow the save: draft refs replaced, published refs after publish, so retiring a used media row is refused by the database', async () => {
@@ -610,6 +727,37 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     expect(moved.status).toBe(200)
     expect(moved.headers.get('ETag')).toBe('"2"')
     expect(await moved.json()).toMatchObject({ groupId: target.id, language: 'en', rowVersion: 2 })
+  }, timeout)
+
+  it('[E2.14][AC30] a link saved in one language is the link of both, another story\'s link answers 409 and changes neither', async () => {
+    const staff = await env.storeWithStaff()
+    const { owner, groups } = staff
+    const first = slug()
+    const { groupId, versionPath } = await groupAndVersion(staff, { slug: first, draft: doc() })
+    const german = await env.call(`${groups}/${groupId}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'de', draft: doc() } })
+    expect(german.status).toBe(201)
+    expect(await german.json()).toMatchObject({ slug: first })
+    const dePath = `${groups}/${groupId}/versions/de`
+    const link = async (language: 'en' | 'de') => ({ slug: (await pool.query<{ slug: string | null }>('select slug from content.story_versions where group_id = $1 and language = $2', [groupId, language])).rows[0]?.slug })
+
+    const next = slug()
+    const saved = await env.call(versionPath, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: { slug: next } })
+    expect(saved.status).toBe(200)
+    expect(saved.headers.get('ETag')).toBe('"2"')
+    expect(await saved.json()).toMatchObject({ slug: next })
+    expect(await link('de')).toMatchObject({ slug: next })
+    const stale = await env.call(dePath, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: { draft: doc({ title: 'Ein Tag' }) } })
+    expect(stale.status).toBe(412)
+
+    const other = slug()
+    const rival = await groupAndVersion(staff, { slug: other, draft: doc() })
+    const clash = await env.call(versionPath, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '2' }, body: { slug: other } })
+    expect(clash.status).toBe(409)
+    expect(await clash.json()).toMatchObject({ type: 'content-slug-taken' })
+    expect(await link('en')).toMatchObject({ slug: next })
+    expect(await link('de')).toMatchObject({ slug: next })
+    expect((await versionRow(groupId, 'de'))?.row_version).toBe(2)
+    expect(rival.made.status).toBe(201)
   }, timeout)
 
   it('[E2.6] AC-6 a retired cover answers 422 media-retired and the draft is unchanged', async () => {

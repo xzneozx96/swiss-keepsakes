@@ -31,7 +31,7 @@ async function snapshot(): Promise<Record<string, string>> {
 }
 
 describe('db:seed', () => {
-  it('[E2.12][E2.13] the seed imports drafts and a second run changes nothing', async () => {
+  it('[E2.12][E2.13][E2.14][AC30] the seed imports drafts, both languages share one link, and a second run changes nothing', async () => {
     await insertStore(pool, storeId)
     // A prototype slug that already exists in this store: its story is left alone, including the other language.
     const taken = seedStories.find(s => s.versions.en && s.versions.de)!
@@ -62,6 +62,13 @@ describe('db:seed', () => {
     expect(versions.rows).toHaveLength(expected)
     expect(versions.rows.every(v => v.status === 'draft' && v.published === null && v.published_at === null)).toBe(true)
     expect(versions.rows.filter(v => v.slug === taken.slug)).toHaveLength(1)
+    // Both language versions of a seeded story carry the one link (G-E214-SLUG), and a second run left them alone.
+    const perGroup = await pool.query<{ links: number, versions: number }>(
+      `select count(distinct slug)::int as links, count(*)::int as versions from content.story_versions where store_id = $1 group by group_id`,
+      [storeId],
+    )
+    expect(perGroup.rows.every(g => g.links === 1)).toBe(true)
+    expect(perGroup.rows.some(g => g.versions === 2)).toBe(true)
     const after = await pool.query(`select md5(t::text) as hash from content.story_versions t where store_id = $1 and slug = $2`, [storeId, taken.slug])
     expect(after.rows).toEqual(preExisting.rows)
 
