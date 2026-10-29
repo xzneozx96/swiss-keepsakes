@@ -482,10 +482,206 @@ describe('[E6.2][AC52] stores and keepsakes are separate', () => {
     expect((await get(one.id)).options).toEqual(one.options)
   })
 
-  it('[E6.2][AC52] a signed-out visitor is 401 and a guest of no store is 403', async () => {
+  it('[E6.2][AC52] a signed-out visitor is 401 and a guest of no store is 403, on the options save, a new variant and a variant change', async () => {
     const { withOptions, call, products } = await setup()
     const product = await withOptions()
+    const guest = await env.signIn()
+    const target = `${products}/${product.id}`
+    const attempts = (headers: Record<string, string>) => Promise.all([
+      call(`${target}/options`, { method: 'PUT', headers: { ...headers, 'If-Match': String(product.rowVersion) }, body: { options: [] } }),
+      call(`${target}/variants`, { method: 'POST', headers, body: { skuCode: code(), priceRappen: 100, values: {} } }),
+      call(`${target}/variants/${product.variants[0]!.id}`, { method: 'PATCH', headers, body: { priceRappen: 200 } }),
+    ])
 
-    expect((await call(`${products}/${product.id}/options`, { method: 'PUT', headers: { 'If-Match': '1' }, body: { options: [] } })).status).toBe(401)
+    expect((await attempts({})).map(r => r.status)).toEqual([401, 401, 401])
+    expect((await attempts(guest.headers)).map(r => r.status)).toEqual([403, 403, 403])
+  })
+
+  it('[E6.2][AC52] a variant id of another keepsake in an options save is 422 refs-invalid, and nothing is written', async () => {
+    const { withOptions, plain, putOptions, get } = await setup()
+    const one = await withOptions()
+    const other = await plain()
+
+    const response = await putOptions(one.id, one.rowVersion, { options: asInput(one.options), variantValues: [{ variantId: other.variants[0]!.id, values: {} }] })
+
+    expect(response.status).toBe(422)
+    expect((await response.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'refs-invalid', path: `variantValues.${other.variants[0]!.id}` })])
+    expect(await get(one.id)).toEqual(one)
+    expect(await get(other.id)).toEqual(other)
+  })
+})
+
+describe('[E6.2][AC52] keys that name no option are refused, never a 500', () => {
+  const junk = randomUUID()
+
+  it('[E6.2][AC52] a new keepsake with a value for an option it does not have is 422 value-unknown and nothing is created', async () => {
+    const { create, products, owner, call } = await setup({ fresh: true })
+
+    const bare = await create({ variants: [{ skuCode: code(), priceRappen: 100, values: { x: 'y' } }] })
+    const sized = await create({ options: [sizeOption], variants: [{ skuCode: code(), priceRappen: 100, values: { size: 's', colour: 'red' } }] })
+
+    expect(bare.status).toBe(422)
+    expect((await bare.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'value-unknown', path: 'variants.0.values.x' })])
+    expect(sized.status).toBe(422)
+    expect((await sized.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'value-unknown', path: 'variants.0.values.colour' })])
+    expect(((await (await call(products, { headers: owner.headers })).json()) as { items: unknown[] }).items).toHaveLength(0)
+  })
+
+  it('[E6.2][AC52] a variant change on a keepsake with no option, with ids that exist nowhere, is 422 value-unknown', async () => {
+    const { plain, patchVariant, get } = await setup()
+    const product = await plain()
+
+    const response = await patchVariant(product.id, product.variants[0]!.id, { values: { [junk]: randomUUID() } })
+
+    expect(response.status).toBe(422)
+    expect((await response.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'value-unknown', path: `values.${junk}` })])
+    expect(await get(product.id)).toEqual(product)
+  })
+
+  it('[E6.2][AC52] a variant change with the option id of another keepsake is 422 value-unknown', async () => {
+    const { withOptions, plain, patchVariant, get } = await setup()
+    const one = await withOptions()
+    const other = await plain()
+    const foreign = one.options[0]!
+
+    const response = await patchVariant(other.id, other.variants[0]!.id, { values: { [foreign.id]: foreign.values[0]!.id } })
+
+    expect(response.status).toBe(422)
+    expect((await response.json() as Problem).errors?.[0]).toMatchObject({ code: 'value-unknown' })
+    expect(await get(other.id)).toEqual(other)
+  })
+
+  it('[E6.2][AC52] a new variant with a key that is not an option of the keepsake is 422 value-unknown', async () => {
+    const { withOptions, postVariant, get } = await setup()
+    const product = await withOptions()
+    const free = { [product.options[0]!.id]: product.options[0]!.values[0]!.id, [product.options[1]!.id]: product.options[1]!.values[0]!.id }
+
+    const response = await postVariant(product.id, { skuCode: code(), priceRappen: 100, values: { ...free, [junk]: randomUUID() } })
+
+    expect(response.status).toBe(422)
+    expect((await response.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'value-unknown', path: `values.${junk}` })])
+    expect(await get(product.id)).toEqual(product)
+  })
+
+  it('[E6.2][AC52] an options save with a value for an option that is not in the save is 422 value-unknown, and nothing is written', async () => {
+    const { withOptions, putOptions, get } = await setup()
+    const product = await withOptions()
+
+    const response = await putOptions(product.id, product.rowVersion, { options: asInput(product.options), variantValues: [{ variantId: product.variants[0]!.id, values: { bogus: 'v' } }] })
+
+    expect(response.status).toBe(422)
+    expect((await response.json() as Problem).errors).toEqual([expect.objectContaining({ code: 'value-unknown', path: `variants.${product.variants[0]!.id}.values.bogus` })])
+    expect(await get(product.id)).toEqual(product)
+  })
+})
+
+describe('[E6.2][412] saves that run at the same time', () => {
+  it('[E6.2][412] two options saves on one version: exactly one wins, the other is 412, and the stored options are the winner\'s', async () => {
+    const { withOptions, putOptions, get } = await setup()
+
+    for (let round = 0; round < 3; round++) {
+      const product = await withOptions()
+      const named = (name: string) => ({ options: asInput(product.options).map((o, i) => (i === 0 ? { ...o, name: { en: name } } : o)) })
+
+      const [a, b] = await Promise.all([
+        putOptions(product.id, product.rowVersion, named('Size (a)')),
+        putOptions(product.id, product.rowVersion, named('Size (b)')),
+      ])
+
+      expect([a.status, b.status].sort()).toEqual([200, 412])
+      const winner = a.status === 200 ? 'Size (a)' : 'Size (b)'
+      const after = await get(product.id)
+      expect(after.options[0]!.name.en).toBe(winner)
+      expect(after.rowVersion).toBe(product.rowVersion + 1)
+      expect(after.options[1]).toEqual(product.options[1])
+    }
+  })
+
+  it('[E6.2][AC52] a new option racing a new variant on the old options never leaves a variant without a value for it', async () => {
+    const { create, putOptions, postVariant, get } = await setup()
+    const colour = { ref: 'new-colour', name: { en: 'Colour' }, values: [{ ref: 'red', label: { en: 'Red' }, swatch: null }] }
+
+    for (let round = 0; round < 4; round++) {
+      const response = await create({
+        options: [sizeOption, themeOption],
+        variants: [
+          { skuCode: code(), priceRappen: 100, values: { size: 's', theme: 'swan' } },
+          { skuCode: code(), priceRappen: 100, values: { size: 'l', theme: 'swan' } },
+          { skuCode: code(), priceRappen: 100, values: { size: 's', theme: 'lion' } },
+        ],
+      })
+      const product = await response.json() as View
+      const [size, theme] = product.options
+      const fourth = { skuCode: code(), priceRappen: 100, values: { [size!.id]: size!.values[1]!.id, [theme!.id]: theme!.values[1]!.id } }
+
+      const [put, post] = await Promise.all([
+        putOptions(product.id, product.rowVersion, {
+          options: [...asInput(product.options), colour],
+          variantValues: product.variants.map(v => ({ variantId: v.id, values: { 'new-colour': 'red' } })),
+        }),
+        postVariant(product.id, fourth),
+      ])
+
+      // One of them is first. The other then sees its result and is refused with values-missing.
+      expect([[200, 422], [201, 422]]).toContainEqual([put.status, post.status].sort())
+      const loser = put.status === 422 ? put : post
+      expect(loser.status).toBe(422)
+      expect((await loser.json() as Problem).errors?.[0]).toMatchObject({ code: 'values-missing' })
+      const after = await get(product.id)
+      for (const variant of after.variants)
+        expect(Object.keys(variant.values)).toHaveLength(after.options.length)
+      const counts = await pool.query<{ options: string, values: string }>(
+        `select (select count(*) from catalog.product_options where product_id = $1) as options,
+                (select count(*) from catalog.sku_option_values v join catalog.skus s on s.id = v.sku_id where s.product_id = $1) as values`,
+        [product.id],
+      )
+      expect(Number(counts.rows[0]!.values)).toBe(Number(counts.rows[0]!.options) * after.variants.length)
+    }
+  })
+})
+
+describe('[E6.2][AC52] the input limits at the API', () => {
+  const values = (count: number, prefix = 'v') => Array.from({ length: count }, (_, n) => ({ ref: `${prefix}${n}`, label: { en: `Value ${n}` } }))
+
+  async function refused(response: Response, path?: string) {
+    expect(response.status).toBe(400)
+    const problem = await response.json() as Problem
+    expect(problem.type).toBe('validation-failed')
+    if (path)
+      expect(problem.errors?.some(e => e.path.startsWith(path))).toBe(true)
+  }
+
+  it('[E6.2][AC52] an options save with 6 options, 51 values, an over-long name or label is 400 and nothing changes', async () => {
+    const { withOptions, putOptions, get } = await setup()
+    const product = await withOptions()
+    const send = (options: object[], variantValues?: object[]) => putOptions(product.id, product.rowVersion, { options, variantValues })
+    const option = (n: number, over: object = {}) => ({ ref: `o${n}`, name: { en: `Option ${n}` }, values: values(1), ...over })
+
+    await refused(await send(Array.from({ length: 6 }, (_, n) => option(n))), 'options')
+    await refused(await send([option(1, { values: values(51) })]), 'options')
+    await refused(await send([option(1, { name: { en: 'a'.repeat(61) } })]), 'options')
+    await refused(await send([option(1, { values: [{ ref: 'v', label: { de: 'b'.repeat(81) } }] })]), 'options')
+    await refused(await send([], Array.from({ length: 301 }, () => ({ variantId: randomUUID(), values: {} }))), 'variantValues')
+    await refused(await send([], [{ variantId: product.variants[0]!.id, values: Object.fromEntries(values(6).map(v => [v.ref, 'v0'])) }]), 'variantValues')
+    expect(await get(product.id)).toEqual(product)
+  })
+
+  it('[E6.2][AC52] the limits themselves are accepted: 5 options, 50 values', async () => {
+    const { create } = await setup()
+    const options = Array.from({ length: 5 }, (_, n) => ({ ref: `o${n}`, name: { en: `Option ${n}` }, values: values(n === 0 ? 50 : 1, `o${n}-v`) }))
+
+    const response = await create({ options, variants: [{ skuCode: code(), priceRappen: 100, values: Object.fromEntries(options.map(o => [o.ref, `${o.ref}-v0`])) }] })
+
+    expect(response.status).toBe(201)
+    expect(((await response.json()) as View).options[0]!.values).toHaveLength(50)
+  })
+
+  it('[E6.2][AC52] a new keepsake with 301 variants is 400, and nothing is created', async () => {
+    const { create, products, owner, call } = await setup({ fresh: true })
+    const variants = Array.from({ length: 301 }, (_, n) => ({ skuCode: `VX-LIM-${n}`, priceRappen: 100, values: { size: n % 2 ? 's' : 'l' } }))
+
+    await refused(await create({ options: [sizeOption], variants }), 'variants')
+    await refused(await create({ options: Array.from({ length: 6 }, (_, n) => ({ ref: `o${n}`, name: { en: 'x' }, values: values(1) })), variants: [{ skuCode: code(), priceRappen: 100 }] }), 'options')
+    expect(((await (await call(products, { headers: owner.headers })).json()) as { items: unknown[] }).items).toHaveLength(0)
   })
 })

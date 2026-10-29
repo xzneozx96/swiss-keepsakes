@@ -53,10 +53,14 @@ export function checkOptionDefinitions(options: OptionInput[], base = 'options')
 // A variant's values against the options, in ref space. A value of a missing or foreign option, or a missing value, is a
 // refusal; a twin among `others` (archived ones too: the unique key ignores the status) is `combination-taken`.
 export function checkVariantValues(options: Pick<ProductOption, 'id' | 'name' | 'values'>[], others: Valued[], values: Record<string, string>, path: string, code = ''): Refusal[] {
+  const unknown = Object.keys(values)
+    .filter(key => !options.some(option => option.id === key))
+    .map((key): Refusal => ({ code: 'value-unknown', path: `${path}.${key}` }))
+
   if (options.length === 0) {
     const [other] = others
 
-    return other ? [{ code: 'no-options-one-variant', path, params: { code: other.skuCode } }] : []
+    return other ? [{ code: 'no-options-one-variant', path, params: { code: other.skuCode } }, ...unknown] : unknown
   }
   const refusals: Refusal[] = []
 
@@ -68,10 +72,7 @@ export function checkVariantValues(options: Pick<ProductOption, 'id' | 'name' | 
     else if (!option.values.some(v => v.id === value))
       refusals.push({ code: 'value-unknown', path: `${path}.${option.id}`, params: { option: labelOf(option.name) } })
   }
-  for (const key of Object.keys(values)) {
-    if (!options.some(option => option.id === key))
-      refusals.push({ code: 'value-unknown', path: `${path}.${key}` })
-  }
+  refusals.push(...unknown)
   if (refusals.length === 0) {
     const twin = others.find(other => options.every(option => other.values[option.id] === values[option.id]))
 
@@ -126,6 +127,15 @@ export function checkOptionsSave(product: Pick<Product, 'options' | 'variants'>,
   for (const entry of input.variantValues) {
     if (!known.has(entry.variantId))
       refusals.push({ code: 'refs-invalid', path: `variantValues.${entry.variantId}` })
+  }
+
+  const optionRefs = new Set(input.options.map(option => option.ref))
+
+  for (const entry of input.variantValues) {
+    for (const key of Object.keys(entry.values)) {
+      if (!optionRefs.has(key))
+        refusals.push({ code: 'value-unknown', path: `variants.${entry.variantId}.values.${key}` })
+    }
   }
 
   const overrides = new Map(input.variantValues.map(entry => [entry.variantId, entry.values]))

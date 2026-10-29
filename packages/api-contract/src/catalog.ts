@@ -43,7 +43,9 @@ const labelSchema = (max: number) => z.strictObject({
 })
 
 const ref = z.string().min(1).max(64)
-const valueRefs = z.record(ref, ref)
+const fewKeys = (values: Record<string, string>) => Object.keys(values).length <= MAX_OPTIONS
+const valueRefs = z.record(ref, ref).refine(fewKeys, { message: `At most ${MAX_OPTIONS} options` })
+const valueIds = z.record(z.uuid(), z.uuid()).refine(fewKeys, { message: `At most ${MAX_OPTIONS} options` })
 
 export const optionValueWriteSchema = z.strictObject({
   ref: ref.meta({ description: 'The id of a value that exists, or a key you choose for a new one' }),
@@ -88,7 +90,7 @@ export const variantCreateBodySchema = z.strictObject({
   skuCode: noNul(z.string().trim().min(1).max(60)),
   priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN),
   status: z.enum(['published', 'draft']).optional().meta({ description: 'published is for sale, draft is hidden. For sale when left out' }),
-  values: z.record(z.uuid(), z.uuid()).optional().meta({ description: 'The value id of each option id' }),
+  values: valueIds.optional().meta({ description: 'The value id of each option id' }),
 }).meta({ id: 'VariantCreateBody', description: 'One more variant of a keepsake' })
 
 export const productSaveBodySchema = z.strictObject({
@@ -102,7 +104,7 @@ export const variantSaveBodySchema = z.strictObject({
   skuCode: noNul(z.string().trim().min(1).max(60)).optional(),
   priceRappen: z.int().min(1).max(MAX_PRICE_RAPPEN).optional(),
   status: z.enum(['published', 'draft', 'archived']).optional().meta({ description: 'published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final' }),
-  values: z.record(z.uuid(), z.uuid()).optional().meta({ description: 'The value id of every option id. Replaces the values' }),
+  values: valueIds.optional().meta({ description: 'The value id of every option id. Replaces the values' }),
 }).meta({ id: 'VariantSaveBody', description: 'A change to one variant' })
 
 const localizedView = z.object({ en: z.string().optional(), de: z.string().optional() })

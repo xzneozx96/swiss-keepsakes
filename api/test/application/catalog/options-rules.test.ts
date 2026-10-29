@@ -75,6 +75,11 @@ describe('[E6.2][AC52] one variant against the options', () => {
     expect(codes(checkVariantValues([size], [], { size: 's', colour: 'red' }, 'values'))).toEqual(['value-unknown'])
   })
 
+  it('[E6.2][AC52] a value for an option that does not exist is refused, also when the keepsake has no option', () => {
+    expect(checkVariantValues([], [], { x: 'y' }, 'values')).toEqual([{ code: 'value-unknown', path: 'values.x' }])
+    expect(checkVariantValues([], [variant('1', 'VX-ONLY', {})], { x: 'y' }, 'values').map(r => r.code)).toEqual(['no-options-one-variant', 'value-unknown'])
+  })
+
   it('[E6.2][AC52] with no option the keepsake has one variant only', () => {
     expect(checkVariantValues([], [], {}, 'values')).toEqual([])
     expect(checkVariantValues([], [variant('1', 'VX-ONLY', {})], {}, 'values')).toEqual([
@@ -163,6 +168,21 @@ describe('[E6.2][AC52] saving options with the variants', () => {
     expect(codes(checkOptionsSave(current, { options: [input(size), input(theme)], variantValues: [{ variantId: 'other', values: {} }] }))).toEqual(['refs-invalid'])
   })
 
+  it('[E6.2][AC52] a value for an option that is not in the save is refused, for a variant of the keepsake', () => {
+    const refusals = checkOptionsSave(current, {
+      options: [input(size), input(theme)],
+      variantValues: [{ variantId: '1', values: { bogus: 'v' } }],
+    })
+
+    expect(refusals).toEqual([{ code: 'value-unknown', path: 'variants.1.values.bogus' }])
+  })
+
+  it('[E6.2][AC52] a value for an option the save deletes is refused', () => {
+    const single = product([], [variant('1', 'VX-ONLY', {})])
+
+    expect(codes(checkOptionsSave(single, { options: [], variantValues: [{ variantId: '1', values: { size: 's' } }] }))).toEqual(['value-unknown'])
+  })
+
   it('[E6.2][AC52] a ref that is the id of an existing value under another option is refused', () => {
     const stolen = { ...colour, values: [{ ref: 'swan', label: { en: 'Swan' }, swatch: null }] }
 
@@ -195,6 +215,11 @@ describe('[E6.2][AC52] a new keepsake', () => {
       { ...swan, values: { size: 's', theme: 'swan' } },
       { ...swan, skuCode: 'VX-2', values: { size: 's', theme: 'lion' } },
     ])).toEqual([])
+  })
+
+  it('[E6.2][AC52] a variant with a value for an option the keepsake does not have is refused', () => {
+    expect(checkNewProduct([], [{ ...swan, values: { x: 'y' } }]).map(r => r.code)).toEqual(['value-unknown'])
+    expect(checkNewProduct([input(size)], [{ ...swan, values: { size: 's', colour: 'red' } }]).map(r => r.code)).toEqual(['value-unknown'])
   })
 
   it('[E6.2][AC52] refuses the same combination and the same code twice', () => {
