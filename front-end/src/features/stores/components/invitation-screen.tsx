@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
@@ -6,12 +7,15 @@ import { InfoIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoSelector } from '@/features/demo'
 import { apiEnabled } from '@/lib/api-mode'
+import { sessionUserQuery } from '../api/queries'
 import { useAcceptInvitation } from '../hooks/use-accept-invitation'
 import { useDisplayName } from '../hooks/use-display-name'
 import { useHeldStoreName } from '../hooks/use-held-store-name'
 import { INVITATION_PATH, ONBOARDING_PATH, STORE_PATH } from '../lib/search-params'
 import { DisplayNameForm } from './display-name-form'
+import { InvitationFrame } from './invitation-frame'
 import { InvitationPreview } from './invitation-preview'
+import { InvitationLoading } from './invitation-states'
 import { RefusalView } from './refusal-view'
 import { ScreenFrame } from './screen-frame'
 import { InvitationCardSkeleton } from './store-skeletons'
@@ -42,8 +46,12 @@ function InvitationFlow() {
 }
 
 function InvitationFlowRound({ focusTitle, onSignedOut }: { focusTitle: boolean, onSignedOut: () => void }) {
+  const { t } = useLocale()
   const { state, token, accept, retry } = useAcceptInvitation(INVITATION_PATH, { manual: true })
   const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)
+  const session = useQuery(sessionUserQuery)
+  // The demo flag follows the session only after the first paint, so a visitor whose session has not answered yet is not shown the sign-in form. A user the API found waits for the flag.
+  const sessionKnown = signedIn || (!session.isPending && !session.data)
   const storeName = useHeldStoreName(token)
 
   if (state.kind === 'accepted')
@@ -52,6 +60,13 @@ function InvitationFlowRound({ focusTitle, onSignedOut }: { focusTitle: boolean,
     return <RefusalView refusal={state.refusal} audience={state.role ?? 'manager'} storeName={storeName} onRetry={retry} onSignedOut={onSignedOut} />
   if (!token)
     return <RefusalView refusal="missing" audience="manager" />
+  if (!sessionKnown) {
+    return (
+      <InvitationFrame photo="colour" audience="manager">
+        <InvitationLoading text={t('stores.invite.checking')} title={t('stores.invite.title')} />
+      </InvitationFrame>
+    )
+  }
 
   return (
     <InvitationPreview
