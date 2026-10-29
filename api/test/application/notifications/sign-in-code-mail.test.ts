@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { makeQueueMail } from '../../../src/modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from '../../../src/modules/notifications/application/send-mail.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
+import { createMemoryMailLog } from '../../support/memory-mail-log.ts'
 import { createMemoryMailer } from '../../support/memory-mailer.ts'
 
 const mailId = '0192f3a0-0000-7000-8000-000000000001'
@@ -17,8 +18,8 @@ function fakes() {
       return mailId
     },
     lockForSend: async () => 'queued',
-    recordSent: async () => {},
-    recordAttemptFailed: async () => {},
+    recordSent: async () => 1,
+    recordAttemptFailed: async () => 1,
     recordCancelled: async () => {},
     markFailed: async () => undefined,
   }
@@ -48,10 +49,12 @@ describe('[E2.2] the N01 sign-in code goes through the mail job', () => {
     const { uow, sentMail } = fakes()
     const memory = createMemoryMailer()
     const linkRequests: string[] = []
+    const mailLog = createMemoryMailLog()
     const sendMail = makeSendMail({
       uow,
       sentMail,
       mailer: memory.mailer,
+      log: mailLog.log,
       invitationLink: async (_tx, template) => {
         linkRequests.push(template)
         return undefined
@@ -62,6 +65,10 @@ describe('[E2.2] the N01 sign-in code goes through the mail job', () => {
     await sendMail({ ...request, mailId })
 
     expect(linkRequests).toEqual([])
+    expect(mailLog.sent).toEqual([{ mailId, template: 'N01', attempt: 1, response: `250 2.0.0 OK queued as ${mailId}` }])
+    const reported = JSON.stringify(mailLog.sent)
+    expect(reported).not.toContain('anna.keller@example.ch')
+    expect(reported).not.toContain(request.params.code)
     expect(memory.sent).toEqual([expect.objectContaining({ id: mailId, to: 'anna.keller@example.ch', subject: 'Ihr Anmeldecode für Swiss Keepsakes: 482913' })])
   })
 })

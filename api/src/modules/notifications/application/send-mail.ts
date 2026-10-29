@@ -1,4 +1,4 @@
-import type { Clock, InvitationLink, Mailer, SentMailRepository, UnitOfWork } from '../ports.ts'
+import type { Clock, InvitationLink, Mailer, MailLog, SentMailRepository, UnitOfWork } from '../ports.ts'
 import type { MailJob } from './queue-mail.ts'
 import { invitationRevoked } from '../ports.ts'
 import { MailRenderError, renderMail } from './render-mail.ts'
@@ -9,6 +9,7 @@ export interface SendMailDeps<T> {
   mailer: Mailer
   invitationLink: InvitationLink<T>
   clock: Clock
+  log: MailLog
 }
 
 // What a failed attempt throws. pg-boss stores it with the job and copies it to the dead-letter job, so it
@@ -50,7 +51,7 @@ export function toAttemptError(error: unknown): MailAttemptError {
 // accepted the message but the commit never happened (a crash, a shutdown, a lost connection), the retry sends
 // it again with the same Message-ID. The invitation link is built in the same transaction, so a token it
 // stores commits only with a sent mail.
-export function makeSendMail<T>({ uow, sentMail, mailer, invitationLink, clock }: SendMailDeps<T>) {
+export function makeSendMail<T>({ uow, sentMail, mailer, invitationLink, clock, log }: SendMailDeps<T>) {
   return async (job: MailJob): Promise<void> => {
     try {
       await uow.run(async (tx) => {
@@ -63,12 +64,15 @@ export function makeSendMail<T>({ uow, sentMail, mailer, invitationLink, clock }
         }
         const { to, subject, text, html } = renderMail(job, link)
         const { response } = await mailer.send({ id: job.mailId, to, subject, text, html })
-        await sentMail.recordSent(tx, job.mailId, { at: clock.now(), response })
+        const attempt = await sentMail.recordSent(tx, job.mailId, { at: clock.now(), response })
+        log.sent({ mailId: job.mailId, template: job.template, attempt, response })
       })
     }
     catch (error) {
       const failure = toAttemptError(error)
-      await uow.run(tx => sentMail.recordAttemptFailed(tx, job.mailId, failure.message))
+      const attempt = await uow.run(tx => sentMail.recordAttemptFailed(tx, job.mailId, failure.message))
+      if (!failure.permanent)
+        log.retry({ mailId: job.mailId, template: job.template, attempt, error: failure.message })
       throw failure
     }
   }
