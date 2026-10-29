@@ -137,7 +137,9 @@ describe('[E4.18][AC87] the category editor in German', () => {
     ]
     renderScreen()
 
-    expect(await screen.findByRole('columnheader', { name: 'Deutscher Name' })).toBeInTheDocument()
+    // The headers are drawn while the list loads, so wait for the rows first.
+    expect(await screen.findByText('Walks', { selector: 'span' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Deutscher Name' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Verwendet von' })).toBeInTheDocument()
     expect(within(rowOf('Walks')).getByText('Fehlt')).toBeInTheDocument()
     expect(within(rowOf('Food')).getByText('Essen')).toBeInTheDocument()

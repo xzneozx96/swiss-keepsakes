@@ -23,8 +23,10 @@ type ActionId = 'edit' | 'add-sub' | 'up' | 'down' | 'delete'
  * sub-category's handle drags it among its siblings only. ArrowUp and ArrowDown on a handle, or
  * Move up and Move down in the menu, do the same from the keyboard.
  */
-export function CategoryTable({ items, kind, actions, busy }: {
+export function CategoryTable({ items, kind, actions, busy, loading }: {
   items: MerchantCategory[]
+  /** Draws the real search field and headers with loading bars while the list is not here yet. */
+  loading?: boolean
   kind: CategoryKind
   actions: CategoryActions
   busy: boolean
@@ -101,24 +103,26 @@ export function CategoryTable({ items, kind, actions, busy }: {
 
   return (
     <div className="flex flex-col gap-4">
-      <SearchField aria-label={t('categories.search.label')} className="w-72" value={query} onChange={setQuery}>
+      <SearchField aria-label={t('categories.search.label')} className="w-72" isDisabled={loading} value={query} onChange={setQuery}>
         <SearchField.Group>
           <SearchField.SearchIcon />
           <SearchField.Input placeholder={t('categories.search.placeholder')} />
           <SearchField.ClearButton />
         </SearchField.Group>
       </SearchField>
-      {rows.length === 0
+      {rows.length === 0 && !loading
         ? <EmptyState icon={InfoIcon} message={t(searching ? 'categories.search.empty' : `categories.empty.${kind}`, { query: query.trim() })} />
         : (
             <div ref={boxRef} className="relative [&_tr[data-lifted]]:bg-surface [&_tr[data-lifted]]:shadow-overlay">
               <DataTable
                 hidePager
+                isLoading={loading}
                 columns={[
                   {
                     id: 'name',
                     header: t('categories.col.name'),
                     isRowHeader: true,
+                    skeleton: 'line',
                     headerClassName: 'w-[36%]',
                     render: category => (
                       <span className={`-ms-2 flex items-center gap-1 ${category.parentId ? 'ps-7' : 'font-semibold'}`}>
@@ -140,6 +144,7 @@ export function CategoryTable({ items, kind, actions, busy }: {
                     id: 'de',
                     header: t('categories.col.de'),
                     headerClassName: 'w-[28%]',
+                    skeleton: 'line',
                     render: category => category.name.de === null
                       ? <StatusChip tone="warning">{t('categories.missing')}</StatusChip>
                       : <span className="[overflow-wrap:anywhere]">{category.name.de}</span>,
@@ -147,6 +152,7 @@ export function CategoryTable({ items, kind, actions, busy }: {
                   {
                     id: 'used',
                     header: t('categories.col.usedBy'),
+                    skeleton: 'line',
                     render: category => (
                       <>
                         <span className={`tabular-nums ${category.useCount ? '' : 'text-muted'}`}>
@@ -169,7 +175,7 @@ export function CategoryTable({ items, kind, actions, busy }: {
               <DropSlot ref={childSlotRef} />
             </div>
           )}
-      {!searching && <p className="text-xs text-muted">{t('categories.dragHint')}</p>}
+      {!searching && !loading && <p className="text-xs text-muted">{t('categories.dragHint')}</p>}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import type { CategoryKind } from '@sk/api-contract'
 import type { ReactNode } from 'react'
 
-import { Button, Skeleton } from '@heroui/react'
+import { Button } from '@heroui/react'
 
 import { PlusIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
@@ -57,17 +57,14 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
               <Button className="min-h-11" variant="secondary" onPress={() => void categories.refetch()}>{t('categories.retry')}</Button>
             </div>
           )
-        : !loaded
-            ? (
-                <div className="flex flex-col gap-3">
-                  <p aria-live="polite" className="sr-only" role="status">{t('categories.loading')}</p>
-                  <Skeleton className="h-28 w-full rounded-3xl" />
-                  <Skeleton className="h-28 w-full rounded-3xl" />
-                </div>
-              )
-            : wide
-              ? <CategoryTable key={kind} actions={actions} busy={busy} items={items} kind={kind} />
-              : <CategoryPhone key={kind} actions={actions} busy={busy} items={items} kind={kind} />}
+        : (
+            <>
+              {!loaded && <p aria-live="polite" className="sr-only" role="status">{t('categories.loading')}</p>}
+              {wide
+                ? <CategoryTable key={kind} actions={actions} busy={busy} items={items} kind={kind} loading={!loaded} />
+                : <CategoryPhone key={kind} actions={actions} busy={busy} items={items} kind={kind} loading={!loaded} />}
+            </>
+          )}
       {sheet?.mode === 'refused' && (
         <SheetFrame
           isOpen
