@@ -5,6 +5,7 @@ import { Tabs } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 
 import { STICKY_TABS } from '@/components/layout/sticky-tabs'
+import { TabRow } from '@/components/page-tabs'
 
 export interface RouteTab {
   id: string
@@ -42,22 +43,7 @@ export function RouteTabs({
             to: (tabs.find(tab => tab.id === key) ?? tabs[0]).to as never,
           })}
       >
-        <Tabs.ListContainer className="w-fit max-w-full">
-          <Tabs.List aria-label={label}>
-            {tabs.map((tab, index) => (
-              <Tabs.Tab key={tab.id} className="whitespace-nowrap" id={tab.id}>
-                {index > 0 && <Tabs.Separator />}
-                {tab.label}
-                {tab.badge !== undefined && (
-                  <span className="ms-1.5 min-w-5 rounded-full bg-default px-1.5 text-xs leading-5 tabular-nums">
-                    {tab.badge}
-                  </span>
-                )}
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs.ListContainer>
+        <TabRow label={label} tabs={tabs} />
       </Tabs>
       {trailing}
     </div>

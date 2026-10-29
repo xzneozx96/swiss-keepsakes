@@ -1,8 +1,8 @@
-import { Skeleton, Tabs } from '@heroui/react'
+import { Skeleton } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
-import { STICKY_TABS } from '@/components/layout/sticky-tabs'
+import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { useLocale } from '@/contexts/locale-context'
 
 /** M02 Overview's two pages, each its own route (owner review 15.10.2026). */
@@ -34,33 +34,21 @@ export function OverviewFrame({
         description={t('merchantToday.intro')}
         title={t('merchantToday.title')}
       />
-      <Tabs
-        className="w-full"
-        selectedKey={page}
-        variant="secondary"
-        onSelectionChange={key =>
+      <PageTabs
+        equal
+        hideFrom="lg"
+        label={t('overviewPages.label')}
+        selected={page}
+        tabs={OVERVIEW_PAGES.map(p => ({ id: p.id, label: t(`overviewPages.${p.id}`) }))}
+        onSelect={id =>
           void navigate({
-            to: OVERVIEW_PAGES.find(p => p.id === key)?.to ?? '/store',
+            to: OVERVIEW_PAGES.find(p => p.id === id)?.to ?? '/store',
           })}
       >
-        <Tabs.ListContainer className={`lg:hidden ${STICKY_TABS}`}>
-          <Tabs.List aria-label={t('overviewPages.label')} className="w-full">
-            {OVERVIEW_PAGES.map(p => (
-              <Tabs.Tab
-                key={p.id}
-                className="h-11 min-w-0 flex-1 px-1.5 whitespace-nowrap"
-                id={p.id}
-              >
-                {t(`overviewPages.${p.id}`)}
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs.ListContainer>
-        <Tabs.Panel className="px-0 pt-2 pb-0 lg:pt-0" id={page}>
+        <TabPanel className="pt-2 lg:pt-0" id={page}>
           {children}
-        </Tabs.Panel>
-      </Tabs>
+        </TabPanel>
+      </PageTabs>
     </div>
   )
 }

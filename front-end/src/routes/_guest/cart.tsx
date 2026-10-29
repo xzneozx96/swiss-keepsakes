@@ -1,4 +1,3 @@
-import { Skeleton } from '@heroui/react'
 import {
   createFileRoute,
   useCanGoBack,
@@ -9,6 +8,7 @@ import {
 import { EmptyState } from '@/components/empty-state'
 import { CartIcon } from '@/components/icons'
 import { BackButton } from '@/components/layout/cart-button'
+import { CartSkeleton } from '@/components/layout/guest-skeletons'
 import { useLocale } from '@/contexts/locale-context'
 import { useRequireSignIn } from '@/features/auth/hooks/use-require-sign-in'
 import { CartView } from '@/features/cart/components/cart-view'
@@ -28,17 +28,8 @@ export const Route = createFileRoute('/_guest/cart')({
 function CartPage() {
   const isLoading = useSimulatedLoading()
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4 px-6 pt-16">
-        <Skeleton className="h-4 w-1/3 rounded-lg" />
-        <Skeleton className="h-12 w-full rounded-2xl" />
-        <Skeleton className="mt-2 h-6 w-1/4 rounded-lg" />
-        <Skeleton className="h-48 w-full rounded-3xl" />
-        <Skeleton className="h-48 w-full rounded-3xl" />
-      </div>
-    )
-  }
+  if (isLoading)
+    return <CartSkeleton />
 
   return <CartScreen />
 }

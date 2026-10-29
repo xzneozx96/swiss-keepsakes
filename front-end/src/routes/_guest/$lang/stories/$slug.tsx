@@ -1,4 +1,3 @@
-import { Skeleton } from '@heroui/react'
 import {
   createFileRoute,
   notFound,
@@ -9,6 +8,7 @@ import {
 } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
+import { ArticleSkeleton } from '@/components/layout/guest-skeletons'
 import { ArticlePage } from '@/features/content/components/article-page'
 import { storyLanguages } from '@/features/content/lib/story-versions'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
@@ -54,18 +54,8 @@ function ArticleRoute() {
       void router.invalidate()
   }, [slug, availableLanguages, router])
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-[min(68dvh,540px)] w-full" />
-        <div className="flex flex-col gap-3 px-6">
-          <Skeleton className="h-12 w-2/3 rounded-full" />
-          <Skeleton className="h-5 w-full rounded-lg" />
-          <Skeleton className="h-5 w-4/5 rounded-lg" />
-        </div>
-      </div>
-    )
-  }
+  if (isLoading)
+    return <ArticleSkeleton />
 
   // Keyed by slug so moving between stories starts at the top with a closed sheet.
   return (

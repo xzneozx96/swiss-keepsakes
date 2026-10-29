@@ -1,7 +1,8 @@
-import { Button, Drawer, Tabs } from '@heroui/react'
+import { Button, Drawer } from '@heroui/react'
 import { lazy, Suspense, useState } from 'react'
 
 import { EmailIcon } from '@/components/icons'
+import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { useMail } from '@/features/notifications/api/queries'
 
 const MailList = lazy(() =>
@@ -16,6 +17,7 @@ const MailList = lazy(() =>
 export function MailPanel() {
   const mail = useMail()
   const [open, setOpen] = useState(false)
+  const [who, setWho] = useState<'guest' | 'staff' | 'partner'>('guest')
   const guestMail = mail.filter(m => m.to === 'guest').reverse()
   const staffMail = mail.filter(m => m.to === 'staff').reverse()
   const partnerMail = mail.filter(m => m.to === 'partner').reverse()
@@ -50,42 +52,30 @@ export function MailPanel() {
                 the recipient’s language, newest first.
               </p>
               <Suspense fallback={null}>
-                <Tabs className="w-full">
-                  <Tabs.ListContainer>
-                    <Tabs.List aria-label="Recipient">
-                      <Tabs.Tab id="guest">
-                        Guest (
-                        {guestMail.length}
-                        )
-                        <Tabs.Indicator />
-                      </Tabs.Tab>
-                      <Tabs.Tab id="staff">
-                        Staff (
-                        {staffMail.length}
-                        )
-                        <Tabs.Indicator />
-                      </Tabs.Tab>
-                      <Tabs.Tab id="partner">
-                        Partner (
-                        {partnerMail.length}
-                        )
-                        <Tabs.Indicator />
-                      </Tabs.Tab>
-                    </Tabs.List>
-                  </Tabs.ListContainer>
-                  <Tabs.Panel className="pt-3" id="guest">
+                <PageTabs
+                  sticky={false}
+                  label="Recipient"
+                  selected={who}
+                  tabs={[
+                    { id: 'guest', label: 'Guest', badge: guestMail.length },
+                    { id: 'staff', label: 'Staff', badge: staffMail.length },
+                    { id: 'partner', label: 'Partner', badge: partnerMail.length },
+                  ]}
+                  onSelect={setWho}
+                >
+                  <TabPanel padded className="pt-3" id="guest">
                     <MailList items={guestMail} />
-                  </Tabs.Panel>
-                  <Tabs.Panel className="pt-3" id="staff">
+                  </TabPanel>
+                  <TabPanel padded className="pt-3" id="staff">
                     <MailList
                       items={staffMail}
                       onOpenLink={() => setOpen(false)}
                     />
-                  </Tabs.Panel>
-                  <Tabs.Panel className="pt-3" id="partner">
+                  </TabPanel>
+                  <TabPanel padded className="pt-3" id="partner">
                     <MailList items={partnerMail} />
-                  </Tabs.Panel>
-                </Tabs>
+                  </TabPanel>
+                </PageTabs>
               </Suspense>
             </Drawer.Body>
           </Drawer.Dialog>

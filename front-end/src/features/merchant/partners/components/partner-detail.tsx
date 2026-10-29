@@ -1,7 +1,7 @@
 import type { LedgerRow, PartnerDetailView } from '../hooks/use-partner-detail'
 import type { IconComponent } from '@/components/icons'
 
-import { Button, Tabs, toast } from '@heroui/react'
+import { Button, toast } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -20,7 +20,7 @@ import {
   StatusSuccessIcon,
 } from '@/components/icons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
-import { STICKY_TABS_BELOW_BAR } from '@/components/layout/sticky-tabs'
+import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { StatCard } from '@/components/stat-card'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
@@ -452,43 +452,27 @@ export function PartnerDetail({ view }: { view: PartnerDetailView }) {
                 </>
               )
             : (
-                <Tabs
-                  className="w-full"
-                  selectedKey={tab}
-                  onSelectionChange={key => setTab(key as TabId)}
+                <PageTabs
+                  belowBar
+                  label={t('partnerDetail.tabs.label')}
+                  selected={tab}
+                  tabs={[
+                    { id: 'ledger', label: t('partnerDetail.tabs.ledger') },
+                    { id: 'transactions', label: t('partnerDetail.tabs.transactions') },
+                    { id: 'links', label: t('partnerDetail.tabs.links') },
+                  ]}
+                  onSelect={setTab}
                 >
-                  <div className={`max-lg:py-2 ${STICKY_TABS_BELOW_BAR}`}>
-                    <Tabs.ListContainer>
-                      <Tabs.List aria-label={t('partnerDetail.tabs.label')}>
-                        {(
-                          [
-                            ['ledger', t('partnerDetail.tabs.ledger')],
-                            ['transactions', t('partnerDetail.tabs.transactions')],
-                            ['links', t('partnerDetail.tabs.links')],
-                          ] as const
-                        ).map(([id, label], index) => (
-                          <Tabs.Tab key={id} className="whitespace-nowrap" id={id}>
-                            {index > 0 && <Tabs.Separator />}
-                            {label}
-                            <Tabs.Indicator />
-                          </Tabs.Tab>
-                        ))}
-                      </Tabs.List>
-                    </Tabs.ListContainer>
-                  </div>
-                  <Tabs.Panel className="flex flex-col gap-5 px-0 pb-0" id="ledger">
+                  <TabPanel className="flex flex-col gap-5" id="ledger">
                     <LedgerCard view={view} />
-                  </Tabs.Panel>
-                  <Tabs.Panel
-                    className="flex flex-col gap-5 px-0 pb-0"
-                    id="transactions"
-                  >
+                  </TabPanel>
+                  <TabPanel className="flex flex-col gap-5" id="transactions">
                     <TransactionsCard view={view} />
-                  </Tabs.Panel>
-                  <Tabs.Panel className="flex flex-col gap-5 px-0 pb-0" id="links">
+                  </TabPanel>
+                  <TabPanel className="flex flex-col gap-5" id="links">
                     {links}
-                  </Tabs.Panel>
-                </Tabs>
+                  </TabPanel>
+                </PageTabs>
               )}
         </div>
         {isWide && <div className="flex min-w-0 flex-col gap-6">{links}</div>}

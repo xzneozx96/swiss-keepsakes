@@ -1,4 +1,3 @@
-import { Skeleton } from '@heroui/react'
 import {
   createFileRoute,
   useCanGoBack,
@@ -8,6 +7,7 @@ import {
 
 import { EmptyState } from '@/components/empty-state'
 import { GiftIcon } from '@/components/icons'
+import { GiftDetailSkeleton } from '@/components/layout/guest-skeletons'
 import { useLocale } from '@/contexts/locale-context'
 import { GiftDetail } from '@/features/catalog/components/gift-detail'
 import { useGiftDetail } from '@/features/catalog/hooks/use-gift-detail'
@@ -25,19 +25,8 @@ function GiftDetailPage() {
   const { slug } = Route.useParams()
   const isLoading = useSimulatedLoading()
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="aspect-square w-full" />
-        <div className="flex flex-col gap-3 px-4">
-          <Skeleton className="h-7 w-4/5 rounded-lg" />
-          <Skeleton className="h-5 w-1/3 rounded-lg" />
-          <Skeleton className="h-10 w-full rounded-xl" />
-          <Skeleton className="h-10 w-full rounded-xl" />
-        </div>
-      </div>
-    )
-  }
+  if (isLoading)
+    return <GiftDetailSkeleton />
 
   // Keyed by slug so moving between gifts starts with an empty form.
   return <GiftDetailScreen key={slug} slug={slug} />

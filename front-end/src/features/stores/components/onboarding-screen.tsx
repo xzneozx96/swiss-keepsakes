@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 
-import { Skeleton } from '@heroui/react'
 import { useEffect } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
@@ -21,6 +20,7 @@ import { ProblemNotice } from './problem-notice'
 import { RefusalView } from './refusal-view'
 import { ScreenFrame } from './screen-frame'
 import { StoreInformationForm } from './store-information-form'
+import { InvitationCardSkeleton, OnboardingSkeleton } from './store-skeletons'
 
 /**
  * A02 (UX 4.12): the invited Owner accepts the invitation after sign-in, sees the four conditions for opening
@@ -48,7 +48,7 @@ function InvitationFlow() {
     return (
       <ScreenFrame title={t('stores.onboarding.title')}>
         <p aria-live="polite" className="text-sm text-muted" role="status">{t('stores.onboarding.accepting')}</p>
-        <Skeleton className="h-24 w-full rounded-3xl" />
+        <InvitationCardSkeleton />
       </ScreenFrame>
     )
   }
@@ -99,7 +99,8 @@ function OwnerStore({ fallback }: { fallback: ReactNode }) {
   if (me.isPending || signedOut) {
     return (
       <ScreenFrame title={t('stores.onboarding.title')}>
-        <Skeleton className="h-40 w-full rounded-3xl" />
+        <p aria-live="polite" className="sr-only" role="status">{t('stores.onboarding.title')}</p>
+        <OnboardingSkeleton />
       </ScreenFrame>
     )
   }
@@ -141,8 +142,8 @@ function OnboardingView({ storeId }: { storeId: string }) {
   if (!query.data) {
     return (
       <ScreenFrame title={t('stores.onboarding.title')}>
-        <Skeleton className="h-40 w-full rounded-3xl" />
-        <Skeleton className="h-24 w-full rounded-3xl" />
+        <p aria-live="polite" className="sr-only" role="status">{t('stores.onboarding.title')}</p>
+        <OnboardingSkeleton />
       </ScreenFrame>
     )
   }

@@ -2,9 +2,10 @@ import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
 import type { ReactNode } from 'react'
 import type { CategoryActions } from '../hooks/use-category-actions'
 
-import { Button, SearchField } from '@heroui/react'
+import { Button, SearchField, Skeleton } from '@heroui/react'
 import { useRef, useState } from 'react'
 
+import { SKELETON_ROWS } from '@/components/data-table-skeleton'
 import { EmptyState } from '@/components/empty-state'
 import { BackIcon, ChevronRightIcon, EditIcon, InfoIcon, PlusIcon, StatusSuccessIcon, StatusWarningIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
@@ -12,6 +13,7 @@ import { useLevelDrag } from '../hooks/use-level-drag'
 import { childrenOf, matches, nameOf, refusalOf, rootsOf } from '../lib/category-tree'
 import { DropSlot, Grip } from './category-drag'
 
+const NAME_WIDTHS = ['w-3/5', 'w-1/2', 'w-2/3', 'w-2/5', 'w-1/2']
 const card = 'flex flex-col gap-3 rounded-3xl bg-surface p-4 shadow-surface'
 
 /** `{n} pins` or `{n} story groups`, with the singular for one. */
@@ -41,8 +43,10 @@ function OtherName({ category }: { category: MerchantCategory }) {
  * the category's page: names, what uses it, its sub-categories (drag to reorder among themselves) and a
  * Delete checklist that says what still blocks it.
  */
-export function CategoryPhone({ items, kind, actions, busy }: {
+export function CategoryPhone({ items, kind, actions, busy, loading }: {
   items: MerchantCategory[]
+  /** Draws the search field and the list rows as loading bars while the list is not here yet. */
+  loading?: boolean
   kind: CategoryKind
   actions: CategoryActions
   busy: boolean
@@ -50,9 +54,45 @@ export function CategoryPhone({ items, kind, actions, busy }: {
   const [pageId, setPageId] = useState<string | null>(null)
   const page = items.find(category => category.id === pageId)
 
+  if (loading)
+    return <PhoneSkeleton />
+
   return page
     ? <CategoryPage key={page.id} actions={actions} busy={busy} category={page} items={items} kind={kind} onPage={setPageId} />
     : <CategoryList actions={actions} items={items} kind={kind} onPage={setPageId} />
+}
+
+/** The drill-in list while it loads: the search field, then rows of handle, two lines and chevron. */
+function PhoneSkeleton() {
+  const { t } = useLocale()
+
+  return (
+    <div className="flex flex-col gap-3">
+      <SearchField isDisabled aria-label={t('categories.search.label')} className="w-full">
+        <SearchField.Group>
+          <SearchField.SearchIcon />
+          <SearchField.Input placeholder={t('categories.search.placeholder')} />
+        </SearchField.Group>
+      </SearchField>
+      <div className="overflow-hidden rounded-3xl bg-surface shadow-surface">
+        <ul aria-hidden className="flex flex-col divide-y divide-separator">
+          {Array.from({ length: SKELETON_ROWS }, (_, index) => (
+            <li key={index} className="flex items-center ps-1">
+              <Skeleton className="size-9 shrink-0 rounded-full" />
+              <div className="flex min-w-0 flex-1 items-center gap-3 py-3 pe-4">
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <Skeleton className={`h-4 rounded-lg ${NAME_WIDTHS[index % NAME_WIDTHS.length]}`} />
+                  <Skeleton className="h-3 w-2/5 rounded-lg" />
+                  <Skeleton className="h-3 w-1/2 rounded-lg" />
+                </div>
+                <Skeleton className="size-[18px] shrink-0 rounded-full" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
 }
 
 /** A drag list of one level: `ol` rows with the handle first, the rest of the row opens a page. */

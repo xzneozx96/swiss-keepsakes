@@ -1,6 +1,6 @@
-import { Skeleton } from '@heroui/react'
 import { createFileRoute } from '@tanstack/react-router'
 
+import { RequestSentSkeleton } from '@/components/layout/guest-skeletons'
 import { RequestSent } from '@/features/checkout/components/request-sent'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 import { noIndexHead } from '@/lib/no-index'
@@ -24,18 +24,8 @@ function SentPage() {
   const { orders } = Route.useSearch()
   const isLoading = useSimulatedLoading()
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4 px-6 pt-16">
-        <Skeleton className="size-14 rounded-full" />
-        <Skeleton className="h-10 w-2/3 rounded-2xl" />
-        <Skeleton className="h-4 w-full rounded-lg" />
-        <Skeleton className="mt-6 h-6 w-1/3 rounded-lg" />
-        <Skeleton className="h-72 w-full rounded-3xl" />
-        <Skeleton className="h-72 w-full rounded-3xl" />
-      </div>
-    )
-  }
+  if (isLoading)
+    return <RequestSentSkeleton orders={Math.max(1, orders.split(',').filter(Boolean).length)} />
 
   return <RequestSent orderIds={orders.split(',').filter(Boolean)} />
 }

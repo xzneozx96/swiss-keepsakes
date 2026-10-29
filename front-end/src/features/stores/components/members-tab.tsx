@@ -1,7 +1,7 @@
 import type { Member, MemberInvitation } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
 
-import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, Skeleton, TextField, toast } from '@heroui/react'
+import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, TextField, toast } from '@heroui/react'
 import { formatDate } from '@sk/domain/shared'
 import { useEffect, useState } from 'react'
 
@@ -19,6 +19,7 @@ import { useMemberFailure } from '../hooks/use-member-failure'
 import { memberProblemKey } from '../lib/member-problems'
 import { SETTINGS_PATH } from '../lib/search-params'
 import { ProblemNotice } from './problem-notice'
+import { MembersSkeleton } from './store-skeletons'
 
 const EMAIL = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
 
@@ -45,11 +46,10 @@ export function MembersTab({ storeId }: { storeId: string }) {
   }
   if (!members.data || signedOut) {
     return (
-      <div className="flex flex-col gap-3">
+      <>
         <p aria-live="polite" className="sr-only" role="status">{t('stores.members.title')}</p>
-        <Skeleton className="h-24 w-full rounded-3xl" />
-        <Skeleton className="h-24 w-full rounded-3xl" />
-      </div>
+        <MembersSkeleton />
+      </>
     )
   }
   const { members: people, invitations } = members.data

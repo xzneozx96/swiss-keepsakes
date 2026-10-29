@@ -1,12 +1,12 @@
 import type { Order } from '@sk/domain/orders'
 
-import { Skeleton } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 
 import { DateTile } from '@/components/date-tile'
 
 import { EmptyState } from '@/components/empty-state'
 import { ChevronRightIcon, OrdersIcon, PickupIcon } from '@/components/icons'
+import { OrderListSkeleton } from '@/components/layout/guest-skeletons'
 import { Media } from '@/components/media'
 import { StatusChip } from '@/components/status-chip'
 import {
@@ -34,15 +34,8 @@ export function TransactionList() {
     .sort((a, b) => a.pickupDate.localeCompare(b.pickupDate))
   const past = orders.filter(isClosedOrder)
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-3">
-        <Skeleton className="h-6 w-32 rounded-lg" />
-        <Skeleton className="h-44 w-full rounded-2xl" />
-        <Skeleton className="h-44 w-full rounded-2xl" />
-      </div>
-    )
-  }
+  if (isLoading)
+    return <OrderListSkeleton />
 
   if (orders.length === 0) {
     return (

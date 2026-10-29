@@ -12,10 +12,22 @@ import { useLocale } from '@/contexts/locale-context'
  */
 export function RoutePending() {
   return (
-    <div aria-busy className="flex flex-col gap-4 px-4 pt-16">
-      <Skeleton className="h-8 w-2/3 rounded-lg" />
-      <Skeleton className="h-40 w-full rounded-3xl" />
-      <Skeleton className="h-24 w-full rounded-3xl" />
+    <div aria-busy className="flex flex-col gap-6 px-4 pt-16" data-skeleton="route">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-8 w-2/3 rounded-lg" />
+        <Skeleton className="h-4 w-1/2 rounded-lg" />
+      </div>
+      <ul className="flex flex-col divide-y divide-separator rounded-3xl bg-surface px-4 shadow-surface">
+        {[0, 1, 2, 3].map(index => (
+          <li key={index} className="flex items-center gap-3 py-4">
+            <Skeleton className="size-12 shrink-0 rounded-xl" />
+            <div className="flex flex-1 flex-col gap-2">
+              <Skeleton className="h-4 w-3/4 rounded-lg" />
+              <Skeleton className="h-3 w-1/2 rounded-lg" />
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

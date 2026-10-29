@@ -1,13 +1,12 @@
 import type { OrderTabId } from '../lib/order-tabs'
 import type { OrderRowProps } from './order-rows'
 
-import { Tabs } from '@heroui/react'
 import { useEffect, useRef } from 'react'
 
 import { OrdersIcon } from '@/components/icons'
 
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
-import { STICKY_TABS } from '@/components/layout/sticky-tabs'
+import { PageTabs, TabPanel } from '@/components/page-tabs'
 import { OrderRows } from './order-rows'
 
 export interface MerchantOrdersProps {
@@ -63,33 +62,14 @@ export function MerchantOrders({
   return (
     <div ref={rootRef} className="flex flex-col gap-4">
       <MerchantPageHeader description={intro} title={title} />
-      <Tabs
-        className="w-full"
-        selectedKey={selected}
-        onSelectionChange={key => onSelect(key as OrderTabId)}
+      <PageTabs
+        label={tabsLabel}
+        selected={selected}
+        tabs={tabs.map(tab => ({ id: tab.id, label: tab.label, badge: tab.count }))}
+        onSelect={onSelect}
       >
-        <div className={`max-lg:py-2 ${STICKY_TABS}`}>
-          <Tabs.ListContainer className="w-fit max-w-full">
-            <Tabs.List aria-label={tabsLabel}>
-              {tabs.map((tab, index) => (
-                <Tabs.Tab
-                  key={tab.id}
-                  className="whitespace-nowrap"
-                  id={tab.id}
-                >
-                  {index > 0 && <Tabs.Separator />}
-                  {tab.label}
-                  <span className="ms-1.5 min-w-5 rounded-full bg-default px-1.5 text-xs leading-5 tabular-nums">
-                    {tab.count}
-                  </span>
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              ))}
-            </Tabs.List>
-          </Tabs.ListContainer>
-        </div>
         {tabs.map(tab => (
-          <Tabs.Panel key={tab.id} className="px-0 pb-0" id={tab.id}>
+          <TabPanel key={tab.id} id={tab.id}>
             <OrderRows
               columns={columns}
               empty={emptyState}
@@ -98,9 +78,9 @@ export function MerchantOrders({
               resetKey={selectedLabel}
               rows={rows}
             />
-          </Tabs.Panel>
+          </TabPanel>
         ))}
-      </Tabs>
+      </PageTabs>
     </div>
   )
 }
