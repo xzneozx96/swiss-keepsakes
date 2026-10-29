@@ -1,3 +1,5 @@
+export type { Feedback, FeedbackHandle, MutationFeedback, QueryFeedback } from './api-feedback'
+export { ApiFeedbackBridge, createApiQueryClient, createFeedback } from './api-feedback'
 export type { DataClient } from './data-client'
 export { useDataClient } from './data-client-context'
 export { DataClientProvider } from './data-client-provider'

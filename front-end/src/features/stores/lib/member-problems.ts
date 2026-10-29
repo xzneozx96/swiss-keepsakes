@@ -3,7 +3,8 @@ import type { MessageKey } from '@/i18n/en'
 import { ApiProblem } from '@/features/data-client/errors'
 import { genericProblemKey } from './refusals'
 
-const byProblemType: Record<string, MessageKey> = {
+/** The members screen's own `meta.error` map (`api-feedback.md`), and `memberProblemKey`'s table. */
+export const byProblemType: Record<string, MessageKey> = {
   'forbidden': 'stores.members.forbidden',
   'already-a-member': 'stores.members.alreadyMember',
   'invitation-already-open': 'stores.members.alreadyOpen',

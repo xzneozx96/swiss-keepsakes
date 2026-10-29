@@ -47,12 +47,13 @@ export function RecordPaymentSheet({
   const save = () => {
     const failed = form.submit()
 
+    // A blocked attempt (the button is disabled otherwise): recordOfflinePayment itself never ran,
+    // so this is local. The real success and error toasts, once it does run, come from meta.
     if (failed) {
       toast.danger(failed)
 
       return
     }
-    toast.success(form.recordedText)
     onClose()
   }
 

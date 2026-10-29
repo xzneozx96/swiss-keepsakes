@@ -1,9 +1,8 @@
-import type { QueryExecuteOptions, QueryKey } from '@tanstack/react-query'
+import type { QueryClient, QueryExecuteOptions, QueryKey } from '@tanstack/react-query'
 import type { DemoStore } from './store'
 import type { DemoData } from './types'
-import type { DataClient } from '@/features/data-client'
+import type { DataClient, FeedbackHandle } from '@/features/data-client'
 
-import { QueryClient } from '@tanstack/react-query'
 import { createAccountDemoClient } from '@/features/account/api/demo-client'
 import { accountQueries } from '@/features/account/api/queries'
 import { createCatalogDemoClient } from '@/features/catalog/api/demo-client'
@@ -11,6 +10,7 @@ import { catalogQueries } from '@/features/catalog/api/queries'
 import { createCategoriesClient } from '@/features/categories/api/api-client'
 import { createContentDemoClient } from '@/features/content/api/demo-client'
 import { contentQueries } from '@/features/content/api/queries'
+import { createApiQueryClient, createFeedback } from '@/features/data-client'
 import { createKeepsakesClient } from '@/features/keepsakes/api/api-client'
 import { createNotificationsDemoClient } from '@/features/notifications/api/demo-client'
 import { notificationsQueries } from '@/features/notifications/api/queries'
@@ -134,20 +134,20 @@ export function createDemoDataClient(store: DemoStore): DataClient {
  * fix a failed local read, and being offline must not pause a read that never uses the network.
  * The store already keeps every unchanged object when it updates, so the cache holds the store's
  * own arrays instead of a structurally shared copy, and screens re-render exactly as they did on
- * store selectors. A feature that moves to the API sets its own options on its queries.
+ * store selectors. A feature that moves to the API sets its own options on its queries. The cache
+ * is `createApiQueryClient`'s (`api-feedback.ts`), so every command's `meta` still shows its toast
+ * in demo mode.
  */
-function createDemoQueryClient(): QueryClient {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: Infinity,
-        gcTime: Infinity,
-        retry: false,
-        networkMode: 'always',
-        structuralSharing: false,
-      },
-      mutations: { networkMode: 'always' },
+function createDemoQueryClient(feedback: FeedbackHandle): QueryClient {
+  return createApiQueryClient(feedback, {
+    queries: {
+      staleTime: Infinity,
+      gcTime: Infinity,
+      retry: false,
+      networkMode: 'always',
+      structuralSharing: false,
     },
+    mutations: { networkMode: 'always' },
   })
 }
 
@@ -189,11 +189,12 @@ function readCollections(queryClient: QueryClient, dataClient: DataClient) {
 
 function assemble(store: DemoStore) {
   const dataClient = createDemoDataClient(store)
-  const queryClient = createDemoQueryClient()
+  const feedback = createFeedback()
+  const queryClient = createDemoQueryClient(feedback)
 
   bridgeStore(store, queryClient, dataClient)
 
-  return { store, dataClient, queryClient }
+  return { store, dataClient, queryClient, feedback }
 }
 
 /**

@@ -1,8 +1,9 @@
 import type { ProductRow } from '../hooks/use-merchant-products'
 import type { ProductAction } from './product-rows'
+import type { MutationFeedback } from '@/features/data-client'
 import type { ProductTab } from '@/features/merchant/products/lib/search-params'
 
-import { buttonVariants, Skeleton, toast } from '@heroui/react'
+import { buttonVariants, Skeleton } from '@heroui/react'
 import { pickText } from '@sk/domain/shared'
 import { Link, useNavigate } from '@tanstack/react-router'
 
@@ -76,7 +77,11 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
   const all = useMerchantProducts()
   const { places } = all
   const subcategories = useStoreSubcategories()
-  const archive = useProductArchive()
+  const nameOf = (id: string) => all.gifts.find(r => r.id === id)?.name ?? all.tours.find(r => r.id === id)?.name ?? ''
+  const archivedToast: MutationFeedback<void, { id: string, archived: boolean }> = {
+    success: (_result, input) => t(input.archived ? 'products.archivedToast' : 'products.restored', { name: nameOf(input.id) }),
+  }
+  const archive = useProductArchive({ gift: archivedToast, tour: archivedToast })
   const navigate = useNavigate()
   const { confirm, dialog } = useConfirm()
   // Archived gifts and tours sit under their own filter, as archived partners on M15.
@@ -147,7 +152,6 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
     }
     if (action === 'restore') {
       archive.restore(kind, row.id)
-      toast.success(t('products.restored', { name: row.name }))
 
       return
     }
@@ -164,7 +168,6 @@ export function MerchantProducts({ tab }: { tab: ProductTab }) {
     if (!ok)
       return
     archive.archive(kind, row.id)
-    toast.success(t('products.archivedToast', { name: row.name }))
   }
 
   const filterGroups = (id: 'gifts' | 'tours') => {

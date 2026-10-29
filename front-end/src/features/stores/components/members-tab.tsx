@@ -1,7 +1,7 @@
 import type { Member, MemberInvitation } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
 
-import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, TextField, toast } from '@heroui/react'
+import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, TextField } from '@heroui/react'
 import { formatDate } from '@sk/domain/shared'
 import { useEffect, useState } from 'react'
 
@@ -16,7 +16,7 @@ import { useMembers } from '../api/queries'
 import { useGoToSignIn } from '../hooks/use-go-to-sign-in'
 import { useIdempotencyKey } from '../hooks/use-idempotency-key'
 import { useMemberFailure } from '../hooks/use-member-failure'
-import { memberProblemKey } from '../lib/member-problems'
+import { byProblemType, memberProblemKey } from '../lib/member-problems'
 import { SETTINGS_PATH } from '../lib/search-params'
 import { ProblemNotice } from './problem-notice'
 import { MembersSkeleton } from './store-skeletons'
@@ -85,7 +85,9 @@ export function MembersTab({ storeId }: { storeId: string }) {
 function MemberRow({ member, storeId }: { member: Member, storeId: string }) {
   const { t, intlLocale } = useLocale()
   const { confirm, dialog } = useConfirm()
-  const { submit, isPending } = useSubmit('stores', 'removeMember')
+  const { submit, isPending } = useSubmit('stores', 'removeMember', {
+    meta: { success: () => t('stores.members.removed', { email: member.email }), error: byProblemType },
+  })
   const key = useIdempotencyKey({ storeId, memberId: member.id })
   const fail = useMemberFailure(storeId)
 
@@ -98,10 +100,7 @@ function MemberRow({ member, storeId }: { member: Member, storeId: string }) {
       return
     }
     submit({ storeId, memberId: member.id, idempotencyKey: key.next() }, {
-      onSuccess: () => {
-        key.settled()
-        toast.success(t('stores.members.removed', { email: member.email }))
-      },
+      onSuccess: () => key.settled(),
       onError: (error) => {
         key.settled(error)
         fail(error)
@@ -135,8 +134,12 @@ function MemberRow({ member, storeId }: { member: Member, storeId: string }) {
 function InvitationRow({ invitation, storeId }: { invitation: MemberInvitation, storeId: string }) {
   const { t, intlLocale } = useLocale()
   const { confirm, dialog } = useConfirm()
-  const resend = useSubmit('stores', 'resendManagerInvitation')
-  const revoke = useSubmit('stores', 'revokeManagerInvitation')
+  const resend = useSubmit('stores', 'resendManagerInvitation', {
+    meta: { success: () => t('stores.members.resent', { email: invitation.email }), error: byProblemType },
+  })
+  const revoke = useSubmit('stores', 'revokeManagerInvitation', {
+    meta: { success: () => t('stores.members.revoked', { email: invitation.email }), error: byProblemType },
+  })
   const resendKey = useIdempotencyKey({ storeId, invitationId: invitation.id, action: 'resend' })
   const revokeKey = useIdempotencyKey({ storeId, invitationId: invitation.id, action: 'revoke' })
   const fail = useMemberFailure(storeId)
@@ -144,10 +147,7 @@ function InvitationRow({ invitation, storeId }: { invitation: MemberInvitation, 
   const expired = invitation.state === 'expired'
 
   const sendAgain = () => resend.submit({ storeId, invitationId: invitation.id, idempotencyKey: resendKey.next() }, {
-    onSuccess: () => {
-      resendKey.settled()
-      toast.success(t('stores.members.resent', { email: invitation.email }))
-    },
+    onSuccess: () => resendKey.settled(),
     onError: (error) => {
       resendKey.settled(error)
       fail(error)
@@ -163,10 +163,7 @@ function InvitationRow({ invitation, storeId }: { invitation: MemberInvitation, 
       return
     }
     revoke.submit({ storeId, invitationId: invitation.id, idempotencyKey: revokeKey.next() }, {
-      onSuccess: () => {
-        revokeKey.settled()
-        toast.success(t('stores.members.revoked', { email: invitation.email }))
-      },
+      onSuccess: () => revokeKey.settled(),
       onError: (error) => {
         revokeKey.settled(error)
         fail(error)
@@ -210,8 +207,11 @@ function InviteForm({ storeId }: { storeId: string }) {
   const [email, setEmail] = useState('')
   const [language, setLanguage] = useState<Language>(screenLanguage)
   const [invalid, setInvalid] = useState(false)
-  const { submit: send, isPending, error, reset } = useSubmit('stores', 'inviteManager')
   const input = { storeId, email: email.trim(), language }
+  // Every refusal shows inline, next to the field or through ProblemNotice, so the cache stays silent.
+  const { submit: send, isPending, error, reset } = useSubmit('stores', 'inviteManager', {
+    meta: { success: () => t('stores.members.invite.done', { email: input.email }), silent: true },
+  })
   const key = useIdempotencyKey(input)
   const fail = useMemberFailure(storeId)
   const problem = error instanceof ApiProblem ? error : undefined
@@ -226,12 +226,11 @@ function InviteForm({ storeId }: { storeId: string }) {
     send({ ...input, idempotencyKey: key.next() }, {
       onSuccess: () => {
         key.settled()
-        toast.success(t('stores.members.invite.done', { email: input.email }))
         setEmail('')
       },
       onError: (failure) => {
         key.settled(failure)
-        fail(failure, { toastIt: false })
+        fail(failure)
       },
     })
   }

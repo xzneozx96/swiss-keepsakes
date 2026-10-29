@@ -10,13 +10,13 @@ const TABS: Record<Lang, { label: string, to: string, heading: string }[]> = {
   en: [
     { label: 'Explore', to: '/en', heading: 'Make yourself at home' },
     { label: 'Keepsakes', to: '/en/gifts', heading: 'Keepsakes' },
-    { label: 'Tours', to: '/en/tours', heading: 'Tours around Luzerne' },
+    { label: 'Map', to: '/en/map', heading: 'Map of Lucerne' },
     { label: 'Account', to: '/account', heading: 'Account' },
   ],
   de: [
     { label: 'Entdecken', to: '/de', heading: 'Fühlen Sie sich wie zu Hause' },
     { label: 'Andenken', to: '/de/gifts', heading: 'Andenken' },
-    { label: 'Touren', to: '/de/tours', heading: 'Touren rund um Luzern' },
+    { label: 'Karte', to: '/de/map', heading: 'Karte von Luzern' },
     { label: 'Konto', to: '/account', heading: 'Konto' },
   ],
 }

@@ -1,5 +1,6 @@
 import type { Tour } from '@sk/domain/bookings'
 import type { LanguageStatus, Product } from '@sk/domain/catalog'
+import type { MutationFeedback } from '@/features/data-client'
 
 import { availableUnits, fromPrice, giftText, isPublished, languageStatus, missingText, placeText, tourText } from '@sk/domain/catalog'
 
@@ -160,10 +161,13 @@ export type ProductKind = 'gift' | 'tour'
  * Archive and restore from the M11 row menu (owner, 15.10.2026). Archiving hides the gift or
  * tour from guests (a tour is also unpublished) and moves it under "Archived"; orders and
  * bookings that point at it are kept. Restoring brings it back as a draft to publish again.
+ *
+ * `meta` is the row menu's toast (M11 only): the editors' own "restore" (unpublishing) stays silent.
  */
-export function useProductArchive() {
-  const { mutate: setProductArchived } = useCommand('catalog', 'setProductArchived')
-  const { mutate: setTourArchived } = useCommand('tours', 'setTourArchived')
+interface ArchiveInput { id: string, archived: boolean }
+export function useProductArchive(meta?: { gift?: MutationFeedback<void, ArchiveInput>, tour?: MutationFeedback<void, ArchiveInput> }) {
+  const { mutate: setProductArchived } = useCommand('catalog', 'setProductArchived', { meta: meta?.gift })
+  const { mutate: setTourArchived } = useCommand('tours', 'setTourArchived', { meta: meta?.tour })
 
   const set = (kind: ProductKind, id: string, archived: boolean) =>
     kind === 'gift'
