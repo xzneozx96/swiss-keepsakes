@@ -22,9 +22,24 @@ Exit codes: 0 granted, 1 refused or failed, 2 a missing or misplaced argument, a
 4. Run `pnpm --filter @sk/api admin:grant <email> --database <name>`, with the database name of the environment you checked in step 3. A wrong name stops the script before it writes.
 5. The person reloads. `GET /api/admin/stores` now answers 200 for them, and `/api/store/{storeId}/*` still answers 403, whatever store they belonged to.
 
+### Local testing
+
+The Neon `development` branch's own database may hold one Super Admin, so you can test the admin and store screens locally. Grant it to an address that is not a store Owner. Run it by hand, never from a test or from CI.
+
+1. Sign in once at http://localhost:3002.
+2. From the repo root, run:
+
+   ```sh
+   env $(grep -E '^DATABASE_URL_UNPOOLED=' api/.env.local | xargs) pnpm --filter @sk/api admin:grant <email> --database neondb
+   ```
+
+3. Create a store in Admin, then invite a different address as Owner.
+
+The development branch already has one Super Admin, granted on 29.10.2026, so a second grant is rarely needed.
+
 ## Rules
 
-- Run it against `staging` and `production` only when you mean to. Do not run it from a test, from CI or against the Neon `development` branch's own database. The integration tests run it against their own `sk_test_*` database.
+- Run it against `staging` and `production` only when you mean to. Do not run it from a test or from CI. The one exception is local testing (see Local testing): the Neon `development` branch's own database may hold one Super Admin. The integration tests run it against their own `sk_test_*` database.
 - It grants nothing a second time. A repeat prints `This user is already a Super Admin. Nothing changed.` and exits 1.
 
 ## Take a Super Admin away
