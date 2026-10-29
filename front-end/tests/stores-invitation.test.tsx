@@ -1,7 +1,7 @@
 import { invitationPreviewSchema, problemSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -11,7 +11,7 @@ import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 import { InvitationScreen } from '@/features/stores/components/invitation-screen'
 import { OnboardingScreen } from '@/features/stores/components/onboarding-screen'
-import { heldInvitationToken } from '@/features/stores/lib/invitation-token'
+import { heldInvitationToken, takeInvitationFromHash } from '@/features/stores/lib/invitation-token'
 import { storesEn } from '@/features/stores/messages'
 import { storesDe } from '@/features/stores/messages.de'
 import { writeStored } from '@/lib/storage'
@@ -220,6 +220,30 @@ describe('[E2.15][AC02] signed in', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'This invitation was already used' })).toBeInTheDocument()
     expect(within(document.querySelector('figure')!).getByText('Chi Ngoc')).toBeInTheDocument()
     expect(photo()).toBe('grey')
+  })
+
+  it.each(['owner', 'manager'] as const)('does not show the store of link A on the refusal of an unknown link B (%s)', async (role) => {
+    signedIn()
+    answer = (call) => {
+      if (call.path === '/api/me/invitations/accept')
+        return problem(403, 'invitation-email-mismatch')
+      if (call.path === '/api/auth/get-session')
+        return Response.json({ session: { id: 's', userId: 'u', expiresAt: new Date(Date.now() + 1e7).toISOString() }, user: { id: 'u', email: 'x@example.ch', name: 'Mia' } })
+
+      return call.body && (call.body as { token?: string }).token === `${token}-b` ? problem(404, 'invitation-not-found') : previewBody({ role })
+    }
+    open(role)
+    if (role === 'manager')
+      await userEvent.click(await screen.findByRole('button', { name: 'Accept invitation' }))
+
+    expect(await screen.findByText('Wrong account')).toBeInTheDocument()
+    expect(within(document.querySelector('figure')!).getByText('Chi Ngoc')).toBeInTheDocument()
+    act(() => {
+      takeInvitationFromHash(screens[role].path, `#invitation=${token}-b`)
+    })
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'This invitation link is not valid' })).toBeInTheDocument()
+    expect(within(document.querySelector('figure')!).queryByText('Chi Ngoc')).not.toBeInTheDocument()
   })
 
   it('shows the Owner a failed read of the invitation inside the invitation frame, with an h1', async () => {

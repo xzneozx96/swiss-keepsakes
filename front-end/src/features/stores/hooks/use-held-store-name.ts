@@ -3,26 +3,34 @@ import { useEffect, useState } from 'react'
 
 import { queryKeys } from '@/features/data-client'
 
+const previewKey = (token: string) => [...queryKeys.stores.invitationPreview, token]
+const nameOf = (data: unknown) => (data as { storeName?: string } | undefined)?.storeName
+
 /**
- * The store's name from the invitation preview the flow reads anyway (never a new call), so a refusal from the accept
- * call can still put the name on the photo. A spent token removes its preview from the cache right after the refusal, so
- * the name is taken as the preview arrives and kept.
+ * The store's name from the invitation preview of the held link, read from the cache the flow fills anyway (never a
+ * new call), so a refusal from the accept call can still put the name on the photo. A spent token is dropped and its
+ * preview removed right after the refusal, so the name is taken as the preview arrives and kept for that link. A
+ * different link starts with no name.
  */
 export function useHeldStoreName(token: string | undefined): string | undefined {
   const queryClient = useQueryClient()
-  const [name, setName] = useState<string | undefined>(() => queryClient.getQueriesData<{ storeName?: string }>({ queryKey: queryKeys.stores.invitationPreview }).at(0)?.[1]?.storeName)
+  const [held, setHeld] = useState<{ token?: string, name?: string }>(() => ({ token, name: token ? nameOf(queryClient.getQueryData(previewKey(token))) : undefined }))
+
+  if (token && held.token !== token)
+    setHeld({ token, name: nameOf(queryClient.getQueryData(previewKey(token))) })
 
   useEffect(() => {
     if (!token)
       return
 
     return queryClient.getQueryCache().subscribe((event) => {
-      const data = event.query.state.data as { storeName?: string } | undefined
+      const key = event.query.queryKey
+      const name = nameOf(event.query.state.data)
 
-      if (event.query.queryKey[queryKeys.stores.invitationPreview.length] === token && data?.storeName)
-        setName(data.storeName)
+      if (name && key.length === 3 && key[0] === queryKeys.stores.invitationPreview[0] && key[1] === queryKeys.stores.invitationPreview[1] && key[2] === token)
+        setHeld({ token, name })
     })
   }, [queryClient, token])
 
-  return name
+  return token && held.token !== token ? undefined : held.name
 }
