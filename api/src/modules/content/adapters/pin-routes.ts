@@ -1,20 +1,23 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { Localized, Pin } from '@sk/domain/content'
+import type { Localized, Pin, PinListEntry, PinStoryOption } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { PinChanges } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { pinPublishBodySchema, pinSchema, pinWriteBodySchema } from '@sk/api-contract'
+import { pinListSchema, pinPublishBodySchema, pinSchema, pinStoryOptionListSchema, pinWriteBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
-import { pinChanges, pinView } from './pin-view.ts'
+import { pinChanges, pinListItemView, pinView } from './pin-view.ts'
 import { failureProblem } from './problems.ts'
 import { acceptEmptyBody, etag, etagHeaders, json, storeParams, withIfMatch } from './route-parts.ts'
 
 // What the pin routes call. main.ts builds each from the module's use cases, wrapped by guardUseCases.
 export interface PinUseCases {
+  listMerchantPins: (actor: Actor, storeId: string) => Promise<Result<PinListEntry[]>>
+  getMerchantPin: (actor: Actor, storeId: string, pinId: string) => Promise<Result<Pin>>
+  listPinStoryOptions: (actor: Actor, storeId: string) => Promise<Result<PinStoryOption[]>>
   createPin: (actor: Actor, storeId: string, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
   savePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
   publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null, slug?: Localized) => Promise<Result<Pin>>
@@ -23,6 +26,28 @@ export interface PinUseCases {
 }
 
 const pinParams = z.object({ storeId: z.uuid(), pinId: z.uuid() })
+
+const listPinsRoute = createRoute({
+  method: 'get',
+  path: '/api/store/{storeId}/pins',
+  request: { params: storeParams },
+  responses: { 200: { description: 'Every pin of the store, most recently edited first. `ended` is a live pin whose dates are all over', headers: requestIdHeader, content: json(pinListSchema) }, ...problemResponses },
+})
+
+// Registered before the {pinId} routes, so `story-options` is never read as a pin id.
+const storyOptionsRoute = createRoute({
+  method: 'get',
+  path: '/api/store/{storeId}/pins/story-options',
+  request: { params: storeParams },
+  responses: { 200: { description: 'The story groups of the store, for the main-story picker', headers: requestIdHeader, content: json(pinStoryOptionListSchema) }, ...problemResponses },
+})
+
+const getPinRoute = createRoute({
+  method: 'get',
+  path: '/api/store/{storeId}/pins/{pinId}',
+  request: { params: pinParams },
+  responses: { 200: { description: 'The pin with its draft, photos and outbound link', headers: etagHeaders, content: json(pinSchema) }, ...problemResponses },
+})
 
 const createPinRoute = createRoute({
   method: 'post',
@@ -78,6 +103,27 @@ const deletePinRoute = createRoute({
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
 // verified store from `c.get('store')`, never from the path.
 export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCases): void {
+  app.openapi(listPinsRoute, async (c) => {
+    const result = await useCases.listMerchantPins(c.get('actor'), c.get('store').storeId)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json({ items: result.value.map(pinListItemView) }, 200)
+  })
+
+  app.openapi(storyOptionsRoute, async (c) => {
+    const result = await useCases.listPinStoryOptions(c.get('actor'), c.get('store').storeId)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json({ items: result.value }, 200)
+  })
+
+  app.openapi(getPinRoute, async (c) => {
+    const result = await useCases.getMerchantPin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId)
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(pinView(result.value), 200, etag(result.value))
+  })
+
   app.openapi(createPinRoute, async (c) => {
     const result = await useCases.createPin(c.get('actor'), c.get('store').storeId, pinChanges(c.req.valid('json')), c.get('requestId'))
     if (!result.ok)

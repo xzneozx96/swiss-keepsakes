@@ -16,8 +16,35 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
     async idsInStore(_tx, storeId, ids) {
       return ids.map(id => id.toLowerCase()).filter(id => rows.get(id)?.storeId === storeId)
     },
+    async find(_tx, storeId, pinId) {
+      const pin = rows.get(pinId)
+      return pin?.storeId === storeId ? pin : undefined
+    },
+    async list(_tx, storeId) {
+      return [...rows.values()].filter(pin => pin.storeId === storeId).sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()).map(pin => ({
+        id: pin.id,
+        status: pin.status,
+        draft: pin.draft,
+        published: pin.published,
+        slug: pin.slug,
+        latitude: pin.latitude,
+        longitude: pin.longitude,
+        categoryIds: pin.categoryIds,
+        dates: pin.dates,
+        stayTag: pin.stayTag,
+        interests: pin.interests,
+        coverMediaId: pin.coverMediaId,
+        mainStoryGroupId: pin.mainStoryGroupId,
+        mainStoryPublished: pin.mainStoryGroupId !== null,
+        rowVersion: pin.rowVersion,
+        updatedAt: pin.updatedAt,
+      }))
+    },
+    async storyOptions() {
+      return []
+    },
     async insert(_tx, storeId, changes, at) {
-      const { title, tip, dates, ...rest } = changes
+      const { title, tip, localTip, dates, ...rest } = changes
       return store({
         id: randomUUID(),
         storeId,
@@ -29,12 +56,18 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
         weeklyHours: [],
         stayTag: 'both',
         interests: [],
+        serviceType: null,
+        mustVisit: false,
+        foodKind: null,
         coverMediaId: null,
+        coverAlt: {},
+        photos: [],
+        outboundUrl: null,
         mainStoryGroupId: null,
         categoryIds: [],
         ...rest,
         dates: (dates ?? []).map(d => ({ id: randomUUID(), ...d })),
-        draft: title || tip ? { title: title ?? {}, tip: tip ?? {} } : null,
+        draft: title || tip || localTip ? { title: title ?? {}, tip: tip ?? {}, localTip: localTip ?? {} } : null,
         published: null,
         firstPublishedAt: null,
         rowVersion: 1,
@@ -47,13 +80,13 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
       return pin?.storeId === storeId ? pin : undefined
     },
     async save(_tx, pin, changes, at) {
-      const { title, tip, dates, ...rest } = changes
-      const base = pin.draft ?? pin.published ?? { title: {}, tip: {} }
+      const { title, tip, localTip, dates, ...rest } = changes
+      const base = pin.draft ?? pin.published ?? { title: {}, tip: {}, localTip: {} }
       return store({
         ...pin,
         ...rest,
         dates: dates ? dates.map(d => ({ id: randomUUID(), ...d })) : pin.dates,
-        draft: title || tip ? { title: title ?? base.title, tip: tip ?? base.tip } : pin.draft,
+        draft: title || tip || localTip ? { title: title ?? base.title, tip: tip ?? base.tip, localTip: localTip ?? base.localTip } : pin.draft,
         rowVersion: pin.rowVersion + 1,
         updatedAt: at,
       })
