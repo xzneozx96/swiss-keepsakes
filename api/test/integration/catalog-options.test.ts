@@ -661,7 +661,7 @@ describe('[E6.2][AC52] the input limits at the API', () => {
     await refused(await send([option(1, { values: values(51) })]), 'options')
     await refused(await send([option(1, { name: { en: 'a'.repeat(61) } })]), 'options')
     await refused(await send([option(1, { values: [{ ref: 'v', label: { de: 'b'.repeat(81) } }] })]), 'options')
-    await refused(await send([], Array.from({ length: 301 }, () => ({ variantId: randomUUID(), values: {} }))), 'variantValues')
+    await refused(await send([], Array.from({ length: 301 }, (_, n) => ({ variantId: randomUUID(), values: { [`o${n}`]: 'v0' } }))), 'variantValues')
     await refused(await send([], [{ variantId: product.variants[0]!.id, values: Object.fromEntries(values(6).map(v => [v.ref, 'v0'])) }]), 'variantValues')
     expect(await get(product.id)).toEqual(product)
   })
