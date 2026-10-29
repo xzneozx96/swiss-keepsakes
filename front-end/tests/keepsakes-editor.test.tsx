@@ -192,6 +192,25 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     await waitFor(() => expect(writes()).toHaveLength(1))
   })
 
+  it.each([
+    ['stale', 412, 'precondition-failed'],
+    ['failed', 500, 'internal-error'],
+  ] as const)('[E6.1][autosave] Back after a %s save still asks first, because the typed edits are not saved', async (_state, status, type) => {
+    serve(call => (call.method === 'PATCH' ? problem(status, type) : undefined))
+    await openEditor()
+
+    await userEvent.type(await nameField(), ' II')
+    await screen.findByRole('alert', undefined, AUTOSAVE)
+    await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    expect(dialog).toHaveTextContent('Leave without saving?')
+    expect(screen.queryByTestId('keepsake-list')).not.toBeInTheDocument()
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Keep editing' }))
+    expect(screen.getByTestId('keepsake-editor')).toBeInTheDocument()
+    expect(screen.getByLabelText('Name (English)')).toHaveValue('Victorinox Classic II')
+  })
+
   it('[E6.1][autosave] the commission saves with the rest, as a fraction', async () => {
     await openEditor()
 
