@@ -12,7 +12,7 @@ import { createPublicReadRepository } from '../../src/modules/content/adapters/p
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeRequestUpload, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetMedia, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeRequestUpload, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -64,6 +64,9 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   const categoryDeps = { uow, categories, audit: createAuditLog(writeClock), clock: writeClock }
   const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock }
   const writeUseCases = guardUseCases({
+    listMerchantPins: makeListMerchantPins(pinDeps),
+    getMerchantPin: makeGetMerchantPin(pinDeps),
+    listPinStoryOptions: makeListPinStoryOptions(pinDeps),
     createPin: makeCreatePin(pinDeps),
     savePin: makeSavePin(pinDeps),
     publishPin: makePublishPin(pinDeps),

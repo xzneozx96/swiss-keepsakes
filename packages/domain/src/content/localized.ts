@@ -6,7 +6,7 @@ export type ContentLanguage = typeof contentLanguages[number]
 export const stayTags = ['short_stay', 'multi_day', 'both'] as const
 export type StayTag = typeof stayTags[number]
 
-export const interestCodes = ['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes'] as const
+export const interestCodes = ['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes', 'local-activities'] as const
 export type InterestCode = typeof interestCodes[number]
 
 /** What stops a draft from being published; the editor shows one line per gap. */

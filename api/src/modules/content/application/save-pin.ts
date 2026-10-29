@@ -7,6 +7,7 @@ import { pinPublishGaps } from '@sk/domain/content'
 import { mayManageContent } from './access.ts'
 import { checkMedia } from './check-media.ts'
 import { fail, ok } from './failure.ts'
+import { pinImages } from './pin-images.ts'
 
 // A save is a PATCH. On a pin that was published, the database CHECK still reads the stored slug and location and
 // the published title, so the use case runs the same rule on the merged result and names the gap.
@@ -20,11 +21,9 @@ export function makeSavePin<T>({ uow, pins, media, clock }: PinDeps<T>) {
         return fail({ reason: 'not-found' })
       if (pin.rowVersion !== ifMatch)
         return fail({ reason: 'stale' })
-      if (changes.coverMediaId) {
-        const refused = await checkMedia(media, tx, storeId, [{ id: changes.coverMediaId, kind: 'image' }])
-        if (refused)
-          return fail(refused)
-      }
+      const refused = await checkMedia(media, tx, storeId, pinImages(changes))
+      if (refused)
+        return fail(refused)
       if (pin.status !== 'draft') {
         const gaps = pinPublishGaps({
           slug: changes.slug !== undefined ? changes.slug : pin.slug,

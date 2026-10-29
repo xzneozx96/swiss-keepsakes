@@ -24,7 +24,7 @@ useCommand('stores', 'createStore', {
 })
 ```
 
-- `success?: MessageKey | ((result, input) => string)`. A key when the text needs no data; a function, closing over the screen's own `t`, when it needs the result or the input (an email, an amount). Nothing toasts on success without this.
+- `success?: MessageKey | ((result, input) => string)`. A key when the text needs no data; a function, closing over the screen's own `t`, when it needs the result or the input (an email, an amount). A function that returns an empty string shows nothing, for a command whose success is only sometimes worth a toast (the place editor's save, when a publish follows). Nothing toasts on success without this.
 - `error?: Partial<Record<string, MessageKey>>`, keyed by `ApiProblem['type']`. Keys only, never a literal string. Mutations only.
 - `silent?: boolean`, on a mutation and on a query (`QueryFeedback`): drops the automatic error toast. On a mutation `success` still fires on its own, so a command that shows its refusal inline but still wants a success toast sets both.
 

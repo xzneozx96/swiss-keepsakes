@@ -6,6 +6,7 @@ import { mapEn } from '@/features/map/messages'
 import { productsEn } from '@/features/merchant/products/messages'
 import { salesOverviewEn } from '@/features/merchant/sales/messages'
 import { partnerDashboardEn } from '@/features/partners/report/messages'
+import { placesEn } from '@/features/places/messages'
 import { reportPagesEn } from '@/features/reports/pages-messages'
 import { requestsEn } from '@/features/requests/messages'
 import { storesEn } from '@/features/stores/messages'
@@ -36,6 +37,7 @@ export const en = {
   ...mailEn,
   ...storesEn,
   ...categoriesEn,
+  ...placesEn,
   ...mapEn,
 
   'app.name': 'Swiss Keepsakes',
