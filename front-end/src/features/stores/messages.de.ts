@@ -20,14 +20,13 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.tiles.total': 'Shops',
   'stores.tiles.totalMore': 'Bisher geladene Shops',
   'stores.tiles.waiting': 'Warten auf den Inhaber',
-  'stores.tiles.onboarding': 'Einrichtung',
+  'stores.tiles.onboarding': 'In Einrichtung',
   'stores.tiles.live': 'Im Verkauf',
 
   'stores.column.store': 'Shop',
-  'stores.column.owner': 'Inhaber',
   'stores.column.status': 'Status',
   'stores.column.invitation': 'Einladung',
-  'stores.column.payment': 'Zahlungskonto',
+  'stores.column.conditions': 'Vor der Eröffnung',
   'stores.column.created': 'Erstellt',
 
   'stores.create.open': 'Inhaber einladen',
@@ -42,6 +41,7 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.create.language.de': 'Deutsch',
   'stores.create.submit': 'Shop anlegen und Einladung senden',
   'stores.create.done': 'Shop angelegt. Die Einladung geht an {email}.',
+  'stores.create.note': 'Der Shop wird sofort angelegt. Der Inhaber erhält eine Einladung, die 7 Tage gilt. Sie können sie in der Liste erneut senden.',
   'stores.create.slug': 'Name in der Web-Adresse: {slug}',
   'stores.create.slugTaken': 'Ein anderer Shop hat einen sehr ähnlichen Namen. Ändern Sie den Namen ein wenig.',
   'stores.create.ownerIsSuperAdmin': 'Diese E-Mail gehört einem Super-Admin, der keinen Shop besitzen kann. Verwenden Sie eine andere Adresse.',
@@ -49,7 +49,6 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.list.title': 'Alle Shops',
   'stores.list.empty': 'Noch kein Shop. Laden Sie den ersten Inhaber ein, dann wird der Shop mit der Einladung angelegt.',
   'stores.list.more': 'Weitere Shops anzeigen',
-  'stores.list.paymentAccount': 'Zahlungskonto',
   'stores.list.created': 'Erstellt am {date}',
   'stores.list.noInvitation': 'Keine Einladung an den Inhaber',
 
@@ -73,6 +72,15 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.condition.unmet': 'Offen',
   'stores.condition.pending': 'Noch nicht verfügbar',
 
+  'stores.conditions.count': '{n} von 4 erledigt',
+  'stores.conditions.title': 'Vor der Eröffnung',
+  'stores.conditions.notStarted': 'Nicht begonnen',
+  'stores.conditions.label': '{name}: {n} von 4 Bedingungen erledigt',
+
+  'stores.actions.label': 'Aktionen für {name}',
+  'stores.actions.copy': 'E-Mail des Inhabers kopieren',
+  'stores.actions.copied': '{email} kopiert',
+  'stores.actions.copyFailed': 'Die E-Mail konnte nicht kopiert werden. Markieren und kopieren Sie sie von Hand.',
   'stores.resend.action': 'Einladung erneut senden',
   'stores.resend.done': 'Einladung erneut an {email} gesendet. Nur der neueste Link funktioniert.',
   'stores.resend.accepted': 'Der Inhaber hat die Einladung bereits angenommen.',

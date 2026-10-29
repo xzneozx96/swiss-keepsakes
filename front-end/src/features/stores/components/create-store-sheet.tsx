@@ -3,6 +3,7 @@ import type { Language } from '@sk/domain/shared'
 import { Button, Description, FieldError, Form, Input, Label, Radio, RadioGroup, TextField, toast } from '@heroui/react'
 import { useId, useState } from 'react'
 
+import { EmailIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
@@ -125,6 +126,10 @@ export function CreateStoreSheet({ onClose }: { onClose: () => void }) {
             </Radio>
           ))}
         </RadioGroup>
+        <p className="flex items-start gap-3 rounded-2xl bg-surface-secondary p-4 text-sm text-pretty">
+          <EmailIcon aria-hidden className="mt-0.5 shrink-0" size={18} />
+          {t('stores.create.note')}
+        </p>
         {error && !slugTaken && !ownerIsSuperAdmin && <ProblemNotice error={error} />}
       </Form>
     </SheetFrame>

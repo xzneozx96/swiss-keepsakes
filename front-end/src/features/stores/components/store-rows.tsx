@@ -7,7 +7,8 @@ import { formatDate } from '@sk/domain/shared'
 import { DataTable } from '@/components/data-table'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
-import { ResendInvitationButton } from './resend-invitation-button'
+import { ConditionsCell } from './conditions-cell'
+import { StoreActions } from './store-actions'
 
 const statusTone: Record<AdminStore['status'], StatusTone> = {
   invited: 'info',
@@ -21,12 +22,6 @@ const invitationTone: Record<NonNullable<AdminStore['invitation']>['state'], Sta
   expired: 'warning',
   accepted: 'success',
   revoked: 'neutral',
-}
-
-const paymentTone: Record<AdminStore['paymentAccount'], StatusTone> = {
-  met: 'success',
-  unmet: 'neutral',
-  pending: 'neutral',
 }
 
 function InvitationCell({ store }: { store: AdminStore }) {
@@ -48,42 +43,34 @@ function InvitationCell({ store }: { store: AdminStore }) {
   )
 }
 
-/** Phones: one card per store, with the invitation said in a sentence and the resend under it. */
+/** Phones: one card per store with the same facts as a table row: status, the invitation as a sentence, the setup bar, and the ⋯ menu. */
 function StoreCards({ stores, label }: { stores: AdminStore[], label: string }) {
   const { t, intlLocale } = useLocale()
 
   return (
-    <ul aria-label={label} className="flex flex-col gap-5 lg:hidden">
+    <ul aria-label={label} className="flex flex-col gap-3 lg:hidden">
       {stores.map((store) => {
         const { invitation } = store
 
         return (
           <li key={store.id} data-store={store.slug}>
             <article className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface">
-              <div className="flex items-start justify-between gap-3 p-4">
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <h3 className="text-lg leading-tight font-semibold [overflow-wrap:anywhere]">{store.name}</h3>
-                  <span className="text-xs break-all text-muted">{store.slug}</span>
+              <div className="flex items-start justify-between gap-3 p-4 pb-3">
+                <div className="flex min-w-0 flex-col items-start gap-1.5">
+                  <h3 className="text-lg leading-snug font-semibold [overflow-wrap:anywhere]">{store.name}</h3>
+                  <StatusChip tone={statusTone[store.status]}>{t(`stores.status.${store.status}`)}</StatusChip>
                 </div>
-                <StatusChip tone={statusTone[store.status]}>{t(`stores.status.${store.status}`)}</StatusChip>
+                <StoreActions store={store} />
               </div>
-              <div className="flex flex-col gap-2 border-t border-dashed border-separator px-4 py-3.5 text-sm">
-                <p className="break-words text-pretty" data-invitation={invitation?.state ?? 'none'}>
+              <div className="flex flex-col gap-3 border-t border-dashed border-separator px-4 py-3 text-sm">
+                <p className="text-pretty [overflow-wrap:anywhere]" data-invitation={invitation?.state ?? 'none'}>
                   {invitation
                     ? t(`stores.invitation.${invitation.state}`, { email: invitation.email, date: formatDate(new Date(invitation.expiresAt), intlLocale) })
                     : t('stores.list.noInvitation')}
                 </p>
-                <p className="flex items-baseline justify-between gap-4">
-                  <span className="text-muted">{t('stores.list.paymentAccount')}</span>
-                  <span className="font-medium">{t(`stores.condition.${store.paymentAccount}`)}</span>
-                </p>
+                <ConditionsCell hasTitle store={store} />
                 <p className="text-muted">{t('stores.list.created', { date: formatDate(new Date(store.createdAt), intlLocale) })}</p>
               </div>
-              {(invitation?.state === 'open' || invitation?.state === 'expired') && (
-                <div className="flex justify-end border-t border-separator px-4 py-2.5">
-                  <ResendInvitationButton store={store} />
-                </div>
-              )}
             </article>
           </li>
         )
@@ -92,7 +79,7 @@ function StoreCards({ stores, label }: { stores: AdminStore[], label: string }) 
   )
 }
 
-/** From 1024px a table, below it the cards. The Owner's email has its own column, and so does the resend. */
+/** From 1024px a table, below it the cards. The Owner's address sits under the store's name. */
 export function StoreRows({ stores, label, isLoading }: { stores: AdminStore[], label: string, isLoading: boolean }) {
   const { t, intlLocale } = useLocale()
   const columns: DataTableColumn<AdminStore>[] = [
@@ -104,16 +91,9 @@ export function StoreRows({ stores, label, isLoading }: { stores: AdminStore[], 
       render: store => (
         <div className="flex min-w-0 flex-col">
           <span className="font-semibold [overflow-wrap:anywhere]">{store.name}</span>
-          <span className="text-label break-all text-muted">{store.slug}</span>
+          <span className="text-label break-all text-muted">{store.invitation?.email ?? '–'}</span>
         </div>
       ),
-    },
-    {
-      id: 'owner',
-      header: t('stores.column.owner'),
-      render: store => store.invitation
-        ? <span className="break-all">{store.invitation.email}</span>
-        : <span className="text-muted">–</span>,
     },
     {
       id: 'status',
@@ -130,11 +110,10 @@ export function StoreRows({ stores, label, isLoading }: { stores: AdminStore[], 
       render: store => <InvitationCell store={store} />,
     },
     {
-      id: 'payment',
-      header: t('stores.column.payment'),
-      skeleton: 'chip',
-      cellClassName: 'whitespace-nowrap',
-      render: store => <StatusChip tone={paymentTone[store.paymentAccount]}>{t(`stores.condition.${store.paymentAccount}`)}</StatusChip>,
+      id: 'conditions',
+      header: t('stores.column.conditions'),
+      skeleton: 'two-line',
+      render: store => <ConditionsCell store={store} />,
     },
     {
       id: 'created',
@@ -153,7 +132,7 @@ export function StoreRows({ stores, label, isLoading }: { stores: AdminStore[], 
       label={label}
       rowActions={{
         headerClassName: 'w-20',
-        render: store => <ResendInvitationButton isIconOnly store={store} />,
+        render: store => <StoreActions store={store} />,
       }}
       rows={stores}
     />
