@@ -1,6 +1,7 @@
-import type { StoryDraft } from '@sk/domain/content'
+import type { StoryBodyNode, StoryDraft } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AuditEntry, MediaRow, StoryVersionChanges } from '../../../src/modules/content/ports.ts'
+import { emptyStoryBody } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 import { makeCreateStoryGroup } from '../../../src/modules/content/application/create-story-group.ts'
 import { makeCreateStoryVersion } from '../../../src/modules/content/application/create-story-version.ts'
@@ -17,16 +18,17 @@ const store = 'store-1'
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g1', stores: new Map([[store, 'owner']]) }
 const outsider: Actor = { kind: 'staff', userId: 'u2', guestId: 'g2', stores: new Map([['store-2', 'owner']]) }
 
-const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [], ...over })
+const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: emptyStoryBody, ...over })
 const complete: StoryVersionChanges = { slug: 'a-day-on-the-lake', draft: doc() }
 
-function setup(media: MediaRow[] = []) {
+function setup(media: MediaRow[] = [], pinRows: { id: string, storeId: string }[] = []) {
   const stories = createFakeStories()
   const audit: AuditEntry[] = []
   const deps = {
     uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) },
     stories,
     media: { find: async (_tx: null, _storeId: string, ids: string[]) => media.filter(m => ids.includes(m.id)) },
+    pins: { idsInStore: async (_tx: null, storeId: string, ids: string[]) => pinRows.filter(p => p.storeId === storeId && ids.some(id => id.toLowerCase() === p.id)).map(p => p.id) },
     audit: { record: async (_tx: null, entry: AuditEntry) => void audit.push(entry) },
     clock: createManualClock(new Date('2026-10-27T10:00:00Z')),
   }
@@ -182,17 +184,17 @@ describe('story use cases', () => {
     ])
     const g = await group(s)
     const v = await version(s, g.id)
-    const block = (b: object) => doc({ sections: [{ id: 's1', heading: '', blocks: [b as never] }] })
+    const block = (b: StoryBodyNode) => doc({ body: { type: 'doc', content: [b] } })
     for (const draft of [
       doc({ coverMediaId: 'img' }),
-      block({ type: 'image', mediaId: 'img', caption: '' }),
-      block({ type: 'audio', mediaId: 'aud', title: '', caption: '' }),
+      block({ type: 'image', attrs: { mediaId: 'img', alt: '', caption: '' } }),
+      block({ type: 'audio', attrs: { mediaId: 'aud', title: '', caption: '' } }),
     ])
       expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft }, null)).toEqual({ ok: false, reason: 'media-retired' })
     expect(await s.createVersion(owner, store, g.id, 'de', { draft: doc({ coverMediaId: 'img' }) }, null)).toEqual({ ok: false, reason: 'media-retired' })
     // An audio file is no cover; an image is no audio block.
     expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: doc({ coverMediaId: 'voice' }) }, null)).toEqual({ ok: false, reason: 'media-invalid' })
-    expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: block({ type: 'audio', mediaId: 'ok', title: '', caption: '' }) }, null)).toEqual({ ok: false, reason: 'media-invalid' })
+    expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: block({ type: 'audio', attrs: { mediaId: 'ok', title: '', caption: '' } }) }, null)).toEqual({ ok: false, reason: 'media-invalid' })
     expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: doc({ coverMediaId: 'ok' }) }, null)).toMatchObject({ ok: true })
     expect(s.stories.versions.get(`${g.id}/en`)?.rowVersion).toBe(v.rowVersion + 1)
   })
@@ -286,6 +288,64 @@ describe('story use cases', () => {
     for (const result of await Promise.all(calls))
       expect(result).toEqual({ ok: false, reason: 'forbidden' })
     expect(s.stories.versions.get(`${g.id}/en`)?.rowVersion).toBe(1)
+  })
+
+  describe('[E2.13][AC30] the body document and the store rules (AC-4)', () => {
+    const pinA = '0190f0c2-0000-7000-8000-0000000000a1'
+    const pinOther = '0190f0c2-0000-7000-8000-0000000000a2'
+    const bodyOf = (...content: StoryBodyNode[]): StoryDraft => doc({ body: { type: 'doc', content } })
+    const image = (mediaId: string): StoryBodyNode => ({ type: 'image', attrs: { mediaId, alt: '', caption: '' } })
+    const pinned = (pinId: string): StoryBodyNode => ({ type: 'paragraph', content: [{ type: 'text', text: 'Chapel Bridge', marks: [{ type: 'pinLink', attrs: { pinId } }] }] })
+    const rows: MediaRow[] = [
+      { id: 'img', kind: 'image', status: 'ready' },
+      { id: 'old', kind: 'image', status: 'retired' },
+      { id: 'foreign', kind: 'image', status: 'ready' },
+    ]
+    const withStores = () => {
+      const s = setup(rows.filter(r => r.id !== 'foreign'), [{ id: pinA, storeId: store }, { id: pinOther, storeId: 'store-2' }])
+      return s
+    }
+
+    it('an image of this store, ready, saves and the draft holds it in the body', async () => {
+      const s = withStores()
+      const g = await group(s)
+      await version(s, g.id)
+      const draft = bodyOf(image('img'))
+      expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft }, null)).toMatchObject({ ok: true, value: { draft: { body: draft.body } } })
+      // The media_refs rows themselves are asserted against the real repository in integration/content-stories.test.ts.
+    })
+
+    it('an image this store has no row for is media-invalid (the fake lists only this store\'s rows; the cross-store lookup is integration-tested), a retired image media-retired, an audio node on an image row media-invalid', async () => {
+      const s = withStores()
+      const g = await group(s)
+      await version(s, g.id)
+      expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: bodyOf(image('foreign')) }, null)).toEqual({ ok: false, reason: 'media-invalid' })
+      expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: bodyOf(image('old')) }, null)).toEqual({ ok: false, reason: 'media-retired' })
+      expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: bodyOf({ type: 'audio', attrs: { mediaId: 'img', title: '', caption: '' } }) }, null)).toEqual({ ok: false, reason: 'media-invalid' })
+      expect(s.stories.versions.get(`${g.id}/en`)?.rowVersion).toBe(1)
+    })
+
+    it('a pinLink to a pin of this store saves, to a pin of another store is reference-invalid and the draft is unchanged', async () => {
+      const s = withStores()
+      const g = await group(s)
+      const v = await version(s, g.id)
+      expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: bodyOf(pinned(pinOther)) }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+      expect(s.stories.versions.get(`${g.id}/en`)?.draft).toEqual(v.draft)
+      expect(await s.createVersion(owner, store, g.id, 'de', { draft: bodyOf(pinned(pinOther)) }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+      expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: bodyOf(pinned(pinA)) }, null)).toMatchObject({ ok: true })
+      // Upper-case letters name the same pin.
+      expect(await s.saveVersion(owner, store, g.id, 'en', 2, { draft: bodyOf(pinned(pinA.toUpperCase())) }, null)).toMatchObject({ ok: true })
+    })
+
+    it('a version with a title and a slug publishes the same body and needs no DE version (AC-1)', async () => {
+      const s = withStores()
+      const g = await group(s)
+      const draft = bodyOf(pinned(pinA), image('img'))
+      await version(s, g.id, 'en', { slug: 'a-day', draft })
+      const result = await s.publish(owner, store, g.id, 'en', 1, null)
+      expect(result).toMatchObject({ ok: true, value: { status: 'published', published: { body: draft.body } } })
+      expect(s.stories.versions.has(`${g.id}/de`)).toBe(false)
+    })
   })
 })
 

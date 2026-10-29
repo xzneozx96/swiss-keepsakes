@@ -27,7 +27,7 @@ function keysOf(value: unknown): string[] {
 
 interface Seed { story: { id: string, slug: string }, pin: string, tour: { id: string, slug: string }, mapCategory: string, blogCategory: string, main: string }
 
-const storyDoc = (title: string) => JSON.stringify({ title, excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [] })
+const storyDoc = (title: string) => JSON.stringify({ title, excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [] } })
 
 async function group(store: string, language: 'en' | 'de', status: 'draft' | 'published', title: string): Promise<{ id: string, slug: string }> {
   const { rows } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store])

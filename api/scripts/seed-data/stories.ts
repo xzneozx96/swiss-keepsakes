@@ -1,8 +1,29 @@
-import type { ContentLanguage, StoryDraft } from '@sk/domain/content'
+import type { ContentLanguage } from '@sk/domain/content'
 
 // The prototype's stories (front-end/src/features/content/seed.ts), one entry per shared slug. Text only: the
 // image and audio blocks and the covers need media rows, so they are left out. Written by a one-off conversion.
-export interface SeedStory { slug: string, versions: Partial<Record<ContentLanguage, StoryDraft>> }
+// The source data keeps the old intro and sections; seed-content.ts maps it to a body document (E2.13). The
+// reading time is no longer stored, so readMinutes here is ignored.
+export interface SeedStoryDoc {
+  title: string
+  excerpt: string
+  intro: string
+  authorName: string
+  authorRole: string
+  readMinutes: number | null
+  coverMediaId: string | null
+  sections: {
+    id: string
+    heading: string
+    blocks: (
+      | { type: 'paragraph', text: string }
+      | { type: 'image', mediaId: string, caption: string }
+      | { type: 'video', youtubeId: string, title: string, caption: string }
+      | { type: 'audio', mediaId: string, title: string, caption: string }
+    )[]
+  }[]
+}
+export interface SeedStory { slug: string, versions: Partial<Record<ContentLanguage, SeedStoryDoc>> }
 
 export const seedStories: SeedStory[] = [
   {
