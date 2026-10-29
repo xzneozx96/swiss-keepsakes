@@ -58,22 +58,24 @@ describe('store screens loading', () => {
     expect(container.querySelectorAll('.skeleton')).toHaveLength(4)
   })
 
-  it('onboarding, me pending: checklist with 4 rows, a form card with fields, and the open-for-sale button', () => {
+  it('onboarding, me pending: the frame, five steps beside the page, one step with its footer, and no generic block [E2.16][E2.3]', () => {
     const { container } = wrap(<OnboardingScreen />)
 
+    expect(screen.getByRole('status')).toHaveTextContent('Open your store')
+    expect(container.querySelector('[data-skeleton="onboarding"]')).not.toBeNull()
     expect(genericBox(container)).toBeNull()
-    expect(container.querySelectorAll('li.rounded-2xl')).toHaveLength(4)
-    expect(container.querySelectorAll('div.rounded-3xl.bg-surface.shadow-surface')).toHaveLength(1)
-    expect(container.querySelector('div.rounded-3xl.bg-surface.shadow-surface > .w-full.h-11.rounded-xl:last-child')).toBeNull()
-    expect(container.querySelector('[data-skeleton="open-for-sale"]')).not.toBeNull()
+    expect(container.querySelectorAll('aside li')).toHaveLength(5)
+    expect(container.querySelectorAll('[data-skeleton="step"]')).toHaveLength(1)
+    expect(container.querySelector('.fixed.bottom-0')?.className).toContain('pb-[calc(env(safe-area-inset-bottom,0px)+12px)]')
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
 
-  it('onboarding, query pending: the same layout', () => {
-    queries.useMe.mockReturnValue({ ...pending, isPending: false, data: { stores: [{ storeId: 's1', role: 'owner' }] } })
+  it('onboarding, query pending: the same layout [E2.16][E2.3]', () => {
+    queries.useMe.mockReturnValue({ ...pending, isPending: false, data: { stores: [{ storeId: 's1', role: 'owner', status: 'onboarding' }] } })
     const { container } = wrap(<OnboardingScreen />)
 
     expect(genericBox(container)).toBeNull()
-    expect(container.querySelectorAll('li.rounded-2xl')).toHaveLength(4)
-    expect(container.querySelector('[data-skeleton="open-for-sale"]')).not.toBeNull()
+    expect(container.querySelectorAll('aside li')).toHaveLength(5)
+    expect(container.querySelector('[data-skeleton="step"]')).not.toBeNull()
   })
 })

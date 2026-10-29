@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 import { MerchantShell } from '@/components/layout/merchant-shell'
+import { SetupNotice } from '@/features/stores/components/setup-notice'
 import { noIndexHead } from '@/lib/no-index'
 
 export const Route = createFileRoute('/store')({
@@ -12,6 +13,7 @@ export const Route = createFileRoute('/store')({
 function StoreLayout() {
   return (
     <MerchantShell>
+      <SetupNotice />
       <Outlet />
     </MerchantShell>
   )
