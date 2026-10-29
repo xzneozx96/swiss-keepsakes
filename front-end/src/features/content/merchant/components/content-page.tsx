@@ -11,7 +11,7 @@ import type { Language } from '@/contexts/locale-context'
 import type { ArticleFilter } from '@/features/content/merchant/lib/search-params'
 import type { MessageKey } from '@/i18n/en'
 
-import { buttonVariants, toast } from '@heroui/react'
+import { buttonVariants } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -129,13 +129,6 @@ function CommentsPanel({ isLoading }: { isLoading: boolean }) {
     }
     if (action === 'hide' || action === 'show') {
       comments.setHidden(row.id, action === 'hide')
-      toast.success(
-        t(
-          action === 'hide'
-            ? 'merchantComments.hiddenToast'
-            : 'merchantComments.shownToast',
-        ),
-      )
 
       return
     }
@@ -156,7 +149,6 @@ function CommentsPanel({ isLoading }: { isLoading: boolean }) {
     if (!ok)
       return
     comments.remove(row.id)
-    toast.success(t('merchantComments.deletedToast'))
   }
 
   const emptyState = {
@@ -194,7 +186,6 @@ function CommentsPanel({ isLoading }: { isLoading: boolean }) {
           onSubmit={(text) => {
             comments.reply(replyTo.id, text)
             setReplyTo(null)
-            toast.success(t('merchantComments.postedToast'))
           }}
         />
       )}
@@ -262,13 +253,6 @@ function ReviewsPanel({ isLoading }: { isLoading: boolean }) {
               language ?? replyTo.replyLanguage,
             )
             setReplyTo(null)
-            toast.success(
-              t(
-                replyTo.reply
-                  ? 'merchantReviews.savedToast'
-                  : 'merchantReviews.postedToast',
-              ),
-            )
           }}
         />
       )}

@@ -42,9 +42,15 @@ export interface CommentRowProps {
  */
 export function useMerchantComments(filter: CommentFilter[]) {
   const { t, intlLocale } = useLocale()
-  const { mutate: setCommentHidden } = useCommand('content', 'setCommentHidden')
-  const { mutate: deleteComment } = useCommand('content', 'deleteComment')
-  const { mutate: replyAsShop } = useCommand('content', 'replyAsShop')
+  const { mutate: setCommentHidden } = useCommand('content', 'setCommentHidden', {
+    meta: { success: (_result, input) => t(input.hidden ? 'merchantComments.hiddenToast' : 'merchantComments.shownToast') },
+  })
+  const { mutate: deleteComment } = useCommand('content', 'deleteComment', {
+    meta: { success: 'merchantComments.deletedToast' },
+  })
+  const { mutate: replyAsShop } = useCommand('content', 'replyAsShop', {
+    meta: { success: 'merchantComments.postedToast' },
+  })
   const comments = useComments()
   const articles = useArticles()
   const guests = useGuests()
