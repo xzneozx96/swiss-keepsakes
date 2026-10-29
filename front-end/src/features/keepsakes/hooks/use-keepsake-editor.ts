@@ -4,12 +4,13 @@ import type { KeepsakeText } from '../lib/keepsake-rules'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 
+import { useLocale } from '@/contexts/locale-context'
 import { useDataClient } from '@/features/data-client'
 import { useCommand } from '@/features/data-client/use-command'
 import { useLatest } from '@/hooks/use-latest'
 import { keepsakesQueries } from '../api/queries'
-import { AUTOSAVE_MS, textOf } from '../lib/keepsake-rules'
-import { problemTypeOf } from '../lib/problems'
+import { AUTOSAVE_MS, fullLanguages, textOf } from '../lib/keepsake-rules'
+import { keepsakeProblemKeys, problemTypeOf } from '../lib/problems'
 
 /** What the autosave holds while it is typed. The commission is a fraction from 0 to 0.5. */
 export interface KeepsakeDraft extends KeepsakeText {
@@ -47,10 +48,28 @@ function trimmed(text: Record<'en' | 'de', string>) {
 export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keepsake: Product }) {
   const client = useDataClient()
   const queryClient = useQueryClient()
-  const save = useCommand('keepsakes', 'save')
-  const publish = useCommand('keepsakes', 'publish')
-  const unpublish = useCommand('keepsakes', 'unpublish')
-  const saveVariant = useCommand('keepsakes', 'saveVariant')
+  const { t } = useLocale()
+  // The autosave and the variant sheet show a refusal inline, so their error toast is off. Publish, unpublish and the
+  // hide / for-sale switch have no field to show it at: their refusal is the toast, in the keepsake screens' copy.
+  const save = useCommand('keepsakes', 'save', { meta: { silent: true } })
+  const publish = useCommand('keepsakes', 'publish', {
+    meta: {
+      success: (published) => {
+        const languages = fullLanguages({ name: textOf(published.name), text: textOf(published.text) })
+
+        return t('keepsakes.toast.published', { languages: languages.map(language => t(`keepsakes.language.${language}`)).join(` ${t('keepsakes.and')} `) })
+      },
+      error: keepsakeProblemKeys,
+    },
+  })
+  const unpublish = useCommand('keepsakes', 'unpublish', { meta: { success: 'keepsakes.toast.unpublished', error: keepsakeProblemKeys } })
+  const saveVariant = useCommand('keepsakes', 'saveVariant', { meta: { success: (_, input) => t('keepsakes.variant.saved', { code: input.skuCode ?? '' }), silent: true } })
+  const setVariantStatus = useCommand('keepsakes', 'saveVariant', {
+    meta: {
+      success: (result, input) => t(input.status === 'draft' ? 'keepsakes.variant.toast.hidden' : 'keepsakes.variant.toast.forSale', { code: result.variants.find(variant => variant.id === input.variantId)?.skuCode ?? '' }),
+      error: keepsakeProblemKeys,
+    },
+  })
   const [draft, setDraft] = useState(() => draftOf(keepsake))
   const [state, setState] = useState<SaveState>('saved')
   const [savedAt, setSavedAt] = useState(() => new Date(keepsake.updatedAt))
@@ -160,6 +179,17 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     }
   }
 
+  async function runVariant(run: () => Promise<Product>): Promise<Outcome> {
+    try {
+      queryClient.setQueryData(detailKey, await run())
+
+      return { ok: true }
+    }
+    catch (error) {
+      return { ok: false, type: problemTypeOf(error) }
+    }
+  }
+
   return {
     draft,
     change,
@@ -172,18 +202,10 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     flush,
     publish: () => afterFlush(() => publish.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID() })),
     unpublish: () => afterFlush(() => unpublish.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID() })),
-    saveVariant: async (variantId: string, body: { skuCode?: string, priceRappen?: number, status?: 'published' | 'draft' }): Promise<Outcome> => {
-      try {
-        const result = await saveVariant.mutateAsync({ storeId, id, variantId, idempotencyKey: crypto.randomUUID(), ...body })
-
-        queryClient.setQueryData(detailKey, result)
-
-        return { ok: true }
-      }
-      catch (error) {
-        return { ok: false, type: problemTypeOf(error) }
-      }
-    },
+    saveVariant: (variantId: string, body: { skuCode: string, priceRappen: number, status: 'published' | 'draft' }) =>
+      runVariant(() => saveVariant.mutateAsync({ storeId, id, variantId, idempotencyKey: crypto.randomUUID(), ...body })),
+    setVariantStatus: (variantId: string, status: 'published' | 'draft') =>
+      runVariant(() => setVariantStatus.mutateAsync({ storeId, id, variantId, idempotencyKey: crypto.randomUUID(), status })),
     isPublishing: publish.isPending || unpublish.isPending,
   }
 }

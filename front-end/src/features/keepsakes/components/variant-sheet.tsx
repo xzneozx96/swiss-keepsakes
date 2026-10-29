@@ -1,7 +1,7 @@
 import type { ProductVariant } from '@sk/api-contract'
 import type { Outcome } from '../hooks/use-keepsake-editor'
 
-import { Button, FieldError, Form, Input, Label, NumberField, Radio, RadioGroup, TextField, toast } from '@heroui/react'
+import { Button, FieldError, Form, Input, Label, NumberField, Radio, RadioGroup, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
 
 import { SheetFrame } from '@/components/sheet-frame'
@@ -9,7 +9,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { isSkuCode, toRappen } from '../lib/keepsake-rules'
 import { problemMessageKey } from '../lib/problems'
 
-type Save = (variantId: string, body: { skuCode?: string, priceRappen?: number, status?: 'published' | 'draft' }) => Promise<Outcome>
+type Save = (variantId: string, body: { skuCode: string, priceRappen: number, status: 'published' | 'draft' }) => Promise<Outcome>
 
 /**
  * The variant sheet for a keepsake with one variant: the code, the price and whether guests can pick it. E6.2 adds the
@@ -41,7 +41,6 @@ export function VariantSheet({ variant, onSave, onClose }: { variant: ProductVar
 
     setIsPending(false)
     if (outcome.ok) {
-      toast.success(t('keepsakes.variant.saved', { code: skuCode }))
       onClose()
     }
     else if (outcome.type === 'sku-code-taken') {

@@ -129,7 +129,7 @@ function Editor({ storeId, keepsake, view, onView, onReload }: {
                 />
               </KeepsakeCard>
               <OptionsCard />
-              <VariantsCard keepsake={keepsake} onSave={editor.saveVariant} />
+              <VariantsCard keepsake={keepsake} onSave={editor.saveVariant} onSetStatus={editor.setVariantStatus} />
               <div className="scroll-mt-20" id="commission">
                 <CommissionCard value={draft.commission} onChange={commission => editor.change({ commission })} />
               </div>
