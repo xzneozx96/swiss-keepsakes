@@ -1,6 +1,6 @@
 import type { Clock, MediaAlert, MediaRepository, ObjectStorage, UnitOfWork } from '../ports.ts'
 import type { MediaJob } from './process-media.ts'
-import { mediaPrefix } from '@sk/domain/content'
+import { confirmedPrefix, mediaPrefix } from '@sk/domain/content'
 
 export interface FailMediaDeps<T> {
   uow: UnitOfWork<T>
@@ -29,7 +29,7 @@ export function makeFailMedia<T>({ uow, media, storage, clock, alert }: FailMedi
         await media.retire(tx, row, clock.now())
       return { ready: false, inUse: false }
     })
-    for (const { key } of await storage.list('uploads', `confirmed/${storeId}/${mediaId}/`))
+    for (const { key } of await storage.list('uploads', confirmedPrefix(storeId, mediaId)))
       await storage.delete('uploads', key)
     if (ready)
       return

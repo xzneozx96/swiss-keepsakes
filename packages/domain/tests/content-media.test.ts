@@ -3,8 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   checkUploadRequest,
   confirmedKey,
+  confirmedPrefix,
   MEDIA_RULES,
   mediaPrefix,
+  mediaRuleFor,
   originalKey,
   parseUploadKey,
   sniffContentType,
@@ -149,5 +151,21 @@ describe('[E2.7] variantWidthsFor', () => {
     [640, [320, 640]],
   ])('[E2.7] original width %i', (width, expected) => {
     expect(variantWidthsFor(width)).toEqual(expected)
+  })
+})
+
+describe('[E2.7] media rule lookups', () => {
+  it('[E2.7] mediaRuleFor finds a listed type and is undefined for anything else, including object prototype names', () => {
+    expect(mediaRuleFor('application/pdf')).toEqual({ kind: 'pdf', ext: 'pdf', maxBytes: 25 * 1024 * 1024 })
+    expect(mediaRuleFor('image/gif')).toBeUndefined()
+    expect(mediaRuleFor('constructor')).toBeUndefined()
+    expect(mediaRuleFor('__proto__')).toBeUndefined()
+  })
+
+  it('[E2.7] confirmedPrefix is the folder that holds confirmedKey, with a trailing slash', () => {
+    const storeId = 's1'
+    const mediaId = 'm1'
+    expect(confirmedPrefix(storeId, mediaId)).toBe('confirmed/s1/m1/')
+    expect(confirmedKey(storeId, mediaId, 'jpg').startsWith(confirmedPrefix(storeId, mediaId))).toBe(true)
   })
 })

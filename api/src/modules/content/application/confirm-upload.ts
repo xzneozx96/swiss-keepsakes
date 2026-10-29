@@ -2,7 +2,7 @@ import type { Actor } from '@sk/domain/identity'
 import type { AuditLog, Clock, JobQueue, MediaRecord, MediaRepository, ObjectStorage, UnitOfWork } from '../ports.ts'
 import type { Result } from './failure.ts'
 import { createHash } from 'node:crypto'
-import { confirmedKey, MEDIA_RULES, originalKey, parseUploadKey, sniffContentType } from '@sk/domain/content'
+import { confirmedKey, mediaRuleFor, originalKey, parseUploadKey, sniffContentType } from '@sk/domain/content'
 import { ObjectTooLargeError } from '../ports.ts'
 import { mayManageContent, staffActor } from './access.ts'
 import { fail, ok } from './failure.ts'
@@ -44,7 +44,7 @@ export function makeConfirmUpload<T>({ uow, media, storage, jobs, audit, clock, 
       return refuse(key, 'empty')
     // Parameters such as `; charset=binary` are not part of the type.
     const storedType = head.contentType?.split(';')[0]?.trim().toLowerCase()
-    const declared = storedType !== undefined && Object.hasOwn(MEDIA_RULES.types, storedType) ? MEDIA_RULES.types[storedType] : undefined
+    const declared = storedType === undefined ? undefined : mediaRuleFor(storedType)
     if (!declared)
       return refuse(key, 'type-not-allowed')
     if (head.size > declared.maxBytes)

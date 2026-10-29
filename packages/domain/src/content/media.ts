@@ -18,12 +18,17 @@ export const MEDIA_RULES = Object.freeze({
   presignExpirySeconds: 900,
 })
 
+// The rule for a content type, or undefined for a type that is not allowed. Own keys only, so names such as `constructor` are not types.
+export function mediaRuleFor(contentType: string): Readonly<{ kind: MediaKind, ext: string, maxBytes: number }> | undefined {
+  return Object.keys(MEDIA_RULES.types).includes(contentType) ? MEDIA_RULES.types[contentType] : undefined
+}
+
 export type UploadCheck
   = | { ok: true, kind: MediaKind, ext: string }
     | { ok: false, reason: 'type-not-allowed' | 'too-large' | 'empty' }
 
 export function checkUploadRequest(input: { contentType: string, byteSize: number }): UploadCheck {
-  const rule = Object.keys(MEDIA_RULES.types).includes(input.contentType) ? MEDIA_RULES.types[input.contentType] : undefined
+  const rule = mediaRuleFor(input.contentType)
   if (!rule) return { ok: false, reason: 'type-not-allowed' }
   if (!Number.isInteger(input.byteSize) || input.byteSize <= 0) return { ok: false, reason: 'empty' }
   if (input.byteSize > rule.maxBytes) return { ok: false, reason: 'too-large' }
@@ -69,8 +74,12 @@ export function uploadKey(storeId: string, uuid: string, ext: string): string {
   return `${storeId}/${uuid}.${ext}`
 }
 
+export function confirmedPrefix(storeId: string, mediaId: string): string {
+  return `confirmed/${storeId}/${mediaId}/`
+}
+
 export function confirmedKey(storeId: string, mediaId: string, ext: string): string {
-  return `confirmed/${storeId}/${mediaId}/source.${ext}`
+  return `${confirmedPrefix(storeId, mediaId)}source.${ext}`
 }
 
 export function originalKey(storeId: string, mediaId: string, ext: string): string {
