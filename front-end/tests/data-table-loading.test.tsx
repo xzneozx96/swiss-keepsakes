@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { DataTable } from '@/components/data-table'
 import { SKELETON_ROWS } from '@/components/data-table-skeleton'
+import { OrdersIcon } from '@/components/icons'
 import { LocaleProvider } from '@/contexts/locale-context'
 
 interface Row { id: string, name: string, kind: string }
@@ -12,7 +13,7 @@ const columns = [
   { id: 'kind', header: 'Kind', render: (row: Row) => row.kind },
 ]
 const rowActions = { render: (row: Row) => <button type="button">{`Menu ${row.name}`}</button> }
-const empty = { message: 'Nothing here' }
+const empty = { icon: OrdersIcon, message: 'Nothing here' }
 
 // The row-header column's cell has the rowheader role, the others gridcell; both are td.
 const cellsOf = (row: HTMLElement) => Array.from(row.querySelectorAll('td'))
