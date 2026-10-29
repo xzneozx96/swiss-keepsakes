@@ -12,8 +12,8 @@ const safeUuid = (expression: SQL) => sql`(case when ${expression} ~ ${uuidPatte
 
 // Every use of a file by a page of this store, one row per file, page and way of use. A page is a pin, a tour, a
 // keepsake or one language version of a story. Stories, places and tours come from this module's tables (the typed
-// cover and PDF columns, and media_refs, which holds the story body and any later photo); keepsakes come from the
-// catalog module, handed in as a list (ADR-013). `published` means the page shows the file in its published version:
+// cover and PDF columns, place_photos for the extra photos of a pin, and media_refs, which holds the story body and
+// any later photo); keepsakes come from the catalog module, handed in as a list (ADR-013). `published` means the page shows the file in its published version:
 // a story version through a published media_refs row, a pin or tour that is published, a keepsake that is for sale
 // and holds the file among its live photos.
 function usesCte(storeId: string, keepsakes: KeepsakeUse[], mediaId?: string): SQL {
@@ -41,6 +41,12 @@ function usesCte(storeId: string, keepsakes: KeepsakeUse[], mediaId?: string): S
         join content.places p on p.id = r.owner_id
        where r.store_id = ${storeId} and r.owner_kind = 'place' ${only('r.media_id')}
        group by r.media_id, r.owner_id, p.status, p.draft, p.published, p.cover_media_id
+      union all
+      select f.media_id, 'place', f.place_id, null, p.status = 'published', 'photo',
+             coalesce(p.draft->'name', p.published->'name', '{}'::jsonb), p.cover_media_id
+        from content.place_photos f
+        join content.places p on p.id = f.place_id
+       where f.store_id = ${storeId} ${only('f.media_id')}
       union all
       select t.cover_media_id, 'tour', t.id, null, t.status = 'published', 'cover',
              coalesce(t.draft->'title', t.published->'title', '{}'::jsonb), t.cover_media_id

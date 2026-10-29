@@ -244,6 +244,20 @@ describe('[E4.11][AC51] where a file is used', () => {
     const w = await wall()
     expect((await call<MediaUses>(w.staff, `/${w.lonely}/uses`)).body).toEqual({ published: [], drafts: [] })
   })
+
+  it('[E4.11][AC51] [E4.2] a file used only as an extra place photo shows the place, published or draft, with its name', async () => {
+    const w = await wall()
+    const photo = await media(w.s, 'image', 'Pin-extra.jpg')
+    const live = await pin(w.s, 'published', 'Lion Monument', null)
+    await pool.query('insert into content.place_photos (place_id, store_id, position, media_id) values ($1, $2, 1, $3)', [live, w.s, photo])
+    expect((await call<MediaUses>(w.staff, `/${photo}/uses`)).body).toMatchObject({ published: [{ pageKind: 'place', pageId: live, role: 'photo', title: { en: 'Lion Monument' } }], drafts: [] })
+    const second = await media(w.s, 'image', 'Pin-extra-2.jpg')
+    const draft = await pin(w.s, 'draft', 'Water Tower', null)
+    await pool.query('insert into content.place_photos (place_id, store_id, position, media_id) values ($1, $2, 1, $3)', [draft, w.s, second])
+    expect((await call<MediaUses>(w.staff, `/${second}/uses`)).body).toMatchObject({ published: [], drafts: [{ pageKind: 'place', pageId: draft, role: 'photo' }] })
+    const library = await list(w.staff, 'kind=image&use=unused&pageSize=24')
+    expect(library.body.items.map(item => item.id)).not.toContain(photo)
+  })
 })
 
 describe('[E4.11][AC51] retiring a file over HTTP', () => {
@@ -271,6 +285,19 @@ describe('[E4.11][AC51] retiring a file over HTTP', () => {
     const cover = await media(w.s, 'image', 'Place-cover.jpg')
     await pin(w.s, 'draft', 'Rose Garden', cover)
     expect((await call(w.staff, `/${cover}/retire`, { method: 'POST' })).status).toBe(409)
+  })
+
+  it('[E4.11][AC51] [E4.2] is refused for a file only an extra place photo uses, and the file stays ready', async () => {
+    const w = await wall()
+    const photo = await media(w.s, 'image', 'Pin-extra-only.jpg')
+    const place = await pin(w.s, 'draft', 'Rose Garden', null)
+    await pool.query('insert into content.place_photos (place_id, store_id, position, media_id) values ($1, $2, 1, $3)', [place, w.s, photo])
+    jobs.length = 0
+    const result = await call<{ type: string, pages: number }>(w.staff, `/${photo}/retire`, { method: 'POST' })
+    expect(result.status).toBe(409)
+    expect(result.body).toMatchObject({ type: 'media-in-use', pages: 1 })
+    expect((await pool.query<{ status: string }>('select status from content.media where id = $1', [photo])).rows[0]!.status).toBe('ready')
+    expect(jobs).toEqual([])
   })
 
   it('[E4.11][AC51] retires an unused ready file, queues its cleanup after the grace period, and refuses it again', async () => {
