@@ -5,10 +5,9 @@ import type { StartStep } from '../lib/search-params'
 import type { StepBar } from '@/features/merchant/products/components/step-shell'
 import type { MessageKey } from '@/i18n/en'
 
-import { toast } from '@heroui/react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { useLocale } from '@/contexts/locale-context'
@@ -54,11 +53,19 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
   const { t } = useLocale()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const create = useSubmit('places', 'create')
-  const save = useSubmit('places', 'save')
-  const publish = useSubmit('places', 'publish')
-  const hide = useSubmit('places', 'hide')
-  const remove = useSubmit('places', 'remove')
+  // The editor shows every refusal itself (`notice`), so each write is `silent`. What a save says depends on the tap
+  // that sent it (`saveToastRef`, written only once `submit` took the tap), and a save that a publish follows says nothing.
+  const saveToastRef = useRef<MessageKey | undefined>(undefined)
+  const hiddenNameRef = useRef('')
+  const saveMeta = {
+    success: (saved: Pin) => saveToastRef.current && !(saved.status === 'published' && saved.draft) ? t(saveToastRef.current) : '',
+    silent: true,
+  }
+  const create = useSubmit('places', 'create', { meta: saveMeta })
+  const save = useSubmit('places', 'save', { meta: saveMeta })
+  const publish = useSubmit('places', 'publish', { meta: { success: 'places.toast.published', silent: true } })
+  const hide = useSubmit('places', 'hide', { meta: { success: () => t('places.toast.hidden', { name: hiddenNameRef.current }), silent: true } })
+  const remove = useSubmit('places', 'remove', { meta: { success: 'places.toast.deleted', silent: true } })
   const { confirm, dialog } = useConfirm()
   const [pin, setPin] = useState(initial)
   const [form, setForm] = useState(() => (initial ? formOf(initial) : emptyForm(start === 'dates')))
@@ -119,7 +126,7 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
   }
 
   /** Saves the form (a create for a new pin), then runs `after` with the stored pin. */
-  const saveThen = (after: (saved: Pin) => void) => {
+  const saveThen = (after: (saved: Pin) => void, toastKey?: MessageKey) => {
     if (busy)
       return
     clear()
@@ -143,10 +150,12 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
       },
     }
 
-    if (pin)
-      save.submit({ storeId, id: pin.id, ifMatch: pin.rowVersion, ...body, idempotencyKey: saveKey.next() }, callbacks)
-    else
-      create.submit({ storeId, ...body, idempotencyKey: saveKey.next() }, callbacks)
+    const sent = pin
+      ? save.submit({ storeId, id: pin.id, ifMatch: pin.rowVersion, ...body, idempotencyKey: saveKey.next() }, callbacks)
+      : create.submit({ storeId, ...body, idempotencyKey: saveKey.next() }, callbacks)
+
+    if (sent)
+      saveToastRef.current = toastKey
   }
 
   const publishNow = (stored: Pin, snapshot: PlaceForm) => {
@@ -154,7 +163,6 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
       onSuccess: (published) => {
         publishKey.settled()
         adopt(published)
-        toast.success(t('places.toast.published'))
         finish(published)
       },
       onError: (error) => {
@@ -166,10 +174,7 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     })
   }
 
-  const saveDraft = () => saveThen((saved) => {
-    toast.success(t(initial ? 'places.toast.saved' : 'places.toast.draftSaved'))
-    finish(saved)
-  })
+  const saveDraft = () => saveThen(finish, initial ? 'places.toast.saved' : 'places.toast.draftSaved')
 
   const doPublish = () => {
     if (publishGaps(form).length > 0) {
@@ -190,9 +195,7 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     saveThen((saved) => {
       if (saved.status === 'published' && saved.draft)
         publishNow(saved, snapshot)
-      else
-        toast.success(t('places.toast.saved'))
-    })
+    }, 'places.toast.saved')
   }
 
   const unhide = () => {
@@ -218,13 +221,8 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
       if (!confirmed)
         return
       clear()
-      hide.submit({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }, {
-        onSuccess: (hidden) => {
-          adopt(hidden)
-          toast.success(t('places.toast.hidden', { name }))
-        },
-        onError: failed,
-      })
+      if (hide.submit({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }, { onSuccess: adopt, onError: failed }))
+        hiddenNameRef.current = name
     })
   }
 
@@ -238,10 +236,7 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
         return
       clear()
       remove.submit({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }, {
-        onSuccess: () => {
-          toast.success(t('places.toast.deleted'))
-          void navigate({ to: PLACES_PATH as never })
-        },
+        onSuccess: () => void navigate({ to: PLACES_PATH as never }),
         onError: failed,
       })
     })

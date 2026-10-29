@@ -1,6 +1,7 @@
+import { toast } from '@heroui/react'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { writeStored } from '@/lib/storage'
 import { list, listItem, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, writes } from './keepsakes-harness'
@@ -23,6 +24,8 @@ beforeEach(async () => {
     return undefined
   }
 })
+
+afterEach(() => vi.restoreAllMocks())
 
 const nameField = () => screen.findByLabelText('Name (English)', undefined, SLOW)
 
@@ -71,6 +74,7 @@ describe('[E6.1][create] the create flow in English', () => {
   })
 
   it('[E6.1][create] the last step needs a code and a price, suggests a code from the name, and Create keepsake makes a draft and opens it', async () => {
+    const success = vi.spyOn(toast, 'success')
     renderKeepsakes('/store/products/gifts/new')
 
     await toVariants()
@@ -89,10 +93,12 @@ describe('[E6.1][create] the create flow in English', () => {
     expect(writes()[0]!.key).toBeTruthy()
     expect(await screen.findByTestId('keepsake-editor', undefined, SLOW)).toBeInTheDocument()
     expect(screen.getByText('Draft')).toBeInTheDocument()
+    expect(success).toHaveBeenCalledExactlyOnceWith('Knife created as a draft with 1 variant.')
   })
 
   it('[E6.1][create] refuses a code that is not letters and digits before any request, and says a taken code is used in the shop', async () => {
     const answer = state.answer
+    const danger = vi.spyOn(toast, 'danger')
 
     state.answer = call => (call.method === 'POST' ? problem(409, 'sku-code-taken') : answer(call))
     renderKeepsakes('/store/products/gifts/new')
@@ -109,6 +115,7 @@ describe('[E6.1][create] the create flow in English', () => {
 
     expect(await screen.findByText('This SKU code is already used in your shop.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: 'New keepsake' })).toBeInTheDocument()
+    expect(danger).not.toHaveBeenCalled()
   })
 
   it('[E6.1][create] Back goes to Details with what was typed, and the arrow asks before it drops it', async () => {

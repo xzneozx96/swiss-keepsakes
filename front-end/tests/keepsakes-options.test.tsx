@@ -1,6 +1,7 @@
+import { toast } from '@heroui/react'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { writeStored } from '@/lib/storage'
 import { list, listItem, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
@@ -8,6 +9,8 @@ import { list, listItem, problem, product, productId, renderKeepsakes, setUpHarn
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
 vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => false }))
+
+afterEach(() => vi.restoreAllMocks())
 
 const base = `/api/store/${storeId}/products`
 const detail = `${base}/${productId}`
@@ -110,6 +113,7 @@ describe('[E6.2][AC52] the Options card', () => {
   })
 
   it('[E6.2][AC52] an option that no variant uses asks first, then goes in one save on the version that was opened', async () => {
+    const success = vi.spyOn(toast, 'success')
     current = product({ options, variants: [] })
     serve(call => (call.method === 'PUT' ? Response.json(product({ options: [options[1]!], variants: [], rowVersion: 2 })) : undefined))
     await openEditor()
@@ -125,11 +129,14 @@ describe('[E6.2][AC52] the Options card', () => {
     expect(writes()[0]).toMatchObject({ method: 'PUT', path: `${detail}/options`, ifMatch: '1' })
     expect((writes()[0]!.body as { options: { ref: string }[] }).options.map(o => o.ref)).toEqual([optTheme])
     expect(writes()[0]!.key).toBeTruthy()
+    await waitFor(() => expect(within(optionsCard()).queryByText('Size')).not.toBeInTheDocument())
+    expect(success).not.toHaveBeenCalled()
   })
 })
 
 describe('[E6.2][AC52] the options sheet N14', () => {
   it('[E6.2][AC52] Edit opens one option, adds a value and saves the whole list in one request; Cancel saves nothing', async () => {
+    const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'PUT' ? Response.json(product({ options, variants, rowVersion: 2 })) : undefined))
     await openEditor()
 
@@ -161,6 +168,7 @@ describe('[E6.2][AC52] the options sheet N14', () => {
     expect(body.options[0]!.values[2]).toMatchObject({ label: { en: 'XL' }, swatch: null })
     expect(body.variantValues).toEqual([])
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Edit Size' })).not.toBeInTheDocument())
+    expect(success).toHaveBeenCalledExactlyOnceWith('Options saved.')
   })
 
   it('[E6.2][AC52] a value that a variant uses cannot be deleted, and the refusal sits at the value and names the variants', async () => {
@@ -207,6 +215,7 @@ describe('[E6.2][AC52] the options sheet N14', () => {
   })
 
   it('[E6.2][AC52] a refusal from the API shows in the sheet in the merchant\'s words and nothing closes', async () => {
+    const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PUT'
       ? refused([{ in: 'body', path: `options.${optTheme}.values.${vLion}`, message: 'x', code: 'value-in-use', params: { value: 'Lion Monument', count: 1, codes: 'VX-S-LION', more: 0 } }])
       : undefined))
@@ -223,6 +232,7 @@ describe('[E6.2][AC52] the options sheet N14', () => {
 
     expect(await within(dialog).findByText(/Not saved\. 1 thing needs a fix: Can’t delete Lion Monument/)).toBeInTheDocument()
     expect(dialog).toBeInTheDocument()
+    expect(danger).not.toHaveBeenCalled()
   })
 
   it('[E6.2][412] a stale save says so, and the page asks for a reload', async () => {
@@ -307,6 +317,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
   })
 
   it('[E6.2][AC52] Create variant sends one request with the value of every option, for sale', async () => {
+    const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'POST' && call.path === `${detail}/variants` ? Response.json(product({ options, variants }), { status: 201 }) : undefined))
     await openEditor()
 
@@ -323,6 +334,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${detail}/variants`, ifMatch: null, body: { skuCode: 'VX-L-LION', priceRappen: 4900, status: 'published', values: { [optSize]: vLarge, [optTheme]: vLion } } })
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Create variant' })).not.toBeInTheDocument())
+    expect(success).toHaveBeenCalledExactlyOnceWith('VX-L-LION created.')
   })
 
   it('[E6.2][AC52] a code another keepsake uses is refused at the code field', async () => {
@@ -343,6 +355,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
   })
 
   it('[E6.2][AC52] Archive asks first, then sends the status; a variant with reserved units is refused with the number', async () => {
+    const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${v1}`
       ? refused([{ in: 'body', path: 'status', message: 'x', code: 'variant-reserved', params: { code: 'VX-S-SWAN', count: 2 } }])
       : undefined))
@@ -357,6 +370,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `${detail}/variants/${v1}`, body: { status: 'archived' } })
     expect(await within(variantsCard()).findByRole('alert')).toHaveTextContent('Can’t archive VX-S-SWAN. 2 units are reserved by open orders.')
+    expect(danger).not.toHaveBeenCalled()
   })
 })
 

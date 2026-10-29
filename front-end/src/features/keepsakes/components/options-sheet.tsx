@@ -1,7 +1,7 @@
 import type { Product } from '@sk/api-contract'
 import type { Outcome } from '../hooks/use-keepsake-editor'
 
-import { Button, toast } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { useState } from 'react'
 
 import { SheetFrame } from '@/components/sheet-frame'
@@ -42,7 +42,6 @@ export function OptionsSheet({ keepsake, focus, onSave, onClose }: {
 
     setIsPending(false)
     if (outcome.ok) {
-      toast.success(t('keepsakes.optionsSheet.saved'))
       onClose()
 
       return

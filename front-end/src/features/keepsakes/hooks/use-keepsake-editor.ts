@@ -5,12 +5,13 @@ import type { Refusal, Values } from '../lib/option-rules'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 
+import { useLocale } from '@/contexts/locale-context'
 import { useDataClient } from '@/features/data-client'
 import { useCommand } from '@/features/data-client/use-command'
 import { useLatest } from '@/hooks/use-latest'
 import { keepsakesQueries } from '../api/queries'
-import { AUTOSAVE_MS, textOf } from '../lib/keepsake-rules'
-import { problemTypeOf, refusalsOf } from '../lib/problems'
+import { AUTOSAVE_MS, fullLanguages, textOf } from '../lib/keepsake-rules'
+import { keepsakeProblemKeys, problemTypeOf, refusalsOf } from '../lib/problems'
 import { useVariantCommands } from './use-variant-commands'
 
 /** What the autosave holds while it is typed. The commission is a fraction from 0 to 0.5. */
@@ -50,10 +51,24 @@ function trimmed(text: Record<'en' | 'de', string>) {
 export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keepsake: Product }) {
   const client = useDataClient()
   const queryClient = useQueryClient()
-  const save = useCommand('keepsakes', 'save')
-  const publish = useCommand('keepsakes', 'publish')
-  const unpublish = useCommand('keepsakes', 'unpublish')
-  const saveOptions = useCommand('keepsakes', 'saveOptions')
+  const { t } = useLocale()
+  // The autosave and the options sheet show a refusal inline, so their error toast is off. Publish and unpublish have
+  // no field to show it at: their refusal is the toast, in the keepsake screens' copy.
+  const save = useCommand('keepsakes', 'save', { meta: { silent: true } })
+  const publish = useCommand('keepsakes', 'publish', {
+    meta: {
+      success: (published) => {
+        const languages = fullLanguages({ name: textOf(published.name), text: textOf(published.text) })
+
+        return t('keepsakes.toast.published', { languages: languages.map(language => t(`keepsakes.language.${language}`)).join(` ${t('keepsakes.and')} `) })
+      },
+      error: keepsakeProblemKeys,
+    },
+  })
+  const unpublish = useCommand('keepsakes', 'unpublish', { meta: { success: 'keepsakes.toast.unpublished', error: keepsakeProblemKeys } })
+  const saveOptions = useCommand('keepsakes', 'saveOptions', { meta: { success: 'keepsakes.optionsSheet.saved', silent: true } })
+  // Removing an option from its row says nothing on success; its refusal shows beside the Options card.
+  const removeOption = useCommand('keepsakes', 'saveOptions', { meta: { silent: true } })
   const variantCommands = useVariantCommands({ storeId, id: keepsake.id })
   const [draft, setDraft] = useState(() => draftOf(keepsake))
   const [state, setState] = useState<SaveState>('saved')
@@ -188,6 +203,8 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     /** The options and the new values of the variants, in one write on the version the page holds. The typed fields save first. */
     saveOptions: (options: OptionWrite[], variantValues: { variantId: string, values: Values }[]) =>
       afterFlush(() => saveOptions.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID(), options, variantValues })),
+    removeOption: (options: OptionWrite[]) =>
+      afterFlush(() => removeOption.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID(), options, variantValues: [] })),
     isPublishing: publish.isPending || unpublish.isPending,
   }
 }

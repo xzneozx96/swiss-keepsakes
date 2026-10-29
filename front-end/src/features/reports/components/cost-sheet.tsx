@@ -7,7 +7,6 @@ import {
   Description,
   Label,
   NumberField,
-  toast,
 } from '@heroui/react'
 import { COST_TYPES } from '@sk/domain/reporting'
 
@@ -47,7 +46,7 @@ export function CostSheet({
   onClose: () => void
 }) {
   const { t } = useLocale()
-  const actions = useCostActions()
+  const actions = useCostActions(row.ref)
   const [draft, setDraft] = useState<Draft>(() => toDraft(row.costs))
 
   const set = (type: CostType, next: Partial<Draft[CostType]>) =>
@@ -68,16 +67,6 @@ export function CostSheet({
         costs[type] = { amount: Math.round(amount * 100) }
     }
     actions.save(row.transaction, costs)
-    toast.success(
-      missing.length
-        ? t(
-            missing.length === 1
-              ? 'costData.saved.missingOne'
-              : 'costData.saved.missingOther',
-            { ref: row.ref, count: missing.length },
-          )
-        : t('costData.saved.complete', { ref: row.ref }),
-    )
     onClose()
   }
 

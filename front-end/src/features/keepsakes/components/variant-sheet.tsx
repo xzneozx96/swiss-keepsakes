@@ -2,7 +2,7 @@ import type { Product, ProductVariant } from '@sk/api-contract'
 import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { CreateVariant, SaveVariant } from './variants-card'
 
-import { Button, Description, FieldError, Form, Input, Label, NumberField, Radio, RadioGroup, TextField, toast } from '@heroui/react'
+import { Button, Description, FieldError, Form, Input, Label, NumberField, Radio, RadioGroup, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
 
 import { SheetFrame } from '@/components/sheet-frame'
@@ -62,7 +62,6 @@ export function VariantSheet({ keepsake, variant, onSave, onCreate, onClose }: {
 
     setIsPending(false)
     if (outcome.ok) {
-      toast.success(t(variant ? 'keepsakes.variant.saved' : 'keepsakes.variant.created', { code: trimmed }))
       onClose()
 
       return

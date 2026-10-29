@@ -50,7 +50,8 @@ export function useAcceptInvitation(returnTo: string = ONBOARDING_PATH, { manual
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const client = useDataClient()
-  const { submit, isPending } = useSubmit('stores', 'acceptInvitation')
+  // Every refusal becomes the refusal screen (`refuse`) and a 401 goes to sign-in, so the cache stays silent on error.
+  const { submit, isPending } = useSubmit('stores', 'acceptInvitation', { meta: { silent: true } })
   const token = useSyncExternalStore(subscribeInvitationToken, heldInvitationToken)
   const key = useIdempotencyKey({ token })
   const [outcome, setOutcome] = useState<Outcome>()

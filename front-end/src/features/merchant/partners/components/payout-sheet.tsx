@@ -15,7 +15,6 @@ import {
   RadioGroup,
   TextArea,
   TextField,
-  toast,
 } from '@heroui/react'
 import { parseDate } from '@internationalized/date'
 import { zurichDate } from '@sk/domain/catalog'
@@ -84,9 +83,6 @@ export function PayoutSheet({
       paidOn: paidOn.toString(),
       reference: reference.trim() || undefined,
     })
-    toast.success(
-      t('payout.recorded', { amount: money(rappen), name: partnerName }),
-    )
     onClose()
   }
 

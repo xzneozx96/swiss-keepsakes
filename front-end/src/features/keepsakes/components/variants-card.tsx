@@ -2,7 +2,7 @@ import type { Product, ProductVariant, VariantCreateBody, VariantSaveBody } from
 import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { DataTableColumn } from '@/components/data-table'
 
-import { Button, toast } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -65,15 +65,8 @@ export function VariantsCard({ keepsake, onSave, onCreate }: { keepsake: Product
     setRefusal(undefined)
     const outcome = await onSave(variant.id, { status })
 
-    if (outcome.ok) {
-      toast.success(t(status === 'draft' ? 'keepsakes.variant.toast.hidden' : status === 'published' ? 'keepsakes.variant.toast.forSale' : 'keepsakes.variant.toast.archived', { code: variant.skuCode }))
-    }
-    else if (outcome.refusals && outcome.refusals.length > 0) {
-      setRefusal(outcome.refusals.map(r => refusalText(t, r)).join(' '))
-    }
-    else {
-      toast.danger(t(problemMessageKey(outcome.type)))
-    }
+    if (!outcome.ok)
+      setRefusal(outcome.refusals && outcome.refusals.length > 0 ? outcome.refusals.map(r => refusalText(t, r)).join(' ') : t(problemMessageKey(outcome.type)))
   }
 
   const archive = async (variant: ProductVariant) => {

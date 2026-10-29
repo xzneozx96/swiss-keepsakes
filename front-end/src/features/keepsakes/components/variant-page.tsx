@@ -1,6 +1,6 @@
 import type { Product, ProductVariant } from '@sk/api-contract'
 
-import { Button, toast } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -52,12 +52,8 @@ function Page({ storeId, keepsake, variant }: { storeId: string, keepsake: Produ
     setRefusal(undefined)
     const outcome = await commands.saveVariant(variant.id, { status })
 
-    if (outcome.ok)
-      toast.success(t(status === 'draft' ? 'keepsakes.variant.toast.hidden' : status === 'published' ? 'keepsakes.variant.toast.forSale' : 'keepsakes.variant.toast.archived', { code: variant.skuCode }))
-    else if (outcome.refusals && outcome.refusals.length > 0)
-      setRefusal(outcome.refusals.map(r => refusalText(t, r)).join(' '))
-    else
-      toast.danger(t(problemMessageKey(outcome.type)))
+    if (!outcome.ok)
+      setRefusal(outcome.refusals && outcome.refusals.length > 0 ? outcome.refusals.map(r => refusalText(t, r)).join(' ') : t(problemMessageKey(outcome.type)))
   }
 
   const onAction = async (action: Action) => {

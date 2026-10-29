@@ -1,4 +1,5 @@
 import type { Product, ProductOption } from '@sk/api-contract'
+import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { SaveOptions } from './options-sheet'
 import type { DataTableColumn } from '@/components/data-table'
 
@@ -22,7 +23,7 @@ type Action = 'edit' | 'delete'
  * variants that use them. Edit and Add option open the options sheet N14. Delete is refused while any variant uses the
  * option, archived ones too; an option no variant uses asks first.
  */
-export function OptionsCard({ keepsake, onSave }: { keepsake: Product, onSave: SaveOptions }) {
+export function OptionsCard({ keepsake, onSave, onRemove }: { keepsake: Product, onSave: SaveOptions, onRemove: (options: ReturnType<typeof optionsBody>) => Promise<Outcome> }) {
   const { t, language } = useLocale()
   const { confirm, dialog } = useConfirm()
   const [sheet, setSheet] = useState<{ focus?: string }>()
@@ -42,7 +43,7 @@ export function OptionsCard({ keepsake, onSave }: { keepsake: Product, onSave: S
     if (!await confirm({ title: t('keepsakes.options.delete.title', { name }), body: t('keepsakes.options.delete.body'), confirmLabel: t('keepsakes.options.delete.confirm') }))
       return
     const rest = draftOfOptions(keepsake.options).filter(draft => draft.ref !== option.id)
-    const outcome = await onSave(optionsBody(rest), [])
+    const outcome = await onRemove(optionsBody(rest))
 
     if (!outcome.ok)
       setRefusal(outcome.refusals?.length ? outcome.refusals.map(r => refusalText(t, r)).join(' ') : t('keepsakes.problem.generic'))

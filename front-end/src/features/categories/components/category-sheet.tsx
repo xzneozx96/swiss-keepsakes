@@ -1,7 +1,7 @@
 import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
 import type { MessageKey } from '@/i18n/en'
 
-import { Button, Form, Input, Label, ListBox, Select, TextField, toast } from '@heroui/react'
+import { Button, Form, Input, Label, ListBox, Select, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
 
 import { SheetFrame } from '@/components/sheet-frame'
@@ -37,8 +37,9 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
   const [nameDe, setNameDe] = useState(category?.name.de ?? '')
   const [parent, setParent] = useState(initialParent ?? ROOT)
   const [nameMissing, setNameMissing] = useState(false)
-  const create = useSubmit('categories', 'create')
-  const save = useSubmit('categories', 'save')
+  // Both show their refusal inline (failureKey below), so the cache stays silent on error.
+  const create = useSubmit('categories', 'create', { meta: { success: () => t('categories.toast.added'), silent: true } })
+  const save = useSubmit('categories', 'save', { meta: { success: () => t('categories.toast.saved'), silent: true } })
   const { isPending, error, reset } = category ? save : create
   const fixedAtTop = category !== undefined && category.childCount > 0
   const name = {
@@ -60,7 +61,6 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
     const callbacks = {
       onSuccess: () => {
         key.settled()
-        toast.success(t(category ? 'categories.toast.saved' : 'categories.toast.added'))
         onClose()
       },
       onError: (failed: Error) => key.settled(failed),

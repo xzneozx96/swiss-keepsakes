@@ -1,7 +1,7 @@
 import type { PartnerFilter } from '../lib/search-params'
 import type { PartnerAction, PartnerRowProps } from './partner-rows'
 
-import { Button, SearchField, toast } from '@heroui/react'
+import { Button, SearchField } from '@heroui/react'
 import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
@@ -63,7 +63,6 @@ export function MerchantPartners({
     }
     if (action === 'restore') {
       actions.restore(row.id)
-      toast.success(t('merchantPartners.restored', { name: row.name }))
 
       return
     }
@@ -93,16 +92,6 @@ export function MerchantPartners({
     if (isDelete)
       actions.remove(row.id)
     else actions.archive(row.id)
-    toast.success(
-      t(
-        isDelete
-          ? 'merchantPartners.deleted'
-          : 'merchantPartners.archivedToast',
-        {
-          name: row.name,
-        },
-      ),
-    )
   }
 
   const emptyState = {
@@ -190,7 +179,6 @@ export function MerchantPartners({
             actions.add(partner)
             setIsAdding(false)
             onFilterChange([])
-            toast.success(t('merchantPartners.added', { name: partner.name }))
             setQrFor({ name: partner.name, code: partner.code })
           }}
           onClose={() => setIsAdding(false)}

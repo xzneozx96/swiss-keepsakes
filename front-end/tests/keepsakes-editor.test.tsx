@@ -1,7 +1,9 @@
+import { toast } from '@heroui/react'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { en } from '@/i18n/en'
 import { writeStored } from '@/lib/storage'
 import { list, listItem, media, photoId, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
 
@@ -18,6 +20,8 @@ const SLOW = { timeout: 8000 }
 const AUTOSAVE = { timeout: 5000 }
 
 let current: ReturnType<typeof product>
+
+afterEach(() => vi.restoreAllMocks())
 
 /** A fake server: reads answer with `current`, a save moves it on one version, and `extra` answers anything else. */
 function serve(extra: (call: (typeof state.calls)[number]) => Response | undefined = () => undefined) {
@@ -135,6 +139,7 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
   })
 
   it('[E6.1][412] a stale save shows the reload message, stops saving, and Reload starts again from the server copy', async () => {
+    const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PATCH' ? problem(412, 'precondition-failed') : undefined))
     await openEditor()
 
@@ -152,6 +157,7 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     await userEvent.click(within(alert).getByRole('button', { name: 'Reload' }))
     await waitFor(() => expect(screen.getByLabelText('Name (English)')).toHaveValue('Their name'))
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(danger).not.toHaveBeenCalled()
   })
 
   it('[E6.1][autosave] another failure offers a retry that saves what was typed', async () => {
@@ -283,6 +289,7 @@ describe('[E6.1][variant] the default variant', () => {
   const save = (over: object = {}) => product({ ...current, ...over })
 
   it('[E6.1][variant] the sheet edits the code and the price and saves them with the status', async () => {
+    const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-2', priceRappen: 4500, status: 'published', values: {} }] })) : undefined))
     await openVariantPage()
 
@@ -304,9 +311,11 @@ describe('[E6.1][variant] the default variant', () => {
     expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `${detail}/variants/${variantId}`, ifMatch: null, body: { skuCode: 'VX-2', priceRappen: 4500, status: 'published' } })
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Edit VX-1' })).not.toBeInTheDocument())
     expect(await screen.findByRole('heading', { level: 1, name: 'VX-2' })).toBeInTheDocument()
+    expect(success).toHaveBeenCalledExactlyOnceWith('VX-2 saved.')
   })
 
   it('[E6.1][variant] a code the shop already uses is refused at the field, and a bad one before any request', async () => {
+    const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? problem(409, 'sku-code-taken') : undefined))
     await openVariantPage()
 
@@ -326,9 +335,11 @@ describe('[E6.1][variant] the default variant', () => {
 
     expect(await within(dialog).findByText('VX-9 is already used in your shop.')).toBeInTheDocument()
     expect(dialog).toBeInTheDocument()
+    expect(danger).not.toHaveBeenCalled()
   })
 
   it('[E6.1][variant] Hide from guests changes the status at once and the card lists it under Hidden', async () => {
+    const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'draft', values: {} }], blocking: [{ code: 'variant-for-sale', card: 'variants' }] })) : undefined))
     await openEditor()
 
@@ -340,6 +351,19 @@ describe('[E6.1][variant] the default variant', () => {
     expect(await within(screen.getByRole('grid', { name: 'Variants' })).findByText('Hidden')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('tab', { name: /For sale/ }))
     expect(await screen.findAllByText('No variants here.')).not.toHaveLength(0)
+    expect(success).toHaveBeenCalledExactlyOnceWith('VX-1: hidden.')
+  })
+
+  it('[E6.1][variant] a refused Hide from guests is shown in the keepsake words on the card, not as a toast', async () => {
+    const danger = vi.spyOn(toast, 'danger')
+    serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? problem(404, 'not-found') : undefined))
+    await openEditor()
+
+    await userEvent.click(screen.getAllByRole('button', { name: 'Actions for VX-1' })[0]!)
+    await userEvent.click(await screen.findByRole('menuitem', { name: 'Hide from guests' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(en['keepsakes.problem.notFound'])
+    expect(danger).not.toHaveBeenCalled()
   })
 })
 
@@ -405,6 +429,7 @@ describe('[E6.1][review] Review and publish', () => {
   })
 
   it('[E6.1][AC30] Publish sends the row version, and the screen then shows Published with Unpublish', async () => {
+    const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'POST' && call.path === `${detail}/publish` ? Response.json(product({ status: 'published', rowVersion: 2, slug: { en: 'victorinox-classic' }, warnings: [] })) : undefined))
     await openEditor()
 
@@ -416,9 +441,11 @@ describe('[E6.1][review] Review and publish', () => {
     expect(await screen.findByText('Published')).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Unpublish' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
+    expect(success).toHaveBeenCalledExactlyOnceWith('Published in English. Guests see it within about a minute.')
   })
 
   it('[E6.1][checks] a refused publish sends the merchant back to the fields', async () => {
+    const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'POST' && call.path === `${detail}/publish` ? problem(422, 'publish-incomplete') : undefined))
     await openEditor()
 
@@ -426,6 +453,7 @@ describe('[E6.1][review] Review and publish', () => {
     await userEvent.click(await within(await screen.findByTestId('review-screen', undefined, SLOW)).findByRole('button', { name: 'Publish' }))
 
     expect(await screen.findByLabelText('Name (English)')).toBeInTheDocument()
+    expect(danger).toHaveBeenCalledExactlyOnceWith('This keepsake cannot be published yet. See what is missing.')
   })
 
   it('[E6.1][review] a published keepsake with edits says so and offers Publish changes', async () => {
@@ -442,6 +470,7 @@ describe('[E6.1][review] Review and publish', () => {
 
   it('[E6.1][review] Unpublish asks first, then sends the row version and returns to Draft', async () => {
     current = product({ status: 'published', slug: { en: 'victorinox-classic' } })
+    const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'POST' && call.path === `${detail}/unpublish` ? Response.json(product({ status: 'draft', rowVersion: 2 })) : undefined))
     await openEditor()
 
@@ -457,6 +486,7 @@ describe('[E6.1][review] Review and publish', () => {
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${detail}/unpublish`, ifMatch: '1' })
     expect(await screen.findByText('Draft')).toBeInTheDocument()
+    expect(success).toHaveBeenCalledExactlyOnceWith('The keepsake is a draft again.')
   })
 })
 

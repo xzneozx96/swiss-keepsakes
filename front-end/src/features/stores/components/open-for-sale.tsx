@@ -26,7 +26,8 @@ const refusals: Record<string, MessageKey> = {
 export function OpenForSale({ onboarding }: { onboarding: Onboarding }) {
   const { t } = useLocale()
   const queryClient = useQueryClient()
-  const { submit, isPending, error } = useSubmit('stores', 'openForSale')
+  // The refusal shows inline below, so the cache stays silent on error.
+  const { submit, isPending, error } = useSubmit('stores', 'openForSale', { meta: { silent: true } })
   const { store, conditions, mayOpenForSale } = onboarding
   const key = useIdempotencyKey({ storeId: store.id })
   const stepName = (id: ReturnType<typeof blockers>[number]) => t(`stores.checklist.${id}`)

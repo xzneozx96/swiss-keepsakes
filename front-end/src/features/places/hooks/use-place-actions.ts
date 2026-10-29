@@ -1,8 +1,7 @@
 import type { PinListItem } from '@sk/api-contract'
 import type { MessageKey } from '@/i18n/en'
 
-import { toast } from '@heroui/react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { useLocale } from '@/contexts/locale-context'
@@ -17,9 +16,12 @@ import { problemMessageKey } from '../lib/problems'
  */
 export function usePlaceActions(storeId: string) {
   const { t, language } = useLocale()
-  const hide = useSubmit('places', 'hide')
-  const publish = useSubmit('places', 'publish')
-  const remove = useSubmit('places', 'remove')
+  // Which row a tap acted on, written only once its submit went out (`api-feedback.md`).
+  const nameRef = useRef('')
+  // A refusal shows next to the list (`notice`), so the cache's error toast is off.
+  const hide = useSubmit('places', 'hide', { meta: { success: () => t('places.toast.hidden', { name: nameRef.current }), silent: true } })
+  const publish = useSubmit('places', 'publish', { meta: { success: () => t('places.toast.shown', { name: nameRef.current }), silent: true } })
+  const remove = useSubmit('places', 'remove', { meta: { success: 'places.toast.deleted', silent: true } })
   const { confirm, dialog } = useConfirm()
   const [notice, setNotice] = useState<MessageKey>()
   const busy = hide.isPending || publish.isPending || remove.isPending
@@ -37,20 +39,16 @@ export function usePlaceActions(storeId: string) {
         if (!confirmed)
           return
         setNotice(undefined)
-        hide.submit({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }, {
-          onSuccess: () => toast.success(t('places.toast.hidden', { name: nameOf(item) })),
-          onError: failed,
-        })
+        if (hide.submit({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }, { onError: failed }))
+          nameRef.current = nameOf(item)
       })
     },
     unhide: (item: PinListItem) => {
       if (busy)
         return
       setNotice(undefined)
-      publish.submit({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }, {
-        onSuccess: () => toast.success(t('places.toast.shown', { name: nameOf(item) })),
-        onError: failed,
-      })
+      if (publish.submit({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }, { onError: failed }))
+        nameRef.current = nameOf(item)
     },
     remove: (item: PinListItem) => {
       if (busy)
@@ -59,10 +57,7 @@ export function usePlaceActions(storeId: string) {
         if (!confirmed)
           return
         setNotice(undefined)
-        remove.submit({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }, {
-          onSuccess: () => toast.success(t('places.toast.deleted')),
-          onError: failed,
-        })
+        remove.submit({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }, { onError: failed })
       })
     },
   }

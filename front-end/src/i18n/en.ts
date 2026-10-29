@@ -3,6 +3,7 @@ import { categoriesEn } from '@/features/categories/messages'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
 import { keepsakesEn } from '@/features/keepsakes/messages'
+import { mapEn } from '@/features/map/messages'
 import { productsEn } from '@/features/merchant/products/messages'
 import { salesOverviewEn } from '@/features/merchant/sales/messages'
 import { partnerDashboardEn } from '@/features/partners/report/messages'
@@ -39,6 +40,7 @@ export const en = {
   ...categoriesEn,
   ...keepsakesEn,
   ...placesEn,
+  ...mapEn,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototype · mock data',
@@ -52,6 +54,7 @@ export const en = {
   'nav.guest.label': 'Main',
   'nav.explore': 'Explore',
   'nav.gifts': 'Keepsakes',
+  'nav.map': 'Map',
   'nav.tours': 'Tours',
   'nav.account': 'Account',
   'nav.assistant': 'Assistant',
@@ -87,6 +90,8 @@ export const en = {
     'This page does not exist. It may have moved in the prototype.',
   'routeError.message': 'This screen could not load.',
   'routeError.retry': 'Try again',
+  'apiFeedback.error.generic': 'Something went wrong. Try again in a moment.',
+  'apiFeedback.error.network': 'The connection was lost. Check it and try again.',
 
   'home.hello': 'Grüezi and welcome!',
   'home.heroTitle': 'Make yourself at home. I’ll show you the Luzerne I love.',
