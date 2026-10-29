@@ -37,17 +37,20 @@ export function CategoriesPage({ lab, action, children }: {
         {action}
       </div>
       <Tabs className="w-full" selectedKey={lab.kind} onSelectionChange={key => lab.setKind(key as CategoryKind)}>
-        <Tabs.ListContainer className={`w-full ${STICKY_TABS}`}>
-          <Tabs.List aria-label="Category lists">
-            {KINDS.map((k, index) => (
-              <Tabs.Tab key={k.id} className="min-h-11 whitespace-nowrap" id={k.id}>
-                {index > 0 && <Tabs.Separator />}
-                {k.label}
-                <Tabs.Indicator />
-              </Tabs.Tab>
-            ))}
-          </Tabs.List>
-        </Tabs.ListContainer>
+        {/* Sized to its tabs like the orders screen; pinned at the top on phones. */}
+        <div className={`max-lg:py-2 ${STICKY_TABS}`}>
+          <Tabs.ListContainer className="w-fit max-w-full">
+            <Tabs.List aria-label="Category lists">
+              {KINDS.map((k, index) => (
+                <Tabs.Tab key={k.id} className="whitespace-nowrap" id={k.id}>
+                  {index > 0 && <Tabs.Separator />}
+                  {k.label}
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+              ))}
+            </Tabs.List>
+          </Tabs.ListContainer>
+        </div>
       </Tabs>
       {children}
     </div>
@@ -63,18 +66,6 @@ export function OtherName({ c, className = '' }: { c: LabCategory, className?: s
     <span className={`flex items-center gap-1 text-xs text-warning-soft-foreground ${className}`}>
       <StatusWarningIcon aria-hidden className="shrink-0" size={12} />
       {c.en ? 'No German name' : 'No English name'}
-    </span>
-  )
-}
-
-/** A thin ink bar: how much this category is used next to the busiest one in its list. */
-export function UsageMeter({ value, max, label }: { value: number, max: number, label: string }) {
-  return (
-    <span className="flex items-center gap-2">
-      <span aria-hidden className="h-1.5 w-16 overflow-hidden rounded-full bg-default">
-        <span className="block h-full rounded-full bg-foreground" style={{ width: `${max ? Math.max(value ? 6 : 0, (value / max) * 100) : 0}%` }} />
-      </span>
-      <span className="text-xs text-muted tabular-nums">{label}</span>
     </span>
   )
 }

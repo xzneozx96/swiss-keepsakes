@@ -11,8 +11,8 @@ export const Route = createFileRoute('/lab/')({
 const experiments = [
   {
     to: '/lab/categories' as const,
-    title: 'Categories editor (N23): three options',
-    note: 'The merchant’s map and blog category lists in three structures side by side: A Outline (rows open in place), B Drill-in (a page per category), C Table (grouped rows, ⋯ menu, sheets). Each shows add and edit, reorder and a refused delete. English only (29.10.2026).',
+    title: 'Categories editor (N23), round 2',
+    note: 'The merchant’s map and blog category lists: the grouped table from 1024 px, the drill-in on phones, both reordering by drag (parents among parents, sub-categories among their siblings). Shown in a phone frame and a desktop frame. English only (29.10.2026).',
   },
   {
     to: '/lab/home' as const,

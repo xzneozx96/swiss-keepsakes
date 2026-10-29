@@ -4,7 +4,7 @@ import type { CategoryKind } from './categories-search-params'
 import { toast } from '@heroui/react'
 import { useState } from 'react'
 
-import { moved, saved, seedCategories } from './categories-data'
+import { moved, reordered, saved, seedCategories } from './categories-data'
 
 /** Both lists in memory, the tab that is open, and the four edits. Nothing is stored. */
 export function useCategoryLab(initialKind: CategoryKind) {
@@ -24,6 +24,7 @@ export function useCategoryLab(initialKind: CategoryKind) {
       toast.success(id ? 'Category saved' : 'Category added')
     },
     move: (id: string, direction: -1 | 1) => update(moved(items, id, direction)),
+    reorder: (parentId: string | null, from: number, to: number) => update(reordered(items, parentId, from, to)),
     remove: (id: string) => {
       update(items.filter(c => c.id !== id))
       toast.success('Category deleted')

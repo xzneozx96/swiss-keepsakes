@@ -52,10 +52,10 @@ export const seedCategories: Record<CategoryKind, LabCategory[]> = {
   ],
 }
 
-/** Which category each frame state opens: one to edit, one whose delete is refused. */
-export const labTargets: Record<CategoryKind, { edit: string, refused: string }> = {
-  map: { edit: 'fondue', refused: 'sights' },
-  blog: { edit: 'rigi', refused: 'history' },
+/** Which category each frame state opens: a page to show, one to edit, one whose delete is refused. */
+export const labTargets: Record<CategoryKind, { page: string, edit: string, refused: string }> = {
+  map: { page: 'food', edit: 'fondue', refused: 'sights' },
+  blog: { page: 'trips', edit: 'rigi', refused: 'history' },
 }
 
 export const usedBy = {
@@ -164,4 +164,34 @@ export function saved(items: LabCategory[], id: string | undefined, draft: Categ
 /** Top-level categories, each followed by its sub-categories: the order the guests see. */
 export function displayOrder(items: LabCategory[]) {
   return roots(items).flatMap(r => [r, ...childrenOf(items, r.id)])
+}
+
+/** Plain facts of a category: how many pins or stories use it and, for a parent, its sub-categories. */
+export function factsOf(items: LabCategory[], c: LabCategory, kind: CategoryKind) {
+  const subs = c.parentId === null ? childrenOf(items, c.id).length : 0
+
+  return [c.uses ? usesLabel(kind, c.uses) : 'Not used', subs ? `${subs} sub-categor${subs === 1 ? 'y' : 'ies'}` : ''].filter(Boolean).join(' · ')
+}
+
+/**
+ * Moves the sibling at `from` to `to` among the categories under `parentId` (a drop or an arrow key).
+ * The parent never changes: moving to another parent is the form's "Sits under".
+ */
+export function reordered(items: LabCategory[], parentId: string | null, from: number, to: number) {
+  const siblings = items.filter(c => c.parentId === parentId)
+  const [picked] = siblings.splice(from, 1)
+
+  if (!picked || to < 0 || to > siblings.length)
+    return items
+  siblings.splice(to, 0, picked)
+  let i = 0
+
+  return items.map(c => (c.parentId === parentId ? siblings[i++]! : c))
+}
+
+/** Search in either language; a blank query matches everything. */
+export function matches(c: LabCategory, query: string) {
+  const q = query.trim().toLowerCase()
+
+  return !q || [c.en, c.de].some(name => name?.toLowerCase().includes(q))
 }
