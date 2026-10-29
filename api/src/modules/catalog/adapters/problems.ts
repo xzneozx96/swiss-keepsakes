@@ -77,6 +77,7 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'media-invalid': return { status: 422, type: 'media-invalid', title: 'A file you chose is not available here, or is not a photo.' }
     case 'media-processing': return { status: 422, type: 'media-processing', title: 'A photo is still being processed. Try again in a moment.', mediaIds: failure.mediaIds }
     case 'not-published': return { status: 409, type: 'not-published', title: 'This keepsake is not published.' }
+    case 'slug-conflict': return { status: 409, type: 'slug-conflict', title: 'Another keepsake just took this web address. Publish again.' }
     case 'sku-code-taken': return { status: 409, type: 'sku-code-taken', title: 'This SKU code is already used in your shop.' }
     case 'refused':
       return {

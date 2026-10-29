@@ -3,7 +3,7 @@ import type { Refusal } from '../ports.ts'
 export type PublishGap = 'name' | 'photos' | 'variants'
 
 export type Failure
-  = | { reason: 'forbidden' | 'not-found' | 'stale' | 'media-retired' | 'media-invalid' | 'not-published' | 'sku-code-taken' | 'name-required' }
+  = | { reason: 'forbidden' | 'not-found' | 'stale' | 'media-retired' | 'media-invalid' | 'not-published' | 'sku-code-taken' | 'name-required' | 'slug-conflict' }
     | { reason: 'sku-code-invalid', path: string }
     // The rules of section 7 of the design: a value in use, a missing value, a duplicate combination and the like.
     | { reason: 'refused', refusals: Refusal[] }

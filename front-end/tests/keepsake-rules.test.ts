@@ -112,6 +112,7 @@ describe('[E6.1] the copy of a refusal', () => {
   it('[E6.1][412] a stale save has its own text and an unknown problem reads as generic', () => {
     expect(problemMessageKey('precondition-failed')).toBe('keepsakes.problem.stale')
     expect(problemMessageKey('sku-code-taken')).toBe('keepsakes.problem.skuTaken')
+    expect(problemMessageKey('slug-conflict')).toBe('keepsakes.problem.slugConflict')
     expect(problemMessageKey('something-new')).toBe('keepsakes.problem.generic')
   })
 })

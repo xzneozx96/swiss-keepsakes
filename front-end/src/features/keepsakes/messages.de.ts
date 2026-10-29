@@ -180,6 +180,7 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.problem.invalid': 'Prüfen Sie die Felder und versuchen Sie es erneut.',
   'keepsakes.problem.forbidden': 'Sie dürfen die Andenken dieses Shops nicht ändern.',
   'keepsakes.problem.notFound': 'Dieses Andenken gibt es nicht mehr. Laden Sie die Liste neu.',
+  'keepsakes.problem.slugConflict': 'Ein anderes Andenken hat diese Webadresse gerade vergeben. Veröffentlichen Sie noch einmal.',
   'keepsakes.problem.notPublished': 'Dieses Andenken ist nicht veröffentlicht.',
   'keepsakes.problem.storage': 'Der Dateispeicher ist gerade nicht verfügbar. Versuchen Sie es gleich noch einmal.',
   'keepsakes.problem.generic': 'Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal.',

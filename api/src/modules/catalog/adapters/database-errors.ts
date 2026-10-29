@@ -24,6 +24,9 @@ export function mapDatabaseError(error: unknown): Failure | undefined {
     return undefined
   if (pg.code === '23505' && pg.constraint === 'skus_store_sku_code_key')
     return { reason: 'sku-code-taken' }
+  // Two keepsakes published in the same instant can both read a slug as free; the second write lands here and a new try finds it taken.
+  if (pg.code === '23505' && (pg.constraint === 'products_slug_en_key' || pg.constraint === 'products_slug_de_key'))
+    return { reason: 'slug-conflict' }
   if (pg.code === '23514' && pg.constraint === 'skus_sku_code_check')
     return { reason: 'sku-code-invalid', path: 'skuCode' }
   // Two writers raced past the checks. The use case names the twin when it sees it first; here only the rule is known.

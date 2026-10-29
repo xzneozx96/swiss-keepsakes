@@ -179,6 +179,7 @@ export const keepsakesEn = {
   'keepsakes.problem.invalid': 'Check the fields and try again.',
   'keepsakes.problem.forbidden': 'You may not change the keepsakes of this store.',
   'keepsakes.problem.notFound': 'This keepsake no longer exists. Reload the list.',
+  'keepsakes.problem.slugConflict': 'Another keepsake just took this web address. Publish again.',
   'keepsakes.problem.notPublished': 'This keepsake is not published.',
   'keepsakes.problem.storage': 'File storage is not available right now. Try again in a moment.',
   'keepsakes.problem.generic': 'Something went wrong. Try again in a moment.',

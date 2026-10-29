@@ -32,7 +32,8 @@ const secret = 'test-only-secret-0123456789-abcdefghij'
 
 const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}`
 
-export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDatabase>) {
+// `slugsTaken` replaces the slug read, so a test can make two publishes read the same slug as free (the race).
+export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDatabase>, options: { slugsTaken?: () => Set<string> } = {}) {
   const codes = new Map<string, string>()
   const uow = createUnitOfWork(db)
   const auth = createAuth({
@@ -48,7 +49,7 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
   const contentMedia = createMediaRepository()
   const deps = {
     uow,
-    products: createProductRepository(),
+    products: options.slugsTaken ? { ...createProductRepository(), slugsTaken: async () => options.slugsTaken!() } : createProductRepository(),
     media: createMediaDirectory({ findById: (tx: Tx, storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
     audit: createAuditLog(systemClock),
     clock: systemClock,

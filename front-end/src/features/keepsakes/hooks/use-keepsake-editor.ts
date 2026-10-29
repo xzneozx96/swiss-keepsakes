@@ -178,7 +178,8 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     state,
     savedAt,
     problem,
-    isUnsaved: state === 'unsaved' || state === 'saving',
+    // Stale and failed edits are unsaved too: Back must ask before they are dropped.
+    isUnsaved: state !== 'saved',
     retry: () => void flush(),
     flush,
     publish: () => afterFlush(() => publish.mutateAsync({ storeId, id, ifMatch: versionRef.current, idempotencyKey: crypto.randomUUID() })),

@@ -22,6 +22,7 @@ export const refusalsOf = (error: unknown): Refusal[] => (error instanceof Keeps
 const byProblemType: Record<string, MessageKey> = {
   'precondition-failed': 'keepsakes.problem.stale',
   'sku-code-taken': 'keepsakes.problem.skuTaken',
+  'slug-conflict': 'keepsakes.problem.slugConflict',
   'publish-incomplete': 'keepsakes.problem.incomplete',
   'media-retired': 'keepsakes.problem.mediaRetired',
   'media-invalid': 'keepsakes.problem.mediaInvalid',
