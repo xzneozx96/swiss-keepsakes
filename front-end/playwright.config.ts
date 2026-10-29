@@ -2,6 +2,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, devices } from '@playwright/test'
 import { API_PORT, INBOX_PORT, SPA_PORT } from './tests/e2e/api-server'
+import { wantsDemo } from './tests/e2e/reuse'
 
 // Own port with --strictPort, so a run never attaches to another session's dev server.
 const PORT = Number(process.env.E2E_PORT ?? 5391)
@@ -17,10 +18,7 @@ const withApi = Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL_UNP
 // tests/e2e/global-setup.ts refuses servers of another worktree. Without it nothing is reused, as before.
 // E2E_DEMO=0 leaves the demo server out; in a reuse run that is the default when --project names only the api project.
 const reuse = process.env.E2E_REUSE === '1'
-const projectArgs = process.argv.flatMap((arg, index, all) =>
-  arg.startsWith('--project=') ? [arg.slice('--project='.length)] : arg === '--project' && all[index + 1] ? [all[index + 1]] : [])
-const apiOnlyRun = projectArgs.length > 0 && projectArgs.every(name => name === 'api-chromium-en')
-const withDemo = process.env.E2E_DEMO !== '0' && !(reuse && apiOnlyRun)
+const withDemo = wantsDemo(process.env, process.argv)
 
 /** A server's command; in a reuse run the command only refuses, because a server that should be up is not. */
 function serverCommand(command: string, name: string) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reuseProblems } from './e2e/reuse'
+import { reuseProblems, wantsDemo } from './e2e/reuse'
 
 const root = '/work/a'
 const here = {
@@ -34,5 +34,28 @@ describe('reuseProblems (E2E_REUSE guard)', () => {
   it('does not treat a sibling directory with the same prefix as this root', async () => {
     const problems = await reuseProblems({ root, ports: [{ name: 'SPA', port: 5392 }], ...here, portCwd: async () => '/work/a-copy/front-end' })
     expect(problems).toHaveLength(1)
+  })
+})
+
+describe('wantsDemo (which servers a run starts or reuses)', () => {
+  const api = 'api-chromium-en'
+
+  it('wants the demo server by default, also in a reuse run without --project', () => {
+    expect(wantsDemo({}, ['playwright', 'test', 'x'])).toBe(true)
+    expect(wantsDemo({ E2E_REUSE: '1' }, ['playwright', 'test'])).toBe(true)
+  })
+
+  it('leaves it out with E2E_DEMO=0', () => {
+    expect(wantsDemo({ E2E_DEMO: '0' }, [])).toBe(false)
+  })
+
+  it('leaves it out of a reuse run that selects only the api project, in either --project form', () => {
+    expect(wantsDemo({ E2E_REUSE: '1' }, ['--project', api])).toBe(false)
+    expect(wantsDemo({ E2E_REUSE: '1' }, [`--project=${api}`])).toBe(false)
+    expect(wantsDemo({ E2E_REUSE: '1' }, ['--project', api, '--project', 'chromium'])).toBe(true)
+  })
+
+  it('keeps the demo server in a default run that selects only the api project', () => {
+    expect(wantsDemo({}, ['--project', api])).toBe(true)
   })
 })

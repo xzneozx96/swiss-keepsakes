@@ -20,6 +20,15 @@ export interface ReuseCheck {
   portCwd: (port: number) => Promise<string | undefined>
 }
 
+/** Whether a run starts (or, with E2E_REUSE=1, reuses) the demo dev server. playwright.config.ts and global-setup.ts both ask. */
+export function wantsDemo(env: Record<string, string | undefined>, argv: string[]): boolean {
+  const projects = argv.flatMap((arg, index) =>
+    arg.startsWith('--project=') ? [arg.slice('--project='.length)] : arg === '--project' && argv[index + 1] ? [argv[index + 1]] : [])
+  const apiOnly = projects.length > 0 && projects.every(name => name === 'api-chromium-en')
+
+  return env.E2E_DEMO !== '0' && !(env.E2E_REUSE === '1' && apiOnly)
+}
+
 const start = 'Start them in this worktree with `pnpm e2e:servers` (in front-end/), or run without E2E_REUSE=1.'
 
 function inside(path: string, root: string) {
