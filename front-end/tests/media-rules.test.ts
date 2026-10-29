@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { checkFile, contentTypeOf, duration, fileSize, retireCheck, thumbOf } from '@/features/media/lib/rules'
-import { parseMediaSearch, pageSizeOf } from '@/features/media/lib/search-params'
+import { pageSizeOf, parseMediaSearch } from '@/features/media/lib/search-params'
 import { item } from './media-harness'
 
 const MiB = 1024 * 1024
