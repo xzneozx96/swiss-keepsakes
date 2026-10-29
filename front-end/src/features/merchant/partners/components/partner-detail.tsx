@@ -1,7 +1,7 @@
 import type { LedgerRow, PartnerDetailView } from '../hooks/use-partner-detail'
 import type { IconComponent } from '@/components/icons'
 
-import { Button, toast } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -346,12 +346,10 @@ function LinksCard({
     if (!ok)
       return
     actions.revokeReportLink(partner.id)
-    toast.success(t('partnerDetail.revoke.done'))
   }
 
   const issue = () => {
     actions.issueReportLink(partner.id)
-    toast.success(t('partnerDetail.issue.done'))
   }
 
   return (
