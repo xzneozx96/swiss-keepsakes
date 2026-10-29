@@ -7,6 +7,7 @@ import {
   countHighlighted,
   isHighlighted,
   keepHighlighted,
+  pinCategoryNames,
   topLevelCategories,
 } from '@/features/map/lib/categories'
 
@@ -101,5 +102,15 @@ describe('[E4.6][AC88] category list', () => {
     expect(categoryName(walks, 'de')).toBe('Spaziergänge')
     expect(categoryName(bakeries, 'de')).toBe('Bakeries')
     expect(categoryName(category(9, null, 0, null, null), 'en')).toBe('c9')
+  })
+})
+
+describe('[E4.6][AC93] categories named on a list row', () => {
+  it('names the most specific categories of a pin, not the parents the server added', () => {
+    expect(pinCategoryNames(pin(6, [bakeries.id, food.id, walks.id]), categories, 'en')).toEqual(['Bakeries', 'Walks'])
+  })
+
+  it('names nothing for a pin with no category', () => {
+    expect(pinCategoryNames(b, categories, 'en')).toEqual([])
   })
 })

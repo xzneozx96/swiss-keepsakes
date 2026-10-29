@@ -3,8 +3,8 @@ import type { Map as MapLibreMap, MapOptions } from 'maplibre-gl'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { useLatest } from '@/hooks/use-latest'
 import { loadAerialStyle } from '@/features/tours/map/aerial-style'
+import { useLatest } from '@/hooks/use-latest'
 import { loadFlatAerialStyle } from './flat-style'
 
 export type AerialMapState = 'loading' | 'ready' | 'error'

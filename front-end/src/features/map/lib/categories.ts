@@ -53,3 +53,15 @@ export function countHighlighted(
 ) {
   return keepHighlighted(pins, [id], categories).length
 }
+
+/** The names a list row shows: the pin's most specific categories (a parent that the server added beside its sub-category is left out). */
+export function pinCategoryNames(
+  pin: PublicMapItem,
+  categories: readonly PublicCategory[],
+  language: Language,
+) {
+  const own = categories.filter(category => pin.categoryIds.includes(category.id))
+  const parents = new Set(own.map(category => category.parentId))
+
+  return own.filter(category => !parents.has(category.id)).map(category => categoryName(category, language))
+}
