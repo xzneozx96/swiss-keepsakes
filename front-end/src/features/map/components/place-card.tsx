@@ -36,7 +36,7 @@ function PlaceCard({ pin, active }: { pin: PublicMapItem, active: boolean }) {
       data-card={pin.id}
     >
       <div className="flex gap-3">
-        <PinThumb className="size-[84px] shrink-0 rounded-2xl" iconSize={32} photoKey={pin.photoKey} />
+        <PinThumb className="size-[84px] shrink-0 rounded-2xl" iconSize={32} />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <h2 className="truncate font-serif text-card-title outline-none" id={`place-card-${pin.id}`} lang={pin.language} tabIndex={-1}>
             {pin.title}

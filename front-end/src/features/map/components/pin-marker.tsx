@@ -2,9 +2,8 @@ import type { PublicMapItem } from '@sk/api-contract'
 
 import { PickupIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { pinPhotoUrl } from '@/features/map/lib/pin-photo'
 
-/** What a pin or card shows when its place has no photo: the place icon, white on the lake blue. */
+/** What a pin or card shows: the place icon, white on the lake blue. */
 function IconFace({ size }: { size: number }) {
   return (
     <span aria-hidden className="flex size-full items-center justify-center bg-[#173f52] text-white">
@@ -13,15 +12,14 @@ function IconFace({ size }: { size: number }) {
   )
 }
 
-/** A pin's photo, or the place icon when it has none or its address is unknown. */
-export function PinThumb({ photoKey, iconSize, className = '' }: { photoKey: string | null, iconSize: number, className?: string }) {
-  const url = pinPhotoUrl(photoKey)
-
+/**
+ * A pin's thumbnail slot. It shows the place icon until the public map list carries a photo
+ * address (a follow-up: the API adds `photoUrl`).
+ */
+export function PinThumb({ iconSize, className = '' }: { iconSize: number, className?: string }) {
   return (
     <span className={`relative block overflow-hidden bg-[#173f52] ${className}`}>
-      {url
-        ? <img alt="" className="absolute inset-0 size-full object-cover" decoding="async" loading="lazy" src={url} />
-        : <IconFace size={iconSize} />}
+      <IconFace size={iconSize} />
     </span>
   )
 }
@@ -61,7 +59,6 @@ export function PhotoPin({
       <PinThumb
         className={`rounded-full border-[3px] shadow-[0_4px_14px_rgb(31_24_17/0.35)] transition-[width,height] duration-200 motion-reduce:transition-none ${look.selected ? 'border-accent' : 'border-[#fffaf4]'} ${size}`}
         iconSize={look.selected ? 24 : 18}
-        photoKey={pin.photoKey}
       />
       {look.selected && <span aria-hidden className="-mt-1 size-2.5 rotate-45 bg-accent" />}
     </button>
@@ -91,7 +88,6 @@ export function PhotoCluster({
           key={member.id}
           className={`size-10 rounded-full border-[3px] border-[#fffaf4] shadow-[0_4px_14px_rgb(31_24_17/0.3)] ${i > 0 ? '-ms-5' : ''}`}
           iconSize={18}
-          photoKey={member.photoKey}
         />
       ))}
       <span className="absolute -end-2 -top-1 flex min-w-6 items-center justify-center rounded-full bg-charcoal px-1.5 text-xs leading-6 font-bold text-white tabular-nums">

@@ -333,6 +333,17 @@ describe('[E4.6][AC42] a pin opens its card', () => {
     expect(within(title.closest('article')!).queryByRole('link', { name: en['map.card.readStory'] })).toBeNull()
   })
 
+  it('shows the place icon on the pin and on the card (no photo address yet)', async () => {
+    await loaded()
+    await screen.findByRole('button', { name: en['map.categories'] })
+    await userEvent.click(pinButton('Hotel am See'))
+    const title = await screen.findByRole('heading', { level: 2, name: 'Hotel am See' })
+
+    expect(pinButton('Hotel am See').querySelector('svg')).not.toBeNull()
+    expect(title.closest('article')!.querySelector('[aria-hidden] svg')).not.toBeNull()
+    expect(document.querySelector('img')).toBeNull()
+  })
+
   it('links the main story only when the pin has one', async () => {
     await loaded()
     await screen.findByRole('button', { name: en['map.categories'] })
