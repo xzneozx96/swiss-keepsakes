@@ -40,7 +40,11 @@ const HAS_MIN_WIDTH = /(?:^|\s)min-w-/
  * row's at rest and on hover (HeroUI: `bg-surface`, and `surface/40` or `default/50` over the
  * backdrop, written here as the opaque mix).
  */
-const PINNED_HEADER_CLASS = 'sticky end-0 z-10 bg-surface-secondary'
+const PINNED_HEADER_CLASS = {
+  page: 'sticky end-0 z-10 bg-surface-secondary',
+  // A card table's header is see-through over the card, so its pinned cell takes the card's colour.
+  card: 'sticky end-0 z-10 bg-surface',
+}
 const PINNED_CELL_CLASS = 'sticky end-0 z-10 bg-surface'
 const PINNED_CELL_HOVER = {
   page: 'in-data-[hovered=true]:bg-[color-mix(in_oklab,var(--surface)_40%,var(--surface-secondary))]',
@@ -121,7 +125,7 @@ export function DataTable<T>({
           id: 'actions',
           header: t('table.actions'),
           skeleton: 'action',
-          headerClassName: `${rowActions.headerClassName ?? 'w-24'} text-end ${PINNED_HEADER_CLASS}`,
+          headerClassName: `${rowActions.headerClassName ?? 'w-24'} text-end ${PINNED_HEADER_CLASS[isOnPage ? 'page' : 'card']}`,
           cellClassName: `${PINNED_CELL_CLASS} ${PINNED_CELL_HOVER[isOnPage ? 'page' : 'card']}`,
           render: row => (
             <div className="flex justify-end">{rowActions.render(row)}</div>

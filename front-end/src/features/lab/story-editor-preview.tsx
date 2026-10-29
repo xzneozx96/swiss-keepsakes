@@ -8,6 +8,7 @@ import { Media } from '@/components/media'
 import { ArticleBlocks } from '@/features/content/components/article-blocks'
 import { ArticleContents, sectionAnchor } from '@/features/content/components/article-contents'
 import { avatarUrl } from '@/lib/avatars'
+import { IPhoneMockup } from './iphone-mockup'
 import { keepsakes, LAB_TODAY, mediaOf, otherStories, pinById, uploadUrls } from './story-editor-data'
 import { contentsList, headingAnchors, readingMinutes } from './story-editor-rules'
 import { PhotoById } from './story-editor-sheets'
@@ -228,17 +229,15 @@ export function StoryPreview({ story, language }: { story: Story, language: Lang
 }
 
 /**
- * The preview inside a phone outline (375 px wide inside), how most guests read. `fixed`: a real
- * phone shape, 375 × 740 inside or shorter to fit the window, with the story scrolling inside it.
+ * The preview inside a phone outline, how most guests read. `fixed`: an iPhone 16 Pro, shorter to
+ * fit the window, with the story scrolling inside it.
  */
 export function PreviewFrame({ story, language, fixed = false }: { story: Story, language: Language, fixed?: boolean }) {
   if (fixed) {
     return (
-      <div className="mx-auto h-[min(756px,calc(100dvh-10rem))] w-[391px] shrink-0 overflow-hidden rounded-[2rem] border-8 border-foreground/90 bg-background">
-        <div className="h-full overflow-y-auto overscroll-contain [scrollbar-width:thin]" data-preview-scroll="">
-          <StoryPreview language={language} story={story} />
-        </div>
-      </div>
+      <IPhoneMockup label="Story preview" reserve={160}>
+        <StoryPreview language={language} story={story} />
+      </IPhoneMockup>
     )
   }
 

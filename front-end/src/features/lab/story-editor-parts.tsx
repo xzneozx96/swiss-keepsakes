@@ -1,3 +1,4 @@
+import type { LanguageStatus } from './language-version-switch'
 import type { Language } from './story-editor-data'
 import type { Check } from './story-editor-rules'
 import type { LabState } from './story-editor-search-params'
@@ -10,6 +11,7 @@ import { lazy, Suspense, useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { PhotoAddIcon, StatusDangerIcon, StatusSuccessIcon, StatusWarningIcon, TrashIcon } from '@/components/icons'
+import { LanguageVersionSwitch } from './language-version-switch'
 import { LAB_TODAY, LANG_NAME } from './story-editor-data'
 import { contentsList, readingMinutes, wordCount } from './story-editor-rules'
 import { MediaInsertSheet, PhotoById } from './story-editor-sheets'
@@ -81,32 +83,32 @@ function statusText(model: StoryEditorModel, l: Language) {
   return 'Draft'
 }
 
-/** EN | DE with each version's state: published (green dot), draft, or not started. */
+function statusTone(model: StoryEditorModel, l: Language): LanguageStatus['tone'] {
+  const v = model.story.versions[l]
+
+  return v.status === 'missing' ? 'muted' : v.status === 'published' && !model.pending[l] ? 'success' : 'warning'
+}
+
+/** Off the header, a version not started says that choosing it starts it (it creates the draft). */
+function versionText(model: StoryEditorModel, l: Language, compact: boolean) {
+  return !compact && model.story.versions[l].status === 'missing' ? 'Not started · choose to start it' : statusText(model, l)
+}
+
+const VERSIONS = (['en', 'de'] as const).map(l => ({ id: l, label: LANG_NAME[l], short: l.toUpperCase() }))
+
+/** EN | DE with each version's state, on the shared switch. Choosing a version not started yet starts it. */
 export function VersionSwitch({ model, compact = false }: { model: StoryEditorModel, compact?: boolean }) {
   return (
-    <div aria-label="Language version" className="flex shrink-0 gap-1 rounded-2xl bg-default/60 p-1" role="group">
-      {(['en', 'de'] as const).map((l) => {
-        const v = model.story.versions[l]
-        const selected = model.language === l
-
-        return (
-          <button
-            key={l}
-            aria-pressed={selected}
-            className={`flex min-h-11 items-center gap-2 rounded-xl px-3 text-start outline-none focus-visible:focus-ring lg:min-h-10 ${selected ? 'bg-surface shadow-surface' : 'text-muted'}`}
-            type="button"
-            onClick={() => (v.status === 'missing' ? model.startVersion(l) : model.setLanguage(l))}
-          >
-            <span aria-hidden className={`size-2 shrink-0 rounded-full ${v.status === 'published' ? 'bg-success' : v.status === 'draft' ? 'bg-warning' : 'border border-muted'}`} />
-            <span className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold">{compact ? l.toUpperCase() : LANG_NAME[l]}</span>
-              {!compact && <span className="text-xs text-muted">{v.status === 'missing' ? 'Start this version' : statusText(model, l)}</span>}
-            </span>
-            {compact && <span className="sr-only">{statusText(model, l)}</span>}
-          </button>
-        )
-      })}
-    </div>
+    <LanguageVersionSwitch
+      compact={compact}
+      languages={VERSIONS}
+      selected={model.language}
+      status={{
+        en: { text: versionText(model, 'en', compact), tone: statusTone(model, 'en') },
+        de: { text: versionText(model, 'de', compact), tone: statusTone(model, 'de') },
+      }}
+      onChange={l => (model.story.versions[l].status === 'missing' ? model.startVersion(l) : model.setLanguage(l))}
+    />
   )
 }
 

@@ -15,6 +15,16 @@ const experiments = [
     note: 'The approved home: sky hero and map, the practical bits, See these first, free routes, the food map, While you’re in town, Victorinox and the advice banner. Section order fixed; answers only order cards inside sections. English only. Search S2 “One list” (approved) below. Spec: docs/ux/home-design.md (28.10.2026).',
   },
   {
+    to: '/lab/keepsake-editor' as const,
+    title: 'Keepsake catalog: keepsake, variants and stock (M12, N13, N14, N15, S7), approved',
+    note: 'Medusa-shaped linked screens: Keepsakes list, the keepsake page on the story editor’s flow (edit cards, then Review and publish), the four-step create flow, the variant page, Inventory with its item page. Options per product. Spec: docs/ux/keepsake-editor-design.md (29.10.2026).',
+  },
+  {
+    to: '/lab/language-switch' as const,
+    title: 'Language version switch (shared by the editors), approved',
+    note: 'The app’s thin tabs with a status icon and one status line; arrows move focus, a click or Enter chooses. Used by the story editor and the keepsake editor (29.10.2026).',
+  },
+  {
     to: '/lab/story-editor' as const,
     title: 'Story editor (M17, S3), approved',
     note: 'Write: Cover and title, then Story with a pinned formatting bar and the bubble on selected text; autosave; the byline is the signed-in account. Review and publish: phone preview, the language switch with the checks and Publish, and Details as collapsible cards. Spec: docs/ux/story-editor-design.md (29.10.2026).',

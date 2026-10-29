@@ -31,6 +31,8 @@ import { Route as LabCartLineRouteImport } from './routes/lab.cart-line'
 import { Route as LabEyebrowRouteImport } from './routes/lab.eyebrow'
 import { Route as LabHeroRouteImport } from './routes/lab.hero'
 import { Route as LabHomeRouteImport } from './routes/lab.home'
+import { Route as LabKeepsakeEditorRouteImport } from './routes/lab.keepsake-editor'
+import { Route as LabLanguageSwitchRouteImport } from './routes/lab.language-switch'
 import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
 import { Route as LabMediaRouteImport } from './routes/lab.media'
@@ -208,6 +210,16 @@ const LabHeroRoute = LabHeroRouteImport.update({
 const LabHomeRoute = LabHomeRouteImport.update({
   id: '/lab/home',
   path: '/lab/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabKeepsakeEditorRoute = LabKeepsakeEditorRouteImport.update({
+  id: '/lab/keepsake-editor',
+  path: '/lab/keepsake-editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabLanguageSwitchRoute = LabLanguageSwitchRouteImport.update({
+  id: '/lab/language-switch',
+  path: '/lab/language-switch',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabMapRoute = LabMapRouteImport.update({
@@ -584,6 +596,8 @@ export interface FileRoutesByFullPath {
   '/lab/eyebrow': typeof LabEyebrowRoute
   '/lab/hero': typeof LabHeroRoute
   '/lab/home': typeof LabHomeRoute
+  '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
+  '/lab/language-switch': typeof LabLanguageSwitchRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
@@ -673,6 +687,8 @@ export interface FileRoutesByTo {
   '/lab/eyebrow': typeof LabEyebrowRoute
   '/lab/hero': typeof LabHeroRoute
   '/lab/home': typeof LabHomeRoute
+  '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
+  '/lab/language-switch': typeof LabLanguageSwitchRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
@@ -766,6 +782,8 @@ export interface FileRoutesById {
   '/lab/eyebrow': typeof LabEyebrowRoute
   '/lab/hero': typeof LabHeroRoute
   '/lab/home': typeof LabHomeRoute
+  '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
+  '/lab/language-switch': typeof LabLanguageSwitchRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
@@ -860,6 +878,8 @@ export interface FileRouteTypes {
     | '/lab/eyebrow'
     | '/lab/hero'
     | '/lab/home'
+    | '/lab/keepsake-editor'
+    | '/lab/language-switch'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/media'
@@ -949,6 +969,8 @@ export interface FileRouteTypes {
     | '/lab/eyebrow'
     | '/lab/hero'
     | '/lab/home'
+    | '/lab/keepsake-editor'
+    | '/lab/language-switch'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/media'
@@ -1041,6 +1063,8 @@ export interface FileRouteTypes {
     | '/lab/eyebrow'
     | '/lab/hero'
     | '/lab/home'
+    | '/lab/keepsake-editor'
+    | '/lab/language-switch'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/media'
@@ -1131,6 +1155,8 @@ export interface RootRouteChildren {
   LabEyebrowRoute: typeof LabEyebrowRoute
   LabHeroRoute: typeof LabHeroRoute
   LabHomeRoute: typeof LabHomeRoute
+  LabKeepsakeEditorRoute: typeof LabKeepsakeEditorRoute
+  LabLanguageSwitchRoute: typeof LabLanguageSwitchRoute
   LabMapRoute: typeof LabMapRoute
   LabMapLoadingRoute: typeof LabMapLoadingRoute
   LabMediaRoute: typeof LabMediaRoute
@@ -1309,6 +1335,20 @@ declare module '@tanstack/react-router' {
       path: '/lab/home'
       fullPath: '/lab/home'
       preLoaderRoute: typeof LabHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/keepsake-editor': {
+      id: '/lab/keepsake-editor'
+      path: '/lab/keepsake-editor'
+      fullPath: '/lab/keepsake-editor'
+      preLoaderRoute: typeof LabKeepsakeEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/language-switch': {
+      id: '/lab/language-switch'
+      path: '/lab/language-switch'
+      fullPath: '/lab/language-switch'
+      preLoaderRoute: typeof LabLanguageSwitchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/map': {
@@ -1963,6 +2003,8 @@ const rootRouteChildren: RootRouteChildren = {
   LabEyebrowRoute: LabEyebrowRoute,
   LabHeroRoute: LabHeroRoute,
   LabHomeRoute: LabHomeRoute,
+  LabKeepsakeEditorRoute: LabKeepsakeEditorRoute,
+  LabLanguageSwitchRoute: LabLanguageSwitchRoute,
   LabMapRoute: LabMapRoute,
   LabMapLoadingRoute: LabMapLoadingRoute,
   LabMediaRoute: LabMediaRoute,

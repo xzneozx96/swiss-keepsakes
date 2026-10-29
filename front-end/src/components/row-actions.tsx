@@ -13,6 +13,8 @@ export interface RowAction<Id extends string = string> {
   isDisabled?: boolean
   /** Turns the icon upside down, e.g. one chevron for both "up" and "down". */
   flip?: boolean
+  /** A destructive action (delete, remove, archive): the item in the danger tone. */
+  isDanger?: boolean
 }
 
 /**
@@ -34,7 +36,8 @@ export function RowActions<Id extends string>({
       <Button isIconOnly aria-label={label} size="sm" variant="tertiary">
         <MoreIcon size={18} />
       </Button>
-      <Dropdown.Popover placement="bottom end">
+      {/* As wide as its longest label: placed near the screen edge it would otherwise shrink and wrap. */}
+      <Dropdown.Popover className="w-max max-w-[calc(100vw-2rem)]" placement="bottom end">
         <Dropdown.Menu
           aria-label={label}
           disabledKeys={actions.filter(a => a.isDisabled).map(a => a.id)}
@@ -46,6 +49,7 @@ export function RowActions<Id extends string>({
               href={action.href}
               id={action.id}
               textValue={action.label}
+              variant={action.isDanger ? 'danger' : undefined}
             >
               <action.icon
                 aria-hidden
