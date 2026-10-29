@@ -68,6 +68,7 @@ export const problemSchema = z.object({
   instance: z.string().meta({ description: 'The request path' }),
   requestId: z.string().meta({ description: 'The server\'s id for this request, also sent as X-Request-Id' }),
   errors: z.array(z.object({ in: z.string(), path: z.string(), message: z.string() })).optional(),
+  mediaIds: z.array(z.string()).optional().meta({ description: 'With media-processing: the ids of the files that are not ready yet' }),
   checks: z.record(z.string(), z.enum(['ok', 'failed'])).optional(),
 }).meta({ id: 'Problem', description: 'RFC 9457 problem details, sent as application/problem+json' })
 

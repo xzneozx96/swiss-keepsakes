@@ -388,7 +388,7 @@ describe('[E2.7] saving a published tour refuses media that is still processing'
   it('[E2.7] a processing PDF is media-processing, nothing changes and no retire job is queued', async () => {
     const s = setup(rows())
     const tour = await live(s)
-    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf-new' }, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf-new' }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['pdf-new'] })
     expect(s.tours.rows.get(tour.id)?.pdfMediaId).toBe('pdf1')
     unchanged(s, tour.id)
   })
@@ -396,14 +396,14 @@ describe('[E2.7] saving a published tour refuses media that is still processing'
   it('[E2.7] a processing cover is media-processing', async () => {
     const s = setup(rows())
     const tour = await live(s)
-    expect(await s.save(owner, store, tour.id, 2, { coverMediaId: 'img-new' }, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.save(owner, store, tour.id, 2, { coverMediaId: 'img-new' }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['img-new'] })
     unchanged(s, tour.id)
   })
 
   it('[E2.7] a processing stop photo is media-processing', async () => {
     const s = setup(rows())
     const tour = await live(s)
-    expect(await s.save(owner, store, tour.id, 2, { stops: [{ ...stop(1), mediaId: 'img-new' }] }, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.save(owner, store, tour.id, 2, { stops: [{ ...stop(1), mediaId: 'img-new' }] }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['img-new'] })
     unchanged(s, tour.id)
   })
 
@@ -412,8 +412,8 @@ describe('[E2.7] saving a published tour refuses media that is still processing'
     const s = setup(data)
     const tour = await live(s)
     data.find(m => m.id === 'pdf1')!.status = 'processing'
-    expect(await s.save(owner, store, tour.id, 2, { stayTag: 'multi_day' }, null)).toEqual({ ok: false, reason: 'media-processing' })
-    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf1' }, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.save(owner, store, tour.id, 2, { stayTag: 'multi_day' }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['pdf1'] })
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf1' }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['pdf1'] })
     data.find(m => m.id === 'pdf1')!.status = 'ready'
     expect(await s.save(owner, store, tour.id, 2, { stayTag: 'multi_day' }, null)).toMatchObject({ ok: true })
   })

@@ -7,5 +7,6 @@ export async function ensureMediaReady<T>(media: MediaLookup<T>, tx: T, storeId:
   if (ids.length === 0)
     return undefined
   const rows = await media.find(tx, storeId, ids)
-  return rows.some(row => row.status === 'processing') ? { reason: 'media-processing' } : undefined
+  const mediaIds = [...new Set(rows.filter(row => row.status === 'processing').map(row => row.id))]
+  return mediaIds.length > 0 ? { reason: 'media-processing', mediaIds } : undefined
 }

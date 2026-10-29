@@ -2991,6 +2991,8 @@ export interface components {
             }[];
             /** @description The request path */
             instance: string;
+            /** @description With media-processing: the ids of the files that are not ready yet */
+            mediaIds?: string[];
             /** @description The server's id for this request, also sent as X-Request-Id */
             requestId: string;
             status: number;

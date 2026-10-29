@@ -1285,6 +1285,13 @@
             "description": "The request path",
             "type": "string"
           },
+          "mediaIds": {
+            "description": "With media-processing: the ids of the files that are not ready yet",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "requestId": {
             "description": "The server's id for this request, also sent as X-Request-Id",
             "type": "string"

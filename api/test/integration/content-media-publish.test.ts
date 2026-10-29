@@ -37,7 +37,7 @@ describe('[E2.7] publish while a file is still processing, over HTTP', () => {
 
     const refused = await publish()
     expect(refused.status).toBe(422)
-    expect(await refused.json()).toMatchObject({ type: 'media-processing', title: 'A file is still being processed. Try again in a moment.' })
+    expect(await refused.json()).toMatchObject({ type: 'media-processing', title: 'A file is still being processed. Try again in a moment.', mediaIds: [pdf] })
 
     await markReady(pdf)
     expect((await publish()).status).toBe(200)
@@ -54,7 +54,7 @@ describe('[E2.7] publish while a file is still processing, over HTTP', () => {
 
     const refused = await publish()
     expect(refused.status).toBe(422)
-    expect(await refused.json()).toMatchObject({ type: 'media-processing' })
+    expect(await refused.json()).toMatchObject({ type: 'media-processing', mediaIds: [cover] })
 
     await markReady(cover)
     expect((await publish()).status).toBe(200)
@@ -72,7 +72,7 @@ describe('[E2.7] publish while a file is still processing, over HTTP', () => {
 
     const refused = await save()
     expect(refused.status).toBe(422)
-    expect(await refused.json()).toMatchObject({ type: 'media-processing' })
+    expect(await refused.json()).toMatchObject({ type: 'media-processing', mediaIds: [next] })
 
     await markReady(next)
     expect((await save()).status).toBe(200)

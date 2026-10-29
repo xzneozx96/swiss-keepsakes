@@ -7,6 +7,7 @@ export interface FailureProblem {
   type: ProblemType
   title: string
   errors?: { in: 'body', path: string, message: string }[]
+  mediaIds?: string[]
 }
 
 const gapMessages: Record<PublishGap, string> = {
@@ -49,7 +50,7 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'empty': return { status: 422, type: 'media-empty', title: 'This file is empty.' }
     case 'upload-missing': return { status: 404, type: 'upload-missing', title: 'The upload was not found. It may have expired. Upload the file again.' }
     case 'content-mismatch': return { status: 422, type: 'media-content-mismatch', title: 'The file is not the type it says it is.' }
-    case 'media-processing': return { status: 422, type: 'media-processing', title: 'A file is still being processed. Try again in a moment.' }
+    case 'media-processing': return { status: 422, type: 'media-processing', title: 'A file is still being processed. Try again in a moment.', mediaIds: failure.mediaIds }
     case 'name-missing':
       return { status: 422, type: 'validation-failed', title: 'Give the category a name in English or German.', errors: [{ in: 'body', path: 'name', message: 'Give a name in English or German' }] }
     case 'order-mismatch':

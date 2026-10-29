@@ -60,7 +60,7 @@ describe('[E2.7] publish refuses media that is still processing', () => {
   it('[E2.7] a story whose cover is processing is media-processing and stays unpublished, then publishes once the cover is ready', async () => {
     const s = setup([row('cover', 'image', 'processing')])
     const id = await story(s, storyDoc({ coverMediaId: 'cover' }))
-    expect(await s.publishStory(owner, store, id, 'en', 1, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.publishStory(owner, store, id, 'en', 1, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['cover'] })
     expect(s.stories.versions.get(`${id}/en`)?.status).toBe('draft')
     await s.ready('cover')
     expect(await s.publishStory(owner, store, id, 'en', 1, null)).toMatchObject({ ok: true, value: { status: 'published' } })
@@ -69,7 +69,16 @@ describe('[E2.7] publish refuses media that is still processing', () => {
   it('[E2.7] a story whose body image or audio is processing is media-processing', async () => {
     const s = setup([row('img', 'image', 'ready'), row('mp3', 'audio', 'processing')])
     const id = await story(s, storyDoc({ body: { type: 'doc', content: [{ type: 'image', attrs: { mediaId: 'img', alt: '', caption: '' } }, { type: 'audio', attrs: { mediaId: 'mp3', title: '', caption: '' } }] } }))
-    expect(await s.publishStory(owner, store, id, 'en', 1, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.publishStory(owner, store, id, 'en', 1, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['mp3'] })
+  })
+
+  it('[E2.7] media-processing names every processing file once, and leaves out the ready ones', async () => {
+    const s = setup([row('pdf', 'pdf', 'processing'), row('cover', 'image', 'processing'), row('photo', 'image', 'ready')])
+    const stop = { latitude: 47, longitude: 8, title: { en: 'Stop' }, text: {}, minutesFromStart: 0, placeId: null }
+    const id = await tour(s, { coverMediaId: 'cover', stops: [{ ...stop, mediaId: 'cover' }, { ...stop, mediaId: 'photo' }] })
+    const result = await s.publishTour(owner, store, id, 1, null)
+    expect(result).toMatchObject({ ok: false, reason: 'media-processing' })
+    expect((result as { mediaIds: string[] }).mediaIds.toSorted()).toEqual(['cover', 'pdf'])
   })
 
   it('[E2.7] a ready cover, and a story with no media, publish as before', async () => {
@@ -85,13 +94,13 @@ describe('[E2.7] publish refuses media that is still processing', () => {
     const id = await story(s, storyDoc({ coverMediaId: 'cover' }))
     expect(await s.publishStory(owner, store, id, 'en', 9, null)).toEqual({ ok: false, reason: 'stale' })
     const t = await tour(s, { slug: null, coverMediaId: 'cover' })
-    expect(await s.publishTour(owner, store, t, 1, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.publishTour(owner, store, t, 1, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['cover'] })
   })
 
   it('[E2.7] a tour whose PDF is processing is media-processing, and publishes after markReady', async () => {
     const s = setup([row('pdf', 'pdf', 'processing')])
     const id = await tour(s, {})
-    expect(await s.publishTour(owner, store, id, 1, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.publishTour(owner, store, id, 1, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['pdf'] })
     await s.ready('pdf')
     expect(await s.publishTour(owner, store, id, 1, null)).toMatchObject({ ok: true, value: { status: 'published' } })
   })
@@ -100,9 +109,9 @@ describe('[E2.7] publish refuses media that is still processing', () => {
     const stop = { latitude: 47, longitude: 8, title: { en: 'Stop' }, text: {}, minutesFromStart: 0, placeId: null }
     const s = setup([row('pdf', 'pdf', 'ready'), row('cover', 'image', 'processing'), row('photo', 'image', 'processing')])
     const cover = await tour(s, { coverMediaId: 'cover' })
-    expect(await s.publishTour(owner, store, cover, 1, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.publishTour(owner, store, cover, 1, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['cover'] })
     const photo = await tour(s, { stops: [{ ...stop, mediaId: 'photo' }] })
-    expect(await s.publishTour(owner, store, photo, 1, null)).toEqual({ ok: false, reason: 'media-processing' })
+    expect(await s.publishTour(owner, store, photo, 1, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['photo'] })
   })
 
   it('[E2.7] a tour with ready files publishes', async () => {
