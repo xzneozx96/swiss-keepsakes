@@ -11,10 +11,16 @@ import { missingLanguages } from '../lib/question-set'
  * edits reach new requests only (AC18).
  */
 export function useQuestionSet() {
-  const { mutate: saveQuestion } = useCommand('requests', 'saveQuestion')
-  const { mutate: removeQuestion } = useCommand('requests', 'removeQuestion')
+  const { mutate: saveQuestion } = useCommand('requests', 'saveQuestion', {
+    meta: { success: 'adviceQuestions.saved' },
+  })
+  const { mutate: removeQuestion } = useCommand('requests', 'removeQuestion', {
+    meta: { success: 'adviceQuestions.deleted' },
+  })
   const { mutate: moveQuestion } = useCommand('requests', 'moveQuestion')
-  const { mutate: setRecipient } = useCommand('requests', 'setRecipient')
+  const { mutate: setRecipient } = useCommand('requests', 'setRecipient', {
+    meta: { success: 'adviceQuestions.recipient.saved' },
+  })
   const set = useAdviceQuestions()
 
   return {

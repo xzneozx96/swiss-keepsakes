@@ -17,7 +17,6 @@ import {
   Radio,
   RadioGroup,
   TimeField,
-  toast,
 } from '@heroui/react'
 import {
   CalendarDateTime,
@@ -147,7 +146,6 @@ export function NewDepartureSheet({
       balanceDueAt,
       closed: false,
     })
-    toast.success(t('products.departure.added'))
     onClose()
   }
 
@@ -297,7 +295,6 @@ export function SeatsSheet({
       return
     }
     saveCapacity(departure.id, capacity)
-    toast.success(t('products.departure.updated'))
     onClose()
   }
 

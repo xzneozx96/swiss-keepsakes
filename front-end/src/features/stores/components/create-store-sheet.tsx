@@ -1,6 +1,6 @@
 import type { Language } from '@sk/domain/shared'
 
-import { Button, Description, FieldError, Form, Input, Label, Radio, RadioGroup, TextField, toast } from '@heroui/react'
+import { Button, Description, FieldError, Form, Input, Label, Radio, RadioGroup, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
 
 import { EmailIcon } from '@/components/icons'
@@ -27,7 +27,13 @@ export function CreateStoreSheet({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState('')
   const [language, setLanguage] = useState<Language>(screenLanguage)
   const [invalid, setInvalid] = useState({ name: false, email: false })
-  const { submit: send, isPending, error, reset } = useSubmit('stores', 'createStore')
+  const { submit: send, isPending, error, reset } = useSubmit('stores', 'createStore', {
+    // Every refusal shows inline (ProblemNotice or a field error), so the cache stays silent on error.
+    meta: {
+      success: (store, input) => t('stores.create.done', { email: store.invitation?.email ?? input.ownerEmail }),
+      silent: true,
+    },
+  })
   const slug = slugFromName(name)
   const input = { slug, name: name.trim(), defaultLanguage: language, language, ownerEmail: email.trim() }
   const key = useIdempotencyKey(input)
@@ -42,9 +48,8 @@ export function CreateStoreSheet({ onClose }: { onClose: () => void }) {
     if (next.name || next.email)
       return
     send({ ...input, idempotencyKey: key.next() }, {
-      onSuccess: (store) => {
+      onSuccess: () => {
         key.settled()
-        toast.success(t('stores.create.done', { email: store.invitation?.email ?? input.ownerEmail }))
         onClose()
       },
       onError: error => key.settled(error),
