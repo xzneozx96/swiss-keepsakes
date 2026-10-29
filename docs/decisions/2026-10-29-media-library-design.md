@@ -3,6 +3,7 @@
 - Date: 2026-10-29
 - Status: **approved on 2026-10-29** (approval given in chat by the person who made the request, on the lab page `/lab/media`). Four points stay open (see "Open points"). The upload limits are proposals that the merchant must confirm.
 - Changes: `docs/ux/media-design.md` (new), `docs/ux/pins-design.md`, `docs/decisions/2026-10-28-pins-and-map-design.md`, `docs/development-plan/screen-inventory.md` (S4, N18, D10, D14), `docs/development-plan/delivery-plan.md` (E4.11), `docs/specs/001-storytelling-pivot/data-model.md` (note under DM-3), `docs/adr/ADR-004-media-and-pdf-storage.md` (History line)
+- Note of 2026-10-30: the owner confirmed the upload limits (gate G-E411-LIMITS): 20 MB for a photo, 50 MB for audio (M4A is allowed) and 30 MB for a PDF. Decision 8 and open point 1 carry the answer.
 - Source: the requester's approval of the lab page `/lab/media` on 29.10.2026
 - Related: `docs/ux/media-design.md` (the full specification), `docs/decisions/2026-10-28-pins-and-map-design.md` (N16 and N17, which N18 sits beside), `docs/adr/ADR-004-media-and-pdf-storage.md`
 
@@ -19,7 +20,7 @@ Slice S4 had designs for the guest map, the pin card, the pins list and the pin 
 5. **A media row gets a name.** It starts as the uploaded file name and the merchant can change it in the detail sheet. A blank name is refused. `content.media` has no name column today. This is a schema change (see "Follow-up").
 6. **Pagination uses the shared `usePaged` and `Pager`** (`front-end/src/components/list-pagination.tsx`). `usePaged` got an optional page size. The photo wall shows 24 a page and the audio and PDF lists the default 10.
 7. **No uploads card.** An accepted file appears at once at the top of its kind tab as "Processing", then turns "Ready". An upload batch gives one toast for the accepted files and one for the refused files. A refused file never enters the list.
-8. **Upload limits (proposals, to confirm).** Photos: JPEG, PNG or WebP, up to 20 MB. Audio: MP3 or M4A, up to 50 MB. PDF: up to 30 MB. Nobody has decided these.
+8. **Upload limits (proposals, to confirm).** Photos: JPEG, PNG or WebP, up to 20 MB. Audio: MP3 or M4A, up to 50 MB. PDF: up to 30 MB. Nobody has decided these. **Confirmed 2026-10-30 (gate G-E411-LIMITS):** the limits stand as written.
 9. **The detail sheet** opens from the right on a laptop and from the bottom on a phone. From the top:
    - The preview, with **Replace** and **Retire** as white pills over its top-right corner. While Retire is refused, the reason sits under the preview.
    - "Where it is used": one row per page with a 48 px thumbnail of the page, its title, a muted line (kind, language for a story, and the slot) and a chevron. The rows are grouped "On published pages (N)" and "Only in drafts (N)".
@@ -54,7 +55,7 @@ Slice S4 had designs for the guest map, the pin card, the pins list and the pin 
 
 Decided here only as far as the lab shows. The requester has not decided these.
 
-1. **Upload limits.** 20, 50 and 30 MB, and the accepted types, are the designer's proposal.
+1. **Upload limits.** 20, 50 and 30 MB, and the accepted types, are the designer's proposal. **Confirmed 2026-10-30 (gate G-E411-LIMITS):** 20 MB for a photo, 50 MB for audio (M4A is allowed) and 30 MB for a PDF.
 2. **Keepsake photos are not counted as uses.** `catalog.product_media` is not in `media_refs`. The lab leaves keepsakes out of the where-used list and out of the retire check. So the 29 photos that only keepsakes use show "Unused" and can be retired, which would take the photo off those keepsakes. E4.11 has to solve this. One way is to ask `catalog` before a retire, as ADR-004's cleanup job does. In the lab, the toast after Replace counts keepsake pages while the Replace dialog and the sheet do not, so the two numbers differ for these photos (see `docs/ux/media-design.md`).
 3. **Is the N18 description the only alt text?** The lab treats it as the only one. It would then show read-only in the pin editor (N17) and the story image node, which keep their own today. The other choice is a default that a pin or story may override.
 4. **Who orders a pin's extra photos?** The lab leaves the order to the pin editor (N17). The "Where it is used" row of an extra photo says "Order in the pin editor". Nobody has checked that N17 does it.

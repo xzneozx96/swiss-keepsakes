@@ -127,7 +127,7 @@ Replace never changes the name. It changes "Uploaded as", the size, the version 
 
 The **Upload** button picks several files at once. The input accepts JPEG, PNG, WebP, MP3, M4A and PDF (the lab also accepts `.heic` so the refusal can be shown). The kind comes from the file's type.
 
-**Limits (proposals, not decided):** photos JPEG, PNG or WebP up to 20 MB. Audio MP3 or M4A up to 50 MB. PDF up to 30 MB. The type is checked first, then the size.
+**Limits (confirmed by the owner on 2026-10-30, gate G-E411-LIMITS):** photos JPEG, PNG or WebP up to 20 MB. Audio MP3 or M4A up to 50 MB. PDF up to 30 MB. The type is checked first, then the size.
 
 - An accepted file appears at once at the top of its kind tab, Processing, with its name set to the uploaded file name.
 - A refused file never enters the list.
@@ -190,7 +190,7 @@ There is no delete. Retire is refused while any page uses the file, a published 
 
 ## 8. Open points
 
-1. **Upload limits** (20, 50 and 30 MB, and the accepted types) are the designer's proposal. The merchant must confirm them.
+1. **Upload limits** (20, 50 and 30 MB, and the accepted types) are the designer's proposal. The merchant must confirm them. **Confirmed 2026-10-30 (gate G-E411-LIMITS):** 20 MB for a photo, 50 MB for audio (M4A is allowed) and 30 MB for a PDF.
 2. **Keepsake photos are not counted as uses.** `catalog.product_media` is not in `media_refs`. The lab leaves keepsakes out of where-used and out of the Retire check, so photos that only keepsakes use (29 in the lab data) show "Unused" and can be retired. A retire would take the photo off those keepsakes. E4.11 has to solve it, for example by asking `catalog` before a retire, as the cleanup job of ADR-004 does. In the lab, the toast after Replace counts keepsake pages, while the Replace dialog and the sheet do not.
 3. **The only description?** The lab treats the N18 description as the only alt text of a file. The pin editor (N17) and the story image node, which carry their own today, would show it read-only. The other choice is a default that a pin or story may override.
 4. **Pin photo order.** The lab leaves the order of a pin's extra photos to the pin editor (N17). A where-used row of an extra photo says "Order in the pin editor". Nobody has checked that N17 does it.
