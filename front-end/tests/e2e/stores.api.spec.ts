@@ -109,11 +109,12 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
       keys.push(request.headers()['idempotency-key'])
   })
   await followLinkAs(owner, language, mail.link, ownerEmail)
-  await expect(owner.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
-  await expect(owner.getByText(say(language, 'stores.checklist.count', { met: '1', total: '4' }))).toBeVisible()
+  await expect(owner.getByRole('heading', { level: 1, name: say(language, 'stores.onboarding.title') })).toBeVisible()
+  await expect(owner.getByText(say(language, 'stores.checklist.count', { met: '1', total: '4' })).locator('visible=true')).toBeVisible()
   await expect(owner.locator('[data-condition="store-information"]')).toHaveAttribute('data-state', 'met')
-  await expect(owner.locator('[data-condition="payment-account"]')).not.toHaveAttribute('data-state', 'met')
-  await expect(owner.getByRole('button', { name: say(language, 'stores.open.action') })).toBeDisabled()
+  await expect(owner.locator('[data-step="payment-account"]')).not.toContainText(say(language, 'stores.condition.met'))
+  await owner.locator('[data-step="open"] button').click()
+  await expect(owner.getByRole('button', { name: say(language, 'stores.open.action', { store: name }) })).toBeDisabled()
   expect(owner.url()).not.toContain(token)
   expect(await owner.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
   // The screen read the session first and sent no accept before sign-in, so the one accept after sign-in took the invitation.
@@ -125,7 +126,7 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
   const phone = await newVisitor(browser, language)
 
   await followLinkAs(phone, language, mail.link, ownerEmail)
-  await expect(phone.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
+  await expect(phone.getByRole('heading', { level: 1, name: say(language, 'stores.onboarding.title') })).toBeVisible()
   expect(await phone.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
 
   // Open for sale is refused by the API with the checklist. The screen is made to think the store may open, as a
@@ -136,7 +137,8 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
     await route.fulfill({ response, json: { ...(await response.json()), mayOpenForSale: true } })
   })
   await owner.reload()
-  await owner.getByRole('button', { name: say(language, 'stores.open.action') }).click()
+  await owner.locator('[data-step="open"] button').click()
+  await owner.getByRole('button', { name: say(language, 'stores.open.action', { store: name }) }).click()
 
   const alert = owner.getByRole('alert')
 
@@ -144,7 +146,7 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
   await expect(alert).toContainText(say(language, 'stores.checklist.payment-account'))
   await expect(alert).toContainText(say(language, 'stores.checklist.catalogue'))
   await expect(alert).toContainText(say(language, 'stores.checklist.policies'))
-  await expect(owner.getByText(say(language, 'stores.open.live'))).toHaveCount(0)
+  await expect(owner.getByText(say(language, 'stores.opened.title', { store: name }))).toHaveCount(0)
   await admin.reload()
   await expect(card.getByText(say(language, 'stores.status.onboarding'), { exact: true })).toBeVisible()
   await expect(card.locator('[data-invitation]')).toHaveAttribute('data-invitation', 'accepted')
@@ -173,7 +175,7 @@ test('[E2.3][S8] after the Super Admin sends the invitation again, the old link 
   const fresh = await newVisitor(browser, language)
 
   await followLinkAs(fresh, language, second.link, ownerEmail)
-  await expect(fresh.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
+  await expect(fresh.getByRole('heading', { level: 1, name: say(language, 'stores.onboarding.title') })).toBeVisible()
 })
 
 test('[E2.3][S8] a link opened in a tab that already shows A02 leaves the address and is taken up and leaves the address', async ({ page }, testInfo) => {

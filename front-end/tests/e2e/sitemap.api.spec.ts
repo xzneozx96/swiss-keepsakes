@@ -90,7 +90,7 @@ test('[E3.6][AC61] the sitemap lists published story pages by language with alte
 
   await followLinkAs(owner, language, mail.link, ownerEmail)
   // The checklist shows once the Owner's invitation is accepted, so the membership exists.
-  await expect(owner.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
+  await expect(owner.getByRole('heading', { level: 1, name: say(language, 'stores.onboarding.title') })).toBeVisible()
   const me = await ok<{ stores: Array<{ storeId: string }> }>(await owner.request.get(`${SPA_ORIGIN}/api/me`), 200)
   const storeId = me.stores[0].storeId
   const tag = Math.random().toString(36).slice(2, 8)

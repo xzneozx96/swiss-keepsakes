@@ -94,9 +94,9 @@ export function OpenPanel({ onboarding }: { onboarding: Onboarding }) {
       </div>
       {blocking.length > 0
         ? (
-            <section aria-labelledby="stores-blockers" className="flex flex-col gap-2">
+            <section className="flex flex-col gap-2">
               <h3 className="text-sm font-semibold" id="stores-blockers">{t('stores.setup.blockers.title')}</h3>
-              <ul className="flex flex-col divide-y divide-separator rounded-2xl border border-separator">
+              <ul aria-labelledby="stores-blockers" className="flex flex-col divide-y divide-separator rounded-2xl border border-separator">
                 {conditions.filter(condition => condition.state !== 'met').map(condition => (
                   <li key={condition.key} className="flex items-center justify-between gap-3 px-4 py-3" data-blocker={condition.key}>
                     <span className="min-w-0 text-sm">{t(`stores.checklist.${condition.key}`)}</span>

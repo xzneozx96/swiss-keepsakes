@@ -113,7 +113,6 @@ export const storesEn = {
   'stores.refusal.failed.title': 'The invitation could not be accepted',
   'stores.refusal.failed.text': 'We could not tell whether it worked. Try again. Repeating it is safe.',
 
-  'stores.checklist.title': 'Before you open for sale',
   'stores.checklist.store-information': 'Store information',
   'stores.checklist.payment-account': 'Payment account',
   'stores.checklist.catalogue': 'A product or a tour',
@@ -131,7 +130,6 @@ export const storesEn = {
   'stores.open.action': 'Open {store} for sale',
   'stores.open.locked': 'Opening is not available right now.',
   'stores.open.blocked': 'Opening unlocks when these are done: {steps}.',
-  'stores.open.live': 'Your store is open for sale.',
   'stores.open.incomplete': 'The store cannot open yet. Still open: {steps}.',
   'stores.open.incompleteNoList': 'The store cannot open yet. Check your steps.',
   'stores.open.notOnboarding': 'Only a store that is onboarding can be opened for sale.',
