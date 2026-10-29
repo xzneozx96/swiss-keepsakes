@@ -51,7 +51,15 @@ function setup(seed: MediaRecord[] = [row()]) {
   const media = createFakeMedia(seed)
   const audit: AuditEntry[] = []
   const sent: { queue: string, data: object, options?: { startAfter?: Date } }[] = []
-  const keepsakes = { uses: [] as KeepsakeUse[], asked: 0, list: async () => { keepsakes.asked++; return keepsakes.uses } }
+  const keepsakes = {
+    uses: [] as KeepsakeUse[],
+    asked: 0,
+    list: async () => {
+      keepsakes.asked++
+
+      return keepsakes.uses
+    },
+  }
   const pages: MediaUseRow[] = []
   const library: MediaLibrary<null> = {
     list: async (_tx, _store, _query, held) => ({ rows: [], total: held.length, kinds: { image: 0, audio: 0, pdf: 0 }, uses: { unused: 0, drafts: 0, published: 0 }, statuses: { processing: 0, ready: 0, retired: 0 } }),

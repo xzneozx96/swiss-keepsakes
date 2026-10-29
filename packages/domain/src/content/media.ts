@@ -131,9 +131,9 @@ const MAX_NAME_LENGTH = 200
 // The name a merchant sees for an upload: the file name without its folder, with control characters turned into
 // spaces, at most 200 characters (the end is kept, so the extension stays). undefined when nothing is left.
 export function cleanFileName(raw: string): string | undefined {
-  const flat = raw.replaceAll(/[\u0000-\u001F\u007F]/g, ' ')
+  const flat = raw.replace(/[\u0000-\u001F\u007F]/g, ' ')
   const base = flat.slice(Math.max(flat.lastIndexOf('/'), flat.lastIndexOf('\\')) + 1).trim()
-  if (base.replaceAll('.', '') === '') return undefined
+  if (base.replace(/\./g, '') === '') return undefined
   return base.length > MAX_NAME_LENGTH ? base.slice(base.length - MAX_NAME_LENGTH) : base
 }
 
