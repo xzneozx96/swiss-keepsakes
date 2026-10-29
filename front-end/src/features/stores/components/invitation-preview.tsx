@@ -14,13 +14,15 @@ import { RefusalView } from './refusal-view'
  * gets the sign-in form under the invitation; a signed-in one gets the accept button. For an Owner invitation the
  * preview names no inviter, and the screen shows none.
  */
-export function InvitationPreview({ token, audience, returnTo, signedOut, pending, focusTitle, onAccept, onSignedIn }: {
+export function InvitationPreview({ token, audience, returnTo, signedOut, checking, pending, focusTitle, onAccept, onSignedIn }: {
   token: string
   audience: InviteRole
   /** Where the embedded sign-in comes back to: the screen of the link. */
   returnTo: string
   /** The visitor has no session, so the screen shows the sign-in form. */
   signedOut: boolean
+  /** The session has not answered yet, so neither the form nor the button can show. */
+  checking?: boolean
   pending?: boolean
   /** Move focus to the title once shown: the visitor just signed out here. */
   focusTitle?: boolean
@@ -55,6 +57,13 @@ export function InvitationPreview({ token, audience, returnTo, signedOut, pendin
 
   if (state === 'expired' || state === 'revoked')
     return <RefusalView audience={invitedRole} refusal={state} storeName={storeName} />
+  if (checking) {
+    return (
+      <InvitationFrame photo="colour" audience={invitedRole} storeName={storeName}>
+        <InvitationLoading text={t('stores.invite.checking')} title={title} />
+      </InvitationFrame>
+    )
+  }
 
   return (
     <InvitationFrame photo="colour" audience={invitedRole} storeName={storeName}>

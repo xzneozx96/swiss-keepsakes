@@ -161,7 +161,8 @@ describe('[E2.4][AC02] M01, the Store Manager accepts an invitation', () => {
     expect(screen.getByText('Ngoc invited you to Chi Ngoc as a Store Manager.')).toBeInTheDocument()
     expect(screen.getByText('Store Manager invitation')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument()
-    expect(calls.map(call => call.path)).toEqual(['/api/public/invitations/preview'])
+    // The preview, and the session (the form shows only once it answered null). No accept.
+    expect(calls.map(call => call.path).sort()).toEqual(['/api/auth/get-session', '/api/public/invitations/preview'])
   })
 
   it('sends no accept for a signed-in Manager before the tap', async () => {

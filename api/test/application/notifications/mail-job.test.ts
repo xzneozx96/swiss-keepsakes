@@ -1,3 +1,4 @@
+import type { Clock } from '../../../src/platform/clock.ts'
 import type { MailRequest } from '../../../src/modules/notifications/application/render-mail.ts'
 import type { InvitationLink, JobQueue, MailFailure, MailStatus, MailTemplate, QueuedMail, SentMailRepository, UnitOfWork } from '../../../src/modules/notifications/ports.ts'
 import { describe, expect, it } from 'vitest'
@@ -38,7 +39,7 @@ interface Row extends QueuedMail {
   failedAt: Date | null
 }
 
-function createFakes() {
+function createFakes(clock: Clock) {
   const rows = new Map<string, Row>()
   const jobs: { queue: string, data: object, id?: string }[] = []
   const alerts: MailFailure[] = []
@@ -103,21 +104,27 @@ function createFakes() {
   // Open invitations and the link each one's mail gets. The link holds a token the job data must never hold.
   const invitations = new Map<string, string>()
   const revoked = new Set<string>()
+  // When each invitation stops being open: the link builder gives no link from then on.
+  const expiries = new Map<string, Date>()
   const linkRequests: { template: MailTemplate, invitationId: string }[] = []
   const invitationLink: InvitationLink<FakeTx> = async (tx, template, invitationId) => {
     inTx(tx)
     linkRequests.push({ template, invitationId })
     if (revoked.has(invitationId))
       return invitationRevoked
+    const expiry = expiries.get(invitationId)
+    if (expiry && clock.now() >= expiry)
+      return undefined
     return invitations.get(invitationId)
   }
-  return { rows, jobs, alerts, invitations, revoked, linkRequests, uow, sentMail, jobQueue, invitationLink }
+  return { rows, jobs, alerts, invitations, revoked, expiries, linkRequests, uow, sentMail, jobQueue, invitationLink }
 }
 
 function setup() {
-  const fakes = createFakes()
-  fakes.invitations.set(n20.params.invitationId, n20Link)
   const clock = createManualClock(new Date('2026-10-20T08:00:00Z'))
+  const fakes = createFakes(clock)
+  fakes.invitations.set(n20.params.invitationId, n20Link)
+  fakes.expiries.set(n20.params.invitationId, new Date(n20.params.expiresOn))
   const memory = createMemoryMailer()
   const queueMail = makeQueueMail({ sentMail: fakes.sentMail, jobs: fakes.jobQueue, clock, queue: 'mail' })
   const sendMail = makeSendMail({ uow: fakes.uow, sentMail: fakes.sentMail, mailer: memory.mailer, invitationLink: fakes.invitationLink, clock })
@@ -195,20 +202,32 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
     expect(rows.get(mailId)).toMatchObject({ status: 'queued', attempts: 1, lastError: 'MailRenderError' })
   })
 
-  it.each(['accepted', 'expired', 'withdrawn'] as const)('[E2.15] a mail for an %s invitation sends nothing, and its job holds the invitation id, the expiry day and no token', async (state) => {
-    const { memory, invitations, revoked, jobs, sendMail, queued } = setup()
-    const { job } = await queued(n20)
-    // The link builder gives no link for an accepted or expired invitation and the revoked marker for a withdrawn one.
-    if (state === 'withdrawn')
-      revoked.add(n20.params.invitationId)
-    else
-      invitations.clear()
+  // How the invitation stops being open before its mail goes out, and what the job then does: accepted and expired
+  // give no link (a permanent render failure, the mail stays queued), withdrawn gives the revoked marker (the mail closes, the job completes).
+  it.each([
+    { state: 'accepted', arrange: ({ invitations }: ReturnType<typeof setup>) => invitations.delete(n20.params.invitationId), outcome: 'noLink' },
+    { state: 'expired', arrange: ({ clock }: ReturnType<typeof setup>) => clock.advance(8 * 24 * 60 * 60 * 1000), outcome: 'noLink' },
+    { state: 'withdrawn', arrange: ({ revoked }: ReturnType<typeof setup>) => revoked.add(n20.params.invitationId), outcome: 'closed' },
+  ] as const)('[E2.15] a mail for an $state invitation sends nothing, and its job holds the invitation id, the expiry day and no token', async ({ arrange, outcome }) => {
+    const context = setup()
+    const { rows, memory, alerts, jobs, sendMail, queued } = context
+    const { mailId, job } = await queued(n20)
 
+    arrange(context)
     expect(jobs[0]?.data).toMatchObject({ params: { invitationId: n20.params.invitationId, expiresOn: n20.params.expiresOn } })
     expect(JSON.stringify(jobs)).not.toMatch(/token|tok_|https:/i)
-    await sendMail(job).catch(() => {})
 
+    if (outcome === 'noLink') {
+      await expect(sendMail(job)).rejects.toMatchObject({ message: 'MailRenderError', permanent: true })
+      expect(rows.get(mailId)).toMatchObject({ status: 'queued', attempts: 1, lastError: 'MailRenderError' })
+    }
+    else {
+      await expect(sendMail(job)).resolves.toBeUndefined()
+      expect(rows.get(mailId)).toMatchObject({ status: 'failed', lastError: 'InvitationRevoked', sentAt: null })
+      expect(alerts).toEqual([])
+    }
     expect(memory.attempts).toEqual([])
+    expect(memory.sent).toEqual([])
   })
 
   it('[E2.4] a mail for an invitation revoked before it was sent sends nothing, closes the mail without an alert, and the job completes', async () => {

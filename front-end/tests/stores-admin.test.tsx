@@ -169,6 +169,18 @@ describe('[E2.15][E2.3] the row menu', () => {
     await waitFor(() => expect(calls.filter(call => call.method === 'GET' && call.path.startsWith('/api/admin/stores')).length).toBeGreaterThan(1))
   })
 
+  it('resends in the language of the store, not of the screen', async () => {
+    const german = adminStoreListSchema.parse({ items: [{ ...listed.items[3], defaultLanguage: 'de' }], nextCursor: null })
+
+    answer = call => call.method === 'POST' ? Response.json(adminStoreSchema.parse(german.items[0])) : Response.json(german)
+    renderAdmin()
+    await within(await screen.findByRole('grid', { name: 'All stores' })).findByText('Kapellbrücke')
+    await userEvent.click(within(await openMenu(rowOf('Kapellbrücke'), 'Kapellbrücke')).getByRole('menuitem', { name: 'Resend invitation' }))
+
+    await waitFor(() => expect(posts()).toHaveLength(1))
+    expect(posts()[0].body).toEqual({ language: 'de' })
+  })
+
   it('shows the new valid date once the list is read again', async () => {
     let resent = false
 
@@ -396,14 +408,17 @@ describe('[E2.15][E2.3] phones, empty and loading states', () => {
   })
 })
 
+// The German tests load the lazy German chunk and run slower than the default wait under load.
+const SLOW = { timeout: 8000 }
+
 describe('[E2.15][AC09] A01 in German', () => {
   beforeEach(() => writeStored('sk.language', 'de'))
 
   it('shows the screen, the row menu and the sheet in German', async () => {
     renderAdmin()
-    const grid = await screen.findByRole('grid', { name: 'Alle Shops' })
+    const grid = await screen.findByRole('grid', { name: 'Alle Shops' }, SLOW)
 
-    await within(grid).findByText('Live Shop')
+    await within(grid).findByText('Live Shop', undefined, SLOW)
     expect(within(grid).getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Shop', 'Status', 'Einladung', 'Vor der Eröffnung', 'Erstellt', 'Aktionen'])
     expect(within(grid).getByText('3 von 4 erledigt')).toBeInTheDocument()
     expect(within(grid).getByText('1 von 4 erledigt')).toBeInTheDocument()
@@ -411,7 +426,7 @@ describe('[E2.15][AC09] A01 in German', () => {
     expect(within(screen.getByLabelText('Shops im Überblick')).getByText('In Einrichtung')).toBeInTheDocument()
 
     await userEvent.click(within(grid).getByRole('button', { name: 'Aktionen für Atelier am See' }))
-    const menu = await screen.findByRole('menu', { name: 'Aktionen für Atelier am See' })
+    const menu = await screen.findByRole('menu', { name: 'Aktionen für Atelier am See' }, SLOW)
 
     expect(within(menu).getByRole('menuitem', { name: 'Einladung erneut senden' })).toBeInTheDocument()
     expect(within(menu).getByRole('menuitem', { name: 'E-Mail des Inhabers kopieren' })).toBeInTheDocument()
@@ -421,6 +436,15 @@ describe('[E2.15][AC09] A01 in German', () => {
     const [invite] = screen.getAllByRole('button', { name: 'Inhaber einladen' })
 
     await userEvent.click(invite)
-    expect(await screen.findByText(/Der Shop wird sofort angelegt\. Der Inhaber erhält eine Einladung, die 7 Tage gilt/)).toBeInTheDocument()
-  })
+    const sheet = await screen.findByRole('dialog', { name: 'Inhaber einladen' }, SLOW)
+
+    expect(within(sheet).getByText(/Der Shop wird sofort angelegt\. Der Inhaber erhält eine Einladung, die 7 Tage gilt/)).toBeInTheDocument()
+    expect(within(sheet).getByLabelText('Name des Shops')).toBeInTheDocument()
+    expect(within(sheet).getByLabelText('E-Mail des Inhabers')).toBeInTheDocument()
+    expect(within(sheet).getByRole('radiogroup', { name: 'Sprache des Shops und der Einladung' })).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Shop anlegen und Einladung senden' })).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Abbrechen' })).toBeInTheDocument()
+    for (const english of ['Store name', 'Owner email', 'Create store and send invitation', 'Cancel', 'Language of the store and the invitation'])
+      expect(sheet).not.toHaveTextContent(english)
+  }, 20_000)
 })
