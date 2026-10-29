@@ -23,6 +23,10 @@ We will store uploads in Neon Object Storage, as backend.md D14 plans, with thes
 - The owner decided that one PDF per tour covers all languages (gate D9, 2026-10-26). The PDF has no language field.
 - The PDF link on the page is the public object URL. It needs no signing and no account, and it can be cached by the browser and any CDN.
 - A tour that needs separate German and English guides puts both in the one PDF.
+- **Amended 2026-10-28 (gate G-S6-S3CLIENT).** The API uses `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner` to talk to Neon Object Storage, which implements only a subset of the S3 API, and to sign presigned PUT and GET URLs. Hand-written SigV4 signing is security-sensitive and would be code we own and must keep correct, so we do not write it. Other S3 packages were not chosen, because spike SP5 already ran on these two (`spikes/package.json`, with `requestChecksumCalculation: 'WHEN_REQUIRED'` so the SDK adds no checksum headers that a presigned URL would have to carry; see `spikes/sp5-object-storage/README.md`). Both enter `api/package.json` in E2.7. Coordinator answer under the owner's delegation for Sprint 6, 2026-10-28.
+- **Amended 2026-10-28 (gate G-S6-UPLOADROW).** No database row exists between the presign and the confirm. The `content.media` row is created at confirm, after the API has checked the object in `uploads`. An abandoned upload leaves only an object in `uploads`, which the cleanup job removes. Coordinator answer under the owner's delegation for Sprint 6, 2026-10-28.
+- **Amended 2026-10-28 (gate G-S6-MEDIAFAIL).** When a file fails processing while a story or tour already references it, the media row stays `processing`, because the trigger `media_not_retired_while_used` (migration 0008) forbids retiring a referenced row. The worker purges the row's objects and raises a distinct alert. The runbook `docs/ops/media.md` tells the merchant to replace the file. Publishing a story, and saving a published tour (gate G-S6-TOURSAVE), refuse a `processing` file with a named 422. A `failed` media status is deferred to a later ticket, because it needs a migration. Coordinator answer under the owner's delegation for Sprint 6, 2026-10-28.
+- **Amended 2026-10-28 (gate G-S6-CORS).** SP5's assumption that we set CORS for our origin does not hold. Neon Object Storage answers 404 `NoSuchBucket` to `PutBucketCors` and `DeleteBucketCors` on both buckets. `GetBucketCors` shows an existing wildcard rule (origins `*`; methods GET, PUT, POST, HEAD, DELETE), and a browser presigned PUT from localhost worked through it. Development accepts the wildcard, because presigned URLs gate writes. The owner raises the 404 with Neon. Locking CORS to the production origin is required before launch (E9.4). Coordinator answer under the owner's delegation for Sprint 6, 2026-10-28.
 
 ## Consequences
 - Public reads bypass the API, and versioned keys remove stale-cache problems, so the O39 delay for PDFs and images is the time it takes the page to point at the new key.
@@ -34,7 +38,7 @@ We will store uploads in Neon Object Storage, as backend.md D14 plans, with thes
 
 ## Assumptions
 - Neon Object Storage `public_read` objects are reachable over HTTPS from browsers without a signed URL, and honour long `Cache-Control` headers. SP5 must confirm both.
-- A presigned PUT works from a browser with CORS set for our origin.
+- A presigned PUT works from a browser with CORS set for our origin. Amended 2026-10-28: it works through the bucket's existing wildcard rule, and we cannot set CORS through the API (see G-S6-CORS).
 - Total storage stays in the low gigabytes in Phase 1 (11 tours, tens of stories). The free plan holds 5 GB per project. Paid storage was listed at about USD 0.023 per GB-month with no per-request fee (Neon plans page, read during the currency check).
 - PDFs are small enough for a single-request upload (under 5 GiB, the documented limit).
 
@@ -47,4 +51,8 @@ We will store uploads in Neon Object Storage, as backend.md D14 plans, with thes
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-28 amended (gate G-S6-S3CLIENT): the API uses the AWS SDK S3 client and presigner
+- 2026-10-28 amended (gate G-S6-UPLOADROW): the media row is created at confirm, not at presign
+- 2026-10-28 amended (gate G-S6-MEDIAFAIL): a referenced file that fails processing stays `processing`; publish and published-tour save refuse it
+- 2026-10-28 amended (gate G-S6-CORS): bucket CORS cannot be set through the API; development uses the existing wildcard, production origin lock before launch
 - 2026-10-29 note: the media library design (`docs/decisions/2026-10-29-media-library-design.md`) needs a `name` column on `content.media` and settles nothing here. The decision above stands
