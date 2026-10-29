@@ -99,9 +99,13 @@ export function useAerialMap({
           created.touchZoomRotate.disableRotation()
           created.keyboard.disableRotation()
         }
+        // Only a failure before the first load is a failed map: after it a tile error is not.
+        let loaded = false
+
         created.on('load', () => {
           if (disposed)
             return
+          loaded = true
           clearTimeout(timeout)
           if (withTerrain)
             created.setTerrain({ source: 'dem', exaggeration: 1.3 })
@@ -112,7 +116,7 @@ export function useAerialMap({
             setState('error')
         }, LOAD_TIMEOUT_MS)
         created.on('error', () => {
-          if (!created.isStyleLoaded() && !disposed)
+          if (!loaded && !created.isStyleLoaded() && !disposed)
             setState('error')
         })
         resizeObserver = new ResizeObserver(() => created.resize())

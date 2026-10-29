@@ -9,6 +9,8 @@ export class FakeMap {
   listeners = new Map<string, Listener[]>()
   canvas = document.createElement('canvas')
   loaded = false
+  /** Set by a test to say the style is not loaded, as MapLibre does while tiles are on the way. */
+  styleLoadedOverride: boolean | undefined
   zoom: number
   remove = vi.fn()
   resize = vi.fn()
@@ -41,7 +43,7 @@ export class FakeMap {
   }
 
   isStyleLoaded() {
-    return this.loaded
+    return this.styleLoadedOverride ?? this.loaded
   }
 
   getCanvas() {

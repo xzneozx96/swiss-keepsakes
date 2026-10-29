@@ -81,6 +81,19 @@ describe('[E4.6][G11] the shared aerial map', () => {
     expect(screen.getByTestId('state')).toHaveTextContent('loading')
   })
 
+  it('stays ready when a tile fails after the map has loaded', async () => {
+    render(<Probe />)
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    const map = FakeMap.instances[0]!
+
+    act(() => map.emit('load'))
+    // MapLibre reports the style as not loaded while tiles are still on the way.
+    map.styleLoadedOverride = false
+    act(() => map.emit('error'))
+
+    expect(screen.getByTestId('state')).toHaveTextContent('ready')
+  })
+
   it('removes the map when the screen goes away', async () => {
     const { unmount } = render(<Probe />)
     await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
