@@ -5,6 +5,7 @@ import type { ContentClient } from '@/features/content/api/client'
 import type { NotificationsClient } from '@/features/notifications/api/client'
 import type { OrdersClient } from '@/features/orders/api/client'
 import type { PartnersClient } from '@/features/partners/api/client'
+import type { PlacesClient } from '@/features/places/api/client'
 import type { ReportsClient } from '@/features/reports/api/client'
 import type { RequestsClient } from '@/features/requests/api/client'
 import type { ReviewsClient } from '@/features/reviews/api/client'
@@ -24,6 +25,7 @@ export interface DataClient {
   notifications: NotificationsClient
   orders: OrdersClient
   partners: PartnersClient
+  places: PlacesClient
   reports: ReportsClient
   requests: RequestsClient
   reviews: ReviewsClient
