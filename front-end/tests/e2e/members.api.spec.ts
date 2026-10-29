@@ -2,7 +2,7 @@ import type { Browser, Page } from '@playwright/test'
 import type { Language } from './invitation-flows'
 import { expect, test } from '@playwright/test'
 import { managerInvitationMail, newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
-import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, openLink, say, signedInSuperAdmin, tokenOf } from './invitation-flows'
+import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, openLink, say, signedInSuperAdmin, tokenOf, words } from './invitation-flows'
 
 // [E2.4][AC02] M22 and M01 against the real API on one origin, at 375x812, on Chromium in English (playwright.config.ts). The Owner
 // comes through the E2.3 path (the Super Admin creates the store, the N20 link, accept). The N18 link is the one
@@ -149,7 +149,8 @@ test('[E2.4][AC02] revoke kills the link and a new invitation of the same addres
   await openLink(late, revokedMail.link)
   await expect(late.getByRole('heading', { name: say(language, 'stores.refusal.revoked.manager.title') })).toBeVisible()
   await expect(late.getByText(say(language, 'stores.refusal.revoked.manager.text'))).toBeVisible()
-  await expect(late.getByRole('button', { name: say(language, 'stores.invite.signIn') })).toHaveCount(0)
+  // A link that can never work again offers no sign-in.
+  await expect(late.getByRole('button', { name: words[language].send })).toHaveCount(0)
 
   await invite(owner, language, resent)
   const first = await managerInvitationMail(resent)
@@ -167,5 +168,6 @@ test('[E2.4][AC02] revoke kills the link and a new invitation of the same addres
 
   await openLink(fresh, second.link)
   await expect(fresh.getByText(say(language, 'stores.invite.roleManager'))).toBeVisible()
-  await expect(fresh.getByRole('button', { name: say(language, 'stores.invite.signIn') })).toBeVisible()
+  // The sign-in form sits on the invitation itself.
+  await expect(fresh.getByRole('button', { name: words[language].send })).toBeVisible()
 })
