@@ -16,8 +16,10 @@ export type RetireLibraryMediaDeps<T> = MediaLibraryDeps<T> & {
 
 // The merchant's Retire. Refused, in this order, for a retired file, a processing file and a file any page uses: a
 // story (published or draft), a pin, a tour or a keepsake photo. The keepsake read comes from the catalog module and is
-// made inside the transaction that holds the row lock, so a keepsake cannot be saved with the file between the check
-// and the update. The database trigger media_not_retired_while_used covers content's own tables as the last guard.
+// made inside the transaction that holds the row lock. That narrows the window in which a keepsake is saved with the file
+// between the check and the update, but does not close it: a keepsake save takes no lock on the media row. Publishing
+// refuses a retired photo (catalog publish-product), so nothing goes live with it. The database trigger
+// media_not_retired_while_used covers content's own tables as the last guard.
 // The objects are deleted by the retire job after the grace period, which asks again before it deletes.
 export function makeRetireLibraryMedia<T>({ uow, media, library, keepsakes, jobs, audit, clock, graceHours }: RetireLibraryMediaDeps<T>) {
   return async (actor: Actor, storeId: string, mediaId: string, requestId: string | null): Promise<Result<MediaRecord>> => {

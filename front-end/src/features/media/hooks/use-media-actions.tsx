@@ -17,6 +17,9 @@ const PROBLEM_KEYS: Record<string, MessageKey> = {
   'not-found': 'media.problem.notFound',
   'media-already-retired': 'media.problem.retired',
   'validation-failed': 'media.problem.invalid',
+  'media-content-mismatch': 'media.problem.content',
+  'precondition-failed': 'media.problem.changed',
+  'media-not-ready': 'media.problem.notReady',
 }
 
 export const problemKey = (error: unknown): MessageKey => (error instanceof ApiProblem ? PROBLEM_KEYS[error.type] : undefined) ?? 'media.problem.generic'

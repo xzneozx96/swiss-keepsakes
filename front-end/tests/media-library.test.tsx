@@ -407,6 +407,22 @@ describe('[E4.11][AC51] replacing', () => {
 
     await waitFor(() => expect(toasts.danger).toHaveBeenCalledWith('Not replaced: Kapellbruecke-Sunrise.JPG. Try again.', { description: 'This file is retired and cannot change.' }))
   })
+
+  it.each([
+    [422, 'media-content-mismatch', 'The file is not the type its name says. Choose another file.'],
+    [412, 'precondition-failed', 'Someone replaced this file while you were sending yours. Open it again and check which version is live.'],
+    [409, 'media-not-ready', 'This file is still being processed. Wait until it is ready.'],
+  ] as const)('[E4.11][AC51] a replacement refused with %i %s says why, not the generic message', async (status, type, description) => {
+    answerWith({ other: call => (call.path === `${base}/uploads` ? Response.json(grant) : call.path.endsWith('/replace') ? problem(status, type) : new Response(null, { status: 200 })) })
+    renderMedia()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Kapellbruecke-Sunrise.JPG' }))
+    await userEvent.click(within(await sheet()).getByRole('button', { name: 'Replace' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Choose new file' }))
+    await userEvent.upload(screen.getByTestId('replace-input'), new File(['png'], 'new.png', { type: 'image/png' }))
+
+    await waitFor(() => expect(toasts.danger).toHaveBeenCalledWith('Not replaced: Kapellbruecke-Sunrise.JPG. Try again.', { description }))
+  })
 })
 
 describe('[E4.11][AC51] uploading', () => {

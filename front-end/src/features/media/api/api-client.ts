@@ -1,6 +1,6 @@
 import type { MediaClient } from './client'
 
-import { answer, keyed, loadClient, timeout } from '@/features/data-client/api-transport'
+import { answer, FILE_CALL_TIMEOUT_MS, keyed, loadClient, timeout, uploadTimeoutMs } from '@/features/data-client/api-transport'
 import { ApiProblem } from '@/features/data-client/errors'
 
 /** A grant, the PUT of the file to storage, and the key to confirm or replace with. */
@@ -11,7 +11,7 @@ async function putToStorage(storeId: string, file: File, contentType: string) {
     params: { path: { storeId } },
     body: { contentType, byteSize: file.size },
   }))
-  const put = await fetch(grant.url, { method: grant.method, headers: grant.headers, body: file, signal: timeout().signal })
+  const put = await fetch(grant.url, { method: grant.method, headers: grant.headers, body: file, signal: timeout(uploadTimeoutMs(file.size)).signal })
 
   if (!put.ok)
     throw new ApiProblem(503, 'storage-unavailable', 'The file could not be sent to storage')
@@ -42,7 +42,7 @@ export function createMediaClient(): MediaClient {
       const { client, uploadKey } = await putToStorage(storeId, file, contentType)
 
       return answer(client.POST('/api/store/{storeId}/media/confirm', {
-        ...keyed(crypto.randomUUID()),
+        ...keyed(crypto.randomUUID(), FILE_CALL_TIMEOUT_MS),
         params: { path: { storeId } },
         body: { uploadKey, fileName: file.name },
       }))
@@ -51,7 +51,7 @@ export function createMediaClient(): MediaClient {
       const { client, uploadKey } = await putToStorage(storeId, file, contentType)
 
       return answer(client.POST('/api/store/{storeId}/media/{mediaId}/replace', {
-        ...keyed(crypto.randomUUID()),
+        ...keyed(crypto.randomUUID(), FILE_CALL_TIMEOUT_MS),
         params: { path: { storeId, mediaId: id } },
         body: { uploadKey, fileName: file.name },
       }))

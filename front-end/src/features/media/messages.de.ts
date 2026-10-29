@@ -130,4 +130,7 @@ export const mediaDe: Record<keyof typeof mediaEn, string> = {
   'media.problem.notFound': 'Diese Datei gibt es nicht mehr.',
   'media.problem.retired': 'Diese Datei ist ausser Dienst und kann sich nicht ändern.',
   'media.problem.invalid': 'Prüfen Sie den Namen und versuchen Sie es erneut.',
+  'media.problem.content': 'Die Datei hat nicht den Typ, den ihr Name angibt. Wählen Sie eine andere Datei.',
+  'media.problem.changed': 'Jemand hat diese Datei ersetzt, während Sie Ihre gesendet haben. Öffnen Sie sie erneut und prüfen Sie, welche Version gilt.',
+  'media.problem.notReady': 'Diese Datei wird noch verarbeitet. Warten Sie, bis sie bereit ist.',
 }

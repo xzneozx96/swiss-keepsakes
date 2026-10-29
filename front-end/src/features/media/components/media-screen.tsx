@@ -14,7 +14,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { useMediaList } from '../api/queries'
 import { useMediaActions } from '../hooks/use-media-actions'
-import { retireCheck } from '../lib/rules'
+import { ACCEPT, retireCheck } from '../lib/rules'
 import { pageSizeOf, STATUS_FILTERS, USE_FILTERS } from '../lib/search-params'
 import { FileList, ListSkeleton } from './file-list'
 import { MediaGate } from './media-gate'
@@ -25,7 +25,7 @@ import { PhotoWall, WallSkeleton } from './photo-wall'
 const SEARCH_DELAY_MS = 250
 
 // The file dialog also offers HEIC, so a refusal can say why (the type check names it).
-const ACCEPT_UPLOAD = `image/jpeg,image/png,image/webp,audio/mpeg,audio/mp4,application/pdf,.m4a,.heic`
+const ACCEPT_UPLOAD = `${ACCEPT},.heic`
 
 function UploadButton({ isBusy, onFiles }: { isBusy: boolean, onFiles: (files: File[]) => void }) {
   const { t } = useLocale()

@@ -170,3 +170,25 @@ describe('[E4.11][AC51] GET /media/{id}/uses', () => {
     })
   })
 })
+
+describe('[E4.11][AC51] every library route checks who asks', () => {
+  const routes = [
+    ['GET', ''],
+    ['GET', `/${mediaId}/uses`],
+    ['PATCH', `/${mediaId}`],
+    ['POST', `/${mediaId}/replace`],
+    ['POST', `/${mediaId}/retire`],
+  ] as const
+  const bodies: Record<string, unknown> = { PATCH: { name: 'x' }, POST: { uploadKey: 'k' } }
+
+  it.each(routes)('[E4.11][AC51] %s %s: a guest and staff of another store are 403', async (method, path) => {
+    expect((await send(setup(), method, path, bodies[method], 'guest')).status).toBe(403)
+    expect((await send(setup(), method, path, bodies[method], 'ownerElsewhere')).status).toBe(403)
+  })
+
+  it.each(routes)('[E4.11][AC51] %s %s: a request with no session is 401', async (method, path) => {
+    const noSession = { 'Origin': shopOrigin, 'Content-Type': 'application/json', 'Idempotency-Key': crypto.randomUUID() }
+    const response = await setup().request(`${base}${path}`, { method, headers: noSession, body: method === 'GET' ? undefined : JSON.stringify(bodies[method]) })
+    expect(response.status).toBe(401)
+  })
+})

@@ -3,7 +3,9 @@ import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DataClientProvider, useCommand } from '@/features/data-client'
+import { uploadTimeoutMs } from '@/features/data-client/api-transport'
 import { ApiProblem } from '@/features/data-client/errors'
+import { createMediaClient } from '@/features/media/api/api-client'
 import { useMediaList, useMediaUses } from '@/features/media/api/queries'
 import { item, other, page, photoId, problem, setUpHarness, state, storeId, uses } from './media-harness'
 
@@ -89,5 +91,49 @@ describe('[E4.11][AC51] the media commands', () => {
 
     expect(error).toBeInstanceOf(ApiProblem)
     expect(error).toMatchObject({ status: 409, type: 'media-in-use' })
+  })
+})
+
+describe('[E4.11][AC51] sending a large file', () => {
+  const grant = { uploadKey: `${storeId}/k.pdf`, url: 'https://storage.test/uploads/k', method: 'PUT', headers: {}, expiresAt: '2026-10-30T10:15:00.000Z', kind: 'pdf' }
+  const mb = 1024 * 1024
+
+  function fileOf(size: number) {
+    const file = new File(['x'], 'big.pdf', { type: 'application/pdf' })
+
+    Object.defineProperty(file, 'size', { value: size })
+
+    return file
+  }
+
+  /** The time each call was given, in the order the calls were made: the grant, the file PUT, the confirm or replace. */
+  async function givenTimes(send: (client: ReturnType<typeof createMediaClient>) => Promise<unknown>) {
+    state.answer = call => call.path === `${base}/uploads` ? Response.json(grant) : call.path.endsWith('/confirm') || call.path.endsWith('/replace') ? Response.json(item()) : new Response(null, { status: 200 })
+    const spy = vi.spyOn(AbortSignal, 'timeout')
+
+    await send(createMediaClient())
+    const times = spy.mock.calls.map(([ms]) => ms)
+
+    spy.mockRestore()
+
+    return times
+  }
+
+  it('[E4.11][AC51] the file PUT of an upload is not cut at 15 s: it gets time by size, and the JSON calls keep their own', async () => {
+    const [grantTime, putTime, confirmTime] = await givenTimes(client => client.upload({ storeId, file: fileOf(50 * mb), contentType: 'application/pdf' }))
+
+    expect(grantTime).toBe(15_000)
+    expect(putTime).toBe(uploadTimeoutMs(50 * mb))
+    expect(putTime).toBeGreaterThanOrEqual(50 * 8 * 1000 / 2)
+    expect(confirmTime).toBeGreaterThan(15_000)
+  })
+
+  it('[E4.11][AC51] the file PUT of a replacement gets time by size, and a bigger file gets more', async () => {
+    const small = await givenTimes(client => client.replace({ storeId, id: photoId, file: fileOf(1 * mb), contentType: 'application/pdf' }))
+    const large = await givenTimes(client => client.replace({ storeId, id: photoId, file: fileOf(30 * mb), contentType: 'application/pdf' }))
+
+    expect(small[1]).toBeGreaterThan(15_000)
+    expect(large[1]).toBeGreaterThan(small[1]!)
+    expect(large[2]).toBeGreaterThan(15_000)
   })
 })

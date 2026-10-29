@@ -138,4 +138,7 @@ export const mediaEn = {
   'media.problem.notFound': 'This file no longer exists.',
   'media.problem.retired': 'This file is retired and cannot change.',
   'media.problem.invalid': 'Check the name and try again.',
+  'media.problem.content': 'The file is not the type its name says. Choose another file.',
+  'media.problem.changed': 'Someone replaced this file while you were sending yours. Open it again and check which version is live.',
+  'media.problem.notReady': 'This file is still being processed. Wait until it is ready.',
 } as const
