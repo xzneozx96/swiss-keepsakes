@@ -230,10 +230,14 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
   ])('shows its own state for %i %s', async (status, type, title, spent) => {
     sessionStorage.setItem('sk.invitationToken', token)
     answer = acceptAnswers(() => problem(status, type))
+    const danger = vi.spyOn(toast, 'danger').mockClear()
+
     renderAt('/store/onboarding', OnboardingScreen)
 
     expect(await screen.findByRole('heading', { name: title })).toBeInTheDocument()
     expect(heldInvitationToken()).toBe(spent ? undefined : token)
+    // The refusal screen is the feedback; the cache must not toast over it.
+    expect(danger).not.toHaveBeenCalled()
   })
 
   it('offers sign-out for a wrong account, and the invitation stays open with the embedded sign-in for the right one', async () => {
@@ -460,6 +464,8 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
       [`GET /api/store/${storeId}/onboarding`]: () => onboardingBody({ mayOpenForSale: true }),
       [`POST /api/store/${storeId}/open-for-sale`]: () => problem(409, 'onboarding-incomplete'),
     })
+    const danger = vi.spyOn(toast, 'danger').mockClear()
+
     renderAt('/store/onboarding', OnboardingScreen)
 
     await goToOpenStep()
@@ -469,6 +475,8 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
 
     expect(within(alert).getByText(/The store cannot open yet\. Still open: Payment account, A product or a tour, Policies\./)).toBeInTheDocument()
     await waitFor(() => expect(calls.filter(call => call.path === `/api/store/${storeId}/onboarding`)).toHaveLength(2))
+    // The inline warning is the feedback; the cache must not toast over it.
+    expect(danger).not.toHaveBeenCalled()
     await userEvent.click(await openButton())
     await waitFor(() => expect(calls.filter(call => call.method === 'POST')).toHaveLength(2))
 
