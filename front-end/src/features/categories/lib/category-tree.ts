@@ -60,3 +60,8 @@ export function matches(category: MerchantCategory, query: string) {
 export function refusalOf(category: MerchantCategory) {
   return category.childCount > 0 || category.useCount > 0 ? { children: category.childCount, uses: category.useCount } : null
 }
+
+/** The name the merchant reads first: English, or German when English is missing. */
+export function nameOf(category: MerchantCategory) {
+  return category.name.en ?? category.name.de ?? ''
+}

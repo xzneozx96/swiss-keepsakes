@@ -12,8 +12,7 @@ import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { useLevelDrag } from '../hooks/use-level-drag'
-import { displayName, OTHER } from '../lib/category-name'
-import { canMove, childrenOf, displayOrder, matches, refusalOf, siblingsOf } from '../lib/category-tree'
+import { canMove, childrenOf, displayOrder, matches, nameOf, refusalOf, siblingsOf } from '../lib/category-tree'
 import { DropSlot, Grip } from './category-drag'
 
 type ActionId = 'edit' | 'add-sub' | 'up' | 'down' | 'delete'
@@ -30,7 +29,7 @@ export function CategoryTable({ items, kind, actions, busy }: {
   actions: CategoryActions
   busy: boolean
 }) {
-  const { t, language } = useLocale()
+  const { t } = useLocale()
   const [query, setQuery] = useState('')
   const [folded, setFolded] = useState(false)
   const boxRef = useRef<HTMLDivElement>(null)
@@ -76,7 +75,7 @@ export function CategoryTable({ items, kind, actions, busy }: {
       { id: 'delete', label: t(refusalOf(category) ? 'categories.deleteInUse' : 'categories.delete'), icon: TrashIcon },
     ]
 
-    return <RowActions actions={list} label={t('table.rowActions', { name: displayName(category, language).primary })} onAction={id => onAction(category, id)} />
+    return <RowActions actions={list} label={t('table.rowActions', { name: nameOf(category) })} onAction={id => onAction(category, id)} />
   }
 
   const grip = (category: MerchantCategory) => {
@@ -89,7 +88,7 @@ export function CategoryTable({ items, kind, actions, busy }: {
       <span className="contents" data-level={category.parentId ? `in-${category.parentId}` : 'root'}>
         <Grip
           id={category.id}
-          label={t('categories.drag', { name: displayName(category, language).primary })}
+          label={t('categories.drag', { name: nameOf(category) })}
           props={drag.handleProps(index)}
           onPointerDown={() => {
             groupRef.current = category.parentId
@@ -99,8 +98,6 @@ export function CategoryTable({ items, kind, actions, busy }: {
       </span>
     )
   }
-
-  const otherName = (category: MerchantCategory) => category.name[OTHER[language]]
 
   return (
     <div className="flex flex-col gap-4">
@@ -128,11 +125,11 @@ export function CategoryTable({ items, kind, actions, busy }: {
                         {grip(category)}
                         {category.parentId && <span aria-hidden className="h-4 w-3 shrink-0 rounded-bl-md border-s-2 border-b-2 border-separator" />}
                         <span className="min-w-0">
-                          <span className="block [overflow-wrap:anywhere]">{displayName(category, language).primary}</span>
-                          {category.name[language] === null && (
+                          <span className="block [overflow-wrap:anywhere]">{nameOf(category)}</span>
+                          {category.name.en === null && (
                             <span className="flex items-center gap-1 text-xs font-normal text-warning-soft-foreground">
                               <StatusWarningIcon aria-hidden className="shrink-0" size={12} />
-                              {t(`categories.noName.${language}`)}
+                              {t('categories.noName.en')}
                             </span>
                           )}
                         </span>
@@ -140,12 +137,12 @@ export function CategoryTable({ items, kind, actions, busy }: {
                     ),
                   },
                   {
-                    id: 'other',
-                    header: t(`categories.col.other.${language}`),
+                    id: 'de',
+                    header: t('categories.col.de'),
                     headerClassName: 'w-[28%]',
-                    render: category => otherName(category) === null
+                    render: category => category.name.de === null
                       ? <StatusChip tone="warning">{t('categories.missing')}</StatusChip>
-                      : <span className="[overflow-wrap:anywhere]">{otherName(category)}</span>,
+                      : <span className="[overflow-wrap:anywhere]">{category.name.de}</span>,
                   },
                   {
                     id: 'used',

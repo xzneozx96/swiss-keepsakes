@@ -47,6 +47,14 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
   const [sheet, setSheet] = useState<CategorySheet>()
   const [notice, setNotice] = useState<MessageKey>()
   const [pending, setPending] = useState<{ parentId: string | null, ids: string[] }>()
+  const [seenKind, setSeenKind] = useState(kind)
+
+  // Another tab is another list: what was pending or reported for the first one does not carry over.
+  if (seenKind !== kind) {
+    setSeenKind(kind)
+    setNotice(undefined)
+    setPending(undefined)
+  }
 
   const failed = (error: Error, options?: { reorder?: boolean }) => {
     setPending(undefined)
@@ -55,7 +63,8 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
   }
 
   const send = (parentId: string | null, ids: string[] | undefined) => {
-    if (!ids)
+    // One write at a time: a step or a drop while one runs is ignored, and the list shows the server order again.
+    if (!ids || reorder.isPending || remove.isPending)
       return
     // A drop is one intent with the full target order, so sending it again under another key leaves the same list.
     const sent = reorder.submit({ storeId, kind, parentId, ids, idempotencyKey: crypto.randomUUID() }, {
