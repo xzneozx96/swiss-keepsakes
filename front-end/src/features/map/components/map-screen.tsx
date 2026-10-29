@@ -134,7 +134,8 @@ export function MapScreen() {
         )}
 
       {/* MapLibre makes its container `position: relative`, so it sits in a sized box. */}
-      <div className="absolute inset-0 bg-[#c9d3c6]">
+      {/* Inert in List view: the list covers the map, so its pins leave the tab order and the accessibility tree. */}
+      <div className="absolute inset-0 bg-[#c9d3c6]" inert={view === 'list'}>
         <div ref={containerRef} className="size-full" />
       </div>
       <PinMap

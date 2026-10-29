@@ -272,6 +272,28 @@ describe('[E4.6][AC93] the Map and List switch', () => {
     expect(rows).toHaveLength(5)
     rows.forEach(row => expect(row).not.toHaveAttribute('tabindex', '-1'))
   })
+
+  it('takes the map and its pins out of the tab order and the accessibility tree while the list covers them', async () => {
+    await loaded()
+    await screen.findByRole('button', { name: en['map.categories'] })
+    const pins = document.querySelectorAll('button[data-pin-return]')
+
+    expect(pins.length).toBe(5)
+    pins.forEach(button => expect(button.closest('[inert]')).toBeNull())
+    await userEvent.click(screen.getByRole('button', { name: en['map.view.list'] }))
+
+    const list = screen.getByRole('list')
+
+    // jsdom keeps inert elements in the tree, so check the attribute: every pin sits inside an inert box, no row does.
+    document.querySelectorAll('button[data-pin-return]').forEach((button) => {
+      if (list.contains(button))
+        expect(button.closest('[inert]')).toBeNull()
+      else
+        expect(button.closest('[inert]')).not.toBeNull()
+    })
+    await userEvent.click(screen.getByRole('button', { name: en['map.view.map'] }))
+    document.querySelectorAll('button[data-pin-return]').forEach(button => expect(button.closest('[inert]')).toBeNull())
+  })
 })
 
 describe('[E4.6][AC42] a pin opens its card', () => {
@@ -306,12 +328,25 @@ describe('[E4.6][AC42] a pin opens its card', () => {
     expect(pinButton('Organ Concert')).toHaveAccessibleName(/Event, Sat 7 Nov/)
   })
 
-  it('closes the card with the button and with Escape, and returns focus to the pin', async () => {
+  it('closes the card with the button and returns focus to the pin', async () => {
     await loaded()
     await screen.findByRole('button', { name: en['map.categories'] })
     await userEvent.click(pinButton('Hotel am See'))
     await screen.findByRole('heading', { level: 2, name: 'Hotel am See' })
     await userEvent.click(screen.getByRole('button', { name: en['map.card.close'] }))
+
+    expect(screen.queryByRole('heading', { level: 2, name: 'Hotel am See' })).toBeNull()
+    await waitFor(() => expect(pinButton('Hotel am See')).toHaveFocus())
+  })
+
+  it('closes the card with Escape from inside the row and returns focus to the pin', async () => {
+    await loaded()
+    await screen.findByRole('button', { name: en['map.categories'] })
+    await userEvent.click(pinButton('Hotel am See'))
+    const title = await screen.findByRole('heading', { level: 2, name: 'Hotel am See' })
+
+    await waitFor(() => expect(title).toHaveFocus())
+    await userEvent.keyboard('{Escape}')
 
     expect(screen.queryByRole('heading', { level: 2, name: 'Hotel am See' })).toBeNull()
     await waitFor(() => expect(pinButton('Hotel am See')).toHaveFocus())
