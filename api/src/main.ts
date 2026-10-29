@@ -9,6 +9,7 @@ import { createMediaRepository } from './modules/content/adapters/media-reposito
 import { createPinRepository } from './modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from './modules/content/adapters/public-repository.ts'
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
+import { createS3Storage, createUnconfiguredStorage } from './modules/content/adapters/s3-storage.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
 import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeRequestUpload, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
@@ -45,7 +46,7 @@ import { startJobs } from './platform/jobs/boss.ts'
 import { createJobQueue } from './platform/jobs/queue.ts'
 import { createLogger } from './platform/logger.ts'
 import { createSmtpTransport } from './platform/mail.ts'
-import { createS3Storage, createUnconfiguredStorage } from './platform/storage.ts'
+import { createS3Client } from './platform/storage.ts'
 
 // The shop name in the N01 subject, the sign-in code mail.
 const appName = brandName
@@ -100,7 +101,7 @@ async function main() {
   // Confirm sends a media job, so the queues exist before the first send, for every role.
   await createMediaQueues(jobs.boss)
   // R5: with no AWS_* the service starts, and the media routes answer 503 storage-unavailable.
-  const storage = config.storage ? createS3Storage(config.storage) : createUnconfiguredStorage()
+  const storage = config.storage ? createS3Storage(createS3Client(config.storage), config.storage.endpoint) : createUnconfiguredStorage()
   if (config.ROLE !== 'api') {
     if (!config.storage)
       logger.warn({ event: 'media.storage-unset' }, 'AWS_* is not set: every upload and media job fails until it is')
