@@ -12,28 +12,36 @@ const sights = make(1, null, 'Sights', 'Sehenswürdigkeiten', { childCount: 2, u
 const town = make(2, 1, 'Old Town', 'Altstadt')
 const views = make(3, 1, 'Viewpoints', null, { childCount: 0, useCount: 3 })
 const food = make(4, null, null, 'Essen')
-const items = [sights, food, town, views]
+const museums = make(5, null, 'Museums', 'Museen', { childCount: 1, useCount: 0 })
+const pond = make(6, 5, 'Pond', null)
+const items = [sights, food, museums, town, views, pond]
 
 describe('[E4.18] category tree helpers', () => {
   it('lists each parent followed by its sub-categories', () => {
-    expect(displayOrder(items).map(c => c.id)).toEqual([sights.id, town.id, views.id, food.id])
+    expect(displayOrder(items).map(c => c.id)).toEqual([sights.id, town.id, views.id, food.id, museums.id, pond.id])
   })
 
   it('returns the full sibling order after a move, and nothing when it does not change', () => {
-    expect(reorderedIds(items, null, 0, 1)).toEqual([food.id, sights.id])
+    expect(reorderedIds(items, null, 0, 1)).toEqual([food.id, sights.id, museums.id])
     expect(reorderedIds(items, sights.id, 1, 0)).toEqual([views.id, town.id])
     expect(reorderedIds(items, null, 1, 1)).toBeUndefined()
-    expect(reorderedIds(items, null, 0, 2)).toBeUndefined()
+    expect(reorderedIds(items, null, 0, 3)).toBeUndefined()
+    // A group of one has nowhere to go.
+    expect(reorderedIds(items, museums.id, 0, 1)).toBeUndefined()
   })
 
   it('applies an order to one group only', () => {
-    expect(withOrder(items, sights.id, [views.id, town.id]).map(c => c.id)).toEqual([sights.id, food.id, views.id, town.id])
+    expect(withOrder(items, sights.id, [views.id, town.id]).map(c => c.id)).toEqual([sights.id, food.id, museums.id, views.id, town.id, pond.id])
+    // The other group keeps its parent and its place.
+    expect(withOrder(items, sights.id, [views.id, town.id]).find(c => c.id === pond.id)?.parentId).toBe(museums.id)
   })
 
   it('stops moves at the ends of a sibling group', () => {
     expect(canMove(items, sights, -1)).toBe(false)
     expect(canMove(items, sights, 1)).toBe(true)
     expect(canMove(items, views, 1)).toBe(false)
+    expect(canMove(items, pond, -1)).toBe(false)
+    expect(canMove(items, pond, 1)).toBe(false)
   })
 
   it('searches both languages, blank matches all', () => {
