@@ -1,5 +1,6 @@
 import type { Pin, PinListItem } from '@sk/api-contract'
 import type { ListFilters } from '@/features/places/lib/list'
+import { pinPublishBodySchema, pinWriteBodySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 
 import { bodyOf, emptyDate, emptyForm, formOf, isDirty, publishBodyOf, publishGaps, suggestSlug, validate } from '@/features/places/lib/form'
@@ -189,5 +190,37 @@ describe('[E4.2][AC86] the list filters', () => {
     expect(ids({ query: 'nothing' })).toEqual([])
     expect(isFiltered(noFilters)).toBe(false)
     expect(isFiltered({ ...noFilters, query: 'x' })).toBe(true)
+  })
+})
+
+describe('[E4.2][AC68] what the editor sends is what the API contract accepts', () => {
+  it('parses the write of an empty form, a full form and a live pin with the contract\'s strict schema', () => {
+    const full = {
+      ...emptyForm(),
+      titleEn: 'Chapel Bridge',
+      titleDe: 'Kapellbrücke',
+      tipEn: 'Walk it at dawn',
+      localTipDe: 'Früh kommen',
+      slug: 'chapel-bridge',
+      latitude: 47.05,
+      longitude: 8.3,
+      address: 'Kapellbrücke, Luzern',
+      hours: [{ key: 'h', day: 1, opens: '09:00', closes: '24:00' }],
+      dates: [{ ...emptyDate(), firstDay: '2026-11-14', startTime: '22:00' }, { ...emptyDate(), kind: 'range' as const, firstDay: '2026-11-09', lastDay: '2026-11-14' }],
+      categoryIds: ['0198a000-0000-7000-8000-000000000020'],
+      interests: ['history-culture', 'local-activities'],
+      serviceType: 'water' as const,
+      foodKind: 'cafe-bakery' as const,
+      mustVisit: true,
+      coverMediaId: '0198a000-0000-7000-8000-000000000040',
+      coverAltEn: 'The bridge',
+      photos: [{ mediaId: '0198a000-0000-7000-8000-000000000041', altEn: 'Close', altDe: '' }],
+      outboundUrl: 'https://hotel.example/stay',
+    }
+
+    expect(() => pinWriteBodySchema.parse(bodyOf(emptyForm()))).not.toThrow()
+    expect(() => pinWriteBodySchema.parse(bodyOf(full))).not.toThrow()
+    expect(() => pinWriteBodySchema.parse(bodyOf({ ...formOf(live), titleDe: 'Kapellbrücke', slug: 'renamed' }, live))).not.toThrow()
+    expect(() => pinPublishBodySchema.parse(publishBodyOf({ ...formOf(live), titleDe: 'Kapellbrücke' }, live))).not.toThrow()
   })
 })
