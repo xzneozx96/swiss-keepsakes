@@ -15,6 +15,7 @@ import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { startJobs } from '../../src/platform/jobs/boss.ts'
 import { createJobQueue } from '../../src/platform/jobs/queue.ts'
 import { createManualClock } from '../support/manual-clock.ts'
+import { createMemoryMailLog } from '../support/memory-mail-log.ts'
 import { createMemoryMailer, quotedAddress, smtpError } from '../support/memory-mailer.ts'
 import { count, openTestDatabase, silentLogger } from './support.ts'
 
@@ -51,13 +52,14 @@ async function setup(retry = { retryLimit: 2, retryDelay: 0, retryBackoff: false
   const uow = createUnitOfWork(db)
   const sentMail = createSentMailRepository()
   const memory = createMemoryMailer()
+  const mailLog = createMemoryMailLog()
   const alerts: MailFailure[] = []
   const queueMail = makeQueueMail({ sentMail, jobs: createJobQueue(jobs.boss), clock, queue: queues.send })
-  const sendMail = makeSendMail({ uow, sentMail, mailer: memory.mailer, invitationLink, clock })
+  const sendMail = makeSendMail({ uow, sentMail, mailer: memory.mailer, invitationLink, clock, log: mailLog.log })
   const failMail = makeFailMail({ uow, sentMail, clock, alert: failure => alerts.push(failure), scrub: createMailJobScrubber(queues) })
   const startWorkers = () => startMailWorkers(jobs.boss, { sendMail, failMail }, queues)
   const row = async (mailId: string) => (await pool.query('select status, template, language, recipient, attempts, last_error, smtp_response, queued_at, sent_at, failed_at from notifications.sent_mail where id = $1', [mailId])).rows[0]
-  return { queues, clock, uow, memory, alerts, queueMail, sendMail, startWorkers, row }
+  return { queues, clock, uow, memory, mailLog, alerts, queueMail, sendMail, startWorkers, row }
 }
 
 // A Mailer whose sends wait until `release` is called, so a test can hold an attempt in the middle of its send.
@@ -114,11 +116,12 @@ describe('[E2.8] the mail job is created in the business transaction', () => {
 
 describe('[E2.8] the worker sends queued mail', () => {
   it('[E2.8] sends the mail once through the Mailer with the mail id, and records it sent', async () => {
-    const { uow, queueMail, memory, startWorkers, row } = await setup()
+    const { uow, queueMail, memory, mailLog, startWorkers, row } = await setup()
     await startWorkers()
 
     const mailId = await uow.run(tx => queueMail(tx, n18))
     await until(async () => (await row(mailId))?.status === 'sent')
+    expect(mailLog.sent).toEqual([{ mailId, template: 'N18', attempt: 1, response: `250 2.0.0 OK queued as ${mailId}` }])
 
     expect(memory.sent).toEqual([expect.objectContaining({ id: mailId, to: 'lena.meier@example.ch', subject: 'Ngoc Tran invited you to Zürich Andenken' })])
     expect(await row(mailId)).toMatchObject({ attempts: 1, last_error: null, smtp_response: `250 2.0.0 OK queued as ${mailId}`, sent_at: new Date('2026-10-20T08:00:00Z') })
@@ -152,7 +155,7 @@ describe('[E2.8] the worker sends queued mail', () => {
   it('[E2.8] two runs of the same job at once send it once, because the second waits on the row lock', async () => {
     const { uow, queueMail, clock, row } = await setup()
     const held = createHeldMailer()
-    const sendMail = makeSendMail({ uow, sentMail: createSentMailRepository(), mailer: held.mailer, invitationLink, clock })
+    const sendMail = makeSendMail({ uow, sentMail: createSentMailRepository(), mailer: held.mailer, invitationLink, clock, log: createMemoryMailLog().log })
     const mailId = await uow.run(tx => queueMail(tx, n18))
 
     const first = sendMail({ ...n18, mailId })
@@ -180,12 +183,14 @@ describe('[E2.8] the worker sends queued mail', () => {
 
 describe('[E2.8] a failing send retries, then alerts', () => {
   it('[E2.8] every attempt fails, pg-boss retries with the same mail id, then dead-letters it, the row turns failed and one alert is raised', async () => {
-    const { queues, uow, queueMail, memory, alerts, startWorkers, row } = await setup()
+    const { queues, uow, queueMail, memory, mailLog, alerts, startWorkers, row } = await setup()
     memory.failWith(smtpError('ETIMEDOUT'))
     await startWorkers()
 
     const mailId = await uow.run(tx => queueMail(tx, n18))
     await until(() => alerts.length > 0)
+    expect(mailLog.retries.map(({ attempt, error }) => ({ attempt, error }))).toEqual([{ attempt: 1, error: 'ETIMEDOUT' }, { attempt: 2, error: 'ETIMEDOUT' }, { attempt: 3, error: 'ETIMEDOUT' }])
+    expect(mailLog.sent).toEqual([])
 
     expect(memory.attempts.map(mail => mail.id)).toEqual([mailId, mailId, mailId])
     expect(memory.sent).toEqual([])

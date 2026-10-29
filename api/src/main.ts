@@ -26,6 +26,7 @@ import { invitationScreens, makeAcceptInvitation, makeCreateStore, makeGetOnboar
 import { createMailJobScrubber } from './modules/notifications/adapters/job-scrubber.ts'
 import { createMailQueues, mailQueues, startMailWorkers } from './modules/notifications/adapters/jobs.ts'
 import { createLogAlert } from './modules/notifications/adapters/mail-alert.ts'
+import { createMailLog } from './modules/notifications/adapters/mail-log.ts'
 import { createSentMailRepository } from './modules/notifications/adapters/sent-mail-repository.ts'
 import { createSmtpMailer, createUnconfiguredMailer } from './modules/notifications/adapters/smtp-mailer.ts'
 import { makeFailMail } from './modules/notifications/application/fail-mail.ts'
@@ -122,6 +123,7 @@ async function main() {
         mailer,
         invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl: config.APP_URL, screens: invitationScreens }),
         clock: systemClock,
+        log: createMailLog(logger),
       }),
       failMail: makeFailMail({ uow, sentMail, clock: systemClock, alert: createLogAlert(logger), scrub: createMailJobScrubber() }),
     })

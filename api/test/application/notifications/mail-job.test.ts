@@ -7,6 +7,7 @@ import { makeQueueMail } from '../../../src/modules/notifications/application/qu
 import { makeSendMail } from '../../../src/modules/notifications/application/send-mail.ts'
 import { invitationRevoked } from '../../../src/modules/notifications/ports.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
+import { createMemoryMailLog } from '../../support/memory-mail-log.ts'
 import { createMemoryMailer, quotedAddress, smtpError } from '../../support/memory-mailer.ts'
 
 // What pg-boss stores as a failed job's output and copies to its dead-letter job: serialize-error (pg-boss's
@@ -72,13 +73,16 @@ function createFakes(clock: Clock) {
     async recordSent(tx, mailId, { at, response }) {
       inTx(tx)
       const row = rows.get(mailId)
-      if (row?.status === 'queued')
-        Object.assign(row, { status: 'sent', attempts: row.attempts + 1, sentAt: at, response })
+      if (row?.status !== 'queued')
+        return undefined
+      Object.assign(row, { status: 'sent', attempts: row.attempts + 1, sentAt: at, response })
+      return row.attempts
     },
     async recordAttemptFailed(tx, mailId, error) {
       inTx(tx)
       const row = rows.get(mailId)!
       Object.assign(row, { attempts: row.attempts + 1, lastError: error })
+      return row.attempts
     },
     async recordCancelled(tx, mailId, at) {
       inTx(tx)
@@ -126,15 +130,16 @@ function setup() {
   fakes.invitations.set(n20.params.invitationId, n20Link)
   fakes.expiries.set(n20.params.invitationId, new Date(n20.params.expiresOn))
   const memory = createMemoryMailer()
+  const mailLog = createMemoryMailLog()
   const queueMail = makeQueueMail({ sentMail: fakes.sentMail, jobs: fakes.jobQueue, clock, queue: 'mail' })
-  const sendMail = makeSendMail({ uow: fakes.uow, sentMail: fakes.sentMail, mailer: memory.mailer, invitationLink: fakes.invitationLink, clock })
+  const sendMail = makeSendMail({ uow: fakes.uow, sentMail: fakes.sentMail, mailer: memory.mailer, invitationLink: fakes.invitationLink, clock, log: mailLog.log })
   const failMail = makeFailMail({ uow: fakes.uow, sentMail: fakes.sentMail, clock, alert: failure => fakes.alerts.push(failure), scrub: { scrubSecrets: async () => {} } })
   // A business command that queues one mail in its own transaction, then the job pg-boss would hand over.
   const queued = async <R extends MailRequest>(request: R) => {
     const mailId = await fakes.uow.run(tx => queueMail(tx, request))
     return { mailId, job: { ...request, mailId } }
   }
-  return { ...fakes, clock, memory, sendMail, failMail, queued }
+  return { ...fakes, clock, memory, mailLog, sendMail, failMail, queued }
 }
 
 describe('[E2.8] queueing mail in the business transaction', () => {
@@ -175,6 +180,62 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
     expect(memory.sent[0]?.text).toContain(n20Link)
     expect(memory.sent[0]?.html).toContain(`href="${n20Link}"`)
     expect(rows.get(mailId)).toMatchObject({ status: 'sent', attempts: 1, response: `250 2.0.0 OK queued as ${mailId}`, sentAt: new Date('2026-10-20T08:00:02Z') })
+  })
+
+  it('[E2.8] a sent mail is reported once with the mail id, template, attempt and SMTP reply, and the report holds no address or link', async () => {
+    const { memory, mailLog, sendMail, queued } = setup()
+    const { mailId, job } = await queued(n20)
+
+    await sendMail(job)
+
+    expect(mailLog.sent).toEqual([{ mailId, template: 'N20', attempt: 1, response: `250 2.0.0 OK queued as ${mailId}` }])
+    expect(mailLog.retries).toEqual([])
+    const reported = JSON.stringify(mailLog.sent)
+    expect(reported).not.toContain(n20.to)
+    expect(reported).not.toContain(memory.sent[0]!.subject)
+    expect(reported).not.toMatch(/https:|tok_/)
+  })
+
+  it('[E2.8] a job that runs again after its mail was sent reports nothing more', async () => {
+    const { mailLog, sendMail, queued } = setup()
+    const { job } = await queued(n20)
+    await sendMail(job)
+
+    await sendMail(job)
+
+    expect(mailLog.sent).toHaveLength(1)
+  })
+
+  it('[E2.8] a failed attempt that will be retried is reported with its attempt number and error code only, then the retry is reported sent as attempt 2', async () => {
+    const { mailLog, memory, sendMail, queued } = setup()
+    const { mailId, job } = await queued(n20)
+    memory.failWith(smtpError('EENVELOPE', 451))
+
+    await expect(sendMail(job)).rejects.toThrow()
+
+    expect(mailLog.retries).toEqual([{ mailId, template: 'N20', attempt: 1, error: 'EENVELOPE 451' }])
+    expect(mailLog.sent).toEqual([])
+    expect(JSON.stringify(mailLog.retries)).not.toMatch(/@example\.ch|Recipient address rejected|RCPT TO/)
+
+    memory.failWith(undefined)
+    await sendMail(job)
+
+    expect(mailLog.sent).toEqual([expect.objectContaining({ mailId, attempt: 2 })])
+  })
+
+  it.each([
+    ['a permanent refusal', smtpError('EENVELOPE', 550)],
+    ['an unreadable job', undefined],
+  ])('[E2.8] %s is not reported as a retry, because mail.failed reports it', async (_name, error) => {
+    const { mailLog, memory, sendMail, queued } = setup()
+    const { job } = await queued(n20)
+    if (error)
+      memory.failWith(error)
+
+    await expect(sendMail(error ? job : { ...job, params: { ...job.params, store: '' } })).rejects.toMatchObject({ permanent: true })
+
+    expect(mailLog.retries).toEqual([])
+    expect(mailLog.sent).toEqual([])
   })
 
   it('[E2.8] the job stores the invitation id and no link, and the link is built when the mail is sent, inside the attempt\'s transaction', async () => {

@@ -19,15 +19,19 @@ export function createSentMailRepository(): SentMailRepository<Tx> {
     },
 
     async recordSent(tx, mailId, { at, response }) {
-      await tx.update(sentMail)
+      const [row] = await tx.update(sentMail)
         .set({ status: 'sent', attempts: sql`${sentMail.attempts} + 1`, sentAt: at, smtpResponse: response })
         .where(and(eq(sentMail.id, mailId), eq(sentMail.status, 'queued')))
+        .returning({ attempts: sentMail.attempts })
+      return row?.attempts
     },
 
     async recordAttemptFailed(tx, mailId, error) {
-      await tx.update(sentMail)
+      const [row] = await tx.update(sentMail)
         .set({ attempts: sql`${sentMail.attempts} + 1`, lastError: error })
         .where(eq(sentMail.id, mailId))
+        .returning({ attempts: sentMail.attempts })
+      return row?.attempts
     },
 
     async recordCancelled(tx, mailId, at) {

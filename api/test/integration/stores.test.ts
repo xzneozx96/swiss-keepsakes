@@ -15,6 +15,7 @@ import { registerIdentityRoutes } from '../../src/modules/identity/adapters/rout
 import { createUserDirectory } from '../../src/modules/identity/adapters/user-directory.ts'
 import { invitationScreens, makeGrantSuperAdmin, makeInvitationLink, makeListMyStores, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
+import { createMailLog } from '../../src/modules/notifications/adapters/mail-log.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from '../../src/modules/notifications/application/send-mail.ts'
@@ -106,6 +107,7 @@ async function setup(options: SetupOptions = {}) {
     mailer: memory.mailer,
     invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl, screens: invitationScreens }),
     clock: systemClock,
+    log: createMailLog(silentLogger),
   })
 
   async function call(path: string, init: { method?: string, headers?: Record<string, string>, body?: object, key?: string | null } = {}) {

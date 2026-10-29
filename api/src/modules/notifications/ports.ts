@@ -83,9 +83,10 @@ export interface SentMailRepository<T> {
   queue: (tx: T, mail: QueuedMail) => Promise<string>
   // Locks the mail's row until the transaction ends and returns its status.
   lockForSend: (tx: T, mailId: string) => Promise<MailStatus | undefined>
-  // Records a queued mail as sent. A mail that is no longer queued keeps its status.
-  recordSent: (tx: T, mailId: string, sent: { at: Date, response: string }) => Promise<void>
-  recordAttemptFailed: (tx: T, mailId: string, error: string) => Promise<void>
+  // Records a queued mail as sent. A mail that is no longer queued keeps its status. Both record methods
+  // return the attempt number this call counted.
+  recordSent: (tx: T, mailId: string, sent: { at: Date, response: string }) => Promise<number | undefined>
+  recordAttemptFailed: (tx: T, mailId: string, error: string) => Promise<number | undefined>
   // Marks a queued mail failed and returns it, or returns undefined when it is no longer queued.
   markFailed: (tx: T, mailId: string, at: Date) => Promise<MailFailure | undefined>
   // Closes a queued mail that must not go out because its invitation was revoked. It becomes `failed` with
@@ -97,3 +98,10 @@ export interface SentMailRepository<T> {
 // Raised once for a mail that will not be retried: after its last attempt, or at once for a failure that a
 // retry cannot fix.
 export type MailAlert = (failure: MailFailure) => void
+
+// What the mail job tells the operator about each attempt (docs/ops/mail.md). Never the address, the body, the
+// code or a link: `error` is a MailAttemptError message, the error code and the SMTP reply code only.
+export interface MailLog {
+  sent: (attempt: { mailId: string, template: MailTemplate, attempt: number | undefined, response: string }) => void
+  retry: (attempt: { mailId: string, template: MailTemplate, attempt: number | undefined, error: string }) => void
+}

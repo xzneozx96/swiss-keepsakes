@@ -11,6 +11,7 @@ import { createPlatformAdminRepository } from '../../src/modules/identity/adapte
 import { createUserDirectory } from '../../src/modules/identity/adapters/user-directory.ts'
 import { invitationScreens, makeGrantSuperAdmin, makeInvitationLink, newInvitationToken } from '../../src/modules/identity/index.ts'
 import { mailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
+import { createMailLog } from '../../src/modules/notifications/adapters/mail-log.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { createSmtpMailer } from '../../src/modules/notifications/adapters/smtp-mailer.ts'
 import { renderMail } from '../../src/modules/notifications/application/render-mail.ts'
@@ -170,6 +171,7 @@ async function main() {
       // The same wiring as the worker's in src/main.ts.
       invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl: origin, screens: invitationScreens }),
       clock: systemClock,
+      log: createMailLog(createLogger('warn')),
     })
     return sendMail(job).then(() => messages[0])
   }
