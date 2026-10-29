@@ -15,6 +15,7 @@ export {
 } from './categories.ts'
 export {
   BODY_LINK_PROTOCOLS,
+  BODY_LIST_LEVELS,
   BODY_MARK_TYPES,
   BODY_NODE_TYPES,
   type LocalizedText,

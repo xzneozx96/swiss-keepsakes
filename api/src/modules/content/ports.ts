@@ -237,8 +237,6 @@ export interface CategoryRepository<T> {
   list: (tx: T, storeId: string, kind: CategoryKind) => Promise<CategoryRow[]>
   // A per store and kind advisory lock for the transaction. Every write takes it first, so two writes to one list queue up.
   lockList: (tx: T, storeId: string, kind: CategoryKind) => Promise<void>
-  // An id of another store has no row.
-  find: (tx: T, storeId: string, kind: CategoryKind, id: string) => Promise<CategoryRow | undefined>
   slugsTaken: (tx: T, storeId: string, kind: CategoryKind) => Promise<Set<string>>
   insert: (tx: T, storeId: string, kind: CategoryKind, input: { name: Localized, slug: string, parentId: string | null, position: number }, at: Date) => Promise<CategoryRow>
   update: (tx: T, storeId: string, kind: CategoryKind, id: string, changes: { name?: Localized, parentId?: string | null, position?: number }, at: Date) => Promise<CategoryRow>

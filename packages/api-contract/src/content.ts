@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { noNul } from './text.js'
 
 // Mirrors packages/domain/src/content (the contract imports only zod). Request bodies are strict, so a price, a
 // type or any other unknown key is a 400. A save is a PATCH: a left-out field stays, null clears, a list replaces.
@@ -8,14 +9,6 @@ const stayTag = z.enum(['short_stay', 'multi_day', 'both'])
 const interests = z.array(z.enum(['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes'])).max(4)
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const time = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, 'A time as HH:MM')
-// Postgres text and jsonb refuse U+0000, so it is a 400 here and not a 500 there. A lone UTF-16 surrogate cannot be
-// written as UTF-8 either, so it is refused with it (String.prototype.isWellFormed needs lib ES2024).
-const loneSurrogate = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/
-function noNul<T extends z.ZodString>(schema: T): T {
-  return schema
-    .refine(value => !value.includes('\u0000'), 'Text may not contain a NUL character')
-    .refine(value => !loneSurrogate.test(value), 'Text may not contain an unpaired surrogate') as T
-}
 const text = (max: number) => noNul(z.string().max(max))
 const closingTime = z.string().regex(/^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/, 'A time as HH:MM, or 24:00')
 
@@ -169,26 +162,26 @@ const bodyHeadingSchema = z.strictObject({
 const bodyBlockquoteSchema = z.strictObject({ type: z.literal('blockquote'), content: z.array(bodyParagraphSchema) })
 
 // A list item holds paragraphs and nested lists; `levels` more list levels may open inside it. A nested list is
-// one schema with a two-value type, so the unrolled schema grows with the levels and not with their square.
-type BodyParagraph = z.infer<typeof bodyParagraphSchema>
-interface BodyListItem { type: 'listItem', content: (BodyParagraph | BodyNestedList)[] }
-interface BodyNestedList { type: 'bulletList' | 'orderedList', content: BodyListItem[] }
+// one schema with a two-value type, so the unrolled schema grows with the levels and not with their square. The
+// write schema here and the public read in public.ts share this helper and BODY_LIST_LEVELS.
+interface ListItem<P> { type: 'listItem', content: (P | NestedList<P>)[] }
+interface NestedList<P> { type: 'bulletList' | 'orderedList', content: ListItem<P>[] }
 const listTypes = z.enum(['bulletList', 'orderedList'])
-function bodyListItem(levels: number): z.ZodType<BodyListItem> {
+export function listItemSchema<P extends z.ZodType>(paragraph: P, levels: number): z.ZodType<ListItem<z.infer<P>>> {
   return z.strictObject({
     type: z.literal('listItem'),
     content: z.array(levels > 0
-      ? z.discriminatedUnion('type', [bodyParagraphSchema, z.strictObject({ type: listTypes, content: z.array(bodyListItem(levels - 1)) })])
-      : bodyParagraphSchema),
-  })
+      ? z.discriminatedUnion('type', [paragraph as unknown as z.ZodObject, z.strictObject({ type: listTypes, content: z.array(listItemSchema(paragraph, levels - 1)) })])
+      : paragraph),
+  }) as unknown as z.ZodType<ListItem<z.infer<P>>>
 }
 
 // Depth 10 allows lists at depths 2, 4, 6, 8 and 10, but only three list levels can hold text (list 2, 4, 6, then item,
 // paragraph and text at 7, 8, 9; a fourth list level leaves room for an empty paragraph only). Two more nested levels
 // let a too-deep body reach the depth check.
-const listLevels = 5
-const bodyBulletListSchema = z.strictObject({ type: z.literal('bulletList'), content: z.array(bodyListItem(listLevels)) })
-const bodyOrderedListSchema = z.strictObject({ type: z.literal('orderedList'), content: z.array(bodyListItem(listLevels)) })
+export const BODY_LIST_LEVELS = 5
+const bodyBulletListSchema = z.strictObject({ type: z.literal('bulletList'), content: z.array(listItemSchema(bodyParagraphSchema, BODY_LIST_LEVELS)) })
+const bodyOrderedListSchema = z.strictObject({ type: z.literal('orderedList'), content: z.array(listItemSchema(bodyParagraphSchema, BODY_LIST_LEVELS)) })
 
 const bodyImageSchema = z.strictObject({
   type: z.literal('image'),

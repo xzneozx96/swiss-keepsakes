@@ -98,7 +98,7 @@ export function registerCategoryRoutes(app: OpenAPIHono<AppEnv>, useCases: Categ
     const { kind, categoryId } = c.req.valid('param')
     const result = await useCases.deleteCategory(c.get('actor'), c.get('store').storeId, kind, categoryId, c.get('requestId'))
     if (!result.ok)
-      return problem(c, failureProblem(result))
+      return problem(c, failureProblem(result.reason === 'in-use' ? { reason: 'category-in-use' } : result))
     return c.body(null, 204)
   })
 }

@@ -1,4 +1,5 @@
 import {
+  BODY_LIST_LEVELS,
   languageNoticeSchema,
   nextDateSchema,
   publicCategoryListSchema,
@@ -14,6 +15,7 @@ import {
   publicTourCardSchema,
   publicTourListSchema,
   publicTourSchema,
+  storyBodySchema,
 } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
@@ -63,5 +65,12 @@ describe('[E2.12] public read schemas', () => {
   it('[E2.12][AC88] the map item has exactly the ADR-006 fields', () => {
     const expected = ['id', 'slug', 'latitude', 'longitude', 'title', 'language', 'categoryIds', 'stayTag', 'interests', 'nextDate', 'hasMainStory', 'mainStorySlug', 'photoKey']
     expect(Object.keys(publicMapItemSchema.shape).sort()).toEqual([...expected].sort())
+  })
+
+  it('[E2.13] the public body unrolls lists as deep as the write body', () => {
+    const listNodes = (schema: z.ZodType) => JSON.stringify(z.toJSONSchema(schema, { io: 'input', unrepresentable: 'any' })).split('"bulletList"').length - 1
+    expect(listNodes(publicStoryBodySchema)).toBe(listNodes(storyBodySchema))
+    // The top bulletList plus one nested list type per level in each of the two top lists
+    expect(listNodes(storyBodySchema)).toBe(1 + 2 * BODY_LIST_LEVELS)
   })
 })
