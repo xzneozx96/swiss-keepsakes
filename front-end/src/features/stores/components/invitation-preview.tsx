@@ -1,6 +1,6 @@
 import type { InviteRole } from '../lib/refusals'
 
-import { Button, Skeleton } from '@heroui/react'
+import { Button } from '@heroui/react'
 
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
@@ -9,6 +9,7 @@ import { useInvitationPreview } from '../api/queries'
 import { ProblemNotice } from './problem-notice'
 import { RefusalView } from './refusal-view'
 import { ScreenFrame } from './screen-frame'
+import { InvitationCardSkeleton } from './store-skeletons'
 
 /**
  * What the invitation is for, shown before sign-in from the public preview route (the token goes in the body, and
@@ -46,7 +47,7 @@ export function InvitationPreview({ token, audience, returnTo, actionLabel, sign
     return (
       <ScreenFrame title={title}>
         <p aria-live="polite" className="text-sm text-muted" role="status">{t('stores.invite.checking')}</p>
-        <Skeleton className="h-32 w-full rounded-3xl" />
+        <InvitationCardSkeleton />
       </ScreenFrame>
     )
   }

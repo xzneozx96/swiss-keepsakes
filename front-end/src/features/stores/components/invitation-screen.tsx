@@ -1,4 +1,3 @@
-import { Skeleton } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
@@ -14,6 +13,7 @@ import { DisplayNameForm } from './display-name-form'
 import { InvitationPreview } from './invitation-preview'
 import { RefusalView } from './refusal-view'
 import { ScreenFrame } from './screen-frame'
+import { InvitationCardSkeleton } from './store-skeletons'
 
 /**
  * M01 (UX 4.12, AC02): the invited Store Manager sees the store, the inviter and the role before sign-in, and
@@ -77,7 +77,7 @@ function Welcome({ role }: { role: 'owner' | 'manager' }) {
         : (
             <>
               <p aria-live="polite" className="text-sm text-muted" role="status">{t('stores.invite.accepting')}</p>
-              <Skeleton className="h-24 w-full rounded-3xl" />
+              <InvitationCardSkeleton />
             </>
           )}
     </ScreenFrame>
