@@ -116,6 +116,19 @@ describe.each([
     expect(hrefs.indexOf('/store/content/categories')).toBeLessThan(hrefs.indexOf('/store/content/analytics'))
   })
 
+  it('[E6.1][nav] the Products menu links Keepsakes and Pickup points', async () => {
+    const { sidebar } = await renderShop(language)
+    const products = Array.from(sidebar.querySelectorAll(':scope > ul > li > button'), el => el).find(el => text(el) === dict['nav.products'])!
+
+    await userEvent.click(products)
+    const links = Array.from(sidebar.querySelectorAll('a')).filter(a => a.getAttribute('href')?.startsWith('/store/products'))
+
+    expect(links.map(a => [a.getAttribute('href'), text(a)])).toEqual([
+      ['/store/products', dict['products.tab.gifts']],
+      ['/store/products/pickup', dict['products.tab.pickup']],
+    ])
+  })
+
   it('[E4.1][AC50] no menu link is a booking path or a raw key', async () => {
     const { phone } = await renderShop(language)
     await userEvent.click(phone.querySelector('button')!)
