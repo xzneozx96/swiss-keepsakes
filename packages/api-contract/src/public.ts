@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BODY_LIST_LEVELS, listItemSchema } from './content.ts'
 
 // What the public reads return: published text in one language, media as a storage key, and no price anywhere.
 // Responses are plain objects, not strict ones, like the editor views in content.ts.
@@ -45,21 +46,9 @@ const publicHeadingSchema = z.strictObject({
 })
 const publicBlockquoteSchema = z.strictObject({ type: z.literal('blockquote'), content: z.array(publicParagraphSchema) })
 
-// Lists unrolled to a fixed depth, as in the write schema (a story body is at most ten levels deep).
-type PublicParagraph = z.infer<typeof publicParagraphSchema>
-interface PublicListItem { type: 'listItem', content: (PublicParagraph | PublicNestedList)[] }
-interface PublicNestedList { type: 'bulletList' | 'orderedList', content: PublicListItem[] }
-const listTypes = z.enum(['bulletList', 'orderedList'])
-function publicListItem(levels: number): z.ZodType<PublicListItem> {
-  return z.strictObject({
-    type: z.literal('listItem'),
-    content: z.array(levels > 0
-      ? z.discriminatedUnion('type', [publicParagraphSchema, z.strictObject({ type: listTypes, content: z.array(publicListItem(levels - 1)) })])
-      : publicParagraphSchema),
-  })
-}
-const publicBulletListSchema = z.strictObject({ type: z.literal('bulletList'), content: z.array(publicListItem(5)) })
-const publicOrderedListSchema = z.strictObject({ type: z.literal('orderedList'), content: z.array(publicListItem(5)) })
+// Lists unrolled to the same depth as the write schema (a story body is at most ten levels deep).
+const publicBulletListSchema = z.strictObject({ type: z.literal('bulletList'), content: z.array(listItemSchema(publicParagraphSchema, BODY_LIST_LEVELS)) })
+const publicOrderedListSchema = z.strictObject({ type: z.literal('orderedList'), content: z.array(listItemSchema(publicParagraphSchema, BODY_LIST_LEVELS)) })
 
 const publicImageSchema = z.strictObject({
   type: z.literal('image'),
