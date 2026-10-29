@@ -167,3 +167,13 @@ E4.4 and AC32 need a contents list and a reading time. Both come from the body a
 - The Claude Design mock. The owner may review one before Sprint 8. It can change the layout of the steps and not the body shape.
 - Not checked. The behaviour of each Tiptap 3.32 extension was not run in this session. The E4.3 builder confirms that the editor cannot output a node outside the allow-list.
 - Not checked. The exact drizzle-kit command that regenerates the 0008 snapshot, and how the Neon development branch is reset, were not run. The E2.13 builder follows the repo's own steps.
+
+## Note, 2026-10-29: the layout is now designed
+
+The owner approved the editor's design on 2026-10-29 (`docs/decisions/2026-10-29-story-editor-design.md`, specification `docs/ux/story-editor-design.md`). The body shape, the allow-list, the links and the validation above do not change. Three things in this record are different now.
+
+- **Layout.** The editor has two screens, Write and Review and publish. Details are no longer a step. They are eight collapsible cards in a side panel on the Review screen, shared by both languages, and the Language version card is gone. The language switch sits in the Write header and heads the publish card.
+- **No author fields.** The byline is the display name of the signed-in account. The author name and role leave Step 1 and leave the document ("Body shape" above still lists them). The contract, the API and the seed drop both (follow-up E2.13).
+- **Wider publish rules.** "Publishing keeps its rules: a title and a slug" is replaced by the owner's rule. The cover, the title, the excerpt and the link stop publishing. An editorial review also needs its place and check date. Everything else warns.
+
+Drafts save themselves, and there is no Save draft button.
