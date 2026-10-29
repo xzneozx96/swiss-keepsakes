@@ -63,6 +63,8 @@ interface DataTableProps<T> {
    * with it the table shows from 1024px and the same pager sits under the cards.
    */
   cards?: (pageRows: T[]) => ReactNode
+  /** Phones: the loading state of `cards`; default is the generic ticket skeleton. A list whose cards differ passes one with their shape. */
+  cardSkeleton?: ReactNode
   /** Shows every row in one list, with no pager, for a grouped list that must not be cut into pages. */
   hidePager?: boolean
   /** Shown inside the table when `rows` is empty, and as a card on phones. */
@@ -101,6 +103,7 @@ export function DataTable<T>({
   getRowHref,
   resetKey,
   cards,
+  cardSkeleton,
   hidePager,
   empty,
   isLoading,
@@ -147,7 +150,7 @@ export function DataTable<T>({
       {cards
         && (isLoading
           ? (
-              <TicketSkeletons />
+              (cardSkeleton ?? <TicketSkeletons />)
             )
           : (
               <>

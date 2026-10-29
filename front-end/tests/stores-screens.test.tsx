@@ -530,7 +530,7 @@ describe('[E2.3][S8] A01, the Super Admin invites the Owner', () => {
     expect(within(first).getByText('Not started')).toBeInTheDocument()
   })
 
-  it('shows one card per store for a phone, with the store address name and the invitation sentence', async () => {
+  it('shows one card per store for a phone, with the invitation sentence and the setup bar only while the store is being set up', async () => {
     answer = () => Response.json(listed)
     renderAt('/admin', AdminStoresScreen)
 

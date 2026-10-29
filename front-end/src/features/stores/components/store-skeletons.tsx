@@ -102,3 +102,35 @@ export function OnboardingSkeleton() {
     </div>
   )
 }
+
+/** Phone loading state of A01, as `StoreCards` lays out a store: name and status chip, the ⋯ button, the invitation sentence, the setup bar and the created line. */
+export function StoreCardSkeletons({ count = 3 }: { count?: number }) {
+  return (
+    <ul aria-hidden className="flex flex-col gap-3 lg:hidden" data-skeleton="store-cards">
+      {Array.from({ length: count }, (_, index) => (
+        <li key={index}>
+          <article className="flex flex-col overflow-hidden rounded-3xl bg-surface shadow-surface">
+            <div className="flex items-start justify-between gap-3 p-4 pb-3">
+              <div className="flex min-w-0 flex-col items-start gap-1.5">
+                <Skeleton className="h-6 w-44 max-w-full rounded-lg" />
+                <Skeleton className="h-7 w-24 rounded-full" />
+              </div>
+              <Skeleton className="size-9 shrink-0 rounded-xl" />
+            </div>
+            <div className="flex flex-col gap-3 border-t border-dashed border-separator px-4 py-3">
+              <Skeleton className="h-5 w-3/4 rounded-lg" />
+              <div className="flex w-full max-w-40 flex-col gap-1.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <Skeleton className="h-5 w-20 rounded-lg" />
+                  <Skeleton className="h-5 w-16 rounded-lg" />
+                </div>
+                <Skeleton className="h-1 w-full rounded-full" />
+              </div>
+              <Skeleton className="h-5 w-32 rounded-lg" />
+            </div>
+          </article>
+        </li>
+      ))}
+    </ul>
+  )
+}

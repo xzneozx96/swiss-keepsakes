@@ -302,7 +302,7 @@ describe('[E2.15][E2.3] the invite sheet', () => {
     expect(posts()).toHaveLength(0)
   })
 
-  it('says in words that the name is taken, or the address belongs to a Super Admin, and keeps what was typed', async () => {
+  it('says in words that the name is taken (store-slug-taken) and keeps what was typed', async () => {
     answer = call => call.method === 'POST' ? problem(409, 'store-slug-taken') : emptyList()
     renderAdmin()
     await openInviteSheet()
@@ -344,6 +344,13 @@ describe('[E2.15][E2.3] phones, empty and loading states', () => {
 
     expect(grid).toHaveAttribute('aria-busy', 'true')
     expect(screen.queryByRole('list', { name: 'All stores' })).not.toBeInTheDocument()
+    const skeleton = document.querySelector('[data-skeleton=store-cards]') as HTMLElement
+
+    expect(skeleton).toHaveClass('gap-3')
+    expect(skeleton.querySelectorAll('li')).toHaveLength(3)
+    expect(skeleton.querySelectorAll('li:first-child article > div')).toHaveLength(2)
+    expect(skeleton.querySelectorAll('li:first-child article > div:last-child > *')).toHaveLength(3)
+    expect(skeleton.querySelector('li:first-child .size-14')).toBeNull()
     expect(within(grid).getAllByRole('columnheader').map(header => header.textContent)).toContain('Before opening')
 
     await within(grid).findByText('Live Shop')
@@ -358,7 +365,8 @@ describe('[E2.15][E2.3] phones, empty and loading states', () => {
     expect(within(atelier).getByRole('progressbar')).toHaveAttribute('aria-valuenow', '1')
     expect(within(atelier).getByText(/lena@atelier\.ch/)).toBeInTheDocument()
     expect(within(cardOf('Live Shop')).queryByRole('progressbar')).not.toBeInTheDocument()
-    expect(within(cardOf('Kapellbrücke')).getByText('Not started')).toBeInTheDocument()
+    expect(within(cardOf('Kapellbrücke')).queryByText('Not started')).not.toBeInTheDocument()
+    expect(within(cardOf('Live Shop')).queryByText('–')).not.toBeInTheDocument()
     expect(within(atelier).getByRole('button', { name: 'Actions for Atelier am See' })).toBeInTheDocument()
   })
 

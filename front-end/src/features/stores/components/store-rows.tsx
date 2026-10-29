@@ -9,6 +9,7 @@ import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { ConditionsCell } from './conditions-cell'
 import { StoreActions } from './store-actions'
+import { StoreCardSkeletons } from './store-skeletons'
 
 const statusTone: Record<AdminStore['status'], StatusTone> = {
   invited: 'info',
@@ -68,7 +69,7 @@ function StoreCards({ stores, label }: { stores: AdminStore[], label: string }) 
                     ? t(`stores.invitation.${invitation.state}`, { email: invitation.email, date: formatDate(new Date(invitation.expiresAt), intlLocale) })
                     : t('stores.list.noInvitation')}
                 </p>
-                <ConditionsCell hasTitle store={store} />
+                {(store.status === 'onboarding' || store.status === 'suspended') && <ConditionsCell hasTitle store={store} />}
                 <p className="text-muted">{t('stores.list.created', { date: formatDate(new Date(store.createdAt), intlLocale) })}</p>
               </div>
             </article>
@@ -125,6 +126,7 @@ export function StoreRows({ stores, label, isLoading }: { stores: AdminStore[], 
 
   return (
     <DataTable
+      cardSkeleton={<StoreCardSkeletons />}
       cards={page => <StoreCards label={label} stores={page} />}
       columns={columns}
       getRowId={store => store.id}
