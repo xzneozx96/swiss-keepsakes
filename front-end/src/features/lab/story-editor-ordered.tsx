@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { GripIcon, PickupIcon, TrashIcon } from '@/components/icons'
 import { Media } from '@/components/media'
-import { useStopDrag } from '@/features/merchant/products/components/itinerary/use-stop-drag'
+import { useStopDrag } from '@/hooks/use-stop-drag'
 
 /**
  * An ordered list in Details (keepsakes, more to discover), in the app's reorder pattern: the
