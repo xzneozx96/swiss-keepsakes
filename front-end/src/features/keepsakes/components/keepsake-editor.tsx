@@ -10,6 +10,7 @@ import { GiftIcon, PhotoAddIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { CommissionCard } from '@/features/merchant/products/components/gift-editor'
+import { useIsWide } from '@/hooks/use-is-wide'
 import { useKeepsake } from '../api/queries'
 import { useKeepsakeEditor } from '../hooks/use-keepsake-editor'
 import { usePhotoLibrary } from '../hooks/use-photo-library'
@@ -39,6 +40,7 @@ function Editor({ storeId, keepsake, view, onView, onReload }: {
   onReload: () => void
 }) {
   const { t, language } = useLocale()
+  const wide = useIsWide()
   const navigate = useNavigate()
   const editor = useKeepsakeEditor({ storeId, keepsake })
   const library = usePhotoLibrary(keepsake.photos)
@@ -76,8 +78,7 @@ function Editor({ storeId, keepsake, view, onView, onReload }: {
       >
         {view === 'edit' && (
           <Button className="shrink-0 max-lg:min-h-11" size="sm" onPress={() => void review()}>
-            <span className="max-lg:hidden">{t('keepsakes.review.open')}</span>
-            <span className="lg:hidden">{t('keepsakes.review.openShort')}</span>
+            {wide ? t('keepsakes.review.open') : t('keepsakes.review.openShort')}
           </Button>
         )}
       </KeepsakeTopBar>

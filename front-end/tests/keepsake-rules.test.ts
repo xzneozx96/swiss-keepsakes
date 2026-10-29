@@ -14,7 +14,7 @@ function text(name: { en?: string, de?: string }, body: { en?: string, de?: stri
 
 function translate(dictionary: Record<string, string>) {
   return (key: string, params: Record<string, string | number> = {}) =>
-    Object.entries(params).reduce((line, [name, value]) => line.replaceAll(`{${name}}`, String(value)), dictionary[key] ?? key)
+    Object.entries(params).reduce((line, [name, value]) => line.split(`{${name}}`).join(String(value)), dictionary[key] ?? key)
 }
 
 describe('[E6.1][AC30] a language is full with a name and a text', () => {

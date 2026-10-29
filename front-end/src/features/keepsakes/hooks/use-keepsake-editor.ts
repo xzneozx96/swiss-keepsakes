@@ -61,6 +61,7 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
   const runningRef = useRef<Promise<boolean>>(undefined)
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
   const problemRef = useRef<string>(undefined)
+  const staleRef = useRef(false)
   const { id } = keepsake
   const detailKey = keepsakesQueries.detail(client, storeId, id).queryKey
 
@@ -73,6 +74,9 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     clearTimeout(timerRef.current)
     if (runningRef.current)
       return runningRef.current
+    // A stale draft is not saved again until the page is reloaded.
+    if (staleRef.current)
+      return false
     if (!dirtyRef.current)
       return true
     const run = (async () => {
@@ -99,6 +103,7 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
             const type = problemTypeOf(error)
 
             dirtyRef.current = true
+            staleRef.current = type === 'precondition-failed'
             problemRef.current = type
             setProblem(type)
             setState(type === 'precondition-failed' ? 'stale' : 'failed')
@@ -129,7 +134,6 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
     draftRef.current = next
     dirtyRef.current = true
     setDraft(next)
-    // A stale draft is not saved again until the page is reloaded.
     setState(current => (current === 'stale' ? current : 'unsaved'))
     clearTimeout(timerRef.current)
     timerRef.current = setTimeout(() => void flushRef.current(), AUTOSAVE_MS)
@@ -144,8 +148,6 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
 
   /** Saves what is typed, then runs the command on the version that save returned. */
   async function afterFlush(run: () => Promise<Product>): Promise<Outcome> {
-    if (state === 'stale')
-      return { ok: false, type: 'precondition-failed' }
     if (!(await flush()))
       return { ok: false, type: problemRef.current ?? 'unknown' }
     try {

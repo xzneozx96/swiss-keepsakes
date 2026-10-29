@@ -15,7 +15,7 @@ import { isKeepsakeView } from '@/features/keepsakes/lib/search-params'
 
 // jsdom has no CSS.supports, which a module of the prototype gift editor (the CommissionCard's file) calls on load.
 vi.hoisted(() => {
-  const css = (globalThis as { CSS?: { supports?: () => boolean } }).CSS
+  const css = (globalThis as unknown as { CSS?: { supports?: () => boolean } }).CSS
 
   if (css)
     css.supports ??= () => false
@@ -101,10 +101,20 @@ export async function setUpHarness() {
   state.calls = []
   state.answer = () => undefined
   vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
-    const request = input instanceof Request ? input : new Request(input, init)
+    // jsdom's File is no body for Node's Request: a file PUT is recorded without its bytes.
+    const request = input instanceof Request
+      ? input
+      : (() => {
+          try {
+            return new Request(input, init)
+          }
+          catch {
+            return new Request(input, { method: init?.method, headers: init?.headers })
+          }
+        })()
     const text = await request.clone().text()
     const url = new URL(request.url)
-    const call = { method: request.method, path: url.pathname + url.search, key: request.headers.get('idempotency-key'), ifMatch: request.headers.get('if-match'), body: text ? JSON.parse(text) : undefined }
+    const call = { method: request.method, path: url.pathname + url.search, key: request.headers.get('idempotency-key'), ifMatch: request.headers.get('if-match'), body: text && request.headers.get('content-type')?.includes('json') ? JSON.parse(text) : undefined }
 
     state.calls.push(call)
     const custom = state.answer(call)
