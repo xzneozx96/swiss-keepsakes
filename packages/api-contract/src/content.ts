@@ -6,7 +6,9 @@ import { noNul } from './text.js'
 
 const language = z.enum(['en', 'de'])
 const stayTag = z.enum(['short_stay', 'multi_day', 'both'])
-const interests = z.array(z.enum(['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes'])).max(4)
+const interests = z.array(z.enum(['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes', 'local-activities'])).max(5)
+const serviceType = z.enum(['water', 'toilets', 'connect', 'transport', 'lockers', 'cash'])
+const foodKind = z.enum(['restaurant', 'cafe-bakery', 'pub-bar', 'market'])
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const time = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, 'A time as HH:MM')
 const text = (max: number) => noNul(z.string().max(max))
@@ -74,9 +76,19 @@ const pinDateWriteSchema = z.strictObject({
     ctx.addIssue({ code: 'custom', message: 'endTime must be after startTime', path: ['endTime'] })
 })
 
+// The alt text of a photo, as long as a title and per language.
+const pinPhotoWriteSchema = z.strictObject({
+  mediaId: z.uuid(),
+  alt: localizedTextSchema.optional(),
+})
+
+// One plain https address with no space (ADR-011). The database checks the same.
+const outboundUrl = noNul(z.string().max(2000).regex(/^https:\/\/[^\s]+$/, 'An https address with no space'))
+
 export const pinWriteBodySchema = z.strictObject({
   title: localizedTextSchema.optional(),
   tip: localizedLongTextSchema.optional(),
+  localTip: localizedTextSchema.optional(),
   slug: slugMapSchema.nullable().optional(),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
@@ -84,13 +96,19 @@ export const pinWriteBodySchema = z.strictObject({
   weeklyHours: z.array(weeklySpanSchema).max(21).optional(),
   stayTag: stayTag.optional(),
   interests: interests.optional(),
+  serviceType: serviceType.nullable().optional(),
+  mustVisit: z.boolean().optional(),
+  foodKind: foodKind.nullable().optional(),
   coverMediaId: z.uuid().nullable().optional(),
+  coverAlt: localizedTextSchema.optional(),
+  photos: z.array(pinPhotoWriteSchema).max(10).refine(photos => new Set(photos.map(photo => photo.mediaId.toLowerCase())).size === photos.length, 'Each photo may appear once').optional(),
+  outboundUrl: outboundUrl.nullable().optional(),
   mainStoryGroupId: z.uuid().nullable().optional(),
   categoryIds: idList(20).optional(),
   dates: z.array(pinDateWriteSchema).max(50).optional(),
-}).meta({ id: 'PinWriteBody', description: 'Every field is optional. A pin has no type and no price' })
+}).meta({ id: 'PinWriteBody', description: 'Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list. `localTip`, `coverAlt` and the alt text of each photo are text: they go to the draft and are live on publish' })
 
-const pinDraftViewSchema = z.object({ title: localizedView, tip: localizedView })
+const pinDraftViewSchema = z.object({ title: localizedView, tip: localizedView, localTip: localizedView, coverAlt: localizedView, photoAlt: z.record(z.uuid(), localizedView) })
 
 export const pinSchema = z.object({
   id: z.uuid(),
@@ -103,7 +121,12 @@ export const pinSchema = z.object({
   weeklyHours: z.array(z.object({ day: z.int(), opens: z.string(), closes: z.string() })),
   stayTag,
   interests: z.array(z.string()),
+  serviceType: serviceType.nullable(),
+  mustVisit: z.boolean(),
+  foodKind: foodKind.nullable(),
   coverMediaId: z.uuid().nullable(),
+  photos: z.array(z.object({ mediaId: z.uuid() })),
+  outboundUrl: z.string().nullable(),
   mainStoryGroupId: z.uuid().nullable(),
   categoryIds: z.array(z.uuid()),
   dates: z.array(z.object({
@@ -120,6 +143,36 @@ export const pinSchema = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 }).meta({ id: 'Pin', description: 'A map pin as the editor sees it, with its draft and its published text' })
+
+// One row of the merchant's list (N16). `status` is `ended` for a published pin whose dates are all over (AC86).
+export const pinListItemSchema = z.object({
+  id: z.uuid(),
+  status: z.enum(['draft', 'published', 'hidden', 'ended']),
+  title: localizedView.meta({ description: 'The pending draft title when there is one, else the published title' }),
+  slug: localizedView.nullable(),
+  located: z.boolean(),
+  categoryIds: z.array(z.uuid()),
+  hasDates: z.boolean(),
+  nextDate: z.object({ firstDay: z.string(), lastDay: z.string(), startTime: z.string().nullable(), endTime: z.string().nullable() }).nullable(),
+  stayTag,
+  interests: z.array(z.string()),
+  coverMediaId: z.uuid().nullable(),
+  mainStory: z.object({ groupId: z.uuid(), published: z.boolean() }).nullable().meta({ description: '`published` is false when the story has no published version' }),
+  rowVersion: z.int(),
+  updatedAt: z.iso.datetime(),
+}).meta({ id: 'PinListItem', description: 'A pin as one row of the merchant list' })
+
+export const pinListSchema = z.object({ items: z.array(pinListItemSchema) }).meta({ id: 'PinList', description: 'Every pin of the store, most recently edited first' })
+
+// What the main-story picker offers: the story groups of the store.
+export const pinStoryOptionSchema = z.object({
+  groupId: z.uuid(),
+  kind: z.enum(['story', 'editorial_review']),
+  title: localizedView,
+  publishedLanguages: z.array(language),
+}).meta({ id: 'PinStoryOption', description: 'A story group the pin can name as its main story' })
+
+export const pinStoryOptionListSchema = z.object({ items: z.array(pinStoryOptionSchema) }).meta({ id: 'PinStoryOptionList', description: 'Story groups of the store, most recently created first' })
 
 // The story body: one Tiptap document. Only the nodes and marks of the story-editor decision are accepted, each with
 // strict attributes. The contract imports only zod, so these constants repeat packages/domain/src/content/body.ts;
@@ -432,6 +485,10 @@ export type PinPublishBody = z.infer<typeof pinPublishBodySchema>
 export type TourPublishBody = z.infer<typeof tourPublishBodySchema>
 export type PinWriteBody = z.infer<typeof pinWriteBodySchema>
 export type Pin = z.infer<typeof pinSchema>
+export type PinListItem = z.infer<typeof pinListItemSchema>
+export type PinList = z.infer<typeof pinListSchema>
+export type PinStoryOption = z.infer<typeof pinStoryOptionSchema>
+export type PinStoryOptionList = z.infer<typeof pinStoryOptionListSchema>
 export type StoryDraft = z.infer<typeof storyDraftSchema>
 export type StoryGroupCreateBody = z.infer<typeof storyGroupCreateBodySchema>
 export type StoryGroupSaveBody = z.infer<typeof storyGroupSaveBodySchema>

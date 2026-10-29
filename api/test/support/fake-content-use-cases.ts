@@ -13,7 +13,12 @@ export const fakePin: Pin = {
   weeklyHours: [],
   stayTag: 'both',
   interests: [],
+  serviceType: null,
+  mustVisit: false,
+  foodKind: null,
   coverMediaId: null,
+  photos: [],
+  outboundUrl: null,
   mainStoryGroupId: null,
   categoryIds: [],
   dates: [],
@@ -102,6 +107,9 @@ export const fakeTour: TourGuide = {
 // row existed and the caller could do the thing, so a request that gets past the guard is not a 404 or a 403.
 export function createFakeContentUseCases(): ContentUseCases {
   return {
+    listMerchantPins: async () => ({ ok: true, value: [] }),
+    getMerchantPin: async (_actor, storeId, pinId) => ({ ok: true, value: { ...fakePin, storeId, id: pinId } }),
+    listPinStoryOptions: async () => ({ ok: true, value: [] }),
     createPin: async (_actor, storeId) => ({ ok: true, value: { ...fakePin, storeId } }),
     savePin: async (_actor, storeId, pinId, ifMatch) => ({ ok: true, value: { ...fakePin, storeId, id: pinId, rowVersion: ifMatch + 1 } }),
     publishPin: async (_actor, storeId, pinId, ifMatch) => ({ ok: true, value: { ...fakePin, storeId, id: pinId, status: 'published', rowVersion: ifMatch + 1 } }),
