@@ -70,11 +70,11 @@ describe('guest screens loading', () => {
     expect(count(container, 'ul.divide-y li')).toBe(2)
   })
 
-  it('order detail: bar, ticket card, three tabs and a panel card', () => {
+  it('order detail: bar, ticket card, four tabs in one pill row and a panel card', () => {
     const { container } = render(<OrderDetailSkeleton />)
 
     expect(genericBox(container)).toBeNull()
-    expect(count(container, '[data-skeleton="tabs"] > *')).toBe(4)
+    expect(count(container, '[data-skeleton="tabs"].rounded-3xl.bg-default.p-1 > .h-8')).toBe(4)
     expect(count(container, '.border-dashed')).toBe(1)
     expect(container.querySelector('[data-skeleton="panel"] > .h-6')).not.toBeNull()
     expect(count(container, '[data-skeleton="panel"] .divide-y > *')).toBe(3)

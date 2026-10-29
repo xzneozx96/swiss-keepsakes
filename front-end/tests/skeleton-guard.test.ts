@@ -4,12 +4,12 @@ import { join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const SRC = join(__dirname, '..', 'src')
-const SCANNED = ['features/', 'routes/']
+const SCANNED = ['components/', 'features/', 'routes/']
 const SKIPPED = ['features/lab/']
-// A generic block: a Skeleton that is full width, has the large card radius and a fixed height.
+// A generic block: a Skeleton that is full width, has a large card radius (2xl or 3xl) and a fixed height.
 const SKELETON = /<Skeleton\b[^>]*>/g
 function isGenericBlock(tag: string) {
-  return /(?<![\w-])w-full(?![\w-])/.test(tag) && /(?<![\w-])rounded-3xl(?![\w-])/.test(tag) && /(?<![\w-])h-\d+(?![\w-])/.test(tag)
+  return /(?<![\w-])w-full(?![\w-])/.test(tag) && /(?<![\w-])rounded-(?:2xl|3xl)(?![\w-])/.test(tag) && /(?<![\w-])h-\d+(?![\w-])/.test(tag)
 }
 
 function sources(dir: string): string[] {
@@ -23,11 +23,12 @@ function sources(dir: string): string[] {
 describe('skeleton guard', () => {
   it('detects a generic block and ignores shaped skeletons', () => {
     expect(isGenericBlock('<Skeleton className="h-40 w-full rounded-3xl" />')).toBe(true)
+    expect(isGenericBlock('<Skeleton className="h-44 w-full rounded-2xl" />')).toBe(true)
     expect(isGenericBlock('<Skeleton className="h-5 w-48 rounded-lg" />')).toBe(false)
     expect(isGenericBlock('<Skeleton className="h-11 w-full rounded-xl" />')).toBe(false)
   })
 
-  it('no feature or route renders a generic w-full rounded-3xl Skeleton block', () => {
+  it('no feature or route renders a generic full-width rounded-2xl/3xl Skeleton block', () => {
     const offenders = sources(SRC)
       .map(file => relative(SRC, file))
       .filter(file => SCANNED.some(prefix => file.startsWith(prefix)))

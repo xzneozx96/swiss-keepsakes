@@ -99,6 +99,7 @@ function OwnerStore({ fallback }: { fallback: ReactNode }) {
   if (me.isPending || signedOut) {
     return (
       <ScreenFrame title={t('stores.onboarding.title')}>
+        <p aria-live="polite" className="sr-only" role="status">{t('stores.onboarding.title')}</p>
         <OnboardingSkeleton />
       </ScreenFrame>
     )
@@ -141,6 +142,7 @@ function OnboardingView({ storeId }: { storeId: string }) {
   if (!query.data) {
     return (
       <ScreenFrame title={t('stores.onboarding.title')}>
+        <p aria-live="polite" className="sr-only" role="status">{t('stores.onboarding.title')}</p>
         <OnboardingSkeleton />
       </ScreenFrame>
     )

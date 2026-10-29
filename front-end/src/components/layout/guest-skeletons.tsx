@@ -330,26 +330,30 @@ export function OrderDetailSkeleton() {
           </div>
         </div>
       </div>
-      <div className="mt-6 flex gap-2 px-4" data-skeleton="tabs">
-        {[0, 1, 2, 3].map(i => (
-          <Skeleton key={i} className="h-11 flex-1 rounded-lg" />
-        ))}
-      </div>
-      <div className="px-4 pt-5">
-        <section className="flex flex-col gap-3" data-skeleton="panel">
-          <Skeleton className="h-6 w-32 rounded-lg" />
-          <div className={`flex flex-col divide-y divide-separator ${CARD}`}>
-            {[0, 1, 2].map(i => (
-              <div key={i} className="flex gap-3 p-4">
-                <Skeleton className="size-5 shrink-0 rounded-full" />
-                <div className="flex flex-1 flex-col gap-2">
-                  <Skeleton className="h-3 w-16 rounded-lg" />
-                  <Skeleton className="h-5 w-2/3 rounded-lg" />
-                </div>
-              </div>
+      <div className="mt-6 flex flex-col gap-2">
+        <div className="px-4">
+          <div className="flex w-full gap-1 rounded-3xl bg-default p-1" data-skeleton="tabs">
+            {[0, 1, 2, 3].map(i => (
+              <Skeleton key={i} className="h-8 flex-1 rounded-full" />
             ))}
           </div>
-        </section>
+        </div>
+        <div className="px-4 pt-5">
+          <section className="flex flex-col gap-3" data-skeleton="panel">
+            <Skeleton className="h-6 w-32 rounded-lg" />
+            <div className={`flex flex-col divide-y divide-separator ${CARD}`}>
+              {[0, 1, 2].map(i => (
+                <div key={i} className="flex gap-3 p-4">
+                  <Skeleton className="size-5 shrink-0 rounded-full" />
+                  <div className="flex flex-1 flex-col gap-2">
+                    <Skeleton className="h-3 w-16 rounded-lg" />
+                    <Skeleton className="h-5 w-2/3 rounded-lg" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   )

@@ -55,11 +55,16 @@ describe('dataTable isLoading', () => {
   })
 
   it('marks the grid busy only while loading', () => {
-    const { unmount } = renderTable({ isLoading: true })
+    const props = { columns, getRowId: (row: Row) => row.id, label: 'Things', rows }
+    const table = (isLoading: boolean) => (
+      <LocaleProvider>
+        <DataTable {...props} isLoading={isLoading} />
+      </LocaleProvider>
+    )
+    const { rerender } = render(table(true))
 
     expect(screen.getByRole('grid', { name: 'Things' })).toHaveAttribute('aria-busy', 'true')
-    unmount()
-    renderTable()
+    rerender(table(false))
     expect(screen.getByRole('grid', { name: 'Things' })).not.toHaveAttribute('aria-busy')
   })
 

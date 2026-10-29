@@ -46,9 +46,15 @@ export function SettingsScreen() {
 
   if (apiEnabled && (me.isPending || signedOut)) {
     return (
-      <div className="flex flex-col gap-4">
+      <div aria-busy className="flex flex-col gap-4">
+        <p aria-live="polite" className="sr-only" role="status">{t('nav.settings')}</p>
         <h1 className="text-title">{t('nav.settings')}</h1>
-        <Skeleton className="h-11 w-48 rounded-2xl" />
+        <div className="flex items-center gap-2 max-lg:py-2" data-skeleton="tabs">
+          <div className="flex w-fit gap-1 rounded-3xl bg-default p-1">
+            <Skeleton className="h-8 w-24 rounded-full" />
+            <Skeleton className="h-8 w-24 rounded-full" />
+          </div>
+        </div>
       </div>
     )
   }

@@ -14,7 +14,7 @@ const TABS_ON_DESKTOP: readonly Section[] = ['requests']
 
 /**
  * A section page with sub-pages (owner review 15.10.2026): on phones the section's pages as
- * underline tabs (from 1024px the sidebar lists them), then the page. A page without its own
+ * tab pills (from 1024px the sidebar lists them), then the page. A page without its own
  * visible title (the analytics pages) gets a hidden one.
  */
 export function SectionFrame({

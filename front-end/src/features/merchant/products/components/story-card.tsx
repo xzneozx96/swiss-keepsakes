@@ -61,7 +61,7 @@ export function StoryCard({
         value={title}
         onChange={onTitle}
       />
-      <Suspense fallback={<Skeleton className="h-60 w-full rounded-2xl" />}>
+      <Suspense fallback={<StoryEditorSkeleton />}>
         <StoryEditor
           key={language}
           label={t('products.story.body')}
@@ -83,5 +83,21 @@ export function StoryCard({
         </p>
       )}
     </DetailCard>
+  )
+}
+
+/** The rich-text editor while its code loads: a toolbar of small buttons over a few lines of text. */
+function StoryEditorSkeleton() {
+  return (
+    <div aria-hidden className="flex flex-col gap-4 rounded-2xl bg-surface p-4 shadow-surface">
+      <div className="flex gap-2">
+        {[0, 1, 2, 3].map(i => (
+          <Skeleton key={i} className="size-8 rounded-lg" />
+        ))}
+      </div>
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-5/6 rounded-lg" />
+      <Skeleton className="h-4 w-2/3 rounded-lg" />
+    </div>
   )
 }
