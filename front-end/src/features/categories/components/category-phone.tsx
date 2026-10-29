@@ -141,10 +141,7 @@ function CategoryList({ items, kind, actions, onPage }: { items: MerchantCategor
   const searching = query.trim() !== ''
   const found = items.filter(category => matches(category, query))
 
-  const facts = (category: MerchantCategory) => [
-    category.useCount ? uses(kind, category.useCount) : t('categories.unused'),
-    category.parentId === null && category.childCount > 0 ? t(`categories.subs.${category.childCount === 1 ? 'one' : 'other'}`, { n: category.childCount }) : '',
-  ].filter(Boolean).join(' · ')
+  const facts = (category: MerchantCategory) => category.useCount ? uses(kind, category.useCount) : t('categories.unused')
 
   const row = (category: MerchantCategory) => {
     const parent = items.find(item => item.id === category.parentId)

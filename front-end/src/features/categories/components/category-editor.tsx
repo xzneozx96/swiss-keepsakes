@@ -2,6 +2,7 @@ import type { CategoryKind } from '@sk/api-contract'
 import type { ReactNode } from 'react'
 
 import { Button } from '@heroui/react'
+import { useState } from 'react'
 
 import { PlusIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
@@ -14,7 +15,7 @@ import { nameOf, rootsOf } from '../lib/category-tree'
 import { CategoryPhone } from './category-phone'
 import { CategoryRefusal } from './category-refusal'
 import { CategorySheet } from './category-sheet'
-import { CategoryTable } from './category-table'
+import { CategorySearch, CategoryTable } from './category-table'
 
 /**
  * One list of the store (the map's or the blog's) under the screen's header: the Add action, the tabs the
@@ -26,6 +27,9 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
   const wide = useIsWide()
   const categories = useCategories(storeId, kind)
   const loaded = categories.data?.items
+  // The search text belongs to the list shown: another tab starts with an empty field.
+  const [search, setSearch] = useState({ kind, text: '' })
+  const query = search.kind === kind ? search.text : ''
   const { actions, items, busy, notice, sheet, closeSheet, dialog } = useCategoryActions({
     storeId: storeId ?? '',
     kind,
@@ -45,7 +49,14 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
           {t('categories.add')}
         </Button>
       </div>
-      {tabs}
+      {wide
+        ? (
+            <div className="flex items-center justify-between gap-3">
+              {tabs}
+              <CategorySearch disabled={!loaded} value={query} onChange={text => setSearch({ kind, text })} />
+            </div>
+          )
+        : tabs}
       {notice && (
         <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(notice)}</p>
       )}
@@ -61,7 +72,7 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
             <>
               {!loaded && <p aria-live="polite" className="sr-only" role="status">{t('categories.loading')}</p>}
               {wide
-                ? <CategoryTable key={kind} actions={actions} busy={busy} items={items} kind={kind} loading={!loaded} />
+                ? <CategoryTable key={kind} actions={actions} busy={busy} items={items} kind={kind} loading={!loaded} query={query} />
                 : <CategoryPhone key={kind} actions={actions} busy={busy} items={items} kind={kind} loading={!loaded} />}
             </>
           )}

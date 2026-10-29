@@ -173,7 +173,7 @@ describe('[E4.18][AC87] the category editor in German', () => {
     await openMenu('Walks', 'Löschen', 'Aktionen für')
     await userEvent.click(await screen.findByRole('button', { name: 'Kategorie löschen' }))
 
-    expect(await screen.findByText('Diese Kategorie wird noch von Pins oder Geschichtengruppen verwendet. Entfernen Sie dort zuerst die Zuordnung.')).toBeInTheDocument()
+    expect(await screen.findByText('Diese Kategorie wird noch von Pins oder Geschichten verwendet. Entfernen Sie dort zuerst die Zuordnung.')).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/\bcategories\.[a-z]/i)
   })
 })
@@ -193,7 +193,7 @@ describe('[E4.18][AC87] the category editor in English', () => {
     expect(within(rowOf('Hill')).queryByText('Missing')).not.toBeInTheDocument()
     expect(within(rowOf('Hill')).getByText('Hügel')).toBeInTheDocument()
     expect(within(rowOf('Walks')).getByText('1 pin')).toBeInTheDocument()
-    expect(within(rowOf('Walks')).getByText(/1 sub-category/)).toBeInTheDocument()
+    expect(within(rowOf('Walks')).queryByText(/sub-categor/)).toBeNull()
     expect(within(rowOf('Food')).getByText('Not used')).toBeInTheDocument()
   })
 
@@ -502,7 +502,7 @@ describe('[E4.18][AC87] the category editor in English', () => {
 
   it.each([
     [422, 'validation-failed', 'The list changed and was reloaded. Try the move again.'],
-    [409, 'category-in-use', 'This category is still used by pins or story groups. Untag them first.'],
+    [409, 'category-in-use', 'This category is still used by pins or stories. Untag them first.'],
   ])('reads the list again, shows the server order and says why when a reorder is refused with %i', async (status, type, message) => {
     lists.map = [
       category(walks, { name: { en: 'Walks', de: null }, position: 1 }),

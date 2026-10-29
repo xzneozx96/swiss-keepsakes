@@ -17,14 +17,31 @@ import { DropSlot, Grip } from './category-drag'
 
 type ActionId = 'edit' | 'add-sub' | 'up' | 'down' | 'delete'
 
+/** The table's search field, drawn by the table or, next to the tabs, by the screen. */
+export function CategorySearch({ value, onChange, disabled }: { value: string, onChange: (value: string) => void, disabled?: boolean }) {
+  const { t } = useLocale()
+
+  return (
+    <SearchField aria-label={t('categories.search.label')} className="w-72" isDisabled={disabled} value={value} onChange={onChange}>
+      <SearchField.Group>
+        <SearchField.SearchIcon />
+        <SearchField.Input placeholder={t('categories.search.placeholder')} />
+        <SearchField.ClearButton />
+      </SearchField.Group>
+    </SearchField>
+  )
+}
+
 /**
  * From 1024 px: the page table in the guests' order, sub-categories indented under their parent.
  * A parent's handle drags it among the parents (its sub-categories fold away while it moves); a
  * sub-category's handle drags it among its siblings only. ArrowUp and ArrowDown on a handle, or
  * Move up and Move down in the menu, do the same from the keyboard.
  */
-export function CategoryTable({ items, kind, actions, busy, loading }: {
+export function CategoryTable({ items, kind, actions, busy, loading, query: lifted }: {
   items: MerchantCategory[]
+  /** The search text when the screen owns the field (next to the tabs); the table then draws none of its own. */
+  query?: string
   /** Draws the real search field and headers with loading bars while the list is not here yet. */
   loading?: boolean
   kind: CategoryKind
@@ -32,7 +49,8 @@ export function CategoryTable({ items, kind, actions, busy, loading }: {
   busy: boolean
 }) {
   const { t } = useLocale()
-  const [query, setQuery] = useState('')
+  const [own, setQuery] = useState('')
+  const query = lifted ?? own
   const [folded, setFolded] = useState(false)
   const boxRef = useRef<HTMLDivElement>(null)
   const groupRef = useRef<string | null>(null)
@@ -103,13 +121,7 @@ export function CategoryTable({ items, kind, actions, busy, loading }: {
 
   return (
     <div className="flex flex-col gap-4">
-      <SearchField aria-label={t('categories.search.label')} className="w-72" isDisabled={loading} value={query} onChange={setQuery}>
-        <SearchField.Group>
-          <SearchField.SearchIcon />
-          <SearchField.Input placeholder={t('categories.search.placeholder')} />
-          <SearchField.ClearButton />
-        </SearchField.Group>
-      </SearchField>
+      {lifted === undefined && <CategorySearch disabled={loading} value={query} onChange={setQuery} />}
       {rows.length === 0 && !loading
         ? <EmptyState icon={InfoIcon} message={t(searching ? 'categories.search.empty' : `categories.empty.${kind}`, { query: query.trim() })} />
         : (
@@ -154,14 +166,9 @@ export function CategoryTable({ items, kind, actions, busy, loading }: {
                     header: t('categories.col.usedBy'),
                     skeleton: 'line',
                     render: category => (
-                      <>
-                        <span className={`tabular-nums ${category.useCount ? '' : 'text-muted'}`}>
-                          {category.useCount ? t(`categories.uses.${kind}.${category.useCount === 1 ? 'one' : 'other'}`, { n: category.useCount }) : t('categories.unused')}
-                        </span>
-                        {category.parentId === null && category.childCount > 0 && (
-                          <span className="whitespace-nowrap text-muted">{` · ${t(`categories.subs.${category.childCount === 1 ? 'one' : 'other'}`, { n: category.childCount })}`}</span>
-                        )}
-                      </>
+                      <span className={`tabular-nums ${category.useCount ? '' : 'text-muted'}`}>
+                        {category.useCount ? t(`categories.uses.${kind}.${category.useCount === 1 ? 'one' : 'other'}`, { n: category.useCount }) : t('categories.unused')}
+                      </span>
                     ),
                   },
                 ]}
