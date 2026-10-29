@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
-import { DataClientProvider } from '@/features/data-client'
+import { DataClientProvider, queryKeys } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 import { OnboardingScreen } from '@/features/stores/components/onboarding-screen'
@@ -26,6 +26,7 @@ let store = base
 let conditions: Array<{ key: Key, state: State }>
 let mayOpenForSale: boolean
 let meStatus: 'onboarding' | 'live'
+let meDelay: number
 let calls: Call[]
 let handlers: Record<string, () => Response>
 let demo: ReturnType<typeof startDemo>
@@ -64,6 +65,7 @@ beforeEach(async () => {
   conditions = onlyInformation()
   mayOpenForSale = false
   meStatus = 'onboarding'
+  meDelay = 0
   calls = []
   handlers = {}
   vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -72,6 +74,8 @@ beforeEach(async () => {
     const call = { method: request.method, path: new URL(request.url).pathname, body: text ? JSON.parse(text) : undefined }
 
     calls.push(call)
+    if (call.path === '/api/me' && meDelay)
+      await new Promise(resolve => setTimeout(resolve, meDelay))
 
     return answerFor(call)
   })
@@ -141,6 +145,8 @@ describe('open your store, the steps [E2.16][E2.3]', () => {
     const steps = await rail()
 
     expect(screen.getAllByRole('navigation')).toHaveLength(1)
+    expect(steps.getByText('Open your store')).toBeInTheDocument()
+    expect(document.querySelector('[data-step="open"] .text-xs')).toBeNull()
     expect(stepTitle()).toHaveTextContent('Store information')
     expect(panel().getByText('Done')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Edit store information' })).toBeInTheDocument()
@@ -263,6 +269,20 @@ describe('open your store, the last step [E2.16][E2.3]', () => {
     expect(posts()).toHaveLength(1)
   })
 
+  it('[AC-4] Open stays disabled when every condition reads met but the API says mayOpenForSale is false, and nothing is sent', async () => {
+    conditions = allMet()
+    mayOpenForSale = false
+    renderOnboarding()
+
+    await pick(/^Open for sale/)
+    const button = screen.getByRole('button', { name: 'Open Chi Ngoc for sale' })
+
+    expect(button).toBeDisabled()
+    expect(button).toHaveAccessibleDescription('Opening is not available right now.')
+    await userEvent.click(button)
+    expect(posts()).toHaveLength(0)
+  })
+
   it('[AC-4] a refused open says which conditions are unmet in words and the store stays onboarding', async () => {
     mayOpenForSale = true
     handlers = { [`POST /api/store/${storeId}/open-for-sale`]: () => problem(409, 'onboarding-incomplete') }
@@ -294,6 +314,7 @@ describe('open your store, the last step [E2.16][E2.3]', () => {
       [`POST /api/store/${storeId}/open-for-sale`]: () => {
         store = storeSchema.parse({ ...store, status: 'live' })
         meStatus = 'live'
+        meDelay = 300
 
         return Response.json(store)
       },
@@ -309,6 +330,11 @@ describe('open your store, the last step [E2.16][E2.3]', () => {
     expect(await screen.findByText('Today', { selector: 'p' })).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/store')
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0)
+    // On arrival: the stores read is slow here, so a read that only started on arrival would still show the old status.
+    expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
+    await waitFor(() => expect(demo.queryClient.getQueryState(queryKeys.stores.me)?.fetchStatus).toBe('idle'))
+    await act(async () => {})
+    expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
   })
 })
 
