@@ -47,3 +47,4 @@ We will store uploads in Neon Object Storage, as backend.md D14 plans, with thes
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-29 note: the media library design (`docs/decisions/2026-10-29-media-library-design.md`) needs a `name` column on `content.media` and settles nothing here. The decision above stands
