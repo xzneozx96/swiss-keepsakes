@@ -44,7 +44,14 @@ async function ok<T>(response: APIResponse, status: number): Promise<T> {
 }
 
 function draft(title: string) {
-  return { title, excerpt: 'Excerpt', intro: 'Intro', authorName: 'Anna', authorRole: 'Guide', readMinutes: 3, coverMediaId: null, sections: [] }
+  return {
+    title,
+    excerpt: 'Excerpt',
+    authorName: 'Anna',
+    authorRole: 'Guide',
+    coverMediaId: null,
+    body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Intro' }] }] },
+  }
 }
 
 async function story(owner: Page, storeId: string, versions: Array<{ language: 'en' | 'de', slug: string, title: string }>, publish: boolean) {
