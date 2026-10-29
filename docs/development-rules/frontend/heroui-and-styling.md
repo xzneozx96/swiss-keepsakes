@@ -28,6 +28,35 @@ Where a spec and HeroUI's CSS disagree, the CSS wins. Every spec file ends with 
 - **Tailwind classes, not inline `style`.** Use `style` only for a value that is computed at runtime, such as a progress transform.
 - **Icons.** Import only from `front-end/src/components/icons.ts`. HeroUI ships no icons.
 
+## Reuse shared UI and match loading layouts
+
+### Loading skeletons mirror the real layout
+
+- **Tables.** Pass `isLoading` to the shared `DataTable`. It renders the real header and one HeroUI `Skeleton` per cell, shaped by the column's `skeleton` field.
+- **Lists and cards.** Render skeleton rows or cards with the same shape as the real ones: same count of lines, same avatar or thumbnail, same height.
+- **Never a generic block.** Do not stand in for a screen with a few large grey boxes such as `<Skeleton className="h-40 w-full rounded-3xl" />`.
+- **HeroUI limits.** HeroUI has `Skeleton` and `Table.LoadMore` (the append row for infinite scroll). It has no whole-table skeleton. Do not use `Table.LoadMore` as a first-load state.
+- **Guard.** `front-end/tests/skeleton-guard.test.ts` fails when a file in `src/features` (not the lab) or `src/routes` has a `<Skeleton` with `w-full`, `rounded-3xl` and an `h-<n>` height.
+- **Related.** The router's route skeleton is in `api-integration.md`. Loading before a heavy hook runs is in `performance.md`.
+
+### Reuse shared components and never restyle HeroUI primitives in a feature
+
+Before you build a control, search `front-end/src/components` for an existing one. Use it as it is. If it lacks a variant, add the variant there, not a copy in the feature.
+
+| Need | Use |
+| :-- | :-- |
+| Tabs that change the URL | `front-end/src/components/route-tabs.tsx` (`RouteTabs`) |
+| In-page tabs with panels | `front-end/src/components/page-tabs.tsx` (`PageTabs`) |
+| Tabs on a detail screen | `front-end/src/components/detail-tabs.tsx` (`DetailTabs`) |
+| Table | `front-end/src/components/data-table.tsx` (`DataTable`) |
+| Sheet or drawer body | `front-end/src/components/sheet-frame.tsx` (`SheetFrame`) |
+| Confirm before a change | `front-end/src/components/confirm-dialog.tsx` (`ConfirmDialog`, `useConfirm`) |
+| Status label | `front-end/src/components/status-chip.tsx` (`StatusChip`) |
+| Nothing to show | `front-end/src/components/empty-state.tsx` (`EmptyState`, `TableEmptyState`) |
+| Row menu | `front-end/src/components/row-actions.tsx` (`RowActions`) |
+
+Do not set `className` on `Tabs`, `Tabs.Tab`, `Tabs.List` or `Tabs.ListContainer` in a feature. `front-end/tests/tabs-guard.test.ts` fails when a file outside `src/components`, `src/features/lab` and `src/dormant` imports `Tabs` from `@heroui/react`.
+
 ## Facts that bite
 
 These come from the reference README. They are known HeroUI v3 behaviour, so plan for them.
