@@ -31,6 +31,7 @@ import { Route as LabHeroRouteImport } from './routes/lab.hero'
 import { Route as LabHomeRouteImport } from './routes/lab.home'
 import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
+import { Route as LabMediaRouteImport } from './routes/lab.media'
 import { Route as LabOnboardingFullscreenRouteImport } from './routes/lab.onboarding-fullscreen'
 import { Route as LabOrderCardsRouteImport } from './routes/lab.order-cards'
 import { Route as LabPinsRouteImport } from './routes/lab.pins'
@@ -203,6 +204,11 @@ const LabMapRoute = LabMapRouteImport.update({
 const LabMapLoadingRoute = LabMapLoadingRouteImport.update({
   id: '/lab/map-loading',
   path: '/lab/map-loading',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabMediaRoute = LabMediaRouteImport.update({
+  id: '/lab/media',
+  path: '/lab/media',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabOnboardingFullscreenRoute = LabOnboardingFullscreenRouteImport.update({
@@ -554,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/lab/home': typeof LabHomeRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
+  '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
@@ -638,6 +645,7 @@ export interface FileRoutesByTo {
   '/lab/home': typeof LabHomeRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
+  '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
@@ -726,6 +734,7 @@ export interface FileRoutesById {
   '/lab/home': typeof LabHomeRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
+  '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
@@ -815,6 +824,7 @@ export interface FileRouteTypes {
     | '/lab/home'
     | '/lab/map'
     | '/lab/map-loading'
+    | '/lab/media'
     | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
     | '/lab/pins'
@@ -899,6 +909,7 @@ export interface FileRouteTypes {
     | '/lab/home'
     | '/lab/map'
     | '/lab/map-loading'
+    | '/lab/media'
     | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
     | '/lab/pins'
@@ -986,6 +997,7 @@ export interface FileRouteTypes {
     | '/lab/home'
     | '/lab/map'
     | '/lab/map-loading'
+    | '/lab/media'
     | '/lab/onboarding-fullscreen'
     | '/lab/order-cards'
     | '/lab/pins'
@@ -1071,6 +1083,7 @@ export interface RootRouteChildren {
   LabHomeRoute: typeof LabHomeRoute
   LabMapRoute: typeof LabMapRoute
   LabMapLoadingRoute: typeof LabMapLoadingRoute
+  LabMediaRoute: typeof LabMediaRoute
   LabOnboardingFullscreenRoute: typeof LabOnboardingFullscreenRoute
   LabOrderCardsRoute: typeof LabOrderCardsRoute
   LabPinsRoute: typeof LabPinsRoute
@@ -1245,6 +1258,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/map-loading'
       fullPath: '/lab/map-loading'
       preLoaderRoute: typeof LabMapLoadingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/media': {
+      id: '/lab/media'
+      path: '/lab/media'
+      fullPath: '/lab/media'
+      preLoaderRoute: typeof LabMediaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/onboarding-fullscreen': {
@@ -1862,6 +1882,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabHomeRoute: LabHomeRoute,
   LabMapRoute: LabMapRoute,
   LabMapLoadingRoute: LabMapLoadingRoute,
+  LabMediaRoute: LabMediaRoute,
   LabOnboardingFullscreenRoute: LabOnboardingFullscreenRoute,
   LabOrderCardsRoute: LabOrderCardsRoute,
   LabPinsRoute: LabPinsRoute,

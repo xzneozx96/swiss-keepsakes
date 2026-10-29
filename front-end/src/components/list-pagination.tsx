@@ -33,24 +33,25 @@ export interface PagerState {
 }
 
 /**
- * A list cut into pages of 10. Goes back to page 1 when `resetKey` changes, e.g. on a new
- * tab, filter or search. `pager` feeds `Pager`, wherever it is placed.
+ * A list cut into pages of 10 (`size` sets another, e.g. 24 for a photo wall). Goes back to
+ * page 1 when `resetKey` changes, e.g. on a new tab, filter or search. `pager` feeds `Pager`,
+ * wherever it is placed.
  */
-export function usePaged<T>(items: T[], resetKey = '') {
+export function usePaged<T>(items: T[], resetKey = '', size = PAGE_SIZE) {
   const [state, setState] = useState({ key: resetKey, page: 1 })
-  const pages = Math.max(1, Math.ceil(items.length / PAGE_SIZE))
+  const pages = Math.max(1, Math.ceil(items.length / size))
   const page = Math.min(state.key === resetKey ? state.page : 1, pages)
-  const start = (page - 1) * PAGE_SIZE
+  const start = (page - 1) * size
   const pager: PagerState = {
     page,
     pages,
     total: items.length,
     from: start + 1,
-    to: Math.min(start + PAGE_SIZE, items.length),
+    to: Math.min(start + size, items.length),
     go: next => setState({ key: resetKey, page: next }),
   }
 
-  return { pageItems: items.slice(start, start + PAGE_SIZE), pager }
+  return { pageItems: items.slice(start, start + size), pager }
 }
 
 /**

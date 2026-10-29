@@ -55,3 +55,4 @@ We will store uploads in Neon Object Storage, as backend.md D14 plans, with thes
 - 2026-10-28 amended (gate G-S6-UPLOADROW): the media row is created at confirm, not at presign
 - 2026-10-28 amended (gate G-S6-MEDIAFAIL): a referenced file that fails processing stays `processing`; publish and published-tour save refuse it
 - 2026-10-28 amended (gate G-S6-CORS): bucket CORS cannot be set through the API; development uses the existing wildcard, production origin lock before launch
+- 2026-10-29 note: the media library design (`docs/decisions/2026-10-29-media-library-design.md`) needs a `name` column on `content.media` and settles nothing here. The decision above stands
