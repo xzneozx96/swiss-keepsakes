@@ -45,6 +45,16 @@ export async function grantSuperAdmin(email: string) {
     throw new Error(`${email} could not be made a Super Admin: ${await response.text()}`)
 }
 
+/** A ready image row of this store with no file behind it, for a story that must have a cover to publish. */
+export async function readyCover(storeId: string): Promise<string> {
+  const response = await fetch(`${inbox}/ready-cover?storeId=${encodeURIComponent(storeId)}`, { method: 'POST' })
+
+  if (!response.ok)
+    throw new Error(`No cover could be made for store ${storeId}: ${await response.text()}`)
+
+  return (await response.json() as { id: string }).id
+}
+
 export interface InvitationMail { to: string, subject: string, text: string, link: string }
 export type OwnerInvitationMail = InvitationMail
 

@@ -2,7 +2,7 @@ import type { APIResponse, Browser, Locator, Page } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { expect, test } from '@playwright/test'
 import { categoriesEn } from '../../src/features/categories/messages'
-import { newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
+import { newEmail, ownerInvitationMail, readyCover, SPA_ORIGIN } from './api-server'
 import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, signedInSuperAdmin } from './invitation-flows'
 
 // Sprint 6 user-visible effects against the real API on Chromium in English (playwright.config.ts):
@@ -129,7 +129,7 @@ test('[E4.18][AC87] the Owner creates, renames, reorders and nests blog categori
 })
 
 const paragraph = (text: string) => ({ type: 'paragraph', content: [{ type: 'text', text }] })
-const draft = (title: string, body: unknown) => ({ title, excerpt: 'Excerpt', authorName: 'Anna', authorRole: 'Guide', coverMediaId: null, body })
+const draft = (title: string, body: unknown, coverMediaId: string) => ({ title, excerpt: 'Excerpt', authorName: 'Anna', coverMediaId, body })
 
 test('[E2.13][AC30] the public story read returns the body document, and a table or an HTML body is refused with 422', async ({ browser }, testInfo) => {
   testInfo.setTimeout(240_000)
@@ -146,7 +146,8 @@ test('[E2.13][AC30] the public story read returns the body document, and a table
     ],
   }
   const group = await (await send(owner, 'post', base, {})).json() as { id: string }
-  const created = await send(owner, 'post', `${base}/${group.id}/versions`, { language: 'en', slug, draft: draft('Body story', body) })
+  const cover = await readyCover(storeId)
+  const created = await send(owner, 'post', `${base}/${group.id}/versions`, { language: 'en', slug, draft: draft('Body story', body, cover) })
 
   expect(created.status(), await created.text()).toBe(201)
   const version = await created.json() as { rowVersion: number }
@@ -167,8 +168,8 @@ test('[E2.13][AC30] the public story read returns the body document, and a table
   // A refused body names where the fault is and leaves the stored draft as it was.
   const table = { type: 'doc', content: [{ type: 'table', content: [] }] }
   const current = (await published.json() as { rowVersion: number }).rowVersion
-  const refusedTable = await send(owner, 'patch', `${base}/${group.id}/versions/en`, { draft: draft('Body story', table) }, current)
-  const refusedHtml = await send(owner, 'patch', `${base}/${group.id}/versions/en`, { draft: draft('Body story', '<p>Hi</p>') }, current)
+  const refusedTable = await send(owner, 'patch', `${base}/${group.id}/versions/en`, { draft: draft('Body story', table, cover) }, current)
+  const refusedHtml = await send(owner, 'patch', `${base}/${group.id}/versions/en`, { draft: draft('Body story', '<p>Hi</p>', cover) }, current)
 
   for (const refused of [refusedTable, refusedHtml]) {
     expect([400, 422], await refused.text()).toContain(refused.status())
