@@ -9,13 +9,11 @@ import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { useIdempotencyKey } from '../hooks/use-idempotency-key'
+import { choiceCard } from '../lib/choice-card'
 import { slugFromName } from '../lib/slug'
 import { ProblemNotice } from './problem-notice'
 
 const EMAIL = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
-
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /**
  * A01's sheet: the store's name, the Owner's email and one language, used for the store's default language and

@@ -9,6 +9,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { useIdempotencyKey } from '../hooks/use-idempotency-key'
+import { choiceCard } from '../lib/choice-card'
 import { ProblemNotice } from './problem-notice'
 
 interface Draft { name?: string, language?: Language }
@@ -88,7 +89,7 @@ export function StoreInformationSheet({ store, onClose }: { store: Store, onClos
         <RadioGroup name="defaultLanguage" value={language} onChange={value => setDraft(current => ({ ...current, language: value as Language }))}>
           <Label>{t('stores.info.language')}</Label>
           {(['en', 'de'] as const).map(code => (
-            <Radio key={code} value={code}>
+            <Radio key={code} className={choiceCard} value={code}>
               <Radio.Content>
                 <Radio.Control>
                   <Radio.Indicator />
