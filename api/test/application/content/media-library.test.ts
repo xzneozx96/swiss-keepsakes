@@ -17,6 +17,7 @@ const store = '0190f0c2-0000-7000-8000-00000000000a'
 const other = '0190f0c2-0000-7000-8000-00000000000b'
 const mediaId = '0190f0c2-0000-7000-8000-0000000000f1'
 const rawId = '0190f0c2-0000-7000-8000-0000000000e1'
+const otherRawId = '0190f0c2-0000-7000-8000-0000000000e2'
 const tx = null
 
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g1', stores: new Map([[store, 'owner']]) }
@@ -207,7 +208,7 @@ describe('[E4.11][AC51] replacing a file', () => {
     expect(result.ok).toBe(true)
     const saved = s.media.rows.get(mediaId)!
     expect(saved).toMatchObject({ id: mediaId, version: 2, name: 'Chapel Bridge.png', fileName: 'sunrise.png', status: 'ready', width: 40, height: 30, contentType: 'image/png' })
-    expect(saved.storageKey).toMatch(new RegExp(`^${store}/${mediaId}/v2-[0-9a-f]{8}/original\\.png$`))
+    expect(saved.storageKey).toMatch(new RegExp(`^${store}/${mediaId}/v2-[0-9a-f]{8}-[0-9a-f]{8}/original\\.png$`))
     expect(saved.storageKey).not.toBe(originalKey(store, mediaId, 'png'))
     // The new file and its variant are public, the old ones are still there, the raw upload is spent.
     const keys = [...s.storage.objects('media').keys()]
@@ -224,7 +225,7 @@ describe('[E4.11][AC51] replacing a file', () => {
     await s.replace(owner, store, mediaId, { uploadKey: seedRaw(s, await png('green'), 'image/png') }, null)
     const v3 = s.media.rows.get(mediaId)!
     expect(v3.version).toBe(3)
-    expect(v3.storageKey).toMatch(/\/v3-[0-9a-f]{8}\/original\.png$/)
+    expect(v3.storageKey).toMatch(/\/v3-[0-9a-f]{8}-[0-9a-f]{8}\/original\.png$/)
     expect(v3.storageKey).not.toBe(v2)
     // The file name stays when the upload brings none.
     expect(v3.fileName).toBe('chapel-bridge.png')
@@ -234,7 +235,7 @@ describe('[E4.11][AC51] replacing a file', () => {
     const s = setup([row({ kind: 'pdf', contentType: 'application/pdf', storageKey: originalKey(store, mediaId, 'pdf'), width: null, height: null })])
     const result = await s.replace(owner, store, mediaId, { uploadKey: seedRaw(s, pdf, 'application/pdf', 'pdf') }, null)
     expect(result).toMatchObject({ ok: true, value: { kind: 'pdf', version: 2, width: null } })
-    expect(s.media.rows.get(mediaId)!.storageKey).toMatch(/\/v2-[0-9a-f]{8}\/original\.pdf$/)
+    expect(s.media.rows.get(mediaId)!.storageKey).toMatch(/\/v2-[0-9a-f]{8}-[0-9a-f]{8}\/original\.pdf$/)
     expect([...s.storage.objects('media').values()][0]).toMatchObject({ contentType: 'application/pdf', contentDisposition: 'inline' })
   })
 
@@ -287,6 +288,35 @@ describe('[E4.11][AC51] replacing a file', () => {
     expect(s.sent).toEqual([])
   })
 
+  it('[E4.11][AC51] two replacements with the same bytes from the same version: the loser leaves the winner\'s live objects alone', async () => {
+    const s = setup()
+    const bytes = await png('blue')
+    const winnerUpload = `${store}/${rawId}.png`
+    const loserUpload = `${store}/${otherRawId}.png`
+    s.storage.seed('uploads', winnerUpload, bytes, { contentType: 'image/png' })
+    s.storage.seed('uploads', loserUpload, bytes, { contentType: 'image/png' })
+    // The loser has read version 1 and built its objects. The winner commits before the loser takes the row lock.
+    const realFind = s.media.findById
+    let reads = 0
+    let winner: Awaited<ReturnType<Setup['replace']>> | undefined
+    s.media.findById = async (...args) => {
+      if (++reads === 2)
+        winner = await s.replace(owner, store, mediaId, { uploadKey: winnerUpload }, 'winner')
+
+      return realFind(...args)
+    }
+
+    const loser = await s.replace(owner, store, mediaId, { uploadKey: loserUpload }, 'loser')
+
+    expect(loser).toEqual({ ok: false, reason: 'stale' })
+    expect(winner).toMatchObject({ ok: true, value: { version: 2 } })
+    const live = s.media.rows.get(mediaId)!.storageKey
+    const keys = [...s.storage.objects('media').keys()]
+    expect(keys).toContain(live)
+    expect(keys).toContain(variantKey(live, 40))
+    expect(keys.every(key => isCurrentObject(live, key))).toBe(true)
+  })
+
   it('[E4.11][AC51] a guest and staff of another store are forbidden', async () => {
     const s = setup()
     expect(await s.replace(guest, store, mediaId, { uploadKey: 'x' }, null)).toEqual({ ok: false, reason: 'forbidden' })
@@ -296,17 +326,17 @@ describe('[E4.11][AC51] replacing a file', () => {
 
 describe('[E4.11][AC51] purging old versions', () => {
   it('[E4.11][AC51] removes the objects beside every key but the current one, and keeps what is fresh', async () => {
-    const current = versionedKey(store, mediaId, 3, 'c'.repeat(64), 'png')
+    const current = versionedKey(store, mediaId, 3, 'c'.repeat(64), 'png', 'n0n0n0n0')
     const s = setup([row({ storageKey: current, version: 3 })])
     const old = new Date('2026-10-29T10:00:00Z')
     const first = originalKey(store, mediaId, 'png')
-    const v2 = versionedKey(store, mediaId, 2, 'b'.repeat(64), 'png')
+    const v2 = versionedKey(store, mediaId, 2, 'b'.repeat(64), 'png', 'n0n0n0n0')
     for (const key of [first, variantKey(first, 320), v2, variantKey(v2, 320)])
       s.storage.seed('media', key, new Uint8Array([1]), { lastModified: old })
     s.storage.seed('media', current, new Uint8Array([1]), { lastModified: old })
     s.storage.seed('media', variantKey(current, 320), new Uint8Array([1]), { lastModified: old })
     // A replacement that is being made right now.
-    const v4 = versionedKey(store, mediaId, 4, 'd'.repeat(64), 'png')
+    const v4 = versionedKey(store, mediaId, 4, 'd'.repeat(64), 'png', 'n0n0n0n0')
     s.storage.seed('media', v4, new Uint8Array([1]), { lastModified: s.clock.now() })
 
     await s.purge({ storeId: store, mediaId })

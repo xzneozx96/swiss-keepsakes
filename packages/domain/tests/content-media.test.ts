@@ -165,20 +165,27 @@ describe('[E4.11][AC51] versioned keys', () => {
   const mediaId = '1a2b3c4d-1111-4222-8333-444455556666'
   const sha = 'ab12cd34ef56'.padEnd(64, '0')
 
-  it('[E4.11][AC51] names version n by its number and the first 8 hash characters, and never reuses the first version key', () => {
-    const key = versionedKey(storeId, mediaId, 2, sha, 'png')
-    expect(key).toBe(`${storeId}/${mediaId}/v2-ab12cd34/original.png`)
+  it('[E4.11][AC51] names version n by its number, the first 8 hash characters and the nonce, and never reuses the first version key', () => {
+    const key = versionedKey(storeId, mediaId, 2, sha, 'png', '9f8e7d6c')
+    expect(key).toBe(`${storeId}/${mediaId}/v2-ab12cd34-9f8e7d6c/original.png`)
     expect(key).not.toBe(originalKey(storeId, mediaId, 'png'))
-    expect(variantKey(key, 640)).toBe(`${storeId}/${mediaId}/v2-ab12cd34/w640.webp`)
+    expect(variantKey(key, 640)).toBe(`${storeId}/${mediaId}/v2-ab12cd34-9f8e7d6c/w640.webp`)
+  })
+
+  it('[E4.11][AC51] the same bytes from the same version still get another folder when the nonce differs', () => {
+    const a = versionedKey(storeId, mediaId, 2, sha, 'png', '11111111')
+    const b = versionedKey(storeId, mediaId, 2, sha, 'png', '22222222')
+    expect(a).not.toBe(b)
+    expect(isCurrentObject(a, b)).toBe(false)
   })
 
   it('[E4.11][AC51] keeps the objects beside the current key and nothing else of the file', () => {
-    const current = versionedKey(storeId, mediaId, 3, sha, 'jpg')
+    const current = versionedKey(storeId, mediaId, 3, sha, 'jpg', 'aaaaaaaa')
     const first = originalKey(storeId, mediaId, 'jpg')
     expect(isCurrentObject(current, variantKey(current, 320))).toBe(true)
     expect(isCurrentObject(current, current)).toBe(true)
     expect(isCurrentObject(current, first)).toBe(false)
-    expect(isCurrentObject(current, versionedKey(storeId, mediaId, 2, sha, 'jpg'))).toBe(false)
+    expect(isCurrentObject(current, versionedKey(storeId, mediaId, 2, sha, 'jpg', 'bbbbbbbb'))).toBe(false)
     // The first version sits in the folder that holds every version: only its own files stay.
     expect(isCurrentObject(first, variantKey(first, 320))).toBe(true)
     expect(isCurrentObject(first, current)).toBe(false)

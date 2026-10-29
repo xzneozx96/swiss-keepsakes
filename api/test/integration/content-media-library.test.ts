@@ -1,6 +1,6 @@
 import type { MediaItem, MediaList, MediaUses } from '@sk/api-contract'
 import { randomUUID } from 'node:crypto'
-import { emptyStoryBody } from '@sk/domain/content'
+import { emptyStoryBody, isCurrentObject } from '@sk/domain/content'
 import sharp from 'sharp'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { createFakeStorage } from '../support/fake-storage.ts'
@@ -383,10 +383,10 @@ describe('[E4.11][AC51] replacing a file over HTTP', () => {
 
     expect(result.status).toBe(200)
     expect(result.body).toMatchObject({ id: photo, version: 2, name: 'Sunrise.jpg', fileName: 'sunrise-v2.png', status: 'ready', contentType: 'image/png', width: 64, height: 48 })
-    expect(result.body.publicUrl).toMatch(new RegExp(`/media/${s}/${photo}/v2-[0-9a-f]{8}/original\\.png$`))
+    expect(result.body.publicUrl).toMatch(new RegExp(`/media/${s}/${photo}/v2-[0-9a-f]{8}-[0-9a-f]{8}/original\\.png$`))
     const { rows } = await pool.query<{ storage_key: string, version: number }>('select storage_key, version from content.media where id = $1', [photo])
     const newKey = rows[0]!.storage_key
-    expect(newKey).toMatch(new RegExp(`^${s}/${photo}/v2-[0-9a-f]{8}/original\\.png$`))
+    expect(newKey).toMatch(new RegExp(`^${s}/${photo}/v2-[0-9a-f]{8}-[0-9a-f]{8}/original\\.png$`))
     expect(newKey).not.toBe(oldKey)
     expect(storage.objects('media').has(newKey)).toBe(true)
     // The old object is still there until the purge job runs, and was never overwritten.
@@ -409,6 +409,24 @@ describe('[E4.11][AC51] replacing a file over HTTP', () => {
     expect([refused.status, refused.body.type]).toEqual([422, 'media-kind-mismatch'])
   })
 
+  it('[E4.11][AC51] replacements with the same bytes that race on the real row lock leave the live file and its sizes in storage', async () => {
+    const staff = await env.storeWithStaff()
+    const photo = await media(staff.storeId, 'image', 'Sunrise.jpg')
+    const bytes = await png('blue')
+    const answers = await Promise.all([1, 2, 3, 4].map(() => call<{ type?: string }>(staff, `/${photo}/replace`, { method: 'POST', body: { uploadKey: grant(staff, bytes) } })))
+
+    // A request that lost the lock is refused as stale (412); the others moved the row to the next version.
+    expect(answers.every(answer => answer.status === 200 || answer.status === 412)).toBe(true)
+    const won = answers.filter(answer => answer.status === 200).length
+    expect(won).toBeGreaterThanOrEqual(1)
+    const { rows } = await pool.query<{ storage_key: string, version: number }>('select storage_key, version from content.media where id = $1', [photo])
+    expect(rows[0]!.version).toBe(1 + won)
+    const live = rows[0]!.storage_key
+    const folder = [...storage.objects('media').keys()].filter(key => isCurrentObject(live, key))
+    expect(folder).toContain(live)
+    expect(folder.length).toBeGreaterThan(1)
+  })
+
   it('[E4.11][AC51] queues the purge of the old version after the grace period and refuses a retired or processing file', async () => {
     const w = await wall()
     jobs.length = 0
@@ -420,7 +438,7 @@ describe('[E4.11][AC51] replacing a file over HTTP', () => {
     expect([processing.status, processing.body.type]).toEqual([409, 'media-not-ready'])
   })
 
-  it('[E4.11][AC51] a file that is too large or not the type it says is refused and the row is unchanged', async () => {
+  it('[E4.11][AC51] a file that is not the type it says is refused and the row is unchanged', async () => {
     const w = await wall()
     const result = await call<{ type: string }>(w.staff, `/${w.lonely}/replace`, { method: 'POST', body: { uploadKey: grant(w.staff, new TextEncoder().encode('not a picture')) } })
     expect([result.status, result.body.type]).toEqual([422, 'media-content-mismatch'])

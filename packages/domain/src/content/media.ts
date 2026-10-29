@@ -114,10 +114,12 @@ export function originalKey(storeId: string, mediaId: string, ext: string): stri
   return `${storeId}/${mediaId}/original.${ext}`
 }
 
-// Version 1 keeps the key it was made with. A replacement writes a new folder named by its version and the start of
-// its hash, so two replacements that race never write the same key (ADR-004: a key is never overwritten).
-export function versionedKey(storeId: string, mediaId: string, version: number, sha256: string, ext: string): string {
-  return `${storeId}/${mediaId}/v${version}-${sha256.slice(0, 8)}/original.${ext}`
+// Version 1 keeps the key it was made with. A replacement writes a new folder named by its version, the start of its
+// hash and a nonce that is new for each request, so two replacements never write the same key, even with the same
+// bytes from the same version (ADR-004: a key is never overwritten). A request that loses a race can then remove its
+// own folder without touching the folder of the winner.
+export function versionedKey(storeId: string, mediaId: string, version: number, sha256: string, ext: string, nonce: string): string {
+  return `${storeId}/${mediaId}/v${version}-${sha256.slice(0, 8)}-${nonce}/original.${ext}`
 }
 
 // True for the key itself and the files beside it (the variants). The first version sits in the folder that holds
