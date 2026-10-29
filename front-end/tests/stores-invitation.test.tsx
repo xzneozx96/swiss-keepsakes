@@ -131,9 +131,8 @@ describe('[E2.15][AC02] the invitation on the sign-in layout, signed out', () =>
     answer = signedOutAnswers({ storeName: longName })
     open('owner')
 
-    const title = await screen.findByRole('heading', { level: 1 })
+    const title = await screen.findByRole('heading', { level: 1, name: name => name.includes(longName) })
 
-    expect(title).toHaveTextContent(longName)
     expect(title.className).toContain('[overflow-wrap:anywhere]')
     expect(within(document.querySelector('figure')!).getByText(longName).className).toContain('[overflow-wrap:anywhere]')
     expect(document.body.innerHTML).not.toMatch(/overflow-x/)
@@ -190,6 +189,7 @@ describe('[E2.15][AC02] signed in', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'This invitation is for another email address' })).toHaveFocus()
     expect(screen.getByText('Wrong account')).toBeInTheDocument()
+    expect(within(document.querySelector('figure')!).getByText('Chi Ngoc')).toBeInTheDocument()
     expect(screen.getByText(/The invitation is still open/)).toBeInTheDocument()
     expect(photo()).toBe('colour')
     expect(heldInvitationToken()).toBe(token)
@@ -199,6 +199,36 @@ describe('[E2.15][AC02] signed in', () => {
     expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument()
     expect(heldInvitationToken()).toBe(token)
     expect(photo()).toBe('colour')
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1 })).toHaveFocus())
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Chi Ngoc')
+  })
+
+  it.each(['owner', 'manager'] as const)('keeps the store name on the photo for an already-used %s link refused by the accept call', async (role) => {
+    signedIn()
+    answer = (call) => {
+      if (call.path === '/api/me/invitations/accept')
+        return problem(409, 'invitation-already-accepted')
+      if (call.path === '/api/auth/get-session')
+        return Response.json({ session: { id: 's', userId: 'u', expiresAt: new Date(Date.now() + 1e7).toISOString() }, user: { id: 'u', email: 'x@example.ch', name: 'Mia' } })
+
+      return previewBody({ role })
+    }
+    open(role)
+    if (role === 'manager')
+      await userEvent.click(await screen.findByRole('button', { name: 'Accept invitation' }))
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'This invitation was already used' })).toBeInTheDocument()
+    expect(within(document.querySelector('figure')!).getByText('Chi Ngoc')).toBeInTheDocument()
+    expect(photo()).toBe('grey')
+  })
+
+  it('shows the Owner a failed read of the invitation inside the invitation frame, with an h1', async () => {
+    answer = call => call.path === '/api/public/invitations/preview' ? problem(503, 'internal-error') : Response.json({})
+    open('owner')
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Open your store' })).toBeInTheDocument()
+    expect(document.querySelector('figure img[data-photo]')).not.toBeNull()
   })
 })
 

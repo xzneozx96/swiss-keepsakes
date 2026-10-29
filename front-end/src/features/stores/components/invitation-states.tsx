@@ -17,6 +17,7 @@ import { useDemoActions, useDemoSelector } from '@/features/demo'
 import { clearGuestData } from '@/features/demo/store'
 import { refusalKeys, switchesAccount } from '../lib/refusals'
 import { STORE_PATH } from '../lib/search-params'
+import { ProblemNotice } from './problem-notice'
 
 /** The wording of a screen: a role label or a chip, the title (the screen's h1) and one line under it. */
 function InvitationHead({ eyebrow, chip, title, intro, titleRef }: {
@@ -41,9 +42,10 @@ function InvitationHead({ eyebrow, chip, title, intro, titleRef }: {
 }
 
 /** Mirrors the head, the sign-in note and the first button of the states below. */
-export function InvitationLoading({ text }: { text: string }) {
+export function InvitationLoading({ text, title }: { text: string, title: string }) {
   return (
     <div className="flex flex-col gap-7">
+      <h1 className="sr-only">{title}</h1>
       <p aria-live="polite" className="sr-only" role="status">{text}</p>
       <div aria-hidden className="flex flex-col gap-3">
         <Skeleton className="h-4 w-36 rounded-lg" />
@@ -51,6 +53,16 @@ export function InvitationLoading({ text }: { text: string }) {
         <Skeleton className="h-5 w-3/4 rounded-lg" />
       </div>
       <Skeleton aria-hidden className="h-12 rounded-xl" />
+    </div>
+  )
+}
+
+/** A failed read of the invitation: the screen's title, then what happened and a retry. */
+export function InvitationProblem({ error, title, onRetry }: { error: unknown, title: string, onRetry: () => void }) {
+  return (
+    <div className="flex flex-col gap-7">
+      <h1 className="font-serif text-display text-balance [overflow-wrap:anywhere]">{title}</h1>
+      <ProblemNotice error={error} onRetry={onRetry} />
     </div>
   )
 }
@@ -96,19 +108,26 @@ function EmbeddedSignIn({ returnTo, onSignedIn }: { returnTo: string, onSignedIn
 }
 
 /** Signed out: the store, the role and the sign-in form. No expiry is shown, because the preview carries none. */
-export function SignedOutBody({ role, storeName, inviterName, returnTo, onSignedIn }: {
+export function SignedOutBody({ role, storeName, inviterName, returnTo, focusTitle, onSignedIn }: {
   role: InviteRole
   storeName: string
   inviterName?: string | null
   returnTo: string
+  focusTitle?: boolean
   onSignedIn?: () => void
 }) {
   const { t } = useLocale()
   const text = storeText(role, storeName, inviterName, t)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    if (focusTitle)
+      titleRef.current?.focus()
+  }, [focusTitle])
 
   return (
     <div className="flex flex-col gap-7" data-invitation-state="signedOut">
-      <InvitationHead eyebrow={text.eyebrow} intro={text.intro} title={text.title} />
+      <InvitationHead eyebrow={text.eyebrow} intro={text.intro} title={text.title} titleRef={focusTitle ? titleRef : undefined} />
       <div className="flex flex-col gap-5">
         <p className="text-sm text-pretty text-muted">{t('stores.invite.signInHint')}</p>
         <EmbeddedSignIn returnTo={returnTo} onSignedIn={onSignedIn} />

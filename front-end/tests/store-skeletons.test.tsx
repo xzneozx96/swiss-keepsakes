@@ -15,6 +15,7 @@ const queries = vi.hoisted(() => ({
 }))
 
 vi.mock('@/features/stores/api/queries', () => queries)
+vi.mock('@/features/stores/hooks/use-held-store-name', () => ({ useHeldStoreName: () => undefined }))
 vi.mock('@/features/stores/hooks/use-go-to-sign-in', () => ({ useGoToSignIn: () => vi.fn() }))
 vi.mock('@/features/stores/hooks/use-accept-invitation', () => ({
   useAcceptInvitation: () => ({ state: { kind: 'idle' }, token: undefined, retry: vi.fn(), signIn: vi.fn() }),
@@ -50,6 +51,7 @@ describe('store screens loading', () => {
     const { container } = wrap(<RouterProvider router={router} />)
 
     expect(await screen.findByRole('status')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Join a store' })).toBeInTheDocument()
     expect(genericBox(container)).toBeNull()
     expect(container.querySelector('figure img[data-photo="colour"]')).not.toBeNull()
     expect(container.querySelector('section.rounded-3xl')).toBeNull()

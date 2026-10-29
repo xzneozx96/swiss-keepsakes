@@ -8,6 +8,7 @@ import { useDemoSelector } from '@/features/demo'
 import { apiEnabled } from '@/lib/api-mode'
 import { useAcceptInvitation } from '../hooks/use-accept-invitation'
 import { useDisplayName } from '../hooks/use-display-name'
+import { useHeldStoreName } from '../hooks/use-held-store-name'
 import { INVITATION_PATH, ONBOARDING_PATH, STORE_PATH } from '../lib/search-params'
 import { DisplayNameForm } from './display-name-form'
 import { InvitationPreview } from './invitation-preview'
@@ -37,17 +38,18 @@ export function InvitationScreen() {
 function InvitationFlow() {
   const [round, setRound] = useState(0)
 
-  return <InvitationFlowRound key={round} onSignedOut={() => setRound(count => count + 1)} />
+  return <InvitationFlowRound key={round} focusTitle={round > 0} onSignedOut={() => setRound(count => count + 1)} />
 }
 
-function InvitationFlowRound({ onSignedOut }: { onSignedOut: () => void }) {
+function InvitationFlowRound({ focusTitle, onSignedOut }: { focusTitle: boolean, onSignedOut: () => void }) {
   const { state, token, accept, retry } = useAcceptInvitation(INVITATION_PATH, { manual: true })
   const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)
+  const storeName = useHeldStoreName(token)
 
   if (state.kind === 'accepted')
     return <Welcome role={state.accepted.role} />
   if (state.kind === 'refused')
-    return <RefusalView refusal={state.refusal} audience={state.role ?? 'manager'} onRetry={retry} onSignedOut={onSignedOut} />
+    return <RefusalView refusal={state.refusal} audience={state.role ?? 'manager'} storeName={storeName} onRetry={retry} onSignedOut={onSignedOut} />
   if (!token)
     return <RefusalView refusal="missing" audience="manager" />
 
@@ -56,6 +58,7 @@ function InvitationFlowRound({ onSignedOut }: { onSignedOut: () => void }) {
       pending={state.kind === 'accepting'}
       returnTo={INVITATION_PATH}
       audience="manager"
+      focusTitle={focusTitle}
       signedOut={!signedIn}
       token={token}
       onAccept={accept}

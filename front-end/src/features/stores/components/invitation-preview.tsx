@@ -4,8 +4,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useInvitationPreview } from '../api/queries'
 import { InvitationFrame } from './invitation-frame'
-import { InvitationLoading, ReadyBody, SignedOutBody } from './invitation-states'
-import { ProblemNotice } from './problem-notice'
+import { InvitationLoading, InvitationProblem, ReadyBody, SignedOutBody } from './invitation-states'
 import { RefusalView } from './refusal-view'
 
 /**
@@ -15,7 +14,7 @@ import { RefusalView } from './refusal-view'
  * gets the sign-in form under the invitation; a signed-in one gets the accept button. For an Owner invitation the
  * preview names no inviter, and the screen shows none.
  */
-export function InvitationPreview({ token, audience, returnTo, signedOut, pending, onAccept, onSignedIn }: {
+export function InvitationPreview({ token, audience, returnTo, signedOut, pending, focusTitle, onAccept, onSignedIn }: {
   token: string
   audience: InviteRole
   /** Where the embedded sign-in comes back to: the screen of the link. */
@@ -23,6 +22,8 @@ export function InvitationPreview({ token, audience, returnTo, signedOut, pendin
   /** The visitor has no session, so the screen shows the sign-in form. */
   signedOut: boolean
   pending?: boolean
+  /** Move focus to the title once shown: the visitor just signed out here. */
+  focusTitle?: boolean
   onAccept: () => void
   /** The embedded code sign-in finished. */
   onSignedIn?: () => void
@@ -31,20 +32,21 @@ export function InvitationPreview({ token, audience, returnTo, signedOut, pendin
   const preview = useInvitationPreview(token)
   const problem = preview.error instanceof ApiProblem ? preview.error : undefined
   const unknown = problem?.status === 404 || problem?.status === 400
+  const title = t(audience === 'manager' ? 'stores.invite.title' : 'stores.onboarding.title')
 
   if (unknown)
     return <RefusalView audience={audience} refusal="notFound" />
   if (preview.isError) {
     return (
       <InvitationFrame photo="colour" audience={audience}>
-        <ProblemNotice error={preview.error} onRetry={() => void preview.refetch()} />
+        <InvitationProblem error={preview.error} title={title} onRetry={() => void preview.refetch()} />
       </InvitationFrame>
     )
   }
   if (!preview.data) {
     return (
       <InvitationFrame photo="colour" audience={audience}>
-        <InvitationLoading text={t('stores.invite.checking')} />
+        <InvitationLoading text={t('stores.invite.checking')} title={title} />
       </InvitationFrame>
     )
   }
@@ -57,7 +59,7 @@ export function InvitationPreview({ token, audience, returnTo, signedOut, pendin
   return (
     <InvitationFrame photo="colour" audience={invitedRole} storeName={storeName}>
       {signedOut
-        ? <SignedOutBody inviterName={inviterName} returnTo={returnTo} role={invitedRole} storeName={storeName} onSignedIn={onSignedIn} />
+        ? <SignedOutBody focusTitle={focusTitle} inviterName={inviterName} returnTo={returnTo} role={invitedRole} storeName={storeName} onSignedIn={onSignedIn} />
         : <ReadyBody accepted={state === 'accepted'} inviterName={inviterName} pending={pending} role={invitedRole} storeName={storeName} onAccept={onAccept} />}
     </InvitationFrame>
   )
