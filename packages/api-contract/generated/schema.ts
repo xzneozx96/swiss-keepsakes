@@ -1636,7 +1636,39 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Every pin of the store, most recently edited first. `ended` is a live pin whose dates are all over */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PinList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         put?: never;
         post: {
             parameters: {
@@ -1690,7 +1722,42 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    pinId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pin with its draft, photos and outbound link */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Pin"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete: {
@@ -1881,6 +1948,54 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/pins/story-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The story groups of the store, for the main-story picker */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PinStoryOptionList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3253,6 +3368,20 @@ export interface components {
                 startTime: string | null;
             }[];
             draft: {
+                coverAlt: {
+                    de?: string;
+                    en?: string;
+                };
+                localTip: {
+                    de?: string;
+                    en?: string;
+                };
+                photoAlt: {
+                    [key: string]: {
+                        de?: string;
+                        en?: string;
+                    };
+                };
                 tip: {
                     de?: string;
                     en?: string;
@@ -3264,6 +3393,8 @@ export interface components {
             } | null;
             /** Format: date-time */
             firstPublishedAt: string | null;
+            /** @enum {string|null} */
+            foodKind: "restaurant" | "cafe-bakery" | "pub-bar" | "market" | null;
             /** Format: uuid */
             id: string;
             interests: string[];
@@ -3271,7 +3402,27 @@ export interface components {
             longitude: number | null;
             /** Format: uuid */
             mainStoryGroupId: string | null;
+            mustVisit: boolean;
+            outboundUrl: string | null;
+            photos: {
+                /** Format: uuid */
+                mediaId: string;
+            }[];
             published: {
+                coverAlt: {
+                    de?: string;
+                    en?: string;
+                };
+                localTip: {
+                    de?: string;
+                    en?: string;
+                };
+                photoAlt: {
+                    [key: string]: {
+                        de?: string;
+                        en?: string;
+                    };
+                };
                 tip: {
                     de?: string;
                     en?: string;
@@ -3282,6 +3433,8 @@ export interface components {
                 };
             } | null;
             rowVersion: number;
+            /** @enum {string|null} */
+            serviceType: "water" | "toilets" | "connect" | "transport" | "lockers" | "cash" | null;
             slug: {
                 de?: string;
                 en?: string;
@@ -3300,6 +3453,49 @@ export interface components {
                 opens: string;
             }[];
         };
+        /** @description Every pin of the store, most recently edited first */
+        PinList: {
+            items: components["schemas"]["PinListItem"][];
+        };
+        /** @description A pin as one row of the merchant list */
+        PinListItem: {
+            categoryIds: string[];
+            /** Format: uuid */
+            coverMediaId: string | null;
+            hasDates: boolean;
+            /** Format: uuid */
+            id: string;
+            interests: string[];
+            located: boolean;
+            /** @description `published` is false when the story has no published version */
+            mainStory: {
+                /** Format: uuid */
+                groupId: string;
+                published: boolean;
+            } | null;
+            nextDate: {
+                endTime: string | null;
+                firstDay: string;
+                lastDay: string;
+                startTime: string | null;
+            } | null;
+            rowVersion: number;
+            slug: {
+                de?: string;
+                en?: string;
+            } | null;
+            /** @enum {string} */
+            status: "draft" | "published" | "hidden" | "ended";
+            /** @enum {string} */
+            stayTag: "short_stay" | "multi_day" | "both";
+            /** @description The pending draft title when there is one, else the published title */
+            title: {
+                de?: string;
+                en?: string;
+            };
+            /** Format: date-time */
+            updatedAt: string;
+        };
         /** @description Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save */
         PinPublishBody: {
             slug?: {
@@ -3307,10 +3503,27 @@ export interface components {
                 en?: string;
             };
         };
-        /** @description Every field is optional. A pin has no type and no price */
+        /** @description A story group the pin can name as its main story */
+        PinStoryOption: {
+            /** Format: uuid */
+            groupId: string;
+            /** @enum {string} */
+            kind: "story" | "editorial_review";
+            publishedLanguages: ("en" | "de")[];
+            title: {
+                de?: string;
+                en?: string;
+            };
+        };
+        /** @description Story groups of the store, most recently created first */
+        PinStoryOptionList: {
+            items: components["schemas"]["PinStoryOption"][];
+        };
+        /** @description Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list. `localTip`, `coverAlt` and the alt text of each photo are text: they go to the draft and are live on publish */
         PinWriteBody: {
             address?: string | null;
             categoryIds?: string[];
+            coverAlt?: components["schemas"]["LocalizedText"];
             /** Format: uuid */
             coverMediaId?: string | null;
             dates?: {
@@ -3321,11 +3534,23 @@ export interface components {
                 lastDay: string;
                 startTime?: string | null;
             }[];
-            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes")[];
+            /** @enum {string|null} */
+            foodKind?: "restaurant" | "cafe-bakery" | "pub-bar" | "market" | null;
+            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities")[];
             latitude?: number | null;
+            localTip?: components["schemas"]["LocalizedText"];
             longitude?: number | null;
             /** Format: uuid */
             mainStoryGroupId?: string | null;
+            mustVisit?: boolean;
+            outboundUrl?: string | null;
+            photos?: {
+                alt?: components["schemas"]["LocalizedText"];
+                /** Format: uuid */
+                mediaId: string;
+            }[];
+            /** @enum {string|null} */
+            serviceType?: "water" | "toilets" | "connect" | "transport" | "lockers" | "cash" | null;
             slug?: {
                 de?: string;
                 en?: string;
@@ -4943,7 +5168,7 @@ export interface components {
         };
         StoryGroupCreateBody: {
             categoryIds?: string[];
-            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes")[];
+            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities")[];
             keepsakeProductIds?: string[];
             /**
              * @default story
@@ -4959,7 +5184,7 @@ export interface components {
         };
         StoryGroupSaveBody: {
             categoryIds?: string[];
-            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes")[];
+            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities")[];
             keepsakeProductIds?: string[];
             placeIds?: string[];
             relatedGroupIds?: string[];
@@ -5153,7 +5378,7 @@ export interface components {
                 title?: components["schemas"]["LocalizedText"];
             };
             durationMinutes?: number | null;
-            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes")[];
+            interests?: ("history-culture" | "food-drink" | "lake-mountains" | "shopping-keepsakes" | "local-activities")[];
             keepsakeProductIds?: string[];
             /** Format: uuid */
             pdfMediaId?: string | null;

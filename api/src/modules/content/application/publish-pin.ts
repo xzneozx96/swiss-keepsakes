@@ -4,12 +4,14 @@ import type { Result } from './failure.ts'
 import type { PinDeps } from './pin-deps.ts'
 import { pinPublishGaps } from '@sk/domain/content'
 import { mayManageContent, staffActor } from './access.ts'
+import { ensureMediaReady } from './ensure-media-ready.ts'
 import { fail, ok } from './failure.ts'
 import { mergePublishSlug } from './publish-slug.ts'
 
 // The pending draft goes live. A hidden pin with no draft goes live with the text it had. A language the draft adds
 // needs its slug in `slug`; a language the draft drops goes with its slug. The last language cannot be dropped.
-export function makePublishPin<T>({ uow, pins, audit, clock }: PinDeps<T>) {
+// The main photo and the extra photos must be done processing, as for a tour or a story.
+export function makePublishPin<T>({ uow, pins, media, audit, clock }: PinDeps<T>) {
   return async (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null, slug?: Localized): Promise<Result<Pin>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -19,6 +21,9 @@ export function makePublishPin<T>({ uow, pins, audit, clock }: PinDeps<T>) {
         return fail({ reason: 'not-found' })
       if (pin.rowVersion !== ifMatch)
         return fail({ reason: 'stale' })
+      const processing = await ensureMediaReady(media, tx, storeId, [...(pin.coverMediaId ? [pin.coverMediaId] : []), ...pin.photos.map(photo => photo.mediaId)])
+      if (processing)
+        return fail(processing)
       const title = (pin.draft ?? pin.published)?.title ?? {}
       const merged = mergePublishSlug({ stored: pin.slug, body: slug, title, hasBeenPublished: pin.status !== 'draft' || pin.published !== null })
       if (!merged.ok)
