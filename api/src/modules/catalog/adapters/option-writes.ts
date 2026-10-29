@@ -6,10 +6,12 @@ import { sql } from 'drizzle-orm'
 // has one value of every option and compute the combination key, so the order of these statements does not matter.
 
 // Only the languages that have text: product_options_name_check wants a key, and a blank label is no label.
-const labelJson = (label: Localized) => JSON.stringify({
-  ...(label.en?.trim() && { en: label.en.trim() }),
-  ...(label.de?.trim() && { de: label.de.trim() }),
-})
+function labelJson(label: Localized) {
+  return JSON.stringify({
+    ...(label.en?.trim() && { en: label.en.trim() }),
+    ...(label.de?.trim() && { de: label.de.trim() }),
+  })
+}
 
 export interface WrittenOptions {
   // Ref to id, for options and values. An existing one maps to its own id.

@@ -70,11 +70,13 @@ async function setup(options: { fresh?: boolean } = {}) {
 }
 
 // The options as the editor sends them back: the existing ids as refs.
-const asInput = (options: Option[]) => options.map(option => ({
-  ref: option.id,
-  name: option.name,
-  values: option.values.map(value => ({ ref: value.id, label: value.label, swatch: value.swatch })),
-}))
+function asInput(options: Option[]) {
+  return options.map(option => ({
+    ref: option.id,
+    name: option.name,
+    values: option.values.map(value => ({ ref: value.id, label: value.label, swatch: value.swatch })),
+  }))
+}
 
 describe('[E6.2][AC52] creating a keepsake with options', () => {
   it('[E6.2][AC52] makes the options, their values in order, and a variant with one value of each option', async () => {

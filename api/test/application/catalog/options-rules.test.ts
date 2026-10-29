@@ -13,11 +13,13 @@ const theme: ProductOption = {
   values: [{ id: 'swan', label: { en: 'Swan' }, swatch: null }, { id: 'lion', label: { en: 'Lion' }, swatch: null }],
 }
 const variant = (id: string, skuCode: string, values: Record<string, string>, status: ProductVariant['status'] = 'published'): ProductVariant => ({ id, skuCode, priceRappen: 3900, status, values })
-const input = (option: ProductOption): OptionInput => ({
-  ref: option.id,
-  name: option.name,
-  values: option.values.map(v => ({ ref: v.id, label: v.label, swatch: v.swatch })),
-})
+function input(option: ProductOption): OptionInput {
+  return {
+    ref: option.id,
+    name: option.name,
+    values: option.values.map(v => ({ ref: v.id, label: v.label, swatch: v.swatch })),
+  }
+}
 const product = (options: ProductOption[], variants: ProductVariant[]): Pick<Product, 'options' | 'variants'> => ({ options, variants })
 const codes = (refusals: { code: string }[]) => refusals.map(r => r.code)
 

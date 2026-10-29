@@ -125,11 +125,13 @@ const variantRoute = createRoute({
 
 type OptionBody = NonNullable<z.infer<typeof optionsSaveBodySchema>['options']>[number]
 
-const optionInput = (option: OptionBody): OptionInput => ({
-  ref: option.ref,
-  name: option.name,
-  values: option.values.map(value => ({ ref: value.ref, label: value.label, swatch: value.swatch ?? null })),
-})
+function optionInput(option: OptionBody): OptionInput {
+  return {
+    ref: option.ref,
+    name: option.name,
+    values: option.values.map(value => ({ ref: value.ref, label: value.label, swatch: value.swatch ?? null })),
+  }
+}
 
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
 // verified store from `c.get('store')`, never from the path.

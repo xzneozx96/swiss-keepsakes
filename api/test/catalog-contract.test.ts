@@ -38,7 +38,7 @@ describe('[E6.1][AC55] the catalog contract', () => {
 })
 
 describe('[E6.2][AC52] the options and variants contract', () => {
-  type Schema = { properties?: Record<string, unknown>, required?: string[] }
+  interface Schema { properties?: Record<string, unknown>, required?: string[] }
   const schema = (name: string) => document.components.schemas[name] as Schema
   const operation = (path: string, method: string) => document.paths[`/api/store/{storeId}/products${path}`]?.[method] as { parameters?: { name: string, in: string }[], responses: Record<string, unknown> }
 
