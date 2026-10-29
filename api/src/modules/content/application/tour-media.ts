@@ -1,9 +1,9 @@
-import type { MediaRepository, TourChanges } from '../ports.ts'
+import type { MediaLookup, TourChanges } from '../ports.ts'
 import type { Failure } from './failure.ts'
 import { checkMedia } from './check-media.ts'
 
 // The cover and each stop photo must be images, the guide file a PDF. Each use is listed, not each file.
-export function checkTourMedia<T>(media: MediaRepository<T>, tx: T, storeId: string, changes: TourChanges): Promise<Failure | undefined> {
+export function checkTourMedia<T>(media: MediaLookup<T>, tx: T, storeId: string, changes: TourChanges): Promise<Failure | undefined> {
   const wanted: { id: string, kind: 'image' | 'pdf' }[] = []
   if (changes.coverMediaId)
     wanted.push({ id: changes.coverMediaId, kind: 'image' })

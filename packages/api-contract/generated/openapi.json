@@ -225,6 +225,22 @@
         ],
         "type": "string"
       },
+      "ConfirmUpload": {
+        "additionalProperties": false,
+        "description": "The upload to confirm",
+        "properties": {
+          "uploadKey": {
+            "description": "The uploadKey of the grant, after the file was PUT",
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "uploadKey"
+        ],
+        "type": "object"
+      },
       "CreateStore": {
         "properties": {
           "defaultLanguage": {
@@ -422,6 +438,87 @@
           "storeId",
           "role",
           "status"
+        ],
+        "type": "object"
+      },
+      "Media": {
+        "description": "A file in the library",
+        "properties": {
+          "byteSize": {
+            "type": "integer"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "height": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "audio",
+              "pdf"
+            ],
+            "type": "string"
+          },
+          "publicUrl": {
+            "description": "The public URL of the original. Null until the file is ready",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "processing",
+              "ready",
+              "retired"
+            ],
+            "type": "string"
+          },
+          "variants": {
+            "description": "Resized copies of an image. Empty until the file is ready",
+            "items": {
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "width",
+                "url"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "contentType",
+          "byteSize",
+          "width",
+          "height",
+          "publicUrl",
+          "variants"
         ],
         "type": "object"
       },
@@ -1188,6 +1285,13 @@
             "description": "The request path",
             "type": "string"
           },
+          "mediaIds": {
+            "description": "With media-processing: the ids of the files that are not ready yet",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "requestId": {
             "description": "The server's id for this request, also sent as X-Request-Id",
             "type": "string"
@@ -1201,7 +1305,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, category-has-children, category-in-use, category-too-deep, category-parent-has-children. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -9112,6 +9216,75 @@
           }
         },
         "type": "object"
+      },
+      "UploadGrant": {
+        "description": "Where and how to upload one file",
+        "properties": {
+          "expiresAt": {
+            "description": "The URL stops working at this time",
+            "format": "date-time",
+            "type": "string"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Send these headers with the PUT",
+            "type": "object"
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "audio",
+              "pdf"
+            ],
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "PUT"
+            ],
+            "type": "string"
+          },
+          "uploadKey": {
+            "description": "Send this back to confirm the upload",
+            "type": "string"
+          },
+          "url": {
+            "description": "PUT the file bytes here",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uploadKey",
+          "url",
+          "method",
+          "headers",
+          "expiresAt",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "UploadRequest": {
+        "additionalProperties": false,
+        "description": "The file to upload. The type and size are checked before a URL is issued",
+        "properties": {
+          "byteSize": {
+            "description": "The size of the file in bytes",
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          "contentType": {
+            "description": "The type of the file: image/jpeg, image/png, image/webp, audio/mpeg or application/pdf",
+            "maxLength": 100,
+            "type": "string"
+          }
+        },
+        "required": [
+          "contentType",
+          "byteSize"
+        ],
+        "type": "object"
       }
     }
   },
@@ -10517,6 +10690,176 @@
               }
             },
             "description": "The store with its new information",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/media/confirm": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmUpload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Media"
+                }
+              }
+            },
+            "description": "The file was checked and is being processed. Read it until its status is ready",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/media/uploads": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadGrant"
+                }
+              }
+            },
+            "description": "Where to PUT the file. The URL is valid for 15 minutes",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/media/{mediaId}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Media"
+                }
+              }
+            },
+            "description": "The file. The URLs are set when its status is ready",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"

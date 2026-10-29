@@ -3,13 +3,16 @@ import type { CommandDeps } from './platform/http/app.ts'
 import process from 'node:process'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
+import { createMediaLogAlert } from './modules/content/adapters/media-alert.ts'
+import { createMediaQueues, startMediaWorkers } from './modules/content/adapters/media-jobs.ts'
 import { createMediaRepository } from './modules/content/adapters/media-repository.ts'
 import { createPinRepository } from './modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from './modules/content/adapters/public-repository.ts'
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
+import { createS3Storage, createUnconfiguredStorage } from './modules/content/adapters/s3-storage.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeRequestUpload, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -43,6 +46,7 @@ import { startJobs } from './platform/jobs/boss.ts'
 import { createJobQueue } from './platform/jobs/queue.ts'
 import { createLogger } from './platform/logger.ts'
 import { createSmtpTransport } from './platform/mail.ts'
+import { createS3Client } from './platform/storage.ts'
 
 // The shop name in the N01 subject, the sign-in code mail.
 const appName = brandName
@@ -94,7 +98,19 @@ async function main() {
   stops.unshift(jobs.stop)
   const uow = createUnitOfWork(createDatabase(pool))
   await createMailQueues(jobs.boss)
+  // Confirm sends a media job, so the queues exist before the first send, for every role.
+  await createMediaQueues(jobs.boss)
+  // R5: with no AWS_* the service starts, and the media routes answer 503 storage-unavailable.
+  const storage = config.storage ? createS3Storage(createS3Client(config.storage), config.storage.endpoint) : createUnconfiguredStorage()
   if (config.ROLE !== 'api') {
+    if (!config.storage)
+      logger.warn({ event: 'media.storage-unset' }, 'AWS_* is not set: every upload and media job fails until it is')
+    await startMediaWorkers(jobs.boss, {
+      processMedia: makeProcessMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, warn: event => logger.warn(event, 'media source not deleted') }),
+      failMedia: makeFailMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, alert: createMediaLogAlert(logger) }),
+      retireMedia: makeRetireMedia({ uow, media: createMediaRepository(), storage, clock: systemClock }),
+      sweepMedia: makeSweepUploads({ storage, clock: systemClock }),
+    })
     const sentMail = createSentMailRepository()
     if (!config.smtp)
       logger.warn({ event: 'mail.smtp-unset' }, 'SMTP_* is not set: every mail fails and retries until it is')
@@ -156,7 +172,7 @@ async function main() {
     }
     const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit, clock: systemClock }
     const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit, clock: systemClock }
-    const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock }
+    const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock, jobs: createJobQueue(jobs.boss), graceHours: config.MEDIA_GRACE_HOURS }
     const categoryDeps = { uow, categories: createCategoryRepository(), audit, clock: systemClock }
     const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock }
     const writeUseCases = guardUseCases({
@@ -187,6 +203,11 @@ async function main() {
     // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
     const contentUseCases = {
       ...writeUseCases,
+      requestUpload: makeRequestUpload({ storage, clock: systemClock, newId: () => crypto.randomUUID() }),
+      // They touch storage, so guardUseCases does not wrap them: the media routes map a StorageUnavailableError.
+      confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, newId: () => crypto.randomUUID() }),
+      getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+      publicUrl: storage.publicUrl,
       listStories: makeListStories(readDeps),
       getStory: makeGetStory(readDeps),
       getPin: makeGetPin(readDeps),

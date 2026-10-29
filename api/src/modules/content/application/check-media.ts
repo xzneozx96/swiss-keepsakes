@@ -1,10 +1,10 @@
-import type { MediaRepository } from '../ports.ts'
+import type { MediaLookup } from '../ports.ts'
 import type { Failure } from './failure.ts'
 
 // A retired file is reported before an unusable one, so the editor hears first about what it can fix by choosing
-// another file. Processing files pass: no publish check looks at media status, so only a retired file is refused.
+// another file. Processing files pass here (an upload is saved while the worker runs); ensureMediaReady refuses them at publish.
 export async function checkMedia<T>(
-  media: MediaRepository<T>,
+  media: MediaLookup<T>,
   tx: T,
   storeId: string,
   wanted: { id: string, kind: 'image' | 'audio' | 'pdf' }[],

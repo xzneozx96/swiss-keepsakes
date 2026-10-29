@@ -4,12 +4,13 @@ import type { Result } from './failure.ts'
 import type { TourDeps } from './tour-deps.ts'
 import { tourPublishGaps } from '@sk/domain/content'
 import { mayManageContent, staffActor } from './access.ts'
+import { ensureMediaReady } from './ensure-media-ready.ts'
 import { fail, ok } from './failure.ts'
 import { mergePublishSlug } from './publish-slug.ts'
 
 // The pending draft goes live. An unpublished tour with no draft goes live with the text it had. A language the draft
 // adds needs its slug in `slug`; a language the draft drops goes with its slug. The last language cannot be dropped.
-export function makePublishTour<T>({ uow, tours, audit, clock }: TourDeps<T>) {
+export function makePublishTour<T>({ uow, tours, media, audit, clock }: TourDeps<T>) {
   return async (actor: Actor, storeId: string, tourId: string, ifMatch: number, requestId: string | null, slug?: Localized): Promise<Result<TourGuide>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -19,6 +20,10 @@ export function makePublishTour<T>({ uow, tours, audit, clock }: TourDeps<T>) {
         return fail({ reason: 'not-found' })
       if (tour.rowVersion !== ifMatch)
         return fail({ reason: 'stale' })
+      const files = [tour.coverMediaId, tour.pdfMediaId, ...tour.stops.map(stop => stop.mediaId)].filter(id => id !== null)
+      const processing = await ensureMediaReady(media, tx, storeId, files)
+      if (processing)
+        return fail(processing)
       const title = (tour.draft ?? tour.published)?.title ?? {}
       const merged = mergePublishSlug({ stored: tour.slug, body: slug, title, hasBeenPublished: tour.status !== 'draft' || tour.published !== null })
       if (!merged.ok)

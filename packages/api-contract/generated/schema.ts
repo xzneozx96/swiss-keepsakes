@@ -1131,6 +1131,159 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/store/{storeId}/media/{mediaId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    mediaId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The file. The URLs are set when its status is ready */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Media"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/media/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ConfirmUpload"];
+                };
+            };
+            responses: {
+                /** @description The file was checked and is being processed. Read it until its status is ready */
+                201: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Media"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/media/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UploadRequest"];
+                };
+            };
+            responses: {
+                /** @description Where to PUT the file. The URL is valid for 15 minutes */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UploadGrant"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/member-invitations": {
         parameters: {
             query?: never;
@@ -2550,6 +2703,11 @@ export interface components {
          * @enum {string}
          */
         ConditionState: "met" | "unmet" | "pending";
+        /** @description The upload to confirm */
+        ConfirmUpload: {
+            /** @description The uploadKey of the grant, after the file was PUT */
+            uploadKey: string;
+        };
         CreateStore: {
             /**
              * @default en
@@ -2607,6 +2765,26 @@ export interface components {
             guestId: string;
             /** @description The stores the user belongs to, oldest membership first. Empty for a guest and for a Super Admin, who hold no store role */
             stores: components["schemas"]["MeStore"][];
+        };
+        /** @description A file in the library */
+        Media: {
+            byteSize: number;
+            contentType: string;
+            height: number | null;
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "image" | "audio" | "pdf";
+            /** @description The public URL of the original. Null until the file is ready */
+            publicUrl: string | null;
+            /** @enum {string} */
+            status: "processing" | "ready" | "retired";
+            /** @description Resized copies of an image. Empty until the file is ready */
+            variants: {
+                url: string;
+                width: number;
+            }[];
+            width: number | null;
         };
         Member: {
             /** Format: date-time */
@@ -2813,11 +2991,13 @@ export interface components {
             }[];
             /** @description The request path */
             instance: string;
+            /** @description With media-processing: the ids of the files that are not ready yet */
+            mediaIds?: string[];
             /** @description The server's id for this request, also sent as X-Request-Id */
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, category-has-children, category-in-use, category-too-deep, category-parent-has-children. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children. Show generic copy for any other */
             type: string;
         };
         PublicCategory: {
@@ -4508,6 +4688,33 @@ export interface components {
                 de?: string;
                 en?: string;
             };
+        };
+        /** @description Where and how to upload one file */
+        UploadGrant: {
+            /**
+             * Format: date-time
+             * @description The URL stops working at this time
+             */
+            expiresAt: string;
+            /** @description Send these headers with the PUT */
+            headers: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            kind: "image" | "audio" | "pdf";
+            /** @enum {string} */
+            method: "PUT";
+            /** @description Send this back to confirm the upload */
+            uploadKey: string;
+            /** @description PUT the file bytes here */
+            url: string;
+        };
+        /** @description The file to upload. The type and size are checked before a URL is issued */
+        UploadRequest: {
+            /** @description The size of the file in bytes */
+            byteSize: number;
+            /** @description The type of the file: image/jpeg, image/png, image/webp, audio/mpeg or application/pdf */
+            contentType: string;
         };
     };
     responses: never;

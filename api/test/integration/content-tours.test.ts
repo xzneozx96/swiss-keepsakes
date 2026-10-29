@@ -32,7 +32,7 @@ function setup() {
   const clock = createManualClock(new Date('2026-10-27T10:00:00Z'))
   const uow = createUnitOfWork(db)
   const tours = createTourRepository()
-  const deps = { uow, tours, media: createMediaRepository(), audit: createAuditLog(clock), clock }
+  const deps = { uow, tours, media: createMediaRepository(), audit: createAuditLog(clock), clock, jobs: { send: async () => {} }, graceHours: 24 }
   const use = guardUseCases({
     create: makeCreateTour(deps),
     save: makeSaveTour(deps),

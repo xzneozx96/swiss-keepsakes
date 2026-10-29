@@ -19,7 +19,7 @@ afterAll(async () => {
 // The category repository wrapper below reads a stale count, as a request does when a link is added after it.
 const realCategories = createCategoryRepository()
 let staleUseCount = false
-const env = createContentHttp({ pool, db }, undefined, {
+const env = createContentHttp({ pool, db }, undefined, undefined, {
   ...realCategories,
   list: async (tx, storeId, kind) => {
     const rows = await realCategories.list(tx, storeId, kind)
