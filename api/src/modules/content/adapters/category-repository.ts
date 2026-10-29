@@ -47,10 +47,6 @@ export function createCategoryRepository(): CategoryRepository<Tx> {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${storeId}::text || ${kind}::text, 0))`)
     },
 
-    async find(tx, storeId, kind, id) {
-      return (await select(tx, storeId, kind, id))[0]
-    },
-
     async slugsTaken(tx, storeId, kind) {
       const found = await tx.execute<{ slug: string }>(sql`select slug from ${tables[kind].categories} where store_id = ${storeId}`)
       return new Set(found.rows.map(row => row.slug))

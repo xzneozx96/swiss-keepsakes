@@ -28,10 +28,6 @@ export function createFakeCategories(): CategoryRepository<null> & { rows: Map<s
     async lockList(_tx, storeId, kind) {
       locks.push(`${storeId}:${kind}`)
     },
-    async find(_tx, storeId, kind, id) {
-      const row = rows.get(id)
-      return row && row.storeId === storeId && row.kind === kind ? view(row) : undefined
-    },
     async slugsTaken(_tx, storeId, kind) {
       return new Set(inList(storeId, kind).map(r => r.slug))
     },
