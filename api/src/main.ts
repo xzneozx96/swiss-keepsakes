@@ -154,7 +154,7 @@ async function main() {
       removeMember: makeRemoveMember({ uow, memberships, invitations, audit, clock: systemClock }),
     }
     const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit, clock: systemClock }
-    const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), audit, clock: systemClock }
+    const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit, clock: systemClock }
     const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock }
     const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock }
     const writeUseCases = guardUseCases({

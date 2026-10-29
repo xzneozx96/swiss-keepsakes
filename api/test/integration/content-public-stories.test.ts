@@ -1,4 +1,4 @@
-import type { StoryDraft } from '@sk/domain/content'
+import type { StoredStoryDoc } from '../../src/modules/content/read-ports.ts'
 import { randomUUID } from 'node:crypto'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { createPublicReadRepository } from '../../src/modules/content/adapters/public-repository.ts'
@@ -22,14 +22,14 @@ const get = makeGetStory(deps)
 const categories = makeListCategories(deps)
 
 const slug = () => `s-${randomUUID().slice(0, 8)}`
-const doc = (title: string, over: Partial<StoryDraft> = {}): StoryDraft => ({ title, excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [], ...over })
+const doc = (title: string, over: Partial<StoredStoryDoc> = {}): StoredStoryDoc => ({ title, excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [] }, ...over })
 
 async function group(store: string): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store])
   return rows[0]!.id
 }
 
-async function version(store: string, groupId: string, language: 'en' | 'de', status: 'draft' | 'published', title: string, over: { slug?: string, published?: StoryDraft | null, draft?: StoryDraft | null } = {}): Promise<string> {
+async function version(store: string, groupId: string, language: 'en' | 'de', status: 'draft' | 'published', title: string, over: { slug?: string, published?: StoredStoryDoc | null, draft?: StoredStoryDoc | null } = {}): Promise<string> {
   const s = over.slug ?? slug()
   const published = over.published === undefined ? (status === 'published' ? doc(title) : null) : over.published
   await pool.query(
@@ -141,13 +141,13 @@ describe('public story reads over the database', () => {
     )
     const readyKey = (await pool.query<{ storage_key: string }>('select storage_key from content.media where id = $1', [ready.rows[0]!.id])).rows[0]!.storage_key
     const s = await version(store, g, 'en', 'published', 'With pictures', {
-      published: doc('With pictures', { coverMediaId: ready.rows[0]!.id, sections: [{ id: 'a', heading: 'H', blocks: [{ type: 'image', mediaId: processing.rows[0]!.id, caption: '' }] }] }),
+      published: doc('With pictures', { coverMediaId: ready.rows[0]!.id, body: { type: 'doc', content: [{ type: 'image', attrs: { mediaId: processing.rows[0]!.id, alt: '', caption: '' } }] } }),
     })
 
     const result = await get(s, 'en')
 
     expect(result.ok && result.value.coverKey).toBe(readyKey)
-    expect(result.ok && result.value.sections[0]!.blocks[0]).toEqual({ type: 'image', key: null, caption: '' })
+    expect(result.ok && result.value.body.content[0]).toEqual({ type: 'image', attrs: { key: null, alt: '', caption: '' } })
   })
 
   it('[E2.12][AC45] a media id of another store is not resolved', async () => {
@@ -192,13 +192,13 @@ describe('public story reads over the database', () => {
     )
     const upper = rows[0]!.id.toUpperCase()
     const s = await version(store, g, 'en', 'published', 'Capitals', {
-      published: doc('Capitals', { coverMediaId: upper, sections: [{ id: 'a', heading: 'H', blocks: [{ type: 'image', mediaId: upper, caption: '' }] }] }),
+      published: doc('Capitals', { coverMediaId: upper, body: { type: 'doc', content: [{ type: 'image', attrs: { mediaId: upper, alt: '', caption: '' } }] } }),
     })
 
     const result = await get(s, 'en')
 
     expect(result.ok && result.value.coverKey).toBe(rows[0]!.storage_key)
-    expect(result.ok && result.value.sections[0]!.blocks[0]).toEqual({ type: 'image', key: rows[0]!.storage_key, caption: '' })
+    expect(result.ok && result.value.body.content[0]).toEqual({ type: 'image', attrs: { key: rows[0]!.storage_key, alt: '', caption: '' } })
   })
 
   it('[E2.12][AC64] an unpublished German version with old text does not count: English is carried and only English is available', async () => {
@@ -215,23 +215,23 @@ describe('public story reads over the database', () => {
   it('[E2.12][AC45] a stored document with a block that has no media id does not break the reads', async () => {
     const store = randomUUID()
     const g = await group(store)
-    const odd = doc('Odd shape', { sections: [{ id: 'a', heading: 'H', blocks: [{ type: 'image', caption: 'no id' }, { type: 'audio', mediaId: 'not-a-uuid', title: 't', caption: '' }] }, { id: 'b', heading: 'x', blocks: 'nope' }] } as unknown as Partial<StoryDraft>)
+    const odd = doc('Odd shape', { body: { type: 'doc', content: [{ type: 'image', attrs: { caption: 'no id' } }, { type: 'audio', attrs: { mediaId: 'not-a-uuid', title: 't' } }, 'nope'] } })
     const s = await version(store, g, 'en', 'published', 'Odd shape', { published: odd })
 
     const detail = await get(s, 'en')
     const listed = (await list('en')).items.find(i => i.id === g)
 
     expect(listed?.title).toBe('Odd shape')
-    expect(detail.ok && detail.value.sections[0]!.blocks).toEqual([{ type: 'image', key: null, caption: 'no id' }, { type: 'audio', key: null, title: 't', caption: '' }])
+    expect(detail.ok && detail.value.body.content).toEqual([{ type: 'image', attrs: { key: null, alt: '', caption: 'no id' } }, { type: 'audio', attrs: { key: null, title: 't', caption: '' } }])
   })
 
-  it('[E2.12][AC45] a published document with only a title and sections (the minimum the database accepts) reads', async () => {
+  it('[E2.12][AC45] a published document with only a title and an empty body (the minimum the database accepts) reads', async () => {
     const store = randomUUID()
     const g = await group(store)
-    const s = await version(store, g, 'en', 'published', 'Minimal', { published: { title: 'Minimal', sections: [] } as unknown as StoryDraft })
+    const s = await version(store, g, 'en', 'published', 'Minimal', { published: { title: 'Minimal', body: { type: 'doc' } } })
 
     const detail = await get(s, 'en')
 
-    expect(detail.ok && detail.value).toMatchObject({ title: 'Minimal', excerpt: '', coverKey: null, readMinutes: null, sections: [] })
+    expect(detail.ok && detail.value).toMatchObject({ title: 'Minimal', excerpt: '', coverKey: null, readMinutes: 1, body: { type: 'doc', content: [] } })
   })
 })

@@ -8,9 +8,13 @@ const stayTag = z.enum(['short_stay', 'multi_day', 'both'])
 const interests = z.array(z.enum(['history-culture', 'food-drink', 'lake-mountains', 'shopping-keepsakes'])).max(4)
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const time = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, 'A time as HH:MM')
-// Postgres text and jsonb refuse U+0000, so it is a 400 here and not a 500 there.
+// Postgres text and jsonb refuse U+0000, so it is a 400 here and not a 500 there. A lone UTF-16 surrogate cannot be
+// written as UTF-8 either, so it is refused with it (String.prototype.isWellFormed needs lib ES2024).
+const loneSurrogate = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/
 function noNul<T extends z.ZodString>(schema: T): T {
-  return schema.refine(value => !value.includes('\u0000'), 'Text may not contain a NUL character')
+  return schema
+    .refine(value => !value.includes('\u0000'), 'Text may not contain a NUL character')
+    .refine(value => !loneSurrogate.test(value), 'Text may not contain an unpaired surrogate') as T
 }
 const text = (max: number) => noNul(z.string().max(max))
 const closingTime = z.string().regex(/^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/, 'A time as HH:MM, or 24:00')
@@ -124,32 +128,155 @@ export const pinSchema = z.object({
   updatedAt: z.iso.datetime(),
 }).meta({ id: 'Pin', description: 'A map pin as the editor sees it, with its draft and its published text' })
 
-const storyBlockSchema = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('paragraph'), text: text(20000) }),
-  z.strictObject({ type: z.literal('image'), mediaId: z.uuid(), caption: text(300) }),
+// The story body: one Tiptap document. Only the nodes and marks of the story-editor decision are accepted, each with
+// strict attributes. The contract imports only zod, so these constants repeat packages/domain/src/content/body.ts;
+// a test fails when the two differ. The list nesting is unrolled to a fixed number of levels, so the check that
+// refuses a deep body never meets a deeper one (a recursive schema would walk it first).
+export const STORY_BODY_LIMITS = { maxBytes: 200_000, maxDepth: 10, maxMedia: 100 } as const
+export const BODY_NODE_TYPES = ['paragraph', 'text', 'hardBreak', 'heading', 'blockquote', 'bulletList', 'orderedList', 'listItem', 'image', 'video', 'audio'] as const
+export const BODY_MARK_TYPES = ['bold', 'italic', 'link', 'pinLink'] as const
+export const BODY_LINK_PROTOCOLS = ['https:', 'http:', 'mailto:'] as const
+
+function isSafeHref(href: string): boolean {
+  try {
+    return (BODY_LINK_PROTOCOLS as readonly string[]).includes(new URL(href).protocol)
+  }
+  catch {
+    return false
+  }
+}
+
+const bodyMarkSchema = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('bold') }),
+  z.strictObject({ type: z.literal('italic') }),
   z.strictObject({
-    type: z.literal('video'),
-    youtubeId: z.string().regex(/^[\w-]{11}$/, 'A YouTube video id'),
-    title: text(300),
-    caption: text(300),
+    type: z.literal('link'),
+    attrs: z.strictObject({ href: noNul(z.string().max(2000)).refine(isSafeHref, 'A link is https:, http: or mailto:') }),
   }),
-  z.strictObject({ type: z.literal('audio'), mediaId: z.uuid(), title: text(300), caption: text(300) }),
+  z.strictObject({ type: z.literal('pinLink'), attrs: z.strictObject({ pinId: z.uuid() }) }),
 ])
+
+const bodyTextSchema = z.strictObject({ type: z.literal('text'), text: noNul(z.string().min(1).max(20000)), marks: z.array(bodyMarkSchema).max(4).optional() })
+const bodyHardBreakSchema = z.strictObject({ type: z.literal('hardBreak') })
+const inline = [bodyTextSchema, bodyHardBreakSchema] as const
+
+const bodyParagraphSchema = z.strictObject({ type: z.literal('paragraph'), content: z.array(z.discriminatedUnion('type', inline)).optional() })
+const bodyHeadingSchema = z.strictObject({
+  type: z.literal('heading'),
+  attrs: z.strictObject({ level: z.literal([2, 3]) }),
+  content: z.array(z.discriminatedUnion('type', inline)).optional(),
+})
+const bodyBlockquoteSchema = z.strictObject({ type: z.literal('blockquote'), content: z.array(bodyParagraphSchema) })
+
+// A list item holds paragraphs and nested lists; `levels` more list levels may open inside it. A nested list is
+// one schema with a two-value type, so the unrolled schema grows with the levels and not with their square. The
+// write schema here and the public read in public.ts share this helper and BODY_LIST_LEVELS.
+interface ListItem<P> { type: 'listItem', content: (P | NestedList<P>)[] }
+interface NestedList<P> { type: 'bulletList' | 'orderedList', content: ListItem<P>[] }
+const listTypes = z.enum(['bulletList', 'orderedList'])
+export function listItemSchema<P extends z.ZodType>(paragraph: P, levels: number): z.ZodType<ListItem<z.infer<P>>> {
+  return z.strictObject({
+    type: z.literal('listItem'),
+    content: z.array(levels > 0
+      ? z.discriminatedUnion('type', [paragraph as unknown as z.ZodObject, z.strictObject({ type: listTypes, content: z.array(listItemSchema(paragraph, levels - 1)) })])
+      : paragraph),
+  }) as unknown as z.ZodType<ListItem<z.infer<P>>>
+}
+
+// Depth 10 allows lists at depths 2, 4, 6, 8 and 10, but only three list levels can hold text (list 2, 4, 6, then item,
+// paragraph and text at 7, 8, 9; a fourth list level leaves room for an empty paragraph only). Two more nested levels
+// let a too-deep body reach the depth check.
+export const BODY_LIST_LEVELS = 5
+const bodyBulletListSchema = z.strictObject({ type: z.literal('bulletList'), content: z.array(listItemSchema(bodyParagraphSchema, BODY_LIST_LEVELS)) })
+const bodyOrderedListSchema = z.strictObject({ type: z.literal('orderedList'), content: z.array(listItemSchema(bodyParagraphSchema, BODY_LIST_LEVELS)) })
+
+const bodyImageSchema = z.strictObject({
+  type: z.literal('image'),
+  attrs: z.strictObject({ mediaId: z.uuid(), alt: text(300), caption: text(300) }),
+})
+const bodyVideoSchema = z.strictObject({
+  type: z.literal('video'),
+  attrs: z.strictObject({ youtubeId: z.string().regex(/^[\w-]{11}$/, 'A YouTube video id'), title: text(300), caption: text(300) }),
+})
+const bodyAudioSchema = z.strictObject({
+  type: z.literal('audio'),
+  attrs: z.strictObject({ mediaId: z.uuid(), title: text(300), caption: text(300) }),
+})
+
+const bodyNodeSchema = z.discriminatedUnion('type', [
+  bodyParagraphSchema,
+  bodyHeadingSchema,
+  bodyBlockquoteSchema,
+  bodyBulletListSchema,
+  bodyOrderedListSchema,
+  bodyImageSchema,
+  bodyVideoSchema,
+  bodyAudioSchema,
+])
+
+function utf8Length(value: string): number {
+  let bytes = 0
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i)
+    if (code < 0x80) bytes += 1
+    else if (code < 0x800) bytes += 2
+    else if (code >= 0xD800 && code <= 0xDBFF) {
+      bytes += 4
+      i++
+    }
+    else bytes += 3
+  }
+  return bytes
+}
+
+type Path = (string | number)[]
+interface Walked { type?: unknown, content?: unknown }
+
+// The first fault of the three caps, in document order for depth and media. Runs on a body the shape check passed.
+function firstCapFault(body: Walked): { path: Path, message: string } | undefined {
+  if (utf8Length(JSON.stringify(body)) > STORY_BODY_LIMITS.maxBytes)
+    return { path: [], message: `The body is larger than ${STORY_BODY_LIMITS.maxBytes} bytes` }
+  let media = 0
+  let fault: { path: Path, message: string } | undefined
+  function walk(nodes: unknown, depth: number, path: Path): void {
+    if (!Array.isArray(nodes) || fault) return
+    nodes.forEach((node: Walked, index) => {
+      if (fault) return
+      const here = [...path, index]
+      if (depth > STORY_BODY_LIMITS.maxDepth) {
+        fault = { path: here, message: `Nesting is deeper than ${STORY_BODY_LIMITS.maxDepth} levels` }
+        return
+      }
+      if (node.type === 'image' || node.type === 'video' || node.type === 'audio') {
+        media++
+        if (media > STORY_BODY_LIMITS.maxMedia) {
+          fault = { path: here, message: `A body holds at most ${STORY_BODY_LIMITS.maxMedia} images, videos and audio files` }
+          return
+        }
+      }
+      walk(node.content, depth + 1, [...here, 'content'])
+    })
+  }
+  walk(body.content, 2, ['content'])
+  return fault
+}
+
+export const storyBodySchema = z.strictObject({
+  type: z.literal('doc'),
+  content: z.array(bodyNodeSchema),
+}).superRefine((body, ctx) => {
+  const fault = firstCapFault(body)
+  if (fault) ctx.addIssue({ code: 'custom', path: fault.path, message: fault.message })
+}).meta({ id: 'StoryBody', description: 'The story text as one Tiptap document. Only the nodes and marks of the story editor are accepted' })
 
 // The title may be empty: a draft is incomplete, and the publish gap (title) stops an untitled version going live.
 export const storyDraftSchema = z.strictObject({
   title: noNul(z.string().trim().max(300)),
   excerpt: text(1000),
-  intro: text(20000),
   authorName: text(120),
   authorRole: text(120),
-  readMinutes: z.int().min(1).max(600).nullable(),
   coverMediaId: z.uuid().nullable(),
-  sections: z.array(z.strictObject({
-    id: noNul(z.string().min(1).max(64)),
-    heading: text(300),
-    blocks: z.array(storyBlockSchema).max(200),
-  })).max(60),
+  body: storyBodySchema,
 }).meta({ id: 'StoryDraft', description: 'The text of one story version. The title may be empty until it is published' })
 
 const storyGroupFields = {
@@ -208,24 +335,22 @@ export const storyVersionMoveBodySchema = z.strictObject({
   targetGroupId: z.uuid(),
 }).meta({ id: 'StoryVersionMoveBody' })
 
+// Stored data is not checked again on a read, so the body here is only known to be a document of nodes.
+const storyBodyNodeViewSchema = z.object({
+  type: z.string(),
+  attrs: z.record(z.string(), z.unknown()).optional(),
+  content: z.array(z.unknown()).optional(),
+  text: z.string().optional(),
+  marks: z.array(z.unknown()).optional(),
+})
+
 const storyDraftViewSchema = z.object({
   title: z.string(),
   excerpt: z.string(),
-  intro: z.string(),
   authorName: z.string(),
   authorRole: z.string(),
-  readMinutes: z.int().nullable(),
   coverMediaId: z.uuid().nullable(),
-  sections: z.array(z.object({
-    id: z.string(),
-    heading: z.string(),
-    blocks: z.array(z.discriminatedUnion('type', [
-      z.object({ type: z.literal('paragraph'), text: z.string() }),
-      z.object({ type: z.literal('image'), mediaId: z.uuid(), caption: z.string() }),
-      z.object({ type: z.literal('video'), youtubeId: z.string(), title: z.string(), caption: z.string() }),
-      z.object({ type: z.literal('audio'), mediaId: z.uuid(), title: z.string(), caption: z.string() }),
-    ])),
-  })),
+  body: z.object({ type: z.literal('doc'), content: z.array(storyBodyNodeViewSchema) }),
 })
 
 export const storyVersionSchema = z.object({

@@ -1,24 +1,16 @@
+import type { StoryBody } from './body.ts'
 import type { ContentLanguage, PublishGap, StayTag } from './localized.ts'
+import { storyBodyMediaRefs } from './body.ts'
 
 export type StoryVersionStatus = 'draft' | 'published'
-
-export type StoryBlock
-  = | { type: 'paragraph', text: string }
-    | { type: 'image', mediaId: string, caption: string }
-    | { type: 'video', youtubeId: string, title: string, caption: string }
-    | { type: 'audio', mediaId: string, title: string, caption: string }
-
-export interface StorySection { id: string, heading: string, blocks: StoryBlock[] }
 
 export interface StoryDraft {
   title: string
   excerpt: string
-  intro: string
   authorName: string
   authorRole: string
-  readMinutes: number | null
   coverMediaId: string | null
-  sections: StorySection[]
+  body: StoryBody
 }
 
 export interface StoryGroup {
@@ -68,16 +60,12 @@ export function canDeleteStoryVersion(version: Pick<StoryVersion, 'published'>):
   return version.published === null
 }
 
-/** Media the document points at, once each: the cover and every image or audio block. */
+/** Media the document points at, once each: the cover first, then every image or audio node in document order. */
 export function storyMediaIds(doc: StoryDraft): { id: string, kind: 'image' | 'audio' }[] {
   const seen = new Map<string, 'image' | 'audio'>()
   if (doc.coverMediaId !== null) seen.set(doc.coverMediaId, 'image')
-  for (const section of doc.sections) {
-    for (const block of section.blocks) {
-      if ((block.type === 'image' || block.type === 'audio') && !seen.has(block.mediaId)) {
-        seen.set(block.mediaId, block.type)
-      }
-    }
+  for (const ref of storyBodyMediaRefs(doc.body)) {
+    if (!seen.has(ref.id)) seen.set(ref.id, ref.kind)
   }
   return [...seen].map(([id, kind]) => ({ id, kind }))
 }

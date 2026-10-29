@@ -1,6 +1,7 @@
 import type { StoryDraft } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import { randomUUID } from 'node:crypto'
+import { emptyStoryBody } from '@sk/domain/content'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { guardUseCases, mapDatabaseError } from '../../src/modules/content/adapters/database-errors.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
@@ -34,7 +35,7 @@ function setup() {
   const clock = createManualClock(new Date('2026-10-27T10:00:00Z'))
   const uow = createUnitOfWork(db)
   const stories = createStoryRepository()
-  const deps = { uow, stories, media: createMediaRepository(), audit: createAuditLog(clock), clock }
+  const deps = { uow, stories, media: createMediaRepository(), pins: createPinRepository(), audit: createAuditLog(clock), clock }
   const use = guardUseCases({
     createGroup: makeCreateStoryGroup(deps),
     saveGroup: makeSaveStoryGroup(deps),
@@ -51,7 +52,9 @@ function setup() {
 type Setup = ReturnType<typeof setup>
 
 const slug = () => `story-${randomUUID().slice(0, 8)}`
-const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [], ...over })
+const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: emptyStoryBody, ...over })
+const imageNode = (mediaId: string) => ({ type: 'image', attrs: { mediaId, alt: '', caption: '' } })
+const audioNode = (mediaId: string) => ({ type: 'audio', attrs: { mediaId, title: '', caption: '' } })
 
 async function media(store: string, kind: 'image' | 'audio' = 'image'): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(
@@ -153,7 +156,7 @@ describe('[E2.6] story repository on the real database', () => {
     const voice = await media(s.store, 'audio')
     const next = await media(s.store)
     const g = await group(s)
-    const withMedia = doc({ coverMediaId: cover, sections: [{ id: 's1', heading: 'H', blocks: [{ type: 'audio', mediaId: voice, title: '', caption: '' }, { type: 'image', mediaId: cover, caption: '' }] }] })
+    const withMedia = doc({ coverMediaId: cover, body: { type: 'doc', content: [audioNode(voice), imageNode(cover)] } })
     await version(s, g.id, 'en', { slug: slug(), draft: withMedia })
     expect(await refs(g.id, 'draft')).toBe(2)
     const retire = (id: string) => pool.query(`update content.media set status = 'retired', retired_at = now() where id = $1`, [id])
@@ -179,14 +182,73 @@ describe('[E2.6] story repository on the real database', () => {
     await retire(loneCover)
   })
 
+  it('[E2.13][AC30] a body with an image saves, media_refs lists it, and retiring that image is refused by the database', async () => {
+    const s = setup()
+    const image = await media(s.store)
+    const g = await group(s)
+    const draft = doc({ body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello' }] }, imageNode(image)] } })
+
+    await version(s, g.id, 'en', { slug: slug(), draft })
+
+    const { rows } = await pool.query<{ media_id: string }>(`select media_id from content.media_refs where owner_id = $1 and slot = 'draft'`, [g.id])
+    expect(rows.map(r => r.media_id)).toEqual([image])
+    const refused = await thrown(() => pool.query(`update content.media set status = 'retired', retired_at = now() where id = $1`, [image]))
+    expect(refused).toMatchObject({ code: '23001' })
+    expect(mapDatabaseError(refused)).toMatchObject({ reason: 'in-use' })
+  })
+
   it('[E2.6] one media file written with different letter case in two blocks leaves one media_refs row', async () => {
     const s = setup()
     const image = await media(s.store)
     const g = await group(s)
-    const block = (mediaId: string) => ({ type: 'image' as const, mediaId, caption: '' })
-    const draft = doc({ sections: [{ id: 's1', heading: '', blocks: [block(image), block(image.toUpperCase())] }] })
+    const draft = doc({ body: { type: 'doc', content: [imageNode(image), imageNode(image.toUpperCase())] } })
     expect(await s.use.createVersion(s.actor, s.store, g.id, 'en', { slug: slug(), draft }, null)).toMatchObject({ ok: true })
     expect(await refs(g.id, 'draft')).toBe(1)
+  })
+
+  describe('[E2.13][AC30] pinLink marks against the real pin lookup', () => {
+    async function pin(store: string, status: 'draft' | 'published'): Promise<string> {
+      const published = status === 'published'
+      const { rows } = await pool.query<{ id: string }>(
+        `insert into content.places (store_id, status, slug, latitude, longitude, published, first_published_at)
+         values ($1, $2, $3::jsonb, 47.05, 8.3, $4::jsonb, $5) returning id`,
+        [store, status, published ? JSON.stringify({ en: slug() }) : null, published ? JSON.stringify({ name: { en: 'Chapel Bridge' }, tip: {} }) : null, published ? new Date().toISOString() : null],
+      )
+      return rows[0]!.id
+    }
+    const pinned = (pinId: string) => doc({ body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Bridge', marks: [{ type: 'pinLink', attrs: { pinId } }] }] }] } })
+
+    it('[E2.13][AC30] a pinLink to a draft pin of this store and to a published pin of this store saves', async () => {
+      const s = setup()
+      const g = await group(s)
+      await version(s, g.id)
+      const draftPin = await pin(s.store, 'draft')
+      const livePin = await pin(s.store, 'published')
+
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'en', 1, { draft: pinned(draftPin) }, null)).toMatchObject({ ok: true })
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'en', 2, { draft: pinned(livePin) }, null)).toMatchObject({ ok: true })
+    })
+
+    it('[E2.13][AC30] a pinLink to a pin of another store is reference-invalid and the draft is unchanged', async () => {
+      const s = setup()
+      const g = await group(s)
+      const v = await version(s, g.id)
+      const foreign = await pin(randomUUID(), 'published')
+
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'en', 1, { draft: pinned(foreign) }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+      expect(await s.use.createVersion(s.actor, s.store, g.id, 'de', { slug: slug(), draft: pinned(foreign) }, null)).toEqual({ ok: false, reason: 'reference-invalid' })
+      expect(await versionRow(g.id)).toMatchObject({ row_version: v.rowVersion, draft: v.draft })
+      expect(await count(pool, 'select count(*) from content.story_versions where group_id = $1', [g.id])).toBe(1)
+    })
+
+    it('[E2.13][AC30] an upper-case pinId names the same pin and saves', async () => {
+      const s = setup()
+      const g = await group(s)
+      await version(s, g.id)
+      const own = await pin(s.store, 'draft')
+
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'en', 1, { draft: pinned(own.toUpperCase()) }, null)).toMatchObject({ ok: true })
+    })
   })
 
   it('[E2.6] media of another store is media-invalid and nothing is written', async () => {
@@ -364,6 +426,45 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     const second = await env.call(`${groups}/${groupBody.id}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'en' } })
     expect(second.status).toBe(409)
     expect(await second.json()).toMatchObject({ type: 'version-exists' })
+  }, timeout)
+
+  it('[E2.13][AC30] AC-1 a body with an image saves and publishes through the real app and the published row holds the body', async () => {
+    const staff = await env.storeWithStaff()
+    const image = await media(staff.storeId)
+    const script = '<script>alert(1)</script>'
+    const body = {
+      type: 'doc' as const,
+      content: [
+        { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Lake' }] },
+        { type: 'paragraph', content: [{ type: 'text', text: script }] },
+        imageNode(image),
+      ],
+    }
+    const storySlug = slug()
+    const { groupId, versionPath } = await groupAndVersion(staff, { slug: storySlug, draft: doc() })
+
+    const saved = await env.call(versionPath, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': '1' }, body: { draft: doc({ body }) } })
+    expect(saved.status).toBe(200)
+    const savedBody = await saved.json() as { draft: { body: typeof body } }
+    expect(savedBody).toMatchObject({ rowVersion: 2, draft: { body } })
+    expect(savedBody.draft.body.content[1]).toEqual({ type: 'paragraph', content: [{ type: 'text', text: script }] })
+    expect(await count(pool, `select count(*) from content.media_refs where owner_id = $1 and slot = 'draft'`, [groupId])).toBe(1)
+
+    const published = await env.call(`${versionPath}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '2' } })
+    expect(published.status).toBe(200)
+    expect(await published.json()).toMatchObject({ status: 'published', draft: null, published: { body } })
+    const row = await versionRow(groupId)
+    expect(row).toMatchObject({ status: 'published', published: { body } })
+    expect((row!.published as { body: typeof body }).body.content[1]).toEqual({ type: 'paragraph', content: [{ type: 'text', text: script }] })
+    expect(await count(pool, `select count(*) from content.media_refs where owner_id = $1 and slot = 'published'`, [groupId])).toBe(1)
+
+    const publicRead = await env.call(`/api/public/stories/${storySlug}?lang=en`)
+    expect(publicRead.status).toBe(200)
+    const detail = await publicRead.json() as Record<string, unknown> & { body: { type: string, content: unknown[] } }
+    expect(detail.body.type).toBe('doc')
+    expect(detail.body.content[1]).toEqual({ type: 'paragraph', content: [{ type: 'text', text: script }] })
+    expect(detail).not.toHaveProperty('intro')
+    expect(detail).not.toHaveProperty('sections')
   }, timeout)
 
   it('[E2.6][AC30] publish end to end writes an audit row and unpublish another', async () => {

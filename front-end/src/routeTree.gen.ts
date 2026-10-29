@@ -13,7 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as GuestRouteImport } from './routes/_guest'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as InvitationRouteImport } from './routes/invitation'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as GuestLangRouteImport } from './routes/_guest/$lang'
 import { Route as GuestAccountRouteImport } from './routes/_guest/account'
@@ -115,9 +117,19 @@ const InvitationRoute = InvitationRouteImport.update({
   path: '/invitation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StoreRoute = StoreRouteImport.update({
@@ -536,7 +548,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sign-in': typeof SignInRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
   '/$lang': typeof GuestLangRouteWithChildren
@@ -623,7 +637,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sign-in': typeof SignInRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/account': typeof GuestAccountRoute
   '/cart': typeof GuestCartRoute
   '/credits/$': typeof CreditsSplatRoute
@@ -708,7 +724,9 @@ export interface FileRoutesById {
   '/_guest': typeof GuestRouteWithChildren
   '/admin': typeof AdminRoute
   '/invitation': typeof InvitationRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sign-in': typeof SignInRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/store': typeof StoreRouteWithChildren
   '/store/reports': typeof StoreReportsRouteRouteWithChildren
   '/_guest/$lang': typeof GuestLangRouteWithChildren
@@ -797,7 +815,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/invitation'
+    | '/robots.txt'
     | '/sign-in'
+    | '/sitemap.xml'
     | '/store'
     | '/store/reports'
     | '/$lang'
@@ -884,7 +904,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/invitation'
+    | '/robots.txt'
     | '/sign-in'
+    | '/sitemap.xml'
     | '/account'
     | '/cart'
     | '/credits/$'
@@ -968,7 +990,9 @@ export interface FileRouteTypes {
     | '/_guest'
     | '/admin'
     | '/invitation'
+    | '/robots.txt'
     | '/sign-in'
+    | '/sitemap.xml'
     | '/store'
     | '/store/reports'
     | '/_guest/$lang'
@@ -1057,7 +1081,9 @@ export interface RootRouteChildren {
   GuestRoute: typeof GuestRouteWithChildren
   AdminRoute: typeof AdminRoute
   InvitationRoute: typeof InvitationRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SignInRoute: typeof SignInRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StoreRoute: typeof StoreRouteWithChildren
   CreditsSplatRoute: typeof CreditsSplatRoute
   GiftsSplatRoute: typeof GiftsSplatRoute
@@ -1121,11 +1147,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvitationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sign-in': {
       id: '/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/store': {
@@ -1848,7 +1888,9 @@ const rootRouteChildren: RootRouteChildren = {
   GuestRoute: GuestRouteWithChildren,
   AdminRoute: AdminRoute,
   InvitationRoute: InvitationRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SignInRoute: SignInRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StoreRoute: StoreRouteWithChildren,
   CreditsSplatRoute: CreditsSplatRoute,
   GiftsSplatRoute: GiftsSplatRoute,

@@ -132,15 +132,16 @@ describe('[E2.6] content write schemas', () => {
     expect(ok(storyGroupSaveBodySchema, { subjectPlaceId: uuid })).toBe(false)
   })
 
-  it('[E2.6] story draft limits', () => {
-    const draft = (sections: unknown[]) => ({ title: 'T', excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections })
-    const section = (blocks: unknown[]) => ({ id: 's1', heading: 'H', blocks })
-    expect(ok(storyDraftSchema, draft([section([{ type: 'paragraph', text: 'x' }])]))).toBe(true)
-    expect(ok(storyDraftSchema, draft(Array.from({ length: 61 }).fill(section([]))))).toBe(false)
-    expect(ok(storyDraftSchema, draft([section(Array.from({ length: 201 }).fill({ type: 'paragraph', text: 'x' }))]))).toBe(false)
-    expect(ok(storyDraftSchema, draft([section([{ type: 'video', youtubeId: 'dQw4w9WgXcQ', title: 't', caption: '' }])]))).toBe(true)
-    expect(ok(storyDraftSchema, draft([section([{ type: 'gif' }])]))).toBe(false)
-    expect(ok(storyVersionSaveBodySchema, { draft: draft([]) })).toBe(true)
+  it('[E2.13] story draft: the old intro, sections and readMinutes are refused and the body is required', () => {
+    const body = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'x' }] }] }
+    const draft = { title: 'T', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body }
+    expect(ok(storyDraftSchema, draft)).toBe(true)
+    expect(ok(storyDraftSchema, { ...draft, intro: '' })).toBe(false)
+    expect(ok(storyDraftSchema, { ...draft, readMinutes: 3 })).toBe(false)
+    expect(ok(storyDraftSchema, { ...draft, sections: [] })).toBe(false)
+    expect(ok(storyDraftSchema, { ...draft, body: undefined })).toBe(false)
+    expect(ok(storyVersionSaveBodySchema, { draft })).toBe(true)
+    expect(ok(storyVersionSaveBodySchema, { draft: { ...draft, body: 'x' } })).toBe(false)
   })
 
   it('[E2.6] views serialise dates as ISO strings', () => {
@@ -249,15 +250,15 @@ describe('[E2.6] content write schemas', () => {
 
   it('[E2.6] text with a NUL character is refused in every free-text field, a slug may be cleared with null', () => {
     const nul = 'a\u0000b'
-    const draft = { title: 'T', excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [] }
+    const draft = { title: 'T', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [{ type: 'paragraph' }] } }
+    const paragraph = (value: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: value }] }] })
     expect(ok(pinWriteBodySchema, { title: { en: nul } })).toBe(false)
     expect(ok(pinWriteBodySchema, { tip: { de: nul } })).toBe(false)
     expect(ok(pinWriteBodySchema, { address: nul })).toBe(false)
     expect(ok(tourWriteBodySchema, { draft: { summary: { en: nul } } })).toBe(false)
     expect(ok(storyDraftSchema, { ...draft, title: nul })).toBe(false)
-    expect(ok(storyDraftSchema, { ...draft, intro: nul })).toBe(false)
-    expect(ok(storyDraftSchema, { ...draft, sections: [{ id: 's1', heading: nul, blocks: [] }] })).toBe(false)
-    expect(ok(storyDraftSchema, { ...draft, sections: [{ id: 's1', heading: 'H', blocks: [{ type: 'paragraph', text: nul }] }] })).toBe(false)
+    expect(ok(storyDraftSchema, { ...draft, body: paragraph(nul) })).toBe(false)
+    expect(ok(storyDraftSchema, { ...draft, body: { type: 'doc', content: [{ type: 'image', attrs: { mediaId: uuid, alt: nul, caption: '' } }] } })).toBe(false)
     expect(ok(storyDraftSchema, draft)).toBe(true)
     expect(ok(storyVersionSaveBodySchema, { slug: null })).toBe(true)
   })
@@ -266,7 +267,7 @@ describe('[E2.6] content write schemas', () => {
     const iso = '2026-10-27T10:00:00.000Z'
     const long = 'x'.repeat(30000)
     const view = { groupId: uuid, storeId: uuid, language: 'en', status: 'draft', slug: null, published: null, publishedAt: null, rowVersion: 1, createdAt: iso, updatedAt: iso }
-    const draft = { title: '', excerpt: long, intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [] }
+    const draft = { title: '', excerpt: long, authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [] } }
     expect(ok(storyVersionSchema, { ...view, draft })).toBe(true)
   })
 

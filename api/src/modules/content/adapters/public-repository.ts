@@ -1,27 +1,8 @@
-import type { ContentLanguage, Localized, PinDate, StayTag, StoryDraft, TourGuideDoc } from '@sk/domain/content'
+import type { ContentLanguage, Localized, PinDate, StayTag, TourGuideDoc } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
-import type { PublicCategoryRow, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow } from '../read-ports.ts'
+import type { PublicCategoryRow, PublicPinRow, PublicReadRepository, PublicStoryRow, PublicTourRow, StoredStoryDoc } from '../read-ports.ts'
 import { sql } from 'drizzle-orm'
-
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-// The media ids a stored story document points at, lowercased. The JSON is not trusted: a missing or odd id, a
-// section list that is not an array and a block without an id are skipped, and a value that is no uuid never reaches the query.
-function storyMediaIds(doc: StoryDraft): string[] {
-  const ids = new Set<string>()
-  const add = (value: unknown) => {
-    if (typeof value === 'string' && uuidPattern.test(value))
-      ids.add(value.toLowerCase())
-  }
-  add(doc?.coverMediaId)
-  for (const section of Array.isArray(doc?.sections) ? doc.sections : []) {
-    for (const block of Array.isArray(section?.blocks) ? section.blocks : []) {
-      if (block && (block.type === 'image' || block.type === 'audio'))
-        add(block.mediaId)
-    }
-  }
-  return [...ids]
-}
+import { publishedStoryMediaIds } from './story-media-ids.ts'
 
 interface VersionJoinRow {
   id: string
@@ -30,7 +11,7 @@ interface VersionJoinRow {
   interests: string[]
   language: ContentLanguage
   slug: string
-  published: StoryDraft
+  published: StoredStoryDoc
   published_at: Date
 }
 
@@ -56,7 +37,7 @@ async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryR
 
   const groupIds = [...new Set(versions.rows.map(r => r.id))]
   const storeIds = [...new Set(versions.rows.map(r => r.store_id))]
-  const mediaIds = [...new Set(versions.rows.flatMap(r => storyMediaIds(r.published)))]
+  const mediaIds = [...new Set(versions.rows.flatMap(r => publishedStoryMediaIds(r.published)))]
 
   const categoryRows = await tx.execute<CategoryJoinRow & Record<string, unknown>>(sql`
     select sc.group_id, c.id, c.slug, c.name, c.parent_id, c.position
@@ -89,7 +70,7 @@ async function loadStories(tx: Tx, groupId: string | null): Promise<PublicStoryR
       slug: row.slug,
       published: row.published,
       publishedAt: new Date(row.published_at),
-      mediaKeys: Object.fromEntries(storyMediaIds(row.published).flatMap(id => (keys.has(`${row.store_id}/${id}`) ? [[id, keys.get(`${row.store_id}/${id}`)!]] : []))),
+      mediaKeys: Object.fromEntries(publishedStoryMediaIds(row.published).flatMap(id => (keys.has(`${row.store_id}/${id}`) ? [[id, keys.get(`${row.store_id}/${id}`)!]] : []))),
     })
   }
   return [...stories.values()]

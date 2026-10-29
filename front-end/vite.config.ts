@@ -8,6 +8,8 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { nitro } from 'nitro/vite'
 import { defineConfig } from 'vite'
 
+const ZOD_IMPORT = /^zod$/
+
 // The API's address for the dev server. The browser only ever calls /api on its own origin.
 const apiTarget = process.env.API_PROXY_TARGET ?? 'http://127.0.0.1:5002'
 
@@ -27,6 +29,8 @@ export default defineConfig(({ command }) => ({
   base: '/',
   resolve: {
     tsconfigPaths: true,
+    // Nitro bundles `zod` as `_libs/zod.mjs`, which is all zod/v3 (no `.meta`), so the contract schemas throw in the server build: pin v4.
+    alias: [{ find: ZOD_IMPORT, replacement: 'zod/v4' }],
   },
   server: { port: 3002, strictPort: true },
   plugins: [

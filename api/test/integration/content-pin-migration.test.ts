@@ -91,7 +91,7 @@ describe('[E2.11][AC68] the migration runs on top of 0008', () => {
     const group = await insertId(pool, `insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store])
     await pool.query(
       `insert into content.story_versions (group_id, language, store_id, status, slug, published, published_at)
-       values ($1, 'en', $2, 'published', 'old-town', '{"title":"Old Town","sections":[]}', now())`,
+       values ($1, 'en', $2, 'published', 'old-town', '{"title":"Old Town","body":{"type":"doc","content":[]}}', now())`,
       [group, store],
     )
     const place = await insertId(

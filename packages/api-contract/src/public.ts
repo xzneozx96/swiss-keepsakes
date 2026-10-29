@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BODY_LIST_LEVELS, listItemSchema } from './content.ts'
 
 // What the public reads return: published text in one language, media as a storage key, and no price anywhere.
 // Responses are plain objects, not strict ones, like the editor views in content.ts.
@@ -24,19 +25,64 @@ export const nextDateSchema = z.object({
 
 const categoryRefSchema = z.object({ id: z.uuid(), slug: z.string(), name: z.string().nullable() })
 
-const storyBlockSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('paragraph'), text: z.string() }),
-  z.object({ type: z.literal('image'), key: z.string().nullable(), caption: z.string() }),
-  z.object({ type: z.literal('video'), youtubeId: z.string(), title: z.string(), caption: z.string() }),
-  z.object({ type: z.literal('audio'), key: z.string().nullable(), title: z.string(), caption: z.string() }),
+// The story body as the page reads it: the editor document with each media id replaced by its storage key.
+// Strict, so a node or attribute the server does not mean to send fails the response check in tests.
+const publicMarkSchema = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('bold') }),
+  z.strictObject({ type: z.literal('italic') }),
+  z.strictObject({ type: z.literal('link'), attrs: z.strictObject({ href: z.string() }) }),
+  z.strictObject({ type: z.literal('pinLink'), attrs: z.strictObject({ pinId: z.uuid() }) }),
 ])
+
+const publicTextSchema = z.strictObject({ type: z.literal('text'), text: z.string(), marks: z.array(publicMarkSchema).optional() })
+const publicHardBreakSchema = z.strictObject({ type: z.literal('hardBreak') })
+const publicInline = z.discriminatedUnion('type', [publicTextSchema, publicHardBreakSchema])
+
+const publicParagraphSchema = z.strictObject({ type: z.literal('paragraph'), content: z.array(publicInline).optional() })
+const publicHeadingSchema = z.strictObject({
+  type: z.literal('heading'),
+  attrs: z.strictObject({ level: z.literal([2, 3]) }),
+  content: z.array(publicInline).optional(),
+})
+const publicBlockquoteSchema = z.strictObject({ type: z.literal('blockquote'), content: z.array(publicParagraphSchema) })
+
+// Lists unrolled to the same depth as the write schema (a story body is at most ten levels deep).
+const publicBulletListSchema = z.strictObject({ type: z.literal('bulletList'), content: z.array(listItemSchema(publicParagraphSchema, BODY_LIST_LEVELS)) })
+const publicOrderedListSchema = z.strictObject({ type: z.literal('orderedList'), content: z.array(listItemSchema(publicParagraphSchema, BODY_LIST_LEVELS)) })
+
+const publicImageSchema = z.strictObject({
+  type: z.literal('image'),
+  attrs: z.strictObject({ key: z.string().nullable(), alt: z.string(), caption: z.string() }),
+})
+const publicVideoSchema = z.strictObject({
+  type: z.literal('video'),
+  attrs: z.strictObject({ youtubeId: z.string(), title: z.string(), caption: z.string() }),
+})
+const publicAudioSchema = z.strictObject({
+  type: z.literal('audio'),
+  attrs: z.strictObject({ key: z.string().nullable(), title: z.string(), caption: z.string() }),
+})
+
+export const publicStoryBodySchema = z.strictObject({
+  type: z.literal('doc'),
+  content: z.array(z.discriminatedUnion('type', [
+    publicParagraphSchema,
+    publicHeadingSchema,
+    publicBlockquoteSchema,
+    publicBulletListSchema,
+    publicOrderedListSchema,
+    publicImageSchema,
+    publicVideoSchema,
+    publicAudioSchema,
+  ])),
+}).meta({ id: 'PublicStoryBody', description: 'The story text as one Tiptap document. Images and audio carry a storage key in place of a media id' })
 
 export const publicStoryCardSchema = z.object({
   id: z.uuid(),
   slug: z.string(),
   title: z.string(),
   excerpt: z.string(),
-  readMinutes: z.int().nullable(),
+  readMinutes: z.int().min(1),
   coverKey: z.string().nullable(),
   stayTag,
   interests: z.array(z.string()),
@@ -50,14 +96,9 @@ export const publicStoryListSchema = z.object({
 }).meta({ id: 'PublicStoryList' })
 
 export const publicStorySchema = publicStoryCardSchema.extend({
-  intro: z.string(),
   authorName: z.string(),
   authorRole: z.string(),
-  sections: z.array(z.object({
-    id: z.string(),
-    heading: z.string(),
-    blocks: z.array(storyBlockSchema),
-  })),
+  body: publicStoryBodySchema,
 }).meta({ id: 'PublicStory' })
 
 export const publicPinSchema = z.object({

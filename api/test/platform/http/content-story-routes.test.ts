@@ -1,8 +1,11 @@
+import type { StoryDraft } from '@sk/domain/content'
 import type { Access } from '@sk/domain/identity'
 import type { ContentUseCases } from '../../../src/modules/content/adapters/routes.ts'
 import { describe, expect, it } from 'vitest'
 import { registerContentRoutes } from '../../../src/modules/content/adapters/routes.ts'
+import { makeSaveStoryVersion } from '../../../src/modules/content/application/save-story-version.ts'
 import { createFakeContentUseCases, fakeStoryGroup, fakeStoryVersion } from '../../support/fake-content-use-cases.ts'
+import { createFakeStories } from '../../support/fake-stories.ts'
 import { createGuardedApp, guardedCommands, noAccess, shopOrigin, signedInAs } from '../../support/guarded-app.ts'
 
 const lucerne = '0190f0c2-0000-7000-8000-00000000000a'
@@ -36,7 +39,7 @@ function send(app: ReturnType<typeof setup>, method: string, path: string, heade
   })
 }
 
-const draft = { title: 'A day on the lake', excerpt: '', intro: '', authorName: '', authorRole: '', readMinutes: null, coverMediaId: null, sections: [] }
+const draft: StoryDraft = { title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello' }] }] } }
 
 describe('[E2.6] the story version save: If-Match, ETag and rowVersion', () => {
   it('[E2.6] AC-1 a story version PATCH with a stale If-Match is 412 and with none is 428', async () => {
@@ -333,5 +336,107 @@ describe('[E2.6] AC-7 who may write stories', () => {
     const response = await send(setup(), 'POST', groups, signedInAs(who), {})
 
     expect(response.status).toBe(201)
+  })
+})
+
+function paragraphOf(text: string) {
+  return { type: 'paragraph', content: [{ type: 'text', text }] }
+}
+
+function deepList(lists: number, leaf: unknown) {
+  let inner: unknown = { type: 'listItem', content: [leaf] }
+  for (let i = 1; i < lists; i++)
+    inner = { type: 'listItem', content: [{ type: 'bulletList', content: [inner] }] }
+  return { type: 'bulletList', content: [inner] }
+}
+
+// The filler that makes nine full paragraphs plus one paragraph exactly 200,000 bytes; one more character is over.
+const sizeFiller = 200_000 - new TextEncoder().encode(JSON.stringify({ type: 'doc', content: [...Array.from({ length: 9 }).fill(paragraphOf('a'.repeat(20000))), paragraphOf('')] })).length
+
+describe('[E2.13][AC30] a refused story body', () => {
+  const badBodies: [string, unknown, string][] = [
+    ['a node that is not on the list', { type: 'doc', content: [{ type: 'paragraph' }, { type: 'table' }] }, 'draft.body.content.1.type'],
+    ['a mark that is not on the list', { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a', marks: [{ type: 'underline' }] }] }] }, 'draft.body.content.0.content.0.marks.0.type'],
+    ['a heading of level 1', { type: 'doc', content: [{ type: 'heading', attrs: { level: 1 }, content: [] }] }, 'draft.body.content.0.attrs.level'],
+    ['a javascript: link', { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a', marks: [{ type: 'link', attrs: { href: 'JAVASCRIPT:alert(1)' } }] }] }] }, 'draft.body.content.0.content.0.marks.0.attrs.href'],
+    ['a string of HTML', '<p>Hi</p>', 'draft.body'],
+    ['an unknown attribute on an image', { type: 'doc', content: [{ type: 'image', attrs: { mediaId: '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d', alt: '', caption: '', width: 9 } }] }, 'draft.body.content.0.attrs'],
+    ['an empty text node', { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: '' }] }] }, 'draft.body.content.0.content.0.text'],
+    ['depth 11', { type: 'doc', content: [deepList(4, { type: 'paragraph', content: [{ type: 'text', text: 'x' }] })] }, `draft.body${'.content.0'.repeat(10)}`],
+    ['101 media nodes', { type: 'doc', content: Array.from({ length: 101 }).fill({ type: 'image', attrs: { mediaId: '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d', alt: '', caption: '' } }) }, 'draft.body.content.100'],
+    ['a size of 200,001 bytes', { type: 'doc', content: [...Array.from({ length: 9 }).fill(paragraphOf('a'.repeat(20000))), paragraphOf('a'.repeat(sizeFiller + 1))] }, 'draft.body'],
+  ]
+
+  it.each(badBodies)('[E2.13][AC30] %s answers 422 with the path, the use case is not called, on a create and on a save', async (_name, body, path) => {
+    let calls = 0
+    const count = async () => {
+      calls++
+      return { ok: true, value: fakeStoryVersion } as const
+    }
+    const app = setup({ createStoryVersion: count, saveStoryVersion: count })
+    const bad = { ...draft, body }
+
+    const created = await send(app, 'POST', versions, {}, { language: 'en', draft: bad })
+    const saved = await send(app, 'PATCH', english, { 'If-Match': '1' }, { draft: bad })
+
+    for (const response of [created, saved]) {
+      expect(response.status).toBe(422)
+      expect(response.headers.get('Content-Type')).toBe('application/problem+json')
+      expect(await response.json()).toMatchObject({ type: 'validation-failed', errors: [{ in: 'json', path }] })
+    }
+    expect(calls).toBe(0)
+  })
+
+  it('[E2.13] a body with 50,000 faults answers with the first 20 issues only', async () => {
+    const app = setup()
+    const content = Array.from({ length: 50_000 }).fill({ type: 'x' })
+    const response = await send(app, 'PATCH', english, { 'If-Match': '1' }, { draft: { ...draft, body: { type: 'doc', content } } })
+    expect(response.status).toBe(422)
+    const problem = await response.json() as { errors: unknown[] }
+    expect(problem.errors).toHaveLength(20)
+    expect(JSON.stringify(problem).length).toBeLessThan(20_000)
+  })
+
+  it('[E2.13][AC30] a missing body is refused with the path draft.body', async () => {
+    const app = setup()
+    const { body: _body, ...without } = draft
+    const response = await send(app, 'PATCH', english, { 'If-Match': '1' }, { draft: without })
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ errors: [{ path: 'draft.body' }] })
+  })
+
+  it('[E2.13] a fault outside the body keeps 400', async () => {
+    const app = setup()
+    const response = await send(app, 'PATCH', english, { 'If-Match': '1' }, { draft: { ...draft, intro: 'old shape' } })
+    expect(response.status).toBe(400)
+    expect(await response.json()).toMatchObject({ type: 'validation-failed', errors: [{ path: 'draft' }] })
+  })
+
+  it('[E2.13][AC30] the stored draft is unchanged after a refused save (real use case, fake repository)', async () => {
+    const stories = createFakeStories()
+    const at = new Date('2026-10-27T08:00:00Z')
+    const g = await stories.insertGroup(null, lucerne, { kind: 'story', subjectPlaceId: null }, at)
+    const v = await stories.insertVersion(null, lucerne, g.id, 'en', { slug: 'a-day', draft }, at)
+    const deps = {
+      uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) },
+      stories,
+      media: { find: async () => [] },
+      pins: { idsInStore: async () => [] },
+      audit: { record: async () => {} },
+      clock: { now: () => at },
+    }
+    const app = setup({ saveStoryVersion: makeSaveStoryVersion(deps) })
+    const path = `${groups}/${g.id}/versions/en`
+
+    const refused = await send(app, 'PATCH', path, { 'If-Match': '1' }, { draft: { ...draft, body: { type: 'doc', content: [{ type: 'table' }] } } })
+    expect(refused.status).toBe(422)
+    expect(stories.versions.get(`${g.id}/en`)).toEqual(v)
+
+    const pin = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
+    const body = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'a', marks: [{ type: 'pinLink', attrs: { pinId: pin } }] }] }] }
+    const unknownPin = await send(app, 'PATCH', path, { 'If-Match': '1' }, { draft: { ...draft, body } })
+    expect(unknownPin.status).toBe(422)
+    expect(await unknownPin.json()).toMatchObject({ type: 'reference-invalid' })
+    expect(stories.versions.get(`${g.id}/en`)).toEqual(v)
   })
 })
