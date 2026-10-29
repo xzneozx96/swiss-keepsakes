@@ -1,22 +1,14 @@
 import { Skeleton } from '@heroui/react'
 
+import { SetupFrame } from './setup-frame'
+
 /** Loading shapes for the store screens. Each copies the container classes of the real rows and cards it stands in for, so nothing jumps when the data arrives. */
 
 const ROW_CARD = 'flex flex-col gap-2 rounded-3xl bg-surface p-4 shadow-surface'
-const FORM_CARD = 'flex flex-col gap-4 rounded-3xl bg-surface p-4 shadow-surface'
 const BUTTON = 'h-11 rounded-xl'
 
 function Heading({ width = 'w-40' }: { width?: string }) {
   return <Skeleton aria-hidden className={`h-6 rounded-lg ${width}`} />
-}
-
-function Field() {
-  return (
-    <div aria-hidden className="flex flex-col gap-2">
-      <Skeleton className="h-4 w-24 rounded-lg" />
-      <Skeleton className="h-11 w-full rounded-xl" />
-    </div>
-  )
 }
 
 /** The two list sections of the members tab and the invitations heading, as `MemberRow` and `InvitationRow` lay them out. */
@@ -68,38 +60,68 @@ export function InvitationCardSkeleton() {
   )
 }
 
-/** A02 as it will look: the checklist, the store information form and the open-for-sale button. */
-export function OnboardingSkeleton() {
+/** Open your store as it will look: the frame, the steps beside the page (a bar and "All steps" on a phone), and one step with its footer. */
+export function OnboardingSkeleton({ title }: { title: string }) {
   return (
-    <div aria-hidden className="flex flex-col gap-6" data-skeleton="onboarding">
-      <section className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <Heading width="w-44" />
-          <Skeleton className="h-4 w-10 rounded-lg" />
-        </div>
-        <ul className="flex flex-col gap-2">
-          {[0, 1, 2, 3].map(index => (
-            <li key={index} className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-4 shadow-surface">
-              <Skeleton className="h-4 w-40 rounded-lg" />
-              <Skeleton className="h-6 w-16 shrink-0 rounded-full" />
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="flex flex-col gap-3">
-        <Heading width="w-48" />
-        <div className={FORM_CARD}>
-          <Field />
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-4 w-28 rounded-lg" />
-            <Skeleton className="h-5 w-24 rounded-lg" />
-            <Skeleton className="h-5 w-24 rounded-lg" />
+    <SetupFrame title={title}>
+      <p aria-live="polite" className="sr-only" role="status">{title}</p>
+      <div aria-hidden className="flex flex-1 flex-col" data-skeleton="onboarding">
+        <div className="flex flex-col gap-2 border-b border-separator bg-surface px-4 py-3 lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <Skeleton className="h-5 w-40 rounded-lg" />
+            <Skeleton className="h-8 w-24 rounded-xl" />
           </div>
-          <Skeleton className={`${BUTTON} w-32`} />
+          <Skeleton className="h-2 w-full rounded-full" />
         </div>
-      </section>
-      <Skeleton className="h-12 w-full rounded-xl" data-skeleton="open-for-sale" />
-    </div>
+        <div className="mx-auto flex w-full max-w-5xl flex-1 items-start gap-8 px-4 py-6 pb-28 lg:px-8 lg:py-10">
+          <aside className="hidden w-72 shrink-0 lg:block">
+            <div className="flex flex-col gap-4 rounded-3xl bg-surface p-4 shadow-surface">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-baseline justify-between gap-3">
+                  <Skeleton className="h-5 w-28 rounded-lg" />
+                  <Skeleton className="h-5 w-16 rounded-lg" />
+                </div>
+                <Skeleton className="h-2 w-full rounded-full" />
+              </div>
+              <ul className="flex flex-col gap-1">
+                {[0, 1, 2, 3, 4].map(index => (
+                  <li key={index} className="flex min-h-11 items-center gap-3 px-3 py-2">
+                    <Skeleton className="size-5 shrink-0 rounded-full" />
+                    <div className="flex flex-col gap-1">
+                      <Skeleton className="h-4 w-32 rounded-lg" />
+                      <Skeleton className="h-3 w-20 rounded-lg" />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
+          <div className="flex min-w-0 flex-1 flex-col rounded-3xl bg-surface shadow-surface">
+            <div className="flex min-h-80 flex-col gap-6 p-5 lg:p-8" data-skeleton="step">
+              <div className="flex items-start gap-4">
+                <Skeleton className="size-12 shrink-0 rounded-2xl" />
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Skeleton className="h-7 w-44 max-w-full rounded-lg" />
+                    <Skeleton className="h-7 w-24 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-3/4 rounded-lg" />
+                </div>
+              </div>
+              <div className="flex max-w-md flex-col gap-4">
+                <Skeleton className="h-24 w-full rounded-xl" />
+                <Skeleton className="h-4 w-4/5 rounded-lg" />
+                <Skeleton className={`${BUTTON} w-52`} />
+              </div>
+            </div>
+            <div className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 border-t border-separator bg-surface px-4 py-3 lg:static lg:rounded-b-3xl lg:px-8">
+              <Skeleton className={`${BUTTON} w-20`} />
+              <Skeleton className={`${BUTTON} w-32`} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </SetupFrame>
   )
 }
 

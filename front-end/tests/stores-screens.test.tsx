@@ -154,22 +154,39 @@ function onboardingAnswers(overrides: Partial<Record<string, () => Response>> = 
   }
 }
 
+const stepsNav = () => screen.findByRole('navigation', { name: 'Steps' })
+
+async function pickStep(name: RegExp) {
+  await userEvent.click(within(await stepsNav()).getByRole('button', { name }))
+}
+
+/** The last step, where the store opens. */
+const goToOpenStep = () => pickStep(/^Open for sale/)
+const openButton = () => screen.findByRole('button', { name: 'Open Chi Ngoc for sale' })
+
+async function openInformationSheet() {
+  await userEvent.click(await screen.findByRole('button', { name: 'Edit store information' }))
+
+  return screen.findByRole('dialog', { name: 'Store information' })
+}
+
 describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => {
   it('accepts the held token once, drops it, and shows the four conditions with Open for sale locked', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     answer = onboardingAnswers()
     renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    expect(await stepsNav()).toBeInTheDocument()
     const accepts = calls.filter(call => call.path === '/api/me/invitations/accept')
 
     expect(accepts).toHaveLength(1)
     expect(accepts[0].body).toEqual({ token })
     expect(accepts[0].key).toBeTruthy()
     expect(heldInvitationToken()).toBeUndefined()
-    expect(screen.getByText('1 of 4 done')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Open for sale' })).toBeDisabled()
-    expect(screen.getByText('Finish every step above to open for sale.')).toBeInTheDocument()
+    expect(screen.getAllByText('1 of 4 done').length).toBeGreaterThan(0)
+    await goToOpenStep()
+    expect(await openButton()).toBeDisabled()
+    expect(screen.getByText('Opening unlocks when these are done: Payment account, A product or a tour, Policies.')).toBeInTheDocument()
   })
 
   it('shows the store from the preview and the embedded sign-in when the API answers 401, on the same address, the token in sessionStorage only', async () => {
@@ -306,7 +323,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     answer = onboardingAnswers()
     renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    expect(await stepsNav()).toBeInTheDocument()
     expect(JSON.stringify(demo.queryClient.getQueryCache().getAll().map(query => query.queryKey))).not.toContain(token)
   })
 
@@ -315,7 +332,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     answer = onboardingAnswers()
     renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    expect(await stepsNav()).toBeInTheDocument()
     expect(calls.map(call => call.path).filter(path => path !== '/api/auth/get-session')).toEqual(['/api/me', `/api/store/${storeId}/onboarding`])
     expect(localStorage.getItem('sk.ownerStore')).toBeNull()
   })
@@ -345,7 +362,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     }
     renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    expect(await stepsNav()).toBeInTheDocument()
   })
 
   it('asks for a display name when the account has none, and saves it with updateUser, as plain text capped at 80 characters', async () => {
@@ -364,7 +381,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
 
     expect(field).toHaveAttribute('maxlength', '80')
     await userEvent.type(field, '  <b>Ngoc</b>  ')
-    await userEvent.click(screen.getByRole('button', { name: 'Save name' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Save and continue' }))
 
     await waitFor(() => expect(calls.some(call => call.path === '/api/auth/update-user')).toBe(true))
     expect(calls.find(call => call.path === '/api/auth/update-user')?.body).toEqual({ name: '<b>Ngoc</b>' })
@@ -380,7 +397,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     }
     renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    expect(await stepsNav()).toBeInTheDocument()
     await waitFor(() => expect(calls.some(call => call.path === '/api/auth/get-session')).toBe(true))
     expect(screen.queryByRole('textbox', { name: 'Your name' })).not.toBeInTheDocument()
   })
@@ -392,14 +409,15 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     })
     renderAt('/store/onboarding', OnboardingScreen)
 
-    const name = await screen.findByRole('textbox', { name: 'Store name' })
+    const sheet = await openInformationSheet()
+    const name = within(sheet).getByRole('textbox', { name: 'Store name' })
 
     await userEvent.clear(name)
     await userEvent.type(name, 'Chi Ngoc Shop')
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await userEvent.click(within(sheet).getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(calls.some(call => call.method === 'PATCH')).toBe(true))
-    await userEvent.type(name, '!')
-    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await userEvent.type(await within(await openInformationSheet()).findByRole('textbox', { name: 'Store name' }), '!')
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Store information' })).getByRole('button', { name: 'Save' }))
     await waitFor(() => expect(calls.filter(call => call.method === 'PATCH')).toHaveLength(2))
 
     const [first, second] = calls.filter(call => call.method === 'PATCH')
@@ -427,10 +445,11 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     })
     renderAt('/store/onboarding', OnboardingScreen)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Open for sale' }))
+    await goToOpenStep()
+    await userEvent.click(await openButton())
 
-    expect(await screen.findByText('Your store is open for sale.', { selector: 'p' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Open for sale' })).not.toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Chi Ngoc is open for sale' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Open Chi Ngoc for sale' })).not.toBeInTheDocument()
   })
 
   it('shows the 409 onboarding-incomplete state with the steps still open, then reads the conditions again', async () => {
@@ -441,13 +460,14 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     })
     renderAt('/store/onboarding', OnboardingScreen)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Open for sale' }))
+    await goToOpenStep()
+    await userEvent.click(await openButton())
 
     const alert = await screen.findByRole('alert')
 
     expect(within(alert).getByText(/The store cannot open yet\. Still open: Payment account, A product or a tour, Policies\./)).toBeInTheDocument()
     await waitFor(() => expect(calls.filter(call => call.path === `/api/store/${storeId}/onboarding`)).toHaveLength(2))
-    await userEvent.click(screen.getByRole('button', { name: 'Open for sale' }))
+    await userEvent.click(await openButton())
     await waitFor(() => expect(calls.filter(call => call.method === 'POST')).toHaveLength(2))
 
     const [first, second] = calls.filter(call => call.path.endsWith('/open-for-sale'))
@@ -804,7 +824,7 @@ describe('[E2.3][S8] one Idempotency-Key per intent, not per request', () => {
     renderAt('/store/onboarding', OnboardingScreen)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Try again' }))
-    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    expect(await stepsNav()).toBeInTheDocument()
 
     const accepts = calls.filter(call => call.path === '/api/me/invitations/accept')
 
@@ -825,7 +845,7 @@ describe('[E2.3][S8] one Idempotency-Key per intent, not per request', () => {
     renderAt('/store/onboarding', OnboardingScreen)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Try again' }))
-    await screen.findByText('Before you open for sale')
+    await stepsNav()
 
     const [first, second] = calls.filter(call => call.path === '/api/me/invitations/accept')
 
@@ -940,7 +960,8 @@ describe('[E2.3][S8] a double tap sends one request', () => {
     })
     renderAt('/store/onboarding', OnboardingScreen)
 
-    const button = await screen.findByRole('button', { name: 'Open for sale' })
+    await goToOpenStep()
+    const button = await openButton()
     let release = () => {}
 
     hold = new Promise<void>((resolve) => { release = resolve })
@@ -962,7 +983,7 @@ describe('[E2.3][S8] a double tap sends one request', () => {
     })
     renderAt('/store/onboarding', OnboardingScreen)
 
-    await userEvent.type(await screen.findByRole('textbox', { name: 'Store name' }), ' Shop')
+    await userEvent.type(within(await openInformationSheet()).getByRole('textbox', { name: 'Store name' }), ' Shop')
     const button = screen.getByRole('button', { name: 'Save' })
     let release = () => {}
 
@@ -1004,7 +1025,7 @@ describe('[E2.3][S8] the invitation survives a screen that is gone and a link op
       takeInvitationFromHash('/store/onboarding', `#invitation=${token}`)
     })
 
-    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    expect(await stepsNav()).toBeInTheDocument()
     expect(calls.filter(call => call.path === '/api/me/invitations/accept')).toHaveLength(1)
     expect(heldInvitationToken()).toBeUndefined()
   })
@@ -1025,7 +1046,7 @@ describe('[E2.3][S8] the invitation survives a screen that is gone and a link op
       takeInvitationFromHash('/store/onboarding', `#invitation=${token}-newer-link`)
     })
 
-    expect(await screen.findByText('Before you open for sale')).toBeInTheDocument()
+    expect(await stepsNav()).toBeInTheDocument()
   })
 })
 
@@ -1109,9 +1130,10 @@ describe('[E2.3][S8] refusals and failed reads', () => {
     })
     renderAt('/store/onboarding', OnboardingScreen)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Open for sale' }))
+    await goToOpenStep()
+    await userEvent.click(await openButton())
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('The store cannot open yet. Check the steps above.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('The store cannot open yet. Check your steps.')
     expect(screen.queryByText(/Still open/)).not.toBeInTheDocument()
   })
 
@@ -1128,9 +1150,10 @@ describe('[E2.3][S8] refusals and failed reads', () => {
     answer = onboardingAnswers()
     renderAt('/store/onboarding', OnboardingScreen)
 
-    const button = await screen.findByRole('button', { name: 'Open for sale' })
+    await goToOpenStep()
+    const button = await openButton()
 
-    expect(button).toHaveAccessibleDescription('Finish every step above to open for sale.')
+    expect(button).toHaveAccessibleDescription('Opening unlocks when these are done: Payment account, A product or a tour, Policies.')
   })
 
   it('gives a Super Admin the sign-out alone, with the private window hint', async () => {
@@ -1164,13 +1187,13 @@ describe('[E2.3][S8] the store information form keeps an edit through a backgrou
     })
     renderAt('/store/onboarding', OnboardingScreen)
 
-    const field = await screen.findByRole('textbox', { name: 'Store name' })
+    const field = within(await openInformationSheet()).getByRole('textbox', { name: 'Store name' })
 
     await userEvent.type(field, ' Shop')
     name = 'Chi Ngoc Changed Elsewhere'
     await act(() => demo.queryClient.invalidateQueries({ queryKey: ['stores'] }))
 
-    await waitFor(() => expect(screen.getByText('Chi Ngoc Changed Elsewhere')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getAllByText('Chi Ngoc Changed Elsewhere').length).toBeGreaterThan(0))
     expect(screen.getByRole('textbox', { name: 'Store name' })).toHaveValue('Chi Ngoc Shop')
   })
 })

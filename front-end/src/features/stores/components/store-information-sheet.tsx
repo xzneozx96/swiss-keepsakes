@@ -4,6 +4,7 @@ import type { Language } from '@sk/domain/shared'
 import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, TextField, toast } from '@heroui/react'
 import { useState } from 'react'
 
+import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
@@ -13,11 +14,11 @@ import { ProblemNotice } from './problem-notice'
 interface Draft { name?: string, language?: Language }
 
 /**
- * The editable part of the store's information: its name and default language. Only the Owner may save. What the
- * Owner typed is kept apart from what the API last said, so a read in the background never wipes an edit in
- * progress, and a field the Owner has not touched follows the API.
+ * The store's name and default language, edited in a sheet. Only the Owner may save. What the Owner typed is kept
+ * apart from what the API last said, so a read in the background (the store changed elsewhere) never wipes an
+ * edit in progress, and a field the Owner has not touched follows the API.
  */
-export function StoreInformationForm({ store }: { store: Store }) {
+export function StoreInformationSheet({ store, onClose }: { store: Store, onClose: () => void }) {
   const { t } = useLocale()
   const [draft, setDraft] = useState<Draft>({})
   const [nameInvalid, setNameInvalid] = useState(false)
@@ -37,18 +38,31 @@ export function StoreInformationForm({ store }: { store: Store }) {
     submit({ ...input, idempotencyKey: key.next() }, {
       onSuccess: () => {
         key.settled()
-        setDraft({})
         toast.success(t('stores.info.saved'))
+        onClose()
       },
       onError: failure => key.settled(failure),
     })
   }
 
   return (
-    <section aria-labelledby="stores-information" className="flex flex-col gap-3">
-      <h2 className="text-heading" id="stores-information">{t('stores.info.title')}</h2>
+    <SheetFrame
+      isOpen
+      footer={(
+        <>
+          <Button fullWidth className="min-h-11" isDisabled={!changed} isPending={isPending} onPress={save}>
+            {t('stores.info.save')}
+          </Button>
+          <Button fullWidth className="min-h-11" variant="tertiary" onPress={onClose}>
+            {t('stores.create.cancel')}
+          </Button>
+        </>
+      )}
+      title={t('stores.info.title')}
+      onClose={onClose}
+    >
       <Form
-        className="flex flex-col gap-4 rounded-3xl bg-surface p-4 shadow-surface"
+        className="flex flex-col gap-4"
         validationBehavior="aria"
         onSubmit={(event) => {
           event.preventDefault()
@@ -90,10 +104,7 @@ export function StoreInformationForm({ store }: { store: Store }) {
             message={error instanceof ApiProblem && error.type === 'forbidden' ? 'stores.info.forbidden' : undefined}
           />
         )}
-        <Button isDisabled={!changed} isPending={isPending} type="submit">
-          {t('stores.info.save')}
-        </Button>
       </Form>
-    </section>
+    </SheetFrame>
   )
 }
