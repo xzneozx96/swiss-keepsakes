@@ -36,7 +36,7 @@ Where a spec and HeroUI's CSS disagree, the CSS wins. Every spec file ends with 
 - **Lists and cards.** Render skeleton rows or cards with the same shape as the real ones: same count of lines, same avatar or thumbnail, same height.
 - **Never a generic block.** Do not stand in for a screen with a few large grey boxes such as `<Skeleton className="h-40 w-full rounded-3xl" />`.
 - **HeroUI limits.** HeroUI has `Skeleton` and `Table.LoadMore` (the append row for infinite scroll). It has no whole-table skeleton. Do not use `Table.LoadMore` as a first-load state.
-- **Guard.** `front-end/tests/skeleton-guard.test.ts` fails when a file in `src/features` (not the lab) or `src/routes` has a `<Skeleton` with `w-full`, `rounded-3xl` and an `h-<n>` height.
+- **Guard.** `front-end/tests/skeleton-guard.test.ts` fails when a file in `src/features` (not the lab), `src/routes` or `src/components` has a `<Skeleton` with `w-full`, `rounded-3xl` or `rounded-2xl`, and an `h-<n>` height.
 - **Related.** The router's route skeleton is in `api-integration.md`. Loading before a heavy hook runs is in `performance.md`.
 
 ### Reuse shared components and never restyle HeroUI primitives in a feature
