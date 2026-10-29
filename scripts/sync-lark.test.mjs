@@ -5,7 +5,8 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
-  BLOCKED_PATTERN, classifyDeletes, diffEpicOptions, diffSections, initialStatus, parseArgs, parsePlan, readIds, sectionName,
+  BLOCKED_PATTERN, classifyDeletes, diffEpicOptions, diffSections, fingerprint, initialStatus, needsPatch, parseArgs, parsePlan, readIds,
+  sectionName, select, syncTasks,
 } from "../docs/development-plan/sync-lark.mjs";
 
 const plans = join(dirname(fileURLToPath(import.meta.url)), "..", "docs", "development-plan");
@@ -22,7 +23,7 @@ test("parsePlan reads 10 epics, 21 sprints and every story row of the plan", () 
 });
 
 test("parsePlan expands a story range in the sprint map", () => {
-  assert.deepEqual(plan.sprints.at(-1).storyIds, Array.from({ length: 10 }, (_, i) => `E9.${i + 1}`));
+  assert.deepEqual(plan.sprints[0].storyIds, Array.from({ length: 9 }, (_, i) => `E0.${i + 1}`));
 });
 
 test("a Blocked by O or Q reference starts a story as Blocked, and nothing else does", () => {
@@ -33,11 +34,11 @@ test("a Blocked by O or Q reference starts a story as Blocked, and nothing else 
   assert.equal(initialStatus({ acceptance: "Works on staging." }), "Backlog");
 });
 
-test("a blocker named in the Story column blocks the story, as in the real row E4.6", () => {
-  const e46 = plan.stories.find((s) => s.id === "E4.6");
+test("a blocker named in the Story column blocks the story, as in the real row E2.9", () => {
+  const e29 = plan.stories.find((s) => s.id === "E2.9");
 
-  assert.ok(/Blocked by [QO]\d+/.test(e46.story));
-  assert.equal(initialStatus(e46), "Blocked");
+  assert.ok(/Blocked by [QO]\d+/.test(e29.story));
+  assert.equal(initialStatus(e29), "Blocked");
   assert.equal(initialStatus({ story: "Blocked by O23.", acceptance: "Works." }), "Blocked");
 });
 
@@ -126,10 +127,116 @@ test("classifyDeletes refuses active work unless forced, and skips a task that i
 
 test("parseArgs reads the mode, the delete file and the flags", () => {
   assert.deepEqual(parseArgs(["--dry-run", "--delete-ids", "ids.txt", "--delete-only", "--force"]), {
-    mode: "dry", deleteIds: "ids.txt", deleteOnly: true, force: true,
+    mode: "dry", deleteIds: "ids.txt", deleteOnly: true, force: true, forceAll: false,
   });
-  assert.deepEqual(parseArgs([]), { mode: "live", deleteIds: undefined, deleteOnly: false, force: false });
+  assert.deepEqual(parseArgs([]), { mode: "live", deleteIds: undefined, deleteOnly: false, force: false, forceAll: false });
   assert.equal(parseArgs(["--parse"]).mode, "parse");
+});
+
+test("--force-all is its own flag and does not turn on the delete --force", () => {
+  assert.deepEqual([parseArgs(["--force-all"]).forceAll, parseArgs(["--force-all"]).force], [true, false]);
+  assert.deepEqual([parseArgs(["--force"]).forceAll, parseArgs(["--force"]).force], [false, true]);
+});
+
+const lark = {
+  tasklist: "tl",
+  sections: { 1: "s1" },
+  fields: {
+    Priority: { guid: "pf", options: { High: "p-high", Medium: "p-med", Low: "p-low" } },
+    Epic: { guid: "ef", options: { "E1 One": "e-one" } },
+    Status: { guid: "sf", options: { Backlog: "s-backlog", Blocked: "s-blocked" } },
+  },
+};
+const miniPlan = {
+  epics: [{ id: "E1", name: "One" }],
+  stories: ["E1.1", "E1.2"].map((id) => ({
+    id, story: `Story ${id}`, side: "FE", priority: "High", depends: "", acceptance: "Works.", epic: "E1", sprint: 1,
+  })),
+};
+const ownedOf = (story) => [select(lark, "Priority", story.priority), select(lark, "Epic", "E1 One")];
+const printOf = (story) => fingerprint(story, ownedOf(story));
+
+function runSync({ fingerprints, have, forceAll = false, stories = miniPlan.stories }) {
+  const calls = [];
+  const state = { ...lark, fingerprints };
+  const run = (args) => {
+    calls.push(args.slice(0, 2).join(" "));
+    return {};
+  };
+  const result = syncTasks({ ...miniPlan, stories }, state, new Set(), { have: new Map(have), run, persist: () => {}, forceAll });
+  return { calls, state, result };
+}
+
+test("fingerprint is 16 hex characters and follows the title, description and owned field values", () => {
+  const story = miniPlan.stories[0];
+  const print = printOf(story);
+
+  assert.match(print, /^[0-9a-f]{16}$/);
+  assert.equal(print, printOf({ ...story }));
+  assert.notEqual(print, printOf({ ...story, story: "Another title" }));
+  assert.notEqual(print, printOf({ ...story, acceptance: "Different proof." }));
+  assert.notEqual(print, printOf({ ...story, side: "BE" }));
+  assert.notEqual(print, fingerprint(story, [select(lark, "Priority", "Low"), select(lark, "Epic", "E1 One")]));
+});
+
+test("needsPatch is false only when the stored fingerprint matches and no force is given", () => {
+  assert.equal(needsPatch("abc", "abc", false), false);
+  assert.equal(needsPatch("abc", "def", false), true);
+  assert.equal(needsPatch(undefined, "abc", false), true);
+  assert.equal(needsPatch("abc", "abc", true), true);
+});
+
+test("syncTasks patches nothing when every fingerprint matches", () => {
+  const fingerprints = Object.fromEntries(miniPlan.stories.map((s) => [s.id, printOf(s)]));
+  const { calls, result } = runSync({ fingerprints, have: [["E1.1", "g1"], ["E1.2", "g2"]] });
+
+  assert.deepEqual(calls, []);
+  assert.deepEqual(result, { created: 0, updated: 0, unchanged: 2 });
+});
+
+test("syncTasks patches only the story whose description changed, and records its new fingerprint", () => {
+  const fingerprints = Object.fromEntries(miniPlan.stories.map((s) => [s.id, printOf(s)]));
+  const changed = [miniPlan.stories[0], { ...miniPlan.stories[1], acceptance: "Now with proof." }];
+  const { calls, state, result } = runSync({ fingerprints, have: [["E1.1", "g1"], ["E1.2", "g2"]], stories: changed });
+
+  assert.deepEqual(calls, ["tasks patch"]);
+  assert.deepEqual(result, { created: 0, updated: 1, unchanged: 1 });
+  assert.equal(state.fingerprints["E1.1"], printOf(miniPlan.stories[0]));
+  assert.equal(state.fingerprints["E1.2"], printOf(changed[1]));
+});
+
+test("syncTasks patches a task with no stored fingerprint, also when lark.json has no fingerprints key", () => {
+  const { calls, state, result } = runSync({ fingerprints: undefined, have: [["E1.1", "g1"], ["E1.2", "g2"]] });
+
+  assert.deepEqual(calls, ["tasks patch", "tasks patch"]);
+  assert.deepEqual(result, { created: 0, updated: 2, unchanged: 0 });
+  assert.deepEqual(state.fingerprints, { "E1.1": printOf(miniPlan.stories[0]), "E1.2": printOf(miniPlan.stories[1]) });
+});
+
+test("syncTasks with forceAll patches every task even when nothing changed", () => {
+  const fingerprints = Object.fromEntries(miniPlan.stories.map((s) => [s.id, printOf(s)]));
+  const { calls, result } = runSync({ fingerprints, have: [["E1.1", "g1"], ["E1.2", "g2"]], forceAll: true });
+
+  assert.deepEqual(calls, ["tasks patch", "tasks patch"]);
+  assert.deepEqual(result, { created: 0, updated: 2, unchanged: 0 });
+});
+
+test("syncTasks creates a story that is not in Lark and records its fingerprint", () => {
+  const { calls, state, result } = runSync({ fingerprints: {}, have: [["E1.1", "g1"]] });
+
+  assert.deepEqual(calls, ["tasks patch", "tasks create"]);
+  assert.deepEqual(result, { created: 1, updated: 1, unchanged: 0 });
+  assert.equal(state.fingerprints["E1.2"], printOf(miniPlan.stories[1]));
+});
+
+test("a failed write leaves no fingerprint, so the next run tries that task again", () => {
+  const state = { ...lark, fingerprints: {} };
+  const run = () => {
+    throw new Error("lark-cli failed");
+  };
+
+  assert.throws(() => syncTasks(miniPlan, state, new Set(), { have: new Map([["E1.1", "g1"]]), run, persist: () => {} }), /lark-cli failed/);
+  assert.deepEqual(state.fingerprints, {});
 });
 
 test("parseArgs rejects a delete option without its file", () => {

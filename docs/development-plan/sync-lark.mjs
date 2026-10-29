@@ -4,9 +4,15 @@
 // scripts/trace.mjs. The plan owns the summary, description, Priority and Epic; Lark owns
 // Status, comments and assignees, so a sync never overwrites those.
 //
+// lark.json keeps a "fingerprints" map, one short hash per story of exactly what a patch sends (title,
+// description, Priority and Epic). A run patches only the tasks whose hash differs or is missing, and
+// records the new hash after each successful write. The first live run after this was added has no
+// hashes, so it patches every task once and seeds them. Only a live run saves them.
+//
 //   node docs/development-plan/sync-lark.mjs --parse     print what the plan parses to, touch nothing
 //   node docs/development-plan/sync-lark.mjs --dry-run   print every lark-cli write without running it
 //   node docs/development-plan/sync-lark.mjs             create or update the task list
+//   node docs/development-plan/sync-lark.mjs --force-all patch every task, changed or not, to repair drift
 //
 // Retiring tasks: --delete-ids <file> deletes the tasks whose ids are listed (one per line, or a JSON
 // array) before the create and update pass, and --delete-only stops after the deletes. A task whose
@@ -33,6 +39,7 @@ export function parseArgs(argv) {
     deleteIds: at === -1 ? undefined : argv[at + 1],
     deleteOnly,
     force: argv.includes("--force"),
+    forceAll: argv.includes("--force-all"),
   };
 }
 
@@ -309,7 +316,7 @@ function deleteRetired(plan, state, ids, force) {
   return new Set(remove.map((t) => t.guid));
 }
 
-function describe(story) {
+export function describe(story) {
   return [
     story.story,
     "",
@@ -323,12 +330,12 @@ function describe(story) {
   ].join("\n");
 }
 
-function title(story) {
+export function title(story) {
   const short = story.story.length > 120 ? `${story.story.slice(0, 117)}...` : story.story;
   return `${story.id} ${short}`;
 }
 
-const select = (state, field, option) => {
+export const select = (state, field, option) => {
   const value = state.fields[field].options[option];
   if (!value) throw new Error(`no ${field} option named "${option}"`);
   return { guid: state.fields[field].guid, single_select_value: value };
@@ -339,17 +346,31 @@ function clientToken(id) {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
 }
 
-function syncTasks(plan, state, gone) {
-  const have = existingTasks(state, gone);
+// Hashes what a patch sends, so a story whose plan row did not change can be skipped.
+export function fingerprint(story, owned) {
+  const sent = JSON.stringify([title(story), describe(story), owned.map((f) => [f.guid, f.single_select_value])]);
+  return createHash("sha256").update(sent).digest("hex").slice(0, 16);
+}
+
+export const needsPatch = (stored, current, forceAll) => forceAll || stored !== current;
+
+export function syncTasks(plan, state, gone, { have = existingTasks(state, gone), run = task, persist = save, forceAll = options.forceAll } = {}) {
   const labelOf = new Map(plan.epics.map((e) => [e.id, epicLabel(e)]));
+  state.fingerprints ??= {};
   let created = 0;
   let updated = 0;
+  let unchanged = 0;
 
   for (const story of plan.stories) {
     const owned = [select(state, "Priority", story.priority), select(state, "Epic", labelOf.get(story.epic))];
+    const print = fingerprint(story, owned);
     const guid = have.get(story.id);
+    if (guid && !needsPatch(state.fingerprints[story.id], print, forceAll)) {
+      unchanged++;
+      continue;
+    }
     if (!guid) {
-      task(["tasks", "create", "--data", JSON.stringify({
+      run(["tasks", "create", "--data", JSON.stringify({
         summary: title(story),
         description: describe(story),
         client_token: clientToken(story.id),
@@ -358,17 +379,20 @@ function syncTasks(plan, state, gone) {
       })], { write: true });
       created++;
     } else {
-      task(["tasks", "patch", "--params", JSON.stringify({ task_guid: guid }), "--data", JSON.stringify({
+      run(["tasks", "patch", "--params", JSON.stringify({ task_guid: guid }), "--data", JSON.stringify({
         update_fields: ["summary", "description", "custom_fields"],
         task: { summary: title(story), description: describe(story), custom_fields: owned },
       })], { write: true });
       updated++;
     }
+    state.fingerprints[story.id] = print;
+    persist(state);
   }
 
   const orphans = [...have.keys()].filter((id) => !plan.stories.some((s) => s.id === id));
   if (orphans.length) console.warn(`in Lark but not in the plan, left alone: ${orphans.join(", ")}`);
-  console.log(`tasks: ${created} created, ${updated} updated`);
+  console.log(`tasks: ${created} created, ${updated} updated, ${unchanged} unchanged`);
+  return { created, updated, unchanged };
 }
 
 function pullStatus(state) {
