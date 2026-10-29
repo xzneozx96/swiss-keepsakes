@@ -29,7 +29,7 @@ describe('categories loading', () => {
     expect(screen.getAllByRole('row')).toHaveLength(6)
     expect(container.querySelector('.h-28')).toBeNull()
     expect(screen.queryByText(/drag/i)).toBeNull()
-    expect(screen.queryByText(/no pins|nothing/i)).toBeNull()
+    expect(screen.queryByText(/No map categories yet/)).toBeNull()
   })
 
   it('phone: a search field, then five skeleton rows in one rounded card, no big boxes', () => {
@@ -39,6 +39,7 @@ describe('categories loading', () => {
     const rows = within(container.querySelector('ul')!).getAllByRole('listitem', { hidden: true })
 
     expect(rows).toHaveLength(5)
+    expect(screen.queryByText(/No map categories yet/)).toBeNull()
     expect(container.querySelector('.rounded-3xl.h-28')).toBeNull()
     expect(container.querySelector('.h-28')).toBeNull()
     expect(container.querySelector('.rounded-3xl.bg-surface.shadow-surface ul.divide-y')).not.toBeNull()

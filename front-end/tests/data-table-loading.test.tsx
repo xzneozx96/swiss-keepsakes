@@ -60,7 +60,7 @@ describe('dataTable isLoading', () => {
     expect(screen.getByRole('grid', { name: 'Things' })).toHaveAttribute('aria-busy', 'true')
     unmount()
     renderTable()
-    expect(screen.getByRole('grid', { name: 'Things' })).toHaveAttribute('aria-busy', 'false')
+    expect(screen.getByRole('grid', { name: 'Things' })).not.toHaveAttribute('aria-busy')
   })
 
   it('gives the grid the same classes loading and loaded, so the width does not shift', () => {

@@ -134,7 +134,9 @@ export function DataTable<T>({
     : [MIN_WIDTH_CLASS, contentClassName].filter(Boolean).join(' ')
   // React Aria's table drops `aria-busy` from its props, so it is set on the grid element itself.
   useEffect(() => {
-    gridRef.current?.setAttribute('aria-busy', String(Boolean(isLoading)))
+    if (isLoading)
+      gridRef.current?.setAttribute('aria-busy', 'true')
+    else gridRef.current?.removeAttribute('aria-busy')
   }, [isLoading])
   const tableClass = [cards && 'hidden lg:block', className]
     .filter(Boolean)

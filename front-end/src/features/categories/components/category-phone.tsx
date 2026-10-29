@@ -77,13 +77,16 @@ function PhoneSkeleton() {
       <div className="overflow-hidden rounded-3xl bg-surface shadow-surface">
         <ul aria-hidden className="flex flex-col divide-y divide-separator">
           {Array.from({ length: SKELETON_ROWS }, (_, index) => (
-            <li key={index} className="flex items-center gap-3 py-3 ps-2 pe-4">
+            <li key={index} className="flex items-center ps-1">
               <Skeleton className="size-9 shrink-0 rounded-full" />
-              <div className="flex min-w-0 flex-1 flex-col gap-2">
-                <Skeleton className={`h-4 rounded-lg ${NAME_WIDTHS[index % NAME_WIDTHS.length]}`} />
-                <Skeleton className="h-3 w-1/2 rounded-lg" />
+              <div className="flex min-w-0 flex-1 items-center gap-3 py-3 pe-4">
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <Skeleton className={`h-4 rounded-lg ${NAME_WIDTHS[index % NAME_WIDTHS.length]}`} />
+                  <Skeleton className="h-3 w-2/5 rounded-lg" />
+                  <Skeleton className="h-3 w-1/2 rounded-lg" />
+                </div>
+                <Skeleton className="size-[18px] shrink-0 rounded-full" />
               </div>
-              <Skeleton className="size-4 shrink-0 rounded-full" />
             </li>
           ))}
         </ul>
