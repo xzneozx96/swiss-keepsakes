@@ -113,7 +113,6 @@ export const storesEn = {
   'stores.refusal.failed.title': 'The invitation could not be accepted',
   'stores.refusal.failed.text': 'We could not tell whether it worked. Try again. Repeating it is safe.',
 
-  'stores.checklist.title': 'Before you open for sale',
   'stores.checklist.store-information': 'Store information',
   'stores.checklist.payment-account': 'Payment account',
   'stores.checklist.catalogue': 'A product or a tour',

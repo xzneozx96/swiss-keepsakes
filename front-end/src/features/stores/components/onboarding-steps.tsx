@@ -44,7 +44,7 @@ export function OnboardingSteps({ onboarding }: { onboarding: Onboarding }) {
     return {
       id,
       title: t(id === 'open' ? 'stores.setup.open' : `stores.checklist.${id}`),
-      note: state ? t(`stores.condition.${state}`) : '',
+      note: state ? t(`stores.condition.${state}`) : undefined,
       done: state === 'met',
     }
   })

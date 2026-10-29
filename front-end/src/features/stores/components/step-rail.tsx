@@ -9,7 +9,7 @@ export interface RailStep {
   id: StepId
   title: string
   /** Words for the state, so it never rests on the tick alone. */
-  note: string
+  note?: string
   done: boolean
 }
 
@@ -38,7 +38,7 @@ export function StepRail({ steps, current, met, total, onPick }: {
     <nav aria-label={t('stores.setup.steps.label')} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-sm font-semibold">{t('stores.checklist.title')}</span>
+          <span className="text-sm font-semibold">{t('stores.onboarding.title')}</span>
           <span className="text-sm text-muted tabular-nums">{t('stores.checklist.count', { met, total })}</span>
         </div>
         <ProgressBar aria-label={t('stores.checklist.count', { met, total })} color="default" maxValue={total} size="sm" value={met}>
@@ -59,7 +59,7 @@ export function StepRail({ steps, current, met, total, onPick }: {
               <StepMark done={step.done} />
               <span className="flex min-w-0 flex-col">
                 <span className={step.done ? 'text-muted' : ''}>{step.title}</span>
-                <span className="text-xs font-normal text-muted">{step.note}</span>
+                {step.note && <span className="text-xs font-normal text-muted">{step.note}</span>}
               </span>
             </button>
           </li>

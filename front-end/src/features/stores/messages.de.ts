@@ -114,7 +114,6 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.refusal.failed.title': 'Die Einladung konnte nicht angenommen werden',
   'stores.refusal.failed.text': 'Wir konnten nicht feststellen, ob es geklappt hat. Versuchen Sie es erneut. Eine Wiederholung ist sicher.',
 
-  'stores.checklist.title': 'Vor dem Verkaufsstart',
   'stores.checklist.store-information': 'Shop-Angaben',
   'stores.checklist.payment-account': 'Zahlungskonto',
   'stores.checklist.catalogue': 'Ein Produkt oder eine Tour',

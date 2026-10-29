@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+import type { Language } from './invitation-flows'
 import { expect, test } from '@playwright/test'
 import { newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
 import { clickInMiddle, closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, openLink, say, sayStart, signedInSuperAdmin, signInFromSheet, tokenOf, words } from './invitation-flows'
@@ -113,7 +115,7 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
   await expect(owner.getByText(say(language, 'stores.checklist.count', { met: '1', total: '4' })).locator('visible=true')).toBeVisible()
   await expect(owner.locator('[data-condition="store-information"]')).toHaveAttribute('data-state', 'met')
   await expect(owner.locator('[data-step="payment-account"]')).not.toContainText(say(language, 'stores.condition.met'))
-  await owner.locator('[data-step="open"] button').click()
+  await goToOpenStep(owner, language)
   await expect(owner.getByRole('button', { name: say(language, 'stores.open.action', { store: name }) })).toBeDisabled()
   expect(owner.url()).not.toContain(token)
   expect(await owner.evaluate(() => sessionStorage.getItem('sk.invitationToken'))).toBeNull()
@@ -137,7 +139,7 @@ test('[E2.3][S8][E3.4][AC02] the Super Admin creates the store, the Owner follow
     await route.fulfill({ response, json: { ...(await response.json()), mayOpenForSale: true } })
   })
   await owner.reload()
-  await owner.locator('[data-step="open"] button').click()
+  await goToOpenStep(owner, language)
   await owner.getByRole('button', { name: say(language, 'stores.open.action', { store: name }) }).click()
 
   const alert = owner.getByRole('alert')
@@ -199,3 +201,9 @@ test('[E2.3][S8] a link opened in a tab that already shows A02 leaves the addres
   expect(page.url()).not.toContain(token)
   expect(addresses.at(-1)).not.toContain(token)
 })
+
+/** The Open step is reached from the step list, which on a phone is the "All steps" sheet. */
+async function goToOpenStep(owner: Page, language: Language) {
+  await owner.getByRole('button', { name: say(language, 'stores.setup.steps.all') }).click()
+  await owner.getByRole('dialog').locator('[data-step="open"] button').click()
+}
