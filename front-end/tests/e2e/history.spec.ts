@@ -291,10 +291,19 @@ test.describe('[E3.9] AC-1 sign-in route', () => {
   })
 })
 
-test('[E3.9][AC12] /en carries neither header', async ({ request }) => {
+test('[E3.9][AC12] /en carries noindex outside production but not the partner-only header', async ({ request }) => {
   const response = await request.get(HOME)
 
   expect(response.status()).toBe(200)
-  expect(response.headers()['x-robots-tag']).toBeUndefined()
+  // E3.6 sends noindex on public pages outside production (ADR-001); only the partner-only header stays absent.
+  expect(response.headers()['x-robots-tag']).toBe('noindex')
   expect(response.headers()['referrer-policy']).toBeUndefined()
+
+  // A partner path still answers the client shell, with noindex and the partner-only header.
+  const partner = await request.get('/partner/some-token', { maxRedirects: 0 })
+
+  expect(partner.status()).toBeLessThan(400)
+  expect(await partner.text()).not.toMatch(/<main\b/)
+  expect(partner.headers()['x-robots-tag']).toBe('noindex')
+  expect(partner.headers()['referrer-policy']).toBe('no-referrer')
 })
