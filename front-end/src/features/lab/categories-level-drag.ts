@@ -2,8 +2,8 @@ import type { RefObject } from 'react'
 
 import { useRef } from 'react'
 
-import { useStopDrag } from '@/features/merchant/products/components/itinerary/use-stop-drag'
 import { useLatest } from '@/hooks/use-latest'
+import { useStopDrag } from '@/hooks/use-stop-drag'
 
 export type HandleProps = ReturnType<ReturnType<typeof useStopDrag>['handleProps']>
 

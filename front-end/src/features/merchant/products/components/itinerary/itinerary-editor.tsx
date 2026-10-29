@@ -11,12 +11,12 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { BookingsIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
+import { useStopDrag } from '@/hooks/use-stop-drag'
 
 import { ItineraryMap } from './itinerary-map'
 import { reducedMotion } from './map-shared'
 import { PlaceSearch } from './place-search'
 import { StopCard } from './stop-card'
-import { useStopDrag } from './use-stop-drag'
 
 type Editor = ReturnType<typeof useTourEditor>
 

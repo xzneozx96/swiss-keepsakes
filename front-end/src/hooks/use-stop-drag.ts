@@ -5,7 +5,9 @@ import { flushSync } from 'react-dom'
 
 import { useLatest } from '@/hooks/use-latest'
 
-import { reducedMotion } from './map-shared'
+function reducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
 
 const THRESHOLD = 4
 const EDGE = 72
