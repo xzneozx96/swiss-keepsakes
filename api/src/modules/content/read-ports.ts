@@ -19,7 +19,6 @@ export interface StoredStoryDoc {
   title?: string
   excerpt?: string
   authorName?: string
-  authorRole?: string
   coverMediaId?: string | null
   body?: unknown
 }

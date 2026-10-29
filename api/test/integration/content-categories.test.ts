@@ -63,7 +63,7 @@ async function pinWith(storeId: string, categoryId: string, status: 'draft' | 'p
 
 async function draftStoryWith(storeId: string, categoryId: string) {
   const { rows } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [storeId])
-  await pool.query(`insert into content.story_versions (store_id, group_id, language, status, slug, draft) values ($1, $2, 'en', 'draft', $3, $4)`, [storeId, rows[0]!.id, `s-${randomUUID().slice(0, 8)}`, JSON.stringify({ title: 'Draft', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [] } })])
+  await pool.query(`insert into content.story_versions (store_id, group_id, language, status, slug, draft) values ($1, $2, 'en', 'draft', $3, $4)`, [storeId, rows[0]!.id, `s-${randomUUID().slice(0, 8)}`, JSON.stringify({ title: 'Draft', excerpt: '', authorName: '', coverMediaId: null, body: { type: 'doc', content: [] } })])
   await pool.query('insert into content.story_categories (group_id, category_id, store_id) values ($1, $2, $3)', [rows[0]!.id, categoryId, storeId])
 }
 
