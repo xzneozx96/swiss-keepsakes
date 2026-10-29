@@ -8,8 +8,8 @@ import {
   AccountIcon,
   ExploreIcon,
   GiftIcon,
+  PickupIcon,
   SparkleIcon,
-  TourIcon,
 } from '@/components/icons'
 import { LanguageNotice } from '@/components/layout/language-notice'
 import { forgetPublicPath, rememberPublicPath } from '@/components/layout/last-public-path'
@@ -19,11 +19,11 @@ import { GuestAvatar } from '@/features/account/components/guest-avatar'
 import { useDemoSelector } from '@/features/demo'
 import { isLanguage } from '@/lib/language-routing'
 
-type GuestNavTarget = '/$lang' | '/$lang/gifts' | '/$lang/tours' | '/account'
+type GuestNavTarget = '/$lang' | '/$lang/gifts' | '/$lang/map' | '/account'
 
 interface NavItem {
   to: GuestNavTarget
-  label: 'nav.explore' | 'nav.gifts' | 'nav.tours' | 'nav.account'
+  label: 'nav.explore' | 'nav.gifts' | 'nav.map' | 'nav.account'
   icon: IconComponent
 }
 
@@ -32,7 +32,7 @@ const leftItems: NavItem[] = [
   { to: '/$lang/gifts', label: 'nav.gifts', icon: GiftIcon },
 ]
 const rightItems: NavItem[] = [
-  { to: '/$lang/tours', label: 'nav.tours', icon: TourIcon },
+  { to: '/$lang/map', label: 'nav.map', icon: PickupIcon },
   { to: '/account', label: 'nav.account', icon: AccountIcon },
 ]
 

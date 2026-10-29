@@ -1,3 +1,4 @@
+import { toast } from '@heroui/react'
 import { acceptedInvitationSchema, invitationPreviewSchema, memberInvitationSchema, membersSchema, meSchema, problemSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
@@ -6,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
-import { DataClientProvider, queryKeys } from '@/features/data-client'
+import { ApiFeedbackBridge, DataClientProvider, queryKeys } from '@/features/data-client'
 import { ApiProblem } from '@/features/data-client/errors'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
@@ -94,6 +95,7 @@ function renderAt(path: string, Screen: () => React.ReactNode) {
     <QueryClientProvider client={demo.queryClient}>
       <DataClientProvider client={demo.dataClient}>
         <LocaleProvider>
+          <ApiFeedbackBridge feedback={demo.feedback} />
           <DemoProvider store={demo.store}>
             <RouterProvider router={router} />
           </DemoProvider>
@@ -564,6 +566,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
 
   it('goes to sign-in and back to Settings when a members command meets a session that ended', async () => {
     answer = membersAnswers({ [`POST /api/store/${storeId}/member-invitations/${openInvitation}/revoke`]: () => problem(401, 'unauthenticated') })
+    const danger = vi.spyOn(toast, 'danger').mockClear()
     const router = renderAt('/members', () => <MembersTab storeId={storeId} />)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Revoke the invitation to open@example.ch' }))
@@ -571,6 +574,7 @@ describe('[E2.4][AC02] M22, the members tab', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
     expect(router.state.location.search).toEqual({ returnTo: '/store/settings' })
+    expect(danger).not.toHaveBeenCalled()
   })
 
   it('goes to sign-in and back to Settings when the list answers 401', async () => {
@@ -593,6 +597,32 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     await waitFor(() => expect(calls.some(call => call.method === 'DELETE')).toBe(true))
     expect(calls.find(call => call.method === 'DELETE')?.key).toBeTruthy()
     await waitFor(() => expect(calls.filter(call => call.path === `/api/store/${storeId}/members`).length).toBeGreaterThanOrEqual(2))
+  })
+
+  it('toasts the mapped copy for a refused removal, once, and the success copy for a removal', async () => {
+    const danger = vi.spyOn(toast, 'danger').mockClear()
+    const success = vi.spyOn(toast, 'success').mockClear()
+
+    answer = membersAnswers({ [`DELETE /api/store/${storeId}/members/${managerMember}`]: () => problem(404, 'member-not-found') })
+    renderAt('/members', () => <MembersTab storeId={storeId} />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /Remove a-very-long/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Remove from the store' }))
+
+    await waitFor(() => expect(danger).toHaveBeenCalledExactlyOnceWith('This member is no longer in the store.'))
+    expect(success).not.toHaveBeenCalled()
+  })
+
+  it('toasts which member was removed', async () => {
+    const success = vi.spyOn(toast, 'success').mockClear()
+
+    answer = membersAnswers({ [`DELETE /api/store/${storeId}/members/${managerMember}`]: () => new Response(null, { status: 204 }) })
+    renderAt('/members', () => <MembersTab storeId={storeId} />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /Remove a-very-long/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Remove from the store' }))
+
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('a-very-long-manager-address-for-wrapping@subdomain.example.ch was removed from the store.'))
   })
 
   it('does not remove when the Owner cancels', async () => {

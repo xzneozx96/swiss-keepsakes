@@ -41,7 +41,9 @@ export interface OrderReviews {
  */
 export function useOrderReviews(order: Order): OrderReviews {
   const { language } = useLocale()
-  const { mutate: addReview } = useCommand('reviews', 'addReview')
+  const { mutate: addReview } = useCommand('reviews', 'addReview', {
+    meta: { success: 'review.posted' },
+  })
   const storedProducts = useProducts()
   const reviews = useReviews()
   const orders = useOrders()

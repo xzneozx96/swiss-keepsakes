@@ -1,7 +1,6 @@
 import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
 import type { MessageKey } from '@/i18n/en'
 
-import { toast } from '@heroui/react'
 import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
@@ -41,8 +40,11 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
   refetch: () => void
 }) {
   const { t } = useLocale()
-  const reorder = useSubmit('categories', 'reorder')
-  const remove = useSubmit('categories', 'remove')
+  // Both show their refusal inline, in the `notice` banner below, so the cache stays silent on error.
+  const reorder = useSubmit('categories', 'reorder', { meta: { silent: true } })
+  const remove = useSubmit('categories', 'remove', {
+    meta: { success: () => t('categories.toast.deleted'), silent: true },
+  })
   const { confirm, dialog } = useConfirm()
   const [sheet, setSheet] = useState<CategorySheet>()
   const [notice, setNotice] = useState<MessageKey>()
@@ -108,10 +110,7 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
           return
         setNotice(undefined)
         remove.submit({ storeId, kind, id: category.id, idempotencyKey: crypto.randomUUID() }, {
-          onSuccess: () => {
-            toast.success(t('categories.toast.deleted'))
-            onDeleted?.()
-          },
+          onSuccess: () => onDeleted?.(),
           onError: failed,
         })
       })

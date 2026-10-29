@@ -4,7 +4,7 @@ Read this when you show an error, a notice or a toast, or when a call can fail.
 
 ## Never fail silently
 
-- Catch an error from a call the user started and tell the user. A mutation that completes gets a success message too.
+- Catch an error from a call the user started and tell the user. A mutation that completes gets a success message too. **For a `useCommand` or `useSubmit` call this is the query client's `meta`, not the call site — see `api-feedback.md`.**
 - Messages are readable text in the user's language, written through `t()`. Do not show a raw error string or a stack trace.
 - A field-level problem appears next to the field. Do not use a toast for it.
 - Do not swallow an error with an empty `catch` unless you have decided the failure is invisible to the user and you say why in a comment.

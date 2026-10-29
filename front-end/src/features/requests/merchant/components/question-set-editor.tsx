@@ -8,7 +8,6 @@ import {
   Input,
   Label,
   TextField,
-  toast,
 } from '@heroui/react'
 import { formatOrderDateTime } from '@sk/domain/orders'
 
@@ -58,7 +57,6 @@ export function QuestionSetEditor() {
         email={set.recipientEmail}
         onSave={(email) => {
           editor.setRecipient(email)
-          toast.success(t('adviceQuestions.recipient.saved'))
         }}
       />
 
@@ -200,12 +198,10 @@ export function QuestionSetEditor() {
           onDelete={(id) => {
             editor.removeQuestion(id)
             setEditing(null)
-            toast.success(t('adviceQuestions.deleted'))
           }}
           onSave={(question) => {
             editor.saveQuestion(question)
             setEditing(null)
-            toast.success(t('adviceQuestions.saved'))
           }}
         />
       )}

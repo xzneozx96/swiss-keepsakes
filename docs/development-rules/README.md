@@ -25,6 +25,7 @@ These files tell people and AI coding agents how to build in this repo. `AGENTS.
 | `frontend/forms-and-validation.md` | build a form |
 | `frontend/api-integration.md` | call an API or read server data |
 | `frontend/error-handling.md` | show errors or toasts, or handle failures |
+| `frontend/api-feedback.md` | a `useCommand` or `useSubmit` call needs a success or error toast |
 | `frontend/performance.md` | touch first load, lists, typing, scrolling, streaming, dependencies or icons |
 | `frontend/heroui-and-styling.md` | build or restyle UI |
 | `frontend/linting.md` | change lint config, add a rule, or format code |
