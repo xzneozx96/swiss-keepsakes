@@ -21,37 +21,42 @@ import { CODE_LENGTH } from '../hooks/use-sign-in'
 /**
  * C05 sign-in form: Google or an emailed 6-digit code, no password and no sign-up (one
  * flow does both). The step heading is the screen's h1; the code step's back arrow
- * returns to the start step, not out of the screen.
+ * returns to the start step, not out of the screen. `embedded`: the form sits inside another screen (an invitation)
+ * that has its own h1 and intro, so the start step has no heading and the code step's is an h2.
  */
-export function SignInForm({ view }: { view: SignInView }) {
+export function SignInForm({ view, embedded = false }: { view: SignInView, embedded?: boolean }) {
   const { t } = useLocale()
+  const Heading = embedded ? 'h2' : 'h1'
+  const showHeading = !embedded || view.step === 'code'
 
   return (
     <div className="flex flex-col gap-7">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-1">
-          {view.step === 'code' && (
-            <Button
-              isIconOnly
-              aria-label={t('auth.changeEmail')}
-              className="-ms-2.5"
-              size="sm"
-              variant="ghost"
-              onPress={view.changeEmail}
-            >
-              <BackIcon size={20} />
-            </Button>
-          )}
-          <h1 className="font-serif text-display text-balance">
-            {view.step === 'code' ? t('auth.code.title') : t('auth.title')}
-          </h1>
+      {showHeading && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-1">
+            {view.step === 'code' && (
+              <Button
+                isIconOnly
+                aria-label={t('auth.changeEmail')}
+                className="-ms-2.5"
+                size="sm"
+                variant="ghost"
+                onPress={view.changeEmail}
+              >
+                <BackIcon size={20} />
+              </Button>
+            )}
+            <Heading className={embedded ? 'text-heading text-balance' : 'font-serif text-display text-balance'}>
+              {view.step === 'code' ? t('auth.code.title') : t('auth.title')}
+            </Heading>
+          </div>
+          <p className="text-body text-pretty text-muted">
+            {view.step === 'code'
+              ? t('auth.code.sent', { email: view.sentTo })
+              : t('auth.intro')}
+          </p>
         </div>
-        <p className="text-body text-pretty text-muted">
-          {view.step === 'code'
-            ? t('auth.code.sent', { email: view.sentTo })
-            : t('auth.intro')}
-        </p>
-      </div>
+      )}
       {view.step === 'start'
         ? (
             <StartStep view={view} />

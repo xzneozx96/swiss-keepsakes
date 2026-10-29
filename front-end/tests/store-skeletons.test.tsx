@@ -1,3 +1,4 @@
+import { createMemoryHistory, createRootRoute, createRouter, RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -40,15 +41,19 @@ describe('store screens loading', () => {
     expect(container.querySelectorAll('section')).toHaveLength(2)
   })
 
-  it('invitation preview: one card with chip, heading, from line and action button', () => {
-    const { container } = wrap(<InvitationPreview actionLabel="Accept" audience="manager" returnTo="/" signedOut={false} token="t" onAction={vi.fn()} />)
+  it('invitation preview: the invitation frame with a role line, a title, an intro and the first button', async () => {
+    // The frame has a Back action, so it needs a router.
+    const router = createRouter({
+      routeTree: createRootRoute({ component: () => <InvitationPreview audience="manager" returnTo="/" signedOut={false} token="t" onAccept={vi.fn()} /> }),
+      history: createMemoryHistory({ initialEntries: ['/'] }),
+    })
+    const { container } = wrap(<RouterProvider router={router} />)
 
-    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(await screen.findByRole('status')).toBeInTheDocument()
     expect(genericBox(container)).toBeNull()
-    const card = container.querySelector('section.rounded-3xl.bg-surface.shadow-surface')
-
-    expect(card).not.toBeNull()
-    expect(card!.querySelectorAll('.skeleton').length).toBeGreaterThanOrEqual(4)
+    expect(container.querySelector('figure img[data-photo="colour"]')).not.toBeNull()
+    expect(container.querySelector('section.rounded-3xl')).toBeNull()
+    expect(container.querySelectorAll('.skeleton')).toHaveLength(4)
   })
 
   it('onboarding, me pending: checklist with 4 rows, a form card with fields, and the open-for-sale button', () => {

@@ -172,7 +172,7 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(screen.getByText('Finish every step above to open for sale.')).toBeInTheDocument()
   })
 
-  it('shows the store from the preview and a sign-in button when the API answers 401, and the button goes to sign-in with the fixed returnTo, the token in sessionStorage only', async () => {
+  it('shows the store from the preview and the embedded sign-in when the API answers 401, on the same address, the token in sessionStorage only', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     answer = (call) => {
       if (call.path === '/api/public/invitations/preview')
@@ -182,8 +182,8 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     }
     const router = renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByRole('heading', { name: 'Chi Ngoc Shop' })).toBeInTheDocument()
-    expect(screen.getByText('You are invited to open Chi Ngoc Shop.')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'You’re invited to open Chi Ngoc Shop' })).toBeInTheDocument()
+    expect(screen.getByText('Owner invitation')).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/store/onboarding')
     const preview = calls.find(call => call.path === '/api/public/invitations/preview')
 
@@ -191,10 +191,9 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(preview?.key).toBeNull()
     expect(calls.some(call => call.path === '/api/me/invitations/accept')).toBe(false)
     expect(calls.map(call => call.path).join('\n')).not.toContain(token)
-    await userEvent.click(screen.getByRole('button', { name: 'Sign in to continue' }))
-
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
-    expect(router.state.location.search).toEqual({ returnTo: '/store/onboarding' })
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Email')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/store/onboarding')
     expect(router.state.location.href).not.toContain(token)
     expect(heldInvitationToken()).toBe(token)
   })
@@ -218,15 +217,27 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(heldInvitationToken()).toBe(spent ? undefined : token)
   })
 
-  it('offers sign-out for a wrong account, and the invitation stays open for the right one', async () => {
+  it('offers sign-out for a wrong account, and the invitation stays open with the embedded sign-in for the right one', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
-    answer = call => call.path.startsWith('/api/auth/') && call.path !== '/api/auth/get-session' ? Response.json({ success: true }) : acceptAnswers(() => problem(403, 'invitation-email-mismatch'))(call)
+    let signedOut = false
+
+    answer = (call) => {
+      if (call.path === '/api/auth/sign-out') {
+        signedOut = true
+
+        return Response.json({ success: true })
+      }
+      if (call.path === '/api/auth/get-session' && signedOut)
+        return Response.json(null)
+
+      return acceptAnswers(() => problem(403, 'invitation-email-mismatch'))(call)
+    }
     const router = renderAt('/store/onboarding', OnboardingScreen)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Sign out and use another account' }))
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
-    expect(router.state.location.search).toEqual({ returnTo: '/store/onboarding' })
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe('/store/onboarding')
     expect(heldInvitationToken()).toBe(token)
   })
 
@@ -258,12 +269,12 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     expect(heldInvitationToken()).toBe(token)
   })
 
-  it('sends no accept for a visitor whose session is gone, and shows the sign-in button', async () => {
+  it('sends no accept for a visitor whose session is gone, and shows the embedded sign-in', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     answer = call => call.path === '/api/auth/get-session' ? Response.json(null) : onboardingAnswers()(call)
     renderAt('/store/onboarding', OnboardingScreen)
 
-    expect(await screen.findByRole('button', { name: 'Sign in to continue' })).toBeInTheDocument()
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument()
     expect(calls.some(call => call.path === '/api/me/invitations/accept')).toBe(false)
   })
 
@@ -1008,16 +1019,14 @@ describe('[E2.3][S8] the invitation survives a screen that is gone and a link op
 })
 
 describe('[E2.3][S8] a 401 marks the app signed out before sign-in', () => {
-  it('clears the signed-in flag the sign-in screen would bounce back from, on accept', async () => {
+  it('clears the signed-in flag the embedded sign-in would not notice finishing, on accept', async () => {
     sessionStorage.setItem('sk.invitationToken', token)
     demo.store.update(s => ({ ...s, data: { ...s.data, signedInGuestId: 'stale-guest' } }))
     answer = call => call.path === '/api/public/invitations/preview' ? previewBody() : problem(401, 'unauthenticated')
-    const router = renderAt('/store/onboarding', OnboardingScreen)
+    renderAt('/store/onboarding', OnboardingScreen)
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Sign in to continue' }))
-
-    await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
-    expect(demo.store.getState().data.signedInGuestId).toBeNull()
+    expect(await screen.findByLabelText('Email')).toBeInTheDocument()
+    await waitFor(() => expect(demo.store.getState().data.signedInGuestId).toBeNull())
   })
 
   it('clears it on A01 reads too', async () => {

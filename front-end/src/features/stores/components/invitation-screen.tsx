@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
 import { InfoIcon } from '@/components/icons'
@@ -33,27 +33,32 @@ export function InvitationScreen() {
   return <InvitationFlow />
 }
 
+/** "Sign out and use another account" starts the flow again from the held token, which now meets no session and shows the embedded sign-in. */
 function InvitationFlow() {
-  const { t } = useLocale()
-  const { state, token, accept, signIn, retry } = useAcceptInvitation(INVITATION_PATH, { manual: true })
+  const [round, setRound] = useState(0)
+
+  return <InvitationFlowRound key={round} onSignedOut={() => setRound(count => count + 1)} />
+}
+
+function InvitationFlowRound({ onSignedOut }: { onSignedOut: () => void }) {
+  const { state, token, accept, retry } = useAcceptInvitation(INVITATION_PATH, { manual: true })
   const signedIn = useDemoSelector(s => s.data.signedInGuestId !== null)
 
   if (state.kind === 'accepted')
     return <Welcome role={state.accepted.role} />
   if (state.kind === 'refused')
-    return <RefusalView refusal={state.refusal} returnTo={INVITATION_PATH} audience={state.role ?? 'manager'} onRetry={retry} />
+    return <RefusalView refusal={state.refusal} audience={state.role ?? 'manager'} onRetry={retry} onSignedOut={onSignedOut} />
   if (!token)
-    return <RefusalView refusal="missing" returnTo={INVITATION_PATH} audience="manager" />
+    return <RefusalView refusal="missing" audience="manager" />
 
   return (
     <InvitationPreview
-      actionLabel={t(signedIn ? 'stores.invite.accept' : 'stores.invite.signIn')}
       pending={state.kind === 'accepting'}
       returnTo={INVITATION_PATH}
       audience="manager"
       signedOut={!signedIn}
       token={token}
-      onAction={signedIn ? accept : signIn}
+      onAccept={accept}
     />
   )
 }
