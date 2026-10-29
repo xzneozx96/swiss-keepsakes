@@ -48,7 +48,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     logger: silentLogger,
   })
   const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
-  const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
+  const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit: createAuditLog(systemClock), clock: systemClock }
   const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
   const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock }
   const writeUseCases = guardUseCases({

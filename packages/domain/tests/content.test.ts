@@ -77,27 +77,24 @@ describe('[E2.6] content/story', () => {
     expect(canDeleteStoryVersion({ published: null })).toBe(true)
   })
 
-  it('[E2.6] storyMediaIds lists cover, image and audio blocks once', () => {
+  it('[E2.13] storyMediaIds lists the cover first, then image and audio nodes once', () => {
     const doc: StoryDraft = {
       title: 't',
       excerpt: '',
-      intro: '',
       authorName: '',
       authorRole: '',
-      readMinutes: null,
       coverMediaId: 'm1',
-      sections: [{
-        id: 's1',
-        heading: 'h',
-        blocks: [
-          { type: 'paragraph', text: 'p' },
-          { type: 'image', mediaId: 'm1', caption: '' },
-          { type: 'image', mediaId: 'm2', caption: '' },
-          { type: 'video', youtubeId: 'y', title: '', caption: '' },
-          { type: 'audio', mediaId: 'm3', title: '', caption: '' },
-          { type: 'image', mediaId: 'm2', caption: 'again' },
+      body: {
+        type: 'doc',
+        content: [
+          { type: 'paragraph', content: [{ type: 'text', text: 'p' }] },
+          { type: 'image', attrs: { mediaId: 'm1', alt: '', caption: '' } },
+          { type: 'image', attrs: { mediaId: 'm2', alt: '', caption: '' } },
+          { type: 'video', attrs: { youtubeId: 'y', title: '', caption: '' } },
+          { type: 'audio', attrs: { mediaId: 'm3', title: '', caption: '' } },
+          { type: 'image', attrs: { mediaId: 'm2', alt: '', caption: 'again' } },
         ],
-      }],
+      },
     }
     expect(storyMediaIds(doc)).toEqual([
       { id: 'm1', kind: 'image' },

@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, PinDate, StayTag, StoryDraft } from '@sk/domain/content'
+import type { ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
 import type { Clock, UnitOfWork } from './ports.ts'
 
 // What the public reads need. Rows are plain data; the use cases choose the language and shape the response.
@@ -13,10 +13,21 @@ export interface PublicCategoryRow {
   position: number
 }
 
+// The published story document as stored. Stored JSON is read as written and not re-validated, so every field is
+// optional and the body is unknown: the public view copies only what it knows.
+export interface StoredStoryDoc {
+  title?: string
+  excerpt?: string
+  authorName?: string
+  authorRole?: string
+  coverMediaId?: string | null
+  body?: unknown
+}
+
 export interface PublicStoryVersionRow {
   language: ContentLanguage
   slug: string
-  published: StoryDraft
+  published: StoredStoryDoc
   publishedAt: Date
   // storage_key of every ready media row the published text refers to, by media id.
   mediaKeys: Record<string, string>

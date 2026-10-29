@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, describe, expect, it, vi } from 'vitest'
-import { seedContent } from '../../scripts/seed-content.ts'
+import { seedContent, seedStoryDraft } from '../../scripts/seed-content.ts'
 import { seedStories } from '../../scripts/seed-data/stories.ts'
 import { seedTours } from '../../scripts/seed-data/tours.ts'
 import { insertStore } from '../support/identity-wiring.ts'
@@ -31,14 +31,14 @@ async function snapshot(): Promise<Record<string, string>> {
 }
 
 describe('db:seed', () => {
-  it('[E2.12] the seed imports drafts and a second run changes nothing', async () => {
+  it('[E2.12][E2.13] the seed imports drafts and a second run changes nothing', async () => {
     await insertStore(pool, storeId)
     // A prototype slug that already exists in this store: its story is left alone, including the other language.
     const taken = seedStories.find(s => s.versions.en && s.versions.de)!
     const { rows: group } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [storeId])
     await pool.query(
       `insert into content.story_versions (group_id, language, store_id, slug, draft) values ($1, 'en', $2, $3, $4::jsonb)`,
-      [group[0]!.id, storeId, taken.slug, JSON.stringify({ ...taken.versions.en, title: 'Hand-written' })],
+      [group[0]!.id, storeId, taken.slug, JSON.stringify({ ...seedStoryDraft(taken.versions.en!), title: 'Hand-written' })],
     )
     const preExisting = await pool.query(`select md5(t::text) as hash from content.story_versions t where store_id = $1 and slug = $2`, [storeId, taken.slug])
     // Two prototype tour slugs held by other tours: one by its en slug, one by its de slug only. Both tours are skipped.
@@ -54,8 +54,8 @@ describe('db:seed', () => {
     expect(second).toEqual({ stories: 0, tours: 0 })
     expect(await snapshot()).toEqual(afterFirst)
 
-    const versions = await pool.query<{ status: string, published: unknown, published_at: Date | null, language: string, slug: string }>(
-      `select status, published, published_at, language, slug from content.story_versions where store_id = $1`,
+    const versions = await pool.query<{ status: string, published: unknown, published_at: Date | null, language: string, slug: string, draft: Record<string, unknown>, row_version: number }>(
+      `select status, published, published_at, language, slug, draft, row_version from content.story_versions where store_id = $1`,
       [storeId],
     )
     const expected = seedStories.reduce((n, s) => n + Object.keys(s.versions).length, 0) - Object.keys(taken.versions).length + 1
@@ -78,5 +78,19 @@ describe('db:seed', () => {
     expect(Number(stops.rows[0]!.count)).toBe(seedTours.slice(2).reduce((n, t) => n + t.stops.length, 0))
     const media = await pool.query<{ count: string }>(`select count(*) from content.media where store_id = $1`, [storeId])
     expect(Number(media.rows[0]!.count)).toBe(0)
+  })
+
+  // Runs after the test above, on the rows it seeded (same file, same store, in order).
+  it('[E2.13] seeded drafts hold a body document, no intro, sections or readMinutes, and the second run bumped no row_version', async () => {
+    const taken = seedStories.find(s => s.versions.en && s.versions.de)!
+    const { rows } = await pool.query<{ draft: Record<string, unknown>, row_version: number, slug: string, language: string }>(
+      `select draft, row_version, slug, language from content.story_versions where store_id = $1`,
+      [storeId],
+    )
+    const seeded = rows.filter(v => v.slug !== taken.slug || v.language !== 'en')
+
+    expect(seeded.length).toBeGreaterThan(0)
+    expect(seeded.every(v => (v.draft.body as { type?: string }).type === 'doc' && !('intro' in v.draft) && !('sections' in v.draft) && !('readMinutes' in v.draft))).toBe(true)
+    expect(rows.every(v => v.row_version === 1)).toBe(true)
   })
 })

@@ -1,6 +1,6 @@
 import type { ContentLanguage, Localized, PinDate, StayTag } from '@sk/domain/content'
 import type { PublicCategoryRow, PublicPinRow, PublicStoryRow, PublicStoryVersionRow, PublicTourRow } from '../read-ports.ts'
-import { languagesOf } from '@sk/domain/content'
+import { isSafeLinkHref, languagesOf, STORY_BODY_LIMITS, storyBodyReadMinutes } from '@sk/domain/content'
 import { pickLanguage } from './language.ts'
 import { nextDate, withParents } from './pin-dates.ts'
 
@@ -17,7 +17,7 @@ export interface PublicStoryCard extends LanguageNotice {
   slug: string
   title: string
   excerpt: string
-  readMinutes: number | null
+  readMinutes: number
   coverKey: string | null
   stayTag: StayTag
   interests: string[]
@@ -25,17 +25,35 @@ export interface PublicStoryCard extends LanguageNotice {
   publishedAt: string
 }
 
-export type PublicStoryBlock
-  = | { type: 'paragraph', text: string }
-    | { type: 'image', key: string | null, caption: string }
-    | { type: 'video', youtubeId: string, title: string, caption: string }
-    | { type: 'audio', key: string | null, title: string, caption: string }
+export type PublicBodyMark
+  = | { type: 'bold' }
+    | { type: 'italic' }
+    | { type: 'link', attrs: { href: string } }
+    | { type: 'pinLink', attrs: { pinId: string } }
+
+export type PublicBodyInline
+  = | { type: 'text', text: string, marks?: PublicBodyMark[] }
+    | { type: 'hardBreak' }
+
+export interface PublicBodyParagraph { type: 'paragraph', content?: PublicBodyInline[] }
+export interface PublicBodyListItem { type: 'listItem', content: (PublicBodyParagraph | PublicBodyList)[] }
+export interface PublicBodyList { type: 'bulletList' | 'orderedList', content: PublicBodyListItem[] }
+
+export type PublicBodyNode
+  = | PublicBodyParagraph
+    | { type: 'heading', attrs: { level: 2 | 3 }, content?: PublicBodyInline[] }
+    | { type: 'blockquote', content: PublicBodyParagraph[] }
+    | PublicBodyList
+    | { type: 'image', attrs: { key: string | null, alt: string, caption: string } }
+    | { type: 'video', attrs: { youtubeId: string, title: string, caption: string } }
+    | { type: 'audio', attrs: { key: string | null, title: string, caption: string } }
+
+export interface PublicStoryBody { type: 'doc', content: PublicBodyNode[] }
 
 export interface PublicStory extends PublicStoryCard {
-  intro: string
   authorName: string
   authorRole: string
-  sections: { id: string, heading: string, blocks: PublicStoryBlock[] }[]
+  body: PublicStoryBody
 }
 
 export interface PublicStoryList { items: PublicStoryCard[] }
@@ -44,6 +62,104 @@ export interface PublicStoryList { items: PublicStoryCard[] }
 const keyOf = (version: PublicStoryVersionRow, mediaId: unknown) => (typeof mediaId === 'string' ? version.mediaKeys[mediaId.toLowerCase()] ?? null : null)
 
 const str = (value: unknown) => (typeof value === 'string' ? value : '')
+
+// The stored body is untrusted JSON. Only nodes, marks and attributes the story editor writes are copied, by the
+// place they may stand in; anything else is dropped. Nesting below the write limit is cut, so a hostile document
+// cannot make the walk deep.
+type Json = Record<string, unknown>
+const isObject = (value: unknown): value is Json => typeof value === 'object' && value !== null && !Array.isArray(value)
+const childrenOf = (node: Json) => (Array.isArray(node.content) ? node.content : [])
+const attrsOf = (node: Json): Json => (isObject(node.attrs) ? node.attrs : {})
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const youtubePattern = /^[\w-]{11}$/
+
+function publicMarks(value: unknown): PublicBodyMark[] {
+  const marks: PublicBodyMark[] = []
+  for (const mark of Array.isArray(value) ? value : []) {
+    if (!isObject(mark))
+      continue
+    const attrs = attrsOf(mark)
+    if (mark.type === 'bold' || mark.type === 'italic')
+      marks.push({ type: mark.type })
+    else if (mark.type === 'link' && typeof attrs.href === 'string' && isSafeLinkHref(attrs.href))
+      marks.push({ type: 'link', attrs: { href: attrs.href } })
+    else if (mark.type === 'pinLink' && typeof attrs.pinId === 'string' && uuidPattern.test(attrs.pinId))
+      marks.push({ type: 'pinLink', attrs: { pinId: attrs.pinId } })
+  }
+  return marks.slice(0, 4)
+}
+
+function publicInline(nodes: unknown[]): PublicBodyInline[] {
+  return nodes.flatMap((node): PublicBodyInline[] => {
+    if (!isObject(node))
+      return []
+    if (node.type === 'hardBreak')
+      return [{ type: 'hardBreak' }]
+    if (node.type === 'text' && typeof node.text === 'string' && node.text !== '') {
+      const marks = publicMarks(node.marks)
+      return [marks.length > 0 ? { type: 'text', text: node.text, marks } : { type: 'text', text: node.text }]
+    }
+    return []
+  })
+}
+
+const withContent = <T extends { type: string }>(base: T, content: PublicBodyInline[]) => (content.length > 0 ? { ...base, content } : base)
+
+function publicParagraph(node: Json): PublicBodyParagraph {
+  return withContent({ type: 'paragraph' as const }, publicInline(childrenOf(node)))
+}
+
+function publicList(node: Json, depth: number): PublicBodyList {
+  const items = childrenOf(node).flatMap((item): PublicBodyListItem[] => {
+    if (!isObject(item) || item.type !== 'listItem' || depth + 1 > STORY_BODY_LIMITS.maxDepth)
+      return []
+    const content = childrenOf(item).flatMap((child): (PublicBodyParagraph | PublicBodyList)[] => {
+      if (!isObject(child))
+        return []
+      if (child.type === 'paragraph')
+        return [publicParagraph(child)]
+      if ((child.type === 'bulletList' || child.type === 'orderedList') && depth + 2 <= STORY_BODY_LIMITS.maxDepth)
+        return [publicList(child, depth + 2)]
+      return []
+    })
+    return [{ type: 'listItem', content }]
+  })
+  return { type: node.type === 'orderedList' ? 'orderedList' : 'bulletList', content: items }
+}
+
+function publicBlock(node: unknown, version: PublicStoryVersionRow): PublicBodyNode[] {
+  if (!isObject(node))
+    return []
+  const attrs = attrsOf(node)
+  switch (node.type) {
+    case 'paragraph':
+      return [publicParagraph(node)]
+    case 'heading':
+      return [withContent({ type: 'heading' as const, attrs: { level: attrs.level === 3 ? 3 as const : 2 as const } }, publicInline(childrenOf(node)))]
+    case 'blockquote':
+      return [{ type: 'blockquote', content: childrenOf(node).flatMap(child => (isObject(child) && child.type === 'paragraph' ? [publicParagraph(child)] : [])) }]
+    case 'bulletList':
+    case 'orderedList':
+      return [publicList(node, 2)]
+    case 'image':
+      return [{ type: 'image', attrs: { key: keyOf(version, attrs.mediaId), alt: str(attrs.alt), caption: str(attrs.caption) } }]
+    case 'audio':
+      return [{ type: 'audio', attrs: { key: keyOf(version, attrs.mediaId), title: str(attrs.title), caption: str(attrs.caption) } }]
+    case 'video':
+      return typeof attrs.youtubeId === 'string' && youtubePattern.test(attrs.youtubeId)
+        ? [{ type: 'video', attrs: { youtubeId: attrs.youtubeId, title: str(attrs.title), caption: str(attrs.caption) } }]
+        : []
+    default:
+      return []
+  }
+}
+
+// A body that is missing or not a document reads as an empty one.
+function publicBody(version: PublicStoryVersionRow): PublicStoryBody {
+  const body = version.published.body
+  const content = isObject(body) && body.type === 'doc' ? childrenOf(body) : []
+  return { type: 'doc', content: content.flatMap(node => publicBlock(node, version)) }
+}
 
 export function toPublicCategory(row: PublicCategoryRow): PublicCategory {
   return { id: row.id, slug: row.slug, name: { en: row.name.en ?? null, de: row.name.de ?? null }, parentId: row.parentId, position: row.position }
@@ -66,14 +182,14 @@ function carried(row: PublicStoryRow, requested: ContentLanguage) {
   }
 }
 
-function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: NonNullable<ReturnType<typeof carried>>['notice']): PublicStoryCard {
+function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: NonNullable<ReturnType<typeof carried>>['notice'], body: PublicStoryBody): PublicStoryCard {
   const { published } = version
   return {
     id: row.id,
     slug: version.slug,
     title: str(published.title),
     excerpt: str(published.excerpt),
-    readMinutes: typeof published.readMinutes === 'number' ? published.readMinutes : null,
+    readMinutes: storyBodyReadMinutes(body),
     coverKey: keyOf(version, published.coverMediaId),
     stayTag: row.stayTag,
     interests: row.interests,
@@ -85,7 +201,7 @@ function toCard(row: PublicStoryRow, version: PublicStoryVersionRow, notice: Non
 
 export function toStoryCard(row: PublicStoryRow, requested: ContentLanguage): PublicStoryCard | null {
   const pick = carried(row, requested)
-  return pick && toCard(row, pick.version, pick.notice)
+  return pick && toCard(row, pick.version, pick.notice, publicBody(pick.version))
 }
 
 export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): PublicStory | null {
@@ -94,29 +210,12 @@ export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): 
     return null
   const { version } = pick
   const { published } = version
+  const body = publicBody(version)
   return {
-    ...toCard(row, version, pick.notice),
-    intro: str(published.intro),
+    ...toCard(row, version, pick.notice, body),
     authorName: str(published.authorName),
     authorRole: str(published.authorRole),
-    sections: (Array.isArray(published.sections) ? published.sections : []).map(section => ({
-      id: str(section?.id),
-      heading: str(section?.heading),
-      blocks: (Array.isArray(section?.blocks) ? section.blocks : []).flatMap((block): PublicStoryBlock[] => {
-        switch (block?.type) {
-          case 'image':
-            return [{ type: 'image', key: keyOf(version, block.mediaId), caption: str(block.caption) }]
-          case 'audio':
-            return [{ type: 'audio', key: keyOf(version, block.mediaId), title: str(block.title), caption: str(block.caption) }]
-          case 'video':
-            return [{ type: 'video', youtubeId: str(block.youtubeId), title: str(block.title), caption: str(block.caption) }]
-          case 'paragraph':
-            return [{ type: 'paragraph', text: str(block.text) }]
-          default:
-            return []
-        }
-      }),
-    })),
+    body,
   }
 }
 

@@ -115,7 +115,8 @@ CREATE TABLE content.story_versions (
   CONSTRAINT story_versions_slug_check CHECK (slug IS NULL OR slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
   CONSTRAINT story_versions_published_fields_check CHECK (status = 'draft' OR (
     slug IS NOT NULL AND published_at IS NOT NULL
-    AND jsonb_typeof(published->'title') = 'string' AND jsonb_typeof(published->'sections') = 'array') IS TRUE)
+    AND jsonb_typeof(published->'title') = 'string'
+    AND jsonb_typeof(published->'body') = 'object' AND published->'body'->>'type' = 'doc') IS TRUE)
 );--> statement-breakpoint
 CREATE TABLE content.story_group_places (
   group_id uuid NOT NULL,
