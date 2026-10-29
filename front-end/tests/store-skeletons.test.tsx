@@ -51,12 +51,13 @@ describe('store screens loading', () => {
     expect(card!.querySelectorAll('.skeleton').length).toBeGreaterThanOrEqual(4)
   })
 
-  it('onboarding, me pending: checklist with 3 rows, a form card with fields, and the open-for-sale button', () => {
+  it('onboarding, me pending: checklist with 4 rows, a form card with fields, and the open-for-sale button', () => {
     const { container } = wrap(<OnboardingScreen />)
 
     expect(genericBox(container)).toBeNull()
-    expect(container.querySelectorAll('li.rounded-2xl')).toHaveLength(3)
+    expect(container.querySelectorAll('li.rounded-2xl')).toHaveLength(4)
     expect(container.querySelectorAll('div.rounded-3xl.bg-surface.shadow-surface')).toHaveLength(1)
+    expect(container.querySelector('div.rounded-3xl.bg-surface.shadow-surface > .w-full.h-11.rounded-xl:last-child')).toBeNull()
     expect(container.querySelector('[data-skeleton="open-for-sale"]')).not.toBeNull()
   })
 
@@ -65,7 +66,7 @@ describe('store screens loading', () => {
     const { container } = wrap(<OnboardingScreen />)
 
     expect(genericBox(container)).toBeNull()
-    expect(container.querySelectorAll('li.rounded-2xl')).toHaveLength(3)
+    expect(container.querySelectorAll('li.rounded-2xl')).toHaveLength(4)
     expect(container.querySelector('[data-skeleton="open-for-sale"]')).not.toBeNull()
   })
 })

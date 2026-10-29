@@ -78,7 +78,7 @@ export function OnboardingSkeleton() {
           <Skeleton className="h-4 w-10 rounded-lg" />
         </div>
         <ul className="flex flex-col gap-2">
-          {[0, 1, 2].map(index => (
+          {[0, 1, 2, 3].map(index => (
             <li key={index} className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-4 shadow-surface">
               <Skeleton className="h-4 w-40 rounded-lg" />
               <Skeleton className="h-6 w-16 shrink-0 rounded-full" />
@@ -95,7 +95,7 @@ export function OnboardingSkeleton() {
             <Skeleton className="h-5 w-24 rounded-lg" />
             <Skeleton className="h-5 w-24 rounded-lg" />
           </div>
-          <Skeleton className={`${BUTTON} w-full`} />
+          <Skeleton className={`${BUTTON} w-32`} />
         </div>
       </section>
       <Skeleton className="h-12 w-full rounded-xl" data-skeleton="open-for-sale" />

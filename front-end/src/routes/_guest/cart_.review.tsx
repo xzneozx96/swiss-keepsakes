@@ -1,7 +1,7 @@
-import { Skeleton } from '@heroui/react'
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import { ReviewSkeleton } from '@/components/layout/guest-skeletons'
 import { useRequireSignIn } from '@/features/auth/hooks/use-require-sign-in'
 import { ReviewView } from '@/features/checkout/components/review-view'
 import { useReview } from '@/features/checkout/hooks/use-review'
@@ -21,17 +21,8 @@ export const Route = createFileRoute('/_guest/cart_/review')({
 function ReviewPage() {
   const isLoading = useSimulatedLoading()
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4 px-6 pt-16">
-        <Skeleton className="h-16 w-full rounded-3xl" />
-        <Skeleton className="mt-3 h-6 w-1/4 rounded-lg" />
-        <Skeleton className="h-4 w-2/3 rounded-lg" />
-        <Skeleton className="h-48 w-full rounded-3xl" />
-        <Skeleton className="h-48 w-full rounded-3xl" />
-      </div>
-    )
-  }
+  if (isLoading)
+    return <ReviewSkeleton />
 
   return <ReviewScreen />
 }

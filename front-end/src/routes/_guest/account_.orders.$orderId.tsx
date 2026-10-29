@@ -1,7 +1,6 @@
 import type { Order } from '@sk/domain/orders'
 
 import type { OrderTab } from '@/features/transactions/order-detail/lib/search-params'
-import { Skeleton } from '@heroui/react'
 
 import {
   createFileRoute,
@@ -12,6 +11,7 @@ import {
 import { EmptyState } from '@/components/empty-state'
 import { OrdersIcon } from '@/components/icons'
 import { BackButton } from '@/components/layout/cart-button'
+import { OrderDetailSkeleton } from '@/components/layout/guest-skeletons'
 import { useLocale } from '@/contexts/locale-context'
 import { SignInPrompt } from '@/features/auth/components/account-profile'
 import { useRequireSignIn } from '@/features/auth/hooks/use-require-sign-in'
@@ -56,15 +56,8 @@ function OrderDetailPage() {
   const back = () =>
     canGoBack ? router.history.back() : void navigate({ to: '/account' })
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col gap-4 px-4 pt-16">
-        <Skeleton className="h-64 w-full rounded-3xl" />
-        <Skeleton className="mt-2 h-9 w-full rounded-lg" />
-        <Skeleton className="h-40 w-full rounded-3xl" />
-      </div>
-    )
-  }
+  if (isLoading)
+    return <OrderDetailSkeleton />
 
   if (!order) {
     return (
