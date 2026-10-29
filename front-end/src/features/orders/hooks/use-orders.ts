@@ -1,6 +1,8 @@
 import type { Order } from '@sk/domain/orders'
-import type { OrderBlock, TransitionContext } from '../lib/transitions'
+import type { OfflinePaymentInput, OrderBlock, TransitionContext } from '../lib/transitions'
 import type { StatusTone } from '@/components/status-chip'
+import type { Language } from '@/contexts/locale-context'
+import type { MutationFeedback } from '@/features/data-client'
 import type { DemoState } from '@/features/demo/types'
 
 import {
@@ -37,8 +39,11 @@ export interface ShownLabel {
  * Order actions through the data client. Each returns null when it was sent, or the reason it is
  * blocked (formatted with `useBlockText`). The guard runs on the screen's data first; the command
  * checks again on the latest data, so a race leaves the order unchanged.
+ *
+ * `recordOfflinePaymentMeta` is M08's own "recorded" toast (`RecordPaymentSheet`): every other
+ * screen that calls `recordOfflinePayment` (there is none today) gets no success toast.
  */
-export function useOrderActions() {
+export function useOrderActions(recordOfflinePaymentMeta?: MutationFeedback<void, { id: string, language: Language, payment: OfflinePaymentInput }>) {
   const { language } = useLocale()
   const { update } = useDemoActions()
   const orders = useOrders()
@@ -47,7 +52,7 @@ export function useOrderActions() {
   const { mutate: changePickup } = useCommand('orders', 'changePickup')
   const { mutate: decline } = useCommand('orders', 'decline')
   const { mutate: payOnline } = useCommand('orders', 'payOnline')
-  const { mutate: recordOfflinePayment } = useCommand('orders', 'recordOfflinePayment')
+  const { mutate: recordOfflinePayment } = useCommand('orders', 'recordOfflinePayment', { meta: recordOfflinePaymentMeta })
   const { mutate: markReady } = useCommand('orders', 'markReady')
   const { mutate: handOver } = useCommand('orders', 'handOver')
   const { mutate: complete } = useCommand('orders', 'complete')
