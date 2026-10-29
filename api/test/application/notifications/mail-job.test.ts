@@ -1,6 +1,6 @@
-import type { Clock } from '../../../src/platform/clock.ts'
 import type { MailRequest } from '../../../src/modules/notifications/application/render-mail.ts'
 import type { InvitationLink, JobQueue, MailFailure, MailStatus, MailTemplate, QueuedMail, SentMailRepository, UnitOfWork } from '../../../src/modules/notifications/ports.ts'
+import type { Clock } from '../../../src/platform/clock.ts'
 import { describe, expect, it } from 'vitest'
 import { makeFailMail } from '../../../src/modules/notifications/application/fail-mail.ts'
 import { makeQueueMail } from '../../../src/modules/notifications/application/queue-mail.ts'
