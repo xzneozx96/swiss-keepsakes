@@ -6,7 +6,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.list.intro': 'Punkte auf der Gästekarte: Orte zum Ansehen, Essen oder Nutzen und Anlässe mit Datum.',
   'places.list.addPlace': 'Ort hinzufügen',
   'places.list.addEvent': 'Anlass hinzufügen',
-  'places.list.search': 'Titel, Link oder Adresse suchen',
+  'places.list.search': 'Nach Titel oder Kartenlink suchen',
   'places.list.label': 'Punkte',
   'places.list.all': 'Alle Punkte',
   'places.filter.status': 'Status',

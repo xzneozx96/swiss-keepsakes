@@ -4,7 +4,7 @@ export const placesEn = {
   'places.list.intro': 'Pins on the guest map: places to see, eat or use, and events with dates.',
   'places.list.addPlace': 'Add place',
   'places.list.addEvent': 'Add event',
-  'places.list.search': 'Search title, link or address',
+  'places.list.search': 'Search by title or map link',
   'places.list.label': 'Pins',
   'places.list.all': 'All pins',
   'places.filter.status': 'Status',

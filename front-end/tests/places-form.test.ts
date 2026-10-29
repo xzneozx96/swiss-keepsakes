@@ -1,7 +1,9 @@
-import type { Pin } from '@sk/api-contract'
+import type { Pin, PinListItem } from '@sk/api-contract'
+import type { ListFilters } from '@/features/places/lib/list'
 import { describe, expect, it } from 'vitest'
 
 import { bodyOf, emptyDate, emptyForm, formOf, isDirty, publishBodyOf, publishGaps, suggestSlug, validate } from '@/features/places/lib/form'
+import { filterItems, isFiltered, NO_CATEGORY, noFilters } from '@/features/places/lib/list'
 
 const pin: Pin = {
   id: '0198a000-0000-7000-8000-000000000001',
@@ -157,5 +159,35 @@ describe('[E4.2][AC68] form state', () => {
     expect(isDirty(formOf(withData), form)).toBe(false)
     expect(isDirty({ ...form, mustVisit: true }, form)).toBe(true)
     expect(isDirty({ ...form, hours: form.hours.map(h => ({ ...h, key: 'other' })) }, form)).toBe(false)
+  })
+})
+
+describe('[E4.2][AC86] the list filters', () => {
+  const item = (over: object) => ({ id: 'x', status: 'draft', title: {}, slug: null, located: true, categoryIds: [], hasDates: false, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, mainStory: null, hasPendingChanges: false, rowVersion: 1, updatedAt: '2026-10-30T10:00:00.000Z', ...over }) as PinListItem
+  const items = [
+    item({ id: 'a', status: 'published', title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, categoryIds: ['walks'] }),
+    item({ id: 'b', status: 'ended', title: { de: 'Fasnacht' }, hasDates: true, stayTag: 'short_stay' }),
+    item({ id: 'c', status: 'hidden', title: { en: 'Old tap' } }),
+  ]
+  const ids = (filters: Partial<ListFilters>) => filterItems(items, { ...noFilters, ...filters }).map(found => found.id)
+
+  it('narrows by status, category (including none), stay and dates, each group an OR and the groups together an AND', () => {
+    expect(ids({})).toEqual(['a', 'b', 'c'])
+    expect(ids({ status: ['ended'] })).toEqual(['b'])
+    expect(ids({ status: ['ended', 'hidden'] })).toEqual(['b', 'c'])
+    expect(ids({ category: [NO_CATEGORY] })).toEqual(['b', 'c'])
+    expect(ids({ category: ['walks'] })).toEqual(['a'])
+    expect(ids({ stay: ['short_stay'] })).toEqual(['b'])
+    expect(ids({ dates: ['has'] })).toEqual(['b'])
+    expect(ids({ dates: ['none'] })).toEqual(['a', 'c'])
+    expect(ids({ status: ['ended'], dates: ['none'] })).toEqual([])
+  })
+
+  it('searches the titles in both languages and the map link, ignoring case and spaces around', () => {
+    expect(ids({ query: ' FASN ' })).toEqual(['b'])
+    expect(ids({ query: 'chapel-bridge' })).toEqual(['a'])
+    expect(ids({ query: 'nothing' })).toEqual([])
+    expect(isFiltered(noFilters)).toBe(false)
+    expect(isFiltered({ ...noFilters, query: 'x' })).toBe(true)
   })
 })
