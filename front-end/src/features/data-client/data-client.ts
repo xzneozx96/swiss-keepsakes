@@ -3,6 +3,7 @@ import type { CatalogClient } from '@/features/catalog/api/client'
 import type { CategoriesClient } from '@/features/categories/api/client'
 import type { ContentClient } from '@/features/content/api/client'
 import type { KeepsakesClient } from '@/features/keepsakes/api/client'
+import type { MediaClient } from '@/features/media/api/client'
 import type { NotificationsClient } from '@/features/notifications/api/client'
 import type { OrdersClient } from '@/features/orders/api/client'
 import type { PartnersClient } from '@/features/partners/api/client'
@@ -23,6 +24,7 @@ export interface DataClient {
   categories: CategoriesClient
   content: ContentClient
   keepsakes: KeepsakesClient
+  media: MediaClient
   notifications: NotificationsClient
   orders: OrdersClient
   partners: PartnersClient

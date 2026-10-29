@@ -44,6 +44,11 @@ export const SECTION_PAGES = {
       label: 'merchantContent.tab.categories',
     },
     {
+      id: 'media',
+      to: '/store/content/media',
+      label: 'merchantContent.tab.media',
+    },
+    {
       id: 'analytics',
       to: '/store/content/analytics',
       label: 'sectionPages.analytics',

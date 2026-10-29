@@ -70,6 +70,7 @@ import { Route as StoreContentIndexRouteImport } from './routes/store/content/in
 import { Route as StoreContentAnalyticsRouteImport } from './routes/store/content/analytics'
 import { Route as StoreContentCategoriesRouteImport } from './routes/store/content/categories'
 import { Route as StoreContentCommentsRouteImport } from './routes/store/content/comments'
+import { Route as StoreContentMediaRouteImport } from './routes/store/content/media'
 import { Route as StoreContentReviewsRouteImport } from './routes/store/content/reviews'
 import { Route as StoreOrdersIndexRouteImport } from './routes/store/orders/index'
 import { Route as StoreOrdersOrderIdRouteImport } from './routes/store/orders/$orderId'
@@ -407,6 +408,11 @@ const StoreContentCommentsRoute = StoreContentCommentsRouteImport.update({
   path: '/content/comments',
   getParentRoute: () => StoreRoute,
 } as any)
+const StoreContentMediaRoute = StoreContentMediaRouteImport.update({
+  id: '/content/media',
+  path: '/content/media',
+  getParentRoute: () => StoreRoute,
+} as any)
 const StoreContentReviewsRoute = StoreContentReviewsRouteImport.update({
   id: '/content/reviews',
   path: '/content/reviews',
@@ -633,6 +639,7 @@ export interface FileRoutesByFullPath {
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
   '/store/content/categories': typeof StoreContentCategoriesRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
+  '/store/content/media': typeof StoreContentMediaRoute
   '/store/content/reviews': typeof StoreContentReviewsRoute
   '/store/orders/$orderId': typeof StoreOrdersOrderIdRoute
   '/store/partners/$partnerId': typeof StorePartnersPartnerIdRoute
@@ -723,6 +730,7 @@ export interface FileRoutesByTo {
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
   '/store/content/categories': typeof StoreContentCategoriesRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
+  '/store/content/media': typeof StoreContentMediaRoute
   '/store/content/reviews': typeof StoreContentReviewsRoute
   '/store/orders/$orderId': typeof StoreOrdersOrderIdRoute
   '/store/partners/$partnerId': typeof StorePartnersPartnerIdRoute
@@ -819,6 +827,7 @@ export interface FileRoutesById {
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
   '/store/content/categories': typeof StoreContentCategoriesRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
+  '/store/content/media': typeof StoreContentMediaRoute
   '/store/content/reviews': typeof StoreContentReviewsRoute
   '/store/orders/$orderId': typeof StoreOrdersOrderIdRoute
   '/store/partners/$partnerId': typeof StorePartnersPartnerIdRoute
@@ -915,6 +924,7 @@ export interface FileRouteTypes {
     | '/store/content/analytics'
     | '/store/content/categories'
     | '/store/content/comments'
+    | '/store/content/media'
     | '/store/content/reviews'
     | '/store/orders/$orderId'
     | '/store/partners/$partnerId'
@@ -1005,6 +1015,7 @@ export interface FileRouteTypes {
     | '/store/content/analytics'
     | '/store/content/categories'
     | '/store/content/comments'
+    | '/store/content/media'
     | '/store/content/reviews'
     | '/store/orders/$orderId'
     | '/store/partners/$partnerId'
@@ -1100,6 +1111,7 @@ export interface FileRouteTypes {
     | '/store/content/analytics'
     | '/store/content/categories'
     | '/store/content/comments'
+    | '/store/content/media'
     | '/store/content/reviews'
     | '/store/orders/$orderId'
     | '/store/partners/$partnerId'
@@ -1610,6 +1622,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreContentCommentsRouteImport
       parentRoute: typeof StoreRoute
     }
+    '/store/content/media': {
+      id: '/store/content/media'
+      path: '/content/media'
+      fullPath: '/store/content/media'
+      preLoaderRoute: typeof StoreContentMediaRouteImport
+      parentRoute: typeof StoreRoute
+    }
     '/store/content/reviews': {
       id: '/store/content/reviews'
       path: '/content/reviews'
@@ -1931,6 +1950,7 @@ interface StoreRouteChildren {
   StoreContentAnalyticsRoute: typeof StoreContentAnalyticsRoute
   StoreContentCategoriesRoute: typeof StoreContentCategoriesRoute
   StoreContentCommentsRoute: typeof StoreContentCommentsRoute
+  StoreContentMediaRoute: typeof StoreContentMediaRoute
   StoreContentReviewsRoute: typeof StoreContentReviewsRoute
   StoreOrdersOrderIdRoute: typeof StoreOrdersOrderIdRoute
   StorePartnersPartnerIdRoute: typeof StorePartnersPartnerIdRoute
@@ -1961,6 +1981,7 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreContentAnalyticsRoute: StoreContentAnalyticsRoute,
   StoreContentCategoriesRoute: StoreContentCategoriesRoute,
   StoreContentCommentsRoute: StoreContentCommentsRoute,
+  StoreContentMediaRoute: StoreContentMediaRoute,
   StoreContentReviewsRoute: StoreContentReviewsRoute,
   StoreOrdersOrderIdRoute: StoreOrdersOrderIdRoute,
   StorePartnersPartnerIdRoute: StorePartnersPartnerIdRoute,
