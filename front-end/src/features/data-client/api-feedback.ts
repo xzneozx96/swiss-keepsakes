@@ -20,7 +20,7 @@ export interface ToastApi {
  */
 // eslint-disable-next-line ts/consistent-type-definitions -- must be a `type`, see the comment above
 export type MutationFeedback<TResult = unknown, TInput = unknown> = {
-  /** Shown on success. A key, or a function for text that needs the result or the input (an email, an amount). Nothing toasts without this. */
+  /** Shown on success. A key, or a function for text that needs the result or the input (an email, an amount); a function that returns an empty string shows nothing. Nothing toasts without this. */
   success?: MessageKey | ((result: TResult, input: TInput) => string)
   /** Copy for a refused `ApiProblem`, by its `type`. A type not listed, or a non-`ApiProblem` error, gets the generic copy. */
   error?: Partial<Record<string, MessageKey>>
@@ -136,7 +136,8 @@ export function createApiQueryClient(
         catch {
           return
         }
-        feedback.toast.success(message)
+        if (message)
+          feedback.toast.success(message)
       },
       onError: (error, _variables, _onMutateResult, mutation) => {
         if (!live || isCancelledError(error))

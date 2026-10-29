@@ -163,6 +163,15 @@ describe('createApiQueryClient mutations', () => {
     expect(danger).not.toHaveBeenCalled()
   })
 
+  it('a meta.success function that returns an empty string shows nothing', async () => {
+    const { queryClient, success, danger } = setup()
+
+    await expect(runMutation(queryClient, { mutationFn: async () => 'ok', meta: { success: () => '' } }, undefined)).resolves.toBe('ok')
+
+    expect(success).not.toHaveBeenCalled()
+    expect(danger).not.toHaveBeenCalled()
+  })
+
   it('never toasts success without meta.success', async () => {
     const { queryClient, success } = setup()
 
