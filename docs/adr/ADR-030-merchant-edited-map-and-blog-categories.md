@@ -46,3 +46,4 @@ We will add two merchant-edited lists to the `content` module, and keep the inte
 ## History
 - 2026-10-27 proposed
 - 2026-10-27 accepted (gate G11)
+- 2026-10-29 note: the story editor design (`docs/decisions/2026-10-29-story-editor-design.md`) applies the rule that a parent covers items tagged only with its sub-categories (R5) with replacement. Choosing a sub-category tags only it, choosing a parent replaces its sub-category, and a parent never selects its children. The decision above stands. Whether the API refuses a story tagged with both a parent and its child is open
