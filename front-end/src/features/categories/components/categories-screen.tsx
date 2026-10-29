@@ -1,6 +1,6 @@
 import type { CategoryKind } from '@sk/api-contract'
 
-import { Skeleton, Tabs } from '@heroui/react'
+import { Tabs } from '@heroui/react'
 import { useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
@@ -11,12 +11,13 @@ import { ApiProblem } from '@/features/data-client/errors'
 import { useMe } from '@/features/stores/api/queries'
 import { currentStore } from '@/features/stores/lib/current-store'
 import { apiEnabled } from '@/lib/api-mode'
-import { CategoryList } from './category-list'
+import { CategoryEditor } from './category-editor'
 
 const KINDS: CategoryKind[] = ['map', 'blog']
 
 /**
- * N23, Content > Categories: the map list and the blog list of the store, one tab each. The store is
+ * N23, Content > Categories: the map list and the blog list of the store, one tab each, a grouped table from
+ * 1024 px and a drill-in below it. The store is
  * `currentStore(me)`, the same rule the stores screens use. The categories work with the live API only.
  */
 export function CategoriesScreen() {
@@ -35,11 +36,11 @@ export function CategoriesScreen() {
   if (!me.isPending && !current)
     return <EmptyState icon={InfoIcon} message={t('categories.noStore')} />
 
-  return (
-    <div className="flex flex-col gap-4" data-testid="categories-screen">
-      <h1 className="text-title">{t('categories.title')}</h1>
-      <Tabs className="w-full" selectedKey={tab} onSelectionChange={key => setTab(key as CategoryKind)}>
-        <Tabs.ListContainer className={`w-full ${STICKY_TABS}`}>
+  const tabs = (
+    <Tabs className="w-full" selectedKey={tab} onSelectionChange={key => setTab(key as CategoryKind)}>
+      {/* Full width on phones and pinned at the top; sized to its tabs from 1024 px, like the orders screen. */}
+      <div className={`max-lg:py-2 ${STICKY_TABS}`}>
+        <Tabs.ListContainer className="w-full lg:w-fit">
           <Tabs.List aria-label={t('categories.tabs')}>
             {KINDS.map((kind, index) => (
               <Tabs.Tab key={kind} className="min-h-11 whitespace-nowrap" id={kind}>
@@ -50,14 +51,13 @@ export function CategoriesScreen() {
             ))}
           </Tabs.List>
         </Tabs.ListContainer>
-        {KINDS.map(kind => (
-          <Tabs.Panel key={kind} className="px-0 pt-4 pb-0" id={kind}>
-            {current
-              ? <CategoryList kind={kind} storeId={current.storeId} />
-              : <Skeleton className="h-28 w-full rounded-3xl" />}
-          </Tabs.Panel>
-        ))}
-      </Tabs>
+      </div>
+    </Tabs>
+  )
+
+  return (
+    <div className="flex flex-col gap-4" data-testid="categories-screen">
+      <CategoryEditor kind={tab} storeId={current?.storeId} tabs={tabs} />
     </div>
   )
 }
