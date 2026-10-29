@@ -43,7 +43,7 @@ export function ConditionPanel({ id, state, store, onEdit }: {
         </div>
       </div>
       {id === 'store-information' && (
-        <div className="flex max-w-md flex-col gap-4">
+        <div className="flex flex-col gap-4">
           <dl className="flex flex-col divide-y divide-separator rounded-2xl border border-separator px-4 text-sm">
             <div className="flex justify-between gap-3 py-3">
               <dt className="text-muted">{t('stores.setup.info.name')}</dt>
@@ -55,7 +55,7 @@ export function ConditionPanel({ id, state, store, onEdit }: {
             </div>
           </dl>
           <p className="text-sm text-pretty text-muted">{t('stores.setup.info.note')}</p>
-          <Button className="min-h-11 self-start" variant="outline" onPress={onEdit}>
+          <Button className="min-h-11 self-start" variant="secondary" onPress={onEdit}>
             <EditIcon aria-hidden size={16} />
             {t('stores.setup.info.edit')}
           </Button>
