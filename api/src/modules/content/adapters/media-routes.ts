@@ -1,5 +1,6 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
 import type { Actor } from '@sk/domain/identity'
+import type { Context } from 'hono'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
 import type { UploadGrant } from '../application/request-upload.ts'
@@ -55,53 +56,38 @@ const getMediaRoute = createRoute({
 
 const storageUnavailable = { status: 503, type: 'storage-unavailable', title: 'File storage is not available right now. Try again in a moment.' } as const
 
-// Runs a use case; a storage that is not configured or not answering is a 503, anything else is the caller's to see.
-async function withStorage<V>(work: () => Promise<Result<V>>): Promise<Result<V> | typeof storageUnavailable> {
+// Runs a whole handler body: a storage that is not configured or not answering, whether a use case or the view
+// raises it, is a 503. Anything else is the caller's to see.
+async function withStorage<R>(c: Context<AppEnv>, handler: () => Promise<R>): Promise<R | ReturnType<typeof problem>> {
   try {
-    return await work()
+    return await handler()
   }
   catch (error) {
     if (error instanceof StorageUnavailableError)
-      return storageUnavailable
+      return problem(c, storageUnavailable)
     throw error
   }
 }
 
-const isUnavailable = (result: object): result is typeof storageUnavailable => result === storageUnavailable
-
 // The store guard sits before these (createApp), so handlers read the verified store from `c.get('store')`.
 export function registerMediaRoutes(app: OpenAPIHono<AppEnv>, useCases: MediaUseCases): void {
-  app.openapi(requestUploadRoute, async (c) => {
-    const result = await withStorage(() => useCases.requestUpload(c.get('actor'), c.get('store').storeId, c.req.valid('json')))
-    if (isUnavailable(result))
-      return problem(c, result)
+  app.openapi(requestUploadRoute, c => withStorage(c, async () => {
+    const result = await useCases.requestUpload(c.get('actor'), c.get('store').storeId, c.req.valid('json'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(result.value, 200)
-  })
-  app.openapi(confirmUploadRoute, async (c) => {
-    const result = await withStorage(() => useCases.confirmUpload(c.get('actor'), c.get('store').storeId, c.req.valid('json'), c.get('requestId')))
-    if (isUnavailable(result))
-      return problem(c, result)
+  }))
+  app.openapi(confirmUploadRoute, c => withStorage(c, async () => {
+    const result = await useCases.confirmUpload(c.get('actor'), c.get('store').storeId, c.req.valid('json'), c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(mediaView(result.value, useCases.publicUrl), 201)
-  })
-
-  app.openapi(getMediaRoute, async (c) => {
-    const result = await withStorage(() => useCases.getMedia(c.get('actor'), c.get('store').storeId, c.req.valid('param').mediaId))
-    if (isUnavailable(result))
-      return problem(c, result)
+  }))
+  // The view asks for a URL only when the row is ready, so a storage that is not configured fails there, not before.
+  app.openapi(getMediaRoute, c => withStorage(c, async () => {
+    const result = await useCases.getMedia(c.get('actor'), c.get('store').storeId, c.req.valid('param').mediaId)
     if (!result.ok)
       return problem(c, failureProblem(result))
-    // The view asks for a URL only when the row is ready, so a storage that is not configured fails here, not before.
-    try {
-      return c.json(mediaView(result.value, useCases.publicUrl), 200)
-    }
-    catch (error) {
-      if (error instanceof StorageUnavailableError)
-        return problem(c, storageUnavailable)
-      throw error
-    }
-  })
+    return c.json(mediaView(result.value, useCases.publicUrl), 200)
+  }))
 }
