@@ -210,7 +210,7 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
   }
 
   const askHide = () => {
-    if (!pin || busy)
+    if (!pin || busy || dirty)
       return
     const name = form.titleEn || form.titleDe || t('places.row.untitled')
 
@@ -280,8 +280,8 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
   return {
     pin,
     form,
-    patch: (changes: Partial<PlaceForm>) => {
-      setForm(current => ({ ...current, ...changes }))
+    patch: (changes: Partial<PlaceForm> | ((current: PlaceForm) => Partial<PlaceForm>)) => {
+      setForm(current => ({ ...current, ...(typeof changes === 'function' ? changes(current) : changes) }))
       setJustSaved(false)
       setSlugTaken(false)
     },
@@ -296,6 +296,6 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     slugTaken,
     busy,
     dialog,
-    actions: { hide: askHide, unhide, remove: askRemove, busy },
+    actions: { hide: askHide, unhide, remove: askRemove, busy, dirty },
   }
 }

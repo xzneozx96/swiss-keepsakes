@@ -21,7 +21,6 @@ const pin: Pin = {
   mustVisit: false,
   foodKind: null,
   coverMediaId: null,
-  coverAlt: {},
   photos: [],
   outboundUrl: null,
   mainStoryGroupId: null,
@@ -35,7 +34,7 @@ const pin: Pin = {
   updatedAt: '2026-10-30T10:00:00.000Z',
 }
 
-const live: Pin = { ...pin, status: 'published', slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3, published: { title: { en: 'Chapel Bridge' }, tip: {}, localTip: {} }, firstPublishedAt: '2026-10-30T10:00:00.000Z' }
+const live: Pin = { ...pin, status: 'published', slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3, published: { title: { en: 'Chapel Bridge' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} }, firstPublishedAt: '2026-10-30T10:00:00.000Z' }
 
 describe('[E4.2][AC68] suggestSlug', () => {
   it.each([
@@ -76,6 +75,14 @@ describe('[E4.2][AC86] the date and hours rules of the form', () => {
     expect(errorOf([entry({ kind: 'range', lastDay: '2026-11-10' })])).toBe('places.error.dateOrder')
     expect(errorOf([entry({ endTime: '21:00' })])).toBe('places.error.endNeedsStart')
     expect(errorOf([entry({ startTime: '25:00' })])).toBe('places.error.timeFormat')
+  })
+
+  it('[E4.2][AC86] refuses a day that is not a whole real YYYY-MM-DD, on that entry, and a last day that is not one', () => {
+    for (const firstDay of ['14.11.2026', '2026-11-1', 'tomorrow', '2026-02-31', '2026-13-01', ' 2026-11-14'])
+      expect(errorOf([entry({ firstDay })]), firstDay).toBe('places.error.dateFormat')
+    expect(errorOf([entry({ kind: 'range', lastDay: '16.11.2026' })])).toBe('places.error.dateFormat')
+    expect(errorOf([entry({ kind: 'range', firstDay: '2026-11-14', lastDay: '2026-11-16' })])).toBeUndefined()
+    expect(validate({ ...emptyForm(), dates: [entry({ firstDay: '14.11.2026' })] }).count).toBe(1)
   })
 
   it('checks weekly hours: a close at or before the open is refused and 24:00 closes at midnight', () => {
@@ -151,7 +158,7 @@ describe('[E4.2][AC79] the write of a pin that was live', () => {
 
 describe('[E4.2][AC68] form state', () => {
   it('reads a pin back into the form and sees no change until a field moves', () => {
-    const withData: Pin = { ...live, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: { de: 'Früh kommen' }, localTip: { en: 'Go at dawn' } }, dates: [{ id: 'd1', firstDay: '2026-11-09', lastDay: '2026-11-14', startTime: null, endTime: null }], weeklyHours: [{ day: 1, opens: '09:00', closes: '18:00' }], photos: [{ mediaId: 'm1', alt: { en: 'Close' } }], interests: ['local-activities'] }
+    const withData: Pin = { ...live, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: { de: 'Früh kommen' }, localTip: { en: 'Go at dawn' }, coverAlt: {}, photoAlt: { m1: { en: 'Close' } } }, dates: [{ id: 'd1', firstDay: '2026-11-09', lastDay: '2026-11-14', startTime: null, endTime: null }], weeklyHours: [{ day: 1, opens: '09:00', closes: '18:00' }], photos: [{ mediaId: 'm1' }], interests: ['local-activities'] }
     const form = formOf(withData)
 
     expect(form).toMatchObject({ titleEn: 'Chapel Bridge, Lucerne', tipDe: 'Früh kommen', localTipEn: 'Go at dawn', slug: 'chapel-bridge', interests: ['local-activities'] })

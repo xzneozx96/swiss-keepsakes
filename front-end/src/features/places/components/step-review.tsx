@@ -14,6 +14,8 @@ export interface ReviewActions {
   unhide: () => void
   remove: () => void
   busy: boolean
+  /** The form has edits that are not saved. */
+  dirty: boolean
 }
 
 const GAP_KEY: Record<'title' | 'location' | 'slug', MessageKey> = {
@@ -58,7 +60,8 @@ function StatusPanel({ pin, actions }: Pick<StepProps, 'pin'> & { actions: Revie
       <p className="text-sm text-pretty">{t(body)}</p>
       {pin?.published && pin.draft && <p className="text-sm text-warning">{t('places.hasChanges')}</p>}
       <div className="flex flex-wrap gap-2">
-        {status === 'published' && <Button isDisabled={actions.busy} variant="secondary" onPress={actions.hide}>{t('places.action.hide')}</Button>}
+        {status === 'published' && <Button isDisabled={actions.busy || actions.dirty} variant="secondary" onPress={actions.hide}>{t('places.action.hide')}</Button>}
+        {status === 'published' && actions.dirty && <p className="w-full text-sm text-muted">{t('places.hide.unsaved')}</p>}
         {status === 'hidden' && <Button isDisabled={actions.busy} variant="secondary" onPress={actions.unhide}>{t('places.action.unhide')}</Button>}
         {status === 'draft' && <Button isDisabled={actions.busy} variant="danger-soft" onPress={actions.remove}>{t('places.action.delete')}</Button>}
       </div>

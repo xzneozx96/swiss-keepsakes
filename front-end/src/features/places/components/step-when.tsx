@@ -78,8 +78,8 @@ function Entry({ entry, index, error, onChange, onRemove }: { entry: DateEntry, 
         </div>
       </RadioGroup>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label={`${n} · ${t(entry.kind === 'day' ? 'places.dates.on' : 'places.dates.from')}`} placeholder="2026-11-14" value={entry.firstDay} onChange={firstDay => onChange({ firstDay })} />
-        {entry.kind === 'range' && <Field label={`${n} · ${t('places.dates.to')}`} placeholder="2026-11-16" value={entry.lastDay} onChange={lastDay => onChange({ lastDay })} />}
+        <Field label={`${n} · ${t(entry.kind === 'day' ? 'places.dates.on' : 'places.dates.from')}`} type="date" value={entry.firstDay} onChange={firstDay => onChange({ firstDay })} />
+        {entry.kind === 'range' && <Field label={`${n} · ${t('places.dates.to')}`} type="date" value={entry.lastDay} onChange={lastDay => onChange({ lastDay })} />}
         {entry.kind === 'day' && (
           <>
             <Field label={`${n} · ${t('places.dates.start')}`} placeholder="19:30" value={entry.startTime} onChange={startTime => onChange({ startTime })} />

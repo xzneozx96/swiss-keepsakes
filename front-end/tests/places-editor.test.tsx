@@ -1,10 +1,13 @@
 import type { FakeApi } from './places-support'
 
-import { screen, waitFor, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { LocaleProvider } from '@/contexts/locale-context'
 import { PlaceEditorScreen } from '@/features/places/components/place-editor-screen'
+import { StepWhen } from '@/features/places/components/step-when'
+import { emptyDate, emptyForm, validate } from '@/features/places/lib/form'
 import { installApi, pinOf, problem, renderInRouter, storeId, uuid } from './places-support'
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
@@ -44,7 +47,7 @@ const type = (label: string, text: string) => userEvent.type(screen.getByLabelTe
 const stepName = (name: string) => new RegExp(`${name}$`)
 const heading = (name: string) => screen.findByRole('heading', { name: stepName(name), level: 2 })
 
-const livePin = (over = {}) => pinOf({ status: 'published', slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3, draft: null, published: { title: { en: 'Chapel Bridge' }, tip: {}, localTip: {} }, firstPublishedAt: '2026-10-29T10:00:00.000Z', rowVersion: 3, ...over })
+const livePin = (over = {}) => pinOf({ status: 'published', slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3, draft: null, published: { title: { en: 'Chapel Bridge' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} }, firstPublishedAt: '2026-10-29T10:00:00.000Z', rowVersion: 3, ...over })
 
 async function completeNewPin() {
   await heading('Place on the map')
@@ -150,6 +153,29 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await heading('Hours and dates')
     expect(screen.getByText('Date 1')).toBeInTheDocument()
     expect(screen.getByTestId('places-status')).toHaveTextContent('Draft')
+  })
+
+  it('[E4.2][AC86] the day, from and to fields are the phone\'s own date input, not free text', async () => {
+    await open('new', { start: 'dates' })
+    await heading('Hours and dates')
+
+    expect(screen.getByLabelText('1 · Day')).toHaveAttribute('type', 'date')
+    await userEvent.click(screen.getByRole('radio', { name: 'Several days' }))
+    expect(screen.getByLabelText('1 · From')).toHaveAttribute('type', 'date')
+    expect(screen.getByLabelText('1 · To')).toHaveAttribute('type', 'date')
+  })
+
+  it('[E4.2][AC86] a day that is not a real YYYY-MM-DD (a paste, or the demo build) is refused with the words on that entry', () => {
+    const form = { ...emptyForm(), dates: [{ ...emptyDate(), key: 'd1', firstDay: '14.11.2026' }] }
+
+    render(
+      <LocaleProvider>
+        <StepWhen errors={validate(form)} form={form} patch={() => {}} pin={undefined} slugTaken={false} storeId={storeId} />
+      </LocaleProvider>,
+    )
+
+    const entry = screen.getByText('Date 1').closest('li')!
+    expect(within(entry).getByRole('alert')).toHaveTextContent('Use a real day, like 2026-11-14.')
   })
 
   it('[E4.2][AC86] 22:00 to 00:30 is refused in words and blocks the save, and a late event with no end is accepted', async () => {
@@ -296,8 +322,39 @@ describe('[E4.2][AC68] N17 photos', () => {
     expect(document.querySelector('img')).toBeNull()
   })
 
+  it('[E4.2][AC68] alt text typed while another photo uploads is kept when the upload ends', async () => {
+    api.pin = pinOf({ id: uuid(10), photos: [{ mediaId: uuid(41) }] })
+    api.answer = (call) => {
+      if (call.path === `/api/store/${storeId}/media/uploads`)
+        return Response.json(grant)
+      if (call.path === `/api/store/${storeId}/media/confirm`)
+        return Response.json(media('processing'), { status: 201 })
+      if (call.path.includes('/media/') && call.method === 'GET')
+        return Response.json({ ...media('ready'), id: call.path.split('/').at(-1) })
+      if (call.method === 'PUT')
+        return new Response(null, { status: 200 })
+    }
+    await open(uuid(10))
+    await heading('Place on the map')
+    await userEvent.click(screen.getAllByRole('button', { name: /Text and photo/ }).at(0)!)
+    await heading('Text and photo')
+    let release = () => {}
+    api.hold = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    await userEvent.upload(screen.getAllByTestId('places-photo-input').at(-1)!, new File(['abc'], 'new.jpg', { type: 'image/jpeg' }))
+    await userEvent.type(screen.getByLabelText('Photo 1 · Photo description in English'), 'Typed during the upload')
+    release()
+
+    await waitFor(() => expect(screen.getByText('Photo 2')).toBeInTheDocument())
+    expect(screen.getByLabelText('Photo 1 · Photo description in English')).toHaveValue('Typed during the upload')
+    await press('Save draft')
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ photos: [{ mediaId: uuid(41), alt: { en: 'Typed during the upload' } }, { mediaId: uuid(40) }] })
+  })
+
   it('[E4.2][AC68] more photos keep an order the merchant sets: a photo moves up and the list is sent in that order', async () => {
-    api.pin = pinOf({ id: uuid(10), photos: [{ mediaId: uuid(41), alt: { en: 'A' } }, { mediaId: uuid(42), alt: { en: 'B' } }, { mediaId: uuid(43), alt: {} }] })
+    api.pin = pinOf({ id: uuid(10), photos: [{ mediaId: uuid(41) }, { mediaId: uuid(42) }, { mediaId: uuid(43) }], draft: { title: { en: 'Chapel Bridge' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: { [uuid(41)]: { en: 'A' }, [uuid(42)]: { en: 'B' } } } })
     api.answer = call => (call.path.includes('/media/') && call.method === 'GET' ? Response.json({ ...media('ready'), id: call.path.split('/').at(-1) }) : undefined)
     await open(uuid(10))
     await heading('Place on the map')
@@ -316,7 +373,7 @@ describe('[E4.2][AC68] N17 photos', () => {
 describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
   it('[E4.2][AC79] a published pin saves with its version and no new map link, and a draft the save returns is published after it', async () => {
     api.pin = livePin()
-    api.answer = call => (call.method === 'PATCH' ? Response.json(livePin({ rowVersion: 4, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: {}, localTip: {} } })) : undefined)
+    api.answer = call => (call.method === 'PATCH' ? Response.json(livePin({ rowVersion: 4, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} } })) : undefined)
     await open(uuid(10))
     await heading('Place on the map')
     expect(screen.getByTestId('places-status')).toHaveTextContent('Published')
@@ -345,6 +402,25 @@ describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins/${uuid(10)}/hide`, ifMatch: '3' })
+  })
+
+  it('[E4.2][AC79] Hide is off while the form has unsaved edits, so hiding never discards them, and it works again once they are saved', async () => {
+    api.pin = livePin()
+    api.answer = call => (call.method === 'PATCH' ? Response.json(livePin({ rowVersion: 4, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} } })) : undefined)
+    await open(uuid(10))
+    await heading('Place on the map')
+    await userEvent.click(screen.getAllByRole('button', { name: /Text and photo/ }).at(0)!)
+    await heading('Text and photo')
+    await type('Title in English', ', Lucerne')
+    await nextTo('Review and publish')
+
+    expect(screen.getByRole('button', { name: 'Hide from map' })).toBeDisabled()
+    expect(screen.getByText('Save your changes first. Hiding the pin would discard them.')).toBeInTheDocument()
+    await press('Save changes')
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Hide from map' })).toBeEnabled())
+    expect(screen.queryByText('Save your changes first. Hiding the pin would discard them.')).not.toBeInTheDocument()
+    expect(writes().some(call => call.path.endsWith('/hide'))).toBe(false)
   })
 
   it('[E4.2][AC79] a hidden pin is shown again from the review', async () => {

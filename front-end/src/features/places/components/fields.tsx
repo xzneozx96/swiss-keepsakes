@@ -10,7 +10,7 @@ export const choiceCard
   = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /** One text field: its label, an optional help line, and the error under it in words. */
-export function Field({ label, value, onChange, lang, description, error, rows, maxLength, placeholder, inputMode, className }: {
+export function Field({ label, value, onChange, lang, description, error, rows, maxLength, placeholder, inputMode, type, className }: {
   label: string
   value: string
   onChange: (value: string) => void
@@ -22,12 +22,14 @@ export function Field({ label, value, onChange, lang, description, error, rows, 
   maxLength?: number
   placeholder?: string
   inputMode?: 'text' | 'decimal' | 'numeric'
+  /** `date` gives the phone's own day picker and a value that is empty or a whole `YYYY-MM-DD`. */
+  type?: 'text' | 'date'
   className?: string
 }) {
   const { t } = useLocale()
 
   return (
-    <TextField fullWidth className={className} isInvalid={error !== undefined} maxLength={maxLength} value={value} onChange={onChange}>
+    <TextField fullWidth className={className} isInvalid={error !== undefined} maxLength={maxLength} type={type} value={value} onChange={onChange}>
       <Label>{label}</Label>
       {rows
         ? <TextArea lang={lang} placeholder={placeholder} rows={rows} />

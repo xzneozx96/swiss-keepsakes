@@ -61,14 +61,15 @@ function AltFields({ en, de, onChange, label }: { en: string, de: string, onChan
 
 function MorePhotos({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch' | 'storeId'>) {
   const { t } = useLocale()
-  const move = (index: number, to: number) => {
-    const photos = [...form.photos]
+  const move = (index: number, to: number) => patch((current) => {
+    const photos = [...current.photos]
     const [photo] = photos.splice(index, 1)
 
     photos.splice(to, 0, photo!)
-    patch({ photos })
-  }
-  const change = (index: number, changes: Partial<PhotoEntry>) => patch({ photos: form.photos.map((photo, at) => (at === index ? { ...photo, ...changes } : photo)) })
+
+    return { photos }
+  })
+  const change = (index: number, changes: Partial<PhotoEntry>) => patch(current => ({ photos: current.photos.map((photo, at) => (at === index ? { ...photo, ...changes } : photo)) }))
 
   return (
     <Block hint={t('places.photos.help')} title={t('places.photos.label')}>
@@ -84,7 +85,7 @@ function MorePhotos({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch' |
                 <Button isIconOnly aria-label={t('places.photos.down', { n: index + 1 })} isDisabled={index === form.photos.length - 1} size="sm" variant="tertiary" onPress={() => move(index, index + 1)}>
                   <ChevronDownIcon aria-hidden size={16} />
                 </Button>
-                <Button isIconOnly aria-label={t('places.photos.remove', { n: index + 1 })} size="sm" variant="tertiary" onPress={() => patch({ photos: form.photos.filter((_, at) => at !== index) })}>
+                <Button isIconOnly aria-label={t('places.photos.remove', { n: index + 1 })} size="sm" variant="tertiary" onPress={() => patch(current => ({ photos: current.photos.filter((_, at) => at !== index) }))}>
                   <TrashIcon aria-hidden size={16} />
                 </Button>
               </div>
@@ -95,7 +96,7 @@ function MorePhotos({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch' |
         ))}
       </ol>
       {form.photos.length < MAX_PHOTOS
-        ? <PhotoAdder storeId={storeId} onAdd={mediaId => patch({ photos: [...form.photos, { mediaId, altEn: '', altDe: '' }] })} />
+        ? <PhotoAdder storeId={storeId} onAdd={mediaId => patch(current => ({ photos: [...current.photos, { mediaId, altEn: '', altDe: '' }] }))} />
         : <p className="text-sm text-muted">{t('places.photos.limit')}</p>}
     </Block>
   )

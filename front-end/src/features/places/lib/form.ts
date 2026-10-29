@@ -77,7 +77,7 @@ export function emptyForm(withDate = false): PlaceForm {
 
 /** The text the editor shows: the pending draft, else what is live. */
 function textOf(pin: Pin) {
-  return pin.draft ?? pin.published ?? { title: {}, tip: {}, localTip: {} }
+  return pin.draft ?? pin.published ?? { title: {}, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} }
 }
 
 export function slugOfPin(pin: Pin): string {
@@ -114,9 +114,9 @@ export function formOf(pin: Pin): PlaceForm {
     mustVisit: pin.mustVisit,
     foodKind: pin.foodKind,
     coverMediaId: pin.coverMediaId,
-    coverAltEn: pin.coverAlt.en ?? '',
-    coverAltDe: pin.coverAlt.de ?? '',
-    photos: pin.photos.map(photo => ({ mediaId: photo.mediaId, altEn: photo.alt.en ?? '', altDe: photo.alt.de ?? '' })),
+    coverAltEn: text.coverAlt.en ?? '',
+    coverAltDe: text.coverAlt.de ?? '',
+    photos: pin.photos.map(photo => ({ mediaId: photo.mediaId, altEn: text.photoAlt[photo.mediaId]?.en ?? '', altDe: text.photoAlt[photo.mediaId]?.de ?? '' })),
     outboundUrl: pin.outboundUrl ?? '',
     mainStoryGroupId: pin.mainStoryGroupId,
   }
@@ -151,6 +151,16 @@ function trimmed(en: string, de: string) {
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const OPEN_TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/
 const CLOSE_TIME = /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/
+const DAY = /^\d{4}-\d{2}-\d{2}$/
+
+/** A whole `YYYY-MM-DD` that is a real day (the API takes only those). */
+function isDay(value: string): boolean {
+  if (!DAY.test(value))
+    return false
+  const date = new Date(`${value}T00:00:00Z`)
+
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+}
 const HTTPS = /^https:\/\/\S+$/
 
 export interface FormErrors {
@@ -179,6 +189,8 @@ export function validate(form: PlaceForm): FormErrors {
 
     if (date.firstDay === '' || (date.kind === 'range' && date.lastDay === ''))
       errors.dates[date.key] = 'places.error.dateMissing'
+    else if (!isDay(date.firstDay) || (date.kind === 'range' && !isDay(date.lastDay)))
+      errors.dates[date.key] = 'places.error.dateFormat'
     else if (last < date.firstDay)
       errors.dates[date.key] = 'places.error.dateOrder'
     else if (timed && ((startTime !== '' && !OPEN_TIME.test(startTime)) || (endTime !== '' && !OPEN_TIME.test(endTime))))
