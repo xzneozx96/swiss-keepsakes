@@ -9,8 +9,7 @@ import { queryKeys } from '@/features/data-client'
 
 /**
  * The store is open. "Go to your dashboard" opens Today, where the merchant menu shows from then on. The stores
- * the person belongs to are read again first, so the `/store` gate knows the store is open and does not send the
- * Owner back here.
+ * the person belongs to are read again first, so the "Open your store" link of the store area is gone on arrival.
  */
 export function OpenedView({ storeName }: { storeName: string }) {
   const { t } = useLocale()

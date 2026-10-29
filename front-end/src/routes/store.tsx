@@ -1,7 +1,7 @@
-import { createFileRoute, Navigate, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 import { MerchantShell } from '@/components/layout/merchant-shell'
-import { useStoreGate } from '@/features/stores/hooks/use-store-gate'
+import { SetupNotice } from '@/features/stores/components/setup-notice'
 import { noIndexHead } from '@/lib/no-index'
 
 export const Route = createFileRoute('/store')({
@@ -11,15 +11,9 @@ export const Route = createFileRoute('/store')({
 })
 
 function StoreLayout() {
-  const gate = useStoreGate()
-
-  if (gate === 'checking')
-    return <main aria-busy className="flex-1" />
-  if (gate === 'onboarding')
-    return <Navigate replace to="/store/onboarding" />
-
   return (
     <MerchantShell>
+      <SetupNotice />
       <Outlet />
     </MerchantShell>
   )

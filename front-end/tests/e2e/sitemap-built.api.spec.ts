@@ -53,7 +53,7 @@ test('[E3.6][AC61][E3.9] the built server serves the sitemap with alternates aft
   const owner = await newVisitor(browser, language)
 
   await followLinkAs(owner, language, (await ownerInvitationMail(ownerEmail)).link, ownerEmail)
-  await expect(owner.getByRole('heading', { level: 1, name: say(language, 'stores.onboarding.title') })).toBeVisible()
+  await expect(owner.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
   const me = await ok<{ stores: Array<{ storeId: string }> }>(await owner.request.get(`${SPA_ORIGIN}/api/me`), 200)
   const base = `/api/store/${me.stores[0].storeId}/story-groups`
   const tag = Math.random().toString(36).slice(2, 8)

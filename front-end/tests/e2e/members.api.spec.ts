@@ -26,7 +26,7 @@ async function storeWithOwner(browser: Browser, language: Language) {
   const owner = await newVisitor(browser, language)
 
   await followLinkAs(owner, language, mail.link, ownerEmail)
-  await expect(owner.getByRole('heading', { level: 1, name: say(language, 'stores.onboarding.title') })).toBeVisible()
+  await expect(owner.getByText(say(language, 'stores.checklist.title'))).toBeVisible()
 
   return { owner, ownerEmail }
 }

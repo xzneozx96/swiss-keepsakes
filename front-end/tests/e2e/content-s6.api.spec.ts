@@ -29,7 +29,7 @@ async function storeWithOwner(browser: Browser) {
   const owner = await newVisitor(browser, 'en')
 
   await followLinkAs(owner, 'en', (await ownerInvitationMail(ownerEmail)).link, ownerEmail)
-  await expect(owner.getByRole('heading', { level: 1, name: say('en', 'stores.onboarding.title') })).toBeVisible()
+  await expect(owner.getByText(say('en', 'stores.checklist.title'))).toBeVisible()
   const me = await (await owner.request.get('/api/me')).json() as { stores: Array<{ storeId: string }> }
 
   return { owner, storeId: me.stores[0].storeId }

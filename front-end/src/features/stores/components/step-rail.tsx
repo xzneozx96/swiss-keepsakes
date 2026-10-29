@@ -38,7 +38,7 @@ export function StepRail({ steps, current, met, total, onPick }: {
     <nav aria-label={t('stores.setup.steps.label')} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-sm font-semibold">{t('stores.onboarding.title')}</span>
+          <span className="text-sm font-semibold">{t('stores.checklist.title')}</span>
           <span className="text-sm text-muted tabular-nums">{t('stores.checklist.count', { met, total })}</span>
         </div>
         <ProgressBar aria-label={t('stores.checklist.count', { met, total })} color="default" maxValue={total} size="sm" value={met}>

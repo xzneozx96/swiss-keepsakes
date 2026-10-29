@@ -113,6 +113,7 @@ export const storesEn = {
   'stores.refusal.failed.title': 'The invitation could not be accepted',
   'stores.refusal.failed.text': 'We could not tell whether it worked. Try again. Repeating it is safe.',
 
+  'stores.checklist.title': 'Before you open for sale',
   'stores.checklist.store-information': 'Store information',
   'stores.checklist.payment-account': 'Payment account',
   'stores.checklist.catalogue': 'A product or a tour',
@@ -135,6 +136,7 @@ export const storesEn = {
   'stores.open.notOnboarding': 'Only a store that is onboarding can be opened for sale.',
   'stores.open.forbidden': 'Only the Owner can open the store for sale.',
 
+  'stores.setup.notice': 'Your store is not open for sale yet.',
   'stores.setup.steps.label': 'Steps',
   'stores.setup.steps.title': 'Your steps',
   'stores.setup.steps.all': 'All steps',
