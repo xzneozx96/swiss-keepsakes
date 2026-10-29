@@ -17,10 +17,9 @@ const actions = {
 const wrap = (node: React.ReactNode) => render(<LocaleProvider>{node}</LocaleProvider>)
 
 describe('categories loading', () => {
-  it('table: the real search field and headers, skeleton rows, no big boxes, no empty state or hint', () => {
-    const { container } = wrap(<CategoryTable loading actions={actions} busy={false} items={[]} kind="map" />)
+  it('table: the real headers, skeleton rows, no big boxes, no empty state or hint', () => {
+    const { container } = wrap(<CategoryTable loading actions={actions} busy={false} items={[]} kind="map" query="" />)
 
-    expect(screen.getByRole('searchbox')).toBeDisabled()
     expect(screen.getByRole('columnheader', { name: 'Name' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'German name' })).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: 'Used by' })).toBeInTheDocument()

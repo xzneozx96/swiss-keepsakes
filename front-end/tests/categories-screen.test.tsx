@@ -2,7 +2,7 @@ import { merchantCategoryListSchema, merchantCategorySchema, problemSchema } fro
 import { QueryClientProvider } from '@tanstack/react-query'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
 import { CategoriesScreen } from '@/features/categories/components/categories-screen'
@@ -43,6 +43,8 @@ beforeEach(async () => {
   // jsdom has no pointer capture; the handle's press (use-stop-drag) calls it.
   HTMLElement.prototype.setPointerCapture = vi.fn()
   HTMLElement.prototype.releasePointerCapture = vi.fn()
+  // Sheets open as a dialog on desktop in the merchant area.
+  window.history.pushState({}, '', '/store/content/categories')
   localStorage.clear()
   sessionStorage.clear()
   calls = []
@@ -87,6 +89,8 @@ beforeEach(async () => {
   demo = startDemo()
   await demo.ready
 })
+
+afterEach(() => window.history.pushState({}, '', '/'))
 
 function renderScreen() {
   render(
@@ -173,7 +177,7 @@ describe('[E4.18][AC87] the category editor in German', () => {
     await openMenu('Walks', 'Löschen', 'Aktionen für')
     await userEvent.click(await screen.findByRole('button', { name: 'Kategorie löschen' }))
 
-    expect(await screen.findByText('Diese Kategorie wird noch von Pins oder Geschichtengruppen verwendet. Entfernen Sie dort zuerst die Zuordnung.')).toBeInTheDocument()
+    expect(await screen.findByText('Diese Kategorie wird noch von Pins oder Geschichten verwendet. Entfernen Sie dort zuerst die Zuordnung.')).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/\bcategories\.[a-z]/i)
   })
 })
@@ -193,8 +197,27 @@ describe('[E4.18][AC87] the category editor in English', () => {
     expect(within(rowOf('Hill')).queryByText('Missing')).not.toBeInTheDocument()
     expect(within(rowOf('Hill')).getByText('Hügel')).toBeInTheDocument()
     expect(within(rowOf('Walks')).getByText('1 pin')).toBeInTheDocument()
-    expect(within(rowOf('Walks')).getByText(/1 sub-category/)).toBeInTheDocument()
+    expect(within(rowOf('Walks')).queryByText(/sub-categor/)).toBeNull()
     expect(within(rowOf('Food')).getByText('Not used')).toBeInTheDocument()
+  })
+
+  it('keeps the search box beside the tabs, disabled while the list loads', () => {
+    renderScreen()
+    const search = screen.getByRole('searchbox', { name: 'Search categories' })
+
+    expect(search).toBeDisabled()
+    expect(search.closest('.justify-between')).toContainElement(screen.getByRole('tablist'))
+  })
+
+  it('starts the other tab with an empty search box', async () => {
+    lists.map = [category(walks)]
+    renderScreen()
+    await screen.findByText('Walks')
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search categories' }), 'walk')
+    expect(screen.getByRole('searchbox', { name: 'Search categories' })).toHaveValue('walk')
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Blog categories' }))
+    expect(screen.getByRole('searchbox', { name: 'Search categories' })).toHaveValue('')
   })
 
   it('searches in English and in German, hides the handles while searching and brings them back', async () => {
@@ -502,7 +525,7 @@ describe('[E4.18][AC87] the category editor in English', () => {
 
   it.each([
     [422, 'validation-failed', 'The list changed and was reloaded. Try the move again.'],
-    [409, 'category-in-use', 'This category is still used by pins or story groups. Untag them first.'],
+    [409, 'category-in-use', 'This category is still used by pins or stories. Untag them first.'],
   ])('reads the list again, shows the server order and says why when a reorder is refused with %i', async (status, type, message) => {
     lists.map = [
       category(walks, { name: { en: 'Walks', de: null }, position: 1 }),

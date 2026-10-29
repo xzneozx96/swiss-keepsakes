@@ -16,7 +16,7 @@ import { DropSlot, Grip } from './category-drag'
 const NAME_WIDTHS = ['w-3/5', 'w-1/2', 'w-2/3', 'w-2/5', 'w-1/2']
 const card = 'flex flex-col gap-3 rounded-3xl bg-surface p-4 shadow-surface'
 
-/** `{n} pins` or `{n} story groups`, with the singular for one. */
+/** `{n} pins` or `{n} stories`, with the singular for one. */
 function useUses() {
   const { t } = useLocale()
 
@@ -141,10 +141,7 @@ function CategoryList({ items, kind, actions, onPage }: { items: MerchantCategor
   const searching = query.trim() !== ''
   const found = items.filter(category => matches(category, query))
 
-  const facts = (category: MerchantCategory) => [
-    category.useCount ? uses(kind, category.useCount) : t('categories.unused'),
-    category.parentId === null && category.childCount > 0 ? t(`categories.subs.${category.childCount === 1 ? 'one' : 'other'}`, { n: category.childCount }) : '',
-  ].filter(Boolean).join(' · ')
+  const facts = (category: MerchantCategory) => category.useCount ? uses(kind, category.useCount) : t('categories.unused')
 
   const row = (category: MerchantCategory) => {
     const parent = items.find(item => item.id === category.parentId)

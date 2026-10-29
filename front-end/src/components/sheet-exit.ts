@@ -4,7 +4,7 @@ const DURATION = 200
 const EASE = 'cubic-bezier(0.32, 0.72, 0, 1)'
 
 /**
- * Slides a bottom sheet out after it was removed from the page. Every sheet screen mounts its
+ * Slides a bottom sheet (the Drawer only; the desktop modal in `SheetFrame` keeps HeroUI's own exit) out after it was removed from the page. Every sheet screen mounts its
  * sheet only while it is open, so closing unmounts it at once and HeroUI's exit state never
  * runs. Called as the sheet unmounts: a copy of the sheet stays for 200ms and slides down while
  * the backdrop fades, then goes. The copy cannot be touched or read out.
@@ -49,7 +49,7 @@ export function playSheetExit(inside: HTMLElement) {
  * For the component that renders a bottom sheet and is itself removed when the sheet closes:
  * put `<span ref={markerRef} hidden />` inside the sheet's dialog and the sheet slides out as
  * the component goes. A component that stays mounted and toggles `isOpen` does not need it,
- * HeroUI's own exit runs there. Development's simulated unmount leaves the sheet in the page,
+ * HeroUI's own exit runs there. Only the Drawer is animated here. Development's simulated unmount leaves the sheet in the page,
  * so only a sheet that is really gone slides out.
  */
 export function useSheetExit() {
