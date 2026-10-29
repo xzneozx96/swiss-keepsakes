@@ -4540,7 +4540,6 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        /** @description The slug is the link of the whole story, shared by its English and Deutsch versions. A new version takes the link of the other language when none is given, and a given link is written to both. A link another story already uses in either language is refused with 409 content-slug-taken and nothing is written */
         StoryVersionCreateBody: {
             draft?: components["schemas"]["StoryDraft"];
             /** @enum {string} */
@@ -4551,7 +4550,6 @@ export interface components {
             /** Format: uuid */
             targetGroupId: string;
         };
-        /** @description The slug is the link of the whole story, shared by its English and Deutsch versions. A save that carries it writes it to both and raises the row version of the other language too. null clears it on both, and is refused with 422 publish-incomplete while either language is published. A link another story already uses in either language is refused with 409 content-slug-taken and neither version changes */
         StoryVersionSaveBody: {
             draft?: components["schemas"]["StoryDraft"];
             slug?: string | null;

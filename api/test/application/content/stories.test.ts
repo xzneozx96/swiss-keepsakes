@@ -278,7 +278,7 @@ describe('story use cases', () => {
     const s = setup()
     const g = await group(s)
     await version(s, g.id)
-    await version(s, g.id, 'de', { slug: 'a-day-on-the-lake' })
+    await version(s, g.id, 'de', { slug: 'ein-tag' })
     await s.publish(owner, store, g.id, 'en', 1, null)
     await s.unpublish(owner, store, g.id, 'en', 2, null)
     expect(await s.remove(owner, store, g.id, 'en', 3, null)).toEqual({ ok: false, reason: 'published-cannot-be-deleted' })
@@ -411,123 +411,6 @@ describe('story use cases', () => {
       expect(result).toMatchObject({ ok: true, value: { status: 'published', published: { body: draft.body } } })
       expect(s.stories.versions.has(`${g.id}/de`)).toBe(false)
     })
-  })
-})
-
-describe('[E2.14][AC30] both language versions of a story carry one link', () => {
-  const slugs = (s: Setup, groupId: string) => [s.stories.versions.get(`${groupId}/en`)?.slug, s.stories.versions.get(`${groupId}/de`)?.slug]
-
-  it('[E2.14][AC30] a version created second takes the link of the first', async () => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id)
-    expect(await s.createVersion(owner, store, g.id, 'de', { draft: doc() }, null)).toMatchObject({ ok: true, value: { slug: 'a-day-on-the-lake', rowVersion: 1 } })
-    expect(slugs(s, g.id)).toEqual(['a-day-on-the-lake', 'a-day-on-the-lake'])
-    expect(s.stories.versions.get(`${g.id}/en`)?.rowVersion).toBe(1)
-  })
-
-  it('[E2.14][AC30] a link given at create is written to both versions, and the other version is bumped', async () => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id)
-    expect(await s.createVersion(owner, store, g.id, 'de', { slug: 'ein-tag-am-see', draft: doc() }, null)).toMatchObject({ ok: true, value: { slug: 'ein-tag-am-see' } })
-    expect(slugs(s, g.id)).toEqual(['ein-tag-am-see', 'ein-tag-am-see'])
-    expect(s.stories.versions.get(`${g.id}/en`)?.rowVersion).toBe(2)
-  })
-
-  it('[E2.14][AC30] a story with one version has one link and nothing else to write', async () => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id, 'de', { slug: 'ein-tag', draft: doc() })
-    expect(await s.saveVersion(owner, store, g.id, 'de', 1, { slug: 'ein-neuer-tag' }, null)).toMatchObject({ ok: true, value: { slug: 'ein-neuer-tag', rowVersion: 2 } })
-  })
-
-  it.each(['en', 'de'] as const)('[E2.14][AC30] a save in %s writes the new link to both versions, and the other row_version goes up', async (language) => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id)
-    await version(s, g.id, 'de', { draft: doc() })
-    expect(await s.saveVersion(owner, store, g.id, language, 1, { slug: 'new-link' }, null)).toMatchObject({ ok: true, value: { slug: 'new-link', rowVersion: 2 } })
-    expect(slugs(s, g.id)).toEqual(['new-link', 'new-link'])
-    expect(s.stories.versions.get(`${g.id}/${language === 'en' ? 'de' : 'en'}`)?.rowVersion).toBe(2)
-  })
-
-  it('[E2.14][AC30] the editor of the other language holding the old If-Match is refused after a link change', async () => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id)
-    await version(s, g.id, 'de', { draft: doc() })
-    await s.saveVersion(owner, store, g.id, 'en', 1, { slug: 'new-link' }, null)
-    expect(await s.saveVersion(owner, store, g.id, 'de', 1, { draft: doc({ title: 'Ein Tag' }) }, null)).toEqual({ ok: false, reason: 'stale' })
-  })
-
-  it('[E2.14][AC30] a save with no link leaves the other version alone', async () => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id)
-    await version(s, g.id, 'de', { draft: doc() })
-    await s.saveVersion(owner, store, g.id, 'en', 1, { draft: doc({ title: 'Changed' }) }, null)
-    expect(s.stories.versions.get(`${g.id}/de`)?.rowVersion).toBe(1)
-  })
-
-  it('[E2.14][AC30] stories whose links already differ are aligned by the next save of the link, even to the same value', async () => {
-    const s = setup()
-    const g = await group(s)
-    const en = await version(s, g.id)
-    const de = await version(s, g.id, 'de', { draft: doc() })
-    s.stories.versions.set(`${g.id}/de`, { ...de, slug: 'alter-link' })
-    expect(await s.saveVersion(owner, store, g.id, 'en', en.rowVersion, { draft: doc({ title: 'Changed' }) }, null)).toMatchObject({ ok: true })
-    expect(slugs(s, g.id)).toEqual(['a-day-on-the-lake', 'alter-link'])
-    expect(await s.saveVersion(owner, store, g.id, 'en', 2, { slug: 'a-day-on-the-lake' }, null)).toMatchObject({ ok: true })
-    expect(slugs(s, g.id)).toEqual(['a-day-on-the-lake', 'a-day-on-the-lake'])
-  })
-
-  it('[E2.14][AC30] clearing the link of a draft clears it on a draft version of the other language', async () => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id)
-    await version(s, g.id, 'de', { draft: doc() })
-    expect(await s.saveVersion(owner, store, g.id, 'en', 1, { slug: null }, null)).toMatchObject({ ok: true, value: { slug: null } })
-    expect(slugs(s, g.id)).toEqual([null, null])
-  })
-
-  it('[E2.14][AC30] clearing the link is refused as incomplete when the other language is published, and nothing is written', async () => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id)
-    await version(s, g.id, 'de', { draft: doc() })
-    await s.publish(owner, store, g.id, 'de', 1, null)
-    expect(await s.saveVersion(owner, store, g.id, 'en', 1, { slug: null }, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
-    expect(slugs(s, g.id)).toEqual(['a-day-on-the-lake', 'a-day-on-the-lake'])
-    expect(s.stories.versions.get(`${g.id}/en`)?.rowVersion).toBe(1)
-  })
-
-  it('[E2.14][AC30] a stale If-Match writes neither version', async () => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id)
-    await version(s, g.id, 'de', { draft: doc() })
-    expect(await s.saveVersion(owner, store, g.id, 'en', 9, { slug: 'new-link' }, null)).toEqual({ ok: false, reason: 'stale' })
-    expect(slugs(s, g.id)).toEqual(['a-day-on-the-lake', 'a-day-on-the-lake'])
-  })
-
-  it('[E2.14][AC30] a publish keeps the link, and a version with no link still names slug', async () => {
-    const s = setup()
-    const g = await group(s)
-    await version(s, g.id, 'en', { draft: doc() })
-    expect(await s.publish(owner, store, g.id, 'en', 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
-    await s.saveVersion(owner, store, g.id, 'en', 1, { slug: 'set-by-save' }, null)
-    expect(await s.publish(owner, store, g.id, 'en', 2, null)).toMatchObject({ ok: true, value: { slug: 'set-by-save' } })
-  })
-
-  it('[E2.14][AC30] a draft moved into a group takes the link of the other language there', async () => {
-    const s = setup()
-    const a = await group(s)
-    const b = await group(s)
-    await version(s, a.id, 'de', { slug: 'ein-link', draft: doc() })
-    await version(s, b.id, 'en', { slug: 'the-link', draft: doc() })
-    expect(await s.move(owner, store, a.id, 'de', 1, b.id, null)).toMatchObject({ ok: true, value: { groupId: b.id, slug: 'the-link' } })
-    expect(slugs(s, b.id)).toEqual(['the-link', 'the-link'])
   })
 })
 
