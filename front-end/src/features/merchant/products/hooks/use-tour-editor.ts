@@ -318,8 +318,12 @@ function emptyTour(id: string, slug: string): Tour {
 }
 
 export function useDepartureActions() {
-  const { mutate: addDeparture } = useCommand('tours', 'addDeparture')
-  const { mutate: setDepartureCapacity } = useCommand('tours', 'setDepartureCapacity')
+  const { mutate: addDeparture } = useCommand('tours', 'addDeparture', {
+    meta: { success: 'products.departure.added' },
+  })
+  const { mutate: setDepartureCapacity } = useCommand('tours', 'setDepartureCapacity', {
+    meta: { success: 'products.departure.updated' },
+  })
 
   return {
     add: (departure: Departure) => addDeparture(departure),
