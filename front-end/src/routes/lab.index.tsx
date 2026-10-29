@@ -15,6 +15,11 @@ const experiments = [
     note: 'The approved home: sky hero and map, the practical bits, See these first, free routes, the food map, While you’re in town, Victorinox and the advice banner. Section order fixed; answers only order cards inside sections. English only. Search S2 “One list” (approved) below. Spec: docs/ux/home-design.md (28.10.2026).',
   },
   {
+    to: '/lab/media' as const,
+    title: 'Media library (N18, S4), approved',
+    note: 'Option B: a photo wall with Photos, Audio and PDFs tabs, search by name, a selection bar that retires unused files, and a detail sheet with Replace and Retire on the preview, where the file is used, name, description and info. Spec: docs/ux/media-design.md (29.10.2026).',
+  },
+  {
     to: '/lab/pins' as const,
     title: 'Pins: dashboard editor and guest map together (S4)',
     note: 'The merchant’s pins list and pin editor (N16, N17, three editor structures) beside the guest’s Map tab and pin card (N02, N03, three map structures), on one list of pins: edit a pin and watch it on the map (28.10.2026).',
