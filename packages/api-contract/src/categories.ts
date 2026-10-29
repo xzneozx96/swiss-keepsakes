@@ -1,15 +1,12 @@
 import { z } from 'zod'
+import { noNul } from './text.js'
 
 // The merchant category API for the map and blog lists (E4.18). Request bodies are strict. A name accepts blank text:
 // the use case trims it and rules on blank, so the 422 carries the message for the name field.
 
 export const categoryKindSchema = z.enum(['map', 'blog']).meta({ id: 'CategoryKind', description: 'Which list: map categories (pins) or blog categories (story groups)' })
 
-// Postgres text and jsonb refuse U+0000, and a lone UTF-16 surrogate cannot be written as UTF-8.
-const loneSurrogate = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/
-const nameText = z.string().max(300)
-  .refine(value => !value.includes('\u0000'), 'Text may not contain a NUL character')
-  .refine(value => !loneSurrogate.test(value), 'Text may not contain an unpaired surrogate')
+const nameText = noNul(z.string().max(300))
 
 const categoryNameInputSchema = z.strictObject({
   en: nameText.optional(),
