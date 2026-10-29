@@ -23,7 +23,7 @@ describe('[E2.3] the Super Admin creates a store with its Owner invitation', () 
 
     const result = await createStore(admin, input, 'request-1')
 
-    expect(result).toMatchObject({ ok: true, store: { slug: 'lucerne-andenken', name: 'Lucerne Andenken', status: 'invited', defaultLanguage: 'de', paymentAccount: 'pending', createdAt: start.toISOString() } })
+    expect(result).toMatchObject({ ok: true, store: { slug: 'lucerne-andenken', name: 'Lucerne Andenken', status: 'invited', defaultLanguage: 'de', conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' }, createdAt: start.toISOString() } })
     const [invitation] = [...fake.state.invitations.values()]
     expect(invitation).toMatchObject({ role: 'owner', email: 'ngoc.tran@example.ch', tokenHash: null, acceptedBy: null })
     expect(invitation?.expiresAt.getTime()).toBe(start.getTime() + invitationLifetimeMs)
@@ -105,7 +105,7 @@ describe('[E2.3] the Super Admin creates a store with its Owner invitation', () 
 })
 
 describe('[E2.3] A01\'s list of stores', () => {
-  it('[E2.3] shows each store with its newest Owner invitation and its payment account state', async () => {
+  it('[E2.3] shows each store with its newest Owner invitation and its four opening conditions', async () => {
     const { createStore, listStores } = setup()
     await createStore(admin, input, null)
 
@@ -113,7 +113,19 @@ describe('[E2.3] A01\'s list of stores', () => {
 
     expect(page.nextCursor).toBeNull()
     expect(page.items).toHaveLength(1)
-    expect(page.items[0]).toMatchObject({ slug: 'lucerne-andenken', status: 'invited', paymentAccount: 'pending', createdAt: start.toISOString(), invitation: { state: 'open', email: 'ngoc.tran@example.ch' } })
+    expect(page.items[0]).toMatchObject({ slug: 'lucerne-andenken', status: 'invited', conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' }, createdAt: start.toISOString(), invitation: { state: 'open', email: 'ngoc.tran@example.ch' } })
+  })
+
+  it('[E2.15] returns the same four conditions the open-for-sale rule reads, per store', async () => {
+    const { fake, createStore, listStores } = setup()
+    await createStore(admin, input, null)
+    fake.setLater({ 'payment-account': 'met', 'catalogue': 'met', 'policies': 'met' })
+    await createStore(admin, { ...input, slug: 'second-shop', name: ' ', ownerEmail: 'two@example.ch' }, null)
+
+    const { items } = await listStores({ limit: 10 })
+
+    expect(items.find(item => item.slug === 'second-shop')?.conditions).toEqual({ 'store-information': 'unmet', 'payment-account': 'met', 'catalogue': 'met', 'policies': 'met' })
+    expect(items.find(item => item.slug === 'lucerne-andenken')?.conditions).toEqual({ 'store-information': 'met', 'payment-account': 'met', 'catalogue': 'met', 'policies': 'met' })
   })
 
   it('[E2.4] the Owner invitation records the Super Admin who made it, and a resend the Super Admin who sent it again', async () => {

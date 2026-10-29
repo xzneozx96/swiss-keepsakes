@@ -647,7 +647,7 @@ describe('[E2.3] the Super Admin\'s routes over real sessions', () => {
     expect(accepted.status).toBe(200)
   })
 
-  it('[E2.3] A01\'s list shows each store with its invitation and payment state, and pages with a cursor', async () => {
+  it('[E2.3] A01\'s list shows each store with its invitation and four opening conditions, and pages with a cursor', async () => {
     const env = shared
     const admin = sharedAdmin
     const owner = await env.signIn()
@@ -656,7 +656,7 @@ describe('[E2.3] the Super Admin\'s routes over real sessions', () => {
       const created = await env.createStore(admin, index === 0 ? owner.email : `list-${randomUUID().slice(0, 8)}@example.ch`)
       slugs.push(created.body.id)
     }
-    interface Page { items: { id: string, slug: string, status: string, paymentAccount: string, invitation: { state: string } | null }[], nextCursor: string | null }
+    interface Page { items: { id: string, slug: string, status: string, conditions: Record<string, string>, invitation: { state: string } | null }[], nextCursor: string | null }
 
     // Other test files add stores to the same database at the same time, so the pages are walked, not counted.
     const first = await (await env.call('/api/admin/stores?limit=2', { headers: admin.headers })).json() as Page
@@ -676,7 +676,7 @@ describe('[E2.3] the Super Admin\'s routes over real sessions', () => {
     const ids = everything.map(item => item.id)
     expect(new Set(ids).size).toBe(ids.length)
     expect(ids.filter(id => slugs.includes(id))).toEqual([...slugs].reverse())
-    expect(everything.find(item => item.id === slugs[0])).toMatchObject({ status: 'invited', paymentAccount: 'pending', createdAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT[\d:.]+Z$/), invitation: { state: 'open' } })
+    expect(everything.find(item => item.id === slugs[0])).toMatchObject({ status: 'invited', conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' }, createdAt: expect.stringMatching(/^\d{4}-\d\d-\d\dT[\d:.]+Z$/), invitation: { state: 'open' } })
   })
 })
 
@@ -691,6 +691,18 @@ describe('[E2.3][AC03] the Owner\'s onboarding routes on a real store', () => {
     await pool.query(`insert into identity.store_memberships (user_id, store_id, role, accepted_at) values ($1, $2, 'manager', now())`, [manager.userId, body.id])
     return { env, admin, owner, manager, storeId: body.id }
   }
+
+  it('[E2.15] A01\'s list returns the same conditions the Owner\'s checklist and open-for-sale read', async () => {
+    const { env, admin, owner, storeId } = await onboardingStore({ conditions: { laterConditions: async () => ({ ...laterMet, catalogue: 'unmet' }) } })
+    interface Page { items: { id: string, conditions: Record<string, string> }[], nextCursor: string | null }
+
+    const page = await (await env.call('/api/admin/stores?limit=100', { headers: admin.headers })).json() as Page
+    const checklist = await (await env.call(`/api/store/${storeId}/onboarding`, { headers: owner.headers })).json() as { conditions: { key: string, state: string }[] }
+
+    const listed = page.items.find(item => item.id === storeId)!.conditions
+    expect(listed).toEqual({ 'store-information': 'met', 'payment-account': 'met', 'catalogue': 'unmet', 'policies': 'met' })
+    expect(listed).toEqual(Object.fromEntries(checklist.conditions.map(({ key, state }) => [key, state])))
+  })
 
   it('[E2.3][AC03] with the later conditions replaced by doubles that are met, the Owner opens the store and it goes live', async () => {
     const { env, owner, storeId } = await onboardingStore({ conditions: { laterConditions: async () => ({ ...laterMet }) } })

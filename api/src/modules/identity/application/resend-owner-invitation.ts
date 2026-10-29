@@ -4,6 +4,7 @@ import type { AuditLog, Clock, ConditionSource, InvitationRepository, StoreRepos
 import type { AdminStoreView } from './admin-store-view.ts'
 import { invitationLifetimeMs } from '@sk/domain/identity'
 import { adminStoreView } from './admin-store-view.ts'
+import { onboardingConditions } from './get-onboarding.ts'
 
 export interface ResendOwnerInvitationDeps<T> {
   uow: UnitOfWork<T>
@@ -39,6 +40,6 @@ export function makeResendOwnerInvitation<T>({ uow, stores, invitations, conditi
     await invitations.renew(tx, storeId, invitation.id, expiresAt, actor.userId)
     await queueMail(tx, { template: 'N20', to: invitation.email, language: language ?? store.defaultLanguage, storeId, params: { store: store.name, invitationId: invitation.id, expiresOn: expiresAt.toISOString() } })
     await audit.record(tx, { storeId, actor: `super_admin:${actor.userId}`, entity: 'store_invitation', entityId: invitation.id, action: 'resent', requestId })
-    return { ok: true, store: adminStoreView(store, { ...invitation, tokenHash: null, expiresAt, invitedBy: actor.userId }, await conditions.laterConditions(tx, storeId), now) }
+    return { ok: true, store: adminStoreView(store, { ...invitation, tokenHash: null, expiresAt, invitedBy: actor.userId }, await onboardingConditions(conditions, tx, store), now) }
   })
 }

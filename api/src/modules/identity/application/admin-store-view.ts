@@ -1,21 +1,21 @@
-import type { ConditionState, InvitationState, Store } from '@sk/domain/identity'
-import type { Invitation, LaterConditions } from '../ports.ts'
+import type { InvitationState, OnboardingConditions, Store } from '@sk/domain/identity'
+import type { Invitation } from '../ports.ts'
 import { invitationState } from '@sk/domain/identity'
 
-// A store as A01 lists it.
+// A store as A01 lists it, with the four opening conditions the Owner's open-for-sale rule reads (`onboardingConditions`).
 export interface AdminStoreView extends Omit<Store, 'createdAt'> {
   invitation: { email: string, state: InvitationState, expiresAt: string } | null
-  paymentAccount: ConditionState
+  conditions: OnboardingConditions
   createdAt: string
 }
 
-export function adminStoreView(store: Store, invitation: Invitation | undefined, later: LaterConditions, now: Date): AdminStoreView {
+export function adminStoreView(store: Store, invitation: Invitation | undefined, conditions: OnboardingConditions, now: Date): AdminStoreView {
   return {
     ...store,
     invitation: invitation
       ? { email: invitation.email, state: invitationState(invitation, now), expiresAt: invitation.expiresAt.toISOString() }
       : null,
-    paymentAccount: later['payment-account'],
+    conditions,
     createdAt: store.createdAt.toISOString(),
   }
 }

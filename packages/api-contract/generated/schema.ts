@@ -2647,8 +2647,15 @@ export interface components {
         AcceptInvitation: {
             token: string;
         };
-        /** @description A store as A01 lists it: its Owner invitation and whether its payment account is verified */
+        /** @description A store as A01 lists it: its Owner invitation and its four opening conditions */
         AdminStore: {
+            /** @description The four opening conditions, from the rule that decides open-for-sale */
+            conditions: {
+                catalogue: components["schemas"]["ConditionState"];
+                "payment-account": components["schemas"]["ConditionState"];
+                policies: components["schemas"]["ConditionState"];
+                "store-information": components["schemas"]["ConditionState"];
+            };
             /** Format: date-time */
             createdAt: string;
             /** @enum {string} */
@@ -2657,7 +2664,6 @@ export interface components {
             id: string;
             invitation: components["schemas"]["OwnerInvitation"];
             name: string;
-            paymentAccount: components["schemas"]["ConditionState"];
             slug: string;
             /** @enum {string} */
             status: "invited" | "onboarding" | "live" | "suspended";

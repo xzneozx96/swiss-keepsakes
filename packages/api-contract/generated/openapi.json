@@ -56,8 +56,32 @@
         "type": "object"
       },
       "AdminStore": {
-        "description": "A store as A01 lists it: its Owner invitation and whether its payment account is verified",
+        "description": "A store as A01 lists it: its Owner invitation and its four opening conditions",
         "properties": {
+          "conditions": {
+            "description": "The four opening conditions, from the rule that decides open-for-sale",
+            "properties": {
+              "catalogue": {
+                "$ref": "#/components/schemas/ConditionState"
+              },
+              "payment-account": {
+                "$ref": "#/components/schemas/ConditionState"
+              },
+              "policies": {
+                "$ref": "#/components/schemas/ConditionState"
+              },
+              "store-information": {
+                "$ref": "#/components/schemas/ConditionState"
+              }
+            },
+            "required": [
+              "store-information",
+              "payment-account",
+              "catalogue",
+              "policies"
+            ],
+            "type": "object"
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -78,9 +102,6 @@
           },
           "name": {
             "type": "string"
-          },
-          "paymentAccount": {
-            "$ref": "#/components/schemas/ConditionState"
           },
           "slug": {
             "type": "string"
@@ -103,7 +124,7 @@
           "defaultLanguage",
           "createdAt",
           "invitation",
-          "paymentAccount"
+          "conditions"
         ],
         "type": "object"
       },

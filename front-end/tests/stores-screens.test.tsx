@@ -458,9 +458,9 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
 
 const listed = adminStoreListSchema.parse({
   items: [
-    { ...store, status: 'invited', invitation: { email: 'owner@example.ch', state: 'open', expiresAt: '2026-10-29T10:00:00.000Z' }, paymentAccount: 'pending' },
-    { ...store, id: '0198a000-0000-7000-8000-000000000002', slug: 'old', name: 'Old Shop', status: 'invited', createdAt: '2026-09-15T08:00:00.000Z', invitation: { email: 'late@example.ch', state: 'expired', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'pending' },
-    { ...store, id: '0198a000-0000-7000-8000-000000000003', slug: 'live', name: 'Live Shop', status: 'live', createdAt: '2026-08-03T08:00:00.000Z', invitation: { email: 'done@example.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'met' },
+    { ...store, status: 'invited', invitation: { email: 'owner@example.ch', state: 'open', expiresAt: '2026-10-29T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' } },
+    { ...store, id: '0198a000-0000-7000-8000-000000000002', slug: 'old', name: 'Old Shop', status: 'invited', createdAt: '2026-09-15T08:00:00.000Z', invitation: { email: 'late@example.ch', state: 'expired', expiresAt: '2026-10-01T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' } },
+    { ...store, id: '0198a000-0000-7000-8000-000000000003', slug: 'live', name: 'Live Shop', status: 'live', createdAt: '2026-08-03T08:00:00.000Z', invitation: { email: 'done@example.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'met', 'catalogue': 'met', 'policies': 'met' } },
   ],
   nextCursor: null,
 })

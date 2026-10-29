@@ -25,12 +25,12 @@ const base = { defaultLanguage: 'en', createdAt: '2026-10-20T08:00:00.000Z' } as
 
 const listed = adminStoreListSchema.parse({
   items: [
-    { ...base, id: id(1), slug: 'atelier', name: 'Atelier am See', status: 'onboarding', invitation: { email: 'lena@atelier.ch', state: 'accepted', expiresAt: '2026-10-27T10:00:00.000Z' }, paymentAccount: 'pending' },
-    { ...base, id: id(2), slug: 'live', name: 'Live Shop', status: 'live', invitation: { email: 'done@example.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'met' },
-    { ...base, id: id(3), slug: 'sus', name: 'Löwen Papeterie', status: 'suspended', invitation: { email: 'hallo@loewen.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, paymentAccount: 'unmet' },
-    { ...base, id: id(4), slug: 'kapell', name: 'Kapellbrücke', status: 'invited', invitation: { email: 'marco@kapell.ch', state: 'open', expiresAt: '2026-11-04T10:00:00.000Z' }, paymentAccount: 'pending' },
-    { ...base, id: id(5), slug: 'pilatus', name: 'Pilatus Bergkiosk', status: 'invited', invitation: { email: 'info@pilatus.ch', state: 'expired', expiresAt: '2026-10-22T10:00:00.000Z' }, paymentAccount: 'pending' },
-    { ...base, id: id(6), slug: 'rev', name: 'Revoked Shop', status: 'invited', invitation: { email: 'gone@example.ch', state: 'revoked', expiresAt: '2026-10-20T10:00:00.000Z' }, paymentAccount: 'pending' },
+    { ...base, id: id(1), slug: 'atelier', name: 'Atelier am See', status: 'onboarding', invitation: { email: 'lena@atelier.ch', state: 'accepted', expiresAt: '2026-10-27T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'met', 'catalogue': 'pending', 'policies': 'met' } },
+    { ...base, id: id(2), slug: 'live', name: 'Live Shop', status: 'live', invitation: { email: 'done@example.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'met', 'catalogue': 'met', 'policies': 'met' } },
+    { ...base, id: id(3), slug: 'sus', name: 'Löwen Papeterie', status: 'suspended', invitation: { email: 'hallo@loewen.ch', state: 'accepted', expiresAt: '2026-10-01T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'unmet', 'catalogue': 'pending', 'policies': 'pending' } },
+    { ...base, id: id(4), slug: 'kapell', name: 'Kapellbrücke', status: 'invited', invitation: { email: 'marco@kapell.ch', state: 'open', expiresAt: '2026-11-04T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' } },
+    { ...base, id: id(5), slug: 'pilatus', name: 'Pilatus Bergkiosk', status: 'invited', invitation: { email: 'info@pilatus.ch', state: 'expired', expiresAt: '2026-10-22T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' } },
+    { ...base, id: id(6), slug: 'rev', name: 'Revoked Shop', status: 'invited', invitation: { email: 'gone@example.ch', state: 'revoked', expiresAt: '2026-10-20T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' } },
   ],
   nextCursor: null,
 })
@@ -126,9 +126,9 @@ describe('[E2.15][E2.3] A01 shows each store\'s setup at a glance', () => {
 
     const bar = within(rowOf('Atelier am See')).getByRole('progressbar')
 
-    expect(bar).toHaveAttribute('aria-valuenow', '1')
+    expect(bar).toHaveAttribute('aria-valuenow', '3')
     expect(bar).toHaveAttribute('aria-valuemax', '4')
-    expect(within(rowOf('Atelier am See')).getByText('1 of 4 done')).toBeInTheDocument()
+    expect(within(rowOf('Atelier am See')).getByText('3 of 4 done')).toBeInTheDocument()
     expect(within(rowOf('Live Shop')).queryByRole('progressbar')).not.toBeInTheDocument()
     expect(within(rowOf('Löwen Papeterie')).getByRole('progressbar')).toHaveAttribute('aria-valuenow', '1')
     expect(within(rowOf('Kapellbrücke')).queryByRole('progressbar')).not.toBeInTheDocument()
@@ -268,7 +268,7 @@ describe('[E2.15][E2.3] the invite sheet', () => {
 
   it('closes, lists the new store as onboarding with an invitation pending, and sends one invitation', async () => {
     let created = false
-    const fresh = adminStoreSchema.parse({ ...base, id: id(7), slug: 'seebrise', name: 'Seebrise Café', status: 'invited', invitation: { email: 'anna@seebrise.ch', state: 'open', expiresAt: '2026-11-05T10:00:00.000Z' }, paymentAccount: 'pending' })
+    const fresh = adminStoreSchema.parse({ ...base, id: id(7), slug: 'seebrise', name: 'Seebrise Café', status: 'invited', invitation: { email: 'anna@seebrise.ch', state: 'open', expiresAt: '2026-11-05T10:00:00.000Z' }, conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' } })
 
     answer = (call) => {
       if (call.method === 'POST') {
@@ -361,8 +361,8 @@ describe('[E2.15][E2.3] phones, empty and loading states', () => {
 
     expect(within(atelier).getByText('Onboarding')).toBeInTheDocument()
     expect(within(atelier).getByText('Before opening')).toBeInTheDocument()
-    expect(within(atelier).getByText('1 of 4 done')).toBeInTheDocument()
-    expect(within(atelier).getByRole('progressbar')).toHaveAttribute('aria-valuenow', '1')
+    expect(within(atelier).getByText('3 of 4 done')).toBeInTheDocument()
+    expect(within(atelier).getByRole('progressbar')).toHaveAttribute('aria-valuenow', '3')
     expect(within(atelier).getByText(/lena@atelier\.ch/)).toBeInTheDocument()
     expect(within(cardOf('Live Shop')).queryByRole('progressbar')).not.toBeInTheDocument()
     expect(within(cardOf('Kapellbrücke')).queryByText('Not started')).not.toBeInTheDocument()
@@ -405,7 +405,8 @@ describe('[E2.15][AC09] A01 in German', () => {
 
     await within(grid).findByText('Live Shop')
     expect(within(grid).getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Shop', 'Status', 'Einladung', 'Vor der Eröffnung', 'Erstellt', 'Aktionen'])
-    expect(within(grid).getAllByText('1 von 4 erledigt')).toHaveLength(2)
+    expect(within(grid).getByText('3 von 4 erledigt')).toBeInTheDocument()
+    expect(within(grid).getByText('1 von 4 erledigt')).toBeInTheDocument()
     expect(within(grid).getAllByText('Nicht begonnen')).toHaveLength(3)
     expect(within(screen.getByLabelText('Shops im Überblick')).getByText('In Einrichtung')).toBeInTheDocument()
 

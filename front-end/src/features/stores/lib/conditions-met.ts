@@ -1,11 +1,9 @@
 import type { AdminStore } from '@sk/api-contract'
 
-import { storeInformationState } from '@sk/domain/identity'
-
 /**
- * How many of the four opening conditions a store has met, counted from the list data (`AdminStore` carries no
- * conditions list). The catalogue and the policies count as unmet until their stories add them to `AdminStore`.
+ * How many of the four opening conditions a store has met, counted from `store.conditions`, which the server
+ * computes by the same rule that decides open-for-sale. `pending` and `unmet` both count as not met.
  */
 export function conditionsMet(store: AdminStore): 0 | 1 | 2 | 3 | 4 {
-  return (storeInformationState(store) === 'met' ? 1 : 0) + (store.paymentAccount === 'met' ? 1 : 0) as 0 | 1 | 2
+  return Object.values(store.conditions).filter(state => state === 'met').length as 0 | 1 | 2 | 3 | 4
 }

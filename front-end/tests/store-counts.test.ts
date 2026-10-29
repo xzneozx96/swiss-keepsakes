@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { countStores } from '@/features/stores/lib/store-counts'
 
 function store(status: AdminStore['status'], invitation: AdminStore['invitation']): AdminStore {
-  return { id: '0198a000-0000-7000-8000-000000000001', slug: 's', name: 'S', status, defaultLanguage: 'en', createdAt: '2026-10-20T08:00:00.000Z', invitation, paymentAccount: 'pending' }
+  return { id: '0198a000-0000-7000-8000-000000000001', slug: 's', name: 'S', status, defaultLanguage: 'en', createdAt: '2026-10-20T08:00:00.000Z', invitation, conditions: { 'store-information': 'met', 'payment-account': 'pending', 'catalogue': 'pending', 'policies': 'pending' } }
 }
 
 const at = '2026-10-29T10:00:00.000Z'

@@ -26,8 +26,13 @@ const invitationSchema = z.object({
 
 export const adminStoreSchema = storeSchema.extend({
   invitation: invitationSchema.nullable(),
-  paymentAccount: conditionStateSchema,
-}).meta({ id: 'AdminStore', description: 'A store as A01 lists it: its Owner invitation and whether its payment account is verified' })
+  conditions: z.object({
+    'store-information': conditionStateSchema,
+    'payment-account': conditionStateSchema,
+    'catalogue': conditionStateSchema,
+    'policies': conditionStateSchema,
+  }).meta({ description: 'The four opening conditions, from the rule that decides open-for-sale' }),
+}).meta({ id: 'AdminStore', description: 'A store as A01 lists it: its Owner invitation and its four opening conditions' })
 
 export const adminStoreListSchema = z.object({
   items: z.array(adminStoreSchema),
