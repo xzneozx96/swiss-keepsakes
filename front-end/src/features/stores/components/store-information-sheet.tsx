@@ -1,7 +1,7 @@
 import type { Store } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
 
-import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, TextField, toast } from '@heroui/react'
+import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, TextField } from '@heroui/react'
 import { useState } from 'react'
 
 import { SheetFrame } from '@/components/sheet-frame'
@@ -22,7 +22,10 @@ export function StoreInformationSheet({ store, onClose }: { store: Store, onClos
   const { t } = useLocale()
   const [draft, setDraft] = useState<Draft>({})
   const [nameInvalid, setNameInvalid] = useState(false)
-  const { submit, isPending, error } = useSubmit('stores', 'updateStoreInformation')
+  const { submit, isPending, error } = useSubmit('stores', 'updateStoreInformation', {
+    // The only refusal (forbidden) shows inline through ProblemNotice.
+    meta: { success: 'stores.info.saved', silent: true },
+  })
   const name = draft.name ?? store.name
   const language = draft.language ?? store.defaultLanguage
   const changed = name.trim() !== store.name || language !== store.defaultLanguage
@@ -38,7 +41,6 @@ export function StoreInformationSheet({ store, onClose }: { store: Store, onClos
     submit({ ...input, idempotencyKey: key.next() }, {
       onSuccess: () => {
         key.settled()
-        toast.success(t('stores.info.saved'))
         onClose()
       },
       onError: failure => key.settled(failure),

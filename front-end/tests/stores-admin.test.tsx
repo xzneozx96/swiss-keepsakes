@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
-import { DataClientProvider } from '@/features/data-client'
+import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 import { AdminStoresScreen } from '@/features/stores/components/admin-stores-screen'
@@ -80,6 +80,7 @@ function renderAdmin() {
     <QueryClientProvider client={demo.queryClient}>
       <DataClientProvider client={demo.dataClient}>
         <LocaleProvider>
+          <ApiFeedbackBridge feedback={demo.feedback} />
           <DemoProvider store={demo.store}>
             <RouterProvider router={router} />
           </DemoProvider>

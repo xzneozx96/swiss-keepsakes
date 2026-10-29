@@ -7,10 +7,8 @@ import { toast } from '@heroui/react'
 import { CopyIcon, SendIcon } from '@/components/icons'
 import { RowActions } from '@/components/row-actions'
 import { useLocale } from '@/contexts/locale-context'
-import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { useIdempotencyKey } from '../hooks/use-idempotency-key'
-import { genericProblemKey } from '../lib/refusals'
 
 type ActionId = 'resend' | 'copy'
 
@@ -27,10 +25,15 @@ const resendRefusals: Record<string, MessageKey> = {
  */
 export function StoreActions({ store }: { store: AdminStore }) {
   const { t } = useLocale()
-  const { submit, isPending } = useSubmit('stores', 'resendOwnerInvitation')
+  const { invitation } = store
+  const { submit, isPending } = useSubmit('stores', 'resendOwnerInvitation', {
+    meta: {
+      success: () => t('stores.resend.done', { email: invitation?.email ?? '' }),
+      error: resendRefusals,
+    },
+  })
   const input = { id: store.id, language: store.defaultLanguage }
   const key = useIdempotencyKey(input)
-  const { invitation } = store
   const mayResend = invitation?.state === 'open' || invitation?.state === 'expired'
   const actions: RowAction<ActionId>[] = [
     { id: 'resend', label: t('stores.resend.action'), icon: SendIcon, isDisabled: !mayResend },
@@ -41,14 +44,8 @@ export function StoreActions({ store }: { store: AdminStore }) {
     if (!invitation || isPending)
       return
     submit({ ...input, idempotencyKey: key.next() }, {
-      onSuccess: () => {
-        key.settled()
-        toast.success(t('stores.resend.done', { email: invitation.email }))
-      },
-      onError: (error) => {
-        key.settled(error)
-        toast.danger(t(error instanceof ApiProblem ? (resendRefusals[error.type] ?? genericProblemKey(error)) : genericProblemKey(error)))
-      },
+      onSuccess: () => key.settled(),
+      onError: error => key.settled(error),
     })
   }
 
