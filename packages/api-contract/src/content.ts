@@ -106,9 +106,9 @@ export const pinWriteBodySchema = z.strictObject({
   mainStoryGroupId: z.uuid().nullable().optional(),
   categoryIds: idList(20).optional(),
   dates: z.array(pinDateWriteSchema).max(50).optional(),
-}).meta({ id: 'PinWriteBody', description: 'Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list; `coverAlt` and `localTip` replace the whole text' })
+}).meta({ id: 'PinWriteBody', description: 'Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list. `localTip`, `coverAlt` and the alt text of each photo are text: they go to the draft and are live on publish' })
 
-const pinDraftViewSchema = z.object({ title: localizedView, tip: localizedView, localTip: localizedView })
+const pinDraftViewSchema = z.object({ title: localizedView, tip: localizedView, localTip: localizedView, coverAlt: localizedView, photoAlt: z.record(z.uuid(), localizedView) })
 
 export const pinSchema = z.object({
   id: z.uuid(),
@@ -125,8 +125,7 @@ export const pinSchema = z.object({
   mustVisit: z.boolean(),
   foodKind: foodKind.nullable(),
   coverMediaId: z.uuid().nullable(),
-  coverAlt: localizedView,
-  photos: z.array(z.object({ mediaId: z.uuid(), alt: localizedView })),
+  photos: z.array(z.object({ mediaId: z.uuid() })),
   outboundUrl: z.string().nullable(),
   mainStoryGroupId: z.uuid().nullable(),
   categoryIds: z.array(z.uuid()),
@@ -159,7 +158,6 @@ export const pinListItemSchema = z.object({
   interests: z.array(z.string()),
   coverMediaId: z.uuid().nullable(),
   mainStory: z.object({ groupId: z.uuid(), published: z.boolean() }).nullable().meta({ description: '`published` is false when the story has no published version' }),
-  hasPendingChanges: z.boolean().meta({ description: 'A live pin with a draft that is not published yet' }),
   rowVersion: z.int(),
   updatedAt: z.iso.datetime(),
 }).meta({ id: 'PinListItem', description: 'A pin as one row of the merchant list' })

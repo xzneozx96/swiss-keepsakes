@@ -4,7 +4,7 @@ import type { PinChanges, PinListRow, PinRepository } from '../ports.ts'
 import { sql } from 'drizzle-orm'
 
 // The document stores the title under `name`: places_published_fields_check reads published->'name'.
-interface PinDocument { name?: PinDraft['title'], tip?: PinDraft['tip'], localTip?: PinDraft['localTip'] }
+interface PinDocument { name?: PinDraft['title'], tip?: PinDraft['tip'], localTip?: PinDraft['localTip'], coverAlt?: PinDraft['coverAlt'], photoAlt?: PinDraft['photoAlt'] }
 
 interface PinRow {
   id: string
@@ -21,7 +21,6 @@ interface PinRow {
   must_visit: boolean
   food_kind: Pin['foodKind']
   cover_media_id: string | null
-  cover_alt: Pin['coverAlt']
   main_story_group_id: string | null
   draft: PinDocument | null
   published: PinDocument | null
@@ -35,14 +34,32 @@ interface PinRow {
 type DateRow = { [K in keyof PinDate]: PinDate[K] }
 
 const columns = sql`id, store_id, status, slug, latitude, longitude, address, weekly_hours, stay_tag, interests,
-  service_type, must_visit, food_kind, cover_media_id, cover_alt, main_story_group_id, draft, published,
+  service_type, must_visit, food_kind, cover_media_id, main_story_group_id, draft, published,
   first_published_at, row_version, created_at, updated_at`
 
 function toDraft(document: PinDocument | null): PinDraft | null {
-  return document ? { title: document.name ?? {}, tip: document.tip ?? {}, localTip: document.localTip ?? {} } : null
+  return document ? { title: document.name ?? {}, tip: document.tip ?? {}, localTip: document.localTip ?? {}, coverAlt: document.coverAlt ?? {}, photoAlt: document.photoAlt ?? {} } : null
 }
 
-const toDocument = (draft: PinDraft) => ({ name: draft.title, tip: draft.tip, localTip: draft.localTip })
+const toDocument = (draft: PinDraft) => ({ name: draft.title, tip: draft.tip, localTip: draft.localTip, coverAlt: draft.coverAlt, photoAlt: draft.photoAlt })
+
+const emptyText: PinDraft = { title: {}, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} }
+
+// The alt text of the extra photos, by media id; a photo with no alt text has no entry.
+const photoAltOf = (photos: NonNullable<PinChanges['photos']>) => Object.fromEntries(photos.filter(photo => Object.keys(photo.alt).length > 0).map(photo => [photo.mediaId, photo.alt]))
+
+// The text document a save writes: what the changes name, the rest from the stored text. Undefined when the save names no text.
+function documentOf(changes: PinChanges, base: PinDraft): ReturnType<typeof toDocument> | undefined {
+  if (!changes.title && !changes.tip && !changes.localTip && !changes.coverAlt && !changes.photos)
+    return undefined
+  return toDocument({
+    title: changes.title ?? base.title,
+    tip: changes.tip ?? base.tip,
+    localTip: changes.localTip ?? base.localTip,
+    coverAlt: changes.coverAlt ?? base.coverAlt,
+    photoAlt: changes.photos ? photoAltOf(changes.photos) : base.photoAlt,
+  })
+}
 
 const json = (value: unknown) => (value === null ? null : JSON.stringify(value))
 
@@ -59,8 +76,8 @@ async function load(tx: Tx, storeId: string, pinId: string, lock: boolean): Prom
      order by first_day, start_time nulls first, id`)
   const categories = await tx.execute<{ id: string }>(sql`
     select category_id as id from content.place_categories where store_id = ${storeId} and place_id = ${pinId} order by category_id`)
-  const photos = await tx.execute<{ mediaId: string, alt: Pin['coverAlt'] }>(sql`
-    select media_id as "mediaId", alt from content.place_photos where store_id = ${storeId} and place_id = ${pinId} order by position`)
+  const photos = await tx.execute<{ mediaId: string }>(sql`
+    select media_id as "mediaId" from content.place_photos where store_id = ${storeId} and place_id = ${pinId} order by position`)
   const link = await tx.execute<{ url: string }>(sql`
     select url from content.place_links where store_id = ${storeId} and place_id = ${pinId}`)
   return {
@@ -78,7 +95,6 @@ async function load(tx: Tx, storeId: string, pinId: string, lock: boolean): Prom
     mustVisit: row.must_visit,
     foodKind: row.food_kind,
     coverMediaId: row.cover_media_id,
-    coverAlt: row.cover_alt,
     photos: photos.rows,
     outboundUrl: link.rows[0]?.url ?? null,
     mainStoryGroupId: row.main_story_group_id,
@@ -105,9 +121,9 @@ async function replaceLists(tx: Tx, storeId: string, pinId: string, changes: Pin
   if (changes.photos) {
     await tx.execute(sql`delete from content.place_photos where store_id = ${storeId} and place_id = ${pinId}`)
     if (changes.photos.length > 0) {
-      const values = changes.photos.map((photo, index) => sql`(${pinId}, ${storeId}, ${index + 1}, ${photo.mediaId}, ${JSON.stringify(photo.alt)}::jsonb)`)
+      const values = changes.photos.map((photo, index) => sql`(${pinId}, ${storeId}, ${index + 1}, ${photo.mediaId})`)
       await tx.execute(sql`
-        insert into content.place_photos (place_id, store_id, position, media_id, alt) values ${sql.join(values, sql`, `)}`)
+        insert into content.place_photos (place_id, store_id, position, media_id) values ${sql.join(values, sql`, `)}`)
     }
   }
   if (changes.outboundUrl === null) {
@@ -202,14 +218,14 @@ async function storyOptionRows(tx: Tx, storeId: string): Promise<PinStoryOption[
 export function createPinRepository(): PinRepository<Tx> {
   return {
     async insert(tx, storeId, changes, at) {
-      const draft = changes.title || changes.tip || changes.localTip ? { name: changes.title ?? {}, tip: changes.tip ?? {}, localTip: changes.localTip ?? {} } : null
+      const draft = documentOf(changes, emptyText) ?? null
       const inserted = await tx.execute<{ id: string }>(sql`
         insert into content.places (store_id, slug, latitude, longitude, address, weekly_hours, stay_tag, interests,
-                                    service_type, must_visit, food_kind, cover_media_id, cover_alt, main_story_group_id, draft, created_at, updated_at)
+                                    service_type, must_visit, food_kind, cover_media_id, main_story_group_id, draft, created_at, updated_at)
         values (${storeId}, ${json(changes.slug ?? null)}::jsonb, ${changes.latitude ?? null}, ${changes.longitude ?? null},
                 ${changes.address ?? null}, ${JSON.stringify(changes.weeklyHours ?? [])}::jsonb, ${changes.stayTag ?? 'both'},
                 ${sql.param(changes.interests ?? [])}::text[], ${changes.serviceType ?? null}, ${changes.mustVisit ?? false},
-                ${changes.foodKind ?? null}, ${changes.coverMediaId ?? null}, ${JSON.stringify(changes.coverAlt ?? {})}::jsonb,
+                ${changes.foodKind ?? null}, ${changes.coverMediaId ?? null},
                 ${changes.mainStoryGroupId ?? null}, ${json(draft)}::jsonb, ${at}, ${at})
         returning id`)
       const id = inserted.rows[0]!.id
@@ -220,10 +236,7 @@ export function createPinRepository(): PinRepository<Tx> {
     findForUpdate: (tx, storeId, pinId) => load(tx, storeId, pinId, true),
 
     async save(tx, pin, changes, at) {
-      const base = pin.draft ?? pin.published ?? { title: {}, tip: {}, localTip: {} }
-      const draft = changes.title || changes.tip || changes.localTip
-        ? { name: changes.title ?? base.title, tip: changes.tip ?? base.tip, localTip: changes.localTip ?? base.localTip }
-        : undefined
+      const draft = documentOf(changes, pin.draft ?? pin.published ?? emptyText)
       const has = <K extends keyof PinChanges>(key: K) => changes[key] !== undefined
       await tx.execute(sql`
         update content.places set
@@ -238,7 +251,6 @@ export function createPinRepository(): PinRepository<Tx> {
           must_visit = ${changes.mustVisit ?? pin.mustVisit},
           food_kind = ${has('foodKind') ? changes.foodKind : pin.foodKind},
           cover_media_id = ${has('coverMediaId') ? changes.coverMediaId : pin.coverMediaId},
-          cover_alt = ${JSON.stringify(changes.coverAlt ?? pin.coverAlt)}::jsonb,
           main_story_group_id = ${has('mainStoryGroupId') ? changes.mainStoryGroupId : pin.mainStoryGroupId},
           draft = ${draft ? JSON.stringify(draft) : pin.draft && JSON.stringify(toDocument(pin.draft))}::jsonb,
           row_version = row_version + 1, updated_at = ${at}

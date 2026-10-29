@@ -1,4 +1,4 @@
-import type { ContentLanguage, FoodKind, Localized, MediaKind, Pin, PinDate, PinPhoto, PinStoryOption, ServiceType, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
+import type { ContentLanguage, FoodKind, Localized, MediaKind, Pin, PinDate, PinStoryOption, ServiceType, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -89,8 +89,8 @@ export interface PinChanges {
   foodKind?: FoodKind | null
   coverMediaId?: string | null
   coverAlt?: Localized
-  // The extra photos in order; the list replaces the stored one.
-  photos?: PinPhoto[]
+  // The extra photos in order; the list replaces the stored one. The alt text goes to the draft, keyed by media id.
+  photos?: { mediaId: string, alt: Localized }[]
   // The one outbound link; null removes it.
   outboundUrl?: string | null
   mainStoryGroupId?: string | null

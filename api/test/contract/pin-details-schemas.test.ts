@@ -104,13 +104,12 @@ describe('[E4.2][AC68] the response shapes', () => {
     mustVisit: false,
     foodKind: null,
     coverMediaId: null,
-    coverAlt: {},
     photos: [],
     outboundUrl: null,
     mainStoryGroupId: null,
     categoryIds: [],
     dates: [],
-    draft: { title: { en: 'A' }, tip: {}, localTip: {} },
+    draft: { title: { en: 'A' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} },
     published: null,
     firstPublishedAt: null,
     rowVersion: 1,
@@ -123,8 +122,16 @@ describe('[E4.2][AC68] the response shapes', () => {
     expect(ok(pinSchema, { ...pin, serviceType: undefined })).toBe(false)
   })
 
+  it('[E4.2][AC68] the alt text of the photos is in the draft, by media id, and a photo is only its media id', () => {
+    const withAlt = { ...pin, photos: [{ mediaId: uuid }], draft: { title: { en: 'A' }, tip: {}, localTip: {}, coverAlt: { en: 'Cover' }, photoAlt: { [uuid]: { en: 'Photo' } } } }
+
+    expect(ok(pinSchema, withAlt)).toBe(true)
+    expect(ok(pinSchema, { ...withAlt, draft: { ...withAlt.draft, photoAlt: { 'not-an-id': { en: 'Photo' } } } })).toBe(false)
+    expect(ok(pinSchema, { ...withAlt, draft: { title: { en: 'A' }, tip: {}, localTip: {} } })).toBe(false)
+  })
+
   it('[E4.2][AC86] a list item may have the status ended and a warning for a story with no published version', () => {
-    const item = { id: uuid, status: 'ended', title: { en: 'Blues' }, slug: { en: 'blues' }, located: true, categoryIds: [], hasDates: true, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, mainStory: { groupId: uuid2, published: false }, hasPendingChanges: false, rowVersion: 3, updatedAt: '2026-10-30T10:00:00.000Z' }
+    const item = { id: uuid, status: 'ended', title: { en: 'Blues' }, slug: { en: 'blues' }, located: true, categoryIds: [], hasDates: true, nextDate: null, stayTag: 'both', interests: [], coverMediaId: null, mainStory: { groupId: uuid2, published: false }, rowVersion: 3, updatedAt: '2026-10-30T10:00:00.000Z' }
 
     expect(ok(pinListSchema, { items: [item] })).toBe(true)
     expect(ok(pinListSchema, { items: [{ ...item, status: 'archived' }] })).toBe(false)

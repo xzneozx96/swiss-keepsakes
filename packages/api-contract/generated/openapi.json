@@ -826,17 +826,6 @@
             },
             "type": "array"
           },
-          "coverAlt": {
-            "properties": {
-              "de": {
-                "type": "string"
-              },
-              "en": {
-                "type": "string"
-              }
-            },
-            "type": "object"
-          },
           "coverMediaId": {
             "format": "uuid",
             "type": [
@@ -887,6 +876,17 @@
           },
           "draft": {
             "properties": {
+              "coverAlt": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
               "localTip": {
                 "properties": {
                   "de": {
@@ -895,6 +895,20 @@
                   "en": {
                     "type": "string"
                   }
+                },
+                "type": "object"
+              },
+              "photoAlt": {
+                "additionalProperties": {
+                  "properties": {
+                    "de": {
+                      "type": "string"
+                    },
+                    "en": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "type": "object"
               },
@@ -924,7 +938,9 @@
             "required": [
               "title",
               "tip",
-              "localTip"
+              "localTip",
+              "coverAlt",
+              "photoAlt"
             ],
             "type": [
               "object",
@@ -992,7 +1008,44 @@
           "photos": {
             "items": {
               "properties": {
-                "alt": {
+                "mediaId": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mediaId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "published": {
+            "properties": {
+              "coverAlt": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "localTip": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "photoAlt": {
+                "additionalProperties": {
                   "properties": {
                     "de": {
                       "type": "string"
@@ -1002,30 +1055,6 @@
                     }
                   },
                   "type": "object"
-                },
-                "mediaId": {
-                  "format": "uuid",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "mediaId",
-                "alt"
-              ],
-              "type": "object"
-            },
-            "type": "array"
-          },
-          "published": {
-            "properties": {
-              "localTip": {
-                "properties": {
-                  "de": {
-                    "type": "string"
-                  },
-                  "en": {
-                    "type": "string"
-                  }
                 },
                 "type": "object"
               },
@@ -1055,7 +1084,9 @@
             "required": [
               "title",
               "tip",
-              "localTip"
+              "localTip",
+              "coverAlt",
+              "photoAlt"
             ],
             "type": [
               "object",
@@ -1156,7 +1187,6 @@
           "mustVisit",
           "foodKind",
           "coverMediaId",
-          "coverAlt",
           "photos",
           "outboundUrl",
           "mainStoryGroupId",
@@ -1204,10 +1234,6 @@
             ]
           },
           "hasDates": {
-            "type": "boolean"
-          },
-          "hasPendingChanges": {
-            "description": "A live pin with a draft that is not published yet",
             "type": "boolean"
           },
           "id": {
@@ -1339,7 +1365,6 @@
           "interests",
           "coverMediaId",
           "mainStory",
-          "hasPendingChanges",
           "rowVersion",
           "updatedAt"
         ],
@@ -1429,7 +1454,7 @@
       },
       "PinWriteBody": {
         "additionalProperties": false,
-        "description": "Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list; `coverAlt` and `localTip` replace the whole text",
+        "description": "Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list. `localTip`, `coverAlt` and the alt text of each photo are text: they go to the draft and are live on publish",
         "properties": {
           "address": {
             "maxLength": 300,

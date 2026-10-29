@@ -23,7 +23,6 @@ function toEntry(row: PinListRow, now: Date): PinListEntry {
     interests: row.interests,
     coverMediaId: row.coverMediaId,
     mainStory: row.mainStoryGroupId ? { groupId: row.mainStoryGroupId, published: row.mainStoryPublished } : null,
-    hasPendingChanges: row.status !== 'draft' && row.draft !== null,
     rowVersion: row.rowVersion,
     updatedAt: row.updatedAt,
   }

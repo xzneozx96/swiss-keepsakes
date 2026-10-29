@@ -89,10 +89,10 @@ describe('[E4.2][AC68] list and read of the signed-in store', () => {
 
     const listed = await s.list(owner, store)
 
-    expect(listed).toMatchObject({ ok: true, value: [{ id: pin.id, status: 'ended', hasPendingChanges: false, nextDate: null }] })
+    expect(listed).toMatchObject({ ok: true, value: [{ id: pin.id, status: 'ended', nextDate: null }] })
   })
 
-  it('[E4.2][AC68] a live pin with a new draft says it has pending changes', async () => {
+  it('[E4.2][AC68] a live pin with a new draft lists the draft title', async () => {
     const s = setup()
     const pin = await created(s)
     const live = await s.publish(owner, store, pin.id, 1, null)
@@ -100,7 +100,7 @@ describe('[E4.2][AC68] list and read of the signed-in store', () => {
       throw new Error('publish failed')
     await s.save(owner, store, pin.id, live.value.rowVersion, { title: { en: 'Chapel Bridge, Lucerne' } }, null)
 
-    expect(await s.list(owner, store)).toMatchObject({ ok: true, value: [{ status: 'published', hasPendingChanges: true, title: { en: 'Chapel Bridge, Lucerne' } }] })
+    expect(await s.list(owner, store)).toMatchObject({ ok: true, value: [{ status: 'published', title: { en: 'Chapel Bridge, Lucerne' } }] })
   })
 
   it('[E4.2][AC68] a member of another store gets forbidden, and a pin id of another store is not found', async () => {
@@ -121,7 +121,7 @@ describe('[E4.2][AC68] the pin details on create and save', () => {
     const s = setup()
     const pin = await created(s)
 
-    expect(pin).toMatchObject({ storeId: store, serviceType: null, mustVisit: false, foodKind: null, photos: [], outboundUrl: null, coverAlt: {} })
+    expect(pin).toMatchObject({ storeId: store, serviceType: null, mustVisit: false, foodKind: null, photos: [], outboundUrl: null })
     expect('type' in pin).toBe(false)
   })
 
@@ -148,7 +148,7 @@ describe('[E4.2][AC68] the pin details on create and save', () => {
     const s = setup([image('m1'), image('m2'), { id: 'p1', kind: 'pdf', status: 'ready' }, { id: 'r1', kind: 'image', status: 'retired' }])
 
     const good = await s.create(owner, store, { ...complete, coverMediaId: 'm1', photos: [{ mediaId: 'm2', alt: { en: 'The bridge' } }] }, null)
-    expect(good).toMatchObject({ ok: true, value: { coverMediaId: 'm1', photos: [{ mediaId: 'm2', alt: { en: 'The bridge' } }] } })
+    expect(good).toMatchObject({ ok: true, value: { coverMediaId: 'm1', photos: [{ mediaId: 'm2' }] } })
     expect(await s.create(owner, store, { ...complete, photos: [{ mediaId: 'unknown', alt: {} }] }, null)).toEqual({ ok: false, reason: 'media-invalid' })
     expect(await s.create(owner, store, { ...complete, photos: [{ mediaId: 'p1', alt: {} }] }, null)).toEqual({ ok: false, reason: 'media-invalid' })
     expect(await s.create(owner, store, { ...complete, photos: [{ mediaId: 'r1', alt: {} }] }, null)).toEqual({ ok: false, reason: 'media-retired' })
@@ -160,11 +160,51 @@ describe('[E4.2][AC68] the pin details on create and save', () => {
 
     const saved = await s.save(owner, store, pin.id, 1, { photos: [{ mediaId: 'm3', alt: { de: 'Brücke' } }, { mediaId: 'm1', alt: {} }, { mediaId: 'm2', alt: {} }] }, null)
 
-    expect(saved).toMatchObject({ ok: true, value: { photos: [{ mediaId: 'm3', alt: { de: 'Brücke' } }, { mediaId: 'm1' }, { mediaId: 'm2' }] } })
+    expect(saved).toMatchObject({ ok: true, value: { photos: [{ mediaId: 'm3' }, { mediaId: 'm1' }, { mediaId: 'm2' }] } })
+  })
+
+  it('[E4.2][AC68] alt text goes to the draft, not live: a published pin keeps its published alt text until publish (ADR-014)', async () => {
+    const s = setup([image('m1'), image('m2')])
+    const pin = await created(s, { ...complete, coverMediaId: 'm1', coverAlt: { en: 'Old cover' }, photos: [{ mediaId: 'm2', alt: { en: 'Old photo' } }] })
+    const live = await s.publish(owner, store, pin.id, 1, null)
+    if (!live.ok)
+      throw new Error('publish failed')
+    expect(live.value.published).toMatchObject({ coverAlt: { en: 'Old cover' }, photoAlt: { m2: { en: 'Old photo' } } })
+
+    const edited = await s.save(owner, store, pin.id, live.value.rowVersion, { coverAlt: { en: 'New cover' }, photos: [{ mediaId: 'm2', alt: { en: 'New photo' } }] }, null)
+
+    expect(edited).toMatchObject({ ok: true, value: {
+      published: { coverAlt: { en: 'Old cover' }, photoAlt: { m2: { en: 'Old photo' } } },
+      draft: { title: { en: 'Chapel Bridge' }, coverAlt: { en: 'New cover' }, photoAlt: { m2: { en: 'New photo' } } },
+    } })
+    if (!edited.ok)
+      throw new Error('save failed')
+    const republished = await s.publish(owner, store, pin.id, edited.value.rowVersion, null)
+    expect(republished).toMatchObject({ ok: true, value: { draft: null, published: { coverAlt: { en: 'New cover' }, photoAlt: { m2: { en: 'New photo' } } } } })
+  })
+
+  it('[E4.2][AC68] a save that names no text keeps the stored alt text', async () => {
+    const s = setup([image('m1')])
+    const pin = await created(s, { ...complete, coverMediaId: 'm1', coverAlt: { en: 'Cover' } })
+
+    const saved = await s.save(owner, store, pin.id, 1, { mustVisit: true }, null)
+
+    expect(saved).toMatchObject({ ok: true, value: { draft: { coverAlt: { en: 'Cover' } } } })
   })
 })
 
 describe('[E4.2][AC85][AC68] publish', () => {
+  it('[E4.2][AC68] a pin whose main photo or extra photo is still processing is not published, like a tour or a story', async () => {
+    const s = setup([image('m1'), { id: 'm2', kind: 'image', status: 'processing' }])
+    const withCover = await created(s, { ...complete, coverMediaId: 'm2' })
+    const withExtra = await created(s, { ...complete, coverMediaId: 'm1', photos: [{ mediaId: 'm2', alt: {} }] })
+    const ready = await created(s, { ...complete, coverMediaId: 'm1' })
+
+    expect(await s.publish(owner, store, withCover.id, 1, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['m2'] })
+    expect(await s.publish(owner, store, withExtra.id, 1, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['m2'] })
+    expect(await s.publish(owner, store, ready.id, 1, null)).toMatchObject({ ok: true })
+  })
+
   it('[E4.2][AC85] a pin with no story and no category publishes', async () => {
     const s = setup()
     const pin = await created(s)

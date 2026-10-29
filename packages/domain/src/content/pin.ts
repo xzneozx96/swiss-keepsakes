@@ -3,8 +3,11 @@ import { hasText, slugCoversTitle } from './localized.ts'
 
 export type PinStatus = 'draft' | 'published' | 'hidden'
 
-/** `localTip` is the one line of local advice the home shows on a must-visit (decision 2026-10-28, home local briefing). */
-export interface PinDraft { title: Localized, tip: Localized, localTip: Localized }
+/**
+ * The text of a pin, which goes live on publish (ADR-014). `localTip` is the one line of local advice the home shows on
+ * a must-visit (decision 2026-10-28, home local briefing). `coverAlt` and `photoAlt` (by media id) describe the photos.
+ */
+export interface PinDraft { title: Localized, tip: Localized, localTip: Localized, coverAlt: Localized, photoAlt: Record<string, Localized> }
 
 /** What a service pin gives a visitor on the home's "Sorted before you unpack" row. */
 export const serviceTypes = ['water', 'toilets', 'connect', 'transport', 'lockers', 'cash'] as const
@@ -15,7 +18,7 @@ export const foodKinds = ['restaurant', 'cafe-bakery', 'pub-bar', 'market'] as c
 export type FoodKind = typeof foodKinds[number]
 
 /** One extra photo of a pin, in the order the merchant set. The main photo is `coverMediaId`. */
-export interface PinPhoto { mediaId: string, alt: Localized }
+export interface PinPhoto { mediaId: string }
 
 /** One opening span of a weekday; `opens` and `closes` are local times. */
 export interface WeeklySpan { day: number, opens: string, closes: string }
@@ -43,7 +46,6 @@ export interface Pin {
   mustVisit: boolean
   foodKind: FoodKind | null
   coverMediaId: string | null
-  coverAlt: Localized
   photos: PinPhoto[]
   /** The pin's one outbound link (ADR-011): a plain https address. */
   outboundUrl: string | null
@@ -73,7 +75,6 @@ export interface PinListEntry {
   coverMediaId: string | null
   /** `published` is false when the story has no published version. */
   mainStory: { groupId: string, published: boolean } | null
-  hasPendingChanges: boolean
   rowVersion: number
   updatedAt: Date
 }

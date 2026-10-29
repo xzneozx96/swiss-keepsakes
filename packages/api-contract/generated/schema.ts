@@ -2995,10 +2995,6 @@ export interface components {
         Pin: {
             address: string | null;
             categoryIds: string[];
-            coverAlt: {
-                de?: string;
-                en?: string;
-            };
             /** Format: uuid */
             coverMediaId: string | null;
             /** Format: date-time */
@@ -3012,9 +3008,19 @@ export interface components {
                 startTime: string | null;
             }[];
             draft: {
+                coverAlt: {
+                    de?: string;
+                    en?: string;
+                };
                 localTip: {
                     de?: string;
                     en?: string;
+                };
+                photoAlt: {
+                    [key: string]: {
+                        de?: string;
+                        en?: string;
+                    };
                 };
                 tip: {
                     de?: string;
@@ -3039,17 +3045,23 @@ export interface components {
             mustVisit: boolean;
             outboundUrl: string | null;
             photos: {
-                alt: {
-                    de?: string;
-                    en?: string;
-                };
                 /** Format: uuid */
                 mediaId: string;
             }[];
             published: {
+                coverAlt: {
+                    de?: string;
+                    en?: string;
+                };
                 localTip: {
                     de?: string;
                     en?: string;
+                };
+                photoAlt: {
+                    [key: string]: {
+                        de?: string;
+                        en?: string;
+                    };
                 };
                 tip: {
                     de?: string;
@@ -3091,8 +3103,6 @@ export interface components {
             /** Format: uuid */
             coverMediaId: string | null;
             hasDates: boolean;
-            /** @description A live pin with a draft that is not published yet */
-            hasPendingChanges: boolean;
             /** Format: uuid */
             id: string;
             interests: string[];
@@ -3149,7 +3159,7 @@ export interface components {
         PinStoryOptionList: {
             items: components["schemas"]["PinStoryOption"][];
         };
-        /** @description Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list; `coverAlt` and `localTip` replace the whole text */
+        /** @description Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list. `localTip`, `coverAlt` and the alt text of each photo are text: they go to the draft and are live on publish */
         PinWriteBody: {
             address?: string | null;
             categoryIds?: string[];

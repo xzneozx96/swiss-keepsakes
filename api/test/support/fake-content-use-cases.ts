@@ -17,7 +17,6 @@ export const fakePin: Pin = {
   mustVisit: false,
   foodKind: null,
   coverMediaId: null,
-  coverAlt: {},
   photos: [],
   outboundUrl: null,
   mainStoryGroupId: null,
