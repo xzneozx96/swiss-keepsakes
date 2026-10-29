@@ -200,7 +200,8 @@ describe('[E2.3][S8] A02, the invited Owner accepts and opens the store', () => 
     const router = renderAt('/store/onboarding', OnboardingScreen)
 
     expect(await screen.findByRole('heading', { name: 'You’re invited to open Chi Ngoc Shop' })).toBeInTheDocument()
-    expect(screen.getByText('Owner invitation')).toBeInTheDocument()
+    expect(screen.queryByText('Owner invitation')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/store/onboarding')
     const preview = calls.find(call => call.path === '/api/public/invitations/preview')
 

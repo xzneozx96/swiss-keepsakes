@@ -17,6 +17,14 @@ test.beforeEach(async ({ page, context }, testInfo) => {
   )
 })
 
+// The Manager screen's title, with any store name in place of {store}.
+function managerTitle(language: Language) {
+  const marker = '\u0000'
+  const parts = say(language, 'stores.invite.managerTitle', { store: marker }).split(marker)
+
+  return new RegExp(`^${parts.map(part => part.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`)).join('.+')}$`)
+}
+
 async function storeWithOwner(browser: Browser, language: Language) {
   const ownerEmail = newEmail()
   const admin = await signedInSuperAdmin(browser, language)
@@ -92,7 +100,7 @@ test('[E2.4][AC02][E3.4][AC02] the Owner invites a Manager, another email is ref
       accepts.push(request.method())
   })
   await openLink(manager, mail.link)
-  await expect(manager.getByText(say(language, 'stores.invite.roleManager'))).toBeVisible()
+  await expect(manager.getByRole('heading', { level: 1, name: managerTitle(language) })).toBeVisible()
   await expect(manager.getByRole('button', { name: say(language, 'stores.invite.accept') })).toHaveCount(0)
   expect(accepts).toEqual([])
   expect(manager.url()).not.toContain(token)
@@ -167,7 +175,7 @@ test('[E2.4][AC02] revoke kills the link and a new invitation of the same addres
   const fresh = await newVisitor(browser, language)
 
   await openLink(fresh, second.link)
-  await expect(fresh.getByText(say(language, 'stores.invite.roleManager'))).toBeVisible()
+  await expect(fresh.getByRole('heading', { level: 1, name: managerTitle(language) })).toBeVisible()
   // The sign-in form sits on the invitation itself.
   await expect(fresh.getByRole('button', { name: words[language].send })).toBeVisible()
 })

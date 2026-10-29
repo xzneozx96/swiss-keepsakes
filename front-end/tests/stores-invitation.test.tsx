@@ -125,19 +125,21 @@ const signedIn = () => demo.store.update(s => ({ ...s, data: { ...s.data, signed
 
 describe('[E2.15][AC02] the invitation on the sign-in layout, signed out', () => {
   it.each([
-    ['owner', 'You’re invited to open Chi Ngoc', 'Owner invitation'],
-    ['manager', 'Join Chi Ngoc', 'Store Manager invitation'],
-  ] as const)('shows the %s the store, the role, Google and the email field, with one h1 and no expiry', async (role, title, label) => {
+    ['owner', 'You’re invited to open Chi Ngoc', 'Check your store’s details, then open it for sale once it’s ready.'],
+    ['manager', 'Join Chi Ngoc', 'Ngoc invited you to Chi Ngoc as a Store Manager.'],
+  ] as const)('shows the %s the store, a short intro, Google and the email field, with one h1, no role line, no page Back and no expiry', async (role, title, intro) => {
     answer = signedOutAnswers({ role, inviterName: role === 'manager' ? 'Ngoc' : null })
     const router = open(role)
 
     expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument()
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     expect(within(document.querySelector('figure')!).getByText('Chi Ngoc')).toBeInTheDocument()
-    expect(screen.getByText(label)).toBeInTheDocument()
+    expect(screen.getByText(intro)).toBeInTheDocument()
+    expect(screen.queryByText(/^(?:Owner|Store Manager) invitation$/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
-    expect(screen.getByText('Sign in with the email address this invitation was sent to.')).toBeInTheDocument()
+    expect(screen.getByText('Sign in with the email this invitation was sent to.')).toBeInTheDocument()
     expect(document.body).not.toHaveTextContent(/valid until|expires|gültig bis/i)
     expect(photo()).toBe('colour')
     expect(router.state.location.pathname).toBe(screens[role].path)
@@ -445,9 +447,9 @@ const SLOW = { timeout: 8000 }
 describe('[E2.15][AC09] German', () => {
   it('has a German line for every stores key, and a German line of its own for each new key', () => {
     expect(Object.keys(storesDe).sort()).toEqual(Object.keys(storesEn).sort())
-    const ownKeys = Object.keys(storesEn).filter(key => /^stores\.(?:invite\.(?:ownerTitle|ownerIntro|managerTitle|roleOwner|roleManager)|refusal\.(?:chip|spentNote))/.test(key)) as Array<keyof typeof storesEn>
+    const ownKeys = Object.keys(storesEn).filter(key => /^stores\.(?:invite\.(?:ownerTitle|ownerIntro|managerTitle|signInHint)|refusal\.(?:chip|spentNote))/.test(key)) as Array<keyof typeof storesEn>
 
-    expect(ownKeys.length).toBeGreaterThanOrEqual(9)
+    expect(ownKeys.length).toBeGreaterThanOrEqual(8)
     for (const key of ownKeys)
       expect(storesDe[key], key).not.toBe(storesEn[key])
   })
@@ -502,6 +504,9 @@ describe('[E2.15][AC09] German', () => {
     const lines = visibleLines()
 
     expect(lines.length).toBeGreaterThan(3)
+    expect(screen.queryByRole('button', { name: 'Zurück' })).not.toBeInTheDocument()
+    expect(lines).not.toContain('Einladung als Inhaber')
+    expect(lines).not.toContain('Einladung als Shop-Manager')
     expect(['Continue with Google', 'This invitation was withdrawn', 'Wrong account'].every(english => englishOnly.some(pattern => pattern.test(english)))).toBe(true)
     expect(lines.filter(line => englishOnly.some(english => english.test(line)))).toEqual([])
   }, 20_000)

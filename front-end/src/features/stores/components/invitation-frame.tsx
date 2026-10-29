@@ -1,13 +1,8 @@
 import type { ReactNode } from 'react'
 import type { InviteRole } from '../lib/refusals'
 
-import { Button } from '@heroui/react'
-import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
-
 import heroPhoto from '@/assets/photos/lucerne-kapellbruecke-1200.jpg'
-import { BackIcon } from '@/components/icons'
 import { BrandLogo } from '@/components/layout/brand-logo'
-import { BackButton } from '@/components/layout/cart-button'
 import { useLocale } from '@/contexts/locale-context'
 
 /**
@@ -21,12 +16,7 @@ export function InvitationFrame({ photo, storeName, audience, children }: {
   audience: InviteRole
   children: ReactNode
 }) {
-  const { language, t } = useLocale()
-  const router = useRouter()
-  const navigate = useNavigate()
-  const canGoBack = useCanGoBack()
-  // Leaving without signing in goes back to where the visitor came from, or home.
-  const back = () => canGoBack ? router.history.back() : void navigate({ to: '/$lang', params: { lang: language } })
+  const { t } = useLocale()
 
   return (
     <main className="flex flex-1 justify-center bg-default/60 lg:bg-background" data-invitation-role={audience}>
@@ -40,9 +30,6 @@ export function InvitationFrame({ photo, storeName, audience, children }: {
             src={heroPhoto}
           />
           <div aria-hidden className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/30 to-transparent lg:hidden" />
-          <div className="absolute start-4 top-[calc(env(safe-area-inset-top,0px)+12px)] lg:hidden">
-            <BackButton label={t('auth.back')} tone="pill" onPress={back} />
-          </div>
           <figcaption className="absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t from-black/65 via-black/25 to-transparent px-6 pt-20 pb-11 text-white lg:px-10 lg:pt-32 lg:pb-9">
             <span className="text-xs text-white/80">{t('app.name')}</span>
             {storeName && <span className="font-serif text-title text-balance [overflow-wrap:anywhere]">{storeName}</span>}
@@ -52,10 +39,6 @@ export function InvitationFrame({ photo, storeName, audience, children }: {
         <div className="relative -mt-7 flex flex-1 flex-col rounded-t-[28px] bg-background px-6 pt-8 pb-[calc(env(safe-area-inset-bottom,0px)+32px)] lg:order-1 lg:mt-0 lg:rounded-none lg:px-12 lg:pt-6 lg:pb-10 xl:px-20">
           <header className="hidden h-14 items-center justify-between gap-4 lg:flex">
             <BrandLogo label={t('app.name')} />
-            <Button size="sm" variant="ghost" onPress={back}>
-              <BackIcon size={18} />
-              {t('auth.back')}
-            </Button>
           </header>
           <div className="w-full min-w-0 lg:my-auto lg:max-w-[400px] lg:self-center lg:py-12">
             {children}
