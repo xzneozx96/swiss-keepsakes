@@ -12,6 +12,8 @@ import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress,
 // Owner's own session through the merchant API.
 const EVIDENCE = '/home/ross-geller/Projects/minastik/swiss-keepsakes/.factory/runs/20261028-sprint-6/evidence/T-E4.18'
 const WIDTH = 375
+// The distance from the screen edge at which a drag scrolls the page (use-stop-drag.ts).
+const EDGE = 72
 const DESKTOP = { width: 1280, height: 900 }
 // The first load of a page and of its API answers is slow on the remote Neon branch.
 const FIRST_LOAD = 60_000
@@ -117,11 +119,14 @@ async function listOf(owner: Page, storeId: string) {
   return (await response.json() as { items: Item[] }).items
 }
 
-/** The API's order as `Parent` for a top-level category and `Parent/Child` for a sub-category. */
+/** The API's order of the top-level categories, and of the sub-categories under each parent by the parent's name. */
 function shape(items: Item[]) {
   const name = (id: string | null) => items.find(item => item.id === id)?.name.en
   const parents = items.filter(item => item.parentId === null).map(item => name(item.id)!)
-  const kids = items.filter(item => item.parentId !== null).map(item => `${name(item.parentId)}/${name(item.id)}`)
+  const kids: Record<string, string[]> = {}
+
+  for (const item of items.filter(item => item.parentId !== null))
+    (kids[name(item.parentId)!] ??= []).push(name(item.id)!)
 
   return { parents, kids }
 }
@@ -137,7 +142,7 @@ async function create(owner: Page, storeId: string, name: string, parentId?: str
   return (await response.json() as Item).id
 }
 
-/** Walks (Hill, Lake, Pond), Museums, Cafes, in this order. */
+/** Walks (Hill, Lake, Pond), Museums (Gallery), Cafes, in this order. */
 async function seedTree(owner: Page) {
   const me = await (await owner.request.get('/api/me')).json() as { stores: Array<{ storeId: string }> }
   const { storeId } = me.stores[0]
@@ -145,13 +150,16 @@ async function seedTree(owner: Page) {
 
   await create(owner, storeId, 'Museums')
   await create(owner, storeId, 'Cafes')
+  const gallery = (await listOf(owner, storeId)).find(item => item.name.en === 'Museums')!.id
+
   for (const name of ['Hill', 'Lake', 'Pond'])
     await create(owner, storeId, name, walks)
+  await create(owner, storeId, 'Gallery', gallery)
 
   return storeId
 }
 
-const SEEDED = { parents: ['Walks', 'Museums', 'Cafes'], kids: ['Walks/Hill', 'Walks/Lake', 'Walks/Pond'] }
+const SEEDED = { parents: ['Walks', 'Museums', 'Cafes'], kids: { Walks: ['Hill', 'Lake', 'Pond'], Museums: ['Gallery'] } }
 
 /** The first line of each row, which is the category's name (a handle has no text). */
 async function names(rows: Locator) {
@@ -163,12 +171,25 @@ async function names(rows: Locator) {
  * move is checked against the API: one PUT that is ok, with `parentId` and the full order of that level.
  */
 async function dragHandle(page: Page, handle: Locator, target: Locator, where: 'below' | 'above') {
+  await handle.scrollIntoViewIfNeeded()
+  await target.scrollIntoViewIfNeeded()
+  // Keep the whole path clear of the screen edges, where the page would start to scroll under the drag.
+  const room = page.viewportSize()!.height
+  const last = (await target.boundingBox())!
+
+  if (where === 'below' && last.y + last.height + 15 > room - EDGE - 30)
+    await page.evaluate(by => window.scrollBy(0, by), last.y + last.height - room * 0.55)
   const from = (await handle.boundingBox())!
   const to = (await target.boundingBox())!
   const x = from.x + from.width / 2
   const y = from.y + from.height / 2
   const endY = where === 'below' ? to.y + to.height + 15 : to.y - 15
-  const put = page.waitForResponse(response => response.url().endsWith('/categories/map/order') && response.request().method() === 'PUT')
+  const put = page.waitForResponse(response => response.url().endsWith('/categories/map/order') && response.request().method() === 'PUT', { timeout: 15_000 })
+  // Away from the screen edges, where the page would start to scroll.
+  const height = page.viewportSize()!.height
+
+  expect(endY).toBeGreaterThan(EDGE)
+  expect(endY).toBeLessThan(height - EDGE)
 
   await page.mouse.move(x, y)
   await page.mouse.down()
@@ -191,7 +212,7 @@ async function tabsWidth(owner: Page) {
   const list = owner.getByRole('tablist', { name: en['categories.tabs'] })
   const container = (await list.locator('xpath=..').boundingBox())!
   const screen = (await owner.getByTestId('categories-screen').boundingBox())!
-  const tabs = await owner.getByRole('tab').evaluateAll(nodes => nodes.reduce((sum, node) => sum + node.getBoundingClientRect().width, 0))
+  const tabs = await list.getByRole('tab').evaluateAll(nodes => nodes.reduce((sum, node) => sum + node.getBoundingClientRect().width, 0))
 
   return { container: container.width, screen: screen.width, tabs }
 }
@@ -285,7 +306,7 @@ test('[E4.18][AC87] the Owner adds, nests and deletes map categories on a phone,
   await expect(phoneSubs(owner, 'Walks')).toHaveCount(1)
   await expect(owner.getByRole('heading', { name: en['categories.phone.subsTitle'].replace('{n}', '1') })).toBeVisible()
   await expectFits(owner)
-  expect(shape(await listOf(owner, storeId)).kids).toEqual(['Walks/Trails'])
+  expect(shape(await listOf(owner, storeId)).kids).toEqual({ Walks: ['Trails'] })
 
   // Walks has a sub-category, so its delete is blocked and says so; the API refuses it too.
   await expect(owner.getByRole('button', { name: en['categories.delete.confirm'] })).toBeDisabled()
@@ -307,7 +328,7 @@ test('[E4.18][AC87] the Owner adds, nests and deletes map categories on a phone,
   await owner.reload()
   await expect(phoneTop(owner)).toHaveCount(3, { timeout: FIRST_LOAD })
   expect(await names(phoneTop(owner))).toEqual(['Museums', 'Walks', 'Cafes'])
-  expect(shape(await listOf(owner, storeId))).toEqual({ parents: ['Museums', 'Walks', 'Cafes'], kids: ['Walks/Trails'] })
+  expect(shape(await listOf(owner, storeId))).toEqual({ parents: ['Museums', 'Walks', 'Cafes'], kids: { Walks: ['Trails'] } })
   await expectFits(owner)
 
   // A pin tagged with Museums blocks its delete.
@@ -342,7 +363,7 @@ test('[E4.18][AC87] the Owner adds, nests and deletes map categories on a phone,
   await owner.reload()
   await expect(phoneTop(owner)).toHaveCount(2, { timeout: FIRST_LOAD })
   expect(await names(phoneTop(owner))).toEqual(['Museums', 'Walks'])
-  expect(shape(await listOf(owner, storeId))).toEqual({ parents: ['Museums', 'Walks'], kids: ['Walks/Trails'] })
+  expect(shape(await listOf(owner, storeId))).toEqual({ parents: ['Museums', 'Walks'], kids: { Walks: ['Trails'] } })
 
   // The Blog tab, empty for this store.
   await owner.getByRole('tab', { name: en['categories.tab.blog'] }).click()
@@ -378,6 +399,15 @@ test('[E4.18][AC87] a real mouse drag reorders the parents and the sub-categorie
   await expect(phoneTop(owner)).toHaveCount(3, { timeout: FIRST_LOAD })
   expect(await names(phoneTop(owner))).toEqual(SEEDED.parents)
 
+  // A middle slot: Cafes above Museums gives Walks, Cafes, Museums.
+  items = await listOf(owner, storeId)
+  sent = await dragHandle(owner, handleOf(owner, 'Cafes'), phoneTop(owner).filter({ has: handleOf(owner, 'Museums') }), 'above')
+  expect(sent).toEqual({ parentId: null, ids: idsOf(items, ['Walks', 'Cafes', 'Museums']) })
+  await owner.reload()
+  await expect(phoneTop(owner)).toHaveCount(3, { timeout: FIRST_LOAD })
+  expect(await names(phoneTop(owner))).toEqual(['Walks', 'Cafes', 'Museums'])
+  expect(shape(await listOf(owner, storeId))).toEqual({ parents: ['Walks', 'Cafes', 'Museums'], kids: SEEDED.kids })
+
   // Hill to the bottom among Walks' sub-categories, on Walks' page.
   await openPhonePage(owner, 'Walks')
   await expect(phoneSubs(owner, 'Walks')).toHaveCount(3)
@@ -393,8 +423,10 @@ test('[E4.18][AC87] a real mouse drag reorders the parents and the sub-categorie
   // The parents did not move, and every sub-category is still Walks'.
   const after = await listOf(owner, storeId)
 
-  expect(shape(after)).toEqual({ parents: SEEDED.parents, kids: ['Walks/Lake', 'Walks/Pond', 'Walks/Hill'] })
-  expect(after.filter(item => item.parentId !== null).every(item => item.parentId === walks.id)).toBe(true)
+  expect(shape(after)).toEqual({ parents: ['Walks', 'Cafes', 'Museums'], kids: { Walks: ['Lake', 'Pond', 'Hill'], Museums: ['Gallery'] } })
+  expect(after.filter(item => item.parentId !== null).every(item => item.parentId === walks.id || item.name.en === 'Gallery')).toBe(true)
+  // The other group is untouched: Gallery is still Museums'.
+  expect(after.find(item => item.name.en === 'Gallery')!.parentId).toBe(after.find(item => item.name.en === 'Museums')!.id)
   await expectFits(owner)
 })
 
@@ -406,7 +438,7 @@ test('[E4.18][AC87] on a desktop the tabs fit their tabs, and a real mouse drag 
 
   try {
     await openDesktop(page)
-    expect(await names(tableRows(page))).toEqual(['Walks', 'Hill', 'Lake', 'Pond', 'Museums', 'Cafes'])
+    expect(await names(tableRows(page))).toEqual(['Walks', 'Hill', 'Lake', 'Pond', 'Museums', 'Gallery', 'Cafes'])
     const widths = await tabsWidth(page)
 
     expect(widths.container).toBeLessThan(widths.screen / 2)
@@ -415,9 +447,9 @@ test('[E4.18][AC87] on a desktop the tabs fit their tabs, and a real mouse drag 
     // Search hides the handles; clearing it brings them back.
     await page.getByRole('searchbox', { name: en['categories.search.label'] }).fill('lake')
     await expect(page.locator('[data-grip]')).toHaveCount(0)
-    expect(await names(page.getByRole('row').filter({ hasText: /Walks|Hill|Lake|Pond|Museums|Cafes/ }))).toEqual(['Walks', 'Lake'])
+    expect(await names(page.getByRole('row').filter({ hasText: /Walks|Hill|Lake|Pond|Museums|Gallery|Cafes/ }))).toEqual(['Walks', 'Lake'])
     await page.getByRole('searchbox', { name: en['categories.search.label'] }).fill('')
-    await expect(page.locator('[data-grip]')).toHaveCount(6)
+    await expect(page.locator('[data-grip]')).toHaveCount(7)
 
     // Walks (its sub-categories fold while it moves) to the bottom among the parents.
     let items = await listOf(phone, storeId)
@@ -425,8 +457,8 @@ test('[E4.18][AC87] on a desktop the tabs fit their tabs, and a real mouse drag 
 
     expect(sent).toEqual({ parentId: null, ids: idsOf(items, ['Museums', 'Cafes', 'Walks']) })
     await page.reload()
-    await expect(page.locator('[data-grip]')).toHaveCount(6, { timeout: FIRST_LOAD })
-    expect(await names(tableRows(page))).toEqual(['Museums', 'Cafes', 'Walks', 'Hill', 'Lake', 'Pond'])
+    await expect(page.locator('[data-grip]')).toHaveCount(7, { timeout: FIRST_LOAD })
+    expect(await names(tableRows(page))).toEqual(['Museums', 'Gallery', 'Cafes', 'Walks', 'Hill', 'Lake', 'Pond'])
     expect(shape(await listOf(phone, storeId))).toEqual({ parents: ['Museums', 'Cafes', 'Walks'], kids: SEEDED.kids })
 
     // The last parent back to the top.
@@ -434,8 +466,8 @@ test('[E4.18][AC87] on a desktop the tabs fit their tabs, and a real mouse drag 
     sent = await dragHandle(page, handleOf(page, 'Walks'), rowWith(page, 'Museums'), 'above')
     expect(sent).toEqual({ parentId: null, ids: idsOf(items, ['Walks', 'Museums', 'Cafes']) })
     await page.reload()
-    await expect(page.locator('[data-grip]')).toHaveCount(6, { timeout: FIRST_LOAD })
-    expect(await names(tableRows(page))).toEqual(['Walks', 'Hill', 'Lake', 'Pond', 'Museums', 'Cafes'])
+    await expect(page.locator('[data-grip]')).toHaveCount(7, { timeout: FIRST_LOAD })
+    expect(await names(tableRows(page))).toEqual(['Walks', 'Hill', 'Lake', 'Pond', 'Museums', 'Gallery', 'Cafes'])
 
     // Pond to the top among Walks' sub-categories; the parents and the parent of each sub-category stay.
     items = await listOf(phone, storeId)
@@ -444,12 +476,14 @@ test('[E4.18][AC87] on a desktop the tabs fit their tabs, and a real mouse drag 
     sent = await dragHandle(page, handleOf(page, 'Pond'), rowWith(page, 'Hill'), 'above')
     expect(sent).toEqual({ parentId: walks.id, ids: idsOf(items, ['Pond', 'Hill', 'Lake']) })
     await page.reload()
-    await expect(page.locator('[data-grip]')).toHaveCount(6, { timeout: FIRST_LOAD })
-    expect(await names(tableRows(page))).toEqual(['Walks', 'Pond', 'Hill', 'Lake', 'Museums', 'Cafes'])
+    await expect(page.locator('[data-grip]')).toHaveCount(7, { timeout: FIRST_LOAD })
+    expect(await names(tableRows(page))).toEqual(['Walks', 'Pond', 'Hill', 'Lake', 'Museums', 'Gallery', 'Cafes'])
     const after = await listOf(phone, storeId)
 
-    expect(shape(after)).toEqual({ parents: SEEDED.parents, kids: ['Walks/Pond', 'Walks/Hill', 'Walks/Lake'] })
-    expect(after.filter(item => item.parentId !== null).every(item => item.parentId === walks.id)).toBe(true)
+    expect(shape(after)).toEqual({ parents: SEEDED.parents, kids: { Walks: ['Pond', 'Hill', 'Lake'], Museums: ['Gallery'] } })
+    expect(after.filter(item => item.parentId !== null).every(item => item.parentId === walks.id || item.name.en === 'Gallery')).toBe(true)
+    // The other group is untouched: Gallery is still Museums'.
+    expect(after.find(item => item.name.en === 'Gallery')!.parentId).toBe(after.find(item => item.name.en === 'Museums')!.id)
   }
   finally {
     await context.close()
