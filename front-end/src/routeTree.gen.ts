@@ -60,6 +60,7 @@ import { Route as StoriesSplatRouteImport } from './routes/stories.$'
 import { Route as ToursSplatRouteImport } from './routes/tours.$'
 import { Route as GuestLangIndexRouteImport } from './routes/_guest/$lang/index'
 import { Route as GuestLangCreditsRouteImport } from './routes/_guest/$lang/credits'
+import { Route as GuestLangMapRouteImport } from './routes/_guest/$lang/map'
 import { Route as GuestLangPlanRouteImport } from './routes/_guest/$lang/plan'
 import { Route as GuestLangSearchRouteImport } from './routes/_guest/$lang/search'
 import { Route as GuestLangToursRouteImport } from './routes/_guest/$lang/tours'
@@ -357,6 +358,11 @@ const GuestLangCreditsRoute = GuestLangCreditsRouteImport.update({
   path: '/credits',
   getParentRoute: () => GuestLangRoute,
 } as any)
+const GuestLangMapRoute = GuestLangMapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => GuestLangRoute,
+} as any)
 const GuestLangPlanRoute = GuestLangPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -624,6 +630,7 @@ export interface FileRoutesByFullPath {
   '/partner/': typeof PartnerIndexRoute
   '/store/': typeof StoreIndexRoute
   '/$lang/credits': typeof GuestLangCreditsRoute
+  '/$lang/map': typeof GuestLangMapRoute
   '/$lang/plan': typeof GuestLangPlanRoute
   '/$lang/search': typeof GuestLangSearchRoute
   '/$lang/tours': typeof GuestLangToursRouteWithChildren
@@ -715,6 +722,7 @@ export interface FileRoutesByTo {
   '/partner': typeof PartnerIndexRoute
   '/store': typeof StoreIndexRoute
   '/$lang/credits': typeof GuestLangCreditsRoute
+  '/$lang/map': typeof GuestLangMapRoute
   '/$lang/plan': typeof GuestLangPlanRoute
   '/$lang/search': typeof GuestLangSearchRoute
   '/cart/review': typeof GuestCartReviewRoute
@@ -810,6 +818,7 @@ export interface FileRoutesById {
   '/partner/': typeof PartnerIndexRoute
   '/store/': typeof StoreIndexRoute
   '/_guest/$lang/credits': typeof GuestLangCreditsRoute
+  '/_guest/$lang/map': typeof GuestLangMapRoute
   '/_guest/$lang/plan': typeof GuestLangPlanRoute
   '/_guest/$lang/search': typeof GuestLangSearchRoute
   '/_guest/$lang/tours': typeof GuestLangToursRouteWithChildren
@@ -906,6 +915,7 @@ export interface FileRouteTypes {
     | '/partner/'
     | '/store/'
     | '/$lang/credits'
+    | '/$lang/map'
     | '/$lang/plan'
     | '/$lang/search'
     | '/$lang/tours'
@@ -997,6 +1007,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/store'
     | '/$lang/credits'
+    | '/$lang/map'
     | '/$lang/plan'
     | '/$lang/search'
     | '/cart/review'
@@ -1091,6 +1102,7 @@ export interface FileRouteTypes {
     | '/partner/'
     | '/store/'
     | '/_guest/$lang/credits'
+    | '/_guest/$lang/map'
     | '/_guest/$lang/plan'
     | '/_guest/$lang/search'
     | '/_guest/$lang/tours'
@@ -1540,6 +1552,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestLangCreditsRouteImport
       parentRoute: typeof GuestLangRoute
     }
+    '/_guest/$lang/map': {
+      id: '/_guest/$lang/map'
+      path: '/map'
+      fullPath: '/$lang/map'
+      preLoaderRoute: typeof GuestLangMapRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
     '/_guest/$lang/plan': {
       id: '/_guest/$lang/plan'
       path: '/plan'
@@ -1853,6 +1872,7 @@ const GuestLangToursRouteWithChildren = GuestLangToursRoute._addFileChildren(
 
 interface GuestLangRouteChildren {
   GuestLangCreditsRoute: typeof GuestLangCreditsRoute
+  GuestLangMapRoute: typeof GuestLangMapRoute
   GuestLangPlanRoute: typeof GuestLangPlanRoute
   GuestLangSearchRoute: typeof GuestLangSearchRoute
   GuestLangToursRoute: typeof GuestLangToursRouteWithChildren
@@ -1866,6 +1886,7 @@ interface GuestLangRouteChildren {
 
 const GuestLangRouteChildren: GuestLangRouteChildren = {
   GuestLangCreditsRoute: GuestLangCreditsRoute,
+  GuestLangMapRoute: GuestLangMapRoute,
   GuestLangPlanRoute: GuestLangPlanRoute,
   GuestLangSearchRoute: GuestLangSearchRoute,
   GuestLangToursRoute: GuestLangToursRouteWithChildren,

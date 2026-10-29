@@ -2,6 +2,7 @@ import { mailEn } from '@sk/i18n/en'
 import { categoriesEn } from '@/features/categories/messages'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
+import { mapEn } from '@/features/map/messages'
 import { productsEn } from '@/features/merchant/products/messages'
 import { salesOverviewEn } from '@/features/merchant/sales/messages'
 import { partnerDashboardEn } from '@/features/partners/report/messages'
@@ -35,6 +36,7 @@ export const en = {
   ...mailEn,
   ...storesEn,
   ...categoriesEn,
+  ...mapEn,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototype · mock data',
@@ -48,6 +50,7 @@ export const en = {
   'nav.guest.label': 'Main',
   'nav.explore': 'Explore',
   'nav.gifts': 'Keepsakes',
+  'nav.map': 'Map',
   'nav.tours': 'Tours',
   'nav.account': 'Account',
   'nav.assistant': 'Assistant',
