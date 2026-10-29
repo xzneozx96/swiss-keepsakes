@@ -10,6 +10,11 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/categories' as const,
+    title: 'Categories editor (N23): three options',
+    note: 'The merchant’s map and blog category lists in three structures side by side: A Outline (rows open in place), B Drill-in (a page per category), C Table (grouped rows, ⋯ menu, sheets). Each shows add and edit, reorder and a refused delete. English only (29.10.2026).',
+  },
+  {
     to: '/lab/home' as const,
     title: 'Home: a local friend’s briefing (C01, S2), approved',
     note: 'The approved home: sky hero and map, the practical bits, See these first, free routes, the food map, While you’re in town, Victorinox and the advice banner. Section order fixed; answers only order cards inside sections. English only. Search S2 “One list” (approved) below. Spec: docs/ux/home-design.md (28.10.2026).',
