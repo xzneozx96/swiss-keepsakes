@@ -5,7 +5,7 @@ import { guardUseCases } from '../../src/modules/catalog/adapters/database-error
 import { createMediaDirectory } from '../../src/modules/catalog/adapters/media-directory.ts'
 import { createProductRepository } from '../../src/modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from '../../src/modules/catalog/adapters/routes.ts'
-import { makeCreateProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
+import { makeCreateProduct, makeCreateVariant, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from '../../src/modules/catalog/index.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { mediaView } from '../../src/modules/content/adapters/media-view.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
@@ -61,6 +61,8 @@ export function createCatalogHttp({ pool, db }: ReturnType<typeof openTestDataba
     publishProduct: makePublishProduct(deps),
     unpublishProduct: makeUnpublishProduct(deps),
     saveVariant: makeSaveVariant(deps),
+    saveOptions: makeSaveOptions(deps),
+    createVariant: makeCreateVariant(deps),
   })
   const app = createApp(createLogger('silent'), async () => ({ database: true, jobs: true }), {
     authHandler: auth.handler,

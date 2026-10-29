@@ -68,7 +68,13 @@ export const problemSchema = z.object({
   title: z.string(),
   instance: z.string().meta({ description: 'The request path' }),
   requestId: z.string().meta({ description: 'The server\'s id for this request, also sent as X-Request-Id' }),
-  errors: z.array(z.object({ in: z.string(), path: z.string(), message: z.string() })).optional(),
+  errors: z.array(z.object({
+    in: z.string(),
+    path: z.string(),
+    message: z.string(),
+    code: z.string().optional().meta({ description: 'With a catalog refusal: a stable code the screen translates, such as value-in-use' }),
+    params: z.record(z.string(), z.union([z.string(), z.number()])).optional().meta({ description: 'With a code: the numbers and names the message uses' }),
+  })).optional(),
   mediaIds: z.array(z.string()).optional().meta({ description: 'With media-processing: the ids of the files that are not ready yet' }),
   checks: z.record(z.string(), z.enum(['ok', 'failed'])).optional(),
 }).meta({ id: 'Problem', description: 'RFC 9457 problem details, sent as application/problem+json' })

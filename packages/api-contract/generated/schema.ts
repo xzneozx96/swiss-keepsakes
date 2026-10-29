@@ -1943,7 +1943,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description The new draft keepsake with its one variant for sale */
+                /** @description The new draft keepsake with its options and its variants for sale */
                 201: {
                     headers: {
                         /** @description The row version, as `"<rowVersion>"` */
@@ -2066,6 +2066,64 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/store/{storeId}/products/{productId}/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    productId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["OptionsSaveBody"];
+                };
+            };
+            responses: {
+                /** @description The options are saved with the new values of the variants, all or nothing. The row version moves */
+                200: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/products/{productId}/publish": {
         parameters: {
             query?: never;
@@ -2174,6 +2232,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/products/{productId}/variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    productId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["VariantCreateBody"];
+                };
+            };
+            responses: {
+                /** @description The keepsake with the new variant. It is live at once and takes no row version */
+                201: {
+                    headers: {
+                        /** @description The row version, as `"<rowVersion>"` */
+                        ETag?: string;
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Product"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/products/{productId}/variants/{skuId}": {
         parameters: {
             query?: never;
@@ -2204,7 +2317,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description The keepsake with the variant changed. The change is live at once and takes no row version */
+                /** @description The keepsake with the variant changed. The change is live at once and takes no row version. Archiving is final */
                 200: {
                     headers: {
                         /** @description The row version, as `"<rowVersion>"` */
@@ -3106,12 +3219,16 @@ export interface components {
             de?: string;
             en?: string;
         };
-        /** @description A variant to create: a code and a price. It is for sale */
+        /** @description A variant to create: a code, a price and one value of each option. It is for sale */
         KeepsakeVariantWrite: {
             /** @description The price in Rappen, above 0 */
             priceRappen: number;
             /** @description Letters and digits joined by - _ or ., unique in the shop */
             skuCode: string;
+            /** @description The value ref of each option ref. A keepsake with no option sends none */
+            values?: {
+                [key: string]: string;
+            };
         };
         /** @description Text per language. A present key is non-empty and at most 20000 characters */
         LocalizedLongText: {
@@ -3226,6 +3343,41 @@ export interface components {
             }[];
             mayOpenForSale: boolean;
             store: components["schemas"]["Store"];
+        };
+        /** @description The name per language. One language is enough */
+        OptionName: {
+            de?: string;
+            en?: string;
+        };
+        /** @description The options of a keepsake with the new values of its variants, saved in one request */
+        OptionsSaveBody: {
+            /** @description Every option the keepsake should have, in order. One that is left out is deleted, if no variant uses it */
+            options: components["schemas"]["OptionWrite"][];
+            /** @description The new values of existing variants, archived ones too. A variant keeps the values it has for options that stay */
+            variantValues?: {
+                /** @description The value ref of each option ref, for a new option or a changed value */
+                values: {
+                    [key: string]: string;
+                };
+                /** Format: uuid */
+                variantId: string;
+            }[];
+        };
+        /** @description A value of an option */
+        OptionValueWrite: {
+            label: components["schemas"]["ValueLabel"];
+            /** @description The id of a value that exists, or a key you choose for a new one */
+            ref: string;
+            /** @description A colour as # and six lowercase hexadecimal digits, or null for none */
+            swatch?: string | null;
+        };
+        /** @description An option with its values */
+        OptionWrite: {
+            name: components["schemas"]["OptionName"];
+            /** @description The id of an option that exists, or a key you choose for a new one */
+            ref: string;
+            /** @description In the order guests see them. At least one */
+            values: components["schemas"]["OptionValueWrite"][];
         };
         /** @description The newest Owner invitation of a store */
         OwnerInvitation: {
@@ -3351,8 +3503,14 @@ export interface components {
                 [key: string]: "ok" | "failed";
             };
             errors?: {
+                /** @description With a catalog refusal: a stable code the screen translates, such as value-in-use */
+                code?: string;
                 in: string;
                 message: string;
+                /** @description With a code: the numbers and names the message uses */
+                params?: {
+                    [key: string]: string | number;
+                };
                 path: string;
             }[];
             /** @description The request path */
@@ -3382,6 +3540,8 @@ export interface components {
                 de?: string;
                 en?: string;
             };
+            /** @description In the order guests see them */
+            options: components["schemas"]["ProductOption"][];
             /** @description The working photos in order, the first is the cover */
             photos: components["schemas"]["Media"][];
             rowVersion: number;
@@ -3400,17 +3560,18 @@ export interface components {
             };
             /** Format: date-time */
             updatedAt: string;
+            /** @description Every variant, archived ones too */
             variants: components["schemas"]["ProductVariant"][];
             warnings: components["schemas"]["PublishCheck"][];
         };
-        /** @description A new keepsake as a draft, with its one variant */
+        /** @description A new keepsake as a draft, with its options and variants */
         ProductCreateBody: {
             /** @description The share of a sale that a referral partner earns, from 0 to 0.5 */
             commissionRate?: number;
             name: components["schemas"]["KeepsakeName"];
+            options?: components["schemas"]["OptionWrite"][];
             photoIds?: string[];
             text?: components["schemas"]["KeepsakeText"];
-            /** @description Exactly one variant until options exist (E6.2) */
             variants: components["schemas"]["KeepsakeVariantWrite"][];
         };
         /** @description The keepsakes of the store, newest first */
@@ -3455,6 +3616,25 @@ export interface components {
             /** @description Variants that are not archived */
             variantCount: number;
         };
+        /** @description An option of one keepsake, such as Size or Theme */
+        ProductOption: {
+            /** Format: uuid */
+            id: string;
+            name: {
+                de?: string;
+                en?: string;
+            };
+            /** @description In the order guests see them */
+            values: {
+                /** Format: uuid */
+                id: string;
+                label: {
+                    de?: string;
+                    en?: string;
+                };
+                swatch: string | null;
+            }[];
+        };
         /** @description The autosave. name, text and photoIds replace the draft. commissionRate is saved live */
         ProductSaveBody: {
             /** @description The share of a sale that a referral partner earns, from 0 to 0.5 */
@@ -3470,10 +3650,14 @@ export interface components {
             priceRappen: number;
             skuCode: string;
             /**
-             * @description published is for sale, draft is hidden from guests
+             * @description published is for sale, draft is hidden from guests, archived stays for old orders
              * @enum {string}
              */
-            status: "published" | "draft";
+            status: "published" | "draft" | "archived";
+            /** @description The value id of each option id. Empty for a keepsake with no option */
+            values: {
+                [key: string]: string;
+            };
         };
         PublicCategory: {
             /** Format: uuid */
@@ -4264,9 +4448,9 @@ export interface components {
              * @description The card of the edit screen that fixes it
              * @enum {string}
              */
-            card: "basics" | "photos" | "variants" | "commission";
+            card: "basics" | "photos" | "options" | "variants" | "commission";
             /** @enum {string} */
-            code: "language" | "photos" | "variant-for-sale" | "other-language" | "hidden" | "commission-zero";
+            code: "language" | "photos" | "variant-for-sale" | "other-language" | "hidden" | "commission-zero" | "option-labels";
             /** @description SKU codes the check names */
             codes?: string[];
             count?: number;
@@ -5209,15 +5393,38 @@ export interface components {
             /** @description The type of the file: image/jpeg, image/png, image/webp, audio/mpeg or application/pdf */
             contentType: string;
         };
+        /** @description The label per language. One language is enough */
+        ValueLabel: {
+            de?: string;
+            en?: string;
+        };
+        /** @description One more variant of a keepsake */
+        VariantCreateBody: {
+            priceRappen: number;
+            skuCode: string;
+            /**
+             * @description published is for sale, draft is hidden. For sale when left out
+             * @enum {string}
+             */
+            status?: "published" | "draft";
+            /** @description The value id of each option id */
+            values?: {
+                [key: string]: string;
+            };
+        };
         /** @description A change to one variant */
         VariantSaveBody: {
             priceRappen?: number;
             skuCode?: string;
             /**
-             * @description published is for sale, draft is hidden from guests
+             * @description published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final
              * @enum {string}
              */
-            status?: "published" | "draft";
+            status?: "published" | "draft" | "archived";
+            /** @description The value id of every option id. Replaces the values */
+            values?: {
+                [key: string]: string;
+            };
         };
     };
     responses: never;

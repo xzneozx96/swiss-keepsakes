@@ -52,14 +52,30 @@ export interface ProductDoc {
   media: string[]
 }
 
-// `published` is for sale, `draft` is hidden from guests. `archived` exists in the database and has no screen yet (E6.2).
+// `published` is for sale, `draft` is hidden from guests, `archived` stays for old orders and keeps its combination.
 export type VariantStatus = 'published' | 'draft' | 'archived'
+
+export interface OptionValue {
+  id: string
+  label: Localized
+  // `#rrggbb` or null (product_option_values_swatch_check).
+  swatch: string | null
+}
+
+// An option of one keepsake (ADR-027). Its values are in the order guests see them.
+export interface ProductOption {
+  id: string
+  name: Localized
+  values: OptionValue[]
+}
 
 export interface ProductVariant {
   id: string
   skuCode: string
   priceRappen: number
   status: VariantStatus
+  // The value of each option, by option id. A keepsake with no option has an empty map.
+  values: Record<string, string>
 }
 
 export interface Product {
@@ -73,6 +89,7 @@ export interface Product {
   published: { name: Localized, text: Localized } | null
   publishedMedia: string[]
   commissionRate: number
+  options: ProductOption[]
   variants: ProductVariant[]
   rowVersion: number
   createdAt: Date
@@ -98,18 +115,80 @@ export interface ProductChanges {
   commissionRate?: number
 }
 
+// An option or value as a request names it. `ref` is the id of an existing one, or any key the client picked for a new
+// one. Refs only link the parts of one request together; the repository gives new rows their own ids.
+export interface ValueInput {
+  ref: string
+  label: Localized
+  swatch: string | null
+}
+
+export interface OptionInput {
+  ref: string
+  name: Localized
+  // In the order guests see them.
+  values: ValueInput[]
+}
+
+// A variant to create. `values` maps an option ref to a value ref.
+export interface VariantInput {
+  skuCode: string
+  priceRappen: number
+  status: 'published' | 'draft'
+  values: Record<string, string>
+}
+
 export interface NewProduct {
   name: Localized
   text: Localized
   media: string[]
   commissionRate: number
-  variant: { skuCode: string, priceRappen: number }
+  options: OptionInput[]
+  variants: VariantInput[]
+}
+
+// The options of a keepsake as they should be after the save, with the values that variants get for them. A variant
+// keeps the values it has for options that stay, so only new options and changed values are listed.
+export interface OptionsSave {
+  options: OptionInput[]
+  variantValues: { variantId: string, values: Record<string, string> }[]
 }
 
 export interface VariantChanges {
   skuCode?: string
   priceRappen?: number
-  status?: 'published' | 'draft'
+  status?: VariantStatus
+  // Every option's value, by option id. Replaces the variant's values.
+  values?: Record<string, string>
+}
+
+// Why a save is refused, with the numbers a screen needs to say it. `path` names the field in the request.
+export type RefusalCode
+  = | 'option-name-required'
+    | 'value-name-required'
+    | 'option-needs-value'
+    | 'option-in-use'
+    | 'value-in-use'
+    | 'values-missing'
+    | 'value-unknown'
+    | 'combination-taken'
+    | 'combination-duplicate'
+    | 'no-options-one-variant'
+    | 'refs-invalid'
+    | 'code-duplicate'
+    | 'variant-reserved'
+    | 'variant-archived'
+
+export interface Refusal {
+  code: RefusalCode
+  path: string
+  params?: Record<string, string | number>
+}
+
+// The units that open orders reserve, by SKU id. E6.3 wires this from the inventory module (ADR-009, ADR-013); until
+// then nothing is wired and archiving never finds a reserved unit.
+export interface ReservationDirectory<T> {
+  reservedBySku: (tx: T, storeId: string, skuIds: string[]) => Promise<Map<string, number>>
 }
 
 export interface ProductRepository<T> {
@@ -118,7 +197,7 @@ export interface ProductRepository<T> {
   find: (tx: T, storeId: string, productId: string) => Promise<Product | undefined>
   // Locks the row. An id of another store has no row.
   findForUpdate: (tx: T, storeId: string, productId: string) => Promise<Product | undefined>
-  // A draft product with its one variant for sale, in one transaction.
+  // A draft product with its options and its variants for sale, in one transaction.
   insert: (tx: T, storeId: string, input: NewProduct, at: Date) => Promise<Product>
   // Writes the draft document and the commission, bumps row_version.
   save: (tx: T, product: Product, changes: ProductChanges, at: Date) => Promise<Product>
@@ -131,4 +210,8 @@ export interface ProductRepository<T> {
   slugsTaken: (tx: T, language: 'en' | 'de') => Promise<Set<string>>
   // Writes the variant and returns the product. undefined when the variant is not this product's.
   saveVariant: (tx: T, product: Product, skuId: string, changes: VariantChanges, at: Date) => Promise<Product | undefined>
+  // Adds one variant. `values` maps option ids to value ids.
+  insertVariant: (tx: T, product: Product, input: VariantInput, at: Date) => Promise<Product>
+  // Writes the options, their values and order, and the new values of the variants, then bumps row_version.
+  replaceOptions: (tx: T, product: Product, input: OptionsSave, at: Date) => Promise<Product>
 }

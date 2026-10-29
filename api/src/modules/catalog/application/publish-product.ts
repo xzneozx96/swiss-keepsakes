@@ -23,7 +23,7 @@ export function makePublishProduct<T>({ uow, products, media, audit, clock }: Ca
       if (product.rowVersion !== ifMatch)
         return fail({ reason: 'stale' })
       const doc = workingDoc(product)
-      const gaps = publishGaps(publishChecks({ doc, variants: product.variants, commissionRate: product.commissionRate }))
+      const gaps = publishGaps(publishChecks({ doc, variants: product.variants, options: product.options, commissionRate: product.commissionRate }))
       if (gaps.length > 0)
         return fail({ reason: 'incomplete', gaps })
       const processing = await photosProcessing(media, tx, storeId, doc.media)

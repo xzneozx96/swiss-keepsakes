@@ -1,11 +1,11 @@
-import type { ProductDoc, ProductVariant } from '../ports.ts'
+import type { ProductDoc, ProductOption, ProductVariant } from '../ports.ts'
 import { languagesOf } from '@sk/domain/content'
 
 type Language = 'en' | 'de'
 
 export interface PublishCheck {
-  code: 'language' | 'photos' | 'variant-for-sale' | 'other-language' | 'hidden' | 'commission-zero'
-  card: 'basics' | 'photos' | 'variants' | 'commission'
+  code: 'language' | 'photos' | 'variant-for-sale' | 'other-language' | 'hidden' | 'commission-zero' | 'option-labels'
+  card: 'basics' | 'photos' | 'options' | 'variants' | 'commission'
   count?: number
   codes?: string[]
   language?: Language
@@ -20,6 +20,13 @@ export function fullLanguages(doc: Pick<ProductDoc, 'name' | 'text'>): Language[
   return languages.filter(language => named.includes(language) && written.includes(language))
 }
 
+// Option names and values that miss a language. German is optional (design open point 9), so this only warns.
+export function unlabelledCount(options: ProductOption[]): number {
+  const labels = options.flatMap(option => [option.name, ...option.values.map(value => value.label)])
+
+  return labels.filter(label => !label.en?.trim() || !label.de?.trim()).length
+}
+
 export interface PublishChecks {
   blocking: PublishCheck[]
   warnings: PublishCheck[]
@@ -27,7 +34,7 @@ export interface PublishChecks {
 
 // The publish card's checks (design section 10). Blocking ones stop a publish and are also what the write validation
 // refuses; warnings never do. Archived variants are not checked.
-export function publishChecks(input: { doc: ProductDoc, variants: ProductVariant[], commissionRate: number }): PublishChecks {
+export function publishChecks(input: { doc: ProductDoc, variants: ProductVariant[], options: ProductOption[], commissionRate: number }): PublishChecks {
   const { doc, commissionRate } = input
   const variants = input.variants.filter(variant => variant.status !== 'archived')
   const full = fullLanguages(doc)
@@ -43,6 +50,9 @@ export function publishChecks(input: { doc: ProductDoc, variants: ProductVariant
 
   if (full.length === 1)
     warnings.push({ code: 'other-language', card: 'basics', language: full[0] === 'en' ? 'de' : 'en' })
+  const unlabelled = unlabelledCount(input.options)
+  if (unlabelled > 0)
+    warnings.push({ code: 'option-labels', card: 'options', count: unlabelled })
   const hidden = variants.filter(variant => variant.status === 'draft')
   if (hidden.length > 0)
     warnings.push({ code: 'hidden', card: 'variants', count: hidden.length, codes: hidden.map(variant => variant.skuCode) })

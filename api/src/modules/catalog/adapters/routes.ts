@@ -5,9 +5,9 @@ import type { CreateProductInput } from '../application/create-product.ts'
 import type { Result } from '../application/failure.ts'
 import type { ProductListEntry } from '../application/list-products.ts'
 import type { ProductDetail } from '../application/product-detail.ts'
-import type { ProductChanges, VariantChanges } from '../ports.ts'
+import type { OptionInput, OptionsSave, ProductChanges, VariantChanges, VariantInput } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { productCreateBodySchema, productListSchema, productSaveBodySchema, productSchema, variantSaveBodySchema } from '@sk/api-contract'
+import { optionsSaveBodySchema, productCreateBodySchema, productListSchema, productSaveBodySchema, productSchema, variantCreateBodySchema, variantSaveBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
@@ -24,6 +24,8 @@ export interface CatalogUseCases {
   publishProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null) => Promise<Result<ProductDetail>>
   unpublishProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null) => Promise<Result<ProductDetail>>
   saveVariant: (actor: Actor, storeId: string, productId: string, skuId: string, changes: VariantChanges, requestId: string | null) => Promise<Result<ProductDetail>>
+  saveOptions: (actor: Actor, storeId: string, productId: string, ifMatch: number, input: OptionsSave, requestId: string | null) => Promise<Result<ProductDetail>>
+  createVariant: (actor: Actor, storeId: string, productId: string, input: VariantInput, requestId: string | null) => Promise<Result<ProductDetail>>
 }
 
 const productParams = z.object({ storeId: z.uuid(), productId: z.uuid() })
@@ -46,7 +48,7 @@ const createRoutePart = createRoute({
   path: productsPath,
   request: { params: storeParams, body: { required: true, content: json(productCreateBodySchema) } },
   responses: {
-    201: { description: 'The new draft keepsake with its one variant for sale', headers: etagHeaders, content: json(productSchema) },
+    201: { description: 'The new draft keepsake with its options and its variants for sale', headers: etagHeaders, content: json(productSchema) },
     ...problemResponses,
   },
 })
@@ -91,14 +93,42 @@ const unpublishRoute = createRoute({
   },
 })
 
+const optionsRoute = createRoute({
+  method: 'put',
+  path: `${productsPath}/{productId}/options`,
+  request: { params: productParams, ...withIfMatch, body: { required: true, content: json(optionsSaveBodySchema) } },
+  responses: {
+    200: { description: 'The options are saved with the new values of the variants, all or nothing. The row version moves', headers: etagHeaders, content: json(productSchema) },
+    ...problemResponses,
+  },
+})
+
+const createVariantRoute = createRoute({
+  method: 'post',
+  path: `${productsPath}/{productId}/variants`,
+  request: { params: productParams, body: { required: true, content: json(variantCreateBodySchema) } },
+  responses: {
+    201: { description: 'The keepsake with the new variant. It is live at once and takes no row version', headers: etagHeaders, content: json(productSchema) },
+    ...problemResponses,
+  },
+})
+
 const variantRoute = createRoute({
   method: 'patch',
   path: `${productsPath}/{productId}/variants/{skuId}`,
   request: { params: variantParams, body: { required: true, content: json(variantSaveBodySchema) } },
   responses: {
-    200: { description: 'The keepsake with the variant changed. The change is live at once and takes no row version', headers: etagHeaders, content: json(productSchema) },
+    200: { description: 'The keepsake with the variant changed. The change is live at once and takes no row version. Archiving is final', headers: etagHeaders, content: json(productSchema) },
     ...problemResponses,
   },
+})
+
+type OptionBody = NonNullable<z.infer<typeof optionsSaveBodySchema>['options']>[number]
+
+const optionInput = (option: OptionBody): OptionInput => ({
+  ref: option.ref,
+  name: option.name,
+  values: option.values.map(value => ({ ref: value.ref, label: value.label, swatch: value.swatch ?? null })),
 })
 
 // The Idempotency-Key middleware and the store guard sit before these (createApp), so the handlers read the
@@ -112,13 +142,14 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
   })
 
   app.openapi(createRoutePart, async (c) => {
-    const { name, text, photoIds, commissionRate, variants } = c.req.valid('json')
+    const { name, text, photoIds, commissionRate, options, variants } = c.req.valid('json')
     const result = await useCases.createProduct(c.get('actor'), c.get('store').storeId, {
       name,
       text: text ?? {},
       photoIds: photoIds ?? [],
       commissionRate: commissionRate ?? 0,
-      variant: variants[0]!,
+      options: (options ?? []).map(optionInput),
+      variants: variants.map(({ skuCode, priceRappen, values }) => ({ skuCode, priceRappen, status: 'published' as const, values: values ?? {} })),
     }, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
@@ -171,15 +202,43 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
 
   app.openapi(variantRoute, async (c) => {
     const { productId, skuId } = c.req.valid('param')
-    const { skuCode, priceRappen, status } = c.req.valid('json')
+    const { skuCode, priceRappen, status, values } = c.req.valid('json')
     const changes: VariantChanges = {
       ...(skuCode !== undefined && { skuCode }),
       ...(priceRappen !== undefined && { priceRappen }),
       ...(status !== undefined && { status }),
+      ...(values !== undefined && { values }),
     }
     const result = await useCases.saveVariant(c.get('actor'), c.get('store').storeId, productId, skuId, changes, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(productView(result.value), 200, etag(result.value.product))
+  })
+
+  app.openapi(optionsRoute, async (c) => {
+    const ifMatch = readIfMatch(c)
+    if (!ifMatch.ok)
+      return ifMatch.response
+    const { options, variantValues } = c.req.valid('json')
+    const result = await useCases.saveOptions(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, ifMatch.version, {
+      options: options.map(optionInput),
+      variantValues: variantValues ?? [],
+    }, c.get('requestId'))
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(productView(result.value), 200, etag(result.value.product))
+  })
+
+  app.openapi(createVariantRoute, async (c) => {
+    const { skuCode, priceRappen, status, values } = c.req.valid('json')
+    const result = await useCases.createVariant(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, {
+      skuCode,
+      priceRappen,
+      status: status ?? 'published',
+      values: values ?? {},
+    }, c.get('requestId'))
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(productView(result.value), 201, etag(result.value.product))
   })
 }
