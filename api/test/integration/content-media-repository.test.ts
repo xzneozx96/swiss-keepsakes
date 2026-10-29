@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
+import { makeRetireMedia } from '../../src/modules/content/application/retire-media.ts'
 import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { openTestDatabase } from './support.ts'
 
@@ -193,6 +194,22 @@ describe('[E2.7] isReferenced', () => {
     await pool.query('insert into content.places (store_id, cover_media_id) values ($1, $2)', [store, id])
 
     expect(await referenced(store, id)).toBe(true)
+  })
+
+  it('[E4.2][AC68] a place extra photo counts, and a retire job leaves the file alone', async () => {
+    const store = randomUUID()
+    const id = await readyMedia(store)
+    const pin = (await pool.query<{ id: string }>('insert into content.places (store_id) values ($1) returning id', [store])).rows[0]!.id
+    await pool.query('insert into content.place_photos (place_id, store_id, position, media_id) values ($1, $2, 1, $3)', [pin, store, id])
+    const deleted: string[] = []
+    const storage = { list: async () => [{ key: 'k' }], delete: async (_bucket: string, key: string) => void deleted.push(key) }
+    const retire = makeRetireMedia({ uow, media, storage: storage as never, keepsakes: { list: async () => [] }, clock: { now: () => later } })
+
+    expect(await referenced(store, id)).toBe(true)
+    await retire({ storeId: store, mediaId: id })
+
+    expect((await rowOf(id))?.status).toBe('ready')
+    expect(deleted).toEqual([])
   })
 
   it('[E2.7] a story_version media_refs row counts, in the draft and the published slot', async () => {

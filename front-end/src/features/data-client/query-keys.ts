@@ -29,6 +29,12 @@ export const queryKeys = {
   orders: {
     orders: ['orders', 'orders'],
   },
+  places: {
+    list: ['places', 'list'],
+    pin: ['places', 'pin'],
+    storyOptions: ['places', 'storyOptions'],
+    media: ['places', 'media'],
+  },
   partners: {
     partners: ['partners', 'partners'],
     referralVisits: ['partners', 'referralVisits'],

@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, MediaKind, Pin, PinDate, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
+import type { ContentLanguage, FoodKind, Localized, MediaKind, Pin, PinDate, PinStoryOption, ServiceType, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -164,6 +164,7 @@ export interface JobQueue<T> {
 export interface PinChanges {
   title?: Localized
   tip?: Localized
+  localTip?: Localized
   slug?: Localized | null
   latitude?: number | null
   longitude?: number | null
@@ -171,10 +172,38 @@ export interface PinChanges {
   weeklyHours?: WeeklySpan[]
   stayTag?: StayTag
   interests?: string[]
+  serviceType?: ServiceType | null
+  mustVisit?: boolean
+  foodKind?: FoodKind | null
   coverMediaId?: string | null
+  coverAlt?: Localized
+  // The extra photos in order; the list replaces the stored one. The alt text goes to the draft, keyed by media id.
+  photos?: { mediaId: string, alt: Localized }[]
+  // The one outbound link; null removes it.
+  outboundUrl?: string | null
   mainStoryGroupId?: string | null
   categoryIds?: string[]
   dates?: Omit<PinDate, 'id'>[]
+}
+
+// What the merchant list needs of one pin, read with its dates and category ids in one query.
+export interface PinListRow {
+  id: string
+  status: Pin['status']
+  draft: Pin['draft']
+  published: Pin['published']
+  slug: Pin['slug']
+  latitude: number | null
+  longitude: number | null
+  categoryIds: string[]
+  dates: PinDate[]
+  stayTag: StayTag
+  interests: string[]
+  coverMediaId: string | null
+  mainStoryGroupId: string | null
+  mainStoryPublished: boolean
+  rowVersion: number
+  updatedAt: Date
 }
 
 export interface PinRepository<T> {
@@ -190,6 +219,12 @@ export interface PinRepository<T> {
   remove: (tx: T, storeId: string, pinId: string) => Promise<boolean>
   // The ids among the given ones that are pins of this store, whatever their status. An id of another store is left out.
   idsInStore: (tx: T, storeId: string, ids: string[]) => Promise<string[]>
+  // A read without a lock. An id of another store has no row.
+  find: (tx: T, storeId: string, pinId: string) => Promise<Pin | undefined>
+  // Every pin of the store, most recently edited first.
+  list: (tx: T, storeId: string) => Promise<PinListRow[]>
+  // The story groups of the store with their titles, for the main-story picker, most recently created first.
+  storyOptions: (tx: T, storeId: string) => Promise<PinStoryOption[]>
 }
 
 // What a story group save may change. A list replaces the whole list, in the order given.

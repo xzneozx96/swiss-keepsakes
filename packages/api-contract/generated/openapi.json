@@ -1301,6 +1301,42 @@
           },
           "draft": {
             "properties": {
+              "coverAlt": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "localTip": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "photoAlt": {
+                "additionalProperties": {
+                  "properties": {
+                    "de": {
+                      "type": "string"
+                    },
+                    "en": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
               "tip": {
                 "properties": {
                   "de": {
@@ -1326,7 +1362,10 @@
             },
             "required": [
               "title",
-              "tip"
+              "tip",
+              "localTip",
+              "coverAlt",
+              "photoAlt"
             ],
             "type": [
               "object",
@@ -1335,6 +1374,19 @@
           },
           "firstPublishedAt": {
             "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "foodKind": {
+            "enum": [
+              "restaurant",
+              "cafe-bakery",
+              "pub-bar",
+              "market",
+              null
+            ],
             "type": [
               "string",
               "null"
@@ -1369,8 +1421,68 @@
               "null"
             ]
           },
+          "mustVisit": {
+            "type": "boolean"
+          },
+          "outboundUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "photos": {
+            "items": {
+              "properties": {
+                "mediaId": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mediaId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
           "published": {
             "properties": {
+              "coverAlt": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "localTip": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "photoAlt": {
+                "additionalProperties": {
+                  "properties": {
+                    "de": {
+                      "type": "string"
+                    },
+                    "en": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
               "tip": {
                 "properties": {
                   "de": {
@@ -1396,7 +1508,10 @@
             },
             "required": [
               "title",
-              "tip"
+              "tip",
+              "localTip",
+              "coverAlt",
+              "photoAlt"
             ],
             "type": [
               "object",
@@ -1405,6 +1520,21 @@
           },
           "rowVersion": {
             "type": "integer"
+          },
+          "serviceType": {
+            "enum": [
+              "water",
+              "toilets",
+              "connect",
+              "transport",
+              "lockers",
+              "cash",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "slug": {
             "properties": {
@@ -1478,7 +1608,12 @@
           "weeklyHours",
           "stayTag",
           "interests",
+          "serviceType",
+          "mustVisit",
+          "foodKind",
           "coverMediaId",
+          "photos",
+          "outboundUrl",
           "mainStoryGroupId",
           "categoryIds",
           "dates",
@@ -1487,6 +1622,175 @@
           "firstPublishedAt",
           "rowVersion",
           "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "PinList": {
+        "description": "Every pin of the store, most recently edited first",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PinListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PinListItem": {
+        "description": "A pin as one row of the merchant list",
+        "properties": {
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "coverMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hasDates": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "located": {
+            "type": "boolean"
+          },
+          "mainStory": {
+            "description": "`published` is false when the story has no published version",
+            "properties": {
+              "groupId": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "published": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "groupId",
+              "published"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "nextDate": {
+            "properties": {
+              "endTime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "firstDay": {
+                "type": "string"
+              },
+              "lastDay": {
+                "type": "string"
+              },
+              "startTime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "firstDay",
+              "lastDay",
+              "startTime",
+              "endTime"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "slug": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "hidden",
+              "ended"
+            ],
+            "type": "string"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "description": "The pending draft title when there is one, else the published title",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "title",
+          "slug",
+          "located",
+          "categoryIds",
+          "hasDates",
+          "nextDate",
+          "stayTag",
+          "interests",
+          "coverMediaId",
+          "mainStory",
+          "rowVersion",
           "updatedAt"
         ],
         "type": "object"
@@ -1514,9 +1818,68 @@
         },
         "type": "object"
       },
+      "PinStoryOption": {
+        "description": "A story group the pin can name as its main story",
+        "properties": {
+          "groupId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "story",
+              "editorial_review"
+            ],
+            "type": "string"
+          },
+          "publishedLanguages": {
+            "items": {
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "groupId",
+          "kind",
+          "title",
+          "publishedLanguages"
+        ],
+        "type": "object"
+      },
+      "PinStoryOptionList": {
+        "description": "Story groups of the store, most recently created first",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PinStoryOption"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
       "PinWriteBody": {
         "additionalProperties": false,
-        "description": "Every field is optional. A pin has no type and no price",
+        "description": "Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list. `localTip`, `coverAlt` and the alt text of each photo are text: they go to the draft and are live on publish",
         "properties": {
           "address": {
             "maxLength": 300,
@@ -1533,6 +1896,9 @@
             },
             "maxItems": 20,
             "type": "array"
+          },
+          "coverAlt": {
+            "$ref": "#/components/schemas/LocalizedText"
           },
           "coverMediaId": {
             "format": "uuid",
@@ -1577,17 +1943,31 @@
             "maxItems": 50,
             "type": "array"
           },
+          "foodKind": {
+            "enum": [
+              "restaurant",
+              "cafe-bakery",
+              "pub-bar",
+              "market",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "interests": {
             "items": {
               "enum": [
                 "history-culture",
                 "food-drink",
                 "lake-mountains",
-                "shopping-keepsakes"
+                "shopping-keepsakes",
+                "local-activities"
               ],
               "type": "string"
             },
-            "maxItems": 4,
+            "maxItems": 5,
             "type": "array"
           },
           "latitude": {
@@ -1597,6 +1977,9 @@
               "number",
               "null"
             ]
+          },
+          "localTip": {
+            "$ref": "#/components/schemas/LocalizedText"
           },
           "longitude": {
             "maximum": 180,
@@ -1608,6 +1991,52 @@
           },
           "mainStoryGroupId": {
             "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mustVisit": {
+            "type": "boolean"
+          },
+          "outboundUrl": {
+            "maxLength": 2000,
+            "pattern": "^https:\\/\\/[^\\s]+$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "photos": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "alt": {
+                  "$ref": "#/components/schemas/LocalizedText"
+                },
+                "mediaId": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mediaId"
+              ],
+              "type": "object"
+            },
+            "maxItems": 10,
+            "type": "array"
+          },
+          "serviceType": {
+            "enum": [
+              "water",
+              "toilets",
+              "connect",
+              "transport",
+              "lockers",
+              "cash",
+              null
+            ],
             "type": [
               "string",
               "null"
@@ -9171,11 +9600,12 @@
                 "history-culture",
                 "food-drink",
                 "lake-mountains",
-                "shopping-keepsakes"
+                "shopping-keepsakes",
+                "local-activities"
               ],
               "type": "string"
             },
-            "maxItems": 4,
+            "maxItems": 5,
             "type": "array"
           },
           "keepsakeProductIds": {
@@ -9242,11 +9672,12 @@
                 "history-culture",
                 "food-drink",
                 "lake-mountains",
-                "shopping-keepsakes"
+                "shopping-keepsakes",
+                "local-activities"
               ],
               "type": "string"
             },
-            "maxItems": 4,
+            "maxItems": 5,
             "type": "array"
           },
           "keepsakeProductIds": {
@@ -9976,11 +10407,12 @@
                 "history-culture",
                 "food-drink",
                 "lake-mountains",
-                "shopping-keepsakes"
+                "shopping-keepsakes",
+                "local-activities"
               ],
               "type": "string"
             },
-            "maxItems": 4,
+            "maxItems": 5,
             "type": "array"
           },
           "keepsakeProductIds": {
@@ -12523,6 +12955,51 @@
       }
     },
     "/api/store/{storeId}/pins": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinList"
+                }
+              }
+            },
+            "description": "Every pin of the store, most recently edited first. `ended` is a live pin whose dates are all over",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
       "post": {
         "parameters": [
           {
@@ -12585,6 +13062,53 @@
         }
       }
     },
+    "/api/store/{storeId}/pins/story-options": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinStoryOptionList"
+                }
+              }
+            },
+            "description": "The story groups of the store, for the main-story picker",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/store/{storeId}/pins/{pinId}": {
       "delete": {
         "parameters": [
@@ -12621,6 +13145,66 @@
           "204": {
             "description": "The pin is deleted. Only a pin that was never published can be",
             "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The pin with its draft, photos and outbound link",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }

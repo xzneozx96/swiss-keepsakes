@@ -52,7 +52,7 @@ afterAll(async () => {
   await Promise.allSettled(scratchDatabases.map(database => admin(`drop database if exists ${database} with (force)`)))
 })
 
-describe('[E4.11][AC51] migration 0011_media_name', () => {
+describe('[E4.11][AC51] migration 0012_media_name', () => {
   it('[E4.11][AC51] names every existing file, keeps its version at 1, refuses a blank name and names a row that has none', async () => {
     const database = `sk_test_${randomBytes(6).toString('hex')}`
     scratchDatabases.push(database)
@@ -60,7 +60,7 @@ describe('[E4.11][AC51] migration 0011_media_name', () => {
     const pool = new Pool({ connectionString: withDatabase(inject('databaseUrlUnpooled'), database), max: 1 })
     pools.push(pool)
     const orm = drizzle({ client: pool })
-    const lastBefore = JSON.parse(readFileSync(join(migrationsFolder, 'meta', '_journal.json'), 'utf8')).entries.find((entry: { tag: string }) => entry.tag === '0011_media_name').idx - 1
+    const lastBefore = JSON.parse(readFileSync(join(migrationsFolder, 'meta', '_journal.json'), 'utf8')).entries.find((entry: { tag: string }) => entry.tag === '0012_media_name').idx - 1
     await migrate(orm, { migrationsFolder: folderUpTo(lastBefore) })
 
     const storeId = randomUUID()

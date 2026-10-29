@@ -14,7 +14,7 @@ import { createPublicReadRepository } from '../../src/modules/content/adapters/p
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -68,6 +68,9 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
   // Content asks the catalog which files keepsakes hold, as main.ts wires it.
   const libraryDeps = { uow, library: createMediaLibrary(), keepsakes: media.keepsakes ?? createMediaUses() }
   const writeUseCases = guardUseCases({
+    listMerchantPins: makeListMerchantPins(pinDeps),
+    getMerchantPin: makeGetMerchantPin(pinDeps),
+    listPinStoryOptions: makeListPinStoryOptions(pinDeps),
     createPin: makeCreatePin(pinDeps),
     savePin: makeSavePin(pinDeps),
     publishPin: makePublishPin(pinDeps),

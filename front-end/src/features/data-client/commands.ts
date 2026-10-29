@@ -21,6 +21,7 @@ interface ReadsWithInput {
   categories: 'list'
   keepsakes: 'list' | 'get'
   media: 'list' | 'uses'
+  places: 'list' | 'get' | 'storyOptions' | 'media'
 }
 
 /**
@@ -104,6 +105,16 @@ export const commandAffects: {
     recordPayout: [queryKeys.partners.partnerPayouts],
     revokeReportLink: [queryKeys.partners.partners],
     issueReportLink: [queryKeys.partners.partners],
+  },
+  places: {
+    create: [queryKeys.places.list, queryKeys.places.pin],
+    save: [queryKeys.places.list, queryKeys.places.pin],
+    publish: [queryKeys.places.list, queryKeys.places.pin],
+    hide: [queryKeys.places.list, queryKeys.places.pin],
+    remove: [queryKeys.places.list, queryKeys.places.pin],
+    // An upload writes a file and no collection a screen reads.
+    requestUpload: [],
+    confirmUpload: [],
   },
   reports: {
     saveCosts: [queryKeys.reports.costs],

@@ -124,6 +124,7 @@ export function createMediaRepository(): MediaRepository<Tx> {
           exists (select 1 from content.tours where store_id = ${storeId} and (pdf_media_id = ${mediaId} or cover_media_id = ${mediaId}))
           or exists (select 1 from content.tour_stops where store_id = ${storeId} and media_id = ${mediaId})
           or exists (select 1 from content.places where store_id = ${storeId} and cover_media_id = ${mediaId})
+          or exists (select 1 from content.place_photos where store_id = ${storeId} and media_id = ${mediaId})
           or exists (select 1 from content.media_refs where store_id = ${storeId} and media_id = ${mediaId})
         ) as referenced`)
       return result.rows[0]!.referenced

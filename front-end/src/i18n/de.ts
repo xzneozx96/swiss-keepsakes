@@ -9,6 +9,7 @@ import { mediaDe } from '@/features/media/messages.de'
 import { productsDe } from '@/features/merchant/products/messages.de'
 import { salesOverviewDe } from '@/features/merchant/sales/messages.de'
 import { partnerDashboardDe } from '@/features/partners/report/messages.de'
+import { placesDe } from '@/features/places/messages.de'
 import { reportPagesDe } from '@/features/reports/pages-messages.de'
 import { requestsDe } from '@/features/requests/messages.de'
 import { storesDe } from '@/features/stores/messages.de'
@@ -41,6 +42,7 @@ export const de: Record<MessageKey, string> = {
   ...categoriesDe,
   ...keepsakesDe,
   ...mediaDe,
+  ...placesDe,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototyp · Beispieldaten',
