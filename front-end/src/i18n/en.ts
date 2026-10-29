@@ -83,6 +83,8 @@ export const en = {
     'This page does not exist. It may have moved in the prototype.',
   'routeError.message': 'This screen could not load.',
   'routeError.retry': 'Try again',
+  'apiFeedback.error.generic': 'Something went wrong. Try again in a moment.',
+  'apiFeedback.error.network': 'The connection was lost. Check it and try again.',
 
   'home.hello': 'Grüezi and welcome!',
   'home.heroTitle': 'Make yourself at home. I’ll show you the Luzerne I love.',
