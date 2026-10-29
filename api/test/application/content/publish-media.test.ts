@@ -8,7 +8,7 @@ import { makeCreateStoryVersion } from '../../../src/modules/content/application
 import { makeCreateTour } from '../../../src/modules/content/application/create-tour.ts'
 import { makePublishStoryVersion } from '../../../src/modules/content/application/publish-story-version.ts'
 import { makePublishTour } from '../../../src/modules/content/application/publish-tour.ts'
-import { createFakeMedia } from '../../support/fake-media.ts'
+import { createFakeMedia, mediaDefaults } from '../../support/fake-media.ts'
 import { createFakeStories } from '../../support/fake-stories.ts'
 import { createFakeTours } from '../../support/fake-tours.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
@@ -19,7 +19,7 @@ const tx = null
 
 const kinds = { image: 'image/jpeg', audio: 'audio/mpeg', pdf: 'application/pdf' } as const
 function row(id: string, kind: keyof typeof kinds, status: MediaRecord['status']): MediaRecord {
-  return { id, storeId: store, kind, contentType: kinds[kind], storageKey: `${store}/${id}/original`, byteSize: 1, sha256: 'a'.repeat(64), width: null, height: null, status }
+  return { id, storeId: store, kind, contentType: kinds[kind], storageKey: `${store}/${id}/original`, byteSize: 1, sha256: 'a'.repeat(64), width: null, height: null, status, ...mediaDefaults }
 }
 
 function setup(seed: MediaRecord[]) {

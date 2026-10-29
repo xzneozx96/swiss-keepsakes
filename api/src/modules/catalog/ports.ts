@@ -132,3 +132,21 @@ export interface ProductRepository<T> {
   // Writes the variant and returns the product. undefined when the variant is not this product's.
   saveVariant: (tx: T, product: Product, skuId: string, changes: VariantChanges, at: Date) => Promise<Product | undefined>
 }
+
+// One keepsake that holds a file as a photo. The content module's media library reads this to count keepsakes as uses
+// of a file (E4.11), so a photo that only keepsakes show is never retired. `published` is true when the keepsake is for
+// sale and the file is among its live photos; any other holding (a draft photo, or live photos of an unpublished
+// keepsake) is a draft-only use.
+export interface MediaUse {
+  mediaId: string
+  productId: string
+  name: Localized
+  published: boolean
+  // The first photo of the keepsake, as the list shows it, for a thumbnail.
+  coverMediaId: string | null
+}
+
+export interface MediaUses<T> {
+  // Every file of this store that a keepsake holds, once per keepsake and file.
+  list: (tx: T, storeId: string) => Promise<MediaUse[]>
+}

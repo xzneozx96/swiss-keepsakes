@@ -8,6 +8,7 @@ export interface FailureProblem {
   title: string
   errors?: { in: 'body', path: string, message: string }[]
   mediaIds?: string[]
+  pages?: number
 }
 
 const gapMessages: Record<PublishGap, string> = {
@@ -45,12 +46,16 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'version-exists': return { status: 409, type: 'version-exists', title: 'This group already has a version in that language.' }
     case 'not-published': return { status: 409, type: 'not-published', title: 'This item is not published.' }
     case 'in-use': return { status: 409, type: 'content-in-use', title: 'Other content still uses this item.' }
-    case 'type-not-allowed': return { status: 422, type: 'media-type-not-allowed', title: 'This type of file is not allowed. Use JPEG, PNG, WebP, MP3 or PDF.' }
+    case 'type-not-allowed': return { status: 422, type: 'media-type-not-allowed', title: 'This type of file is not allowed. Use JPEG, PNG, WebP, MP3, M4A or PDF.' }
     case 'too-large': return { status: 422, type: 'media-too-large', title: 'This file is too large.' }
     case 'empty': return { status: 422, type: 'media-empty', title: 'This file is empty.' }
     case 'upload-missing': return { status: 404, type: 'upload-missing', title: 'The upload was not found. It may have expired. Upload the file again.' }
     case 'content-mismatch': return { status: 422, type: 'media-content-mismatch', title: 'The file is not the type it says it is.' }
     case 'media-processing': return { status: 422, type: 'media-processing', title: 'A file is still being processed. Try again in a moment.', mediaIds: failure.mediaIds }
+    case 'media-in-use': return { status: 409, type: 'media-in-use', title: 'Pages still use this file. Remove it from them, or replace it, before you retire it.', ...(failure.pages === undefined ? {} : { pages: failure.pages }) }
+    case 'media-already-retired': return { status: 409, type: 'media-already-retired', title: 'This file is retired already.' }
+    case 'media-not-ready': return { status: 409, type: 'media-not-ready', title: 'This file is still being processed. Wait until it is ready.' }
+    case 'media-kind-mismatch': return { status: 422, type: 'media-kind-mismatch', title: 'Choose a file of the same kind as the one you replace.' }
     case 'name-missing':
       return { status: 422, type: 'validation-failed', title: 'Give the category a name in English or German.', errors: [{ in: 'body', path: 'name', message: 'Give a name in English or German' }] }
     case 'order-mismatch':

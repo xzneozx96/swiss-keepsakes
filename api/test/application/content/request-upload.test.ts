@@ -40,7 +40,7 @@ describe('[E2.7] the upload request', () => {
     const { requestUpload } = setup()
 
     expect(await requestUpload(owner, store, { contentType: 'image/svg+xml', byteSize: 10 })).toMatchObject({ ok: false, reason: 'type-not-allowed' })
-    expect(await requestUpload(owner, store, { contentType: 'image/png', byteSize: 10 * MiB + 1 })).toMatchObject({ ok: false, reason: 'too-large' })
+    expect(await requestUpload(owner, store, { contentType: 'image/png', byteSize: 20 * MiB + 1 })).toMatchObject({ ok: false, reason: 'too-large' })
     expect(await requestUpload(owner, store, { contentType: 'audio/mpeg', byteSize: 0 })).toMatchObject({ ok: false, reason: 'empty' })
   })
 

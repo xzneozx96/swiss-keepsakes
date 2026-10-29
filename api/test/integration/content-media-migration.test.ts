@@ -60,8 +60,7 @@ describe('[E4.11][AC51] migration 0011_media_name', () => {
     const pool = new Pool({ connectionString: withDatabase(inject('databaseUrlUnpooled'), database), max: 1 })
     pools.push(pool)
     const orm = drizzle({ client: pool })
-    const lastBefore = JSON.parse(readFileSync(join(migrationsFolder, 'meta', '_journal.json'), 'utf8')).entries
-      .find((entry: { tag: string }) => entry.tag === '0011_media_name').idx - 1
+    const lastBefore = JSON.parse(readFileSync(join(migrationsFolder, 'meta', '_journal.json'), 'utf8')).entries.find((entry: { tag: string }) => entry.tag === '0011_media_name').idx - 1
     await migrate(orm, { migrationsFolder: folderUpTo(lastBefore) })
 
     const storeId = randomUUID()
@@ -79,7 +78,9 @@ describe('[E4.11][AC51] migration 0011_media_name', () => {
     await migrate(orm, { migrationsFolder })
 
     const { rows } = await pool.query<{ id: string, name: string, file_name: string, version: number }>(
-      'select id, name, file_name, version from content.media where store_id = $1 order by kind', [storeId])
+      'select id, name, file_name, version from content.media where store_id = $1 order by kind',
+      [storeId],
+    )
     expect(rows).toEqual([
       { id: photo, name: `image-${photo.slice(0, 8)}.jpg`, file_name: `image-${photo.slice(0, 8)}.jpg`, version: 1 },
       { id: pdf, name: `pdf-${pdf.slice(0, 8)}.pdf`, file_name: `pdf-${pdf.slice(0, 8)}.pdf`, version: 1 },
@@ -88,7 +89,8 @@ describe('[E4.11][AC51] migration 0011_media_name', () => {
     const later = await pool.query<{ id: string, name: string }>(
       `insert into content.media (store_id, kind, storage_key, content_type, byte_size, sha256, status)
        values ($1, 'audio', $2, 'audio/mpeg', 10, repeat('b', 64), 'ready') returning id, name`,
-      [storeId, `${storeId}/z/original.mp3`])
+      [storeId, `${storeId}/z/original.mp3`],
+    )
     expect(later.rows[0]!.name).toBe(`audio-${later.rows[0]!.id.slice(0, 8)}.mp3`)
 
     for (const blank of ['', '   '])

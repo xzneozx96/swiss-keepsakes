@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { mediaView } from '../../../src/modules/content/adapters/media-view.ts'
 import { makeGetMedia } from '../../../src/modules/content/application/get-media.ts'
 import { StorageUnavailableError } from '../../../src/modules/content/ports.ts'
-import { createFakeMedia } from '../../support/fake-media.ts'
+import { createFakeMedia, mediaDefaults } from '../../support/fake-media.ts'
 
 const store = '0190f0c2-0000-7000-8000-00000000000a'
 const other = '0190f0c2-0000-7000-8000-00000000000b'
@@ -13,7 +13,7 @@ const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g1', stores: new M
 const elsewhere: Actor = { kind: 'staff', userId: 'u3', guestId: 'g3', stores: new Map([[other, 'owner']]) }
 const guest: Actor = { kind: 'guest', userId: 'u4', guestId: 'g4' }
 
-const row: MediaRecord = { id, storeId: store, kind: 'image', storageKey: `${store}/${id}/original.jpg`, contentType: 'image/jpeg', byteSize: 1000, sha256: 'a'.repeat(64), width: 1500, height: 1000, status: 'ready' }
+const row: MediaRecord = { id, storeId: store, kind: 'image', storageKey: `${store}/${id}/original.jpg`, contentType: 'image/jpeg', byteSize: 1000, sha256: 'a'.repeat(64), width: 1500, height: 1000, status: 'ready', ...mediaDefaults }
 const url = (key: string) => `https://storage.test/media/${key}`
 
 function setup(rows: MediaRecord[]) {

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { checkMedia } from '../../../src/modules/content/application/check-media.ts'
 import { makeFailMedia } from '../../../src/modules/content/application/fail-media.ts'
 import { makeProcessMedia, MEDIA_CACHE_CONTROL } from '../../../src/modules/content/application/process-media.ts'
-import { createFakeMedia } from '../../support/fake-media.ts'
+import { createFakeMedia, mediaDefaults } from '../../support/fake-media.ts'
 import { createFakeStorage } from '../../support/fake-storage.ts'
 import { jpegWithGps, pngImage, undecodableJpeg } from '../../support/images.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
@@ -24,7 +24,7 @@ const kinds = {
 async function setup(ext: keyof typeof kinds, bytes: Uint8Array | undefined, maxInputPixels?: number) {
   const clock = createManualClock(new Date('2026-10-28T10:00:00Z'))
   const storage = createFakeStorage(clock)
-  const row: MediaRecord = { id: mediaId, storeId: store, ...kinds[ext], storageKey: originalKey(store, mediaId, ext), byteSize: bytes?.byteLength ?? 1, sha256: 'a'.repeat(64), width: null, height: null, status: 'processing' }
+  const row: MediaRecord = { id: mediaId, storeId: store, ...kinds[ext], storageKey: originalKey(store, mediaId, ext), byteSize: bytes?.byteLength ?? 1, sha256: 'a'.repeat(64), width: null, height: null, status: 'processing', ...mediaDefaults }
   const media = createFakeMedia([row])
   if (bytes)
     storage.seed('uploads', confirmedKey(store, mediaId, ext), bytes, { contentType: row.contentType })

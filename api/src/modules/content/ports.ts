@@ -44,13 +44,33 @@ export interface MediaRecord {
   width: number | null
   height: number | null
   status: 'processing' | 'ready' | 'retired'
+  // What the merchant sees and searches; starts as the uploaded file name.
+  name: string
+  // The file name of the latest upload.
+  fileName: string
+  alt: Localized
+  durationSeconds: number | null
+  // Starts at 1; a replacement adds one and moves storageKey to a new versioned key.
+  version: number
+  createdAt: Date
+}
+
+// What a replacement writes into the row: the new file, its derived facts and the next version.
+export interface MediaReplacement {
+  storageKey: string
+  contentType: string
+  byteSize: number
+  sha256: string
+  width: number | null
+  height: number | null
+  fileName: string
 }
 
 export interface MediaRepository<T> {
   // The rows of this store among the ids. An id of another store has no row.
   find: (tx: T, storeId: string, ids: string[]) => Promise<MediaRow[]>
-  // A new row, status `processing`.
-  insert: (tx: T, row: { id: string, storeId: string, kind: MediaKind, storageKey: string, contentType: string, byteSize: number, sha256: string }, at: Date) => Promise<MediaRecord>
+  // A new row, status `processing`. A row inserted without a name is named by the database (migration 0011).
+  insert: (tx: T, row: { id: string, storeId: string, kind: MediaKind, storageKey: string, contentType: string, byteSize: number, sha256: string, name?: string, fileName?: string }, at: Date) => Promise<MediaRecord>
   // An id of another store has no row. `forUpdate` locks the row until the transaction ends.
   findById: (tx: T, storeId: string, id: string, options?: { forUpdate?: boolean }) => Promise<MediaRecord | undefined>
   // `dims` for an image, none for audio and PDF (the table CHECK refuses a width on anything but an image).
@@ -58,8 +78,76 @@ export interface MediaRepository<T> {
   markReady: (tx: T, row: MediaRecord, dims: { width: number, height: number } | undefined, at: Date) => Promise<MediaRecord | undefined>
   // Sets status `retired` and `retired_at` together (media_retired_check). undefined when the row is gone (or belongs to another store).
   retire: (tx: T, row: MediaRecord, at: Date) => Promise<MediaRecord | undefined>
+  // Writes the name and the description that are given. undefined when the row is gone (or belongs to another store).
+  describe: (tx: T, row: MediaRecord, changes: { name?: string, alt?: Localized }, at: Date) => Promise<MediaRecord | undefined>
+  // The new file replaces the old under the same id, version + 1. The row keeps status `ready`. undefined when the row is gone.
+  replace: (tx: T, row: MediaRecord, next: MediaReplacement, at: Date) => Promise<MediaRecord | undefined>
   // True when a tour (PDF or cover), a tour stop, a pin cover or any media_refs row points at the id.
   isReferenced: (tx: T, storeId: string, mediaId: string) => Promise<boolean>
+}
+
+// A keepsake that holds a photo, as the catalog module reports it (ADR-013: by plain id, no table of another module is
+// read). main.ts builds this port from the catalog module's read.
+export interface KeepsakeUse {
+  mediaId: string
+  productId: string
+  name: Localized
+  published: boolean
+  coverMediaId: string | null
+}
+
+export interface KeepsakeUses<T> {
+  list: (tx: T, storeId: string) => Promise<KeepsakeUse[]>
+}
+
+export interface MediaUsage {
+  pages: number
+  published: number
+  drafts: number
+}
+
+export interface MediaListRow extends MediaRecord {
+  usage: MediaUsage
+}
+
+export type MediaUseFilter = 'unused' | 'drafts' | 'published'
+
+export interface MediaListQuery {
+  kind: MediaKind
+  q?: string | undefined
+  use: MediaUseFilter[]
+  status: MediaRecord['status'][]
+  page: number
+  pageSize: number
+}
+
+export interface MediaListPage {
+  rows: MediaListRow[]
+  total: number
+  kinds: Record<MediaKind, number>
+  uses: Record<MediaUseFilter, number>
+  statuses: Record<MediaRecord['status'], number>
+}
+
+// One page that uses a file. A story counts once per language version.
+export interface MediaUseRow {
+  pageKind: 'story' | 'place' | 'tour' | 'keepsake'
+  pageId: string
+  language: ContentLanguage | null
+  title: Localized
+  role: 'cover' | 'text' | 'pdf' | 'stop' | 'photo'
+  published: boolean
+  // The media row of the page's picture, for a thumbnail.
+  thumbnailMediaId: string | null
+}
+
+// The library reads: the files of a store with how many pages use each, and the pages that use one file. Keepsake
+// photos are not in content's tables, so the caller hands them in.
+export interface MediaLibrary<T> {
+  list: (tx: T, storeId: string, query: MediaListQuery, keepsakes: KeepsakeUse[]) => Promise<MediaListPage>
+  usesOf: (tx: T, storeId: string, mediaId: string, keepsakes: KeepsakeUse[]) => Promise<MediaUseRow[]>
+  // The thumbnails of the pages: the storage key and width of each ready image among the ids.
+  thumbnails: (tx: T, storeId: string, ids: string[]) => Promise<Map<string, { storageKey: string, width: number | null }>>
 }
 
 // What the save and read use cases need of the media table: they only look rows up.

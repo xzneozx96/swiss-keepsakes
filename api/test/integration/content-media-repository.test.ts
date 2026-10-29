@@ -47,7 +47,10 @@ describe('[E2.7] the media repository', () => {
 
     const inserted = await uow.run(tx => media.insert(tx, row, at))
 
-    expect(inserted).toEqual({ ...row, width: null, height: null, status: 'processing' })
+    expect(inserted).toMatchObject({ ...row, width: null, height: null, status: 'processing', version: 1 })
+    // A row inserted without a name is named by the database.
+    expect(inserted.name).toBe(`${row.kind}-${row.id.slice(0, 8)}.jpg`)
+    expect(inserted.fileName).toBe(inserted.name)
     expect(await uow.run(tx => media.findById(tx, store, row.id))).toEqual(inserted)
   })
 

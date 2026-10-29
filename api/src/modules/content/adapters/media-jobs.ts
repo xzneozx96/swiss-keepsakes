@@ -7,6 +7,7 @@ export interface MediaQueues {
   failed: string
   retire: string
   sweep: string
+  purge: string
 }
 
 // Four attempts. Before retry n (from 0) pg-boss waits 30 * 2^n seconds times a random factor from 1 to 2.
@@ -21,7 +22,7 @@ export async function createMediaQueues(boss: PgBoss, queues: MediaQueues = medi
   await boss.createQueue(queues.process, { ...retry, deadLetter: queues.failed })
   await boss.updateQueue(queues.process, { ...retry, deadLetter: queues.failed })
   // A retire job that fails when storage is down must wait out the outage, not exhaust its retries in seconds.
-  for (const name of [queues.retire, queues.sweep]) {
+  for (const name of [queues.retire, queues.sweep, queues.purge]) {
     await boss.createQueue(name, retry)
     await boss.updateQueue(name, retry)
   }
@@ -32,11 +33,13 @@ export interface MediaHandlers {
   failMedia: (job: MediaJob) => Promise<void>
   retireMedia: (job: MediaJob) => Promise<void>
   sweepMedia: () => Promise<unknown>
+  // After the grace period of a replacement: removes the objects of the old versions.
+  purgeVersions: (job: MediaJob) => Promise<void>
 }
 
 // Only the worker roles call this. pg-boss hands each handler one job at a time (batchSize 1, the default); a
 // handler that throws fails the job, which pg-boss retries and finally moves to the failed queue.
-export async function startMediaWorkers(boss: PgBoss, { processMedia, failMedia, retireMedia, sweepMedia }: MediaHandlers, queues: MediaQueues = mediaQueues): Promise<void> {
+export async function startMediaWorkers(boss: PgBoss, { processMedia, failMedia, retireMedia, sweepMedia, purgeVersions }: MediaHandlers, queues: MediaQueues = mediaQueues): Promise<void> {
   await boss.work<MediaJob>(queues.process, async ([job]) => {
     if (job)
       await processMedia(job.data)
@@ -48,6 +51,10 @@ export async function startMediaWorkers(boss: PgBoss, { processMedia, failMedia,
   await boss.work<MediaJob>(queues.retire, async ([job]) => {
     if (job)
       await retireMedia(job.data)
+  })
+  await boss.work<MediaJob>(queues.purge, async ([job]) => {
+    if (job)
+      await purgeVersions(job.data)
   })
   await boss.work(queues.sweep, async () => {
     await sweepMedia()

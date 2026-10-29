@@ -49,8 +49,22 @@ describe('[E4.11][AC51] media library schemas', () => {
 
   it('[E4.11][AC51] an item carries the name, version and use', () => {
     const item = {
-      id, kind: 'image', status: 'ready', contentType: 'image/jpeg', byteSize: 10, width: 100, height: 50, publicUrl: 'https://x/y.jpg', variants: [],
-      name: 'a.jpg', fileName: 'a.jpg', alt: {}, durationSeconds: null, version: 2, createdAt: '2026-10-30T00:00:00.000Z', usage: { pages: 3, published: 2, drafts: 1 },
+      id,
+      kind: 'image',
+      status: 'ready',
+      contentType: 'image/jpeg',
+      byteSize: 10,
+      width: 100,
+      height: 50,
+      publicUrl: 'https://x/y.jpg',
+      variants: [],
+      name: 'a.jpg',
+      fileName: 'a.jpg',
+      alt: {},
+      durationSeconds: null,
+      version: 2,
+      createdAt: '2026-10-30T00:00:00.000Z',
+      usage: { pages: 3, published: 2, drafts: 1 },
     }
     expect(ok(mediaItemSchema, item)).toBe(true)
     expect(ok(mediaItemSchema, { ...item, name: undefined })).toBe(false)

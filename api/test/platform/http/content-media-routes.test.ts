@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { registerContentRoutes } from '../../../src/modules/content/adapters/routes.ts'
 import { StorageUnavailableError } from '../../../src/modules/content/ports.ts'
 import { createFakeContentUseCases } from '../../support/fake-content-use-cases.ts'
+import { mediaDefaults } from '../../support/fake-media.ts'
 import { createGuardedApp, guardedCommands, noAccess, shopOrigin, signedInAs } from '../../support/guarded-app.ts'
 
 const lucerne = '0190f0c2-0000-7000-8000-00000000000a'
@@ -98,7 +99,7 @@ describe('[E2.7] POST /api/store/{storeId}/media/uploads', () => {
 const confirmPath = `/api/store/${lucerne}/media/confirm`
 const mediaId = '0190f0c2-0000-7000-8000-0000000000f1'
 
-const processing = { id: mediaId, storeId: lucerne, kind: 'image', storageKey: `${lucerne}/${mediaId}/original.jpg`, contentType: 'image/jpeg', byteSize: 1000, sha256: 'a'.repeat(64), width: null, height: null, status: 'processing' } as const
+const processing = { ...mediaDefaults, id: mediaId, storeId: lucerne, kind: 'image', storageKey: `${lucerne}/${mediaId}/original.jpg`, contentType: 'image/jpeg', byteSize: 1000, sha256: 'a'.repeat(64), width: null, height: null, status: 'processing' } as const
 
 function confirm(app: ReturnType<typeof setup>, body: unknown, headers: Record<string, string> = signedInAs('owner')) {
   return app.request(confirmPath, { method: 'POST', headers: { 'Origin': shopOrigin, 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) })

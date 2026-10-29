@@ -43,7 +43,7 @@ async function until(done: () => Promise<boolean> | boolean, timeoutMs = 40_000)
 // Each test runs on its own queues, so its worker sees only its own jobs.
 async function setup(bytes: Uint8Array) {
   const suffix = randomUUID().slice(0, 8)
-  const queues: MediaQueues = { process: `media-e2-7-${suffix}`, failed: `media-failed-e2-7-${suffix}`, retire: `media-retire-e2-7-${suffix}`, sweep: `media-sweep-e2-7-${suffix}` }
+  const queues: MediaQueues = { process: `media-e2-7-${suffix}`, failed: `media-failed-e2-7-${suffix}`, retire: `media-retire-e2-7-${suffix}`, sweep: `media-sweep-e2-7-${suffix}`, purge: `media-purge-e2-7-${suffix}` }
   await createMediaQueues(jobs.boss, queues, { retryLimit: 1, retryDelay: 1, retryBackoff: false })
   const clock = createManualClock(new Date('2026-10-28T10:00:00Z'))
   const storage = createFakeStorage(clock)
@@ -60,6 +60,7 @@ async function setup(bytes: Uint8Array) {
     failMedia: makeFailMedia({ uow, media, storage, clock, alert: failure => alerts.push(failure) }),
     retireMedia: async job => void retired.push(job),
     sweepMedia: async () => ({ removed: 0 }),
+    purgeVersions: async () => undefined,
   }, queues)
   const status = async () => (await pool.query<{ status: string }>('select status from content.media where id = $1', [mediaId])).rows[0]?.status
   const send = () => uow.run(tx => createJobQueue(jobs.boss).send(tx, queues.process, { storeId, mediaId }))
