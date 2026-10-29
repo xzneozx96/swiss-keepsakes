@@ -1,6 +1,23 @@
+import type { Refusal } from './option-rules'
+
 import type { MessageKey } from '@/i18n/en'
 
 import { ApiProblem } from '@/features/data-client/errors'
+import { refusalsOfProblem } from './option-rules'
+
+/** An API problem with the refusals it names (a 422 of the options and variants rules). */
+export class KeepsakeProblem extends ApiProblem {
+  readonly refusals: Refusal[]
+
+  constructor(problem: ApiProblem, body: unknown) {
+    super(problem.status, problem.type, problem.message, problem.requestId)
+    const errors = typeof body === 'object' && body !== null ? (body as { errors?: unknown }).errors : undefined
+
+    this.refusals = Array.isArray(errors) ? refusalsOfProblem(errors as Parameters<typeof refusalsOfProblem>[0]) : []
+  }
+}
+
+export const refusalsOf = (error: unknown): Refusal[] => (error instanceof KeepsakeProblem ? error.refusals : [])
 
 const byProblemType: Record<string, MessageKey> = {
   'precondition-failed': 'keepsakes.problem.stale',

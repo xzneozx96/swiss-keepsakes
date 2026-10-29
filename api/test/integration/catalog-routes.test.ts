@@ -113,12 +113,13 @@ describe('[E6.1] creating a keepsake', () => {
     expect(await duplicate.json()).toMatchObject({ type: 'sku-code-taken' })
   })
 
-  it('[E6.1][create] refuses a price of 0, two variants, a missing variant and a photo of another store', async () => {
+  it('[E6.1][create] refuses a price of 0, two variants with no option, a missing variant and a photo of another store', async () => {
     const { create } = await setup()
     const other = await setup({ fresh: true })
 
     expect((await create({ variants: [{ skuCode: code(), priceRappen: 0 }] })).status).toBe(400)
-    expect((await create({ variants: [{ skuCode: code(), priceRappen: 1 }, { skuCode: code(), priceRappen: 1 }] })).status).toBe(400)
+    // Two variants need options to tell them apart (E6.2).
+    expect((await create({ variants: [{ skuCode: code(), priceRappen: 1 }, { skuCode: code(), priceRappen: 1 }] })).status).toBe(422)
     expect((await create({ variants: [] })).status).toBe(400)
     const foreign = await create({ photoIds: [other.photo] })
     expect(foreign.status).toBe(422)

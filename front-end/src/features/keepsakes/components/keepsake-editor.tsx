@@ -30,7 +30,7 @@ import { VariantsCard } from './variants-card'
 // The mockup and the preview load when Review opens, not with the edit screen.
 const ReviewScreen = lazy(() => import('./review-screen'))
 
-const CARD_OF_CHECK = { basics: 'basics', photos: 'photos', variants: 'variants', commission: 'commission' } as const
+const CARD_OF_CHECK = { basics: 'basics', photos: 'photos', options: 'options', variants: 'variants', commission: 'commission' } as const
 
 function Editor({ storeId, keepsake, view, onView, onReload }: {
   storeId: string
@@ -128,8 +128,8 @@ function Editor({ storeId, keepsake, view, onView, onReload }: {
                   onUploaded={library.add}
                 />
               </KeepsakeCard>
-              <OptionsCard />
-              <VariantsCard keepsake={keepsake} onSave={editor.saveVariant} />
+              <OptionsCard keepsake={keepsake} onSave={editor.saveOptions} />
+              <VariantsCard keepsake={keepsake} onCreate={editor.createVariant} onSave={editor.saveVariant} />
               <div className="scroll-mt-20" id="commission">
                 <CommissionCard value={draft.commission} onChange={commission => editor.change({ commission })} />
               </div>

@@ -112,5 +112,6 @@ export function checkText(t: Translate, check: PublishCheck): string {
     case 'hidden':
       return t(codes.length === 1 ? 'keepsakes.check.hidden.one' : 'keepsakes.check.hidden.other', { count: check.count ?? codes.length, codes: codes.join(', ') })
     case 'commission-zero': return t('keepsakes.check.commissionZero')
+    case 'option-labels': return t((check.count ?? 0) === 1 ? 'keepsakes.check.optionLabels.one' : 'keepsakes.check.optionLabels.other', { count: check.count ?? 0 })
   }
 }
