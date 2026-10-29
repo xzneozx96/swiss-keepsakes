@@ -6,7 +6,7 @@ export const categoriesEn = {
   'categories.problem.tooDeep': 'A sub-category cannot hold another category. Pick a top-level category.',
   'categories.problem.parentHasChildren': 'This category has sub-categories, so it cannot become a sub-category.',
   'categories.problem.name': 'Give a name in at least one language.',
-  'categories.problem.listChanged': 'The list changed. Reload it and move the category again.',
+  'categories.problem.listChanged': 'The list changed and was reloaded. Try the move again.',
   'categories.problem.forbidden': 'You may not change categories in this store.',
   'categories.problem.notFound': 'This category no longer exists. Reload the list.',
   'categories.problem.generic': 'Something went wrong. Try again in a moment.',

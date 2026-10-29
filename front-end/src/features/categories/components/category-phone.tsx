@@ -41,16 +41,17 @@ function OtherName({ category }: { category: MerchantCategory }) {
  * the category's page: names, what uses it, its sub-categories (drag to reorder among themselves) and a
  * Delete checklist that says what still blocks it.
  */
-export function CategoryPhone({ items, kind, actions }: {
+export function CategoryPhone({ items, kind, actions, busy }: {
   items: MerchantCategory[]
   kind: CategoryKind
   actions: CategoryActions
+  busy: boolean
 }) {
   const [pageId, setPageId] = useState<string | null>(null)
   const page = items.find(category => category.id === pageId)
 
   return page
-    ? <CategoryPage key={page.id} actions={actions} category={page} items={items} kind={kind} onPage={setPageId} />
+    ? <CategoryPage key={page.id} actions={actions} busy={busy} category={page} items={items} kind={kind} onPage={setPageId} />
     : <CategoryList actions={actions} items={items} kind={kind} onPage={setPageId} />
 }
 
@@ -153,7 +154,8 @@ function CategoryList({ items, kind, actions, onPage }: { items: MerchantCategor
   )
 }
 
-function CategoryPage({ category, items, kind, actions, onPage }: {
+function CategoryPage({ category, items, kind, actions, busy, onPage }: {
+  busy: boolean
   category: MerchantCategory
   items: MerchantCategory[]
   kind: CategoryKind
@@ -242,7 +244,7 @@ function CategoryPage({ category, items, kind, actions, onPage }: {
             text={category.useCount ? t(`categories.refusal.uses.${kind}.${plural(category.useCount)}`, { n: category.useCount }) : t(`categories.phone.noneUse.${kind}`)}
           />
         </ul>
-        <Button className="min-h-11 self-start" isDisabled={refusal !== null} variant="danger-soft" onPress={() => actions.remove(category, () => onPage(category.parentId))}>
+        <Button className="min-h-11 self-start" isDisabled={refusal !== null || busy} variant="danger-soft" onPress={() => actions.remove(category, () => onPage(category.parentId))}>
           <TrashIcon size={16} />
           {t('categories.delete.confirm')}
         </Button>

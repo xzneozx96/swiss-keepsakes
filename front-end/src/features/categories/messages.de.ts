@@ -7,7 +7,7 @@ export const categoriesDe: Record<keyof typeof categoriesEn, string> = {
   'categories.problem.tooDeep': 'Eine Unterkategorie kann keine weitere Kategorie enthalten. Wählen Sie eine Hauptkategorie.',
   'categories.problem.parentHasChildren': 'Diese Kategorie hat Unterkategorien und kann deshalb nicht selbst zur Unterkategorie werden.',
   'categories.problem.name': 'Geben Sie einen Namen in mindestens einer Sprache ein.',
-  'categories.problem.listChanged': 'Die Liste hat sich geändert. Laden Sie sie neu und verschieben Sie die Kategorie noch einmal.',
+  'categories.problem.listChanged': 'Die Liste hat sich geändert und wurde neu geladen. Versuchen Sie das Verschieben noch einmal.',
   'categories.problem.forbidden': 'Sie dürfen die Kategorien dieses Shops nicht ändern.',
   'categories.problem.notFound': 'Diese Kategorie gibt es nicht mehr. Laden Sie die Liste neu.',
   'categories.problem.generic': 'Etwas ist schiefgelaufen. Versuchen Sie es gleich noch einmal.',

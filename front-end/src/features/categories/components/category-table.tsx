@@ -72,7 +72,7 @@ export function CategoryTable({ items, kind, actions, busy }: {
       ...(category.parentId === null ? [{ id: 'add-sub' as const, label: t('categories.addSub'), icon: PlusIcon }] : []),
       { id: 'up', label: t('categories.moveUp'), icon: ChevronDownIcon, flip: true, isDisabled: busy || !canMove(items, category, -1) },
       { id: 'down', label: t('categories.moveDown'), icon: ChevronDownIcon, isDisabled: busy || !canMove(items, category, 1) },
-      { id: 'delete', label: t(refusalOf(category) ? 'categories.deleteInUse' : 'categories.delete'), icon: TrashIcon },
+      { id: 'delete', label: t(refusalOf(category) ? 'categories.deleteInUse' : 'categories.delete'), icon: TrashIcon, isDisabled: busy },
     ]
 
     return <RowActions actions={list} label={t('table.rowActions', { name: nameOf(category) })} onAction={id => onAction(category, id)} />

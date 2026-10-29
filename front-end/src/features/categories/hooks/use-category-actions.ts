@@ -91,6 +91,9 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
       send(category.parentId, reorderedIds(items, category.parentId, from, from + direction))
     },
     remove: (category, onDeleted) => {
+      // One write at a time, as for a reorder: a delete while a reorder runs is ignored.
+      if (reorder.isPending || remove.isPending)
+        return
       if (refusalOf(category)) {
         setSheet({ mode: 'refused', category })
 

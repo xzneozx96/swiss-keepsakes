@@ -12,7 +12,9 @@ import { startDemo } from '@/features/demo/data-client'
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
 // jsdom is not wide, so the phone view would render; the table is under test here.
-vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => true }))
+const view = vi.hoisted(() => ({ wide: true }))
+
+vi.mock('@/hooks/use-is-wide', () => ({ useIsWide: () => view.wide }))
 
 interface Call { method: string, path: string, key: string | null, body: unknown }
 
@@ -21,9 +23,12 @@ const walks = '0198a000-0000-7000-8000-0000000000c1'
 const food = '0198a000-0000-7000-8000-0000000000c2'
 const hill = '0198a000-0000-7000-8000-0000000000c3'
 const lake = '0198a000-0000-7000-8000-0000000000c4'
+const museums = '0198a000-0000-7000-8000-0000000000c5'
+const pond = '0198a000-0000-7000-8000-0000000000c6'
 
 let calls: Call[]
 let lists: { map: unknown[], blog: unknown[] }
+let hold: Promise<void> | undefined
 let answer: ((call: Call) => Response | undefined) | undefined
 let demo: ReturnType<typeof startDemo>
 
@@ -43,6 +48,8 @@ beforeEach(async () => {
   calls = []
   lists = { map: [], blog: [] }
   answer = undefined
+  hold = undefined
+  view.wide = true
   vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = input instanceof Request ? input : new Request(input, init)
     const text = await request.clone().text()
@@ -64,6 +71,7 @@ beforeEach(async () => {
       return Response.json(category(food), { status: 201 })
     if (call.method === 'PUT') {
       // The server keeps the order it was sent, as the real API does.
+      await hold
       const { parentId, ids } = call.body as { parentId: string | null, ids: string[] }
       const items = lists[kind] as Array<{ id: string, parentId: string | null }>
       const sent = ids.map(id => items.find(item => item.id === id)!)
@@ -348,6 +356,45 @@ describe('[E4.18][AC87] the category editor in English', () => {
     expect(writes('PUT')[1].key).not.toBe(writes('PUT')[0].key)
   })
 
+  it('moves a parent among the parents only: its sub-categories are not in the request and keep their parent', async () => {
+    lists.map = [
+      category(walks, { name: { en: 'Walks', de: null }, position: 1, childCount: 1 }),
+      category(museums, { name: { en: 'Museums', de: null }, position: 2, childCount: 1 }),
+      category(hill, { name: { en: 'Hill', de: null }, parentId: walks, position: 1 }),
+      category(pond, { name: { en: 'Pond', de: null }, parentId: museums, position: 1 }),
+    ]
+    renderScreen()
+
+    await openMenu('Walks', 'Move down')
+
+    await waitFor(() => expect(writes('PUT')).toHaveLength(1))
+    expect(writes('PUT')[0].body).toEqual({ parentId: null, ids: [museums, walks] })
+    await waitFor(() => expect(order()).toEqual([museums, pond, walks, hill]))
+  })
+
+  it('does not start a delete while a reorder runs', async () => {
+    let release = () => {}
+
+    hold = new Promise<void>((resolve) => { release = resolve })
+    lists.map = [
+      category(walks, { name: { en: 'Walks', de: null }, position: 1 }),
+      category(food, { name: { en: 'Food', de: null }, position: 2 }),
+    ]
+    renderScreen()
+
+    await openMenu('Walks', 'Move down')
+    await waitFor(() => expect(writes('PUT')).toHaveLength(1))
+    await userEvent.click(screen.getByRole('button', { name: 'Actions for Food' }))
+    expect(await screen.findByRole('menuitem', { name: 'Delete' })).toHaveAttribute('aria-disabled', 'true')
+    await userEvent.keyboard('{Escape}')
+
+    release()
+    await waitFor(() => expect(order()).toEqual([food, walks]))
+    await userEvent.click(screen.getByRole('button', { name: 'Actions for Food' }))
+    expect(await screen.findByRole('menuitem', { name: 'Delete' })).not.toHaveAttribute('aria-disabled', 'true')
+    expect(writes('DELETE')).toHaveLength(0)
+  })
+
   it('disables Move up on the first and Move down on the last sibling', async () => {
     lists.map = [
       category(walks, { name: { en: 'Walks', de: null }, position: 1 }),
@@ -389,7 +436,8 @@ describe('[E4.18][AC87] the category editor in English', () => {
       category(walks, { position: 1, childCount: 2 }),
       category(hill, { name: { en: 'Hill', de: null }, parentId: walks, position: 1 }),
       category(lake, { name: { en: 'Lake', de: null }, parentId: walks, position: 2 }),
-      category(food, { name: { en: 'Food', de: null }, position: 2 }),
+      category(museums, { name: { en: 'Museums', de: null }, position: 2, childCount: 1 }),
+      category(pond, { name: { en: 'Pond', de: null }, parentId: museums, position: 1 }),
     ]
     renderScreen()
 
@@ -399,7 +447,7 @@ describe('[E4.18][AC87] the category editor in English', () => {
     await waitFor(() => expect(writes('PUT')).toHaveLength(1))
     expect(writes('PUT')[0].body).toEqual({ parentId: walks, ids: [lake, hill] })
     expect(writes('PUT')[0].key).toBeTruthy()
-    await waitFor(() => expect(order()).toEqual([walks, lake, hill, food]))
+    await waitFor(() => expect(order()).toEqual([walks, lake, hill, museums, pond]))
   })
 
   it('moves one step on ArrowDown and ArrowUp on a handle, and sends nothing at the ends', async () => {
@@ -433,7 +481,8 @@ describe('[E4.18][AC87] the category editor in English', () => {
       category(walks, { position: 1, childCount: 2 }),
       category(hill, { name: { en: 'Hill', de: null }, parentId: walks, position: 1 }),
       category(lake, { name: { en: 'Lake', de: null }, parentId: walks, position: 2 }),
-      category(food, { name: { en: 'Food', de: null }, position: 2 }),
+      category(museums, { name: { en: 'Museums', de: null }, position: 2, childCount: 1 }),
+      category(pond, { name: { en: 'Pond', de: null }, parentId: museums, position: 1 }),
     ]
     renderScreen()
 
@@ -442,27 +491,37 @@ describe('[E4.18][AC87] the category editor in English', () => {
     await userEvent.keyboard('{ArrowDown}')
 
     await waitFor(() => expect(writes('PUT')).toHaveLength(1))
+    // Only Walks' group is in the request; the other group keeps its order and its parent.
     expect(writes('PUT')[0].body).toEqual({ parentId: walks, ids: [lake, hill] })
-    await waitFor(() => expect(order()).toEqual([walks, lake, hill, food]))
+    await waitFor(() => expect(order()).toEqual([walks, lake, hill, museums, pond]))
+    expect(within(rowOf('Pond')).queryByText('Museums')).not.toBeInTheDocument()
+    expect(writes('PUT')).toHaveLength(1)
   })
 
   it.each([
-    [422, 'validation-failed', 'The list changed. Reload it and move the category again.'],
+    [422, 'validation-failed', 'The list changed and was reloaded. Try the move again.'],
     [409, 'category-in-use', 'This category is still used by pins or story groups. Untag them first.'],
   ])('reads the list again, shows the server order and says why when a reorder is refused with %i', async (status, type, message) => {
     lists.map = [
       category(walks, { name: { en: 'Walks', de: null }, position: 1 }),
       category(food, { name: { en: 'Food', de: null }, position: 2 }),
     ]
-    answer = call => call.method === 'PUT' ? problem(status, type) : undefined
+    answer = (call) => {
+      if (call.method !== 'PUT')
+        return undefined
+      // Someone else reordered meanwhile: the re-read holds a third order, neither the shown one nor the tried one.
+      lists.map = [lists.map[1], category(lake, { name: { en: 'Lake', de: null }, position: 3 }), lists.map[0]]
+
+      return problem(status, type)
+    }
     renderScreen()
 
     await openMenu('Walks', 'Move down')
 
     expect(await screen.findByRole('alert')).toHaveTextContent(message)
     await waitFor(() => expect(reads()).toHaveLength(2))
-    // The list is the server's again, not the order that was tried.
-    await waitFor(() => expect(order()).toEqual([walks, food]))
+    // The list is the server's order, not the one that was tried.
+    await waitFor(() => expect(order()).toEqual([food, lake, walks]))
   })
 
   it('says so when the account belongs to no store', async () => {
@@ -478,5 +537,67 @@ describe('[E4.18][AC87] the category editor in English', () => {
 
     expect(await screen.findByText('Wanderungen', { selector: 'span.block' })).toBeInTheDocument()
     expect(screen.getByText('No English name')).toBeInTheDocument()
+  })
+})
+
+describe('[E4.18][AC87] the category editor on a phone in German', () => {
+  beforeEach(async () => {
+    view.wide = false
+    await loadDictionary('de')
+    localStorage.setItem('sk.language', JSON.stringify('de'))
+  })
+
+  it('shows the empty state of the list', async () => {
+    renderScreen()
+
+    expect(await screen.findByText('Noch keine Kartenkategorien. Fügen Sie die erste hinzu.')).toBeInTheDocument()
+    expect(screen.queryByRole('grid')).not.toBeInTheDocument()
+  })
+
+  it('hides the handles while searching, shows sub-categories in the results and the German empty result', async () => {
+    lists.map = [
+      category(walks, { name: { en: 'Walks', de: 'Wanderungen' }, position: 1, childCount: 1 }),
+      category(hill, { name: { en: 'Hill', de: 'Hügel' }, parentId: walks, position: 1 }),
+      category(food, { name: { en: 'Food', de: 'Essen' }, position: 2 }),
+    ]
+    renderScreen()
+
+    // The list holds the parents only, each with a handle; the table is not rendered.
+    expect(await screen.findByRole('button', { name: 'Walks ziehen, um die Reihenfolge zu ändern' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /ziehen, um die Reihenfolge zu ändern$/ })).toHaveLength(2)
+    expect(screen.queryByRole('grid')).not.toBeInTheDocument()
+    const search = screen.getByRole('searchbox', { name: 'Kategorien durchsuchen' })
+
+    await userEvent.type(search, 'hügel')
+    expect(await screen.findByRole('list', { name: 'Suchergebnisse' })).toBeInTheDocument()
+    expect(screen.getByText('Hill')).toBeInTheDocument()
+    expect(screen.queryByText('Food')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /ziehen, um die Reihenfolge zu ändern$/ })).not.toBeInTheDocument()
+
+    await userEvent.clear(search)
+    await userEvent.type(search, 'zzz')
+    expect(screen.getByText('Keine Kategorie heißt „zzz“.')).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/\bcategories\.[a-z]/i)
+  })
+
+  it('does not offer Delete while a reorder runs', async () => {
+    let release = () => {}
+
+    hold = new Promise<void>((resolve) => { release = resolve })
+    lists.map = [
+      category(walks, { name: { en: 'Walks', de: null }, position: 1 }),
+      category(food, { name: { en: 'Food', de: null }, position: 2 }),
+    ]
+    renderScreen()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Walks ziehen, um die Reihenfolge zu ändern' }))
+    await userEvent.keyboard('{ArrowDown}')
+    await waitFor(() => expect(writes('PUT')).toHaveLength(1))
+    await userEvent.click(screen.getByText('Food'))
+    expect(await screen.findByRole('button', { name: 'Kategorie löschen' })).toBeDisabled()
+
+    release()
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Kategorie löschen' })).toBeEnabled())
+    expect(writes('DELETE')).toHaveLength(0)
   })
 })
