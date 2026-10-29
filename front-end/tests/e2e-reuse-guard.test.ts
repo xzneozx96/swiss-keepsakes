@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { reuseProblems, wantsDemo } from './e2e/reuse'
+import { listenerPids, reuseProblems, wantsApi, wantsDemo } from './e2e/reuse'
 
 const root = '/work/a'
 const here = {
@@ -34,6 +34,62 @@ describe('reuseProblems (E2E_REUSE guard)', () => {
   it('does not treat a sibling directory with the same prefix as this root', async () => {
     const problems = await reuseProblems({ root, ports: [{ name: 'SPA', port: 5392 }], ...here, portCwd: async () => '/work/a-copy/front-end' })
     expect(problems).toHaveLength(1)
+  })
+
+  it('refuses a dev server of a worktree nested under this root', async () => {
+    const nested = `${root}/.worktrees/e2e-reuse/front-end`
+    const problems = await reuseProblems({ root, ports: [{ name: 'SPA', port: 5392 }], ...here, portCwd: async () => nested })
+    expect(problems).toHaveLength(1)
+    expect(problems[0]).toContain(nested)
+  })
+
+  it('accepts a nested root when the server runs from that root\'s own front-end', async () => {
+    const nestedRoot = `${root}/.worktrees/e2e-reuse`
+    const problems = await reuseProblems({
+      root: nestedRoot,
+      ports: [{ name: 'SPA', port: 5392 }],
+      inboxRoot: async () => nestedRoot,
+      portCwd: async () => `${nestedRoot}/front-end`,
+    })
+    expect(problems).toEqual([])
+  })
+
+  it('refuses a server started from a folder of the root other than front-end', async () => {
+    const problems = await reuseProblems({ root, ports: [{ name: 'SPA', port: 5392 }], ...here, portCwd: async () => `${root}/front-end/src` })
+    expect(problems).toHaveLength(1)
+  })
+
+  it('says "dev server" once in its refusal', async () => {
+    const problems = await reuseProblems({ root, ports: [{ name: 'SPA dev server', port: 5392 }], ...here, portCwd: async () => '/work/b/front-end' })
+    expect(problems[0]).not.toContain('dev server dev server')
+  })
+})
+
+describe('listenerPids (dual-stack binds list one pid per socket)', () => {
+  it('returns every distinct pid on the port', () => {
+    const out = [
+      'LISTEN 0 511 [::1]:5392 [::]:* users:(("node",pid=111,fd=20))',
+      'LISTEN 0 511 127.0.0.1:5392 0.0.0.0:* users:(("node",pid=222,fd=21),("node",pid=111,fd=22))',
+    ].join('\n')
+    expect(listenerPids(out)).toEqual(['111', '222'])
+  })
+
+  it('returns nothing for empty output', () => {
+    expect(listenerPids('')).toEqual([])
+  })
+})
+
+describe('wantsApi (when the api project and its servers are in the run)', () => {
+  const urls = { DATABASE_URL: 'x', DATABASE_URL_UNPOOLED: 'y' }
+
+  it('needs both Neon variables in a default run', () => {
+    expect(wantsApi({})).toBe(false)
+    expect(wantsApi({ DATABASE_URL: 'x' })).toBe(false)
+    expect(wantsApi(urls)).toBe(true)
+  })
+
+  it('is on in a reuse run without any URL, because the reused servers already hold them', () => {
+    expect(wantsApi({ E2E_REUSE: '1' })).toBe(true)
   })
 })
 

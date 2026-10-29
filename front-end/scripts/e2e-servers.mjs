@@ -86,7 +86,8 @@ let stopping = false
 
 /** SIGTERM to the process (the API drops its database on it) or, for `pnpm dev`, to its whole process group. */
 function terminate(child, signal = 'SIGTERM') {
-  if (child.exitCode !== null || child.signalCode !== null)
+  // A group is signalled even after its pnpm leader exited, so vite is not orphaned. A lone process that exited is skipped.
+  if (!child.group && (child.exitCode !== null || child.signalCode !== null))
     return
   try {
     process.kill(child.group ? -child.pid : child.pid, signal)
@@ -137,6 +138,12 @@ for (const server of servers) {
       void stop(1)
     }
   })
+  child.once('error', (error) => {
+    if (!stopping) {
+      process.stderr.write(`${server.name} could not start: ${error.message}. Stopping the rest.\n`)
+      void stop(1)
+    }
+  })
 }
 
 const deadline = Date.now() + 180_000
@@ -155,5 +162,5 @@ if (!stopping) {
   if (!apiOnly)
     process.stdout.write(`  demo dev server      http://localhost:${demoPort}\n`)
   process.stdout.write(`  API-mode dev server  http://localhost:${SPA_PORT}\n  e2e API              http://127.0.0.1:${API_PORT} (inbox ${INBOX_PORT})\n`)
-  process.stdout.write(`Run: E2E_REUSE=1 pnpm test:e2e <spec> --project api-chromium-en\nStop with Ctrl-C or: kill ${process.pid}\n`)
+  process.stdout.write(`Run: E2E_REUSE=1 pnpm test:e2e <spec> --project api-chromium-en --workers=2\nStop with Ctrl-C or: kill ${process.pid}\n`)
 }

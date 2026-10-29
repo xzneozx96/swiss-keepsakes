@@ -7,12 +7,12 @@ import { promisify } from 'node:util'
 // another worktree's code. See docs/development-rules/shared/testing.md.
 
 const run = promisify(execFile)
-const listenerPid = /pid=(\d+)/
+const listenerPid = /pid=(\d+)/g
 
 export interface ReuseCheck {
   /** The worktree root this run belongs to. */
   root: string
-  /** The dev servers that must run from this root, e.g. `demo` (5391) and `SPA` (5392). */
+  /** The dev servers that must run from this root, each named in full, e.g. `demo dev server` (5391) and `API-mode dev server` (5392). */
   ports: Array<{ name: string, port: number }>
   /** The root the e2e API reports on its inbox `/ready`, or undefined when it does not answer. */
   inboxRoot: () => Promise<string | undefined>
@@ -29,10 +29,16 @@ export function wantsDemo(env: Record<string, string | undefined>, argv: string[
   return env.E2E_DEMO !== '0' && !(env.E2E_REUSE === '1' && apiOnly)
 }
 
+/** Whether a run includes the api project and its servers. A reuse run needs no Neon URLs: the reused servers already hold them. */
+export function wantsApi(env: Record<string, string | undefined>): boolean {
+  return env.E2E_REUSE === '1' || Boolean(env.DATABASE_URL && env.DATABASE_URL_UNPOOLED)
+}
+
 const start = 'Start them in this worktree with `pnpm e2e:servers` (in front-end/), or run without E2E_REUSE=1.'
 
-function inside(path: string, root: string) {
-  return path === root || path.startsWith(`${root}/`)
+/** Both dev servers start in `<root>/front-end` (e2e-servers.mjs and playwright.config.ts), so the match is exact: a prefix test would accept a worktree nested under this root (.worktrees/*). */
+function startsFrom(cwd: string, root: string) {
+  return cwd === `${root}/front-end`
 }
 
 /** The reasons a reuse run must not go ahead. An empty list means every server belongs to this worktree. */
@@ -49,9 +55,9 @@ export async function reuseProblems({ root, ports, inboxRoot, portCwd }: ReuseCh
     const cwd = await portCwd(port)
 
     if (cwd === undefined)
-      problems.push(`The ${name} dev server is not running on port ${port}. ${start}`)
-    else if (!inside(cwd, root))
-      problems.push(`The ${name} dev server on port ${port} runs from ${cwd}, not from ${root}. Stop it and ${start.charAt(0).toLowerCase()}${start.slice(1)}`)
+      problems.push(`The ${name} is not running on port ${port}. ${start}`)
+    else if (!startsFrom(cwd, root))
+      problems.push(`The ${name} on port ${port} runs from ${cwd}, not from ${root}. Stop it and ${start.charAt(0).toLowerCase()}${start.slice(1)}`)
   }
 
   return problems
@@ -70,13 +76,21 @@ export async function readInboxRoot(inboxPort: number): Promise<string | undefin
   }
 }
 
-/** The working directory of the process listening on a TCP port, through `ss` and /proc (Linux). */
-export async function listenerCwd(port: number): Promise<string | undefined> {
+/** Every distinct pid in `ss -ltnpH` output: a dual-stack bind lists one socket per address family. */
+export function listenerPids(stdout: string): string[] {
+  return [...new Set(Array.from(stdout.matchAll(listenerPid), match => match[1]))]
+}
+
+/**
+ * The working directory of the processes listening on a TCP port, through `ss` and /proc (Linux).
+ * Undefined when nothing listens. When the listeners differ, one that is not this worktree's still shows (the first of them).
+ */
+export async function listenerCwd(port: number, expected?: string): Promise<string | undefined> {
   try {
     const { stdout } = await run('ss', ['-ltnpH', `sport = :${port}`])
-    const pid = listenerPid.exec(stdout)?.[1]
+    const cwds = await Promise.all(listenerPids(stdout).map(pid => readlink(`/proc/${pid}/cwd`)))
 
-    return pid ? await readlink(`/proc/${pid}/cwd`) : undefined
+    return cwds.find(cwd => cwd !== expected) ?? cwds[0]
   }
   catch {
     return undefined

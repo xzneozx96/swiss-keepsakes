@@ -2,7 +2,7 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, devices } from '@playwright/test'
 import { API_PORT, INBOX_PORT, SPA_PORT } from './tests/e2e/api-server'
-import { wantsDemo } from './tests/e2e/reuse'
+import { wantsApi, wantsDemo } from './tests/e2e/reuse'
 
 // Own port with --strictPort, so a run never attaches to another session's dev server.
 const PORT = Number(process.env.E2E_PORT ?? 5391)
@@ -11,7 +11,8 @@ const PORT = Number(process.env.E2E_PORT ?? 5391)
 // development branch (api/test/support/e2e-server.ts). They run only when DATABASE_URL and
 // DATABASE_URL_UNPOOLED are set, and the host guard of the integration tests applies (docs/development-rules/shared/testing.md):
 //   env $(grep -E '^DATABASE_URL(_UNPOOLED)?=' ../api/.env.local | xargs) INTEGRATION_ALLOW_REMOTE_DATABASE=1 pnpm test:e2e
-const withApi = Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL_UNPOOLED)
+// A reuse run (below) needs no URLs: the servers it reuses already hold them.
+const withApi = wantsApi(process.env)
 
 // E2E_REUSE=1 reuses servers started earlier by `pnpm e2e:servers` (scripts/e2e-servers.mjs) and their one test
 // database, so a run starts in seconds. A server that is not up stops the run (tests/e2e/reuse-refuse.mjs), and
