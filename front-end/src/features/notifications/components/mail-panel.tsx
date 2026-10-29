@@ -53,6 +53,7 @@ export function MailPanel() {
               </p>
               <Suspense fallback={null}>
                 <PageTabs
+                  sticky={false}
                   label="Recipient"
                   selected={who}
                   tabs={[
@@ -62,16 +63,16 @@ export function MailPanel() {
                   ]}
                   onSelect={setWho}
                 >
-                  <TabPanel className="pt-3" id="guest">
+                  <TabPanel padded className="pt-3" id="guest">
                     <MailList items={guestMail} />
                   </TabPanel>
-                  <TabPanel className="pt-3" id="staff">
+                  <TabPanel padded className="pt-3" id="staff">
                     <MailList
                       items={staffMail}
                       onOpenLink={() => setOpen(false)}
                     />
                   </TabPanel>
-                  <TabPanel className="pt-3" id="partner">
+                  <TabPanel padded className="pt-3" id="partner">
                     <MailList items={partnerMail} />
                   </TabPanel>
                 </PageTabs>

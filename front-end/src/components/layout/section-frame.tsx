@@ -48,7 +48,7 @@ export function SectionFrame({
       )}
       <PageTabs
         equal
-        className={TABS_ON_DESKTOP.includes(section) ? undefined : 'lg:hidden'}
+        hideFrom={TABS_ON_DESKTOP.includes(section) ? undefined : 'lg'}
         dense={pages.length > 3}
         label={t('sectionPages.label', { section: title })}
         selected={page}

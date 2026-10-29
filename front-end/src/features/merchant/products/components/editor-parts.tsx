@@ -199,6 +199,7 @@ export function LanguageTabs({
           </>
         ),
       }))}
+      sticky={false}
       onSelect={onChange}
     >
       {LANGUAGES.map(language => (

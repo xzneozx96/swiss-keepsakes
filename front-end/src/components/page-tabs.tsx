@@ -17,7 +17,7 @@ export interface TabItem<Id extends string = string> {
  * The one tab row of the app: the thin pill the orders screen set. It must sit inside a
  * HeroUI `Tabs`; RouteTabs, PageTabs and DetailTabs each wrap it. `fill` is full width on
  * phones and fit-content from 1024px; `equal` shares the bar between the tabs (`dense` for
- * five or more); `className` sizes the container.
+ * four or more); `split` is full width on phones and 20rem from 640px.
  */
 export function TabRow({
   label,
@@ -25,23 +25,26 @@ export function TabRow({
   fill = false,
   equal = false,
   dense = false,
-  className,
+  split = false,
 }: {
   label: string
   tabs: readonly TabItem[]
   fill?: boolean
   equal?: boolean
   dense?: boolean
-  className?: string
+  split?: boolean
 }) {
-  const width = equal || fill ? 'w-full lg:w-fit' : 'w-fit max-w-full'
-  const container = equal ? 'w-full' : width
+  const container = equal
+    ? 'w-full'
+    : split
+      ? 'w-full sm:w-80'
+      : fill ? 'w-full lg:w-fit' : 'w-fit max-w-full'
   const tabWidth = equal
     ? dense ? 'min-w-0 flex-auto px-1.5 text-[13px]' : 'min-w-0 flex-1 px-1'
     : ''
 
   return (
-    <Tabs.ListContainer className={`${container} ${className ?? ''}`.trim()}>
+    <Tabs.ListContainer className={container}>
       <Tabs.List aria-label={label} className={equal ? 'w-full' : undefined}>
         {tabs.map((tab, index) => (
           <Tabs.Tab key={tab.id} className={`${tabWidth} whitespace-nowrap`.trim()} id={tab.id}>
@@ -61,18 +64,23 @@ export function TabRow({
   )
 }
 
-/** A panel of PageTabs, flush with the page: no HeroUI padding; `className` adds layout. */
+/**
+ * A panel of PageTabs, flush with the page (no HeroUI padding) unless `padded`; `className`
+ * adds the caller's spacing and layout.
+ */
 export function TabPanel({
   id,
+  padded = false,
   className,
   children,
 }: {
   id: string
+  padded?: boolean
   className?: string
   children: ReactNode
 }) {
   return (
-    <Tabs.Panel className={`px-0 pb-0 ${className ?? ''}`.trim()} id={id}>
+    <Tabs.Panel className={`${padded ? '' : 'px-0 pb-0'} ${className ?? ''}`.trim()} id={id}>
       {children}
     </Tabs.Panel>
   )
@@ -83,7 +91,8 @@ export function TabPanel({
  * row is pinned on phones; `trailing` sits at the end of it; the `children` are the
  * `TabPanel`s. `split` is the report's layout: tabs and `trailing` stack on phones and
  * from 640px the tabs sit at the end of the row, 20rem wide. `belowBar` pins the row under
- * a 56px back bar; `className` on the row is for visibility only (e.g. `lg:hidden`).
+ * a 56px back bar; `sticky={false}` is for tabs inside a sheet or drawer (no pinning, no
+ * bleed padding); `hideFrom="lg"` hides the row from 1024px.
  */
 export function PageTabs<Id extends string>({
   label,
@@ -96,7 +105,8 @@ export function PageTabs<Id extends string>({
   dense,
   split,
   belowBar,
-  className,
+  sticky = true,
+  hideFrom,
   children,
 }: {
   label: string
@@ -109,23 +119,24 @@ export function PageTabs<Id extends string>({
   dense?: boolean
   split?: boolean
   belowBar?: boolean
-  className?: string
+  sticky?: boolean
+  hideFrom?: 'lg'
   children?: ReactNode
 }) {
-  const sticky = belowBar ? STICKY_TABS_BELOW_BAR : STICKY_TABS
+  const pinned = sticky ? `max-lg:py-2 ${belowBar ? STICKY_TABS_BELOW_BAR : STICKY_TABS}` : ''
   const layout = split
     ? 'flex flex-col gap-3 sm:flex-row-reverse sm:items-center sm:justify-between'
     : 'flex items-center gap-2'
 
   return (
     <Tabs className="w-full" selectedKey={selected} onSelectionChange={key => onSelect(key as Id)}>
-      <div className={`${layout} max-lg:py-2 ${sticky} ${className ?? ''}`.trim()}>
+      <div className={`${layout} ${pinned} ${hideFrom === 'lg' ? 'lg:hidden' : ''}`.trim()}>
         <TabRow
-          className={split ? 'sm:w-80' : undefined}
           dense={dense}
           equal={equal}
           fill={fill}
           label={label}
+          split={split}
           tabs={tabs}
         />
         {trailing}

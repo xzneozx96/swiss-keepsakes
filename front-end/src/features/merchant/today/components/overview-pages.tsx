@@ -36,7 +36,7 @@ export function OverviewFrame({
       />
       <PageTabs
         equal
-        className="lg:hidden"
+        hideFrom="lg"
         label={t('overviewPages.label')}
         selected={page}
         tabs={OVERVIEW_PAGES.map(p => ({ id: p.id, label: t(`overviewPages.${p.id}`) }))}
