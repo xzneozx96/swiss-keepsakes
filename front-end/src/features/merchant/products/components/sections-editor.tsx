@@ -40,9 +40,9 @@ import { useLocale } from '@/contexts/locale-context'
 import { useProducts } from '@/features/catalog/api/queries'
 import { useOrders } from '@/features/orders/api/queries'
 import { MAX_TOUR_KEEPSAKES } from '@/features/tours/discovery/tour-keepsakes'
+import { useStopDrag } from '@/hooks/use-stop-drag'
 import { newId } from '../lib/records'
 import { LocalizedField } from './editor-parts'
-import { useStopDrag } from './itinerary/use-stop-drag'
 import { Group, NavRow, rowHairline, SheetLanguage } from './settings-rows'
 
 export interface SectionsEditor {

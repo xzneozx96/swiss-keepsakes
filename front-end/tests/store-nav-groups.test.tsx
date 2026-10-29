@@ -102,6 +102,20 @@ describe.each([
       expect(names).not.toContain(word)
   })
 
+  it('[E4.18][AC87] the Content menu lists Categories before Analytics, under its own label', async () => {
+    const { sidebar } = await renderShop(language)
+    const content = Array.from(sidebar.querySelectorAll(':scope > ul > li > button'), el => el).find(el => text(el) === dict['nav.content'])!
+
+    await userEvent.click(content)
+    const links = Array.from(sidebar.querySelectorAll('a'))
+    const hrefs = links.map(a => a.getAttribute('href'))
+    const link = links.find(a => a.getAttribute('href') === '/store/content/categories')
+
+    expect(link && text(link)).toBe(dict['merchantContent.tab.categories'])
+    expect(hrefs.indexOf('/store/content/categories')).toBeGreaterThan(hrefs.indexOf('/store/content/reviews'))
+    expect(hrefs.indexOf('/store/content/categories')).toBeLessThan(hrefs.indexOf('/store/content/analytics'))
+  })
+
   it('[E4.1][AC50] no menu link is a booking path or a raw key', async () => {
     const { phone } = await renderShop(language)
     await userEvent.click(phone.querySelector('button')!)

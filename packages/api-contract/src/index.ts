@@ -1,5 +1,19 @@
 export { createApiClient } from './client.ts'
 export {
+  type CategoryKind,
+  categoryKindSchema,
+  type CategoryOrderBody,
+  categoryOrderBodySchema,
+  type CategoryPatchBody,
+  categoryPatchBodySchema,
+  type CategoryWriteBody,
+  categoryWriteBodySchema,
+  type MerchantCategory,
+  type MerchantCategoryList,
+  merchantCategoryListSchema,
+  merchantCategorySchema,
+} from './categories.ts'
+export {
   BODY_LINK_PROTOCOLS,
   BODY_LIST_LEVELS,
   BODY_MARK_TYPES,
@@ -39,6 +53,16 @@ export {
   tourWriteBodySchema,
 } from './content.ts'
 export { healthSchema } from './health.ts'
+export {
+  type ConfirmUpload,
+  confirmUploadSchema,
+  type Media,
+  mediaSchema,
+  type UploadGrant,
+  uploadGrantSchema,
+  type UploadRequest,
+  uploadRequestSchema,
+} from './media.ts'
 export { type Me, meSchema, type MeStore, meStoreSchema } from './me.ts'
 export { type Problem, problemSchema, type ProblemType, problemTypes } from './problem.ts'
 export {

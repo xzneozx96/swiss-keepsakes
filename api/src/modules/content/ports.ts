@@ -1,4 +1,4 @@
-import type { ContentLanguage, Localized, Pin, PinDate, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
+import type { ContentLanguage, Localized, MediaKind, Pin, PinDate, StayTag, StoryDraft, StoryGroup, StoryVersion, TourGuide, TourGuideDoc, TourGuideStop, WeeklySpan } from '@sk/domain/content'
 
 // What the content use cases need. Same shapes as the identity module's ports, copied so modules do not import
 // each other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
@@ -32,9 +32,43 @@ export interface MediaRow {
   status: 'processing' | 'ready' | 'retired'
 }
 
+// One row of content.media, as the use cases see it.
+export interface MediaRecord {
+  id: string
+  storeId: string
+  kind: MediaKind
+  storageKey: string
+  contentType: string
+  byteSize: number
+  sha256: string
+  width: number | null
+  height: number | null
+  status: 'processing' | 'ready' | 'retired'
+}
+
 export interface MediaRepository<T> {
   // The rows of this store among the ids. An id of another store has no row.
   find: (tx: T, storeId: string, ids: string[]) => Promise<MediaRow[]>
+  // A new row, status `processing`.
+  insert: (tx: T, row: { id: string, storeId: string, kind: MediaKind, storageKey: string, contentType: string, byteSize: number, sha256: string }, at: Date) => Promise<MediaRecord>
+  // An id of another store has no row. `forUpdate` locks the row until the transaction ends.
+  findById: (tx: T, storeId: string, id: string, options?: { forUpdate?: boolean }) => Promise<MediaRecord | undefined>
+  // `dims` for an image, none for audio and PDF (the table CHECK refuses a width on anything but an image).
+  // undefined when the row is gone (or belongs to another store).
+  markReady: (tx: T, row: MediaRecord, dims: { width: number, height: number } | undefined, at: Date) => Promise<MediaRecord | undefined>
+  // Sets status `retired` and `retired_at` together (media_retired_check). undefined when the row is gone (or belongs to another store).
+  retire: (tx: T, row: MediaRecord, at: Date) => Promise<MediaRecord | undefined>
+  // True when a tour (PDF or cover), a tour stop, a pin cover or any media_refs row points at the id.
+  isReferenced: (tx: T, storeId: string, mediaId: string) => Promise<boolean>
+}
+
+// What the save and read use cases need of the media table: they only look rows up.
+export type MediaLookup<T> = Pick<MediaRepository<T>, 'find'>
+
+// The job queue, as the identity and notifications modules also define it. `send` writes the job through the
+// caller's transaction, so a rollback removes it with the business change.
+export interface JobQueue<T> {
+  send: (tx: T, queue: string, data: object, options?: { startAfter?: Date, id?: string, retryLimit?: number, retryDelay?: number, retryBackoff?: boolean, expireInSeconds?: number, retentionSeconds?: number, deleteAfterSeconds?: number }) => Promise<void>
 }
 
 // What a pin save may change. `title` and `tip` together form the draft document; the repository stores it with
@@ -131,4 +165,83 @@ export interface TourRepository<T> {
   // status goes back to draft; the published text stays.
   unpublish: (tx: T, tour: TourGuide, at: Date) => Promise<TourGuide>
   remove: (tx: T, storeId: string, tourId: string) => Promise<boolean>
+}
+
+export type Bucket = 'uploads' | 'media'
+
+export interface StoredObject {
+  key: string
+  size: number
+  contentType: string | undefined
+  lastModified: Date | undefined
+}
+
+// Object storage (Neon Object Storage, S3 API). Keys are bucket-relative: the bucket is never part of a key.
+export interface ObjectStorage {
+  // A URL the browser PUTs the file to. The bucket is always `uploads`. The content type and length are signed into
+  // the URL, but whether the storage enforces them is unverified on Neon, so the confirm step re-checks the stored bytes.
+  presignPut: (input: { key: string, contentType: string, byteSize: number, expiresInSeconds: number }) => Promise<{ url: string, headers: Record<string, string> }>
+  // undefined when the key does not exist.
+  head: (bucket: Bucket, key: string) => Promise<StoredObject | undefined>
+  // With `maxBytes`, an object larger than that is never read into memory: it throws ObjectTooLargeError.
+  get: (bucket: Bucket, key: string, maxBytes?: number) => Promise<Uint8Array | undefined>
+  put: (bucket: Bucket, key: string, body: Uint8Array, meta: { contentType: string, cacheControl?: string, contentDisposition?: string }) => Promise<void>
+  // A missing key is not an error.
+  delete: (bucket: Bucket, key: string) => Promise<void>
+  // Follows continuation tokens.
+  list: (bucket: Bucket, prefix: string) => Promise<StoredObject[]>
+  // `${endpoint}/media/${key}`
+  publicUrl: (key: string) => string
+}
+
+// `get` found an object larger than the `maxBytes` it was given.
+export class ObjectTooLargeError extends Error {
+  override name = 'ObjectTooLargeError'
+}
+
+// The storage is not configured, or it answered with a server error after the SDK's own retries. Mapped to 503
+// `storage-unavailable`.
+export class StorageUnavailableError extends Error {
+  override name = 'StorageUnavailableError'
+}
+
+// Raised once for a media file that will not be processed: its job used all its attempts. Ids only.
+// `inUse` is set when a story or tour still uses the file: the row stays processing and the merchant must replace it.
+export interface MediaFailure {
+  storeId: string
+  mediaId: string
+  inUse?: true
+}
+
+export type MediaAlert = (failure: MediaFailure) => void
+
+// A leftover that needs no retry: ids and an error name only.
+export type MediaWarn = (event: { event: string, storeId: string, mediaId: string, error: string }) => void
+export type CategoryKind = 'map' | 'blog'
+
+// One row of a category list. `childCount` counts the sub-categories, `useCount` the pins (map) or story groups (blog)
+// tagged with it, whatever their status.
+export interface CategoryRow {
+  id: string
+  storeId: string
+  name: Localized
+  slug: string
+  parentId: string | null
+  position: number
+  childCount: number
+  useCount: number
+}
+
+export interface CategoryRepository<T> {
+  // Parents first, then sub-categories, each by position.
+  list: (tx: T, storeId: string, kind: CategoryKind) => Promise<CategoryRow[]>
+  // A per store and kind advisory lock for the transaction. Every write takes it first, so two writes to one list queue up.
+  lockList: (tx: T, storeId: string, kind: CategoryKind) => Promise<void>
+  slugsTaken: (tx: T, storeId: string, kind: CategoryKind) => Promise<Set<string>>
+  insert: (tx: T, storeId: string, kind: CategoryKind, input: { name: Localized, slug: string, parentId: string | null, position: number }, at: Date) => Promise<CategoryRow>
+  update: (tx: T, storeId: string, kind: CategoryKind, id: string, changes: { name?: Localized, parentId?: string | null, position?: number }, at: Date) => Promise<CategoryRow>
+  // Positions 1..n in the order given.
+  setPositions: (tx: T, storeId: string, kind: CategoryKind, orderedIds: string[], at: Date) => Promise<void>
+  // false when the id has no row. A link that still names the category makes the database refuse (in-use).
+  remove: (tx: T, storeId: string, kind: CategoryKind, id: string) => Promise<boolean>
 }

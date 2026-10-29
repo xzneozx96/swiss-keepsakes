@@ -19,21 +19,28 @@ const complete: TourChanges = { slug: { en: 'old-town-walk' }, pdfMediaId: 'pdf1
 const media: MediaRow[] = [
   { id: 'pdf1', kind: 'pdf', status: 'ready' },
   { id: 'img1', kind: 'image', status: 'ready' },
+  { id: 'pdf2', kind: 'pdf', status: 'ready' },
 ]
 
-function setup(rows: MediaRow[] = media) {
+interface SentJob { queue: string, data: object, options?: { startAfter?: Date } }
+
+function setup(rows: MediaRow[] = media, graceHours = 24) {
   const tours = createFakeTours()
   const audit: AuditEntry[] = []
+  const jobs: SentJob[] = []
   const deps = {
     uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) },
     tours,
-    media: { find: async (_tx: null, _storeId: string, ids: string[]) => rows.filter(m => ids.includes(m.id)) },
+    media: { find: async (_tx: null, _storeId: string, ids: string[]) => rows.filter(m => ids.some(id => id.toLowerCase() === m.id.toLowerCase())) },
     audit: { record: async (_tx: null, entry: AuditEntry) => void audit.push(entry) },
+    jobs: { send: async (_tx: null, queue: string, data: object, options?: { startAfter?: Date }) => void jobs.push({ queue, data, options }) },
+    graceHours,
     clock: createManualClock(new Date('2026-10-27T10:00:00Z')),
   }
   return {
     tours,
     audit,
+    jobs,
     create: makeCreateTour(deps),
     save: makeSaveTour(deps),
     publish: makePublishTour(deps),
@@ -197,6 +204,65 @@ describe('tour guide use cases', () => {
     expect(s.tours.rows.get(tour.id)).toMatchObject({ pdfMediaId: 'pdf1', rowVersion: 2 })
   })
 
+  it('[E2.7][AC51] replacing PDF A by B queues one retire job for A that starts after the grace period', async () => {
+    const s = setup()
+    const tour = await created(s)
+    expect(await s.save(owner, store, tour.id, 1, { pdfMediaId: 'pdf2' }, null)).toMatchObject({ ok: true, value: { pdfMediaId: 'pdf2' } })
+    expect(s.jobs).toEqual([{ queue: 'media-retire', data: { storeId: store, mediaId: 'pdf1' }, options: { startAfter: new Date('2026-10-28T10:00:00Z') } }])
+  })
+
+  it('[E2.7][AC51] the grace period is the configured one', async () => {
+    const s = setup(media, 48)
+    const tour = await created(s)
+    await s.save(owner, store, tour.id, 1, { pdfMediaId: 'pdf2' }, null)
+    expect(s.jobs[0]?.options?.startAfter).toEqual(new Date('2026-10-29T10:00:00Z'))
+  })
+
+  it('[E2.7][AC51] saving the same PDF id again queues nothing', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.save(owner, store, tour.id, 1, { pdfMediaId: 'pdf1', draft: doc('Again') }, null)
+    expect(s.jobs).toEqual([])
+  })
+
+  it('[E2.7][AC51] clearing the PDF of a draft tour, or saving with no PDF change, queues nothing', async () => {
+    const s = setup()
+    const tour = await created(s)
+    expect(await s.save(owner, store, tour.id, 1, { draft: doc('Other') }, null)).toMatchObject({ ok: true })
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: null }, null)).toMatchObject({ ok: true, value: { pdfMediaId: null } })
+    expect(s.jobs).toEqual([])
+  })
+
+  it('[E2.7][AC51] a refused removal on a published tour queues nothing', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: null }, null)).toMatchObject({ ok: false })
+    expect(s.jobs).toEqual([])
+  })
+
+  it('[E2.7] setting a first PDF on a tour that had none queues nothing', async () => {
+    const s = setup()
+    const tour = await created(s, { slug: { en: 'bare' } })
+    await s.save(owner, store, tour.id, 1, { pdfMediaId: 'pdf1' }, null)
+    expect(s.jobs).toEqual([])
+  })
+
+  it('[E2.7][AC51] an upper-case id of the same PDF queues nothing', async () => {
+    const s = setup([{ id: 'abc-pdf', kind: 'pdf', status: 'ready' }, ...media])
+    const tour = await created(s, { ...complete, pdfMediaId: 'abc-pdf' })
+    expect(await s.save(owner, store, tour.id, 1, { pdfMediaId: 'ABC-PDF' }, null)).toMatchObject({ ok: true })
+    expect(s.jobs).toEqual([])
+  })
+
+  it('[E2.7][AC51] replacing the PDF of a published tour queues one retire job', async () => {
+    const s = setup()
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf2' }, null)).toMatchObject({ ok: true })
+    expect(s.jobs).toEqual([{ queue: 'media-retire', data: { storeId: store, mediaId: 'pdf1' }, options: { startAfter: new Date('2026-10-28T10:00:00Z') } }])
+  })
+
   it('[E2.6] a slug that drops a language of a published tour is incomplete naming slug', async () => {
     const s = setup()
     const tour = await created(s, { ...complete, slug: { en: 'a', de: 'b' }, draft: { ...doc('A'), title: { en: 'A', de: 'B' } } })
@@ -299,5 +365,71 @@ describe('tour guide use cases', () => {
     expectTypeOf<TourChanges>().not.toHaveProperty('departureAt')
     expect(tourWriteBodySchema.safeParse({ price: 100 }).success).toBe(false)
     expect(tourWriteBodySchema.safeParse({ departureAt: '2026-11-01T10:00:00Z' }).success).toBe(false)
+  })
+})
+
+describe('[E2.7] saving a published tour refuses media that is still processing', () => {
+  const rows = (): MediaRow[] => [
+    { id: 'pdf1', kind: 'pdf', status: 'ready' },
+    { id: 'img1', kind: 'image', status: 'ready' },
+    { id: 'pdf-new', kind: 'pdf', status: 'processing' },
+    { id: 'img-new', kind: 'image', status: 'processing' },
+  ]
+  const live = async (s: ReturnType<typeof setup>) => {
+    const tour = await created(s)
+    await s.publish(owner, store, tour.id, 1, null)
+    return tour
+  }
+  const unchanged = (s: ReturnType<typeof setup>, id: string) => {
+    expect(s.tours.rows.get(id)?.rowVersion).toBe(2)
+    expect(s.jobs).toEqual([])
+  }
+
+  it('[E2.7] a processing PDF is media-processing, nothing changes and no retire job is queued', async () => {
+    const s = setup(rows())
+    const tour = await live(s)
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf-new' }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['pdf-new'] })
+    expect(s.tours.rows.get(tour.id)?.pdfMediaId).toBe('pdf1')
+    unchanged(s, tour.id)
+  })
+
+  it('[E2.7] a processing cover is media-processing', async () => {
+    const s = setup(rows())
+    const tour = await live(s)
+    expect(await s.save(owner, store, tour.id, 2, { coverMediaId: 'img-new' }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['img-new'] })
+    unchanged(s, tour.id)
+  })
+
+  it('[E2.7] a processing stop photo is media-processing', async () => {
+    const s = setup(rows())
+    const tour = await live(s)
+    expect(await s.save(owner, store, tour.id, 2, { stops: [{ ...stop(1), mediaId: 'img-new' }] }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['img-new'] })
+    unchanged(s, tour.id)
+  })
+
+  it('[E2.7] a stored file that is still processing refuses an unrelated change until it is ready', async () => {
+    const data = rows()
+    const s = setup(data)
+    const tour = await live(s)
+    data.find(m => m.id === 'pdf1')!.status = 'processing'
+    expect(await s.save(owner, store, tour.id, 2, { stayTag: 'multi_day' }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['pdf1'] })
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf1' }, null)).toEqual({ ok: false, reason: 'media-processing', mediaIds: ['pdf1'] })
+    data.find(m => m.id === 'pdf1')!.status = 'ready'
+    expect(await s.save(owner, store, tour.id, 2, { stayTag: 'multi_day' }, null)).toMatchObject({ ok: true })
+  })
+
+  it('[E2.7] a draft tour still accepts processing files', async () => {
+    const s = setup(rows())
+    const tour = await created(s, { ...complete, pdfMediaId: 'pdf-new', coverMediaId: 'img-new' })
+    expect(await s.save(owner, store, tour.id, 1, { stops: [{ ...stop(1), mediaId: 'img-new' }] }, null)).toMatchObject({ ok: true })
+  })
+
+  it('[E2.7] a published tour saves with ready files, and replacing the PDF queues the retire job', async () => {
+    const data = rows()
+    const s = setup(data)
+    const tour = await live(s)
+    data.find(m => m.id === 'pdf-new')!.status = 'ready'
+    expect(await s.save(owner, store, tour.id, 2, { pdfMediaId: 'pdf-new', coverMediaId: 'img1', stops: [{ ...stop(1), mediaId: 'img1' }] }, null)).toMatchObject({ ok: true, value: { pdfMediaId: 'pdf-new' } })
+    expect(s.jobs).toHaveLength(1)
   })
 })

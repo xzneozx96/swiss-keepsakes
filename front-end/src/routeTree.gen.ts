@@ -66,6 +66,7 @@ import { Route as GuestCartSentRouteImport } from './routes/_guest/cart_.sent'
 import { Route as LabBlogHomeStoriesRouteImport } from './routes/lab.blog-home_.stories'
 import { Route as StoreContentIndexRouteImport } from './routes/store/content/index'
 import { Route as StoreContentAnalyticsRouteImport } from './routes/store/content/analytics'
+import { Route as StoreContentCategoriesRouteImport } from './routes/store/content/categories'
 import { Route as StoreContentCommentsRouteImport } from './routes/store/content/comments'
 import { Route as StoreContentReviewsRouteImport } from './routes/store/content/reviews'
 import { Route as StoreOrdersIndexRouteImport } from './routes/store/orders/index'
@@ -384,6 +385,11 @@ const StoreContentAnalyticsRoute = StoreContentAnalyticsRouteImport.update({
   path: '/content/analytics',
   getParentRoute: () => StoreRoute,
 } as any)
+const StoreContentCategoriesRoute = StoreContentCategoriesRouteImport.update({
+  id: '/content/categories',
+  path: '/content/categories',
+  getParentRoute: () => StoreRoute,
+} as any)
 const StoreContentCommentsRoute = StoreContentCommentsRouteImport.update({
   id: '/content/comments',
   path: '/content/comments',
@@ -611,6 +617,7 @@ export interface FileRoutesByFullPath {
   '/cart/sent': typeof GuestCartSentRoute
   '/lab/blog-home/stories': typeof LabBlogHomeStoriesRoute
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
+  '/store/content/categories': typeof StoreContentCategoriesRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
   '/store/content/reviews': typeof StoreContentReviewsRoute
   '/store/orders/$orderId': typeof StoreOrdersOrderIdRoute
@@ -698,6 +705,7 @@ export interface FileRoutesByTo {
   '/cart/sent': typeof GuestCartSentRoute
   '/lab/blog-home/stories': typeof LabBlogHomeStoriesRoute
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
+  '/store/content/categories': typeof StoreContentCategoriesRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
   '/store/content/reviews': typeof StoreContentReviewsRoute
   '/store/orders/$orderId': typeof StoreOrdersOrderIdRoute
@@ -791,6 +799,7 @@ export interface FileRoutesById {
   '/_guest/cart_/sent': typeof GuestCartSentRoute
   '/lab/blog-home_/stories': typeof LabBlogHomeStoriesRoute
   '/store/content/analytics': typeof StoreContentAnalyticsRoute
+  '/store/content/categories': typeof StoreContentCategoriesRoute
   '/store/content/comments': typeof StoreContentCommentsRoute
   '/store/content/reviews': typeof StoreContentReviewsRoute
   '/store/orders/$orderId': typeof StoreOrdersOrderIdRoute
@@ -884,6 +893,7 @@ export interface FileRouteTypes {
     | '/cart/sent'
     | '/lab/blog-home/stories'
     | '/store/content/analytics'
+    | '/store/content/categories'
     | '/store/content/comments'
     | '/store/content/reviews'
     | '/store/orders/$orderId'
@@ -971,6 +981,7 @@ export interface FileRouteTypes {
     | '/cart/sent'
     | '/lab/blog-home/stories'
     | '/store/content/analytics'
+    | '/store/content/categories'
     | '/store/content/comments'
     | '/store/content/reviews'
     | '/store/orders/$orderId'
@@ -1063,6 +1074,7 @@ export interface FileRouteTypes {
     | '/_guest/cart_/sent'
     | '/lab/blog-home_/stories'
     | '/store/content/analytics'
+    | '/store/content/categories'
     | '/store/content/comments'
     | '/store/content/reviews'
     | '/store/orders/$orderId'
@@ -1544,6 +1556,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreContentAnalyticsRouteImport
       parentRoute: typeof StoreRoute
     }
+    '/store/content/categories': {
+      id: '/store/content/categories'
+      path: '/content/categories'
+      fullPath: '/store/content/categories'
+      preLoaderRoute: typeof StoreContentCategoriesRouteImport
+      parentRoute: typeof StoreRoute
+    }
     '/store/content/comments': {
       id: '/store/content/comments'
       path: '/content/comments'
@@ -1870,6 +1889,7 @@ interface StoreRouteChildren {
   StoreSalesRoute: typeof StoreSalesRoute
   StoreIndexRoute: typeof StoreIndexRoute
   StoreContentAnalyticsRoute: typeof StoreContentAnalyticsRoute
+  StoreContentCategoriesRoute: typeof StoreContentCategoriesRoute
   StoreContentCommentsRoute: typeof StoreContentCommentsRoute
   StoreContentReviewsRoute: typeof StoreContentReviewsRoute
   StoreOrdersOrderIdRoute: typeof StoreOrdersOrderIdRoute
@@ -1899,6 +1919,7 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreSalesRoute: StoreSalesRoute,
   StoreIndexRoute: StoreIndexRoute,
   StoreContentAnalyticsRoute: StoreContentAnalyticsRoute,
+  StoreContentCategoriesRoute: StoreContentCategoriesRoute,
   StoreContentCommentsRoute: StoreContentCommentsRoute,
   StoreContentReviewsRoute: StoreContentReviewsRoute,
   StoreOrdersOrderIdRoute: StoreOrdersOrderIdRoute,

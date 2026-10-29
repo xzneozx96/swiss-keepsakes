@@ -2,13 +2,14 @@ import type { ContentLanguage, StoryVersion } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { Result } from './failure.ts'
 import type { StoryDeps } from './story-deps.ts'
-import { storyVersionPublishGaps } from '@sk/domain/content'
+import { storyMediaIds, storyVersionPublishGaps } from '@sk/domain/content'
 import { mayManageContent, staffActor } from './access.ts'
+import { ensureMediaReady } from './ensure-media-ready.ts'
 import { fail, ok } from './failure.ts'
 
 // One language goes live on its own; no rule asks for another. A draft-status version with no pending draft has
 // nothing to publish but its kept published text, which is what goes live again.
-export function makePublishStoryVersion<T>({ uow, stories, audit, clock }: StoryDeps<T>) {
+export function makePublishStoryVersion<T>({ uow, stories, media, audit, clock }: StoryDeps<T>) {
   return async (actor: Actor, storeId: string, groupId: string, language: ContentLanguage, ifMatch: number, requestId: string | null): Promise<Result<StoryVersion>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -18,6 +19,10 @@ export function makePublishStoryVersion<T>({ uow, stories, audit, clock }: Story
         return fail({ reason: 'not-found' })
       if (version.rowVersion !== ifMatch)
         return fail({ reason: 'stale' })
+      const doc = version.draft ?? version.published
+      const processing = doc && await ensureMediaReady(media, tx, storeId, storyMediaIds(doc).map(m => m.id))
+      if (processing)
+        return fail(processing)
       const gaps = storyVersionPublishGaps({ slug: version.slug, title: (version.draft ?? version.published)?.title ?? '' })
       if (gaps.length > 0)
         return fail({ reason: 'incomplete', gaps })

@@ -1,6 +1,10 @@
+import type { CategoryRepository, ObjectStorage } from '../../src/modules/content/ports.ts'
 import type { Clock } from '../../src/platform/clock.ts'
+import type { Tx } from '../../src/platform/db/client.ts'
+import type { JobQueue } from '../../src/platform/jobs/queue.ts'
 import type { openTestDatabase } from './support.ts'
 import { randomUUID } from 'node:crypto'
+import { createCategoryRepository } from '../../src/modules/content/adapters/category-repository.ts'
 import { guardUseCases } from '../../src/modules/content/adapters/database-errors.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { createPinRepository } from '../../src/modules/content/adapters/pin-repository.ts'
@@ -8,7 +12,7 @@ import { createPublicReadRepository } from '../../src/modules/content/adapters/p
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeRequestUpload, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -20,6 +24,7 @@ import { createUnitOfWork } from '../../src/platform/db/unit-of-work.ts'
 import { createApp } from '../../src/platform/http/app.ts'
 import { idempotency, idempotencyActor } from '../../src/platform/http/idempotency.ts'
 import { createLogger } from '../../src/platform/logger.ts'
+import { createFakeStorage } from '../support/fake-storage.ts'
 import { insertStore } from '../support/identity-wiring.ts'
 import { silentLogger } from './support.ts'
 
@@ -35,7 +40,13 @@ const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.flo
 // The wiring of main.ts over a real database. Better Auth is the real one; the sign-in code goes to a map
 // instead of a mail job, so no queue is needed.
 // `readClock` is the clock of the public reads, so a test can move the map cache's time.
-export function createContentHttp({ pool, db }: ReturnType<typeof openTestDatabase>, readClock: Clock = systemClock) {
+// `media` swaps the fake storage, the job queue (default: sends nothing) and the clock of the write use cases.
+export interface MediaWiring { storage?: ObjectStorage, jobs?: JobQueue<Tx>, clock?: Clock }
+
+// `categories` lets a test stand in for the category repository (the delete race).
+export function createContentHttp({ pool, db }: ReturnType<typeof openTestDatabase>, readClock: Clock = systemClock, media: MediaWiring = {}, categories: CategoryRepository<Tx> = createCategoryRepository()) {
+  const writeClock = media.clock ?? systemClock
+  const jobs: JobQueue<Tx> = media.jobs ?? { send: async () => {} }
   const codes = new Map<string, string>()
   const uow = createUnitOfWork(db)
   const auth = createAuth({
@@ -47,9 +58,10 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     },
     logger: silentLogger,
   })
-  const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
-  const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit: createAuditLog(systemClock), clock: systemClock }
-  const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(systemClock), clock: systemClock }
+  const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit: createAuditLog(writeClock), clock: writeClock }
+  const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit: createAuditLog(writeClock), clock: writeClock }
+  const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit: createAuditLog(writeClock), clock: writeClock, jobs, graceHours: 24 }
+  const categoryDeps = { uow, categories, audit: createAuditLog(writeClock), clock: writeClock }
   const readDeps = { uow, reads: createPublicReadRepository(), clock: readClock }
   const writeUseCases = guardUseCases({
     createPin: makeCreatePin(pinDeps),
@@ -70,10 +82,21 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     publishTour: makePublishTour(tourDeps),
     unpublishTour: makeUnpublishTour(tourDeps),
     deleteTour: makeDeleteTour(tourDeps),
+    createCategory: makeCreateCategory(categoryDeps),
+    saveCategory: makeSaveCategory(categoryDeps),
+    reorderCategories: makeReorderCategories(categoryDeps),
+    deleteCategory: makeDeleteCategory(categoryDeps),
+    listMerchantCategories: makeListMerchantCategories(categoryDeps),
   })
   // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
+  // No pg-boss here, so the job send is a no-op; the job and the transaction are tested with the use case.
+  const storage = media.storage ?? createFakeStorage(systemClock)
   const contentUseCases = {
     ...writeUseCases,
+    requestUpload: makeRequestUpload({ storage, clock: writeClock, newId: () => randomUUID() }),
+    confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs, audit: createAuditLog(writeClock), clock: writeClock, newId: () => randomUUID() }),
+    getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+    publicUrl: storage.publicUrl,
     listStories: makeListStories(readDeps),
     getStory: makeGetStory(readDeps),
     getPin: makeGetPin(readDeps),

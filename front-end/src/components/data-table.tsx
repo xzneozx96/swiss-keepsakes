@@ -50,7 +50,7 @@ interface DataTableProps<T> {
   /** Accessible name of the table: the selected tab or filter. */
   label: string
   columns: DataTableColumn<T>[]
-  /** Every row; the table cuts them into pages of 10. */
+  /** Every row; the table cuts them into pages of 10 unless `hidePager` is set. */
   rows: T[]
   getRowId: (row: T) => string
   /** Makes the whole row a link. */
@@ -62,6 +62,8 @@ interface DataTableProps<T> {
    * with it the table shows from 1024px and the same pager sits under the cards.
    */
   cards?: (pageRows: T[]) => ReactNode
+  /** Shows every row in one list, with no pager, for a grouped list that must not be cut into pages. */
+  hidePager?: boolean
   /** Shown inside the table when `rows` is empty, and as a card on phones. */
   empty?: EmptyStateProps
   /** Draws the real headers with column-shaped bars (and loading tickets on phones). */
@@ -98,6 +100,7 @@ export function DataTable<T>({
   getRowHref,
   resetKey,
   cards,
+  hidePager,
   empty,
   isLoading,
   rowActions,
@@ -106,7 +109,8 @@ export function DataTable<T>({
   contentClassName,
 }: DataTableProps<T>) {
   const { t } = useLocale()
-  const { pageItems, pager } = usePaged(rows, resetKey)
+  const { pageItems: pagedItems, pager } = usePaged(rows, resetKey)
+  const pageItems = hidePager ? rows : pagedItems
   const isOnPage = variant !== 'card'
   const allColumns: DataTableColumn<T>[] = rowActions
     ? [
@@ -145,9 +149,11 @@ export function DataTable<T>({
                   </div>
                 )}
                 {cards(pageItems)}
-                <div className="lg:hidden">
-                  <Pager compact pager={pager} />
-                </div>
+                {!hidePager && (
+                  <div className="lg:hidden">
+                    <Pager compact pager={pager} />
+                  </div>
+                )}
               </>
             ))}
       <Table
@@ -211,7 +217,7 @@ export function DataTable<T>({
             </Table.Body>
           </Table.Content>
         </Table.ScrollContainer>
-        {!isLoading && pager.pages > 1 && (
+        {!isLoading && !hidePager && pager.pages > 1 && (
           <Table.Footer>
             <Pager pager={pager} />
           </Table.Footer>

@@ -1,5 +1,6 @@
 import type { Pin, StoryGroup, StoryVersion, TourGuide } from '@sk/domain/content'
 import type { ContentUseCases } from '../../src/modules/content/adapters/routes.ts'
+import type { CategoryRow, MediaRecord } from '../../src/modules/content/ports.ts'
 
 export const fakePin: Pin = {
   id: '0190f0c2-0000-7000-8000-0000000000a1',
@@ -22,6 +23,17 @@ export const fakePin: Pin = {
   rowVersion: 1,
   createdAt: new Date('2026-10-27T08:00:00Z'),
   updatedAt: new Date('2026-10-27T08:00:00Z'),
+}
+
+export const fakeCategory: CategoryRow = {
+  id: '0190f0c2-0000-7000-8000-0000000000d1',
+  storeId: '0190f0c2-0000-7000-8000-00000000000a',
+  name: { en: 'Walks' },
+  slug: 'walks',
+  parentId: null,
+  position: 1,
+  childCount: 0,
+  useCount: 0,
 }
 
 export const fakeStoryGroup: StoryGroup = {
@@ -52,6 +64,19 @@ export const fakeStoryVersion: StoryVersion = {
   rowVersion: 1,
   createdAt: new Date('2026-10-27T08:00:00Z'),
   updatedAt: new Date('2026-10-27T08:00:00Z'),
+}
+
+export const fakeMedia: MediaRecord = {
+  id: '0190f0c2-0000-7000-8000-0000000000f1',
+  storeId: '0190f0c2-0000-7000-8000-00000000000a',
+  kind: 'image',
+  storageKey: 'fake',
+  contentType: 'image/jpeg',
+  byteSize: 1,
+  sha256: 'a'.repeat(64),
+  width: null,
+  height: null,
+  status: 'processing',
 }
 
 export const fakeTour: TourGuide = {
@@ -95,6 +120,15 @@ export function createFakeContentUseCases(): ContentUseCases {
     publishTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, status: 'published', rowVersion: ifMatch + 1 } }),
     unpublishTour: async (_actor, storeId, tourId, ifMatch) => ({ ok: true, value: { ...fakeTour, storeId, id: tourId, rowVersion: ifMatch + 1 } }),
     deleteTour: async (_actor, _storeId, tourId) => ({ ok: true, value: { id: tourId } }),
+    requestUpload: async (_actor, storeId, input) => ({ ok: true, value: { uploadKey: `${storeId}/0190f0c2-0000-7000-8000-0000000000e1.jpg`, url: 'https://storage.test/uploads/fake', method: 'PUT', headers: { 'Content-Type': input.contentType }, expiresAt: '2026-10-28T10:15:00.000Z', kind: 'image' } }),
+    confirmUpload: async (_actor, storeId) => ({ ok: true, value: { ...fakeMedia, storeId } }),
+    getMedia: async (_actor, storeId, mediaId) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId } }),
+    publicUrl: key => `https://storage.test/media/${key}`,
+    listMerchantCategories: async (_actor, storeId) => ({ ok: true, value: [{ ...fakeCategory, storeId }] }),
+    createCategory: async (_actor, storeId, _kind, input) => ({ ok: true, value: { ...fakeCategory, storeId, name: input.name as CategoryRow['name'] } }),
+    saveCategory: async (_actor, storeId, _kind, id) => ({ ok: true, value: { ...fakeCategory, storeId, id } }),
+    reorderCategories: async (_actor, storeId) => ({ ok: true, value: [{ ...fakeCategory, storeId }] }),
+    deleteCategory: async (_actor, _storeId, _kind, id) => ({ ok: true, value: { id } }),
     listStories: async () => ({ items: [] }),
     getStory: async () => ({ ok: false, reason: 'not-found' }),
     getPin: async () => ({ ok: false, reason: 'not-found' }),
