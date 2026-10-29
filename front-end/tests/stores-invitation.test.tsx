@@ -15,6 +15,8 @@ import { forgetStoresSession } from '@/features/stores/lib/forget-session'
 import { heldInvitationToken, takeInvitationFromHash } from '@/features/stores/lib/invitation-token'
 import { storesEn } from '@/features/stores/messages'
 import { storesDe } from '@/features/stores/messages.de'
+import { de } from '@/i18n/de'
+import { en } from '@/i18n/en'
 import { writeStored } from '@/lib/storage'
 
 // The real screens, hooks and DataClient, with the HTTP answered here (as in stores-screens.test.tsx).
@@ -437,6 +439,9 @@ describe('[E2.15][AC02] links that can no longer work', () => {
   })
 })
 
+// The German tests load the lazy German chunk and run slower than the default wait under load.
+const SLOW = { timeout: 8000 }
+
 describe('[E2.15][AC09] German', () => {
   it('has a German line for every stores key, and a German line of its own for each new key', () => {
     expect(Object.keys(storesDe).sort()).toEqual(Object.keys(storesEn).sort())
@@ -448,24 +453,56 @@ describe('[E2.15][AC09] German', () => {
   })
 
   type Setup = () => void
-  const states: Array<[string, Setup, string, string]> = [
+  type Action = () => Promise<void>
+  const mismatchAnswers = (role: Role) => (call: Call): Response => {
+    if (call.path === '/api/me/invitations/accept')
+      return problem(403, 'invitation-email-mismatch')
+
+    return call.path === '/api/auth/get-session' ? sessionBody() : previewBody({ role })
+  }
+  const usedAnswers = (role: Role) => (call: Call): Response => {
+    if (call.path === '/api/me/invitations/accept')
+      return problem(409, 'invitation-already-accepted')
+
+    return call.path === '/api/auth/get-session' ? sessionBody() : previewBody({ role })
+  }
+  const acceptAsManager: Action = async () => {
+    await userEvent.click(await screen.findByRole('button', { name: storesDe['stores.invite.accept'] }, SLOW))
+  }
+  const states: Array<[string, Setup, Role, string, Action?]> = [
     ['signed-out Owner', () => { answer = signedOutAnswers() }, 'owner', 'stores.invite.ownerTitle'],
+    ['signed-out Manager', () => { answer = signedOutAnswers({ role: 'manager', inviterName: 'Ngoc' }) }, 'manager', 'stores.invite.managerTitle'],
     ['expired Owner link', () => { answer = signedOutAnswers({ state: 'expired' }) }, 'owner', 'stores.refusal.expired.title'],
     ['withdrawn Manager link', () => { answer = signedOutAnswers({ role: 'manager', state: 'revoked' }) }, 'manager', 'stores.refusal.revoked.manager.title'],
     ['unknown link', () => { answer = call => call.path === '/api/public/invitations/preview' ? problem(404, 'invitation-not-found') : Response.json({}) }, 'manager', 'stores.refusal.notFound.title'],
+    ['wrong address, Owner', () => { signedIn(); answer = mismatchAnswers('owner') }, 'owner', 'stores.refusal.mismatch.title'],
+    ['wrong address, Manager', () => { signedIn(); answer = mismatchAnswers('manager') }, 'manager', 'stores.refusal.mismatch.title', acceptAsManager],
+    ['used link, Owner', () => { signedIn(); answer = usedAnswers('owner') }, 'owner', 'stores.refusal.accepted.title'],
+    ['used link, Manager', () => { signedIn(); answer = usedAnswers('manager') }, 'manager', 'stores.refusal.accepted.manager.title', acceptAsManager],
   ]
 
-  it.each(states)('renders the %s in German with no English line left', async (_name, setup, role, titleKey) => {
+  // The English lines that have a different German line: none of them may be on screen in German. A line with a {value} is matched with any value.
+  const englishOnly = Object.entries(en)
+    .filter(([key, value]) => de[key as keyof typeof de] !== value)
+    .map(([, value]) => new RegExp(`^${value.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\{\w+\}/g, '.+')}$`))
+  const visibleLines = () => [...document.body.querySelectorAll('*')]
+    .filter(element => element.children.length === 0 && !['SCRIPT', 'STYLE'].includes(element.tagName))
+    .map(element => element.textContent?.trim() ?? '')
+    .filter(Boolean)
+
+  it.each(states)('renders the %s in German with no English line left', async (_name, setup, role, titleKey, act) => {
     writeStored('sk.language', 'de')
     setup()
-    open(role as Role)
+    open(role)
+    await act?.()
 
     const title = storesDe[titleKey as keyof typeof storesDe].replace('{store}', 'Chi Ngoc')
 
-    expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument()
-    const text = document.body.textContent ?? ''
+    expect(await screen.findByRole('heading', { level: 1, name: title }, SLOW)).toBeInTheDocument()
+    const lines = visibleLines()
 
-    for (const english of ['Sign in with the email address', 'Back to Explore', 'Owner invitation', 'Store Manager invitation', 'This invitation has expired', 'This invitation was withdrawn', 'This invitation link is not valid', 'Wrong account', 'Withdrawn', 'Continue with Google'])
-      expect(text).not.toContain(english)
-  })
+    expect(lines.length).toBeGreaterThan(3)
+    expect(['Continue with Google', 'This invitation was withdrawn', 'Wrong account'].every(english => englishOnly.some(pattern => pattern.test(english)))).toBe(true)
+    expect(lines.filter(line => englishOnly.some(english => english.test(line)))).toEqual([])
+  }, 20_000)
 })
