@@ -52,7 +52,7 @@ function setup() {
 type Setup = ReturnType<typeof setup>
 
 const slug = () => `story-${randomUUID().slice(0, 8)}`
-const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: emptyStoryBody, ...over })
+const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: 'A day out on the water.', authorName: '', coverMediaId: null, body: emptyStoryBody, ...over })
 const imageNode = (mediaId: string) => ({ type: 'image', attrs: { mediaId, alt: '', caption: '' } })
 const audioNode = (mediaId: string) => ({ type: 'audio', attrs: { mediaId, title: '', caption: '' } })
 
@@ -63,6 +63,11 @@ async function media(store: string, kind: 'image' | 'audio' = 'image'): Promise<
     [store, kind, `${store}/${randomUUID()}`, kind === 'audio' ? 'audio/mpeg' : 'image/jpeg'],
   )
   return rows[0]!.id
+}
+
+// A version that meets every publish rule: a link, an excerpt and a ready cover of the store.
+async function complete(store: string, over: Partial<StoryDraft> = {}): Promise<{ slug: string, draft: StoryDraft }> {
+  return { slug: slug(), draft: doc({ coverMediaId: await media(store), ...over }) }
 }
 
 async function group(s: Setup, extra: Record<string, unknown> = {}) {
@@ -103,7 +108,7 @@ describe('[E2.6] story repository on the real database', () => {
   it('[E2.6][AC30] EN publishes alone against the real guards', async () => {
     const s = setup()
     const g = await group(s)
-    await version(s, g.id)
+    await version(s, g.id, 'en', await complete(s.store))
     const result = await s.use.publish(s.actor, s.store, g.id, 'en', 1, randomUUID())
     expect(result).toMatchObject({ ok: true, value: { language: 'en', status: 'published', rowVersion: 2, draft: null, published: { title: 'A day on the lake' } } })
     expect(result.ok && result.value.publishedAt).toBeInstanceOf(Date)
@@ -118,9 +123,44 @@ describe('[E2.6] story repository on the real database', () => {
   it('[E2.6][AC30] publishing a version with no slug is incomplete and the row stays a draft', async () => {
     const s = setup()
     const g = await group(s)
-    await version(s, g.id, 'en', { draft: doc() })
+    await version(s, g.id, 'en', { draft: (await complete(s.store)).draft })
     expect(await s.use.publish(s.actor, s.store, g.id, 'en', 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['slug'] })
     expect(await versionRow(g.id)).toMatchObject({ status: 'draft', row_version: 1 })
+  })
+
+  it('[E2.14][AC30] a draft with no cover and no excerpt saves and stays a draft, and publishing it names both fields', async () => {
+    const s = setup()
+    const g = await group(s)
+    await version(s, g.id, 'en', { slug: slug(), draft: doc({ excerpt: '' }) })
+    expect(await s.use.publish(s.actor, s.store, g.id, 'en', 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['excerpt', 'coverMediaId'] })
+    expect(await versionRow(g.id)).toMatchObject({ status: 'draft', row_version: 1 })
+  })
+
+  describe('[E2.14][AC30] an editorial review on the real database', () => {
+    async function place(store: string): Promise<string> {
+      const { rows } = await pool.query<{ id: string }>(
+        `insert into content.places (store_id, status, latitude, longitude) values ($1, 'draft', 47.05, 8.3) returning id`,
+        [store],
+      )
+      return rows[0]!.id
+    }
+
+    it('needs its check date and publishes once it has one', async () => {
+      const s = setup()
+      const g = await group(s, { kind: 'editorial_review', subjectPlaceId: await place(s.store) })
+      const ready = await complete(s.store)
+      await version(s, g.id, 'en', ready)
+      expect(await s.use.publish(s.actor, s.store, g.id, 'en', 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['checkedOn'] })
+      expect(await s.use.saveVersion(s.actor, s.store, g.id, 'en', 1, { draft: { ...ready.draft, checkedOn: '2026-10-01' } }, null)).toMatchObject({ ok: true })
+      expect(await s.use.publish(s.actor, s.store, g.id, 'en', 2, null)).toMatchObject({ ok: true, value: { status: 'published', published: { checkedOn: '2026-10-01' } } })
+    })
+
+    it('a plain story in the same store publishes with no check date', async () => {
+      const s = setup()
+      const g = await group(s)
+      await version(s, g.id, 'en', await complete(s.store))
+      expect(await s.use.publish(s.actor, s.store, g.id, 'en', 1, null)).toMatchObject({ ok: true })
+    })
   })
 
   it('[E2.6] AC-1 two saves racing with the same If-Match: one 200, one stale, row_version +1', async () => {
@@ -263,7 +303,7 @@ describe('[E2.6] story repository on the real database', () => {
     const s = setup()
     const a = await group(s)
     const b = await group(s)
-    await version(s, a.id)
+    await version(s, a.id, 'en', await complete(s.store))
     await s.use.publish(s.actor, s.store, a.id, 'en', 1, null)
     expect(await s.use.move(s.actor, s.store, a.id, 'en', 2, b.id, null)).toEqual({ ok: false, reason: 'published-cannot-move' })
     expect(await versionRow(a.id)).toMatchObject({ group_id: a.id, row_version: 2 })
@@ -291,7 +331,7 @@ describe('[E2.6] story repository on the real database', () => {
   it('[E2.6][AC79] a direct delete of a version that kept published text raises restrict_violation and mapDatabaseError says published-cannot-be-deleted', async () => {
     const s = setup()
     const g = await group(s)
-    await version(s, g.id)
+    await version(s, g.id, 'en', await complete(s.store))
     await s.use.publish(s.actor, s.store, g.id, 'en', 1, null)
     await s.use.unpublish(s.actor, s.store, g.id, 'en', 2, null)
     const error = await thrown(() => s.uow.run(tx => s.stories.removeVersion(tx, s.store, g.id, 'en')))
@@ -308,7 +348,7 @@ describe('[E2.6] story repository on the real database', () => {
   it('[E2.6][AC79] the database refuses to clear published text, and mapDatabaseError does not call that in-use', async () => {
     const s = setup()
     const g = await group(s)
-    await version(s, g.id)
+    await version(s, g.id, 'en', await complete(s.store))
     await s.use.publish(s.actor, s.store, g.id, 'en', 1, null)
     const error = await thrown(() => pool.query(`update content.story_versions set published = null, status = 'draft' where group_id = $1`, [g.id]))
     expect(error).toMatchObject({ code: '23001', message: expect.stringContaining('cannot change after insert') })
@@ -318,7 +358,7 @@ describe('[E2.6] story repository on the real database', () => {
   it('[E2.6] a published version saved to a state the CHECK refuses is mapped to incomplete', async () => {
     const s = setup()
     const g = await group(s)
-    await version(s, g.id)
+    await version(s, g.id, 'en', await complete(s.store))
     await s.use.publish(s.actor, s.store, g.id, 'en', 1, null)
     const error = await thrown(() => pool.query(`update content.story_versions set slug = null where group_id = $1`, [g.id]))
     expect(error).toMatchObject({ code: '23514', constraint: 'story_versions_published_fields_check' })
@@ -383,8 +423,9 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     )).rows
   }
 
-  async function groupAndVersion(staff: Awaited<ReturnType<typeof env.storeWithStaff>>, body: object = { slug: slug(), draft: doc() }) {
+  async function groupAndVersion(staff: Awaited<ReturnType<typeof env.storeWithStaff>>, body?: object) {
     const { owner, groups } = staff
+    body ??= await complete(staff.storeId)
     const created = await (await env.call(groups, { method: 'POST', headers: owner.headers, body: {} })).json() as { id: string }
     const made = await env.call(`${groups}/${created.id}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'en', ...body } })
     return { groupId: created.id, versionPath: `${groups}/${created.id}/versions/en`, made }
@@ -443,7 +484,7 @@ describe('[E2.6] the story routes over the real app and the database', () => {
     const storySlug = slug()
     const { groupId, versionPath } = await groupAndVersion(staff, { slug: storySlug, draft: doc() })
 
-    const saved = await env.call(versionPath, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': '1' }, body: { draft: doc({ body }) } })
+    const saved = await env.call(versionPath, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': '1' }, body: { draft: doc({ body, coverMediaId: image }) } })
     expect(saved.status).toBe(200)
     const savedBody = await saved.json() as { draft: { body: typeof body } }
     expect(savedBody).toMatchObject({ rowVersion: 2, draft: { body } })
@@ -490,13 +531,45 @@ describe('[E2.6] the story routes over the real app and the database', () => {
 
   it('[E2.6] a publish with no slug answers 422 publish-incomplete and writes no audit row', async () => {
     const staff = await env.storeWithStaff()
-    const { groupId, versionPath } = await groupAndVersion(staff, { draft: doc() })
+    const { groupId, versionPath } = await groupAndVersion(staff, { draft: (await complete(staff.storeId)).draft })
 
     const response = await env.call(`${versionPath}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
 
     expect(response.status).toBe(422)
     expect(await response.json()).toMatchObject({ type: 'publish-incomplete', errors: [{ in: 'body', path: 'slug' }] })
     expect(await auditRows(groupId)).toEqual([])
+  }, timeout)
+
+  it('[E2.14][AC30] a publish with no cover or no excerpt answers 422 naming each field, and a draft with neither saved', async () => {
+    const staff = await env.storeWithStaff()
+    const { groupId, versionPath } = await groupAndVersion(staff, { slug: slug(), draft: doc({ excerpt: '' }) })
+
+    const response = await env.call(`${versionPath}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
+
+    expect(response.status).toBe(422)
+    const problem = await response.json() as { type: string, errors: { in: string, path: string }[] }
+    expect(problem.type).toBe('publish-incomplete')
+    expect(problem.errors.map(e => e.path)).toEqual(['excerpt', 'coverMediaId'])
+    expect(await auditRows(groupId)).toEqual([])
+    expect(await versionRow(groupId)).toMatchObject({ status: 'draft', row_version: 1 })
+  }, timeout)
+
+  it('[E2.14][AC30] a save with an authorRole answers 400 and a stored authorRole is not returned', async () => {
+    const staff = await env.storeWithStaff()
+    const { groupId, versionPath } = await groupAndVersion(staff)
+    const headers = { ...staff.owner.headers, 'If-Match': '1' }
+
+    const refused = await env.call(versionPath, { method: 'PATCH', headers, body: { draft: { ...doc(), authorRole: 'Owner' } } })
+    expect(refused.status).toBe(400)
+    expect(JSON.stringify(await refused.json())).toContain('authorRole')
+    expect(await versionRow(groupId)).toMatchObject({ row_version: 1 })
+
+    // A draft written before the role left the contract: the read drops it, and the next save replaces the document.
+    await pool.query(`update content.story_versions set draft = draft || '{"authorRole":"Owner"}'::jsonb where group_id = $1`, [groupId])
+    const saved = await env.call(versionPath, { method: 'PATCH', headers, body: { draft: doc({ title: 'Saved again' }) } })
+    expect(saved.status).toBe(200)
+    expect(JSON.stringify(await saved.json())).not.toContain('authorRole')
+    expect(JSON.stringify((await versionRow(groupId))!.draft)).not.toContain('authorRole')
   }, timeout)
 
   it('[E2.6][AC79] deleting a published version answers 409, and a draft one 204', async () => {
@@ -549,7 +622,8 @@ describe('[E2.6] the story routes over the real app and the database', () => {
 
     expect(response.status).toBe(422)
     expect(await response.json()).toMatchObject({ type: 'media-retired' })
-    expect(await versionRow(groupId)).toMatchObject({ row_version: 1, draft: { coverMediaId: null } })
+    expect(await versionRow(groupId)).toMatchObject({ row_version: 1 })
+    expect((await versionRow(groupId))!.draft).not.toMatchObject({ coverMediaId: cover })
   }, timeout)
 
   it('[E2.6] AC-7 the other store\'s owner gets 403 and a group of another store is 404 through my store', async () => {
