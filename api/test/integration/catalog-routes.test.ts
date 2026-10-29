@@ -257,6 +257,17 @@ describe('[E6.1][AC30] publishing', () => {
     expect(await pending.json()).toMatchObject({ type: 'media-processing', mediaIds: [expect.any(String)] })
   })
 
+  it('[E6.1][checks] a photo retired after the save is refused at publish', async () => {
+    const { created, act, photo } = await setup()
+    const product = await created()
+    await pool.query(`update content.media set status = 'retired', retired_at = now() where id = $1`, [photo])
+
+    const response = await act(product.id, 'publish', 1)
+
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ type: 'media-retired' })
+  })
+
   it('[E6.1][review] publishing copies the photos and an edit afterwards is not live until Publish changes', async () => {
     const { created, act, patch, readyPhoto, storeId } = await setup()
     const product = await created()
@@ -340,6 +351,32 @@ describe('[E6.1][AC30] publishing', () => {
     expect(first.slug?.en).not.toBe(second.slug?.en)
   })
 
+  it('[E6.1][review] a publish that read the slug as free after another took it is a 409 slug-conflict, not a 500, and a new try gets the next address', async () => {
+    const first = await setup({ fresh: true })
+    const racing = createCatalogHttp(testDatabase, { slugsTaken: () => new Set() })
+    const second = await racing.storeWithStaff()
+    const photo = await racing.readyPhoto(second.storeId)
+    const name = { en: `Race Knife ${randomUUID().slice(0, 8)}` }
+    const winner = await first.created({ name })
+    const loserResponse = await racing.call(second.products, {
+      method: 'POST',
+      headers: second.owner.headers,
+      body: { name, text: { en: 'A Swiss knife.' }, photoIds: [photo], variants: [{ skuCode: code(), priceRappen: 3900 }] },
+    })
+    const loser = await loserResponse.json() as View
+    const publishAs = (http: typeof env, store: typeof second, id: string) =>
+      http.call(`${store.products}/${id}/publish`, { method: 'POST', headers: { ...store.owner.headers, 'If-Match': '1' } })
+
+    const live = await (await first.act(winner.id, 'publish', 1)).json() as View
+    const clash = await publishAs(racing, second, loser.id)
+    const retried = await publishAs(env, second, loser.id)
+
+    expect(clash.status).toBe(409)
+    expect(await clash.json()).toMatchObject({ type: 'slug-conflict' })
+    expect(retried.status).toBe(200)
+    expect(((await retried.json()) as View).slug?.en).toBe(`${live.slug?.en}-2`)
+  })
+
   it('[E6.1][review] each publish and unpublish writes an audit row with the actor and the request id', async () => {
     const { created, act, owner } = await setup()
     const product = await created()
@@ -390,6 +427,23 @@ describe('[E6.1][list] the keepsake list', () => {
 
     expect((await env.call(a.products, { headers: b.owner.headers })).status).toBe(403)
     expect((await env.call(a.products)).status).toBe(401)
+  })
+})
+
+describe('[E6.1][store] another store', () => {
+  it('[E6.1][store] cannot publish, unpublish or change the variant of a keepsake it does not own', async () => {
+    const a = await setup()
+    const b = await setup({ fresh: true })
+    const product = await a.created()
+    const owned = `${b.products}/${product.id}`
+    const asB = (path: string, method: string, body?: object, ifMatch = '1') =>
+      b.call(path, { method, headers: { ...b.owner.headers, ...(method === 'POST' ? { 'If-Match': ifMatch } : {}) }, body })
+
+    expect((await asB(`${owned}/publish`, 'POST')).status).toBe(404)
+    expect((await asB(`${owned}/unpublish`, 'POST')).status).toBe(404)
+    expect((await asB(`${owned}/variants/${product.variants[0]!.id}`, 'PATCH', { priceRappen: 100 })).status).toBe(404)
+    const untouched = await a.call(`${a.products}/${product.id}`, { headers: a.owner.headers })
+    expect(await untouched.json()).toMatchObject({ status: 'draft', rowVersion: 1, variants: [{ priceRappen: 3900 }] })
   })
 })
 
