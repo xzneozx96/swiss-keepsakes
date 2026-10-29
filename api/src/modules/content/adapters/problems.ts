@@ -50,6 +50,14 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'upload-missing': return { status: 404, type: 'upload-missing', title: 'The upload was not found. It may have expired. Upload the file again.' }
     case 'content-mismatch': return { status: 422, type: 'media-content-mismatch', title: 'The file is not the type it says it is.' }
     case 'media-processing': return { status: 422, type: 'media-processing', title: 'A file is still being processed. Try again in a moment.' }
+    case 'name-missing':
+      return { status: 422, type: 'validation-failed', title: 'Give the category a name in English or German.', errors: [{ in: 'body', path: 'name', message: 'Give a name in English or German' }] }
+    case 'order-mismatch':
+      return { status: 422, type: 'validation-failed', title: 'The list changed. Reload it and move the category again.', errors: [{ in: 'body', path: 'ids', message: 'Send exactly the categories that are in this group now' }] }
+    case 'category-has-children': return { status: 409, type: 'category-has-children', title: 'This category has sub-categories. Move or delete them first.' }
+    case 'category-in-use': return { status: 409, type: 'category-in-use', title: 'This category is still used by content. Remove it from that content first.' }
+    case 'category-too-deep': return { status: 409, type: 'category-too-deep', title: 'A sub-category cannot hold other categories. Choose a top-level category.' }
+    case 'category-parent-has-children': return { status: 409, type: 'category-parent-has-children', title: 'This category has sub-categories, so it cannot become a sub-category itself.' }
   }
 }
 

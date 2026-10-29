@@ -52,6 +52,10 @@ export const problemTypes = [
   'media-content-mismatch',
   'media-processing',
   'storage-unavailable',
+  'category-has-children',
+  'category-in-use',
+  'category-too-deep',
+  'category-parent-has-children',
 ] as const
 
 export type ProblemType = (typeof problemTypes)[number]

@@ -1,4 +1,5 @@
 import { mailEn } from '@sk/i18n/en'
+import { categoriesEn } from '@/features/categories/messages'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
 import { productsEn } from '@/features/merchant/products/messages'
@@ -33,6 +34,7 @@ export const en = {
   ...reportPagesEn,
   ...mailEn,
   ...storesEn,
+  ...categoriesEn,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototype · mock data',

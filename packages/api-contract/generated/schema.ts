@@ -849,6 +849,236 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/categories/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Which list: map categories (pins) or blog categories (story groups) */
+                    kind: components["schemas"]["CategoryKind"];
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Every category of the list, top level first, each by position */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MerchantCategoryList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Which list: map categories (pins) or blog categories (story groups) */
+                    kind: components["schemas"]["CategoryKind"];
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CategoryWriteBody"];
+                };
+            };
+            responses: {
+                /** @description The new category, last among its siblings */
+                201: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MerchantCategory"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/categories/{kind}/{categoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    categoryId: string;
+                    /** @description Which list: map categories (pins) or blog categories (story groups) */
+                    kind: components["schemas"]["CategoryKind"];
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The category is deleted. Refused while it has a sub-category or content tagged with it */
+                204: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    categoryId: string;
+                    /** @description Which list: map categories (pins) or blog categories (story groups) */
+                    kind: components["schemas"]["CategoryKind"];
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CategoryPatchBody"];
+                };
+            };
+            responses: {
+                /** @description The category with the change saved. The last write wins */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MerchantCategory"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/store/{storeId}/categories/{kind}/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Which list: map categories (pins) or blog categories (story groups) */
+                    kind: components["schemas"]["CategoryKind"];
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CategoryOrderBody"];
+                };
+            };
+            responses: {
+                /** @description The whole list in its new order */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MerchantCategoryList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/information": {
         parameters: {
             query?: never;
@@ -2441,6 +2671,34 @@ export interface components {
             nextCursor: string | null;
         };
         /**
+         * @description Which list: map categories (pins) or blog categories (story groups)
+         * @enum {string}
+         */
+        CategoryKind: "map" | "blog";
+        /** @description Name per language, at most 300 characters each. Blank counts as missing; at least one language must be left or the answer is 422 */
+        CategoryNameInput: {
+            de?: string;
+            en?: string;
+        };
+        /** @description The new order of the siblings under parentId (null for the top level). ids must be exactly the current siblings */
+        CategoryOrderBody: {
+            ids: string[];
+            /** Format: uuid */
+            parentId: string | null;
+        };
+        /** @description A name replaces both languages. A changed parentId appends the category last under the new parent */
+        CategoryPatchBody: {
+            name?: components["schemas"]["CategoryNameInput"];
+            /** Format: uuid */
+            parentId?: string | null;
+        };
+        /** @description A new category, appended last among its siblings. The slug is made from the name and never changes */
+        CategoryWriteBody: {
+            name: components["schemas"]["CategoryNameInput"];
+            /** Format: uuid */
+            parentId?: string | null;
+        };
+        /**
          * @description `pending` means the story that decides the condition is not built yet. It counts as unmet
          * @enum {string}
          */
@@ -2557,6 +2815,25 @@ export interface components {
             /** @description The Store Manager invitations that are neither accepted nor revoked, newest first. An `expired` one can be sent again */
             invitations: components["schemas"]["MemberInvitation"][];
             members: components["schemas"]["Member"][];
+        };
+        MerchantCategory: {
+            childCount: number;
+            /** Format: uuid */
+            id: string;
+            name: {
+                de: string | null;
+                en: string | null;
+            };
+            /** Format: uuid */
+            parentId: string | null;
+            position: number;
+            slug: string;
+            /** @description Pins (map) or story groups (blog) tagged with it, whatever their status */
+            useCount: number;
+        };
+        MerchantCategoryList: {
+            /** @description Top-level categories first, then sub-categories, each by position */
+            items: components["schemas"]["MerchantCategory"][];
         };
         MeStore: {
             /** @enum {string} */
@@ -2718,7 +2995,7 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children. Show generic copy for any other */
             type: string;
         };
         PublicCategory: {

@@ -1,7 +1,8 @@
 import type { Tx } from './platform/db/client.ts'
 import type { CommandDeps } from './platform/http/app.ts'
 import process from 'node:process'
-import { guardUseCases } from './modules/content/adapters/database-errors.ts'
+import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
+import { guardUseCases, mappingDatabaseErrors } from './modules/content/adapters/database-errors.ts'
 import { createMediaLogAlert } from './modules/content/adapters/media-alert.ts'
 import { createMediaQueues, startMediaWorkers } from './modules/content/adapters/media-jobs.ts'
 import { createMediaRepository } from './modules/content/adapters/media-repository.ts'
@@ -10,7 +11,7 @@ import { createPublicReadRepository } from './modules/content/adapters/public-re
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeRequestUpload, makeRetireMedia, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeRequestUpload, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -171,6 +172,7 @@ async function main() {
     const pinDeps = { uow, pins: createPinRepository(), media: createMediaRepository(), audit, clock: systemClock }
     const storyDeps = { uow, stories: createStoryRepository(), media: createMediaRepository(), pins: pinDeps.pins, audit, clock: systemClock }
     const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock, jobs: createJobQueue(jobs.boss), graceHours: config.MEDIA_GRACE_HOURS }
+    const categoryDeps = { uow, categories: createCategoryRepository(), audit, clock: systemClock, guard: mappingDatabaseErrors }
     const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock }
     const writeUseCases = guardUseCases({
       createPin: makeCreatePin(pinDeps),
@@ -191,6 +193,11 @@ async function main() {
       publishTour: makePublishTour(tourDeps),
       unpublishTour: makeUnpublishTour(tourDeps),
       deleteTour: makeDeleteTour(tourDeps),
+      listMerchantCategories: makeListMerchantCategories(categoryDeps),
+      createCategory: makeCreateCategory(categoryDeps),
+      saveCategory: makeSaveCategory(categoryDeps),
+      reorderCategories: makeReorderCategories(categoryDeps),
+      deleteCategory: makeDeleteCategory(categoryDeps),
     })
     // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
     const contentUseCases = {

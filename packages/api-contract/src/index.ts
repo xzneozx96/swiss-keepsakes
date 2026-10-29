@@ -1,5 +1,19 @@
 export { createApiClient } from './client.ts'
 export {
+  type CategoryKind,
+  categoryKindSchema,
+  type CategoryOrderBody,
+  categoryOrderBodySchema,
+  type CategoryPatchBody,
+  categoryPatchBodySchema,
+  type CategoryWriteBody,
+  categoryWriteBodySchema,
+  type MerchantCategory,
+  type MerchantCategoryList,
+  merchantCategoryListSchema,
+  merchantCategorySchema,
+} from './categories.ts'
+export {
   BODY_LINK_PROTOCOLS,
   BODY_MARK_TYPES,
   BODY_NODE_TYPES,

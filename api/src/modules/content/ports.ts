@@ -217,3 +217,33 @@ export type MediaAlert = (failure: MediaFailure) => void
 
 // A leftover that needs no retry: ids and an error name only.
 export type MediaWarn = (event: { event: string, storeId: string, mediaId: string, error: string }) => void
+export type CategoryKind = 'map' | 'blog'
+
+// One row of a category list. `childCount` counts the sub-categories, `useCount` the pins (map) or story groups (blog)
+// tagged with it, whatever their status.
+export interface CategoryRow {
+  id: string
+  storeId: string
+  name: Localized
+  slug: string
+  parentId: string | null
+  position: number
+  childCount: number
+  useCount: number
+}
+
+export interface CategoryRepository<T> {
+  // Parents first, then sub-categories, each by position.
+  list: (tx: T, storeId: string, kind: CategoryKind) => Promise<CategoryRow[]>
+  // A per store and kind advisory lock for the transaction. Every write takes it first, so two writes to one list queue up.
+  lockList: (tx: T, storeId: string, kind: CategoryKind) => Promise<void>
+  // An id of another store has no row.
+  find: (tx: T, storeId: string, kind: CategoryKind, id: string) => Promise<CategoryRow | undefined>
+  slugsTaken: (tx: T, storeId: string, kind: CategoryKind) => Promise<Set<string>>
+  insert: (tx: T, storeId: string, kind: CategoryKind, input: { name: Localized, slug: string, parentId: string | null, position: number }, at: Date) => Promise<CategoryRow>
+  update: (tx: T, storeId: string, kind: CategoryKind, id: string, changes: { name?: Localized, parentId?: string | null, position?: number }, at: Date) => Promise<CategoryRow>
+  // Positions 1..n in the order given.
+  setPositions: (tx: T, storeId: string, kind: CategoryKind, orderedIds: string[], at: Date) => Promise<void>
+  // false when the id has no row. A link that still names the category makes the database refuse (in-use).
+  remove: (tx: T, storeId: string, kind: CategoryKind, id: string) => Promise<boolean>
+}
