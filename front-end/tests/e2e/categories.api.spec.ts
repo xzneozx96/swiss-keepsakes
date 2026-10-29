@@ -415,6 +415,7 @@ test('[E4.18][AC87] on a desktop the tabs fit their tabs, and a real mouse drag 
     // Search hides the handles; clearing it brings them back.
     await page.getByRole('searchbox', { name: en['categories.search.label'] }).fill('lake')
     await expect(page.locator('[data-grip]')).toHaveCount(0)
+    expect(await names(page.getByRole('row').filter({ hasText: /Walks|Hill|Lake|Pond|Museums|Cafes/ }))).toEqual(['Walks', 'Lake'])
     await page.getByRole('searchbox', { name: en['categories.search.label'] }).fill('')
     await expect(page.locator('[data-grip]')).toHaveCount(6)
 

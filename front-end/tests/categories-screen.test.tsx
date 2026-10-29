@@ -35,6 +35,9 @@ const problem = (status: number, type: string) => Response.json(problemSchema.pa
 
 beforeEach(async () => {
   window.scrollTo = vi.fn()
+  // jsdom has no pointer capture; the handle's press (use-stop-drag) calls it.
+  HTMLElement.prototype.setPointerCapture = vi.fn()
+  HTMLElement.prototype.releasePointerCapture = vi.fn()
   localStorage.clear()
   sessionStorage.clear()
   calls = []
@@ -355,6 +358,48 @@ describe('[E4.18][AC87] the category editor in English', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Actions for Walks' }))
     expect(await screen.findByRole('menuitem', { name: 'Move up' })).toHaveAttribute('aria-disabled', 'true')
     expect(screen.getByRole('menuitem', { name: 'Move down' })).not.toHaveAttribute('aria-disabled', 'true')
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('menuitem', { name: 'Move up' })).not.toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Actions for Food' }))
+    expect(await screen.findByRole('menuitem', { name: 'Move down' })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('menuitem', { name: 'Move up' })).not.toHaveAttribute('aria-disabled', 'true')
+  })
+
+  it('moves the last parent up on ArrowUp, sending the full order with a key', async () => {
+    lists.map = [
+      category(walks, { name: { en: 'Walks', de: null }, position: 1 }),
+      category(food, { name: { en: 'Food', de: null }, position: 2 }),
+      category(lake, { name: { en: 'Lake', de: null }, position: 3 }),
+    ]
+    renderScreen()
+    const handle = await screen.findByRole('button', { name: 'Drag to reorder Lake' })
+
+    await userEvent.click(handle)
+    await userEvent.keyboard('{ArrowUp}')
+
+    await waitFor(() => expect(writes('PUT')).toHaveLength(1))
+    expect(writes('PUT')[0].body).toEqual({ parentId: null, ids: [walks, lake, food] })
+    expect(writes('PUT')[0].key).toBeTruthy()
+    await waitFor(() => expect(order()).toEqual([walks, lake, food]))
+  })
+
+  it('moves the last sub-category up on ArrowUp, with its parent and only its siblings', async () => {
+    lists.map = [
+      category(walks, { position: 1, childCount: 2 }),
+      category(hill, { name: { en: 'Hill', de: null }, parentId: walks, position: 1 }),
+      category(lake, { name: { en: 'Lake', de: null }, parentId: walks, position: 2 }),
+      category(food, { name: { en: 'Food', de: null }, position: 2 }),
+    ]
+    renderScreen()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Drag to reorder Lake' }))
+    await userEvent.keyboard('{ArrowUp}')
+
+    await waitFor(() => expect(writes('PUT')).toHaveLength(1))
+    expect(writes('PUT')[0].body).toEqual({ parentId: walks, ids: [lake, hill] })
+    expect(writes('PUT')[0].key).toBeTruthy()
+    await waitFor(() => expect(order()).toEqual([walks, lake, hill, food]))
   })
 
   it('moves one step on ArrowDown and ArrowUp on a handle, and sends nothing at the ends', async () => {
@@ -365,7 +410,8 @@ describe('[E4.18][AC87] the category editor in English', () => {
     renderScreen()
     const walksHandle = await screen.findByRole('button', { name: 'Drag to reorder Walks' })
 
-    walksHandle.focus()
+    // A press focuses the handle (a bare .focus() can land on the table row in jsdom); a press alone drops nothing.
+    await userEvent.click(walksHandle)
     await userEvent.keyboard('{ArrowUp}')
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 50)) })
     expect(writes('PUT')).toHaveLength(0)
@@ -391,10 +437,8 @@ describe('[E4.18][AC87] the category editor in English', () => {
     ]
     renderScreen()
 
-    const hillHandle = await screen.findByRole('button', { name: 'Drag to reorder Hill' })
-
-    // A press on the handle focuses it (a bare .focus() lands on the table row in jsdom); the press alone drops nothing.
-    await userEvent.click(hillHandle)
+    // A press on the handle focuses it (a bare .focus() can land on the table row in jsdom); the press alone drops nothing.
+    await userEvent.click(await screen.findByRole('button', { name: 'Drag to reorder Hill' }))
     await userEvent.keyboard('{ArrowDown}')
 
     await waitFor(() => expect(writes('PUT')).toHaveLength(1))
