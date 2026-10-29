@@ -55,8 +55,9 @@ async function create(staff: Staff, body: object) {
   return await response.json() as { id: string, rowVersion: number, photos: { mediaId: string, alt: object }[], outboundUrl: string | null, draft: { localTip: object } | null }
 }
 
-const patch = (staff: Staff, id: string, version: number, body: object) =>
-  env.call(`${staff.pins}/${id}`, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': String(version) }, body })
+function patch(staff: Staff, id: string, version: number, body: object) {
+  return env.call(`${staff.pins}/${id}`, { method: 'PATCH', headers: { ...staff.owner.headers, 'If-Match': String(version) }, body })
+}
 
 describe('[E4.2][AC41] migration 0010: five interests in the database', () => {
   it.each(['{local-activities}', '{history-culture,food-drink,lake-mountains,shopping-keepsakes,local-activities}'])('[E4.2][AC41] valid_interests accepts %s', async (value) => {

@@ -110,8 +110,9 @@ async function replaceLists(tx: Tx, storeId: string, pinId: string, changes: Pin
         insert into content.place_photos (place_id, store_id, position, media_id, alt) values ${sql.join(values, sql`, `)}`)
     }
   }
-  if (changes.outboundUrl === null)
+  if (changes.outboundUrl === null) {
     await tx.execute(sql`delete from content.place_links where store_id = ${storeId} and place_id = ${pinId}`)
+  }
   else if (changes.outboundUrl !== undefined) {
     await tx.execute(sql`
       insert into content.place_links (place_id, store_id, url) values (${pinId}, ${storeId}, ${changes.outboundUrl})

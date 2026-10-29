@@ -1,4 +1,4 @@
-import type { Pin as PinView, PinListItem, PinWriteBody } from '@sk/api-contract'
+import type { PinListItem, Pin as PinView, PinWriteBody } from '@sk/api-contract'
 import type { Pin, PinListEntry } from '@sk/domain/content'
 import type { PinChanges } from '../ports.ts'
 
