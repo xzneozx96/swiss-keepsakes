@@ -11,7 +11,7 @@ describe('routeTabs', () => {
       <RouteTabs
         label="Pages"
         selected="a"
-        tabs={[{ id: 'a', to: '/a', label: 'Alpha', badge: 2 }, { id: 'b', to: '/b', label: 'Beta' }]}
+        tabs={[{ id: 'a', to: '/store', label: 'Alpha', badge: 2 }, { id: 'b', to: '/account', label: 'Beta' }]}
         trailing={<button type="button">Filter</button>}
       />,
     )
