@@ -22,7 +22,8 @@ export interface CategoryActions {
   add: () => void
   edit: (category: MerchantCategory) => void
   addSub: (parent: MerchantCategory) => void
-  remove: (category: MerchantCategory) => void
+  /** `onDeleted` runs after the API removed it, for a page that must leave the category it showed. */
+  remove: (category: MerchantCategory, onDeleted?: () => void) => void
   move: (category: MerchantCategory, direction: -1 | 1) => void
   /** Moves the sibling at `from` to `to` under `parentId` (a drop or an arrow key). */
   reorder: (parentId: string | null, from: number, to: number) => void
@@ -90,7 +91,7 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
 
       send(category.parentId, reorderedIds(items, category.parentId, from, from + direction))
     },
-    remove: (category) => {
+    remove: (category, onDeleted) => {
       if (refusalOf(category)) {
         setSheet({ mode: 'refused', category })
 
@@ -105,7 +106,10 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
           return
         setNotice(undefined)
         remove.submit({ storeId, kind, id: category.id, idempotencyKey: crypto.randomUUID() }, {
-          onSuccess: () => toast.success(t('categories.toast.deleted')),
+          onSuccess: () => {
+            toast.success(t('categories.toast.deleted'))
+            onDeleted?.()
+          },
           onError: failed,
         })
       })

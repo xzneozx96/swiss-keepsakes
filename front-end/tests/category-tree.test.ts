@@ -1,7 +1,7 @@
 import { merchantCategorySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 
-import { canMove, displayOrder, matches, refusalOf, reorderedIds, withOrder } from '@/features/categories/lib/category-tree'
+import { canMove, displayOrder, matches, nameOf, refusalOf, reorderedIds, withOrder } from '@/features/categories/lib/category-tree'
 
 const uuid = (n: number) => `0198a000-0000-7000-8000-00000000000${n}`
 function make(n: number, parentId: number | null, en: string | null, de: string | null, counts = { childCount: 0, useCount: 0 }) {
@@ -47,5 +47,10 @@ describe('[E4.18] category tree helpers', () => {
     expect(refusalOf(sights)).toEqual({ children: 2, uses: 0 })
     expect(refusalOf(views)).toEqual({ children: 0, uses: 3 })
     expect(refusalOf(town)).toBeNull()
+  })
+
+  it('reads English first and falls back to German', () => {
+    expect(nameOf(sights)).toBe('Sights')
+    expect(nameOf(food)).toBe('Essen')
   })
 })

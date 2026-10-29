@@ -68,7 +68,7 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
               )
             : wide
               ? <CategoryTable key={kind} actions={actions} busy={busy} items={items} kind={kind} />
-              : <CategoryPhone items={items} kind={kind} />}
+              : <CategoryPhone key={kind} actions={actions} items={items} kind={kind} />}
       {sheet?.mode === 'refused' && (
         <SheetFrame
           isOpen
