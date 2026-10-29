@@ -72,8 +72,9 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
   const tours = useTourRecords()
   const products = useProducts()
   const orders = useOrders()
-  // `save` and `addOtherVersion` set this right before sending, so meta.success (fixed once createArticle
-  // and updateArticle are set up) always reads the text for the attempt actually in flight.
+  // `save` and `addOtherVersion` set this right after `submit` accepts a send (never for a dropped tap),
+  // so meta.success (fixed once createArticle and updateArticle are set up) always reads the text for
+  // the attempt actually in flight.
   const pendingSuccessRef = useRef('')
   const { submit: createArticle, isPending: isCreating } = useSubmit(
     'content',
@@ -279,7 +280,7 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
     const willPublish = (publication ?? stored?.publication)?.status === 'published'
     const languageName = t(`merchantContent.lang.${form.language}`)
 
-    pendingSuccessRef.current = !wasPublished && willPublish
+    const successText = !wasPublished && willPublish
       ? t('merchantArticles.toast.published', { language: languageName })
       : wasPublished && !willPublish
         ? t('merchantArticles.toast.unpublished')
@@ -288,10 +289,13 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
           : t('merchantArticles.toast.saved')
 
     if (stored) {
-      updateArticle(
+      const sent = updateArticle(
         { id: stored.id, content, publication },
         { onSuccess: () => saved(stored.id) },
       )
+
+      if (sent)
+        pendingSuccessRef.current = successText
 
       return true
     }
@@ -304,7 +308,7 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       new Set(articles.map(a => a.id)),
     )
 
-    createArticle(
+    const sent = createArticle(
       {
         ...content,
         id,
@@ -313,6 +317,9 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       },
       { onSuccess: () => saved(id) },
     )
+
+    if (sent)
+      pendingSuccessRef.current = successText
 
     return true
   }
@@ -326,8 +333,7 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       new Set(articles.map(a => a.id)),
     )
 
-    pendingSuccessRef.current = t(`merchantArticles.toast.versionAdded.${otherLanguage}`)
-    createArticle(
+    const sent = createArticle(
       {
         ...structuredClone(stored),
         id,
@@ -340,6 +346,9 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       },
       { onSuccess: () => onAdded(id) },
     )
+
+    if (sent)
+      pendingSuccessRef.current = t(`merchantArticles.toast.versionAdded.${otherLanguage}`)
   }
 
   return {
