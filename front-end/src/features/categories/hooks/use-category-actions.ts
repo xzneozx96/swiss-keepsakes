@@ -8,9 +8,8 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
-import { displayName } from '../lib/category-name'
 import { problemTypeToMessageKey } from '../lib/category-problems'
-import { canMove, refusalOf, reorderedIds, siblingsOf, withOrder } from '../lib/category-tree'
+import { canMove, nameOf, refusalOf, reorderedIds, siblingsOf, withOrder } from '../lib/category-tree'
 
 /** What is open over the list: the add or edit form (a parent to preselect for a new sub-category), or the refusal of a delete. */
 export type CategorySheet
@@ -41,7 +40,7 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
   items: MerchantCategory[]
   refetch: () => void
 }) {
-  const { t, language } = useLocale()
+  const { t } = useLocale()
   const reorder = useSubmit('categories', 'reorder')
   const remove = useSubmit('categories', 'remove')
   const { confirm, dialog } = useConfirm()
@@ -98,7 +97,7 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
         return
       }
       void confirm({
-        title: t('categories.delete.title', { name: displayName(category, language).primary }),
+        title: t('categories.delete.title', { name: nameOf(category) }),
         body: t('categories.delete.body'),
         confirmLabel: t('categories.delete.confirm'),
       }).then((confirmed) => {

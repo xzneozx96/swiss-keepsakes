@@ -10,8 +10,7 @@ import { ApiProblem } from '@/features/data-client/errors'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { useCategories } from '../api/queries'
 import { useCategoryActions } from '../hooks/use-category-actions'
-import { displayName } from '../lib/category-name'
-import { rootsOf } from '../lib/category-tree'
+import { nameOf, rootsOf } from '../lib/category-tree'
 import { CategoryPhone } from './category-phone'
 import { CategoryRefusal } from './category-refusal'
 import { CategorySheet } from './category-sheet'
@@ -23,7 +22,7 @@ import { CategoryTable } from './category-table'
  * The store id is unknown for a moment after sign-in, so the list waits while it is.
  */
 export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | undefined, kind: CategoryKind, tabs: ReactNode }) {
-  const { t, language } = useLocale()
+  const { t } = useLocale()
   const wide = useIsWide()
   const categories = useCategories(storeId, kind)
   const loaded = categories.data?.items
@@ -73,7 +72,7 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
         <SheetFrame
           isOpen
           footer={<Button fullWidth className="min-h-11" variant="secondary" onPress={closeSheet}>{t('categories.refusal.gotIt')}</Button>}
-          title={t('categories.refusal.title', { name: displayName(sheet.category, language).primary })}
+          title={t('categories.refusal.title', { name: nameOf(sheet.category) })}
           onClose={closeSheet}
         >
           <CategoryRefusal category={sheet.category} items={items} kind={kind} />

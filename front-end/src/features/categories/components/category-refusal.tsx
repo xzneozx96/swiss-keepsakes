@@ -1,8 +1,7 @@
 import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
 
 import { useLocale } from '@/contexts/locale-context'
-import { displayName } from '../lib/category-name'
-import { childrenOf } from '../lib/category-tree'
+import { childrenOf, nameOf } from '../lib/category-tree'
 
 /** Why the category cannot go yet, and what to do about each reason. It reads the counts the API sent. */
 export function CategoryRefusal({ category, items, kind }: {
@@ -10,7 +9,7 @@ export function CategoryRefusal({ category, items, kind }: {
   items: MerchantCategory[]
   kind: CategoryKind
 }) {
-  const { t, language } = useLocale()
+  const { t } = useLocale()
   const children = childrenOf(items, category.id)
   const plural = (n: number) => (n === 1 ? 'one' : 'other')
 
@@ -21,7 +20,7 @@ export function CategoryRefusal({ category, items, kind }: {
           <li>
             {t(`categories.refusal.children.${plural(category.childCount)}`, {
               n: category.childCount,
-              names: children.map(child => displayName(child, language).primary).join(', '),
+              names: children.map(child => nameOf(child)).join(', '),
             })}
           </li>
         )}

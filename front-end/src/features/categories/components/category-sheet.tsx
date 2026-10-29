@@ -9,8 +9,8 @@ import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
-import { displayName } from '../lib/category-name'
 import { problemTypeToMessageKey } from '../lib/category-problems'
+import { nameOf } from '../lib/category-tree'
 
 const ROOT = 'root'
 
@@ -30,8 +30,8 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
   roots: MerchantCategory[]
   onClose: () => void
 }) {
-  const { t, language } = useLocale()
-  const title = category ? t('categories.sheet.editTitle', { name: displayName(category, language).primary }) : t(initialParent ? 'categories.sheet.addSubTitle' : 'categories.sheet.addTitle')
+  const { t } = useLocale()
+  const title = category ? t('categories.sheet.editTitle', { name: nameOf(category) }) : t(initialParent ? 'categories.sheet.addSubTitle' : 'categories.sheet.addTitle')
   const formId = useId()
   const [nameEn, setNameEn] = useState(category?.name.en ?? '')
   const [nameDe, setNameDe] = useState(category?.name.de ?? '')
@@ -153,7 +153,7 @@ export function CategorySheet({ storeId, kind, category, parentId: initialParent
                       <ListBox.ItemIndicator />
                     </ListBox.Item>
                     {parents.map((root) => {
-                      const label = displayName(root, language).primary
+                      const label = nameOf(root)
 
                       return (
                         <ListBox.Item key={root.id} id={root.id} textValue={label}>
