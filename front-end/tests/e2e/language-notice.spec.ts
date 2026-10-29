@@ -1,11 +1,18 @@
 import type { Page } from '@playwright/test'
+import process from 'node:process'
 import { expect, test } from '@playwright/test'
 
 // E3.11 / AC64: a story address in a language the story has no version in.
 test.use({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true })
 
+// E2E_BASE_URL (playwright.config.ts) points the demo specs at another server, a production build. Its story list
+// leaves out the two fixture stories (story-versions.ts adds them only outside production), so their addresses answer 404 there.
+const fixturesServed = !process.env.E2E_BASE_URL
+const FIXTURES_ABSENT = 'The fixture stories a-quiet-morning-on-the-reuss and ein-ruhiger-morgen-an-der-reuss exist only outside a production build (E2E_BASE_URL is set).'
+
 test.describe('[E3.11][AC64] story with no version in the URL language', () => {
   test('redirects the German address of an English-only story to the English one', async ({ request }) => {
+    test.skip(!fixturesServed, FIXTURES_ABSENT)
     const response = await request.get('/de/stories/a-quiet-morning-on-the-reuss', { maxRedirects: 0 })
 
     expect(response.status()).toBe(302)
@@ -13,6 +20,7 @@ test.describe('[E3.11][AC64] story with no version in the URL language', () => {
   })
 
   test('redirects the English address of a German-only story to the German one', async ({ request }) => {
+    test.skip(!fixturesServed, FIXTURES_ABSENT)
     const response = await request.get('/en/stories/ein-ruhiger-morgen-an-der-reuss', { maxRedirects: 0 })
 
     expect(response.status()).toBe(302)
@@ -34,6 +42,7 @@ test.describe('[E3.11][AC64] story with no version in the URL language', () => {
   })
 
   test('keeps the query string in the redirect', async ({ request }) => {
+    test.skip(!fixturesServed, FIXTURES_ABSENT)
     const response = await request.get('/de/stories/a-quiet-morning-on-the-reuss?utm_source=x', { maxRedirects: 0 })
 
     expect(response.status()).toBe(302)
@@ -90,6 +99,7 @@ function seedLanguage(page: Page, language: 'en' | 'de') {
 
 test.describe('[E3.11][AC64] notice', () => {
   test('stored de, hard load of the English-only story: English page with the notice, no console noise', async ({ page }) => {
+    test.skip(!fixturesServed, FIXTURES_ABSENT)
     const problems = problemsOf(page)
 
     await seedLanguage(page, 'de')
@@ -103,6 +113,7 @@ test.describe('[E3.11][AC64] notice', () => {
   })
 
   test('stored en: no notice on the English-only story', async ({ page }) => {
+    test.skip(!fixturesServed, FIXTURES_ABSENT)
     await seedLanguage(page, 'en')
     await page.goto(`/en/stories/${FIXTURE}`)
     await hydrated(page)
@@ -126,6 +137,7 @@ test.describe('[E3.11][AC64] German-only notice', () => {
   const NOTICE_DE = 'Diese Seite gibt es nur auf Deutsch.'
 
   test('the server HTML has the empty live region and no notice, so a German guest never sees it flash', async ({ request }) => {
+    test.skip(!fixturesServed, FIXTURES_ABSENT)
     const response = await request.get(`/de/stories/${DE_ONLY}`)
 
     expect(response.status()).toBe(200)
@@ -136,6 +148,7 @@ test.describe('[E3.11][AC64] German-only notice', () => {
   })
 
   test('stored en: the notice shows in German after hydration', async ({ page }) => {
+    test.skip(!fixturesServed, FIXTURES_ABSENT)
     await seedLanguage(page, 'en')
     await page.goto(`/de/stories/${DE_ONLY}`)
     await hydrated(page)
@@ -144,6 +157,7 @@ test.describe('[E3.11][AC64] German-only notice', () => {
   })
 
   test('nothing stored: no notice', async ({ page }) => {
+    test.skip(!fixturesServed, FIXTURES_ABSENT)
     await page.goto(`/de/stories/${DE_ONLY}`)
     await hydrated(page)
 
@@ -154,6 +168,7 @@ test.describe('[E3.11][AC64] German-only notice', () => {
 
 test.describe('[E3.11][AC64] switch', () => {
   test('choosing DE on the English-only story stays at the English address with the notice and stores de', async ({ page }) => {
+    test.skip(!fixturesServed, FIXTURES_ABSENT)
     await page.goto(`/en/stories/${FIXTURE}`)
     await hydrated(page)
     await choose(page, 'Language', 'Deutsch')

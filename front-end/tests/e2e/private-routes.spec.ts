@@ -65,10 +65,11 @@ test('[E3.7][AC24] /r/abc is a 302 with noindex and no shell', async ({ request 
   expect(body).not.toContain('Make yourself at home')
 })
 
-test('[E3.3][AC12] a public path has neither header', async ({ request }) => {
+test('[E3.3][AC12] a public path carries noindex outside production but not the partner-only header', async ({ request }) => {
   const response = await request.get('/')
 
-  expect(response.headers()['x-robots-tag']).toBeUndefined()
+  // E3.6 sends noindex on public pages outside production (ADR-001); the partner paths above prove the private headers.
+  expect(response.headers()['x-robots-tag']).toBe('noindex')
   expect(response.headers()['referrer-policy']).toBeUndefined()
 })
 
