@@ -91,8 +91,8 @@ function genericFeedbackKey(error: unknown): MessageKey {
  * Defaults: a mutation's error always toasts, mapped by `meta.error[problem.type]` then the generic copy,
  * unless `meta.silent`, a 401 (sign-in owns it) or a cancelled request. A mutation's success toasts only
  * with `meta.success`. A query toasts only when a background refetch fails while data is already on screen
- * (the first load is the route's error screen); `meta.silent` opts a query out, and a query toasts at most
- * once per `queryHash` until it next succeeds, so polling cannot stack toasts.
+ * (the first load is the route's error screen), never for a 401 or a cancelled request; `meta.silent` opts a
+ * query out, and a query toasts at most once per `queryHash` until it next succeeds, so polling cannot stack toasts.
  *
  * A no-op on the server: `QueryCache.onError` also fires for a failed `ensureQueryData` in a loader.
  */
@@ -108,6 +108,8 @@ export function createApiQueryClient(
     queryCache: new QueryCache({
       onError: (error, query) => {
         if (!live || query.state.data === undefined || isCancelledError(error))
+          return
+        if (error instanceof ApiProblem && error.status === 401)
           return
         const meta = query.meta
         if (meta?.silent || toastedQueryHashes.has(query.queryHash))
@@ -126,7 +128,14 @@ export function createApiQueryClient(
         const success = mutation.meta?.success
         if (!success)
           return
-        const message = typeof success === 'function' ? success(data, variables) : feedback.t(success)
+        // A throwing `success` function must not turn a command that worked into a failed one.
+        let message: string
+        try {
+          message = typeof success === 'function' ? success(data, variables) : feedback.t(success)
+        }
+        catch {
+          return
+        }
         feedback.toast.success(message)
       },
       onError: (error, _variables, _onMutateResult, mutation) => {
