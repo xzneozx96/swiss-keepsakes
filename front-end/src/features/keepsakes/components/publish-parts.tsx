@@ -2,14 +2,13 @@ import type { Product, PublishCheck } from '@sk/api-contract'
 import type { Language } from '@sk/domain/shared'
 import type { Outcome } from '../hooks/use-keepsake-editor'
 
-import { Button, toast } from '@heroui/react'
+import { Button } from '@heroui/react'
 import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { ChevronDownIcon, StatusDangerIcon, StatusSuccessIcon, StatusWarningIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { checkText, fullLanguages, nameIn, textOf } from '../lib/keepsake-rules'
-import { problemMessageKey } from '../lib/problems'
 import { KeepsakeLanguageSwitch } from './basics-fields'
 
 export interface PublishActions {
@@ -70,23 +69,12 @@ export function PublishButtons({ keepsake, actions, layout = 'stack' }: { keepsa
   const blocked = keepsake.blocking.length > 0
   const live = keepsake.status === 'published'
 
-  const fail = (outcome: Extract<Outcome, { ok: false }>) => {
-    if (outcome.type === 'publish-incomplete')
-      actions.onBlocked()
-    toast.danger(t(problemMessageKey(outcome.type)))
-  }
-
+  // The toast of a result is the command's `meta` (`use-keepsake-editor.ts`); here only the screen reacts to a blocked publish.
   const publish = async () => {
     const outcome = await actions.publish()
 
-    if (outcome.ok) {
-      const languages = fullLanguages({ name: textOf(keepsake.name), text: textOf(keepsake.text) })
-
-      toast.success(t('keepsakes.toast.published', { languages: languages.map(language => t(`keepsakes.language.${language}`)).join(` ${t('keepsakes.and')} `) }))
-    }
-    else {
-      fail(outcome)
-    }
+    if (!outcome.ok && outcome.type === 'publish-incomplete')
+      actions.onBlocked()
   }
   const unpublish = async () => {
     const confirmed = await confirm({
@@ -97,12 +85,7 @@ export function PublishButtons({ keepsake, actions, layout = 'stack' }: { keepsa
 
     if (!confirmed)
       return
-    const outcome = await actions.unpublish()
-
-    if (outcome.ok)
-      toast(t('keepsakes.toast.unpublished'))
-    else
-      fail(outcome)
+    await actions.unpublish()
   }
 
   return (

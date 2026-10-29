@@ -19,8 +19,9 @@ const failures: Record<string, MessageKey> = {
  * own `Idempotency-Key`, and a failed attempt says why in words.
  */
 export function usePhotoUpload(storeId: string) {
-  const request = useCommand('places', 'requestUpload')
-  const confirm = useCommand('places', 'confirmUpload')
+  // Every failure becomes `state` next to the field, so the cache's error toast is off.
+  const request = useCommand('places', 'requestUpload', { meta: { silent: true } })
+  const confirm = useCommand('places', 'confirmUpload', { meta: { silent: true } })
   const [state, setState] = useState<UploadState>({ status: 'idle' })
 
   async function upload(file: File): Promise<string | undefined> {

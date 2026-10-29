@@ -2,7 +2,6 @@ import type { Product, ProductVariant } from '@sk/api-contract'
 import type { Outcome } from '../hooks/use-keepsake-editor'
 import type { DataTableColumn } from '@/components/data-table'
 
-import { toast } from '@heroui/react'
 import { useState } from 'react'
 
 import { DataTable } from '@/components/data-table'
@@ -12,7 +11,6 @@ import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { chf } from '../lib/keepsake-rules'
-import { problemMessageKey } from '../lib/problems'
 import { KeepsakeCard } from './keepsake-card'
 import { VariantSheet } from './variant-sheet'
 
@@ -21,7 +19,8 @@ const TABS = ['all', 'for-sale', 'hidden'] as const
 
 type Tab = (typeof TABS)[number]
 type Action = 'edit' | 'toggle'
-type Save = (variantId: string, body: { skuCode?: string, priceRappen?: number, status?: 'published' | 'draft' }) => Promise<Outcome>
+type Save = (variantId: string, body: { skuCode: string, priceRappen: number, status: 'published' | 'draft' }) => Promise<Outcome>
+type SetStatus = (variantId: string, status: 'published' | 'draft') => Promise<Outcome>
 
 const inTab = (variant: ProductVariant, tab: Tab) => tab === 'all' || (tab === 'for-sale' ? variant.status === 'published' : variant.status === 'draft')
 
@@ -30,22 +29,12 @@ const inTab = (variant: ProductVariant, tab: Tab) => tab === 'all' || (tab === '
  * this into the combinations table N15 with option columns and Create variant, and the variant page; E6.3 shows stock
  * on two lines.
  */
-export function VariantsCard({ keepsake, onSave }: { keepsake: Product, onSave: Save }) {
+export function VariantsCard({ keepsake, onSave, onSetStatus }: { keepsake: Product, onSave: Save, onSetStatus: SetStatus }) {
   const { t, intlLocale } = useLocale()
   const [tab, setTab] = useState<Tab>('all')
   const [editing, setEditing] = useState<ProductVariant>()
   const rows = keepsake.variants.filter(variant => inTab(variant, tab))
   const count = (which: Tab) => keepsake.variants.filter(variant => inTab(variant, which)).length
-
-  const toggle = async (variant: ProductVariant) => {
-    const status = variant.status === 'published' ? 'draft' : 'published'
-    const outcome = await onSave(variant.id, { status })
-
-    if (outcome.ok)
-      toast.success(t(status === 'draft' ? 'keepsakes.variant.toast.hidden' : 'keepsakes.variant.toast.forSale', { code: variant.skuCode }))
-    else
-      toast.danger(t(problemMessageKey(outcome.type)))
-  }
 
   const menu = (variant: ProductVariant) => (
     <RowActions<Action>
@@ -60,7 +49,7 @@ export function VariantsCard({ keepsake, onSave }: { keepsake: Product, onSave: 
         if (action === 'edit')
           setEditing(variant)
         else
-          void toggle(variant)
+          void onSetStatus(variant.id, variant.status === 'published' ? 'draft' : 'published')
       }}
     />
   )

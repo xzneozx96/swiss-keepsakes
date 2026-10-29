@@ -1,7 +1,7 @@
 import type { Language } from '@sk/domain/shared'
 import type { KeepsakeText } from '../lib/keepsake-rules'
 
-import { Button, FieldError, Input, Label, NumberField, TextField, toast } from '@heroui/react'
+import { Button, FieldError, Input, Label, NumberField, TextField } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
@@ -69,7 +69,10 @@ function VariantStep({ name, code, price, errors, onCode, onPrice }: {
 function CreateFlow({ storeId }: { storeId: string }) {
   const { t, language } = useLocale()
   const navigate = useNavigate()
-  const create = useSubmit('keepsakes', 'create')
+  // A refusal shows at the code field or in `failure`, so the cache's error toast is off.
+  const create = useSubmit('keepsakes', 'create', {
+    meta: { success: created => t('keepsakes.toast.created', { name: nameIn(created.name, language), count: created.variants.length }), silent: true },
+  })
   const library = usePhotoLibrary([])
   const [step, setStep] = useState<StepId>('details')
   const [value, setValue] = useState(empty)
@@ -111,7 +114,6 @@ function CreateFlow({ storeId }: { storeId: string }) {
     create.submit({ storeId, ...body, variants: [{ skuCode, priceRappen }], idempotencyKey: key.next() }, {
       onSuccess: (created) => {
         key.settled()
-        toast.success(t('keepsakes.toast.created', { name: nameIn(created.name, language), count: created.variants.length }))
         void navigate({ to: '/store/products/gifts/$productId', params: { productId: created.id } })
       },
       onError: (error) => {

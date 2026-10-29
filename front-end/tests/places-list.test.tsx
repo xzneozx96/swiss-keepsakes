@@ -1,5 +1,6 @@
 import type { FakeApi } from './places-support'
 
+import { toast } from '@heroui/react'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -25,7 +26,10 @@ beforeEach(() => {
   api = installApi()
 })
 
-afterEach(() => window.history.pushState({}, '', '/'))
+afterEach(() => {
+  vi.restoreAllMocks()
+  window.history.pushState({}, '', '/')
+})
 
 const path = '/store/content/places'
 const open = (language: 'en' | 'de' = 'en') => renderInRouter(<PlacesScreen />, { path, language })
@@ -117,6 +121,7 @@ describe('[E4.2][AC68] N16 the list', () => {
   })
 
   it('[E4.2][AC79] a published pin can be hidden and not deleted: hide asks first, sends If-Match and a key, and the list reloads', async () => {
+    const success = vi.spyOn(toast, 'success')
     api.items = [listItem({ id: uuid(11), status: 'published', title: { en: 'Chapel Bridge' }, rowVersion: 4 })]
     await open()
     await screen.findAllByRole('link', { name: 'Chapel Bridge' })
@@ -131,9 +136,11 @@ describe('[E4.2][AC68] N16 the list', () => {
     await waitFor(() => expect(writes('POST')).toHaveLength(1))
     expect(writes('POST')[0]).toMatchObject({ path: `/api/store/${storeId}/pins/${uuid(11)}/hide`, ifMatch: '4', key: expect.any(String) })
     await waitFor(() => expect(api.calls.filter(call => call.method === 'GET' && call.path === `/api/store/${storeId}/pins`).length).toBeGreaterThan(1))
+    expect(success).toHaveBeenCalledExactlyOnceWith('Chapel Bridge is hidden.')
   })
 
   it('[E4.2][AC79] a draft can be deleted after a confirm, and has no hide action', async () => {
+    const success = vi.spyOn(toast, 'success')
     api.items = [listItem({ id: uuid(11), status: 'draft', title: { en: 'Draft pin' }, rowVersion: 2 })]
     await open()
     await screen.findAllByRole('link', { name: 'Draft pin' })
@@ -144,9 +151,11 @@ describe('[E4.2][AC68] N16 the list', () => {
 
     await waitFor(() => expect(writes('DELETE')).toHaveLength(1))
     expect(writes('DELETE')[0]).toMatchObject({ path: `/api/store/${storeId}/pins/${uuid(11)}`, ifMatch: '2' })
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Draft deleted.'))
   })
 
   it('[E4.2][AC79] a hidden pin is shown again by a publish with its version', async () => {
+    const success = vi.spyOn(toast, 'success')
     api.items = [listItem({ id: uuid(11), status: 'hidden', title: { en: 'Old tap' }, rowVersion: 3 })]
     await open()
     await screen.findAllByRole('link', { name: 'Old tap' })
@@ -154,10 +163,12 @@ describe('[E4.2][AC68] N16 the list', () => {
 
     await waitFor(() => expect(writes('POST')).toHaveLength(1))
     expect(writes('POST')[0]).toMatchObject({ path: `/api/store/${storeId}/pins/${uuid(11)}/publish`, ifMatch: '3' })
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Old tap is on the map again.'))
   })
 
   it('[E4.2][AC79] a refusal of a write is shown in words next to the list', async () => {
     api.items = [listItem({ id: uuid(11), status: 'published', title: { en: 'Chapel Bridge' }, rowVersion: 4 })]
+    const danger = vi.spyOn(toast, 'danger')
     api.answer = call => (call.method === 'POST' ? problem(412, 'precondition-failed') : undefined)
     await open()
     await screen.findAllByRole('link', { name: 'Chapel Bridge' })
@@ -165,6 +176,7 @@ describe('[E4.2][AC68] N16 the list', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Hide pin' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Someone saved this place after you opened it')
+    expect(danger).not.toHaveBeenCalled()
   })
 
   it('[E4.2][AC68] a failed read shows a message with Try again, and a store with no pins at all invites the first', async () => {

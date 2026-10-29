@@ -56,12 +56,10 @@ export function OrderReviews({ order }: { order: Order }) {
           if (!writing)
             return
           setIsOpen(false)
-          if (submit(writing.productId, rating, text)) {
-            toast.success(t('review.posted'))
-          }
-          else {
+          // `submit` sends addReview, whose own toast comes from meta.success; false means it never
+          // sent (the order changed under the guest since the button showed), which is this toast's.
+          if (!submit(writing.productId, rating, text))
             toast.danger(t('review.failed'))
-          }
         }}
       />
     </>

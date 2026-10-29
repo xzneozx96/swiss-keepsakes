@@ -9,7 +9,7 @@ import {
   storedLanguage,
 } from '@/contexts/locale-context'
 import { followSession } from '@/features/auth/lib/session-sync'
-import { DataClientProvider } from '@/features/data-client'
+import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startSeedDemo } from '@/features/demo/data-client'
 import { apiEnabled } from '@/lib/api-mode'
@@ -85,6 +85,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <QueryClientProvider client={demo.queryClient}>
       <DataClientProvider client={demo.dataClient}>
         <LocaleProvider>
+          <ApiFeedbackBridge feedback={demo.feedback} />
           <DemoProvider store={demo.store}>{children}</DemoProvider>
         </LocaleProvider>
       </DataClientProvider>

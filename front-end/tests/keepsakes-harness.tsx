@@ -5,7 +5,7 @@ import { render } from '@testing-library/react'
 import { vi } from 'vitest'
 
 import { LocaleProvider } from '@/contexts/locale-context'
-import { DataClientProvider } from '@/features/data-client'
+import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
 import { CreateKeepsake } from '@/features/keepsakes/components/create-flow'
@@ -152,6 +152,7 @@ export function renderKeepsakes(initial: string) {
     <QueryClientProvider client={state.demo.queryClient}>
       <DataClientProvider client={state.demo.dataClient}>
         <LocaleProvider>
+          <ApiFeedbackBridge feedback={state.demo.feedback} />
           <DemoProvider store={state.demo.store}>
             <RouterProvider router={router} />
           </DemoProvider>

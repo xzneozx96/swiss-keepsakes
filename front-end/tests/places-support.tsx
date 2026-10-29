@@ -8,7 +8,7 @@ import { render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
 
 import { loadDictionary, LocaleProvider } from '@/contexts/locale-context'
-import { DataClientProvider } from '@/features/data-client'
+import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { startDemo } from '@/features/demo/data-client'
 import { Stub } from './places-stub'
 
@@ -143,6 +143,7 @@ export async function renderInRouter(screen_: ReactNode, { path, language = 'en'
     <QueryClientProvider client={demo.queryClient}>
       <DataClientProvider client={demo.dataClient}>
         <LocaleProvider>
+          <ApiFeedbackBridge feedback={demo.feedback} />
           <RouterProvider router={router} />
         </LocaleProvider>
       </DataClientProvider>

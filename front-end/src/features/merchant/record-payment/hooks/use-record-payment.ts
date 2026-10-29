@@ -54,10 +54,15 @@ const ZURICH = 'Europe/Zurich'
 export function useRecordPayment(order: Order) {
   const { t, intlLocale } = useLocale()
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
-  const actions = useOrderActions()
-  const blockText = useBlockText()
   const owed = balance(order)
   const money = (rappen: number) => formatMoney(rappen / 100, intlLocale)
+  const actions = useOrderActions({
+    success: (_result, input) => t('recordPayment.recorded', {
+      amount: money(input.payment.amount),
+      balance: money(Math.max(0, owed - input.payment.amount)),
+    }),
+  })
+  const blockText = useBlockText()
 
   // Fixed when the sheet opens: the latest time the money can have arrived.
   const [openedAt] = useState(() => fromDate(demoNow(clockStartedAt), ZURICH))
@@ -114,10 +119,6 @@ export function useRecordPayment(order: Order) {
     setNote,
     canSubmit: (!block || isDuplicate) && !isFuture,
     confirmLabel,
-    recordedText: t('recordPayment.recorded', {
-      amount: money(rappen),
-      balance: after,
-    }),
     submit,
   }
 }

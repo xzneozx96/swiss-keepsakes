@@ -1,5 +1,6 @@
 import type { FakeApi } from './places-support'
 
+import { toast } from '@heroui/react'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -34,7 +35,10 @@ beforeEach(() => {
   api = installApi()
 })
 
-afterEach(() => window.history.pushState({}, '', '/'))
+afterEach(() => {
+  vi.restoreAllMocks()
+  window.history.pushState({}, '', '/')
+})
 
 function open(placeId: string, options: { start?: 'dates', language?: 'en' | 'de' } = {}) {
   return renderInRouter(<PlaceEditorScreen placeId={placeId} start={options.start} />, { path: `/store/content/places/${placeId}${options.start ? '?start=dates' : ''}`, language: options.language })
@@ -75,6 +79,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
   })
 
   it('[E4.2][AC68] saves a draft with the position, the map link per title language and a key, then moves to the pin\'s own address', async () => {
+    const success = vi.spyOn(toast, 'success')
     api.pin = pinOf({ id: uuid(10) })
     const { router } = await open('new')
     await completeNewPin()
@@ -83,9 +88,11 @@ describe('[E4.2][AC68] N17 a new place', () => {
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins`, key: expect.any(String), body: { title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3, interests: [], mustVisit: false, serviceType: null, foodKind: null, photos: [], dates: [], outboundUrl: null } })
     await waitFor(() => expect(router.state.location.pathname).toBe(`/store/content/places/${uuid(10)}`))
+    expect(success).toHaveBeenCalledExactlyOnceWith('Draft saved.')
   })
 
   it('[E4.2][AC85][AC68] publishes with a title, a position and a map link and nothing else: a create, then a publish with the new version', async () => {
+    const success = vi.spyOn(toast, 'success')
     api.pin = pinOf({ id: uuid(10), rowVersion: 1 })
     await open('new')
     await completeNewPin()
@@ -95,6 +102,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
     await waitFor(() => expect(writes()).toHaveLength(2))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins`, body: { categoryIds: [], mainStoryGroupId: null } })
     expect(writes()[1]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins/${uuid(10)}/publish`, ifMatch: '1' })
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Published. The pin is on the map.'))
   })
 
   it('[E4.2][AC68] on the review, each missing item is named, and Publish sends nothing', async () => {
@@ -125,6 +133,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
   })
 
   it('[E4.2][AC68] a map link that another place uses sends the editor back to it with the words of the refusal', async () => {
+    const danger = vi.spyOn(toast, 'danger')
     api.answer = call => (call.method === 'POST' ? problem(409, 'content-slug-taken') : undefined)
     await open('new')
     await completeNewPin()
@@ -132,6 +141,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
 
     expect(await screen.findAllByText('Another place already uses this map link. Pick a different one.')).not.toHaveLength(0)
     await heading('Place on the map')
+    expect(danger).not.toHaveBeenCalled()
   })
 
   it('[E4.2][AC68] a map link with capitals or spaces is refused in the field, and nothing is sent', async () => {
@@ -312,6 +322,7 @@ describe('[E4.2][AC68] N17 photos', () => {
   })
 
   it('[E4.2][AC68] a refused upload says why, and keeps the form', async () => {
+    const danger = vi.spyOn(toast, 'danger')
     api.answer = call => (call.path === `/api/store/${storeId}/media/uploads` ? problem(422, 'media-type-not-allowed') : undefined)
     await open('new')
     await heading('Place on the map')
@@ -320,6 +331,7 @@ describe('[E4.2][AC68] N17 photos', () => {
 
     expect(await screen.findByText(/This type of file is not allowed/)).toBeInTheDocument()
     expect(document.querySelector('img')).toBeNull()
+    expect(danger).not.toHaveBeenCalled()
   })
 
   it('[E4.2][AC68] alt text typed while another photo uploads is kept when the upload ends', async () => {
@@ -372,6 +384,7 @@ describe('[E4.2][AC68] N17 photos', () => {
 
 describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
   it('[E4.2][AC79] a published pin saves with its version and no new map link, and a draft the save returns is published after it', async () => {
+    const success = vi.spyOn(toast, 'success')
     api.pin = livePin()
     api.answer = call => (call.method === 'PATCH' ? Response.json(livePin({ rowVersion: 4, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} } })) : undefined)
     await open(uuid(10))
@@ -388,9 +401,26 @@ describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
     expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `/api/store/${storeId}/pins/${uuid(10)}`, ifMatch: '3', body: { title: { en: 'Chapel Bridge, Lucerne' } } })
     expect(writes()[0]!.body).not.toHaveProperty('slug')
     expect(writes()[1]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins/${uuid(10)}/publish`, ifMatch: '4' })
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Published. The pin is on the map.'))
+  })
+
+  it('[E4.2][AC79] a published pin whose save returns no draft says the changes are saved, once', async () => {
+    const success = vi.spyOn(toast, 'success')
+    api.pin = livePin()
+    api.answer = call => (call.method === 'PATCH' ? Response.json(livePin({ rowVersion: 4 })) : undefined)
+    await open(uuid(10))
+    await heading('Place on the map')
+    await userEvent.click(screen.getAllByRole('button', { name: /Text and photo/ }).at(0)!)
+    await heading('Text and photo')
+    await type('Title in English', ' Bridge')
+    await press('Save changes')
+
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Changes saved.'))
+    expect(writes()).toHaveLength(1)
   })
 
   it('[E4.2][AC79] a published pin is hidden after a confirm, and has no delete', async () => {
+    const success = vi.spyOn(toast, 'success')
     api.pin = livePin()
     await open(uuid(10))
     await heading('Place on the map')
@@ -402,6 +432,7 @@ describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins/${uuid(10)}/hide`, ifMatch: '3' })
+    await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Chapel Bridge is hidden.'))
   })
 
   it('[E4.2][AC79] Hide is off while the form has unsaved edits, so hiding never discards them, and it works again once they are saved', async () => {
@@ -435,6 +466,7 @@ describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
   })
 
   it('[E4.2][AC79] a draft is deleted from the review after a confirm and the editor goes back to the list', async () => {
+    const success = vi.spyOn(toast, 'success')
     api.pin = pinOf({ id: uuid(10), rowVersion: 2 })
     const { router } = await open(uuid(10))
     await heading('Place on the map')
@@ -445,6 +477,7 @@ describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'DELETE', ifMatch: '2' })
     await waitFor(() => expect(router.state.location.pathname).toBe('/store/content/places'))
+    expect(success).toHaveBeenCalledExactlyOnceWith('Draft deleted.')
   })
 
   it('[E4.2][AC68] a pin that is not in the store is not found, with a way back', async () => {
