@@ -28,7 +28,9 @@ async function renderShell(url: string) {
         <DataClientProvider client={demo.dataClient}>
           <LocaleProvider>
             <DemoProvider store={demo.store}>
-              <GuestShell><Outlet /></GuestShell>
+              <GuestShell>
+                <Outlet />
+              </GuestShell>
             </DemoProvider>
           </LocaleProvider>
         </DataClientProvider>
