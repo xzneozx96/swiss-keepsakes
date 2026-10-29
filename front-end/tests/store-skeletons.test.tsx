@@ -66,6 +66,7 @@ describe('store screens loading', () => {
     expect(genericBox(container)).toBeNull()
     expect(container.querySelectorAll('aside li')).toHaveLength(5)
     expect(container.querySelectorAll('[data-skeleton="step"]')).toHaveLength(1)
+    expect(container.querySelector('.fixed.bottom-0')?.className).toContain('pb-[calc(env(safe-area-inset-bottom,0px)+12px)]')
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
 

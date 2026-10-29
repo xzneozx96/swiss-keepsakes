@@ -114,7 +114,7 @@ export function OnboardingSkeleton({ title }: { title: string }) {
                 <Skeleton className={`${BUTTON} w-52`} />
               </div>
             </div>
-            <div className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 border-t border-separator bg-surface px-4 py-3 lg:static lg:rounded-b-3xl lg:px-8">
+            <div className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 border-t border-separator bg-surface px-4 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] lg:static lg:rounded-b-3xl lg:px-8 lg:pb-3">
               <Skeleton className={`${BUTTON} w-20`} />
               <Skeleton className={`${BUTTON} w-32`} />
             </div>
