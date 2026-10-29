@@ -119,7 +119,9 @@ for (const s of slices) {
   const unknown = s.approved.filter(id => !designIds.includes(id))
   if (unknown.length)
     throw new Error(`slice ${s.slice} approves ${unknown.join(', ')}, which are not Design screens of the slice`)
-  const all = s.approved.length === s.design
+  // A screen with two route files (M12 new and edit) is two Design rows but one approval.
+  const idless = [...ex, ...nw].filter(r => r.slice === s.slice && r.ui === 'Design' && !r.id).length
+  const all = idless === 0 && designIds.every(id => s.approved.includes(id))
   const some = s.approved.length > 0
   const ok = {
     'Approved': all && some,
