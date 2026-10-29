@@ -1,11 +1,17 @@
 import type { Tx } from './platform/db/client.ts'
 import type { CommandDeps } from './platform/http/app.ts'
 import process from 'node:process'
+import { guardUseCases as guardCatalogUseCases } from './modules/catalog/adapters/database-errors.ts'
+import { createMediaDirectory } from './modules/catalog/adapters/media-directory.ts'
+import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
+import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
+import { makeCreateProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
 import { createMediaLogAlert } from './modules/content/adapters/media-alert.ts'
 import { createMediaQueues, startMediaWorkers } from './modules/content/adapters/media-jobs.ts'
 import { createMediaRepository } from './modules/content/adapters/media-repository.ts'
+import { mediaView } from './modules/content/adapters/media-view.ts'
 import { createPinRepository } from './modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from './modules/content/adapters/public-repository.ts'
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
@@ -218,10 +224,27 @@ async function main() {
       listCategories: makeListCategories(readDeps),
       getMap: makeGetMap(readDeps),
     }
+    const contentMedia = createMediaRepository()
+    const catalogDeps = {
+      uow,
+      products: createProductRepository(),
+      media: createMediaDirectory({ findById: (tx: Tx, storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
+      audit,
+      clock: systemClock,
+    }
+    const catalogUseCases = guardCatalogUseCases({
+      listProducts: makeListProducts(catalogDeps),
+      getProduct: makeGetProduct(catalogDeps),
+      createProduct: makeCreateProduct(catalogDeps),
+      saveProduct: makeSaveProduct(catalogDeps),
+      publishProduct: makePublishProduct(catalogDeps),
+      unpublishProduct: makeUnpublishProduct(catalogDeps),
+      saveVariant: makeSaveVariant(catalogDeps),
+    })
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
       withoutIdempotencyKey: [invitationPreviewPath],
-      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases)],
+      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases)],
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity, commands).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)
