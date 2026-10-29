@@ -19,9 +19,8 @@ import { refusalKeys, switchesAccount } from '../lib/refusals'
 import { STORE_PATH } from '../lib/search-params'
 import { ProblemNotice } from './problem-notice'
 
-/** The wording of a screen: a role label or a chip, the title (the screen's h1) and one line under it. */
-function InvitationHead({ eyebrow, chip, title, intro, titleRef }: {
-  eyebrow?: string
+/** The wording of a screen: an optional chip, the title (the screen's h1) and one line under it. */
+function InvitationHead({ chip, title, intro, titleRef }: {
   chip?: { tone: StatusTone, label: string }
   title: string
   intro: string
@@ -34,7 +33,6 @@ function InvitationHead({ eyebrow, chip, title, intro, titleRef }: {
           <StatusChip tone={chip.tone}>{chip.label}</StatusChip>
         </span>
       )}
-      {!chip && eyebrow && <span className="text-sm font-medium text-muted">{eyebrow}</span>}
       <h1 ref={titleRef} className="font-serif text-display text-balance outline-none [overflow-wrap:anywhere]" tabIndex={titleRef ? -1 : undefined}>{title}</h1>
       <p className="text-body text-pretty text-muted [overflow-wrap:anywhere]">{intro}</p>
     </div>
@@ -48,7 +46,6 @@ export function InvitationLoading({ text, title }: { text: string, title: string
       <h1 className="sr-only">{title}</h1>
       <p aria-live="polite" className="sr-only" role="status">{text}</p>
       <div aria-hidden className="flex flex-col gap-3">
-        <Skeleton className="h-4 w-36 rounded-lg" />
         <Skeleton className="h-9 w-4/5 rounded-lg" />
         <Skeleton className="h-5 w-3/4 rounded-lg" />
       </div>
@@ -76,7 +73,7 @@ function storeText(role: InviteRole, storeName: string, inviterName: string | nu
   else
     intro = inviterName ? t('stores.invite.from', { inviter: inviterName, store: storeName }) : t('stores.invite.fromUnknown', { store: storeName })
 
-  return { title, intro, eyebrow: t(role === 'owner' ? 'stores.invite.roleOwner' : 'stores.invite.roleManager') }
+  return { title, intro }
 }
 
 /**
@@ -127,7 +124,7 @@ export function SignedOutBody({ role, storeName, inviterName, returnTo, focusTit
 
   return (
     <div className="flex flex-col gap-7" data-invitation-state="signedOut">
-      <InvitationHead eyebrow={text.eyebrow} intro={text.intro} title={text.title} titleRef={focusTitle ? titleRef : undefined} />
+      <InvitationHead intro={text.intro} title={text.title} titleRef={focusTitle ? titleRef : undefined} />
       <div className="flex flex-col gap-5">
         <p className="text-sm text-pretty text-muted">{t('stores.invite.signInHint')}</p>
         <EmbeddedSignIn returnTo={returnTo} onSignedIn={onSignedIn} />
@@ -151,7 +148,7 @@ export function ReadyBody({ role, storeName, inviterName, accepted, pending, onA
 
   return (
     <div className="flex flex-col gap-7" data-invitation-state="ready">
-      <InvitationHead eyebrow={text.eyebrow} intro={text.intro} title={text.title} />
+      <InvitationHead intro={text.intro} title={text.title} />
       <div className="flex flex-col gap-5">
         {accepted && <p className="text-sm text-pretty text-muted">{t('stores.invite.stateAccepted')}</p>}
         <Button fullWidth isPending={pending} size="lg" onPress={onAccept}>{t('stores.invite.accept')}</Button>

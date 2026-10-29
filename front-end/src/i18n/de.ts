@@ -318,7 +318,7 @@ export const de: Record<MessageKey, string> = {
   'cart.empty.action': 'Andenken ansehen',
 
   'auth.title': 'Anmelden und weiter',
-  'auth.intro': 'Kein Passwort nötig. Ihr Warenkorb bleibt, wie er ist.',
+  'auth.intro': 'Kein Passwort nötig. Melden Sie sich an und entdecken Sie Luzern: seine Geschichten, Orte und Tipps von Einheimischen.',
   'auth.close': 'Schliessen',
   'auth.google': 'Weiter mit Google',
   'auth.google.failed':

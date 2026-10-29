@@ -10,6 +10,7 @@ import { registerIdentityRoutes } from '../../src/modules/identity/adapters/rout
 import { hashInvitationToken } from '../../src/modules/identity/application/invitation-token.ts'
 import { invitationScreens, makeInvitationLink, makeListMyStores, makeLoadIdentity, newInvitationToken } from '../../src/modules/identity/index.ts'
 import { createMailQueues } from '../../src/modules/notifications/adapters/jobs.ts'
+import { createMailLog } from '../../src/modules/notifications/adapters/mail-log.ts'
 import { createSentMailRepository } from '../../src/modules/notifications/adapters/sent-mail-repository.ts'
 import { makeQueueMail } from '../../src/modules/notifications/application/queue-mail.ts'
 import { makeSendMail } from '../../src/modules/notifications/application/send-mail.ts'
@@ -89,6 +90,7 @@ async function setup() {
     mailer: memory.mailer,
     invitationLink: makeInvitationLink({ invitations: createInvitationRepository(), clock: systemClock, newToken: newInvitationToken, appUrl, screens: invitationScreens }),
     clock: systemClock,
+    log: createMailLog(silentLogger),
   })
 
   async function call(path: string, init: { method?: string, headers?: Record<string, string>, body?: object, key?: string | null } = {}) {

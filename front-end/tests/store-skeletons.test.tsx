@@ -42,7 +42,7 @@ describe('store screens loading', () => {
     expect(container.querySelectorAll('section')).toHaveLength(2)
   })
 
-  it('invitation preview: the invitation frame with a role line, a title, an intro and the first button', async () => {
+  it('invitation preview: the invitation frame with a title, an intro and the first button', async () => {
     // The frame has a Back action, so it needs a router.
     const router = createRouter({
       routeTree: createRootRoute({ component: () => <InvitationPreview audience="manager" returnTo="/" signedOut={false} token="t" onAccept={vi.fn()} /> }),
@@ -55,7 +55,7 @@ describe('store screens loading', () => {
     expect(genericBox(container)).toBeNull()
     expect(container.querySelector('figure img[data-photo="colour"]')).not.toBeNull()
     expect(container.querySelector('section.rounded-3xl')).toBeNull()
-    expect(container.querySelectorAll('.skeleton')).toHaveLength(4)
+    expect(container.querySelectorAll('.skeleton')).toHaveLength(3)
   })
 
   it('onboarding, me pending: the frame, five steps beside the page, one step with its footer, and no generic block [E2.16][E2.3]', () => {

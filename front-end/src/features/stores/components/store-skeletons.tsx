@@ -108,7 +108,7 @@ export function OnboardingSkeleton({ title }: { title: string }) {
                   <Skeleton className="h-4 w-3/4 rounded-lg" />
                 </div>
               </div>
-              <div className="flex max-w-md flex-col gap-4">
+              <div className="flex flex-col gap-4">
                 <Skeleton className="h-24 w-full rounded-xl" />
                 <Skeleton className="h-4 w-4/5 rounded-lg" />
                 <Skeleton className={`${BUTTON} w-52`} />
