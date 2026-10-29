@@ -3,6 +3,7 @@ import type { SkeletonShape } from '@/components/data-table-skeleton'
 import type { EmptyStateProps } from '@/components/empty-state'
 
 import { Table } from '@heroui/react'
+import { useEffect, useRef } from 'react'
 
 import {
   SKELETON_ROWS,
@@ -109,6 +110,7 @@ export function DataTable<T>({
   contentClassName,
 }: DataTableProps<T>) {
   const { t } = useLocale()
+  const gridRef = useRef<HTMLTableElement>(null)
   const { pageItems: pagedItems, pager } = usePaged(rows, resetKey)
   const pageItems = hidePager ? rows : pagedItems
   const isOnPage = variant !== 'card'
@@ -130,6 +132,10 @@ export function DataTable<T>({
   const contentClasses = contentClassName && HAS_MIN_WIDTH.test(contentClassName)
     ? contentClassName
     : [MIN_WIDTH_CLASS, contentClassName].filter(Boolean).join(' ')
+  // React Aria's table drops `aria-busy` from its props, so it is set on the grid element itself.
+  useEffect(() => {
+    gridRef.current?.setAttribute('aria-busy', String(Boolean(isLoading)))
+  }, [isLoading])
   const tableClass = [cards && 'hidden lg:block', className]
     .filter(Boolean)
     .join(' ')
@@ -162,6 +168,7 @@ export function DataTable<T>({
       >
         <Table.ScrollContainer>
           <Table.Content
+            ref={gridRef}
             aria-label={label}
             className={contentClasses}
           >
