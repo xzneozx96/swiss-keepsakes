@@ -250,6 +250,11 @@
         "additionalProperties": false,
         "description": "The upload to confirm",
         "properties": {
+          "fileName": {
+            "description": "The name of the file on the uploader's device. It becomes the name in the library. A blank one is replaced by a default name",
+            "maxLength": 1000,
+            "type": "string"
+          },
           "uploadKey": {
             "description": "The uploadKey of the grant, after the file was PUT",
             "maxLength": 300,
@@ -597,6 +602,369 @@
           "height",
           "publicUrl",
           "variants"
+        ],
+        "type": "object"
+      },
+      "MediaAlt": {
+        "additionalProperties": false,
+        "description": "The description of a file in each language. It is the alt text guests with a screen reader hear",
+        "properties": {
+          "de": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 300,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MediaItem": {
+        "description": "A file of the library with its name, description and use",
+        "properties": {
+          "alt": {
+            "$ref": "#/components/schemas/MediaAlt"
+          },
+          "byteSize": {
+            "type": "integer"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "durationSeconds": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "fileName": {
+            "description": "The file name of the latest upload",
+            "type": "string"
+          },
+          "height": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "audio",
+              "pdf"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "What the merchant sees and searches. It starts as the uploaded file name",
+            "type": "string"
+          },
+          "publicUrl": {
+            "description": "The public URL of the original. Null until the file is ready",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "processing",
+              "ready",
+              "retired"
+            ],
+            "type": "string"
+          },
+          "usage": {
+            "description": "Only in the list. An answer to a change leaves it out: read the list again for the pages",
+            "properties": {
+              "drafts": {
+                "description": "The pages that use the file only in a draft",
+                "type": "integer"
+              },
+              "pages": {
+                "description": "The pages that use the file. A story counts once per language version, keepsakes count too",
+                "type": "integer"
+              },
+              "published": {
+                "description": "The pages that show the file in their published version",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "pages",
+              "published",
+              "drafts"
+            ],
+            "type": "object"
+          },
+          "variants": {
+            "description": "Resized copies of an image. Empty until the file is ready",
+            "items": {
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "width",
+                "url"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "version": {
+            "description": "Starts at 1. A replacement adds one",
+            "type": "integer"
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "contentType",
+          "byteSize",
+          "width",
+          "height",
+          "publicUrl",
+          "variants",
+          "name",
+          "fileName",
+          "alt",
+          "durationSeconds",
+          "version",
+          "createdAt"
+        ],
+        "type": "object"
+      },
+      "MediaList": {
+        "description": "One page of the library",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MediaItem"
+            },
+            "type": "array"
+          },
+          "kinds": {
+            "description": "Every file of each kind, retired ones too. Search and filters do not change them",
+            "properties": {
+              "audio": {
+                "type": "integer"
+              },
+              "image": {
+                "type": "integer"
+              },
+              "pdf": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "image",
+              "audio",
+              "pdf"
+            ],
+            "type": "object"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "pageSize": {
+            "type": "integer"
+          },
+          "statuses": {
+            "description": "The files of this kind that match the search and the use filter, by status",
+            "properties": {
+              "processing": {
+                "type": "integer"
+              },
+              "ready": {
+                "type": "integer"
+              },
+              "retired": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "processing",
+              "ready",
+              "retired"
+            ],
+            "type": "object"
+          },
+          "total": {
+            "description": "The files that match, before paging",
+            "type": "integer"
+          },
+          "uses": {
+            "description": "The files of this kind that match the search and the status filter, by use",
+            "properties": {
+              "drafts": {
+                "type": "integer"
+              },
+              "published": {
+                "type": "integer"
+              },
+              "unused": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "unused",
+              "drafts",
+              "published"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "kinds",
+          "uses",
+          "statuses"
+        ],
+        "type": "object"
+      },
+      "MediaPatch": {
+        "additionalProperties": false,
+        "description": "The name and description of a file",
+        "properties": {
+          "alt": {
+            "additionalProperties": false,
+            "description": "Replaces the description. A language left out keeps its text; an empty string clears it",
+            "properties": {
+              "de": {
+                "maxLength": 300,
+                "type": "string"
+              },
+              "en": {
+                "maxLength": 300,
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MediaUse": {
+        "description": "One page that uses a file",
+        "properties": {
+          "language": {
+            "description": "Only for a story: its language version",
+            "enum": [
+              "en",
+              "de",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pageId": {
+            "description": "A story group, place, tour or keepsake id",
+            "format": "uuid",
+            "type": "string"
+          },
+          "pageKind": {
+            "enum": [
+              "story",
+              "place",
+              "tour",
+              "keepsake"
+            ],
+            "type": "string"
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "role": {
+            "description": "What the file is on that page",
+            "enum": [
+              "cover",
+              "text",
+              "pdf",
+              "stop",
+              "photo"
+            ],
+            "type": "string"
+          },
+          "thumbnailUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "description": "The page title. A story has its own language only",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "pageKind",
+          "pageId",
+          "language",
+          "title",
+          "role",
+          "published",
+          "thumbnailUrl"
+        ],
+        "type": "object"
+      },
+      "MediaUses": {
+        "description": "Where a file is used, on published pages and only in drafts",
+        "properties": {
+          "drafts": {
+            "items": {
+              "$ref": "#/components/schemas/MediaUse"
+            },
+            "type": "array"
+          },
+          "published": {
+            "items": {
+              "$ref": "#/components/schemas/MediaUse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "published",
+          "drafts"
         ],
         "type": "object"
       },
@@ -1370,6 +1738,10 @@
             },
             "type": "array"
           },
+          "pages": {
+            "description": "With media-in-use: how many pages use the file",
+            "type": "integer"
+          },
           "requestId": {
             "description": "The server's id for this request, also sent as X-Request-Id",
             "type": "string"
@@ -1383,7 +1755,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -5544,6 +5916,26 @@
         "required": [
           "code",
           "card"
+        ],
+        "type": "object"
+      },
+      "ReplaceMedia": {
+        "additionalProperties": false,
+        "description": "The new file for an existing one",
+        "properties": {
+          "fileName": {
+            "maxLength": 1000,
+            "type": "string"
+          },
+          "uploadKey": {
+            "description": "The uploadKey of a grant, after the new file was PUT. It must be the same kind of file",
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "uploadKey"
         ],
         "type": "object"
       },
@@ -9769,7 +10161,7 @@
             "type": "integer"
           },
           "contentType": {
-            "description": "The type of the file: image/jpeg, image/png, image/webp, audio/mpeg or application/pdf",
+            "description": "The type of the file: image/jpeg, image/png, image/webp, audio/mpeg, audio/mp4 (M4A) or application/pdf",
             "maxLength": 100,
             "type": "string"
           }
@@ -11233,6 +11625,122 @@
         }
       }
     },
+    "/api/store/{storeId}/media": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "default": "image",
+              "enum": [
+                "image",
+                "audio",
+                "pdf"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Matches the name only, in any case",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "description": "Matches the name only, in any case",
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated: unused, drafts, published. A file matches any of them",
+            "in": "query",
+            "name": "use",
+            "required": false,
+            "schema": {
+              "description": "Comma separated: unused, drafts, published. A file matches any of them",
+              "maxLength": 60,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma separated: processing, ready, retired. Empty means all three",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "description": "Comma separated: processing, ready, retired. Empty means all three",
+              "maxLength": 60,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaList"
+                }
+              }
+            },
+            "description": "One page of the library, with the counts for its tabs and filters",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/store/{storeId}/media/confirm": {
       "post": {
         "parameters": [
@@ -11379,6 +11887,248 @@
               }
             },
             "description": "The file. The URLs are set when its status is ready",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaItem"
+                }
+              }
+            },
+            "description": "The file with its new name or description",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/media/{mediaId}/replace": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceMedia"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaItem"
+                }
+              }
+            },
+            "description": "The file now holds the new upload: same id, next version, new storage key. Every page that uses it shows it",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/media/{mediaId}/retire": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaItem"
+                }
+              }
+            },
+            "description": "The file is retired. It is refused while any page uses it",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/media/{mediaId}/uses": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mediaId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUses"
+                }
+              }
+            },
+            "description": "The pages that use the file: stories, places, tours and keepsakes",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
