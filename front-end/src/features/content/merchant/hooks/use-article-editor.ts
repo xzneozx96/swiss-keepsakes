@@ -13,8 +13,9 @@ import { isPublished, isSoldOut } from '@sk/domain/catalog'
 import { MAX_ARTICLE_LINKS, MAX_RELATED_STORIES } from '@sk/domain/content'
 import { pickText, slugify } from '@sk/domain/shared'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
+import { useLocale } from '@/contexts/locale-context'
 import { useProducts } from '@/features/catalog/api/queries'
 import { useSubmit } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
@@ -65,18 +66,24 @@ function sameLink(a: ArticleLink, b: ArticleLink) {
  * refresh drops them (outline side path "Refresh"). A new article is stored on its first save.
  */
 export function useArticleEditor(articleId: string, newLanguage: Language) {
+  const { t } = useLocale()
   const role = useDemoSelector(s => s.role)
   const clockStartedAt = useDemoSelector(s => s.clockStartedAt)
   const tours = useTourRecords()
   const products = useProducts()
   const orders = useOrders()
+  // `save` and `addOtherVersion` set this right before sending, so meta.success (fixed once createArticle
+  // and updateArticle are set up) always reads the text for the attempt actually in flight.
+  const pendingSuccessRef = useRef('')
   const { submit: createArticle, isPending: isCreating } = useSubmit(
     'content',
     'createArticle',
+    { meta: { success: () => pendingSuccessRef.current } },
   )
   const { submit: updateArticle, isPending: isUpdating } = useSubmit(
     'content',
     'updateArticle',
+    { meta: { success: () => pendingSuccessRef.current } },
   )
   const articles = useArticles()
   const stored = articles.find(a => a.id === articleId)
@@ -268,6 +275,17 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       setAttempt(null)
       onSaved?.(id)
     }
+    const wasPublished = stored?.publication.status === 'published'
+    const willPublish = (publication ?? stored?.publication)?.status === 'published'
+    const languageName = t(`merchantContent.lang.${form.language}`)
+
+    pendingSuccessRef.current = !wasPublished && willPublish
+      ? t('merchantArticles.toast.published', { language: languageName })
+      : wasPublished && !willPublish
+        ? t('merchantArticles.toast.unpublished')
+        : wasPublished
+          ? t('merchantArticles.toast.savedPublished')
+          : t('merchantArticles.toast.saved')
 
     if (stored) {
       updateArticle(
@@ -308,6 +326,7 @@ export function useArticleEditor(articleId: string, newLanguage: Language) {
       new Set(articles.map(a => a.id)),
     )
 
+    pendingSuccessRef.current = t(`merchantArticles.toast.versionAdded.${otherLanguage}`)
     createArticle(
       {
         ...structuredClone(stored),
