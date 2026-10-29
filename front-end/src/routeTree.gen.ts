@@ -60,6 +60,7 @@ import { Route as StoriesSplatRouteImport } from './routes/stories.$'
 import { Route as ToursSplatRouteImport } from './routes/tours.$'
 import { Route as GuestLangIndexRouteImport } from './routes/_guest/$lang/index'
 import { Route as GuestLangCreditsRouteImport } from './routes/_guest/$lang/credits'
+import { Route as GuestLangMapRouteImport } from './routes/_guest/$lang/map'
 import { Route as GuestLangPlanRouteImport } from './routes/_guest/$lang/plan'
 import { Route as GuestLangSearchRouteImport } from './routes/_guest/$lang/search'
 import { Route as GuestLangToursRouteImport } from './routes/_guest/$lang/tours'
@@ -95,6 +96,8 @@ import { Route as GuestLangToursIndexRouteImport } from './routes/_guest/$lang/t
 import { Route as GuestLangToursSlugRouteImport } from './routes/_guest/$lang/tours/$slug'
 import { Route as GuestAccountOrdersOrderIdRouteImport } from './routes/_guest/account_.orders.$orderId'
 import { Route as StoreContentArticlesArticleIdRouteImport } from './routes/store/content/articles/$articleId'
+import { Route as StoreContentPlacesIndexRouteImport } from './routes/store/content/places/index'
+import { Route as StoreContentPlacesPlaceIdRouteImport } from './routes/store/content/places/$placeId'
 import { Route as StoreProductsGiftsProductIdRouteImport } from './routes/store/products/gifts/$productId'
 import { Route as StoreProductsGiftsNewRouteImport } from './routes/store/products/gifts/new'
 import { Route as StoreProductsToursIndexRouteImport } from './routes/store/products/tours/index'
@@ -357,6 +360,11 @@ const GuestLangCreditsRoute = GuestLangCreditsRouteImport.update({
   path: '/credits',
   getParentRoute: () => GuestLangRoute,
 } as any)
+const GuestLangMapRoute = GuestLangMapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => GuestLangRoute,
+} as any)
 const GuestLangPlanRoute = GuestLangPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -534,6 +542,17 @@ const StoreContentArticlesArticleIdRoute =
     path: '/content/articles/$articleId',
     getParentRoute: () => StoreRoute,
   } as any)
+const StoreContentPlacesIndexRoute = StoreContentPlacesIndexRouteImport.update({
+  id: '/content/places/',
+  path: '/content/places/',
+  getParentRoute: () => StoreRoute,
+} as any)
+const StoreContentPlacesPlaceIdRoute =
+  StoreContentPlacesPlaceIdRouteImport.update({
+    id: '/content/places/$placeId',
+    path: '/content/places/$placeId',
+    getParentRoute: () => StoreRoute,
+  } as any)
 const StoreProductsGiftsProductIdRoute =
   StoreProductsGiftsProductIdRouteImport.update({
     id: '/products/gifts/$productId',
@@ -624,6 +643,7 @@ export interface FileRoutesByFullPath {
   '/partner/': typeof PartnerIndexRoute
   '/store/': typeof StoreIndexRoute
   '/$lang/credits': typeof GuestLangCreditsRoute
+  '/$lang/map': typeof GuestLangMapRoute
   '/$lang/plan': typeof GuestLangPlanRoute
   '/$lang/search': typeof GuestLangSearchRoute
   '/$lang/tours': typeof GuestLangToursRouteWithChildren
@@ -657,6 +677,7 @@ export interface FileRoutesByFullPath {
   '/$lang/tours/$slug': typeof GuestLangToursSlugRoute
   '/account/orders/$orderId': typeof GuestAccountOrdersOrderIdRoute
   '/store/content/articles/$articleId': typeof StoreContentArticlesArticleIdRoute
+  '/store/content/places/$placeId': typeof StoreContentPlacesPlaceIdRoute
   '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
   '/store/products/gifts/new': typeof StoreProductsGiftsNewRoute
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
@@ -665,6 +686,7 @@ export interface FileRoutesByFullPath {
   '/$lang/gifts/': typeof GuestLangGiftsIndexRoute
   '/$lang/stories/': typeof GuestLangStoriesIndexRoute
   '/$lang/tours/': typeof GuestLangToursIndexRoute
+  '/store/content/places/': typeof StoreContentPlacesIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
 }
@@ -715,6 +737,7 @@ export interface FileRoutesByTo {
   '/partner': typeof PartnerIndexRoute
   '/store': typeof StoreIndexRoute
   '/$lang/credits': typeof GuestLangCreditsRoute
+  '/$lang/map': typeof GuestLangMapRoute
   '/$lang/plan': typeof GuestLangPlanRoute
   '/$lang/search': typeof GuestLangSearchRoute
   '/cart/review': typeof GuestCartReviewRoute
@@ -747,6 +770,7 @@ export interface FileRoutesByTo {
   '/$lang/tours/$slug': typeof GuestLangToursSlugRoute
   '/account/orders/$orderId': typeof GuestAccountOrdersOrderIdRoute
   '/store/content/articles/$articleId': typeof StoreContentArticlesArticleIdRoute
+  '/store/content/places/$placeId': typeof StoreContentPlacesPlaceIdRoute
   '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
   '/store/products/gifts/new': typeof StoreProductsGiftsNewRoute
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
@@ -755,6 +779,7 @@ export interface FileRoutesByTo {
   '/$lang/gifts': typeof GuestLangGiftsIndexRoute
   '/$lang/stories': typeof GuestLangStoriesIndexRoute
   '/$lang/tours': typeof GuestLangToursIndexRoute
+  '/store/content/places': typeof StoreContentPlacesIndexRoute
   '/store/products/tours': typeof StoreProductsToursIndexRoute
   '/account/orders/$orderId/pay': typeof GuestAccountOrdersOrderIdPayRoute
 }
@@ -810,6 +835,7 @@ export interface FileRoutesById {
   '/partner/': typeof PartnerIndexRoute
   '/store/': typeof StoreIndexRoute
   '/_guest/$lang/credits': typeof GuestLangCreditsRoute
+  '/_guest/$lang/map': typeof GuestLangMapRoute
   '/_guest/$lang/plan': typeof GuestLangPlanRoute
   '/_guest/$lang/search': typeof GuestLangSearchRoute
   '/_guest/$lang/tours': typeof GuestLangToursRouteWithChildren
@@ -843,6 +869,7 @@ export interface FileRoutesById {
   '/_guest/$lang/tours/$slug': typeof GuestLangToursSlugRoute
   '/_guest/account_/orders/$orderId': typeof GuestAccountOrdersOrderIdRoute
   '/store/content/articles/$articleId': typeof StoreContentArticlesArticleIdRoute
+  '/store/content/places/$placeId': typeof StoreContentPlacesPlaceIdRoute
   '/store/products/gifts/$productId': typeof StoreProductsGiftsProductIdRoute
   '/store/products/gifts/new': typeof StoreProductsGiftsNewRoute
   '/store/products/tours/$tourId': typeof StoreProductsToursTourIdRoute
@@ -851,6 +878,7 @@ export interface FileRoutesById {
   '/_guest/$lang/gifts/': typeof GuestLangGiftsIndexRoute
   '/_guest/$lang/stories/': typeof GuestLangStoriesIndexRoute
   '/_guest/$lang/tours/': typeof GuestLangToursIndexRoute
+  '/store/content/places/': typeof StoreContentPlacesIndexRoute
   '/store/products/tours/': typeof StoreProductsToursIndexRoute
   '/_guest/account_/orders/$orderId_/pay': typeof GuestAccountOrdersOrderIdPayRoute
 }
@@ -906,6 +934,7 @@ export interface FileRouteTypes {
     | '/partner/'
     | '/store/'
     | '/$lang/credits'
+    | '/$lang/map'
     | '/$lang/plan'
     | '/$lang/search'
     | '/$lang/tours'
@@ -939,6 +968,7 @@ export interface FileRouteTypes {
     | '/$lang/tours/$slug'
     | '/account/orders/$orderId'
     | '/store/content/articles/$articleId'
+    | '/store/content/places/$placeId'
     | '/store/products/gifts/$productId'
     | '/store/products/gifts/new'
     | '/store/products/tours/$tourId'
@@ -947,6 +977,7 @@ export interface FileRouteTypes {
     | '/$lang/gifts/'
     | '/$lang/stories/'
     | '/$lang/tours/'
+    | '/store/content/places/'
     | '/store/products/tours/'
     | '/account/orders/$orderId/pay'
   fileRoutesByTo: FileRoutesByTo
@@ -997,6 +1028,7 @@ export interface FileRouteTypes {
     | '/partner'
     | '/store'
     | '/$lang/credits'
+    | '/$lang/map'
     | '/$lang/plan'
     | '/$lang/search'
     | '/cart/review'
@@ -1029,6 +1061,7 @@ export interface FileRouteTypes {
     | '/$lang/tours/$slug'
     | '/account/orders/$orderId'
     | '/store/content/articles/$articleId'
+    | '/store/content/places/$placeId'
     | '/store/products/gifts/$productId'
     | '/store/products/gifts/new'
     | '/store/products/tours/$tourId'
@@ -1037,6 +1070,7 @@ export interface FileRouteTypes {
     | '/$lang/gifts'
     | '/$lang/stories'
     | '/$lang/tours'
+    | '/store/content/places'
     | '/store/products/tours'
     | '/account/orders/$orderId/pay'
   id:
@@ -1091,6 +1125,7 @@ export interface FileRouteTypes {
     | '/partner/'
     | '/store/'
     | '/_guest/$lang/credits'
+    | '/_guest/$lang/map'
     | '/_guest/$lang/plan'
     | '/_guest/$lang/search'
     | '/_guest/$lang/tours'
@@ -1124,6 +1159,7 @@ export interface FileRouteTypes {
     | '/_guest/$lang/tours/$slug'
     | '/_guest/account_/orders/$orderId'
     | '/store/content/articles/$articleId'
+    | '/store/content/places/$placeId'
     | '/store/products/gifts/$productId'
     | '/store/products/gifts/new'
     | '/store/products/tours/$tourId'
@@ -1132,6 +1168,7 @@ export interface FileRouteTypes {
     | '/_guest/$lang/gifts/'
     | '/_guest/$lang/stories/'
     | '/_guest/$lang/tours/'
+    | '/store/content/places/'
     | '/store/products/tours/'
     | '/_guest/account_/orders/$orderId_/pay'
   fileRoutesById: FileRoutesById
@@ -1540,6 +1577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GuestLangCreditsRouteImport
       parentRoute: typeof GuestLangRoute
     }
+    '/_guest/$lang/map': {
+      id: '/_guest/$lang/map'
+      path: '/map'
+      fullPath: '/$lang/map'
+      preLoaderRoute: typeof GuestLangMapRouteImport
+      parentRoute: typeof GuestLangRoute
+    }
     '/_guest/$lang/plan': {
       id: '/_guest/$lang/plan'
       path: '/plan'
@@ -1785,6 +1829,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StoreContentArticlesArticleIdRouteImport
       parentRoute: typeof StoreRoute
     }
+    '/store/content/places/': {
+      id: '/store/content/places/'
+      path: '/content/places'
+      fullPath: '/store/content/places/'
+      preLoaderRoute: typeof StoreContentPlacesIndexRouteImport
+      parentRoute: typeof StoreRoute
+    }
+    '/store/content/places/$placeId': {
+      id: '/store/content/places/$placeId'
+      path: '/content/places/$placeId'
+      fullPath: '/store/content/places/$placeId'
+      preLoaderRoute: typeof StoreContentPlacesPlaceIdRouteImport
+      parentRoute: typeof StoreRoute
+    }
     '/store/products/gifts/$productId': {
       id: '/store/products/gifts/$productId'
       path: '/products/gifts/$productId'
@@ -1853,6 +1911,7 @@ const GuestLangToursRouteWithChildren = GuestLangToursRoute._addFileChildren(
 
 interface GuestLangRouteChildren {
   GuestLangCreditsRoute: typeof GuestLangCreditsRoute
+  GuestLangMapRoute: typeof GuestLangMapRoute
   GuestLangPlanRoute: typeof GuestLangPlanRoute
   GuestLangSearchRoute: typeof GuestLangSearchRoute
   GuestLangToursRoute: typeof GuestLangToursRouteWithChildren
@@ -1866,6 +1925,7 @@ interface GuestLangRouteChildren {
 
 const GuestLangRouteChildren: GuestLangRouteChildren = {
   GuestLangCreditsRoute: GuestLangCreditsRoute,
+  GuestLangMapRoute: GuestLangMapRoute,
   GuestLangPlanRoute: GuestLangPlanRoute,
   GuestLangSearchRoute: GuestLangSearchRoute,
   GuestLangToursRoute: GuestLangToursRouteWithChildren,
@@ -1944,11 +2004,13 @@ interface StoreRouteChildren {
   StoreProductsIndexRoute: typeof StoreProductsIndexRoute
   StoreRequestsIndexRoute: typeof StoreRequestsIndexRoute
   StoreContentArticlesArticleIdRoute: typeof StoreContentArticlesArticleIdRoute
+  StoreContentPlacesPlaceIdRoute: typeof StoreContentPlacesPlaceIdRoute
   StoreProductsGiftsProductIdRoute: typeof StoreProductsGiftsProductIdRoute
   StoreProductsGiftsNewRoute: typeof StoreProductsGiftsNewRoute
   StoreProductsToursTourIdRoute: typeof StoreProductsToursTourIdRoute
   StoreProductsToursNewRoute: typeof StoreProductsToursNewRoute
   StoreRequestsAdviceRequestIdRoute: typeof StoreRequestsAdviceRequestIdRoute
+  StoreContentPlacesIndexRoute: typeof StoreContentPlacesIndexRoute
   StoreProductsToursIndexRoute: typeof StoreProductsToursIndexRoute
 }
 
@@ -1974,11 +2036,13 @@ const StoreRouteChildren: StoreRouteChildren = {
   StoreProductsIndexRoute: StoreProductsIndexRoute,
   StoreRequestsIndexRoute: StoreRequestsIndexRoute,
   StoreContentArticlesArticleIdRoute: StoreContentArticlesArticleIdRoute,
+  StoreContentPlacesPlaceIdRoute: StoreContentPlacesPlaceIdRoute,
   StoreProductsGiftsProductIdRoute: StoreProductsGiftsProductIdRoute,
   StoreProductsGiftsNewRoute: StoreProductsGiftsNewRoute,
   StoreProductsToursTourIdRoute: StoreProductsToursTourIdRoute,
   StoreProductsToursNewRoute: StoreProductsToursNewRoute,
   StoreRequestsAdviceRequestIdRoute: StoreRequestsAdviceRequestIdRoute,
+  StoreContentPlacesIndexRoute: StoreContentPlacesIndexRoute,
   StoreProductsToursIndexRoute: StoreProductsToursIndexRoute,
 }
 

@@ -29,6 +29,11 @@ export const SECTION_PAGES = {
       label: 'merchantContent.tab.articles',
     },
     {
+      id: 'places',
+      to: '/store/content/places',
+      label: 'merchantContent.tab.places',
+    },
+    {
       id: 'comments',
       to: '/store/content/comments',
       label: 'merchantContent.tab.comments',

@@ -377,6 +377,63 @@
         ],
         "type": "object"
       },
+      "KeepsakeName": {
+        "additionalProperties": false,
+        "description": "The name per language, at most 90 characters each. A present key is non-empty",
+        "properties": {
+          "de": {
+            "maxLength": 90,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 90,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "KeepsakeText": {
+        "additionalProperties": false,
+        "description": "The text per language, at most 1200 characters each. A present key is non-empty",
+        "properties": {
+          "de": {
+            "maxLength": 1200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 1200,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "KeepsakeVariantWrite": {
+        "additionalProperties": false,
+        "description": "A variant to create: a code and a price. It is for sale",
+        "properties": {
+          "priceRappen": {
+            "description": "The price in Rappen, above 0",
+            "maximum": 100000000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "skuCode": {
+            "description": "Letters and digits joined by - _ or ., unique in the shop",
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "skuCode",
+          "priceRappen"
+        ],
+        "type": "object"
+      },
       "LocalizedLongText": {
         "additionalProperties": false,
         "description": "Text per language. A present key is non-empty and at most 20000 characters",
@@ -876,6 +933,42 @@
           },
           "draft": {
             "properties": {
+              "coverAlt": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "localTip": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "photoAlt": {
+                "additionalProperties": {
+                  "properties": {
+                    "de": {
+                      "type": "string"
+                    },
+                    "en": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
               "tip": {
                 "properties": {
                   "de": {
@@ -901,7 +994,10 @@
             },
             "required": [
               "title",
-              "tip"
+              "tip",
+              "localTip",
+              "coverAlt",
+              "photoAlt"
             ],
             "type": [
               "object",
@@ -910,6 +1006,19 @@
           },
           "firstPublishedAt": {
             "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "foodKind": {
+            "enum": [
+              "restaurant",
+              "cafe-bakery",
+              "pub-bar",
+              "market",
+              null
+            ],
             "type": [
               "string",
               "null"
@@ -944,8 +1053,68 @@
               "null"
             ]
           },
+          "mustVisit": {
+            "type": "boolean"
+          },
+          "outboundUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "photos": {
+            "items": {
+              "properties": {
+                "mediaId": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mediaId"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
           "published": {
             "properties": {
+              "coverAlt": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "localTip": {
+                "properties": {
+                  "de": {
+                    "type": "string"
+                  },
+                  "en": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "photoAlt": {
+                "additionalProperties": {
+                  "properties": {
+                    "de": {
+                      "type": "string"
+                    },
+                    "en": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              },
               "tip": {
                 "properties": {
                   "de": {
@@ -971,7 +1140,10 @@
             },
             "required": [
               "title",
-              "tip"
+              "tip",
+              "localTip",
+              "coverAlt",
+              "photoAlt"
             ],
             "type": [
               "object",
@@ -980,6 +1152,21 @@
           },
           "rowVersion": {
             "type": "integer"
+          },
+          "serviceType": {
+            "enum": [
+              "water",
+              "toilets",
+              "connect",
+              "transport",
+              "lockers",
+              "cash",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "slug": {
             "properties": {
@@ -1053,7 +1240,12 @@
           "weeklyHours",
           "stayTag",
           "interests",
+          "serviceType",
+          "mustVisit",
+          "foodKind",
           "coverMediaId",
+          "photos",
+          "outboundUrl",
           "mainStoryGroupId",
           "categoryIds",
           "dates",
@@ -1062,6 +1254,175 @@
           "firstPublishedAt",
           "rowVersion",
           "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "PinList": {
+        "description": "Every pin of the store, most recently edited first",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PinListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "PinListItem": {
+        "description": "A pin as one row of the merchant list",
+        "properties": {
+          "categoryIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "coverMediaId": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hasDates": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "located": {
+            "type": "boolean"
+          },
+          "mainStory": {
+            "description": "`published` is false when the story has no published version",
+            "properties": {
+              "groupId": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "published": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "groupId",
+              "published"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "nextDate": {
+            "properties": {
+              "endTime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "firstDay": {
+                "type": "string"
+              },
+              "lastDay": {
+                "type": "string"
+              },
+              "startTime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "firstDay",
+              "lastDay",
+              "startTime",
+              "endTime"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "slug": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "hidden",
+              "ended"
+            ],
+            "type": "string"
+          },
+          "stayTag": {
+            "enum": [
+              "short_stay",
+              "multi_day",
+              "both"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "description": "The pending draft title when there is one, else the published title",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "title",
+          "slug",
+          "located",
+          "categoryIds",
+          "hasDates",
+          "nextDate",
+          "stayTag",
+          "interests",
+          "coverMediaId",
+          "mainStory",
+          "rowVersion",
           "updatedAt"
         ],
         "type": "object"
@@ -1089,9 +1450,68 @@
         },
         "type": "object"
       },
+      "PinStoryOption": {
+        "description": "A story group the pin can name as its main story",
+        "properties": {
+          "groupId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "story",
+              "editorial_review"
+            ],
+            "type": "string"
+          },
+          "publishedLanguages": {
+            "items": {
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "groupId",
+          "kind",
+          "title",
+          "publishedLanguages"
+        ],
+        "type": "object"
+      },
+      "PinStoryOptionList": {
+        "description": "Story groups of the store, most recently created first",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PinStoryOption"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
       "PinWriteBody": {
         "additionalProperties": false,
-        "description": "Every field is optional. A pin has no type and no price",
+        "description": "Every field is optional. A pin has no type and no price. `photos` are the extra photos in order and replace the list. `localTip`, `coverAlt` and the alt text of each photo are text: they go to the draft and are live on publish",
         "properties": {
           "address": {
             "maxLength": 300,
@@ -1108,6 +1528,9 @@
             },
             "maxItems": 20,
             "type": "array"
+          },
+          "coverAlt": {
+            "$ref": "#/components/schemas/LocalizedText"
           },
           "coverMediaId": {
             "format": "uuid",
@@ -1152,17 +1575,31 @@
             "maxItems": 50,
             "type": "array"
           },
+          "foodKind": {
+            "enum": [
+              "restaurant",
+              "cafe-bakery",
+              "pub-bar",
+              "market",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "interests": {
             "items": {
               "enum": [
                 "history-culture",
                 "food-drink",
                 "lake-mountains",
-                "shopping-keepsakes"
+                "shopping-keepsakes",
+                "local-activities"
               ],
               "type": "string"
             },
-            "maxItems": 4,
+            "maxItems": 5,
             "type": "array"
           },
           "latitude": {
@@ -1172,6 +1609,9 @@
               "number",
               "null"
             ]
+          },
+          "localTip": {
+            "$ref": "#/components/schemas/LocalizedText"
           },
           "longitude": {
             "maximum": 180,
@@ -1183,6 +1623,52 @@
           },
           "mainStoryGroupId": {
             "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mustVisit": {
+            "type": "boolean"
+          },
+          "outboundUrl": {
+            "maxLength": 2000,
+            "pattern": "^https:\\/\\/[^\\s]+$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "photos": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "alt": {
+                  "$ref": "#/components/schemas/LocalizedText"
+                },
+                "mediaId": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mediaId"
+              ],
+              "type": "object"
+            },
+            "maxItems": 10,
+            "type": "array"
+          },
+          "serviceType": {
+            "enum": [
+              "water",
+              "toilets",
+              "connect",
+              "transport",
+              "lockers",
+              "cash",
+              null
+            ],
             "type": [
               "string",
               "null"
@@ -1326,7 +1812,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -1336,6 +1822,373 @@
           "title",
           "instance",
           "requestId"
+        ],
+        "type": "object"
+      },
+      "Product": {
+        "description": "A keepsake with its working copy, variants and publish checks",
+        "properties": {
+          "blocking": {
+            "description": "What stops publishing, empty when it can go live",
+            "items": {
+              "$ref": "#/components/schemas/PublishCheck"
+            },
+            "type": "array"
+          },
+          "commissionRate": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "hasUnpublishedEdits": {
+            "description": "A published keepsake whose draft differs from the live copy",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "description": "The working copy: the draft, else the published text",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "photos": {
+            "description": "The working photos in order, the first is the cover",
+            "items": {
+              "$ref": "#/components/schemas/Media"
+            },
+            "type": "array"
+          },
+          "rowVersion": {
+            "type": "integer"
+          },
+          "slug": {
+            "description": "The web address per language, set at the first publish",
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "type": "string"
+          },
+          "storeId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "text": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "variants": {
+            "items": {
+              "$ref": "#/components/schemas/ProductVariant"
+            },
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/PublishCheck"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "storeId",
+          "status",
+          "name",
+          "text",
+          "photos",
+          "commissionRate",
+          "slug",
+          "hasUnpublishedEdits",
+          "variants",
+          "blocking",
+          "warnings",
+          "rowVersion",
+          "createdAt",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ProductCreateBody": {
+        "additionalProperties": false,
+        "description": "A new keepsake as a draft, with its one variant",
+        "properties": {
+          "commissionRate": {
+            "description": "The share of a sale that a referral partner earns, from 0 to 0.5",
+            "maximum": 0.5,
+            "minimum": 0,
+            "type": "number"
+          },
+          "name": {
+            "$ref": "#/components/schemas/KeepsakeName"
+          },
+          "photoIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 12,
+            "type": "array"
+          },
+          "text": {
+            "$ref": "#/components/schemas/KeepsakeText"
+          },
+          "variants": {
+            "description": "Exactly one variant until options exist (E6.2)",
+            "items": {
+              "$ref": "#/components/schemas/KeepsakeVariantWrite"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "variants"
+        ],
+        "type": "object"
+      },
+      "ProductList": {
+        "description": "The keepsakes of the store, newest first",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProductListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "ProductListItem": {
+        "description": "One row of the keepsake list",
+        "properties": {
+          "cover": {
+            "description": "The first photo",
+            "properties": {
+              "byteSize": {
+                "type": "integer"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "height": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "pdf"
+                ],
+                "type": "string"
+              },
+              "publicUrl": {
+                "description": "The public URL of the original. Null until the file is ready",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "processing",
+                  "ready",
+                  "retired"
+                ],
+                "type": "string"
+              },
+              "variants": {
+                "description": "Resized copies of an image. Empty until the file is ready",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "width": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "status",
+              "contentType",
+              "byteSize",
+              "width",
+              "height",
+              "publicUrl",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "hasUnpublishedEdits": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "soldOutCount": {
+            "description": "Variants with no unit available. Always 0 until stock exists (E6.3)",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "variantCount": {
+            "description": "Variants that are not archived",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "hasUnpublishedEdits",
+          "cover",
+          "variantCount",
+          "soldOutCount",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "ProductSaveBody": {
+        "additionalProperties": false,
+        "description": "The autosave. name, text and photoIds replace the draft. commissionRate is saved live",
+        "properties": {
+          "commissionRate": {
+            "description": "The share of a sale that a referral partner earns, from 0 to 0.5",
+            "maximum": 0.5,
+            "minimum": 0,
+            "type": "number"
+          },
+          "name": {
+            "$ref": "#/components/schemas/KeepsakeName"
+          },
+          "photoIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 12,
+            "type": "array"
+          },
+          "text": {
+            "$ref": "#/components/schemas/KeepsakeText"
+          }
+        },
+        "type": "object"
+      },
+      "ProductVariant": {
+        "description": "A variant (SKU) of a keepsake",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "priceRappen": {
+            "type": "integer"
+          },
+          "skuCode": {
+            "type": "string"
+          },
+          "status": {
+            "description": "published is for sale, draft is hidden from guests",
+            "enum": [
+              "published",
+              "draft"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "skuCode",
+          "priceRappen",
+          "status"
         ],
         "type": "object"
       },
@@ -5074,6 +5927,55 @@
         ],
         "type": "object"
       },
+      "PublishCheck": {
+        "description": "One thing the publish card reports",
+        "properties": {
+          "card": {
+            "description": "The card of the edit screen that fixes it",
+            "enum": [
+              "basics",
+              "photos",
+              "variants",
+              "commission"
+            ],
+            "type": "string"
+          },
+          "code": {
+            "enum": [
+              "language",
+              "photos",
+              "variant-for-sale",
+              "other-language",
+              "hidden",
+              "commission-zero"
+            ],
+            "type": "string"
+          },
+          "codes": {
+            "description": "SKU codes the check names",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "language": {
+            "description": "With other-language: the language that has no full text",
+            "enum": [
+              "en",
+              "de"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "card"
+        ],
+        "type": "object"
+      },
       "ResendManagerInvitation": {
         "properties": {
           "language": {
@@ -8306,11 +9208,12 @@
                 "history-culture",
                 "food-drink",
                 "lake-mountains",
-                "shopping-keepsakes"
+                "shopping-keepsakes",
+                "local-activities"
               ],
               "type": "string"
             },
-            "maxItems": 4,
+            "maxItems": 5,
             "type": "array"
           },
           "keepsakeProductIds": {
@@ -8377,11 +9280,12 @@
                 "history-culture",
                 "food-drink",
                 "lake-mountains",
-                "shopping-keepsakes"
+                "shopping-keepsakes",
+                "local-activities"
               ],
               "type": "string"
             },
-            "maxItems": 4,
+            "maxItems": 5,
             "type": "array"
           },
           "keepsakeProductIds": {
@@ -9111,11 +10015,12 @@
                 "history-culture",
                 "food-drink",
                 "lake-mountains",
-                "shopping-keepsakes"
+                "shopping-keepsakes",
+                "local-activities"
               ],
               "type": "string"
             },
-            "maxItems": 4,
+            "maxItems": 5,
             "type": "array"
           },
           "keepsakeProductIds": {
@@ -9305,6 +10210,31 @@
           "contentType",
           "byteSize"
         ],
+        "type": "object"
+      },
+      "VariantSaveBody": {
+        "additionalProperties": false,
+        "description": "A change to one variant",
+        "properties": {
+          "priceRappen": {
+            "maximum": 100000000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "skuCode": {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "description": "published is for sale, draft is hidden from guests",
+            "enum": [
+              "published",
+              "draft"
+            ],
+            "type": "string"
+          }
+        },
         "type": "object"
       }
     }
@@ -11275,6 +12205,51 @@
       }
     },
     "/api/store/{storeId}/pins": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinList"
+                }
+              }
+            },
+            "description": "Every pin of the store, most recently edited first. `ended` is a live pin whose dates are all over",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
       "post": {
         "parameters": [
           {
@@ -11337,6 +12312,53 @@
         }
       }
     },
+    "/api/store/{storeId}/pins/story-options": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinStoryOptionList"
+                }
+              }
+            },
+            "description": "The story groups of the store, for the main-story picker",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/store/{storeId}/pins/{pinId}": {
       "delete": {
         "parameters": [
@@ -11373,6 +12395,66 @@
           "204": {
             "description": "The pin is deleted. Only a pin that was never published can be",
             "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "pinId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pin"
+                }
+              }
+            },
+            "description": "The pin with its draft, photos and outbound link",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -11600,6 +12682,481 @@
               }
             },
             "description": "The pin is live with its draft",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductList"
+                }
+              }
+            },
+            "description": "The keepsakes of the store, newest first",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The new draft keepsake with its one variant for sale",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/{productId}": {
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake with its working copy and publish checks",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductSaveBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake with the change saved. A left-out field stays, a list replaces",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/{productId}/publish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake is live with its working copy",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/{productId}/unpublish": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake is a draft again. Its live text is kept",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/{productId}/variants/{skuId}": {
+      "patch": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "skuId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VariantSaveBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake with the variant changed. The change is live at once and takes no row version",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",

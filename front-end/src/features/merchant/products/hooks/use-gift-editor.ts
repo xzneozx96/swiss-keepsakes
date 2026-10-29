@@ -569,7 +569,6 @@ export function useGiftEditor(
           void navigate({
             to: '/store/products/gifts/$productId',
             params: { productId: next.id },
-            search: { step },
             replace: true,
           })
 

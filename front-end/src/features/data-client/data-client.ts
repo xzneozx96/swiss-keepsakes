@@ -2,9 +2,11 @@ import type { AccountClient } from '@/features/account/api/client'
 import type { CatalogClient } from '@/features/catalog/api/client'
 import type { CategoriesClient } from '@/features/categories/api/client'
 import type { ContentClient } from '@/features/content/api/client'
+import type { KeepsakesClient } from '@/features/keepsakes/api/client'
 import type { NotificationsClient } from '@/features/notifications/api/client'
 import type { OrdersClient } from '@/features/orders/api/client'
 import type { PartnersClient } from '@/features/partners/api/client'
+import type { PlacesClient } from '@/features/places/api/client'
 import type { ReportsClient } from '@/features/reports/api/client'
 import type { RequestsClient } from '@/features/requests/api/client'
 import type { ReviewsClient } from '@/features/reviews/api/client'
@@ -21,9 +23,11 @@ export interface DataClient {
   catalog: CatalogClient
   categories: CategoriesClient
   content: ContentClient
+  keepsakes: KeepsakesClient
   notifications: NotificationsClient
   orders: OrdersClient
   partners: PartnersClient
+  places: PlacesClient
   reports: ReportsClient
   requests: RequestsClient
   reviews: ReviewsClient

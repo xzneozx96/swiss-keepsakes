@@ -15,11 +15,21 @@ export const queryKeys = {
     articles: ['content', 'articles'],
     comments: ['content', 'comments'],
   },
+  keepsakes: {
+    list: ['keepsakes', 'list'],
+    detail: ['keepsakes', 'detail'],
+  },
   notifications: {
     mail: ['notifications', 'mail'],
   },
   orders: {
     orders: ['orders', 'orders'],
+  },
+  places: {
+    list: ['places', 'list'],
+    pin: ['places', 'pin'],
+    storyOptions: ['places', 'storyOptions'],
+    media: ['places', 'media'],
   },
   partners: {
     partners: ['partners', 'partners'],

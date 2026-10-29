@@ -10,7 +10,6 @@ import {
   Label,
   Radio,
   RadioGroup,
-  toast,
 } from '@heroui/react'
 import { STORY_CATEGORIES } from '@sk/domain/content'
 import { formatDate } from '@sk/domain/shared'
@@ -429,28 +428,19 @@ export function ArticleEditor({
   }
 
   const onSaveDraft = () => {
-    const valid = editor.save('draft', undefined, (id) => {
-      toast.success(t('merchantArticles.toast.saved'))
-      openSaved(id)
-    })
+    const valid = editor.save('draft', undefined, openSaved)
 
     if (!valid)
       focusFirstError()
   }
   const onPublish = () => {
-    const valid = editor.publish((id) => {
-      toast.success(
-        t('merchantArticles.toast.published', { language: languageName }),
-      )
-      openSaved(id)
-    })
+    const valid = editor.publish(openSaved)
 
     if (!valid)
       focusFirstError()
   }
   const onSaveChanges = () => {
-    const valid = editor.save('publish', undefined, () =>
-      toast.success(t('merchantArticles.toast.savedPublished')))
+    const valid = editor.save('publish')
 
     if (!valid)
       focusFirstError()
@@ -466,17 +456,13 @@ export function ArticleEditor({
 
     if (!ok)
       return
-    const valid = editor.unpublish(() =>
-      toast.success(t('merchantArticles.toast.unpublished')))
+    const valid = editor.unpublish()
 
     if (!valid)
       focusFirstError()
   }
   const onAddVersion = () =>
     editor.addOtherVersion((id) => {
-      toast.success(
-        t(`merchantArticles.toast.versionAdded.${editor.otherLanguage}`),
-      )
       void navigate({
         to: '/store/content/articles/$articleId',
         params: { articleId: id },

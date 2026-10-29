@@ -41,7 +41,7 @@ Always read `docs/development-rules/shared/code-style.md`. Then read by task.
   - UI and styling: `docs/development-rules/frontend/heroui-and-styling.md`
   - Forms: `docs/development-rules/frontend/forms-and-validation.md`
   - Server data: `docs/development-rules/frontend/api-integration.md`
-  - Errors and toasts: `docs/development-rules/frontend/error-handling.md`
+  - Errors and toasts: `docs/development-rules/frontend/error-handling.md`, and for an API call's toast, `docs/development-rules/frontend/api-feedback.md`
   - First load, lists, typing, scrolling or streaming, new dependency, new icon: `docs/development-rules/frontend/performance.md`
   - Lint config: `docs/development-rules/frontend/linting.md`
 - **Back-end work** (`api/`, `packages/`; design only for now): `docs/development-rules/backend/architecture.md`, `docs/development-rules/backend/api-contract.md`, `docs/development-rules/backend/data-jobs-security.md`

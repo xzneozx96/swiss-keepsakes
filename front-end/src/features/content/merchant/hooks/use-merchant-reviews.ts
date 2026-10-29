@@ -44,8 +44,14 @@ export interface ReviewRowProps {
  */
 export function useMerchantReviews(filter: ReviewFilter[]) {
   const { t, language, intlLocale } = useLocale()
-  const { mutate: replyToReview } = useCommand('reviews', 'replyToReview')
   const reviews = useReviews()
+  const { mutate: replyToReview } = useCommand('reviews', 'replyToReview', {
+    // The cache's onSuccess runs before the list is read again, so `reviews` here is still the
+    // pre-reply list: whether the review already had a reply is exactly "saved" vs. "posted".
+    meta: {
+      success: (_result, input) => t(reviews.find(r => r.id === input.id)?.reply ? 'merchantReviews.savedToast' : 'merchantReviews.postedToast'),
+    },
+  })
   const products = useProducts()
   const tours = useTourRecords()
   const role = useDemoSelector(s => s.role)

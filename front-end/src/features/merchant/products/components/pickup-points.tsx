@@ -8,7 +8,6 @@ import {
   Input,
   Label,
   TextField,
-  toast,
 } from '@heroui/react'
 import {
   cleanText,
@@ -52,7 +51,9 @@ function PickupPointSheet({
   onClose: () => void
 }) {
   const { t, language: uiLanguage } = useLocale()
-  const { mutate: savePickupPlace } = useCommand('catalog', 'savePickupPlace')
+  const { mutate: savePickupPlace } = useCommand('catalog', 'savePickupPlace', {
+    meta: { success: (_result, input) => t('products.place.saved', { name: pickText(input.name, uiLanguage).text }) },
+  })
   const [draft, setDraft] = useState<PlaceDraft>(() => ({
     name: { ...place.name },
     address: place.address,
@@ -92,11 +93,6 @@ function PickupPointSheet({
     }
 
     savePickupPlace(next)
-    toast.success(
-      t('products.place.saved', {
-        name: pickText(next.name, uiLanguage).text,
-      }),
-    )
     onClose()
   }
 

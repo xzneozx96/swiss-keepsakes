@@ -1,8 +1,8 @@
 import type { Keepsake, Language, Sku } from './keepsake-editor-data'
 
 import { SelectedIcon } from '@/components/icons'
+import { IPhoneMockup } from '@/components/iphone-mockup'
 import { Media } from '@/components/media'
-import { IPhoneMockup } from './iphone-mockup'
 import { LANG_NAME } from './keepsake-editor-data'
 import { available, chf, findSku, label, shortLabel } from './keepsake-editor-rules'
 import { mediaOf } from './story-editor-data'

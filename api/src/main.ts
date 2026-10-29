@@ -1,18 +1,24 @@
 import type { Tx } from './platform/db/client.ts'
 import type { CommandDeps } from './platform/http/app.ts'
 import process from 'node:process'
+import { guardUseCases as guardCatalogUseCases } from './modules/catalog/adapters/database-errors.ts'
+import { createMediaDirectory } from './modules/catalog/adapters/media-directory.ts'
+import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
+import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
+import { makeCreateProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
 import { createMediaLogAlert } from './modules/content/adapters/media-alert.ts'
 import { createMediaQueues, startMediaWorkers } from './modules/content/adapters/media-jobs.ts'
 import { createMediaRepository } from './modules/content/adapters/media-repository.ts'
+import { mediaView } from './modules/content/adapters/media-view.ts'
 import { createPinRepository } from './modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from './modules/content/adapters/public-repository.ts'
 import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createS3Storage, createUnconfiguredStorage } from './modules/content/adapters/s3-storage.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeRequestUpload, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeRequestUpload, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -178,6 +184,9 @@ async function main() {
     const categoryDeps = { uow, categories: createCategoryRepository(), audit, clock: systemClock }
     const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock }
     const writeUseCases = guardUseCases({
+      listMerchantPins: makeListMerchantPins(pinDeps),
+      getMerchantPin: makeGetMerchantPin(pinDeps),
+      listPinStoryOptions: makeListPinStoryOptions(pinDeps),
       createPin: makeCreatePin(pinDeps),
       savePin: makeSavePin(pinDeps),
       publishPin: makePublishPin(pinDeps),
@@ -218,10 +227,27 @@ async function main() {
       listCategories: makeListCategories(readDeps),
       getMap: makeGetMap(readDeps),
     }
+    const contentMedia = createMediaRepository()
+    const catalogDeps = {
+      uow,
+      products: createProductRepository(),
+      media: createMediaDirectory({ findById: (tx: Tx, storeId: string, id: string) => contentMedia.findById(tx, storeId, id), view: row => mediaView(row, storage.publicUrl) }),
+      audit,
+      clock: systemClock,
+    }
+    const catalogUseCases = guardCatalogUseCases({
+      listProducts: makeListProducts(catalogDeps),
+      getProduct: makeGetProduct(catalogDeps),
+      createProduct: makeCreateProduct(catalogDeps),
+      saveProduct: makeSaveProduct(catalogDeps),
+      publishProduct: makePublishProduct(catalogDeps),
+      unpublishProduct: makeUnpublishProduct(catalogDeps),
+      saveVariant: makeSaveVariant(catalogDeps),
+    })
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
       withoutIdempotencyKey: [invitationPreviewPath],
-      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases)],
+      routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases)],
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity, commands).fetch, config.HOST, config.PORT, logger)
     stops.unshift(server.close)

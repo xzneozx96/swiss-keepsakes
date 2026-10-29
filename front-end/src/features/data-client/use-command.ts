@@ -1,3 +1,5 @@
+import type { MutationMeta } from '@tanstack/react-query'
+import type { MutationFeedback } from './api-feedback'
 import type { CommandName, Feature } from './commands'
 import type { DataClient } from './data-client'
 
@@ -20,10 +22,15 @@ type Command<F extends Feature, C extends CommandName<F>> = DataClient[F][C] ext
  * Take `mutate`, `mutateAsync` or `isPending` from the result: the result itself changes on
  * every state change. To leave the screen after a write, pass `onSuccess` to `mutate`: it does
  * not run when the screen is gone by then.
+ *
+ * `meta` is the command's feedback (`api-feedback.md`): a success message, a map from an `ApiProblem.type`
+ * to its copy, or `silent` to drop the automatic error toast (a screen that shows the refusal inline
+ * sets this). Never call `toast.*` next to `mutate` or `submit` yourself; the query client's cache does.
  */
 export function useCommand<F extends Feature, C extends CommandName<F>>(
   feature: F,
   command: C,
+  options?: { meta?: MutationFeedback<Command<F, C>['result'], Command<F, C>['input']> },
 ) {
   type TInput = Command<F, C>['input']
   type TResult = Command<F, C>['result']
@@ -33,6 +40,9 @@ export function useCommand<F extends Feature, C extends CommandName<F>>(
 
   return useMutation<TResult, Error, TInput>({
     mutationFn: input => run(input),
+    // The cache's feedback typing is looser than ours (it cannot know each command's result and
+    // input), so it is cast here, once, instead of at every call site.
+    meta: options?.meta as MutationMeta,
     onSuccess: () =>
       Promise.all(
         commandAffects[feature][command].map(queryKey =>
@@ -52,10 +62,11 @@ export function useCommand<F extends Feature, C extends CommandName<F>>(
 export function useSubmit<F extends Feature, C extends CommandName<F>>(
   feature: F,
   command: C,
+  options?: { meta?: MutationFeedback<Command<F, C>['result'], Command<F, C>['input']> },
 ) {
   type TInput = Command<F, C>['input']
   type TResult = Command<F, C>['result']
-  const { mutate, isPending, error, reset } = useCommand(feature, command)
+  const { mutate, isPending, error, reset } = useCommand(feature, command, options)
   const runningRef = useRef(false)
 
   const submit = (

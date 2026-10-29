@@ -1,68 +1,28 @@
-import type { GiftStep } from '@/features/merchant/products/lib/search-params'
+import type { KeepsakeView } from '@/features/keepsakes/lib/search-params'
 
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { EmptyState } from '@/components/empty-state'
-import { GiftIcon } from '@/components/icons'
-import { useLocale } from '@/contexts/locale-context'
-import { useProducts } from '@/features/catalog/api/queries'
-import { EditorSkeleton } from '@/features/merchant/products/components/editor-parts'
-import { GiftEditor } from '@/features/merchant/products/components/gift-editor'
-import {
-  GIFT_STEPS,
 
-} from '@/features/merchant/products/lib/search-params'
-import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
+import { KeepsakeEditorScreen } from '@/features/keepsakes/components/keepsake-editor'
+import { isKeepsakeView } from '@/features/keepsakes/lib/search-params'
 
-interface GiftEditorSearch {
-  /** The stepper's step (revision 2); absent = Basics. */
-  step?: GiftStep
-}
-
-// M12 Edit gift (step 4.9; stepper since revision 2). M11 gift cards and table rows link
-// here with the product id; `?step=` opens a step.
+// M12 for one keepsake: the edit screen, and Review and publish at `?view=review`.
 export const Route = createFileRoute('/store/products/gifts/$productId')({
-  validateSearch: (search: Record<string, unknown>): GiftEditorSearch => ({
-    step: GIFT_STEPS.includes(search.step as GiftStep)
-      ? (search.step as GiftStep)
-      : undefined,
+  validateSearch: (search: Record<string, unknown>): { view?: Exclude<KeepsakeView, 'edit'> } => ({
+    view: isKeepsakeView(search.view) && search.view !== 'edit' ? search.view : undefined,
   }),
-  component: GiftEditorPage,
+  component: KeepsakePage,
 })
 
-function GiftEditorPage() {
+function KeepsakePage() {
   const { productId } = Route.useParams()
-  const { step = 'basics' } = Route.useSearch()
+  const { view = 'edit' } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
-  const { t } = useLocale()
-  const isLoading = useSimulatedLoading()
-  const product = useProducts(products =>
-    products.find(p => p.id === productId),
-  )
 
-  if (isLoading)
-    return <EditorSkeleton />
-
-  if (!product) {
-    return (
-      <EmptyState
-        action={{ label: t('products.back'), to: '/store/products' }}
-        icon={GiftIcon}
-        message={t('products.notFound.gift')}
-      />
-    )
-  }
-
-  // Keyed by product, so a draft never carries over to another gift.
   return (
-    <GiftEditor
-      key={product.id}
-      product={product}
-      step={step}
-      onStep={next =>
-        void navigate({
-          search: next === 'basics' ? {} : { step: next },
-          replace: true,
-        })}
+    <KeepsakeEditorScreen
+      id={productId}
+      view={view}
+      onView={next => void navigate({ search: next === 'edit' ? {} : { view: next }, replace: true })}
     />
   )
 }

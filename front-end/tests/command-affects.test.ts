@@ -54,8 +54,8 @@ function payInFull(client: DataClient, { data, now }: Context, id: string) {
   })
 }
 
-/** `stores` and `categories` have no demo data to write: they are the API client in both modes, and tests/stores-client.test.tsx and tests/categories-client.test.tsx check their commands. */
-type DemoFeature = Exclude<Feature, 'stores' | 'categories'>
+/** `stores`, `categories`, `keepsakes` and `places` have no demo data to write: they are the API client in both modes, and tests/stores-client.test.tsx, tests/categories-client.test.tsx, tests/keepsakes-client.test.tsx and tests/places-client.test.tsx check their commands. */
+type DemoFeature = Exclude<Feature, 'stores' | 'categories' | 'keepsakes' | 'places'>
 
 const cases: { [F in DemoFeature]: { [C in CommandName<F>]: Case<F, C> } } = {
   account: {

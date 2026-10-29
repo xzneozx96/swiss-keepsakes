@@ -1,6 +1,8 @@
 import type { Partner, PartnerPayout } from '@sk/domain/partners'
 import type { QueriedData } from '@/features/demo/types'
 
+import { formatMoney } from '@sk/domain/shared'
+import { useLocale } from '@/contexts/locale-context'
 import { useCommand } from '@/features/data-client'
 import { useDemoSelector } from '@/features/demo'
 
@@ -57,13 +59,31 @@ export function canDeletePartner(
 
 /** M15 and M16 partner management: add, archive, restore, delete (D17), payouts, report link. */
 export function usePartnerActions() {
-  const { mutate: addPartner } = useCommand('partners', 'addPartner')
-  const { mutate: setPartnerArchived } = useCommand('partners', 'setPartnerArchived')
-  const { mutate: deletePartner } = useCommand('partners', 'deletePartner')
-  const { mutate: recordPayout } = useCommand('partners', 'recordPayout')
-  const { mutate: revokeReportLink } = useCommand('partners', 'revokeReportLink')
-  const { mutate: issueReportLink } = useCommand('partners', 'issueReportLink')
+  const { t, intlLocale } = useLocale()
   const demoPartners = usePartners()
+  const nameOf = (partnerId: string) => demoPartners.find(p => p.id === partnerId)?.name ?? ''
+  const { mutate: addPartner } = useCommand('partners', 'addPartner', {
+    meta: { success: (_result, input) => t('merchantPartners.added', { name: input.name }) },
+  })
+  const { mutate: setPartnerArchived } = useCommand('partners', 'setPartnerArchived', {
+    meta: {
+      success: (_result, input) => t(input.archived ? 'merchantPartners.archivedToast' : 'merchantPartners.restored', { name: nameOf(input.id) }),
+    },
+  })
+  const { mutate: deletePartner } = useCommand('partners', 'deletePartner', {
+    meta: { success: (_result, input) => t('merchantPartners.deleted', { name: nameOf(input.id) }) },
+  })
+  const { mutate: recordPayout } = useCommand('partners', 'recordPayout', {
+    meta: {
+      success: (_result, input) => t('payout.recorded', { amount: formatMoney(input.amount / 100, intlLocale), name: nameOf(input.partnerId) }),
+    },
+  })
+  const { mutate: revokeReportLink } = useCommand('partners', 'revokeReportLink', {
+    meta: { success: 'partnerDetail.revoke.done' },
+  })
+  const { mutate: issueReportLink } = useCommand('partners', 'issueReportLink', {
+    meta: { success: 'partnerDetail.issue.done' },
+  })
   const role = useDemoSelector(s => s.role)
 
   return {
