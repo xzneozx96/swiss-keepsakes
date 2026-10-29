@@ -6,6 +6,7 @@ import { pickText } from '@sk/domain/shared'
 
 import { useEffect, useRef, useState } from 'react'
 
+import { warmAerialTiles } from '@/components/aerial-map/aerial-style'
 import { useAerialMap } from '@/components/aerial-map/use-aerial-map'
 import {
   ChevronLeftIcon,
@@ -20,7 +21,6 @@ import { Media } from '@/components/media'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { useLatest } from '@/hooks/use-latest'
-import { warmAerialTiles } from './aerial-style'
 
 import './tour-itinerary-map.css'
 

@@ -1,6 +1,6 @@
 import type { StyleSpecification } from 'maplibre-gl'
 
-import { loadAerialStyle } from '@/features/tours/map/aerial-style'
+import { loadAerialStyle } from './aerial-style'
 
 /**
  * The aerial photo with OpenFreeMap names, without the 3D parts: no elevation source, no sky
