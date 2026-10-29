@@ -1,7 +1,7 @@
 import type { CategoryKind, MerchantCategory } from '@sk/api-contract'
 import type { MessageKey } from '@/i18n/en'
 
-import { Button, Form, Input, Label, ListBox, Select, TextField } from '@heroui/react'
+import { Button, Form, Input, Label, ListBox, Select, TextField, toast } from '@heroui/react'
 import { useId, useState } from 'react'
 
 import { SheetFrame } from '@/components/sheet-frame'
@@ -9,8 +9,8 @@ import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
-import { displayName } from '../lib/category-name'
 import { problemTypeToMessageKey } from '../lib/category-problems'
+import { nameOf } from '../lib/category-tree'
 
 const ROOT = 'root'
 
@@ -19,20 +19,23 @@ const ROOT = 'root'
  * and a category with sub-categories gets no parent field because the API refuses to nest it. It closes on
  * success, so a refusal keeps what was typed and the key of the attempt.
  */
-export function CategorySheet({ storeId, kind, category, roots, onClose }: {
+export function CategorySheet({ storeId, kind, category, parentId: initialParent, roots, onClose }: {
   storeId: string
   kind: CategoryKind
   /** The category to edit, or none to add one. */
   category: MerchantCategory | undefined
+  /** The parent to preselect: the category's own, or the one "Add sub-category" came from. */
+  parentId: string | null
   /** The top-level categories of the list. */
   roots: MerchantCategory[]
   onClose: () => void
 }) {
-  const { t, language } = useLocale()
+  const { t } = useLocale()
+  const title = category ? t('categories.sheet.editTitle', { name: nameOf(category) }) : t(initialParent ? 'categories.sheet.addSubTitle' : 'categories.sheet.addTitle')
   const formId = useId()
   const [nameEn, setNameEn] = useState(category?.name.en ?? '')
   const [nameDe, setNameDe] = useState(category?.name.de ?? '')
-  const [parent, setParent] = useState(category?.parentId ?? ROOT)
+  const [parent, setParent] = useState(initialParent ?? ROOT)
   const [nameMissing, setNameMissing] = useState(false)
   const create = useSubmit('categories', 'create')
   const save = useSubmit('categories', 'save')
@@ -57,6 +60,7 @@ export function CategorySheet({ storeId, kind, category, roots, onClose }: {
     const callbacks = {
       onSuccess: () => {
         key.settled()
+        toast.success(t(category ? 'categories.toast.saved' : 'categories.toast.added'))
         onClose()
       },
       onError: (failed: Error) => key.settled(failed),
@@ -77,7 +81,7 @@ export function CategorySheet({ storeId, kind, category, roots, onClose }: {
     }
   }
 
-  const field = (label: MessageKey, value: string, set: (value: string) => void) => (
+  const field = (label: MessageKey, lang: 'en' | 'de', value: string, set: (value: string) => void) => (
     <TextField
       fullWidth
       isInvalid={nameMissing}
@@ -89,8 +93,8 @@ export function CategorySheet({ storeId, kind, category, roots, onClose }: {
         reset()
       }}
     >
-      <Label className="text-heading">{t(label)}</Label>
-      <Input />
+      <Label>{t(label)}</Label>
+      <Input lang={lang} />
     </TextField>
   )
 
@@ -107,11 +111,11 @@ export function CategorySheet({ storeId, kind, category, roots, onClose }: {
           </Button>
         </>
       )}
-      title={t(category ? 'categories.sheet.editTitle' : 'categories.sheet.addTitle')}
+      title={title}
       onClose={onClose}
     >
       <Form
-        className="flex flex-col gap-6"
+        className="flex flex-col gap-4"
         id={formId}
         validationBehavior="aria"
         onSubmit={(event) => {
@@ -119,9 +123,11 @@ export function CategorySheet({ storeId, kind, category, roots, onClose }: {
           submit()
         }}
       >
-        {field('categories.sheet.nameEn', nameEn, setNameEn)}
-        {field('categories.sheet.nameDe', nameDe, setNameDe)}
-        {nameMissing && <p className="-mt-4 text-sm text-danger" role="alert">{t('categories.problem.name')}</p>}
+        {field('categories.sheet.nameEn', 'en', nameEn, setNameEn)}
+        {field('categories.sheet.nameDe', 'de', nameDe, setNameDe)}
+        <p className={`-mt-2 text-xs ${nameMissing ? 'text-danger' : 'text-muted'}`} role={nameMissing ? 'alert' : undefined}>
+          {t(nameMissing ? 'categories.problem.name' : 'categories.sheet.nameHint')}
+        </p>
         {fixedAtTop
           ? <p className="text-sm text-pretty text-muted">{t('categories.sheet.hasChildren')}</p>
           : (
@@ -135,7 +141,7 @@ export function CategorySheet({ storeId, kind, category, roots, onClose }: {
                   reset()
                 }}
               >
-                <Label className="text-heading">{t('categories.sheet.parent')}</Label>
+                <Label>{t('categories.sheet.parent')}</Label>
                 <Select.Trigger>
                   <Select.Value />
                   <Select.Indicator />
@@ -147,7 +153,7 @@ export function CategorySheet({ storeId, kind, category, roots, onClose }: {
                       <ListBox.ItemIndicator />
                     </ListBox.Item>
                     {parents.map((root) => {
-                      const label = displayName(root, language).primary
+                      const label = nameOf(root)
 
                       return (
                         <ListBox.Item key={root.id} id={root.id} textValue={label}>

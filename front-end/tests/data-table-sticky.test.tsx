@@ -55,3 +55,22 @@ describe('dataTable sticky actions column', () => {
     expect(table).not.toHaveClass('min-w-[56rem]')
   })
 })
+
+describe('dataTable hidePager', () => {
+  const many: Row[] = Array.from({ length: 12 }, (_, i) => ({ id: `r${i}`, name: `Row ${i}` }))
+  const cards = (items: Row[]) => <ul>{items.map(row => <li key={row.id}>{`Card ${row.name}`}</li>)}</ul>
+
+  it('pages at 10 rows with a pager by default', () => {
+    renderTable({ rows: many, cards })
+    expect(screen.getAllByRole('row')).toHaveLength(11)
+    expect(screen.getAllByText(/^Card Row/)).toHaveLength(10)
+    expect(screen.getAllByRole('button', { name: /next/i }).length).toBeGreaterThan(0)
+  })
+
+  it('shows every row and no pager with hidePager, in the table and the cards', () => {
+    renderTable({ rows: many, cards, hidePager: true })
+    expect(screen.getAllByRole('row')).toHaveLength(13)
+    expect(screen.getAllByText(/^Card Row/)).toHaveLength(12)
+    expect(screen.queryByRole('button', { name: /next/i })).toBeNull()
+  })
+})
