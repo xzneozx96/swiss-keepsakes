@@ -25,7 +25,7 @@ function SentPage() {
   const isLoading = useSimulatedLoading()
 
   if (isLoading)
-    return <RequestSentSkeleton />
+    return <RequestSentSkeleton orders={Math.max(1, orders.split(',').filter(Boolean).length)} />
 
   return <RequestSent orderIds={orders.split(',').filter(Boolean)} />
 }

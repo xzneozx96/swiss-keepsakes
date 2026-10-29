@@ -35,18 +35,29 @@ describe('guest screens loading', () => {
     const { container } = render(<ReviewSkeleton />)
 
     expect(genericBox(container)).toBeNull()
-    expect(count(container, '.divide-y.rounded-3xl.shadow-surface')).toBe(2)
+    expect(count(container, '[data-skeleton="order-card"]')).toBe(2)
+    expect(count(container, '[data-skeleton="rule"]')).toBe(2)
+    expect(count(container, '[data-skeleton="cancellation"].py-2 .min-h-11')).toBe(2)
+    expect(count(container, '[data-skeleton="order-link"]')).toBe(0)
+    expect(count(container, '[data-skeleton="note"] .skeleton')).toBe(2)
+    expect(container.querySelector('[data-skeleton="bar"] .h-12.w-full')).not.toBeNull()
+    expect(container.querySelector('[data-skeleton="bar"] .rounded-full')).not.toBeNull()
+    expect(container.querySelector('[data-skeleton="bar"]')!.className).toContain('safe-area-inset-bottom')
     expect(container.querySelector('[data-skeleton="note"]')).not.toBeNull()
     expect(container.querySelector('[data-skeleton="bar"]')).not.toBeNull()
   })
 
   it('request sent: success mark, title lines, two sections and a full-width button', () => {
-    const { container } = render(<RequestSentSkeleton />)
+    const { container } = render(<RequestSentSkeleton orders={2} />)
 
     expect(genericBox(container)).toBeNull()
     expect(container.querySelector('.size-14.rounded-full')).not.toBeNull()
-    expect(count(container, 'section')).toBe(2)
-    expect(count(container, 'li')).toBe(3)
+    expect(count(container, '[data-skeleton="order-card"]')).toBe(2)
+    expect(count(container, '[data-skeleton="order-link"].min-h-12')).toBe(2)
+    expect(count(container, '[data-skeleton="rule"]')).toBe(2)
+    expect(count(container, '[data-skeleton="cancellation"]')).toBe(2)
+    expect(container.querySelector('[data-skeleton="transactions-link"]')).not.toBeNull()
+    expect(count(container, 'ul.rounded-3xl li')).toBe(3)
     expect(container.querySelector('[data-skeleton="bar"] .h-12.w-full')).not.toBeNull()
   })
 
@@ -63,9 +74,11 @@ describe('guest screens loading', () => {
     const { container } = render(<OrderDetailSkeleton />)
 
     expect(genericBox(container)).toBeNull()
-    expect(count(container, '[data-skeleton="tabs"] > *')).toBe(3)
+    expect(count(container, '[data-skeleton="tabs"] > *')).toBe(4)
     expect(count(container, '.border-dashed')).toBe(1)
-    expect(count(container, '.divide-y > *')).toBe(3)
+    expect(container.querySelector('[data-skeleton="panel"] > .h-6')).not.toBeNull()
+    expect(count(container, '[data-skeleton="panel"] .divide-y > *')).toBe(3)
+    expect(container.querySelector('[data-skeleton="date-tile"]')!.className).toContain('w-14')
   })
 
   it('gift detail: 4:3.4 photo and the overlapping sheet with highlight rows', () => {
@@ -74,6 +87,15 @@ describe('guest screens loading', () => {
     expect(container.querySelector('.aspect-\\[4\\/3\\.4\\]')).not.toBeNull()
     expect(container.querySelector('.-mt-6.rounded-t-3xl')).not.toBeNull()
     expect(count(container, 'ul li')).toBe(3)
+    expect(container.querySelector('.items-center.pb-6')).not.toBeNull()
+    expect(container.querySelector('[data-skeleton="stats"].py-4.border-y [data-skeleton="rating"].h-10')).not.toBeNull()
+    expect(container.querySelector('[data-skeleton="seller"].py-5 .size-12.rounded-full')).not.toBeNull()
+    const bar = container.querySelector('[data-skeleton="bar"]')!
+
+    expect(bar.className).toContain('sticky')
+    expect(bar.className).toContain('bottom-0')
+    expect(bar.querySelector('.h-12.w-28')).not.toBeNull()
+    expect(bar.querySelectorAll('.rounded-full')).toHaveLength(1)
   })
 
   it('article: tall cover with title lines, then the sheet with the author row', () => {
@@ -81,6 +103,11 @@ describe('guest screens loading', () => {
 
     expect(container.querySelector('.h-\\[min\\(68dvh\\,540px\\)\\]')).not.toBeNull()
     expect(container.querySelector('.-mt-6.rounded-t-3xl .size-12.rounded-full')).not.toBeNull()
+    expect(count(container, '[data-skeleton="contents"] .h-11.rounded-full')).toBe(3)
+    expect(container.querySelector('[data-skeleton="contents"] .py-2\\.5')).not.toBeNull()
+    expect(container.querySelector('[data-skeleton="contents"] .h-0\\.5')).not.toBeNull()
+    expect(container.querySelector('[data-skeleton="bar"] .h-12.w-full')).not.toBeNull()
+    expect(container.querySelector('[data-skeleton="bar"]')!.className).toContain('safe-area-inset-bottom')
   })
 
   it('route pending: title and subtitle, then a list card of rows', () => {
