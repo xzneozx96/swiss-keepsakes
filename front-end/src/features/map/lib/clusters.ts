@@ -1,7 +1,7 @@
 export type LngLat = [lng: number, lat: number]
 
 /** Pins this close on screen (px) merge into one cluster. The selected pin never does. */
-export const CLUSTER_RADIUS = 34
+const CLUSTER_RADIUS = 34
 
 export function boundsOf(points: readonly LngLat[]): [LngLat, LngLat] {
   const lngs = points.map(point => point[0])
