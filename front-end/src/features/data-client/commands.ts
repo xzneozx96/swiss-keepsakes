@@ -19,6 +19,7 @@ export type CommandName<F extends Feature> = Exclude<
 interface ReadsWithInput {
   stores: 'onboarding' | 'members' | 'previewInvitation'
   categories: 'list'
+  keepsakes: 'list' | 'get'
 }
 
 /**
@@ -55,6 +56,14 @@ export const commandAffects: {
     replyAsShop: [queryKeys.content.comments],
     setCommentHidden: [queryKeys.content.comments],
     deleteComment: [queryKeys.content.comments],
+  },
+  keepsakes: {
+    create: [queryKeys.keepsakes.list],
+    // The autosave leaves the list alone: the editor keeps its own copy, and the list reads again when it opens.
+    save: [],
+    publish: [queryKeys.keepsakes.list],
+    unpublish: [queryKeys.keepsakes.list],
+    saveVariant: [queryKeys.keepsakes.list],
   },
   notifications: {},
   orders: {

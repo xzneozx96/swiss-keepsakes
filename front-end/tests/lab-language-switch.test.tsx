@@ -3,8 +3,8 @@ import type { LanguageStatus } from '@/components/language-version-switch'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { LocaleProvider } from '@/contexts/locale-context'
 import { LanguageVersionSwitch } from '@/components/language-version-switch'
+import { LocaleProvider } from '@/contexts/locale-context'
 import { StoryEditorLabApp } from '@/features/lab/story-editor-app'
 
 // jsdom has no CSS.supports; the story editor's auto-sizing textarea asks it at import time.

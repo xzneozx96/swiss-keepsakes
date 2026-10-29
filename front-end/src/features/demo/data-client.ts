@@ -11,6 +11,7 @@ import { catalogQueries } from '@/features/catalog/api/queries'
 import { createCategoriesClient } from '@/features/categories/api/api-client'
 import { createContentDemoClient } from '@/features/content/api/demo-client'
 import { contentQueries } from '@/features/content/api/queries'
+import { createKeepsakesClient } from '@/features/keepsakes/api/api-client'
 import { createNotificationsDemoClient } from '@/features/notifications/api/demo-client'
 import { notificationsQueries } from '@/features/notifications/api/queries'
 import { createOrdersDemoClient } from '@/features/orders/api/demo-client'
@@ -113,6 +114,7 @@ export function createDemoDataClient(store: DemoStore): DataClient {
     catalog: createCatalogDemoClient(store),
     categories: createCategoriesClient(),
     content: createContentDemoClient(store),
+    keepsakes: createKeepsakesClient(),
     notifications: createNotificationsDemoClient(store),
     orders: createOrdersDemoClient(store),
     partners: createPartnersDemoClient(store),
