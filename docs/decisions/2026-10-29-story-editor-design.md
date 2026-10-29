@@ -2,6 +2,7 @@
 
 - Date: 2026-10-29
 - Status: **approved on 2026-10-29** (approval given in chat by the owner, on the lab page `/lab/story-editor`). It changes only the layout of the editor and adds the owner answers below. Nine points stay open (see "Open points").
+- Note of 2026-10-29 (later the same day): the owner approved the keepsake catalog design (`docs/decisions/2026-10-29-keepsake-catalog-design.md`). Two shared pieces replace the editor's own. The language switch is the shared `LanguageVersionSwitch` (design A: thin tabs with a status icon and one status line, arrow keys only move the focus, a click or Enter chooses), and the laptop preview is the shared iPhone 16 Pro mockup in place of the phone outline. The editor has a back arrow and no breadcrumb. Decision points 1, 6 and 14 keep their meaning. `docs/ux/story-editor-design.md` carries the note and names the sections it changes
 - Changes: `docs/ux/story-editor-design.md` (new), `docs/decisions/2026-10-28-story-editor.md` (dated note), `docs/development-plan/screen-inventory.md` (S3, M17, D15), `docs/development-plan/delivery-plan.md` (E4.3), `docs/adr/ADR-030-merchant-edited-map-and-blog-categories.md` (History line)
 - Source: the owner's approval of the lab page `/lab/story-editor` on 29.10.2026
 - Related: `docs/ux/story-editor-design.md` (the full specification), `docs/decisions/2026-10-28-story-editor.md` (the body shape, the allow-list and the pin link, which this record leaves as they are), `docs/adr/ADR-011-outbound-link-by-place.md`, `docs/adr/ADR-030-merchant-edited-map-and-blog-categories.md`

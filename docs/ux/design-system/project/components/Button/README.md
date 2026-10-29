@@ -18,6 +18,7 @@ HeroUI v3 `Button` (variants primary, secondary, tertiary, outline, ghost, dange
 - `color-accent-hover` is darker than the accent (#C12D20), so white labels keep 5.7:1 while pressed. HeroUI lightens, which drops to 4.4:1.
 - Destructive buttons use `color-destructive` (ink) with `color-destructive-foreground`, not HeroUI's brick `danger`. Brick is never a solid fill in this theme; the dialog carries the brick icon and words.
 - `danger-soft` is not used. A refund entry point is a tertiary button that opens an AlertDialog.
+- **Changed 2026-10-29 (owner, keepsake catalog design, `docs/ux/keepsake-editor-design.md`).** The two rules above and the rule under Use that limit the ink button to an AlertDialog still hold for the confirm button. Destructive actions outside a dialog now use the danger tone, never a solid fill: `danger-soft` buttons (a trash button, Unpublish) and danger menu items (red text, through `isDanger` on `RowActions`). The button that opens a confirm dialog stays plain or `danger-soft`. The confirm button inside the dialog stays ink.
 - Focus ring is ink (`color-focus`) so it never reads as the brick invalid state.
 
 ## Use

@@ -42,3 +42,4 @@ We will keep the stock design of ADR-009 and ADR-016 and not copy the parts of M
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-29 note: the keepsake catalog design (`docs/decisions/2026-10-29-keepsake-catalog-design.md`) shows no stock locations. Inventory has an inventory item page, which is a screen over the one `inventory.stock_items` row per SKU. It does not adopt Medusa's separate inventory item model. The decision above stands

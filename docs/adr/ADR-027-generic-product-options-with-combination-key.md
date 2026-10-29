@@ -40,3 +40,4 @@ We will keep the options in two tables and link a SKU to values in a third.
 ## History
 - 2026-10-26 proposed
 - 2026-10-26 accepted (gate DESIGN)
+- 2026-10-29 note: the keepsake catalog design (`docs/decisions/2026-10-29-keepsake-catalog-design.md`) keeps options per product. The owner considered Medusa's shared options and chose per product on 2026-10-29. Revisit this when a second product line shares values. The decision above stands
