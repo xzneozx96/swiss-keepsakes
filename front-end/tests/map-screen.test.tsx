@@ -234,6 +234,30 @@ describe('[E4.6][AC88] the filter dims on the map and filters the card row and t
   })
 })
 
+describe('[E4.6][AC88] a filter that matches nothing', () => {
+  it('says so in both views, opens no card, and forgets the card that was open', async () => {
+    vi.mocked(fetchMapCategories).mockResolvedValue([...categories, category(5, null, 3, 'Boat trips', 'Bootsfahrten')])
+    await loaded()
+    await screen.findByRole('button', { name: en['map.categories'] })
+    await userEvent.click(pinButton('Hotel am See'))
+    await screen.findByRole('heading', { level: 2, name: 'Hotel am See' })
+    await choose('Boat trips')
+
+    expect(screen.getByText(en['map.none.title'])).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Hotel am See' })).toBeNull()
+    expect(allPinButtons()).toHaveLength(5)
+    await userEvent.click(screen.getByRole('button', { name: en['map.view.list'] }))
+    expect(screen.getByText(en['map.none.title'])).toBeInTheDocument()
+    expect(screen.queryByRole('list')).toBeNull()
+
+    // Back to All: the card that was open before the filter does not come back by itself.
+    await userEvent.click(screen.getByRole('button', { name: en['map.filter.clear'] }))
+    expect(screen.queryByText(en['map.none.title'])).toBeNull()
+    expect(screen.queryByRole('heading', { level: 2, name: 'Hotel am See' })).toBeNull()
+    expect(screen.getByRole('button', { name: en['map.categories'] })).toBeInTheDocument()
+  })
+})
+
 describe('[E4.6][AC93] the Map and List switch', () => {
   it('lists the same pins in the same order as the card row, under the same filter', async () => {
     await loaded()

@@ -93,8 +93,10 @@ export function MapScreen() {
     setChosen(next)
     setFilterOpen(false)
     setView('map')
+    // A filter that keeps nothing opens no card and drops the one that was open.
     if (next.length > 0 && first)
       openCard(first.id)
+    else setSelectedId(undefined)
   }
 
   function retry() {
@@ -104,6 +106,7 @@ export function MapScreen() {
       data.retry()
   }
 
+  const matchesNothing = pinsReady && chosenCount > 0 && kept.length === 0
   const places = t(kept.length === 1 ? 'map.places.one' : 'map.places.other', { count: kept.length })
   const announce = chosenCount === 0
     ? t(ranked.length === 1 ? 'map.announce.all.one' : 'map.announce.all.other', { count: ranked.length })
@@ -153,8 +156,21 @@ export function MapScreen() {
 
       {view === 'list' && pinsReady && (
         <div className="absolute inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom,0px)+64px)] z-[8] overflow-y-auto bg-background px-4 pt-[60px] pb-4">
-          <h2 className="pb-2 text-card-title font-semibold">{places}</h2>
-          <PinList categories={data.categories} pins={kept} onOpen={openFromList} />
+          {!matchesNothing && (
+            <>
+              <h2 className="pb-2 text-card-title font-semibold">{places}</h2>
+              <PinList categories={data.categories} pins={kept} onOpen={openFromList} />
+            </>
+          )}
+        </div>
+      )}
+
+      {matchesNothing && (
+        <div className="pointer-events-none absolute inset-x-3 top-[70px] z-[9] flex justify-center">
+          <div className="pointer-events-auto flex w-full flex-col items-center gap-2 rounded-3xl bg-surface p-5 text-center shadow-overlay" role="status">
+            <p className="font-serif text-card-title text-balance">{t('map.none.title')}</p>
+            <Button className="min-h-11" variant="secondary" onPress={() => applyFilter([])}>{t('map.filter.clear')}</Button>
+          </div>
         </div>
       )}
 
