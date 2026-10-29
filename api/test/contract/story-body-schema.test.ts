@@ -22,7 +22,7 @@ const uuid2 = '4f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2e'
 
 const p = (text: string, marks?: unknown[]) => ({ type: 'paragraph', content: [{ type: 'text', text, ...(marks ? { marks } : {}) }] })
 const doc = (...content: unknown[]) => ({ type: 'doc', content })
-const draftOf = (body: unknown) => ({ title: 'T', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body })
+const draftOf = (body: unknown) => ({ title: 'T', excerpt: '', authorName: '', coverMediaId: null, body })
 const image = (mediaId = uuid) => ({ type: 'image', attrs: { mediaId, alt: 'a', caption: 'c' } })
 
 function firstIssue(body: unknown) {

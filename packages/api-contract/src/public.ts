@@ -97,7 +97,6 @@ export const publicStoryListSchema = z.object({
 
 export const publicStorySchema = publicStoryCardSchema.extend({
   authorName: z.string(),
-  authorRole: z.string(),
   body: publicStoryBodySchema,
 }).meta({ id: 'PublicStory' })
 

@@ -1663,9 +1663,6 @@
           "authorName": {
             "type": "string"
           },
-          "authorRole": {
-            "type": "string"
-          },
           "availableLanguages": {
             "items": {
               "$ref": "#/components/schemas/PublicLanguage"
@@ -1769,7 +1766,6 @@
           "fallback",
           "availableLanguages",
           "authorName",
-          "authorRole",
           "body"
         ],
         "type": "object"
@@ -8160,12 +8156,15 @@
             "maxLength": 120,
             "type": "string"
           },
-          "authorRole": {
-            "maxLength": 120,
-            "type": "string"
-          },
           "body": {
             "$ref": "#/components/schemas/StoryBody"
+          },
+          "checkedOn": {
+            "format": "date",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "coverMediaId": {
             "format": "uuid",
@@ -8187,7 +8186,6 @@
           "title",
           "excerpt",
           "authorName",
-          "authorRole",
           "coverMediaId",
           "body"
         ],
@@ -8431,9 +8429,6 @@
               "authorName": {
                 "type": "string"
               },
-              "authorRole": {
-                "type": "string"
-              },
               "body": {
                 "properties": {
                   "content": {
@@ -8478,6 +8473,12 @@
                 ],
                 "type": "object"
               },
+              "checkedOn": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "coverMediaId": {
                 "format": "uuid",
                 "type": [
@@ -8496,7 +8497,6 @@
               "title",
               "excerpt",
               "authorName",
-              "authorRole",
               "coverMediaId",
               "body"
             ],
@@ -8521,9 +8521,6 @@
               "authorName": {
                 "type": "string"
               },
-              "authorRole": {
-                "type": "string"
-              },
               "body": {
                 "properties": {
                   "content": {
@@ -8568,6 +8565,12 @@
                 ],
                 "type": "object"
               },
+              "checkedOn": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "coverMediaId": {
                 "format": "uuid",
                 "type": [
@@ -8586,7 +8589,6 @@
               "title",
               "excerpt",
               "authorName",
-              "authorRole",
               "coverMediaId",
               "body"
             ],

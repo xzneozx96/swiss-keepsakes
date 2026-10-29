@@ -267,8 +267,8 @@ export const storyDraftSchema = z.strictObject({
   title: noNul(z.string().trim().max(300)),
   excerpt: text(1000),
   authorName: text(120),
-  authorRole: text(120),
   coverMediaId: z.uuid().nullable(),
+  checkedOn: z.iso.date().nullable().optional(),
   body: storyBodySchema,
 }).meta({ id: 'StoryDraft', description: 'The text of one story version. The title may be empty until it is published' })
 
@@ -341,8 +341,8 @@ const storyDraftViewSchema = z.object({
   title: z.string(),
   excerpt: z.string(),
   authorName: z.string(),
-  authorRole: z.string(),
   coverMediaId: z.uuid().nullable(),
+  checkedOn: z.string().nullable().optional(),
   body: z.object({ type: z.literal('doc'), content: z.array(storyBodyNodeViewSchema) }),
 })
 

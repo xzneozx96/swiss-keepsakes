@@ -10,7 +10,7 @@ export const interestCodes = ['history-culture', 'food-drink', 'lake-mountains',
 export type InterestCode = typeof interestCodes[number]
 
 /** What stops a draft from being published; the editor shows one line per gap. */
-export type PublishGap = 'title' | 'location' | 'slug' | 'pdf'
+export type PublishGap = 'title' | 'location' | 'slug' | 'pdf' | 'excerpt' | 'coverMediaId' | 'subjectPlaceId' | 'checkedOn'
 
 export interface Localized { en?: string, de?: string }
 

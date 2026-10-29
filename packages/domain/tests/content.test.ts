@@ -9,6 +9,7 @@ import {
   languagesOf,
   pinPublishGaps,
   storyMediaIds,
+  storyVersionCheckGaps,
   storyVersionPublishGaps,
   tourPublishGaps,
 } from '../src/content'
@@ -59,10 +60,37 @@ describe('[E2.6] content/pin', () => {
 })
 
 describe('[E2.6] content/story', () => {
-  it('[E2.6][AC30] a story version with a title and a slug has no gaps and no rule asks for a second language', () => {
-    expect(storyVersionPublishGaps({ title: 'Lucerne', slug: 'lucerne' })).toEqual([])
-    expect(storyVersionPublishGaps({ title: '  ', slug: null })).toEqual(['title', 'slug'])
-    expect(storyVersionPublishGaps({ title: 'x', slug: ' ' })).toEqual(['slug'])
+  const story = { title: 'Lucerne', slug: 'lucerne', excerpt: 'Short', coverMediaId: 'm1', kind: 'story' as const, subjectPlaceId: null, checkedOn: null }
+
+  it('[E2.14][AC30] a story version with a title, a slug, a cover and an excerpt has no gaps and no rule asks for a second language', () => {
+    expect(storyVersionPublishGaps(story)).toEqual([])
+  })
+
+  it.each([
+    ['title', { title: '  ' }, ['title']],
+    ['slug', { slug: null }, ['slug']],
+    ['blank slug', { slug: ' ' }, ['slug']],
+    ['excerpt', { excerpt: '   ' }, ['excerpt']],
+    ['cover', { coverMediaId: null }, ['coverMediaId']],
+    ['everything', { title: '', slug: null, excerpt: '', coverMediaId: null }, ['title', 'slug', 'excerpt', 'coverMediaId']],
+  ] as const)('[E2.14][AC30] a story without its %s has that gap', (_name, over, gaps) => {
+    expect(storyVersionPublishGaps({ ...story, ...over })).toEqual(gaps)
+  })
+
+  it('[E2.14][AC30] an editorial review also needs its place and its check date, a story needs neither', () => {
+    const review = { ...story, kind: 'editorial_review' as const, subjectPlaceId: 'p1', checkedOn: '2026-10-01' }
+    expect(storyVersionPublishGaps(review)).toEqual([])
+    expect(storyVersionPublishGaps({ ...review, checkedOn: null })).toEqual(['checkedOn'])
+    expect(storyVersionPublishGaps({ ...review, checkedOn: ' ' })).toEqual(['checkedOn'])
+    expect(storyVersionPublishGaps({ ...review, subjectPlaceId: null })).toEqual(['subjectPlaceId'])
+    expect(storyVersionPublishGaps({ ...review, subjectPlaceId: null, checkedOn: null, title: '' })).toEqual(['title', 'subjectPlaceId', 'checkedOn'])
+    expect(storyVersionPublishGaps({ ...story, checkedOn: null, subjectPlaceId: null })).toEqual([])
+  })
+
+  it('[E2.14][AC30] the gaps the database CHECK reads are the title and the slug only', () => {
+    expect(storyVersionCheckGaps({ title: 'Lucerne', slug: 'lucerne' })).toEqual([])
+    expect(storyVersionCheckGaps({ title: '  ', slug: null })).toEqual(['title', 'slug'])
+    expect(storyVersionCheckGaps({ title: 'x', slug: ' ' })).toEqual(['slug'])
   })
 
   it('[E2.6][AC30] a published story version cannot move to another group, a draft can', () => {
@@ -82,7 +110,6 @@ describe('[E2.6] content/story', () => {
       title: 't',
       excerpt: '',
       authorName: '',
-      authorRole: '',
       coverMediaId: 'm1',
       body: {
         type: 'doc',
