@@ -12,7 +12,7 @@ function n18(language: 'en' | 'de'): Extract<MailRequest, { template: 'N18' }> {
 }
 
 function n20(language: 'en' | 'de'): Extract<MailRequest, { template: 'N20' }> {
-  return { template: 'N20', to: 'ngoc.tran@example.ch', language, storeId, params: { store: 'Zürich Andenken', invitationId } }
+  return { template: 'N20', to: 'ngoc.tran@example.ch', language, storeId, params: { store: 'Zürich Andenken', invitationId, expiresOn: '2026-11-05T09:00:00.000Z' } }
 }
 
 describe('[E2.8] N18 and N20 render in the stored language, with their data and recipient', () => {
@@ -51,8 +51,8 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
       text: [
         'Hello,',
         'You’re invited to run Zürich Andenken as its Owner.',
-        `Open the invitation, sign in and complete the steps your store needs before it can sell: ${link}`,
-        'The link works for 7 days.',
+        ['Invitation to open', 'Zürich Andenken', 'Valid until 5 November 2026'].join('\n'),
+        `Set up your store: ${link}`,
         'If you didn’t expect this invitation, you can ignore this email.',
       ].join('\n\n'),
     })
@@ -65,8 +65,8 @@ describe('[E2.8] N18 and N20 render in the stored language, with their data and 
       text: [
         'Grüezi,',
         'Sie sind eingeladen, Zürich Andenken als Inhaber:in zu führen.',
-        `Öffnen Sie die Einladung, melden Sie sich an und erledigen Sie die Schritte, die Ihr Laden vor dem Verkaufsstart braucht: ${link}`,
-        'Der Link ist 7 Tage gültig.',
+        ['Einladung zur Eröffnung', 'Zürich Andenken', 'Gültig bis 5. November 2026'].join('\n'),
+        `Laden einrichten: ${link}`,
         'Wenn Sie diese Einladung nicht erwartet haben, können Sie diese E-Mail ignorieren.',
       ].join('\n\n'),
     })
@@ -93,7 +93,7 @@ describe('[E2.8] a template value that is missing never reaches the recipient', 
   })
 
   it.each(['', '   '])('[E2.8] a blank value (%j) counts as missing', (store) => {
-    const request = { ...n20('de'), params: { store, invitationId } }
+    const request = { ...n20('de'), params: { store, invitationId, expiresOn: '2026-11-05T09:00:00.000Z' } }
 
     expect(() => renderMail(request, link)).toThrow(MailRenderError)
     expect(() => renderMail(request, link)).toThrow('N20 has no value for {store}')
@@ -155,9 +155,14 @@ describe('[E2.8] every mail has an HTML part built from the same copy as the tex
   it.each(cases)('[E2.8] $name says in the HTML what the text says', ({ request, link }) => {
     const { html, text } = renderMail(request, link)
 
-    for (const paragraph of text.split('\n\n').map(part => part.replace(/: https?:\/\/\S+$/, ''))) {
+    // A box's three lines are three elements, and its date sits in a <strong> after the words.
+    for (const paragraph of text.split(/\n\n|\n/).map(part => part.replace(/: https?:\/\/\S+$/, ''))) {
       const sentence = paragraph.replace(/^Your sign-in code is |^Ihr Anmeldecode lautet |\.$/g, '')
-      expect(html).toContain(escapeHtml(sentence))
+      const [, words, date] = /^((?:Valid until|Gültig bis) )(.+)$/.exec(sentence) ?? []
+      if (words)
+        expect(html).toMatch(new RegExp(`${words}<strong[^>]*>${date}</strong>`))
+      else
+        expect(html).toContain(escapeHtml(sentence))
     }
   })
 
@@ -276,5 +281,41 @@ describe('[E2.8] every mail has an HTML part built from the same copy as the tex
     it.each(['javascript:alert(1)', 'data:text/html,<p>x</p>', 'ftp://swiss-keepsakes.example/i', '//swiss-keepsakes.example/i', 'https://swiss keepsakes.example/i'])('[E2.8] the link %j is not an http(s) URL, so no mail goes out with it', (bad) => {
       expect(() => renderMail(n20('de'), bad)).toThrow(new MailRenderError('N20 has a link that is not an http(s) URL'))
     })
+  })
+})
+
+describe('[E2.15][N20] the Owner invitation states the day it stops working', () => {
+  it.each([['en', 'Invitation to open', 'Valid until 5 November 2026', '7 days'], ['de', 'Einladung zur Eröffnung', 'Gültig bis 5. November 2026', '7 Tage']] as const)('[E2.15][N20] %s has the box "%s", one line "%s", the link, no "%s"', (language, label, line, sevenDays) => {
+    const { html, text } = renderMail(n20(language), link)
+
+    expect(text.split(line)).toHaveLength(2)
+    expect(html).toContain(label)
+    expect(html).toContain('Zürich Andenken')
+    expect(html).toMatch(/<strong[^>]*>\d+\.? \w+ 2026<\/strong>/)
+    expect(html.match(/(Valid until|Gültig bis)/g)).toHaveLength(1)
+    expect(html).toContain(`href="${link}"`)
+    expect(`${html}${text}`).not.toContain(sevenDays)
+  })
+
+  it('[E2.15][N20] the day is the one in Zurich, not in UTC', () => {
+    const request = { ...n20('en'), params: { store: 'Zürich Andenken', invitationId, expiresOn: '2026-11-04T23:30:00Z' } }
+
+    expect(renderMail(request, link).text).toContain('Valid until 5 November 2026')
+  })
+
+  it('[E2.15][N20] has no heading cell and no ruled-row table', () => {
+    expect(renderMail(n20('en'), link).html).not.toMatch(/<th[\s>]/)
+  })
+
+  it('[E2.15][N20] escapes the store in the box', () => {
+    const request = { ...n20('en'), params: { store: '<b>Evil</b>', invitationId, expiresOn: '2026-11-05T09:00:00.000Z' } }
+
+    expect(renderMail(request, link).html).not.toContain('<b>Evil</b>')
+  })
+
+  it.each([undefined, '', 'not a date'])('[E2.15][N20] a missing or invalid expiresOn (%j) throws MailRenderError', (expiresOn) => {
+    const request = { ...n20('en'), params: { store: 'Zürich Andenken', invitationId, expiresOn } } as unknown as MailRequest
+
+    expect(() => renderMail(request, link)).toThrow(MailRenderError)
   })
 })

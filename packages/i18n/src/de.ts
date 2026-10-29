@@ -90,8 +90,8 @@ export const mailDe: Record<MailKey, string> = {
   'mail.N18.button': 'Einladung annehmen',
   'mail.N20.subject': 'Einladung: Eröffnen Sie {store}',
   'mail.N20.invited': 'Sie sind eingeladen, {store} als Inhaber:in zu führen.',
-  'mail.N20.setup':
-    'Öffnen Sie die Einladung, melden Sie sich an und erledigen Sie die Schritte, die Ihr Laden vor dem Verkaufsstart braucht',
+  'mail.N20.box': 'Einladung zur Eröffnung',
+  'mail.N20.validUntil': 'Gültig bis {date}',
   'mail.N20.button': 'Laden einrichten',
 
   'tourMail.greeting': 'Grüezi {guest}',

@@ -20,8 +20,8 @@ for (const language of ['en', 'de'] as const) {
   previews[`N01-${language}`] = { request: { template: 'N01', to: 'anna.keller@example.ch', language, storeId: null, params: { shop: brandName, code: '482913' } }, link: undefined }
   previews[`N18-${language}`] = { request: { template: 'N18', to: 'lena.meier@example.ch', language, storeId: null, params: { inviter: 'Ngoc Tran', store: 'Zürich Andenken', invitationId } }, link }
   previews[`N18-long-${language}`] = { request: { template: 'N18', to: 'lena.meier@example.ch', language, storeId: null, params: { inviter: longInviter, store: longStore, invitationId } }, link }
-  previews[`N20-${language}`] = { request: { template: 'N20', to: 'ngoc.tran@example.ch', language, storeId: null, params: { store: 'Zürich Andenken', invitationId } }, link: ownerLink }
-  previews[`N20-long-${language}`] = { request: { template: 'N20', to: 'ngoc.tran@example.ch', language, storeId: null, params: { store: longStore, invitationId } }, link: ownerLink }
+  previews[`N20-${language}`] = { request: { template: 'N20', to: 'ngoc.tran@example.ch', language, storeId: null, params: { store: 'Zürich Andenken', invitationId, expiresOn: '2026-11-05T09:00:00.000Z' } }, link: ownerLink }
+  previews[`N20-long-${language}`] = { request: { template: 'N20', to: 'ngoc.tran@example.ch', language, storeId: null, params: { store: longStore, invitationId, expiresOn: '2026-11-05T09:00:00.000Z' } }, link: ownerLink }
 }
 
 // Writes each preview's HTML to `<dir>/<name>.html`, for opening in a browser or a screenshot.

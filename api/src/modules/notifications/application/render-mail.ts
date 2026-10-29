@@ -11,7 +11,8 @@ export interface MailParams {
   // The sign-in code is the one secret a job holds: it is useless after 5 minutes, and the job is deleted soon after.
   N01: { shop: string, code: string }
   N18: { inviter: string, store: string, invitationId: string }
-  N20: { store: string, invitationId: string }
+  // `expiresOn` is the invitation's expiry as an ISO instant. The mail shows its day in Zurich.
+  N20: { store: string, invitationId: string, expiresOn: string }
 }
 
 // `language` is the one stored with the business record, never the server's (D12).
@@ -21,12 +22,14 @@ export type MailRequest = {
 
 // What a template says, in order. The text and the HTML are both built from this list and the same copy, so
 // the words live once. `lead` and `note` are paragraphs that the HTML sets in another style. `code` is the
-// sign-in code, big in the HTML. `action` is a sentence that ends in the link: the text puts the link after a
-// colon, the HTML puts a button and the plain link under the sentence.
+// sign-in code, big in the HTML. `box` is the store in a soft box with a label above and a line below (N20); the
+// text prints the three lines in order. `action` is a sentence that ends in the link: the text puts the link after a
+// colon, the HTML puts a button and the plain link under the sentence. Without a sentence the button's label stands in.
 type Item
   = | { kind: 'paragraph' | 'lead' | 'note', key: MailKey }
     | { kind: 'code', key: MailKey, label: MailKey }
-    | { kind: 'action', key: MailKey, button: MailKey }
+    | { kind: 'box', label: MailKey, line: MailKey }
+    | { kind: 'action', key?: MailKey, button: MailKey }
 
 interface Template { subject: MailKey, preheader: MailKey, reason?: MailKey, body: Item[] }
 
@@ -62,14 +65,19 @@ const templates: Record<MailTemplate, Template> = {
     body: [
       { kind: 'paragraph', key: 'mail.greeting' },
       { kind: 'lead', key: 'mail.N20.invited' },
-      { kind: 'action', key: 'mail.N20.setup', button: 'mail.N20.button' },
-      { kind: 'note', key: 'mail.invitation.expiry' },
+      { kind: 'box', label: 'mail.N20.box', line: 'mail.N20.validUntil' },
+      { kind: 'action', button: 'mail.N20.button' },
       { kind: 'note', key: 'mail.invitation.ignore' },
     ],
   },
 }
 
 const copy = { en: mailEn, de: mailDe }
+
+const dayEn = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' })
+const dayDe = new Intl.DateTimeFormat('de-CH', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Zurich' })
+
+const isoInstant = /^\d{4}-\d{2}-\d{2}T/
 
 const placeholder = /\{(\w+)\}/g
 
@@ -101,9 +109,13 @@ export function renderMail(request: MailRequest, link: string | undefined): Rend
   const { subject, preheader, reason, body } = templates[template]
   const words = copy[request.language]
   const params: Record<string, string | undefined> = Object.fromEntries(
-    Object.entries<string>(request.params).map(([name, value]) => [name, value.replace(invisible, '')]),
+    Object.entries<string>(request.params).map(([name, value]) => [name, (value ?? '').replace(invisible, '')]),
   )
   params.link = link
+  // The invitation's last day, as Zurich counts it. A missing or invalid instant leaves `{date}` empty, which throws.
+  const expires = isoInstant.test(params.expiresOn ?? '') ? new Date(params.expiresOn ?? '') : undefined
+  if (expires && !Number.isNaN(expires.getTime()))
+    params.date = (request.language === 'de' ? dayDe : dayEn).format(expires)
   const fill = (key: MailKey) => words[key].replace(placeholder, (_, name: string) => {
     const value = params[name]
     if (!value?.trim())
@@ -121,8 +133,11 @@ export function renderMail(request: MailRequest, link: string | undefined): Rend
     throw new MailRenderError(`${template} has no value for {code}`)
 
   const text = body.map((item) => {
-    const sentence = fill(item.key)
-    return item.kind === 'action' ? `${sentence}: ${link}` : sentence
+    if (item.kind === 'box')
+      return [words[item.label], params.store ?? '', fill(item.line)].join('\n')
+    if (item.kind === 'action')
+      return `${item.key ? fill(item.key) : words[item.button]}: ${link}`
+    return fill(item.key)
   }).join('\n\n')
   const subjectLine = fill(subject)
   const html = renderHtml({
@@ -135,8 +150,10 @@ export function renderMail(request: MailRequest, link: string | undefined): Rend
       switch (item.kind) {
         case 'code':
           return { kind: 'code', label: fill(item.label), code }
+        case 'box':
+          return { kind: 'box', label: words[item.label], title: params.store ?? '', line: fill(item.line), emphasis: params.date ?? '' }
         case 'action':
-          return { kind: 'action', text: `${fill(item.key)}.`, button: fill(item.button), link: link ?? '', fallback: words['mail.linkFallback'] }
+          return { kind: 'action', text: item.key ? `${fill(item.key)}.` : undefined, button: fill(item.button), link: link ?? '', fallback: words['mail.linkFallback'] }
         default:
           return { kind: item.kind, text: fill(item.key) }
       }

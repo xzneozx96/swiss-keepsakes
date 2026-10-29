@@ -21,7 +21,7 @@ const n20: Extract<MailRequest, { template: 'N20' }> = {
   to: 'ngoc.tran@example.ch',
   language: 'de',
   storeId: '0192f3a0-0000-7000-8000-0000000000aa',
-  params: { store: 'Zürich Andenken', invitationId: '0192f3a0-0000-7000-8000-0000000000ee' },
+  params: { store: 'Zürich Andenken', invitationId: '0192f3a0-0000-7000-8000-0000000000ee', expiresOn: '2026-10-27T08:00:00.000Z' },
 }
 
 const n20Link = 'https://swiss-keepsakes.example/store/onboarding/tok_7f3c9a'
@@ -193,6 +193,22 @@ describe('[E2.8] the mail job sends through the Mailer port', () => {
 
     expect(memory.attempts).toEqual([])
     expect(rows.get(mailId)).toMatchObject({ status: 'queued', attempts: 1, lastError: 'MailRenderError' })
+  })
+
+  it.each(['accepted', 'expired', 'withdrawn'] as const)('[E2.15] a mail for an %s invitation sends nothing, and its job holds the invitation id, the expiry day and no token', async (state) => {
+    const { memory, invitations, revoked, jobs, sendMail, queued } = setup()
+    const { job } = await queued(n20)
+    // The link builder gives no link for an accepted or expired invitation and the revoked marker for a withdrawn one.
+    if (state === 'withdrawn')
+      revoked.add(n20.params.invitationId)
+    else
+      invitations.clear()
+
+    expect(jobs[0]?.data).toMatchObject({ params: { invitationId: n20.params.invitationId, expiresOn: n20.params.expiresOn } })
+    expect(JSON.stringify(jobs)).not.toMatch(/token|tok_|https:/i)
+    await sendMail(job).catch(() => {})
+
+    expect(memory.attempts).toEqual([])
   })
 
   it('[E2.4] a mail for an invitation revoked before it was sent sends nothing, closes the mail without an alert, and the job completes', async () => {

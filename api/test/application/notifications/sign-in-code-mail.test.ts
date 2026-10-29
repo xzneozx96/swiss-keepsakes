@@ -37,7 +37,7 @@ describe('[E2.2] the N01 sign-in code goes through the mail job', () => {
     const { queued, jobs, uow, sentMail, jobQueue } = fakes()
     const queueMail = makeQueueMail({ sentMail, jobs: jobQueue, clock: createManualClock(new Date('2026-10-20T08:00:00Z')), queue: 'mail' })
     await uow.run(tx => queueMail(tx, request))
-    await uow.run(tx => queueMail(tx, { template: 'N20', to: 'ngoc.tran@example.ch', language: 'en', storeId: '0192f3a0-0000-7000-8000-0000000000aa', params: { store: 'Zürich Andenken', invitationId: '0192f3a0-0000-7000-8000-0000000000ee' } }))
+    await uow.run(tx => queueMail(tx, { template: 'N20', to: 'ngoc.tran@example.ch', language: 'en', storeId: '0192f3a0-0000-7000-8000-0000000000aa', params: { store: 'Zürich Andenken', invitationId: '0192f3a0-0000-7000-8000-0000000000ee', expiresOn: '2026-10-27T08:00:00.000Z' } }))
 
     expect(queued[0]).toMatchObject({ storeId: null, template: 'N01', language: 'de', recipient: 'anna.keller@example.ch' })
     expect(jobs[0]).toEqual({ data: { ...request, mailId }, options: { id: mailId, retryLimit: 2, retryDelay: 20, retryBackoff: false, expireInSeconds: 60, retentionSeconds: 300, deleteAfterSeconds: 3600 } })

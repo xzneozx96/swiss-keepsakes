@@ -269,7 +269,7 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
 
     // The queued N20 job holds the invitation id and no link or token.
     const job = await env.newestJob(owner.email)
-    expect(job).toMatchObject({ template: 'N20', to: owner.email, storeId, params: { store: 'Lucerne Andenken', invitationId: invitation!.id } })
+    expect(job).toMatchObject({ template: 'N20', to: owner.email, storeId, params: { store: 'Lucerne Andenken', invitationId: invitation!.id, expiresOn: invitation!.expires_at.toISOString() } })
     expect(JSON.stringify(job)).not.toMatch(/token|http|invitation=/i)
 
     // The mail attempt builds the link with the real InvitationLink, in the attempt's own transaction.
@@ -502,6 +502,10 @@ describe('[E2.3][S8] the Super Admin invites the Owner, the Owner accepts, and t
 
     expect(new Set([first.token, second.token, third.token]).size).toBe(3)
     expect(await invitationRow(body.id)).toHaveLength(1)
+    // The resent job holds the renewed expiry and no token.
+    const resentJob = await env.newestJob(owner.email)
+    expect(resentJob).toMatchObject({ params: { expiresOn: (await invitationRow(body.id))[0]!.expires_at.toISOString() } })
+    expect(JSON.stringify(resentJob)).not.toMatch(/token|http|invitation=/i)
     expect((await env.newestJob(owner.email)).language).toBe('de')
     for (const stale of [first.token, second.token])
       expect((await env.call('/api/me/invitations/accept', { method: 'POST', headers: owner.headers, body: { token: stale } })).status).toBe(404)

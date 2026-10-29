@@ -38,7 +38,7 @@ describe('[E2.3] the Super Admin creates a store with its Owner invitation', () 
 
     const [invitation] = [...fake.state.invitations.values()]
     const [store] = [...fake.state.stores.values()]
-    expect(fake.state.mail).toEqual([{ template: 'N20', to: 'ngoc.tran@example.ch', language: 'de', storeId: store?.id, params: { store: 'Lucerne Andenken', invitationId: invitation?.id } }])
+    expect(fake.state.mail).toEqual([{ template: 'N20', to: 'ngoc.tran@example.ch', language: 'de', storeId: store?.id, params: { store: 'Lucerne Andenken', invitationId: invitation?.id, expiresOn: invitation?.expiresAt.toISOString() } }])
     expect(JSON.stringify(fake.state.mail)).not.toMatch(/token|http|#\//i)
   })
 
@@ -177,7 +177,8 @@ describe('[E2.3] the Super Admin resends the Owner invitation', () => {
     expect(fake.state.invitations.get(invitation?.id ?? '')).toMatchObject({ tokenHash: null })
     expect(fake.state.invitations.get(invitation?.id ?? '')?.expiresAt.getTime()).toBe(clock.now().getTime() + invitationLifetimeMs)
     expect(fake.state.mail).toHaveLength(2)
-    expect(fake.state.mail[1]).toMatchObject({ template: 'N20', to: 'ngoc.tran@example.ch', params: { invitationId: invitation?.id } })
+    expect(fake.state.mail[1]).toMatchObject({ template: 'N20', to: 'ngoc.tran@example.ch', params: { invitationId: invitation?.id, expiresOn: fake.state.invitations.get(invitation?.id ?? '')?.expiresAt.toISOString() } })
+    expect(fake.state.mail[1]?.params).toMatchObject({ expiresOn: new Date(clock.now().getTime() + invitationLifetimeMs).toISOString() })
     expect(JSON.stringify(fake.state.mail)).not.toMatch(/token|http/i)
     expect(fake.state.audit.at(-1)).toMatchObject({ entity: 'store_invitation', action: 'resent', requestId: 'request-2' })
   })
