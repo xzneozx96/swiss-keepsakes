@@ -11,6 +11,10 @@ import { useIsWide } from '@/hooks/use-is-wide'
 const operatorArea = /^\/(?:store|admin)(?:\/|$)/
 
 function inOperatorArea() {
+  // /store and /admin are `ssr: false`, so the server never decides; guard for any other render.
+  if (typeof window === 'undefined')
+    return false
+
   return operatorArea.test(window.location.pathname)
 }
 
@@ -44,7 +48,7 @@ export function SheetFrame({
         onOpenChange={open => !open && onClose()}
       >
         <Modal.Container placement="center">
-          <Modal.Dialog className="max-h-[min(720px,calc(var(--visual-viewport-height,100dvh)-80px))] sm:max-w-[560px]">
+          <Modal.Dialog className="max-h-[min(720px,calc(var(--visual-viewport-height,100dvh)-80px))] w-[560px] max-w-full">
             <span ref={markerRef} hidden />
             <Modal.Header className="flex flex-row items-center justify-between pe-10">
               <Modal.Heading className="text-title">{title}</Modal.Heading>

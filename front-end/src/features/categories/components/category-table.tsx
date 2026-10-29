@@ -17,7 +17,7 @@ import { DropSlot, Grip } from './category-drag'
 
 type ActionId = 'edit' | 'add-sub' | 'up' | 'down' | 'delete'
 
-/** The table's search field, drawn by the table or, next to the tabs, by the screen. */
+/** The search field of the desktop list, drawn by the screen next to the tabs. */
 export function CategorySearch({ value, onChange, disabled }: { value: string, onChange: (value: string) => void, disabled?: boolean }) {
   const { t } = useLocale()
 
@@ -38,19 +38,17 @@ export function CategorySearch({ value, onChange, disabled }: { value: string, o
  * sub-category's handle drags it among its siblings only. ArrowUp and ArrowDown on a handle, or
  * Move up and Move down in the menu, do the same from the keyboard.
  */
-export function CategoryTable({ items, kind, actions, busy, loading, query: lifted }: {
+export function CategoryTable({ items, kind, actions, busy, loading, query }: {
   items: MerchantCategory[]
-  /** The search text when the screen owns the field (next to the tabs); the table then draws none of its own. */
-  query?: string
-  /** Draws the real search field and headers with loading bars while the list is not here yet. */
+  /** The search text; the screen owns the field, next to the tabs. */
+  query: string
+  /** Draws the headers with loading bars while the list is not here yet. */
   loading?: boolean
   kind: CategoryKind
   actions: CategoryActions
   busy: boolean
 }) {
   const { t } = useLocale()
-  const [own, setQuery] = useState('')
-  const query = lifted ?? own
   const [folded, setFolded] = useState(false)
   const boxRef = useRef<HTMLDivElement>(null)
   const groupRef = useRef<string | null>(null)
@@ -121,7 +119,6 @@ export function CategoryTable({ items, kind, actions, busy, loading, query: lift
 
   return (
     <div className="flex flex-col gap-4">
-      {lifted === undefined && <CategorySearch disabled={loading} value={query} onChange={setQuery} />}
       {rows.length === 0 && !loading
         ? <EmptyState icon={InfoIcon} message={t(searching ? 'categories.search.empty' : `categories.empty.${kind}`, { query: query.trim() })} />
         : (

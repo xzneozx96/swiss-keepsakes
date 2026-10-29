@@ -53,7 +53,7 @@ export function CategoryEditor({ storeId, kind, tabs }: { storeId: string | unde
         ? (
             <div className="flex items-center justify-between gap-3">
               {tabs}
-              <CategorySearch disabled={!loaded} value={query} onChange={text => setSearch({ kind, text })} />
+              {!categories.isError && <CategorySearch disabled={!loaded} value={query} onChange={text => setSearch({ kind, text })} />}
             </div>
           )
         : tabs}
