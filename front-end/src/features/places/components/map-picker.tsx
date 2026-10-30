@@ -32,20 +32,16 @@ const markerShape
  * MapLibre loads by dynamic import, never with the editor's first paint. If it cannot load, `onFailed` lets the
  * step show coordinate fields instead.
  */
-export function MapPicker({ lat, lng, onPlace, onFailed, attached, className = 'h-72 lg:h-96', overlay, controlsRef, children }: {
+export function MapPicker({ lat, lng, onPlace, onFailed, className = 'h-72 lg:h-96', overlay, controlsRef }: {
   lat: number | null
   lng: number | null
   onPlace: (position: { lat: number, lng: number }) => void
   onFailed: () => void
-  /** The map sits in a frame with something above it: square corners, the frame rounds them. */
-  attached?: boolean
   /** The size of the box, as height classes; the width is the parent's. */
   className?: string
   /** Controls placed anywhere over the map: the box leaves the map under it to the pointer, so give each control its own `pointer-events-auto`. */
   overlay?: ReactNode
   controlsRef?: Ref<MapPickerControls>
-  /** Controls over the map, bottom left. */
-  children?: ReactNode
 }) {
   const { t } = useLocale()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -188,11 +184,10 @@ export function MapPicker({ lat, lng, onPlace, onFailed, attached, className = '
 
   // MapLibre makes its container `position: relative`, so it sits in a box that has a size.
   return (
-    <div className={`relative overflow-hidden bg-[#c9d3c6] ${className} ${attached ? '' : 'rounded-2xl'}`}>
+    <div className={`relative overflow-hidden rounded-2xl bg-[#c9d3c6] ${className}`}>
       {!map && <p className="absolute inset-0 grid place-items-center text-sm text-muted" role="status">{t('places.map.loading')}</p>}
       <div ref={containerRef} className="size-full" />
       {overlay && <div className="pointer-events-none absolute inset-0 z-10">{overlay}</div>}
-      {children && <div className="absolute bottom-3 start-3 z-10">{children}</div>}
     </div>
   )
 }

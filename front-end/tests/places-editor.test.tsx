@@ -22,10 +22,10 @@ vi.hoisted(() => {
 
 // MapLibre needs a canvas, which jsdom has not: the picker is replaced by a button that places a pin.
 vi.mock('@/features/places/components/map-picker', () => ({
-  MapPicker: ({ onPlace, children }: { onPlace: (position: { lat: number, lng: number }) => void, children?: ReactNode }) => (
+  MapPicker: ({ onPlace, overlay }: { onPlace: (position: { lat: number, lng: number }) => void, overlay?: ReactNode }) => (
     <div>
       <button type="button" onClick={() => onPlace({ lat: 47.05, lng: 8.3 })}>Place pin</button>
-      {children}
+      {overlay}
     </div>
   ),
 }))
@@ -1095,31 +1095,44 @@ describe('[E4.2][AC68] N17 position from a Google Maps link', () => {
   }
   const long = 'https://www.google.com/maps/place/Kapellbr%C3%BCcke/@47.0516,8.3074,17z/data=!3m1!4b1!8m2!3d47.0516943!4d8.3074029'
 
-  it('[E4.2][AC68] is the input on top of the map, in the one frame with no card between', async () => {
+  it('[E4.2][AC68] is a field like the others on top of the map, a gap between them, both in the one location card', async () => {
     await open('new')
     await heading('Place on the map')
 
     const field = screen.getByLabelText('Google Maps link')
-    expect(field.compareDocumentPosition(screen.getByRole('button', { name: 'Place pin' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(field.closest('[data-testid="place-block"]')).toBe(screen.getByRole('button', { name: 'Place pin' }).closest('[data-testid="place-block"]'))
-    expect(field.closest('.overflow-hidden')).toContainElement(screen.getByRole('button', { name: 'Place pin' }))
+    const map = screen.getByRole('button', { name: 'Place pin' })
+
+    expect(field.compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(field.closest('[data-testid="place-block"]')).toBe(map.closest('[data-testid="place-block"]'))
+    expect(field).toHaveAccessibleDescription('Paste a link from Google Maps, or tap the map.')
+    expect(field.closest('.gap-3')).toContainElement(map)
     expect(screen.queryByRole('button', { name: 'Remove the position' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Recenter on the pin' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Clear the link' })).not.toBeInTheDocument()
   })
 
-  it('[E4.2][AC68] says the pin moved to the link until the pin is moved another way, and the clear button empties the input', async () => {
+  it('[E4.2][AC68] says the pin moved to the link until the pin is moved another way, then the help line is back', async () => {
     await open('new')
     await heading('Place on the map')
     await paste(long)
 
-    expect(screen.getByText('Pin moved to the link.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Google Maps link')).toHaveAccessibleDescription('Pin moved to the link.')
     await press('Place pin')
     expect(screen.queryByText('Pin moved to the link.')).not.toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Clear the link' }))
-    expect(screen.getByLabelText('Google Maps link')).toHaveValue('')
-    expect(screen.queryByRole('button', { name: 'Clear the link' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Google Maps link')).toHaveAccessibleDescription('Paste a link from Google Maps, or tap the map.')
+    await userEvent.clear(screen.getByLabelText('Google Maps link'))
+    await userEvent.tab()
     await paste(long)
     expect(screen.getByText('Pin moved to the link.')).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC68] gives the remove control the destructive look, apart from the recenter control', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await press('Place pin')
+
+    expect(screen.getByRole('button', { name: 'Remove the position' }).className).toContain('--danger-soft-hover')
+    expect(screen.getByRole('button', { name: 'Recenter on the pin' }).className).not.toContain('--danger')
   })
 
   it('[E4.2][AC68] removes the position from the button over the map', async () => {
