@@ -156,6 +156,53 @@ describe('[E4.2][AC68] N17 a new place', () => {
   })
 })
 
+describe('[E4.2][AC68] N17 header', () => {
+  it('[E4.2][AC68] is one row: a back button named All places, the title, then the status chip', async () => {
+    api.pin = livePin()
+    await open(uuid(10))
+    await heading('Place on the map')
+
+    const title = screen.getByRole('heading', { level: 1, name: 'Chapel Bridge' })
+    const back = screen.getByRole('link', { name: 'All places' })
+    const status = screen.getByTestId('places-status')
+    expect(back).toHaveAttribute('href', '/store/content/places')
+    expect(back).not.toHaveTextContent('All places')
+    expect(back.parentElement).toBe(title.parentElement)
+    expect(status.parentElement).toBe(title.parentElement)
+    expect(Array.from(title.parentElement!.children)).toEqual([back, title, status])
+    expect(status).toHaveTextContent('Published')
+    expect(status.querySelector('.chip--success')).not.toBeNull()
+  })
+
+  it('[E4.2][AC68] shows draft in the neutral colour and hidden in the warning colour, as the list does', async () => {
+    await open('new')
+    await heading('Place on the map')
+
+    expect(screen.getByTestId('places-status')).toHaveTextContent('Draft')
+    expect(screen.getByTestId('places-status').querySelector('.chip--default')).not.toBeNull()
+  })
+
+  it('[E4.2][AC68] a hidden place reads Hidden in the warning colour', async () => {
+    api.pin = livePin({ status: 'hidden' })
+    await open(uuid(10))
+    await heading('Place on the map')
+
+    expect(screen.getByTestId('places-status')).toHaveTextContent('Hidden')
+    expect(screen.getByTestId('places-status').querySelector('.chip--warning')).not.toBeNull()
+  })
+
+  it('[E4.2][AC68] the form card starts level with the step list: nothing sits above the first card', async () => {
+    await open('new')
+    await heading('Place on the map')
+
+    // jsdom has no layout: the step's title row, empty from 1024 px, must not be a flex item that adds a gap.
+    const row = document.getElementById('step-title')!.parentElement!
+
+    expect(row.className).toContain('lg:contents')
+    expect(row.parentElement!.className).toContain('lg:contents')
+  })
+})
+
 describe('[E4.2][AC86] N17 dates and Add event', () => {
   it('[E4.2][AC86] Add event opens a new place on the dates step with one date entry ready', async () => {
     await open('new', { start: 'dates' })

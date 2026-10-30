@@ -3,12 +3,15 @@ import type { StepId } from '../hooks/use-place-editor'
 
 import type { StartStep } from '../lib/search-params'
 
+import { buttonVariants } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 import { BackIcon } from '@/components/icons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
+import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { StepBar, StepLayout } from '@/features/merchant/products/components/step-shell'
 import { usePlaceEditor } from '../hooks/use-place-editor'
+import { STATUS_TONE } from '../lib/list'
 import { PLACES_PATH } from '../lib/search-params'
 import { StepContent } from './step-content'
 import { StepLinks } from './step-links'
@@ -18,17 +21,14 @@ import { StepTags } from './step-tags'
 
 import { StepWhen } from './step-when'
 
-const DOT: Record<string, string> = { new: 'bg-muted', draft: 'bg-muted', published: 'bg-success', hidden: 'bg-warning' }
-
-/** The status as a dot and words, never colour alone. */
+/** The status in its colour and words, the same chip as the list. */
 function StatusLine({ status }: { status: 'new' | 'draft' | 'published' | 'hidden' }) {
   const { t } = useLocale()
   const key = status === 'new' ? 'places.publish.draft' : (`places.status.${status}` as const)
 
   return (
-    <span className="inline-flex items-center gap-2 text-sm text-muted" data-testid="places-status">
-      <span aria-hidden className={`size-2 rounded-full ${DOT[status]}`} />
-      {t(key)}
+    <span className="shrink-0" data-testid="places-status">
+      <StatusChip tone={STATUS_TONE[status === 'new' ? 'draft' : status]}>{t(key)}</StatusChip>
     </span>
   )
 }
@@ -54,12 +54,11 @@ export function PlaceEditor({ storeId, initial, start }: { storeId: string, init
   return (
     <div className="flex min-w-0 flex-col gap-5" data-testid="place-editor">
       <MerchantBackBar label={t('places.back')} title={title} to={PLACES_PATH as never} />
-      <header className="flex flex-col gap-2">
-        <Link className="hidden w-fit items-center gap-1.5 rounded-lg text-sm text-muted outline-none hover:text-foreground focus-visible:focus-ring lg:flex" to={PLACES_PATH as never}>
-          <BackIcon aria-hidden size={16} />
-          {t('places.back')}
+      <header className="flex min-w-0 items-center gap-3">
+        <Link aria-label={t('places.back')} className={`${buttonVariants({ variant: 'tertiary', isIconOnly: true })} -ms-2 hidden shrink-0 lg:inline-flex`} to={PLACES_PATH as never}>
+          <BackIcon aria-hidden size={20} />
         </Link>
-        <h1 className="text-title text-pretty [overflow-wrap:anywhere] max-lg:sr-only">{title}</h1>
+        <h1 className="min-w-0 text-title text-pretty [overflow-wrap:anywhere] max-lg:sr-only">{title}</h1>
         <StatusLine status={editor.pin?.status ?? 'new'} />
       </header>
       {editor.notice && <p className="rounded-2xl bg-danger-soft p-4 text-sm text-danger-soft-foreground" role="alert">{t(editor.notice)}</p>}

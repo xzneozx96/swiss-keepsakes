@@ -284,8 +284,8 @@ export function StepLayout({
         )}
         {/* The step's own title: on phones with its number, as the owner's "Step 2 of 6 · …",
           beside "All steps", with an ink progress bar under it. */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-3">
+        <div className={`flex flex-col gap-3 ${quietTitle ? 'lg:contents' : ''}`}>
+          <div className={`flex items-center justify-between gap-3 ${quietTitle ? 'lg:contents' : ''}`}>
             <h2 className={`min-w-0 text-heading ${quietTitle ? 'lg:sr-only' : ''}`} id="step-title">
               <span className="lg:hidden">
                 {t('products.steps.of', { n: index + 1, total: steps.length })}

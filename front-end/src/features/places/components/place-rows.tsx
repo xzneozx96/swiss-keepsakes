@@ -3,7 +3,6 @@ import type { Lang } from '../lib/form'
 import type { DataTableColumn } from '@/components/data-table'
 import type { EmptyStateProps } from '@/components/empty-state'
 import type { RowAction } from '@/components/row-actions'
-import type { StatusTone } from '@/components/status-chip'
 import type { MessageKey } from '@/i18n/en'
 
 import { Skeleton } from '@heroui/react'
@@ -15,10 +14,8 @@ import { RowActions } from '@/components/row-actions'
 import { StatusChip, TagChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
-import { kindOf, languagesOf, titleOf } from '../lib/list'
+import { kindOf, languagesOf, STATUS_TONE, titleOf } from '../lib/list'
 import { PLACES_PATH } from '../lib/search-params'
-
-const TONE: Record<PinListItem['status'], StatusTone> = { draft: 'neutral', published: 'success', hidden: 'warning', ended: 'warning' }
 
 export type RowActionId = 'edit' | 'hide' | 'unhide' | 'delete'
 
@@ -129,7 +126,7 @@ function Status({ item }: { item: PinListItem }) {
 
   return (
     <span className="flex flex-wrap items-center gap-1.5">
-      <StatusChip tone={TONE[item.status]}>{t(`places.status.${item.status}` as MessageKey)}</StatusChip>
+      <StatusChip tone={STATUS_TONE[item.status]}>{t(`places.status.${item.status}` as MessageKey)}</StatusChip>
       <LanguageChips item={item} />
     </span>
   )

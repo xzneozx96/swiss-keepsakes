@@ -1,9 +1,13 @@
 import type { PinListItem } from '@sk/api-contract'
 import type { Lang } from './form'
+import type { StatusTone } from '@/components/status-chip'
 
 export const NO_CATEGORY = 'none'
 export const STATUSES = ['draft', 'published', 'hidden', 'ended'] as const
 export const TYPE_FILTERS = ['place', 'event'] as const
+
+/** The status chip's colour, the same in the list and in the editor's header. */
+export const STATUS_TONE: Record<PinListItem['status'], StatusTone> = { draft: 'neutral', published: 'success', hidden: 'warning', ended: 'warning' }
 
 export interface ListFilters {
   status: string[]
