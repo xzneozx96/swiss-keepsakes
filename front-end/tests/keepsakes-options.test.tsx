@@ -401,6 +401,8 @@ describe('[E6.2][AC52] the variant page', () => {
     await openPage()
 
     expect(screen.getByRole('heading', { level: 1, name: 'Small / Swan' })).toBeInTheDocument()
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent)).toEqual(['Details', 'Media'])
+    expect(screen.queryAllByRole('heading', { level: 3 })).toEqual([])
     expect(screen.getByText('For sale')).toBeInTheDocument()
     expect(screen.getByText('VX-S-SWAN')).toBeInTheDocument()
     expect(screen.getByText('Size')).toBeInTheDocument()

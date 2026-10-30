@@ -1,10 +1,10 @@
 import type { KeepsakeText } from '../lib/keepsake-rules'
 
 import { Block } from '@/components/form-block'
-import { GiftIcon, PhotoAddIcon } from '@/components/icons'
+import { GiftIcon, PartnersIcon, PhotoAddIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { PhotosField } from '@/features/media/components/photos-field'
-import { CommissionCard } from '@/features/merchant/products/components/gift-editor'
+import { CommissionField } from '@/features/merchant/products/components/gift-editor'
 import { MAX_PHOTOS } from '../lib/keepsake-rules'
 import { BasicsFields } from './basics-fields'
 
@@ -47,9 +47,9 @@ export function DetailsStep({ storeId, value, onValue, photoIds, onPhotos, onAdd
           onUploadingChange={onUploadingChange}
         />
       </Block>
-      <div className="scroll-mt-20" id="commission">
-        <CommissionCard value={commission} onChange={onCommission} />
-      </div>
+      <Block hint={t('products.commission.help')} icon={PartnersIcon} id="commission" title={t('products.commission.title')}>
+        <CommissionField help={false} value={commission} onChange={onCommission} />
+      </Block>
     </>
   )
 }

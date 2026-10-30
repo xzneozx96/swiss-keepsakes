@@ -64,7 +64,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     expect(stepButtons().map(button => (button as HTMLButtonElement).disabled)).toEqual([true, true, true, true])
     expect(screen.queryByText('1. Details', { selector: 'li' })).not.toBeInTheDocument()
     expect(screen.getByText('Not saved yet')).toBeInTheDocument()
-    expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name and text', 'Photos'])
+    expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name and text', 'Photos', 'Partner\'s commission rate (%)'])
     expect(screen.queryByRole('button', { name: 'Previous step' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^Save/ })).not.toBeInTheDocument()
   })

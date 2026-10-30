@@ -81,6 +81,7 @@ function Page({ storeId, keepsake, variant }: { storeId: string, keepsake: Produ
       <div className="mx-auto flex w-full max-w-[880px] flex-col gap-3 lg:gap-5">
         <Block
           icon={GiftIcon}
+          headingLevel={2}
           id="variant-details"
           title={t('keepsakes.variantPage.details')}
           trailing={archived
@@ -114,7 +115,7 @@ function Page({ storeId, keepsake, variant }: { storeId: string, keepsake: Produ
             </Fact>
           </dl>
         </Block>
-        <Block icon={PhotoAddIcon} id="variant-media" title={t('keepsakes.variantPage.media')}>
+        <Block headingLevel={2} icon={PhotoAddIcon} id="variant-media" title={t('keepsakes.variantPage.media')}>
           <div className="flex items-center gap-3">
             <KeepsakePhoto className="size-16 shrink-0 rounded-xl" media={keepsake.photos[0]} width={160} />
             <p className="text-sm text-pretty text-muted">{t('keepsakes.variantPage.noPhoto')}</p>

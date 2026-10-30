@@ -145,6 +145,23 @@ describe('[T-001] the shared block', () => {
     expect(screen.getByTestId('place-block')).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
   })
 
+  it('titles the block with an h3 unless the screen sets another heading level', () => {
+    render(
+      <>
+        <Block title="Default">
+          <input aria-label="A" />
+        </Block>
+        <Block headingLevel={2} title="Under an h1">
+          <input aria-label="B" />
+        </Block>
+      </>,
+    )
+
+    expect(screen.getByRole('heading', { level: 3, name: 'Default' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Under an h1' })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Under an h1' })).toBeInTheDocument()
+  })
+
   it('has no header when the block holds one field', () => {
     render(
       <Block>

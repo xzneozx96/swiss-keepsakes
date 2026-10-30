@@ -80,7 +80,8 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
     const steps = within(screen.getByRole('navigation', { name: 'Steps' }))
 
     expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Done', '2. Options, Done', '3. Variants, Done', '4. Review and publish, Done'])
-    expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name and text', 'Photos'])
+    expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name and text', 'Photos', 'Partner\'s commission rate (%)'])
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.id)).toEqual(['step-title'])
     expect(screen.getByRole('heading', { level: 1, name: 'Victorinox Classic' })).toBeInTheDocument()
     expect(within(screen.getByTestId('keepsake-status')).getByText('Draft')).toBeInTheDocument()
     expect(screen.getByText(/^Saved \d/)).toBeInTheDocument()
@@ -681,7 +682,7 @@ describe('[E6.1][i18n] M12 in German', () => {
     await screen.findByLabelText('Name (English)', undefined, SLOW)
     await screen.findByRole('heading', { level: 3, name: 'Name und Text' }, SLOW)
     expect(within(screen.getByRole('navigation', { name: 'Schritte' })).getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Erledigt', '2. Optionen, Erledigt', '3. Varianten, Erledigt', '4. Prüfen und veröffentlichen, Erledigt'])
-    expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name und Text', 'Fotos'])
+    expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name und Text', 'Fotos', 'Provisionssatz für Partner (%)'])
     expect(screen.getByText(/Schritt 1 von 4/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Zurück zu Andenken' })).toBeInTheDocument()
