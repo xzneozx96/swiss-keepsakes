@@ -8,4 +8,8 @@ export function isKeepsakeView(value: unknown): value is KeepsakeView {
 }
 
 export const KEEPSAKES_PATH = '/store/products'
+export const KEEPSAKE_PATH = '/store/products/gifts/$productId'
 export const NEW_KEEPSAKE_PATH = '/store/products/gifts/new'
+
+/** The variant page of one keepsake (its own route; the keepsake page's route has no search for it). */
+export const VARIANT_PATH = '/store/products/gifts/$productId/variants/$variantId'

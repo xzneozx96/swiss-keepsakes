@@ -1,11 +1,12 @@
 import type { ProblemType } from '@sk/api-contract'
 import type { Failure } from '../application/failure.ts'
+import type { Refusal } from '../ports.ts'
 
 export interface FailureProblem {
   status: 403 | 404 | 409 | 412 | 422
   type: ProblemType
   title: string
-  errors?: { in: 'body', path: string, message: string }[]
+  errors?: { in: 'body', path: string, message: string, code?: string, params?: Record<string, string | number> }[]
   mediaIds?: string[]
 }
 
@@ -14,6 +15,38 @@ const gapMessages = {
   photos: 'Add at least one photo',
   variants: 'Put at least one variant on sale',
 } as const
+
+const plural = (count: number, one: string, other: string) => (count === 1 ? one : other)
+
+// "Used by 2 variants (A, B and 1 more)": the codes the rule named, then how many more there are.
+function usedBy(params: Refusal['params']): string {
+  const count = Number(params?.count ?? 0)
+  const more = Number(params?.more ?? 0)
+  const codes = `${params?.codes ?? ''}${more > 0 ? ` and ${more} more` : ''}`
+
+  return `Used by ${count} ${plural(count, 'variant', 'variants')} (${codes})`
+}
+
+// The merchant's words for a refusal, in English. A screen translates from `code` and `params`, so this is for a client
+// that does not.
+export function refusalMessage({ code, params }: Refusal): string {
+  switch (code) {
+    case 'option-name-required': return 'Name the option in English or German.'
+    case 'value-name-required': return 'Name the value in English or German.'
+    case 'option-needs-value': return `${params?.option || 'This option'} needs at least one value.`
+    case 'option-in-use': return `Can’t delete ${params?.option}. ${usedBy(params)}. Every variant has one of its values.`
+    case 'value-in-use': return `Can’t delete ${params?.value}. ${usedBy(params)}. Archive or change those first.`
+    case 'values-missing': return `${params?.code || 'A variant'} needs a ${String(params?.option || 'value').toLowerCase()}.`
+    case 'value-unknown': return 'That value does not belong to this option.'
+    case 'combination-taken': return !params?.code ? 'This combination is already sold. Each combination is sold once.' : params.archived ? `This combination is already ${params?.code}, archived.` : `This combination is already sold as ${params?.code}. Each combination is sold once.`
+    case 'combination-duplicate': return `${params?.code} and ${params?.twin} would both be the same combination.`
+    case 'no-options-one-variant': return `A keepsake without options has one variant only (${params?.code}). Add an option to sell more.`
+    case 'refs-invalid': return 'This request names an option, a value or a variant twice, or one that is not this keepsake’s.'
+    case 'code-duplicate': return `${params?.code} is used twice in this request.`
+    case 'variant-reserved': return `Can’t archive ${params?.code}. ${params?.count} ${plural(Number(params?.count), 'unit is', 'units are')} reserved by open orders. Archive it once they are handed over or released.`
+    case 'variant-archived': return `${params?.code} is archived and can’t be changed.`
+  }
+}
 
 export const missingIfMatchProblem = {
   status: 428,
@@ -46,6 +79,13 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'not-published': return { status: 409, type: 'not-published', title: 'This keepsake is not published.' }
     case 'slug-conflict': return { status: 409, type: 'slug-conflict', title: 'Another keepsake just took this web address. Publish again.' }
     case 'sku-code-taken': return { status: 409, type: 'sku-code-taken', title: 'This SKU code is already used in your shop.' }
+    case 'refused':
+      return {
+        status: 422,
+        type: 'validation-failed',
+        title: 'This can’t be saved. See what needs a fix.',
+        errors: failure.refusals.map(refusal => ({ in: 'body' as const, path: refusal.path, message: refusalMessage(refusal), code: refusal.code, ...(refusal.params && { params: refusal.params }) })),
+      }
     case 'name-required':
       return { status: 422, type: 'validation-failed', title: 'Add a name in English or German.', errors: [{ in: 'body', path: 'name', message: 'Add a name in English or German' }] }
     case 'sku-code-invalid':

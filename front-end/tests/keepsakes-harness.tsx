@@ -11,6 +11,7 @@ import { startDemo } from '@/features/demo/data-client'
 import { CreateKeepsake } from '@/features/keepsakes/components/create-flow'
 import { KeepsakeEditorScreen } from '@/features/keepsakes/components/keepsake-editor'
 import { KeepsakeList } from '@/features/keepsakes/components/keepsake-list'
+import { VariantScreen } from '@/features/keepsakes/components/variant-page'
 import { isKeepsakeView } from '@/features/keepsakes/lib/search-params'
 
 // jsdom has no CSS.supports, which a module of the prototype gift editor (the CommissionCard's file) calls on load.
@@ -54,7 +55,8 @@ export function product(over: Record<string, unknown> = {}) {
     commissionRate: 0.1,
     slug: null,
     hasUnpublishedEdits: false,
-    variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'published' }],
+    options: [],
+    variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'published', values: {} }],
     blocking: [],
     warnings: [{ code: 'other-language', card: 'basics', language: 'de' }],
     rowVersion: 1,
@@ -146,7 +148,16 @@ export function renderKeepsakes(initial: string) {
       return <KeepsakeEditorScreen id={id} view={view} onView={next => void navigate({ search: next === 'edit' ? {} : { view: next }, replace: true })} />
     },
   })
-  const router = createRouter({ routeTree: root.addChildren([index, create, edit]), history: createMemoryHistory({ initialEntries: [initial] }), disableGlobalCatchBoundary: true })
+  const variant = createRoute({
+    getParentRoute: () => root,
+    path: '/store/products/gifts/$productId/variants/$variantId',
+    component: function VariantPage() {
+      const { productId: id, variantId: variantRef } = variant.useParams()
+
+      return <VariantScreen id={id} variantId={variantRef} />
+    },
+  })
+  const router = createRouter({ routeTree: root.addChildren([index, create, edit, variant]), history: createMemoryHistory({ initialEntries: [initial] }), disableGlobalCatchBoundary: true })
 
   render(
     <QueryClientProvider client={state.demo.queryClient}>

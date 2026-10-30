@@ -1,6 +1,7 @@
 import type { Tx } from '../../../platform/db/client.ts'
-import type { Localized, Product, ProductChanges, ProductDoc, ProductListRow, ProductRepository, ProductVariant } from '../ports.ts'
+import type { Localized, OptionValue, Product, ProductChanges, ProductDoc, ProductListRow, ProductOption, ProductRepository, ProductVariant } from '../ports.ts'
 import { sql } from 'drizzle-orm'
+import { writeOptions, writeSkuValues } from './option-writes.ts'
 
 interface ProductRow {
   id: string
@@ -21,6 +22,24 @@ interface VariantRow {
   // bigint comes back from node-postgres as a string.
   price_rappen: string | number
   status: ProductVariant['status']
+}
+
+interface OptionRow {
+  id: string
+  name: Localized
+}
+
+interface ValueRow {
+  id: string
+  option_id: string
+  label: Localized
+  swatch: string | null
+}
+
+interface SkuValueRow {
+  sku_id: string
+  option_id: string
+  value_id: string
 }
 
 interface ListRow {
@@ -57,6 +76,18 @@ async function load(tx: Tx, storeId: string, productId: string, lock: boolean): 
     select media_id from catalog.product_media where store_id = ${storeId} and product_id = ${productId} order by position`)
   const variants = await tx.execute<VariantRow & Record<string, unknown>>(sql`
     select id, sku_code, price_rappen, status from catalog.skus where store_id = ${storeId} and product_id = ${productId} order by created_at, id`)
+  const optionRows = await tx.execute<OptionRow & Record<string, unknown>>(sql`
+    select id, name from catalog.product_options where store_id = ${storeId} and product_id = ${productId} order by position`)
+  const valueRows = await tx.execute<ValueRow & Record<string, unknown>>(sql`
+    select id, option_id, label, swatch from catalog.product_option_values where store_id = ${storeId} and product_id = ${productId} order by position`)
+  const skuValueRows = await tx.execute<SkuValueRow & Record<string, unknown>>(sql`
+    select sku_id, option_id, value_id from catalog.sku_option_values where store_id = ${storeId} and product_id = ${productId}`)
+  const options: ProductOption[] = optionRows.rows.map(option => ({
+    id: option.id,
+    name: option.name,
+    values: valueRows.rows.filter(value => value.option_id === option.id).map((value): OptionValue => ({ id: value.id, label: value.label, swatch: value.swatch })),
+  }))
+  const valuesOf = (skuId: string) => Object.fromEntries(skuValueRows.rows.filter(row => row.sku_id === skuId).map(row => [row.option_id, row.value_id]))
   return {
     id: row.id,
     storeId: row.store_id,
@@ -66,7 +97,8 @@ async function load(tx: Tx, storeId: string, productId: string, lock: boolean): 
     published: row.published && { name: row.published.name ?? {}, text: row.published.text ?? {} },
     publishedMedia: media.rows.map(m => m.media_id),
     commissionRate: row.commission_rate,
-    variants: variants.rows.map(v => ({ id: v.id, skuCode: v.sku_code, priceRappen: Number(v.price_rappen), status: v.status })),
+    options,
+    variants: variants.rows.map(v => ({ id: v.id, skuCode: v.sku_code, priceRappen: Number(v.price_rappen), status: v.status, values: valuesOf(v.id) })),
     rowVersion: row.row_version,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
@@ -112,9 +144,18 @@ export function createProductRepository(): ProductRepository<Tx> {
         values (${storeId}, ${JSON.stringify(draft)}::jsonb, ${input.commissionRate}, ${at}, ${at})
         returning id`)
       const id = inserted.rows[0]!.id
-      await tx.execute(sql`
+      const written = await writeOptions(tx, storeId, id, [], input.options, at)
+      const rows = sql.join(input.variants.map(variant => sql`(${storeId}, ${variant.skuCode}, ${id}, ${variant.priceRappen}, ${variant.status}, ${at}, ${at})`), sql`, `)
+      const skus = await tx.execute<{ id: string, sku_code: string }>(sql`
         insert into catalog.skus (store_id, sku_code, product_id, price_rappen, status, created_at, updated_at)
-        values (${storeId}, ${input.variant.skuCode}, ${id}, ${input.variant.priceRappen}, 'published', ${at}, ${at})`)
+        values ${rows} returning id, sku_code`)
+      const idOfCode = new Map(skus.rows.map(row => [row.sku_code, row.id]))
+
+      for (const variant of input.variants) {
+        const values = Object.fromEntries(Object.entries(variant.values).map(([optionRef, valueRef]) => [written.optionIds.get(optionRef)!, written.valueIds.get(valueRef)!]))
+
+        await writeSkuValues(tx, storeId, id, idOfCode.get(variant.skuCode)!, values)
+      }
       return reload(tx, { storeId, id })
     },
 
@@ -176,7 +217,40 @@ export function createProductRepository(): ProductRepository<Tx> {
           updated_at = ${at}
         where store_id = ${product.storeId} and product_id = ${product.id} and id = ${skuId} and status <> 'archived'
         returning id`)
-      return updated.rows.length > 0 ? reload(tx, product) : undefined
+      if (updated.rows.length === 0)
+        return undefined
+      if (changes.values) {
+        await tx.execute(sql`delete from catalog.sku_option_values where sku_id = ${skuId}`)
+        await writeSkuValues(tx, product.storeId, product.id, skuId, changes.values)
+      }
+      return reload(tx, product)
+    },
+
+    async insertVariant(tx, product, input, at) {
+      const inserted = await tx.execute<{ id: string }>(sql`
+        insert into catalog.skus (store_id, sku_code, product_id, price_rappen, status, created_at, updated_at)
+        values (${product.storeId}, ${input.skuCode}, ${product.id}, ${input.priceRappen}, ${input.status}, ${at}, ${at})
+        returning id`)
+      await writeSkuValues(tx, product.storeId, product.id, inserted.rows[0]!.id, input.values)
+      return reload(tx, product)
+    },
+
+    async replaceOptions(tx, product, input, at) {
+      const written = await writeOptions(tx, product.storeId, product.id, product.options, input.options, at)
+
+      for (const entry of input.variantValues) {
+        const values = Object.fromEntries(Object.entries(entry.values).map(([optionRef, valueRef]) => [written.optionIds.get(optionRef)!, written.valueIds.get(valueRef)!]))
+        const optionIds = Object.keys(values)
+
+        if (optionIds.length === 0)
+          continue
+        await tx.execute(sql`delete from catalog.sku_option_values where sku_id = ${entry.variantId} and option_id = any(${sql.param(optionIds)}::uuid[])`)
+        await writeSkuValues(tx, product.storeId, product.id, entry.variantId, values)
+      }
+      await tx.execute(sql`
+        update catalog.products set row_version = row_version + 1, updated_at = ${at}
+        where store_id = ${product.storeId} and id = ${product.id}`)
+      return reload(tx, product)
     },
   }
 }

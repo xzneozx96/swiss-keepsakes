@@ -413,7 +413,7 @@
       },
       "KeepsakeVariantWrite": {
         "additionalProperties": false,
-        "description": "A variant to create: a code and a price. It is for sale",
+        "description": "A variant to create: a code, a price and one value of each option. It is for sale",
         "properties": {
           "priceRappen": {
             "description": "The price in Rappen, above 0",
@@ -426,6 +426,15 @@
             "maxLength": 60,
             "minLength": 1,
             "type": "string"
+          },
+          "values": {
+            "additionalProperties": {
+              "maxLength": 64,
+              "minLength": 1,
+              "type": "string"
+            },
+            "description": "The value ref of each option ref. A keepsake with no option sends none",
+            "type": "object"
           }
         },
         "required": [
@@ -833,6 +842,126 @@
           "store",
           "conditions",
           "mayOpenForSale"
+        ],
+        "type": "object"
+      },
+      "OptionName": {
+        "additionalProperties": false,
+        "description": "The name per language. One language is enough",
+        "properties": {
+          "de": {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "OptionValueWrite": {
+        "additionalProperties": false,
+        "description": "A value of an option",
+        "properties": {
+          "label": {
+            "$ref": "#/components/schemas/ValueLabel"
+          },
+          "ref": {
+            "description": "The id of a value that exists, or a key you choose for a new one",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "swatch": {
+            "description": "A colour as # and six lowercase hexadecimal digits, or null for none",
+            "pattern": "^#[0-9a-f]{6}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "ref",
+          "label"
+        ],
+        "type": "object"
+      },
+      "OptionWrite": {
+        "additionalProperties": false,
+        "description": "An option with its values",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/OptionName"
+          },
+          "ref": {
+            "description": "The id of an option that exists, or a key you choose for a new one",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "values": {
+            "description": "In the order guests see them. At least one",
+            "items": {
+              "$ref": "#/components/schemas/OptionValueWrite"
+            },
+            "maxItems": 50,
+            "type": "array"
+          }
+        },
+        "required": [
+          "ref",
+          "name",
+          "values"
+        ],
+        "type": "object"
+      },
+      "OptionsSaveBody": {
+        "additionalProperties": false,
+        "description": "The options of a keepsake with the new values of its variants, saved in one request",
+        "properties": {
+          "options": {
+            "description": "Every option the keepsake should have, in order. One that is left out is deleted, if no variant uses it",
+            "items": {
+              "$ref": "#/components/schemas/OptionWrite"
+            },
+            "maxItems": 5,
+            "type": "array"
+          },
+          "variantValues": {
+            "description": "The new values of existing variants, archived ones too. A variant keeps the values it has for options that stay",
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "values": {
+                  "additionalProperties": {
+                    "maxLength": 64,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "description": "The value ref of each option ref, for a new option or a changed value",
+                  "type": "object"
+                },
+                "variantId": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "variantId",
+                "values"
+              ],
+              "type": "object"
+            },
+            "maxItems": 300,
+            "type": "array"
+          }
+        },
+        "required": [
+          "options"
         ],
         "type": "object"
       },
@@ -1769,11 +1898,29 @@
           "errors": {
             "items": {
               "properties": {
+                "code": {
+                  "description": "With a catalog refusal: a stable code the screen translates, such as value-in-use",
+                  "type": "string"
+                },
                 "in": {
                   "type": "string"
                 },
                 "message": {
                   "type": "string"
+                },
+                "params": {
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "description": "With a code: the numbers and names the message uses",
+                  "type": "object"
                 },
                 "path": {
                   "type": "string"
@@ -1862,6 +2009,13 @@
             },
             "type": "object"
           },
+          "options": {
+            "description": "In the order guests see them",
+            "items": {
+              "$ref": "#/components/schemas/ProductOption"
+            },
+            "type": "array"
+          },
           "photos": {
             "description": "The working photos in order, the first is the cover",
             "items": {
@@ -1914,6 +2068,7 @@
             "type": "string"
           },
           "variants": {
+            "description": "Every variant, archived ones too",
             "items": {
               "$ref": "#/components/schemas/ProductVariant"
             },
@@ -1936,6 +2091,7 @@
           "commissionRate",
           "slug",
           "hasUnpublishedEdits",
+          "options",
           "variants",
           "blocking",
           "warnings",
@@ -1947,7 +2103,7 @@
       },
       "ProductCreateBody": {
         "additionalProperties": false,
-        "description": "A new keepsake as a draft, with its one variant",
+        "description": "A new keepsake as a draft, with its options and variants",
         "properties": {
           "commissionRate": {
             "description": "The share of a sale that a referral partner earns, from 0 to 0.5",
@@ -1957,6 +2113,13 @@
           },
           "name": {
             "$ref": "#/components/schemas/KeepsakeName"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/OptionWrite"
+            },
+            "maxItems": 5,
+            "type": "array"
           },
           "photoIds": {
             "items": {
@@ -1970,10 +2133,11 @@
             "$ref": "#/components/schemas/KeepsakeText"
           },
           "variants": {
-            "description": "Exactly one variant until options exist (E6.2)",
             "items": {
               "$ref": "#/components/schemas/KeepsakeVariantWrite"
             },
+            "maxItems": 300,
+            "minItems": 1,
             "type": "array"
           }
         },
@@ -2135,6 +2299,67 @@
         ],
         "type": "object"
       },
+      "ProductOption": {
+        "description": "An option of one keepsake, such as Size or Theme",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "properties": {
+              "de": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "values": {
+            "description": "In the order guests see them",
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "label": {
+                  "properties": {
+                    "de": {
+                      "type": "string"
+                    },
+                    "en": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "swatch": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "swatch"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "values"
+        ],
+        "type": "object"
+      },
       "ProductSaveBody": {
         "additionalProperties": false,
         "description": "The autosave. name, text and photoIds replace the draft. commissionRate is saved live",
@@ -2176,19 +2401,29 @@
             "type": "string"
           },
           "status": {
-            "description": "published is for sale, draft is hidden from guests",
+            "description": "published is for sale, draft is hidden from guests, archived stays for old orders",
             "enum": [
               "published",
-              "draft"
+              "draft",
+              "archived"
             ],
             "type": "string"
+          },
+          "values": {
+            "additionalProperties": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "description": "The value id of each option id. Empty for a keepsake with no option",
+            "type": "object"
           }
         },
         "required": [
           "id",
           "skuCode",
           "priceRappen",
-          "status"
+          "status",
+          "values"
         ],
         "type": "object"
       },
@@ -5931,6 +6166,7 @@
             "enum": [
               "basics",
               "photos",
+              "options",
               "variants",
               "commission"
             ],
@@ -5943,7 +6179,8 @@
               "variant-for-sale",
               "other-language",
               "hidden",
-              "commission-zero"
+              "commission-zero",
+              "option-labels"
             ],
             "type": "string"
           },
@@ -10214,6 +10451,60 @@
         ],
         "type": "object"
       },
+      "ValueLabel": {
+        "additionalProperties": false,
+        "description": "The label per language. One language is enough",
+        "properties": {
+          "de": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          },
+          "en": {
+            "maxLength": 80,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "VariantCreateBody": {
+        "additionalProperties": false,
+        "description": "One more variant of a keepsake",
+        "properties": {
+          "priceRappen": {
+            "maximum": 100000000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "skuCode": {
+            "maxLength": 60,
+            "minLength": 1,
+            "type": "string"
+          },
+          "status": {
+            "description": "published is for sale, draft is hidden. For sale when left out",
+            "enum": [
+              "published",
+              "draft"
+            ],
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "description": "The value id of each option id",
+            "type": "object"
+          }
+        },
+        "required": [
+          "skuCode",
+          "priceRappen"
+        ],
+        "type": "object"
+      },
       "VariantSaveBody": {
         "additionalProperties": false,
         "description": "A change to one variant",
@@ -10229,12 +10520,21 @@
             "type": "string"
           },
           "status": {
-            "description": "published is for sale, draft is hidden from guests",
+            "description": "published is for sale, draft is hidden from guests, archived keeps the variant for old orders and is final",
             "enum": [
               "published",
-              "draft"
+              "draft",
+              "archived"
             ],
             "type": "string"
+          },
+          "values": {
+            "additionalProperties": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "description": "The value id of every option id. Replaces the values",
+            "type": "object"
           }
         },
         "type": "object"
@@ -12791,7 +13091,7 @@
                 }
               }
             },
-            "description": "The new draft keepsake with its one variant for sale",
+            "description": "The new draft keepsake with its options and its variants for sale",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",
@@ -12934,6 +13234,88 @@
               }
             },
             "description": "The keepsake with the change saved. A left-out field stays, a list replaces",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/products/{productId}/options": {
+      "put": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OptionsSaveBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The options are saved with the new values of the variants, all or nothing. The row version moves",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",
@@ -13108,6 +13490,78 @@
         }
       }
     },
+    "/api/store/{storeId}/products/{productId}/variants": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VariantCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            },
+            "description": "The keepsake with the new variant. It is live at once and takes no row version",
+            "headers": {
+              "ETag": {
+                "description": "The row version, as `\"<rowVersion>\"`",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/store/{storeId}/products/{productId}/variants/{skuId}": {
       "patch": {
         "parameters": [
@@ -13158,7 +13612,7 @@
                 }
               }
             },
-            "description": "The keepsake with the variant changed. The change is live at once and takes no row version",
+            "description": "The keepsake with the variant changed. The change is live at once and takes no row version. Archiving is final",
             "headers": {
               "ETag": {
                 "description": "The row version, as `\"<rowVersion>\"`",
