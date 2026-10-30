@@ -5,9 +5,9 @@ import type { CardExtras } from '@/features/map/components/place-card'
 
 import { useMemo, useRef, useState } from 'react'
 
-import { MapCredits } from '@/components/aerial-map/map-credits'
-import { useAerialMap } from '@/components/aerial-map/use-aerial-map'
 import { IPhoneMockup } from '@/components/iphone-mockup'
+import { MapCredits } from '@/components/map/map-credits'
+import { useMapInstance } from '@/components/map/use-map-instance'
 import { LocaleOverride, useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
 import { PinMap } from '@/features/map/components/pin-map'
@@ -50,7 +50,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
   }, [categories.data, form, language])
   const pins = useMemo(() => (located ? [item] : NO_PINS), [item, located])
   const frameRef = useRef<HTMLDivElement>(null)
-  const { containerRef, map, maplibre, state, drawn, retry } = useAerialMap({
+  const { containerRef, map, maplibre, state, drawn, retry } = useMapInstance({
     options: {
       center: located ? [item.longitude, item.latitude] : [8.3068, 47.0535],
       zoom: 16,

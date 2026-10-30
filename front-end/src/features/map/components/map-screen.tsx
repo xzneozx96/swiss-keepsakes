@@ -3,9 +3,9 @@ import type { PublicMapItem } from '@sk/api-contract'
 import { Button } from '@heroui/react'
 import { useEffect, useId, useState } from 'react'
 
-import { MapCredits } from '@/components/aerial-map/map-credits'
-import { useAerialMap } from '@/components/aerial-map/use-aerial-map'
 import { BulletListIcon, FilterIcon, PickupIcon } from '@/components/icons'
+import { MapCredits } from '@/components/map/map-credits'
+import { useMapInstance } from '@/components/map/use-map-instance'
 import { useLocale } from '@/contexts/locale-context'
 import { useMapData } from '@/features/map/api/queries'
 import { categoryName, keepHighlighted, topLevelCategories } from '@/features/map/lib/categories'
@@ -33,7 +33,7 @@ const MAP_OPTIONS = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
 export function MapScreen() {
   const { t, language } = useLocale()
   const data = useMapData(language)
-  const { containerRef, map, maplibre, state: mapState, drawn, retry: retryMap } = useAerialMap({ options: MAP_OPTIONS })
+  const { containerRef, map, maplibre, state: mapState, drawn, retry: retryMap } = useMapInstance({ options: MAP_OPTIONS })
   const headingId = useId()
   // Empty means All.
   const [chosen, setChosen] = useState<string[]>([])

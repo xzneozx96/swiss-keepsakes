@@ -4,11 +4,11 @@ import { Button, Spinner } from '@heroui/react'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useRef, useState } from 'react'
 
-import { foldCreditsOnFirstTouch } from '@/components/aerial-map/fold-credits'
 import { CloseIcon, PlusIcon } from '@/components/icons'
+import { foldCreditsOnFirstTouch } from '@/components/map/fold-credits'
 
+import { loadAerialStyle } from '@/components/map/map-style'
 import { useLocale } from '@/contexts/locale-context'
-import { loadAerialStyle } from '@/features/tours/map/aerial-style'
 import { useLatest } from '@/hooks/use-latest'
 import { addRoute, pinElement, reducedMotion, setRoute } from './map-shared'
 

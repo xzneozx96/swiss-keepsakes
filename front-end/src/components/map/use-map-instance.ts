@@ -4,10 +4,9 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useLatest } from '@/hooks/use-latest'
-import { loadAerialStyle } from './aerial-style'
-import { loadFlatAerialStyle } from './flat-style'
+import { loadAerialStyle, loadFlatAerialStyle } from './map-style'
 
-export type AerialMapState = 'loading' | 'ready' | 'error'
+export type MapInstanceState = 'loading' | 'ready' | 'error'
 export type MapLibre = typeof import('maplibre-gl')
 
 /** A map that has not drawn its style after this long has failed (a lost connection never fires an error). */
@@ -37,7 +36,7 @@ const flatView: Partial<MapOptions> = {
  * visible tiles are on screen and have finished fading in), so a loading state can stay until then. `lazy` builds the map only when its container comes
  * near the viewport. `resetKey` builds a new map when it changes.
  */
-export function useAerialMap({
+export function useMapInstance({
   options,
   terrain = false,
   lazy = false,
@@ -51,7 +50,7 @@ export function useAerialMap({
   const containerRef = useRef<HTMLDivElement>(null)
   const [map, setMap] = useState<MapLibreMap | null>(null)
   const [maplibre, setMaplibre] = useState<MapLibre | null>(null)
-  const [state, setState] = useState<AerialMapState>('loading')
+  const [state, setState] = useState<MapInstanceState>('loading')
   const [drawn, setDrawn] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const [seenKey, setSeenKey] = useState(resetKey)

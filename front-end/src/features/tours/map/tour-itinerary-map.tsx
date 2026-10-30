@@ -6,9 +6,6 @@ import { pickText } from '@sk/domain/shared'
 
 import { useEffect, useRef, useState } from 'react'
 
-import { warmAerialTiles } from '@/components/aerial-map/aerial-style'
-import { foldCreditsOnFirstTouch } from '@/components/aerial-map/fold-credits'
-import { useAerialMap } from '@/components/aerial-map/use-aerial-map'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -18,6 +15,9 @@ import {
   ExploreIcon,
   InfoIcon,
 } from '@/components/icons'
+import { foldCreditsOnFirstTouch } from '@/components/map/fold-credits'
+import { warmAerialTiles } from '@/components/map/map-style'
+import { useMapInstance } from '@/components/map/use-map-instance'
 import { Media } from '@/components/media'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
@@ -62,7 +62,7 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
     maplibre,
     state: mapState,
     retry,
-  } = useAerialMap({
+  } = useMapInstance({
     terrain: true,
     lazy: true,
     resetKey: stops,

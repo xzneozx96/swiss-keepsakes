@@ -1,6 +1,6 @@
 import type { PublicMapItem } from '@sk/api-contract'
 import type { Map as MapLibreMap, Marker } from 'maplibre-gl'
-import type { MapLibre } from '@/components/aerial-map/use-aerial-map'
+import type { MapLibre } from '@/components/map/use-map-instance'
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'

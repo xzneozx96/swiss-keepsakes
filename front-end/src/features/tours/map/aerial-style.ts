@@ -1,3 +1,3 @@
-// The aerial style lives with the shared map (components/aerial-map). The lab and the merchant
-// itinerary map still import it from here.
-export * from '@/components/aerial-map/aerial-style'
+// The aerial style lives with the shared map kit (components/map/map-style). The lab still
+// imports it from here.
+export * from '@/components/map/map-style'

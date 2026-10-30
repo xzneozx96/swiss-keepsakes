@@ -4,9 +4,9 @@ import type { ReactNode, Ref } from 'react'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useImperativeHandle, useRef, useState } from 'react'
 
-import { foldCreditsOnFirstTouch } from '@/components/aerial-map/fold-credits'
+import { foldCreditsOnFirstTouch } from '@/components/map/fold-credits'
+import { loadAerialStyle } from '@/components/map/map-style'
 import { useLocale } from '@/contexts/locale-context'
-import { loadAerialStyle } from '@/features/tours/map/aerial-style'
 import { useLatest } from '@/hooks/use-latest'
 
 const LUCERNE: [number, number] = [8.3068, 47.0535]

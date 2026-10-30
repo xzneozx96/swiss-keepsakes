@@ -3,8 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { useRef } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { MapCredits } from '@/components/aerial-map/map-credits'
-import { useAerialMap } from '@/components/aerial-map/use-aerial-map'
+import { MapCredits } from '@/components/map/map-credits'
+import { useMapInstance } from '@/components/map/use-map-instance'
 import { LocaleProvider } from '@/contexts/locale-context'
 import { en } from '@/i18n/en'
 import { FakeMap, resetFakeMaps } from './support/fake-maplibre'
@@ -14,7 +14,7 @@ vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.mjs' }))
 
 function Probe({ terrain = false, options = {} }: { terrain?: boolean, options?: Record<string, unknown> }) {
-  const { containerRef, state, drawn, retry } = useAerialMap({ options, terrain })
+  const { containerRef, state, drawn, retry } = useMapInstance({ options, terrain })
 
   return (
     <div>

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { foldCreditsOnFirstTouch } from '@/components/aerial-map/fold-credits'
+import { foldCreditsOnFirstTouch } from '@/components/map/fold-credits'
 
 let container: HTMLDivElement
 let credits: HTMLDetailsElement
