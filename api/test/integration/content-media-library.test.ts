@@ -336,7 +336,7 @@ describe('[E4.11][AC51] retiring a file over HTTP', () => {
     await call(w.staff, `/${w.lonely}/retire`, { method: 'POST' })
     const made = await env.call(w.staff.groups, { method: 'POST', headers: w.staff.owner.headers, body: {} })
     const group = await made.json() as { id: string }
-    const draft = { title: 'x', excerpt: '', authorName: '', authorRole: '', coverMediaId: w.lonely, body: emptyStoryBody }
+    const draft = { title: 'x', excerpt: '', authorName: '', coverMediaId: w.lonely, body: emptyStoryBody }
     const saved = await env.call(`${w.staff.groups}/${group.id}/versions`, { method: 'POST', headers: w.staff.owner.headers, body: { language: 'en', slug: slug(), draft } })
     expect(saved.status).toBe(422)
     expect(await saved.json()).toMatchObject({ type: 'media-retired' })
