@@ -6,6 +6,7 @@ import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
+import { Block } from '@/components/form-block'
 import { ArchiveIcon, BackIcon, EditIcon, GiftIcon, MoreIcon, PhotoAddIcon, StatusNeutralIcon, StatusSuccessIcon } from '@/components/icons'
 import { RowActions } from '@/components/row-actions'
 import { useLocale } from '@/contexts/locale-context'
@@ -17,7 +18,6 @@ import { labelOf, refusalText, variantTitle } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
 import { KEEPSAKE_PATH } from '../lib/search-params'
 import { EditorSkeleton } from './editor-skeleton'
-import { KeepsakeCard } from './keepsake-card'
 import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
 import { KeepsakePhoto } from './keepsake-photo'
@@ -79,7 +79,7 @@ function Page({ storeId, keepsake, variant }: { storeId: string, keepsake: Produ
         </div>
       </header>
       <div className="mx-auto flex w-full max-w-[880px] flex-col gap-3 lg:gap-5">
-        <KeepsakeCard
+        <Block
           icon={GiftIcon}
           id="variant-details"
           title={t('keepsakes.variantPage.details')}
@@ -113,13 +113,13 @@ function Page({ storeId, keepsake, variant }: { storeId: string, keepsake: Produ
               <span className="tabular-nums">{chf(variant.priceRappen, intlLocale)}</span>
             </Fact>
           </dl>
-        </KeepsakeCard>
-        <KeepsakeCard icon={PhotoAddIcon} id="variant-media" title={t('keepsakes.variantPage.media')}>
+        </Block>
+        <Block icon={PhotoAddIcon} id="variant-media" title={t('keepsakes.variantPage.media')}>
           <div className="flex items-center gap-3">
             <KeepsakePhoto className="size-16 shrink-0 rounded-xl" media={keepsake.photos[0]} width={160} />
             <p className="text-sm text-pretty text-muted">{t('keepsakes.variantPage.noPhoto')}</p>
           </div>
-        </KeepsakeCard>
+        </Block>
       </div>
       {editing && <VariantSheet keepsake={keepsake} variant={variant} onClose={() => setEditing(false)} onSave={commands.saveVariant} />}
       {dialog}

@@ -37,7 +37,7 @@ async function toVariants(name = 'Knife') {
   await next()
   await screen.findByRole('region', { name: 'Options' })
   await next()
-  await screen.findByRole('heading', { level: 2, name: 'One variant' })
+  await screen.findByRole('heading', { level: 3, name: 'One variant' })
 }
 
 /** The price field commits on blur, so tab out of it. */
@@ -64,7 +64,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     expect(stepButtons().map(button => (button as HTMLButtonElement).disabled)).toEqual([true, true, true, true])
     expect(screen.queryByText('1. Details', { selector: 'li' })).not.toBeInTheDocument()
     expect(screen.getByText('Not saved yet')).toBeInTheDocument()
-    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent).filter(text => !text?.startsWith('Step'))).toEqual(['Name and text', 'Photos', 'Partner\'s commission rate (%)'])
+    expect(screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent)).toEqual(['Name and text', 'Photos'])
     expect(screen.queryByRole('button', { name: 'Previous step' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /^Save/ })).not.toBeInTheDocument()
   })
@@ -91,7 +91,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await screen.findByRole('region', { name: 'Options' })
     await next()
 
-    expect(await screen.findByRole('heading', { level: 2, name: 'One variant' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: 'One variant' })).toBeInTheDocument()
     expect(screen.getByText(/Step 3 of 4/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '1. Details, Done' })).toBeInTheDocument()
   })
@@ -232,7 +232,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     expect(document.body.textContent).not.toMatch(/engrav|sub-?categor|deposit|pay later/i)
     await userEvent.type(screen.getByLabelText('Name (English)'), 'Knife')
     await next()
-    await screen.findByRole('heading', { level: 2, name: 'Options' })
+    await screen.findByRole('heading', { level: 3, name: 'Options' })
     expect(document.body.textContent).not.toMatch(/engrav|sub-?categor|deposit|pay later/i)
     await next()
     await screen.findByLabelText('SKU code for One variant')

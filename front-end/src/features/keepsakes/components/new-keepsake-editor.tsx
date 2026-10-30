@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 
+import { Block } from '@/components/form-block'
 import { useLocale } from '@/contexts/locale-context'
 import { useDataClient } from '@/features/data-client'
 import { useSubmit } from '@/features/data-client/use-command'
@@ -20,7 +21,6 @@ import { draftStatuses } from '../lib/steps'
 import { CreateVariantsStep } from './create-variants-step'
 import { DetailsStep } from './details-step'
 import { StepEditorSkeleton } from './editor-skeleton'
-import { KeepsakeCard } from './keepsake-card'
 import { KeepsakeFrame } from './keepsake-frame'
 import { KeepsakeGate } from './keepsake-gate'
 import { OptionsEditor, OptionsProblems } from './option-blocks'
@@ -186,11 +186,11 @@ function NewKeepsakeEditor({ storeId }: { storeId: string }) {
           />
         </div>
         {step === 'options' && (
-          <KeepsakeCard id="options" title={t('keepsakes.create.options.title')}>
+          <Block id="options" title={t('keepsakes.create.options.title')}>
             <p className="text-sm text-pretty text-muted">{t('keepsakes.create.options.hint')}</p>
             <OptionsProblems problems={draft.problems} />
             <OptionsEditor draft={draft} />
-          </KeepsakeCard>
+          </Block>
         )}
         {step === 'variants' && (
           <>

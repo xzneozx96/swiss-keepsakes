@@ -455,10 +455,10 @@ describe('[E6.2][AC52][T-005] a new keepsake with options', () => {
     await userEvent.type(screen.getAllByLabelText('English')[1]!, 'Black')
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
 
-    expect(await screen.findByRole('heading', { level: 2, name: '2 of 2 combinations ticked' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: '2 of 2 combinations ticked' })).toBeInTheDocument()
     expect(screen.getByLabelText('SKU code for Navy')).toHaveValue('VX-N')
     await userEvent.click(screen.getByRole('checkbox', { name: /Black/ }))
-    expect(await screen.findByRole('heading', { level: 2, name: '1 of 2 combinations ticked' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: '1 of 2 combinations ticked' })).toBeInTheDocument()
     expect(screen.getByText('Not sold')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
     expect(await screen.findByText('Add a price above CHF 0.')).toBeInTheDocument()
@@ -501,7 +501,7 @@ describe('[E6.2][AC52][T-005] a new keepsake with options', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Add a value' }))
     await userEvent.type(screen.getAllByLabelText('English')[1]!, 'Black')
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
-    await screen.findByRole('heading', { level: 2, name: '2 of 2 combinations ticked' })
+    await screen.findByRole('heading', { level: 3, name: '2 of 2 combinations ticked' })
 
     await userEvent.type(screen.getByLabelText('Price for all ticked'), '25')
     await userEvent.tab()

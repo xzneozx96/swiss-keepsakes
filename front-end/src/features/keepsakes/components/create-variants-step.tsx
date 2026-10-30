@@ -3,9 +3,9 @@ import type { CreateErrors, CreateRow, OptionDraft } from '../lib/option-rules'
 import { Button, Checkbox, FieldError, Input, Label, NumberField, TextField } from '@heroui/react'
 import { useState } from 'react'
 
+import { Block } from '@/components/form-block'
 import { useLocale } from '@/contexts/locale-context'
 import { asSaved, variantTitle } from '../lib/option-rules'
-import { KeepsakeCard } from './keepsake-card'
 
 /** Every combination of the options, ticked, with a code and a price. The merchant unticks what is not sold. */
 export function CreateVariantsStep({ rows, options, errors, tried, suggestion, onChange }: {
@@ -25,7 +25,7 @@ export function CreateVariantsStep({ rows, options, errors, tried, suggestion, o
   const patch = (key: string, change: Partial<CreateRow>) => onChange(rows.map(row => (row.key === key ? { ...row, ...change } : row)))
 
   return (
-    <KeepsakeCard id="variants" title={options.length > 0 ? t('keepsakes.create.variants.title', { count: sold.length, total: rows.length }) : t('keepsakes.create.variants.titleOne')}>
+    <Block id="variants" title={options.length > 0 ? t('keepsakes.create.variants.title', { count: sold.length, total: rows.length }) : t('keepsakes.create.variants.titleOne')}>
       <p className="text-sm text-pretty text-muted">{t(options.length > 0 ? 'keepsakes.create.variants.hint' : 'keepsakes.create.variant.hint')}</p>
       {tried && sold.length === 0 && <p className="text-sm text-danger" role="alert">{t('keepsakes.create.variants.tickOne')}</p>}
       {sold.length > 1 && (
@@ -88,6 +88,6 @@ export function CreateVariantsStep({ rows, options, errors, tried, suggestion, o
           )
         })}
       </ul>
-    </KeepsakeCard>
+    </Block>
   )
 }

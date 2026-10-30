@@ -8,6 +8,7 @@ import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { DataTable } from '@/components/data-table'
+import { Block } from '@/components/form-block'
 import { ArchiveIcon, EditIcon, OptionIcon, PlusIcon, StatusNeutralIcon, StatusSuccessIcon } from '@/components/icons'
 import { PageTabs } from '@/components/page-tabs'
 import { RouterLink } from '@/components/router-link'
@@ -18,7 +19,6 @@ import { chf } from '../lib/keepsake-rules'
 import { refusalText, shortLabel, variantTitle } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
 import { VARIANT_PATH } from '../lib/search-params'
-import { KeepsakeCard } from './keepsake-card'
 import { RefusalAlert, VariantThumb } from './option-parts'
 import { VariantSheet } from './variant-sheet'
 
@@ -138,7 +138,7 @@ export function VariantsCard({ keepsake, onSave, onCreate }: { keepsake: Product
     : t('keepsakes.variants.footnote', { count: live.length, possible })
 
   return (
-    <KeepsakeCard
+    <Block
       icon={OptionIcon}
       id="variants"
       title={t('keepsakes.variants.title')}
@@ -189,6 +189,6 @@ export function VariantsCard({ keepsake, onSave, onCreate }: { keepsake: Product
       <p className="text-xs text-pretty text-muted">{footnote}</p>
       {creating && <VariantSheet keepsake={keepsake} onClose={() => setCreating(false)} onCreate={onCreate} onSave={onSave} />}
       {dialog}
-    </KeepsakeCard>
+    </Block>
   )
 }

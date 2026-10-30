@@ -8,11 +8,11 @@ import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { DataTable } from '@/components/data-table'
+import { Block } from '@/components/form-block'
 import { EditIcon, OptionIcon, PlusIcon, TrashIcon } from '@/components/icons'
 import { RowActions } from '@/components/row-actions'
 import { useLocale } from '@/contexts/locale-context'
 import { draftOfOptions, labelOf, optionsBody, refusalText, shortLabel, variantsUsing } from '../lib/option-rules'
-import { KeepsakeCard } from './keepsake-card'
 import { RefusalAlert, Swatch } from './option-parts'
 import { OptionsSheet } from './options-sheet'
 
@@ -102,7 +102,7 @@ export function OptionsCard({ keepsake, onSave, onRemove }: { keepsake: Product,
   ]
 
   return (
-    <KeepsakeCard
+    <Block
       icon={OptionIcon}
       id="options"
       title={t('keepsakes.options.title')}
@@ -144,6 +144,6 @@ export function OptionsCard({ keepsake, onSave, onRemove }: { keepsake: Product,
           )}
       {sheet && <OptionsSheet focus={sheet.focus} keepsake={keepsake} onClose={() => setSheet(undefined)} onSave={onSave} />}
       {dialog}
-    </KeepsakeCard>
+    </Block>
   )
 }
