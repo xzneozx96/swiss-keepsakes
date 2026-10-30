@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import type { FakeApi } from './places-support'
 
 import { screen, waitFor } from '@testing-library/react'
@@ -15,15 +14,8 @@ vi.hoisted(() => {
     CSS.supports = () => false
 })
 
-// MapLibre needs a canvas, which jsdom has not: the picker is replaced by a button that places a pin.
-vi.mock('@/features/places/components/map-picker', () => ({
-  MapPicker: ({ onPlace, overlay }: { onPlace: (position: { lat: number, lng: number }) => void, overlay?: ReactNode }) => (
-    <div>
-      <button type="button" onClick={() => onPlace({ lat: 47.05, lng: 8.3 })}>Place pin</button>
-      {overlay}
-    </div>
-  ),
-}))
+// MapLibre needs a canvas, which jsdom has not: the picker is replaced by a stub (tests/support/map-picker-stub.tsx).
+vi.mock('@/features/places/components/map-picker', async () => (await import('./support/map-picker-stub')).mapPickerStub)
 
 vi.mock('maplibre-gl', async () => (await import('./support/fake-maplibre')).fakeMaplibre)
 vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))

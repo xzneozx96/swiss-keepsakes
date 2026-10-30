@@ -251,7 +251,6 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.hide.unsaved': 'Speichern Sie zuerst Ihre Änderungen. Beim Ausblenden gingen sie verloren.',
   'places.hasChanges': 'Änderungen noch nicht veröffentlicht. Veröffentlichen Sie, damit Gäste sie sehen.',
   'places.hoursAddFirst': 'Zeiten hinzufügen',
-  'places.map.loading': 'Karte wird geladen …',
   'places.map.failed': 'Die Karte konnte nicht geladen werden. Geben Sie stattdessen die Koordinaten ein.',
   'places.map.lat': 'Breitengrad',
   'places.map.lng': 'Längengrad',

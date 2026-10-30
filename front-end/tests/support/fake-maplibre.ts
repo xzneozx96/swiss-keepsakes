@@ -61,6 +61,10 @@ export class FakeMap {
     return this.canvas
   }
 
+  getContainer() {
+    return this.options.container as HTMLElement
+  }
+
   getZoom() {
     return this.zoom
   }

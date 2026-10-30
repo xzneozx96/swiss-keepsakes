@@ -1,193 +1,147 @@
-import type { Map as MapLibreMap, Marker } from 'maplibre-gl'
-import type { ReactNode, Ref } from 'react'
+import type { Map as MapLibreMap } from 'maplibre-gl'
+import type { RefObject } from 'react'
 
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
-import { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
-import { foldCreditsOnFirstTouch } from '@/components/map/fold-credits'
-import { loadAerialStyle } from '@/components/map/map-style'
+import { RecenterIcon, TrashIcon } from '@/components/icons'
+import { useMap } from '@/components/map/map-context'
+import { MapControlButton, MapControls } from '@/components/map/map-controls'
+import { MapView } from '@/components/map/map-view'
+import { TeardropPin } from '@/components/map/pin-faces'
+import { PinLayer } from '@/components/map/pin-layer'
+import { reducedMotion } from '@/components/map/reduced-motion'
 import { useLocale } from '@/contexts/locale-context'
 import { useLatest } from '@/hooks/use-latest'
 
 const LUCERNE: [number, number] = [8.3068, 47.0535]
+const PIN_ID = 'position'
+const RECENTER_ZOOM = 16.5
 /** One arrow key press moves the pin about 5 m; with Shift about 25 m. */
 const STEP = 0.00005
-
-/** What the parent can ask of the map: bring it back to the pin (or to Lucerne while there is none). */
-export interface MapPickerControls {
-  recenter: () => void
-}
+/** The space the controls (right), the credits (bottom) and the pin's own head (top) take, so a pin the camera brings to the middle is never under them (px). */
+const CLEAR = { top: 56, right: 56, bottom: 52, left: 16 }
+const OFFSET: [number, number] = [(CLEAR.left - CLEAR.right) / 2, (CLEAR.top - CLEAR.bottom) / 2]
 
 const round = (value: number) => Number(value.toFixed(5))
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-const markerClass
-  = 'flex size-11 cursor-grab items-end justify-center rounded-full outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent'
-const markerShape
-  = '<span aria-hidden="true" style="transform:rotate(45deg)" class="grid size-9 place-items-center rounded-full rounded-br-none bg-accent shadow-surface ring-2 ring-white"><span class="size-3 rounded-full bg-white"></span></span>'
+/** Where the pin is on screen, inside the clear part of the map? */
+function inClearPart(map: { project: (point: [number, number]) => { x: number, y: number }, getContainer: () => HTMLElement }, at: [number, number]) {
+  const { x, y } = map.project(at)
+  const { clientWidth, clientHeight } = map.getContainer()
+
+  return x >= CLEAR.left && x <= clientWidth - CLEAR.right && y >= CLEAR.top && y <= clientHeight - CLEAR.bottom
+}
+
+/**
+ * The camera and the controls of the picker, on the map once it exists. The camera brings the pin to the middle of the
+ * clear part of the map when the position comes from somewhere else (a link, the coordinate fields), and only keeps it in
+ * the clear part when the person moved it on the map themselves (a tap, a drag, a key), so the map never jumps under their
+ * hand. Recenter does the same for a person who has dragged the map away.
+ */
+function PickerLayers({ position, ownMoveRef, onRemove }: { position: [number, number] | null, ownMoveRef: RefObject<string | null>, onRemove?: () => void }) {
+  const { t } = useLocale()
+  const { map } = useMap()
+  const key = position ? `${position[0]},${position[1]}` : null
+  const settledRef = useRef<MapLibreMap | null>(null)
+
+  useEffect(() => {
+    if (!map)
+      return
+    // A new map opens on the pin already.
+    if (settledRef.current !== map) {
+      settledRef.current = map
+
+      return
+    }
+    if (!position)
+      return
+    const own = ownMoveRef.current === key
+
+    if (own && inClearPart(map, position))
+      return
+    map.easeTo({
+      center: position,
+      zoom: own ? map.getZoom() : Math.max(map.getZoom(), RECENTER_ZOOM),
+      offset: OFFSET,
+      duration: reducedMotion() ? 0 : 400,
+    })
+    // `key` stands for the position: the effect runs when it changes, not on a new array with the same numbers.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, key])
+
+  function recenter() {
+    map?.easeTo({
+      center: position ?? LUCERNE,
+      zoom: position ? RECENTER_ZOOM : 15.2,
+      offset: position ? OFFSET : [0, 0],
+      duration: reducedMotion() ? 0 : 400,
+    })
+  }
+
+  return (
+    <MapControls>
+      <MapControlButton icon={RecenterIcon} label={t('places.map.recenter')} onPress={recenter} />
+      {position && onRemove && <MapControlButton icon={TrashIcon} label={t('places.map.clear')} tone="danger" onPress={onRemove} />}
+    </MapControls>
+  )
+}
 
 /**
  * The position picker of the place editor, on the same flat aerial photo style as the guest map, so a pin placed
- * here lands where the guest map draws it. A tap places the pin, the marker drags, and the arrow keys nudge it.
- * MapLibre loads by dynamic import, never with the editor's first paint. If it cannot load, `onFailed` lets the
- * step show coordinate fields instead.
+ * here lands where the guest map draws it. A tap places the pin, the pin drags, and the arrow keys nudge it. The map,
+ * zoom, credits and loading are the shared map kit; Recenter and Remove position are two more round buttons under the
+ * zoom. If the map cannot load, `onFailed` lets the step show coordinate fields instead.
  */
-export function MapPicker({ lat, lng, onPlace, onFailed, className = 'h-72 lg:h-96', overlay, controlsRef }: {
+export function MapPicker({ lat, lng, onPlace, onFailed, onRemove, className = 'h-72 lg:h-96' }: {
   lat: number | null
   lng: number | null
   onPlace: (position: { lat: number, lng: number }) => void
   onFailed: () => void
+  /** The Remove position button; without it there is none. */
+  onRemove?: () => void
   /** The size of the box, as height classes; the width is the parent's. */
   className?: string
-  /** Controls placed anywhere over the map: the box leaves the map under it to the pointer, so give each control its own `pointer-events-auto`. */
-  overlay?: ReactNode
-  controlsRef?: Ref<MapPickerControls>
 }) {
   const { t } = useLocale()
-  const containerRef = useRef<HTMLDivElement>(null)
-  const markerRef = useRef<Marker | null>(null)
-  const markerClassRef = useRef<typeof Marker | null>(null)
-  const [map, setMap] = useState<MapLibreMap | null>(null)
-  const latest = useLatest({ lat, lng, onPlace, onFailed, label: t('places.map.marker'), help: 'places-map-help' })
+  const position = useMemo<[number, number] | null>(() => (lat !== null && lng !== null ? [lng, lat] : null), [lat, lng])
+  const pins = useMemo(() => (position ? [{ id: PIN_ID, coordinates: position }] : []), [position])
+  // The last position the person set on the map itself, to tell it from one that came from a link or the fields.
+  const ownMoveRef = useRef<string | null>(null)
+  const latest = useLatest({ lat, lng, onPlace })
 
-  useEffect(() => {
-    const container = containerRef.current
+  function place(at: { lat: number, lng: number }) {
+    ownMoveRef.current = `${at.lng},${at.lat}`
+    latest.current.onPlace(at)
+  }
 
-    if (!container)
+  function nudge(event: React.KeyboardEvent) {
+    const step = event.shiftKey ? STEP * 5 : STEP
+    const moves: Record<string, [number, number]> = { ArrowLeft: [0, -step], ArrowRight: [0, step], ArrowUp: [step, 0], ArrowDown: [-step, 0] }
+    const move = moves[event.key]
+    const { lat: at, lng: along } = latest.current
+
+    if (!move || at === null || along === null)
       return
-    let disposed = false
-    let instance: MapLibreMap | undefined
-    const unfold = foldCreditsOnFirstTouch(container)
+    event.preventDefault()
+    place({ lat: round(at + move[0]), lng: round(along + move[1]) })
+  }
 
-    async function initialize() {
-      try {
-        const styleLoading = loadAerialStyle()
-        const [maplibre] = await Promise.all([import('maplibre-gl'), import('maplibre-gl/dist/maplibre-gl.css')])
-        const style = await styleLoading
-
-        if (disposed || !container)
-          return
-        // The map is flat: no terrain and no sky (decision G11).
-        delete style.sources.dem
-        delete style.sky
-        maplibre.setWorkerUrl(workerUrl)
-        markerClassRef.current = maplibre.Marker
-        const { lat: startLat, lng: startLng } = latest.current
-
-        instance = new maplibre.Map({
-          container,
-          style,
-          center: startLat !== null && startLng !== null ? [startLng, startLat] : LUCERNE,
-          zoom: startLat !== null ? 16.5 : 15.2,
-          minZoom: 12,
-          maxZoom: 19,
-          pitch: 0,
-          maxPitch: 0,
-          dragRotate: false,
-          pitchWithRotate: false,
-          touchPitch: false,
-          attributionControl: { compact: true },
-        })
-        instance.touchZoomRotate.disableRotation()
-        instance.keyboard.disableRotation()
-        const ready = instance
-
-        ready.on('click', (event) => {
-          // A tap on the marker itself is not a new position.
-          if (markerRef.current?.getElement().contains(event.originalEvent.target as Node))
-            return
-          latest.current.onPlace({ lat: round(event.lngLat.lat), lng: round(event.lngLat.lng) })
-        })
-        ready.on('load', () => {
-          if (!disposed)
-            setMap(ready)
-        })
-        ready.on('error', () => {
-          if (!disposed && !ready.loaded())
-            latest.current.onFailed()
-        })
-      }
-      catch {
-        if (!disposed)
-          latest.current.onFailed()
-      }
-    }
-    void initialize()
-
-    return () => {
-      disposed = true
-      markerRef.current?.remove()
-      markerRef.current = null
-      unfold()
-      instance?.remove()
-    }
-  }, [latest])
-
-  // The marker follows the form: placed, moved by a tap, a drag, the keys or the fields, or removed.
-  useEffect(() => {
-    const MarkerClass = markerClassRef.current
-
-    if (!map || !MarkerClass)
-      return
-    if (lat === null || lng === null) {
-      markerRef.current?.remove()
-      markerRef.current = null
-
-      return
-    }
-    if (markerRef.current) {
-      markerRef.current.setLngLat([lng, lat])
-      if (!map.getBounds().contains([lng, lat]))
-        map.easeTo({ center: [lng, lat], duration: reducedMotion() ? 0 : 400 })
-
-      return
-    }
-    const element = document.createElement('button')
-
-    element.type = 'button'
-    element.className = markerClass
-    element.setAttribute('aria-label', latest.current.label)
-    element.setAttribute('aria-describedby', latest.current.help)
-    element.innerHTML = markerShape
-    element.onkeydown = (event) => {
-      const step = event.shiftKey ? STEP * 5 : STEP
-      const moves: Record<string, [number, number]> = { ArrowLeft: [0, -step], ArrowRight: [0, step], ArrowUp: [step, 0], ArrowDown: [-step, 0] }
-      const move = moves[event.key]
-      const { lat: at, lng: along } = latest.current
-
-      if (!move || at === null || along === null)
-        return
-      event.preventDefault()
-      latest.current.onPlace({ lat: round(at + move[0]), lng: round(along + move[1]) })
-    }
-    const marker = new MarkerClass({ element, anchor: 'bottom', draggable: true }).setLngLat([lng, lat]).addTo(map)
-
-    marker.on('dragend', () => {
-      const position = marker.getLngLat()
-
-      latest.current.onPlace({ lat: round(position.lat), lng: round(position.lng) })
-    })
-    markerRef.current = marker
-  }, [map, lat, lng, latest])
-
-  useImperativeHandle(controlsRef, () => ({
-    recenter: () => {
-      const { lat: at, lng: along } = latest.current
-
-      map?.easeTo({
-        center: at !== null && along !== null ? [along, at] : LUCERNE,
-        zoom: at !== null ? 16.5 : 15.2,
-        duration: reducedMotion() ? 0 : 400,
-      })
-    },
-  }), [map, latest])
-
-  // MapLibre makes its container `position: relative`, so it sits in a box that has a size.
   return (
-    <div className={`relative overflow-hidden rounded-2xl bg-[#c9d3c6] ${className}`}>
-      {!map && <p className="absolute inset-0 grid place-items-center text-sm text-muted" role="status">{t('places.map.loading')}</p>}
-      <div ref={containerRef} className="size-full" />
-      {overlay && <div className="pointer-events-none absolute inset-0 z-10">{overlay}</div>}
-    </div>
+    <MapView
+      className={`relative rounded-2xl ${className}`}
+      label={t('places.map.label')}
+      view={{ center: position ?? LUCERNE, zoom: position ? 16.5 : 15.2, minZoom: 12, maxZoom: 19 }}
+      onFailed={onFailed}
+      onMapClick={([along, at]) => place({ lat: round(at), lng: round(along) })}
+    >
+      <PinLayer
+        draggable
+        anchor="bottom"
+        pins={pins}
+        renderPin={() => <TeardropPin describedBy="places-map-help" label={t('places.map.marker')} onKeyDown={nudge} />}
+        onMove={(_id, [along, at]) => place({ lat: round(at), lng: round(along) })}
+      />
+      <PickerLayers ownMoveRef={ownMoveRef} position={position} onRemove={onRemove} />
+    </MapView>
   )
 }

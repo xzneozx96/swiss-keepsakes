@@ -249,7 +249,6 @@ export const placesEn = {
   'places.hide.unsaved': 'Save your changes first. Hiding the pin would discard them.',
   'places.hasChanges': 'Changes not published yet. Publish to send them to guests.',
   'places.hoursAddFirst': 'Add hours',
-  'places.map.loading': 'Loading the map…',
   'places.map.failed': 'The map could not be loaded. Enter the coordinates below instead.',
   'places.map.lat': 'Latitude',
   'places.map.lng': 'Longitude',

@@ -75,3 +75,24 @@ export function NumberedPin({ id, number, label, selected, onPress }: {
     </button>
   )
 }
+
+/** A teardrop that points at the exact spot (the place picker). Its tip is the pin's anchor: use it with `anchor="bottom"`. */
+export function TeardropPin({ label, describedBy, onKeyDown }: {
+  label: string
+  describedBy?: string
+  onKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>) => void
+}) {
+  return (
+    <button
+      aria-describedby={describedBy}
+      aria-label={label}
+      className="flex size-11 cursor-grab items-end justify-center rounded-full outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      type="button"
+      onKeyDown={onKeyDown}
+    >
+      <span aria-hidden className="grid size-9 rotate-45 place-items-center rounded-full rounded-br-none bg-accent shadow-surface ring-2 ring-white">
+        <span className="size-3 rounded-full bg-white" />
+      </span>
+    </button>
+  )
+}

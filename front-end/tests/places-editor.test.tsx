@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import type { FakeApi } from './places-support'
 
 import { toast } from '@heroui/react'
@@ -20,15 +19,8 @@ vi.hoisted(() => {
     CSS.supports = () => false
 })
 
-// MapLibre needs a canvas, which jsdom has not: the picker is replaced by a button that places a pin.
-vi.mock('@/features/places/components/map-picker', () => ({
-  MapPicker: ({ onPlace, overlay }: { onPlace: (position: { lat: number, lng: number }) => void, overlay?: ReactNode }) => (
-    <div>
-      <button type="button" onClick={() => onPlace({ lat: 47.05, lng: 8.3 })}>Place pin</button>
-      {overlay}
-    </div>
-  ),
-}))
+// MapLibre needs a canvas, which jsdom has not: the picker is replaced by a stub (tests/support/map-picker-stub.tsx).
+vi.mock('@/features/places/components/map-picker', async () => (await import('./support/map-picker-stub')).mapPickerStub)
 
 // The review draws the guest map in a phone: MapLibre is the fake one.
 vi.mock('maplibre-gl', async () => (await import('./support/fake-maplibre')).fakeMaplibre)
@@ -817,9 +809,9 @@ describe('[E4.2][AC68] N17 photos', () => {
     await press('Next')
 
     expect(screen.getByText('No photos yet. The first one you add is the main photo.')).toBeInTheDocument()
-    expect(screen.getAllByTestId('photo-input')).toHaveLength(1)
+    expect(screen.getAllByTestId('places-photo-input')).toHaveLength(1)
     expect(screen.queryByText('More photos')).not.toBeInTheDocument()
-    await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'bridge.jpg', { type: 'image/jpeg' }))
+    await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'bridge.jpg', { type: 'image/jpeg' }))
 
     await waitFor(() => expect(names()).toEqual(['Photo 1']))
     expect(rows()[0]).toHaveTextContent('Cover')
@@ -837,7 +829,7 @@ describe('[E4.2][AC68] N17 photos', () => {
     await open('new')
     await heading('Place on the map')
     await press('Next')
-    await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'a.gif', { type: 'image/jpeg' }))
+    await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'a.gif', { type: 'image/jpeg' }))
 
     expect(await screen.findByText(/This type of file is not allowed/)).toBeInTheDocument()
     expect(screen.getByText('Upload failed')).toBeInTheDocument()
@@ -869,7 +861,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       api.answer = answerUpload
       await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41) }))
       const release = hold()
-      await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'bridge.jpg', { type: 'image/jpeg' }))
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'bridge.jpg', { type: 'image/jpeg' }))
 
       const [row] = pendingRows()
       expect(create).toHaveBeenCalledTimes(1)
@@ -898,7 +890,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       api.answer = answerUpload
       await openPhotos()
       const release = hold()
-      await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'first.jpg', { type: 'image/jpeg' }))
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'first.jpg', { type: 'image/jpeg' }))
 
       expect(pendingRows()).toHaveLength(1)
       expect(screen.queryByRole('list', { name: 'Photos, in order' })).not.toBeInTheDocument()
@@ -925,7 +917,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       }
       await openPhotos()
       const release = hold()
-      await userEvent.upload(screen.getByTestId('photo-input'), [new File(['a'], 'a.jpg', { type: 'image/jpeg' }), new File(['b'], 'b.jpg', { type: 'image/jpeg' })])
+      await userEvent.upload(screen.getByTestId('places-photo-input'), [new File(['a'], 'a.jpg', { type: 'image/jpeg' }), new File(['b'], 'b.jpg', { type: 'image/jpeg' })])
 
       expect(pendingRows().map(row => row.querySelector('.line-clamp-2')!.textContent)).toEqual(['a.jpg', 'b.jpg'])
       release()
@@ -954,7 +946,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       let refuse = true
       api.answer = call => (call.path === `/api/store/${storeId}/media/uploads` && refuse ? problem(422, 'media-too-large') : answerUpload(call))
       await openPhotos()
-      await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'big.jpg', { type: 'image/jpeg' }))
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'big.jpg', { type: 'image/jpeg' }))
 
       const [row] = await waitFor(() => {
         const found = pendingRows()
@@ -980,7 +972,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       api.answer = answerUpload
       await openPhotos()
       const release = hold()
-      await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'gone.jpg', { type: 'image/jpeg' }))
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'gone.jpg', { type: 'image/jpeg' }))
       await userEvent.click(within(pendingRows()[0]!).getByRole('button', { name: 'Remove gone.jpg' }))
 
       expect(screen.queryByRole('list', { name: 'Photos being added' })).not.toBeInTheDocument()
@@ -1001,7 +993,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       await press('Weiter')
       await heading('Text und Foto')
       const release = hold()
-      await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'a.jpg', { type: 'image/jpeg' }))
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'a.jpg', { type: 'image/jpeg' }))
 
       expect(within(screen.getByRole('list', { name: 'Fotos, die gerade hinzugefügt werden' })).getByText('Wird hochgeladen…')).toBeInTheDocument()
       release()
@@ -1066,7 +1058,7 @@ describe('[E4.2][AC68] N17 photos', () => {
     api.hold = new Promise<void>((resolve) => {
       release = resolve
     })
-    await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'new.jpg', { type: 'image/jpeg' }))
+    await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'new.jpg', { type: 'image/jpeg' }))
     await userEvent.type(screen.getByLabelText('Tips from a local'), 'Typed during the upload')
     release()
 
@@ -1082,7 +1074,7 @@ describe('[E4.2][AC68] N17 photos', () => {
     await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(50), photos: Array.from({ length: 10 }, (_, i) => ({ mediaId: uuid(51 + i) })) }))
 
     expect(names()).toHaveLength(11)
-    expect(screen.queryByTestId('photo-input')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('places-photo-input')).not.toBeInTheDocument()
     expect(screen.getByText('Up to 11 photos: the main photo and 10 more.')).toBeInTheDocument()
   })
 })

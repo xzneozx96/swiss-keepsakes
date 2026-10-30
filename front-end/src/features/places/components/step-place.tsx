@@ -1,15 +1,12 @@
-import type { MapPickerControls } from './map-picker'
 import type { StepProps } from './step-props'
 
 import { Button } from '@heroui/react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
-import { Block } from '@/components/form-block'
-import { OpenInMapsIcon, RecenterIcon, TrashIcon } from '@/components/icons'
-import { MapControlButton, MapControlGroup } from '@/components/map-controls'
+import { OpenInMapsIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useAddressFromPosition } from '../hooks/use-address-from-position'
-import { Field } from './fields'
+import { Block, Field } from './fields'
 import { MapPicker } from './map-picker'
 import { MapsLinkField } from './maps-link-field'
 
@@ -23,7 +20,6 @@ function coordinate(value: string, limit: number): number | null {
 export function StepPlace({ form, patch, storeId }: StepProps) {
   const { t } = useLocale()
   const [mapFailed, setMapFailed] = useState(false)
-  const pickerRef = useRef<MapPickerControls>(null)
   const located = form.latitude !== null && form.longitude !== null
   const removePosition = () => patch({ latitude: null, longitude: null })
   const addressFilled = useAddressFromPosition({ storeId, latitude: form.latitude, longitude: form.longitude, address: form.address, patch })
@@ -48,19 +44,11 @@ export function StepPlace({ form, patch, storeId }: StepProps) {
             : (
                 <MapPicker
                   className="h-72 lg:h-80"
-                  controlsRef={pickerRef}
                   lat={form.latitude}
                   lng={form.longitude}
-                  overlay={(
-                    <div className="absolute end-3 top-3">
-                      <MapControlGroup label={t('places.map.label')}>
-                        <MapControlButton icon={RecenterIcon} label={t('places.map.recenter')} onPress={() => pickerRef.current?.recenter()} />
-                        {located && <MapControlButton icon={TrashIcon} label={t('places.map.clear')} tone="danger" onPress={removePosition} />}
-                      </MapControlGroup>
-                    </div>
-                  )}
                   onFailed={() => setMapFailed(true)}
                   onPlace={({ lat, lng }) => patch({ latitude: lat, longitude: lng })}
+                  onRemove={removePosition}
                 />
               )}
         </div>
