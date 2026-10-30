@@ -24,10 +24,15 @@ export async function buildMediaObjects(
   const open = (bytes: Uint8Array) => sharp(bytes, { limitInputPixels: maxInputPixels })
   const format = formats[file.contentType as keyof typeof formats]
   const { data, info } = await open(file.source).rotate().toFormat(format).toBuffer({ resolveWithObject: true })
-  await storage.put('media', file.storageKey, data, { contentType: file.contentType, ...headers })
-  for (const width of variantWidthsFor(info.width)) {
-    const variant = await open(data).resize({ width, withoutEnlargement: true }).webp().toBuffer()
-    await storage.put('media', variantKey(file.storageKey, width), variant, { contentType: 'image/webp', ...headers })
-  }
+  // Nothing here waits on anything else: the original is already encoded, each variant is cut from it, and every put
+  // goes to its own key. So the encodes and all the puts run together (at most 1 + 4 of them), and the first failure
+  // rejects the whole call, which makes the job retry.
+  await Promise.all([
+    storage.put('media', file.storageKey, data, { contentType: file.contentType, ...headers }),
+    ...variantWidthsFor(info.width).map(async (width) => {
+      const variant = await open(data).resize({ width, withoutEnlargement: true }).webp().toBuffer()
+      await storage.put('media', variantKey(file.storageKey, width), variant, { contentType: 'image/webp', ...headers })
+    }),
+  ])
   return { width: info.width, height: info.height }
 }

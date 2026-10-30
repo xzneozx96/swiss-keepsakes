@@ -1,6 +1,7 @@
 import type { Clock, MediaAlert, MediaRepository, ObjectStorage, UnitOfWork } from '../ports.ts'
 import type { MediaJob } from './process-media.ts'
 import { confirmedPrefix, mediaPrefix } from '@sk/domain/content'
+import { deleteFolder } from './delete-objects.ts'
 
 export interface FailMediaDeps<T> {
   uow: UnitOfWork<T>
@@ -29,12 +30,13 @@ export function makeFailMedia<T>({ uow, media, storage, clock, alert }: FailMedi
         await media.retire(tx, row, clock.now())
       return { ready: false, inUse: false }
     })
-    for (const { key } of await storage.list('uploads', confirmedPrefix(storeId, mediaId)))
-      await storage.delete('uploads', key)
-    if (ready)
+    // The source folder and the public folder are independent, so they are emptied together.
+    const removeSource = deleteFolder(storage, 'uploads', confirmedPrefix(storeId, mediaId))
+    if (ready) {
+      await removeSource
       return
-    for (const { key } of await storage.list('media', mediaPrefix(storeId, mediaId)))
-      await storage.delete('media', key)
+    }
+    await Promise.all([removeSource, deleteFolder(storage, 'media', mediaPrefix(storeId, mediaId))])
     alert(inUse ? { storeId, mediaId, inUse } : { storeId, mediaId })
   }
 }

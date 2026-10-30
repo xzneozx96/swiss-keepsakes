@@ -14,17 +14,13 @@ export interface SweepUploadsDeps {
 export function makeSweepUploads({ storage, clock }: SweepUploadsDeps) {
   return async (): Promise<{ removed: number }> => {
     const now = clock.now().getTime()
-    let removed = 0
-    for (const { key, lastModified } of await storage.list('uploads', '')) {
-      // An object with no timestamp cannot be aged, so it stays.
-      if (!lastModified)
-        continue
+    // An object with no timestamp cannot be aged, so it stays.
+    const expired = (await storage.list('uploads', '')).filter(({ key, lastModified }) => {
       const hours = key.startsWith('confirmed/') ? MEDIA_RULES.orphanedSourceHours : MEDIA_RULES.abandonedUploadHours
-      if (now - lastModified.getTime() > hours * HOUR) {
-        await storage.delete('uploads', key)
-        removed++
-      }
-    }
-    return { removed }
+      return lastModified !== undefined && now - lastModified.getTime() > hours * HOUR
+    })
+    // The deletes are independent, so they run together; the SDK's connection pool bounds how many are in flight.
+    await Promise.all(expired.map(({ key }) => storage.delete('uploads', key)))
+    return { removed: expired.length }
   }
 }

@@ -5,6 +5,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { cleanFileName, isCurrentObject, MEDIA_RULES, mediaPrefix, versionedKey } from '@sk/domain/content'
 import { mayManageContent, staffActor } from './access.ts'
 import { buildMediaObjects } from './build-media-objects.ts'
+import { deleteFolder } from './delete-objects.ts'
 import { fail, ok } from './failure.ts'
 import { mediaQueues } from './media-queues.ts'
 import { readUpload } from './read-upload.ts'
@@ -53,8 +54,7 @@ export function makeReplaceMedia<T>({ uow, media, storage, jobs, audit, clock, g
     const fileName = (input.fileName === undefined ? undefined : cleanFileName(input.fileName)) ?? current.fileName
 
     const removeNewObjects = async () => {
-      for (const { key } of await storage.list('media', storageKey.slice(0, storageKey.lastIndexOf('/') + 1)))
-        await storage.delete('media', key)
+      await deleteFolder(storage, 'media', storageKey.slice(0, storageKey.lastIndexOf('/') + 1))
     }
     let outcome: Result<MediaRecord>
     try {
@@ -119,10 +119,10 @@ export function makePurgeOldVersions<T>({ uow, media, storage, clock }: { uow: U
     if (!row || row.status === 'retired')
       return
     const now = clock.now().getTime()
-    for (const { key, lastModified } of await storage.list('media', mediaPrefix(storeId, mediaId))) {
+    const old = (await storage.list('media', mediaPrefix(storeId, mediaId))).filter(({ key, lastModified }) => {
       const fresh = lastModified !== undefined && now - lastModified.getTime() < FRESH_MS
-      if (!isCurrentObject(row.storageKey, key) && !fresh)
-        await storage.delete('media', key)
-    }
+      return !isCurrentObject(row.storageKey, key) && !fresh
+    })
+    await Promise.all(old.map(({ key }) => storage.delete('media', key)))
   }
 }
