@@ -5,7 +5,7 @@
   "scripts": {
     "spikes": "tsx run-all.ts",
     "sp4:twint": "tsx sp4-stripe-sandbox/payment-element.ts",
-    "typecheck": "../scripts/locked.sh tsc --noEmit -p . --incremental --tsBuildInfoFile node_modules/.tmp/typecheck.tsbuildinfo"
+    "typecheck": "tsc --noEmit -p ."
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1152.0",

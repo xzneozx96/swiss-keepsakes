@@ -59,7 +59,5 @@ export default defineConfig(({ command }) => ({
     setupFiles: ['./tests/setup.ts'],
     globals: true,
     exclude: ['**/node_modules/**', '**/tests/e2e/**'],
-    // Several sessions run tests on one machine (scripts/locked.sh lets two at a time), so one run takes a share, not every core.
-    maxWorkers: 3,
   },
 }))

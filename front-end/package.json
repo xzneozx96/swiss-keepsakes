@@ -7,17 +7,16 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "typecheck": "../scripts/locked.sh tsc --incremental --tsBuildInfoFile node_modules/.tmp/typecheck.tsbuildinfo",
+    "typecheck": "tsc",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
-    "test": "../scripts/locked.sh vitest run",
-    "test:related": "../scripts/locked.sh vitest related --run",
-    "test:e2e": "../scripts/locked.sh --name e2e --slots 1 --wait 1800 playwright test",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
     "e2e:servers": "node scripts/e2e-servers.mjs",
     "verify:routes": "node scripts/verify/compare-builds.mjs",
     "verify:renders": "node scripts/verify/render-count.mjs",
-    "typecheck:tests": "../scripts/locked.sh tsc -p tsconfig.test.json --noEmit --incremental --tsBuildInfoFile node_modules/.tmp/typecheck-tests.tsbuildinfo"
+    "typecheck:tests": "tsc -p tsconfig.test.json --noEmit"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.312",
