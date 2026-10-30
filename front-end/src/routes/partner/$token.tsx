@@ -1,4 +1,5 @@
 import type { SalesPeriodId } from '@sk/domain/reporting'
+import type { CommissionFilter } from '@/features/partners/report/lib/search-params'
 
 import { SALES_PERIODS } from '@sk/domain/reporting'
 
@@ -8,6 +9,7 @@ import { PartnerAccessScreen } from '@/features/partners/access/partner-access-s
 import { usePartnerAccess } from '@/features/partners/hooks/use-partner-access'
 import { PartnerDashboard } from '@/features/partners/report/components/partner-dashboard'
 import { usePartnerOverview } from '@/features/partners/report/hooks/use-partner-overview'
+import { COMMISSION_FILTERS } from '@/features/partners/report/lib/search-params'
 import { useSimulatedLoading } from '@/hooks/use-simulated-loading'
 import { noIndexHead } from '@/lib/no-index'
 
@@ -19,6 +21,8 @@ interface PartnerSearch {
   /** The custom range, YYYY-MM-DD; only with period "custom". */
   from?: string
   to?: string
+  /** The commission states ticked in the transactions filter; absent = all. */
+  commission?: CommissionFilter[]
 }
 
 const DEFAULT_PERIOD: SalesPeriodId = '28d'
@@ -43,6 +47,9 @@ export const Route = createFileRoute('/partner/$token')({
     period: isPeriod(search.period) ? search.period : undefined,
     from: isIsoDate(search.from) ? search.from : undefined,
     to: isIsoDate(search.to) ? search.to : undefined,
+    commission: Array.isArray(search.commission)
+      ? COMMISSION_FILTERS.filter(id => (search.commission as unknown[]).includes(id))
+      : undefined,
   }),
   component: PartnerPage,
 })
@@ -76,7 +83,7 @@ function ReportPage({
   partnerId: string
   partnerName: string
 }) {
-  const { period = DEFAULT_PERIOD, from, to } = Route.useSearch()
+  const { period = DEFAULT_PERIOD, from, to, commission = [] } = Route.useSearch()
   const navigate = useNavigate({ from: '/partner/$token' })
   const custom = from && to ? { start: from, end: to } : null
   const view = usePartnerOverview(
@@ -91,6 +98,7 @@ function ReportPage({
         period: next.period === DEFAULT_PERIOD ? undefined : next.period,
         from: next.period === 'custom' ? next.from : undefined,
         to: next.period === 'custom' ? next.to : undefined,
+        commission: commission.length ? commission : undefined,
       },
       replace: true,
       // A period switch keeps the reader where they are (default would scroll to the top).
@@ -101,9 +109,16 @@ function ReportPage({
     <PartnerShell isWide partnerName={partnerName}>
       <PartnerDashboard
         custom={custom}
+        commission={commission}
         isLoading={isLoading}
         period={period}
         view={view}
+        onCommissionChange={next =>
+          void navigate({
+            search: s => ({ ...s, commission: next.length ? next : undefined }),
+            replace: true,
+            resetScroll: false,
+          })}
         onCustomChange={range =>
           go({ period: 'custom', from: range.start, to: range.end })}
         onMonthSelect={(start) => {
