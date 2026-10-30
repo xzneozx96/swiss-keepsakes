@@ -20,7 +20,7 @@ export const productsDe: Record<keyof typeof productsEn, string> = {
     'Gäste sehen diese Tour nicht mehr. Bestehende Buchungen und Termine bleiben unverändert. Sie können sie später als Entwurf wiederherstellen.',
   'products.archivedToast': '{name} archiviert',
   'products.restored': '{name} als Entwurf wiederhergestellt',
-  'products.view.label': 'Anzeigen',
+  'products.view.label': 'Status',
   'products.view.all': 'Alle',
   'products.view.active': 'Aktiv',
   'products.view.archived': 'Archiviert',

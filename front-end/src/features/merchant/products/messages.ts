@@ -19,7 +19,7 @@ export const productsEn = {
     'Guests no longer see this tour. Existing bookings and departures stay as they are. You can restore it later as a draft.',
   'products.archivedToast': '{name} archived',
   'products.restored': '{name} restored as a draft',
-  'products.view.label': 'Show',
+  'products.view.label': 'Status',
   'products.view.all': 'All',
   'products.view.active': 'Active',
   'products.view.archived': 'Archived',

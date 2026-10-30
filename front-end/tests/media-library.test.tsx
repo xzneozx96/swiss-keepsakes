@@ -147,8 +147,18 @@ describe('[E4.11][AC51] the media library in English', () => {
 
     expect(listCalls().at(-1)!.path).toContain('use=unused%2Cdrafts')
     expect(listCalls().at(-1)!.path).toContain('status=ready')
-    for (const chip of ['Unused', 'Only in drafts', 'Ready'])
-      expect(screen.getByRole('button', { name: new RegExp(chip) })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove filter Use: Unused, Only in drafts' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove filter Status: Ready' })).toBeInTheDocument()
+  })
+
+  it('[E4.11][AC51] Clear all takes every filter out of the address', async () => {
+    answerWith()
+    renderMedia('/store/content/media?use=unused&status=ready')
+
+    await screen.findByRole('list', { name: 'Photos' })
+    await userEvent.click(screen.getByRole('button', { name: 'Clear all' }))
+
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Clear all' })).not.toBeInTheDocument())
   })
 
   it('[E4.11][AC51] shows tiles shaped like the wall while the list is on its way', async () => {

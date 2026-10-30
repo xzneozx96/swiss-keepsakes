@@ -228,14 +228,87 @@ describe('[E4.2][AC68] N16 the list', () => {
     await open()
     await screen.findAllByRole('link', { name: 'Chapel Bridge' })
 
-    await userEvent.click(screen.getByRole('button', { name: 'Filters' }))
-    expect(await screen.findByText('Type')).toBeInTheDocument()
-    expect(screen.queryByText('Has dates')).not.toBeInTheDocument()
-    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /^Event/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Type' }))
+    const popover = await screen.findByRole('dialog', { name: 'Type' })
+
+    expect(within(popover).queryByText('Has dates')).not.toBeInTheDocument()
+    expect(within(popover).getByRole('checkbox', { name: /^Place2/ })).toBeInTheDocument()
+    await userEvent.click(within(popover).getByRole('checkbox', { name: /^Event1/ }))
     await userEvent.keyboard('{Escape}')
 
     await waitFor(() => expect(table().queryByRole('link', { name: 'Chapel Bridge' })).not.toBeInTheDocument())
     expect(table().getByRole('link', { name: 'Fasnacht' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove filter Type: Event' })).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] each group has its own button, and the counts follow the other groups and the search', async () => {
+    api.items = [
+      listItem({ id: uuid(11), status: 'draft', title: { en: 'Chapel Bridge' }, stayTag: 'short_stay' }),
+      listItem({ id: uuid(12), status: 'published', title: { en: 'Old tap' }, stayTag: 'short_stay' }),
+      listItem({ id: uuid(13), status: 'published', title: { en: 'Fasnacht' }, stayTag: 'multi_day', hasDates: true }),
+    ]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+
+    for (const name of ['Status', 'Categories', 'Recommended for', 'Type'])
+      expect(screen.getByRole('button', { name })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Recommended for' }))
+    let popover = await screen.findByRole('dialog', { name: 'Recommended for' })
+
+    expect(within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent)).toEqual(['Short stay visitors2', 'Long stay visitors1', 'All visitors0'])
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    // Tick Published: the Recommended for counts now count published pins only.
+    await userEvent.click(screen.getByRole('button', { name: 'Status' }))
+    popover = await screen.findByRole('dialog', { name: 'Status' })
+    await userEvent.click(within(popover).getByRole('checkbox', { name: /^Published/ }))
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: 'Recommended for' }))
+    popover = await screen.findByRole('dialog', { name: 'Recommended for' })
+
+    expect(within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent)).toEqual(['Short stay visitors1', 'Long stay visitors1', 'All visitors0'])
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    // The search narrows the counts too, and Clear all empties the chips.
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Search by title or map link' }), 'tap')
+    await userEvent.click(screen.getByRole('button', { name: 'Status, 1 selected' }))
+    popover = await screen.findByRole('dialog', { name: 'Status' })
+    expect(within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent).slice(0, 1)).toEqual(['Published1'])
+    await userEvent.keyboard('{Escape}')
+    await userEvent.click(screen.getByRole('button', { name: 'Clear all' }))
+    expect(screen.queryByRole('button', { name: 'Clear all' })).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] the categories list nests the sub-categories under their category and searches', async () => {
+    const category = (n: number, name: string, parentId: string | null) => ({ id: uuid(n), slug: name.toLowerCase(), name: { en: name }, parentId, position: n, childCount: 0, useCount: 0 })
+
+    api.categories = [
+      category(20, 'Food', null),
+      category(21, 'Soup', uuid(20)),
+      category(22, 'Views', null),
+      ...Array.from({ length: 8 }, (_, index) => category(30 + index, `Spot ${index}`, null)),
+    ]
+    api.items = [listItem({ id: uuid(11), title: { en: 'Chapel Bridge' }, categoryIds: [uuid(21)] })]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Categories' }))
+    const popover = await screen.findByRole('dialog', { name: 'Categories' })
+    const names = () => within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent)
+
+    // Soup has the pin; Food has none itself, so it keeps its place behind its child; the others are muted last.
+    expect(names()[0]).toBe('Food0')
+    expect(names()[1]).toBe('Soup1')
+    expect(within(popover).getByRole('checkbox', { name: /^Soup/ }).closest('.checkbox')).toHaveClass('ms-6')
+    await userEvent.type(within(popover).getByRole('searchbox', { name: 'Search options' }), 'soup')
+    expect(names()).toEqual(['Food0', 'Soup1'])
+    await userEvent.click(within(popover).getByRole('checkbox', { name: /^Soup/ }))
+    await userEvent.keyboard('{Escape}')
+    expect(await screen.findByRole('button', { name: 'Remove filter Categories: Soup' })).toBeInTheDocument()
   })
 
   it('[E4.2][AC68] Add place and Add event open the editor on a new pin, the event on its dates', async () => {

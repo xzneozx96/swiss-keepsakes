@@ -11,7 +11,7 @@ import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { DataTable } from '@/components/data-table'
-import { FilterButton, FilterChips, filterGroup, selectedLabels } from '@/components/filter-bar'
+import { FilterButtons, FilterChips, filterGroup, selectedLabels } from '@/components/filter-bar'
 import {
   ArchiveIcon,
   ChevronRightIcon,
@@ -418,7 +418,7 @@ export function PinsList({ pins, onPinsChange, state, onOpen, onAdd }: {
             <SearchField.ClearButton />
           </SearchField.Group>
         </SearchField>
-        <FilterButton groups={filterGroups} />
+        <FilterButtons groups={filterGroups} />
       </div>
       <FilterChips groups={filterGroups} />
       <DataTable

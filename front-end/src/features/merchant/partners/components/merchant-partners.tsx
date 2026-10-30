@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { useConfirm } from '@/components/confirm-dialog'
 
 import {
-  FilterButton,
+  FilterButtons,
   FilterChips,
   filterGroup,
   selectedLabels,
@@ -132,7 +132,7 @@ export function MerchantPartners({
             <SearchField.ClearButton />
           </SearchField.Group>
         </SearchField>
-        <FilterButton groups={filterGroups} />
+        <FilterButtons groups={filterGroups} />
       </div>
       <FilterChips groups={filterGroups} />
       <PartnerRows

@@ -10,7 +10,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.list.label': 'Punkte',
   'places.list.all': 'Alle Punkte',
   'places.filter.status': 'Status',
-  'places.filter.category': 'Kartenkategorie',
+  'places.filter.category': 'Kategorien',
   'places.filter.stay': 'Empfohlen für',
   'places.filter.type': 'Typ',
   'places.filter.noCategory': 'Ohne Kategorie',

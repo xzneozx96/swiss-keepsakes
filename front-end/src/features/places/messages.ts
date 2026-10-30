@@ -8,7 +8,7 @@ export const placesEn = {
   'places.list.label': 'Pins',
   'places.list.all': 'All pins',
   'places.filter.status': 'Status',
-  'places.filter.category': 'Map category',
+  'places.filter.category': 'Categories',
   'places.filter.stay': 'Recommended for',
   'places.filter.type': 'Type',
   'places.filter.noCategory': 'No category',

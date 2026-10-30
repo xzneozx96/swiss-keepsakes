@@ -7,7 +7,7 @@ import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { EmptyState } from '@/components/empty-state'
-import { FilterButton, FilterChips, filterGroup } from '@/components/filter-bar'
+import { FilterButtons, FilterChips, filterGroup } from '@/components/filter-bar'
 import { PhotoAddIcon, SearchIcon, SelectedIcon } from '@/components/icons'
 import { Pager, usePaged } from '@/components/list-pagination'
 import { useIsWide } from '@/hooks/use-is-wide'
@@ -173,7 +173,7 @@ export function MediaLibrary({ lib, state }: { lib: Library, state: LabState }) 
               <SearchField.ClearButton />
             </SearchField.Group>
           </SearchField>
-          <FilterButton groups={groups} />
+          <FilterButtons groups={groups} />
           <Button className="shrink-0 max-lg:h-11" size="sm" variant={selecting ? 'primary' : 'secondary'} onPress={() => (selecting ? stopSelecting() : setSelecting(true))}>
             {selecting ? mc('select.stop') : mc('select.start')}
           </Button>
