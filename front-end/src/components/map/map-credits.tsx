@@ -22,7 +22,7 @@ const INTERACTIONS = ['pointerdown', 'wheel', 'keydown'] as const
  * interaction folds the credits: the map's container, or the frame the map sits in when the person
  * rarely touches the map itself.
  */
-export function MapCredits({ className = '', watch }: { className?: string, watch?: React.RefObject<HTMLElement | null> }) {
+export function MapCredits({ className = '', style, watch }: { className?: string, style?: React.CSSProperties, watch?: React.RefObject<HTMLElement | null> }) {
   const { t } = useLocale()
   const [open, setOpen] = useState(true)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -53,6 +53,7 @@ export function MapCredits({ className = '', watch }: { className?: string, watc
       ref={rootRef}
       className={`pointer-events-auto flex w-fit items-end bg-surface/85 text-[11px] leading-4 text-foreground/80 backdrop-blur-sm ${open ? 'rounded-2xl ps-2.5' : 'rounded-full'} ${className}`}
       data-map-credits=""
+      style={style}
     >
       {open && (
         <p className="flex flex-wrap items-center gap-x-1.5 self-center py-0.5">

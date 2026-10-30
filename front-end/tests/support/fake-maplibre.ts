@@ -36,6 +36,12 @@ export class FakeMap {
     return this
   }
 
+  off(event: string, listener: Listener) {
+    this.listeners.set(event, (this.listeners.get(event) ?? []).filter(item => item !== listener))
+
+    return this
+  }
+
   emit(event: string, payload?: unknown) {
     if (event === 'load')
       this.loaded = true

@@ -1,8 +1,8 @@
-import { Button, buttonVariants, Skeleton, Spinner } from '@heroui/react'
+import { Button, buttonVariants, Spinner } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
-import { InfoIcon, OpenInMapsIcon, PickupIcon } from '@/components/icons'
+import { InfoIcon, PickupIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 
 export type MapStatus = 'map-loading' | 'pins-loading' | 'failed' | 'empty'
@@ -10,12 +10,13 @@ export type MapStatus = 'map-loading' | 'pins-loading' | 'failed' | 'empty'
 const FADE_MS = 300
 
 /**
- * The map while its photo tiles are on the way: a soft shimmer over the map area, a muted pin and a
- * "Loading the map" pill. It stays until the map has drawn its first view (`loading` ends), then
- * fades out, so the guest never sees a grey box and tiles popping in. It waits out the fade before
- * it leaves the page; with reduced motion it leaves at once.
+ * The map while its photo tiles are on the way: a translucent surface with a blur over the map area, so the
+ * map's colours show through softly as tiles arrive, a small spinner and the words "Loading the map". It stays
+ * until the map has drawn its first view (`loading` ends), then fades out, so the guest never sees a grey box and
+ * tiles popping in. It waits out the fade before it leaves the page; with reduced motion it leaves at once and
+ * the spinner does not turn: only the words stay.
  */
-function MapLoadingVeil({ loading }: { loading: boolean }) {
+function MapLoadingOverlay({ loading }: { loading: boolean }) {
   const { t } = useLocale()
   const [mounted, setMounted] = useState(loading)
 
@@ -36,28 +37,28 @@ function MapLoadingVeil({ loading }: { loading: boolean }) {
   return (
     <div
       aria-busy={loading}
-      className={`absolute inset-0 z-[4] flex flex-col items-center justify-center gap-3 bg-surface-secondary transition-opacity duration-300 motion-reduce:transition-none ${loading ? '' : 'pointer-events-none opacity-0'}`}
+      className={`absolute inset-0 z-[4] flex flex-col items-center justify-center gap-2 bg-surface/55 backdrop-blur-md transition-opacity duration-300 motion-reduce:transition-none ${loading ? '' : 'pointer-events-none opacity-0'}`}
       data-skeleton="map"
       role="status"
     >
-      <Skeleton aria-hidden className="absolute inset-0 rounded-none motion-reduce:after:animate-none" />
-      <OpenInMapsIcon aria-hidden className="relative text-muted" size={30} />
-      <span className="relative flex min-h-11 items-center gap-2.5 rounded-full bg-surface py-1.5 ps-2 pe-4 text-sm font-medium shadow-overlay">
-        <Spinner size="sm" />
-        {t('map.loadingMap')}
-      </span>
+      <Spinner aria-hidden className="motion-reduce:hidden" size="md" />
+      <span className="text-sm font-medium text-foreground">{t('map.loadingMap')}</span>
     </div>
   )
 }
 
-function MapNotice({ status, onRetry }: { status: MapStatus | undefined, onRetry: () => void }) {
+function MapNotice({ status, top, onRetry }: { status: MapStatus | undefined, top: number, onRetry: () => void }) {
   const { t, language } = useLocale()
 
   if (status === undefined || status === 'map-loading')
     return null
   if (status === 'pins-loading') {
     return (
-      <div className="pointer-events-none absolute inset-x-0 top-[70px] z-[6] flex justify-center" role="status">
+      <div
+        className="pointer-events-none absolute inset-x-0 z-[6] flex justify-center"
+        role="status"
+        style={{ top }}
+      >
         <span className="flex min-h-11 items-center gap-2.5 rounded-full bg-surface py-1.5 ps-2 pe-4 text-sm font-medium shadow-overlay">
           <Spinner size="sm" />
           {t('map.loading')}
@@ -68,7 +69,7 @@ function MapNotice({ status, onRetry }: { status: MapStatus | undefined, onRetry
   const failed = status === 'failed'
 
   return (
-    <div className="pointer-events-none absolute inset-x-3 top-[70px] z-[6] flex justify-center">
+    <div className="pointer-events-none absolute inset-x-3 z-[6] flex justify-center" style={{ top }}>
       <div className="pointer-events-auto flex w-full flex-col items-center gap-2 rounded-3xl bg-surface p-5 text-center shadow-overlay" role={failed ? 'alert' : 'status'}>
         {failed ? <InfoIcon className="text-danger" size={26} /> : <PickupIcon className="text-muted" size={26} />}
         <p className="font-serif text-card-title text-balance">{t(failed ? 'map.failed.title' : 'map.empty.title')}</p>
@@ -87,15 +88,15 @@ function MapNotice({ status, onRetry }: { status: MapStatus | undefined, onRetry
 
 /**
  * The map's loading, empty and failed states over it. The map keeps its place underneath, so the
- * controls and the tab bar never jump when the state changes. While the map draws, the screen shows
- * the veil and the controls' skeleton (`MapControlsSkeleton`). Render it always, with `undefined`
- * when there is nothing to say: the veil needs to stay mounted for its fade.
+ * controls and the tab bar never jump when the state changes. Render it always, with `undefined`
+ * when there is nothing to say: the overlay needs to stay mounted for its fade. `top` (px) is where the
+ * notices start, below the screen's own controls.
  */
-export function MapStatusLayer({ status, onRetry }: { status: MapStatus | undefined, onRetry: () => void }) {
+export function MapStatusLayer({ status, top = 70, onRetry }: { status: MapStatus | undefined, top?: number, onRetry: () => void }) {
   return (
     <>
-      <MapLoadingVeil loading={status === 'map-loading'} />
-      <MapNotice status={status} onRetry={onRetry} />
+      <MapLoadingOverlay loading={status === 'map-loading'} />
+      <MapNotice status={status} top={top} onRetry={onRetry} />
     </>
   )
 }

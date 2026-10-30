@@ -3,16 +3,15 @@ import type { Language } from '@sk/domain/shared'
 import type { PlaceForm } from '../lib/form'
 import type { CardExtras } from '@/features/map/components/place-card'
 
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { IPhoneMockup } from '@/components/iphone-mockup'
-import { MapCredits } from '@/components/map/map-credits'
-import { useMapInstance } from '@/components/map/use-map-instance'
+import { useMap } from '@/components/map/map-context'
+import { MapView } from '@/components/map/map-view'
 import { LocaleOverride, useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
 import { PinMap } from '@/features/map/components/pin-map'
 import { PlaceCardRow } from '@/features/map/components/place-card'
-import { MapStatusLayer } from '@/features/map/components/status-layer'
 import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
 import { useMedia, useStoryOptions } from '../api/queries'
 import { photoIds } from '../lib/form'
@@ -24,6 +23,8 @@ const SELECTED = new Set([PREVIEW_PIN_ID])
 const noop = () => undefined
 /** The card sits about 16 px above the phone's home indicator (it ends 13 px from the bottom): the preview has no tab bar or music button. */
 const CARD_BOTTOM = 29
+const LUCERNE: [number, number] = [8.3068, 47.0535]
+const PREVIEW_INSETS = { top: CONTROLS, bottom: CARD_BOTTOM + CARD_ROW_HEIGHT }
 
 /** The address of the first photo: the smallest copy wide enough for the card's 84 px thumbnail on a sharp screen. */
 function useCoverSrc(storeId: string, mediaId: string | undefined) {
@@ -49,43 +50,42 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
     return { tip: tipIn(form, language), categories: form.categoryIds.flatMap(id => names.get(id) || []) }
   }, [categories.data, form, language])
   const pins = useMemo(() => (located ? [item] : NO_PINS), [item, located])
-  const frameRef = useRef<HTMLDivElement>(null)
-  const { containerRef, map, maplibre, state, drawn, retry } = useMapInstance({
-    options: {
-      center: located ? [item.longitude, item.latitude] : [8.3068, 47.0535],
-      zoom: 16,
-      minZoom: 12,
-      maxZoom: 18.5,
-      interactive: false,
-    },
-  })
 
   return (
-    <div ref={frameRef} className="relative h-full overflow-hidden bg-[#c9d3c6]">
-      {/* The map, its pin and the card are a picture: inert, except the retry button of a failed map. The credits stay out of it, so they can be pressed. */}
-      <div className="absolute inset-0" inert={state !== 'error'}>
-        {/* MapLibre makes its container `position: relative`, so it sits in a sized box. */}
-        <div className="absolute inset-0">
-          <div ref={containerRef} className="size-full" />
-        </div>
-        <PinMap
-          filtered={false}
-          insetBottom={CARD_BOTTOM + CARD_ROW_HEIGHT}
-          insetTop={CONTROLS}
-          litIds={SELECTED}
-          map={map}
-          maplibre={maplibre}
-          photoOf={() => cover}
-          pins={pins}
-          selectedId={located ? PREVIEW_PIN_ID : undefined}
-          onSelect={noop}
-        />
-        <MapStatusLayer status={state === 'error' ? 'failed' : drawn ? undefined : 'map-loading'} onRetry={retry} />
-        <PlaceCardRow bottom={CARD_BOTTOM} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onClose={noop} onSelect={noop} />
-      </div>
-      {/* The owner looks at the phone and rarely touches the map, so the first touch anywhere on the phone folds the credits. */}
-      <MapCredits watch={frameRef} className="absolute start-3 top-14 z-10 max-w-[calc(100%-6rem)]" />
-    </div>
+    // The map, its pin and the card are a picture: inert, except the retry button of a failed map and the credits.
+    <MapView
+      inert
+      className="h-full"
+      insets={PREVIEW_INSETS}
+      interactive={false}
+      label={t('map.heading')}
+      view={{ center: located ? [item.longitude, item.latitude] : LUCERNE, zoom: 16, minZoom: 12, maxZoom: 18.5 }}
+    >
+      <DraftLayers cover={cover} extras={extras} item={item} located={located} pins={pins} />
+    </MapView>
+  )
+}
+
+/** The pin and the card of the draft, on the map around them. */
+function DraftLayers({ item, located, pins, cover, extras }: { item: PublicMapItem, located: boolean, pins: PublicMapItem[], cover: string | undefined, extras: CardExtras }) {
+  const { map, maplibre, insets } = useMap()
+
+  return (
+    <>
+      <PinMap
+        filtered={false}
+        insetBottom={insets.bottom}
+        insetTop={insets.top}
+        litIds={SELECTED}
+        map={map}
+        maplibre={maplibre}
+        photoOf={() => cover}
+        pins={pins}
+        selectedId={located ? PREVIEW_PIN_ID : undefined}
+        onSelect={noop}
+      />
+      <PlaceCardRow bottom={CARD_BOTTOM} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onClose={noop} onSelect={noop} />
+    </>
   )
 }
 

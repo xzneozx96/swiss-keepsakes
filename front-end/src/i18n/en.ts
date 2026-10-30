@@ -1,4 +1,5 @@
 import { mailEn } from '@sk/i18n/en'
+import { mapKitEn } from '@/components/map/map-messages'
 import { multiSelectEn } from '@/components/multi-select-messages'
 import { categoriesEn } from '@/features/categories/messages'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
@@ -45,6 +46,7 @@ export const en = {
   ...placesEn,
   ...multiSelectEn,
   ...mapEn,
+  ...mapKitEn,
 
   'app.name': 'Swiss Keepsakes',
   'app.prototypeBadge': 'Prototype · mock data',

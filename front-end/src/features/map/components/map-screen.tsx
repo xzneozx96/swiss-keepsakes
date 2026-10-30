@@ -5,6 +5,7 @@ import { useEffect, useId, useState } from 'react'
 
 import { BulletListIcon, FilterIcon, PickupIcon } from '@/components/icons'
 import { MapCredits } from '@/components/map/map-credits'
+import { MapStatusLayer } from '@/components/map/map-status'
 import { useMapInstance } from '@/components/map/use-map-instance'
 import { useLocale } from '@/contexts/locale-context'
 import { useMapData } from '@/features/map/api/queries'
@@ -15,7 +16,6 @@ import { MapControlsSkeleton } from './map-skeleton'
 import { PinList } from './pin-list'
 import { PinMap } from './pin-map'
 import { PlaceCardRow } from './place-card'
-import { MapStatusLayer } from './status-layer'
 
 type View = 'map' | 'list'
 
