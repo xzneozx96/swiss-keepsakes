@@ -11,19 +11,20 @@ The chosen stack, and what is in use versus only planned, is in `docs/developmen
 
 ## Commands (run in `front-end/`)
 
-- Type check: `pnpm exec tsc --noEmit`
+- Type check: `pnpm typecheck` (incremental: a run with no change is a few seconds)
 - Lint, checking only: `pnpm lint` (0 errors expected; the 46 `react-refresh` warnings are known)
 - Build: `pnpm build` (about 22 s, because the React Compiler runs)
-- Unit tests: `pnpm test` (Vitest, about 2 s). Type-check the tests: `pnpm typecheck:tests`
+- Unit tests: `pnpm test` (the whole suite, a few minutes), `pnpm test <files>` (chosen files), `pnpm test:related <source files>` (the tests that import them). Type-check the tests: `pnpm typecheck:tests`
 - Rendering, routing or state change: compare builds with `pnpm verify:routes` and `pnpm verify:renders` (`front-end/scripts/verify/README.md`)
 - End-to-end: `pnpm test:e2e` runs the demo specs on their own dev server (port 5391). With the Neon variables set it also runs the real-API specs (`*.api.spec.ts`, SPA on port 5392) against the Neon development branch (setup in `docs/development-rules/shared/testing.md`). Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Chrome
 - Faster real-API e2e while iterating: `pnpm e2e:servers` (keeps the servers and one test database up), then `E2E_REUSE=1 pnpm test:e2e <spec> --project api-chromium-en --workers=2` (no Neon variables needed in that shell); a guard refuses servers of another worktree; specs must use unique data (`docs/development-rules/shared/testing.md`)
+- Heavy jobs: run tests, type checks and e2e only through those scripts, never `pnpm exec vitest`, `npx vitest`, `tsc` or `playwright test` directly. The scripts go through `scripts/locked.sh`, which lets two such jobs run at once on the machine (e2e: one), at low priority, and makes the next wait (up to 10 minutes). Other sessions share the CPU, so an unlocked run slows everyone. Watch mode (`vitest` with no `run`) and `pnpm e2e:servers` are not locked: do not start them.
 - Never run `pnpm lint:fix`. It rewrites every file, and other sessions are editing them. Fix your own files with `pnpm exec eslint --fix <files>`.
 - Tests live in `front-end/tests/`. Setup and examples are in `docs/development-rules/shared/testing.md`.
 
 ## Definition of done
 
-1. `pnpm exec tsc --noEmit` and `pnpm lint` report no errors, and `pnpm test` and `pnpm typecheck:tests` pass.
+1. `pnpm typecheck` and `pnpm lint` report no errors, and `pnpm test` and `pnpm typecheck:tests` pass.
 2. You ran the changed behavior (browser or script), not only the compiler. New logic has a test.
 3. Your final message says what you did not verify.
 

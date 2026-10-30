@@ -15,9 +15,10 @@ Set up on 2026-10-19 to match the owner's agentic-rag project: Vitest 4.1 with j
 | End-to-end | `front-end/tests/e2e/*.spec.ts` and `front-end/playwright.config.ts` |
 
 Commands, run in `front-end/`:
-- `pnpm test` runs every unit test (about 2 s). `pnpm exec vitest tests/format.test.ts` runs one file.
+- `pnpm test` runs every unit test (132 files, about 4 to 5 minutes when other sessions are running). `pnpm test tests/format.test.ts` runs one file, and `pnpm test:related src/features/places/lib/form.ts` runs the tests that import a source file. Use these scripts, never `pnpm exec vitest` or `npx vitest`: they go through `scripts/locked.sh`, which lets two heavy jobs run at once on the machine and makes the next one wait (see Heavy jobs below).
+- `pnpm typecheck` type-checks the app. It is incremental (`node_modules/.tmp/typecheck.tsbuildinfo`), so a run with nothing changed takes seconds. Delete that file if its answer ever looks stale.
 - `pnpm typecheck:tests` type-checks the tests. CI runs it.
-- `pnpm test:e2e` runs Playwright. It starts its own dev server on port 5391 and stops it afterwards. Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Google Chrome. Without it, run `pnpm exec playwright install chromium` first.
+- `pnpm test:e2e` runs Playwright, one run at a time on the machine (its own lock). It starts its own dev server on port 5391 and stops it afterwards. Set `PLAYWRIGHT_CHANNEL=chrome` to use the installed Google Chrome. Without it, run `pnpm exec playwright install chromium` first.
 
 Examples to copy: `front-end/tests/format.test.ts` replaces `Intl.NumberFormat` to reproduce Chrome's straight apostrophe, and `front-end/tests/storage.test.ts` makes `setItem` throw a quota error. `front-end/tests/e2e/smoke.spec.ts` checks that the app mounts, with a stable selector and no page errors. Use `/#/` URLs, because routing is hash based.
 
@@ -25,6 +26,15 @@ Gaps:
 - `front-end/eslint.config.mjs` ignores `tests/*`, so tests are not linted. The owner's standard (`eslint .`) would lint them.
 - Nothing type-checks `front-end/tests/e2e/*.spec.ts` or `front-end/playwright.config.ts`. `tsconfig.test.json` excludes the e2e folder and the config file sits outside both tsconfigs. agentic-rag has the same gap.
 - There are no component tests yet. The first ones are unwritten, and the stubs in `setup.ts` are the generic ones only.
+
+## Heavy jobs: one limit for every session
+
+Several agent sessions share one machine, and an unlimited run of tests or type checks from each one has pushed the load to 3 times the core count. So:
+
+- `scripts/locked.sh` runs a job under `flock` with two slots (`--name e2e --slots 1` for Playwright), at `nice 10`. A third job waits, and after 10 minutes (30 for e2e) it runs anyway, so a stuck job never blocks everyone. It does nothing when `CI` is set or when a locked job started it.
+- The package scripts `test`, `test:related`, `typecheck`, `typecheck:tests` and `test:e2e` (and the root `test` and `typecheck`) use it. Do not call `vitest`, `tsc` or `playwright test` yourself. The project settings (`.claude/settings.json`, `.opencode/opencode.json`) refuse those commands.
+- Vitest runs with `maxWorkers: 3` (`front-end/vite.config.ts` and the root `vitest.config.mjs`), so one run takes three cores at most.
+- Not locked, on purpose: `pnpm build` (Vercel runs it), watch mode, `pnpm e2e:servers` (it runs for hours) and the dev servers.
 
 ## Rules
 
