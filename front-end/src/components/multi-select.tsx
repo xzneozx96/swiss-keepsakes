@@ -28,8 +28,10 @@ function inTreeOrder(options: MultiSelectOption[]) {
  * HeroUI Autocomplete: Enter, Space or the arrow down opens the list, the arrows move, Enter or Space ticks, Escape
  * closes. Label, input, then the help line, like every field.
  */
-export function MultiSelect({ label, options, value, onChange, description, placeholder, isDisabled, error }: {
+export function MultiSelect({ label, hideLabel, options, value, onChange, description, placeholder, isDisabled, error }: {
   label: string
+  /** The label is only for screen readers, because a title next to the field already says it. */
+  hideLabel?: boolean
   options: MultiSelectOption[]
   /** The ids of the chosen options, in the order they were chosen. */
   value: string[]
@@ -59,7 +61,7 @@ export function MultiSelect({ label, options, value, onChange, description, plac
       value={value}
       onChange={keys => onChange((keys as Key[]).map(String))}
     >
-      <Label>{label}</Label>
+      <Label className={hideLabel ? 'sr-only' : undefined}>{label}</Label>
       <Autocomplete.Trigger>
         <Autocomplete.Value>
           {({ defaultChildren }) => chosen.length === 0

@@ -300,16 +300,20 @@ describe('[E4.2][AC68] N17 one pattern for every field, and a card for each bloc
     expect(headings().slice(0, 2)).toEqual(['Opening hours', 'Dates'])
   })
 
-  it('[E4.2][AC68] the categories step has no heading that repeats a field label', async () => {
+  it('[E4.2][AC68] the categories step has an icon card for each group, and the field label is hidden so no text shows twice', async () => {
     await open('new')
     await heading('Place on the map')
     await nextTo('Categories and tags')
 
     expect(blocks()).toHaveLength(4)
-    expect(headings()).toEqual(['Shown on the home'])
-    expect(screen.getAllByText('Recommended for')).toHaveLength(1)
-    expect(screen.getAllByText('Interests')).toHaveLength(1)
-    expect(screen.getAllByText('Categories')).toHaveLength(1)
+    expect(headings()).toEqual(['Categories', 'Recommended for', 'Interests', 'Shown on the home'])
+    for (const name of ['Categories', 'Recommended for', 'Interests']) {
+      const label = screen.getAllByText(name).find(element => element.tagName === 'LABEL' || element.tagName === 'SPAN')!
+
+      expect(label).toHaveClass('sr-only')
+      expect(screen.getAllByText(name)).toHaveLength(2)
+    }
+    expect(screen.getByText(/Shown first to these visitors/)).toBeInTheDocument()
   })
 
   it('[E4.2][AC68] the story step puts each field in its own card without a repeating heading', async () => {
@@ -592,7 +596,7 @@ describe('[E4.2][AC68] N17 categories and interests as multi-selects', () => {
   it('[E4.2][AC68] reads in German, with the list of categories in the dashboard language', async () => {
     await toTags('de')
 
-    expect(screen.getByText('Kategorien')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Kategorien' })).toBeInTheDocument()
     await waitFor(() => expect(field('Kategorien').getAllByRole('row')).toHaveLength(2))
     expect(field('Kategorien').getAllByRole('row')[0]).toHaveTextContent('Altstadt')
     await userEvent.click(within(screen.getAllByTestId('place-block')[0]!).getByRole('button', { name: /Kategorien/ }))

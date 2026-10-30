@@ -70,6 +70,7 @@ export { Location as PickupIcon } from 'reicon-react'
 export { Wallet as PayLaterIcon } from 'reicon-react'
 export { Calendar as PickupDateIcon } from 'reicon-react'
 export { Tag as OptionIcon } from 'reicon-react'
+export { Tag as CategoryIcon } from 'reicon-react'
 
 // Seller contact card
 export { Call as CallIcon } from 'reicon-react'
@@ -112,6 +113,7 @@ export { ChevronDown as ChevronDownIcon } from 'reicon-react'
 
 // Trip profile (C07)
 export { Profile2user as TravelGroupIcon } from 'reicon-react'
+export { Profile2user as AudienceIcon } from 'reicon-react'
 export { User as TravelSoloIcon } from 'reicon-react'
 
 // Overview analytics deltas (M02, step 1.9s)

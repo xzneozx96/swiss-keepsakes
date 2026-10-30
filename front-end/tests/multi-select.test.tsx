@@ -13,7 +13,7 @@ const options = [
   { id: 'food', label: 'Food' },
 ]
 
-function Harness({ start = [], onValue, ...rest }: { start?: string[], onValue?: (value: string[]) => void, description?: string, error?: string, items?: typeof options }) {
+function Harness({ start = [], onValue, ...rest }: { hideLabel?: boolean, start?: string[], onValue?: (value: string[]) => void, description?: string, error?: string, items?: typeof options }) {
   const [value, setValue] = useState(start)
 
   return (
@@ -21,6 +21,7 @@ function Harness({ start = [], onValue, ...rest }: { start?: string[], onValue?:
       <MultiSelect
         description={rest.description}
         error={rest.error}
+        hideLabel={rest.hideLabel}
         label="Categories"
         options={rest.items ?? options}
         value={value}
@@ -64,6 +65,13 @@ describe('multiSelect', () => {
 
     expect(search).toHaveClass('search-field--primary')
     expect(search).not.toHaveClass('search-field--secondary')
+  })
+
+  it('can keep the label for screen readers only, when a title beside the field already says it', () => {
+    render(<Harness hideLabel />)
+
+    expect(screen.getByText('Categories')).toHaveClass('sr-only')
+    expect(field()).toBeInTheDocument()
   })
 
   it('shows the label, the placeholder and the help line, with the list closed', () => {

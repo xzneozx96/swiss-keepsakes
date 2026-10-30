@@ -5,7 +5,7 @@ import { Description, Label, ListBox, Radio, RadioGroup, Select, Switch } from '
 import { foodKinds, interestCodes, serviceTypes } from '@sk/domain/content'
 
 import { choiceCard } from '@/components/choice-card'
-import { SparkleIcon } from '@/components/icons'
+import { AudienceIcon, CategoryIcon, FavouriteIcon, SparkleIcon } from '@/components/icons'
 import { MultiSelect } from '@/components/multi-select'
 import { useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
@@ -46,9 +46,9 @@ function MapCategories({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch
   const options = (categories.data?.items ?? []).map(item => ({ id: item.id, label: name(item), parentId: item.parentId }))
 
   return (
-    <Block>
+    <Block hint={`${t('places.categories.help')} ${t('places.categories.manage')}`} icon={CategoryIcon} title={t('places.categories.label')}>
       <MultiSelect
-        description={`${t('places.categories.help')} ${t('places.categories.manage')}`}
+        hideLabel
         label={t('places.categories.label')}
         options={options}
         value={form.categoryIds}
@@ -65,9 +65,9 @@ export function StepTags({ form, patch, storeId }: StepProps) {
   return (
     <div className="flex flex-col gap-6">
       <MapCategories form={form} patch={patch} storeId={storeId} />
-      <Block>
+      <Block hint={t('places.stay.help')} icon={AudienceIcon} title={t('places.stay.label')}>
         <RadioGroup value={form.stayTag} onChange={stayTag => patch({ stayTag: stayTag as typeof form.stayTag })}>
-          <Label>{t('places.stay.label')}</Label>
+          <Label className="sr-only">{t('places.stay.label')}</Label>
           <div className="grid gap-2 sm:grid-cols-3">
             {STAYS.map(id => (
               <Radio key={id} className={choiceCard} value={id}>
@@ -83,12 +83,11 @@ export function StepTags({ form, patch, storeId }: StepProps) {
               </Radio>
             ))}
           </div>
-          <Description>{t('places.stay.help')}</Description>
         </RadioGroup>
       </Block>
-      <Block>
+      <Block hint={t('places.interests.help')} icon={FavouriteIcon} title={t('places.interests.label')}>
         <MultiSelect
-          description={t('places.interests.help')}
+          hideLabel
           label={t('places.interests.label')}
           options={interestCodes.map(code => ({ id: code, label: t(`places.interest.${code}`) }))}
           value={form.interests}
