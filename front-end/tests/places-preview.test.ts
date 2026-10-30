@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { emptyDate, emptyForm } from '@/features/places/lib/form'
-import { previewItem, titleIn } from '@/features/places/lib/preview'
+import { previewItem, tipIn, titleIn } from '@/features/places/lib/preview'
 
 const now = new Date('2026-10-30T10:00:00Z')
 const base = { storyLanguages: [] as const, untitled: 'Untitled pin', now }
@@ -13,6 +13,14 @@ describe('[E4.2][AC68] the draft as the guest map\'s pin', () => {
     expect(titleIn(form, 'en')).toEqual({ title: 'Chapel Bridge', language: 'en' })
     expect(titleIn(form, 'de')).toEqual({ title: 'Chapel Bridge', language: 'en' })
     expect(previewItem(emptyForm(), 'en', base).item.title).toBe('Untitled pin')
+  })
+
+  it('takes the tips of the chosen language, else the other one with its language, else none', () => {
+    const form = { ...emptyForm(), tipEn: ' Go early ', tipDe: '' }
+
+    expect(tipIn(form, 'en')).toEqual({ text: 'Go early', language: 'en' })
+    expect(tipIn(form, 'de')).toEqual({ text: 'Go early', language: 'en' })
+    expect(tipIn(emptyForm(), 'en')).toBeUndefined()
   })
 
   it('is located only with both coordinates', () => {

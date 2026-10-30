@@ -23,6 +23,17 @@ export function titleIn(form: Pick<PlaceForm, 'titleEn' | 'titleDe'>, language: 
   return { title: other.trim(), language: language === 'en' ? 'de' : 'en' }
 }
 
+/** The tips from a local the guest card would show: the chosen language's, else the other one's; undefined when there are none. */
+export function tipIn(form: Pick<PlaceForm, 'tipEn' | 'tipDe'>, language: Language): { text: string, language: Language } | undefined {
+  const own = (language === 'en' ? form.tipEn : form.tipDe).trim()
+  const other = (language === 'en' ? form.tipDe : form.tipEn).trim()
+
+  if (own !== '')
+    return { text: own, language }
+
+  return other === '' ? undefined : { text: other, language: language === 'en' ? 'de' : 'en' }
+}
+
 /** The next date a guest would see: entries that are complete, as `nextDate` of the server reads them. */
 function nextDateOf(form: Pick<PlaceForm, 'dates'>, now: Date): PublicMapItem['nextDate'] {
   const dates = form.dates.flatMap((date) => {

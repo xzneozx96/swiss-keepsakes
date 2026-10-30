@@ -1,6 +1,7 @@
 import type { PublicMapItem } from '@sk/api-contract'
+import type { Language } from '@sk/domain/shared'
 
-import { Button, buttonVariants } from '@heroui/react'
+import { Button, buttonVariants, Chip } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 
@@ -12,15 +13,24 @@ import { PinThumb } from './pin-marker'
 const CARD_WIDTH = 311
 const GAP = 8
 
+/** The words a card shows besides the pin's own fields, when the caller has them (the place editor's preview; the guest map feeds them with E4.7). */
+export interface CardExtras {
+  /** The tips from a local, in the language they are written in. */
+  tip?: { text: string, language: Language }
+  /** The names of the pin's categories. */
+  categories?: string[]
+}
+
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
  * The card of one pin (N03, the part E4.6 builds): a thumbnail slot that is always there (the
  * place icon when there is no photo), so every card in the row has one height; the title; the
  * next date when the pin has dates; and the main story when it has one. No price. The details
- * sheet, hours, address and directions are E4.7.
+ * sheet, hours, address and directions are E4.7. A card given `extras` also shows the tips (two lines)
+ * and the category chips (one row).
  */
-function PlaceCard({ pin, active, photoSrc }: { pin: PublicMapItem, active: boolean, photoSrc?: string }) {
+function PlaceCard({ pin, active, photoSrc, extras }: { pin: PublicMapItem, active: boolean, photoSrc?: string, extras?: CardExtras }) {
   const { t, language, intlLocale } = useLocale()
   const date = pin.nextDate
     ? nextDateLine(pin.nextDate, zurichToday(new Date()), intlLocale, {
@@ -42,8 +52,20 @@ function PlaceCard({ pin, active, photoSrc }: { pin: PublicMapItem, active: bool
             {pin.title}
           </h2>
           {date && <p className="truncate text-label text-muted tabular-nums">{date}</p>}
+          {extras?.tip && <p className="line-clamp-2 text-sm leading-5" lang={extras.tip.language}>{extras.tip.text}</p>}
         </div>
       </div>
+      {extras?.categories && extras.categories.length > 0 && (
+        <ul className="flex max-h-6 flex-wrap gap-1.5 overflow-hidden">
+          {extras.categories.map(name => (
+            <li key={name}>
+              <Chip size="sm" variant="secondary">
+                <Chip.Label>{name}</Chip.Label>
+              </Chip>
+            </li>
+          ))}
+        </ul>
+      )}
       {pin.hasMainStory && pin.mainStorySlug && (
         <div className="mt-auto flex" inert={!active}>
           <Link
@@ -68,6 +90,7 @@ export function PlaceCardRow({
   pins,
   selectedId,
   photoOf,
+  extrasOf,
   onSelect,
   onClose,
 }: {
@@ -75,6 +98,8 @@ export function PlaceCardRow({
   selectedId: string
   /** The picture of a pin, when the caller knows it (the place editor's preview); without it a card shows the place icon. */
   photoOf?: (pin: PublicMapItem) => string | undefined
+  /** The tips and category names of a pin, when the caller knows them; without them a card shows neither. */
+  extrasOf?: (pin: PublicMapItem) => CardExtras | undefined
   onSelect: (id: string) => void
   onClose: () => void
 }) {
@@ -120,7 +145,7 @@ export function PlaceCardRow({
         className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-[calc(50%-155.5px)] pb-3 [scrollbar-width:none]"
         onScrollEnd={onScrollEnd}
       >
-        {pins.map(pin => <PlaceCard key={pin.id} active={pin.id === selectedId} photoSrc={photoOf?.(pin)} pin={pin} />)}
+        {pins.map(pin => <PlaceCard key={pin.id} active={pin.id === selectedId} extras={extrasOf?.(pin)} photoSrc={photoOf?.(pin)} pin={pin} />)}
       </div>
     </section>
   )
