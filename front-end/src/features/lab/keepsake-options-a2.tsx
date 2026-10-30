@@ -9,10 +9,10 @@ import type { OptionsDraft } from './keepsake-options-state'
 import { Button, Chip, Input, Label, TextField } from '@heroui/react'
 import { useState } from 'react'
 
+import { Block } from '@/components/form-block'
 import { CheckIcon, EditIcon, OptionIcon, PlusIcon, TrashIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { Swatch } from '@/features/keepsakes/components/option-parts'
-import { Block } from '@/features/places/components/fields'
 import { AssignVariants, ProblemLines, Reorder, SwatchPicker } from './keepsake-options-parts'
 import { labelOf, plural, variantsUsing } from './keepsake-options-rules'
 

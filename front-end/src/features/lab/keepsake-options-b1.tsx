@@ -7,10 +7,10 @@ import type { VariantDraft } from './keepsake-options-b-state'
 import { Button, Label, ListBox, Select } from '@heroui/react'
 import { useState } from 'react'
 
+import { Block } from '@/components/form-block'
 import { PlusIcon, ProductsIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { Swatch } from '@/features/keepsakes/components/option-parts'
-import { Block } from '@/features/places/components/fields'
 import { CodeField, CombinationStatus, OnSaleRow, PriceField, StockNote, VariantList } from './keepsake-options-b-parts'
 import { labelOf, variantAt } from './keepsake-options-rules'
 

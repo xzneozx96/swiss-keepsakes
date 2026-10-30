@@ -7,9 +7,9 @@ import type { OptionDraft } from './keepsake-options-data'
 
 import { Button, Switch } from '@heroui/react'
 
+import { Block } from '@/components/form-block'
 import { CheckIcon, PlusIcon, ProductsIcon } from '@/components/icons'
 import { Swatch } from '@/features/keepsakes/components/option-parts'
-import { Block } from '@/features/places/components/fields'
 import { CodeField, CombinationStatus, PriceField, StockNote } from './keepsake-options-b-parts'
 import { ChoiceChips } from './keepsake-options-parts'
 import { combinationName, labelOf, variantAt } from './keepsake-options-rules'

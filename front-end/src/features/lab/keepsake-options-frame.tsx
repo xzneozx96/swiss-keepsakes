@@ -11,7 +11,7 @@ import { useVariantDraft } from './keepsake-options-b-state'
 import { designs, keepsakes } from './keepsake-options-data'
 import { useOptionsDraft } from './keepsake-options-state'
 
-const STEPS = ['Name and text', 'Photos', 'Options', 'Variants', 'Stock', 'Review and publish']
+const STEPS = ['Details', 'Options', 'Variants', 'Review and publish']
 
 function StepRail({ current }: { current: string }) {
   const at = STEPS.indexOf(current)

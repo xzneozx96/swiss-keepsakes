@@ -8,9 +8,9 @@ import type { VariantDraft } from './keepsake-options-b-state'
 import { Button, ListBox, Select, Switch } from '@heroui/react'
 import { useRef } from 'react'
 
+import { Block } from '@/components/form-block'
 import { PlusIcon, ProductsIcon } from '@/components/icons'
 import { Swatch } from '@/features/keepsakes/components/option-parts'
-import { Block } from '@/features/places/components/fields'
 import { CodeField, CombinationStatus, PriceField, VariantList } from './keepsake-options-b-parts'
 import { labelOf } from './keepsake-options-rules'
 

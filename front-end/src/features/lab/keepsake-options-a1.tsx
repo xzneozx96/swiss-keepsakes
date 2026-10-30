@@ -6,9 +6,9 @@ import type { LanguageStatus } from '@/components/language-version-switch'
 import { Button, Description, Input, Label, TextField } from '@heroui/react'
 import { useState } from 'react'
 
+import { Block } from '@/components/form-block'
 import { CheckIcon, OptionIcon, PlusIcon, TrashIcon } from '@/components/icons'
 import { LanguageVersionSwitch } from '@/components/language-version-switch'
-import { Block } from '@/features/places/components/fields'
 import { AssignVariants, DraftBar, ProblemLines, Reorder, SwatchPicker } from './keepsake-options-parts'
 import { labelOf, plural, splitValues } from './keepsake-options-rules'
 
