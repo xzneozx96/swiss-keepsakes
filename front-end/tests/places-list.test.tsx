@@ -316,15 +316,16 @@ describe('[E4.2][AC68] N16 the list', () => {
     const popover = await screen.findByRole('dialog', { name: 'Categories' })
     const names = () => within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent)
 
-    // Soup has the pin; Food has none itself, so it keeps its place behind its child; the others are muted last.
-    expect(names()[0]).toBe('Food0')
+    // Soup has the pin; Food counts what ticking it shows (its children too); the others are muted last.
+    expect(names()[0]).toBe('Food1')
     expect(names()[1]).toBe('Soup1')
     expect(within(popover).getByRole('checkbox', { name: /^Soup/ }).closest('.checkbox')).toHaveClass('ms-6')
     await userEvent.type(within(popover).getByRole('searchbox', { name: 'Search options' }), 'soup')
-    expect(names()).toEqual(['Food0', 'Soup1'])
+    expect(names()).toEqual(['Food1', 'Soup1'])
     await userEvent.click(within(popover).getByRole('checkbox', { name: /^Soup/ }))
     await userEvent.keyboard('{Escape}')
-    expect(await screen.findByRole('button', { name: 'Remove filter Categories: Soup' })).toBeInTheDocument()
+    // Soup is Food's only child, so ticking it ticks Food, and the chip names the parent alone.
+    expect(await screen.findByRole('button', { name: 'Remove filter Categories: Food' })).toBeInTheDocument()
   })
 
   it('[E4.2][AC68] Add place and Add event open the editor on a new pin, the event on its dates', async () => {

@@ -48,7 +48,7 @@ function Header({ disabled }: { disabled: boolean }) {
 /** Each count is what ticking the option shows: the search and the other groups apply, this group's own ticks do not. */
 function usePlaceFilterGroups(items: PinListItem[], filters: ListFilters, categories: { id: string, label: string, parentId?: string }[], onChange: (patch: Partial<ListFilters>) => void) {
   const { t } = useLocale()
-  const count = (group: keyof Omit<ListFilters, 'query'>, id: string) => filterItems(items, { ...filters, [group]: [id] }).length
+  const count = (group: keyof Omit<ListFilters, 'query'>, ...ids: string[]) => filterItems(items, { ...filters, [group]: ids }).length
 
   return [
     filterGroup({
@@ -61,7 +61,8 @@ function usePlaceFilterGroups(items: PinListItem[], filters: ListFilters, catego
     filterGroup({
       id: 'category',
       label: t('places.filter.category'),
-      options: [...categories, { id: NO_CATEGORY, label: t('places.filter.noCategory') }].map(option => ({ ...option, count: count('category', option.id) })),
+      // Ticking a parent ticks its children too (the filter bar keeps them in one list), so its count is the union.
+      options: [...categories, { id: NO_CATEGORY, label: t('places.filter.noCategory') }].map(option => ({ ...option, count: count('category', option.id, ...categories.filter(child => child.parentId === option.id).map(child => child.id)) })),
       selected: filters.category,
       onChange: category => onChange({ category }),
     }),

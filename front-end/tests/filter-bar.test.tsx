@@ -1,7 +1,7 @@
 import type { FilterGroup } from '@/components/filter-bar'
 import type { Language } from '@/contexts/locale-context'
 
-import { render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -261,6 +261,173 @@ describe('filterBar: the options of a group', () => {
     await userEvent.type(await screen.findByRole('searchbox', { name: 'Search options' }), 'soup')
 
     expect(optionNames()).toEqual(['Food2', 'Soup2'])
+  })
+})
+
+const FOOD = [
+  { id: 'food', label: 'Food and drink', count: 9 },
+  { id: 'bakery', label: 'Bakeries', count: 3, parentId: 'food' },
+  { id: 'fondue', label: 'Fondue and raclette', count: 4, parentId: 'food' },
+  { id: 'choc', label: 'Chocolate', count: 2, parentId: 'food' },
+  { id: 'views', label: 'Views', count: 5 },
+]
+
+async function openCategories() {
+  await userEvent.click(screen.getByRole('button', { name: /^Categories/ }))
+  await screen.findByRole('dialog', { name: 'Categories' })
+}
+
+const box = (name: RegExp) => screen.getByRole('checkbox', { name })
+
+describe('filterBar: a parent and its children tick like select-all', () => {
+  it('ticks the parent and every child when the parent is ticked, and clears them all when it is cleared', async () => {
+    const { latest } = setup({ categories: FOOD })
+
+    await openCategories()
+    await userEvent.click(box(/Food and drink/))
+    expect(latest.category).toEqual(['food', 'bakery', 'fondue', 'choc'])
+    expect(box(/Bakeries/)).toBeChecked()
+    expect(box(/Food and drink/)).toBeChecked()
+    expect(box(/Views/)).not.toBeChecked()
+    await userEvent.click(box(/Food and drink/))
+    expect(latest.category).toEqual([])
+    expect(box(/Fondue/)).not.toBeChecked()
+  })
+
+  it('shows the parent as partly ticked, announced as mixed, while only some children are ticked', async () => {
+    const { latest } = setup({ categories: FOOD })
+
+    await openCategories()
+    await userEvent.click(box(/Bakeries/))
+
+    expect(latest.category).toEqual(['bakery'])
+    expect(box(/Food and drink/)).toBePartiallyChecked()
+    // React Aria sets the input's native `indeterminate` property, which assistive tech announces as mixed.
+    expect(box(/Food and drink/)).toHaveProperty('indeterminate', true)
+    expect(box(/Bakeries/)).toBeChecked()
+    expect(box(/Chocolate/)).not.toBeChecked()
+  })
+
+  it('ticks the parent, and adds its id to the list, when the last child is ticked', async () => {
+    const { latest } = setup({ categories: FOOD, categorySelected: ['bakery', 'fondue'] })
+
+    await openCategories()
+    await userEvent.click(box(/Chocolate/))
+
+    expect(latest.category).toEqual(['food', 'bakery', 'fondue', 'choc'])
+    expect(box(/Food and drink/)).toBeChecked()
+    expect(box(/Food and drink/)).not.toBePartiallyChecked()
+  })
+
+  it('unticks the parent, and takes its id out of the list, when one child is cleared', async () => {
+    const { latest } = setup({ categories: FOOD, categorySelected: ['food', 'bakery', 'fondue', 'choc'] })
+
+    await openCategories()
+    await userEvent.click(box(/Fondue/))
+
+    expect(latest.category).toEqual(['bakery', 'choc'])
+    expect(box(/Food and drink/)).toBePartiallyChecked()
+    await userEvent.click(box(/Bakeries/))
+    await userEvent.click(box(/Chocolate/))
+    expect(latest.category).toEqual([])
+    expect(box(/Food and drink/)).not.toBePartiallyChecked()
+    expect(box(/Food and drink/)).not.toBeChecked()
+  })
+
+  it('completes a half ticked parent when the parent is pressed', async () => {
+    const { latest } = setup({ categories: FOOD, categorySelected: ['choc'] })
+
+    await openCategories()
+    await userEvent.click(box(/Food and drink/))
+
+    expect(latest.category).toEqual(['food', 'bakery', 'fondue', 'choc'])
+  })
+
+  it('keeps other options ticked, and ticks with the keyboard', async () => {
+    const { latest } = setup({ categories: FOOD, categorySelected: ['views'] })
+
+    await openCategories()
+    box(/Food and drink/).focus()
+    await userEvent.keyboard(' ')
+
+    expect(latest.category).toEqual(['food', 'bakery', 'fondue', 'choc', 'views'])
+  })
+
+  it('counts a ticked parent as one choice on the button, and names it alone in the chip', async () => {
+    setup({ categories: FOOD, categorySelected: ['food', 'bakery', 'fondue', 'choc', 'views'] })
+
+    expect(screen.getByRole('button', { name: 'Categories, 2 selected' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove filter Categories: Food and drink, Views' })).toBeInTheDocument()
+  })
+
+  it('names the ticked children in the chip while their parent is only partly ticked', () => {
+    setup({ categories: FOOD, categorySelected: ['bakery', 'choc'] })
+
+    expect(screen.getByRole('button', { name: 'Categories, 2 selected' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove filter Categories: Bakeries, Chocolate' })).toBeInTheDocument()
+  })
+
+  it('clears the parent and its children with the chip', async () => {
+    const { latest } = setup({ categories: FOOD, categorySelected: ['food', 'bakery', 'fondue', 'choc'] })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove filter Categories: Food and drink' }))
+
+    expect(latest.category).toEqual([])
+  })
+
+  it('keeps the parent in view, with its own state, when the search matches only a child', async () => {
+    const { latest } = setup({ categories: [...many.slice(0, 8), ...FOOD] })
+
+    await openCategories()
+    await userEvent.type(await screen.findByRole('searchbox', { name: 'Search options' }), 'choc')
+
+    expect(optionNames()).toEqual(['Food and drink9', 'Chocolate2'])
+    await userEvent.click(box(/Chocolate/))
+    expect(latest.category).toEqual(['choc'])
+    expect(box(/Food and drink/)).toBePartiallyChecked()
+    // The parent covers the children the search hides.
+    await userEvent.click(box(/Food and drink/))
+    expect(latest.category).toEqual(['food', 'bakery', 'fondue', 'choc'])
+  })
+
+  it('reads a list that holds only the parent as the parent and all its children ticked', async () => {
+    const { latest } = setup({ categories: FOOD, categorySelected: ['food'] })
+
+    await openCategories()
+
+    expect(box(/Food and drink/)).toBeChecked()
+    expect(box(/Chocolate/)).toBeChecked()
+    await userEvent.click(box(/Chocolate/))
+    expect(latest.category).toEqual(['bakery', 'fondue'])
+  })
+
+  it('round-trips through a flat list in the URL, in option order', async () => {
+    const asUrl = (ids: string[]) => ids.join(',')
+    const fromUrl = (text: string) => (text ? text.split(',') : [])
+    const first = setup({ categories: FOOD })
+
+    await openCategories()
+    await userEvent.click(box(/Fondue/))
+    await userEvent.click(box(/Chocolate/))
+    const url = asUrl(first.latest.category)
+
+    expect(url).toBe('fondue,choc')
+    cleanup()
+    setup({ categories: FOOD, categorySelected: fromUrl(url) })
+    await openCategories()
+    expect(box(/Food and drink/)).toBePartiallyChecked()
+    expect(box(/Fondue/)).toBeChecked()
+    expect(box(/Chocolate/)).toBeChecked()
+    expect(box(/Bakeries/)).not.toBeChecked()
+    expect(screen.getByRole('button', { name: 'Categories, 2 selected', hidden: true })).toBeInTheDocument()
+  })
+
+  it('does not draw a half ticked state for a flat group', async () => {
+    setup({ categories: many, categorySelected: ['c1'] })
+
+    await openCategories()
+
+    expect(screen.queryAllByRole('checkbox').filter(item => item.getAttribute('aria-checked') === 'mixed')).toHaveLength(0)
   })
 })
 

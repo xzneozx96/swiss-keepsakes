@@ -22,7 +22,13 @@ export interface FilterOption {
    * count never promises more than the list will show. `0` sorts the option last, muted.
    */
   count?: number
-  /** Another option of the same group: this one is indented under it. One level only. */
+  /**
+   * Another option of the same group: this one is indented under it. One level only. A parent with
+   * children ticks like a table's select-all: ticking it ticks every child, ticking some children
+   * shows it half ticked, ticking all of them ticks it. `selected` stays a flat list that holds the
+   * parent's id together with all of its children's ids, so an item tagged with the parent itself
+   * or with any child matches.
+   */
   parentId?: string
 }
 
@@ -48,17 +54,105 @@ export function filterGroup<Id extends string>(group: {
   return group as unknown as FilterGroup
 }
 
-/** The ticked options' labels, or the "all" wording when nothing is ticked. */
+/**
+ * The options as a tree of one level: `childrenOf` lists an option's children, in option order.
+ * An option under an option that is itself a child counts as a top-level one.
+ */
+function optionTree(options: FilterOption[]) {
+  const byId = new Map(options.map(o => [o.id, o]))
+  const parentOf = (option: FilterOption) => (option.parentId ? byId.get(option.parentId) : undefined)
+  const isChild = (option: FilterOption) => {
+    const parent = parentOf(option)
+
+    return !!parent && !parentOf(parent)
+  }
+
+  return {
+    isChild,
+    parentOf: (option: FilterOption) => (isChild(option) ? parentOf(option) : undefined),
+    childrenOf: (id: string) => options.filter(o => o.parentId === id && isChild(o)),
+  }
+}
+
+/**
+ * How a row is ticked: a parent with children is `all` when every child is ticked and `some`
+ * between. A parent in the list covers its children, so a list that holds only its id counts them ticked.
+ */
+function tickState(options: FilterOption[], selected: string[]) {
+  const { childrenOf } = optionTree(options)
+  const ticked = new Set(selected)
+
+  for (const option of options) {
+    if (ticked.has(option.id))
+      childrenOf(option.id).forEach(child => ticked.add(child.id))
+  }
+
+  return (option: FilterOption): 'none' | 'some' | 'all' => {
+    const children = childrenOf(option.id)
+
+    if (!children.length)
+      return ticked.has(option.id) ? 'all' : 'none'
+    const count = children.filter(child => ticked.has(child.id)).length
+
+    if (count === 0)
+      return 'none'
+
+    return count === children.length ? 'all' : 'some'
+  }
+}
+
+/**
+ * The list after one option is ticked or cleared: a parent takes all its children with it, and a
+ * child that completes or breaks its siblings' set ticks or clears the parent. The ids come back
+ * in the options' order.
+ */
+function toggleOption(options: FilterOption[], selected: string[], id: string, on: boolean) {
+  const { parentOf, childrenOf } = optionTree(options)
+  const option = options.find(o => o.id === id)
+  const state = tickState(options, selected)
+  const next = new Set(options.filter(o => state(o) === 'all').map(o => o.id))
+  const set = (ids: string[]) => ids.forEach(other => (on ? next.add(other) : next.delete(other)))
+
+  if (!option)
+    return selected
+  set([id, ...childrenOf(id).map(c => c.id)])
+  const parent = parentOf(option)
+
+  if (parent) {
+    const siblings = childrenOf(parent.id)
+
+    if (siblings.every(sibling => next.has(sibling.id)))
+      next.add(parent.id)
+    else
+      next.delete(parent.id)
+  }
+
+  return options.filter(o => next.has(o.id)).map(o => o.id)
+}
+
+/**
+ * The options that stand for the choice: a ticked parent speaks for its children, so the
+ * children of a fully ticked parent are left out. This is what a button counts and a chip names.
+ */
+function chosenOptions(options: FilterOption[], selected: string[]) {
+  const { parentOf } = optionTree(options)
+  const ticked = new Set(selected)
+
+  return options.filter((o) => {
+    const parent = parentOf(o)
+
+    return ticked.has(o.id) && !(parent && ticked.has(parent.id))
+  })
+}
+
+/** The ticked options' labels (a ticked parent without its children), or the "all" wording when nothing is ticked. */
 export function selectedLabels(
   options: FilterOption[],
   selected: string[],
   allLabel: string,
 ) {
   return selected.length
-    ? options
-        .filter(o => selected.includes(o.id))
-        .map(o => o.label)
-        .join(', ')
+    ? chosenOptions(options, selected).map(o => o.label).join(', ')
     : allLabel
 }
 
@@ -83,15 +177,7 @@ function emptyLast<T>(list: T[], empty: (item: T) => boolean) {
 function arrangeOptions(options: FilterOption[], query: string): OptionRow[] {
   const text = query.trim().toLowerCase()
   const hit = (option: FilterOption) => !text || option.label.toLowerCase().includes(text)
-  const byId = new Map(options.map(o => [o.id, o]))
-  const parentOf = (option: FilterOption) => (option.parentId ? byId.get(option.parentId) : undefined)
-  // Only one level: an option under an option that is itself a child is drawn at the top.
-  const isChild = (option: FilterOption) => {
-    const parent = parentOf(option)
-
-    return !!parent && !parentOf(parent)
-  }
-  const childrenOf = (id: string) => options.filter(o => o.parentId === id && isChild(o))
+  const { isChild, childrenOf } = optionTree(options)
   const live = (top: FilterOption) => !isEmpty(top) || childrenOf(top.id).some(child => !isEmpty(child))
   const rows: OptionRow[] = []
 
@@ -109,16 +195,13 @@ function arrangeOptions(options: FilterOption[], query: string): OptionRow[] {
   return rows
 }
 
-/** The ticked ids in the options' own order, so a caller never sees tick order. */
-function inOrder(group: FilterGroup, ids: string[]) {
-  return group.options.filter(o => ids.includes(o.id)).map(o => o.id)
-}
-
 /** The choices of one group: a search above a long list, the checkboxes, nothing else. */
 function OptionList({ group, roomy }: { group: FilterGroup, roomy: boolean }) {
   const { t } = useLocale()
   const [query, setQuery] = useState('')
   const rows = arrangeOptions(group.options, query)
+  const state = tickState(group.options, group.selected)
+  const ticked = group.options.filter(o => state(o) === 'all').map(o => o.id)
 
   return (
     <div className="flex min-w-0 flex-col gap-2 p-2.5">
@@ -138,8 +221,14 @@ function OptionList({ group, roomy }: { group: FilterGroup, roomy: boolean }) {
       <CheckboxGroup
         aria-label={group.label}
         className={`[&_[data-slot=checkbox]]:mt-0 ${roomy ? 'gap-2' : 'max-h-72 gap-0 overflow-y-auto'}`}
-        value={group.selected}
-        onChange={ids => group.onChange(inOrder(group, ids))}
+        value={ticked}
+        onChange={(ids) => {
+          // One press changes one option; the group hands back the whole list, so find it.
+          const changed = group.options.find(o => ticked.includes(o.id) !== ids.includes(o.id))
+
+          if (changed)
+            group.onChange(toggleOption(group.options, group.selected, changed.id, ids.includes(changed.id)))
+        }}
       >
         {rows.map(({ option, depth, isEmpty: none }) => (
           <Checkbox
@@ -149,11 +238,12 @@ function OptionList({ group, roomy }: { group: FilterGroup, roomy: boolean }) {
                 ? choiceCard
                 : 'min-h-9 justify-center rounded-lg px-3 hover:bg-default'
             } ${depth ? 'ms-6' : ''}`}
+            isIndeterminate={state(option) === 'some'}
             value={option.id}
           >
             <Checkbox.Content className={`w-full flex-row items-center ${roomy ? 'gap-3' : 'gap-2'}`}>
               <Checkbox.Control className={roomy ? 'size-6 shrink-0 rounded-lg' : 'size-5 shrink-0 rounded-md'}>
-                <Checkbox.Indicator className="size-4 [&_[data-slot$=checkmark]]:size-4" />
+                <Checkbox.Indicator className="size-4 [&_svg]:size-4" />
               </Checkbox.Control>
               <span className={`min-w-0 flex-1 ${roomy ? 'font-medium' : 'text-sm'} ${none ? 'text-muted' : ''}`}>
                 {option.label}
@@ -214,7 +304,7 @@ function GroupSheet({
 
 function GroupButton({ group, onPress }: { group: FilterGroup, onPress?: () => void }) {
   const { t } = useLocale()
-  const active = group.selected.length
+  const active = chosenOptions(group.options, group.selected).length
 
   return (
     <Button
