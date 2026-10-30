@@ -240,6 +240,41 @@ describe('[E4.2][AC41][AC68] N17 tags and the home fields', () => {
     expect(writes()[0]!.body).toMatchObject({ interests: ['local-activities'], mustVisit: true })
   })
 
+  it('[E4.2][AC41] the stay field is Recommended for: three visitor groups and a help that says it never hides the place', async () => {
+    api.pin = pinOf({ id: uuid(10) })
+    await open('new')
+    await heading('Place on the map')
+    await nextTo('Categories and tags')
+
+    expect(screen.getByRole('radiogroup', { name: 'Recommended for' })).toBeInTheDocument()
+    expect(screen.getByText('Shown first to these visitors. It never hides the place.')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Short stay visitors/ })).toBeInTheDocument()
+    expect(screen.getByText('In Lucerne for a few hours or a day')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Long stay visitors/ })).toBeInTheDocument()
+    expect(screen.getByText('Staying one night or more')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /All visitors/ })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('radio', { name: /Long stay visitors/ }))
+    await press('Save draft')
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ stayTag: 'multi_day' })
+  })
+
+  it('[E4.2][AC41] the stay field reads in German', async () => {
+    api.pin = pinOf({ id: uuid(10) })
+    await open('new', { language: 'de' })
+    await heading('Ort auf der Karte')
+    for (let i = 0; i < 6 && !screen.queryByRole('heading', { name: /Kategorien und Tags$/, level: 2 }); i++)
+      await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
+    await heading('Kategorien und Tags')
+
+    expect(screen.getByRole('radiogroup', { name: 'Empfohlen für' })).toBeInTheDocument()
+    expect(screen.getByText('Wird diesen Gästen zuerst gezeigt. Der Ort wird nie ausgeblendet.')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Gäste mit kurzem Aufenthalt/ })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Gäste mit längerem Aufenthalt/ })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Alle Gäste/ })).toBeInTheDocument()
+  })
+
   it('[E4.2][AC68] lists the map categories of the store and saves the ones ticked', async () => {
     api.categories = [
       { id: uuid(20), slug: 'walks', name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, position: 1, childCount: 1, useCount: 0 },

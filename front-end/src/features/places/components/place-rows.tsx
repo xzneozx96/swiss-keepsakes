@@ -6,15 +6,16 @@ import type { RowAction } from '@/components/row-actions'
 import type { StatusTone } from '@/components/status-chip'
 import type { MessageKey } from '@/i18n/en'
 
-import { Chip, Skeleton } from '@heroui/react'
+import { Skeleton } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 
 import { DataTable } from '@/components/data-table'
 import { ArchiveIcon, ChevronRightIcon, EditIcon, RestoreIcon, TrashIcon } from '@/components/icons'
 import { RowActions } from '@/components/row-actions'
-import { StatusChip } from '@/components/status-chip'
+import { StatusChip, TagChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
-import { languagesOf, titleOf } from '../lib/list'
+import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
+import { kindOf, languagesOf, titleOf } from '../lib/list'
 import { PLACES_PATH } from '../lib/search-params'
 
 const TONE: Record<PinListItem['status'], StatusTone> = { draft: 'neutral', published: 'success', hidden: 'warning', ended: 'warning' }
@@ -37,10 +38,9 @@ const hrefOf = (item: PinListItem) => `${PLACES_PATH}/${item.id}`
 function useNames() {
   const { t, language, intlLocale } = useLocale()
   const nameOfItem = (item: PinListItem) => titleOf(item, language) ?? t('places.row.untitled')
-  const when = (day: string) => new Intl.DateTimeFormat(intlLocale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${day}T00:00:00Z`))
   const edited = (iso: string) => new Intl.DateTimeFormat(intlLocale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
 
-  return { t, language, nameOfItem, when, edited }
+  return { t, language, nameOfItem, edited }
 }
 
 function categoryNames(item: PinListItem, categories: MerchantCategory[], language: Lang) {
@@ -65,11 +65,61 @@ function LanguageChips({ item }: { item: PinListItem }) {
   return (
     <>
       {missing.map(lang => (
-        <Chip key={lang} color="warning" size="sm" variant="soft">
-          <Chip.Label className="whitespace-nowrap">{t(`places.lang.missing.${lang}` as MessageKey)}</Chip.Label>
-        </Chip>
+        <StatusChip key={lang} tone="warning">{t(`places.lang.missing.${lang}` as MessageKey)}</StatusChip>
       ))}
     </>
+  )
+}
+
+/** Place or event, derived from the dates (ADR-029): a place has none, an event is upcoming or current, or ended. */
+function Kind({ item }: { item: PinListItem }) {
+  const { t, intlLocale } = useLocale()
+  const kind = kindOf(item)
+  let label = t('places.type.place')
+
+  if (kind === 'ended') {
+    label = t('places.type.eventEnded')
+  }
+  else if (kind === 'event' && item.nextDate) {
+    const date = nextDateLine(item.nextDate, zurichToday(new Date()), intlLocale, {
+      until: day => t('map.date.until', { day }),
+      from: time => t('map.date.from', { time }),
+    })
+
+    label = t('places.type.eventNext', { date })
+  }
+
+  return <span className="text-xs text-muted">{label}</span>
+}
+
+/** The categories of a pin as chips, or None. */
+function Categories({ item, categories }: { item: PinListItem, categories: MerchantCategory[] }) {
+  const { t, language } = useLocale()
+  const names = categoryNames(item, categories, language)
+
+  if (!names.length)
+    return <span className="text-muted">{t('places.list.onlyAll')}</span>
+
+  return (
+    <span className="flex flex-wrap items-center gap-1.5">
+      {names.map(name => <TagChip key={name}>{name}</TagChip>)}
+    </span>
+  )
+}
+
+/** Who the pin is recommended for: the stay value, then the interests. Both only rank the pin. */
+function RecommendedFor({ item }: { item: PinListItem }) {
+  const { t } = useLocale()
+
+  return (
+    <span className="flex flex-col items-start gap-1.5">
+      <span>{t(`places.stay.${item.stayTag}` as MessageKey)}</span>
+      {item.interests.length > 0 && (
+        <span className="flex flex-wrap items-center gap-1.5">
+          {item.interests.map(id => <TagChip key={id}>{t(`places.interest.${id}` as MessageKey)}</TagChip>)}
+        </span>
+      )}
+    </span>
   )
 }
 
@@ -96,7 +146,7 @@ function actionsOf(item: PinListItem, t: ReturnType<typeof useLocale>['t']): Row
 
 /** Phones: one card per place, the whole card opens the editor and the menu holds the actions that change it. */
 function Cards({ items, categories, busy, label, onAction }: PlaceRowsProps) {
-  const { t, language, nameOfItem, when } = useNames()
+  const { t, language, nameOfItem } = useNames()
 
   return (
     <ul aria-label={label} className="flex flex-col gap-4 lg:hidden">
@@ -107,11 +157,9 @@ function Cards({ items, categories, busy, label, onAction }: PlaceRowsProps) {
               <span className="min-w-0 text-lg leading-tight font-semibold text-pretty [overflow-wrap:anywhere]">{nameOfItem(item)}</span>
               <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={16} />
             </span>
+            <Kind item={item} />
             <Status item={item} />
-            <span className="text-xs text-muted">
-              {categoryNames(item, categories, language).join(', ') || t('places.list.onlyAll')}
-              {item.nextDate ? ` · ${t('places.next.until', { date: when(item.nextDate.lastDay) })}` : ''}
-            </span>
+            <span className="text-xs text-muted">{categoryNames(item, categories, language).join(', ') || t('places.list.onlyAll')}</span>
           </Link>
           <RowActions actions={actionsOf(item, t).map(action => ({ ...action, isDisabled: busy && action.id !== 'edit' }))} label={t('places.row.actions', { name: nameOfItem(item) })} onAction={id => onAction(item, id)} />
         </li>
@@ -120,13 +168,14 @@ function Cards({ items, categories, busy, label, onAction }: PlaceRowsProps) {
   )
 }
 
-/** The loading cards of a phone: the shape of a card, a title line, the chips of the status row and a fact line. */
+/** The loading cards of a phone: the shape of a card, a title line, the kind line, the chips of the status row and a fact line. */
 function CardSkeleton() {
   return (
     <ul aria-hidden className="flex flex-col gap-4 lg:hidden">
       {Array.from({ length: 4 }, (_, index) => (
         <li key={index} className="flex flex-col gap-3 rounded-3xl bg-surface p-4 shadow-surface">
           <Skeleton className="h-6 w-2/3 rounded-lg" />
+          <Skeleton className="h-3 w-1/3 rounded-lg" />
           <div className="flex gap-2">
             <Skeleton className="h-7 w-24 rounded-full" />
             <Skeleton className="h-7 w-20 rounded-full" />
@@ -141,7 +190,7 @@ function CardSkeleton() {
 /** N16: the table from 1024 px and the cards below it. */
 export function PlaceRows(props: PlaceRowsProps) {
   const { items, categories, isLoading, label, resetKey, empty, busy, onAction } = props
-  const { t, language, nameOfItem, edited } = useNames()
+  const { t, nameOfItem, edited } = useNames()
   const columns: DataTableColumn<PinListItem>[] = [
     {
       id: 'pin',
@@ -149,16 +198,15 @@ export function PlaceRows(props: PlaceRowsProps) {
       isRowHeader: true,
       headerClassName: 'w-[26%]',
       render: item => (
-        <Link className="font-semibold text-pretty [overflow-wrap:anywhere] outline-none hover:underline focus-visible:focus-ring" to={hrefOf(item) as never}>{nameOfItem(item)}</Link>
+        <div className="flex min-w-0 flex-col">
+          <Link className="font-semibold text-pretty [overflow-wrap:anywhere] outline-none hover:underline focus-visible:focus-ring" to={hrefOf(item) as never}>{nameOfItem(item)}</Link>
+          <Kind item={item} />
+        </div>
       ),
     },
     { id: 'status', header: t('places.column.status'), skeleton: 'chip', render: item => <Status item={item} /> },
-    { id: 'categories', header: t('places.column.categories'), render: item => categoryNames(item, categories, language).join(', ') || <span className="text-muted">{t('places.list.onlyAll')}</span> },
-    {
-      id: 'tags',
-      header: t('places.column.tags'),
-      render: item => [t(`places.stay.${item.stayTag}` as MessageKey), ...item.interests.map(id => t(`places.interest.${id}` as MessageKey))].join(', '),
-    },
+    { id: 'categories', header: t('places.column.categories'), render: item => <Categories categories={categories} item={item} /> },
+    { id: 'tags', header: t('places.column.tags'), render: item => <RecommendedFor item={item} /> },
     { id: 'edited', header: t('places.column.edited'), cellClassName: 'whitespace-nowrap text-muted', render: item => edited(item.updatedAt) },
   ]
 

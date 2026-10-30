@@ -74,12 +74,12 @@ describe('[E4.2][AC68] N16 the list', () => {
     expect(within(rowOf('Old tap')).getByText('Hidden')).toBeInTheDocument()
   })
 
-  it('[E4.2][AC86] the table has the columns of the list: Pin, Status, Categories, Stay and interests and Last update', async () => {
+  it('[E4.2][AC86] the table has the columns of the list: Pin, Status, Categories, Recommended for and Last update', async () => {
     api.items = [listItem({ id: uuid(11), title: { en: 'Chapel Bridge' } })]
     await open()
     await screen.findAllByRole('link', { name: 'Chapel Bridge' })
 
-    expect(table().getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Pin', 'Status', 'Categories', 'Stay and interests', 'Last update', 'Actions'])
+    expect(table().getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Pin', 'Status', 'Categories', 'Recommended for', 'Last update', 'Actions'])
   })
 
   it('[E4.2][AC86] the columns Next date and Main story are gone', async () => {
@@ -126,6 +126,116 @@ describe('[E4.2][AC68] N16 the list', () => {
     await screen.findAllByRole('link', { name: 'Blues festival' })
 
     expect(within(rowOf('Blues festival')).getByText('DE fehlt')).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] Recommended for shows the stay value in words, then each interest as a chip, in English and German', async () => {
+    api.items = [
+      listItem({ id: uuid(11), title: { en: 'Chapel Bridge', de: 'Kapellbrücke' }, stayTag: 'short_stay', interests: ['local-activities', 'food-drink'] }),
+      listItem({ id: uuid(12), title: { en: 'Old tap', de: 'Alter Brunnen' }, stayTag: 'multi_day' }),
+      listItem({ id: uuid(13), title: { en: 'Lake', de: 'See' }, stayTag: 'both' }),
+    ]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+
+    const bridge = within(rowOf('Chapel Bridge'))
+    expect(bridge.getByText('Short stay visitors')).toBeInTheDocument()
+    expect(bridge.getByText('Local activities')).toBeInTheDocument()
+    expect(bridge.getByText('Food and drink')).toBeInTheDocument()
+    expect(within(rowOf('Old tap')).getByText('Long stay visitors')).toBeInTheDocument()
+    expect(within(rowOf('Lake')).getByText('All visitors')).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] Recommended for reads in German', async () => {
+    api.items = [
+      listItem({ id: uuid(11), title: { en: 'Chapel Bridge', de: 'Kapellbrücke' }, stayTag: 'short_stay' }),
+      listItem({ id: uuid(12), title: { en: 'Old tap', de: 'Alter Brunnen' }, stayTag: 'multi_day' }),
+      listItem({ id: uuid(13), title: { en: 'Lake', de: 'See' }, stayTag: 'both' }),
+    ]
+    await open('de')
+    await screen.findAllByRole('link', { name: 'Kapellbrücke' })
+    expect(table().getByRole('columnheader', { name: 'Empfohlen für' })).toBeInTheDocument()
+    expect(within(rowOf('Kapellbrücke')).getByText('Gäste mit kurzem Aufenthalt')).toBeInTheDocument()
+    expect(within(rowOf('Alter Brunnen')).getByText('Gäste mit längerem Aufenthalt')).toBeInTheDocument()
+    expect(within(rowOf('See')).getByText('Alle Gäste')).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] every chip of a row is the size of the status chip', async () => {
+    api.categories = [{ id: uuid(20), slug: 'walks', name: { en: 'Walks' }, parentId: null, position: 1, childCount: 0, useCount: 1 }]
+    api.items = [listItem({ id: uuid(11), status: 'published', title: { en: 'Blues festival' }, categoryIds: [uuid(20)], interests: ['food-drink'] })]
+    await open()
+    await screen.findAllByRole('link', { name: 'Blues festival' })
+
+    const row = rowOf('Blues festival')
+    const chips = ['Published', 'DE missing', 'Walks', 'Food and drink'].map(text => within(row).getByText(text).closest('[data-slot="chip"]') as HTMLElement)
+
+    for (const chip of chips)
+      expect(chip).toHaveClass('chip--lg', 'chip--soft')
+  })
+
+  it('[E4.2][AC86] the categories are chips, and a pin with none says None', async () => {
+    api.categories = [
+      { id: uuid(20), slug: 'walks', name: { en: 'Walks' }, parentId: null, position: 1, childCount: 0, useCount: 1 },
+      { id: uuid(21), slug: 'food', name: { en: 'Food' }, parentId: null, position: 2, childCount: 0, useCount: 1 },
+    ]
+    api.items = [
+      listItem({ id: uuid(11), title: { en: 'Chapel Bridge' }, categoryIds: [uuid(20), uuid(21)] }),
+      listItem({ id: uuid(12), title: { en: 'Old tap' } }),
+    ]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+
+    const bridge = within(rowOf('Chapel Bridge'))
+    expect(bridge.getByText('Walks').closest('[data-slot="chip"]')).not.toBeNull()
+    expect(bridge.getByText('Food').closest('[data-slot="chip"]')).not.toBeNull()
+    expect(within(rowOf('Old tap')).getByText('None')).toBeInTheDocument()
+    expect(screen.queryByText(/only under All/)).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] a second line says Place for a pin with no dates, Event with the next date, or Event ended', async () => {
+    api.items = [
+      listItem({ id: uuid(11), title: { en: 'Chapel Bridge' } }),
+      listItem({ id: uuid(12), title: { en: 'Blues festival' }, hasDates: true, nextDate: { firstDay: '2090-11-07', lastDay: '2090-11-07', startTime: '18:00', endTime: null } }),
+      listItem({ id: uuid(13), title: { en: 'Fasnacht' }, hasDates: true, nextDate: null }),
+    ]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+
+    expect(within(rowOf('Chapel Bridge')).getByText('Place')).toBeInTheDocument()
+    expect(within(rowOf('Blues festival')).getByText(/^Event · Tue 7 Nov 2090, from 18:00$/)).toBeInTheDocument()
+    expect(within(rowOf('Fasnacht')).getByText('Event · ended')).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] the line reads in German and the phone card carries it too', async () => {
+    api.items = [
+      listItem({ id: uuid(11), title: { de: 'Kapellbrücke' } }),
+      listItem({ id: uuid(13), title: { de: 'Fasnacht' }, hasDates: true, nextDate: null }),
+    ]
+    await open('de')
+    await screen.findAllByRole('link', { name: 'Kapellbrücke' })
+
+    expect(within(rowOf('Kapellbrücke')).getByText('Ort')).toBeInTheDocument()
+    expect(within(rowOf('Fasnacht')).getByText('Veranstaltung · beendet')).toBeInTheDocument()
+    // The table and the cards are both in the DOM: one line in each.
+    expect(screen.getAllByText('Ort')).toHaveLength(2)
+  })
+
+  it('[E4.2][AC86] the filter has a Type group with Place and Event and their counts', async () => {
+    api.items = [
+      listItem({ id: uuid(11), title: { en: 'Chapel Bridge' } }),
+      listItem({ id: uuid(12), title: { en: 'Old tap' } }),
+      listItem({ id: uuid(13), title: { en: 'Fasnacht' }, hasDates: true }),
+    ]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Filters' }))
+    expect(await screen.findByText('Type')).toBeInTheDocument()
+    expect(screen.queryByText('Has dates')).not.toBeInTheDocument()
+    await userEvent.click(await screen.findByRole('menuitemcheckbox', { name: /^Event/ }))
+    await userEvent.keyboard('{Escape}')
+
+    await waitFor(() => expect(table().queryByRole('link', { name: 'Chapel Bridge' })).not.toBeInTheDocument())
+    expect(table().getByRole('link', { name: 'Fasnacht' })).toBeInTheDocument()
   })
 
   it('[E4.2][AC68] Add place and Add event open the editor on a new pin, the event on its dates', async () => {

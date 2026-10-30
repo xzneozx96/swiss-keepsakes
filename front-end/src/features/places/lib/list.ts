@@ -3,17 +3,17 @@ import type { Lang } from './form'
 
 export const NO_CATEGORY = 'none'
 export const STATUSES = ['draft', 'published', 'hidden', 'ended'] as const
-export const DATE_FILTERS = ['has', 'none'] as const
+export const TYPE_FILTERS = ['place', 'event'] as const
 
 export interface ListFilters {
   status: string[]
   category: string[]
   stay: string[]
-  dates: string[]
+  type: string[]
   query: string
 }
 
-export const noFilters: ListFilters = { status: [], category: [], stay: [], dates: [], query: '' }
+export const noFilters: ListFilters = { status: [], category: [], stay: [], type: [], query: '' }
 
 /** The title in the dashboard's language, else the other one. `undefined` for a pin with no title yet. */
 export function titleOf(item: Pick<PinListItem, 'title'>, language: Lang): string | undefined {
@@ -23,6 +23,14 @@ export function titleOf(item: Pick<PinListItem, 'title'>, language: Lang): strin
 /** The languages that carry a title, in the order EN, DE. */
 export function languagesOf(item: Pick<PinListItem, 'title'>): Lang[] {
   return (['en', 'de'] as const).filter(lang => (item.title[lang] ?? '') !== '')
+}
+
+/** A pin with no date entries is a place; with dates it is an event, upcoming or current, or ended. Derived, never stored (ADR-029). */
+export function kindOf(item: Pick<PinListItem, 'hasDates' | 'nextDate'>): 'place' | 'event' | 'ended' {
+  if (!item.hasDates)
+    return 'place'
+
+  return item.nextDate ? 'event' : 'ended'
 }
 
 const matches = (selected: string[], test: (id: string) => boolean) => selected.length === 0 || selected.some(test)
@@ -35,12 +43,12 @@ export function filterItems(items: PinListItem[], filters: ListFilters): PinList
     matches(filters.status, id => item.status === id)
     && matches(filters.category, id => (id === NO_CATEGORY ? item.categoryIds.length === 0 : item.categoryIds.includes(id)))
     && matches(filters.stay, id => item.stayTag === id)
-    && matches(filters.dates, id => (id === 'has' ? item.hasDates : !item.hasDates))
+    && matches(filters.type, id => (id === 'event') === item.hasDates)
     && (query === ''
       || [item.title.en, item.title.de, item.slug?.en, item.slug?.de].some(text => text?.toLowerCase().includes(query))),
   )
 }
 
 export function isFiltered(filters: ListFilters) {
-  return filters.query.trim() !== '' || filters.status.length + filters.category.length + filters.stay.length + filters.dates.length > 0
+  return filters.query.trim() !== '' || filters.status.length + filters.category.length + filters.stay.length + filters.type.length > 0
 }

@@ -4,7 +4,7 @@ import { pinPublishBodySchema, pinWriteBodySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 
 import { bodyOf, emptyDate, emptyForm, formOf, isDirty, publishBodyOf, publishGaps, suggestSlug, validate } from '@/features/places/lib/form'
-import { filterItems, isFiltered, NO_CATEGORY, noFilters } from '@/features/places/lib/list'
+import { filterItems, isFiltered, kindOf, NO_CATEGORY, noFilters } from '@/features/places/lib/list'
 
 const pin: Pin = {
   id: '0198a000-0000-7000-8000-000000000001',
@@ -179,16 +179,25 @@ describe('[E4.2][AC86] the list filters', () => {
   ]
   const ids = (filters: Partial<ListFilters>) => filterItems(items, { ...noFilters, ...filters }).map(found => found.id)
 
-  it('narrows by status, category (including none), stay and dates, each group an OR and the groups together an AND', () => {
+  it('narrows by status, category (including none), stay and type, each group an OR and the groups together an AND', () => {
     expect(ids({})).toEqual(['a', 'b', 'c'])
     expect(ids({ status: ['ended'] })).toEqual(['b'])
     expect(ids({ status: ['ended', 'hidden'] })).toEqual(['b', 'c'])
     expect(ids({ category: [NO_CATEGORY] })).toEqual(['b', 'c'])
     expect(ids({ category: ['walks'] })).toEqual(['a'])
     expect(ids({ stay: ['short_stay'] })).toEqual(['b'])
-    expect(ids({ dates: ['has'] })).toEqual(['b'])
-    expect(ids({ dates: ['none'] })).toEqual(['a', 'c'])
-    expect(ids({ status: ['ended'], dates: ['none'] })).toEqual([])
+    expect(ids({ type: ['event'] })).toEqual(['b'])
+    expect(ids({ type: ['place'] })).toEqual(['a', 'c'])
+    expect(ids({ type: ['place', 'event'] })).toEqual(['a', 'b', 'c'])
+    expect(ids({ status: ['ended'], type: ['place'] })).toEqual([])
+  })
+
+  it('derives place or event from the dates and stores neither: no dates is a place, an upcoming or current date an event, all dates past an ended event', () => {
+    const upcoming = { hasDates: true, nextDate: { firstDay: '2090-11-07', lastDay: '2090-11-07', startTime: null, endTime: null } }
+
+    expect(kindOf({ hasDates: false, nextDate: null })).toBe('place')
+    expect(kindOf(upcoming)).toBe('event')
+    expect(kindOf({ hasDates: true, nextDate: null })).toBe('ended')
   })
 
   it('searches the titles in both languages and the map link, ignoring case and spaces around', () => {

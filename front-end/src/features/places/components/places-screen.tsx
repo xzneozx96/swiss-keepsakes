@@ -18,7 +18,7 @@ import { currentStore } from '@/features/stores/lib/current-store'
 import { apiEnabled } from '@/lib/api-mode'
 import { usePlaces } from '../api/queries'
 import { usePlaceActions } from '../hooks/use-place-actions'
-import { DATE_FILTERS, filterItems, isFiltered, NO_CATEGORY, noFilters, STATUSES } from '../lib/list'
+import { filterItems, isFiltered, NO_CATEGORY, noFilters, STATUSES, TYPE_FILTERS } from '../lib/list'
 import { NEW_PLACE_ID, PLACES_PATH } from '../lib/search-params'
 import { PlaceRows } from './place-rows'
 
@@ -79,11 +79,11 @@ function Filters({ items, filters, categories, onChange }: {
           onChange: stay => onChange({ ...filters, stay }),
         }),
         filterGroup({
-          id: 'dates',
-          label: t('places.filter.dates'),
-          options: DATE_FILTERS.map(id => ({ id, label: t(id === 'has' ? 'places.filter.hasDates' : 'places.filter.noDates'), count: count(item => item.hasDates === (id === 'has')) })),
-          selected: filters.dates as (typeof DATE_FILTERS)[number][],
-          onChange: dates => onChange({ ...filters, dates }),
+          id: 'type',
+          label: t('places.filter.type'),
+          options: TYPE_FILTERS.map(id => ({ id, label: t(`places.type.${id}` as MessageKey), count: count(item => item.hasDates === (id === 'event')) })),
+          selected: filters.type as (typeof TYPE_FILTERS)[number][],
+          onChange: type => onChange({ ...filters, type }),
         }),
       ]}
     />
