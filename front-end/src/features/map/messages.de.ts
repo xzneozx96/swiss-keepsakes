@@ -9,7 +9,6 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.places.one': '{count} Ort',
   'map.places.other': '{count} Orte',
   'map.none.title': 'Keine Orte passen zu diesem Filter',
-  'map.cluster': '{count} Orte hier. Hineinzoomen',
   'map.pin.event': 'Anlass',
   'map.pin.dimmed': 'gedimmt',
   'map.card.readStory': 'Geschichte lesen',

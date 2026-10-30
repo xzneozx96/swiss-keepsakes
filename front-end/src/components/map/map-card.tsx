@@ -6,12 +6,11 @@ import { useEffect, useRef } from 'react'
 import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { focusStepButton } from './focus-step'
+import { reducedMotion } from './reduced-motion'
 
 /** A card in a `MapCardRow` is this wide (px), and the cards are this far apart. */
 export const CARD_WIDTH = 311
 const GAP = 8
-
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** The words of the step buttons; without them they say "Previous" and "Next". */
 export interface MapCardNavLabels {

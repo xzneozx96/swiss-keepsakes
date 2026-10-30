@@ -1,27 +1,60 @@
 import type { PublicMapItem } from '@sk/api-contract'
 
 import { Button } from '@heroui/react'
-import { useEffect, useId, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 
 import { BulletListIcon, FilterIcon, PickupIcon } from '@/components/icons'
-import { MapCredits } from '@/components/map/map-credits'
-import { MapStatusLayer } from '@/components/map/map-status'
-import { useMapInstance } from '@/components/map/use-map-instance'
+import { useMap } from '@/components/map/map-context'
+import { MapView } from '@/components/map/map-view'
+import { PhotoCluster, PhotoPin } from '@/components/map/pin-faces'
+import { PinLayer } from '@/components/map/pin-layer'
 import { useLocale } from '@/contexts/locale-context'
 import { useMapData } from '@/features/map/api/queries'
-import { categoryName, keepHighlighted, pinCategoryNames, topLevelCategories } from '@/features/map/lib/categories'
-import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, TAB_BAR } from '@/features/map/lib/layout'
+import { categoryName, isHighlighted, keepHighlighted, pinCategoryNames, topLevelCategories } from '@/features/map/lib/categories'
+import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, MAP_BOTTOM_CLEAR } from '@/features/map/lib/layout'
+import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
 import { CategoriesSheet } from './categories-sheet'
 import { MapControlsSkeleton } from './map-skeleton'
 import { PinList } from './pin-list'
-import { PinMap } from './pin-map'
 import { PlaceCardRow } from './place-card'
 
 type View = 'map' | 'list'
 
 const NO_PINS: PublicMapItem[] = []
 const LUCERNE: [number, number] = [8.3068, 47.0535]
-const MAP_OPTIONS = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
+const MAP_VIEW = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
+
+/** The Categories and Map or List buttons over the map: skeletons while the map draws or the places are on the way, nothing when there are none. */
+function MapPills({ chosenCount, dataPending, hasPins, view, onFilter, onView }: {
+  chosenCount: number
+  dataPending: boolean
+  hasPins: boolean
+  view: View
+  onFilter: () => void
+  onView: () => void
+}) {
+  const { t } = useLocale()
+  const { state, drawn } = useMap()
+
+  if (state === 'loading' || !drawn || dataPending)
+    return <MapControlsSkeleton />
+  if (!hasPins)
+    return null
+
+  return (
+    <div className="absolute inset-x-0 top-0 z-10 flex items-start gap-2 px-3 pt-3">
+      <Button aria-haspopup="dialog" className="pill min-h-11 shadow-sm" size="sm" variant="secondary" onPress={onFilter}>
+        <FilterIcon size={16} />
+        {chosenCount > 0 ? t('map.categoriesCount', { count: chosenCount }) : t('map.categories')}
+      </Button>
+      <span className="flex-1" />
+      <Button className="pill min-h-11 shadow-sm" size="sm" variant="secondary" onPress={onView}>
+        {view === 'map' ? <BulletListIcon size={16} /> : <PickupIcon size={16} />}
+        {t(view === 'map' ? 'map.view.list' : 'map.view.map')}
+      </Button>
+    </div>
+  )
+}
 
 /**
  * N02, option B "Cards" (docs/ux/pins-design.md): a flat aerial map between the top edge and the
@@ -31,32 +64,28 @@ const MAP_OPTIONS = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
  * map and never removes one, while the card row and the list hold only the chosen places.
  */
 export function MapScreen() {
-  const { t, language } = useLocale()
+  const { t, language, intlLocale } = useLocale()
   const data = useMapData(language)
-  const { containerRef, map, maplibre, state: mapState, drawn, retry: retryMap } = useMapInstance({ options: MAP_OPTIONS })
   const headingId = useId()
+  const [today] = useState(() => zurichToday(new Date()))
   // Empty means All.
   const [chosen, setChosen] = useState<string[]>([])
   const [view, setView] = useState<View>('map')
   const [selectedId, setSelectedId] = useState<string>()
   const [filterOpen, setFilterOpen] = useState(false)
 
-  const failed = data.isFailed || mapState === 'error'
-  const pinsReady = mapState === 'ready' && !data.isPending && !data.isFailed
-  const status = failed
+  const dataReady = !data.isPending && !data.isFailed
+  const status = data.isFailed
     ? 'failed' as const
-    : mapState === 'loading' || !drawn
-      ? 'map-loading' as const
-      : data.isPending ? 'pins-loading' as const : data.pins.length === 0 ? 'empty' as const : undefined
-  const ranked = pinsReady ? data.pins : NO_PINS
+    : data.isPending ? 'pins-loading' as const : data.pins.length === 0 ? 'empty' as const : undefined
+  const ranked = dataReady ? data.pins : NO_PINS
+  const located = useMemo(() => ranked.map(pin => ({ ...pin, coordinates: [pin.longitude, pin.latitude] as [number, number] })), [ranked])
   const kept = keepHighlighted(ranked, chosen, data.categories)
   const litIds = new Set(kept.map(pin => pin.id))
+  const dimmedIds = useMemo(() => new Set(ranked.filter(pin => !isHighlighted(pin, chosen, data.categories)).map(pin => pin.id)), [ranked, chosen, data.categories])
   const openId = view === 'map' && selectedId !== undefined && litIds.has(selectedId) ? selectedId : undefined
   const chosenCount = chosen.length
-
-  useEffect(() => {
-    map?.getCanvas().setAttribute('aria-label', t('map.heading'))
-  }, [map, t])
+  const insets = { top: CONTROLS, bottom: openId ? CARD_ROW_BOTTOM + CARD_ROW_HEIGHT + 8 : MAP_BOTTOM_CLEAR }
 
   // A pin tap, a list row or an applied filter moves focus to the card's title; a swipe leaves focus alone.
   function openCard(id: string) {
@@ -94,14 +123,8 @@ export function MapScreen() {
     else setSelectedId(undefined)
   }
 
-  function retry() {
-    if (mapState === 'error')
-      retryMap()
-    if (data.isFailed)
-      data.retry()
-  }
-
-  const matchesNothing = pinsReady && chosenCount > 0 && kept.length === 0
+  const dateCopy = { until: (day: string) => t('map.date.until', { day }), from: (time: string) => t('map.date.from', { time }) }
+  const matchesNothing = dataReady && chosenCount > 0 && kept.length === 0
   const places = t(kept.length === 1 ? 'map.places.one' : 'map.places.other', { count: kept.length })
   const announce = chosenCount === 0
     ? t(ranked.length === 1 ? 'map.announce.all.one' : 'map.announce.all.other', { count: ranked.length })
@@ -115,41 +138,54 @@ export function MapScreen() {
     <section aria-labelledby={headingId} className="relative min-h-[28rem] flex-1 overflow-hidden">
       <h1 className="sr-only" id={headingId}>{t('map.heading')}</h1>
 
-      {status === 'map-loading' || status === 'pins-loading'
-        ? <MapControlsSkeleton />
-        : pinsReady && data.pins.length > 0 && (
-          <div className="absolute inset-x-0 top-0 z-10 flex items-start gap-2 px-3 pt-3">
-            <Button aria-haspopup="dialog" className="pill min-h-11 shadow-sm" size="sm" variant="secondary" onPress={() => setFilterOpen(true)}>
-              <FilterIcon size={16} />
-              {chosenCount > 0 ? t('map.categoriesCount', { count: chosenCount }) : t('map.categories')}
-            </Button>
-            <span className="flex-1" />
-            <Button className="pill min-h-11 shadow-sm" size="sm" variant="secondary" onPress={() => setView(view === 'map' ? 'list' : 'map')}>
-              {view === 'map' ? <BulletListIcon size={16} /> : <PickupIcon size={16} />}
-              {t(view === 'map' ? 'map.view.list' : 'map.view.map')}
-            </Button>
-          </div>
+      <MapView
+        className="absolute inset-0"
+        credits={view === 'map'}
+        inert={view === 'list'}
+        insets={insets}
+        label={t('map.heading')}
+        overlay={(
+          <MapPills
+            chosenCount={chosenCount}
+            dataPending={data.isPending}
+            hasPins={dataReady && data.pins.length > 0}
+            view={view}
+            onFilter={() => setFilterOpen(true)}
+            onView={() => setView(view === 'map' ? 'list' : 'map')}
+          />
         )}
+        safeArea
+        status={status}
+        view={MAP_VIEW}
+        onRetry={data.isFailed ? data.retry : undefined}
+      >
+        <PinLayer
+          followSelected
+          fit="first-load"
+          dimmedIds={dimmedIds}
+          pins={located}
+          renderCluster={(members, zoomIn) => <PhotoCluster count={members.length} dimmed={members.every(member => dimmedIds.has(member.id))} onPress={zoomIn} />}
+          renderPin={(pin, state) => {
+            const date = pin.nextDate ? nextDateLine(pin.nextDate, today, intlLocale, dateCopy) : undefined
+            const label = [pin.title, date && `${t('map.pin.event')}, ${date}`, state.dimmed && t('map.pin.dimmed')].filter(Boolean).join(', ')
 
-      {/* MapLibre makes its container `position: relative`, so it sits in a sized box. */}
-      {/* Inert in List view: the list covers the map, so its pins leave the tab order and the accessibility tree. */}
-      <div className="absolute inset-0 bg-[#c9d3c6]" inert={view === 'list'}>
-        <div ref={containerRef} className="size-full" />
-      </div>
-      <PinMap
-        filtered={chosenCount > 0}
-        insetBottom={openId ? CARD_ROW_BOTTOM + CARD_ROW_HEIGHT : TAB_BAR}
-        insetTop={CONTROLS}
-        litIds={litIds}
-        map={map}
-        maplibre={maplibre}
-        pins={ranked}
-        selectedId={openId}
-        onSelect={openFromPin}
-      />
-      <MapStatusLayer status={status} onRetry={retry} />
+            return <PhotoPin dimmed={state.dimmed} emphasized={chosenCount > 0 && !state.dimmed} id={pin.id} label={label} selected={state.selected} onPress={state.select} />
+          }}
+          selectedId={openId}
+          onSelect={openFromPin}
+        />
+        {openId && (
+          <PlaceCardRow
+            extrasOf={pin => ({ categories: pinCategoryNames(pin, data.categories, language) })}
+            pins={kept}
+            selectedId={openId}
+            onClose={closeCard}
+            onSelect={setSelectedId}
+          />
+        )}
+      </MapView>
 
-      {view === 'list' && pinsReady && (
+      {view === 'list' && dataReady && (
         <div className="absolute inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom,0px)+64px)] z-[8] overflow-y-auto bg-background px-4 pt-[60px] pb-4">
           {!matchesNothing && (
             <>
@@ -169,21 +205,7 @@ export function MapScreen() {
         </div>
       )}
 
-      <p aria-live="polite" className="sr-only">{pinsReady ? announce : ''}</p>
-
-      {view === 'map' && (
-        <MapCredits watch={containerRef} className={`absolute start-3 z-10 max-w-[calc(100%-6rem)] ${openId ? 'top-14' : 'bottom-[calc(env(safe-area-inset-bottom,0px)+108px)]'}`} />
-      )}
-
-      {openId && (
-        <PlaceCardRow
-          extrasOf={pin => ({ categories: pinCategoryNames(pin, data.categories, language) })}
-          pins={kept}
-          selectedId={openId}
-          onClose={closeCard}
-          onSelect={setSelectedId}
-        />
-      )}
+      <p aria-live="polite" className="sr-only">{dataReady ? announce : ''}</p>
 
       {filterOpen && (
         <CategoriesSheet

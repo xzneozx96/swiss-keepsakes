@@ -6,11 +6,11 @@ import type { CardExtras } from '@/features/map/components/place-card'
 import { useMemo, useState } from 'react'
 
 import { IPhoneMockup } from '@/components/iphone-mockup'
-import { useMap } from '@/components/map/map-context'
 import { MapView } from '@/components/map/map-view'
+import { PhotoPin } from '@/components/map/pin-faces'
+import { PinLayer } from '@/components/map/pin-layer'
 import { LocaleOverride, useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
-import { PinMap } from '@/features/map/components/pin-map'
 import { PlaceCardRow } from '@/features/map/components/place-card'
 import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
 import { useMedia, useStoryOptions } from '../api/queries'
@@ -19,7 +19,6 @@ import { PREVIEW_PIN_ID, previewItem, tipIn } from '../lib/preview'
 
 const NO_PINS: PublicMapItem[] = []
 const NO_LANGUAGES: readonly Language[] = []
-const SELECTED = new Set([PREVIEW_PIN_ID])
 const noop = () => undefined
 /** The card sits about 16 px above the phone's home indicator (it ends 13 px from the bottom): the preview has no tab bar or music button. */
 const CARD_BOTTOM = 29
@@ -68,21 +67,15 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
 
 /** The pin and the card of the draft, on the map around them. */
 function DraftLayers({ item, located, pins, cover, extras }: { item: PublicMapItem, located: boolean, pins: PublicMapItem[], cover: string | undefined, extras: CardExtras }) {
-  const { map, maplibre, insets } = useMap()
+  const places = useMemo(() => pins.map(pin => ({ ...pin, coordinates: [pin.longitude, pin.latitude] as [number, number] })), [pins])
 
   return (
     <>
-      <PinMap
-        filtered={false}
-        insetBottom={insets.bottom}
-        insetTop={insets.top}
-        litIds={SELECTED}
-        map={map}
-        maplibre={maplibre}
-        photoOf={() => cover}
-        pins={pins}
+      <PinLayer
+        followSelected
+        pins={places}
+        renderPin={(pin, state) => <PhotoPin dimmed={false} emphasized={false} id={pin.id} label={pin.title} photoSrc={cover} selected={state.selected} onPress={noop} />}
         selectedId={located ? PREVIEW_PIN_ID : undefined}
-        onSelect={noop}
       />
       <PlaceCardRow bottom={CARD_BOTTOM} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onClose={noop} onSelect={noop} />
     </>

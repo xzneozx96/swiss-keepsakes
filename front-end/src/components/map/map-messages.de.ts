@@ -17,4 +17,5 @@ export const mapKitDe: Record<keyof typeof mapKitEn, string> = {
   'map.card.previous': 'Zurück',
   'map.card.next': 'Weiter',
   'map.card.position': '{number} von {count}',
+  'map.cluster': '{count} Orte hier. Hineinzoomen',
 }

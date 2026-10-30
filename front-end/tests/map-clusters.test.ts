@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { boundsOf, clusterPins } from '@/features/map/lib/clusters'
+import { boundsOf, clusterPins } from '@/components/map/clusters'
 
 // One degree is 1000 px here, so pins closer than 0.034 degrees merge.
 const project = ([lng, lat]: [number, number]) => ({ x: lng * 1000, y: lat * 1000 })

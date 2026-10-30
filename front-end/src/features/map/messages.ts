@@ -8,7 +8,6 @@ export const mapEn = {
   'map.places.one': '{count} place',
   'map.places.other': '{count} places',
   'map.none.title': 'No places match this filter',
-  'map.cluster': '{count} places here. Zoom in',
   'map.pin.event': 'Event',
   'map.pin.dimmed': 'dimmed',
   'map.card.readStory': 'Read the story',

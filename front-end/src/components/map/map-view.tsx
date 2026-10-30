@@ -35,10 +35,11 @@ export function MapView({
   cooperativeGestures = false,
   lazy,
   resetKey,
-  insets = NO_INSETS,
+  insets: given = NO_INSETS,
   status,
   inert = false,
   credits = true,
+  overlay,
   safeArea = false,
   className = '',
   onRetry,
@@ -59,6 +60,8 @@ export function MapView({
   inert?: boolean
   credits?: boolean
   safeArea?: boolean
+  /** Controls drawn over the map that stay pressable when the map is `inert` (they may use `useMap()` too). */
+  overlay?: ReactNode
   className?: string
   /** The screen's own retry (its data); a failed map retries itself. */
   onRetry?: () => void
@@ -89,6 +92,8 @@ export function MapView({
     },
   })
   const latest = useLatest({ onFailed, onMapClick })
+  // By value, so a screen may write its insets inline without the layers moving the camera on every render.
+  const insets = useMemo(() => ({ top: given.top, bottom: given.bottom }), [given.top, given.bottom])
 
   useEffect(() => {
     map?.getCanvas().setAttribute('aria-label', label)
@@ -152,11 +157,14 @@ export function MapView({
       className={`relative overflow-hidden bg-[#c9d3c6] ${fullscreen ? 'fixed! inset-0 z-[9999] size-full! min-h-0! rounded-none!' : ''} ${className}`}
       data-map-frame=""
     >
-      {/* MapLibre makes its container `position: relative`, so it sits in a sized box. */}
-      <div className="absolute inset-0" inert={inert}>
-        <div ref={containerRef} className="size-full" />
-        <MapContext value={value}>{children}</MapContext>
-      </div>
+      <MapContext value={value}>
+        {/* MapLibre makes its container `position: relative`, so it sits in a sized box. */}
+        <div className="absolute inset-0" inert={inert}>
+          <div ref={containerRef} className="size-full" />
+          {children}
+        </div>
+        {overlay}
+      </MapContext>
       <MapStatusLayer status={shown} top={insets.top + 10} onRetry={retryAll} />
       {credits && (
         <MapCredits

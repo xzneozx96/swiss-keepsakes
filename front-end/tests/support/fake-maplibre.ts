@@ -73,9 +73,15 @@ export class FakeMarker {
   element: HTMLElement
   remove = vi.fn(() => this.element.remove())
 
-  constructor(options: { element: HTMLElement }) {
+  constructor(public options: { element: HTMLElement, anchor?: string, draggable?: boolean }) {
     this.element = options.element
     FakeMarker.instances.push(this)
+  }
+
+  on = vi.fn()
+
+  getLngLat() {
+    return { lng: this.lngLat[0], lat: this.lngLat[1] }
   }
 
   setLngLat(lngLat: [number, number]) {

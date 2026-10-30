@@ -16,4 +16,5 @@ export const mapKitEn = {
   'map.card.previous': 'Previous',
   'map.card.next': 'Next',
   'map.card.position': '{number} of {count}',
+  'map.cluster': '{count} places here. Zoom in',
 }
