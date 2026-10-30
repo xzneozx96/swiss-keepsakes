@@ -8,7 +8,7 @@ import { useStopDrag } from '@/hooks/use-stop-drag'
 
 export interface PhotoOrderItem {
   id: string
-  /** The row's name: "Photo 1". */
+  /** The row's name: the file's name, or "Photo 1" while it is not known. */
   name: string
   /** The 44 px picture; the row gives it the box. */
   thumbnail: ReactNode
@@ -76,7 +76,7 @@ function PendingRow({ item, pending, remove }: { item: PhotoOrderPending, pendin
         <PhotoThumbOverlay failed={failed} />
       </div>
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="line-clamp-2 text-sm font-medium">{item.name}</span>
+        <span className="truncate text-sm font-medium" title={item.name}>{item.name}</span>
         <span className={`truncate text-xs ${failed ? 'text-danger' : 'text-muted'}`} role={failed ? 'alert' : 'status'}>{item.label}</span>
         {item.detail && <span className="text-xs text-pretty text-muted">{item.detail}</span>}
       </span>
@@ -166,7 +166,7 @@ export function PhotoOrder({ items, labels, pending, onChange }: { items: PhotoO
                 </button>
                 {item.thumbnail}
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="line-clamp-2 text-sm font-medium">{item.name}</span>
+                  <span className="truncate text-sm font-medium" title={item.name}>{item.name}</span>
                   {index === 0 && <span className="truncate text-xs text-muted">{labels.cover}</span>}
                   {item.note}
                 </span>

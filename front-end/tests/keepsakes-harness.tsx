@@ -35,6 +35,7 @@ export const photoId = '0198a000-0000-7000-8000-0000000000e1'
 export const media = mediaSchema.parse({
   id: photoId,
   kind: 'image',
+  name: 'photo.jpg',
   status: 'ready',
   contentType: 'image/jpeg',
   byteSize: 1000,
@@ -124,8 +125,11 @@ export async function setUpHarness() {
     if (custom)
       return custom
     // The photo block reads each photo it shows by id.
-    if (call.method === 'GET' && call.path.startsWith(`/api/store/${storeId}/media/`))
-      return Response.json({ ...media, id: call.path.split('/').at(-1) })
+    if (call.method === 'GET' && call.path.startsWith(`/api/store/${storeId}/media/`)) {
+      const id = call.path.split('/').at(-1)!
+
+      return Response.json({ ...media, id, name: id === photoId ? media.name : `photo-${id.slice(-2)}.jpg` })
+    }
     if (call.path === '/api/me')
       return Response.json({ guestId: storeId, stores: [{ storeId, role: 'owner', status: 'live' }] })
 

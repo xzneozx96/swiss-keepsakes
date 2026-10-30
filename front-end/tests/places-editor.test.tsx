@@ -780,8 +780,8 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
 
 describe('[E4.2][AC68] N17 photos', () => {
   const grant = { uploadKey: `${storeId}/up-1.jpg`, url: 'https://storage.test/uploads/up-1', method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, expiresAt: '2026-10-30T12:00:00.000Z', kind: 'image' }
-  const media = (status: 'processing' | 'ready') => ({ id: uuid(40), kind: 'image', status, contentType: 'image/jpeg', byteSize: 3, width: 800, height: 600, publicUrl: status === 'ready' ? 'https://storage.test/media/a.jpg' : null, variants: [] })
-  const readyMedia = (call: { path: string, method: string }) => (call.path.includes('/media/') && call.method === 'GET' ? Response.json({ ...media('ready'), id: call.path.split('/').at(-1) }) : undefined)
+  const media = (status: 'processing' | 'ready', id = uuid(40)) => ({ id, kind: 'image', status, name: `photo-${id.slice(-2)}.jpg`, contentType: 'image/jpeg', byteSize: 3, width: 800, height: 600, publicUrl: status === 'ready' ? 'https://storage.test/media/a.jpg' : null, variants: [] })
+  const readyMedia = (call: { path: string, method: string }) => (call.path.includes('/media/') && call.method === 'GET' ? Response.json(media('ready', call.path.split('/').at(-1))) : undefined)
   const openPhotos = async (pin = pinOf({ id: uuid(10) })) => {
     api.pin = pin
     await open(uuid(10))
@@ -790,7 +790,7 @@ describe('[E4.2][AC68] N17 photos', () => {
     await heading('Text and photo')
   }
   const rows = () => within(screen.getByRole('list', { name: 'Photos, in order' })).getAllByRole('listitem')
-  const names = () => rows().map(row => row.querySelector('.line-clamp-2')!.textContent)
+  const names = () => rows().map(row => row.querySelector('[title]')!.textContent)
 
   it('[E4.2][AC68] one list: with no photo it says so, and the first photo added is the cover', async () => {
     api.answer = (call) => {
@@ -813,7 +813,7 @@ describe('[E4.2][AC68] N17 photos', () => {
     expect(screen.queryByText('More photos')).not.toBeInTheDocument()
     await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'bridge.jpg', { type: 'image/jpeg' }))
 
-    await waitFor(() => expect(names()).toEqual(['Photo 1']))
+    await waitFor(() => expect(names()).toEqual(['photo-40.jpg']))
     expect(rows()[0]).toHaveTextContent('Cover')
     await waitFor(() => expect(document.querySelector('img')).toHaveAttribute('src', 'https://storage.test/media/a.jpg'))
     expect(api.calls.find(call => call.method === 'PUT')).toMatchObject({ path: '/uploads/up-1' })
@@ -872,11 +872,11 @@ describe('[E4.2][AC68] N17 photos', () => {
       expect(within(row!).queryByRole('button', { name: /^Move/ })).not.toBeInTheDocument()
       expect(within(row!).getByRole('button', { name: 'Remove bridge.jpg' })).toBeInTheDocument()
       expect(row).not.toHaveTextContent('Cover')
-      expect(names()).toEqual(['Photo 1'])
+      await waitFor(() => expect(names()).toEqual(['photo-41.jpg']))
       expect(screen.getAllByText('Uploading…')).toHaveLength(1)
       release()
 
-      await waitFor(() => expect(names()).toEqual(['Photo 1', 'Photo 2']))
+      await waitFor(() => expect(names()).toEqual(['photo-41.jpg', 'photo-40.jpg']))
       expect(screen.queryByRole('list', { name: 'Photos being added' })).not.toBeInTheDocument()
       expect(screen.queryByText('Uploading…')).not.toBeInTheDocument()
       expect(revoke).toHaveBeenCalledWith('blob:bridge')
@@ -898,7 +898,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       expect(screen.queryByText('No photos yet. The first one you add is the main photo.')).not.toBeInTheDocument()
       release()
 
-      await waitFor(() => expect(names()).toEqual(['Photo 1']))
+      await waitFor(() => expect(names()).toEqual(['photo-40.jpg']))
       expect(rows()[0]).toHaveTextContent('Cover')
     })
 
@@ -910,7 +910,7 @@ describe('[E4.2][AC68] N17 photos', () => {
         if (call.path === `/api/store/${storeId}/media/confirm`) {
           n += 1
 
-          return Response.json({ ...media('ready'), id: uuid(60 + n) }, { status: 201 })
+          return Response.json(media('ready', uuid(60 + n)), { status: 201 })
         }
 
         return answerUpload(call)
@@ -919,10 +919,10 @@ describe('[E4.2][AC68] N17 photos', () => {
       const release = hold()
       await userEvent.upload(screen.getByTestId('photo-input'), [new File(['a'], 'a.jpg', { type: 'image/jpeg' }), new File(['b'], 'b.jpg', { type: 'image/jpeg' })])
 
-      expect(pendingRows().map(row => row.querySelector('.line-clamp-2')!.textContent)).toEqual(['a.jpg', 'b.jpg'])
+      expect(pendingRows().map(row => row.querySelector('[title]')!.textContent)).toEqual(['a.jpg', 'b.jpg'])
       release()
 
-      await waitFor(() => expect(names()).toEqual(['Photo 1', 'Photo 2']))
+      await waitFor(() => expect(names()).toEqual(['photo-61.jpg', 'photo-62.jpg']))
       await press('Save draft')
       await waitFor(() => expect(writes()).toHaveLength(1))
       expect(writes()[0]!.body).toMatchObject({ coverMediaId: uuid(61), photos: [{ mediaId: uuid(62) }] })
@@ -931,13 +931,13 @@ describe('[E4.2][AC68] N17 photos', () => {
     it('[E4.2][AC68] a photo still processing is a normal row with a spinner over its picture and Processing… under its name', async () => {
       api.answer = (call) => {
         if (call.path.includes('/media/') && call.method === 'GET')
-          return Response.json({ ...media('processing'), id: call.path.split('/').at(-1) })
+          return Response.json(media('processing', call.path.split('/').at(-1)))
       }
       await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41) }))
 
       expect(await screen.findByText('Processing…')).toBeInTheDocument()
       expect(rows()[0]!.querySelector('.spinner')).not.toBeNull()
-      expect(within(rows()[0]!).getByRole('button', { name: /^Move Photo 1/ })).toBeInTheDocument()
+      expect(within(rows()[0]!).getByRole('button', { name: /^Move photo-41\.jpg/ })).toBeInTheDocument()
     })
 
     it('[E4.2][AC68] a failed upload keeps its row with the error, the reason, Retry and Remove; Retry uploads it again', async () => {
@@ -961,7 +961,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       refuse = false
       await userEvent.click(within(row!).getByRole('button', { name: 'Retry uploading big.jpg' }))
 
-      await waitFor(() => expect(names()).toEqual(['Photo 1']))
+      await waitFor(() => expect(names()).toEqual(['photo-40.jpg']))
       expect(screen.queryByRole('list', { name: 'Photos being added' })).not.toBeInTheDocument()
       expect(revoke).toHaveBeenCalledWith('blob:bad')
     })
@@ -1006,11 +1006,11 @@ describe('[E4.2][AC68] N17 photos', () => {
     api.answer = readyMedia
     await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41), photos: [{ mediaId: uuid(42) }, { mediaId: uuid(43) }] }))
 
-    expect(names()).toEqual(['Photo 1', 'Photo 2', 'Photo 3'])
+    expect(names()).toEqual(['photo-41.jpg', 'photo-42.jpg', 'photo-43.jpg'])
     expect(rows()[0]).toHaveTextContent('Cover')
     expect(screen.getAllByText('Cover')).toHaveLength(1)
-    expect(screen.getByRole('button', { name: 'Move Photo 2, position 2 of 3. Drag, or use the arrow keys.' })).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /^Remove Photo/ })).toHaveLength(3)
+    expect(screen.getByRole('button', { name: 'Move photo-42.jpg, position 2 of 3. Drag, or use the arrow keys.' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^Remove photo-/ })).toHaveLength(3)
     await waitFor(() => expect(rows()[0]!.querySelector('img')).toHaveAttribute('src', 'https://storage.test/media/a.jpg'))
     expect(screen.queryByLabelText(/Photo description/)).not.toBeInTheDocument()
   })
@@ -1018,11 +1018,11 @@ describe('[E4.2][AC68] N17 photos', () => {
   it('[E4.2][AC68] moving a photo to the top makes it the cover; the old cover becomes the first extra photo', async () => {
     api.answer = readyMedia
     await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41), photos: [{ mediaId: uuid(42) }, { mediaId: uuid(43) }] }))
-    screen.getByRole('button', { name: /^Move Photo 3,/ }).focus()
+    screen.getByRole('button', { name: /^Move photo-43\.jpg,/ }).focus()
     await userEvent.keyboard('{ArrowUp}{ArrowUp}')
 
     expect(rows()[0]).toHaveTextContent('Cover')
-    expect(screen.getByText('Photo 2 moved to position 1 of 3.')).toBeInTheDocument()
+    expect(screen.getByText('photo-43.jpg moved to position 1 of 3.')).toBeInTheDocument()
     await press('Save draft')
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]!.method).toBe('PATCH')
@@ -1033,11 +1033,11 @@ describe('[E4.2][AC68] N17 photos', () => {
   it('[E4.2][AC68] removing the cover promotes the next photo; removing the last photo leaves no cover', async () => {
     api.answer = readyMedia
     await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41), photos: [{ mediaId: uuid(42) }] }))
-    await userEvent.click(screen.getByRole('button', { name: 'Remove Photo 1' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Remove photo-41.jpg' }))
 
-    expect(names()).toEqual(['Photo 1'])
+    expect(names()).toEqual(['photo-42.jpg'])
     expect(rows()[0]).toHaveTextContent('Cover')
-    await userEvent.click(screen.getByRole('button', { name: 'Remove Photo 1' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Remove photo-42.jpg' }))
     expect(screen.getByText('No photos yet. The first one you add is the main photo.')).toBeInTheDocument()
     await press('Save draft')
 
@@ -1062,7 +1062,7 @@ describe('[E4.2][AC68] N17 photos', () => {
     await userEvent.type(screen.getByLabelText('Tips from a local'), 'Typed during the upload')
     release()
 
-    await waitFor(() => expect(names()).toEqual(['Photo 1', 'Photo 2']))
+    await waitFor(() => expect(names()).toEqual(['photo-41.jpg', 'photo-40.jpg']))
     expect(screen.getByLabelText('Tips from a local')).toHaveValue('Typed during the upload')
     await press('Save draft')
     await waitFor(() => expect(writes()).toHaveLength(1))

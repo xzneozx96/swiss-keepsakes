@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 
 import { PhotoOrder } from '@/components/photo-order'
 import { useLocale } from '@/contexts/locale-context'
+import { useMediaNames } from '../api/queries'
 import { usePendingPhotos } from '../hooks/use-pending-photos'
 import { PhotoAdd, PhotoState, PhotoThumb } from './photo-parts'
 
@@ -10,7 +11,8 @@ import { PhotoAdd, PhotoState, PhotoThumb } from './photo-parts'
  * file becomes a row at once with its own picture and state (uploading, failed with Retry and Remove); a finished
  * upload is handed to `onAdd` and the row turns into a photo. The caller keeps the ids: `onChange` gets a new order or
  * a photo removed, `onAdd` one new id (add it with an update from the current ids, as several uploads can finish in
- * the same moment). The block has no card of its own; the caller puts it in one.
+ * the same moment). A row shows the file's name from the library, "Photo 1" until it is read. The block has no card
+ * of its own; the caller puts it in one.
  */
 export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, showError = false, onUploadingChange }: {
   storeId: string
@@ -29,6 +31,7 @@ export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, sho
 }) {
   const { t } = useLocale()
   const photos = usePendingPhotos(storeId, onAdd)
+  const fileNames = useMediaNames(storeId, ids)
   const room = max - ids.length - photos.pending.length
   const uploading = photos.pending.some(item => item.status === 'uploading')
 
@@ -43,7 +46,7 @@ export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, sho
             <PhotoOrder
               items={ids.map((id, index) => ({
                 id,
-                name: t('media.photos.title', { n: index + 1 }),
+                name: fileNames[index] || t('media.photos.title', { n: index + 1 }),
                 thumbnail: <PhotoThumb mediaId={id} storeId={storeId} />,
                 note: <PhotoState mediaId={id} storeId={storeId} />,
               }))}

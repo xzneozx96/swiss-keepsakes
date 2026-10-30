@@ -19,7 +19,7 @@ function Harness({ start = ['a', 'b', 'c'] }: { start?: string[] }) {
   return <PhotoOrder items={ids.map(id => ({ id, name: `Photo ${id}`, thumbnail: <span /> }))} labels={labels} onChange={setIds} />
 }
 
-const names = () => screen.getAllByRole('listitem').map(item => item.querySelector('.line-clamp-2')!.textContent)
+const names = () => screen.getAllByRole('listitem').map(item => item.querySelector('[title]')!.textContent)
 
 describe('shared PhotoOrder', () => {
   it('lists the photos in order and says Cover under the first only', () => {
@@ -58,6 +58,15 @@ describe('shared PhotoOrder', () => {
 
     expect(names()).toEqual(['Photo b', 'Photo c'])
     expect(screen.getAllByRole('listitem')[0]).toHaveTextContent('Cover')
+  })
+
+  it('truncates a long name on one line and keeps the whole name as its title', () => {
+    const long = 'a-very-long-file-name-from-the-phone-gallery-2026-10-30-final-final-v2.jpeg'
+
+    render(<PhotoOrder items={[{ id: 'a', name: long, thumbnail: <span />, note: <span /> }]} labels={labels} onChange={() => {}} />)
+
+    expect(screen.getByText(long)).toHaveClass('truncate')
+    expect(screen.getByText(long)).toHaveAttribute('title', long)
   })
 
   it('shows a note under a row, such as a photo that is still processing', () => {

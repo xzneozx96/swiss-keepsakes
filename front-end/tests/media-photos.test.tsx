@@ -15,7 +15,9 @@ vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
 const grant = { uploadKey: 'k/u.jpg', url: 'https://storage.test/uploads/k/u.jpg', method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, expiresAt: '2026-10-30T09:00:00.000Z', kind: 'image' }
 const id = (n: number) => `0198a000-0000-7000-8000-0000000000${(n + 16).toString(16).padStart(2, '0')}`
-const processing = (mediaId: string) => ({ ...readyMedia, id: mediaId, status: 'processing', publicUrl: null, variants: [] })
+/** The library name the test server gives a file: photo-1.jpg for id(1). */
+const nameOf = (mediaId: string) => `photo-${Number.parseInt(mediaId.slice(-2), 16) - 16}.jpg`
+const processing = (mediaId: string) => ({ ...readyMedia, id: mediaId, name: nameOf(mediaId), status: 'processing', publicUrl: null, variants: [] })
 
 let changes: string[][]
 let added: string[]
@@ -80,8 +82,11 @@ function serveUploads(over: (call: (typeof state.calls)[number]) => Response | u
 
       return Response.json(processing(id(confirmed)), { status: 201 })
     }
-    if (call.method === 'GET' && call.path.startsWith(`/api/store/${storeId}/media/`))
-      return Response.json({ ...readyMedia, id: call.path.split('/').at(-1) })
+    if (call.method === 'GET' && call.path.startsWith(`/api/store/${storeId}/media/`)) {
+      const mediaId = call.path.split('/').at(-1)!
+
+      return Response.json({ ...readyMedia, id: mediaId, name: nameOf(mediaId) })
+    }
 
     return undefined
   }
@@ -105,7 +110,7 @@ const file = (name: string, type = 'image/jpeg') => new File(['abc'], name, { ty
 const input = () => screen.getByTestId('photo-input')
 const pendingRows = () => within(screen.getByRole('list', { name: 'Photos being added' })).getAllByRole('listitem')
 const rows = () => within(screen.getByRole('list', { name: 'Photos, in order' })).getAllByRole('listitem')
-const names = () => rows().map(row => row.querySelector('.line-clamp-2')!.textContent)
+const names = () => rows().map(row => row.querySelector('[title]')!.textContent)
 
 describe('[T-002] the shared photos block', () => {
   it('[T-002][AC-1] several files in one choice: a row for each at once, each becomes a photo, the first is the cover', async () => {
@@ -117,12 +122,12 @@ describe('[T-002] the shared photos block', () => {
     })
     await userEvent.upload(input(), [file('a.jpg'), file('b.jpg'), file('c.jpg')])
 
-    expect(pendingRows().map(row => row.querySelector('.line-clamp-2')!.textContent)).toEqual(['a.jpg', 'b.jpg', 'c.jpg'])
+    expect(pendingRows().map(row => row.querySelector('[title]')!.textContent)).toEqual(['a.jpg', 'b.jpg', 'c.jpg'])
     expect(screen.getAllByText('Uploading…')).toHaveLength(3)
     expect(screen.queryByText('Nothing yet.')).not.toBeInTheDocument()
     release()
 
-    await waitFor(() => expect(names()).toEqual(['Photo 1', 'Photo 2', 'Photo 3']))
+    await waitFor(() => expect(names()).toEqual(['photo-1.jpg', 'photo-2.jpg', 'photo-3.jpg']))
     expect(added).toHaveLength(3)
     expect(rows()[0]).toHaveTextContent('Cover')
     expect(screen.getAllByText('Cover')).toHaveLength(1)
@@ -209,17 +214,46 @@ describe('[T-002] the shared photos block', () => {
 
   it('[T-002][AC-5] the arrow keys on a grip move a photo, the new place is announced, Cover follows, Remove takes it off', async () => {
     renderHost({ initial: [id(0), id(1), id(2)] })
-    await waitFor(() => expect(names()).toEqual(['Photo 1', 'Photo 2', 'Photo 3']))
-    screen.getByRole('button', { name: /^Move Photo 3,/ }).focus()
+    await waitFor(() => expect(names()).toEqual(['photo-0.jpg', 'photo-1.jpg', 'photo-2.jpg']))
+    screen.getByRole('button', { name: /^Move photo-2\.jpg,/ }).focus()
     await userEvent.keyboard('{ArrowUp}{ArrowUp}')
 
     expect(changes.at(-1)).toEqual([id(2), id(0), id(1)])
-    expect(screen.getByText('Photo 2 moved to position 1 of 3.')).toBeInTheDocument()
+    expect(screen.getByText('photo-2.jpg moved to position 1 of 3.')).toBeInTheDocument()
     expect(rows()[0]).toHaveTextContent('Cover')
-    await userEvent.click(screen.getByRole('button', { name: 'Remove Photo 1' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Remove photo-2.jpg' }))
 
     expect(changes.at(-1)).toEqual([id(0), id(1)])
-    expect(names()).toEqual(['Photo 1', 'Photo 2'])
+    expect(names()).toEqual(['photo-0.jpg', 'photo-1.jpg'])
+  })
+
+  it('[T-002] a row says "Photo n" until the file\'s name is read, then the name, and keeps "Photo n" when the read fails', async () => {
+    let open = () => {}
+    const gate = new Promise<void>((resolve) => {
+      open = resolve
+    })
+
+    state.answer = (call) => {
+      if (call.method !== 'GET' || !call.path.includes('/media/'))
+        return undefined
+      const mediaId = call.path.split('/').at(-1)!
+
+      if (mediaId === id(2))
+        return problem(500, 'internal-error')
+
+      return gate.then(() => Response.json({ ...readyMedia, id: mediaId, name: nameOf(mediaId) })) as never
+    }
+    renderHost({ initial: [id(0), id(1), id(2)] })
+
+    expect(names()).toEqual(['Photo 1', 'Photo 2', 'Photo 3'])
+    expect(screen.getByRole('button', { name: /^Move Photo 1,/ })).toBeInTheDocument()
+    open()
+
+    await waitFor(() => expect(names()).toEqual(['photo-0.jpg', 'photo-1.jpg', 'Photo 3']))
+    expect(rows()[0]).toHaveTextContent('Cover')
+    expect(rows()[0]!.querySelector('[title]')).toHaveAttribute('title', 'photo-0.jpg')
+    expect(screen.getByRole('button', { name: 'Remove photo-1.jpg' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove Photo 3' })).toBeInTheDocument()
   })
 
   it('[T-002][AC-7] a photo the server is still processing is a row with a spinner and a processing note', async () => {

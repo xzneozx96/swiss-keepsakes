@@ -1,7 +1,7 @@
 import type { MediaListQuery } from './client'
 import type { DataClient } from '@/features/data-client'
 
-import { keepPreviousData, queryOptions, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, queryOptions, useQueries, useQuery } from '@tanstack/react-query'
 import { queryKeys, useDataClient } from '@/features/data-client'
 import { fromApi } from '@/features/data-client/api-transport'
 
@@ -50,4 +50,17 @@ export function useMediaFile(storeId: string | undefined, id: string | null) {
   const client = useDataClient()
 
   return useQuery({ ...mediaQueries.file(client, storeId ?? '', id ?? ''), enabled: storeId !== undefined && id !== null })
+}
+
+/**
+ * The names of the files, in the order of `ids`, from the same cache as `useMediaFile`, so the reads run side by side
+ * and a row's picture and name cost one request. A name is `undefined` while its file loads or when the read failed.
+ */
+export function useMediaNames(storeId: string, ids: string[]) {
+  const client = useDataClient()
+
+  return useQueries({
+    queries: ids.map(id => mediaQueries.file(client, storeId, id)),
+    combine: results => results.map(result => result.data?.name),
+  })
 }

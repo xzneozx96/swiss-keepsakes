@@ -280,7 +280,7 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
 
   it('[E6.1][autosave] a photo added is uploaded, confirmed and saved with the rest, and it shows as processing until it is ready', { timeout: 20_000 }, async () => {
     const added = '0198a000-0000-7000-8000-0000000000e2'
-    const uploaded = { ...media, id: added }
+    const uploaded = { ...media, id: added, name: 'knife.jpg' }
     let reads = 0
 
     serve((call) => {
@@ -306,7 +306,7 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
 
     expect(save.body).toMatchObject({ photoIds: [photoId, added] })
     expect(state.calls.map(call => call.path)).toContain(`/api/store/${storeId}/media/${added}`)
-    expect(screen.getAllByRole('listitem').some(item => item.textContent?.includes('Photo 2'))).toBe(true)
+    expect(screen.getAllByRole('listitem').some(item => item.textContent?.includes('knife.jpg'))).toBe(true)
     expect(await screen.findByText('Processing…')).toBeInTheDocument()
     await waitFor(() => expect(screen.queryByText('Processing…')).not.toBeInTheDocument(), { timeout: 8000 })
   })
@@ -351,13 +351,13 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     current = product({ photos: [media, { ...media, id: second }] })
     await openEditor()
 
-    const grip = screen.getByRole('button', { name: /Move Photo 1, position 1 of 2/ })
+    const grip = await screen.findByRole('button', { name: /Move photo\.jpg, position 1 of 2/ })
 
     grip.focus()
     await userEvent.keyboard('{ArrowDown}')
     await waitFor(() => expect(writes()).toHaveLength(1), AUTOSAVE)
     expect(writes()[0]!.body).toMatchObject({ photoIds: [second, photoId] })
-    await userEvent.click(screen.getByRole('button', { name: 'Remove Photo 1' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Remove photo-e2.jpg' }))
     await waitFor(() => expect(writes()).toHaveLength(2), AUTOSAVE)
     expect(writes()[1]!.body).toMatchObject({ photoIds: [photoId] })
   })
