@@ -59,15 +59,15 @@ function MapCardNav({ index, count, onStep, labels }: MapCardNavProps) {
   )
 }
 
-/** The round ✕ over a card's top right: 36 px to look at, a 44 px hit area to press. */
-export function MapCardClose({ className = '', onClose }: { className?: string, onClose: () => void }) {
+/** The round ✕ over a card's top right: 36 px to look at, a 44 px hit area to press. `floating` places it over the card's top right edge; without it the caller places it. */
+export function MapCardClose({ floating = false, onClose }: { floating?: boolean, onClose: () => void }) {
   const { t } = useLocale()
 
   return (
     <Button
       isIconOnly
       aria-label={t('map.card.close')}
-      className={`relative size-9 min-w-9 rounded-full bg-surface text-foreground shadow-overlay before:absolute before:-inset-1 before:content-[''] ${className}`}
+      className={`${floating ? 'absolute end-0 bottom-full mb-2' : 'relative'} size-9 min-w-9 rounded-full bg-surface text-foreground shadow-overlay before:absolute before:-inset-1 before:content-['']`}
       size="sm"
       variant="tertiary"
       onPress={onClose}
@@ -117,7 +117,7 @@ export function MapCard({
 
   return (
     <article aria-labelledby={titleId} className="relative flex w-full flex-col justify-between gap-2 rounded-2xl bg-surface p-3 shadow-overlay" data-card={id}>
-      {onClose && <MapCardClose className="absolute end-0 bottom-full mb-2" onClose={onClose} />}
+      {onClose && <MapCardClose floating onClose={onClose} />}
       <div className="flex gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           {eyebrow && <p className="truncate text-xs text-muted tabular-nums">{eyebrow}</p>}

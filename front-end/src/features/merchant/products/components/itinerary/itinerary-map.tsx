@@ -13,6 +13,7 @@ import { useLatest } from '@/hooks/use-latest'
 import { addRoute, pinElement, reducedMotion, setRoute } from './map-shared'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
+import '@/components/map/map.css'
 import '@/features/tours/map/tour-itinerary-map.css'
 
 export type Coordinates = [number, number]

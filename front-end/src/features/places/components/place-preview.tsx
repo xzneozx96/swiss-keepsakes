@@ -54,7 +54,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
     // The map, its pin and the card are a picture: inert, except the retry button of a failed map and the credits.
     <MapView
       inert
-      className="h-full"
+      className="relative h-full"
       insets={PREVIEW_INSETS}
       interactive={false}
       label={t('map.heading')}

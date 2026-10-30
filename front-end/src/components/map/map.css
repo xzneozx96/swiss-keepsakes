@@ -1,0 +1,38 @@
+/* The numbered pin of a route (the tour route map, the itinerary editor). */
+.tour-map-marker {
+  width: 44px;
+  height: 44px;
+  border: 3px solid #fffaf4;
+  border-radius: 50%;
+  background: #fffaf4;
+  color: #332b25;
+  box-shadow: 0 4px 16px rgb(31 24 17 / 22%);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 180ms,
+    color 180ms;
+}
+.tour-map-marker:focus-visible {
+  outline: 3px solid #d52b1e;
+  outline-offset: 3px;
+}
+@media (hover: hover) {
+  .tour-map-marker:hover {
+    background: #fae2dd;
+    color: #852017;
+  }
+}
+.tour-map-marker[aria-pressed="true"] {
+  z-index: 2;
+  background: #d52b1e;
+  color: white;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-map-marker {
+    transition: none;
+  }
+}

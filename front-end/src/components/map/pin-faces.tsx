@@ -1,6 +1,8 @@
 import { useLocale } from '@/contexts/locale-context'
 import { MapThumb } from './map-thumb'
 
+import './map.css'
+
 /** A round photo pin (the place icon on the lake blue without a photo). A pin the filter keeps is lit and, with a filter chosen, grows; a pin outside it is dimmed, never hidden. */
 export function PhotoPin({ id, label, photoSrc, selected, dimmed, emphasized, onPress }: {
   id: string
@@ -55,6 +57,21 @@ export function PhotoCluster({ count, dimmed, onPress }: { count: number, dimmed
       <span className="absolute -end-2 -top-1 flex min-w-6 items-center justify-center rounded-full bg-charcoal px-1.5 text-xs leading-6 font-bold text-white tabular-nums">
         {count}
       </span>
+    </button>
+  )
+}
+
+/** A route's numbered pin: white with the number, red when it is the selected stop. */
+export function NumberedPin({ id, number, label, selected, onPress }: {
+  id: string
+  number: number
+  label: string
+  selected: boolean
+  onPress: () => void
+}) {
+  return (
+    <button aria-label={label} aria-pressed={selected} className="tour-map-marker" data-pin-return={id} type="button" onClick={onPress}>
+      {number}
     </button>
   )
 }

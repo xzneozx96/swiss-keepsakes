@@ -1,21 +1,7 @@
-/* Most of a phone screen, so the map and the stop card read together without scrolling. */
-.tour-map-frame {
-  height: min(72svh, 640px);
-  min-height: 460px;
-}
+/* What the itinerary editor still takes from the tour: its canvas box and MapLibre's own controls. Step 7 of the map kit removes it. */
 .tour-map-canvas {
   position: absolute;
   inset: 0;
-}
-.tour-map-frame.maplibregl-pseudo-fullscreen {
-  min-height: 0;
-  border-radius: 0;
-}
-.tour-map-card {
-  bottom: 36px;
-}
-.maplibregl-pseudo-fullscreen .tour-map-card {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 36px);
 }
 /* One compact line of attribution stays readable below the stop card. */
 .tour-itinerary .maplibregl-ctrl-attrib {
@@ -31,41 +17,7 @@
   width: 44px;
   height: 44px;
 }
-.tour-itinerary .maplibregl-ctrl-group button:focus-visible,
-.tour-map-marker:focus-visible {
+.tour-itinerary .maplibregl-ctrl-group button:focus-visible {
   outline: 3px solid #d52b1e;
   outline-offset: 3px;
-}
-.tour-map-marker {
-  width: 44px;
-  height: 44px;
-  border: 3px solid #fffaf4;
-  border-radius: 50%;
-  background: #fffaf4;
-  color: #332b25;
-  box-shadow: 0 4px 16px rgb(31 24 17 / 22%);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background-color 180ms,
-    color 180ms;
-}
-@media (hover: hover) {
-  .tour-map-marker:hover {
-    background: #fae2dd;
-    color: #852017;
-  }
-}
-.tour-map-marker[aria-pressed="true"] {
-  z-index: 2;
-  background: #d52b1e;
-  color: white;
-}
-@media (prefers-reduced-motion: reduce) {
-  .tour-map-marker {
-    transition: none;
-  }
 }

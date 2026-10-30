@@ -23,7 +23,7 @@ function Layer() {
 function renderMap(props: Partial<React.ComponentProps<typeof MapView>> = {}) {
   return render(
     <LocaleProvider>
-      <MapView className="h-96" label="The test map" view={view} {...props}>
+      <MapView className="relative h-96" label="The test map" view={view} {...props}>
         <Layer />
       </MapView>
     </LocaleProvider>,

@@ -21,7 +21,7 @@ const CREDITS_MARGIN = 8
  * read the map through `useMap()`; they clean up their own markers when the map changes (a retry makes a new
  * one). MapLibre loads by dynamic `import()` in `useMapInstance`, never with the first paint.
  *
- * `className` is the frame's size and shape. `insets` is what the screen's overlays take: the credits stay clear
+ * `className` is the frame's position (`relative`, or `absolute inset-0`), size and shape. `insets` is what the screen's overlays take: the credits stay clear
  * of it, and the layers keep the camera clear of it. `status` is the screen's own state (its pins are loading, it
  * has none, or they failed), shown over the map's own loading and failed states. `inert` makes the whole map a
  * picture (the editor's preview, the guest list that covers the map); the status notices and the credits stay
@@ -154,7 +154,7 @@ export function MapView({
   return (
     <div
       ref={frameRef}
-      className={`relative overflow-hidden bg-[#c9d3c6] ${fullscreen ? 'fixed! inset-0 z-[9999] size-full! min-h-0! rounded-none!' : ''} ${className}`}
+      className={`overflow-hidden bg-[#c9d3c6] ${fullscreen ? 'fixed! inset-0 z-[9999] size-full! min-h-0! rounded-none!' : ''} ${className}`}
       data-map-frame=""
     >
       <MapContext value={value}>

@@ -18,6 +18,7 @@ export class FakeMap {
   addSource = vi.fn()
   addLayer = vi.fn()
   addControl = vi.fn()
+  getSource = vi.fn()
   easeTo = vi.fn()
   flyTo = vi.fn()
   fitBounds = vi.fn()
