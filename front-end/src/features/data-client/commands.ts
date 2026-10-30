@@ -114,8 +114,9 @@ export const commandAffects: {
     publish: [queryKeys.places.list, queryKeys.places.pin],
     hide: [queryKeys.places.list, queryKeys.places.pin],
     remove: [queryKeys.places.list, queryKeys.places.pin],
-    // A lookup of a short link and an upload write no collection a screen reads.
+    // A lookup of a short link or of an address and an upload write no collection a screen reads.
     resolveMapsLink: [],
+    addressAt: [],
     requestUpload: [],
     confirmUpload: [],
   },

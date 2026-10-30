@@ -7,6 +7,7 @@ import { useRef, useState } from 'react'
 import { OpenInMapsIcon, RecenterIcon, TrashIcon } from '@/components/icons'
 import { MapControlButton, MapControlGroup } from '@/components/map-controls'
 import { useLocale } from '@/contexts/locale-context'
+import { useAddressFromPosition } from '../hooks/use-address-from-position'
 import { Block, Field } from './fields'
 import { MapPicker } from './map-picker'
 import { MapsLinkField } from './maps-link-field'
@@ -17,13 +18,14 @@ function coordinate(value: string, limit: number): number | null {
   return Number.isFinite(number) && Math.abs(number) <= limit ? Number(number.toFixed(5)) : null
 }
 
-/** Step 1: a Google Maps link that sets the position, then the map picker in its own frame for fine-tuning (coordinate fields when the map cannot load) and the address. The map link of the pin is made by the server. */
+/** Step 1: a Google Maps link that sets the position, then the map picker in its own frame for fine-tuning (coordinate fields when the map cannot load) and the address, which fills itself from the position while it is empty. The map link of the pin is made by the server. */
 export function StepPlace({ form, patch, storeId }: StepProps) {
   const { t } = useLocale()
   const [mapFailed, setMapFailed] = useState(false)
   const pickerRef = useRef<MapPickerControls>(null)
   const located = form.latitude !== null && form.longitude !== null
   const removePosition = () => patch({ latitude: null, longitude: null })
+  const addressFilled = useAddressFromPosition({ storeId, latitude: form.latitude, longitude: form.longitude, address: form.address, patch })
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,7 +68,7 @@ export function StepPlace({ form, patch, storeId }: StepProps) {
         </p>
       </Block>
       <Block>
-        <Field description={t('places.address.help')} label={t('places.address.label')} maxLength={300} value={form.address} onChange={address => patch({ address })} />
+        <Field description={addressFilled ? t('places.address.filled') : t('places.address.help')} label={t('places.address.label')} maxLength={300} value={form.address} onChange={address => patch({ address })} />
       </Block>
     </div>
   )

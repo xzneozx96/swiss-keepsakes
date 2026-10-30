@@ -40,6 +40,8 @@ export function createPlacesClient(): PlacesClient {
     },
     resolveMapsLink: async ({ storeId, url }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/maps-link', { ...timeout(), params: { path: { storeId }, query: { url } } })),
+    addressAt: async ({ storeId, latitude, longitude }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/address-at', { ...timeout(), params: { path: { storeId }, query: { lat: latitude, lng: longitude } } })),
     requestUpload: async ({ storeId, idempotencyKey, ...body }) =>
       answer((await loadClient()).POST('/api/store/{storeId}/media/uploads', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
     confirmUpload: async ({ storeId, idempotencyKey, ...body }) =>
