@@ -10,6 +10,11 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/keepsake-option-design' as const,
+    title: 'Keepsake options, v2: three calmer designs (options for the owner to pick)',
+    note: 'After A1 to A3 were turned down as too dense: O1 a summary row per option that opens one at a time, O2 a plain page you type on, O3 a list and detail. English only until German is asked for; laptop and phone width, errors, a refused delete and a new option on a keepsake with variants (30.10.2026).',
+  },
+  {
     to: '/lab/keepsake-options' as const,
     title: 'Keepsake editor: option management and variant creation (options for the owner to pick)',
     note: 'Three designs for managing an option and its values (type and drag, a table in a sheet, chips with a small editor) and three for creating a variant (a sheet with a live check, a grid of free cells, an open row under the table), each at laptop and phone width with a note on German text, keyboard use and trade-offs (30.10.2026).',

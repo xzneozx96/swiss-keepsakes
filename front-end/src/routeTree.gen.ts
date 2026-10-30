@@ -32,6 +32,7 @@ import { Route as LabEyebrowRouteImport } from './routes/lab.eyebrow'
 import { Route as LabHeroRouteImport } from './routes/lab.hero'
 import { Route as LabHomeRouteImport } from './routes/lab.home'
 import { Route as LabKeepsakeEditorRouteImport } from './routes/lab.keepsake-editor'
+import { Route as LabKeepsakeOptionDesignRouteImport } from './routes/lab.keepsake-option-design'
 import { Route as LabKeepsakeOptionsRouteImport } from './routes/lab.keepsake-options'
 import { Route as LabLanguageSwitchRouteImport } from './routes/lab.language-switch'
 import { Route as LabLocationCardRouteImport } from './routes/lab.location-card'
@@ -223,6 +224,11 @@ const LabHomeRoute = LabHomeRouteImport.update({
 const LabKeepsakeEditorRoute = LabKeepsakeEditorRouteImport.update({
   id: '/lab/keepsake-editor',
   path: '/lab/keepsake-editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabKeepsakeOptionDesignRoute = LabKeepsakeOptionDesignRouteImport.update({
+  id: '/lab/keepsake-option-design',
+  path: '/lab/keepsake-option-design',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabKeepsakeOptionsRoute = LabKeepsakeOptionsRouteImport.update({
@@ -647,6 +653,7 @@ export interface FileRoutesByFullPath {
   '/lab/hero': typeof LabHeroRoute
   '/lab/home': typeof LabHomeRoute
   '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
+  '/lab/keepsake-option-design': typeof LabKeepsakeOptionDesignRoute
   '/lab/keepsake-options': typeof LabKeepsakeOptionsRoute
   '/lab/language-switch': typeof LabLanguageSwitchRoute
   '/lab/location-card': typeof LabLocationCardRoute
@@ -746,6 +753,7 @@ export interface FileRoutesByTo {
   '/lab/hero': typeof LabHeroRoute
   '/lab/home': typeof LabHomeRoute
   '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
+  '/lab/keepsake-option-design': typeof LabKeepsakeOptionDesignRoute
   '/lab/keepsake-options': typeof LabKeepsakeOptionsRoute
   '/lab/language-switch': typeof LabLanguageSwitchRoute
   '/lab/location-card': typeof LabLocationCardRoute
@@ -849,6 +857,7 @@ export interface FileRoutesById {
   '/lab/hero': typeof LabHeroRoute
   '/lab/home': typeof LabHomeRoute
   '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
+  '/lab/keepsake-option-design': typeof LabKeepsakeOptionDesignRoute
   '/lab/keepsake-options': typeof LabKeepsakeOptionsRoute
   '/lab/language-switch': typeof LabLanguageSwitchRoute
   '/lab/location-card': typeof LabLocationCardRoute
@@ -953,6 +962,7 @@ export interface FileRouteTypes {
     | '/lab/hero'
     | '/lab/home'
     | '/lab/keepsake-editor'
+    | '/lab/keepsake-option-design'
     | '/lab/keepsake-options'
     | '/lab/language-switch'
     | '/lab/location-card'
@@ -1052,6 +1062,7 @@ export interface FileRouteTypes {
     | '/lab/hero'
     | '/lab/home'
     | '/lab/keepsake-editor'
+    | '/lab/keepsake-option-design'
     | '/lab/keepsake-options'
     | '/lab/language-switch'
     | '/lab/location-card'
@@ -1154,6 +1165,7 @@ export interface FileRouteTypes {
     | '/lab/hero'
     | '/lab/home'
     | '/lab/keepsake-editor'
+    | '/lab/keepsake-option-design'
     | '/lab/keepsake-options'
     | '/lab/language-switch'
     | '/lab/location-card'
@@ -1254,6 +1266,7 @@ export interface RootRouteChildren {
   LabHeroRoute: typeof LabHeroRoute
   LabHomeRoute: typeof LabHomeRoute
   LabKeepsakeEditorRoute: typeof LabKeepsakeEditorRoute
+  LabKeepsakeOptionDesignRoute: typeof LabKeepsakeOptionDesignRoute
   LabKeepsakeOptionsRoute: typeof LabKeepsakeOptionsRoute
   LabLanguageSwitchRoute: typeof LabLanguageSwitchRoute
   LabLocationCardRoute: typeof LabLocationCardRoute
@@ -1443,6 +1456,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/keepsake-editor'
       fullPath: '/lab/keepsake-editor'
       preLoaderRoute: typeof LabKeepsakeEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/keepsake-option-design': {
+      id: '/lab/keepsake-option-design'
+      path: '/lab/keepsake-option-design'
+      fullPath: '/lab/keepsake-option-design'
+      preLoaderRoute: typeof LabKeepsakeOptionDesignRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/keepsake-options': {
@@ -2172,6 +2192,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabHeroRoute: LabHeroRoute,
   LabHomeRoute: LabHomeRoute,
   LabKeepsakeEditorRoute: LabKeepsakeEditorRoute,
+  LabKeepsakeOptionDesignRoute: LabKeepsakeOptionDesignRoute,
   LabKeepsakeOptionsRoute: LabKeepsakeOptionsRoute,
   LabLanguageSwitchRoute: LabLanguageSwitchRoute,
   LabLocationCardRoute: LabLocationCardRoute,
