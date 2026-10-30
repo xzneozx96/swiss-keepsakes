@@ -47,6 +47,15 @@ function chips() {
 }
 
 describe('multiSelect', () => {
+  it('looks like the other form fields: the primary variant (white field, field border, no resting shadow), not the grey secondary one', () => {
+    render(<Harness />)
+    const root = field().closest('.autocomplete')!
+
+    expect(root).toHaveClass('autocomplete--primary')
+    expect(root).not.toHaveClass('autocomplete--secondary')
+    expect(root.querySelector('.autocomplete__trigger')).not.toBeNull()
+  })
+
   it('shows the label, the placeholder and the help line, with the list closed', () => {
     render(<Harness description="Pick any number." />)
 

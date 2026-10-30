@@ -57,7 +57,6 @@ export function MultiSelect({ label, options, value, onChange, description, plac
       placeholder={placeholder ?? t('multiSelect.placeholder')}
       selectionMode="multiple"
       value={value}
-      variant="secondary"
       onChange={keys => onChange((keys as Key[]).map(String))}
     >
       <Label>{label}</Label>
