@@ -22,7 +22,7 @@ interface View {
   status: 'draft' | 'published'
   name: { en?: string, de?: string }
   text: { en?: string, de?: string }
-  photos: { id: string, publicUrl: string | null }[]
+  photos: { id: string, name: string, publicUrl: string | null }[]
   slug: { en?: string, de?: string } | null
   hasUnpublishedEdits: boolean
   commissionRate: number
@@ -71,7 +71,7 @@ describe('[E6.1] creating a keepsake', () => {
       slug: null,
     })
     expect(product.variants).toEqual([expect.objectContaining({ priceRappen: 3900, status: 'published' })])
-    expect(product.photos).toEqual([expect.objectContaining({ id: photo, publicUrl: expect.stringContaining('/original.jpg') })])
+    expect(product.photos).toEqual([expect.objectContaining({ id: photo, name: expect.any(String), publicUrl: expect.stringContaining('/original.jpg') })])
     expect(product.blocking).toEqual([])
   })
 

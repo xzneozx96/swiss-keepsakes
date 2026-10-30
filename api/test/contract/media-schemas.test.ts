@@ -1,4 +1,4 @@
-import { confirmUploadSchema, MEDIA_NAME_MAX, mediaItemSchema, mediaListQuerySchema, mediaPatchBodySchema, problemTypes, replaceMediaBodySchema, uploadRequestSchema } from '@sk/api-contract'
+import { confirmUploadSchema, MEDIA_NAME_MAX, mediaItemSchema, mediaListQuerySchema, mediaPatchBodySchema, mediaSchema, problemTypes, replaceMediaBodySchema, uploadRequestSchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 
 const id = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
@@ -52,13 +52,13 @@ describe('[E4.11][AC51] media library schemas', () => {
       id,
       kind: 'image',
       status: 'ready',
+      name: 'a.jpg',
       contentType: 'image/jpeg',
       byteSize: 10,
       width: 100,
       height: 50,
       publicUrl: 'https://x/y.jpg',
       variants: [],
-      name: 'a.jpg',
       fileName: 'a.jpg',
       alt: {},
       durationSeconds: null,
@@ -68,6 +68,13 @@ describe('[E4.11][AC51] media library schemas', () => {
     }
     expect(ok(mediaItemSchema, item)).toBe(true)
     expect(ok(mediaItemSchema, { ...item, name: undefined })).toBe(false)
+  })
+
+  it('a plain media file carries its name, so a keepsake photo list can show it', () => {
+    const media = { id, kind: 'image', status: 'ready', name: 'me-fav-vest.jpeg', contentType: 'image/jpeg', byteSize: 10, width: 100, height: 50, publicUrl: 'https://x/y.jpg', variants: [] }
+
+    expect(ok(mediaSchema, media)).toBe(true)
+    expect(ok(mediaSchema, { ...media, name: undefined })).toBe(false)
   })
 
   it('[E4.11][AC51] the new problem codes are listed', () => {

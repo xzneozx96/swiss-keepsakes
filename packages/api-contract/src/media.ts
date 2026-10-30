@@ -28,6 +28,7 @@ export const mediaSchema = z.object({
   id: z.uuid(),
   kind: mediaKind,
   status: z.enum(['processing', 'ready', 'retired']),
+  name: z.string().meta({ description: 'What the merchant sees and searches. It starts as the uploaded file name' }),
   contentType: z.string(),
   byteSize: z.int(),
   width: z.int().nullable(),
@@ -59,7 +60,6 @@ export const mediaUseSummarySchema = z.object({
 }).meta({ id: 'MediaUseSummary' })
 
 export const mediaItemSchema = mediaSchema.extend({
-  name: z.string().meta({ description: 'What the merchant sees and searches. It starts as the uploaded file name' }),
   fileName: z.string().meta({ description: 'The file name of the latest upload' }),
   alt: mediaAltSchema,
   durationSeconds: z.int().nullable(),

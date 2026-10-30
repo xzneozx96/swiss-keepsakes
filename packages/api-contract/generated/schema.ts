@@ -3740,6 +3740,8 @@ export interface components {
             id: string;
             /** @enum {string} */
             kind: "image" | "audio" | "pdf";
+            /** @description What the merchant sees and searches. It starts as the uploaded file name */
+            name: string;
             /** @description The public URL of the original. Null until the file is ready */
             publicUrl: string | null;
             /** @enum {string} */
@@ -4310,6 +4312,8 @@ export interface components {
                 id: string;
                 /** @enum {string} */
                 kind: "image" | "audio" | "pdf";
+                /** @description What the merchant sees and searches. It starts as the uploaded file name */
+                name: string;
                 /** @description The public URL of the original. Null until the file is ready */
                 publicUrl: string | null;
                 /** @enum {string} */

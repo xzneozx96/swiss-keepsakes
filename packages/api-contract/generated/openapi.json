@@ -610,6 +610,10 @@
             ],
             "type": "string"
           },
+          "name": {
+            "description": "What the merchant sees and searches. It starts as the uploaded file name",
+            "type": "string"
+          },
           "publicUrl": {
             "description": "The public URL of the original. Null until the file is ready",
             "type": [
@@ -655,6 +659,7 @@
           "id",
           "kind",
           "status",
+          "name",
           "contentType",
           "byteSize",
           "width",
@@ -799,13 +804,13 @@
           "id",
           "kind",
           "status",
+          "name",
           "contentType",
           "byteSize",
           "width",
           "height",
           "publicUrl",
           "variants",
-          "name",
           "fileName",
           "alt",
           "durationSeconds",
@@ -2646,6 +2651,10 @@
                 ],
                 "type": "string"
               },
+              "name": {
+                "description": "What the merchant sees and searches. It starts as the uploaded file name",
+                "type": "string"
+              },
               "publicUrl": {
                 "description": "The public URL of the original. Null until the file is ready",
                 "type": [
@@ -2691,6 +2700,7 @@
               "id",
               "kind",
               "status",
+              "name",
               "contentType",
               "byteSize",
               "width",

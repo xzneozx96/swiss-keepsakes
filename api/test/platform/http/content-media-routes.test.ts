@@ -116,7 +116,7 @@ describe('[E2.7] POST /api/store/{storeId}/media/confirm', () => {
     const response = await confirm(app, { uploadKey: `${lucerne}/k.jpg` })
 
     expect(response.status).toBe(201)
-    expect(await response.json()).toEqual({ id: mediaId, kind: 'image', status: 'processing', contentType: 'image/jpeg', byteSize: 1000, width: null, height: null, publicUrl: null, variants: [] })
+    expect(await response.json()).toEqual({ id: mediaId, kind: 'image', status: 'processing', name: 'file.jpg', contentType: 'image/jpeg', byteSize: 1000, width: null, height: null, publicUrl: null, variants: [] })
     expect(seen).toEqual([[lucerne, { uploadKey: `${lucerne}/k.jpg` }]])
   })
 
@@ -182,7 +182,7 @@ describe('[E2.7] GET /api/store/{storeId}/media/{mediaId}', () => {
     const response = await read(app, mediaId)
 
     expect(response.status).toBe(200)
-    expect(await response.json()).toMatchObject({ id: mediaId, status: 'ready', width: 1500, publicUrl: expect.stringContaining(`/media/${lucerne}/${mediaId}/original.jpg`), variants: [{ width: 320 }, { width: 640 }, { width: 1280 }] })
+    expect(await response.json()).toMatchObject({ id: mediaId, status: 'ready', name: 'file.jpg', width: 1500, publicUrl: expect.stringContaining(`/media/${lucerne}/${mediaId}/original.jpg`), variants: [{ width: 320 }, { width: 640 }, { width: 1280 }] })
   })
 
   it('[E2.7] a processing row is 200 even when the storage is not configured', async () => {

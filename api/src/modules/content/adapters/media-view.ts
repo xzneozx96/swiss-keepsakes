@@ -11,6 +11,7 @@ export function mediaView(row: MediaRecord, publicUrl: (key: string) => string):
     id: row.id,
     kind: row.kind,
     status: row.status,
+    name: row.name,
     contentType: row.contentType,
     byteSize: row.byteSize,
     width: row.width,
@@ -26,7 +27,6 @@ export function mediaView(row: MediaRecord, publicUrl: (key: string) => string):
 export function mediaItemView(row: MediaRecord & { usage?: MediaListRow['usage'] }, publicUrl: (key: string) => string): MediaItem {
   return {
     ...mediaView(row, publicUrl),
-    name: row.name,
     fileName: row.fileName,
     alt: row.alt,
     durationSeconds: row.durationSeconds,

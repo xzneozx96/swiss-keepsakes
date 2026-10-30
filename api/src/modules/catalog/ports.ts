@@ -32,6 +32,7 @@ export interface MediaInfo {
   id: string
   kind: 'image' | 'audio' | 'pdf'
   status: 'processing' | 'ready' | 'retired'
+  name: string
   contentType: string
   byteSize: number
   width: number | null
