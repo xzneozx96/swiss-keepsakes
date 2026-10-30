@@ -34,7 +34,6 @@ export const keepsakesEn = {
   'keepsakes.status.draft': 'Draft',
 
   'keepsakes.back.toKeepsakes': 'Back to Keepsakes',
-  'keepsakes.back.toEditing': 'Back to editing',
   'keepsakes.save.saving': 'Saving…',
   'keepsakes.save.unsaved': 'Unsaved changes',
   'keepsakes.save.saved': 'Saved {time}',
@@ -42,6 +41,7 @@ export const keepsakesEn = {
   'keepsakes.step.details': 'Details',
   'keepsakes.step.options': 'Options',
   'keepsakes.step.variants': 'Variants',
+  'keepsakes.step.review': 'Review and publish',
   'keepsakes.leave.title': 'Leave without saving?',
   'keepsakes.leave.body': 'Your last edits are not saved yet. If you leave now, they are lost.',
   'keepsakes.leave.confirm': 'Leave without saving',
@@ -125,8 +125,6 @@ export const keepsakesEn = {
   'keepsakes.toast.created': '{name} created as a draft with {count} variants.',
   'keepsakes.toast.created.one': '{name} created as a draft with 1 variant.',
 
-  'keepsakes.review.open': 'Review and publish',
-  'keepsakes.review.openShort': 'Review',
   'keepsakes.review.previewHint': 'What guests will see on a phone, as most of them shop. Scroll inside the phone.',
   'keepsakes.review.previewLabel': 'Preview of the keepsake page on a phone',
   'keepsakes.review.standIn': 'The preview is a stand-in built from this keepsake’s data. The guest page (C03) is designed in its own slice.',

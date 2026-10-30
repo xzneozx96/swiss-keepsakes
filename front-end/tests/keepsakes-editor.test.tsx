@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+
 import { toast } from '@heroui/react'
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -55,8 +58,6 @@ beforeEach(async () => {
 
 const nameField = () => screen.findByLabelText('Name (English)', undefined, SLOW)
 
-const reviewButton = () => screen.getByRole('button', { name: view.wide ? 'Review and publish' : 'Review' })
-
 async function openVariantPage() {
   renderKeepsakes(`/store/products/gifts/${productId}/variants/${variantId}`)
 
@@ -73,23 +74,22 @@ async function openEditor(step?: 'options' | 'variants') {
 }
 
 describe('[E6.1][AC55] M12 the edit screen in English', () => {
-  it('[T-003] lays the editor out like the place editor: the step list, three white blocks, the name, the status and the bar', async () => {
+  it('[T-003] lays the editor out like the place editor: the step list, white blocks, the name, the status and the bar', async () => {
     await openEditor()
 
     const steps = within(screen.getByRole('navigation', { name: 'Steps' }))
 
-    expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Done', '2. Options, Done', '3. Variants, Done'])
-    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent).filter(text => text !== 'Step 1 of 3 · Details')).toEqual(['Name and text', 'Photos', 'Partner\'s commission rate (%)'])
+    expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Done', '2. Options, Done', '3. Variants, Done', '4. Review and publish, Done'])
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent).filter(text => text !== 'Step 1 of 4 · Details')).toEqual(['Name and text', 'Photos', 'Partner\'s commission rate (%)'])
     expect(screen.getByRole('heading', { level: 1, name: 'Victorinox Classic' })).toBeInTheDocument()
     expect(within(screen.getByTestId('keepsake-status')).getByText('Draft')).toBeInTheDocument()
     expect(screen.getByText(/^Saved \d/)).toBeInTheDocument()
-    expect(reviewButton()).toBeInTheDocument()
   })
 
-  it('[T-003] shows "Step 1 of 3 · Details", a progress bar and All steps for a phone', async () => {
+  it('[T-003] shows "Step 1 of 4 · Details", a progress bar and All steps for a phone', async () => {
     await openEditor()
 
-    expect(screen.getByText(/Step 1 of 3/)).toBeInTheDocument()
+    expect(screen.getByText(/Step 1 of 4/)).toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Progress through the steps' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'All steps' }))
     const sheet = await screen.findByRole('dialog', { name: 'Steps' })
@@ -109,7 +109,6 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
     expect(router.state.location.search).toMatchObject({ step: 'options' })
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
     await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
     expect(router.state.location.search.step).toBeUndefined()
@@ -446,143 +445,201 @@ describe('[E6.1][variant] the default variant', () => {
   })
 })
 
-describe('[E6.1][review] Review and publish', () => {
-  it('[E6.1][review] opens from the bar after the save, and Back to editing returns', async () => {
-    const router = await openEditor()
+/** The step list's button for Review and publish: it saves what is typed, then opens the step. */
+const openReview = () => userEvent.click(screen.getByRole('button', { name: /^4\. Review and publish/ }))
 
-    await userEvent.click(reviewButton())
+/** The bar's red action; the bar is a sibling of the step body, so it is found on the page. */
+const bar = () => screen.getByTestId('step-bar')
 
-    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
-    expect(router.state.location.search).toMatchObject({ view: 'review' })
-    expect(screen.getByText('Ready · 1 to look at')).toBeInTheDocument()
-    expect(screen.getByTestId('keepsake-preview')).toHaveTextContent('Victorinox Classic')
-    expect(screen.getByTestId('keepsake-preview')).toHaveTextContent(/CHF\s*39/)
-    await userEvent.click(screen.getByRole('button', { name: 'Back to editing' }))
+describe('[E6.1][review] Review and publish, the fourth step', () => {
+  it('[T-004] is the fourth step of the list and the header has no button for it', async () => {
+    await openEditor()
 
-    expect(await screen.findByLabelText('Name (English)')).toBeInTheDocument()
+    const steps = within(screen.getByRole('navigation', { name: 'Steps' }))
+
+    expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label')?.replace(/,.*$/, ''))).toEqual(['1. Details', '2. Options', '3. Variants', '4. Review and publish'])
+    expect(screen.queryByRole('button', { name: /^Review/ })).not.toBeInTheDocument()
   })
 
-  it('[E6.1][review] a laptop shows the guest page in the iPhone mockup beside the publish card', async () => {
+  it('[T-004] opens from the step list, shows the preview and the checks, and Back returns to Variants', async () => {
+    const router = await openEditor()
+
+    await openReview()
+
+    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
+    expect(router.state.location.search).toMatchObject({ step: 'review' })
+    expect(screen.getAllByText('Ready · 1 to look at').length).toBeGreaterThan(0)
+    expect(screen.getByTestId('keepsake-preview')).toHaveTextContent('Victorinox Classic')
+    expect(screen.getByTestId('keepsake-preview')).toHaveTextContent(/CHF\s*39/)
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
+
+    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
+    expect(router.state.location.search).toMatchObject({ step: 'variants' })
+  })
+
+  it('[T-004] the old ?view=review address opens the step', async () => {
+    renderKeepsakes(`/store/products/gifts/${productId}?view=review`)
+
+    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^4\. Review and publish/ })).toHaveAttribute('aria-current', 'step')
+  })
+
+  it('[T-004] saves what is typed before the step opens', async () => {
+    await openEditor()
+
+    await userEvent.type(await nameField(), ' II')
+    await openReview()
+
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    const saves = writes()
+
+    expect(saves).toHaveLength(1)
+    expect(saves[0]).toMatchObject({ method: 'PATCH', body: { name: { en: 'Victorinox Classic II' } } })
+    expect(await screen.findByTestId('keepsake-preview')).toHaveTextContent('Victorinox Classic II')
+  })
+
+  it('[T-004] does not open while the typed edits cannot be saved', async () => {
+    serve(call => (call.method === 'PATCH' ? problem(412, 'precondition-failed') : undefined))
+    await openEditor()
+
+    await userEvent.type(await nameField(), ' II')
+    await openReview()
+
+    expect(await screen.findByRole('alert', undefined, AUTOSAVE)).toHaveTextContent('Someone saved this keepsake after you opened it')
+    expect(screen.queryByTestId('review-screen')).not.toBeInTheDocument()
+  })
+
+  it('[T-004] a laptop shows the guest page in the iPhone mockup beside the publish card, and the bar offers Publish', async () => {
     view.wide = true
     await openEditor()
 
-    await userEvent.click(reviewButton())
+    await openReview()
     const review = await screen.findByTestId('review-screen', undefined, SLOW)
 
     expect(within(review).getByText('Goes live in English. Deutsch readers see it with a note.')).toBeInTheDocument()
     expect(within(review).getByTestId('publish-checks')).toBeInTheDocument()
     expect(within(review).getByText(/No Deutsch name and text/)).toBeInTheDocument()
-    expect(within(review).getByRole('button', { name: 'Publish' })).toBeEnabled()
+    expect(within(review).queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
+    expect(within(bar()).getByRole('button', { name: 'Publish' })).toBeEnabled()
     expect(within(review).getByText('The web address is made from the name when you publish.')).toBeInTheDocument()
   })
 
-  it('[E6.1][checks] blocking checks switch Publish off, name what is missing and Edit jumps to the card with the error', async () => {
+  it('[T-004] blocking checks switch Publish off, name what is missing and Edit goes to the Details step with the Photos block', async () => {
     current = product({ photos: [], blocking: [{ code: 'photos', card: 'photos' }, { code: 'variant-for-sale', card: 'variants' }] })
     view.wide = true
     await openEditor()
 
-    await userEvent.click(reviewButton())
+    await openReview()
     const review = await screen.findByTestId('review-screen', undefined, SLOW)
 
     expect(within(review).getByText('2 things stop publishing')).toBeInTheDocument()
     expect(within(review).getByText('Add at least one photo.')).toBeInTheDocument()
     expect(within(review).getByText('Put at least one variant on sale.')).toBeInTheDocument()
-    expect(within(review).getByRole('button', { name: 'Publish' })).toBeDisabled()
+    expect(within(bar()).getByRole('button', { name: 'Publish' })).toBeDisabled()
     expect(within(review).getByText('Fix what stops publishing first.')).toBeInTheDocument()
     await userEvent.click(within(review).getAllByRole('button', { name: 'Edit' })[0]!)
 
-    expect(await screen.findByLabelText('Name (English)')).toBeInTheDocument()
-    expect(screen.getByRole('alert')).toHaveTextContent('No photos yet. Add one to publish; the first is the cover.')
-  })
-
-  it('[T-003] Edit on a photo check lands on the Details step with the Photos block focused and the step marked as having errors', async () => {
-    current = product({ photos: [], blocking: [{ code: 'photos', card: 'photos' }] })
-    view.wide = true
-    await openEditor('variants')
-
-    expect(await screen.findByRole('button', { name: '1. Details' })).toBeInTheDocument()
-    await userEvent.click(reviewButton())
-    await userEvent.click(within(await screen.findByTestId('review-screen', undefined, SLOW)).getByRole('button', { name: 'Edit' }))
-
     expect(await screen.findByRole('region', { name: 'Photos' })).toBeVisible()
-    expect(screen.getByRole('button', { name: '1. Details, Has errors' })).toBeInTheDocument()
-    await waitFor(() => expect(document.getElementById('photos')!.contains(document.activeElement)).toBe(true))
     expect(screen.getByRole('alert')).toHaveTextContent('No photos yet. Add one to publish; the first is the cover.')
+    expect(screen.getByRole('button', { name: '1. Details, Has errors' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '4. Review and publish, Has errors' })).toBeInTheDocument()
+    await waitFor(() => expect(document.getElementById('photos')!.contains(document.activeElement)).toBe(true))
   })
 
-  it('[T-003] Edit on a variants check opens the Variants step', async () => {
+  it('[T-004] Edit on a variants check opens the Variants step', async () => {
     current = product({ blocking: [{ code: 'variant-for-sale', card: 'variants' }] })
     view.wide = true
     const router = await openEditor()
 
-    await userEvent.click(reviewButton())
+    await openReview()
     await userEvent.click(within(await screen.findByTestId('review-screen', undefined, SLOW)).getByRole('button', { name: 'Edit' }))
 
     expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
     expect(router.state.location.search).toMatchObject({ step: 'variants' })
-    expect(router.state.location.search.view).toBeUndefined()
   })
 
-  it('[E6.1][checks] the phone bar opens the checks by itself when something blocks', async () => {
+  it('[T-004] on a phone one bar is pinned: it says what the checks say, with Back and Publish, and the checks sit in the step', async () => {
     current = product({ blocking: [{ code: 'language', card: 'basics' }] })
     await openEditor()
 
-    await userEvent.click(reviewButton())
+    await openReview()
     const checks = await screen.findByTestId('publish-checks', undefined, SLOW)
 
     expect(checks).toHaveTextContent('Add the name and the text in English or German.')
-    expect(screen.getAllByText('1 thing stops publishing').length).toBeGreaterThan(0)
-    expect(screen.getAllByRole('button', { name: 'Publish' }).every(button => button.hasAttribute('disabled'))).toBe(true)
+    expect(within(bar()).getByText('1 thing stops publishing')).toBeInTheDocument()
+    expect(within(bar()).getByRole('button', { name: 'Previous step' })).toBeInTheDocument()
+    expect(within(bar()).getByRole('button', { name: 'Publish' })).toBeDisabled()
+    expect(screen.getAllByRole('button', { name: 'Publish' })).toHaveLength(1)
   })
 
-  it('[E6.1][AC30] Publish sends the row version, and the screen then shows Published with Unpublish', async () => {
+  it('[T-004][AC30] Publish sends the row version, and the editor then shows Published with Unpublish in the card', async () => {
     const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'POST' && call.path === `${detail}/publish` ? Response.json(product({ status: 'published', rowVersion: 2, slug: { en: 'victorinox-classic' }, warnings: [] })) : undefined))
     await openEditor()
 
-    await userEvent.click(reviewButton())
-    await userEvent.click(await within(await screen.findByTestId('review-screen', undefined, SLOW)).findByRole('button', { name: 'Publish' }))
+    await openReview()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    await userEvent.click(within(bar()).getByRole('button', { name: 'Publish' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${detail}/publish`, ifMatch: '1' })
-    expect(await screen.findByText('Published')).toBeInTheDocument()
+    expect(await within(screen.getByTestId('keepsake-status')).findByText('Published')).toBeInTheDocument()
     expect(await screen.findByRole('button', { name: 'Unpublish' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
     expect(success).toHaveBeenCalledExactlyOnceWith('Published in English. Guests see it within about a minute.')
   })
 
-  it('[E6.1][checks] a refused publish sends the merchant back to the fields', async () => {
+  it('[T-004] a refused publish sends the merchant back to the step with the error', async () => {
     const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'POST' && call.path === `${detail}/publish` ? problem(422, 'publish-incomplete') : undefined))
     await openEditor()
 
-    await userEvent.click(reviewButton())
-    await userEvent.click(await within(await screen.findByTestId('review-screen', undefined, SLOW)).findByRole('button', { name: 'Publish' }))
+    await openReview()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    await userEvent.click(within(bar()).getByRole('button', { name: 'Publish' }))
 
-    expect(await screen.findByLabelText('Name (English)')).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Name and text' })).toBeVisible()
+    expect(screen.queryByTestId('review-screen')).not.toBeInTheDocument()
     expect(danger).toHaveBeenCalledExactlyOnceWith('This keepsake cannot be published yet. See what is missing.')
   })
 
-  it('[E6.1][review] a published keepsake with edits says so and offers Publish changes', async () => {
+  it('[T-004] a published keepsake with edits says so and the bar offers Publish changes, with no Unpublish in the card', async () => {
     current = product({ status: 'published', hasUnpublishedEdits: true, slug: { en: 'victorinox-classic' } })
     await openEditor()
 
     expect(screen.getByText('Published · edits not live')).toBeInTheDocument()
-    await userEvent.click(reviewButton())
-    const bar = await screen.findByTestId('review-screen', undefined, SLOW)
+    await openReview()
+    const review = await screen.findByTestId('review-screen', undefined, SLOW)
 
-    expect(within(bar).getByRole('button', { name: 'Publish changes' })).toBeEnabled()
-    expect(within(bar).queryByRole('button', { name: 'Unpublish' })).not.toBeInTheDocument()
+    expect(within(bar()).getByRole('button', { name: 'Publish changes' })).toBeEnabled()
+    expect(within(review).getByRole('button', { name: 'Unpublish' })).toBeInTheDocument()
   })
 
-  it('[E6.1][review] Unpublish asks first, then sends the row version and returns to Draft', async () => {
+  it('[T-004] a live keepsake with no edits has no Publish in the bar', async () => {
+    current = product({ status: 'published', slug: { en: 'victorinox-classic' } })
+    await openEditor()
+
+    await openReview()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+
+    expect(within(bar()).queryByRole('button', { name: /^Publish/ })).not.toBeInTheDocument()
+  })
+
+  it('[T-004] Unpublish asks first, then sends the row version and returns to Draft; cancelling changes nothing', async () => {
     current = product({ status: 'published', slug: { en: 'victorinox-classic' } })
     const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'POST' && call.path === `${detail}/unpublish` ? Response.json(product({ status: 'draft', rowVersion: 2 })) : undefined))
     await openEditor()
 
-    await userEvent.click(reviewButton())
+    await openReview()
     await userEvent.click(await screen.findByRole('button', { name: 'Unpublish' }, SLOW))
+    const cancelled = await screen.findByRole('alertdialog')
+
+    await userEvent.click(within(cancelled).getByRole('button', { name: 'Cancel' }))
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(writes()).toHaveLength(0)
+    await userEvent.click(screen.getByRole('button', { name: 'Unpublish' }))
     const dialog = await screen.findByRole('alertdialog')
 
     expect(dialog).toHaveTextContent('Unpublish this keepsake?')
@@ -592,8 +649,16 @@ describe('[E6.1][review] Review and publish', () => {
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${detail}/unpublish`, ifMatch: '1' })
-    expect(await screen.findByText('Draft')).toBeInTheDocument()
+    expect(await within(screen.getByTestId('keepsake-status')).findByText('Draft')).toBeInTheDocument()
     expect(success).toHaveBeenCalledExactlyOnceWith('The keepsake is a draft again.')
+  })
+
+  it('[T-004] the editor loads the review step lazily, so the mockup is not in the first step\'s code', () => {
+    const source = readFileSync(resolve(__dirname, '../src/features/keepsakes/components/keepsake-editor.tsx'), 'utf8')
+
+    expect(source).toContain('lazy(() => import(\'./review-screen\'))')
+    expect(source).not.toMatch(/from '\.\/review-screen'/)
+    expect(readFileSync(resolve(__dirname, '../src/features/keepsakes/components/review-screen.tsx'), 'utf8')).toContain('from \'@/components/iphone-mockup\'')
   })
 })
 
@@ -615,11 +680,10 @@ describe('[E6.1][i18n] M12 in German', () => {
 
     await screen.findByLabelText('Name (English)', undefined, SLOW)
     await screen.findByRole('heading', { level: 2, name: 'Name und Text' }, SLOW)
-    expect(within(screen.getByRole('navigation', { name: 'Schritte' })).getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Erledigt', '2. Optionen, Erledigt', '3. Varianten, Erledigt'])
+    expect(within(screen.getByRole('navigation', { name: 'Schritte' })).getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Erledigt', '2. Optionen, Erledigt', '3. Varianten, Erledigt', '4. Prüfen und veröffentlichen, Erledigt'])
     expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent).filter(text => !text?.startsWith('Schritt'))).toEqual(['Name und Text', 'Fotos', 'Provisionssatz für Partner (%)'])
-    expect(screen.getByText(/Schritt 1 von 3/)).toBeInTheDocument()
+    expect(screen.getByText(/Schritt 1 von 4/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Prüfen' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Zurück zu Andenken' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
     expect(await screen.findByText('Keine Optionen: Dieses Andenken wird als eine Variante verkauft.')).toBeInTheDocument()
@@ -632,14 +696,14 @@ describe('[E6.1][i18n] M12 in German', () => {
   it('[E6.1][i18n] shows Review and publish with its checks and warnings in German', async () => {
     current = product({ photos: [], blocking: [{ code: 'photos', card: 'photos' }], warnings: [{ code: 'other-language', card: 'basics', language: 'de' }, { code: 'commission-zero', card: 'commission' }] })
     view.wide = true
-    renderKeepsakes(`/store/products/gifts/${productId}?view=review`)
+    renderKeepsakes(`/store/products/gifts/${productId}?step=review`)
 
     const review = await screen.findByTestId('review-screen', undefined, SLOW)
 
     expect(await within(review).findByText('1 Punkt verhindert das Veröffentlichen', undefined, SLOW)).toBeInTheDocument()
     expect(within(review).getByText('Fügen Sie mindestens ein Foto hinzu.')).toBeInTheDocument()
     expect(within(review).getByText('Die Provision beträgt 0 %: Partner verdienen nichts daran.')).toBeInTheDocument()
-    expect(within(review).getByRole('button', { name: 'Veröffentlichen' })).toBeDisabled()
+    expect(within(bar()).getByRole('button', { name: 'Veröffentlichen' })).toBeDisabled()
     expect(document.body.textContent).not.toMatch(/keepsakes\.[a-z]/)
   })
 })

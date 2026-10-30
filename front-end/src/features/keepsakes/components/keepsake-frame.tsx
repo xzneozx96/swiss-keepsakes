@@ -16,7 +16,7 @@ import { KEEPSAKES_PATH } from '../lib/search-params'
  * name and the status chip, the step list on the left, the step's blocks on the right and the bar under them.
  * `onBack` is the leave guard: the arrow asks first when something is not saved.
  */
-export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBack, bar, notices, trailing, children }: {
+export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBack, bar, notices, children }: {
   title: string
   status: { tone: StatusTone, label: string }
   steps: StepView[]
@@ -27,8 +27,6 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
   bar: React.ComponentProps<typeof StepBar>
   /** What sits above the steps: the stale warning, a refused save. */
   notices?: React.ReactNode
-  /** At the end of the header, after the status chip. */
-  trailing?: React.ReactNode
   children: React.ReactNode
 }) {
   const { t } = useLocale()
@@ -52,7 +50,6 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
         <span className="shrink-0" data-testid="keepsake-status">
           <StatusChip tone={status.tone}>{status.label}</StatusChip>
         </span>
-        {trailing}
       </header>
       {notices}
       <StepLayout canGo={canGo} current={current} quietTitle steps={steps} onGo={onGo}>

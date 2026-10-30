@@ -35,7 +35,6 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.status.draft': 'Entwurf',
 
   'keepsakes.back.toKeepsakes': 'Zurück zu Andenken',
-  'keepsakes.back.toEditing': 'Zurück zum Bearbeiten',
   'keepsakes.save.saving': 'Speichern …',
   'keepsakes.save.unsaved': 'Nicht gespeicherte Änderungen',
   'keepsakes.save.saved': 'Gespeichert {time}',
@@ -43,6 +42,7 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.step.details': 'Details',
   'keepsakes.step.options': 'Optionen',
   'keepsakes.step.variants': 'Varianten',
+  'keepsakes.step.review': 'Prüfen und veröffentlichen',
   'keepsakes.leave.title': 'Ohne Speichern verlassen?',
   'keepsakes.leave.body': 'Ihre letzten Änderungen sind noch nicht gespeichert. Wenn Sie jetzt gehen, gehen sie verloren.',
   'keepsakes.leave.confirm': 'Ohne Speichern verlassen',
@@ -126,8 +126,6 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.toast.created': '{name} wurde als Entwurf mit {count} Varianten erstellt.',
   'keepsakes.toast.created.one': '{name} wurde als Entwurf mit 1 Variante erstellt.',
 
-  'keepsakes.review.open': 'Prüfen und veröffentlichen',
-  'keepsakes.review.openShort': 'Prüfen',
   'keepsakes.review.previewHint': 'Was Gäste auf dem Handy sehen, wie die meisten einkaufen. Scrollen Sie im Handy.',
   'keepsakes.review.previewLabel': 'Vorschau der Andenken-Seite auf einem Handy',
   'keepsakes.review.standIn': 'Die Vorschau ist ein Platzhalter aus den Daten dieses Andenkens. Die Gästeseite (C03) wird in einem eigenen Schritt gestaltet.',

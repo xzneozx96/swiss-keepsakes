@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { isKeepsakeStep, KEEPSAKE_STEPS } from '@/features/keepsakes/lib/search-params'
-import { draftStatuses, stepOfCard, stepStatuses } from '@/features/keepsakes/lib/steps'
+import { isKeepsakeStep, KEEPSAKE_STEPS, keepsakeSearch } from '@/features/keepsakes/lib/search-params'
+import { draftStatuses, firstBlockedStep, stepOfCard, stepStatuses } from '@/features/keepsakes/lib/steps'
 
 const check = (card: 'basics' | 'photos' | 'options' | 'variants' | 'commission', code: 'language' | 'photos' | 'variant-for-sale' | 'option-labels' = 'photos') => ({ code, card })
 
@@ -67,5 +67,32 @@ describe('[T-003] the status of each step of a new keepsake', () => {
 
   it('[T-003] Review and publish stays not started: the keepsake does not exist yet', () => {
     expect(draftStatuses({ hasName: true, reached: 2, soldCount: 2, nameTried: false, variantsTried: false }).review).toBe('todo')
+  })
+})
+
+describe('[T-004] Review and publish as the fourth step', () => {
+  const ids = KEEPSAKE_STEPS
+
+  it('[T-004] there are four steps and the last is Review and publish', () => {
+    expect(KEEPSAKE_STEPS).toEqual(['details', 'options', 'variants', 'review'])
+  })
+
+  it('[T-004] its mark follows every check: done with none, not started with some, errors after a publish was tried', () => {
+    expect(stepStatuses({ blocking: [] }, ids, true).review).toBe('done')
+    expect(stepStatuses({ blocking: [check('options')] }, ids, false).review).toBe('todo')
+    expect(stepStatuses({ blocking: [check('options')] }, ids, true).review).toBe('error')
+  })
+
+  it('[T-004] a blocked publish goes back to the first step, in order, that holds a blocking check', () => {
+    expect(firstBlockedStep({ blocking: [check('variants'), check('commission')] })).toBe('details')
+    expect(firstBlockedStep({ blocking: [check('variants'), check('options')] })).toBe('options')
+    expect(firstBlockedStep({ blocking: [] })).toBe('details')
+  })
+
+  it('[T-004] the old ?view=review address means ?step=review, and the step in the address wins', () => {
+    expect(keepsakeSearch({ view: 'review' })).toEqual({ step: 'review' })
+    expect(keepsakeSearch({ step: 'options', view: 'review' })).toEqual({ step: 'options' })
+    expect(keepsakeSearch({ step: 'details' })).toEqual({ step: undefined })
+    expect(keepsakeSearch({ step: 'billing', view: 'edit' })).toEqual({ step: undefined })
   })
 })

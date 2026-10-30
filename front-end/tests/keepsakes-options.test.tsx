@@ -381,7 +381,7 @@ describe('[E6.2][AC52] the preview', () => {
     serve()
     await openEditor()
 
-    await userEvent.click(screen.getByRole('button', { name: 'Review' }))
+    await userEvent.click(screen.getByRole('button', { name: /^4\. Review and publish/ }))
     const preview = await screen.findByTestId('keepsake-preview', undefined, SLOW)
 
     expect(within(preview).getByRole('region', { name: 'Size' })).toHaveTextContent('Small')

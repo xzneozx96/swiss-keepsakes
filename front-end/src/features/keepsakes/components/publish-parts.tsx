@@ -3,20 +3,16 @@ import type { Language } from '@sk/domain/shared'
 import type { Outcome } from '../hooks/use-keepsake-editor'
 
 import { Button } from '@heroui/react'
-import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
-import { ChevronDownIcon, StatusDangerIcon, StatusSuccessIcon, StatusWarningIcon } from '@/components/icons'
+import { StatusDangerIcon, StatusSuccessIcon, StatusWarningIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { checkText, fullLanguages, nameIn, textOf } from '../lib/keepsake-rules'
 import { KeepsakeLanguageSwitch } from './basics-fields'
 
 export interface PublishActions {
-  publish: () => Promise<Outcome>
   unpublish: () => Promise<Outcome>
   isPending: boolean
-  /** A blocked attempt: the edit screen shows the errors at its fields. */
-  onBlocked: () => void
 }
 
 /** The checks: blocking ones first, each with Edit that jumps to its card; then the warnings with Show. */
@@ -62,20 +58,11 @@ export function ChecksList({ keepsake, onFix }: { keepsake: Product, onFix: (che
   )
 }
 
-/** Publish, publish the edits of a live keepsake, or unpublish it (asks first). `bar` is the phone's pinned bar. */
-export function PublishButtons({ keepsake, actions, layout = 'stack' }: { keepsake: Product, actions: PublishActions, layout?: 'stack' | 'bar' }) {
+/** Unpublish a live keepsake. It asks first: guests lose the page. Publish is the step bar's red action. */
+export function UnpublishButton({ actions }: { actions: PublishActions }) {
   const { t } = useLocale()
   const { confirm, dialog } = useConfirm()
-  const blocked = keepsake.blocking.length > 0
-  const live = keepsake.status === 'published'
 
-  // The toast of a result is the command's `meta` (`use-keepsake-editor.ts`); here only the screen reacts to a blocked publish.
-  const publish = async () => {
-    const outcome = await actions.publish()
-
-    if (!outcome.ok && outcome.type === 'publish-incomplete')
-      actions.onBlocked()
-  }
   const unpublish = async () => {
     const confirmed = await confirm({
       title: t('keepsakes.unpublish.title'),
@@ -89,18 +76,10 @@ export function PublishButtons({ keepsake, actions, layout = 'stack' }: { keepsa
   }
 
   return (
-    <div className={`flex gap-2 ${layout === 'stack' ? 'flex-col' : 'shrink-0 flex-row items-center'}`}>
-      {(!live || keepsake.hasUnpublishedEdits) && (
-        <Button className={`max-lg:h-11 ${layout === 'stack' ? 'order-first' : ''}`} fullWidth={layout === 'stack'} isDisabled={blocked} isPending={actions.isPending} onPress={() => void publish()}>
-          {t(live ? 'keepsakes.publishChanges' : 'keepsakes.publish')}
-        </Button>
-      )}
-      {live && (layout === 'stack' || !keepsake.hasUnpublishedEdits) && (
-        <Button className="max-lg:h-11" fullWidth={layout === 'stack'} isDisabled={actions.isPending} variant="danger-soft" onPress={() => void unpublish()}>{t('keepsakes.unpublish')}</Button>
-      )}
-      {blocked && layout === 'stack' && <p className="text-xs text-danger">{t('keepsakes.checks.fixFirst')}</p>}
+    <>
+      <Button className="self-start max-lg:min-h-11" isDisabled={actions.isPending} variant="danger-soft" onPress={() => void unpublish()}>{t('keepsakes.unpublish')}</Button>
       {dialog}
-    </div>
+    </>
   )
 }
 
@@ -127,42 +106,7 @@ export function PublishHead({ keepsake, language, onLanguage }: { keepsake: Prod
               ? t('keepsakes.publish.goesLive.one', { language: t(`keepsakes.language.${full[0]!}`), other: t(`keepsakes.language.${other(full[0]!)}`) })
               : t('keepsakes.publish.needsLanguage')}
         </p>
-        <p className="truncate text-xs text-muted">{address ? t('keepsakes.publish.address', { language, slug: address }) : t('keepsakes.publish.addressLater')}</p>
-      </div>
-    </div>
-  )
-}
-
-/** Phones: the checks fold into one line above Publish, pinned over the tab bar. They open by themselves when something blocks. */
-export function PhonePublishBar({ keepsake, actions, onFix }: { keepsake: Product, actions: PublishActions, onFix: (check: PublishCheck) => void }) {
-  const { t } = useLocale()
-  const { blocking, warnings } = keepsake
-  const [expanded, setExpanded] = useState(blocking.length > 0)
-  const summary = blocking.length
-    ? t(blocking.length === 1 ? 'keepsakes.checks.blocking.one' : 'keepsakes.checks.blocking.other', { count: blocking.length })
-    : warnings.length ? t('keepsakes.bar.readyWithWarnings', { count: warnings.length }) : t('keepsakes.checks.ready')
-  const Icon = blocking.length ? StatusDangerIcon : warnings.length ? StatusWarningIcon : StatusSuccessIcon
-
-  return (
-    <div className="fixed inset-x-0 bottom-16 z-20 flex flex-col border-t border-separator bg-surface shadow-overlay">
-      {expanded && (
-        <div className="max-h-[42dvh] overflow-y-auto border-b border-separator px-4 py-3">
-          <ChecksList
-            keepsake={keepsake}
-            onFix={(check) => {
-              setExpanded(false)
-              onFix(check)
-            }}
-          />
-        </div>
-      )}
-      <div className="flex items-center gap-2 px-3 py-2">
-        <button aria-expanded={expanded} className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-xl px-1 text-start text-sm font-medium outline-none focus-visible:focus-ring" type="button" onClick={() => setExpanded(open => !open)}>
-          <Icon aria-hidden className={`shrink-0 ${blocking.length ? 'text-danger' : warnings.length ? 'text-warning' : 'text-success'}`} size={18} />
-          <span className="min-w-0 flex-1 truncate">{summary}</span>
-          <ChevronDownIcon aria-hidden className={`shrink-0 text-muted transition-transform ${expanded ? '' : 'rotate-180'}`} size={16} />
-        </button>
-        <PublishButtons actions={actions} keepsake={keepsake} layout="bar" />
+        <p className="text-xs text-muted [overflow-wrap:anywhere]">{address ? t('keepsakes.publish.address', { language, slug: address }) : t('keepsakes.publish.addressLater')}</p>
       </div>
     </div>
   )

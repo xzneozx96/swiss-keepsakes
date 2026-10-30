@@ -11,6 +11,8 @@ const FORM_FIELD_TAG = /^(?:input|textarea|select)$/i
 export interface BarAction {
   label: string
   onPress: () => void
+  /** The action cannot run now, for a reason the page already says (a publish that checks block). */
+  isDisabled?: boolean
 }
 
 /**
@@ -81,6 +83,7 @@ export function StepBar({
 
   return (
     <div
+      data-testid="step-bar"
       className={`fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] z-10 sm:inset-x-4 lg:sticky lg:inset-x-auto lg:bottom-6 ${keyboardOpen ? 'max-lg:hidden' : ''}`}
     >
       <div className="flex items-center gap-2 rounded-3xl bg-surface px-3 py-2 shadow-overlay lg:px-4 lg:py-3">
@@ -130,7 +133,7 @@ export function StepBar({
             </Button>
           )}
           {primary && (
-            <Button isDisabled={isSaving} size="sm" onPress={primary.onPress}>
+            <Button isDisabled={isSaving || primary.isDisabled} size="sm" onPress={primary.onPress}>
               {primary.label}
             </Button>
           )}
