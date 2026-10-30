@@ -39,7 +39,7 @@ function send(app: ReturnType<typeof setup>, method: string, path: string, heade
   })
 }
 
-const draft: StoryDraft = { title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello' }] }] } }
+const draft: StoryDraft = { title: 'A day on the lake', excerpt: '', authorName: '', coverMediaId: null, body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello' }] }] } }
 
 describe('[E2.6] the story version save: If-Match, ETag and rowVersion', () => {
   it('[E2.6] AC-1 a story version PATCH with a stale If-Match is 412 and with none is 428', async () => {
@@ -193,6 +193,49 @@ describe('[E2.6] the story write routes', () => {
 
     expect(response.status).toBe(422)
     expect(await response.json()).toMatchObject({ type: 'publish-incomplete', errors: [{ in: 'body', path: 'slug' }] })
+  })
+
+  it('[E2.14][AC30] a publish that lacks the cover, the excerpt, the place or the check date names each field in its path', async () => {
+    const app = setup({ publishStoryVersion: async () => ({ ok: false, reason: 'incomplete', gaps: ['excerpt', 'coverMediaId', 'subjectPlaceId', 'checkedOn'] }) })
+
+    const response = await send(app, 'POST', `${english}/publish`, { 'If-Match': '1' })
+
+    expect(response.status).toBe(422)
+    const problem = await response.json() as { errors: { in: string, path: string, message: string }[] }
+    expect(problem).toMatchObject({ type: 'publish-incomplete' })
+    expect(problem.errors.map(e => e.path)).toEqual(['excerpt', 'coverMediaId', 'subjectPlaceId', 'checkedOn'])
+    expect(problem.errors.every(e => e.in === 'body' && e.message !== '')).toBe(true)
+  })
+
+  it.each([
+    ['a save', 'PATCH', english, { 'If-Match': '1' }],
+    ['a create', 'POST', versions, {}],
+  ])('[E2.14][AC30] %s with an authorRole is refused by the contract with 400 naming the key, and the use case is not called', async (_name, method, path, headers) => {
+    let calls = 0
+    const count = async () => {
+      calls++
+      return { ok: true, value: fakeStoryVersion } as const
+    }
+    const app = setup({ saveStoryVersion: count, createStoryVersion: count })
+
+    const response = await send(app, method, path, headers, { language: 'de', draft: { ...draft, authorRole: 'Owner' } })
+
+    expect(response.status).toBe(400)
+    expect(JSON.stringify(await response.json())).toContain('authorRole')
+    expect(calls).toBe(0)
+  })
+
+  it('[E2.14][AC30] a version read from storage with an old authorRole is answered without it, and with the check date', async () => {
+    const legacy = { ...draft, authorName: 'Sonja', checkedOn: '2026-10-01', authorRole: 'Owner' } as StoryDraft
+    const app = setup({ saveStoryVersion: async () => ({ ok: true, value: { ...fakeStoryVersion, draft: legacy, published: legacy } }) })
+
+    const response = await send(app, 'PATCH', english, { 'If-Match': '1' }, { draft })
+    const body = await response.json() as { draft: object, published: object }
+
+    expect(response.status).toBe(200)
+    expect(body.draft).toMatchObject({ authorName: 'Sonja', checkedOn: '2026-10-01' })
+    expect(Object.keys(body.draft)).not.toContain('authorRole')
+    expect(Object.keys(body.published)).not.toContain('authorRole')
   })
 
   it('[E2.6] unpublish answers 200 with status draft, and 409 not-published for a draft', async () => {

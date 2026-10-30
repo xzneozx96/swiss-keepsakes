@@ -135,7 +135,7 @@ describe('public pin reads over the database', () => {
   it('[E2.12][AC88] the main story and the cover come with the pin, in the carried language', async () => {
     const store = randomUUID()
     const { rows: g } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store])
-    const storyDoc = JSON.stringify({ title: 'T', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [] } })
+    const storyDoc = JSON.stringify({ title: 'T', excerpt: '', authorName: '', coverMediaId: null, body: { type: 'doc', content: [] } })
     const storySlug = slug()
     await pool.query(
       `insert into content.story_versions (store_id, group_id, language, status, slug, published, published_at) values ($1, $2, 'en', 'published', $3, $4, now())`,

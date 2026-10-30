@@ -9,7 +9,6 @@ export interface SeedStoryDoc {
   excerpt: string
   intro: string
   authorName: string
-  authorRole: string
   readMinutes: number | null
   coverMediaId: string | null
   sections: {
@@ -34,7 +33,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Climb the old town wall before the city wakes up, and see Luzerne laid out between the lake and the hills.',
         intro: 'The Musegg wall runs along the hill above the old town. It was built in the late 14th century to guard Luzerne from the north, and long stretches of it still stand.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 4,
         coverMediaId: null,
         sections: [
@@ -95,7 +93,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Steigen Sie auf die alte Stadtmauer, bevor die Stadt erwacht, und sehen Sie Luzern zwischen See und Hügeln.',
         intro: 'Die Museggmauer zieht sich über den Hügel oberhalb der Altstadt. Sie wurde im späten 14. Jahrhundert gebaut, um Luzern gegen Norden zu schützen, und lange Abschnitte stehen bis heute.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 4,
         coverMediaId: null,
         sections: [
@@ -161,7 +158,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'A dying lion carved into the rock, and the Swiss guards he remembers.',
         intro: 'A short walk from the old town, a lion lies carved into a sandstone cliff above a small, still pond. He is wounded, a broken spear in his side, one paw resting on a shield. Most people fall quiet when they first see him.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 6,
         coverMediaId: null,
         sections: [
@@ -202,7 +198,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Ein sterbender Löwe im Fels und die Schweizer Gardisten, an die er erinnert.',
         intro: 'Ein paar Gehminuten von der Altstadt entfernt liegt ein Löwe, in eine Sandsteinwand gehauen, über einem kleinen, stillen Teich. Er ist verwundet, ein abgebrochener Speer steckt in seiner Seite, eine Pranke ruht auf einem Schild. Die meisten werden still, wenn sie ihn zum ersten Mal sehen.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 6,
         coverMediaId: null,
         sections: [
@@ -248,7 +243,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Paddle wheels, polished brass and a slow way to watch the mountains rise out of the water.',
         intro: 'Lake Luzerne still has a fleet of paddle steamers, the oldest of them more than a hundred years old. They carry you from the middle of town to the villages along the shore.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 5,
         coverMediaId: null,
         sections: [
@@ -299,7 +293,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Schaufelräder, glänzendes Messing und eine langsame Art, die Berge aus dem Wasser steigen zu sehen.',
         intro: 'Auf dem Vierwaldstättersee fahren noch immer Raddampfer, der älteste von ihnen ist mehr als hundert Jahre alt. Sie bringen Sie von der Stadtmitte zu den Dörfern am Ufer.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 5,
         coverMediaId: null,
         sections: [
@@ -355,7 +348,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'The stone tower in the river was guarding Luzerne before the Chapel Bridge was built.',
         intro: 'The eight-sided stone tower beside the Chapel Bridge is older than the bridge itself. It stood in the river as part of the town’s defences, and over the centuries it served as an archive, a treasury and a prison.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 3,
         coverMediaId: null,
         sections: [
@@ -401,7 +393,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'A fish market, a fountain and a row of painted houses: the Weinmarkt is where the town promised to join the Swiss Confederation.',
         intro: 'Most visitors cross the Weinmarkt on the way to somewhere else. It is worth stopping. This small cobbled square is where the people of Luzerne are said to have gathered in 1332 to swear their alliance with Uri, Schwyz and Unterwalden.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 3,
         coverMediaId: null,
         sections: [
@@ -456,7 +447,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Ein Fischmarkt, ein Brunnen und bemalte Häuser: Auf dem Weinmarkt versprach die Stadt, der Eidgenossenschaft beizutreten.',
         intro: 'Die meisten gehen über den Weinmarkt auf dem Weg zu etwas anderem. Es lohnt sich, stehen zu bleiben. Auf diesem kleinen Kopfsteinplatz sollen sich die Luzernerinnen und Luzerner 1332 versammelt haben, um den Bund mit Uri, Schwyz und Unterwalden zu beschwören.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 3,
         coverMediaId: null,
         sections: [
@@ -516,7 +506,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Luzerne’s quieter wooden bridge carries 45 triangular paintings in its roof, and in every one of them Death is somewhere in the crowd.',
         intro: 'Everyone photographs the Chapel Bridge. A few hundred metres downstream there is a second covered wooden bridge, plainer and much quieter, and its roof is the more unusual gallery. Look up when you cross it.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 5,
         coverMediaId: null,
         sections: [
@@ -567,7 +556,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Luzerns stillere Holzbrücke trägt 45 dreieckige Bilder im Dach, und auf jedem ist der Tod irgendwo in der Menge.',
         intro: 'Alle fotografieren die Kapellbrücke. Ein paar hundert Meter flussabwärts gibt es eine zweite gedeckte Holzbrücke, schlichter und viel ruhiger, und ihr Dach ist die ungewöhnlichere Galerie. Schauen Sie nach oben, wenn Sie hinübergehen.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 5,
         coverMediaId: null,
         sections: [
@@ -623,7 +611,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Since 1861, Luzerne has controlled the level of Lake Luzerne with timber needles, set into the Reuss by hand.',
         intro: 'From the Spreuer Bridge, look upstream. Across the river stands a long row of thin wooden beams, and behind it the whole of Lake Luzerne. This is the Needle Dam, and it still works much as it did in 1861.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 4,
         coverMediaId: null,
         sections: [
@@ -678,7 +665,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Seit 1861 reguliert Luzern den Pegel des Vierwaldstättersees mit Holznadeln, die von Hand in die Reuss gesetzt werden.',
         intro: 'Schauen Sie von der Spreuerbrücke flussaufwärts. Quer im Fluss steht eine lange Reihe dünner Holzbalken, und dahinter liegt der ganze Vierwaldstättersee. Das ist das Nadelwehr, und es funktioniert noch fast so wie 1861.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 4,
         coverMediaId: null,
         sections: [
@@ -738,7 +724,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'A doctor from Vienna, three generations of Suidters and a shop that still serves the neighbours on Bahnhofstrasse.',
         intro: 'On Bahnhofstrasse, a few doors from the old Ritter Palace, there is a pharmacy with a very old name above its window: Alte Suidtersche Apotheke. It opened in 1833, and it is still a working pharmacy.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 3,
         coverMediaId: null,
         sections: [
@@ -783,7 +768,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Ein Arzt aus Wien, drei Generationen Suidter und ein Geschäft, das noch heute die Nachbarschaft an der Bahnhofstrasse bedient.',
         intro: 'An der Bahnhofstrasse, ein paar Türen vom alten Ritterschen Palast entfernt, steht über einem Schaufenster ein sehr alter Name: Alte Suidtersche Apotheke. Sie wurde 1833 eröffnet und ist noch immer eine Apotheke im Alltagsbetrieb.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 3,
         coverMediaId: null,
         sections: [
@@ -833,7 +817,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'An iron tower on the cliff above Lake Luzerne, a ride of under a minute and a view that took five years to reach.',
         intro: 'On the Bürgenstock, on the cliff above Lake Luzerne, a slim iron tower stands against the rock. It is the Hammetschwand lift, and it has taken visitors to the summit for more than a hundred years.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 4,
         coverMediaId: null,
         sections: [
@@ -884,7 +867,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Ein eiserner Turm an der Felswand über dem Vierwaldstättersee, eine Fahrt von unter einer Minute und eine Aussicht, für die man fünf Jahre baute.',
         intro: 'Auf dem Bürgenstock, an der Felswand über dem Vierwaldstättersee, steht ein schlanker Eisenturm vor dem Felsen. Es ist der Hammetschwand-Lift, und er bringt seit über hundert Jahren Gäste auf den Gipfel.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 4,
         coverMediaId: null,
         sections: [
@@ -940,7 +922,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'How a cutler’s workshop in a village in Schwyz became Victorinox, and why a Swiss Army Knife makes a good keepsake.',
         intro: 'Almost everyone has held a red Swiss Army Knife, but few know where it comes from. It began in 1884 in Ibach, a village in the canton of Schwyz, and the company is still there.',
         authorName: 'Sonja',
-        authorRole: 'Owner, Swiss Keepsakes Luzern',
         readMinutes: 4,
         coverMediaId: null,
         sections: [
@@ -1005,7 +986,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Wie aus einer Messerschmiede in einem Dorf im Kanton Schwyz Victorinox wurde, und warum ein Schweizer Taschenmesser ein gutes Andenken ist.',
         intro: 'Fast alle haben schon ein rotes Schweizer Taschenmesser in der Hand gehabt, aber nur wenige wissen, woher es kommt. Es begann 1884 in Ibach, einem Dorf im Kanton Schwyz, und die Firma ist noch immer dort.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 4,
         coverMediaId: null,
         sections: [
@@ -1075,7 +1055,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Wenn die Altstadt still wird: beleuchtete Brücken, leere Gassen und ein Spaziergang mit Laterne.',
         intro: 'Wenn die Tagesgäste abgereist sind, wird es in der Altstadt still. Brücken und Türme sind beleuchtet, und ihr Licht spiegelt sich in der Reuss.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 3,
         coverMediaId: null,
         sections: [
@@ -1121,7 +1100,6 @@ export const seedStories: SeedStory[] = [
         excerpt: 'Mit der Zahnradbahn hinauf, mit der Gondel hinunter: Luzerns Hausberg an einem Tag.',
         intro: 'Der Pilatus ist Luzerns Hausberg. An klaren Tagen sieht man ihn von fast überall in der Stadt, und viele Gäste möchten wenigstens einmal hinauf.',
         authorName: 'Sonja',
-        authorRole: 'Inhaberin, Swiss Keepsakes Luzern',
         readMinutes: 4,
         coverMediaId: null,
         sections: [

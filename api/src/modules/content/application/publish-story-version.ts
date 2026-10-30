@@ -8,7 +8,9 @@ import { ensureMediaReady } from './ensure-media-ready.ts'
 import { fail, ok } from './failure.ts'
 
 // One language goes live on its own; no rule asks for another. A draft-status version with no pending draft has
-// nothing to publish but its kept published text, which is what goes live again.
+// nothing to publish but its kept published text, which is what goes live again. The text that goes live needs a
+// title, a link, an excerpt and a cover, and an editorial review also its place and its check date. The database
+// CHECK reads only the title and the link (ADR-015); the other rules live here.
 export function makePublishStoryVersion<T>({ uow, stories, media, audit, clock }: StoryDeps<T>) {
   return async (actor: Actor, storeId: string, groupId: string, language: ContentLanguage, ifMatch: number, requestId: string | null): Promise<Result<StoryVersion>> => {
     if (!mayManageContent(actor, storeId))
@@ -23,7 +25,16 @@ export function makePublishStoryVersion<T>({ uow, stories, media, audit, clock }
       const processing = doc && await ensureMediaReady(media, tx, storeId, storyMediaIds(doc).map(m => m.id))
       if (processing)
         return fail(processing)
-      const gaps = storyVersionPublishGaps({ slug: version.slug, title: (version.draft ?? version.published)?.title ?? '' })
+      const group = await stories.findGroupForUpdate(tx, storeId, groupId)
+      const gaps = storyVersionPublishGaps({
+        slug: version.slug,
+        title: doc?.title ?? '',
+        excerpt: doc?.excerpt ?? '',
+        coverMediaId: doc?.coverMediaId ?? null,
+        checkedOn: doc?.checkedOn,
+        kind: group?.kind ?? 'story',
+        subjectPlaceId: group?.subjectPlaceId ?? null,
+      })
       if (gaps.length > 0)
         return fail({ reason: 'incomplete', gaps })
       const published = await stories.publishVersion(tx, version, clock.now())

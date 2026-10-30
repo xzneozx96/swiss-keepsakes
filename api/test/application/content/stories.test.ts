@@ -18,8 +18,11 @@ const store = 'store-1'
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g1', stores: new Map([[store, 'owner']]) }
 const outsider: Actor = { kind: 'staff', userId: 'u2', guestId: 'g2', stores: new Map([['store-2', 'owner']]) }
 
-const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: emptyStoryBody, ...over })
+const doc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: 'A day out on the water.', authorName: '', coverMediaId: 'cover', body: emptyStoryBody, ...over })
 const complete: StoryVersionChanges = { slug: 'a-day-on-the-lake', draft: doc() }
+
+// The cover every complete draft points at is always a ready image of the store.
+const coverRow: MediaRow = { id: 'cover', kind: 'image', status: 'ready' }
 
 function setup(media: MediaRow[] = [], pinRows: { id: string, storeId: string }[] = []) {
   const stories = createFakeStories()
@@ -27,7 +30,7 @@ function setup(media: MediaRow[] = [], pinRows: { id: string, storeId: string }[
   const deps = {
     uow: { run: <R>(work: (tx: null) => Promise<R>) => work(null) },
     stories,
-    media: { find: async (_tx: null, _storeId: string, ids: string[]) => media.filter(m => ids.includes(m.id)) },
+    media: { find: async (_tx: null, _storeId: string, ids: string[]) => [coverRow, ...media].filter(m => ids.includes(m.id)) },
     pins: { idsInStore: async (_tx: null, storeId: string, ids: string[]) => pinRows.filter(p => p.storeId === storeId && ids.some(id => id.toLowerCase() === p.id)).map(p => p.id) },
     audit: { record: async (_tx: null, entry: AuditEntry) => void audit.push(entry) },
     clock: createManualClock(new Date('2026-10-27T10:00:00Z')),
@@ -73,14 +76,76 @@ describe('story use cases', () => {
   })
 
   it.each([
-    ['slug', { slug: null }],
-    ['title', { draft: doc({ title: ' ' }) }],
-  ] as const)('[E2.6][AC30] publishing a version with no %s is incomplete', async (gap, lacking) => {
+    ['slug', { slug: null }, ['slug']],
+    ['title', { draft: doc({ title: ' ' }) }, ['title']],
+    ['excerpt', { draft: doc({ excerpt: '  ' }) }, ['excerpt']],
+    ['cover', { draft: doc({ coverMediaId: null }) }, ['coverMediaId']],
+    ['title and excerpt', { draft: doc({ title: '', excerpt: '' }) }, ['title', 'excerpt']],
+  ] as const)('[E2.14][AC30] publishing a version with no %s is incomplete and names the field', async (_name, lacking, gaps) => {
     const s = setup()
     const g = await group(s)
     await version(s, g.id, 'en', { ...complete, ...lacking })
-    expect(await s.publish(owner, store, g.id, 'en', 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: [gap] })
+    expect(await s.publish(owner, store, g.id, 'en', 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps })
     expect(s.stories.versions.get(`${g.id}/en`)).toMatchObject({ status: 'draft', rowVersion: 1 })
+  })
+
+  it('[E2.14][AC30] a draft with no cover, no excerpt and no title saves, on a draft version and on a published one', async () => {
+    const s = setup()
+    const g = await group(s)
+    await version(s, g.id)
+    const bare = doc({ title: '', excerpt: '', coverMediaId: null })
+    expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: bare }, null)).toMatchObject({ ok: true, value: { status: 'draft', draft: bare } })
+    expect(await s.createVersion(owner, store, g.id, 'de', { slug: 'ein-tag', draft: bare }, null)).toMatchObject({ ok: true })
+    const other = await group(s)
+    await version(s, other.id, 'en', { slug: 'other', draft: doc() })
+    await s.publish(owner, store, other.id, 'en', 1, null)
+    const saved = await s.saveVersion(owner, store, other.id, 'en', 2, { draft: bare }, null)
+    expect(saved).toMatchObject({ ok: true, value: { status: 'published', draft: bare, published: { title: 'A day on the lake', coverMediaId: 'cover' } } })
+    expect(await s.publish(owner, store, other.id, 'en', 3, null)).toMatchObject({ ok: false, reason: 'incomplete' })
+  })
+
+  describe('[E2.14][AC30] an editorial review', () => {
+    const place = '0190f0c2-0000-7000-8000-0000000000b1'
+    async function review(s: Setup, draft: StoryDraft) {
+      const created = await s.createGroup(owner, store, { kind: 'editorial_review', subjectPlaceId: place }, null)
+      if (!created.ok)
+        throw new Error('create group failed')
+      await version(s, created.value.id, 'en', { slug: 'chapel-bridge-review', draft })
+      return created.value
+    }
+
+    it('needs its check date, named as checkedOn', async () => {
+      const s = setup()
+      const g = await review(s, doc())
+      expect(await s.publish(owner, store, g.id, 'en', 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['checkedOn'] })
+      expect(s.stories.versions.get(`${g.id}/en`)).toMatchObject({ status: 'draft', rowVersion: 1 })
+    })
+
+    it('publishes with its place and its check date', async () => {
+      const s = setup()
+      const g = await review(s, doc({ checkedOn: '2026-10-01' }))
+      expect(await s.publish(owner, store, g.id, 'en', 1, null)).toMatchObject({ ok: true, value: { status: 'published', published: { checkedOn: '2026-10-01' } } })
+    })
+
+    it('needs its place, named as subjectPlaceId', async () => {
+      const s = setup()
+      const g = await review(s, doc({ checkedOn: '2026-10-01' }))
+      s.stories.groups.set(g.id, { ...s.stories.groups.get(g.id)!, subjectPlaceId: null })
+      expect(await s.publish(owner, store, g.id, 'en', 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['subjectPlaceId'] })
+    })
+
+    it('a plain story needs no check date', async () => {
+      const s = setup()
+      const g = await group(s)
+      await version(s, g.id)
+      expect(await s.publish(owner, store, g.id, 'en', 1, null)).toMatchObject({ ok: true })
+    })
+
+    it('a review draft saves without its check date', async () => {
+      const s = setup()
+      const g = await review(s, doc({ checkedOn: null }))
+      expect(await s.saveVersion(owner, store, g.id, 'en', 1, { draft: doc({ checkedOn: null, excerpt: '' }) }, null)).toMatchObject({ ok: true })
+    })
   })
 
   it('[E2.6][AC30] publishing copies the draft to published, clears the draft, bumps row_version and writes an audit row', async () => {

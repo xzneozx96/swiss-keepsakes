@@ -1,6 +1,6 @@
 import type { ChildProcess } from 'node:child_process'
 import { spawn } from 'node:child_process'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 import { resolve } from 'node:path'
 import process from 'node:process'
@@ -214,6 +214,15 @@ async function main() {
       if (url.pathname === '/grant-admin' && request.method === 'POST') {
         const result = await grantSuperAdmin(email)
         return json(response, result.ok ? 200 : 409, result)
+      }
+      if (url.pathname === '/ready-cover' && request.method === 'POST') {
+        // A ready image row with no file behind it: a story publishes only with a cover, and no spec uploads one.
+        const { rows } = await pool.query<{ id: string }>(
+          `insert into content.media (store_id, kind, storage_key, content_type, byte_size, sha256, width, height, status)
+           values ($1, 'image', $2, 'image/jpeg', 10, repeat('a', 64), 1200, 800, 'ready') returning id`,
+          [url.searchParams.get('storeId'), `${url.searchParams.get('storeId')}/${randomUUID()}.jpg`],
+        )
+        return json(response, 200, { id: rows[0]!.id })
       }
       if (url.pathname === '/invitation-link' && request.method === 'POST') {
         const template = url.searchParams.get('template') === 'N18' ? 'N18' : 'N20'

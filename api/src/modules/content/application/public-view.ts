@@ -52,7 +52,6 @@ export interface PublicStoryBody { type: 'doc', content: PublicBodyNode[] }
 
 export interface PublicStory extends PublicStoryCard {
   authorName: string
-  authorRole: string
   body: PublicStoryBody
 }
 
@@ -214,7 +213,6 @@ export function toPublicStory(row: PublicStoryRow, requested: ContentLanguage): 
   return {
     ...toCard(row, version, pick.notice, body),
     authorName: str(published.authorName),
-    authorRole: str(published.authorRole),
     body,
   }
 }

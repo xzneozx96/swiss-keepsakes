@@ -27,7 +27,7 @@ function keysOf(value: unknown): string[] {
 
 interface Seed { story: { id: string, slug: string }, pin: string, tour: { id: string, slug: string }, mapCategory: string, blogCategory: string, main: string }
 
-const storyDoc = (title: string) => JSON.stringify({ title, excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [] } })
+const storyDoc = (title: string) => JSON.stringify({ title, excerpt: '', authorName: '', coverMediaId: null, body: { type: 'doc', content: [] } })
 
 async function group(store: string, language: 'en' | 'de', status: 'draft' | 'published', title: string): Promise<{ id: string, slug: string }> {
   const { rows } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store])
@@ -225,7 +225,7 @@ describe('[E2.12] the public routes over the real app and the database', () => {
   // Drift guard: what E2.6's publish writes is what the public read lists.
   it('[E2.12][AC45] a pin and a story version created and published through the E2.6 routes show up in the public reads', async () => {
     const env = createContentHttp({ pool, db })
-    const { owner, pins, groups } = await env.storeWithStaff()
+    const { owner, pins, groups, storeId } = await env.storeWithStaff()
 
     const createdPin = await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Drift pin' }, latitude: 47.0502, longitude: 8.3093, slug: { en: slug() } } })
     expect(createdPin.status).toBe(201)
@@ -236,7 +236,13 @@ describe('[E2.12] the public routes over the real app and the database', () => {
     const createdGroup = await env.call(groups, { method: 'POST', headers: owner.headers, body: {} })
     const groupBody = await createdGroup.json() as { id: string }
     const storySlug = slug()
-    const createdVersion = await env.call(`${groups}/${groupBody.id}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'en', slug: storySlug, draft: JSON.parse(storyDoc('Drift story')) } })
+    const { rows: cover } = await pool.query<{ id: string }>(
+      `insert into content.media (store_id, kind, storage_key, content_type, byte_size, sha256, status)
+       values ($1, 'image', $2, 'image/jpeg', 10, repeat('a', 64), 'ready') returning id`,
+      [storeId, `${storeId}/${randomUUID()}`],
+    )
+    const draft = { ...JSON.parse(storyDoc('Drift story')), excerpt: 'A story that drifts.', coverMediaId: cover[0]!.id }
+    const createdVersion = await env.call(`${groups}/${groupBody.id}/versions`, { method: 'POST', headers: owner.headers, body: { language: 'en', slug: storySlug, draft } })
     expect(createdVersion.status).toBe(201)
     const publishedVersion = await env.call(`${groups}/${groupBody.id}/versions/en/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': createdVersion.headers.get('ETag')! } })
     expect(publishedVersion.status).toBe(200)

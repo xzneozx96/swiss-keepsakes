@@ -36,7 +36,7 @@ function setup(seed: MediaRecord[]) {
   return { ready, stories, createGroup: makeCreateStoryGroup(storyDeps), createVersion: makeCreateStoryVersion(storyDeps), publishStory: makePublishStoryVersion(storyDeps), createTour: makeCreateTour(tourDeps), publishTour: makePublishTour(tourDeps) }
 }
 
-const storyDoc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: emptyStoryBody, ...over })
+const storyDoc = (over: Partial<StoryDraft> = {}): StoryDraft => ({ title: 'A day on the lake', excerpt: 'A day out on the water.', authorName: '', coverMediaId: null, body: emptyStoryBody, ...over })
 const tourDoc: TourGuideDoc = { title: { en: 'Old town walk' }, summary: {}, meetingPoint: {}, sections: [] }
 
 async function story(s: ReturnType<typeof setup>, draft: StoryDraft) {
@@ -81,12 +81,12 @@ describe('[E2.7] publish refuses media that is still processing', () => {
     expect((result as { mediaIds: string[] }).mediaIds.toSorted()).toEqual(['cover', 'pdf'])
   })
 
-  it('[E2.7] a ready cover, and a story with no media, publish as before', async () => {
+  it('[E2.7][E2.14] a ready cover publishes, and a story with no cover is incomplete', async () => {
     const s = setup([row('cover', 'image', 'ready')])
     const withCover = await story(s, storyDoc({ coverMediaId: 'cover' }))
     expect(await s.publishStory(owner, store, withCover, 'en', 1, null)).toMatchObject({ ok: true })
     const bare = await story(s, storyDoc())
-    expect(await s.publishStory(owner, store, bare, 'en', 1, null)).toMatchObject({ ok: true })
+    expect(await s.publishStory(owner, store, bare, 'en', 1, null)).toEqual({ ok: false, reason: 'incomplete', gaps: ['coverMediaId'] })
   })
 
   it('[E2.7] the stale check comes before the media check, the media check before the publish gaps', async () => {

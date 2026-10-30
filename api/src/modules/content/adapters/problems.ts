@@ -15,6 +15,10 @@ const gapMessages: Record<PublishGap, string> = {
   location: 'Set the location on the map',
   slug: 'Add a web address (slug) for each language that has a title',
   pdf: 'Upload the PDF itinerary',
+  excerpt: 'Add an excerpt',
+  coverMediaId: 'Choose a cover photo',
+  subjectPlaceId: 'Choose the place this review is about',
+  checkedOn: 'Add the day the facts were checked',
 }
 
 export const missingIfMatchProblem = {

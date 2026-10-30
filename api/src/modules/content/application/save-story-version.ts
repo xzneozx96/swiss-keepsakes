@@ -3,7 +3,7 @@ import type { Actor } from '@sk/domain/identity'
 import type { StoryVersionChanges } from '../ports.ts'
 import type { Result } from './failure.ts'
 import type { StoryDeps } from './story-deps.ts'
-import { storyVersionPublishGaps } from '@sk/domain/content'
+import { storyVersionCheckGaps } from '@sk/domain/content'
 import { mayManageContent } from './access.ts'
 import { fail, ok } from './failure.ts'
 import { checkStoryMedia } from './story-media.ts'
@@ -25,7 +25,7 @@ export function makeSaveStoryVersion<T>({ uow, stories, media, pins, clock }: St
       if (refused)
         return fail(refused)
       if (version.status === 'published') {
-        const gaps = storyVersionPublishGaps({
+        const gaps = storyVersionCheckGaps({
           slug: changes.slug !== undefined ? changes.slug : version.slug,
           title: version.published?.title ?? '',
         })

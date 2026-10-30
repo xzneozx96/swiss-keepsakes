@@ -2,7 +2,7 @@ import type { APIResponse, Page } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import process from 'node:process'
 import { expect, test } from '@playwright/test'
-import { newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
+import { newEmail, ownerInvitationMail, readyCover, SPA_ORIGIN } from './api-server'
 import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, signedInSuperAdmin } from './invitation-flows'
 
 // [E3.6] /sitemap.xml and /robots.txt on the BUILT front-end server (pnpm build, then the Nitro output), not the dev server.
@@ -41,7 +41,7 @@ async function ok<T>(response: APIResponse, status: number): Promise<T> {
 }
 
 const body = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello' }] }] }
-const draft = (title: string) => ({ title, excerpt: 'Excerpt', authorName: 'Anna', authorRole: 'Guide', coverMediaId: null, body })
+const draft = (title: string, coverMediaId: string) => ({ title, excerpt: 'Excerpt', authorName: 'Anna', coverMediaId, body })
 
 test('[E3.6][AC61][E3.9] the built server serves the sitemap with alternates after a publish, and robots.txt disallows outside production', async ({ browser, request }, testInfo) => {
   testInfo.setTimeout(240_000)
@@ -56,12 +56,13 @@ test('[E3.6][AC61][E3.9] the built server serves the sitemap with alternates aft
   await expect(owner.getByRole('heading', { level: 1, name: say(language, 'stores.onboarding.title') })).toBeVisible()
   const me = await ok<{ stores: Array<{ storeId: string }> }>(await owner.request.get(`${SPA_ORIGIN}/api/me`), 200)
   const base = `/api/store/${me.stores[0].storeId}/story-groups`
+  const cover = await readyCover(me.stores[0].storeId)
   const tag = Math.random().toString(36).slice(2, 8)
   const slug = `built-${tag}`
   const group = await ok<{ id: string }>(await send(owner, base, {}), 201)
 
   for (const [lang, versionSlug, title] of [['en', slug, 'Built story'], ['de', `${slug}-de`, 'Gebaute Geschichte']] as const) {
-    const created = await ok<{ rowVersion: number }>(await send(owner, `${base}/${group.id}/versions`, { language: lang, slug: versionSlug, draft: draft(title) }), 201)
+    const created = await ok<{ rowVersion: number }>(await send(owner, `${base}/${group.id}/versions`, { language: lang, slug: versionSlug, draft: draft(title, cover) }), 201)
 
     await ok(await send(owner, `${base}/${group.id}/versions/${lang}/publish`, undefined, created.rowVersion), 200)
   }

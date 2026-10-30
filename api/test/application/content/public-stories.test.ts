@@ -5,7 +5,7 @@ import { makeListCategories } from '../../../src/modules/content/application/rea
 import { makeGetStory, makeListStories } from '../../../src/modules/content/application/read-stories.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
 
-const doc = (title: string, over: Partial<StoredStoryDoc> = {}): StoredStoryDoc => ({ title, excerpt: `${title} excerpt`, authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [] }, ...over })
+const doc = (title: string, over: Partial<StoredStoryDoc> = {}): StoredStoryDoc => ({ title, excerpt: `${title} excerpt`, authorName: '', coverMediaId: null, body: { type: 'doc', content: [] }, ...over })
 
 function version(language: 'en' | 'de', slug: string, title: string, publishedAt = '2090-01-01T00:00:00Z', over: Partial<PublicStoryVersionRow> = {}): PublicStoryVersionRow {
   return { language, slug, published: doc(title), publishedAt: new Date(publishedAt), mediaKeys: {}, ...over }
@@ -53,6 +53,16 @@ describe('public stories', () => {
 
     expect(items).toHaveLength(1)
     expect(items[0]).toMatchObject({ id: id1, slug: 'lake-day', title: 'A day on the lake', language: 'en', requestedLanguage: 'de', fallback: true, availableLanguages: ['en'] })
+  })
+
+  it('[E2.14][AC30] a story whose stored text still holds an authorRole is read with the byline name and no role', async () => {
+    const legacy = { ...doc('A day on the lake', { authorName: 'Sonja' }), authorRole: 'Owner, Swiss Keepsakes Luzern' } as StoredStoryDoc
+    const s = setup([story(id1, [version('en', 'lake-day', 'A day on the lake', undefined, { published: legacy })])])
+
+    const found = await s.get('lake-day', 'en')
+
+    expect(found).toMatchObject({ ok: true, value: { authorName: 'Sonja' } })
+    expect(found.ok && Object.keys(found.value)).not.toContain('authorRole')
   })
 
   it('[E2.12][AC64] a story with both languages reads in the language asked for', async () => {

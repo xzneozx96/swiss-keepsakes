@@ -3775,7 +3775,6 @@ export interface components {
         };
         PublicStory: {
             authorName: string;
-            authorRole: string;
             availableLanguages: components["schemas"]["PublicLanguage"][];
             body: components["schemas"]["PublicStoryBody"];
             categories: {
@@ -5136,8 +5135,9 @@ export interface components {
         /** @description The text of one story version. The title may be empty until it is published */
         StoryDraft: {
             authorName: string;
-            authorRole: string;
             body: components["schemas"]["StoryBody"];
+            /** Format: date */
+            checkedOn?: string | null;
             /** Format: uuid */
             coverMediaId: string | null;
             excerpt: string;
@@ -5197,7 +5197,6 @@ export interface components {
             createdAt: string;
             draft: {
                 authorName: string;
-                authorRole: string;
                 body: {
                     content: {
                         attrs?: {
@@ -5211,6 +5210,7 @@ export interface components {
                     /** @enum {string} */
                     type: "doc";
                 };
+                checkedOn?: string | null;
                 /** Format: uuid */
                 coverMediaId: string | null;
                 excerpt: string;
@@ -5222,7 +5222,6 @@ export interface components {
             language: "en" | "de";
             published: {
                 authorName: string;
-                authorRole: string;
                 body: {
                     content: {
                         attrs?: {
@@ -5236,6 +5235,7 @@ export interface components {
                     /** @enum {string} */
                     type: "doc";
                 };
+                checkedOn?: string | null;
                 /** Format: uuid */
                 coverMediaId: string | null;
                 excerpt: string;
