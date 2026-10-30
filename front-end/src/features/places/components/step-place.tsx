@@ -3,10 +3,11 @@ import type { StepProps } from './step-props'
 import { Button } from '@heroui/react'
 import { useState } from 'react'
 
+import { Block } from '@/components/form-block'
 import { OpenInMapsIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useAddressFromPosition } from '../hooks/use-address-from-position'
-import { Block, Field } from './fields'
+import { Field } from './fields'
 import { MapPicker } from './map-picker'
 import { MapsLinkField } from './maps-link-field'
 
