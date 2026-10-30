@@ -81,8 +81,9 @@ describe('[E4.2][AC86] the date and hours rules of the form', () => {
     expect(hours('09:00', '18:00')).toBeUndefined()
     expect(hours('09:00', '24:00')).toBeUndefined()
     expect(hours('18:00', '09:00')).toBe('places.error.hoursOrder')
-    expect(hours('9:00', '18:00')).toBe('places.error.hoursFormat')
-    expect(hours('09:00', '24:30')).toBe('places.error.hoursFormat')
+    expect(hours('', '18:00')).toBe('places.error.hoursMissing')
+    expect(hours('09:00', '')).toBe('places.error.hoursMissing')
+    expect(hours('09:00', '24:30')).toBe('places.error.hoursMissing')
   })
 
   it('counts the errors that stop a save, and lets a link be empty', () => {

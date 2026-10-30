@@ -2,10 +2,11 @@ import type { ReactNode } from 'react'
 import type { IconComponent } from '@/components/icons'
 import type { MessageKey } from '@/i18n/en'
 
-import { Description, FieldError, Input, Label, TextArea, TextField } from '@heroui/react'
+import { Description, FieldError, Input, Label, TextArea, TextField, TimeField } from '@heroui/react'
 import { useId } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
+import { textOf, timeOf } from '../lib/time-text'
 
 /** One text field: its label, an optional help line, and the error under it in words. */
 export function Field({ label, hiddenPrefix, value, onChange, lang, description, error, rows, maxLength, placeholder, inputMode, type, className }: {
@@ -40,6 +41,36 @@ export function Field({ label, hiddenPrefix, value, onChange, lang, description,
       {description && !error && <Description>{description}</Description>}
       {error && <FieldError>{t(error)}</FieldError>}
     </TextField>
+  )
+}
+
+/** A 24-hour time field: type the digits and the colon is placed. The value is `HH:mm` text, empty while no time is set. */
+export function TimeInput({ label, hiddenPrefix, value, onChange, error, closing, className }: {
+  label: string
+  /** Words only a screen reader hears before the label, such as the weekday of a card whose title already shows it. */
+  hiddenPrefix?: string
+  value: string
+  onChange: (value: string) => void
+  error?: MessageKey
+  /** A closing time: 00:00 means midnight and is kept as `24:00`. */
+  closing?: boolean
+  className?: string
+}) {
+  const { t } = useLocale()
+
+  return (
+    <TimeField fullWidth className={className} hourCycle={24} isInvalid={error !== undefined} value={timeOf(value, closing)} onChange={time => onChange(textOf(time, closing))}>
+      <Label>
+        {hiddenPrefix && <span className="sr-only">{`${hiddenPrefix} · `}</span>}
+        {label}
+      </Label>
+      <TimeField.Group>
+        <TimeField.Input>
+          {segment => <TimeField.Segment segment={segment} />}
+        </TimeField.Input>
+      </TimeField.Group>
+      {error && <FieldError>{t(error)}</FieldError>}
+    </TimeField>
   )
 }
 

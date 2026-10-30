@@ -47,6 +47,13 @@ function open(placeId: string, options: { start?: 'dates', language?: 'en' | 'de
 const writes = () => api.calls.filter(call => call.method !== 'GET' && call.path.startsWith(`/api/store/${storeId}/pins`))
 const press = (name: string | RegExp) => userEvent.click(screen.getByRole('button', { name }))
 const type = (label: string, text: string) => userEvent.type(screen.getByLabelText(label), text)
+// A time input has a segment for the hours and one for the minutes: typing the four digits fills both.
+// HeroUI nests two groups with the same name, and the hidden weekday in the label joins as "Mon ·Open at".
+const timeGroups = (label: string) => screen.getAllByRole('group', { name: new RegExp(`^${label.replace(' · ', ' · ?')}$`) })
+async function typeTime(label: string, digits: string) {
+  await userEvent.click(within(timeGroups(label)[0]!).getAllByRole('spinbutton')[0]!)
+  await userEvent.keyboard(digits)
+}
 // On a phone the step's title starts with "Step 2 of 6 · ", so a heading is found by how it ends.
 const stepName = (name: string) => new RegExp(`${name}$`)
 const heading = (name: string) => screen.findByRole('heading', { name: stepName(name), level: 2 })
@@ -383,8 +390,8 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await press('Next')
     await heading('Hours and dates')
     await userEvent.click(screen.getByRole('button', { name: 'Add hours for Mon' }))
-    await type('Mon · Open at', '18:00')
-    await type('Mon · Close at', '09:00')
+    await typeTime('Mon · Open at', '1800')
+    await typeTime('Mon · Close at', '0900')
 
     expect(await screen.findByText(/Closing must be after opening/)).toBeInTheDocument()
   })
@@ -397,11 +404,11 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await heading('Hours and dates')
     await userEvent.click(screen.getByRole('button', { name: 'Add hours for Tue' }))
 
-    const input = screen.getByLabelText('Tue · Open at')
-    const label = document.querySelector(`label[for="${input.id}"]`)!
+    const group = timeGroups('Tue · Open at')[0]!
+    const label = document.getElementById(group.getAttribute('aria-labelledby')!.split(' ')[0]!)!
     expect(Array.from(label.childNodes, node => node.textContent)).toEqual(['Tue · ', 'Open at'])
     expect(label.querySelector('.sr-only')).toHaveTextContent('Tue ·')
-    expect(screen.getByLabelText('Tue · Close at')).toBeInTheDocument()
+    expect(timeGroups('Tue · Close at')).not.toHaveLength(0)
     expect(screen.queryByText(/Opens$|Closes$/)).not.toBeInTheDocument()
   })
 
@@ -413,8 +420,37 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await heading('Öffnungszeiten und Daten')
     await userEvent.click(screen.getByRole('button', { name: /^Zeiten für Di/ }))
 
-    expect(screen.getByLabelText('Di · Öffnet um')).toBeInTheDocument()
-    expect(screen.getByLabelText('Di · Schliesst um')).toBeInTheDocument()
+    expect(timeGroups('Di · Öffnet um')).not.toHaveLength(0)
+    expect(timeGroups('Di · Schliesst um')).not.toHaveLength(0)
+  })
+
+  it('[E4.2][AC86] a time is typed as digits and kept as HH:mm, with 00:00 as the close meaning midnight (24:00)', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await press('Place pin')
+    await press('Next')
+    await type('Title in English', 'Chapel Bridge')
+    await press('Next')
+    await heading('Hours and dates')
+    await userEvent.click(screen.getByRole('button', { name: 'Add hours for Wed' }))
+    await typeTime('Wed · Open at', '0900')
+    await typeTime('Wed · Close at', '0000')
+    await press('Save draft')
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ weeklyHours: [{ day: 3, opens: '09:00', closes: '24:00' }] })
+  })
+
+  it('[E4.2][AC86] an hours row with no time yet says to set both times', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await press('Next')
+    await press('Next')
+    await heading('Hours and dates')
+    await userEvent.click(screen.getByRole('button', { name: 'Add hours for Thu' }))
+    await press('Save draft')
+
+    expect(await screen.findByText('Set an opening and a closing time.')).toBeInTheDocument()
   })
 })
 

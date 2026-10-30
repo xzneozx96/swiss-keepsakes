@@ -149,7 +149,7 @@ export function validate(form: PlaceForm): FormErrors {
 
   for (const span of form.hours) {
     if (!OPEN_TIME.test(span.opens) || !CLOSE_TIME.test(span.closes))
-      errors.hours[span.key] = 'places.error.hoursFormat'
+      errors.hours[span.key] = 'places.error.hoursMissing'
     else if (span.opens >= span.closes)
       errors.hours[span.key] = 'places.error.hoursOrder'
   }
