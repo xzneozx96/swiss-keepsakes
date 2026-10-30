@@ -406,7 +406,7 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
           className={
             pathname === '/store/calendar'
               ? 'flex w-full flex-1 flex-col'
-              : 'mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8'
+              : 'mx-auto w-full max-w-6xl flex-1 px-4 pt-4 pb-24 lg:px-8 lg:pt-8 lg:pb-8'
           }
         >
           <MerchantBarSlotContext value={barSlot}>{children}</MerchantBarSlotContext>
