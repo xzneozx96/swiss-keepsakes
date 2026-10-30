@@ -8,7 +8,7 @@ import { choiceCard } from '@/components/choice-card'
 import { ClockIcon, PlusIcon, TodayIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { emptyDate } from '../lib/form'
-import { Block, Field } from './fields'
+import { Block, Field, TimeInput } from './fields'
 import { HoursRows } from './hours-rows'
 
 function Hours({ form, patch, errors }: Pick<StepProps, 'form' | 'patch' | 'errors'>) {
@@ -54,8 +54,8 @@ function Entry({ entry, index, error, onChange, onRemove }: { entry: DateEntry, 
         {entry.kind === 'range' && <Field label={`${n} · ${t('places.dates.to')}`} type="date" value={entry.lastDay} onChange={lastDay => onChange({ lastDay })} />}
         {entry.kind === 'day' && (
           <>
-            <Field label={`${n} · ${t('places.dates.start')}`} placeholder="19:30" value={entry.startTime} onChange={startTime => onChange({ startTime })} />
-            <Field description={t('places.dates.endHelp')} label={`${n} · ${t('places.dates.end')}`} placeholder="21:00" value={entry.endTime} onChange={endTime => onChange({ endTime })} />
+            <TimeInput label={`${n} · ${t('places.dates.start')}`} value={entry.startTime} onChange={startTime => onChange({ startTime })} />
+            <TimeInput description={t('places.dates.endHelp')} label={`${n} · ${t('places.dates.end')}`} value={entry.endTime} onChange={endTime => onChange({ endTime })} />
           </>
         )}
       </div>

@@ -49,10 +49,11 @@ export function Field({ label, hiddenPrefix, value, onChange, lang, description,
  * `compact` is for a row that already shows what the time is for: the label is read aloud, not drawn, and the error is
  * left to the row, which shows it once for all its fields.
  */
-export function TimeInput({ label, value, onChange, error, closing, compact, className }: {
+export function TimeInput({ label, value, onChange, description, error, closing, compact, className }: {
   label: string
   value: string
   onChange: (value: string) => void
+  description?: string
   error?: MessageKey
   /** A closing time: 00:00 means midnight and is kept as `24:00`. */
   closing?: boolean
@@ -69,6 +70,7 @@ export function TimeInput({ label, value, onChange, error, closing, compact, cla
           {segment => <TimeField.Segment segment={segment} />}
         </TimeField.Input>
       </TimeField.Group>
+      {description && !error && <Description>{description}</Description>}
       {error && !compact && <FieldError>{t(error)}</FieldError>}
     </TimeField>
   )

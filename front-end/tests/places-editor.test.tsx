@@ -392,15 +392,15 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await open('new', { start: 'dates' })
     await heading('Hours and dates')
     await type('1 · Day', '2026-11-14')
-    await type('1 · Starts', '22:00')
-    await type('1 · Ends', '00:30')
+    await typeTime('1 · Starts', '2200')
+    await typeTime('1 · Ends', '0030')
 
     expect(await screen.findByText(/A date cannot run past midnight/)).toBeInTheDocument()
     expect(screen.getByRole('status')).toHaveTextContent('Fix 1 problem before saving.')
     await press('Save draft')
     expect(writes()).toHaveLength(0)
 
-    await userEvent.clear(screen.getByLabelText('1 · Ends'))
+    await clearTime('1 · Ends')
     await waitFor(() => expect(screen.queryByText(/A date cannot run past midnight/)).not.toBeInTheDocument())
     api.pin = pinOf({ id: uuid(10) })
     await press('Save draft')
