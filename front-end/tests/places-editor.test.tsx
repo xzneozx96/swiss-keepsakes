@@ -344,7 +344,7 @@ describe('[E4.2][AC68] N17 one pattern for every field, and a card for each bloc
 
     expect(blocks()).toHaveLength(2)
     expect(headings()).toEqual([])
-    expect(screen.getByLabelText('Outbound link')).toHaveAccessibleDescription(/the hotel’s or museum’s own website/)
+    expect(screen.getByLabelText('External link')).toHaveAccessibleDescription(/its website, a booking page or its Facebook page/)
   })
 
   it('[E4.2][AC68] reads in German with the same pattern', async () => {
@@ -723,11 +723,11 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
     await open('new')
     await heading('Place on the map')
     await nextTo('Story and link')
-    await type('Outbound link', 'http://hotel.example')
+    await type('External link', 'http://hotel.example')
 
     expect(await screen.findByText(/full web address that starts with https/)).toBeInTheDocument()
-    await userEvent.clear(screen.getByLabelText('Outbound link'))
-    await type('Outbound link', 'https://hotel.example/stay')
+    await userEvent.clear(screen.getByLabelText('External link'))
+    await type('External link', 'https://hotel.example/stay')
     expect(screen.queryByText(/Every page that shows this pin uses this link/)).not.toBeInTheDocument()
     await press('Save draft')
 

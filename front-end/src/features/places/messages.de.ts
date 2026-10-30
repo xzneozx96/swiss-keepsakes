@@ -155,7 +155,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.story.gap': 'Gäste auf {lang} sehen keinen Geschichtenlink, bis die Version auf {lang} veröffentlicht ist.',
   'places.story.untitled': 'Ohne Titel',
   'places.link.label': 'Externer Link',
-  'places.link.help': 'Die Seite, die Gäste von diesem Ort aus öffnen können, etwa die eigene Website des Hotels oder Museums. Kopieren Sie sie aus der Adresszeile Ihres Browsers.',
+  'places.link.help': 'Eine Seite, die Gäste von diesem Ort aus öffnen können, etwa die Website, eine Buchungsseite oder die Facebook-Seite.',
   'places.publish.draft': 'Entwurf',
   'places.publish.ready': 'Bereit zum Veröffentlichen',
   'places.publish.published': 'Auf der Karte',
