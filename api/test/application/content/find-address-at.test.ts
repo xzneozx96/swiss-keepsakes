@@ -1,6 +1,8 @@
 import type { Actor } from '@sk/domain/identity'
 import type { AddressRegister, RegisteredBuilding } from '../../../src/modules/content/ports.ts'
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { createAddressRegister } from '../../../src/modules/content/adapters/address-register-fetch.ts'
 import { makeFindAddressAt } from '../../../src/modules/content/application/find-address-at.ts'
 
 const store = 'store-1'
@@ -62,5 +64,21 @@ describe('finding the address at a pin', () => {
     expect(await s.find(guest, store, pin)).toEqual({ ok: false, reason: 'forbidden' })
     expect(await s.find(elsewhere, store, pin)).toEqual({ ok: false, reason: 'forbidden' })
     expect(s.asked).toEqual([])
+  })
+
+  // The answer recorded from geo.admin.ch for the Kapellbrücke pin lists Rathausquai 7 and Kapellbrücke 1.2 before
+  // Kapellbrücke 1, and the register does not sort by distance. Measured from the pin (about 46 m, 49 m and 53 m), the
+  // nearest entrance is Kapellbrücke 1.
+  it.each([
+    ['the pin of the Google Maps link', 47.0516489, 8.3075351],
+    ['the same pin rounded to 4 decimals', 47.0516, 8.3074],
+  ])('answers Kapellbrücke 1 for %s, from the recorded register answer', async (_name, latitude, longitude) => {
+    const recorded = readFileSync(new URL('../../fixtures/geo-admin-identify-kapellbruecke.json', import.meta.url), 'utf8')
+    const register = createAddressRegister(async () => new Response(recorded, { status: 200 }))
+
+    expect(await makeFindAddressAt({ register })(owner, store, { latitude, longitude })).toEqual({
+      ok: true,
+      value: { street: 'Kapellbrücke', houseNumber: '1', postcode: '6004', city: 'Luzern', formatted: 'Kapellbrücke 1, 6004 Luzern' },
+    })
   })
 })
