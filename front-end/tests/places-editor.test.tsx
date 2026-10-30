@@ -271,6 +271,20 @@ describe('[E4.2][AC68] N17 one pattern for every field, and a card for each bloc
     expect(blocks()[1]).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
   })
 
+  it('[E4.2][AC68] centres a card heading against its icon tile, with or without a hint line', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await press('Next')
+    await heading('Text and photo')
+
+    for (const title of ['Text', 'Photos']) {
+      const row = screen.getByRole('heading', { level: 3, name: title }).parentElement!.parentElement!
+
+      expect(row).toHaveClass('items-center')
+      expect(row).not.toHaveClass('items-start')
+    }
+  })
+
   it('[E4.2][AC68] the hours and dates step has a card for each, with a heading because each groups several fields', async () => {
     await open('new', { start: 'dates' })
     await heading('Hours and dates')

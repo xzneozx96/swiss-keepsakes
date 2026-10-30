@@ -58,7 +58,7 @@ export function Block({ icon: Icon, title, hint, children }: { icon?: IconCompon
   return (
     <section aria-labelledby={title ? titleId : undefined} className="flex flex-col gap-4 rounded-3xl bg-surface p-4 shadow-surface lg:p-5" data-testid="place-block">
       {title && (
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           {Icon && (
             <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-secondary text-muted">
               <Icon aria-hidden size={18} />
