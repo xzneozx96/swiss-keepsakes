@@ -13,6 +13,7 @@ Read this for any TypeScript code. These are the owner's shared rules, from `~/.
 - Read the code around you first. Use a pattern or helper that already exists. Do not write a second one.
 - Do not make an abstraction for a single use. Three similar lines are better than a premature helper.
 - Do not add feature flags or compatibility shims. Change the code.
+- **Batch and parallelise independent work (owner hard rule, 30.10.2026).** When calls do not depend on each other, run them together: `Promise.all` for independent network or storage calls (for example the image variants of one upload), one multi-row query instead of a query per row, one batched request instead of a loop of requests. Await in a loop only when each step needs the previous result, and say why in a comment. Cap the concurrency when the count is unbounded.
 
 ## Owner rules this repo does not follow yet
 
