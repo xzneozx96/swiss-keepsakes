@@ -6,7 +6,7 @@ import type { RowAction } from '@/components/row-actions'
 import type { StatusTone } from '@/components/status-chip'
 import type { MessageKey } from '@/i18n/en'
 
-import { Skeleton } from '@heroui/react'
+import { Chip, Skeleton } from '@heroui/react'
 import { Link } from '@tanstack/react-router'
 
 import { DataTable } from '@/components/data-table'
@@ -50,42 +50,39 @@ function categoryNames(item: PinListItem, categories: MerchantCategory[], langua
     .filter((name): name is string => name !== undefined)
 }
 
-function Languages({ item }: { item: PinListItem }) {
+/**
+ * The languages a pin still needs: a chip for every language without a title. A pin with both
+ * languages ready has no chip.
+ */
+function LanguageChips({ item }: { item: PinListItem }) {
   const { t } = useLocale()
-  const languages = languagesOf(item)
+  const ready = languagesOf(item)
+  const missing = (['en', 'de'] as const).filter(lang => !ready.includes(lang))
 
-  if (languages.length === 0)
+  if (!missing.length)
     return null
 
   return (
-    <span className="text-xs text-muted">
-      {languages.length === 2 ? t('places.lang.both') : t('places.lang.only', { lang: languages[0]!.toUpperCase() })}
-    </span>
+    <>
+      {missing.map(lang => (
+        <Chip key={lang} color="warning" size="sm" variant="soft">
+          <Chip.Label className="whitespace-nowrap">{t(`places.lang.missing.${lang}` as MessageKey)}</Chip.Label>
+        </Chip>
+      ))}
+    </>
   )
 }
 
+/** The status of a pin, and what is still missing in it: a language without a title. */
 function Status({ item }: { item: PinListItem }) {
   const { t } = useLocale()
 
-  return <StatusChip tone={TONE[item.status]}>{t(`places.status.${item.status}` as MessageKey)}</StatusChip>
-}
-
-function NextDate({ item }: { item: PinListItem }) {
-  const { t, when } = useNames()
-
-  if (!item.hasDates)
-    return <span className="text-muted">{t('places.next.none')}</span>
-
-  return <span>{item.nextDate ? t('places.next.until', { date: when(item.nextDate.lastDay) }) : t('places.dates.over')}</span>
-}
-
-function MainStory({ item }: { item: PinListItem }) {
-  const { t } = useLocale()
-
-  if (!item.mainStory)
-    return <span className="text-muted">{t('places.story.none')}</span>
-
-  return item.mainStory.published ? <span>{t('places.review.set')}</span> : <StatusChip tone="warning">{t('places.story.notPublished')}</StatusChip>
+  return (
+    <span className="flex flex-wrap items-center gap-1.5">
+      <StatusChip tone={TONE[item.status]}>{t(`places.status.${item.status}` as MessageKey)}</StatusChip>
+      <LanguageChips item={item} />
+    </span>
+  )
 }
 
 function actionsOf(item: PinListItem, t: ReturnType<typeof useLocale>['t']): RowAction<RowActionId>[] {
@@ -110,10 +107,7 @@ function Cards({ items, categories, busy, label, onAction }: PlaceRowsProps) {
               <span className="min-w-0 text-lg leading-tight font-semibold text-pretty [overflow-wrap:anywhere]">{nameOfItem(item)}</span>
               <ChevronRightIcon aria-hidden className="shrink-0 text-muted" size={16} />
             </span>
-            <span className="flex flex-wrap items-center gap-2">
-              <Status item={item} />
-              <Languages item={item} />
-            </span>
+            <Status item={item} />
             <span className="text-xs text-muted">
               {categoryNames(item, categories, language).join(', ') || t('places.list.onlyAll')}
               {item.nextDate ? ` · ${t('places.next.until', { date: when(item.nextDate.lastDay) })}` : ''}
@@ -126,7 +120,7 @@ function Cards({ items, categories, busy, label, onAction }: PlaceRowsProps) {
   )
 }
 
-/** The loading cards of a phone: the shape of a card, a title line, two chips and a fact line. */
+/** The loading cards of a phone: the shape of a card, a title line, the chips of the status row and a fact line. */
 function CardSkeleton() {
   return (
     <ul aria-hidden className="flex flex-col gap-4 lg:hidden">
@@ -135,7 +129,7 @@ function CardSkeleton() {
           <Skeleton className="h-6 w-2/3 rounded-lg" />
           <div className="flex gap-2">
             <Skeleton className="h-7 w-24 rounded-full" />
-            <Skeleton className="h-4 w-16 rounded-lg" />
+            <Skeleton className="h-7 w-20 rounded-full" />
           </div>
           <Skeleton className="h-3 w-1/2 rounded-lg" />
         </li>
@@ -155,21 +149,16 @@ export function PlaceRows(props: PlaceRowsProps) {
       isRowHeader: true,
       headerClassName: 'w-[26%]',
       render: item => (
-        <div className="flex min-w-0 flex-col">
-          <Link className="font-semibold text-pretty [overflow-wrap:anywhere] outline-none hover:underline focus-visible:focus-ring" to={hrefOf(item) as never}>{nameOfItem(item)}</Link>
-          <Languages item={item} />
-        </div>
+        <Link className="font-semibold text-pretty [overflow-wrap:anywhere] outline-none hover:underline focus-visible:focus-ring" to={hrefOf(item) as never}>{nameOfItem(item)}</Link>
       ),
     },
     { id: 'status', header: t('places.column.status'), skeleton: 'chip', render: item => <Status item={item} /> },
     { id: 'categories', header: t('places.column.categories'), render: item => categoryNames(item, categories, language).join(', ') || <span className="text-muted">{t('places.list.onlyAll')}</span> },
-    { id: 'next', header: t('places.column.next'), render: item => <NextDate item={item} /> },
     {
       id: 'tags',
       header: t('places.column.tags'),
       render: item => [t(`places.stay.${item.stayTag}` as MessageKey), ...item.interests.map(id => t(`places.interest.${id}` as MessageKey))].join(', '),
     },
-    { id: 'story', header: t('places.column.story'), render: item => <MainStory item={item} /> },
     { id: 'edited', header: t('places.column.edited'), cellClassName: 'whitespace-nowrap text-muted', render: item => edited(item.updatedAt) },
   ]
 

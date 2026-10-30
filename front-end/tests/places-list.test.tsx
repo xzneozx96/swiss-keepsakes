@@ -54,10 +54,10 @@ describe('[E4.2][AC68] the Places entry of the Content menu', () => {
 })
 
 describe('[E4.2][AC68] N16 the list', () => {
-  it('[E4.2][AC86] shows each pin with its status, languages, categories, next date and a warning for an unpublished main story', async () => {
+  it('[E4.2][AC86] shows each pin with its status, categories, stay and interests and the last update', async () => {
     api.categories = [{ id: uuid(20), slug: 'walks', name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, position: 1, childCount: 0, useCount: 1 }]
     api.items = [
-      listItem({ id: uuid(11), status: 'published', title: { en: 'Chapel Bridge', de: 'Kapellbrücke' }, categoryIds: [uuid(20)], interests: ['local-activities'], mainStory: { groupId: uuid(30), published: false } }),
+      listItem({ id: uuid(11), status: 'published', title: { en: 'Chapel Bridge', de: 'Kapellbrücke' }, categoryIds: [uuid(20)], interests: ['local-activities'] }),
       listItem({ id: uuid(12), status: 'ended', title: { de: 'Fasnacht' }, hasDates: true }),
       listItem({ id: uuid(13), status: 'published', title: { en: 'Blues festival' }, hasDates: true, nextDate: { firstDay: '2090-11-09', lastDay: '2090-11-14', startTime: null, endTime: null } }),
       listItem({ id: uuid(14), status: 'hidden', title: { en: 'Old tap' } }),
@@ -67,16 +67,65 @@ describe('[E4.2][AC68] N16 the list', () => {
     await screen.findAllByRole('link', { name: 'Chapel Bridge' })
     const bridge = within(rowOf('Chapel Bridge'))
     expect(bridge.getByText('Published')).toBeInTheDocument()
-    expect(bridge.getByText('EN and DE')).toBeInTheDocument()
     expect(bridge.getByText('Walks')).toBeInTheDocument()
     expect(bridge.getByText(/Local activities/)).toBeInTheDocument()
-    expect(bridge.getByText('Not published')).toBeInTheDocument()
     const ended = within(rowOf('Fasnacht'))
     expect(ended.getByText('Ended · off the map')).toBeInTheDocument()
-    expect(ended.getByText('DE only')).toBeInTheDocument()
-    expect(within(rowOf('Blues festival')).getByText(/Until .*2090/)).toBeInTheDocument()
     expect(within(rowOf('Old tap')).getByText('Hidden')).toBeInTheDocument()
-    expect(within(rowOf('Old tap')).getByText('No story')).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] the table has the columns of the list: Pin, Status, Categories, Stay and interests and Last update', async () => {
+    api.items = [listItem({ id: uuid(11), title: { en: 'Chapel Bridge' } })]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+
+    expect(table().getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Pin', 'Status', 'Categories', 'Stay and interests', 'Last update', 'Actions'])
+  })
+
+  it('[E4.2][AC86] the columns Next date and Main story are gone', async () => {
+    api.items = [listItem({ id: uuid(11), title: { en: 'Chapel Bridge' }, hasDates: true, nextDate: { firstDay: '2090-11-09', lastDay: '2090-11-14', startTime: null, endTime: null }, mainStory: { groupId: uuid(30), published: false } })]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+
+    expect(screen.queryByRole('columnheader', { name: 'Next date' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Main story' })).not.toBeInTheDocument()
+    expect(within(rowOf('Chapel Bridge')).queryByText(/Until .*2090/)).not.toBeInTheDocument()
+    expect(within(rowOf('Chapel Bridge')).queryByText('Not published')).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] the status cell says which language is missing, and a pin with both has no chip', async () => {
+    api.items = [
+      listItem({ id: uuid(11), status: 'published', title: { en: 'Chapel Bridge', de: 'Kapellbrücke' } }),
+      listItem({ id: uuid(12), status: 'published', title: { en: 'Blues festival' } }),
+      listItem({ id: uuid(13), status: 'published', title: { de: 'Fasnacht' } }),
+    ]
+    await open()
+    await screen.findAllByRole('link', { name: 'Chapel Bridge' })
+
+    expect(within(rowOf('Chapel Bridge')).queryByText('DE missing')).not.toBeInTheDocument()
+    expect(within(rowOf('Chapel Bridge')).queryByText('EN missing')).not.toBeInTheDocument()
+    expect(within(rowOf('Blues festival')).getByText('DE missing')).toBeInTheDocument()
+    expect(within(rowOf('Fasnacht')).getByText('EN missing')).toBeInTheDocument()
+    // The line under the title is gone: the chip says it now.
+    expect(screen.queryByText('EN and DE')).not.toBeInTheDocument()
+    expect(screen.queryByText('DE only')).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] the phone card carries the same chip as the table', async () => {
+    api.items = [listItem({ id: uuid(11), status: 'published', title: { en: 'Blues festival' } })]
+    await open()
+    await screen.findAllByRole('link', { name: 'Blues festival' })
+
+    // The table and the cards are both in the DOM: one chip in each.
+    expect(screen.getAllByText('DE missing')).toHaveLength(2)
+  })
+
+  it('[E4.2][AC86] the chip reads in German', async () => {
+    api.items = [listItem({ id: uuid(11), status: 'published', title: { en: 'Blues festival' } })]
+    await open('de')
+    await screen.findAllByRole('link', { name: 'Blues festival' })
+
+    expect(within(rowOf('Blues festival')).getByText('DE fehlt')).toBeInTheDocument()
   })
 
   it('[E4.2][AC68] Add place and Add event open the editor on a new pin, the event on its dates', async () => {
