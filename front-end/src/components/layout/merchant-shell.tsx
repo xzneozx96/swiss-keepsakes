@@ -393,10 +393,11 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="group/content flex min-w-0 flex-1 flex-col">
         {/* Phones: no shop header. Detail screens dock their ← title bar here (guest pattern). */}
         <div
           ref={setBarSlot}
+          data-merchant-bar-slot=""
           className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl empty:hidden lg:hidden"
         />
 
