@@ -4143,6 +4143,14 @@ export interface components {
             groupId: string;
             /** @enum {string} */
             kind: "story" | "editorial_review";
+            /** @description `none`: no version in the language, `draft`: only an unpublished one, `published`: live */
+            languages: {
+                /** @enum {string} */
+                de: "none" | "draft" | "published";
+                /** @enum {string} */
+                en: "none" | "draft" | "published";
+            };
+            /** @description The languages whose state is `published` */
             publishedLanguages: ("en" | "de")[];
             title: {
                 de?: string;

@@ -1,6 +1,7 @@
-import type { Pin, PinDate, PinDraft, PinStoryOption } from '@sk/domain/content'
+import type { ContentLanguage, Pin, PinDate, PinDraft, PinStoryOption } from '@sk/domain/content'
 import type { Tx } from '../../../platform/db/client.ts'
 import type { PinChanges, PinListRow, PinRepository } from '../ports.ts'
+import { contentLanguages } from '@sk/domain/content'
 import { sql } from 'drizzle-orm'
 
 // The document stores the title under `name`: places_published_fields_check reads published->'name'.
@@ -202,17 +203,20 @@ async function listRows(tx: Tx, storeId: string): Promise<PinListRow[]> {
 }
 
 async function storyOptionRows(tx: Tx, storeId: string): Promise<PinStoryOption[]> {
-  const found = await tx.execute<{ group_id: string, kind: PinStoryOption['kind'], title: PinStoryOption['title'], published_languages: PinStoryOption['publishedLanguages'] } & Record<string, unknown>>(sql`
+  const found = await tx.execute<{ group_id: string, kind: PinStoryOption['kind'], title: PinStoryOption['title'], statuses: Partial<Record<ContentLanguage, 'draft' | 'published'>> } & Record<string, unknown>>(sql`
     select g.id as group_id, g.kind,
            coalesce(jsonb_object_agg(v.language, coalesce(v.published->>'title', v.draft->>'title'))
                     filter (where coalesce(v.published->>'title', v.draft->>'title') is not null), '{}'::jsonb) as title,
-           coalesce(array_agg(v.language order by v.language) filter (where v.status = 'published'), '{}'::text[]) as published_languages
+           coalesce(jsonb_object_agg(v.language, v.status) filter (where v.language is not null), '{}'::jsonb) as statuses
       from content.story_groups g
       left join content.story_versions v on v.group_id = g.id and v.store_id = g.store_id
      where g.store_id = ${storeId}
      group by g.id, g.kind, g.created_at
      order by g.created_at desc, g.id`)
-  return found.rows.map(row => ({ groupId: row.group_id, kind: row.kind, title: row.title, publishedLanguages: row.published_languages }))
+  return found.rows.map((row) => {
+    const languages = { en: row.statuses.en ?? 'none', de: row.statuses.de ?? 'none' } as const
+    return { groupId: row.group_id, kind: row.kind, title: row.title, languages, publishedLanguages: contentLanguages.filter(language => languages[language] === 'published') }
+  })
 }
 
 export function createPinRepository(): PinRepository<Tx> {

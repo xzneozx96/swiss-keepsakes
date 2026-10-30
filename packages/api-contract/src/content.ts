@@ -166,11 +166,14 @@ export const pinListItemSchema = z.object({
 export const pinListSchema = z.object({ items: z.array(pinListItemSchema) }).meta({ id: 'PinList', description: 'Every pin of the store, most recently edited first' })
 
 // What the main-story picker offers: the story groups of the store.
+const storyLanguageState = z.enum(['none', 'draft', 'published'])
+
 export const pinStoryOptionSchema = z.object({
   groupId: z.uuid(),
   kind: z.enum(['story', 'editorial_review']),
   title: localizedView,
-  publishedLanguages: z.array(language),
+  languages: z.object({ en: storyLanguageState, de: storyLanguageState }).meta({ description: '`none`: no version in the language, `draft`: only an unpublished one, `published`: live' }),
+  publishedLanguages: z.array(language).meta({ description: 'The languages whose state is `published`' }),
 }).meta({ id: 'PinStoryOption', description: 'A story group the pin can name as its main story' })
 
 export const mapsLinkQuerySchema = z.object({

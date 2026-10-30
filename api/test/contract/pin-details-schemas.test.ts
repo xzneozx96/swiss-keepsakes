@@ -137,8 +137,10 @@ describe('[E4.2][AC68] the response shapes', () => {
     expect(ok(pinListSchema, { items: [{ ...item, status: 'archived' }] })).toBe(false)
   })
 
-  it('[E4.2][AC68] a story option carries its live languages', () => {
-    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: { en: 'Chapel Bridge' }, publishedLanguages: ['en'] }] })).toBe(true)
-    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: {}, publishedLanguages: ['fr'] }] })).toBe(false)
+  it('[E4.2][AC68] a story option carries its live languages and the state of each language', () => {
+    const languages = { en: 'published', de: 'none' }
+    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: { en: 'Chapel Bridge' }, languages, publishedLanguages: ['en'] }] })).toBe(true)
+    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: {}, languages, publishedLanguages: ['fr'] }] })).toBe(false)
+    expect(ok(pinStoryOptionListSchema, { items: [{ groupId: uuid, kind: 'story', title: {}, languages: { en: 'live', de: 'none' }, publishedLanguages: [] }] })).toBe(false)
   })
 })

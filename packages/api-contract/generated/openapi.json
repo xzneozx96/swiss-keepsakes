@@ -2013,7 +2013,34 @@
             ],
             "type": "string"
           },
+          "languages": {
+            "description": "`none`: no version in the language, `draft`: only an unpublished one, `published`: live",
+            "properties": {
+              "de": {
+                "enum": [
+                  "none",
+                  "draft",
+                  "published"
+                ],
+                "type": "string"
+              },
+              "en": {
+                "enum": [
+                  "none",
+                  "draft",
+                  "published"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "en",
+              "de"
+            ],
+            "type": "object"
+          },
           "publishedLanguages": {
+            "description": "The languages whose state is `published`",
             "items": {
               "enum": [
                 "en",
@@ -2039,6 +2066,7 @@
           "groupId",
           "kind",
           "title",
+          "languages",
           "publishedLanguages"
         ],
         "type": "object"

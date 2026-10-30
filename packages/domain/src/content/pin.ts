@@ -85,8 +85,12 @@ export interface PinStoryOption {
   groupId: string
   kind: 'story' | 'editorial_review'
   title: Localized
+  /** Per language: `none` has no version, `draft` has only an unpublished one, `published` is live. */
+  languages: Record<ContentLanguage, StoryLanguageState>
   publishedLanguages: ContentLanguage[]
 }
+
+export type StoryLanguageState = 'none' | 'draft' | 'published'
 
 /** A pin publishes with a title in one language, a location and a slug (ADR-029). No story or category is needed. */
 export function pinPublishGaps(pin: Pick<Pin, 'slug' | 'latitude' | 'longitude'> & { title: Localized }): PublishGap[] {

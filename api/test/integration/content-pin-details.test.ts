@@ -387,7 +387,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
     const options = await env.call(`${staff.pins}/story-options`, { headers: staff.owner.headers })
     expect(options.status).toBe(200)
-    expect(await options.json()).toEqual({ items: [{ groupId: group, kind: 'story', title: { en: 'The bridge', de: 'Die Brücke' }, publishedLanguages: ['en'] }] })
+    expect(await options.json()).toEqual({ items: [{ groupId: group, kind: 'story', title: { en: 'The bridge', de: 'Die Brücke' }, languages: { en: 'published', de: 'draft' }, publishedLanguages: ['en'] }] })
 
     const pin = await create(staff, { title: { en: 'Chapel Bridge' }, mainStoryGroupId: group })
     expect(await (await env.call(staff.pins, { headers: staff.owner.headers })).json()).toMatchObject({ items: [{ id: pin.id, mainStory: { groupId: group, published: true } }] })
@@ -398,5 +398,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
     const warned = await create(staff, { title: { en: 'Lion Monument' }, mainStoryGroupId: unpublished })
     const list = await (await env.call(staff.pins, { headers: staff.owner.headers })).json() as { items: { id: string, mainStory: object | null }[] }
     expect(list.items.find(item => item.id === warned.id)?.mainStory).toEqual({ groupId: unpublished, published: false })
+    const after = await (await env.call(`${staff.pins}/story-options`, { headers: staff.owner.headers })).json() as { items: { groupId: string, languages: object, publishedLanguages: string[] }[] }
+    expect(after.items.find(item => item.groupId === unpublished)).toMatchObject({ languages: { en: 'draft', de: 'none' }, publishedLanguages: [] })
   })
 })
