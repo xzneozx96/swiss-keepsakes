@@ -94,12 +94,13 @@ function Categories({ item, categories }: { item: PinListItem, categories: Merch
   const { t, language } = useLocale()
   const names = categoryNames(item, categories, language)
 
-  if (!names.length)
+  if (!names.length) {
     return (
       <TagChip>
         <span className="text-muted">{t('places.list.onlyAll')}</span>
       </TagChip>
     )
+  }
 
   return (
     <span className="flex flex-wrap items-center gap-1.5">
