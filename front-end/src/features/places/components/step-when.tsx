@@ -35,8 +35,8 @@ function Hours({ form, patch, errors }: Pick<StepProps, 'form' | 'patch' | 'erro
               {spans.length === 0 && <span className="text-sm text-muted">{t('places.hours.closed')}</span>}
               {spans.map(span => (
                 <div key={span.key} className="flex items-start gap-2">
-                  <Field className="min-w-0 flex-1" error={errors.hours[span.key]} label={`${dayName} · ${t('places.hours.opens')}`} placeholder="08:00" value={span.opens} onChange={opens => change(span.key, { opens })} />
-                  <Field className="min-w-0 flex-1" label={`${dayName} · ${t('places.hours.closes')}`} placeholder="18:00" value={span.closes} onChange={closes => change(span.key, { closes })} />
+                  <Field className="min-w-0 flex-1" error={errors.hours[span.key]} hiddenPrefix={dayName} label={t('places.hours.opens')} placeholder="08:00" value={span.opens} onChange={opens => change(span.key, { opens })} />
+                  <Field className="min-w-0 flex-1" hiddenPrefix={dayName} label={t('places.hours.closes')} placeholder="18:00" value={span.closes} onChange={closes => change(span.key, { closes })} />
                   <Button isIconOnly aria-label={t('places.hours.remove', { day: dayName, opens: span.opens, closes: span.closes })} className="mt-6" size="sm" variant="tertiary" onPress={() => patch({ hours: form.hours.filter(other => other.key !== span.key) })}>
                     <TrashIcon aria-hidden size={16} />
                   </Button>

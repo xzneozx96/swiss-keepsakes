@@ -12,8 +12,10 @@ export const choiceCard
   = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /** One text field: its label, an optional help line, and the error under it in words. */
-export function Field({ label, value, onChange, lang, description, error, rows, maxLength, placeholder, inputMode, type, className }: {
+export function Field({ label, hiddenPrefix, value, onChange, lang, description, error, rows, maxLength, placeholder, inputMode, type, className }: {
   label: string
+  /** Words only a screen reader hears before the label, such as the weekday of a card whose title already shows it. */
+  hiddenPrefix?: string
   value: string
   onChange: (value: string) => void
   /** The language of the text, for screen readers and hyphenation. */
@@ -32,7 +34,10 @@ export function Field({ label, value, onChange, lang, description, error, rows, 
 
   return (
     <TextField fullWidth className={className} isInvalid={error !== undefined} maxLength={maxLength} type={type} value={value} onChange={onChange}>
-      <Label>{label}</Label>
+      <Label>
+        {hiddenPrefix && <span className="sr-only">{`${hiddenPrefix} · `}</span>}
+        {label}
+      </Label>
       {rows
         ? <TextArea lang={lang} placeholder={placeholder} rows={rows} />
         : <Input inputMode={inputMode} lang={lang} placeholder={placeholder} />}

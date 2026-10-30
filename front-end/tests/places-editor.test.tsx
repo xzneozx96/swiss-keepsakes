@@ -369,10 +369,38 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await press('Next')
     await heading('Hours and dates')
     await userEvent.click(screen.getByRole('button', { name: 'Add hours for Mon' }))
-    await type('Mon · Opens', '18:00')
-    await type('Mon · Closes', '09:00')
+    await type('Mon · Open at', '18:00')
+    await type('Mon · Close at', '09:00')
 
     expect(await screen.findByText(/Closing must be after opening/)).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] labels the inputs Open at and Close at, and keeps the weekday in the name for screen readers only', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await press('Next')
+    await press('Next')
+    await heading('Hours and dates')
+    await userEvent.click(screen.getByRole('button', { name: 'Add hours for Tue' }))
+
+    const input = screen.getByLabelText('Tue · Open at')
+    const label = document.querySelector(`label[for="${input.id}"]`)!
+    expect([...label.childNodes].map(node => node.textContent)).toEqual(['Tue · ', 'Open at'])
+    expect(label.querySelector('.sr-only')).toHaveTextContent('Tue ·')
+    expect(screen.getByLabelText('Tue · Close at')).toBeInTheDocument()
+    expect(screen.queryByText(/Opens$|Closes$/)).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] says Öffnet um and Schliesst um in German', async () => {
+    await open('new', { language: 'de' })
+    await heading('Ort auf der Karte')
+    await press('Weiter')
+    await press('Weiter')
+    await heading('Öffnungszeiten und Daten')
+    await userEvent.click(screen.getByRole('button', { name: /^Zeiten für Di/ }))
+
+    expect(screen.getByLabelText('Di · Öffnet um')).toBeInTheDocument()
+    expect(screen.getByLabelText('Di · Schliesst um')).toBeInTheDocument()
   })
 })
 
