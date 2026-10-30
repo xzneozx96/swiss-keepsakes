@@ -3,6 +3,7 @@ import type { Language } from '@sk/domain/shared'
 import type { PlaceForm } from '../lib/form'
 import type { CardExtras } from '@/features/map/components/place-card'
 
+import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
 import { IPhoneMockup } from '@/components/iphone-mockup'
@@ -11,12 +12,15 @@ import { PhotoPin } from '@/components/map/pin-faces'
 import { PinLayer } from '@/components/map/pin-layer'
 import { LocaleOverride, useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
+import { contentQueries } from '@/features/content/api/queries'
+import { useDataClient } from '@/features/data-client'
 import { PlaceCardRow } from '@/features/map/components/place-card'
 import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
 import { useMediaFile } from '@/features/media/api/queries'
 import { useStoryOptions } from '../api/queries'
 import { photoIds } from '../lib/form'
 import { PREVIEW_PIN_ID, previewItem, tipIn } from '../lib/preview'
+import { StorySheet } from './story-sheet'
 
 const NO_PINS: PublicMapItem[] = []
 const NO_LANGUAGES: readonly Language[] = []
@@ -50,36 +54,48 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
     return { tip: tipIn(form, language), categories: form.categoryIds.flatMap(id => names.get(id) || []) }
   }, [categories.data, form, language])
   const pins = useMemo(() => (located ? [item] : NO_PINS), [item, located])
+  const [frame, setFrame] = useState<HTMLDivElement | null>(null)
+  const [storyOpen, setStoryOpen] = useState(false)
+  const client = useDataClient()
+  const articles = useQuery(contentQueries.articles(client))
+  const option = stories.data?.items.find(candidate => candidate.groupId === form.mainStoryGroupId)
+  const storyTitle = option ? (option.title[language] ?? option.title[language === 'en' ? 'de' : 'en'] ?? '') : ''
+  // The story options carry no text: the text is the version of the story the guest page draws, found by its title.
+  const article = articles.data?.find(candidate => candidate.language === language && candidate.title === storyTitle)
+    ?? articles.data?.find(candidate => candidate.title === storyTitle)
 
   return (
-    // The map, its pin and the card are a picture: inert, except the retry button of a failed map and the credits.
-    <MapView
-      inert
-      className="relative h-full"
-      insets={PREVIEW_INSETS}
-      interactive={false}
-      label={t('map.heading')}
-      view={{ center: located ? [item.longitude, item.latitude] : LUCERNE, zoom: 16, minZoom: 12, maxZoom: 18.5 }}
-    >
-      <DraftLayers cover={cover} extras={extras} item={item} located={located} pins={pins} />
-    </MapView>
+    // `transform-gpu` makes this box the containing block of the sheet, which is `position: fixed`: it fills the phone's screen and not the page. The sheet is as high as the page's window by default, so the box says its own height (the screen under the status bar, 820 px at the phone's real size).
+    <div ref={setFrame} className="relative h-full transform-gpu overflow-hidden [--visual-viewport-height:820px]">
+      <MapView
+        inert
+        className="relative h-full"
+        insets={PREVIEW_INSETS}
+        interactive={false}
+        label={t('map.heading')}
+        overlay={(
+          <PlaceCardRow bottom={CARD_BOTTOM} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onReadStory={() => setStoryOpen(true)} onSelect={noop} />
+        )}
+        view={{ center: located ? [item.longitude, item.latitude] : LUCERNE, zoom: 16, minZoom: 12, maxZoom: 18.5 }}
+      >
+        <DraftPin cover={cover} located={located} pins={pins} />
+      </MapView>
+      <StorySheet article={article} container={frame} isOpen={storyOpen} language={language} title={storyTitle || item.title} onClose={() => setStoryOpen(false)} />
+    </div>
   )
 }
 
-/** The pin and the card of the draft, on the map around them. */
-function DraftLayers({ item, located, pins, cover, extras }: { item: PublicMapItem, located: boolean, pins: PublicMapItem[], cover: string | undefined, extras: CardExtras }) {
+/** The pin of the draft, on the map around it. */
+function DraftPin({ located, pins, cover }: { located: boolean, pins: PublicMapItem[], cover: string | undefined }) {
   const places = useMemo(() => pins.map(pin => ({ ...pin, coordinates: [pin.longitude, pin.latitude] as [number, number] })), [pins])
 
   return (
-    <>
-      <PinLayer
-        followSelected
-        pins={places}
-        renderPin={(pin, state) => <PhotoPin dimmed={false} emphasized={false} id={pin.id} label={pin.title} photoSrc={cover} selected={state.selected} onPress={noop} />}
-        selectedId={located ? PREVIEW_PIN_ID : undefined}
-      />
-      <PlaceCardRow bottom={CARD_BOTTOM} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onClose={noop} onSelect={noop} />
-    </>
+    <PinLayer
+      followSelected
+      pins={places}
+      renderPin={(pin, state) => <PhotoPin dimmed={false} emphasized={false} id={pin.id} label={pin.title} photoSrc={cover} selected={state.selected} onPress={noop} />}
+      selectedId={located ? PREVIEW_PIN_ID : undefined}
+    />
   )
 }
 

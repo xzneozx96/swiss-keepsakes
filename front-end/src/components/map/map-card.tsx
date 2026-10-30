@@ -161,7 +161,8 @@ export function MapCardRow<T extends { id: string }>({
   bottom: number
   renderCard: (item: T, state: { active: boolean, nav: MapCardNavProps | undefined }) => ReactNode
   onSelect: (id: string) => void
-  onClose: () => void
+  /** Without it the row has no ✕ and Escape does nothing (a card that is only a picture). */
+  onClose?: () => void
 }) {
   const rowRef = useRef<HTMLDivElement>(null)
 
@@ -201,12 +202,14 @@ export function MapCardRow<T extends { id: string }>({
       style={{ bottom: `calc(env(safe-area-inset-bottom,0px) + ${bottom}px)` }}
       onKeyDown={(event) => {
         if (event.key === 'Escape')
-          onClose()
+          onClose?.()
       }}
     >
-      <div className="flex justify-end px-6 pb-2">
-        <MapCardClose onClose={onClose} />
-      </div>
+      {onClose && (
+        <div className="flex justify-end px-6 pb-2">
+          <MapCardClose onClose={onClose} />
+        </div>
+      )}
       <div
         ref={rowRef}
         className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-[calc(50%-155.5px)] pb-3 [scrollbar-width:none]"

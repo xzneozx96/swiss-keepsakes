@@ -279,4 +279,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.preview.label': 'Der Ort auf der Gästekarte',
   'places.preview.fallback': 'Es gibt noch keinen Titel auf {language}. Gäste, die {language} lesen, sehen den Titel auf {other}.',
   'places.preview.noLocation': 'Der Punkt erscheint hier, sobald Sie den Ort auf der Karte wählen.',
+  'places.preview.story.close': 'Schliessen',
+  'places.preview.story.draft': 'Diese Version ist ein Entwurf. Gäste sehen sie noch nicht.',
+  'places.preview.story.missing': 'Der Text der Geschichte ist in der Vorschau noch nicht verfügbar. Gäste lesen ihn auf der Geschichtenseite.',
 }

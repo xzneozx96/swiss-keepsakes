@@ -277,4 +277,7 @@ export const placesEn = {
   'places.preview.label': 'The place on the guest map',
   'places.preview.fallback': 'There is no {language} title yet. Guests reading {language} see the {other} one.',
   'places.preview.noLocation': 'The pin shows here once you choose the place on the map.',
+  'places.preview.story.close': 'Close',
+  'places.preview.story.draft': 'This version is a draft. Guests do not see it yet.',
+  'places.preview.story.missing': 'The story text is not available in the preview yet. Guests read it on the story page.',
 } as const

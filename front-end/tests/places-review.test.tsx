@@ -56,7 +56,9 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     await waitFor(() => expect(FakeMarker.instances).toHaveLength(1))
     expect(within(phone).getByRole('heading', { name: 'Chapel Bridge', level: 2 })).toBeInTheDocument()
     expect(within(card()).getByText(/18:00–19:30/)).toBeInTheDocument()
-    expect(within(card()).getByRole('link', { name: 'Read the story' })).toBeInTheDocument()
+    // The preview stays on its page: Read the story is a button that opens the story in a sheet in the phone.
+    expect(within(card()).getByRole('button', { name: 'Read the story' })).toBeInTheDocument()
+    expect(within(card()).queryByRole('link')).not.toBeInTheDocument()
     expect(within(FakeMarker.instances[0]!.element).getByRole('button', { pressed: true })).toBeInTheDocument()
   })
 
@@ -66,7 +68,7 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     await userEvent.click(screen.getByRole('tab', { name: /German/ }))
 
     expect(await within(phone).findByRole('heading', { name: 'Kapellbrücke', level: 2 })).toBeInTheDocument()
-    expect(within(card()).queryByRole('link')).not.toBeInTheDocument()
+    expect(within(card()).queryByRole('button')).not.toBeInTheDocument()
   })
 
   it('shows the other language\'s title and says so when the chosen language has none', async () => {
