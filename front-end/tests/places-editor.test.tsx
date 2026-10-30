@@ -554,6 +554,8 @@ describe('[E4.2][AC68] N17 categories and interests as multi-selects', () => {
 })
 
 describe('[E4.2][AC63][AC68] N17 story and link', () => {
+  const blocks = () => screen.getAllByTestId('place-block')
+
   it('[E4.2][AC63] the outbound link must be https, and a change is saved on the pin', async () => {
     api.pin = pinOf({ id: uuid(10) })
     await open('new')
@@ -569,6 +571,34 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]!.body).toMatchObject({ outboundUrl: 'https://hotel.example/stay' })
+  })
+
+  it('[E4.2][AC85] the story field is a label, a select that says None and one short help line, nothing more', async () => {
+    api.pin = pinOf({ id: uuid(10) })
+    await open('new')
+    await heading('Place on the map')
+    await nextTo('Story and link')
+
+    const select = screen.getByRole('button', { name: /Story behind this place/ })
+    expect(select).toHaveTextContent('None')
+    expect(select).toHaveAccessibleDescription('Guests can open it from the place card.')
+    expect(screen.queryByText(/No main story|Main story|publishes without one/)).not.toBeInTheDocument()
+    expect(screen.getAllByText('Story behind this place')).toHaveLength(1)
+    expect(blocks()[0]).toHaveTextContent(/^Story behind this placeNoneGuests can open it from the place card\.(?: None)?$/)
+  })
+
+  it('[E4.2][AC85] says the same in German', async () => {
+    api.pin = pinOf({ id: uuid(10) })
+    await open('new', { language: 'de' })
+    await heading('Ort auf der Karte')
+    for (let i = 0; i < 4; i++)
+      await press('Weiter')
+    await heading('Geschichte und Link')
+
+    const select = screen.getByRole('button', { name: /Die Geschichte dahinter/ })
+    expect(select).toHaveTextContent('Keine')
+    expect(select).toHaveAccessibleDescription('Gäste öffnen sie über die Ortskarte.')
+    expect(screen.queryByText(/Hauptgeschichte/)).not.toBeInTheDocument()
   })
 
   it('[E4.2][AC85] the main story is optional, and one with no live language shows which language misses it', async () => {

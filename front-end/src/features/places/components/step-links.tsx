@@ -51,7 +51,6 @@ export function StepLinks({ form, patch, errors, storeId }: StepProps) {
                 </Select.Popover>
               </Select>
             )}
-        {!form.mainStoryGroupId && <p className="text-sm text-muted">{t('places.story.empty')}</p>}
         {gaps.map(lang => <p key={lang} className="text-sm text-warning">{t('places.story.gap', { lang: t(`places.lang.${lang}`) })}</p>)}
       </Block>
       <Block>
