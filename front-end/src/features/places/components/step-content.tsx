@@ -26,7 +26,7 @@ function textState(form: PlaceForm, lang: Lang): TextState {
   if (form[`title${upper}` as 'titleEn'].trim())
     return 'ready'
 
-  return form[`tip${upper}` as 'tipEn'].trim() || form[`localTip${upper}` as 'localTipEn'].trim() ? 'missingTitle' : 'notWritten'
+  return form[`tip${upper}` as 'tipEn'].trim() ? 'missingTitle' : 'notWritten'
 }
 
 /** The shared language switch, each language with its state. */
@@ -59,8 +59,7 @@ function TextBlock({ form, patch }: Pick<StepProps, 'form' | 'patch'>) {
     <Block hint={t('places.text.hint')} icon={HeadingIcon} title={t('places.text.title')}>
       <PlaceLanguageSwitch form={form} selected={lang} onChange={setLang} />
       <Field key={`title-${lang}`} label={t('places.content.title', { lang: name })} lang={lang} maxLength={300} value={form[`title${upper}` as 'titleEn']} onChange={value => patch({ [`title${upper}`]: value })} />
-      <Field key={`tip-${lang}`} description={t('places.content.tipHelp')} label={t('places.content.tip', { lang: name })} lang={lang} maxLength={20000} rows={3} value={form[`tip${upper}` as 'tipEn']} onChange={value => patch({ [`tip${upper}`]: value })} />
-      <Field key={`local-${lang}`} description={t('places.localTip.help')} label={t('places.localTip.label', { lang: name })} lang={lang} maxLength={300} value={form[`localTip${upper}` as 'localTipEn']} onChange={value => patch({ [`localTip${upper}`]: value })} />
+      <Field key={`tip-${lang}`} description={t('places.content.tipHelp')} label={t('places.content.tip')} lang={lang} maxLength={20000} rows={3} value={form[`tip${upper}` as 'tipEn']} onChange={value => patch({ [`tip${upper}`]: value })} />
     </Block>
   )
 }

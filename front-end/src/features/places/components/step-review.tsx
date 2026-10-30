@@ -94,7 +94,7 @@ export function StepReview({ form, pin, go, steps, actions, errors }: StepProps 
           {step.id === 'content' && (
             <>
               <ReviewRow label={t('places.review.title')}>{text(form.titleEn, form.titleDe) || none}</ReviewRow>
-              <ReviewRow label={t('places.review.localTip')}>{text(form.localTipEn, form.localTipDe) || none}</ReviewRow>
+              <ReviewRow label={t('places.review.tip')}>{text(form.tipEn, form.tipDe) || none}</ReviewRow>
               <ReviewRow label={t('places.review.photos')}>{form.coverMediaId ? t('places.review.photoCount', { count: form.photos.length + 1 }) : none}</ReviewRow>
             </>
           )}

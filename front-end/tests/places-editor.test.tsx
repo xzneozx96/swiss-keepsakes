@@ -160,12 +160,13 @@ describe('[E4.2][AC68] N17 text per language', () => {
     expect(screen.getByRole('tab', { name: /^German, Not written/ })).toBeInTheDocument()
     expect(screen.getByLabelText('Title in English')).toBeInTheDocument()
     expect(screen.queryByLabelText('Title in German')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Tip in German')).not.toBeInTheDocument()
+    expect(screen.getAllByLabelText('Tips from a local')).toHaveLength(1)
+    expect(screen.queryByLabelText(/Local tip/)).not.toBeInTheDocument()
   })
 
   it('[E4.2][AC68] a title makes the language Ready, and text without a title is Missing title', async () => {
     await openText()
-    await type('Tip in English', 'Come at dawn.')
+    await type('Tips from a local', 'Come at dawn.')
 
     expect(screen.getByRole('tab', { name: /^English, Missing title/ })).toBeInTheDocument()
     await type('Title in English', 'Chapel Bridge')
@@ -179,13 +180,14 @@ describe('[E4.2][AC68] N17 text per language', () => {
     await type('Title in English', 'Chapel Bridge')
     await userEvent.click(screen.getByRole('tab', { name: /^German/ }))
     await type('Title in German', 'Kapellbrücke')
-    await type('Local tip in German', 'Bei Sonnenaufgang')
+    await type('Tips from a local', 'Bei Sonnenaufgang')
     await userEvent.click(screen.getByRole('tab', { name: /^English/ }))
 
     expect(screen.getByLabelText('Title in English')).toHaveValue('Chapel Bridge')
     await userEvent.click(screen.getAllByRole('button', { name: 'Save draft' })[0]!)
     await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]!.body).toMatchObject({ title: { en: 'Chapel Bridge', de: 'Kapellbrücke' }, localTip: { de: 'Bei Sonnenaufgang' } })
+    expect(writes()[0]!.body).toMatchObject({ title: { en: 'Chapel Bridge', de: 'Kapellbrücke' }, tip: { de: 'Bei Sonnenaufgang' } })
+    expect(writes()[0]!.body).not.toHaveProperty('localTip')
   })
 
   it('[E4.2][AC68] opens on the dashboard language, German here, with German labels', async () => {
@@ -194,6 +196,8 @@ describe('[E4.2][AC68] N17 text per language', () => {
     expect(screen.getByRole('tablist', { name: 'Sprachversion' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /^Deutsch/, selected: true })).toBeInTheDocument()
     expect(screen.getByLabelText('Titel auf Deutsch')).toBeInTheDocument()
+    expect(screen.getByLabelText('Tipps von Einheimischen')).toBeInTheDocument()
+    expect(screen.getByText('Ein, zwei Sätze in Ihren Worten: worauf achten, wann kommen.')).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /^Englisch, Nicht geschrieben/ })).toBeInTheDocument()
   })
 })
@@ -653,11 +657,11 @@ describe('[E4.2][AC68] N17 photos', () => {
       release = resolve
     })
     await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'new.jpg', { type: 'image/jpeg' }))
-    await userEvent.type(screen.getByLabelText('Tip in English'), 'Typed during the upload')
+    await userEvent.type(screen.getByLabelText('Tips from a local'), 'Typed during the upload')
     release()
 
     await waitFor(() => expect(names()).toEqual(['Photo 1', 'Photo 2']))
-    expect(screen.getByLabelText('Tip in English')).toHaveValue('Typed during the upload')
+    expect(screen.getByLabelText('Tips from a local')).toHaveValue('Typed during the upload')
     await press('Save draft')
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]!.body).toMatchObject({ tip: { en: 'Typed during the upload' }, coverMediaId: uuid(41), photos: [{ mediaId: uuid(40) }] })

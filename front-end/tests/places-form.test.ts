@@ -109,6 +109,11 @@ describe('[E4.2][AC68] the write of a draft', () => {
     expect(formOf(live)).not.toHaveProperty('slug')
   })
 
+  it('never sends the local tip: the editor has one tip field per language', () => {
+    expect(bodyOf({ ...emptyForm(), tipEn: 'Come at dawn' })).not.toHaveProperty('localTip')
+    expect(formOf(live)).not.toHaveProperty('localTipEn')
+  })
+
   it('sends every field so a save replaces the lists and clears what was emptied', () => {
     const body = bodyOf({ ...emptyForm(), titleEn: ' A ', address: '  ', photos: [{ mediaId: 'm' }], coverMediaId: null })
 
@@ -159,7 +164,7 @@ describe('[E4.2][AC68] form state', () => {
     const withData: Pin = { ...live, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: { de: 'Früh kommen' }, localTip: { en: 'Go at dawn' }, coverAlt: {}, photoAlt: { m1: { en: 'Close' } } }, dates: [{ id: 'd1', firstDay: '2026-11-09', lastDay: '2026-11-14', startTime: null, endTime: null }], weeklyHours: [{ day: 1, opens: '09:00', closes: '18:00' }], photos: [{ mediaId: 'm1' }], interests: ['local-activities'] }
     const form = formOf(withData)
 
-    expect(form).toMatchObject({ titleEn: 'Chapel Bridge, Lucerne', tipDe: 'Früh kommen', localTipEn: 'Go at dawn', interests: ['local-activities'] })
+    expect(form).toMatchObject({ titleEn: 'Chapel Bridge, Lucerne', tipDe: 'Früh kommen', interests: ['local-activities'] })
     expect(form.dates[0]).toMatchObject({ kind: 'range', firstDay: '2026-11-09' })
     // No cover and one extra photo: the list is one photo, so the first photo is the cover.
     expect(form.coverMediaId).toBe('m1')
@@ -216,7 +221,7 @@ describe('[E4.2][AC68] what the editor sends is what the API contract accepts', 
       titleEn: 'Chapel Bridge',
       titleDe: 'Kapellbrücke',
       tipEn: 'Walk it at dawn',
-      localTipDe: 'Früh kommen',
+      tipDe: 'Früh kommen',
       latitude: 47.05,
       longitude: 8.3,
       address: 'Kapellbrücke, Luzern',

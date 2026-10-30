@@ -19,8 +19,6 @@ export interface PlaceForm {
   titleDe: string
   tipEn: string
   tipDe: string
-  localTipEn: string
-  localTipDe: string
   latitude: number | null
   longitude: number | null
   address: string
@@ -63,8 +61,6 @@ export function emptyForm(withDate = false): PlaceForm {
     titleDe: '',
     tipEn: '',
     tipDe: '',
-    localTipEn: '',
-    localTipDe: '',
     latitude: null,
     longitude: null,
     address: '',
@@ -96,8 +92,6 @@ export function formOf(pin: Pin): PlaceForm {
     titleDe: text.title.de ?? '',
     tipEn: text.tip.en ?? '',
     tipDe: text.tip.de ?? '',
-    localTipEn: text.localTip.en ?? '',
-    localTipDe: text.localTip.de ?? '',
     latitude: pin.latitude,
     longitude: pin.longitude,
     address: pin.address ?? '',
@@ -197,7 +191,6 @@ export function bodyOf(form: PlaceForm): PinWriteBody {
   return {
     title: trimmed(form.titleEn, form.titleDe),
     tip: trimmed(form.tipEn, form.tipDe),
-    localTip: trimmed(form.localTipEn, form.localTipDe),
     latitude: form.latitude,
     longitude: form.longitude,
     address: form.address.trim() === '' ? null : form.address.trim(),
