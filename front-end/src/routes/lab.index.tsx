@@ -10,6 +10,11 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/location-card' as const,
+    title: 'Location card (place editor, step 1: Location on the map)',
+    note: 'Three layouts for the link field and the map, each a working card: a floating pill over the map, a side panel, and a clean field above a framed map with map-style controls (30.10.2026).',
+  },
+  {
     to: '/lab/opening-hours' as const,
     title: 'Opening hours editor (place editor, step When), approved',
     note: 'Option A chosen 30.10.2026, built into the place editor: compact week rows with a switch, the range, a second range and copy to other days. Kept here as the reference; the other three options were removed.',

@@ -1,8 +1,8 @@
 import type { Map as MapLibreMap, Marker } from 'maplibre-gl'
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useImperativeHandle, useRef, useState } from 'react'
 
 import { foldCreditsOnFirstTouch } from '@/components/aerial-map/fold-credits'
 import { useLocale } from '@/contexts/locale-context'
@@ -12,6 +12,11 @@ import { useLatest } from '@/hooks/use-latest'
 const LUCERNE: [number, number] = [8.3068, 47.0535]
 /** One arrow key press moves the pin about 5 m; with Shift about 25 m. */
 const STEP = 0.00005
+
+/** What the parent can ask of the map: bring it back to the pin (or to Lucerne while there is none). */
+export interface MapPickerControls {
+  recenter: () => void
+}
 
 const round = (value: number) => Number(value.toFixed(5))
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -27,13 +32,18 @@ const markerShape
  * MapLibre loads by dynamic import, never with the editor's first paint. If it cannot load, `onFailed` lets the
  * step show coordinate fields instead.
  */
-export function MapPicker({ lat, lng, onPlace, onFailed, attached, children }: {
+export function MapPicker({ lat, lng, onPlace, onFailed, attached, className = 'h-72 lg:h-96', overlay, controlsRef, children }: {
   lat: number | null
   lng: number | null
   onPlace: (position: { lat: number, lng: number }) => void
   onFailed: () => void
   /** The map sits in a frame with something above it: square corners, the frame rounds them. */
   attached?: boolean
+  /** The size of the box, as height classes; the width is the parent's. */
+  className?: string
+  /** Controls placed anywhere over the map: the box leaves the map under it to the pointer, so give each control its own `pointer-events-auto`. */
+  overlay?: ReactNode
+  controlsRef?: Ref<MapPickerControls>
   /** Controls over the map, bottom left. */
   children?: ReactNode
 }) {
@@ -164,11 +174,24 @@ export function MapPicker({ lat, lng, onPlace, onFailed, attached, children }: {
     markerRef.current = marker
   }, [map, lat, lng, latest])
 
+  useImperativeHandle(controlsRef, () => ({
+    recenter: () => {
+      const { lat: at, lng: along } = latest.current
+
+      map?.easeTo({
+        center: at !== null && along !== null ? [along, at] : LUCERNE,
+        zoom: at !== null ? 16.5 : 15.2,
+        duration: reducedMotion() ? 0 : 400,
+      })
+    },
+  }), [map, latest])
+
   // MapLibre makes its container `position: relative`, so it sits in a box that has a size.
   return (
-    <div className={`relative h-72 overflow-hidden bg-[#c9d3c6] lg:h-96 ${attached ? '' : 'rounded-2xl'}`}>
+    <div className={`relative overflow-hidden bg-[#c9d3c6] ${className} ${attached ? '' : 'rounded-2xl'}`}>
       {!map && <p className="absolute inset-0 grid place-items-center text-sm text-muted" role="status">{t('places.map.loading')}</p>}
       <div ref={containerRef} className="size-full" />
+      {overlay && <div className="pointer-events-none absolute inset-0 z-10">{overlay}</div>}
       {children && <div className="absolute bottom-3 start-3 z-10">{children}</div>}
     </div>
   )

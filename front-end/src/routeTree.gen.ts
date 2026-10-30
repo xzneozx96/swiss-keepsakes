@@ -33,6 +33,7 @@ import { Route as LabHeroRouteImport } from './routes/lab.hero'
 import { Route as LabHomeRouteImport } from './routes/lab.home'
 import { Route as LabKeepsakeEditorRouteImport } from './routes/lab.keepsake-editor'
 import { Route as LabLanguageSwitchRouteImport } from './routes/lab.language-switch'
+import { Route as LabLocationCardRouteImport } from './routes/lab.location-card'
 import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
 import { Route as LabMediaRouteImport } from './routes/lab.media'
@@ -226,6 +227,11 @@ const LabKeepsakeEditorRoute = LabKeepsakeEditorRouteImport.update({
 const LabLanguageSwitchRoute = LabLanguageSwitchRouteImport.update({
   id: '/lab/language-switch',
   path: '/lab/language-switch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabLocationCardRoute = LabLocationCardRouteImport.update({
+  id: '/lab/location-card',
+  path: '/lab/location-card',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabMapRoute = LabMapRouteImport.update({
@@ -636,6 +642,7 @@ export interface FileRoutesByFullPath {
   '/lab/home': typeof LabHomeRoute
   '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
   '/lab/language-switch': typeof LabLanguageSwitchRoute
+  '/lab/location-card': typeof LabLocationCardRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
@@ -733,6 +740,7 @@ export interface FileRoutesByTo {
   '/lab/home': typeof LabHomeRoute
   '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
   '/lab/language-switch': typeof LabLanguageSwitchRoute
+  '/lab/location-card': typeof LabLocationCardRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
@@ -834,6 +842,7 @@ export interface FileRoutesById {
   '/lab/home': typeof LabHomeRoute
   '/lab/keepsake-editor': typeof LabKeepsakeEditorRoute
   '/lab/language-switch': typeof LabLanguageSwitchRoute
+  '/lab/location-card': typeof LabLocationCardRoute
   '/lab/map': typeof LabMapRoute
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
@@ -936,6 +945,7 @@ export interface FileRouteTypes {
     | '/lab/home'
     | '/lab/keepsake-editor'
     | '/lab/language-switch'
+    | '/lab/location-card'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/media'
@@ -1033,6 +1043,7 @@ export interface FileRouteTypes {
     | '/lab/home'
     | '/lab/keepsake-editor'
     | '/lab/language-switch'
+    | '/lab/location-card'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/media'
@@ -1133,6 +1144,7 @@ export interface FileRouteTypes {
     | '/lab/home'
     | '/lab/keepsake-editor'
     | '/lab/language-switch'
+    | '/lab/location-card'
     | '/lab/map'
     | '/lab/map-loading'
     | '/lab/media'
@@ -1231,6 +1243,7 @@ export interface RootRouteChildren {
   LabHomeRoute: typeof LabHomeRoute
   LabKeepsakeEditorRoute: typeof LabKeepsakeEditorRoute
   LabLanguageSwitchRoute: typeof LabLanguageSwitchRoute
+  LabLocationCardRoute: typeof LabLocationCardRoute
   LabMapRoute: typeof LabMapRoute
   LabMapLoadingRoute: typeof LabMapLoadingRoute
   LabMediaRoute: typeof LabMediaRoute
@@ -1424,6 +1437,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/language-switch'
       fullPath: '/lab/language-switch'
       preLoaderRoute: typeof LabLanguageSwitchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/location-card': {
+      id: '/lab/location-card'
+      path: '/lab/location-card'
+      fullPath: '/lab/location-card'
+      preLoaderRoute: typeof LabLocationCardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/map': {
@@ -2133,6 +2153,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabHomeRoute: LabHomeRoute,
   LabKeepsakeEditorRoute: LabKeepsakeEditorRoute,
   LabLanguageSwitchRoute: LabLanguageSwitchRoute,
+  LabLocationCardRoute: LabLocationCardRoute,
   LabMapRoute: LabMapRoute,
   LabMapLoadingRoute: LabMapLoadingRoute,
   LabMediaRoute: LabMediaRoute,
