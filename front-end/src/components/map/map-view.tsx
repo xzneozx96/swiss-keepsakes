@@ -39,6 +39,7 @@ export function MapView({
   status,
   inert = false,
   credits = true,
+  creditsBottom,
   overlay,
   safeArea = false,
   className = '',
@@ -59,6 +60,8 @@ export function MapView({
   status?: Exclude<MapStatus, 'map-loading'>
   inert?: boolean
   credits?: boolean
+  /** How far the credits sit above the frame's bottom edge (px). Without it they stay clear of `insets.bottom` (above the screen's card); a screen that keeps them in the corner passes 8. */
+  creditsBottom?: number
   safeArea?: boolean
   /** Controls drawn over the map that stay pressable when the map is `inert` (they may use `useMap()` too). */
   overlay?: ReactNode
@@ -176,7 +179,7 @@ export function MapView({
       {credits && (
         <MapCredits
           className="absolute end-2 z-10 max-w-[calc(100%-1rem)]"
-          style={{ bottom: `calc(${lift} + ${insets.bottom || CREDITS_MARGIN}px)` }}
+          style={{ bottom: `calc(${lift} + ${creditsBottom ?? (insets.bottom || CREDITS_MARGIN)}px)` }}
           watch={frameRef}
         />
       )}

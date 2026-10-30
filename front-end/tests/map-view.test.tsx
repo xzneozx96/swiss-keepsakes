@@ -136,6 +136,47 @@ describe('[E4.6][G11] the shared map view', () => {
     expect(screen.getByRole('button', { name: en['map.credits'] })).toHaveAttribute('aria-expanded', 'false')
   })
 
+  it('keeps the credits in the corner when the screen says so, whatever its insets are', async () => {
+    renderMap({ insets: { top: 60, bottom: 245 }, creditsBottom: 8 })
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+
+    expect(document.querySelector<HTMLElement>('[data-map-credits]')!.style.bottom).toContain('8px')
+  })
+
+  it('fills the frame its screen gives it: the frame takes the screen\'s position only, and the canvas sits in a box that covers it', async () => {
+    renderMap({ className: 'absolute inset-0' })
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    const frame = document.querySelector<HTMLElement>('[data-map-frame]')!
+    const box = FakeMap.instances[0]!.getCanvas().parentElement!.parentElement!
+
+    // A `relative` of its own would beat `absolute inset-0` and leave the map as tall as its content (430x300 in a 1127 px section).
+    expect(frame.className.split(' ')).not.toContain('relative')
+    expect(frame).toHaveClass('absolute', 'inset-0')
+    expect(box).toHaveClass('absolute', 'inset-0')
+  })
+
+  it('resizes the map when its container changes size', async () => {
+    let notify = () => {}
+
+    vi.stubGlobal('ResizeObserver', class {
+      constructor(callback: () => void) {
+        notify = callback
+      }
+
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    })
+    renderMap()
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    const map = FakeMap.instances[0]!
+    // The load starts a resize of its own on `load`; count from here.
+    map.resize.mockClear()
+    notify()
+
+    expect(map.resize).toHaveBeenCalledTimes(1)
+  })
+
   it('makes the map a picture when it is inert, and leaves the credits pressable', async () => {
     renderMap({ inert: true, interactive: false })
     await waitFor(() => expect(FakeMap.instances).toHaveLength(1))

@@ -25,8 +25,10 @@ import { StorySheet } from './story-sheet'
 const NO_PINS: PublicMapItem[] = []
 const NO_LANGUAGES: readonly Language[] = []
 const noop = () => undefined
-/** The card sits about 16 px above the phone's home indicator (it ends 13 px from the bottom): the preview has no tab bar or music button. */
-const CARD_BOTTOM = 29
+/** The card row leaves room under it for the credits in the corner (8 px and their two lines, 36 px, when unfolded): the preview has no tab bar or music button. */
+const CARD_BOTTOM = 40
+/** The credits sit in the map's bottom right corner (px from the edges), folded to the round ⓘ after the first touch. */
+const CREDITS_BOTTOM = 8
 const LUCERNE: [number, number] = [8.3068, 47.0535]
 const PREVIEW_INSETS = { top: CONTROLS, bottom: CARD_BOTTOM + CARD_ROW_HEIGHT }
 
@@ -70,6 +72,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
       <MapView
         inert
         className="relative h-full"
+        creditsBottom={CREDITS_BOTTOM}
         insets={PREVIEW_INSETS}
         interactive={false}
         label={t('map.heading')}
