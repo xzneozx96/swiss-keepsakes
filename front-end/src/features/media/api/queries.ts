@@ -16,6 +16,14 @@ export const mediaQueries = {
       queryFn: () => client.media.list({ storeId, query }),
       refetchInterval: ({ state }) => (state.data?.items.some(item => item.status === 'processing') ? PROCESSING_POLL_MS : false),
     }),
+  file: (client: DataClient, storeId: string, id: string) =>
+    queryOptions({
+      ...fromApi,
+      queryKey: [...queryKeys.media.file, storeId, id],
+      queryFn: () => client.media.get({ storeId, id }),
+      // A photo is "processing" for a moment after the upload.
+      refetchInterval: query => (query.state.data?.status === 'processing' ? 2000 : false),
+    }),
   uses: (client: DataClient, storeId: string, id: string) =>
     queryOptions({
       ...fromApi,
@@ -35,4 +43,11 @@ export function useMediaUses(storeId: string, id: string) {
   const client = useDataClient()
 
   return useQuery(mediaQueries.uses(client, storeId, id))
+}
+
+/** One file by id, read again every 2 s while it is processing. Waits while the store or the file is unknown. */
+export function useMediaFile(storeId: string | undefined, id: string | null) {
+  const client = useDataClient()
+
+  return useQuery({ ...mediaQueries.file(client, storeId ?? '', id ?? ''), enabled: storeId !== undefined && id !== null })
 }

@@ -123,6 +123,9 @@ export async function setUpHarness() {
 
     if (custom)
       return custom
+    // The photo block reads each photo it shows by id.
+    if (call.method === 'GET' && call.path.startsWith(`/api/store/${storeId}/media/`))
+      return Response.json({ ...media, id: call.path.split('/').at(-1) })
     if (call.path === '/api/me')
       return Response.json({ guestId: storeId, stores: [{ storeId, role: 'owner', status: 'live' }] })
 

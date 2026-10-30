@@ -68,17 +68,6 @@ export const keepsakesEn = {
 
   'keepsakes.photos.title': 'Media',
   'keepsakes.photos.empty': 'No photos yet. Add one to publish; the first is the cover.',
-  'keepsakes.photos.add': 'Add photo',
-  'keepsakes.photos.list': 'Photos, in order',
-  'keepsakes.photos.name': 'Photo {n}',
-  'keepsakes.photos.cover': 'Cover',
-  'keepsakes.photos.move': 'Move {name}, position {position} of {count}. Drag, or use the arrow keys.',
-  'keepsakes.photos.moved': '{name} moved to position {position} of {count}.',
-  'keepsakes.photos.remove': 'Remove {name}',
-  'keepsakes.photos.refusal.type': 'Use a JPEG, PNG or WebP photo.',
-  'keepsakes.photos.refusal.size': 'This photo is larger than 10 MB. Choose a smaller one.',
-  'keepsakes.photos.refusal.processing': 'The photo is still being prepared. Try adding it again in a moment.',
-  'keepsakes.photos.refusal.failed': 'The photo could not be uploaded. Try again.',
 
   'keepsakes.options.title': 'Options',
 

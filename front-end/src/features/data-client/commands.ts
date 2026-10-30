@@ -20,8 +20,8 @@ interface ReadsWithInput {
   stores: 'onboarding' | 'members' | 'previewInvitation'
   categories: 'list'
   keepsakes: 'list' | 'get'
-  media: 'list' | 'uses'
-  places: 'list' | 'get' | 'storyOptions' | 'media'
+  media: 'list' | 'uses' | 'get'
+  places: 'list' | 'get' | 'storyOptions'
 }
 
 /**
@@ -71,6 +71,9 @@ export const commandAffects: {
   },
   media: {
     upload: [queryKeys.media.list],
+    // A grant writes nothing a screen reads; a confirmed file is a new item of the library.
+    requestUpload: [],
+    confirmUpload: [queryKeys.media.list],
     // A replacement changes the file under every page that uses it; the sheet's pages are read again too.
     replace: [queryKeys.media.list, queryKeys.media.uses],
     describe: [queryKeys.media.list],
@@ -114,11 +117,9 @@ export const commandAffects: {
     publish: [queryKeys.places.list, queryKeys.places.pin],
     hide: [queryKeys.places.list, queryKeys.places.pin],
     remove: [queryKeys.places.list, queryKeys.places.pin],
-    // A lookup of a short link or of an address and an upload write no collection a screen reads.
+    // A lookup of a short link or of an address writes no collection a screen reads.
     resolveMapsLink: [],
     addressAt: [],
-    requestUpload: [],
-    confirmUpload: [],
   },
   reports: {
     saveCosts: [queryKeys.reports.costs],

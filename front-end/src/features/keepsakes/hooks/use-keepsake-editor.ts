@@ -147,8 +147,9 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
 
   const flushRef = useLatest(flush)
 
-  const change = (patch: Partial<KeepsakeDraft>) => {
-    const next = { ...draftRef.current, ...patch }
+  /** A change of some fields, or a function of the draft as it is now: several uploads that finish together all land. */
+  const change = (patch: Partial<KeepsakeDraft> | ((current: KeepsakeDraft) => Partial<KeepsakeDraft>)) => {
+    const next = { ...draftRef.current, ...(typeof patch === 'function' ? patch(draftRef.current) : patch) }
 
     draftRef.current = next
     dirtyRef.current = true

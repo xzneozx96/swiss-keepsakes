@@ -22,6 +22,7 @@ export const queryKeys = {
   media: {
     list: ['media', 'list'],
     uses: ['media', 'uses'],
+    file: ['media', 'file'],
   },
   notifications: {
     mail: ['notifications', 'mail'],
@@ -33,7 +34,6 @@ export const queryKeys = {
     list: ['places', 'list'],
     pin: ['places', 'pin'],
     storyOptions: ['places', 'storyOptions'],
-    media: ['places', 'media'],
   },
   partners: {
     partners: ['partners', 'partners'],

@@ -1,6 +1,6 @@
 import type { PlacesClient } from './client'
 
-import { answer, FILE_CALL_TIMEOUT_MS, keyed, loadClient, problemOf, timeout } from '@/features/data-client/api-transport'
+import { answer, keyed, loadClient, problemOf, timeout } from '@/features/data-client/api-transport'
 
 const withVersion = (idempotencyKey: string, ifMatch: number) => ({ ...keyed(idempotencyKey), params: { header: { 'If-Match': String(ifMatch) } } })
 
@@ -12,8 +12,6 @@ export function createPlacesClient(): PlacesClient {
       answer((await loadClient()).GET('/api/store/{storeId}/pins/{pinId}', { ...timeout(), params: { path: { storeId, pinId: id } } })),
     storyOptions: async ({ storeId }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/pins/story-options', { ...timeout(), params: { path: { storeId } } })),
-    media: async ({ storeId, id }) =>
-      answer((await loadClient()).GET('/api/store/{storeId}/media/{mediaId}', { ...timeout(), params: { path: { storeId, mediaId: id } } })),
     create: async ({ storeId, idempotencyKey, ...body }) =>
       answer((await loadClient()).POST('/api/store/{storeId}/pins', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
     save: async ({ storeId, id, ifMatch, idempotencyKey, ...body }) => {
@@ -42,9 +40,5 @@ export function createPlacesClient(): PlacesClient {
       answer((await loadClient()).GET('/api/store/{storeId}/maps-link', { ...timeout(), params: { path: { storeId }, query: { url } } })),
     addressAt: async ({ storeId, latitude, longitude }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/address-at', { ...timeout(), params: { path: { storeId }, query: { lat: latitude, lng: longitude } } })),
-    requestUpload: async ({ storeId, idempotencyKey, ...body }) =>
-      answer((await loadClient()).POST('/api/store/{storeId}/media/uploads', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
-    confirmUpload: async ({ storeId, idempotencyKey, ...body }) =>
-      answer((await loadClient()).POST('/api/store/{storeId}/media/confirm', { ...keyed(idempotencyKey, FILE_CALL_TIMEOUT_MS), params: { path: { storeId } }, body })),
   }
 }

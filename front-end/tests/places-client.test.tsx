@@ -74,11 +74,9 @@ describe('[E4.2][AC68] the places queries and commands', () => {
     })
   })
 
-  it('[E4.2][AC68] every command that writes a pin refreshes the list and the open pin, and an upload refreshes nothing', () => {
+  it('[E4.2][AC68] every command that writes a pin refreshes the list and the open pin', () => {
     for (const command of ['create', 'save', 'publish', 'hide', 'remove'] as const)
       expect(commandAffects.places[command]).toEqual([['places', 'list'], ['places', 'pin']])
-    expect(commandAffects.places.requestUpload).toEqual([])
-    expect(commandAffects.places.confirmUpload).toEqual([])
     expect(commandAffects.places.resolveMapsLink).toEqual([])
     expect(commandAffects.places.addressAt).toEqual([])
   })

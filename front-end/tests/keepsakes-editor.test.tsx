@@ -231,9 +231,10 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     expect(writes()[0]!.body).toMatchObject({ commissionRate: 0.11 })
   })
 
-  it('[E6.1][autosave] a photo added is uploaded, confirmed, waited for and saved with the rest', { timeout: 20_000 }, async () => {
+  it('[E6.1][autosave] a photo added is uploaded, confirmed and saved with the rest, and it shows as processing until it is ready', { timeout: 20_000 }, async () => {
     const added = '0198a000-0000-7000-8000-0000000000e2'
     const uploaded = { ...media, id: added }
+    let reads = 0
 
     serve((call) => {
       if (call.path === `/api/store/${storeId}/media/uploads`)
@@ -242,8 +243,11 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
         return new Response(null, { status: 200 })
       if (call.path === `/api/store/${storeId}/media/confirm`)
         return Response.json({ ...uploaded, status: 'processing', publicUrl: null, variants: [] }, { status: 201 })
-      if (call.path === `/api/store/${storeId}/media/${added}`)
-        return Response.json(uploaded)
+      if (call.path === `/api/store/${storeId}/media/${added}`) {
+        reads += 1
+
+        return Response.json(reads === 1 ? { ...uploaded, status: 'processing', publicUrl: null, variants: [] } : uploaded)
+      }
 
       return undefined
     })
@@ -256,6 +260,32 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     expect(save.body).toMatchObject({ photoIds: [photoId, added] })
     expect(state.calls.map(call => call.path)).toContain(`/api/store/${storeId}/media/${added}`)
     expect(screen.getAllByRole('listitem').some(item => item.textContent?.includes('Photo 2'))).toBe(true)
+    expect(await screen.findByText('Processing…')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText('Processing…')).not.toBeInTheDocument(), { timeout: 8000 })
+  })
+
+  it('[T-002] several photos picked together are all saved with the keepsake', { timeout: 20_000 }, async () => {
+    let confirmed = 0
+
+    serve((call) => {
+      if (call.path === `/api/store/${storeId}/media/uploads`)
+        return Response.json({ uploadKey: 'k/u.jpg', url: 'https://storage.test/uploads/k/u.jpg', method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, expiresAt: '2026-10-30T09:00:00.000Z', kind: 'image' })
+      if (call.path.startsWith('/uploads/'))
+        return new Response(null, { status: 200 })
+      if (call.path === `/api/store/${storeId}/media/confirm`) {
+        confirmed += 1
+
+        return Response.json({ ...media, id: `0198a000-0000-7000-8000-0000000000f${confirmed}` }, { status: 201 })
+      }
+
+      return undefined
+    })
+    await openEditor()
+
+    await userEvent.upload(screen.getByTestId('photo-input'), [new File(['x'], 'a.jpg', { type: 'image/jpeg' }), new File(['y'], 'b.jpg', { type: 'image/jpeg' }), new File(['z'], 'c.jpg', { type: 'image/jpeg' })])
+    await waitFor(() => expect(writes().at(-1)?.body).toMatchObject({ photoIds: expect.arrayContaining([photoId]) }), { timeout: 8000 })
+    await waitFor(() => expect(writes().at(-1)!.body).toMatchObject({ photoIds: [photoId, expect.any(String), expect.any(String), expect.any(String)] }), { timeout: 8000 })
+    expect(new Set((writes().at(-1)!.body as { photoIds: string[] }).photoIds).size).toBe(4)
   })
 
   it('[E6.1][autosave] a file that is not a photo is refused before any request', async () => {
@@ -263,8 +293,9 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
 
     await userEvent.upload(screen.getByTestId('photo-input'), new File(['x'], 'doc.pdf', { type: 'application/pdf' }), { applyAccept: false })
 
-    expect(await screen.findByText('Use a JPEG, PNG or WebP photo.')).toBeInTheDocument()
-    expect(state.calls.some(call => call.path.includes('/media/'))).toBe(false)
+    expect(await screen.findByText('This type of file is not allowed. Use a JPEG, PNG or WebP photo.')).toBeInTheDocument()
+    expect(state.calls.some(call => call.path.includes('/media/') && call.method !== 'GET')).toBe(false)
+    expect(writes()).toHaveLength(0)
   })
 
   it('[E6.1][autosave] removing a photo and moving one with the arrow keys save the new order', async () => {

@@ -9,10 +9,10 @@ import { useState } from 'react'
 import { BackIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useSubmit } from '@/features/data-client/use-command'
+import { PhotosField } from '@/features/media/components/photos-field'
 import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
 import { useOptionsDraft } from '../hooks/use-options-draft'
-import { usePhotoLibrary } from '../hooks/use-photo-library'
-import { LANGUAGES, nameIn, suggestSkuCode } from '../lib/keepsake-rules'
+import { LANGUAGES, MAX_PHOTOS, nameIn, suggestSkuCode } from '../lib/keepsake-rules'
 import { asSaved, createErrors, createRows, optionsBody, variantsOfRows, variantTitle } from '../lib/option-rules'
 import { problemMessageKey, problemTypeOf, refusalsOf } from '../lib/problems'
 import { KEEPSAKES_PATH } from '../lib/search-params'
@@ -21,7 +21,6 @@ import { CreateSkeleton } from './editor-skeleton'
 import { KeepsakeCard } from './keepsake-card'
 import { KeepsakeGate } from './keepsake-gate'
 import { OptionsEditor, OptionsProblems } from './option-blocks'
-import { PhotosField } from './photos-field'
 import { useLeaveGuard } from './use-leave-guard'
 
 /** The steps of the create flow. E6.3 adds Stock after them, with its message key `keepsakes.create.step.<id>`. */
@@ -123,7 +122,6 @@ function CreateFlow({ storeId }: { storeId: string }) {
   const create = useSubmit('keepsakes', 'create', {
     meta: { success: created => t(created.variants.length === 1 ? 'keepsakes.toast.created.one' : 'keepsakes.toast.created', { name: nameIn(created.name, language), count: created.variants.length }), silent: true },
   })
-  const library = usePhotoLibrary([])
   const draft = useOptionsDraft({ saved: [], variants: [] })
   const [step, setStep] = useState<StepId>('details')
   const [value, setValue] = useState(empty)
@@ -212,7 +210,14 @@ function CreateFlow({ storeId }: { storeId: string }) {
               <BasicsFields nameOnly showErrors={showErrors} value={value} onChange={setValue} />
             </KeepsakeCard>
             <KeepsakeCard id="photos" title={t('keepsakes.photos.title')}>
-              <PhotosField photos={library.photosOf(photoIds)} showError={false} storeId={storeId} onChange={setPhotoIds} onUploaded={library.add} />
+              <PhotosField
+                emptyText={t('keepsakes.photos.empty')}
+                ids={photoIds}
+                max={MAX_PHOTOS}
+                storeId={storeId}
+                onAdd={mediaId => setPhotoIds(current => (current.includes(mediaId) ? current : [...current, mediaId]))}
+                onChange={setPhotoIds}
+              />
             </KeepsakeCard>
           </>
         )}

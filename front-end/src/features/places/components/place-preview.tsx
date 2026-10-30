@@ -13,7 +13,8 @@ import { LocaleOverride, useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
 import { PlaceCardRow } from '@/features/map/components/place-card'
 import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
-import { useMedia, useStoryOptions } from '../api/queries'
+import { useMediaFile } from '@/features/media/api/queries'
+import { useStoryOptions } from '../api/queries'
 import { photoIds } from '../lib/form'
 import { PREVIEW_PIN_ID, previewItem, tipIn } from '../lib/preview'
 
@@ -27,7 +28,7 @@ const PREVIEW_INSETS = { top: CONTROLS, bottom: CARD_BOTTOM + CARD_ROW_HEIGHT }
 
 /** The address of the first photo: the smallest copy wide enough for the card's 84 px thumbnail on a sharp screen. */
 function useCoverSrc(storeId: string, mediaId: string | undefined) {
-  const media = useMedia(storeId, mediaId ?? null)
+  const media = useMediaFile(storeId, mediaId ?? null)
   const copy = media.data?.variants.find(variant => variant.width >= 160) ?? media.data?.variants.at(-1)
 
   return copy?.url ?? media.data?.publicUrl ?? undefined

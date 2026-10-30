@@ -25,14 +25,6 @@ export const placesQueries = {
       queryKey: [...queryKeys.places.storyOptions, storeId],
       queryFn: () => client.places.storyOptions({ storeId }),
     }),
-  media: (client: DataClient, storeId: string, id: string) =>
-    queryOptions({
-      ...fromApi,
-      queryKey: [...queryKeys.places.media, storeId, id],
-      queryFn: () => client.places.media({ storeId, id }),
-      // A photo is "processing" for a moment after the upload.
-      refetchInterval: query => (query.state.data?.status === 'processing' ? 2000 : false),
-    }),
 }
 
 /** Every pin of the store. Waits while the store id is unknown. */
@@ -53,10 +45,4 @@ export function useStoryOptions(storeId: string | undefined) {
   const client = useDataClient()
 
   return useQuery({ ...placesQueries.storyOptions(client, storeId ?? ''), enabled: storeId !== undefined })
-}
-
-export function useMedia(storeId: string | undefined, id: string | null) {
-  const client = useDataClient()
-
-  return useQuery({ ...placesQueries.media(client, storeId ?? '', id ?? ''), enabled: storeId !== undefined && id !== null })
 }

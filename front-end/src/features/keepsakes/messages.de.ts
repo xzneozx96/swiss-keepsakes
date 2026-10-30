@@ -69,17 +69,6 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
 
   'keepsakes.photos.title': 'Medien',
   'keepsakes.photos.empty': 'Noch keine Fotos. Fügen Sie eines hinzu, um zu veröffentlichen; das erste ist das Titelbild.',
-  'keepsakes.photos.add': 'Foto hinzufügen',
-  'keepsakes.photos.list': 'Fotos in Reihenfolge',
-  'keepsakes.photos.name': 'Foto {n}',
-  'keepsakes.photos.cover': 'Titelbild',
-  'keepsakes.photos.move': '{name} verschieben, Position {position} von {count}. Ziehen oder Pfeiltasten benutzen.',
-  'keepsakes.photos.moved': '{name} an Position {position} von {count} verschoben.',
-  'keepsakes.photos.remove': '{name} entfernen',
-  'keepsakes.photos.refusal.type': 'Verwenden Sie ein JPEG-, PNG- oder WebP-Foto.',
-  'keepsakes.photos.refusal.size': 'Dieses Foto ist grösser als 10 MB. Wählen Sie ein kleineres.',
-  'keepsakes.photos.refusal.processing': 'Das Foto wird noch vorbereitet. Versuchen Sie es gleich noch einmal.',
-  'keepsakes.photos.refusal.failed': 'Das Foto konnte nicht hochgeladen werden. Versuchen Sie es erneut.',
 
   'keepsakes.options.title': 'Optionen',
 

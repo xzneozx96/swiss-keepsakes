@@ -15,6 +15,8 @@ export const NAME_MAX = 90
 export const TEXT_MAX = 1200
 export const MAX_COMMISSION = 0.5
 export const AUTOSAVE_MS = 1500
+/** The most photos a keepsake takes: the API's `MAX_PHOTOS`. */
+export const MAX_PHOTOS = 12
 
 /** `skus_sku_code_check`: letters and digits joined by - _ or . */
 const SKU_CODE = /^[A-Z0-9]+(?:[-_.][A-Z0-9]+)*$/i
