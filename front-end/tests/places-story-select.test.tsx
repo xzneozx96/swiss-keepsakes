@@ -57,7 +57,7 @@ async function openStoryStep(mainStoryGroupId: string | null = null, language: '
 const field = (name = /Story behind this place/) => screen.getByRole('button', { name })
 const shown = () => field().closest('.autocomplete')!.querySelector('.autocomplete__value')
 const offered = () => screen.getAllByRole('option').map(option => option.textContent)
-const advice = () => screen.queryAllByText(/see the link|den Link nicht/).map(line => line.textContent)
+const advice = () => screen.queryAllByText(/see the story|die Geschichte nicht/).map(line => line.textContent)
 
 describe('[E4.2][AC68] the story select of step 5', () => {
   it('lists only the stories with a live language, after a None row, in a searchable list', async () => {
@@ -103,10 +103,10 @@ describe('[E4.2][AC68] the story select of step 5', () => {
     api.stories = [story(30, 'The bridge', 'draft', 'none')]
     await openStoryStep(uuid(30))
 
-    expect(await screen.findAllByText(/see the link/)).toHaveLength(2)
+    expect(await screen.findAllByText(/see the story/)).toHaveLength(2)
     expect(advice()).toEqual([
-      'The English version of this story is still a draft, so guests reading English won’t see the link.',
-      'This story has no German version yet, so guests reading German won’t see the link.',
+      'The English version is still a draft: guests reading English won’t see the story.',
+      'No German version yet: guests reading German won’t see the story.',
     ])
   })
 
@@ -114,7 +114,7 @@ describe('[E4.2][AC68] the story select of step 5', () => {
     api.stories = [story(30, 'The bridge', 'published', 'draft')]
     await openStoryStep(uuid(30))
 
-    await waitFor(() => expect(advice()).toEqual(['The German version of this story is still a draft, so guests reading German won’t see the link.']))
+    await waitFor(() => expect(advice()).toEqual(['The German version is still a draft: guests reading German won’t see the story.']))
   })
 
   it('says nothing when both languages are live, or when no story is linked', async () => {
@@ -130,8 +130,8 @@ describe('[E4.2][AC68] the story select of step 5', () => {
     await openStoryStep(uuid(30), 'de')
 
     await waitFor(() => expect(advice()).toEqual([
-      'Die englische Fassung dieser Geschichte ist noch ein Entwurf, daher sehen Gäste auf Englisch den Link nicht.',
-      'Diese Geschichte hat noch keine deutsche Fassung, daher sehen Gäste auf Deutsch den Link nicht.',
+      'Die englische Fassung ist noch ein Entwurf: Gäste auf Englisch sehen die Geschichte nicht.',
+      'Noch keine deutsche Fassung: Gäste auf Deutsch sehen die Geschichte nicht.',
     ]))
   })
 

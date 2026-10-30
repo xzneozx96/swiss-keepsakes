@@ -735,10 +735,10 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
 
     const select = screen.getByRole('button', { name: /Story behind this place/ })
     expect(select.closest('.autocomplete')!.querySelector('.autocomplete__value')).toHaveTextContent('None')
-    expect(select).toHaveAccessibleDescription('Guests can open it from the place card.')
+    expect(screen.queryByText('Guests can open it from the place card.')).not.toBeInTheDocument()
     expect(screen.queryByText(/No main story|Main story|publishes without one/)).not.toBeInTheDocument()
     expect(screen.getAllByText('Story behind this place')).toHaveLength(1)
-    expect(blocks()[0]).toHaveTextContent(/^Story behind this placeNoneGuests can open it from the place card\.(?: None)?$/)
+    expect(blocks()[0]).toHaveTextContent(/^Story behind this placeNone(?: None)?$/)
   })
 
   it('[E4.2][AC85] the review shows the place in a phone, with no list of the steps\' facts and no old words', async () => {
@@ -761,7 +761,7 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
 
     const select = screen.getByRole('button', { name: /Die Geschichte dahinter/ })
     expect(select.closest('.autocomplete')!.querySelector('.autocomplete__value')).toHaveTextContent('Keine')
-    expect(select).toHaveAccessibleDescription('Gäste öffnen sie über die Ortskarte.')
+    expect(screen.queryByText('Gäste öffnen sie über die Ortskarte.')).not.toBeInTheDocument()
     expect(screen.queryByText(/Hauptgeschichte/)).not.toBeInTheDocument()
   })
 
@@ -773,7 +773,7 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
     await heading('Place on the map')
     await userEvent.click(screen.getAllByRole('button', { name: /Story and link/ }).at(0)!)
     await heading('Story and link')
-    expect(await screen.findByText('This story has no German version yet, so guests reading German won’t see the link.')).toBeInTheDocument()
+    expect(await screen.findByText('No German version yet: guests reading German won’t see the story.')).toBeInTheDocument()
     expect(screen.queryByText(/No main story. The pin publishes without one/)).not.toBeInTheDocument()
   })
 })

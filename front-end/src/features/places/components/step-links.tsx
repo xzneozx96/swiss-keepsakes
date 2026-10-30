@@ -31,7 +31,6 @@ export function StepLinks({ form, patch, errors, storeId }: StepProps) {
           ? <p className="text-sm text-danger" role="alert">{t('places.story.loadFailed')}</p>
           : (
               <SearchableSelect
-                description={t('places.story.help')}
                 isDisabled={stories.isPending}
                 label={t('places.story.select')}
                 noneLabel={t('places.story.noneOption')}
