@@ -19,10 +19,10 @@ export interface CardExtras {
 }
 
 /**
- * The card of one pin (N03, the part E4.6 builds), the tour route map's card: the first category and the next date
- * as the eyebrow, the title, the tip (two lines) when the caller has it, a thumbnail slot that is always there (the
- * place icon when there is no photo), `‹ n of m ›`, and "Read the story" when the pin has a main story. No price.
- * The details sheet, hours, address and directions are E4.7.
+ * The card of one pin (N03, the part E4.6 builds): a thumbnail slot on the left that is always there (the place icon
+ * when there is no photo), the title, the first category and the next date, and the tip (two lines) beside it,
+ * centred against the picture, `‹ n of m ›`, and "Read the story" when the pin has a main story. No price. The
+ * details sheet, hours, address and directions are E4.7.
  */
 function PlaceCard({ pin, active, photoSrc, extras, nav, onReadStory }: {
   pin: PublicMapItem
@@ -58,10 +58,11 @@ function PlaceCard({ pin, active, photoSrc, extras, nav, onReadStory }: {
       active={active}
       eyebrow={[extras?.categories?.[0], date].filter(Boolean).join(' · ')}
       id={pin.id}
+      layout="pin"
       nav={nav}
       text={extras?.tip?.text}
       textLang={extras?.tip?.language}
-      thumb={<MapThumb className="size-full" iconSize={28} src={photoSrc} />}
+      thumb={<MapThumb className="size-full" iconSize={32} src={photoSrc} />}
       title={pin.title}
       titleLang={pin.language}
     />

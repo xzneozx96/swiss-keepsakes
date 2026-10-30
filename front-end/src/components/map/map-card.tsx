@@ -78,10 +78,12 @@ export function MapCardClose({ floating = false, onClose }: { floating?: boolean
 }
 
 /**
- * The card of one place or stop over a map, the tour route map's card: an eyebrow, a serif title (one line), a text
- * (two lines at most), the picture on the right, then `‹ n of m ›` and one action. A card in a row takes the height of
- * the tallest, and the buttons sit on its bottom edge. `active: false` takes the buttons out of the tab order (a card
- * that is in the row but not open). `onClose` puts the ✕ over the card's top right: a row has its own.
+ * The card of one place or stop over a map, in one of two looks. `tour` (the default, the tour route map's card): an
+ * eyebrow, a serif title (one line), a text (two lines at most), the picture on the right. `pin` (the guest map's
+ * place card, as it was before the kit): the picture on the left, the title, the eyebrow and the text beside it,
+ * centred against the picture. Both end with `‹ n of m ›` and one action. A card in a row takes the
+ * height of the tallest, and the buttons sit on its bottom edge. `active: false` takes the buttons out of the tab
+ * order (a card that is in the row but not open). `onClose` puts the ✕ over the card's top right: a row has its own.
  */
 export function MapCard({
   id,
@@ -92,6 +94,7 @@ export function MapCard({
   text,
   textLang,
   thumb,
+  layout = 'tour',
   nav,
   action,
   active = true,
@@ -104,8 +107,9 @@ export function MapCard({
   eyebrow?: string
   text?: string
   textLang?: string
-  /** A `MapThumb`, or a photo made the same size: 76 px square. */
+  /** A `MapThumb`, or a photo made the same size: 76 px square (84 px in the `pin` layout). */
   thumb: ReactNode
+  layout?: 'tour' | 'pin'
   nav?: MapCardNavProps
   /** "View more" Button or "Read the story" Link. */
   action?: ReactNode
@@ -114,20 +118,39 @@ export function MapCard({
 }) {
   const Heading = `h${headingLevel}` as const
   const titleId = `map-card-${id}`
+  const pin = layout === 'pin'
+  const heading = (
+    <Heading className="truncate font-serif text-card-title font-semibold outline-none" id={titleId} lang={titleLang} tabIndex={-1}>
+      {title}
+    </Heading>
+  )
+  const eyebrowLine = eyebrow && <p className={`truncate text-muted tabular-nums ${pin ? 'text-label' : 'text-xs'}`}>{eyebrow}</p>
+  const textLine = text && <p className={`line-clamp-2 text-sm ${pin ? 'leading-5' : 'text-muted'}`} lang={textLang}>{text}</p>
 
   return (
-    <article aria-labelledby={titleId} className="relative flex w-full flex-col justify-between gap-2 rounded-2xl bg-surface p-3 shadow-overlay" data-card={id}>
+    <article aria-labelledby={titleId} className={`relative flex w-full flex-col justify-between gap-2 bg-surface p-3 shadow-overlay ${pin ? 'rounded-3xl' : 'rounded-2xl'}`} data-card={id}>
       {onClose && <MapCardClose floating onClose={onClose} />}
-      <div className="flex gap-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          {eyebrow && <p className="truncate text-xs text-muted tabular-nums">{eyebrow}</p>}
-          <Heading className="truncate font-serif text-card-title font-semibold outline-none" id={titleId} lang={titleLang} tabIndex={-1}>
-            {title}
-          </Heading>
-          {text && <p className="line-clamp-2 text-sm text-muted" lang={textLang}>{text}</p>}
-        </div>
-        <div className="size-[76px] shrink-0 overflow-hidden rounded-xl">{thumb}</div>
-      </div>
+      {pin
+        ? (
+            <div className="flex items-center gap-3">
+              <div className="size-[84px] shrink-0 overflow-hidden rounded-2xl">{thumb}</div>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                {heading}
+                {eyebrowLine}
+                {textLine}
+              </div>
+            </div>
+          )
+        : (
+            <div className="flex gap-3">
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
+                {eyebrowLine}
+                {heading}
+                {textLine}
+              </div>
+              <div className="size-[76px] shrink-0 overflow-hidden rounded-xl">{thumb}</div>
+            </div>
+          )}
       {(nav || action) && (
         <div className="flex items-center gap-1" inert={!active}>
           {nav && <MapCardNav {...nav} />}

@@ -89,6 +89,35 @@ describe('[E4.6][AC42] the map card', () => {
     expect(screen.getByRole('button', { name: 'View more' })).toBeInTheDocument()
   })
 
+  it('lays a pin card out the way it was: the picture on the left, the text beside it centred against the picture, and the step buttons under', async () => {
+    await renderRow()
+    const card = cardOf('Place 1')
+    const picture = card.querySelector('span.bg-\\[\\#173f52\\]')!.parentElement!
+    const text = screen.getByRole('heading', { name: 'Place 1' }).parentElement!
+
+    expect(picture).toHaveClass('size-[84px]')
+    expect(picture.parentElement).toHaveClass('items-center')
+    expect(picture.parentElement!.firstElementChild).toBe(picture)
+    expect(picture.parentElement!.lastElementChild).toBe(text)
+    expect(card).toHaveClass('rounded-3xl')
+    expect(within(card).getByRole('button', { name: en['map.card.next'] })).toBeInTheDocument()
+  })
+
+  it('keeps the tour card as it was: the picture on the right, the text on top', () => {
+    render(
+      <LocaleProvider>
+        <MapCard eyebrow="Stop 1" id="s1" text="A text" thumb={<MapThumb iconSize={28} />} title="Old town" />
+      </LocaleProvider>,
+    )
+    const card = screen.getByRole('article')
+    const picture = card.querySelector('span.bg-\\[\\#173f52\\]')!.parentElement!
+
+    expect(picture).toHaveClass('size-[76px]')
+    expect(picture.parentElement!.lastElementChild).toBe(picture)
+    expect(picture.parentElement).not.toHaveClass('items-center')
+    expect(card).toHaveClass('rounded-2xl')
+  })
+
   it('puts the first category in the eyebrow, the tip under the title and "Read the story" only on a pin with a story', async () => {
     await renderRow()
 
