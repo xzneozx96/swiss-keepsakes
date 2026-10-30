@@ -46,7 +46,7 @@ function DayRow({ day, hours, errors, onChange }: { day: Day, hours: HoursSpan[]
   return (
     <li className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 py-1">
       <div className="flex w-32 shrink-0 items-center gap-3">
-        <span className="w-9 font-medium">{t(`places.day.${day}`)}</span>
+        <span className="w-12 shrink-0 font-medium">{t(`places.day.${day}`)}</span>
         <Switch aria-label={t('places.hours.dayOpen', { day: dayName })} isSelected={open} onChange={on => write(on ? openedDay(hours, day) : [])}>
           <Switch.Content>
             <Switch.Control>
