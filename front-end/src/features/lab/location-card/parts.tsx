@@ -4,9 +4,9 @@ import type { LinkReader } from './use-link-reader'
 import { Description, FieldError, Input, Label, TextField } from '@heroui/react'
 import { useEffect, useRef, useState } from 'react'
 
+import { Block } from '@/components/form-block'
 import { OpenInMapsIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { Block } from '@/features/places/components/fields'
 import { copy } from './copy'
 
 type Option = keyof typeof copy.options

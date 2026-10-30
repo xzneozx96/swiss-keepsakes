@@ -84,7 +84,7 @@ One responsive design: a table on desktop and rows on phones (the dashboard's li
 
 ## 4. Merchant pin editor (N17): option S "Steps"
 
-The editor uses the **tour editor's stepper** (M13, `features/merchant/products/components/step-shell.tsx`, `StepLayout`). From 1024 px the steps are a numbered column. On phones the header reads "Step 2 of 6" with an "All steps" sheet. Each step has a done, needs-attention or error mark.
+The editor uses the **tour editor's stepper** (M13, now shared: `components/step-layout.tsx`, `StepLayout`, with `step-bar.tsx` and `step-marks.tsx`). From 1024 px the steps are a numbered column. On phones the header reads "Step 2 of 6" with an "All steps" sheet. Each step has a done, needs-attention or error mark.
 
 | Step | Content |
 | --- | --- |
@@ -147,7 +147,7 @@ All under `front-end/src/`:
 - `features/lab/pins-lab.tsx`, `pins-lab-sync.ts`: the page layout, the shared pin list and the message sync between the dashboard frame and the phone.
 - Merchant: `pins-merchant-app.tsx`, `pins-merchant-shell.tsx`, `pins-merchant-list.tsx` (N16), `pins-merchant-steps.tsx` (N17, option S), `pins-merchant-editor.tsx` and `pins-merchant-editor-state.ts`, `pins-merchant-fields.tsx`, `pins-merchant-schedule.tsx`, `pins-merchant-map-picker.tsx`, `pins-merchant-publish.tsx`, `pins-merchant-data.ts`, `pins-merchant-copy.ts`.
 - Guest: `map-guest-lab.tsx` (the page's phone panel and the tour route panel), `map-guest-options.tsx` (`OptionCards` is the approved option B), `map-guest-card.tsx` (N03 card body), `map-guest-kit.tsx` (credits, list, states), `map-guest-map.tsx` (MapLibre), `map-guest-data.ts` (ranking, visibility, dates, hours, copy).
-- Shared-component edits the lab needs: `components/sheet-frame.tsx`, `features/merchant/products/components/step-shell.tsx`, `components/icons.ts`.
+- Shared-component edits the lab needs: `components/sheet-frame.tsx`, `components/step-layout.tsx`, `components/step-bar.tsx`, `components/icons.ts`.
 
 ## 9. Rejected options (still in the lab for reference)
 

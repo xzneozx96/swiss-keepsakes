@@ -1,6 +1,6 @@
 import type { Departure, Tour } from '@sk/domain/bookings'
 import type { LocalizedText } from '@sk/domain/catalog'
-import type { StepView } from './step-shell'
+import type { StepView } from '@/components/step-layout'
 import type { Language } from '@/contexts/locale-context'
 
 import type { TourStep } from '@/features/merchant/products/lib/search-params'
@@ -32,6 +32,8 @@ import {
 } from '@/components/icons'
 import { Media } from '@/components/media'
 import { SheetFrame } from '@/components/sheet-frame'
+import { StepBar } from '@/components/step-bar'
+import { StepLayout } from '@/components/step-layout'
 import { useLocale } from '@/contexts/locale-context'
 import { rowClass } from '@/features/account/components/settings-list'
 import { DetailCard } from '@/features/merchant/order-detail/components/detail-card'
@@ -64,9 +66,7 @@ import {
   ReviewOverview,
   ReviewRow,
   ReviewSection,
-  StepBar,
   StepBody,
-  StepLayout,
   useStepBar,
 } from './step-shell'
 import { StoryCard } from './story-card'

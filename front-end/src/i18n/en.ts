@@ -1,6 +1,7 @@
 import { mailEn } from '@sk/i18n/en'
 import { mapKitEn } from '@/components/map/map-messages'
 import { multiSelectEn } from '@/components/multi-select-messages'
+import { stepsEn } from '@/components/step-messages'
 import { categoriesEn } from '@/features/categories/messages'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
@@ -45,6 +46,7 @@ export const en = {
   ...mediaEn,
   ...placesEn,
   ...multiSelectEn,
+  ...stepsEn,
   ...mapEn,
   ...mapKitEn,
 

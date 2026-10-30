@@ -1,5 +1,5 @@
 import type { Product } from '@sk/domain/catalog'
-import type { StepView } from './step-shell'
+import type { StepView } from '@/components/step-layout'
 import type { Language } from '@/contexts/locale-context'
 
 import type { GiftStep } from '@/features/merchant/products/lib/search-params'
@@ -39,6 +39,8 @@ import {
   PlusIcon,
 } from '@/components/icons'
 import { Media } from '@/components/media'
+import { StepBar } from '@/components/step-bar'
+import { StepLayout } from '@/components/step-layout'
 import { useLocale } from '@/contexts/locale-context'
 import { usePickupPlaces, useStoreSubcategories } from '@/features/catalog/api/queries'
 import { categories } from '@/features/catalog/categories'
@@ -60,9 +62,7 @@ import {
   ReviewOverview,
   ReviewRow,
   ReviewSection,
-  StepBar,
   StepBody,
-  StepLayout,
   useStepBar,
 } from './step-shell'
 import { StoryCard } from './story-card'

@@ -5,10 +5,11 @@ import type { MessageKey } from '@/i18n/en'
 import { Button, Radio, RadioGroup } from '@heroui/react'
 
 import { choiceCard } from '@/components/choice-card'
+import { Block } from '@/components/form-block'
 import { ClockIcon, PlusIcon, TodayIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { emptyDate } from '../lib/form'
-import { Block, Field, TimeInput } from './fields'
+import { Field, TimeInput } from './fields'
 import { HoursRows } from './hours-rows'
 
 function Hours({ form, patch, errors }: Pick<StepProps, 'form' | 'patch' | 'errors'>) {

@@ -2,7 +2,7 @@ import type { Pin } from '@sk/api-contract'
 import type { StepStatus } from '@sk/domain/catalog'
 import type { FormErrors, PlaceForm } from '../lib/form'
 import type { StartStep } from '../lib/search-params'
-import type { StepBar } from '@/features/merchant/products/components/step-shell'
+import type { StepBar } from '@/components/step-bar'
 import type { MessageKey } from '@/i18n/en'
 
 import { useQueryClient } from '@tanstack/react-query'

@@ -54,6 +54,8 @@ Before you build a control, search `front-end/src/components` for an existing on
 | Status label | `front-end/src/components/status-chip.tsx` (`StatusChip`) |
 | Nothing to show | `front-end/src/components/empty-state.tsx` (`EmptyState`, `TableEmptyState`) |
 | Row menu | `front-end/src/components/row-actions.tsx` (`RowActions`) |
+| Steps of an editor (step list, phone title and sheet, bottom bar) | `front-end/src/components/step-layout.tsx` (`StepLayout`), `step-bar.tsx` (`StepBar`), `step-marks.tsx`; texts in `step-messages.ts` |
+| White rounded block of an editor step, with an optional icon tile, title and help line | `front-end/src/components/form-block.tsx` (`Block`) |
 
 Do not set `className` on `Tabs`, `Tabs.Tab`, `Tabs.List` or `Tabs.ListContainer` in a feature. `front-end/tests/tabs-guard.test.ts` fails when a file outside `src/components`, `src/features/lab` and `src/dormant` imports `Tabs` from `@heroui/react`.
 

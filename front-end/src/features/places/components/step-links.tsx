@@ -2,9 +2,10 @@ import type { StepProps } from './step-props'
 
 import { Description, Label, ListBox, Select } from '@heroui/react'
 
+import { Block } from '@/components/form-block'
 import { useLocale } from '@/contexts/locale-context'
 import { useStoryOptions } from '../api/queries'
-import { Block, Field } from './fields'
+import { Field } from './fields'
 
 const NONE = 'none'
 

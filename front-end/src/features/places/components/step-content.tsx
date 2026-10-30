@@ -3,12 +3,13 @@ import type { StepProps } from './step-props'
 
 import { useState } from 'react'
 
+import { Block } from '@/components/form-block'
 import { CameraIcon, HeadingIcon } from '@/components/icons'
 import { LanguageVersionSwitch } from '@/components/language-version-switch'
 import { useLocale } from '@/contexts/locale-context'
 import { PhotosField } from '@/features/media/components/photos-field'
 import { LANGS, MAX_PHOTOS, photoIds, withPhotoIds } from '../lib/form'
-import { Block, Field } from './fields'
+import { Field } from './fields'
 
 function langName(t: ReturnType<typeof useLocale>['t'], lang: 'en' | 'de') {
   return t(`places.lang.${lang}`)
