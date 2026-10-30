@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useRef, useState } from 'react'
 
+import { foldCreditsOnFirstTouch } from '@/components/aerial-map/fold-credits'
 import { useLocale } from '@/contexts/locale-context'
 import { loadAerialStyle } from '@/features/tours/map/aerial-style'
 import { useLatest } from '@/hooks/use-latest'
@@ -50,6 +51,7 @@ export function MapPicker({ lat, lng, onPlace, onFailed, attached, children }: {
       return
     let disposed = false
     let instance: MapLibreMap | undefined
+    const unfold = foldCreditsOnFirstTouch(container)
 
     async function initialize() {
       try {
@@ -110,6 +112,7 @@ export function MapPicker({ lat, lng, onPlace, onFailed, attached, children }: {
       disposed = true
       markerRef.current?.remove()
       markerRef.current = null
+      unfold()
       instance?.remove()
     }
   }, [latest])

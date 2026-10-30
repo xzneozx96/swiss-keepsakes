@@ -7,6 +7,7 @@ import { pickText } from '@sk/domain/shared'
 import { useEffect, useRef, useState } from 'react'
 
 import { warmAerialTiles } from '@/components/aerial-map/aerial-style'
+import { foldCreditsOnFirstTouch } from '@/components/aerial-map/fold-credits'
 import { useAerialMap } from '@/components/aerial-map/use-aerial-map'
 import {
   ChevronLeftIcon,
@@ -95,6 +96,13 @@ export function TourItineraryMap({ tour }: { tour: Tour }) {
     bottom: (cardRef.current?.offsetHeight ?? 0) + 52,
     left: 24,
   })
+
+  // The credits open on load and fold on the first touch.
+  useEffect(() => {
+    const container = canvasRef.current
+
+    return map && container ? foldCreditsOnFirstTouch(container) : undefined
+  }, [map, canvasRef])
 
   // The map's controls and one numbered pin per stop, once the shared map exists.
   useEffect(() => {

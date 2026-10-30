@@ -4,6 +4,7 @@ import { Button, Spinner } from '@heroui/react'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useRef, useState } from 'react'
 
+import { foldCreditsOnFirstTouch } from '@/components/aerial-map/fold-credits'
 import { CloseIcon, PlusIcon } from '@/components/icons'
 
 import { useLocale } from '@/contexts/locale-context'
@@ -78,6 +79,7 @@ export function ItineraryMap({
     let resizeObserver: ResizeObserver | undefined
     let timeout: ReturnType<typeof setTimeout> | undefined
     const markers = markersRef.current
+    const unfold = foldCreditsOnFirstTouch(container)
 
     void (async () => {
       try {
@@ -185,6 +187,7 @@ export function ItineraryMap({
       disposed = true
       clearTimeout(timeout)
       resizeObserver?.disconnect()
+      unfold()
       markers.forEach(marker => marker.remove())
       markers.clear()
       map?.remove()
