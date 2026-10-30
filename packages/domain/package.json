@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc"
+    "typecheck": "../../scripts/locked.sh tsc --incremental --tsBuildInfoFile node_modules/.tmp/typecheck.tsbuildinfo"
   },
   "devDependencies": {
     "typescript": "5.9.3"
