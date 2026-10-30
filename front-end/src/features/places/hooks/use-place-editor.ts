@@ -15,7 +15,7 @@ import { queryKeys } from '@/features/data-client'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { useIdempotencyKey } from '@/features/stores/hooks/use-idempotency-key'
-import { bodyOf, emptyForm, formOf, isDirty, publishBodyOf, publishGaps, validate } from '../lib/form'
+import { bodyOf, emptyForm, formOf, isDirty, publishGaps, validate } from '../lib/form'
 import { problemMessageKey } from '../lib/problems'
 import { PLACES_PATH } from '../lib/search-params'
 
@@ -24,7 +24,7 @@ export type StepId = typeof STEP_IDS[number]
 
 function statusOf(id: StepId, form: PlaceForm, errors: FormErrors, refused: boolean): StepStatus {
   const filled: Record<StepId, boolean> = {
-    place: form.latitude !== null && form.slug.trim() !== '',
+    place: form.latitude !== null,
     content: form.titleEn.trim() !== '' || form.titleDe.trim() !== '',
     when: form.hours.length + form.dates.length > 0,
     tags: form.categoryIds.length + form.interests.length > 0 || form.serviceType !== null || form.foodKind !== null || form.mustVisit,
@@ -32,7 +32,7 @@ function statusOf(id: StepId, form: PlaceForm, errors: FormErrors, refused: bool
     review: publishGaps(form).length === 0,
   }
   const failing: Record<StepId, boolean> = {
-    place: errors.slug !== undefined,
+    place: false,
     content: false,
     when: Object.keys(errors.hours).length + Object.keys(errors.dates).length > 0,
     tags: false,
@@ -73,14 +73,13 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
   const [step, setStep] = useState<StepId>(!initial && start === 'dates' ? 'when' : 'place')
   const [reached, setReached] = useState(STEP_IDS.indexOf(step))
   const [notice, setNotice] = useState<MessageKey>()
-  const [slugTaken, setSlugTaken] = useState(false)
   const [refused, setRefused] = useState(false)
   const [justSaved, setJustSaved] = useState(false)
   const errors = validate(form)
   const dirty = isDirty(form, baseline)
-  const body = bodyOf(form, pin)
+  const body = bodyOf(form)
   const saveKey = useIdempotencyKey({ id: pin?.id, version: pin?.rowVersion, body })
-  const publishKey = useIdempotencyKey({ id: pin?.id, version: pin?.rowVersion, publish: publishBodyOf(form, pin) })
+  const publishKey = useIdempotencyKey({ id: pin?.id, version: pin?.rowVersion, publish: true })
   const busy = [create, save, publish, hide, remove].some(action => action.isPending)
 
   const go = (next: string) => {
@@ -107,10 +106,7 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     const type = error instanceof ApiProblem ? error.type : 'unknown'
 
     setNotice(problemMessageKey(type))
-    setSlugTaken(type === 'content-slug-taken')
     setRefused(type === 'publish-incomplete')
-    if (type === 'content-slug-taken')
-      go('place')
   }
 
   // A new pin has its own address from its first save on; the editor moves there once the whole chain ended.
@@ -121,7 +117,6 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
 
   const clear = () => {
     setNotice(undefined)
-    setSlugTaken(false)
     setRefused(false)
   }
 
@@ -158,8 +153,8 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
       saveToastRef.current = toastKey
   }
 
-  const publishNow = (stored: Pin, snapshot: PlaceForm) => {
-    publish.submit({ storeId, id: stored.id, ifMatch: stored.rowVersion, ...publishBodyOf(snapshot, stored), idempotencyKey: publishKey.next() }, {
+  const publishNow = (stored: Pin) => {
+    publish.submit({ storeId, id: stored.id, ifMatch: stored.rowVersion, idempotencyKey: publishKey.next() }, {
       onSuccess: (published) => {
         publishKey.settled()
         adopt(published)
@@ -183,32 +178,26 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
 
       return
     }
-    const snapshot = form
-
-    saveThen(saved => publishNow(saved, snapshot))
+    saveThen(saved => publishNow(saved))
   }
 
   // A live pin sends its text changes to guests with the save; a hidden one keeps them for "Show on map again".
   const saveChanges = () => {
-    const snapshot = form
-
     saveThen((saved) => {
       if (saved.status === 'published' && saved.draft)
-        publishNow(saved, snapshot)
+        publishNow(saved)
     }, 'places.toast.saved')
   }
 
   const unhide = () => {
     if (!pin || busy)
       return
-    const snapshot = form
-
     if (dirty) {
-      saveThen(saved => publishNow(saved, snapshot))
+      saveThen(saved => publishNow(saved))
     }
     else {
       clear()
-      publishNow(pin, snapshot)
+      publishNow(pin)
     }
   }
 
@@ -278,7 +267,6 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     patch: (changes: Partial<PlaceForm> | ((current: PlaceForm) => Partial<PlaceForm>)) => {
       setForm(current => ({ ...current, ...(typeof changes === 'function' ? changes(current) : changes) }))
       setJustSaved(false)
-      setSlugTaken(false)
     },
     errors,
     dirty,
@@ -288,7 +276,6 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     canGo: (id: string) => pin !== undefined || STEP_IDS.indexOf(id as StepId) <= reached,
     bar,
     notice,
-    slugTaken,
     busy,
     dialog,
     actions: { hide: askHide, unhide, remove: askRemove, busy, dirty },

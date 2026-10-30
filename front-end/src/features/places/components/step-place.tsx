@@ -3,9 +3,8 @@ import type { StepProps } from './step-props'
 import { Button } from '@heroui/react'
 import { useState } from 'react'
 
-import { LinkIcon, OpenInMapsIcon } from '@/components/icons'
+import { OpenInMapsIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
-import { hasBeenLive, suggestSlug } from '../lib/form'
 import { Block, Field } from './fields'
 import { MapPicker } from './map-picker'
 
@@ -15,11 +14,10 @@ function coordinate(value: string, limit: number): number | null {
   return Number.isFinite(number) && Math.abs(number) <= limit ? Number(number.toFixed(5)) : null
 }
 
-/** Step 1: the position (map picker, with coordinate fields when the map cannot load), the map link and the address. */
-export function StepPlace({ form, patch, errors, pin, slugTaken }: StepProps) {
-  const { t, language } = useLocale()
+/** Step 1: the position (map picker, with coordinate fields when the map cannot load) and the address. The map link is made by the server. */
+export function StepPlace({ form, patch }: StepProps) {
+  const { t } = useLocale()
   const [mapFailed, setMapFailed] = useState(false)
-  const suggestion = suggestSlug(language === 'de' ? form.titleDe || form.titleEn : form.titleEn || form.titleDe)
   const located = form.latitude !== null && form.longitude !== null
 
   return (
@@ -44,19 +42,7 @@ export function StepPlace({ form, patch, errors, pin, slugTaken }: StepProps) {
           <Button className="w-fit" size="sm" variant="tertiary" onPress={() => patch({ latitude: null, longitude: null })}>{t('places.map.clear')}</Button>
         )}
       </Block>
-      <Block icon={LinkIcon} title={t('places.details.title')}>
-        <Field
-          description={t('places.slug.help', { slug: form.slug || suggestion || '…' })}
-          error={errors.slug ?? (slugTaken ? 'places.problem.slugTaken' : undefined)}
-          label={t('places.slug.input')}
-          maxLength={200}
-          value={form.slug}
-          onChange={slug => patch({ slug })}
-        />
-        {form.slug === '' && suggestion !== '' && (
-          <Button className="w-fit" size="sm" variant="secondary" onPress={() => patch({ slug: suggestion })}>{t('places.slug.suggest', { slug: suggestion })}</Button>
-        )}
-        {hasBeenLive(pin) && <p className="text-sm text-warning">{t('places.slug.published')}</p>}
+      <Block>
         <Field description={t('places.address.help')} label={t('places.address.label')} maxLength={300} value={form.address} onChange={address => patch({ address })} />
       </Block>
     </div>

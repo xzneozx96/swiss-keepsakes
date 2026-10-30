@@ -18,10 +18,9 @@ export interface ReviewActions {
   dirty: boolean
 }
 
-const GAP_KEY: Record<'title' | 'location' | 'slug', MessageKey> = {
+const GAP_KEY: Record<'title' | 'location', MessageKey> = {
   title: 'places.checklist.title.item',
   location: 'places.checklist.location.item',
-  slug: 'places.checklist.slug.item',
 }
 
 function Checklist({ form }: Pick<StepProps, 'form'>) {
@@ -32,7 +31,7 @@ function Checklist({ form }: Pick<StepProps, 'form'>) {
     <section aria-labelledby="places-needed" className="flex flex-col gap-3 rounded-3xl bg-surface p-4 shadow-surface lg:p-5">
       <h3 className="font-semibold" id="places-needed">{t('places.checklist.title')}</h3>
       <ul className="flex flex-col gap-2 text-sm">
-        {(['title', 'location', 'slug'] as const).map((gap) => {
+        {(['title', 'location'] as const).map((gap) => {
           const missing = gaps.includes(gap)
           const Icon = missing ? StatusDangerIcon : StatusSuccessIcon
 
@@ -70,24 +69,25 @@ function StatusPanel({ pin, actions }: Pick<StepProps, 'pin'> & { actions: Revie
 }
 
 /** Step 6: the checklist of what a publish needs, each step's facts with Edit, and hide, show again or delete. */
-export function StepReview({ form, pin, go, steps, actions, errors, slugTaken }: StepProps & { steps: StepView[], actions: ReviewActions }) {
+export function StepReview({ form, pin, go, steps, actions, errors }: StepProps & { steps: StepView[], actions: ReviewActions }) {
   const { t, language } = useLocale()
   const text = (en: string, de: string) => (language === 'de' ? de || en : en || de)
   const none = t('places.review.none')
   const listed = steps.filter(step => step.id !== 'review')
+  // Read only: the server made it from the title and locks it at the first publish.
+  const slug = pin?.slug?.[language] ?? pin?.slug?.en ?? pin?.slug?.de
 
   return (
     <div className="flex flex-col gap-4">
       <StatusPanel actions={actions} pin={pin} />
       <Checklist form={form} />
-      {slugTaken && <p className="text-sm text-danger" role="alert">{t('places.problem.slugTaken')}</p>}
       {errors.count > 0 && <p className="text-sm text-danger" role="alert">{t('places.review.fix')}</p>}
       {listed.map((step, index) => (
         <ReviewSection key={step.id} index={index} issues={[]} step={step} onEdit={() => go?.(step.id)}>
           {step.id === 'place' && (
             <>
               <ReviewRow label={t('places.review.location')}>{form.latitude === null ? t('places.map.notSet') : `${form.latitude}, ${form.longitude}`}</ReviewRow>
-              <ReviewRow label={t('places.review.slug')}>{form.slug || none}</ReviewRow>
+              <ReviewRow label={t('places.review.slug')}>{slug ? t('places.review.slugValue', { slug }) : t('places.review.slugPending')}</ReviewRow>
               <ReviewRow label={t('places.review.address')}>{form.address || none}</ReviewRow>
             </>
           )}

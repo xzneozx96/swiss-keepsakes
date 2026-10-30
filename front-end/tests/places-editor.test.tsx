@@ -56,7 +56,6 @@ const livePin = (over = {}) => pinOf({ status: 'published', slug: { en: 'chapel-
 async function completeNewPin() {
   await heading('Place on the map')
   await press('Place pin')
-  await type('Map link', 'chapel-bridge')
   await press('Next')
   await type('Title in English', 'Chapel Bridge')
 }
@@ -78,7 +77,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
     expect(screen.getByTestId('places-status')).toHaveTextContent('Draft')
   })
 
-  it('[E4.2][AC68] saves a draft with the position, the map link per title language and a key, then moves to the pin\'s own address', async () => {
+  it('[E4.2][AC68] saves a draft with the position and a key, and no map link, then moves to the pin\'s own address', async () => {
     const success = vi.spyOn(toast, 'success')
     api.pin = pinOf({ id: uuid(10) })
     const { router } = await open('new')
@@ -86,12 +85,12 @@ describe('[E4.2][AC68] N17 a new place', () => {
     await press('Save draft')
 
     await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins`, key: expect.any(String), body: { title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3, interests: [], mustVisit: false, serviceType: null, foodKind: null, photos: [], dates: [], outboundUrl: null } })
+    expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins`, key: expect.any(String), body: { title: { en: 'Chapel Bridge' }, latitude: 47.05, longitude: 8.3, interests: [], mustVisit: false, serviceType: null, foodKind: null, photos: [], dates: [], outboundUrl: null } })
     await waitFor(() => expect(router.state.location.pathname).toBe(`/store/content/places/${uuid(10)}`))
     expect(success).toHaveBeenCalledExactlyOnceWith('Draft saved.')
   })
 
-  it('[E4.2][AC85][AC68] publishes with a title, a position and a map link and nothing else: a create, then a publish with the new version', async () => {
+  it('[E4.2][AC85][AC68] publishes with a title and a position and nothing else: a create, then a publish with the new version', async () => {
     const success = vi.spyOn(toast, 'success')
     api.pin = pinOf({ id: uuid(10), rowVersion: 1 })
     await open('new')
@@ -101,6 +100,8 @@ describe('[E4.2][AC68] N17 a new place', () => {
 
     await waitFor(() => expect(writes()).toHaveLength(2))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins`, body: { categoryIds: [], mainStoryGroupId: null } })
+    expect(writes()[0]!.body).not.toHaveProperty('slug')
+    expect(writes()[1]!.body).toEqual({})
     expect(writes()[1]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins/${uuid(10)}/publish`, ifMatch: '1' })
     await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Published. The pin is on the map.'))
   })
@@ -111,7 +112,8 @@ describe('[E4.2][AC68] N17 a new place', () => {
     await nextTo('Review and publish')
 
     const list = within(screen.getByRole('region', { name: 'Needed to publish' }))
-    expect(list.getAllByText('missing')).toHaveLength(3)
+    expect(list.getAllByText('missing')).toHaveLength(2)
+    expect(list.queryByText(/map link/i)).not.toBeInTheDocument()
     expect(list.getByText('A title in English or German')).toBeInTheDocument()
     await press('Publish')
 
@@ -133,27 +135,12 @@ describe('[E4.2][AC68] N17 a new place', () => {
     expect((writes()[0]!.body as { title: object }).title).not.toHaveProperty('en')
   })
 
-  it('[E4.2][AC68] a map link that another place uses sends the editor back to it with the words of the refusal', async () => {
-    const danger = vi.spyOn(toast, 'danger')
-    api.answer = call => (call.method === 'POST' ? problem(409, 'content-slug-taken') : undefined)
-    await open('new')
-    await completeNewPin()
-    await press('Save draft')
-
-    expect(await screen.findAllByText('Another place already uses this map link. Pick a different one.')).not.toHaveLength(0)
-    await heading('Place on the map')
-    expect(danger).not.toHaveBeenCalled()
-  })
-
-  it('[E4.2][AC68] a map link with capitals or spaces is refused in the field, and nothing is sent', async () => {
+  it('[E4.2][AC68] has no map link field: the server makes the link from the title', async () => {
     await open('new')
     await heading('Place on the map')
-    await type('Map link', 'Chapel Bridge')
 
-    expect(await screen.findByText(/Use small letters, numbers and dashes only/)).toBeInTheDocument()
-    expect(screen.getByRole('status')).toHaveTextContent('Fix 1 problem before saving.')
-    await press('Save draft')
-    expect(writes()).toHaveLength(0)
+    expect(screen.queryByLabelText('Map link')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Use “/ })).not.toBeInTheDocument()
   })
 })
 
@@ -267,16 +254,12 @@ describe('[E4.2][AC68] N17 one pattern for every field, and a card for each bloc
     await heading('Place on the map')
 
     expect(blocks()).toHaveLength(2)
-    expect(headings()).toEqual(['Location on the map', 'Map link and address'])
-    expect(screen.queryByRole('heading', { name: 'Map link' })).not.toBeInTheDocument()
+    expect(headings()).toEqual(['Location on the map'])
     expect(screen.queryByRole('heading', { name: 'Address' })).not.toBeInTheDocument()
-    expect(screen.getAllByText('Map link')).toHaveLength(1)
     expect(screen.getAllByText('Address')).toHaveLength(1)
-    expect(screen.getByLabelText('Map link')).toHaveAccessibleDescription(/Guests share the pin with this link/)
     expect(screen.getByLabelText('Address')).toHaveAccessibleDescription(/One address for both languages/)
-    // The same card holds both fields, and a card is not collapsible.
+    // A card is not collapsible.
     expect(blocks()[1]).toContainElement(screen.getByLabelText('Address'))
-    expect(blocks()[1]).toContainElement(screen.getByLabelText('Map link'))
     for (const block of blocks())
       expect(block.querySelector('[aria-expanded]')).toBeNull()
     expect(blocks()[0]).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
@@ -316,8 +299,7 @@ describe('[E4.2][AC68] N17 one pattern for every field, and a card for each bloc
     await open('new', { language: 'de' })
     await heading('Ort auf der Karte')
 
-    expect(headings()).toEqual(['Standort auf der Karte', 'Kartenlink und Adresse'])
-    expect(screen.getAllByText('Kartenlink')).toHaveLength(1)
+    expect(headings()).toEqual(['Standort auf der Karte'])
     expect(screen.getAllByText('Adresse')).toHaveLength(1)
   })
 })
@@ -346,7 +328,7 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
 
     render(
       <LocaleProvider>
-        <StepWhen errors={validate(form)} form={form} patch={() => {}} pin={undefined} slugTaken={false} storeId={storeId} />
+        <StepWhen errors={validate(form)} form={form} patch={() => {}} pin={undefined} storeId={storeId} />
       </LocaleProvider>,
     )
 
@@ -689,15 +671,35 @@ describe('[E4.2][AC68] N17 photos', () => {
   })
 })
 
+describe('[E4.2][AC68] N17 the map link on the review', () => {
+  it('[E4.2][AC68] says the link is made from the title while the place has none', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await nextTo('Review and publish')
+
+    expect(screen.getByText('Made from the title when you publish')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: /Map link/ })).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC68] shows the link the server made, as text and never as an input', async () => {
+    api.pin = livePin()
+    await open(uuid(10))
+    await heading('Place on the map')
+    await nextTo('Review and publish')
+
+    expect(screen.getByText('Guests share it with …/map?place=chapel-bridge')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: /Map link/ })).not.toBeInTheDocument()
+  })
+})
+
 describe('[E4.2][AC79][AC85] N17 a pin that exists', () => {
-  it('[E4.2][AC79] a published pin saves with its version and no new map link, and a draft the save returns is published after it', async () => {
+  it('[E4.2][AC79] a published pin saves with its version and no map link, and a draft the save returns is published after it', async () => {
     const success = vi.spyOn(toast, 'success')
     api.pin = livePin()
     api.answer = call => (call.method === 'PATCH' ? Response.json(livePin({ rowVersion: 4, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} } })) : undefined)
     await open(uuid(10))
     await heading('Place on the map')
     expect(screen.getByTestId('places-status')).toHaveTextContent('Published')
-    expect(screen.getByText(/Links already shared use this name/)).toBeInTheDocument()
     await userEvent.click(screen.getAllByRole('button', { name: /Text and photo/ }).at(0)!)
     await heading('Text and photo')
     await userEvent.clear(screen.getByLabelText('Title in English'))

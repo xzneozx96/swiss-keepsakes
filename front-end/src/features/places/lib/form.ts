@@ -1,4 +1,4 @@
-import type { Pin, PinPublishBody, PinWriteBody } from '@sk/api-contract'
+import type { Pin, PinWriteBody } from '@sk/api-contract'
 import type { FoodKind, ServiceType, StayTag } from '@sk/domain/content'
 import type { MessageKey } from '@/i18n/en'
 
@@ -21,7 +21,6 @@ export interface PlaceForm {
   tipDe: string
   localTipEn: string
   localTipDe: string
-  slug: string
   latitude: number | null
   longitude: number | null
   address: string
@@ -66,7 +65,6 @@ export function emptyForm(withDate = false): PlaceForm {
     tipDe: '',
     localTipEn: '',
     localTipDe: '',
-    slug: '',
     latitude: null,
     longitude: null,
     address: '',
@@ -90,10 +88,6 @@ function textOf(pin: Pin) {
   return pin.draft ?? pin.published ?? { title: {}, tip: {}, localTip: {}, coverAlt: {}, photoAlt: {} }
 }
 
-export function slugOfPin(pin: Pin): string {
-  return pin.slug?.en ?? pin.slug?.de ?? ''
-}
-
 export function formOf(pin: Pin): PlaceForm {
   const text = textOf(pin)
 
@@ -104,7 +98,6 @@ export function formOf(pin: Pin): PlaceForm {
     tipDe: text.tip.de ?? '',
     localTipEn: text.localTip.en ?? '',
     localTipDe: text.localTip.de ?? '',
-    slug: slugOfPin(pin),
     latitude: pin.latitude,
     longitude: pin.longitude,
     address: pin.address ?? '',
@@ -129,25 +122,6 @@ export function formOf(pin: Pin): PlaceForm {
   }
 }
 
-/** A suggested web address from a title: lower case, German umlauts spelled out, dashes between words. */
-const UMLAUTS: [RegExp, string][] = [[/ä/g, 'ae'], [/ö/g, 'oe'], [/ü/g, 'ue'], [/ß/g, 'ss']]
-const MARKS = /[\u0300-\u036F]/g
-const NOT_SLUG = /[^a-z0-9]+/g
-const EDGE_DASHES = /^-+|-+$/g
-const TRAILING_DASHES = /-+$/g
-
-export function suggestSlug(title: string): string {
-  const spelled = UMLAUTS.reduce((text, [pattern, to]) => text.replace(pattern, to), title.toLowerCase())
-
-  return spelled
-    .normalize('NFD')
-    .replace(MARKS, '')
-    .replace(NOT_SLUG, '-')
-    .replace(EDGE_DASHES, '')
-    .slice(0, 80)
-    .replace(TRAILING_DASHES, '')
-}
-
 function trimmed(en: string, de: string) {
   return {
     ...(en.trim() === '' ? {} : { en: en.trim() }),
@@ -155,7 +129,6 @@ function trimmed(en: string, de: string) {
   }
 }
 
-const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const OPEN_TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/
 const CLOSE_TIME = /^(?:(?:[01]\d|2[0-3]):[0-5]\d|24:00)$/
 const DAY = /^\d{4}-\d{2}-\d{2}$/
@@ -171,7 +144,6 @@ function isDay(value: string): boolean {
 const HTTPS = /^https:\/\/\S+$/
 
 export interface FormErrors {
-  slug?: MessageKey
   hours: Record<string, MessageKey>
   dates: Record<string, MessageKey>
   link?: MessageKey
@@ -181,8 +153,6 @@ export interface FormErrors {
 export function validate(form: PlaceForm): FormErrors {
   const errors: FormErrors = { hours: {}, dates: {}, count: 0 }
 
-  if (form.slug !== '' && !SLUG.test(form.slug))
-    errors.slug = 'places.error.slugFormat'
   for (const span of form.hours) {
     if (!OPEN_TIME.test(span.opens) || !CLOSE_TIME.test(span.closes))
       errors.hours[span.key] = 'places.error.hoursFormat'
@@ -209,54 +179,25 @@ export function validate(form: PlaceForm): FormErrors {
   }
   if (form.outboundUrl.trim() !== '' && !HTTPS.test(form.outboundUrl.trim()))
     errors.link = 'places.error.linkFormat'
-  errors.count = (errors.slug ? 1 : 0) + Object.keys(errors.hours).length + Object.keys(errors.dates).length + (errors.link ? 1 : 0)
+  errors.count = Object.keys(errors.hours).length + Object.keys(errors.dates).length + (errors.link ? 1 : 0)
 
   return errors
 }
 
-/** What a publish needs (AC68). Everything else is optional. */
-export function publishGaps(form: PlaceForm): ('title' | 'location' | 'slug')[] {
+/** What a publish needs (AC68): a title and a location. The map link is made by the server from the title. */
+export function publishGaps(form: PlaceForm): ('title' | 'location')[] {
   return [
     ...(form.titleEn.trim() === '' && form.titleDe.trim() === '' ? ['title' as const] : []),
     ...(form.latitude === null || form.longitude === null ? ['location' as const] : []),
-    ...(form.slug.trim() === '' || !SLUG.test(form.slug) ? ['slug' as const] : []),
   ]
 }
 
-/** A pin that has been live (published or hidden) keeps its web addresses public, so they are renamed only by a save. */
-export const hasBeenLive = (pin: Pin | undefined) => pin !== undefined && pin.status !== 'draft'
-
-/** The languages that carry a title in the form. */
-export function titleLanguages(form: PlaceForm): Lang[] {
-  return LANGS.filter(lang => (lang === 'en' ? form.titleEn : form.titleDe).trim() !== '')
-}
-
-/**
- * The write of the whole form. A save is a PATCH where a list replaces and null clears, so every field is sent.
- * The slug follows the title: one web address text, kept for each language that has a title. A pin that was live
- * keeps the languages of its stored slug, and a language its draft adds gets its slug at publish (`publishBodyOf`).
- */
-function slugWrite(form: PlaceForm, slugText: string, pin: Pin | undefined): Pick<PinWriteBody, 'slug'> {
-  if (hasBeenLive(pin)) {
-    const stored = LANGS.filter(lang => pin?.slug?.[lang] !== undefined)
-
-    return slugText !== '' && slugText !== slugOfPin(pin!) && stored.length > 0 ? { slug: Object.fromEntries(stored.map(lang => [lang, slugText])) } : {}
-  }
-  if (slugText === '')
-    return { slug: null }
-  const languages = titleLanguages(form)
-
-  return { slug: Object.fromEntries((languages.length > 0 ? languages : ['en']).map(lang => [lang, slugText])) }
-}
-
-export function bodyOf(form: PlaceForm, pin?: Pin): PinWriteBody {
-  const slugText = form.slug.trim()
-
+/** The write of the whole form. A save is a PATCH where a list replaces and null clears, so every field is sent. The map link (slug) is never sent: the server makes it. */
+export function bodyOf(form: PlaceForm): PinWriteBody {
   return {
     title: trimmed(form.titleEn, form.titleDe),
     tip: trimmed(form.tipEn, form.tipDe),
     localTip: trimmed(form.localTipEn, form.localTipDe),
-    ...slugWrite(form, slugText, pin),
     latitude: form.latitude,
     longitude: form.longitude,
     address: form.address.trim() === '' ? null : form.address.trim(),
@@ -278,14 +219,6 @@ export function bodyOf(form: PlaceForm, pin?: Pin): PinWriteBody {
       endTime: date.kind === 'day' && date.endTime !== '' ? date.endTime : null,
     })),
   }
-}
-
-/** The slug a publish adds: for each title language of a live pin that has no stored web address yet. */
-export function publishBodyOf(form: PlaceForm, pin: Pin | undefined): PinPublishBody {
-  const slugText = form.slug.trim()
-  const added = hasBeenLive(pin) ? titleLanguages(form).filter(lang => pin?.slug?.[lang] === undefined) : []
-
-  return added.length > 0 && slugText !== '' ? { slug: Object.fromEntries(added.map(lang => [lang, slugText])) } : {}
 }
 
 /** True while the form differs from the pin as it was opened (or from an empty form for a new pin). */

@@ -41,7 +41,7 @@ export function PlaceEditor({ storeId, initial, start }: { storeId: string, init
   const { t } = useLocale()
   const editor = usePlaceEditor({ storeId, initial, start })
   const title = editor.form.titleEn || editor.form.titleDe || t(start === 'dates' && !initial ? 'places.newEvent' : 'places.newPlace')
-  const props = { form: editor.form, patch: editor.patch, errors: editor.errors, storeId, pin: editor.pin, slugTaken: editor.slugTaken, go: editor.go }
+  const props = { form: editor.form, patch: editor.patch, errors: editor.errors, storeId, pin: editor.pin, go: editor.go }
   const body: Record<StepId, React.ReactNode> = {
     place: <StepPlace {...props} />,
     content: <StepContent {...props} />,
