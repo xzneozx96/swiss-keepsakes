@@ -21,7 +21,7 @@ The tour route map panel on the same page shows the tour detail's route on the s
 - **Top controls**, floating over the map: a **Categories** button (filter icon, shows "Categories" or the number chosen) and a **Map | List** switch.
 - **Pins** are photo pins. Close pins merge into a photo cluster that zooms in on tap. Pins are real buttons in the tab order, with `aria-pressed` and a 44 px hit area.
 - **Card row.** When a pin is open, a row of place cards (311 px wide, 8 px apart) sits above the tab bar and swipes in step with the pins. Swiping to a card opens its pin; tapping a pin slides its card to the middle and moves focus to the card title. The row holds only the places the filter keeps.
-- **Credits** sit just under the top buttons while the card row is up, and bottom-left above the tab bar otherwise. Option B uses the folded form (see section 5, point 5).
+- **Credits** sit bottom right: 8 px above the music button, and 8 px above the card row's ✕ while a card is open. Written out at first, a round ⓘ after the first touch (see section 5, point 5). Zoom in and out are a small pill under the top buttons (the map kit, `docs/ux/map-kit-design.md`). The card is the tour route map's card (eyebrow, serif title, tip, picture on the right, ‹ n of m ›, Read the story).
 - **Status layer** over the map for loading, empty and failed (section 2, "States").
 
 ### Categories filter

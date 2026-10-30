@@ -4,7 +4,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useRef } from 'react'
 
-import { demSource, loadAerialStyle } from '@/features/tours/map/aerial-style'
+import { demSource, loadAerialStyle } from '@/components/map/map-style'
 import { tourSeed } from '@/features/tours/seed'
 import { noIndexHead } from '@/lib/no-index'
 

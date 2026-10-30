@@ -56,6 +56,7 @@ Before you build a control, search `front-end/src/components` for an existing on
 | Row menu | `front-end/src/components/row-actions.tsx` (`RowActions`) |
 | Steps of an editor (step list, phone title and sheet, bottom bar) | `front-end/src/components/step-layout.tsx` (`StepLayout`), `step-bar.tsx` (`StepBar`), `step-marks.tsx`; texts in `step-messages.ts` |
 | White rounded block of an editor step, with an optional icon tile, title and help line | `front-end/src/components/form-block.tsx` (`Block`) |
+| A map: guest map, route, itinerary, place picker, preview | `front-end/src/components/map/` (`MapView`, `PinLayer`, `RouteLayer`, `MapControls`, `MapCorner`, `MapCard`, `MapCardRow`). Never build a MapLibre map in a feature: `tests/map-kit-guard.test.ts` fails when a file outside the kit and the lab imports `maplibre-gl` as a value. `MapView`'s `className` must say `relative` or `absolute inset-0`. |
 
 Do not set `className` on `Tabs`, `Tabs.Tab`, `Tabs.List` or `Tabs.ListContainer` in a feature. `front-end/tests/tabs-guard.test.ts` fails when a file outside `src/components`, `src/features/lab` and `src/dormant` imports `Tabs` from `@heroui/react`.
 

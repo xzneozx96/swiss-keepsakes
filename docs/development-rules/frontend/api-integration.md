@@ -6,7 +6,7 @@ Read this before you call an API or read server data. Check `front-end/package.j
 
 - **TanStack Query v5** holds the shop's data in the browser (D19, E1.11). There is no API call yet: the demo `DataClient` answers from the browser-held demo store (`front-end/src/features/demo`). The **generated client** (D11) is `createApiClient` from `@sk/api-contract` (E1.10). The `stores` feature (E2.3) is the first to use it: `features/stores/api/api-client.ts` is its API client, and every other feature still has only its demo client.
 - **Sign-in is the first call to our API.** With `VITE_API_ENABLED=true`, C05 signs in through Better Auth's client on the SPA's own origin (`front-end/src/features/auth/`). The session is an HttpOnly cookie. The SPA holds no token and sends no `Authorization` header. `followSession` (`lib/session-sync.ts`) keeps the store's `signedInGuestId` in step with the session without blocking the first paint, and the demo store never saves that field in this mode. Until the account feature moves to the API, any session signs in the demo guest. Without the variable (the Vercel build) the demo sign-in runs: C05 accepts the prototype codes, the code arrives as N01 in the Mail panel, nothing calls `/api`. `followSession` runs only with the flag (`restoreOnce` in `app-providers.tsx`). A sign-out only clears `signedInGuestId`. In both modes, the Google return and the invitation capture are off until E3.4. A build with the flag is for development and the E2.1 specs, and `vite build` warns about it. Local development sets `VITE_API_ENABLED=true` in `front-end/.env.local`.
-- The other network calls today are the place search (`front-end/src/features/merchant/products/components/itinerary/use-place-search.ts`) and the map style and tiles (`front-end/src/features/tours/map/aerial-style.ts`).
+- The other network calls today are the place search (`front-end/src/features/merchant/products/components/itinerary/use-place-search.ts`) and the map style and tiles (`front-end/src/components/map/map-style.ts`).
 
 ## The stores feature, the first API feature (E2.3)
 
@@ -48,7 +48,7 @@ These follow `tanstack-start.md`.
 - Keep calls in a feature's hook or `api` module, never inside a presentational component.
 - Cancel requests that can be superseded with an `AbortController` to save work, and ignore stale results with a flag set in cleanup, because an abort alone does not stop a race (see `react-effects-and-refs.md`). `use-place-search.ts` shows the abort pattern.
 - Start independent requests together (`Promise.all`). Do not await one after another when neither needs the other's result.
-- Cache what the whole app reuses at module level, and keep only successful results. Example: `loadAerialStyle()` in `front-end/src/features/tours/map/aerial-style.ts` fetches once and drops a failed attempt so the next call retries.
+- Cache what the whole app reuses at module level, and keep only successful results. Example: `loadAerialStyle()` in `front-end/src/components/map/map-style.ts` fetches once and drops a failed attempt so the next call retries.
 - Guidance. Handle loading, error and empty as separate states in the UI. Do not leave a spinner or a blank screen on failure.
 - Turn errors into messages the user can read. See `error-handling.md`.
 - **Handle errors once, in the query client's cache.** Do not wrap a call in `try/catch` with a `toast.*` next to it. A query that shows its error inline, or a mutation whose refusal the form already shows, opts out with `meta: { silent: true }`. See `api-feedback.md`.
