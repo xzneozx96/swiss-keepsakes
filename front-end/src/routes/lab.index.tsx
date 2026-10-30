@@ -10,6 +10,11 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/keepsake-options' as const,
+    title: 'Keepsake editor: option management and variant creation (options for the owner to pick)',
+    note: 'Three designs for managing an option and its values (type and drag, a table in a sheet, chips with a small editor) and three for creating a variant (a sheet with a live check, a grid of free cells, an open row under the table), each at laptop and phone width with a note on German text, keyboard use and trade-offs (30.10.2026).',
+  },
+  {
     to: '/lab/location-card' as const,
     title: 'Location card (place editor, step 1: Location on the map), approved',
     note: 'Option C chosen 30.10.2026, built into the place editor: a clean link field, a 12 px gap, then the map in its own frame with recenter and remove as a small control group. Kept here as the reference; options A and B were removed.',
