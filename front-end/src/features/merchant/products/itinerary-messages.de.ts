@@ -22,16 +22,6 @@ export const itineraryDe: Record<keyof typeof itineraryEn, string> = {
     'Tippen Sie auf die Karte, wo die Station liegt.',
   'products.itinerary.map.label':
     'Karte der Stationen. Wählen Sie eine Markierung, um eine Station auszuwählen, oder ziehen Sie sie, um sie zu verschieben.',
-  'products.itinerary.map.loading': 'Karte wird geöffnet…',
-  'products.itinerary.map.unavailable':
-    'Die Karte konnte nicht geladen werden. Sie können weiterhin Orte suchen und jede Station in der Liste bearbeiten.',
-  'products.itinerary.map.retry': 'Karte neu laden',
-  'products.itinerary.map.zoomIn': 'Vergrössern',
-  'products.itinerary.map.zoomOut': 'Verkleinern',
-  'products.itinerary.map.compass': 'Norden ausrichten',
-  'products.itinerary.map.touch': 'Mit zwei Fingern die Karte bewegen',
-  'products.itinerary.map.wheel': 'Mit Strg + Scrollen die Karte zoomen',
-  'products.itinerary.map.wheelMac': 'Mit ⌘ + Scrollen die Karte zoomen',
   'products.itinerary.stop.number': 'Station {n}',
   'products.itinerary.stop.unnamed': 'Station ohne Namen',
   'products.itinerary.stop.numbered': 'Station {n}',

@@ -107,7 +107,14 @@ export function MapView({
   useEffect(() => {
     if (!map)
       return
-    const onClick = (event: { lngLat: { lng: number, lat: number } }) => latest.current.onMapClick?.([event.lngLat.lng, event.lngLat.lat])
+    // A tap on a pin (a marker sits over the map, and its click reaches the map too) is not a tap on the map.
+    const onClick = (event: { lngLat: { lng: number, lat: number }, originalEvent?: { target: EventTarget | null } }) => {
+      const target = event.originalEvent?.target
+
+      if (target instanceof Element && target.closest('.maplibregl-marker'))
+        return
+      latest.current.onMapClick?.([event.lngLat.lng, event.lngLat.lat])
+    }
 
     map.on('click', onClick)
 

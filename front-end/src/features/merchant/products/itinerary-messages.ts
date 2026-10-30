@@ -19,16 +19,6 @@ export const itineraryEn = {
   'products.itinerary.drop.hint': 'Tap the map where the stop is.',
   'products.itinerary.map.label':
     'Itinerary map. Select a pin to choose a stop, drag it to move it.',
-  'products.itinerary.map.loading': 'Opening the map…',
-  'products.itinerary.map.unavailable':
-    'The map could not load. You can still search for places and edit every stop in the list.',
-  'products.itinerary.map.retry': 'Reload map',
-  'products.itinerary.map.zoomIn': 'Zoom in',
-  'products.itinerary.map.zoomOut': 'Zoom out',
-  'products.itinerary.map.compass': 'Reset north',
-  'products.itinerary.map.touch': 'Use two fingers to move the map',
-  'products.itinerary.map.wheel': 'Use Ctrl + scroll to zoom the map',
-  'products.itinerary.map.wheelMac': 'Use ⌘ + scroll to zoom the map',
   'products.itinerary.stop.number': 'Stop {n}',
   'products.itinerary.stop.unnamed': 'Unnamed stop',
   'products.itinerary.stop.numbered': 'stop {n}',

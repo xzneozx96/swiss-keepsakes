@@ -188,10 +188,14 @@ export function PinLayer<P extends MapPin>({
     }
   }, [groups, pins])
 
-  // Opening a card brings its pin into the clear part of the map.
-  const selected = pins.find(pin => pin.id === selectedId)
+  // Opening a card brings its pin into the clear part of the map. Only a new selection does it: a pin that is dragged
+  // or edited while selected does not pull the map after it.
+  const present = pins.some(pin => pin.id === selectedId)
+  const pinsRef = useLatest(pins)
 
   useEffect(() => {
+    const selected = pinsRef.current.find(pin => pin.id === selectedId)
+
     if (!map || !followSelected || !selected)
       return
     map.easeTo({
@@ -200,7 +204,7 @@ export function PinLayer<P extends MapPin>({
       offset: [0, (insets.top - insets.bottom) / 2],
       duration: reducedMotion() ? 0 : 600,
     })
-  }, [map, followSelected, selected, insets])
+  }, [map, followSelected, selectedId, present, insets, pinsRef])
 
   function zoomTo(members: P[]) {
     map?.fitBounds(boundsOf(members.map(member => member.coordinates)), {
