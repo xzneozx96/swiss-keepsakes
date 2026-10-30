@@ -1,4 +1,5 @@
 import type { ContentLanguage, Localized, PublishGap, StayTag } from './localized.ts'
+import { slugify } from '../shared/slug.ts'
 import { hasText, slugCoversTitle } from './localized.ts'
 
 export type PinStatus = 'draft' | 'published' | 'hidden'
@@ -99,4 +100,9 @@ export function pinPublishGaps(pin: Pick<Pin, 'slug' | 'latitude' | 'longitude'>
 /** Once a pin was published, hide it instead (ADR-015). */
 export function canDeletePin(pin: Pick<Pin, 'firstPublishedAt'>): boolean {
   return pin.firstPublishedAt === null
+}
+
+/** The slug a pin title makes: lower case, umlauts folded (ä to ae), dashes, at most 60 characters. A title that folds to nothing still gets one. */
+export function pinSlugBase(title: string): string {
+  return slugify(title) || 'place'
 }

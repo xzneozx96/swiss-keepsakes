@@ -7,9 +7,11 @@ import { mayManageContent } from './access.ts'
 import { checkMedia } from './check-media.ts'
 import { fail, ok } from './failure.ts'
 import { pinImages } from './pin-images.ts'
+import { pinSlugFor } from './pin-slug.ts'
 
 // A new pin is a draft of the signed-in store. Categories and the main story are checked by the database
-// (a foreign key that names another store's row maps to reference-invalid).
+// (a foreign key that names another store's row maps to reference-invalid). The server makes the slug of each
+// language that has a title; a slug in `changes` is ignored.
 export function makeCreatePin<T>({ uow, pins, media, clock }: PinDeps<T>) {
   return async (actor: Actor, storeId: string, changes: PinChanges, _requestId: string | null): Promise<Result<Pin>> => {
     if (!mayManageContent(actor, storeId))
@@ -18,7 +20,9 @@ export function makeCreatePin<T>({ uow, pins, media, clock }: PinDeps<T>) {
       const refused = await checkMedia(media, tx, storeId, pinImages(changes))
       if (refused)
         return fail(refused)
-      return ok(await pins.insert(tx, storeId, changes, clock.now()))
+      const title = changes.title ?? {}
+      const slug = await pinSlugFor(pins, tx, { stored: null, title, previousTitle: {}, hasBeenPublished: false })
+      return ok(await pins.insert(tx, storeId, { ...changes, slug }, clock.now()))
     })
   }
 }

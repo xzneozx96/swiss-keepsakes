@@ -161,7 +161,6 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
       tip: { en: 'Drinking water' },
       localTip: { en: 'Bring a bottle', de: 'Flasche mitbringen' },
       ...located,
-      slug: { en: slugFor(), de: slugFor() },
       serviceType: 'water',
       mustVisit: true,
       foodKind: 'market',
@@ -257,7 +256,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
   it('[E4.2][AC68] the local tip goes live on publish with the title, and a later edit stays a draft', async () => {
     const staff = await env.storeWithStaff()
-    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, localTip: { en: 'Go at sunrise' }, ...located, slug: { en: slugFor() } })
+    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, localTip: { en: 'Go at sunrise' }, ...located })
 
     const published = await env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
     expect(published.status).toBe(200)
@@ -272,7 +271,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
   it('[E4.2][AC68] alt text is text: an edit on a published pin stays in the draft until publish, and the photo list itself is live (ADR-014)', async () => {
     const staff = await env.storeWithStaff()
     const [cover, extra] = [await image(staff.storeId), await image(staff.storeId)]
-    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, ...located, slug: { en: slugFor() }, coverMediaId: cover, coverAlt: { en: 'Old cover' }, photos: [{ mediaId: extra, alt: { en: 'Old photo' } }] })
+    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, ...located, coverMediaId: cover, coverAlt: { en: 'Old cover' }, photos: [{ mediaId: extra, alt: { en: 'Old photo' } }] })
     const published = await env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
     expect(await published.json()).toMatchObject({ draft: null, published: { coverAlt: { en: 'Old cover' }, photoAlt: { [extra]: { en: 'Old photo' } } } })
 
@@ -290,7 +289,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
   it('[E4.2][AC68] a pin whose main or extra photo is still processing is not published, and is once the file is ready', async () => {
     const staff = await env.storeWithStaff()
     const [cover, extra] = [await image(staff.storeId), await image(staff.storeId, 'processing')]
-    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, ...located, slug: { en: slugFor() }, coverMediaId: cover, photos: [{ mediaId: extra }] })
+    const pin = await create(staff, { title: { en: 'Chapel Bridge' }, ...located, coverMediaId: cover, photos: [{ mediaId: extra }] })
     const publish = () => env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
 
     const refused = await publish()
@@ -304,7 +303,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
   it('[E4.2][AC85] a pin with no story and no category publishes and lists with no main story', async () => {
     const staff = await env.storeWithStaff()
-    const pin = await create(staff, { title: { de: 'Löwendenkmal' }, ...located, slug: { de: slugFor() } })
+    const pin = await create(staff, { title: { de: 'Löwendenkmal' }, ...located })
 
     const published = await env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })
 
@@ -315,8 +314,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
   it.each([
     ['no location', { title: { en: 'A' } }, 'location'],
-    ['no slug', { title: { en: 'A' }, ...located }, 'slug'],
-    ['no title', { ...located, slug: { en: 'x' } }, 'title'],
+    ['no title', { ...located }, 'title'],
   ])('[E4.2][AC68] publish with %s is refused and names the gap', async (_what, body, gap) => {
     const staff = await env.storeWithStaff()
     const pin = await create(staff, body)
@@ -329,8 +327,8 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
 
   it('[E4.2][AC86] a published pin with only past dates lists as ended, one with a date ahead lists as published with its next date', async () => {
     const staff = await env.storeWithStaff()
-    const past = await create(staff, { title: { en: 'Old fair' }, ...located, slug: { en: slugFor() }, dates: [{ firstDay: '2026-01-01', lastDay: '2026-01-03' }] })
-    const ahead = await create(staff, { title: { en: 'Blues festival' }, ...located, slug: { en: slugFor() }, dates: [{ firstDay: '2090-11-09', lastDay: '2090-11-14' }] })
+    const past = await create(staff, { title: { en: 'Old fair' }, ...located, dates: [{ firstDay: '2026-01-01', lastDay: '2026-01-03' }] })
+    const ahead = await create(staff, { title: { en: 'Blues festival' }, ...located, dates: [{ firstDay: '2090-11-09', lastDay: '2090-11-14' }] })
     for (const pin of [past, ahead])
       expect((await env.call(`${staff.pins}/${pin.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(200)
 
@@ -351,7 +349,7 @@ describe('[E4.2][AC68] the pin routes with the new fields, over the real app and
   it('[E4.2][AC79] a draft is deleted, a published pin is refused and can be hidden, then shown again', async () => {
     const staff = await env.storeWithStaff()
     const draft = await create(staff, { title: { en: 'Draft' } })
-    const live = await create(staff, { title: { en: 'Live' }, ...located, slug: { en: slugFor() } })
+    const live = await create(staff, { title: { en: 'Live' }, ...located })
 
     expect((await env.call(`${staff.pins}/${draft.id}`, { method: 'DELETE', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(204)
     expect((await env.call(`${staff.pins}/${live.id}/publish`, { method: 'POST', headers: { ...staff.owner.headers, 'If-Match': '1' } })).status).toBe(200)

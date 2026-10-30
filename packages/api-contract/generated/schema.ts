@@ -1131,6 +1131,57 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/store/{storeId}/maps-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description A Google Maps short link: https://maps.app.goo.gl/<code> or https://goo.gl/maps/<code> */
+                    url: string;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The position the Google Maps short link points to. The server follows at most 5 redirects, only through Google hosts. 422 `maps-link-unreadable` when the link is not a short link, leaves Google, takes too long or holds no position */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MapsLinkPosition"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/media": {
         parameters: {
             query?: never;
@@ -3603,6 +3654,11 @@ export interface components {
             de?: string;
             en?: string;
         };
+        /** @description The position a Google Maps short link points to */
+        MapsLinkPosition: {
+            latitude: number;
+            longitude: number;
+        };
         Me: {
             /**
              * Format: uuid
@@ -4007,8 +4063,12 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        /** @description Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save */
+        /** @description Optional and empty in practice. The server makes the slug of each language from its title at the first publish and keeps it afterwards (ADR-014), so a publish never fails for a missing slug when a title exists */
         PinPublishBody: {
+            /**
+             * @deprecated
+             * @description Ignored. The server makes the slug from the title
+             */
             slug?: {
                 de?: string;
                 en?: string;
@@ -4062,6 +4122,10 @@ export interface components {
             }[];
             /** @enum {string|null} */
             serviceType?: "water" | "toilets" | "connect" | "transport" | "lockers" | "cash" | null;
+            /**
+             * @deprecated
+             * @description Ignored. The server makes the slug (the map link) of each language from its title: before the first publish it follows the title, after it the slug is locked
+             */
             slug?: {
                 de?: string;
                 en?: string;
@@ -4107,7 +4171,7 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
             type: string;
         };
         /** @description A keepsake with its working copy, variants and publish checks */

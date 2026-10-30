@@ -165,6 +165,7 @@ export interface PinChanges {
   title?: Localized
   tip?: Localized
   localTip?: Localized
+  // Written as it comes: the use cases set it from the title (the server makes the slug) and ignore what a client sent.
   slug?: Localized | null
   latitude?: number | null
   longitude?: number | null
@@ -221,6 +222,11 @@ export interface PinRepository<T> {
   idsInStore: (tx: T, storeId: string, ids: string[]) => Promise<string[]>
   // A read without a lock. An id of another store has no row.
   find: (tx: T, storeId: string, pinId: string) => Promise<Pin | undefined>
+  // A platform-wide advisory lock for the transaction. A write that makes a slug takes it before it reads `slugsTaken`,
+  // so two writes cannot make the same slug (the unique indexes stay the backstop).
+  lockSlugs: (tx: T) => Promise<void>
+  // The slugs in this language that pins hold, in every store, except the pin `exceptPinId`.
+  slugsTaken: (tx: T, language: ContentLanguage, exceptPinId?: string) => Promise<Set<string>>
   // Every pin of the store, most recently edited first.
   list: (tx: T, storeId: string) => Promise<PinListRow[]>
   // The story groups of the store with their titles, for the main-story picker, most recently created first.
@@ -367,4 +373,15 @@ export interface CategoryRepository<T> {
   setPositions: (tx: T, storeId: string, kind: CategoryKind, orderedIds: string[], at: Date) => Promise<void>
   // false when the id has no row. A link that still names the category makes the database refuse (in-use).
   remove: (tx: T, storeId: string, kind: CategoryKind, id: string) => Promise<boolean>
+}
+
+// One step of a short link: the answer to a request that follows no redirect and reads no body. Undefined when the
+// request failed or ran out of time. A port, so the use case holds the rules and the adapter holds `fetch`.
+export interface MapsLinkStep {
+  status: number
+  location: string | null
+}
+
+export interface MapsLinks {
+  step: (url: URL, timeoutMs: number) => Promise<MapsLinkStep | undefined>
 }

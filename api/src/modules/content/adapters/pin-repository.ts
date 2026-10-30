@@ -280,6 +280,17 @@ export function createPinRepository(): PinRepository<Tx> {
     },
     find: (tx, storeId, pinId) => load(tx, storeId, pinId, false),
 
+    async lockSlugs(tx) {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended('content.places.slug', 0))`)
+    },
+
+    async slugsTaken(tx, language, exceptPinId) {
+      const found = await tx.execute<{ taken: string }>(sql`
+        select slug->>${language}::text as taken from content.places
+         where slug ? ${language}::text${exceptPinId ? sql` and id <> ${exceptPinId}` : sql``}`)
+      return new Set(found.rows.map(row => row.taken))
+    },
+
     list: (tx, storeId) => listRows(tx, storeId),
 
     storyOptions: (tx, storeId) => storyOptionRows(tx, storeId),

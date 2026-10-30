@@ -13,7 +13,7 @@ import { createManualClock } from '../../support/manual-clock.ts'
 const store = 'store-1'
 const owner: Actor = { kind: 'staff', userId: 'u1', guestId: 'g1', stores: new Map([[store, 'owner']]) }
 const outsider: Actor = { kind: 'staff', userId: 'u2', guestId: 'g2', stores: new Map([['store-2', 'owner']]) }
-const complete: PinChanges = { title: { en: 'Chapel Bridge' }, slug: { en: 'chapel-bridge' }, latitude: 47.05, longitude: 8.3 }
+const complete: PinChanges = { title: { en: 'Chapel Bridge' }, latitude: 47.05, longitude: 8.3 }
 const image = (id: string): MediaRow => ({ id, kind: 'image', status: 'ready' })
 
 function setup(media: MediaRow[] = [], now = '2026-11-12T11:00:00Z') {
@@ -215,7 +215,7 @@ describe('[E4.2][AC85][AC68] publish', () => {
   })
 
   it.each([
-    ['a title in German only', { title: { de: 'Kapellbrücke' }, slug: { de: 'kapellbruecke' }, latitude: 47.05, longitude: 8.3 }, undefined],
+    ['a title in German only', { title: { de: 'Kapellbrücke' }, latitude: 47.05, longitude: 8.3 }, undefined],
   ])('[E4.2][AC68] %s publishes', async (_what, changes) => {
     const s = setup()
     const pin = await created(s, changes)
@@ -224,9 +224,8 @@ describe('[E4.2][AC85][AC68] publish', () => {
   })
 
   it.each([
-    ['no location', { title: { en: 'A' }, slug: { en: 'a' } }, ['location']],
-    ['no slug', { title: { en: 'A' }, latitude: 47, longitude: 8 }, ['slug']],
-    ['no title', { slug: { en: 'a' }, latitude: 47, longitude: 8 }, ['title']],
+    ['no location', { title: { en: 'A' } }, ['location']],
+    ['no title', { latitude: 47, longitude: 8 }, ['title']],
   ] as const)('[E4.2][AC68] %s is refused and names the gap', async (_what, changes, gaps) => {
     const s = setup()
     const pin = await created(s, { ...changes })

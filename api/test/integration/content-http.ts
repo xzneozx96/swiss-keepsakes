@@ -1,4 +1,4 @@
-import type { CategoryRepository, KeepsakeUses, ObjectStorage } from '../../src/modules/content/ports.ts'
+import type { CategoryRepository, KeepsakeUses, MapsLinks, ObjectStorage } from '../../src/modules/content/ports.ts'
 import type { Clock } from '../../src/platform/clock.ts'
 import type { Tx } from '../../src/platform/db/client.ts'
 import type { JobQueue } from '../../src/platform/jobs/queue.ts'
@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto'
 import { createMediaUses } from '../../src/modules/catalog/adapters/media-uses.ts'
 import { createCategoryRepository } from '../../src/modules/content/adapters/category-repository.ts'
 import { guardUseCases } from '../../src/modules/content/adapters/database-errors.ts'
+import { createMapsLinks } from '../../src/modules/content/adapters/maps-link-fetch.ts'
 import { createMediaLibrary } from '../../src/modules/content/adapters/media-library-repository.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
 import { createPinRepository } from '../../src/modules/content/adapters/pin-repository.ts'
@@ -14,7 +15,7 @@ import { createPublicReadRepository } from '../../src/modules/content/adapters/p
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -43,7 +44,8 @@ const randomIp = () => `198.51.${Math.floor(Math.random() * 250) + 1}.${Math.flo
 // instead of a mail job, so no queue is needed.
 // `readClock` is the clock of the public reads, so a test can move the map cache's time.
 // `media` swaps the fake storage, the job queue (default: sends nothing) and the clock of the write use cases.
-export interface MediaWiring { storage?: ObjectStorage, jobs?: JobQueue<Tx>, clock?: Clock, keepsakes?: KeepsakeUses<Tx> }
+// `links` swaps what asks Google's short links (default: the real fetch, which a test must not reach).
+export interface MediaWiring { storage?: ObjectStorage, jobs?: JobQueue<Tx>, clock?: Clock, keepsakes?: KeepsakeUses<Tx>, links?: MapsLinks }
 
 // `categories` lets a test stand in for the category repository (the delete race).
 export function createContentHttp({ pool, db }: ReturnType<typeof openTestDatabase>, readClock: Clock = systemClock, media: MediaWiring = {}, categories: CategoryRepository<Tx> = createCategoryRepository()) {
@@ -97,6 +99,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     listMedia: makeListMedia(libraryDeps),
     getMediaUses: makeGetMediaUses({ ...libraryDeps, media: createMediaRepository() }),
     describeMedia: makeDescribeMedia({ uow, media: createMediaRepository(), audit: createAuditLog(writeClock), clock: writeClock }),
+    resolveMapsLink: makeResolveMapsLink({ links: media.links ?? createMapsLinks(), clock: writeClock }),
     retireLibraryMedia: makeRetireLibraryMedia({ ...libraryDeps, media: createMediaRepository(), jobs, audit: createAuditLog(writeClock), clock: writeClock, graceHours: 24 }),
   })
   // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.

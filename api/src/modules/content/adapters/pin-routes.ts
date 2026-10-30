@@ -1,5 +1,5 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
-import type { Localized, Pin, PinListEntry, PinStoryOption } from '@sk/domain/content'
+import type { Pin, PinListEntry, PinStoryOption } from '@sk/domain/content'
 import type { Actor } from '@sk/domain/identity'
 import type { AppEnv } from '../../../platform/http/app.ts'
 import type { Result } from '../application/failure.ts'
@@ -20,7 +20,7 @@ export interface PinUseCases {
   listPinStoryOptions: (actor: Actor, storeId: string) => Promise<Result<PinStoryOption[]>>
   createPin: (actor: Actor, storeId: string, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
   savePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, changes: PinChanges, requestId: string | null) => Promise<Result<Pin>>
-  publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null, slug?: Localized) => Promise<Result<Pin>>
+  publishPin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<Pin>>
   hidePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<Pin>>
   deletePin: (actor: Actor, storeId: string, pinId: string, ifMatch: number, requestId: string | null) => Promise<Result<{ id: string }>>
 }
@@ -145,7 +145,7 @@ export function registerPinRoutes(app: OpenAPIHono<AppEnv>, useCases: PinUseCase
     const ifMatch = readIfMatch(c)
     if (!ifMatch.ok)
       return ifMatch.response
-    const result = await useCases.publishPin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'), c.req.valid('json').slug)
+    const result = await useCases.publishPin(c.get('actor'), c.get('store').storeId, c.req.valid('param').pinId, ifMatch.version, c.get('requestId'))
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(pinView(result.value), 200, etag(result.value))

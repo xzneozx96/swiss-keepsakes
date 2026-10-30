@@ -8,6 +8,7 @@ import {
   hasText,
   languagesOf,
   pinPublishGaps,
+  pinSlugBase,
   storyMediaIds,
   storyVersionCheckGaps,
   storyVersionPublishGaps,
@@ -51,6 +52,12 @@ describe('[E2.6] content/pin', () => {
   it('[E2.6][AC68] a title in DE only publishes with a DE-only slug', () => {
     expect(pinPublishGaps({ title: { de: 'Brücke' }, slug: { de: 'bruecke' }, latitude: 1, longitude: 2 })).toEqual([])
     expect(pinPublishGaps({ title: { de: 'Brücke' }, slug: { en: 'bridge' }, latitude: 1, longitude: 2 })).toEqual(['slug'])
+  })
+
+  it('[E7] the slug base of a pin title folds umlauts and falls back to place', () => {
+    expect(pinSlugBase('Kapellbrücke Luzern')).toBe('kapellbruecke-luzern')
+    expect(pinSlugBase('Löwendenkmal Straße')).toBe('loewendenkmal-strasse')
+    expect(pinSlugBase('!!!')).toBe('place')
   })
 
   it('[E2.6][AC79] only a never-published pin can be deleted', () => {

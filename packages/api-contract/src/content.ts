@@ -31,10 +31,11 @@ const slugMapSchema = z.strictObject({
   de: z.string().max(200).regex(slugPattern, 'Lower-case letters and digits, separated by single dashes').optional(),
 }).refine(map => map.en !== undefined || map.de !== undefined, 'Give a slug in at least one language')
 
-// What a pin publish may carry: the web address for each language the publish adds (ADR-015).
+// A pin publish needs no body: the server makes the web address (slug) of each language from its title. The `slug`
+// key is still accepted so a client that sends one keeps working, and it is ignored.
 export const pinPublishBodySchema = z.strictObject({
-  slug: slugMapSchema.optional(),
-}).meta({ id: 'PinPublishBody', description: 'Optional. The slug is the web address for a language the publish adds. A live language with a different slug is refused with 409 slug-conflict, so rename it with a save' })
+  slug: slugMapSchema.optional().meta({ deprecated: true, description: 'Ignored. The server makes the slug from the title' }),
+}).meta({ id: 'PinPublishBody', description: 'Optional and empty in practice. The server makes the slug of each language from its title at the first publish and keeps it afterwards (ADR-014), so a publish never fails for a missing slug when a title exists' })
 
 // What a tour publish may carry: the same as a pin publish.
 export const tourPublishBodySchema = z.strictObject({
@@ -89,7 +90,7 @@ export const pinWriteBodySchema = z.strictObject({
   title: localizedTextSchema.optional(),
   tip: localizedLongTextSchema.optional(),
   localTip: localizedTextSchema.optional(),
-  slug: slugMapSchema.nullable().optional(),
+  slug: slugMapSchema.nullable().optional().meta({ deprecated: true, description: 'Ignored. The server makes the slug (the map link) of each language from its title: before the first publish it follows the title, after it the slug is locked' }),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
   address: noNul(z.string().trim().min(1).max(300)).nullable().optional(),
@@ -171,6 +172,15 @@ export const pinStoryOptionSchema = z.object({
   title: localizedView,
   publishedLanguages: z.array(language),
 }).meta({ id: 'PinStoryOption', description: 'A story group the pin can name as its main story' })
+
+export const mapsLinkQuerySchema = z.object({
+  url: z.string().trim().min(1).max(2000).meta({ description: 'A Google Maps short link: https://maps.app.goo.gl/<code> or https://goo.gl/maps/<code>' }),
+}).meta({ id: 'MapsLinkQuery' })
+
+export const mapsLinkPositionSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+}).meta({ id: 'MapsLinkPosition', description: 'The position a Google Maps short link points to' })
 
 export const pinStoryOptionListSchema = z.object({ items: z.array(pinStoryOptionSchema) }).meta({ id: 'PinStoryOptionList', description: 'Story groups of the store, most recently created first' })
 
@@ -488,6 +498,7 @@ export type Pin = z.infer<typeof pinSchema>
 export type PinListItem = z.infer<typeof pinListItemSchema>
 export type PinList = z.infer<typeof pinListSchema>
 export type PinStoryOption = z.infer<typeof pinStoryOptionSchema>
+export type MapsLinkPosition = z.infer<typeof mapsLinkPositionSchema>
 export type PinStoryOptionList = z.infer<typeof pinStoryOptionListSchema>
 export type StoryDraft = z.infer<typeof storyDraftSchema>
 export type StoryGroupCreateBody = z.infer<typeof storyGroupCreateBodySchema>

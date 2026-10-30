@@ -9,6 +9,7 @@ import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
 import { makeCreateProduct, makeCreateVariant, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
+import { createMapsLinks } from './modules/content/adapters/maps-link-fetch.ts'
 import { createMediaLogAlert } from './modules/content/adapters/media-alert.ts'
 import { createMediaQueues, startMediaWorkers } from './modules/content/adapters/media-jobs.ts'
 import { createMediaLibrary } from './modules/content/adapters/media-library-repository.ts'
@@ -20,7 +21,7 @@ import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createS3Storage, createUnconfiguredStorage } from './modules/content/adapters/s3-storage.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFailMedia, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makePurgeOldVersions, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeRetireLibraryMedia, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFailMedia, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makePurgeOldVersions, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -220,6 +221,7 @@ async function main() {
       listMedia: makeListMedia(libraryDeps),
       getMediaUses: makeGetMediaUses({ ...libraryDeps, media: createMediaRepository() }),
       describeMedia: makeDescribeMedia({ uow, media: createMediaRepository(), audit, clock: systemClock }),
+      resolveMapsLink: makeResolveMapsLink({ links: createMapsLinks(), clock: systemClock }),
       retireLibraryMedia: makeRetireLibraryMedia({ ...libraryDeps, media: createMediaRepository(), jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
     })
     // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.

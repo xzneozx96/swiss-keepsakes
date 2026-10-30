@@ -138,6 +138,7 @@ export function createFakeContentUseCases(): ContentUseCases {
     describeMedia: async (_actor, storeId, mediaId, changes) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId, name: changes.name ?? fakeMedia.name } }),
     replaceMedia: async (_actor, storeId, mediaId) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId, version: 2 } }),
     retireLibraryMedia: async (_actor, storeId, mediaId) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId, status: 'retired' } }),
+    resolveMapsLink: async () => ({ ok: true, value: { latitude: 47.0502, longitude: 8.3093 } }),
     publicUrl: key => `https://storage.test/media/${key}`,
     listMerchantCategories: async (_actor, storeId) => ({ ok: true, value: [{ ...fakeCategory, storeId }] }),
     createCategory: async (_actor, storeId, _kind, input) => ({ ok: true, value: { ...fakeCategory, storeId, name: input.name as CategoryRow['name'] } }),

@@ -22,8 +22,8 @@ async function auditRows(entityId: string) {
 }
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-const located = { latitude: 47.0502, longitude: 8.3093, slug: { en: 'chapel-bridge' } }
-const slugFor = () => `bridge-${randomUUID().slice(0, 8)}`
+const located = { latitude: 47.0502, longitude: 8.3093 }
+const tag = () => randomUUID().slice(0, 8)
 
 describe('[E2.6] the pin routes over the real app and the database', () => {
   it('[E2.6] AC-1 end to end: create, save with the returned ETag, stale save 412, no header 428', async () => {
@@ -35,10 +35,13 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     const pin = await created.json() as { id: string, rowVersion: number, status: string, draft: { title: { en: string } } }
     expect(pin).toMatchObject({ status: 'draft', rowVersion: 1, draft: { title: { en: 'Chapel Bridge' } } })
 
-    const saved = await env.call(`${pins}/${pin.id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': created.headers.get('ETag')! }, body: { ...located, slug: { en: slugFor() }, address: 'Kapellbrücke, Lucerne' } })
+    const saved = await env.call(`${pins}/${pin.id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': created.headers.get('ETag')! }, body: { ...located, slug: { en: 'client-chosen' }, address: 'Kapellbrücke, Lucerne' } })
     expect(saved.status).toBe(200)
     expect(saved.headers.get('ETag')).toBe('"2"')
-    expect(await saved.json()).toMatchObject({ rowVersion: 2, address: 'Kapellbrücke, Lucerne', draft: { title: { en: 'Chapel Bridge' } } })
+    const savedBody = await saved.json() as { slug: { en: string } }
+    expect(savedBody).toMatchObject({ rowVersion: 2, address: 'Kapellbrücke, Lucerne', draft: { title: { en: 'Chapel Bridge' } } })
+    // The server makes the slug from the title and ignores the client's.
+    expect(savedBody.slug.en).toMatch(/^chapel-bridge(-\d+)?$/)
 
     const stale = await env.call(`${pins}/${pin.id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: { address: 'elsewhere' } })
     expect(stale.status).toBe(412)
@@ -66,7 +69,7 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
 
   it('[E2.6] a repeated command with the same Idempotency-Key and body replays the first response and writes one audit row', async () => {
     const { owner, pins } = await env.storeWithStaff()
-    const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Lion Monument' }, ...located, slug: { en: slugFor() } } })).json() as { id: string }
+    const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Lion Monument' }, ...located } })).json() as { id: string }
     const publish = (key: string) => env.call(`${pins}/${created.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' }, key })
     const key = `publish-${randomUUID()}`
 
@@ -88,7 +91,7 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
   // D11: a 412 is stored and replayed like any refusal, and If-Match is part of the request hash.
   it('[E2.6] a 412 is replayed for the same key and If-Match, a newer If-Match under that key is 422, and under a new key it runs', async () => {
     const { owner, pins } = await env.storeWithStaff()
-    const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Museggmauer' }, ...located, slug: { en: slugFor() } } })).json() as { id: string }
+    const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Museggmauer' }, ...located } })).json() as { id: string }
     const publish = (key: string, version: string) => env.call(`${pins}/${created.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': version }, key })
     const key = `publish-${randomUUID()}`
 
@@ -148,29 +151,18 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect(await count(pool, 'select count(*) from content.places where id = $1 and address is null', [theirs.id])).toBe(1)
   })
 
-  it('[E2.6][AC30] over HTTP a live English pin gains German with a slug body, and a taken or missing German slug is refused', async () => {
+  it('[E2.6][AC30] over HTTP a live English pin gains German at the publish with no slug in the body, and the German slug is the next free one', async () => {
     const { owner, pins } = await env.storeWithStaff()
-    const { id } = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Chapel Bridge' }, ...located, slug: { en: slugFor() } } })).json() as { id: string }
+    const t = tag()
+    const { id } = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: `Chapel Bridge ${t}` }, ...located } })).json() as { id: string }
     expect((await env.call(`${pins}/${id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' } })).status).toBe(200)
-    const bilingual = { title: { en: 'Chapel Bridge', de: 'Kapellbruecke' } }
-    await env.call(`${pins}/${id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '2' }, body: bilingual })
-    const publish = (body?: object) => env.call(`${pins}/${id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '3' }, body })
+    await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: `Lion Monument ${t}`, de: `Kapellbruecke ${t}` } } })
+    await env.call(`${pins}/${id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '2' }, body: { title: { en: `Chapel Bridge ${t}`, de: `Kapellbruecke ${t}` } } })
 
-    const missing = await publish()
-    expect(missing.status).toBe(422)
-    expect(await missing.json()).toMatchObject({ type: 'publish-incomplete', errors: [{ path: 'slug' }] })
+    const done = await env.call(`${pins}/${id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '3' } })
 
-    const taken = slugFor()
-    await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Lion Monument', de: 'Loewendenkmal' }, slug: { en: slugFor(), de: taken } } })
-    const clash = await publish({ slug: { de: taken } })
-    expect(clash.status).toBe(409)
-    expect(await clash.json()).toMatchObject({ type: 'content-slug-taken' })
-    expect((await pool.query('select row_version, status from content.places where id = $1', [id])).rows[0]).toEqual({ row_version: 3, status: 'published' })
-
-    const de = slugFor()
-    const done = await publish({ slug: { de } })
     expect(done.status).toBe(200)
-    expect(await done.json()).toMatchObject({ rowVersion: 4, slug: { de }, published: { title: { en: 'Chapel Bridge', de: 'Kapellbruecke' } } })
+    expect(await done.json()).toMatchObject({ rowVersion: 4, slug: { en: `chapel-bridge-${t}`, de: `kapellbruecke-${t}-2` }, published: { title: { en: `Chapel Bridge ${t}`, de: `Kapellbruecke ${t}` } } })
   })
 
   it('[E2.6][AC85] publish end to end writes the audit row and the response has mainStoryGroupId null', async () => {
@@ -179,10 +171,10 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
 
     const incomplete = await env.call(`${pins}/${created.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' } })
     expect(incomplete.status).toBe(422)
-    expect(await incomplete.json()).toMatchObject({ type: 'publish-incomplete', errors: expect.arrayContaining([expect.objectContaining({ path: 'slug' }), expect.objectContaining({ path: 'location' })]) })
+    expect(await incomplete.json()).toMatchObject({ type: 'publish-incomplete', errors: [expect.objectContaining({ path: 'location' })] })
     expect(await auditRows(created.id)).toEqual([])
 
-    const saved = await env.call(`${pins}/${created.id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: { ...located, slug: { en: slugFor() } } })
+    const saved = await env.call(`${pins}/${created.id}`, { method: 'PATCH', headers: { ...owner.headers, 'If-Match': '1' }, body: located })
     const published = await env.call(`${pins}/${created.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': saved.headers.get('ETag')! } })
 
     expect(published.status).toBe(200)
@@ -198,7 +190,7 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
 
   it('[E2.6][AC79] hide writes the audit row, and a pin that was published cannot be deleted', async () => {
     const { owner, manager, pins, storeId } = await env.storeWithStaff()
-    const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Lion Monument' }, ...located, slug: { en: slugFor() } } })).json() as { id: string }
+    const created = await (await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Lion Monument' }, ...located } })).json() as { id: string }
     await env.call(`${pins}/${created.id}/publish`, { method: 'POST', headers: { ...owner.headers, 'If-Match': '1' } })
 
     const hidden = await env.call(`${pins}/${created.id}/hide`, { method: 'POST', headers: { ...manager.headers, 'If-Match': '2' } })
@@ -236,14 +228,16 @@ describe('[E2.6] the pin routes over the real app and the database', () => {
     expect((await env.call(`${pins}/${created.id}`, { method: 'DELETE', headers: { ...owner.headers, 'If-Match': '1' } })).status).toBe(404)
   })
 
-  it('[E2.6] a slug another pin of the store holds answers 409 content-slug-taken, never 500', async () => {
+  it('[E2.6][AC30] a second pin with the same title gets the next free slug over HTTP, never a 409 or a 500', async () => {
     const { owner, pins } = await env.storeWithStaff()
-    const slug = slugFor()
-    await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'One' }, slug: { en: slug } } })
+    const t = tag()
 
-    const second = await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: 'Two' }, slug: { en: slug } } })
+    const first = await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: `One ${t}` }, slug: { en: 'client-chosen' } } })
+    const second = await env.call(pins, { method: 'POST', headers: owner.headers, body: { title: { en: `One ${t}` } } })
 
-    expect(second.status).toBe(409)
-    expect(await second.json()).toMatchObject({ type: 'content-slug-taken' })
+    expect(first.status).toBe(201)
+    expect(second.status).toBe(201)
+    expect(await first.json()).toMatchObject({ slug: { en: `one-${t}` } })
+    expect(await second.json()).toMatchObject({ slug: { en: `one-${t}-2` } })
   })
 })

@@ -55,6 +55,10 @@ export function createFakePins(): PinRepository<null> & { rows: Map<string, Pin>
         updatedAt: pin.updatedAt,
       }))
     },
+    async lockSlugs() {},
+    async slugsTaken(_tx, language, exceptPinId) {
+      return new Set([...rows.values()].filter(pin => pin.id !== exceptPinId).flatMap(pin => pin.slug?.[language] ?? []))
+    },
     async storyOptions() {
       return []
     },
