@@ -1,6 +1,6 @@
 # Map kit design: one reusable map for pins and routes
 
-- Status: **proposed**, written 2026-10-30. Design only: no product code was written.
+- Status: **accepted 2026-10-30** (all 10 recommendations in section 10), written 2026-10-30. Owner additions, same day: a blurred loading overlay on every map (A), compact map controls: a small zoom pill and round compass and fullscreen buttons with a 44 px hit area (B), the place editor review opens the story in a bottom sheet inside the phone (C), the pin card is the tour-style `MapCard` (D). Build started in the order of section 8.
 - Owner request: put the tour route map's info card, its controls and its credits position on the pin map, and "create a reusable map component to display both pins and routes, reused among different screens".
 - Read first: `AGENTS.md`, `docs/development-rules/frontend/heroui-and-styling.md` (reuse shared UI, matching skeletons), `components-and-hooks.md`, `docs/ux/pins-design.md`, ADR-006, ADR-030.
 - Evidence: `.factory/runs/20261029-sprint7-release1/evidence/map-kit-tour-map-before.png` (the card, controls and credits the owner likes) and `map-kit-guest-map-before.png` (the pin map today, 390 px). Other sessions have uncommitted edits in `components/aerial-map/map-credits.tsx`, `features/map/components/map-screen.tsx`, `features/places/components/{map-picker,place-preview}.tsx` and new `components/map-controls.tsx`; the inventory reads the working tree as of this commit.
@@ -158,6 +158,8 @@ Look check: the two "before" screenshots are the reference; after steps 3 to 6 d
 - **Unverified:** nothing here was run in a browser except the two screenshots; the German strings and the 3D tour on a real phone were not checked.
 
 ## 10. Open questions for the owner
+
+**Accepted 30.10.2026: the owner accepted all 10 recommendations below.** Where the owner's additions change a recommendation, they win: the controls (Q2, Q3, Q10) take the compact look of addition B, and the loading look (Q7) is the blurred overlay of addition A.
 
 1. **Compass on flat maps.** Every map but the 3D tour cannot rotate or tilt, so a compass would do nothing. Recommendation: show the compass only where the bearing can change (the 3D tour), and give flat maps zoom and fullscreen only.
 2. **Fullscreen on the guest Map tab.** It already fills the screen. Recommendation: no fullscreen button there; keep it on the tour route map, and offer it to the itinerary editor only if asked.
