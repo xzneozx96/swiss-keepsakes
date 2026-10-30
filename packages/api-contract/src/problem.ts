@@ -51,6 +51,10 @@ export const problemTypes = [
   'upload-missing',
   'media-content-mismatch',
   'media-processing',
+  'media-in-use',
+  'media-already-retired',
+  'media-not-ready',
+  'media-kind-mismatch',
   'storage-unavailable',
   'category-has-children',
   'category-in-use',
@@ -75,6 +79,7 @@ export const problemSchema = z.object({
     code: z.string().optional().meta({ description: 'With a catalog refusal: a stable code the screen translates, such as value-in-use' }),
     params: z.record(z.string(), z.union([z.string(), z.number()])).optional().meta({ description: 'With a code: the numbers and names the message uses' }),
   })).optional(),
+  pages: z.int().optional().meta({ description: 'With media-in-use: how many pages use the file' }),
   mediaIds: z.array(z.string()).optional().meta({ description: 'With media-processing: the ids of the files that are not ready yet' }),
   checks: z.record(z.string(), z.enum(['ok', 'failed'])).optional(),
 }).meta({ id: 'Problem', description: 'RFC 9457 problem details, sent as application/problem+json' })

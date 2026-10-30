@@ -1131,6 +1131,64 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/store/{storeId}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: {
+                    kind?: "image" | "audio" | "pdf";
+                    page?: number;
+                    pageSize?: number;
+                    /** @description Matches the name only, in any case */
+                    q?: string;
+                    /** @description Comma separated: processing, ready, retired. Empty means all three */
+                    status?: string;
+                    /** @description Comma separated: unused, drafts, published. A file matches any of them */
+                    use?: string;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One page of the library, with the counts for its tabs and filters */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MediaList"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/media/{mediaId}": {
         parameters: {
             query?: never;
@@ -1158,6 +1216,194 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["Media"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    mediaId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MediaPatch"];
+                };
+            };
+            responses: {
+                /** @description The file with its new name or description */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MediaItem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/store/{storeId}/media/{mediaId}/replace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    mediaId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReplaceMedia"];
+                };
+            };
+            responses: {
+                /** @description The file now holds the new upload: same id, next version, new storage key. Every page that uses it shows it */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MediaItem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/media/{mediaId}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    mediaId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The file is retired. It is refused while any page uses it */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MediaItem"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/store/{storeId}/media/{mediaId}/uses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    mediaId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The pages that use the file: stories, places, tours and keepsakes */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MediaUses"];
                     };
                 };
                 /** @description An RFC 9457 problem. `type` says what went wrong */
@@ -3282,6 +3528,8 @@ export interface components {
         ConditionState: "met" | "unmet" | "pending";
         /** @description The upload to confirm */
         ConfirmUpload: {
+            /** @description The name of the file on the uploader's device. It becomes the name in the library. A blank one is replaced by a default name */
+            fileName?: string;
             /** @description The uploadKey of the grant, after the file was PUT */
             uploadKey: string;
         };
@@ -3383,6 +3631,117 @@ export interface components {
                 width: number;
             }[];
             width: number | null;
+        };
+        /** @description The description of a file in each language. It is the alt text guests with a screen reader hear */
+        MediaAlt: {
+            de?: string;
+            en?: string;
+        };
+        /** @description A file of the library with its name, description and use */
+        MediaItem: {
+            alt: components["schemas"]["MediaAlt"];
+            byteSize: number;
+            contentType: string;
+            /** Format: date-time */
+            createdAt: string;
+            durationSeconds: number | null;
+            /** @description The file name of the latest upload */
+            fileName: string;
+            height: number | null;
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "image" | "audio" | "pdf";
+            /** @description What the merchant sees and searches. It starts as the uploaded file name */
+            name: string;
+            /** @description The public URL of the original. Null until the file is ready */
+            publicUrl: string | null;
+            /** @enum {string} */
+            status: "processing" | "ready" | "retired";
+            /** @description Only in the list. An answer to a change leaves it out: read the list again for the pages */
+            usage?: {
+                /** @description The pages that use the file only in a draft */
+                drafts: number;
+                /** @description The pages that use the file. A story counts once per language version, keepsakes count too */
+                pages: number;
+                /** @description The pages that show the file in their published version */
+                published: number;
+            };
+            /** @description Resized copies of an image. Empty until the file is ready */
+            variants: {
+                url: string;
+                width: number;
+            }[];
+            /** @description Starts at 1. A replacement adds one */
+            version: number;
+            width: number | null;
+        };
+        /** @description One page of the library */
+        MediaList: {
+            items: components["schemas"]["MediaItem"][];
+            /** @description Every file of each kind, retired ones too. Search and filters do not change them */
+            kinds: {
+                audio: number;
+                image: number;
+                pdf: number;
+            };
+            page: number;
+            pageSize: number;
+            /** @description The files of this kind that match the search and the use filter, by status */
+            statuses: {
+                processing: number;
+                ready: number;
+                retired: number;
+            };
+            /** @description The files that match, before paging */
+            total: number;
+            /** @description The files of this kind that match the search and the status filter, by use */
+            uses: {
+                drafts: number;
+                published: number;
+                unused: number;
+            };
+        };
+        /** @description The name and description of a file */
+        MediaPatch: {
+            /** @description Replaces the description. A language left out keeps its text; an empty string clears it */
+            alt?: {
+                de?: string;
+                en?: string;
+            };
+            name?: string;
+        };
+        /** @description One page that uses a file */
+        MediaUse: {
+            /**
+             * @description Only for a story: its language version
+             * @enum {string|null}
+             */
+            language: "en" | "de" | null;
+            /**
+             * Format: uuid
+             * @description A story group, place, tour or keepsake id
+             */
+            pageId: string;
+            /** @enum {string} */
+            pageKind: "story" | "place" | "tour" | "keepsake";
+            published: boolean;
+            /**
+             * @description What the file is on that page
+             * @enum {string}
+             */
+            role: "cover" | "text" | "pdf" | "stop" | "photo";
+            thumbnailUrl: string | null;
+            /** @description The page title. A story has its own language only */
+            title: {
+                de?: string;
+                en?: string;
+            };
+        };
+        /** @description Where a file is used, on published pages and only in drafts */
+        MediaUses: {
+            drafts: components["schemas"]["MediaUse"][];
+            published: components["schemas"]["MediaUse"][];
         };
         Member: {
             /** Format: date-time */
@@ -3742,11 +4101,13 @@ export interface components {
             instance: string;
             /** @description With media-processing: the ids of the files that are not ready yet */
             mediaIds?: string[];
+            /** @description With media-in-use: how many pages use the file */
+            pages?: number;
             /** @description The server's id for this request, also sent as X-Request-Id */
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
             type: string;
         };
         /** @description A keepsake with its working copy, variants and publish checks */
@@ -4684,6 +5045,12 @@ export interface components {
              */
             language?: "en" | "de";
         };
+        /** @description The new file for an existing one */
+        ReplaceMedia: {
+            fileName?: string;
+            /** @description The uploadKey of a grant, after the new file was PUT. It must be the same kind of file */
+            uploadKey: string;
+        };
         ResendManagerInvitation: {
             /**
              * @description The language of the invitation mail N18. The store's default language when left out
@@ -5615,7 +5982,7 @@ export interface components {
         UploadRequest: {
             /** @description The size of the file in bytes */
             byteSize: number;
-            /** @description The type of the file: image/jpeg, image/png, image/webp, audio/mpeg or application/pdf */
+            /** @description The type of the file: image/jpeg, image/png, image/webp, audio/mpeg, audio/mp4 (M4A) or application/pdf */
             contentType: string;
         };
         /** @description The label per language. One language is enough */

@@ -62,7 +62,7 @@ function setup(storage?: FakeStorage) {
   const env = createContentHttp({ pool, db }, undefined, { storage: fake, jobs: recording, clock })
   const run = {
     process: makeProcessMedia({ uow, media, storage: fake, clock }),
-    retire: makeRetireMedia({ uow, media, storage: fake, clock }),
+    retire: makeRetireMedia({ uow, media, storage: fake, keepsakes: { list: async () => [] }, clock }),
     sweep: makeSweepUploads({ storage: fake, clock }),
   }
   type Staff = Awaited<ReturnType<typeof env.storeWithStaff>>

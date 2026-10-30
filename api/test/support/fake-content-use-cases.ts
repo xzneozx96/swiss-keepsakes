@@ -1,6 +1,7 @@
 import type { Pin, StoryGroup, StoryVersion, TourGuide } from '@sk/domain/content'
 import type { ContentUseCases } from '../../src/modules/content/adapters/routes.ts'
 import type { CategoryRow, MediaRecord } from '../../src/modules/content/ports.ts'
+import { mediaDefaults } from './fake-media.ts'
 
 export const fakePin: Pin = {
   id: '0190f0c2-0000-7000-8000-0000000000a1',
@@ -72,6 +73,7 @@ export const fakeStoryVersion: StoryVersion = {
 }
 
 export const fakeMedia: MediaRecord = {
+  ...mediaDefaults,
   id: '0190f0c2-0000-7000-8000-0000000000f1',
   storeId: '0190f0c2-0000-7000-8000-00000000000a',
   kind: 'image',
@@ -131,6 +133,11 @@ export function createFakeContentUseCases(): ContentUseCases {
     requestUpload: async (_actor, storeId, input) => ({ ok: true, value: { uploadKey: `${storeId}/0190f0c2-0000-7000-8000-0000000000e1.jpg`, url: 'https://storage.test/uploads/fake', method: 'PUT', headers: { 'Content-Type': input.contentType }, expiresAt: '2026-10-28T10:15:00.000Z', kind: 'image' } }),
     confirmUpload: async (_actor, storeId) => ({ ok: true, value: { ...fakeMedia, storeId } }),
     getMedia: async (_actor, storeId, mediaId) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId } }),
+    listMedia: async () => ({ ok: true, value: { rows: [], total: 0, kinds: { image: 0, audio: 0, pdf: 0 }, uses: { unused: 0, drafts: 0, published: 0 }, statuses: { processing: 0, ready: 0, retired: 0 } } }),
+    getMediaUses: async () => ({ ok: true, value: { published: [], drafts: [], thumbnails: new Map() } }),
+    describeMedia: async (_actor, storeId, mediaId, changes) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId, name: changes.name ?? fakeMedia.name } }),
+    replaceMedia: async (_actor, storeId, mediaId) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId, version: 2 } }),
+    retireLibraryMedia: async (_actor, storeId, mediaId) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId, status: 'retired' } }),
     publicUrl: key => `https://storage.test/media/${key}`,
     listMerchantCategories: async (_actor, storeId) => ({ ok: true, value: [{ ...fakeCategory, storeId }] }),
     createCategory: async (_actor, storeId, _kind, input) => ({ ok: true, value: { ...fakeCategory, storeId, name: input.name as CategoryRow['name'] } }),

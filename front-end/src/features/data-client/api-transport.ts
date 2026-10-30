@@ -38,13 +38,24 @@ export async function answer<T>(call: Promise<{ data?: T, error?: unknown, respo
   return data
 }
 
-export function timeout() {
-  return { signal: AbortSignal.timeout(TIMEOUT_MS) }
+export function timeout(ms = TIMEOUT_MS) {
+  return { signal: AbortSignal.timeout(ms) }
+}
+
+/** A call that works on a file (the API reads it and builds its sizes) gets more time than a JSON call. */
+export const FILE_CALL_TIMEOUT_MS = 60_000
+
+const UPLOAD_BASE_MS = 60_000
+const UPLOAD_PER_MB_MS = 3_000
+
+/** The time a file may take to reach storage: 60 s and 3 s per MB, so 50 MB may take 3.5 minutes (about 2 Mbit/s). */
+export function uploadTimeoutMs(byteSize: number) {
+  return UPLOAD_BASE_MS + Math.ceil(byteSize / 1_048_576) * UPLOAD_PER_MB_MS
 }
 
 // The key belongs to the user's intent (`useIdempotencyKey`), so a retry after a timeout repeats the same request, and the API replays its answer.
-export function keyed(idempotencyKey: string) {
-  return { ...timeout(), headers: { 'Idempotency-Key': idempotencyKey } }
+export function keyed(idempotencyKey: string, ms = TIMEOUT_MS) {
+  return { ...timeout(ms), headers: { 'Idempotency-Key': idempotencyKey } }
 }
 
 // The demo QueryClient never refetches and never retries, which suits browser-held data. Reads

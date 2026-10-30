@@ -1,7 +1,7 @@
 import type { Media } from '@sk/api-contract'
 
 import { checkUploadRequest } from '@sk/domain/content'
-import { answer, keyed, loadClient, problemOf, timeout } from '@/features/data-client/api-transport'
+import { answer, FILE_CALL_TIMEOUT_MS, keyed, loadClient, problemOf, timeout, uploadTimeoutMs } from '@/features/data-client/api-transport'
 
 /** Waits for the worker, which resizes the photo: a few seconds, so ten at most. */
 const POLL_MS = 800
@@ -38,12 +38,12 @@ export async function uploadPhoto(storeId: string, file: File): Promise<Media> {
     params: { path: { storeId } },
     body: { contentType: file.type, byteSize: file.size },
   }))
-  const put = await fetch(grant.url, { method: grant.method, headers: grant.headers, body: file, signal: timeout().signal })
+  const put = await fetch(grant.url, { method: grant.method, headers: grant.headers, body: file, signal: timeout(uploadTimeoutMs(file.size)).signal })
 
   if (!put.ok)
     throw new PhotoUploadError('failed')
   let media = await answer(client.POST('/api/store/{storeId}/media/confirm', {
-    ...keyed(crypto.randomUUID()),
+    ...keyed(crypto.randomUUID(), FILE_CALL_TIMEOUT_MS),
     params: { path: { storeId } },
     body: { uploadKey: grant.uploadKey },
   }))

@@ -3,6 +3,7 @@ import type { CommandDeps } from './platform/http/app.ts'
 import process from 'node:process'
 import { guardUseCases as guardCatalogUseCases } from './modules/catalog/adapters/database-errors.ts'
 import { createMediaDirectory } from './modules/catalog/adapters/media-directory.ts'
+import { createMediaUses } from './modules/catalog/adapters/media-uses.ts'
 import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
 import { makeCreateProduct, makeCreateVariant, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from './modules/catalog/index.ts'
@@ -10,6 +11,7 @@ import { createCategoryRepository } from './modules/content/adapters/category-re
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
 import { createMediaLogAlert } from './modules/content/adapters/media-alert.ts'
 import { createMediaQueues, startMediaWorkers } from './modules/content/adapters/media-jobs.ts'
+import { createMediaLibrary } from './modules/content/adapters/media-library-repository.ts'
 import { createMediaRepository } from './modules/content/adapters/media-repository.ts'
 import { mediaView } from './modules/content/adapters/media-view.ts'
 import { createPinRepository } from './modules/content/adapters/pin-repository.ts'
@@ -18,7 +20,7 @@ import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createS3Storage, createUnconfiguredStorage } from './modules/content/adapters/s3-storage.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeFailMedia, makeGetMap, makeGetMedia, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeRequestUpload, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFailMedia, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makePurgeOldVersions, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeRetireLibraryMedia, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
@@ -108,6 +110,9 @@ async function main() {
   // Confirm sends a media job, so the queues exist before the first send, for every role.
   await createMediaQueues(jobs.boss)
   // R5: with no AWS_* the service starts, and the media routes answer 503 storage-unavailable.
+  // Content asks the catalog which files keepsakes hold as photos (ADR-013: by plain id, through the composition root),
+  // so a photo that only keepsakes show counts as used.
+  const keepsakeUses = createMediaUses()
   const storage = config.storage ? createS3Storage(createS3Client(config.storage), config.storage.endpoint) : createUnconfiguredStorage()
   if (config.ROLE !== 'api') {
     if (!config.storage)
@@ -115,7 +120,8 @@ async function main() {
     await startMediaWorkers(jobs.boss, {
       processMedia: makeProcessMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, warn: event => logger.warn(event, 'media source not deleted') }),
       failMedia: makeFailMedia({ uow, media: createMediaRepository(), storage, clock: systemClock, alert: createMediaLogAlert(logger) }),
-      retireMedia: makeRetireMedia({ uow, media: createMediaRepository(), storage, clock: systemClock }),
+      retireMedia: makeRetireMedia({ uow, media: createMediaRepository(), storage, keepsakes: keepsakeUses, clock: systemClock }),
+      purgeVersions: makePurgeOldVersions({ uow, media: createMediaRepository(), storage, clock: systemClock }),
       sweepMedia: makeSweepUploads({ storage, clock: systemClock }),
     })
     const sentMail = createSentMailRepository()
@@ -183,6 +189,7 @@ async function main() {
     const tourDeps = { uow, tours: createTourRepository(), media: createMediaRepository(), audit, clock: systemClock, jobs: createJobQueue(jobs.boss), graceHours: config.MEDIA_GRACE_HOURS }
     const categoryDeps = { uow, categories: createCategoryRepository(), audit, clock: systemClock }
     const readDeps = { uow, reads: createPublicReadRepository(), clock: systemClock }
+    const libraryDeps = { uow, library: createMediaLibrary(), keepsakes: keepsakeUses }
     const writeUseCases = guardUseCases({
       listMerchantPins: makeListMerchantPins(pinDeps),
       getMerchantPin: makeGetMerchantPin(pinDeps),
@@ -210,6 +217,10 @@ async function main() {
       saveCategory: makeSaveCategory(categoryDeps),
       reorderCategories: makeReorderCategories(categoryDeps),
       deleteCategory: makeDeleteCategory(categoryDeps),
+      listMedia: makeListMedia(libraryDeps),
+      getMediaUses: makeGetMediaUses({ ...libraryDeps, media: createMediaRepository() }),
+      describeMedia: makeDescribeMedia({ uow, media: createMediaRepository(), audit, clock: systemClock }),
+      retireLibraryMedia: makeRetireLibraryMedia({ ...libraryDeps, media: createMediaRepository(), jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
     })
     // The reads fail with an exception, not a Result, so guardUseCases does not fit them: a database error is a 500.
     const contentUseCases = {
@@ -218,6 +229,7 @@ async function main() {
       // They touch storage, so guardUseCases does not wrap them: the media routes map a StorageUnavailableError.
       confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, newId: () => crypto.randomUUID() }),
       getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+      replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
       publicUrl: storage.publicUrl,
       listStories: makeListStories(readDeps),
       getStory: makeGetStory(readDeps),

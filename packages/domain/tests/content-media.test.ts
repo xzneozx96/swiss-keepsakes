@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   checkUploadRequest,
   confirmedKey,
+  cleanFileName,
   confirmedPrefix,
+  defaultMediaName,
+  isCurrentObject,
   MEDIA_RULES,
   mediaPrefix,
   mediaRuleFor,
@@ -13,6 +16,7 @@ import {
   uploadKey,
   variantKey,
   variantWidthsFor,
+  versionedKey,
 } from '../src/content'
 
 const MiB = 1024 * 1024
@@ -20,10 +24,11 @@ const storeId = '0b5f3a52-6c1e-4c53-9c0e-1d2f3a4b5c6d'
 const uuid = '9f1c2d3e-4a5b-4c6d-8e7f-0a1b2c3d4e5f'
 
 describe('[E2.7] MEDIA_RULES', () => {
-  it('[E2.7] carries the caps, widths and timings', () => {
-    expect(MEDIA_RULES.types['image/jpeg']).toEqual({ kind: 'image', ext: 'jpg', maxBytes: 10 * MiB })
-    expect(MEDIA_RULES.types['audio/mpeg']).toEqual({ kind: 'audio', ext: 'mp3', maxBytes: 30 * MiB })
-    expect(MEDIA_RULES.types['application/pdf']).toEqual({ kind: 'pdf', ext: 'pdf', maxBytes: 25 * MiB })
+  it('[E2.7][E4.11][AC51] carries the caps, widths and timings', () => {
+    expect(MEDIA_RULES.types['image/jpeg']).toEqual({ kind: 'image', ext: 'jpg', maxBytes: 20 * MiB })
+    expect(MEDIA_RULES.types['audio/mpeg']).toEqual({ kind: 'audio', ext: 'mp3', maxBytes: 50 * MiB })
+    expect(MEDIA_RULES.types['audio/mp4']).toEqual({ kind: 'audio', ext: 'm4a', maxBytes: 50 * MiB })
+    expect(MEDIA_RULES.types['application/pdf']).toEqual({ kind: 'pdf', ext: 'pdf', maxBytes: 30 * MiB })
     expect(MEDIA_RULES.variantWidths).toEqual([320, 640, 1280, 1920])
     expect(MEDIA_RULES.maxInputPixels).toBe(70_000_000)
     expect(MEDIA_RULES.abandonedUploadHours).toBe(24)
@@ -38,19 +43,23 @@ describe('[E2.7] MEDIA_RULES', () => {
   })
 })
 
-describe('[E2.7] checkUploadRequest', () => {
+describe('[E2.7][E4.11][AC51] checkUploadRequest', () => {
   it.each([
     ['image/jpeg', 2 * MiB, { ok: true, kind: 'image', ext: 'jpg' }],
     ['image/png', 1, { ok: true, kind: 'image', ext: 'png' }],
     ['image/webp', 1, { ok: true, kind: 'image', ext: 'webp' }],
-    ['audio/mpeg', 30 * MiB, { ok: true, kind: 'audio', ext: 'mp3' }],
+    ['audio/mpeg', 50 * MiB, { ok: true, kind: 'audio', ext: 'mp3' }],
+    ['audio/mpeg', 50 * MiB + 1, { ok: false, reason: 'too-large' }],
+    ['audio/mp4', 50 * MiB, { ok: true, kind: 'audio', ext: 'm4a' }],
+    ['audio/mp4', 50 * MiB + 1, { ok: false, reason: 'too-large' }],
     ['application/pdf', 1000, { ok: true, kind: 'pdf', ext: 'pdf' }],
-    ['application/pdf', 25 * MiB, { ok: true, kind: 'pdf', ext: 'pdf' }],
-    ['application/pdf', 25 * MiB + 1, { ok: false, reason: 'too-large' }],
+    ['application/pdf', 30 * MiB, { ok: true, kind: 'pdf', ext: 'pdf' }],
+    ['application/pdf', 30 * MiB + 1, { ok: false, reason: 'too-large' }],
+    ['image/heic', 1000, { ok: false, reason: 'type-not-allowed' }],
     ['image/svg+xml', 1000, { ok: false, reason: 'type-not-allowed' }],
     ['text/html', 1000, { ok: false, reason: 'type-not-allowed' }],
-    ['image/jpeg', 10 * MiB + 1, { ok: false, reason: 'too-large' }],
-    ['image/jpeg', 10 * MiB, { ok: true, kind: 'image', ext: 'jpg' }],
+    ['image/jpeg', 20 * MiB + 1, { ok: false, reason: 'too-large' }],
+    ['image/jpeg', 20 * MiB, { ok: true, kind: 'image', ext: 'jpg' }],
     ['image/jpeg', 0, { ok: false, reason: 'empty' }],
     ['image/jpeg', -5, { ok: false, reason: 'empty' }],
   ])('[E2.7] %s at %i bytes', (contentType, byteSize, expected) => {
@@ -77,6 +86,8 @@ describe('[E2.7] sniffContentType', () => {
     ['audio/mpeg', [0xFF, 0xF3, 0x90, 0x00]],
     ['audio/mpeg', [0xFF, 0xE3, 0x90, 0x00]],
     ['application/pdf', [...ascii('%PDF-1.7')]],
+    ['audio/mp4', [0, 0, 0, 0x20, ...ascii('ftypM4A '), 0, 0, 0, 0, ...ascii('M4A mp42isom')]],
+    ['audio/mp4', [0, 0, 0, 0x1C, ...ascii('ftypmp42'), 0, 0, 0, 0, ...ascii('M4A '), ...ascii('isom')]],
   ])('[E2.7] recognises %s', (expected, bytes) => {
     expect(sniffContentType(new Uint8Array(bytes))).toBe(expected)
   })
@@ -100,6 +111,14 @@ describe('[E2.7] sniffContentType', () => {
     ['bad sample rate', [0xFF, 0xFB, 0x9C, 0x00]],
     ['reserved version', [0xFF, 0xEB, 0x90, 0x00]],
   ])('[E2.7] refuses %s as MP3', (_name, bytes) => {
+    expect(sniffContentType(new Uint8Array(bytes))).toBeUndefined()
+  })
+
+  it.each([
+    ['an MP4 video', [0, 0, 0, 0x18, ...ascii('ftypmp42'), 0, 0, 0, 0, ...ascii('isom')]],
+    ['a short ftyp', [0, 0, 0, 0x10, ...ascii('ftyp')]],
+    ['a HEIC photo', [0, 0, 0, 0x18, ...ascii('ftypheic'), 0, 0, 0, 0, ...ascii('mif1')]],
+  ])('[E4.11][AC51] refuses %s as M4A', (_name, bytes) => {
     expect(sniffContentType(new Uint8Array(bytes))).toBeUndefined()
   })
 
@@ -142,6 +161,63 @@ describe('[E2.7] keys', () => {
   })
 })
 
+describe('[E4.11][AC51] versioned keys', () => {
+  const mediaId = '1a2b3c4d-1111-4222-8333-444455556666'
+  const sha = 'ab12cd34ef56'.padEnd(64, '0')
+
+  it('[E4.11][AC51] names version n by its number, the first 8 hash characters and the nonce, and never reuses the first version key', () => {
+    const key = versionedKey(storeId, mediaId, 2, sha, 'png', '9f8e7d6c')
+    expect(key).toBe(`${storeId}/${mediaId}/v2-ab12cd34-9f8e7d6c/original.png`)
+    expect(key).not.toBe(originalKey(storeId, mediaId, 'png'))
+    expect(variantKey(key, 640)).toBe(`${storeId}/${mediaId}/v2-ab12cd34-9f8e7d6c/w640.webp`)
+  })
+
+  it('[E4.11][AC51] the same bytes from the same version still get another folder when the nonce differs', () => {
+    const a = versionedKey(storeId, mediaId, 2, sha, 'png', '11111111')
+    const b = versionedKey(storeId, mediaId, 2, sha, 'png', '22222222')
+    expect(a).not.toBe(b)
+    expect(isCurrentObject(a, b)).toBe(false)
+  })
+
+  it('[E4.11][AC51] keeps the objects beside the current key and nothing else of the file', () => {
+    const current = versionedKey(storeId, mediaId, 3, sha, 'jpg', 'aaaaaaaa')
+    const first = originalKey(storeId, mediaId, 'jpg')
+    expect(isCurrentObject(current, variantKey(current, 320))).toBe(true)
+    expect(isCurrentObject(current, current)).toBe(true)
+    expect(isCurrentObject(current, first)).toBe(false)
+    expect(isCurrentObject(current, versionedKey(storeId, mediaId, 2, sha, 'jpg', 'bbbbbbbb'))).toBe(false)
+    // The first version sits in the folder that holds every version: only its own files stay.
+    expect(isCurrentObject(first, variantKey(first, 320))).toBe(true)
+    expect(isCurrentObject(first, current)).toBe(false)
+  })
+})
+
+describe('[E4.11][AC51] file names', () => {
+  it.each([
+    ['Kapellbruecke-Sunrise.JPG', 'Kapellbruecke-Sunrise.JPG'],
+    ['  spaced name.png  ', 'spaced name.png'],
+    ['C:\\Users\\me\\scan.pdf', 'scan.pdf'],
+    ['/tmp/a/b/track.m4a', 'track.m4a'],
+    ['line\nbreak\t.jpg', 'line break .jpg'],
+  ])('[E4.11][AC51] cleans %j to %j', (raw, expected) => {
+    expect(cleanFileName(raw)).toBe(expected)
+  })
+
+  it.each(['', '   ', '...', '/'])('[E4.11][AC51] gives no name for %j', (raw) => {
+    expect(cleanFileName(raw)).toBeUndefined()
+  })
+
+  it('[E4.11][AC51] cuts a long name to 200 characters and keeps the extension', () => {
+    const cleaned = cleanFileName(`${'a'.repeat(300)}.jpg`)!
+    expect(cleaned).toHaveLength(200)
+    expect(cleaned.endsWith('.jpg')).toBe(true)
+  })
+
+  it('[E4.11][AC51] a missing name falls back to the kind and the first 8 characters of the id', () => {
+    expect(defaultMediaName('image', '019a3f2c-aaaa-7bbb-8ccc-dddd00000000', 'jpg')).toBe('image-019a3f2c.jpg')
+  })
+})
+
 describe('[E2.7] variantWidthsFor', () => {
   it.each([
     [500, [320]],
@@ -156,7 +232,7 @@ describe('[E2.7] variantWidthsFor', () => {
 
 describe('[E2.7] media rule lookups', () => {
   it('[E2.7] mediaRuleFor finds a listed type and is undefined for anything else, including object prototype names', () => {
-    expect(mediaRuleFor('application/pdf')).toEqual({ kind: 'pdf', ext: 'pdf', maxBytes: 25 * 1024 * 1024 })
+    expect(mediaRuleFor('application/pdf')).toEqual({ kind: 'pdf', ext: 'pdf', maxBytes: 30 * 1024 * 1024 })
     expect(mediaRuleFor('image/gif')).toBeUndefined()
     expect(mediaRuleFor('constructor')).toBeUndefined()
     expect(mediaRuleFor('__proto__')).toBeUndefined()

@@ -19,6 +19,10 @@ export const queryKeys = {
     list: ['keepsakes', 'list'],
     detail: ['keepsakes', 'detail'],
   },
+  media: {
+    list: ['media', 'list'],
+    uses: ['media', 'uses'],
+  },
   notifications: {
     mail: ['notifications', 'mail'],
   },

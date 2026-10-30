@@ -2,7 +2,7 @@ import type { Tx } from '../../../platform/db/client.ts'
 import type { MediaRecord, MediaRepository, MediaRow } from '../ports.ts'
 import { sql } from 'drizzle-orm'
 
-interface Columns extends Record<string, unknown> {
+export interface Columns extends Record<string, unknown> {
   id: string
   store_id: string
   kind: MediaRecord['kind']
@@ -14,11 +14,18 @@ interface Columns extends Record<string, unknown> {
   width: number | null
   height: number | null
   status: MediaRecord['status']
+  name: string
+  file_name: string
+  alt: MediaRecord['alt']
+  duration_seconds: number | null
+  version: number
+  created_at: string | Date
 }
 
-const columns = sql`id, store_id, kind, storage_key, content_type, byte_size, sha256, width, height, status`
+export const mediaColumns = sql`id, store_id, kind, storage_key, content_type, byte_size, sha256, width, height, status, name, file_name, alt, duration_seconds, version, created_at`
+const columns = mediaColumns
 
-function record(row: Columns): MediaRecord {
+export function record(row: Columns): MediaRecord {
   return {
     id: row.id,
     storeId: row.store_id,
@@ -30,6 +37,12 @@ function record(row: Columns): MediaRecord {
     width: row.width,
     height: row.height,
     status: row.status,
+    name: row.name,
+    fileName: row.file_name,
+    alt: row.alt ?? {},
+    durationSeconds: row.duration_seconds,
+    version: row.version,
+    createdAt: new Date(row.created_at),
   }
 }
 
@@ -44,8 +57,8 @@ export function createMediaRepository(): MediaRepository<Tx> {
     },
     async insert(tx, row, at) {
       const result = await tx.execute<Columns>(sql`
-        insert into content.media (id, store_id, kind, storage_key, content_type, byte_size, sha256, status, created_at, updated_at)
-        values (${row.id}, ${row.storeId}, ${row.kind}, ${row.storageKey}, ${row.contentType}, ${row.byteSize}, ${row.sha256}, 'processing', ${at}, ${at})
+        insert into content.media (id, store_id, kind, storage_key, content_type, byte_size, sha256, name, file_name, status, created_at, updated_at)
+        values (${row.id}, ${row.storeId}, ${row.kind}, ${row.storageKey}, ${row.contentType}, ${row.byteSize}, ${row.sha256}, ${row.name ?? null}, ${row.fileName ?? row.name ?? null}, 'processing', ${at}, ${at})
         returning ${columns}`)
       return record(result.rows[0]!)
     },
@@ -70,6 +83,36 @@ export function createMediaRepository(): MediaRepository<Tx> {
       const result = await tx.execute<Columns>(sql`
         update content.media
         set status = 'retired', retired_at = ${at}, updated_at = ${at}
+        where store_id = ${row.storeId} and id = ${row.id}
+        returning ${columns}`)
+      const updated = result.rows[0]
+      return updated && record(updated)
+    },
+    async describe(tx, row, changes, at) {
+      // The description is merged per language: a language that is left out keeps its text, an empty text clears it.
+      const alt = { ...row.alt }
+      for (const language of ['en', 'de'] as const) {
+        const text = changes.alt?.[language]
+        if (text === undefined)
+          continue
+        if (text === '')
+          delete alt[language]
+        else
+          alt[language] = text
+      }
+      const result = await tx.execute<Columns>(sql`
+        update content.media
+        set name = ${changes.name ?? row.name}, alt = ${JSON.stringify(alt)}::jsonb, updated_at = ${at}
+        where store_id = ${row.storeId} and id = ${row.id}
+        returning ${columns}`)
+      const updated = result.rows[0]
+      return updated && record(updated)
+    },
+    async replace(tx, row, next, at) {
+      const result = await tx.execute<Columns>(sql`
+        update content.media
+        set storage_key = ${next.storageKey}, content_type = ${next.contentType}, byte_size = ${next.byteSize}, sha256 = ${next.sha256},
+            width = ${next.width}, height = ${next.height}, file_name = ${next.fileName}, version = version + 1, updated_at = ${at}
         where store_id = ${row.storeId} and id = ${row.id}
         returning ${columns}`)
       const updated = result.rows[0]

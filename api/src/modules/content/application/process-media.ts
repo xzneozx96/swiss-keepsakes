@@ -1,6 +1,6 @@
 import type { Clock, MediaRepository, MediaWarn, ObjectStorage, UnitOfWork } from '../ports.ts'
-import { confirmedKey, MEDIA_RULES, mediaPrefix, variantKey, variantWidthsFor } from '@sk/domain/content'
-import sharp from 'sharp'
+import { confirmedKey, MEDIA_RULES, mediaPrefix } from '@sk/domain/content'
+import { buildMediaObjects, MEDIA_CACHE_CONTROL } from './build-media-objects.ts'
 
 export interface MediaJob {
   storeId: string
@@ -18,9 +18,7 @@ export interface ProcessMediaDeps<T> {
   maxInputPixels?: number
 }
 
-export const MEDIA_CACHE_CONTROL = 'public, max-age=31536000, immutable'
-
-const formats = { 'image/jpeg': 'jpeg', 'image/png': 'png', 'image/webp': 'webp' } as const
+export { MEDIA_CACHE_CONTROL }
 
 // One attempt of the media job. It reads the confirmed source, writes the public files, then marks the row ready
 // under its lock and deletes the source. Any failure throws, so pg-boss retries; the dead-letter handler
@@ -29,7 +27,6 @@ const formats = { 'image/jpeg': 'jpeg', 'image/png': 'png', 'image/webp': 'webp'
 // a run whose delete failed). Images are re-encoded after rotate() with no metadata (sharp drops it by default),
 // so a public file never carries GPS. Variants are WebP, cut from the oriented image, never enlarged.
 export function makeProcessMedia<T>({ uow, media, storage, clock, warn, maxInputPixels = MEDIA_RULES.maxInputPixels }: ProcessMediaDeps<T>) {
-  const open = (bytes: Uint8Array) => sharp(bytes, { limitInputPixels: maxInputPixels })
   return async ({ storeId, mediaId }: MediaJob): Promise<void> => {
     // A source that stays after the row is ready is harmless, so a failed delete must not fail the job (the retries
     // would end in fail-media). The sweep removes it after orphanedSourceHours.
@@ -54,22 +51,7 @@ export function makeProcessMedia<T>({ uow, media, storage, clock, warn, maxInput
     const source = await storage.get('uploads', sourceKey, row.byteSize)
     if (!source)
       throw new Error('The confirmed source is missing')
-    const headers = { cacheControl: MEDIA_CACHE_CONTROL, ...(row.kind === 'pdf' && { contentDisposition: 'inline' }) }
-
-    let dims: { width: number, height: number } | undefined
-    if (row.kind === 'image') {
-      const format = formats[row.contentType as keyof typeof formats]
-      const { data, info } = await open(source).rotate().toFormat(format).toBuffer({ resolveWithObject: true })
-      dims = { width: info.width, height: info.height }
-      await storage.put('media', row.storageKey, data, { contentType: row.contentType, ...headers })
-      for (const width of variantWidthsFor(info.width)) {
-        const variant = await open(data).resize({ width, withoutEnlargement: true }).webp().toBuffer()
-        await storage.put('media', variantKey(row.storageKey, width), variant, { contentType: 'image/webp', ...headers })
-      }
-    }
-    else {
-      await storage.put('media', row.storageKey, source, { contentType: row.contentType, ...headers })
-    }
+    const dims = await buildMediaObjects(storage, { kind: row.kind, contentType: row.contentType, storageKey: row.storageKey, source }, maxInputPixels)
 
     const outcome = await uow.run(async (tx) => {
       const locked = await media.findById(tx, storeId, mediaId, { forUpdate: true })

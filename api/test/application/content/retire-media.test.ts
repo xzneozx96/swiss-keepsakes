@@ -1,8 +1,8 @@
-import type { MediaRecord } from '../../../src/modules/content/ports.ts'
+import type { KeepsakeUse, MediaRecord } from '../../../src/modules/content/ports.ts'
 import { originalKey, variantKey } from '@sk/domain/content'
 import { describe, expect, it } from 'vitest'
 import { makeRetireMedia } from '../../../src/modules/content/application/retire-media.ts'
-import { createFakeMedia } from '../../support/fake-media.ts'
+import { createFakeMedia, mediaDefaults } from '../../support/fake-media.ts'
 import { createFakeStorage } from '../../support/fake-storage.ts'
 import { createManualClock } from '../../support/manual-clock.ts'
 
@@ -15,13 +15,14 @@ function setup(status: MediaRecord['status'] = 'ready') {
   const clock = createManualClock(new Date('2026-10-28T10:00:00Z'))
   const storage = createFakeStorage(clock)
   const key = originalKey(store, mediaId, 'pdf')
-  const row: MediaRecord = { id: mediaId, storeId: store, kind: 'pdf', contentType: 'application/pdf', storageKey: key, byteSize: 3, sha256: 'a'.repeat(64), width: null, height: null, status }
+  const row: MediaRecord = { id: mediaId, storeId: store, kind: 'pdf', contentType: 'application/pdf', storageKey: key, byteSize: 3, sha256: 'a'.repeat(64), width: null, height: null, status, ...mediaDefaults }
   const media = createFakeMedia([row])
   storage.seed('media', key, new Uint8Array([1, 2, 3]))
   storage.seed('media', variantKey(key, 320), new Uint8Array([1]))
   storage.seed('media', originalKey(store, otherId, 'pdf'), new Uint8Array([9]))
   const uow = { run: <R>(work: (t: null) => Promise<R>) => work(tx) }
-  return { storage, media, retire: makeRetireMedia({ uow, media, storage, clock }), keys: () => [...storage.objects('media').keys()] }
+  const keepsakes = { uses: [] as KeepsakeUse[], list: async () => keepsakes.uses }
+  return { storage, media, keepsakes, retire: makeRetireMedia({ uow, media, storage, keepsakes, clock }), keys: () => [...storage.objects('media').keys()] }
 }
 
 describe('[E2.7] retire-media', () => {
@@ -30,6 +31,14 @@ describe('[E2.7] retire-media', () => {
     await t.retire({ storeId: store, mediaId })
     expect(t.media.rows.get(mediaId)?.status).toBe('retired')
     expect(t.keys()).toEqual([originalKey(store, otherId, 'pdf')])
+  })
+
+  it('[E4.11][AC51] a file a keepsake holds as a photo stays, row and objects', async () => {
+    const t = setup()
+    t.keepsakes.uses.push({ mediaId, productId: 'p1', name: { en: 'Fondue set' }, published: false, coverMediaId: null })
+    await t.retire({ storeId: store, mediaId })
+    expect(t.media.rows.get(mediaId)?.status).toBe('ready')
+    expect(t.keys()).toHaveLength(3)
   })
 
   it('[E2.7][AC51] a file a tour or a story still references stays, row and objects', async () => {

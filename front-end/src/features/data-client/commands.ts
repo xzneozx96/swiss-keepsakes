@@ -20,6 +20,7 @@ interface ReadsWithInput {
   stores: 'onboarding' | 'members' | 'previewInvitation'
   categories: 'list'
   keepsakes: 'list' | 'get'
+  media: 'list' | 'uses'
   places: 'list' | 'get' | 'storyOptions' | 'media'
 }
 
@@ -67,6 +68,13 @@ export const commandAffects: {
     saveVariant: [queryKeys.keepsakes.list],
     saveOptions: [queryKeys.keepsakes.list],
     createVariant: [queryKeys.keepsakes.list],
+  },
+  media: {
+    upload: [queryKeys.media.list],
+    // A replacement changes the file under every page that uses it; the sheet's pages are read again too.
+    replace: [queryKeys.media.list, queryKeys.media.uses],
+    describe: [queryKeys.media.list],
+    retire: [queryKeys.media.list, queryKeys.media.uses],
   },
   notifications: {},
   orders: {

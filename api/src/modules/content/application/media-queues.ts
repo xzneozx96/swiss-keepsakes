@@ -5,4 +5,5 @@ export const mediaQueues = {
   failed: 'media-process-failed',
   retire: 'media-retire',
   sweep: 'media-sweep',
+  purge: 'media-purge',
 } as const

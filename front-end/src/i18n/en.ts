@@ -4,6 +4,7 @@ import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
 import { keepsakesEn } from '@/features/keepsakes/messages'
 import { mapEn } from '@/features/map/messages'
+import { mediaEn } from '@/features/media/messages'
 import { productsEn } from '@/features/merchant/products/messages'
 import { salesOverviewEn } from '@/features/merchant/sales/messages'
 import { partnerDashboardEn } from '@/features/partners/report/messages'
@@ -39,6 +40,7 @@ export const en = {
   ...storesEn,
   ...categoriesEn,
   ...keepsakesEn,
+  ...mediaEn,
   ...placesEn,
   ...mapEn,
 

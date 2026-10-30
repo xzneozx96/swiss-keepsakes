@@ -1,5 +1,8 @@
 import type { MediaRecord, MediaRepository } from '../../src/modules/content/ports.ts'
 
+// The columns of a media row that the library added (E4.11), for a test row that only cares about the others.
+export const mediaDefaults = { name: 'file.jpg', fileName: 'file.jpg', alt: {}, durationSeconds: null, version: 1, createdAt: new Date('2026-10-28T09:00:00Z') } as const
+
 export type FakeMedia = MediaRepository<null> & {
   rows: Map<string, MediaRecord>
   // Ids that isReferenced answers true for.
@@ -30,8 +33,29 @@ export function createFakeMedia(seed: MediaRecord[] = []): FakeMedia {
         return row ? [row] : []
       })
     },
-    async insert(_tx, row) {
-      return store({ ...row, width: null, height: null, status: 'processing' })
+    async insert(_tx, row, at) {
+      const name = row.name ?? `${row.kind}-${row.id.slice(0, 8)}`
+      return store({ ...mediaDefaults, ...row, name, fileName: row.fileName ?? name, createdAt: at, width: null, height: null, status: 'processing' })
+    },
+    async describe(_tx, row, changes) {
+      if (!own(row.storeId, row.id))
+        return undefined
+      const alt = { ...row.alt }
+      for (const language of ['en', 'de'] as const) {
+        const text = changes.alt?.[language]
+        if (text === undefined)
+          continue
+        if (text === '')
+          delete alt[language]
+        else
+          alt[language] = text
+      }
+      return store({ ...row, name: changes.name ?? row.name, alt })
+    },
+    async replace(_tx, row, next) {
+      if (!own(row.storeId, row.id))
+        return undefined
+      return store({ ...row, ...next, version: row.version + 1 })
     },
     async findById(_tx, storeId, id) {
       return own(storeId, id)

@@ -215,3 +215,21 @@ export interface ProductRepository<T> {
   // Writes the options, their values and order, and the new values of the variants, then bumps row_version.
   replaceOptions: (tx: T, product: Product, input: OptionsSave, at: Date) => Promise<Product>
 }
+
+// One keepsake that holds a file as a photo. The content module's media library reads this to count keepsakes as uses
+// of a file (E4.11), so a photo that only keepsakes show is never retired. `published` is true when the keepsake is for
+// sale and the file is among its live photos; any other holding (a draft photo, or live photos of an unpublished
+// keepsake) is a draft-only use.
+export interface MediaUse {
+  mediaId: string
+  productId: string
+  name: Localized
+  published: boolean
+  // The first photo of the keepsake, as the list shows it, for a thumbnail.
+  coverMediaId: string | null
+}
+
+export interface MediaUses<T> {
+  // Every file of this store that a keepsake holds, once per keepsake and file.
+  list: (tx: T, storeId: string) => Promise<MediaUse[]>
+}

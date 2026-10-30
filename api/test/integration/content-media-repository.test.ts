@@ -48,7 +48,10 @@ describe('[E2.7] the media repository', () => {
 
     const inserted = await uow.run(tx => media.insert(tx, row, at))
 
-    expect(inserted).toEqual({ ...row, width: null, height: null, status: 'processing' })
+    expect(inserted).toMatchObject({ ...row, width: null, height: null, status: 'processing', version: 1 })
+    // A row inserted without a name is named by the database.
+    expect(inserted.name).toBe(`${row.kind}-${row.id.slice(0, 8)}.jpg`)
+    expect(inserted.fileName).toBe(inserted.name)
     expect(await uow.run(tx => media.findById(tx, store, row.id))).toEqual(inserted)
   })
 
@@ -200,7 +203,7 @@ describe('[E2.7] isReferenced', () => {
     await pool.query('insert into content.place_photos (place_id, store_id, position, media_id) values ($1, $2, 1, $3)', [pin, store, id])
     const deleted: string[] = []
     const storage = { list: async () => [{ key: 'k' }], delete: async (_bucket: string, key: string) => void deleted.push(key) }
-    const retire = makeRetireMedia({ uow, media, storage: storage as never, clock: { now: () => later } })
+    const retire = makeRetireMedia({ uow, media, storage: storage as never, keepsakes: { list: async () => [] }, clock: { now: () => later } })
 
     expect(await referenced(store, id)).toBe(true)
     await retire({ storeId: store, mediaId: id })

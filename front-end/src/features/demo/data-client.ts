@@ -12,6 +12,7 @@ import { createContentDemoClient } from '@/features/content/api/demo-client'
 import { contentQueries } from '@/features/content/api/queries'
 import { createApiQueryClient, createFeedback } from '@/features/data-client'
 import { createKeepsakesClient } from '@/features/keepsakes/api/api-client'
+import { createMediaClient } from '@/features/media/api/api-client'
 import { createNotificationsDemoClient } from '@/features/notifications/api/demo-client'
 import { notificationsQueries } from '@/features/notifications/api/queries'
 import { createOrdersDemoClient } from '@/features/orders/api/demo-client'
@@ -117,6 +118,7 @@ export function createDemoDataClient(store: DemoStore): DataClient {
     places: createPlacesClient(),
     content: createContentDemoClient(store),
     keepsakes: createKeepsakesClient(),
+    media: createMediaClient(),
     notifications: createNotificationsDemoClient(store),
     orders: createOrdersDemoClient(store),
     partners: createPartnersDemoClient(store),
