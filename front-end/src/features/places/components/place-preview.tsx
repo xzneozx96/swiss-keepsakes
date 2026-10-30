@@ -13,7 +13,7 @@ import { useCategories } from '@/features/categories/api/queries'
 import { PinMap } from '@/features/map/components/pin-map'
 import { PlaceCardRow } from '@/features/map/components/place-card'
 import { MapStatusLayer } from '@/features/map/components/status-layer'
-import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
+import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
 import { useMedia, useStoryOptions } from '../api/queries'
 import { photoIds } from '../lib/form'
 import { PREVIEW_PIN_ID, previewItem, tipIn } from '../lib/preview'
@@ -22,6 +22,8 @@ const NO_PINS: PublicMapItem[] = []
 const NO_LANGUAGES: readonly Language[] = []
 const SELECTED = new Set([PREVIEW_PIN_ID])
 const noop = () => undefined
+/** The card sits about 16 px above the phone's home indicator (it ends 13 px from the bottom): the preview has no tab bar or music button. */
+const CARD_BOTTOM = 29
 
 /** The address of the first photo: the smallest copy wide enough for the card's 84 px thumbnail on a sharp screen. */
 function useCoverSrc(storeId: string, mediaId: string | undefined) {
@@ -65,7 +67,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
       </div>
       <PinMap
         filtered={false}
-        insetBottom={CARD_ROW_BOTTOM + CARD_ROW_HEIGHT}
+        insetBottom={CARD_BOTTOM + CARD_ROW_HEIGHT}
         insetTop={CONTROLS}
         litIds={SELECTED}
         map={map}
@@ -77,7 +79,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
       />
       <MapStatusLayer status={state === 'error' ? 'failed' : drawn ? undefined : 'map-loading'} onRetry={retry} />
       <MapCredits className="absolute start-3 top-14 z-10 max-w-[calc(100%-6rem)]" />
-      <PlaceCardRow extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onClose={noop} onSelect={noop} />
+      <PlaceCardRow bottom={CARD_BOTTOM} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onClose={noop} onSelect={noop} />
     </div>
   )
 }

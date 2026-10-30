@@ -7,6 +7,7 @@ import { useEffect, useRef } from 'react'
 
 import { CloseIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
+import { CARD_ROW_BOTTOM } from '@/features/map/lib/layout'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
 import { PinThumb } from './pin-marker'
 
@@ -84,13 +85,16 @@ function PlaceCard({ pin, active, photoSrc, extras }: { pin: PublicMapItem, acti
 /**
  * The row of place cards above the tab bar. It holds only the places the filter keeps and swipes
  * in step with the pins: the open pin's card slides to the middle, and a swipe that settles on a
- * card opens that pin (once per swipe, not per frame).
+ * card opens that pin (once per swipe, not per frame). It sits `bottom` px above the bottom edge (plus the
+ * home-indicator inset): the default clears the guest tab bar and the music button, a screen without them
+ * passes a smaller one.
  */
 export function PlaceCardRow({
   pins,
   selectedId,
   photoOf,
   extrasOf,
+  bottom = CARD_ROW_BOTTOM,
   onSelect,
   onClose,
 }: {
@@ -100,6 +104,8 @@ export function PlaceCardRow({
   photoOf?: (pin: PublicMapItem) => string | undefined
   /** The tips and category names of a pin, when the caller knows them; without them a card shows neither. */
   extrasOf?: (pin: PublicMapItem) => CardExtras | undefined
+  /** Space under the row (px). The guest map keeps `CARD_ROW_BOTTOM`; the editor's preview has no tab bar or music button. */
+  bottom?: number
   onSelect: (id: string) => void
   onClose: () => void
 }) {
@@ -129,7 +135,8 @@ export function PlaceCardRow({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the row
     <section
       aria-label={t(pins.length === 1 ? 'map.places.one' : 'map.places.other', { count: pins.length })}
-      className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+124px)] z-20"
+      className="absolute inset-x-0 z-20"
+      style={{ bottom: `calc(env(safe-area-inset-bottom,0px) + ${bottom}px)` }}
       onKeyDown={(event) => {
         if (event.key === 'Escape')
           onClose()
