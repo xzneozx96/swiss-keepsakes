@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { PhotoOrder } from '@/components/photo-order'
 
@@ -64,5 +64,51 @@ describe('shared PhotoOrder', () => {
     render(<PhotoOrder items={[{ id: 'a', name: 'Photo 1', thumbnail: <span />, note: <span className="text-xs">Processing the photo…</span> }]} labels={labels} onChange={() => {}} />)
 
     expect(screen.getByText('Processing the photo…')).toBeInTheDocument()
+  })
+})
+
+describe('shared PhotoOrder pending rows', () => {
+  const pending = (over = {}) => ({
+    items: [{ id: 'p1', name: 'bridge.jpg', previewUrl: 'blob:p1', status: 'uploading' as const, label: 'Uploading…' }],
+    list: 'Photos being added',
+    retryText: 'Retry',
+    retry: (name: string) => `Retry ${name}`,
+    onRetry: () => {},
+    onRemove: () => {},
+    ...over,
+  })
+
+  it('shows a row after the ordered list with its picture, state and Remove, and no grip', () => {
+    render(<PhotoOrder items={[{ id: 'a', name: 'Photo a', thumbnail: <span /> }]} labels={labels} pending={pending()} onChange={() => {}} />)
+    const row = within(screen.getByRole('list', { name: 'Photos being added' })).getByRole('listitem')
+
+    expect(row.querySelector('img')).toHaveAttribute('src', 'blob:p1')
+    expect(row).toHaveTextContent('Uploading…')
+    expect(within(row).queryByRole('button', { name: /Move/ })).not.toBeInTheDocument()
+    expect(within(row).queryByRole('button', { name: /Retry/ })).not.toBeInTheDocument()
+    expect(within(row).getByRole('button', { name: 'Remove bridge.jpg' })).toBeInTheDocument()
+    expect(screen.getAllByText('Cover')).toHaveLength(1)
+    expect(within(screen.getByRole('list', { name: 'Photos, in order' })).getAllByRole('listitem')).toHaveLength(1)
+  })
+
+  it('is never the cover: with only pending rows there is no ordered list and no Cover', () => {
+    render(<PhotoOrder items={[]} labels={labels} pending={pending()} onChange={() => {}} />)
+
+    expect(screen.queryByRole('list', { name: 'Photos, in order' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Cover')).not.toBeInTheDocument()
+  })
+
+  it('a failed row says so with its reason and has Retry and Remove that report the row', async () => {
+    const onRetry = vi.fn()
+    const onRemove = vi.fn()
+
+    render(<PhotoOrder items={[]} labels={labels} pending={pending({ items: [{ id: 'p1', name: 'bridge.jpg', previewUrl: 'blob:p1', status: 'failed', label: 'Upload failed', detail: 'This photo is too large.' }], onRetry, onRemove })} onChange={() => {}} />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Upload failed')
+    expect(screen.getByText('This photo is too large.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Retry bridge.jpg' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Remove bridge.jpg' }))
+    expect(onRetry).toHaveBeenCalledWith('p1')
+    expect(onRemove).toHaveBeenCalledWith('p1')
   })
 })

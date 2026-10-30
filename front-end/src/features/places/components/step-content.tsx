@@ -7,6 +7,7 @@ import { CameraIcon, HeadingIcon } from '@/components/icons'
 import { LanguageVersionSwitch } from '@/components/language-version-switch'
 import { PhotoOrder } from '@/components/photo-order'
 import { useLocale } from '@/contexts/locale-context'
+import { usePendingPhotos } from '../hooks/use-pending-photos'
 import { LANGS, MAX_PHOTOS, photoIds, withPhotoIds } from '../lib/form'
 import { Block, Field } from './fields'
 import { PhotoAdd, PhotoState, PhotoThumb } from './photo-field'
@@ -68,10 +69,12 @@ function PhotosBlock({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch' 
   const { t } = useLocale()
   const ids = photoIds(form)
   const nameOf = (index: number) => t('places.photos.title', { n: index + 1 })
+  const photos = usePendingPhotos(storeId, mediaId => patch(current => withPhotoIds([...photoIds(current), mediaId])))
+  const room = MAX_PHOTOS - ids.length - photos.pending.length
 
   return (
     <Block hint={t('places.photos.help')} icon={CameraIcon} title={t('places.photos.card')}>
-      {ids.length > 0
+      {ids.length > 0 || photos.pending.length > 0
         ? (
             <PhotoOrder
               items={ids.map((id, index) => ({
@@ -87,12 +90,27 @@ function PhotosBlock({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch' 
                 moved: (name, position, count) => t('places.photos.moved', { name, position, count }),
                 remove: name => t('places.photos.remove', { name }),
               }}
+              pending={{
+                items: photos.pending.map(item => ({
+                  id: item.key,
+                  name: item.name,
+                  previewUrl: item.previewUrl,
+                  status: item.status,
+                  label: t(item.status === 'uploading' ? 'places.photo.uploading' : 'places.photo.failed'),
+                  detail: item.message && item.message !== 'places.photo.failed' ? t(item.message) : undefined,
+                })),
+                list: t('places.photos.pending'),
+                retryText: t('places.photo.retry'),
+                retry: name => t('places.photo.retryName', { name }),
+                onRetry: photos.retry,
+                onRemove: photos.remove,
+              }}
               onChange={next => patch(withPhotoIds(next))}
             />
           )
         : <p className="text-sm text-pretty text-muted">{t('places.photos.empty')}</p>}
-      {ids.length < MAX_PHOTOS
-        ? <PhotoAdd storeId={storeId} onAdd={mediaId => patch(current => withPhotoIds([...photoIds(current), mediaId]))} />
+      {room > 0
+        ? <PhotoAdd onPick={files => photos.add(files.slice(0, room))} />
         : <p className="text-sm text-muted">{t('places.photos.limit')}</p>}
     </Block>
   )

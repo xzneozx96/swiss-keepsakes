@@ -399,7 +399,7 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
 
     const input = screen.getByLabelText('Tue · Open at')
     const label = document.querySelector(`label[for="${input.id}"]`)!
-    expect([...label.childNodes].map(node => node.textContent)).toEqual(['Tue · ', 'Open at'])
+    expect(Array.from(label.childNodes, node => node.textContent)).toEqual(['Tue · ', 'Open at'])
     expect(label.querySelector('.sr-only')).toHaveTextContent('Tue ·')
     expect(screen.getByLabelText('Tue · Close at')).toBeInTheDocument()
     expect(screen.queryByText(/Opens$|Closes$/)).not.toBeInTheDocument()
@@ -680,8 +680,174 @@ describe('[E4.2][AC68] N17 photos', () => {
     await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'a.gif', { type: 'image/jpeg' }))
 
     expect(await screen.findByText(/This type of file is not allowed/)).toBeInTheDocument()
-    expect(document.querySelector('img')).toBeNull()
+    expect(screen.getByText('Upload failed')).toBeInTheDocument()
     expect(danger).not.toHaveBeenCalled()
+  })
+
+  describe('upload state on the row', () => {
+    const answerUpload = (call: { path: string, method: string }) => {
+      if (call.path === `/api/store/${storeId}/media/uploads`)
+        return Response.json(grant)
+      if (call.path === `/api/store/${storeId}/media/confirm`)
+        return Response.json(media('processing'), { status: 201 })
+      return readyMedia(call) ?? (call.method === 'PUT' ? new Response(null, { status: 200 }) : undefined)
+    }
+    const pendingRows = (name = 'Photos being added') => within(screen.getByRole('list', { name })).getAllByRole('listitem')
+    const hold = () => {
+      let release = () => {}
+
+      api.hold = new Promise<void>((resolve) => {
+        release = resolve
+      })
+
+      return release
+    }
+
+    it('[E4.2][AC68] adds a row at once with the local picture and Uploading…, no grip and no Cover, then it becomes a normal row', async () => {
+      const create = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:bridge')
+      const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+      api.answer = answerUpload
+      await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41) }))
+      const release = hold()
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'bridge.jpg', { type: 'image/jpeg' }))
+
+      const [row] = pendingRows()
+      expect(create).toHaveBeenCalledTimes(1)
+      expect(row).toHaveTextContent('bridge.jpg')
+      expect(within(row!).getByText('Uploading…')).toBeInTheDocument()
+      expect(row!.querySelector('img')).toHaveAttribute('src', 'blob:bridge')
+      expect(row!.querySelector('[role="progressbar"], .spinner')).not.toBeNull()
+      expect(within(row!).queryByRole('button', { name: /^Move/ })).not.toBeInTheDocument()
+      expect(within(row!).getByRole('button', { name: 'Remove bridge.jpg' })).toBeInTheDocument()
+      expect(row).not.toHaveTextContent('Cover')
+      expect(names()).toEqual(['Photo 1'])
+      expect(screen.getAllByText('Uploading…')).toHaveLength(1)
+      release()
+
+      await waitFor(() => expect(names()).toEqual(['Photo 1', 'Photo 2']))
+      expect(screen.queryByRole('list', { name: 'Photos being added' })).not.toBeInTheDocument()
+      expect(screen.queryByText('Uploading…')).not.toBeInTheDocument()
+      expect(revoke).toHaveBeenCalledWith('blob:bridge')
+      expect(rows()[0]).toHaveTextContent('Cover')
+      expect(rows()[1]).not.toHaveTextContent('Cover')
+    })
+
+    it('[E4.2][AC68] with no photo yet, the pending row is not the cover and the empty text is gone', async () => {
+      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:first')
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+      api.answer = answerUpload
+      await openPhotos()
+      const release = hold()
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'first.jpg', { type: 'image/jpeg' }))
+
+      expect(pendingRows()).toHaveLength(1)
+      expect(screen.queryByRole('list', { name: 'Photos, in order' })).not.toBeInTheDocument()
+      expect(screen.queryByText('Cover')).not.toBeInTheDocument()
+      expect(screen.queryByText('No photos yet. The first one you add is the main photo.')).not.toBeInTheDocument()
+      release()
+
+      await waitFor(() => expect(names()).toEqual(['Photo 1']))
+      expect(rows()[0]).toHaveTextContent('Cover')
+    })
+
+    it('[E4.2][AC68] picks several files at once: a row for each, all uploaded, the first of them the cover when there was none', async () => {
+      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:x')
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+      let n = 0
+      api.answer = (call) => {
+        if (call.path === `/api/store/${storeId}/media/confirm`) {
+          n += 1
+
+          return Response.json({ ...media('ready'), id: uuid(60 + n) }, { status: 201 })
+        }
+
+        return answerUpload(call)
+      }
+      await openPhotos()
+      const release = hold()
+      await userEvent.upload(screen.getByTestId('places-photo-input'), [new File(['a'], 'a.jpg', { type: 'image/jpeg' }), new File(['b'], 'b.jpg', { type: 'image/jpeg' })])
+
+      expect(pendingRows().map(row => row.querySelector('.line-clamp-2')!.textContent)).toEqual(['a.jpg', 'b.jpg'])
+      release()
+
+      await waitFor(() => expect(names()).toEqual(['Photo 1', 'Photo 2']))
+      await press('Save draft')
+      await waitFor(() => expect(writes()).toHaveLength(1))
+      expect(writes()[0]!.body).toMatchObject({ coverMediaId: uuid(61), photos: [{ mediaId: uuid(62) }] })
+    })
+
+    it('[E4.2][AC68] a photo still processing is a normal row with a spinner over its picture and Processing… under its name', async () => {
+      api.answer = (call) => {
+        if (call.path.includes('/media/') && call.method === 'GET')
+          return Response.json({ ...media('processing'), id: call.path.split('/').at(-1) })
+      }
+      await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41) }))
+
+      expect(await screen.findByText('Processing…')).toBeInTheDocument()
+      expect(rows()[0]!.querySelector('.spinner')).not.toBeNull()
+      expect(within(rows()[0]!).getByRole('button', { name: /^Move Photo 1/ })).toBeInTheDocument()
+    })
+
+    it('[E4.2][AC68] a failed upload keeps its row with the error, the reason, Retry and Remove; Retry uploads it again', async () => {
+      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:bad')
+      const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+      let refuse = true
+      api.answer = call => (call.path === `/api/store/${storeId}/media/uploads` && refuse ? problem(422, 'media-too-large') : answerUpload(call))
+      await openPhotos()
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'big.jpg', { type: 'image/jpeg' }))
+
+      const [row] = await waitFor(() => {
+        const found = pendingRows()
+
+        expect(found[0]).toHaveTextContent('Upload failed')
+
+        return found
+      })
+      expect(row).toHaveTextContent('This photo is too large.')
+      expect(row!.querySelector('img')).toHaveAttribute('src', 'blob:bad')
+      expect(within(row!).getByRole('button', { name: 'Remove big.jpg' })).toBeInTheDocument()
+      refuse = false
+      await userEvent.click(within(row!).getByRole('button', { name: 'Retry uploading big.jpg' }))
+
+      await waitFor(() => expect(names()).toEqual(['Photo 1']))
+      expect(screen.queryByRole('list', { name: 'Photos being added' })).not.toBeInTheDocument()
+      expect(revoke).toHaveBeenCalledWith('blob:bad')
+    })
+
+    it('[E4.2][AC68] Remove on a failed row drops it, and on a row that is still uploading it never reaches the form', async () => {
+      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:gone')
+      const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+      api.answer = answerUpload
+      await openPhotos()
+      const release = hold()
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'gone.jpg', { type: 'image/jpeg' }))
+      await userEvent.click(within(pendingRows()[0]!).getByRole('button', { name: 'Remove gone.jpg' }))
+
+      expect(screen.queryByRole('list', { name: 'Photos being added' })).not.toBeInTheDocument()
+      expect(revoke).toHaveBeenCalledWith('blob:gone')
+      release()
+      await waitFor(() => expect(api.calls.some(call => call.path === `/api/store/${storeId}/media/confirm`)).toBe(true))
+      await new Promise(resolve => setTimeout(resolve, 20))
+      expect(screen.getByText('No photos yet. The first one you add is the main photo.')).toBeInTheDocument()
+    })
+
+    it('[E4.2][AC68] says Wird hochgeladen… and Hochladen fehlgeschlagen in German', async () => {
+      vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:de')
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+      api.answer = call => (call.path === `/api/store/${storeId}/media/uploads` ? problem(503, 'storage-unavailable') : undefined)
+      api.pin = pinOf({ id: uuid(10) })
+      await open('new', { language: 'de' })
+      await heading('Ort auf der Karte')
+      await press('Weiter')
+      await heading('Text und Foto')
+      const release = hold()
+      await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'a.jpg', { type: 'image/jpeg' }))
+
+      expect(within(screen.getByRole('list', { name: 'Fotos, die gerade hinzugefügt werden' })).getByText('Wird hochgeladen…')).toBeInTheDocument()
+      release()
+      expect(await screen.findByText('Hochladen fehlgeschlagen')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'a.jpg erneut hochladen' })).toBeInTheDocument()
+    })
   })
 
   it('[E4.2][AC68] shows the main photo first and the extra photos after it, each with a grip, a thumbnail and Remove', async () => {
