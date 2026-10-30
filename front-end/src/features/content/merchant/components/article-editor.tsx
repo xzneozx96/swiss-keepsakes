@@ -17,6 +17,7 @@ import { formatDate } from '@sk/domain/shared'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import { useConfirm } from '@/components/confirm-dialog'
 import {
   BackIcon,
@@ -25,8 +26,8 @@ import {
   StatusSuccessIcon,
 } from '@/components/icons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
-import { StatusChip } from '@/components/status-chip'
 
+import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import {
   ActionPanel,
@@ -38,10 +39,6 @@ import { LinksCard, LinkSheet, RelatedCard, StorySheet } from './article-links'
 import { ArticleSections } from './article-sections'
 import { ERROR_SELECTOR, Field, PickerField } from './editor-fields'
 import { AudioSheet, PhotoSheet } from './media-sheets'
-
-/** Same choice card as M08, M15 and the M04 sheets: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 type Status = 'new' | 'draft' | 'published'
 

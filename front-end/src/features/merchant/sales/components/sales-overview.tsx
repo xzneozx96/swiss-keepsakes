@@ -35,8 +35,9 @@ import {
   YAxis,
 } from 'recharts'
 
-import { DataTable } from '@/components/data-table'
+import { choiceCard } from '@/components/choice-card'
 
+import { DataTable } from '@/components/data-table'
 import { EmptyState } from '@/components/empty-state'
 import {
   ChevronDownIcon,
@@ -61,9 +62,6 @@ export const noAnimation = { isAnimationActive: false } as const
 export const MIX_COLOURS = ['var(--chart-1)', 'var(--chart-4)']
 const MIX_TRACKS = ['var(--chart-track)', 'var(--chart-4-track)']
 const tick = { fill: 'var(--muted)', fontSize: 11 }
-
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /**
  * Phones: the periods in a bottom sheet. A preset applies and closes at once; "Custom range"

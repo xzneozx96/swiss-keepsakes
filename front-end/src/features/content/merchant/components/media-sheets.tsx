@@ -1,8 +1,9 @@
 import { Button, Label, Radio, RadioGroup } from '@heroui/react'
 import { useState } from 'react'
 
-import { SelectedIcon } from '@/components/icons'
+import { choiceCard } from '@/components/choice-card'
 
+import { SelectedIcon } from '@/components/icons'
 import { InfoNote } from '@/components/info-note'
 import { Media } from '@/components/media'
 import { SheetFrame } from '@/components/sheet-frame'
@@ -11,10 +12,6 @@ import { libraryAudio, libraryPhotos } from '../lib/media-library'
 
 const DASHES = /-/g
 const TRAILING_NUMBER = /-\d+$/
-
-/** Same choice card as M08, M15 and the M04 sheets: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /** "lucerne-old-town" → "lucerne old town", to name a photo without a caption. */
 const readable = (slug: string) => slug.replace(TRAILING_NUMBER, '').replace(DASHES, ' ')

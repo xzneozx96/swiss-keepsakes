@@ -16,18 +16,15 @@ import {
   toast,
 } from '@heroui/react'
 
-import { SheetFrame } from '@/components/sheet-frame'
+import { choiceCard } from '@/components/choice-card'
 
+import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import {
   methodLabelKeys,
   offlineMethods,
   useRecordPayment,
 } from '../hooks/use-record-payment'
-
-/** Same choice card as the M04 change and decline sheets: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /**
  * M08 Record payment (spec §4.7, §5.5): a bottom sheet over M04 for money received

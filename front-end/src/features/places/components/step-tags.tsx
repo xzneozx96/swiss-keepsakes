@@ -4,11 +4,12 @@ import type { MessageKey } from '@/i18n/en'
 import { Description, Label, ListBox, Radio, RadioGroup, Select, Switch } from '@heroui/react'
 import { foodKinds, interestCodes, serviceTypes } from '@sk/domain/content'
 
+import { choiceCard } from '@/components/choice-card'
 import { SparkleIcon } from '@/components/icons'
 import { MultiSelect } from '@/components/multi-select'
 import { useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
-import { Block, choiceCard } from './fields'
+import { Block } from './fields'
 
 const NONE = 'none'
 const STAYS = ['short_stay', 'multi_day', 'both'] as const

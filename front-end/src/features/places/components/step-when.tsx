@@ -4,10 +4,11 @@ import type { MessageKey } from '@/i18n/en'
 
 import { Button, Radio, RadioGroup } from '@heroui/react'
 
+import { choiceCard } from '@/components/choice-card'
 import { ClockIcon, PlusIcon, TodayIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { emptyDate } from '../lib/form'
-import { Block, choiceCard, Field } from './fields'
+import { Block, Field } from './fields'
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7] as const
 

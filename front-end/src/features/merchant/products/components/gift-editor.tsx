@@ -26,6 +26,7 @@ import { firstPhoto, formatMoney, formatShortDate, isEmptyDoc, numberFormat, pic
 import { Link } from '@tanstack/react-router'
 import { useRef } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import {
   ClockIcon,
   ContentIcon,
@@ -65,10 +66,6 @@ import {
   useStepBar,
 } from './step-shell'
 import { StoryCard } from './story-card'
-
-/** Same choice card as M08 and the M04 sheets: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /** A whole-number field (days, hours, units) in the M08 field style. */
 function CountField({

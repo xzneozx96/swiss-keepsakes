@@ -4,12 +4,12 @@ import type { Language } from '@sk/domain/shared'
 import { Button, FieldError, Form, Input, Label, Radio, RadioGroup, TextField } from '@heroui/react'
 import { useState } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useSubmit } from '@/features/data-client/use-command'
 import { useIdempotencyKey } from '../hooks/use-idempotency-key'
-import { choiceCard } from '../lib/choice-card'
 import { ProblemNotice } from './problem-notice'
 
 interface Draft { name?: string, language?: Language }

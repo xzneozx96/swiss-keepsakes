@@ -7,10 +7,6 @@ import { useId } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 
-/** The same choice card as the other merchant screens: an ink frame when selected. */
-export const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
-
 /** One text field: its label, an optional help line, and the error under it in words. */
 export function Field({ label, hiddenPrefix, value, onChange, lang, description, error, rows, maxLength, placeholder, inputMode, type, className }: {
   label: string

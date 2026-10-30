@@ -21,6 +21,7 @@ import { zurichDate } from '@sk/domain/catalog'
 
 import { formatMoney } from '@sk/domain/shared'
 import { useState } from 'react'
+import { choiceCard } from '@/components/choice-card'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { useDemoNow } from '@/features/demo'
@@ -29,10 +30,6 @@ import {
   offlineMethods,
 } from '@/features/merchant/record-payment/hooks/use-record-payment'
 import { usePartnerActions } from '@/features/partners/hooks/use-partner-actions'
-
-/** Same choice card as M08: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 /**
  * M16 "Record as paid" (step 5.4, AC13) in the M08 sheet frame: money the shop paid the

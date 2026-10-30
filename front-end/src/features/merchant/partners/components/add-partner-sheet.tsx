@@ -13,6 +13,7 @@ import {
 } from '@heroui/react'
 import { useState } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import {
@@ -21,10 +22,6 @@ import {
 } from '@/features/partners/hooks/use-partner-actions'
 
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/
-
-/** Same choice card as M08 and the M04 sheets: ink frame when selected. */
-const choiceCard
-  = 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
 
 const kinds: Partner['kind'][] = ['hotel', 'guide', 'other']
 

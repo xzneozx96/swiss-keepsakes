@@ -419,6 +419,18 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
 })
 
 describe('[E4.2][AC41][AC68] N17 tags and the home fields', () => {
+  it('[E4.2][AC41] the visitor cards are the shared choice cards: the selected one has the red accent border, not ink', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await nextTo('Categories and tags')
+
+    const card = screen.getByRole('radio', { name: /All visitors/ }).closest('[data-slot="radio"]')!
+    expect(card).toHaveAttribute('data-selected', 'true')
+    expect(card).toHaveClass('data-[selected=true]:border-accent', 'data-[selected=true]:ring-accent')
+    expect(card.className).not.toContain('border-foreground')
+    expect(screen.getByRole('radio', { name: /Short stay visitors/ }).closest('[data-slot="radio"]')).not.toHaveAttribute('data-selected', 'true')
+  })
+
   it('[E4.2][AC41] offers the five fixed interests, and saves local-activities with the home fields', async () => {
     api.pin = pinOf({ id: uuid(10) })
     await open('new')

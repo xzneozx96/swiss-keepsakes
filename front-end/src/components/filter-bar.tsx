@@ -7,6 +7,7 @@ import {
 } from '@heroui/react'
 import { useState } from 'react'
 
+import { choiceCard } from '@/components/choice-card'
 import { ChevronDownIcon, CloseIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
@@ -145,7 +146,7 @@ function OptionList({ group, roomy }: { group: FilterGroup, roomy: boolean }) {
             key={option.id}
             className={`${
               roomy
-                ? 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
+                ? choiceCard
                 : 'min-h-9 justify-center rounded-lg px-3 hover:bg-default'
             } ${depth ? 'ms-6' : ''}`}
             value={option.id}
