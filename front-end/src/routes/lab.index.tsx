@@ -10,6 +10,11 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/opening-hours' as const,
+    title: 'Opening hours editor (place editor, step When): four options',
+    note: 'Compact week rows, a visual week timeline, presets with a summary, and day-chip sets, each editing the same sample week as HoursSpan[]. The current seven tall cards take a full screen (30.10.2026).',
+  },
+  {
     to: '/lab/home' as const,
     title: 'Home: a local friend’s briefing (C01, S2), approved',
     note: 'The approved home: sky hero and map, the practical bits, See these first, free routes, the food map, While you’re in town, Victorinox and the advice banner. Section order fixed; answers only order cards inside sections. English only. Search S2 “One list” (approved) below. Spec: docs/ux/home-design.md (28.10.2026).',

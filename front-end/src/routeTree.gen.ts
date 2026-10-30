@@ -37,6 +37,7 @@ import { Route as LabMapRouteImport } from './routes/lab.map'
 import { Route as LabMapLoadingRouteImport } from './routes/lab.map-loading'
 import { Route as LabMediaRouteImport } from './routes/lab.media'
 import { Route as LabOnboardingFullscreenRouteImport } from './routes/lab.onboarding-fullscreen'
+import { Route as LabOpeningHoursRouteImport } from './routes/lab.opening-hours'
 import { Route as LabOrderCardsRouteImport } from './routes/lab.order-cards'
 import { Route as LabPinsRouteImport } from './routes/lab.pins'
 import { Route as LabPrivateTourRouteImport } from './routes/lab.private-tour'
@@ -245,6 +246,11 @@ const LabMediaRoute = LabMediaRouteImport.update({
 const LabOnboardingFullscreenRoute = LabOnboardingFullscreenRouteImport.update({
   id: '/lab/onboarding-fullscreen',
   path: '/lab/onboarding-fullscreen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LabOpeningHoursRoute = LabOpeningHoursRouteImport.update({
+  id: '/lab/opening-hours',
+  path: '/lab/opening-hours',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LabOrderCardsRoute = LabOrderCardsRouteImport.update({
@@ -634,6 +640,7 @@ export interface FileRoutesByFullPath {
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
+  '/lab/opening-hours': typeof LabOpeningHoursRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
@@ -730,6 +737,7 @@ export interface FileRoutesByTo {
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
+  '/lab/opening-hours': typeof LabOpeningHoursRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
@@ -830,6 +838,7 @@ export interface FileRoutesById {
   '/lab/map-loading': typeof LabMapLoadingRoute
   '/lab/media': typeof LabMediaRoute
   '/lab/onboarding-fullscreen': typeof LabOnboardingFullscreenRoute
+  '/lab/opening-hours': typeof LabOpeningHoursRoute
   '/lab/order-cards': typeof LabOrderCardsRoute
   '/lab/pins': typeof LabPinsRoute
   '/lab/private-tour': typeof LabPrivateTourRoute
@@ -931,6 +940,7 @@ export interface FileRouteTypes {
     | '/lab/map-loading'
     | '/lab/media'
     | '/lab/onboarding-fullscreen'
+    | '/lab/opening-hours'
     | '/lab/order-cards'
     | '/lab/pins'
     | '/lab/private-tour'
@@ -1027,6 +1037,7 @@ export interface FileRouteTypes {
     | '/lab/map-loading'
     | '/lab/media'
     | '/lab/onboarding-fullscreen'
+    | '/lab/opening-hours'
     | '/lab/order-cards'
     | '/lab/pins'
     | '/lab/private-tour'
@@ -1126,6 +1137,7 @@ export interface FileRouteTypes {
     | '/lab/map-loading'
     | '/lab/media'
     | '/lab/onboarding-fullscreen'
+    | '/lab/opening-hours'
     | '/lab/order-cards'
     | '/lab/pins'
     | '/lab/private-tour'
@@ -1223,6 +1235,7 @@ export interface RootRouteChildren {
   LabMapLoadingRoute: typeof LabMapLoadingRoute
   LabMediaRoute: typeof LabMediaRoute
   LabOnboardingFullscreenRoute: typeof LabOnboardingFullscreenRoute
+  LabOpeningHoursRoute: typeof LabOpeningHoursRoute
   LabOrderCardsRoute: typeof LabOrderCardsRoute
   LabPinsRoute: typeof LabPinsRoute
   LabPrivateTourRoute: typeof LabPrivateTourRoute
@@ -1439,6 +1452,13 @@ declare module '@tanstack/react-router' {
       path: '/lab/onboarding-fullscreen'
       fullPath: '/lab/onboarding-fullscreen'
       preLoaderRoute: typeof LabOnboardingFullscreenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lab/opening-hours': {
+      id: '/lab/opening-hours'
+      path: '/lab/opening-hours'
+      fullPath: '/lab/opening-hours'
+      preLoaderRoute: typeof LabOpeningHoursRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lab/order-cards': {
@@ -2117,6 +2137,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabMapLoadingRoute: LabMapLoadingRoute,
   LabMediaRoute: LabMediaRoute,
   LabOnboardingFullscreenRoute: LabOnboardingFullscreenRoute,
+  LabOpeningHoursRoute: LabOpeningHoursRoute,
   LabOrderCardsRoute: LabOrderCardsRoute,
   LabPinsRoute: LabPinsRoute,
   LabPrivateTourRoute: LabPrivateTourRoute,
