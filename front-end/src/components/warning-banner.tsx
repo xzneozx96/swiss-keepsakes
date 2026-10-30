@@ -19,6 +19,9 @@ export interface WarningBannerProps {
 /** The action button: the solid warning colour, 6.9:1 for its white text, readable on the amber banner. */
 const actionClass = (className: string) => buttonVariants({ className: `${className} bg-warning text-warning-foreground hover:bg-warning-hover`, size: 'sm', variant: 'primary' })
 
+/** The close button: a plain X in the title colour, no circle, no hover background, a 32 px hit area; the focus ring stays. */
+const closeClass = 'relative size-8 bg-transparent text-warning-soft-foreground hover:bg-transparent'
+
 /** Whether the banner was closed in this browser session. */
 function dismissedIn(key: string) {
   try {
@@ -74,7 +77,7 @@ export function WarningBanner({ title, action, closeLabel, dismissKey }: Warning
           <Link className={actionClass('mt-3 sm:hidden')} to={action.to}>{action.label}</Link>
         </Alert.Content>
         <Link className={actionClass('relative hidden shrink-0 sm:inline-flex')} to={action.to}>{action.label}</Link>
-        <CloseButton aria-label={closeLabel} className="relative" onPress={close} />
+        <CloseButton aria-label={closeLabel} className={closeClass} onPress={close} />
       </Alert>
     </div>
   )
