@@ -80,7 +80,7 @@ export function MultiSelect({ label, options, value, onChange, description, plac
         <Autocomplete.Filter filter={contains}>
           {/* The list opens on the search: typing narrows it at once. */}
           {/* eslint-disable-next-line jsx-a11y/no-autofocus */}
-          <SearchField autoFocus aria-label={t('multiSelect.search', { label })} variant="secondary">
+          <SearchField autoFocus aria-label={t('multiSelect.search', { label })}>
             <SearchField.Group>
               <SearchField.SearchIcon />
               <SearchField.Input placeholder={t('multiSelect.search', { label })} />

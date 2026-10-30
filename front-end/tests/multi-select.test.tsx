@@ -56,6 +56,16 @@ describe('multiSelect', () => {
     expect(root.querySelector('.autocomplete__trigger')).not.toBeNull()
   })
 
+  it('gives the search field in the list the plain form field look, not the grey secondary variant', async () => {
+    render(<Harness />)
+    await open()
+
+    const search = screen.getByRole('searchbox', { name: 'Search Categories' }).closest('.search-field')!
+
+    expect(search).toHaveClass('search-field--primary')
+    expect(search).not.toHaveClass('search-field--secondary')
+  })
+
   it('shows the label, the placeholder and the help line, with the list closed', () => {
     render(<Harness description="Pick any number." />)
 
