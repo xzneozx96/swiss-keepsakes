@@ -1,4 +1,5 @@
 import type { Map as MapLibreMap, Marker } from 'maplibre-gl'
+import type { ReactNode } from 'react'
 
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { useEffect, useRef, useState } from 'react'
@@ -25,11 +26,15 @@ const markerShape
  * MapLibre loads by dynamic import, never with the editor's first paint. If it cannot load, `onFailed` lets the
  * step show coordinate fields instead.
  */
-export function MapPicker({ lat, lng, onPlace, onFailed }: {
+export function MapPicker({ lat, lng, onPlace, onFailed, attached, children }: {
   lat: number | null
   lng: number | null
   onPlace: (position: { lat: number, lng: number }) => void
   onFailed: () => void
+  /** The map sits in a frame with something above it: square corners, the frame rounds them. */
+  attached?: boolean
+  /** Controls over the map, bottom left. */
+  children?: ReactNode
 }) {
   const { t } = useLocale()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -158,9 +163,10 @@ export function MapPicker({ lat, lng, onPlace, onFailed }: {
 
   // MapLibre makes its container `position: relative`, so it sits in a box that has a size.
   return (
-    <div className="relative h-72 overflow-hidden rounded-2xl bg-[#c9d3c6] lg:h-96">
+    <div className={`relative h-72 overflow-hidden bg-[#c9d3c6] lg:h-96 ${attached ? '' : 'rounded-2xl'}`}>
       {!map && <p className="absolute inset-0 grid place-items-center text-sm text-muted" role="status">{t('places.map.loading')}</p>}
       <div ref={containerRef} className="size-full" />
+      {children && <div className="absolute bottom-3 start-3 z-10">{children}</div>}
     </div>
   )
 }

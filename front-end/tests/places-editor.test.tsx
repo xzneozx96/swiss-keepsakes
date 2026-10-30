@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { FakeApi } from './places-support'
 
 import { toast } from '@heroui/react'
@@ -21,8 +22,11 @@ vi.hoisted(() => {
 
 // MapLibre needs a canvas, which jsdom has not: the picker is replaced by a button that places a pin.
 vi.mock('@/features/places/components/map-picker', () => ({
-  MapPicker: ({ onPlace }: { onPlace: (position: { lat: number, lng: number }) => void }) => (
-    <button type="button" onClick={() => onPlace({ lat: 47.05, lng: 8.3 })}>Place pin</button>
+  MapPicker: ({ onPlace, children }: { onPlace: (position: { lat: number, lng: number }) => void, children?: ReactNode }) => (
+    <div>
+      <button type="button" onClick={() => onPlace({ lat: 47.05, lng: 8.3 })}>Place pin</button>
+      {children}
+    </div>
   ),
 }))
 
@@ -268,22 +272,24 @@ describe('[E4.2][AC68] N17 one pattern for every field, and a card for each bloc
   const blocks = () => screen.getAllByTestId('place-block')
   const headings = () => screen.queryAllByRole('heading', { level: 3 }).map(item => item.textContent)
 
-  it('[E4.2][AC68] the map step has three cards; a field is label, input, help line, and no heading repeats a label', async () => {
+  it('[E4.2][AC68] the map step has two cards, one location card for the link and the map, and one for the address', async () => {
     await open('new')
     await heading('Place on the map')
 
-    expect(blocks()).toHaveLength(3)
+    expect(blocks()).toHaveLength(2)
     expect(headings()).toEqual(['Location on the map'])
     expect(screen.queryByRole('heading', { name: 'Address' })).not.toBeInTheDocument()
     expect(screen.getAllByText('Address')).toHaveLength(1)
     expect(screen.getByLabelText('Address')).toHaveAccessibleDescription(/One address for both languages/)
     // A card is not collapsible.
-    expect(blocks()[2]).toContainElement(screen.getByLabelText('Address'))
+    expect(blocks()[1]).toContainElement(screen.getByLabelText('Address'))
     expect(blocks()[0]).toContainElement(screen.getByLabelText('Google Maps link'))
-    expect(screen.getByLabelText('Google Maps link')).toHaveAccessibleDescription('Paste a link from Google Maps; the pin moves there. You can still drag it.')
+    expect(blocks()[0]).toContainElement(screen.getByRole('button', { name: 'Place pin' }))
+    expect(blocks()[0]).toHaveAccessibleName('Location on the map')
+    expect(screen.getByText('Paste a Google Maps link, tap the map or drag the pin.')).toBeInTheDocument()
     for (const block of blocks())
       expect(block.querySelector('[aria-expanded]')).toBeNull()
-    expect(blocks()[1]).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
+    expect(blocks()[0]).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
   })
 
   it('[E4.2][AC68] centres a card heading against its icon tile, with or without a hint line', async () => {
@@ -993,12 +999,41 @@ describe('[E4.2][AC68] N17 position from a Google Maps link', () => {
   }
   const long = 'https://www.google.com/maps/place/Kapellbr%C3%BCcke/@47.0516,8.3074,17z/data=!3m1!4b1!8m2!3d47.0516943!4d8.3074029'
 
-  it('[E4.2][AC68] is the first field of the first step, above the map', async () => {
+  it('[E4.2][AC68] is the input on top of the map, in the one frame with no card between', async () => {
     await open('new')
     await heading('Place on the map')
 
     const field = screen.getByLabelText('Google Maps link')
     expect(field.compareDocumentPosition(screen.getByRole('button', { name: 'Place pin' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(field.closest('[data-testid="place-block"]')).toBe(screen.getByRole('button', { name: 'Place pin' }).closest('[data-testid="place-block"]'))
+    expect(field.closest('.overflow-hidden')).toContainElement(screen.getByRole('button', { name: 'Place pin' }))
+    expect(screen.queryByRole('button', { name: 'Remove the position' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Clear the link' })).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC68] says the pin moved to the link until the pin is moved another way, and the clear button empties the input', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await paste(long)
+
+    expect(screen.getByText('Pin moved to the link.')).toBeInTheDocument()
+    await press('Place pin')
+    expect(screen.queryByText('Pin moved to the link.')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Clear the link' }))
+    expect(screen.getByLabelText('Google Maps link')).toHaveValue('')
+    expect(screen.queryByRole('button', { name: 'Clear the link' })).not.toBeInTheDocument()
+    await paste(long)
+    expect(screen.getByText('Pin moved to the link.')).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC68] removes the position from the button over the map', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await press('Place pin')
+    await press('Remove the position')
+
+    expect(screen.getByTestId('places-position')).toHaveTextContent('Tap where the place is')
+    expect(screen.queryByRole('button', { name: 'Remove the position' })).not.toBeInTheDocument()
   })
 
   it('[E4.2][AC68] says the position only to screen readers, in a live region, and shows no coordinates line', async () => {
@@ -1089,7 +1124,7 @@ describe('[E4.2][AC68] N17 position from a Google Maps link', () => {
     await open('new', { language: 'de' })
     await heading('Ort auf der Karte')
 
-    expect(screen.getByLabelText('Google-Maps-Link')).toHaveAccessibleDescription(/Fügen Sie einen Link aus Google Maps ein/)
+    expect(screen.getByText('Fügen Sie einen Google-Maps-Link ein, tippen Sie auf die Karte oder ziehen Sie den Punkt.')).toBeInTheDocument()
     await userEvent.click(screen.getByLabelText('Google-Maps-Link'))
     await userEvent.paste('https://www.google.com/maps/search/x')
     expect(await screen.findByText(/In diesem Link steht keine Position/)).toBeInTheDocument()
