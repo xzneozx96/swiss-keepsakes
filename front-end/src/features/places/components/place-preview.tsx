@@ -3,7 +3,7 @@ import type { Language } from '@sk/domain/shared'
 import type { PlaceForm } from '../lib/form'
 import type { CardExtras } from '@/features/map/components/place-card'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
 import { MapCredits } from '@/components/aerial-map/map-credits'
 import { useAerialMap } from '@/components/aerial-map/use-aerial-map'
@@ -49,6 +49,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
     return { tip: tipIn(form, language), categories: form.categoryIds.flatMap(id => names.get(id) || []) }
   }, [categories.data, form, language])
   const pins = useMemo(() => (located ? [item] : NO_PINS), [item, located])
+  const frameRef = useRef<HTMLDivElement>(null)
   const { containerRef, map, maplibre, state, drawn, retry } = useAerialMap({
     options: {
       center: located ? [item.longitude, item.latitude] : [8.3068, 47.0535],
@@ -60,26 +61,30 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
   })
 
   return (
-    <div className="relative h-full overflow-hidden bg-[#c9d3c6]" inert={state !== 'error'}>
-      {/* MapLibre makes its container `position: relative`, so it sits in a sized box. */}
-      <div className="absolute inset-0">
-        <div ref={containerRef} className="size-full" />
+    <div ref={frameRef} className="relative h-full overflow-hidden bg-[#c9d3c6]">
+      {/* The map, its pin and the card are a picture: inert, except the retry button of a failed map. The credits stay out of it, so they can be pressed. */}
+      <div className="absolute inset-0" inert={state !== 'error'}>
+        {/* MapLibre makes its container `position: relative`, so it sits in a sized box. */}
+        <div className="absolute inset-0">
+          <div ref={containerRef} className="size-full" />
+        </div>
+        <PinMap
+          filtered={false}
+          insetBottom={CARD_BOTTOM + CARD_ROW_HEIGHT}
+          insetTop={CONTROLS}
+          litIds={SELECTED}
+          map={map}
+          maplibre={maplibre}
+          photoOf={() => cover}
+          pins={pins}
+          selectedId={located ? PREVIEW_PIN_ID : undefined}
+          onSelect={noop}
+        />
+        <MapStatusLayer status={state === 'error' ? 'failed' : drawn ? undefined : 'map-loading'} onRetry={retry} />
+        <PlaceCardRow bottom={CARD_BOTTOM} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onClose={noop} onSelect={noop} />
       </div>
-      <PinMap
-        filtered={false}
-        insetBottom={CARD_BOTTOM + CARD_ROW_HEIGHT}
-        insetTop={CONTROLS}
-        litIds={SELECTED}
-        map={map}
-        maplibre={maplibre}
-        photoOf={() => cover}
-        pins={pins}
-        selectedId={located ? PREVIEW_PIN_ID : undefined}
-        onSelect={noop}
-      />
-      <MapStatusLayer status={state === 'error' ? 'failed' : drawn ? undefined : 'map-loading'} onRetry={retry} />
-      <MapCredits className="absolute start-3 top-14 z-10 max-w-[calc(100%-6rem)]" />
-      <PlaceCardRow bottom={CARD_BOTTOM} extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onClose={noop} onSelect={noop} />
+      {/* The owner looks at the phone and rarely touches the map, so the first touch anywhere on the phone folds the credits. */}
+      <MapCredits watch={frameRef} className="absolute start-3 top-14 z-10 max-w-[calc(100%-6rem)]" />
     </div>
   )
 }

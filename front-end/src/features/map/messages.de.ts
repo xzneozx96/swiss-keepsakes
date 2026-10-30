@@ -17,6 +17,7 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.failed.title': 'Die Orte konnten nicht geladen werden',
   'map.failed.body': 'Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
   'map.failed.retry': 'Erneut versuchen',
+  'map.credits': 'Kartenhinweise',
   'map.cluster': '{count} Orte hier. Hineinzoomen',
   'map.pin.event': 'Anlass',
   'map.pin.dimmed': 'gedimmt',

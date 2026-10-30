@@ -172,7 +172,7 @@ export function MapScreen() {
       <p aria-live="polite" className="sr-only">{pinsReady ? announce : ''}</p>
 
       {view === 'map' && (
-        <MapCredits className={`absolute start-3 z-10 max-w-[calc(100%-6rem)] ${openId ? 'top-14' : 'bottom-[calc(env(safe-area-inset-bottom,0px)+108px)]'}`} />
+        <MapCredits watch={containerRef} className={`absolute start-3 z-10 max-w-[calc(100%-6rem)] ${openId ? 'top-14' : 'bottom-[calc(env(safe-area-inset-bottom,0px)+108px)]'}`} />
       )}
 
       {openId && (

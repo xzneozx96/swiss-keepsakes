@@ -16,6 +16,7 @@ export const mapEn = {
   'map.failed.title': 'The places could not load',
   'map.failed.body': 'Check your connection and try again.',
   'map.failed.retry': 'Try again',
+  'map.credits': 'Map credits',
   'map.cluster': '{count} places here. Zoom in',
   'map.pin.event': 'Event',
   'map.pin.dimmed': 'dimmed',
