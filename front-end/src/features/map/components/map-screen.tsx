@@ -5,6 +5,7 @@ import { useId, useMemo, useState } from 'react'
 
 import { BulletListIcon, FilterIcon, PickupIcon } from '@/components/icons'
 import { useMap } from '@/components/map/map-context'
+import { MapControls } from '@/components/map/map-controls'
 import { MapView } from '@/components/map/map-view'
 import { PhotoCluster, PhotoPin } from '@/components/map/pin-faces'
 import { PinLayer } from '@/components/map/pin-layer'
@@ -145,14 +146,17 @@ export function MapScreen() {
         insets={insets}
         label={t('map.heading')}
         overlay={(
-          <MapPills
-            chosenCount={chosenCount}
-            dataPending={data.isPending}
-            hasPins={dataReady && data.pins.length > 0}
-            view={view}
-            onFilter={() => setFilterOpen(true)}
-            onView={() => setView(view === 'map' ? 'list' : 'map')}
-          />
+          <>
+            <MapPills
+              chosenCount={chosenCount}
+              dataPending={data.isPending}
+              hasPins={dataReady && data.pins.length > 0}
+              view={view}
+              onFilter={() => setFilterOpen(true)}
+              onView={() => setView(view === 'map' ? 'list' : 'map')}
+            />
+            {view === 'map' && dataReady && <MapControls />}
+          </>
         )}
         safeArea
         status={status}

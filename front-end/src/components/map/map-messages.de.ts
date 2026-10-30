@@ -18,4 +18,10 @@ export const mapKitDe: Record<keyof typeof mapKitEn, string> = {
   'map.card.next': 'Weiter',
   'map.card.position': '{number} von {count}',
   'map.cluster': '{count} Orte hier. Hineinzoomen',
+  'map.zoom': 'Zoom',
+  'map.zoomIn': 'Vergrössern',
+  'map.zoomOut': 'Verkleinern',
+  'map.compass': 'Kartenausrichtung zurücksetzen',
+  'map.fullscreen': 'Vollbild öffnen',
+  'map.exitFullscreen': 'Vollbild schliessen',
 }

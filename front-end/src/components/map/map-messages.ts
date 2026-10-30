@@ -17,4 +17,10 @@ export const mapKitEn = {
   'map.card.next': 'Next',
   'map.card.position': '{number} of {count}',
   'map.cluster': '{count} places here. Zoom in',
+  'map.zoom': 'Zoom',
+  'map.zoomIn': 'Zoom in',
+  'map.zoomOut': 'Zoom out',
+  'map.compass': 'Reset map bearing',
+  'map.fullscreen': 'Enter fullscreen',
+  'map.exitFullscreen': 'Exit fullscreen',
 }

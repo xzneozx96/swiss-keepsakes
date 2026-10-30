@@ -21,6 +21,10 @@ export class FakeMap {
   easeTo = vi.fn()
   flyTo = vi.fn()
   fitBounds = vi.fn()
+  bearing = 0
+  zoomIn = vi.fn()
+  zoomOut = vi.fn()
+  resetNorthPitch = vi.fn()
   touchZoomRotate = { disableRotation: vi.fn() }
   keyboard = { disableRotation: vi.fn() }
 
@@ -58,6 +62,18 @@ export class FakeMap {
 
   getZoom() {
     return this.zoom
+  }
+
+  getMinZoom() {
+    return typeof this.options.minZoom === 'number' ? this.options.minZoom : 0
+  }
+
+  getMaxZoom() {
+    return typeof this.options.maxZoom === 'number' ? this.options.maxZoom : 22
+  }
+
+  getBearing() {
+    return this.bearing
   }
 
   project([lng, lat]: [number, number]) {
