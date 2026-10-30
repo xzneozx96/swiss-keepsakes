@@ -37,17 +37,18 @@ export function stepStatuses<Id extends KeepsakeStep>(keepsake: { blocking: Pick
  * The mark of each step of a keepsake that is only in the browser. `reached` is the index of the furthest step opened:
  * Options is done once it was passed. Review and publish waits for the keepsake to exist.
  */
-export function draftStatuses({ hasName, reached, soldCount, nameTried, variantsTried }: {
+export function draftStatuses({ hasName, reached, variantsReady, nameTried, variantsTried }: {
   hasName: boolean
   reached: number
-  soldCount: number
+  /** At least one combination is ticked and every ticked one has a valid code and price. */
+  variantsReady: boolean
   nameTried: boolean
   variantsTried: boolean
 }): Record<KeepsakeStep, StepStatus> {
   return {
     details: hasName ? 'done' : nameTried ? 'error' : 'todo',
     options: reached > 1 ? 'done' : 'todo',
-    variants: soldCount > 0 ? 'done' : variantsTried ? 'error' : 'todo',
+    variants: variantsReady ? 'done' : variantsTried ? 'error' : 'todo',
     review: 'todo',
   }
 }

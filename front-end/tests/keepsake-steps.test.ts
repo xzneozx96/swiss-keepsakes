@@ -44,7 +44,7 @@ describe('[T-003] the status of each step of a saved keepsake', () => {
 })
 
 describe('[T-003] the status of each step of a new keepsake', () => {
-  const start = { hasName: false, reached: 0, soldCount: 0, nameTried: false, variantsTried: false }
+  const start = { hasName: false, reached: 0, variantsReady: false, nameTried: false, variantsTried: false }
 
   it('[T-003] nothing is done before a name is typed', () => {
     expect(draftStatuses(start)).toEqual({ details: 'todo', options: 'todo', variants: 'todo', review: 'todo' })
@@ -60,13 +60,13 @@ describe('[T-003] the status of each step of a new keepsake', () => {
     expect(draftStatuses({ ...start, hasName: true, reached: 2 }).options).toBe('done')
   })
 
-  it('[T-003] Variants is done with one ticked row, and has errors after a Create with none', () => {
-    expect(draftStatuses({ ...start, hasName: true, reached: 2, soldCount: 1 }).variants).toBe('done')
+  it('[T-003] Variants is done when a ticked row is ready, and has errors after a Create that is not', () => {
+    expect(draftStatuses({ ...start, hasName: true, reached: 2, variantsReady: true }).variants).toBe('done')
     expect(draftStatuses({ ...start, hasName: true, reached: 2, variantsTried: true }).variants).toBe('error')
   })
 
   it('[T-003] Review and publish stays not started: the keepsake does not exist yet', () => {
-    expect(draftStatuses({ hasName: true, reached: 2, soldCount: 2, nameTried: false, variantsTried: false }).review).toBe('todo')
+    expect(draftStatuses({ hasName: true, reached: 2, variantsReady: true, nameTried: false, variantsTried: false }).review).toBe('todo')
   })
 })
 

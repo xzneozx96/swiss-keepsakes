@@ -8,9 +8,9 @@ import { LocaleProvider } from '@/contexts/locale-context'
 import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { startDemo } from '@/features/demo/data-client'
-import { CreateKeepsake } from '@/features/keepsakes/components/create-flow'
 import { KeepsakeEditorScreen } from '@/features/keepsakes/components/keepsake-editor'
 import { KeepsakeList } from '@/features/keepsakes/components/keepsake-list'
+import { NewKeepsake } from '@/features/keepsakes/components/new-keepsake-editor'
 import { VariantScreen } from '@/features/keepsakes/components/variant-page'
 import { keepsakeSearch } from '@/features/keepsakes/lib/search-params'
 
@@ -138,7 +138,7 @@ export async function setUpHarness() {
 export function renderKeepsakes(initial: string) {
   const root = createRootRoute({ component: Outlet })
   const index = createRoute({ getParentRoute: () => root, path: '/store/products', component: KeepsakeList })
-  const create = createRoute({ getParentRoute: () => root, path: '/store/products/gifts/new', component: CreateKeepsake })
+  const create = createRoute({ getParentRoute: () => root, path: '/store/products/gifts/new', component: NewKeepsake })
   const edit = createRoute({
     getParentRoute: () => root,
     path: '/store/products/gifts/$productId',

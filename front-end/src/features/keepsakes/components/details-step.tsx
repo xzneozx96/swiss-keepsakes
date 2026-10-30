@@ -13,7 +13,7 @@ import { KeepsakeCard } from './keepsake-card'
  * `showErrors` is on after a blocked publish (saved) or a Next with no name (new); a new keepsake needs a name only,
  * so its text is not marked as required (`nameOnly`).
  */
-export function DetailsStep({ storeId, value, onValue, photoIds, onPhotos, onAddPhoto, commission, onCommission, showErrors, nameOnly = false }: {
+export function DetailsStep({ storeId, value, onValue, photoIds, onPhotos, onAddPhoto, commission, onCommission, showErrors, nameOnly = false, onUploadingChange }: {
   storeId: string
   value: KeepsakeText
   onValue: (next: KeepsakeText) => void
@@ -25,6 +25,8 @@ export function DetailsStep({ storeId, value, onValue, photoIds, onPhotos, onAdd
   onCommission: (value: number) => void
   showErrors: boolean
   nameOnly?: boolean
+  /** True while a photo is still uploading. A keepsake that is not saved yet waits for it before it is created. */
+  onUploadingChange?: (uploading: boolean) => void
 }) {
   const { t } = useLocale()
 
@@ -42,6 +44,7 @@ export function DetailsStep({ storeId, value, onValue, photoIds, onPhotos, onAdd
           storeId={storeId}
           onAdd={onAddPhoto}
           onChange={onPhotos}
+          onUploadingChange={onUploadingChange}
         />
       </KeepsakeCard>
       <div className="scroll-mt-20" id="commission">

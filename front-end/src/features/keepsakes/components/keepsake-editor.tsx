@@ -16,7 +16,7 @@ import { saveStatusOf } from '../lib/save-status'
 import { isKeepsakeStep, KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
 import { firstBlockedStep, stepOfCard, stepStatuses } from '../lib/steps'
 import { DetailsStep } from './details-step'
-import { EditorSkeleton } from './editor-skeleton'
+import { StepBodySkeleton, StepEditorSkeleton } from './editor-skeleton'
 import { KeepsakeFrame } from './keepsake-frame'
 import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
@@ -148,7 +148,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
         {step === 'options' && <OptionsCard keepsake={keepsake} onRemove={editor.removeOption} onSave={editor.saveOptions} />}
         {step === 'variants' && <VariantsCard keepsake={keepsake} onCreate={editor.createVariant} onSave={editor.saveVariant} />}
         {onReview && (
-          <Suspense fallback={<EditorSkeleton />}>
+          <Suspense fallback={<StepBodySkeleton />}>
             <ReviewScreen actions={{ unpublish: editor.unpublish, isPending: editor.isPublishing }} keepsake={keepsake} onFix={jumpTo} />
           </Suspense>
         )}
@@ -171,7 +171,7 @@ function LoadedEditor({ storeId, id, step, onStep }: { storeId: string, id: stri
     return <KeepsakeNotice error={query.error} onRetry={() => void query.refetch()} />
   }
   if (!query.data)
-    return <EditorSkeleton />
+    return <StepEditorSkeleton />
 
   return (
     <Editor
@@ -188,7 +188,7 @@ function LoadedEditor({ storeId, id, step, onStep }: { storeId: string, id: stri
 /** M12 for one keepsake: the stepped editor with autosave, the last step being Review and publish. */
 export function KeepsakeEditorScreen({ id, step, onStep }: { id: string, step: KeepsakeStep, onStep: (step: KeepsakeStep) => void }) {
   return (
-    <KeepsakeGate fallback={<EditorSkeleton />}>
+    <KeepsakeGate fallback={<StepEditorSkeleton />}>
       {storeId => <LoadedEditor id={id} step={step} storeId={storeId} onStep={onStep} />}
     </KeepsakeGate>
   )

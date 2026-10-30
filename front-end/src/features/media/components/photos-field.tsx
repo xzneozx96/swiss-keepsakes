@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+
 import { PhotoOrder } from '@/components/photo-order'
 import { useLocale } from '@/contexts/locale-context'
 import { usePendingPhotos } from '../hooks/use-pending-photos'
@@ -10,7 +12,7 @@ import { PhotoAdd, PhotoState, PhotoThumb } from './photo-parts'
  * a photo removed, `onAdd` one new id (add it with an update from the current ids, as several uploads can finish in
  * the same moment). The block has no card of its own; the caller puts it in one.
  */
-export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, showError = false }: {
+export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, showError = false, onUploadingChange }: {
   storeId: string
   /** The photos in order. */
   ids: string[]
@@ -22,10 +24,17 @@ export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, sho
   emptyText?: string
   /** After a blocked publish: the empty text is shown as an alert. */
   showError?: boolean
+  /** True while some file is still on its way up (a failed row is not): a page that is not saved yet waits for it. */
+  onUploadingChange?: (uploading: boolean) => void
 }) {
   const { t } = useLocale()
   const photos = usePendingPhotos(storeId, onAdd)
   const room = max - ids.length - photos.pending.length
+  const uploading = photos.pending.some(item => item.status === 'uploading')
+
+  useEffect(() => {
+    onUploadingChange?.(uploading)
+  }, [uploading, onUploadingChange])
 
   return (
     <div className="flex flex-col gap-4">

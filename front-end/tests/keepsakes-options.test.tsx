@@ -440,20 +440,20 @@ describe('[E6.2][AC52] the variant page', () => {
   })
 })
 
-describe('[E6.2][AC52] the create flow with options', () => {
+describe('[E6.2][AC52][T-005] a new keepsake with options', () => {
   it('[E6.2][AC52] Options then every combination ticked; the unticked one is not sold, and it all goes in one request', async () => {
     serve(call => (call.method === 'POST' && call.path === base ? Response.json(product({ options, variants }), { status: 201 }) : undefined))
     renderKeepsakes('/store/products/gifts/new')
 
     await userEvent.type(await nameField(), 'Card')
-    await userEvent.click(screen.getByRole('button', { name: 'Next: Options' }))
-    expect(await screen.findByText('Step 2 of 3 · Options')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(await screen.findByText(/Step 2 of 4/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Add an option' }))
     await userEvent.type(screen.getByLabelText('Option name (English)'), 'Colour')
     await userEvent.type(screen.getByLabelText('English'), 'Navy')
     await userEvent.click(screen.getByRole('button', { name: 'Add a value' }))
     await userEvent.type(screen.getAllByLabelText('English')[1]!, 'Black')
-    await userEvent.click(screen.getByRole('button', { name: 'Next: Variants' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
 
     expect(await screen.findByRole('heading', { level: 2, name: '2 of 2 combinations ticked' })).toBeInTheDocument()
     expect(screen.getByLabelText('SKU code for Navy')).toHaveValue('VX-N')
@@ -474,18 +474,19 @@ describe('[E6.2][AC52] the create flow with options', () => {
     expect(body.options[0]!.name).toEqual({ en: 'Colour' })
     expect(body.options[0]!.values.map(v => v.label)).toEqual([{ en: 'Navy' }, { en: 'Black' }])
     expect(body.variants).toEqual([{ skuCode: 'VX-N', priceRappen: 3900, values: { [body.options[0]!.ref]: body.options[0]!.values[0]!.ref } }])
+    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
   })
 
   it('[E6.2][AC52] Next on Options is refused with the problems, and an option needs a value', async () => {
     renderKeepsakes('/store/products/gifts/new')
 
     await userEvent.type(await nameField(), 'Card')
-    await userEvent.click(screen.getByRole('button', { name: 'Next: Options' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Add an option' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Next: Variants' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
 
     expect(await screen.findByText(/Not saved\. 2 things need a fix: Name the option in English or German\. Name the value in English or German\./)).toBeInTheDocument()
-    expect(screen.getByText('Step 2 of 3 · Options')).toBeInTheDocument()
+    expect(screen.getByText(/Step 2 of 4/)).toBeInTheDocument()
     expect(writes()).toHaveLength(0)
   })
 
@@ -493,13 +494,13 @@ describe('[E6.2][AC52] the create flow with options', () => {
     renderKeepsakes('/store/products/gifts/new')
 
     await userEvent.type(await nameField(), 'Card')
-    await userEvent.click(screen.getByRole('button', { name: 'Next: Options' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Add an option' }))
     await userEvent.type(screen.getByLabelText('Option name (English)'), 'Colour')
     await userEvent.type(screen.getByLabelText('English'), 'Navy')
     await userEvent.click(screen.getByRole('button', { name: 'Add a value' }))
     await userEvent.type(screen.getAllByLabelText('English')[1]!, 'Black')
-    await userEvent.click(screen.getByRole('button', { name: 'Next: Variants' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
     await screen.findByRole('heading', { level: 2, name: '2 of 2 combinations ticked' })
 
     await userEvent.type(screen.getByLabelText('Price for all ticked'), '25')
