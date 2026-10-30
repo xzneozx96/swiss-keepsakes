@@ -175,7 +175,8 @@ export function DataTable<T>({
         className={tableClass || undefined}
         variant={isOnPage ? undefined : 'secondary'}
       >
-        <Table.ScrollContainer>
+        {/* `isolate` keeps the pinned column's z-10 inside the table, so the page's sticky banner and tab rows pass over it. */}
+        <Table.ScrollContainer className="isolate">
           <Table.Content
             ref={gridRef}
             aria-label={label}
