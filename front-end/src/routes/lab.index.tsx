@@ -11,8 +11,8 @@ export const Route = createFileRoute('/lab/')({
 const experiments = [
   {
     to: '/lab/opening-hours' as const,
-    title: 'Opening hours editor (place editor, step When): four options',
-    note: 'Compact week rows, a visual week timeline, presets with a summary, and day-chip sets, each editing the same sample week as HoursSpan[]. The current seven tall cards take a full screen (30.10.2026).',
+    title: 'Opening hours editor (place editor, step When), approved',
+    note: 'Option A chosen 30.10.2026, built into the place editor: compact week rows with a switch, the range, a second range and copy to other days. Kept here as the reference; the other three options were removed.',
   },
   {
     to: '/lab/home' as const,

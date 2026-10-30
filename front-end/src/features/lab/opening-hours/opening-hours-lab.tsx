@@ -5,11 +5,8 @@ import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
 import { copy } from './copy'
-import { sampleWeek, summaryLine } from './model'
+import { sampleWeek } from './model'
 import { WeekRows } from './option-a-rows'
-import { WeekTimeline } from './option-b-timeline'
-import { PresetSummary } from './option-c-presets'
-import { DaySets } from './option-d-sets'
 
 type Option = keyof typeof copy.options
 
@@ -55,7 +52,6 @@ function OptionShell({ option, children }: {
       <div ref={ref} className="min-w-0">{children(hours, setHours)}</div>
       <details className="rounded-xl border border-separator px-3 py-2 text-xs">
         <summary className="cursor-pointer font-medium">{`${copy.samePrefix}: ${copy.spansUnit(hours.length)}`}</summary>
-        <p className="mt-2 text-pretty text-muted" data-summary>{summaryLine(hours) || copy.none}</p>
         <pre className="mt-2 max-h-40 overflow-auto text-[11px] leading-snug" data-json>
           {JSON.stringify(hours.map(({ day, opens, closes }) => ({ day, opens, closes })))}
         </pre>
@@ -81,13 +77,9 @@ export function OpeningHoursLab() {
         </details>
         <Button className="w-fit" size="sm" variant="secondary" onPress={() => setResetKey(k => k + 1)}>{copy.reset}</Button>
       </header>
-      <div key={resetKey} className="grid items-start gap-6 xl:grid-cols-2">
+      <div key={resetKey} className="grid max-w-xl items-start gap-6">
         <OptionShell option="a">{(hours, onChange) => <WeekRows hours={hours} onChange={onChange} />}</OptionShell>
-        <OptionShell option="b">{(hours, onChange) => <WeekTimeline hours={hours} onChange={onChange} />}</OptionShell>
-        <OptionShell option="c">{(hours, onChange) => <PresetSummary hours={hours} onChange={onChange} />}</OptionShell>
-        <OptionShell option="d">{(hours, onChange) => <DaySets hours={hours} onChange={onChange} />}</OptionShell>
       </div>
-      <p className="max-w-3xl text-xs text-muted">{copy.midnightNote}</p>
     </div>
   )
 }

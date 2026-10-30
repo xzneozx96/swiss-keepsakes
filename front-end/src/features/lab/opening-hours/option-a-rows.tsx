@@ -8,8 +8,8 @@ import { CopyPopover } from './copy-popover'
 import { DAYS, isValid, nextSpan, setDay, span, spansOf } from './model'
 import { TimeInput } from './time-input'
 
-/** A range: opens – closes, and a trash button. Used by A, by C's sheet and by B's day popover. */
-export function RangeFields({ name, range, canRemove = true, onChange, onRemove }: {
+/** A range: opens – closes, and a trash button. */
+function RangeFields({ name, range, canRemove = true, onChange, onRemove }: {
   /** What the row belongs to, for screen readers: "Monday", "Set 1". */
   name: string
   range: HoursSpan
@@ -27,44 +27,6 @@ export function RangeFields({ name, range, canRemove = true, onChange, onRemove 
       {canRemove && (
         <Button isIconOnly aria-label={`${copy.removeRange}: ${name} ${range.opens}–${range.closes}`} className="max-lg:size-11" size="sm" variant="ghost" onPress={onRemove}>
           <TrashIcon aria-hidden size={16} />
-        </Button>
-      )}
-    </div>
-  )
-}
-
-/** The editable ranges of one day: used by B's popover. */
-export function DayRanges({ day, hours, onChange }: { day: number, hours: HoursSpan[], onChange: (hours: HoursSpan[]) => void }) {
-  const spans = spansOf(hours, day)
-  const write = (next: HoursSpan[]) => onChange(setDay(hours, day, next))
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Switch
-        aria-label={`${copy.dayNames[day]}: ${copy.open}`}
-        isSelected={spans.length > 0}
-        onChange={on => write(on ? [span(day, '09:00', '18:00')] : [])}
-      >
-        <Switch.Content>
-          <Switch.Control>
-            <Switch.Thumb />
-          </Switch.Control>
-          <span className="text-sm">{spans.length ? copy.open : copy.closed}</span>
-        </Switch.Content>
-      </Switch>
-      {spans.map(range => (
-        <RangeFields
-          key={range.key}
-          name={copy.dayNames[day]!}
-          range={range}
-          onChange={changes => write(spans.map(s => (s.key === range.key ? { ...s, ...changes } : s)))}
-          onRemove={() => write(spans.filter(s => s.key !== range.key))}
-        />
-      ))}
-      {spans.length > 0 && (
-        <Button className="w-fit" size="sm" variant="ghost" onPress={() => write([...spans, nextSpan(day, spans)])}>
-          <PlusIcon aria-hidden size={14} />
-          {copy.addRange}
         </Button>
       )}
     </div>
