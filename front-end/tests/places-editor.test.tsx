@@ -599,6 +599,17 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
     expect(blocks()[0]).toHaveTextContent(/^Story behind this placeNoneGuests can open it from the place card\.(?: None)?$/)
   })
 
+  it('[E4.2][AC85] the review step uses the same words, and its tips row is Tips from a local', async () => {
+    api.pin = pinOf({ id: uuid(10) })
+    await open('new')
+    await heading('Place on the map')
+    await nextTo('Review and publish')
+
+    expect(screen.getByText('Story behind this place')).toBeInTheDocument()
+    expect(screen.getByText('Tips from a local')).toBeInTheDocument()
+    expect(screen.queryByText(/Main story|Local tip/)).not.toBeInTheDocument()
+  })
+
   it('[E4.2][AC85] says the same in German', async () => {
     api.pin = pinOf({ id: uuid(10) })
     await open('new', { language: 'de' })
