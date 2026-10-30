@@ -1,9 +1,10 @@
 import type { StepProps } from './step-props'
 import type { MessageKey } from '@/i18n/en'
 
-import { Checkbox, CheckboxGroup, Label, ListBox, Radio, RadioGroup, Select, Switch } from '@heroui/react'
+import { Checkbox, CheckboxGroup, Description, Label, ListBox, Radio, RadioGroup, Select, Switch } from '@heroui/react'
 import { foodKinds, interestCodes, serviceTypes } from '@sk/domain/content'
 
+import { SparkleIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
 import { Block, choiceCard } from './fields'
@@ -11,7 +12,7 @@ import { Block, choiceCard } from './fields'
 const NONE = 'none'
 const STAYS = ['short_stay', 'multi_day', 'both'] as const
 
-function Choice<T extends string>({ label, value, options, onChange }: { label: string, value: T | null, options: { id: T, label: string }[], onChange: (value: T | null) => void }) {
+function Choice<T extends string>({ label, description, value, options, onChange }: { label: string, description: string, value: T | null, options: { id: T, label: string }[], onChange: (value: T | null) => void }) {
   const { t } = useLocale()
 
   return (
@@ -21,6 +22,7 @@ function Choice<T extends string>({ label, value, options, onChange }: { label: 
         <Select.Value />
         <Select.Indicator />
       </Select.Trigger>
+      <Description>{description}</Description>
       <Select.Popover>
         <ListBox>
           {[{ id: NONE, label: t('places.review.none') }, ...options].map(option => (
@@ -58,9 +60,9 @@ function MapCategories({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch
   const name = (item: { name: { en?: string | null, de?: string | null } }) => item.name[language] ?? item.name[language === 'en' ? 'de' : 'en'] ?? ''
 
   return (
-    <Block hint={t('places.categories.help')} title={t('places.categories.label')}>
+    <Block>
       <CheckboxGroup className="gap-2" value={form.categoryIds} onChange={categoryIds => patch({ categoryIds })}>
-        <Label className="sr-only">{t('places.categories.label')}</Label>
+        <Label>{t('places.categories.label')}</Label>
         {items.map((item) => {
           const parent = item.parentId ? items.find(other => other.id === item.parentId) : undefined
 
@@ -70,8 +72,8 @@ function MapCategories({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch
             </div>
           )
         })}
+        <Description>{`${t('places.categories.help')} ${t('places.categories.manage')}`}</Description>
       </CheckboxGroup>
-      <p className="text-sm text-muted">{t('places.categories.manage')}</p>
     </Block>
   )
 }
@@ -83,8 +85,9 @@ export function StepTags({ form, patch, storeId }: StepProps) {
   return (
     <div className="flex flex-col gap-6">
       <MapCategories form={form} patch={patch} storeId={storeId} />
-      <Block hint={t('places.stay.help')} title={t('places.stay.label')}>
-        <RadioGroup aria-label={t('places.stay.label')} value={form.stayTag} onChange={stayTag => patch({ stayTag: stayTag as typeof form.stayTag })}>
+      <Block>
+        <RadioGroup value={form.stayTag} onChange={stayTag => patch({ stayTag: stayTag as typeof form.stayTag })}>
+          <Label>{t('places.stay.label')}</Label>
           <div className="grid gap-2 sm:grid-cols-3">
             {STAYS.map(id => (
               <Radio key={id} className={choiceCard} value={id}>
@@ -100,18 +103,19 @@ export function StepTags({ form, patch, storeId }: StepProps) {
               </Radio>
             ))}
           </div>
+          <Description>{t('places.stay.help')}</Description>
         </RadioGroup>
       </Block>
-      <Block hint={t('places.interests.help')} title={t('places.interests.label')}>
+      <Block>
         <CheckboxGroup className="gap-2" value={form.interests} onChange={interests => patch({ interests })}>
-          <Label className="sr-only">{t('places.interests.label')}</Label>
+          <Label>{t('places.interests.label')}</Label>
           {interestCodes.map(code => <Check key={code} label={t(`places.interest.${code}`)} value={code} />)}
+          <Description>{t('places.interests.help')}</Description>
         </CheckboxGroup>
       </Block>
-      <Block hint={t('places.service.help')} title={t('places.service.label')}>
-        <Choice label={t('places.service.label')} options={serviceTypes.map(id => ({ id, label: t(`places.service.${id}` as MessageKey) }))} value={form.serviceType} onChange={serviceType => patch({ serviceType })} />
-        <Choice label={t('places.food.label')} options={foodKinds.map(id => ({ id, label: t(`places.food.${id}` as MessageKey) }))} value={form.foodKind} onChange={foodKind => patch({ foodKind })} />
-        <p className="text-sm text-muted">{t('places.food.help')}</p>
+      <Block icon={SparkleIcon} title={t('places.home.title')}>
+        <Choice description={t('places.service.help')} label={t('places.service.label')} options={serviceTypes.map(id => ({ id, label: t(`places.service.${id}` as MessageKey) }))} value={form.serviceType} onChange={serviceType => patch({ serviceType })} />
+        <Choice description={t('places.food.help')} label={t('places.food.label')} options={foodKinds.map(id => ({ id, label: t(`places.food.${id}` as MessageKey) }))} value={form.foodKind} onChange={foodKind => patch({ foodKind })} />
         <Switch isSelected={form.mustVisit} onChange={mustVisit => patch({ mustVisit })}>
           <Switch.Content>
             <Switch.Control>

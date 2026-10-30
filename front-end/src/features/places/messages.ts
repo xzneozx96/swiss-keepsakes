@@ -149,7 +149,7 @@ export const placesEn = {
   'places.error.slugFormat': 'Use small letters, numbers and dashes only, like old-town-bakery.',
   'places.error.slugTaken': '“{name}” already uses this link. Hidden pins keep their link, so pick another.',
   'places.error.linkFormat': 'Enter a full web address that starts with https://',
-  'places.categories.label': 'Map categories',
+  'places.categories.label': 'Categories',
   'places.categories.help': 'The chips guests tap on the map. Pick any number. With none, the pin is highlighted only under All.',
   'places.categories.manage': 'Edit the list under Categories.',
   'places.categories.noGerman': 'no German name',
@@ -305,4 +305,6 @@ export const placesEn = {
   'places.dates.title': 'Dates',
   'places.dates.untilHelp': 'The pin is on the map from publishing until its last date. After that it leaves the map by itself. Times are Lucerne time.',
   'places.action.next': 'Next',
+  'places.details.title': 'Map link and address',
+  'places.home.title': 'Shown on the home',
 } as const

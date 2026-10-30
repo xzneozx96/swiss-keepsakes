@@ -151,7 +151,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.error.slugFormat': 'Nur Kleinbuchstaben, Zahlen und Bindestriche, zum Beispiel altstadt-baeckerei.',
   'places.error.slugTaken': '„{name}“ nutzt diesen Link schon. Ausgeblendete Punkte behalten ihren Link, wählen Sie einen anderen.',
   'places.error.linkFormat': 'Geben Sie eine vollständige Webadresse mit https:// ein',
-  'places.categories.label': 'Kartenkategorien',
+  'places.categories.label': 'Kategorien',
   'places.categories.help': 'Die Chips, die Gäste auf der Karte antippen. Beliebig viele. Ohne Kategorie wird der Punkt nur unter Alle hervorgehoben.',
   'places.categories.manage': 'Die Liste bearbeiten Sie unter Kategorien.',
   'places.categories.noGerman': 'kein deutscher Name',
@@ -307,4 +307,6 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.dates.title': 'Daten',
   'places.dates.untilHelp': 'Der Punkt ist ab dem Veröffentlichen bis zu seinem letzten Datum auf der Karte. Danach verschwindet er von selbst. Zeiten sind Luzerner Zeit.',
   'places.action.next': 'Weiter',
+  'places.details.title': 'Kartenlink und Adresse',
+  'places.home.title': 'Auf der Startseite',
 }

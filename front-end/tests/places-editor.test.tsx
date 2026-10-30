@@ -203,6 +203,70 @@ describe('[E4.2][AC68] N17 header', () => {
   })
 })
 
+describe('[E4.2][AC68] N17 one pattern for every field, and a card for each block', () => {
+  const blocks = () => screen.getAllByTestId('place-block')
+  const headings = () => screen.queryAllByRole('heading', { level: 3 }).map(item => item.textContent)
+
+  it('[E4.2][AC68] the map step has two cards; a field is label, input, help line, and no heading repeats a label', async () => {
+    await open('new')
+    await heading('Place on the map')
+
+    expect(blocks()).toHaveLength(2)
+    expect(headings()).toEqual(['Location on the map', 'Map link and address'])
+    expect(screen.queryByRole('heading', { name: 'Map link' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Address' })).not.toBeInTheDocument()
+    expect(screen.getAllByText('Map link')).toHaveLength(1)
+    expect(screen.getAllByText('Address')).toHaveLength(1)
+    expect(screen.getByLabelText('Map link')).toHaveAccessibleDescription(/Guests share the pin with this link/)
+    expect(screen.getByLabelText('Address')).toHaveAccessibleDescription(/One address for both languages/)
+    // The same card holds both fields, and a card is not collapsible.
+    expect(blocks()[1]).toContainElement(screen.getByLabelText('Address'))
+    expect(blocks()[1]).toContainElement(screen.getByLabelText('Map link'))
+    for (const block of blocks())
+      expect(block.querySelector('[aria-expanded]')).toBeNull()
+    expect(blocks()[0]).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
+  })
+
+  it('[E4.2][AC68] the hours and dates step has a card for each, with a heading because each groups several fields', async () => {
+    await open('new', { start: 'dates' })
+    await heading('Hours and dates')
+
+    expect(blocks()).toHaveLength(2)
+    expect(headings().slice(0, 2)).toEqual(['Opening hours', 'Dates'])
+  })
+
+  it('[E4.2][AC68] the categories step has no heading that repeats a field label', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await nextTo('Categories and tags')
+
+    expect(blocks()).toHaveLength(4)
+    expect(headings()).toEqual(['Shown on the home'])
+    expect(screen.getAllByText('Recommended for')).toHaveLength(1)
+    expect(screen.getAllByText('Interests')).toHaveLength(1)
+    expect(screen.getAllByText('Categories')).toHaveLength(1)
+  })
+
+  it('[E4.2][AC68] the story step puts each field in its own card without a repeating heading', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await nextTo('Story and link')
+
+    expect(blocks()).toHaveLength(2)
+    expect(headings()).toEqual([])
+    expect(screen.getByLabelText('Outbound link')).toHaveAccessibleDescription(/One web address/)
+  })
+
+  it('[E4.2][AC68] reads in German with the same pattern', async () => {
+    await open('new', { language: 'de' })
+    await heading('Ort auf der Karte')
+
+    expect(headings()).toEqual(['Standort auf der Karte', 'Kartenlink und Adresse'])
+    expect(screen.getAllByText('Kartenlink')).toHaveLength(1)
+    expect(screen.getAllByText('Adresse')).toHaveLength(1)
+  })
+})
+
 describe('[E4.2][AC86] N17 dates and Add event', () => {
   it('[E4.2][AC86] Add event opens a new place on the dates step with one date entry ready', async () => {
     await open('new', { start: 'dates' })

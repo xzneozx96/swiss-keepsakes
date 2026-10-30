@@ -1,6 +1,6 @@
 import type { StepProps } from './step-props'
 
-import { Label, ListBox, Select } from '@heroui/react'
+import { Description, Label, ListBox, Select } from '@heroui/react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { useStoryOptions } from '../api/queries'
@@ -20,7 +20,7 @@ export function StepLinks({ form, patch, errors, storeId }: StepProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Block hint={t('places.story.help')} title={t('places.story.label')}>
+      <Block>
         {stories.isError
           ? <p className="text-sm text-danger" role="alert">{t('places.story.loadFailed')}</p>
           : (
@@ -30,6 +30,7 @@ export function StepLinks({ form, patch, errors, storeId }: StepProps) {
                   <Select.Value />
                   <Select.Indicator />
                 </Select.Trigger>
+                <Description>{t('places.story.help')}</Description>
                 <Select.Popover>
                   <ListBox>
                     <ListBox.Item id={NONE} textValue={t('places.story.noneOption')}>
@@ -53,8 +54,8 @@ export function StepLinks({ form, patch, errors, storeId }: StepProps) {
         {!form.mainStoryGroupId && <p className="text-sm text-muted">{t('places.story.empty')}</p>}
         {gaps.map(lang => <p key={lang} className="text-sm text-warning">{t('places.story.gap', { lang: t(`places.lang.${lang}`) })}</p>)}
       </Block>
-      <Block hint={t('places.link.help')} title={t('places.link.label')}>
-        <Field error={errors.link} inputMode="text" label={t('places.link.label')} maxLength={2000} placeholder="https://" value={form.outboundUrl} onChange={outboundUrl => patch({ outboundUrl })} />
+      <Block>
+        <Field description={t('places.link.help')} error={errors.link} inputMode="text" label={t('places.link.label')} maxLength={2000} placeholder="https://" value={form.outboundUrl} onChange={outboundUrl => patch({ outboundUrl })} />
         <p className="text-sm text-warning">{t('places.link.everywhere')}</p>
       </Block>
     </div>
