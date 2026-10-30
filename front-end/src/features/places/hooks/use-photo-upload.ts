@@ -1,5 +1,6 @@
 import type { MessageKey } from '@/i18n/en'
 
+import { timeout, uploadTimeoutMs } from '@/features/data-client/api-transport'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useCommand } from '@/features/data-client/use-command'
 
@@ -24,11 +25,11 @@ export function usePhotoUpload(storeId: string) {
   return async function upload(file: File): Promise<UploadResult> {
     try {
       const grant = await request.mutateAsync({ storeId, contentType: file.type, byteSize: file.size, idempotencyKey: crypto.randomUUID() })
-      const put = await fetch(grant.url, { method: grant.method, headers: grant.headers, body: file })
+      const put = await fetch(grant.url, { method: grant.method, headers: grant.headers, body: file, signal: timeout(uploadTimeoutMs(file.size)).signal })
 
       if (!put.ok)
         throw new Error('storage refused the file')
-      const media = await confirm.mutateAsync({ storeId, uploadKey: grant.uploadKey, idempotencyKey: crypto.randomUUID() })
+      const media = await confirm.mutateAsync({ storeId, uploadKey: grant.uploadKey, fileName: file.name, idempotencyKey: crypto.randomUUID() })
 
       return { id: media.id }
     }
