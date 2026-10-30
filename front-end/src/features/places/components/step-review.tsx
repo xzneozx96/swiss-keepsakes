@@ -14,7 +14,6 @@ import { PlaceLanguageSwitch } from './step-content'
 const PlacePreview = lazy(() => import('./place-preview'))
 
 export interface ReviewActions {
-  publish: () => void
   hide: () => void
   unhide: () => void
   remove: () => void
@@ -59,7 +58,7 @@ function Checklist({ form, go }: Pick<StepProps, 'form' | 'go'>) {
   )
 }
 
-/** Publish while the pin is a draft, Show on map again while it is hidden, Hide while it is live, and Delete while it is a draft. */
+/** Show on map again while the pin is hidden, Hide while it is live, and Delete while it is a draft. Publish is the step bar's red action. */
 function Actions({ pin, actions }: Pick<StepProps, 'pin'> & { actions: ReviewActions }) {
   const { t } = useLocale()
   const status = pin?.status ?? 'new'
@@ -68,8 +67,7 @@ function Actions({ pin, actions }: Pick<StepProps, 'pin'> & { actions: ReviewAct
     <div className="flex flex-col gap-2">
       {pin?.published && pin.draft && <p className="text-sm text-warning">{t('places.hasChanges')}</p>}
       <div className="flex flex-wrap gap-2">
-        {(status === 'new' || status === 'draft') && <Button className="max-lg:min-h-11" isDisabled={actions.busy} onPress={actions.publish}>{t('places.action.publish')}</Button>}
-        {status === 'published' && <Button className="max-lg:min-h-11" isDisabled={actions.busy || actions.dirty} variant="secondary" onPress={actions.hide}>{t('places.action.hide')}</Button>}
+        {status === 'published' && <Button className="max-lg:min-h-11" isDisabled={actions.busy || actions.dirty} variant="danger-soft" onPress={actions.hide}>{t('places.action.hide')}</Button>}
         {status === 'hidden' && <Button className="max-lg:min-h-11" isDisabled={actions.busy} variant="secondary" onPress={actions.unhide}>{t('places.action.unhide')}</Button>}
         {status === 'draft' && <Button className="max-lg:min-h-11" isDisabled={actions.busy} variant="danger-soft" onPress={actions.remove}>{t('places.action.delete')}</Button>}
       </div>
@@ -85,7 +83,7 @@ function PhoneSkeleton() {
 
 /**
  * Step 6: the draft on the guest map in a phone, and beside it (above it on a phone) what a publish needs, with Edit
- * that jumps to the step, then Publish, Hide, Show on map again or Delete. The language switch drives the phone.
+ * that jumps to the step, then Hide, Show on map again or Delete (Publish is in the step bar). The language switch drives the phone.
  */
 export function StepReview({ form, pin, go, actions, errors, storeId }: StepProps & { actions: ReviewActions }) {
   const { t, language } = useLocale()
