@@ -4,7 +4,7 @@ import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet
 import { render } from '@testing-library/react'
 
 import { LocaleProvider } from '@/contexts/locale-context'
-import { DataClientProvider } from '@/features/data-client'
+import { ApiFeedbackBridge, DataClientProvider } from '@/features/data-client'
 import { DemoProvider } from '@/features/demo'
 import { MediaScreen } from '@/features/media/components/media-screen'
 import { parseMediaSearch } from '@/features/media/lib/search-params'
@@ -82,6 +82,7 @@ export function renderMedia(initial = '/store/content/media') {
     <QueryClientProvider client={state.demo.queryClient}>
       <DataClientProvider client={state.demo.dataClient}>
         <LocaleProvider>
+          <ApiFeedbackBridge feedback={state.demo.feedback} />
           <DemoProvider store={state.demo.store}>
             <RouterProvider router={router} />
           </DemoProvider>

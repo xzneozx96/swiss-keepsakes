@@ -27,7 +27,7 @@ beforeEach(async () => {
 
 interface Answers {
   list?: (path: string) => Response
-  uses?: Response
+  uses?: () => Response
   other?: (call: { method: string, path: string, body: unknown }) => Response | undefined
 }
 
@@ -39,7 +39,7 @@ function answerWith({ list, uses: usesAnswer, other: extra }: Answers = {}) {
     if (call.method === 'GET' && call.path.startsWith(`${base}?`))
       return list ? list(call.path) : Response.json(page([item()]))
     if (call.method === 'GET' && call.path.endsWith('/uses'))
-      return usesAnswer ?? Response.json(uses())
+      return usesAnswer ? usesAnswer() : Response.json(uses())
 
     return extra?.(call)
   }
@@ -192,7 +192,7 @@ describe('[E4.11][AC51] the detail sheet', () => {
   })
 
   it('[E4.11][AC51] says no page uses a file that no page uses, and shows the info rows', async () => {
-    answerWith({ list: () => Response.json(page([item({ usage: { pages: 0, published: 0, drafts: 0 } })])), uses: Response.json(uses({ published: [], drafts: [] })) })
+    answerWith({ list: () => Response.json(page([item({ usage: { pages: 0, published: 0, drafts: 0 } })])), uses: () => Response.json(uses({ published: [], drafts: [] })) })
     renderMedia()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Kapellbruecke-Sunrise.JPG' }))
@@ -238,7 +238,7 @@ describe('[E4.11][AC51] the detail sheet', () => {
   })
 
   it('[E4.11][AC51] a retired file is read-only with no Replace or Retire', async () => {
-    answerWith({ list: () => Response.json(page([item({ status: 'retired', usage: { pages: 0, published: 0, drafts: 0 } })])), uses: Response.json(uses({ published: [], drafts: [] })) })
+    answerWith({ list: () => Response.json(page([item({ status: 'retired', usage: { pages: 0, published: 0, drafts: 0 } })])), uses: () => Response.json(uses({ published: [], drafts: [] })) })
     renderMedia()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Kapellbruecke-Sunrise.JPG' }))
@@ -256,7 +256,7 @@ describe('[E4.11][AC51] retiring', () => {
   const unused = { usage: { pages: 0, published: 0, drafts: 0 } }
 
   it('[E4.11][AC51] confirms, then retires an unused file and says so', async () => {
-    answerWith({ list: () => Response.json(page([item(unused)])), uses: Response.json(uses({ published: [], drafts: [] })), other: call => (call.method === 'POST' ? Response.json(item({ ...unused, status: 'retired' })) : undefined) })
+    answerWith({ list: () => Response.json(page([item(unused)])), uses: () => Response.json(uses({ published: [], drafts: [] })), other: call => (call.method === 'POST' ? Response.json(item({ ...unused, status: 'retired' })) : undefined) })
     renderMedia()
 
     await userEvent.click(await screen.findByRole('button', { name: 'Kapellbruecke-Sunrise.JPG' }))
@@ -276,7 +276,7 @@ describe('[E4.11][AC51] retiring', () => {
     let retired = false
     answerWith({
       list: () => Response.json(page([retired ? item({ usage: { pages: 1, published: 0, drafts: 1 } }) : item(unused)])),
-      uses: Response.json(uses({ published: [], drafts: [{ pageKind: 'story', pageId: other, language: 'de', title: { de: 'Luzern an einem Tag' }, role: 'cover', published: false, thumbnailUrl: null }] })),
+      uses: () => Response.json(uses({ published: [], drafts: [{ pageKind: 'story', pageId: other, language: 'de', title: { de: 'Luzern an einem Tag' }, role: 'cover', published: false, thumbnailUrl: null }] })),
       other: (call) => {
         if (call.method !== 'POST')
           return undefined
@@ -298,6 +298,7 @@ describe('[E4.11][AC51] retiring', () => {
     await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Retire' })).toBeDisabled())
     expect(within(dialog).getByText('Used on 1 page. Remove it from there, or replace it, before you can retire it.')).toBeInTheDocument()
     expect(toasts.success).not.toHaveBeenCalled()
+    expect(toasts.danger).toHaveBeenCalledExactlyOnceWith('While you were deciding, a page started to use this file. A file in use cannot be retired.')
   })
 
   it('[E4.11][AC51] Select mode retires only the unused files and keeps the used ones', async () => {
@@ -405,7 +406,7 @@ describe('[E4.11][AC51] replacing', () => {
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Choose new file' }))
     await userEvent.upload(screen.getByTestId('replace-input'), new File(['png'], 'new.png', { type: 'image/png' }))
 
-    await waitFor(() => expect(toasts.danger).toHaveBeenCalledWith('Not replaced: Kapellbruecke-Sunrise.JPG. Try again.', { description: 'This file is retired and cannot change.' }))
+    await waitFor(() => expect(toasts.danger).toHaveBeenCalledExactlyOnceWith('This file is retired and cannot change.'))
   })
 
   it.each([
@@ -421,7 +422,7 @@ describe('[E4.11][AC51] replacing', () => {
     await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Choose new file' }))
     await userEvent.upload(screen.getByTestId('replace-input'), new File(['png'], 'new.png', { type: 'image/png' }))
 
-    await waitFor(() => expect(toasts.danger).toHaveBeenCalledWith('Not replaced: Kapellbruecke-Sunrise.JPG. Try again.', { description }))
+    await waitFor(() => expect(toasts.danger).toHaveBeenCalledExactlyOnceWith(description))
   })
 })
 

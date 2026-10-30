@@ -27,18 +27,39 @@ export const problemKey = (error: unknown): MessageKey => (error instanceof ApiP
 export type RetireOutcome = 'retired' | 'refused' | 'failed' | 'cancelled'
 
 /**
- * The library's commands with their toasts: upload (one toast for the accepted files, one for the refused),
- * Replace (the page count first, then the file dialog), Retire (confirm, refused while used) and the name and
- * description. `elements` holds the confirm dialog and the hidden file input of Replace.
+ * The library's commands: upload (one toast for the accepted files, one for the refused), Replace (the page count
+ * first, then the file dialog), Retire (confirm, refused while used) and the name and description. `elements` holds
+ * the confirm dialog and the hidden file input of Replace.
+ *
+ * A single command says its result through its `meta` (`api-feedback.md`). Upload and Retire selected run one command
+ * per file and tell the whole batch in one toast, which the cache cannot do (it toasts per command), so those two are
+ * `silent` and their summary and per-file refusals stay local. The refusals of a file before any request (type, size)
+ * are client-side checks and stay local too.
  */
 export function useMediaActions(storeId: string) {
   const { t } = useLocale()
   const queryClient = useQueryClient()
   const { confirm, dialog } = useConfirm()
-  const uploadFiles = useCommand('media', 'upload')
-  const replaceFile = useCommand('media', 'replace')
-  const retireFile = useCommand('media', 'retire')
-  const describeFile = useCommand('media', 'describe')
+  // Written once a tap sends its command, read when the answer comes: what the success text names about the file.
+  const pagesRef = useRef<Record<string, number>>({})
+  const namesRef = useRef<Record<string, string>>({})
+  const uploadFiles = useCommand('media', 'upload', { meta: { silent: true } })
+  const replaceFile = useCommand('media', 'replace', {
+    meta: {
+      success: (replaced, input) => {
+        const pages = pagesRef.current[input.id] ?? 0
+
+        return pages === 0 ? t('media.replace.doneNone', { n: replaced.version }) : t(pages === 1 ? 'media.replace.doneOne' : 'media.replace.done', { n: replaced.version, pages })
+      },
+      error: PROBLEM_KEYS,
+    },
+  })
+  // A file a page took while the merchant decided is shown by the sheet (`refused`); the toast says the same in short.
+  const retireFile = useCommand('media', 'retire', {
+    meta: { success: (_, input) => t('media.retire.done', { name: namesRef.current[input.id] ?? '' }), error: { ...PROBLEM_KEYS, 'media-in-use': 'media.retire.refusedBody' } },
+  })
+  const retireEach = useCommand('media', 'retire', { meta: { silent: true } })
+  const describeFile = useCommand('media', 'describe', { meta: { success: 'media.details.saved', error: PROBLEM_KEYS } })
   const [replacing, setReplacing] = useState<MediaItem | null>(null)
   const [busyIds, setBusyIds] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -86,14 +107,12 @@ export function useMediaActions(storeId: string) {
       return
     }
     setBusyIds(ids => [...ids, item.id])
+    pagesRef.current[item.id] = item.usage?.pages ?? 0
     try {
-      const replaced = await replaceFile.mutateAsync({ storeId, id: item.id, file, contentType: check.contentType })
-      const pages = item.usage?.pages ?? 0
-
-      toast.success(pages === 0 ? t('media.replace.doneNone', { n: replaced.version }) : t(pages === 1 ? 'media.replace.doneOne' : 'media.replace.done', { n: replaced.version, pages }))
+      await replaceFile.mutateAsync({ storeId, id: item.id, file, contentType: check.contentType })
     }
-    catch (error) {
-      toast.danger(t('media.replace.failed', { name: item.name }), { description: t(problemKey(error)) })
+    catch {
+      // The cache shows the refusal.
     }
     finally {
       setBusyIds(ids => ids.filter(id => id !== item.id))
@@ -107,9 +126,9 @@ export function useMediaActions(storeId: string) {
 
     if (!ok)
       return 'cancelled'
+    namesRef.current[item.id] = item.name
     try {
       await retireFile.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID() })
-      toast.success(t('media.retire.done', { name: item.name }))
 
       return 'retired'
     }
@@ -120,7 +139,6 @@ export function useMediaActions(storeId: string) {
 
         return 'refused'
       }
-      toast.danger(t('media.retire.failed'), { description: t(problemKey(error)) })
 
       return 'failed'
     }
@@ -142,7 +160,7 @@ export function useMediaActions(storeId: string) {
 
     for (const item of items) {
       try {
-        await retireFile.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID() })
+        await retireEach.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID() })
         retired++
       }
       catch (error) {
@@ -162,10 +180,9 @@ export function useMediaActions(storeId: string) {
   const save = async (item: MediaItem, details: { name: string, alt: { en: string, de: string } }) => {
     try {
       await describeFile.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID(), name: details.name, alt: details.alt })
-      toast.success(t('media.details.saved'))
     }
-    catch (error) {
-      toast.danger(t(problemKey(error)))
+    catch {
+      // The cache shows the refusal.
     }
   }
 
