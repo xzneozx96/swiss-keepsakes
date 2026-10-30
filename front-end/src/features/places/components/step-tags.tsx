@@ -1,10 +1,11 @@
 import type { StepProps } from './step-props'
 import type { MessageKey } from '@/i18n/en'
 
-import { Checkbox, CheckboxGroup, Description, Label, ListBox, Radio, RadioGroup, Select, Switch } from '@heroui/react'
+import { Description, Label, ListBox, Radio, RadioGroup, Select, Switch } from '@heroui/react'
 import { foodKinds, interestCodes, serviceTypes } from '@sk/domain/content'
 
 import { SparkleIcon } from '@/components/icons'
+import { MultiSelect } from '@/components/multi-select'
 import { useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
 import { Block, choiceCard } from './fields'
@@ -37,43 +38,21 @@ function Choice<T extends string>({ label, description, value, options, onChange
   )
 }
 
-function Check({ value, label, hint }: { value: string, label: string, hint?: string }) {
-  return (
-    <Checkbox className={choiceCard} value={value}>
-      <Checkbox.Content className="w-full flex-row items-center gap-3">
-        <Checkbox.Control className="size-6 shrink-0 rounded-lg">
-          <Checkbox.Indicator className="size-4 [&_[data-slot$=checkmark]]:size-4" />
-        </Checkbox.Control>
-        <span className="flex flex-1 flex-col">
-          <span className="font-medium">{label}</span>
-          {hint && <span className="text-xs text-muted">{hint}</span>}
-        </span>
-      </Checkbox.Content>
-    </Checkbox>
-  )
-}
-
 function MapCategories({ form, patch, storeId }: Pick<StepProps, 'form' | 'patch' | 'storeId'>) {
   const { t, language } = useLocale()
   const categories = useCategories(storeId, 'map')
-  const items = categories.data?.items ?? []
   const name = (item: { name: { en?: string | null, de?: string | null } }) => item.name[language] ?? item.name[language === 'en' ? 'de' : 'en'] ?? ''
+  const options = (categories.data?.items ?? []).map(item => ({ id: item.id, label: name(item), parentId: item.parentId }))
 
   return (
     <Block>
-      <CheckboxGroup className="gap-2" value={form.categoryIds} onChange={categoryIds => patch({ categoryIds })}>
-        <Label>{t('places.categories.label')}</Label>
-        {items.map((item) => {
-          const parent = item.parentId ? items.find(other => other.id === item.parentId) : undefined
-
-          return (
-            <div key={item.id} className={parent ? 'ms-6' : undefined}>
-              <Check hint={parent ? t('places.categories.under', { parent: name(parent) }) : undefined} label={name(item)} value={item.id} />
-            </div>
-          )
-        })}
-        <Description>{`${t('places.categories.help')} ${t('places.categories.manage')}`}</Description>
-      </CheckboxGroup>
+      <MultiSelect
+        description={`${t('places.categories.help')} ${t('places.categories.manage')}`}
+        label={t('places.categories.label')}
+        options={options}
+        value={form.categoryIds}
+        onChange={categoryIds => patch({ categoryIds })}
+      />
     </Block>
   )
 }
@@ -107,11 +86,13 @@ export function StepTags({ form, patch, storeId }: StepProps) {
         </RadioGroup>
       </Block>
       <Block>
-        <CheckboxGroup className="gap-2" value={form.interests} onChange={interests => patch({ interests })}>
-          <Label>{t('places.interests.label')}</Label>
-          {interestCodes.map(code => <Check key={code} label={t(`places.interest.${code}`)} value={code} />)}
-          <Description>{t('places.interests.help')}</Description>
-        </CheckboxGroup>
+        <MultiSelect
+          description={t('places.interests.help')}
+          label={t('places.interests.label')}
+          options={interestCodes.map(code => ({ id: code, label: t(`places.interest.${code}`) }))}
+          value={form.interests}
+          onChange={interests => patch({ interests })}
+        />
       </Block>
       <Block icon={SparkleIcon} title={t('places.home.title')}>
         <Choice description={t('places.service.help')} label={t('places.service.label')} options={serviceTypes.map(id => ({ id, label: t(`places.service.${id}` as MessageKey) }))} value={form.serviceType} onChange={serviceType => patch({ serviceType })} />

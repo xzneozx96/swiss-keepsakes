@@ -1,4 +1,5 @@
 import { mailEn } from '@sk/i18n/en'
+import { multiSelectEn } from '@/components/multi-select-messages'
 import { categoriesEn } from '@/features/categories/messages'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
@@ -42,6 +43,7 @@ export const en = {
   ...keepsakesEn,
   ...mediaEn,
   ...placesEn,
+  ...multiSelectEn,
   ...mapEn,
 
   'app.name': 'Swiss Keepsakes',

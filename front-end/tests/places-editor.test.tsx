@@ -395,10 +395,12 @@ describe('[E4.2][AC41][AC68] N17 tags and the home fields', () => {
     await heading('Place on the map')
     await nextTo('Categories and tags')
 
-    for (const label of ['History and culture', 'Food and drink', 'Lake and mountains', 'Shopping and keepsakes', 'Local activities'])
-      expect(screen.getByRole('checkbox', { name: new RegExp(label) })).toBeInTheDocument()
-    expect(screen.getAllByRole('checkbox', { name: /History|Food and drink|Lake|Shopping|Local activities/ })).toHaveLength(5)
-    await userEvent.click(screen.getByRole('checkbox', { name: /Local activities/ }))
+    await userEvent.click(screen.getByRole('button', { name: /Interests/ }))
+    const offered = screen.getAllByRole('option').map(option => option.textContent)
+    expect(offered).toEqual(['History and culture', 'Food and drink', 'Lake and mountains', 'Shopping and keepsakes', 'Local activities'])
+    await userEvent.click(screen.getByRole('option', { name: /Local activities/ }))
+    await userEvent.keyboard('{Escape}')
+    expect(within(screen.getByRole('grid', { name: 'Interests' })).getAllByRole('row')).toHaveLength(1)
     await userEvent.click(screen.getByRole('switch', { name: /Must-visit/ }))
     await press('Save draft')
 
@@ -450,11 +452,74 @@ describe('[E4.2][AC41][AC68] N17 tags and the home fields', () => {
     await open('new')
     await heading('Place on the map')
     await nextTo('Categories and tags')
-    await userEvent.click(await screen.findByRole('checkbox', { name: /Old town/ }))
+    await userEvent.click(within(screen.getAllByTestId('place-block')[0]!).getByRole('button', { name: /Categories/ }))
+    const tree = (await screen.findAllByRole('option')).map(option => option.textContent)
+    expect(tree).toEqual(['Walks', 'Old town, Under Walks'])
+    await userEvent.click(screen.getByRole('option', { name: /Old town/ }))
+    await userEvent.keyboard('{Escape}')
+    expect(within(screen.getByRole('grid', { name: 'Categories' })).getAllByRole('row')).toHaveLength(1)
     await press('Save draft')
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]!.body).toMatchObject({ categoryIds: [uuid(21)] })
+  })
+})
+
+describe('[E4.2][AC68] N17 categories and interests as multi-selects', () => {
+  const categories = [
+    { id: uuid(20), slug: 'walks', name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, position: 1, childCount: 1, useCount: 0 },
+    { id: uuid(21), slug: 'old-town', name: { en: 'Old town', de: 'Altstadt' }, parentId: uuid(20), position: 1, childCount: 0, useCount: 0 },
+    { id: uuid(22), slug: 'food', name: { en: 'Food', de: 'Essen' }, parentId: null, position: 2, childCount: 0, useCount: 0 },
+  ]
+  const toTags = async (language?: 'de') => {
+    api.categories = categories
+    api.pin = pinOf({ id: uuid(10), categoryIds: [uuid(21), uuid(22)], interests: ['food-drink'] })
+    await open(uuid(10), { language })
+    await heading(language ? 'Ort auf der Karte' : 'Place on the map')
+    await userEvent.click(screen.getAllByRole('button', { name: language ? /Kategorien und Tags/ : /Categories and tags/ }).at(0)!)
+    await heading(language ? 'Kategorien und Tags' : 'Categories and tags')
+  }
+  const field = (name: string) => within(screen.getByRole('grid', { name }))
+
+  it('[E4.2][AC68] shows the chosen categories and interests as chips in the input, with no checkbox list', async () => {
+    await toTags()
+
+    await waitFor(() => expect(field('Categories').getAllByRole('row')).toHaveLength(2))
+    expect(field('Categories').getAllByRole('row').map(row => row.textContent)).toEqual([expect.stringContaining('Old town'), expect.stringContaining('Food')])
+    expect(field('Interests').getAllByRole('row')).toHaveLength(1)
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
+  })
+
+  it('[E4.2][AC68] removing a chip removes the category from the save', async () => {
+    await toTags()
+    await waitFor(() => expect(field('Categories').getAllByRole('row')).toHaveLength(2))
+    await userEvent.click(within(field('Categories').getAllByRole('row')[1]!).getByRole('button', { name: /Remove/ }))
+    await press('Save draft')
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ categoryIds: [uuid(21)], interests: ['food-drink'] })
+  })
+
+  it('[E4.2][AC68] searches the categories, with a sub-category under its parent, and ticks the chosen ones', async () => {
+    await toTags()
+    await userEvent.click(within(screen.getAllByTestId('place-block')[0]!).getByRole('button', { name: /Categories/ }))
+
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['Walks', 'Old town, Under Walks', 'Food'])
+    expect(screen.getByRole('option', { name: /Old town/ })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('option', { name: 'Walks' })).toHaveAttribute('aria-selected', 'false')
+    await userEvent.type(screen.getByRole('searchbox'), 'food')
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual(['Food'])
+  })
+
+  it('[E4.2][AC68] reads in German, with the list of categories in the dashboard language', async () => {
+    await toTags('de')
+
+    expect(screen.getByText('Kategorien')).toBeInTheDocument()
+    await waitFor(() => expect(field('Kategorien').getAllByRole('row')).toHaveLength(2))
+    expect(field('Kategorien').getAllByRole('row')[0]).toHaveTextContent('Altstadt')
+    await userEvent.click(within(screen.getAllByTestId('place-block')[0]!).getByRole('button', { name: /Kategorien/ }))
+    expect(screen.getByRole('searchbox', { name: 'Kategorien durchsuchen' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /Altstadt, Unter Wanderungen/ })).toBeInTheDocument()
   })
 })
 

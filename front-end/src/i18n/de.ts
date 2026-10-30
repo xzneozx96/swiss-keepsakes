@@ -1,6 +1,7 @@
 import type { MessageKey } from './en'
 
 import { mailDe } from '@sk/i18n/de'
+import { multiSelectDe } from '@/components/multi-select-messages.de'
 import { categoriesDe } from '@/features/categories/messages.de'
 import { contentMerchantDe } from '@/features/content/merchant/messages.de'
 import { contentDe } from '@/features/content/messages.de'
@@ -44,6 +45,7 @@ export const de: Record<MessageKey, string> = {
   ...keepsakesDe,
   ...mediaDe,
   ...placesDe,
+  ...multiSelectDe,
   ...mapDe,
 
   'app.name': 'Swiss Keepsakes',
