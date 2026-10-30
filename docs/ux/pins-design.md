@@ -88,10 +88,10 @@ The editor uses the **tour editor's stepper** (M13, `features/merchant/products/
 
 | Step | Content |
 | --- | --- |
-| 1 Place on the map | A map picker on the guest map's flat style (a tap places the pin, the marker drags, the arrow keys nudge it about 5 m, or about 25 m with Shift), the slug (suggested from the title, editable, must be one no other pin uses; changing the slug of a published pin warns that links already shared will go to the map without the pin), and the optional address |
-| 2 Text and photo | Title and tip in EN and DE with a completeness indicator per language, the photo and alt text in EN and DE |
+| 1 Place on the map | A Google Maps link field (paste a link and the pin moves there; short links are followed by the API), a map picker on the guest map's flat style for fine-tuning (a tap places the pin, the marker drags, the arrow keys nudge it about 5 m, or about 25 m with Shift), and the optional address. There is no map link input: the server makes the slug from the title (2026-10-30 decision) and the Review shows it read only |
+| 2 Text and photo | Title, tip and local tip on the shared language switch (EN | DE) with a state per language, and one ordered photo list (grip to drag, arrow keys, Remove, Cover under the first): the first photo is the main photo, the rest are the extra photos. No photo description fields (the guest side uses the place title) |
 | 3 Hours and dates | Weekly hours (per weekday, any number of spans, or closed) and optional date entries: one day with optional start and end times, or a range of days. An entry cannot cross midnight (for example 22:00 to 00:30 is an error); for a late event the end time stays empty. Times are Europe/Zurich. The step explains that the pin leaves the map after its last date |
-| 4 Categories and tags | Map categories (multi-select with one level of sub-categories; none is required, and no category means it shows only under All), stay tag (short-stay, multi-day or both), the five fixed interests (the fifth, Local activities, was added on 2026-10-28) and a switch for the fixed flag "Free to use" that puts a pin in the home section "Free and useful" (added 2026-10-28; see `docs/decisions/2026-10-28-home-by-interests.md`) |
+| 4 Categories and tags | Categories (the shared multi-select, chips in the input, search, one level of sub-categories; none is required, and no category means it shows only under All), stay tag (short-stay, multi-day or both), the five fixed interests (the fifth, Local activities, was added on 2026-10-28) and a switch for the fixed flag "Free to use" that puts a pin in the home section "Free and useful" (added 2026-10-28; see `docs/decisions/2026-10-28-home-by-interests.md`) |
 | 5 Story and link | An optional main-story picker that shows which language versions are published, and one optional outbound link (a warning that changing it changes every page that shows the pin) |
 | 6 Review and publish | Each step's facts with **Edit**, and the publish rules |
 
@@ -100,7 +100,7 @@ The editor uses the **tour editor's stepper** (M13, `features/merchant/products/
 - **Lifecycle:** a draft can be deleted. A published pin can only be hidden, after a confirm. A hidden pin can be shown again.
 - **Scenarios in the lab:** new place, new event, published pin, hidden pin, ended event, draft with errors (German title only, no location, a link another pin uses, a 22:00 to 00:30 entry and a link with a space).
 - **Preview** in EN and DE: the editor has "Preview EN" and "Preview DE" actions, and the lab shows the guest phone beside the editor drawing the unsaved edits. In the product the preview is an `ssr:false` route (decision D6).
-- Editor fields are bilingual and validated in the API as well as the UI (ADR-003).
+- Editor fields are bilingual and validated in the API as well as the UI (ADR-003). Every block of a step is a non-collapsible card; a card that groups several fields has an icon tile, a title and a summary, and a one-field card has none, so no heading repeats a field label.
 
 ## 5. Differences from the original PRD v3 (settled)
 
