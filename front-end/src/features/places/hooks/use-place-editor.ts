@@ -278,6 +278,6 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     notice,
     busy,
     dialog,
-    actions: { hide: askHide, unhide, remove: askRemove, busy, dirty },
+    actions: { publish: doPublish, hide: askHide, unhide, remove: askRemove, busy, dirty },
   }
 }

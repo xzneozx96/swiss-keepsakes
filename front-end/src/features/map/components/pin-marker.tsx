@@ -14,12 +14,14 @@ function IconFace({ size }: { size: number }) {
 
 /**
  * A pin's thumbnail slot. It shows the place icon until the public map list carries a photo
- * address (a follow-up: the API adds `photoUrl`).
+ * address (a follow-up: the API adds `photoUrl`). The place editor's preview passes the draft's
+ * cover as `src`.
  */
-export function PinThumb({ iconSize, className = '' }: { iconSize: number, className?: string }) {
+export function PinThumb({ iconSize, className = '', src }: { iconSize: number, className?: string, src?: string }) {
   return (
     <span className={`relative block overflow-hidden bg-[#173f52] ${className}`}>
       <IconFace size={iconSize} />
+      {src && <img alt="" className="absolute inset-0 size-full object-cover" decoding="async" src={src} />}
     </span>
   )
 }
@@ -35,11 +37,13 @@ export function PhotoPin({
   pin,
   look,
   label,
+  photoSrc,
   onSelect,
 }: {
   pin: PublicMapItem
   look: PinLook
   label: string
+  photoSrc?: string
   onSelect: (id: string) => void
 }) {
   const dimmed = !look.lit
@@ -59,6 +63,7 @@ export function PhotoPin({
       <PinThumb
         className={`rounded-full border-[3px] shadow-[0_4px_14px_rgb(31_24_17/0.35)] transition-[width,height] duration-200 motion-reduce:transition-none ${look.selected ? 'border-accent' : 'border-[#fffaf4]'} ${size}`}
         iconSize={look.selected ? 24 : 18}
+        src={photoSrc}
       />
       {look.selected && <span aria-hidden className="-mt-1 size-2.5 rotate-45 bg-accent" />}
     </button>

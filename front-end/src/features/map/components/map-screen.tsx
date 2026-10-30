@@ -9,6 +9,7 @@ import { BulletListIcon, FilterIcon, PickupIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useMapData } from '@/features/map/api/queries'
 import { categoryName, keepHighlighted, topLevelCategories } from '@/features/map/lib/categories'
+import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, TAB_BAR } from '@/features/map/lib/layout'
 import { CategoriesSheet } from './categories-sheet'
 import { MapControlsSkeleton } from './map-skeleton'
 import { PinList } from './pin-list'
@@ -19,12 +20,6 @@ import { MapStatusLayer } from './status-layer'
 type View = 'map' | 'list'
 
 const NO_PINS: PublicMapItem[] = []
-/** The tab bar without the home-indicator inset (px): the camera keeps pins clear of it. */
-const TAB_BAR = 64
-const CONTROLS = 60
-/** The card row sits above the background-music button (px from the bottom), so neither covers the other. */
-const CARD_ROW_BOTTOM = 124
-const CARD_ROW_HEIGHT = 190
 const LUCERNE: [number, number] = [8.3068, 47.0535]
 const MAP_OPTIONS = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
 

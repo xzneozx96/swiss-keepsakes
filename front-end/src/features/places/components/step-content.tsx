@@ -31,7 +31,7 @@ function textState(form: PlaceForm, lang: Lang): TextState {
 }
 
 /** The shared language switch, each language with its state. */
-function PlaceLanguageSwitch({ form, selected, onChange }: { form: PlaceForm, selected: Lang, onChange: (lang: Lang) => void }) {
+export function PlaceLanguageSwitch({ form, selected, onChange }: { form: PlaceForm, selected: Lang, onChange: (lang: Lang) => void }) {
   const { t } = useLocale()
   const status = (lang: Lang) => {
     const state = textState(form, lang)

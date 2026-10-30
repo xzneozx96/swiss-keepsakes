@@ -26,10 +26,16 @@ vi.mock('@/features/places/components/map-picker', () => ({
   ),
 }))
 
+// The review draws the guest map in a phone: MapLibre is the fake one.
+vi.mock('maplibre-gl', async () => (await import('./support/fake-maplibre')).fakeMaplibre)
+vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
+vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.mjs' }))
+
 let api: FakeApi
 
 beforeEach(() => {
   window.scrollTo = vi.fn()
+  window.HTMLElement.prototype.scrollTo = vi.fn()
   localStorage.clear()
   sessionStorage.clear()
   api = installApi()
@@ -46,6 +52,8 @@ function open(placeId: string, options: { start?: 'dates', language?: 'en' | 'de
 
 const writes = () => api.calls.filter(call => call.method !== 'GET' && call.path.startsWith(`/api/store/${storeId}/pins`))
 const press = (name: string | RegExp) => userEvent.click(screen.getByRole('button', { name }))
+// The review has Publish beside the phone and in the step bar: both are the same action.
+const publish = () => userEvent.click(screen.getAllByRole('button', { name: 'Publish' })[0]!)
 const type = (label: string, text: string) => userEvent.type(screen.getByLabelText(label), text)
 // A time input has a segment for the hours and one for the minutes: typing the four digits fills both.
 // HeroUI nests two groups with the same name, and the hidden weekday in the label joins as "Mon ·Open at".
@@ -103,7 +111,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
     await open('new')
     await completeNewPin()
     await nextTo('Review and publish')
-    await press('Publish')
+    await publish()
 
     await waitFor(() => expect(writes()).toHaveLength(2))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `/api/store/${storeId}/pins`, body: { categoryIds: [], mainStoryGroupId: null } })
@@ -122,7 +130,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
     expect(list.getAllByText('missing')).toHaveLength(2)
     expect(list.queryByText(/map link/i)).not.toBeInTheDocument()
     expect(list.getByText('A title in English or German')).toBeInTheDocument()
-    await press('Publish')
+    await publish()
 
     expect(writes()).toHaveLength(0)
     expect(await screen.findByText('To publish, fix the steps marked red.')).toBeInTheDocument()
@@ -639,15 +647,14 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
     expect(blocks()[0]).toHaveTextContent(/^Story behind this placeNoneGuests can open it from the place card\.(?: None)?$/)
   })
 
-  it('[E4.2][AC85] the review step uses the same words, and its tips row is Tips from a local', async () => {
+  it('[E4.2][AC85] the review shows the place in a phone, with no list of the steps\' facts and no old words', async () => {
     api.pin = pinOf({ id: uuid(10) })
     await open('new')
     await heading('Place on the map')
     await nextTo('Review and publish')
 
-    expect(screen.getByText('Story behind this place')).toBeInTheDocument()
-    expect(screen.getByText('Tips from a local')).toBeInTheDocument()
-    expect(screen.queryByText(/Main story|Local tip/)).not.toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'The place on the guest map' })).toBeInTheDocument()
+    expect(screen.queryByText(/Story behind this place|Tips from a local|Main story|Local tip|Opening hours|Recommended for/)).not.toBeInTheDocument()
   })
 
   it('[E4.2][AC85] says the same in German', async () => {

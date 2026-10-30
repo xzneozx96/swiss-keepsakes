@@ -48,7 +48,7 @@ export function PlaceEditor({ storeId, initial, start }: { storeId: string, init
     when: <StepWhen {...props} />,
     tags: <StepTags {...props} />,
     links: <StepLinks {...props} />,
-    review: <StepReview {...props} actions={editor.actions} steps={editor.steps} />,
+    review: <StepReview {...props} actions={editor.actions} />,
   }
 
   return (

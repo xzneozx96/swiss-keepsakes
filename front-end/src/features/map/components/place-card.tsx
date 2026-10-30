@@ -20,7 +20,7 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
  * next date when the pin has dates; and the main story when it has one. No price. The details
  * sheet, hours, address and directions are E4.7.
  */
-function PlaceCard({ pin, active }: { pin: PublicMapItem, active: boolean }) {
+function PlaceCard({ pin, active, photoSrc }: { pin: PublicMapItem, active: boolean, photoSrc?: string }) {
   const { t, language, intlLocale } = useLocale()
   const date = pin.nextDate
     ? nextDateLine(pin.nextDate, zurichToday(new Date()), intlLocale, {
@@ -36,7 +36,7 @@ function PlaceCard({ pin, active }: { pin: PublicMapItem, active: boolean }) {
       data-card={pin.id}
     >
       <div className="flex gap-3">
-        <PinThumb className="size-[84px] shrink-0 rounded-2xl" iconSize={32} />
+        <PinThumb className="size-[84px] shrink-0 rounded-2xl" iconSize={32} src={photoSrc} />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <h2 className="truncate font-serif text-card-title outline-none" id={`place-card-${pin.id}`} lang={pin.language} tabIndex={-1}>
             {pin.title}
@@ -67,11 +67,14 @@ function PlaceCard({ pin, active }: { pin: PublicMapItem, active: boolean }) {
 export function PlaceCardRow({
   pins,
   selectedId,
+  photoOf,
   onSelect,
   onClose,
 }: {
   pins: PublicMapItem[]
   selectedId: string
+  /** The picture of a pin, when the caller knows it (the place editor's preview); without it a card shows the place icon. */
+  photoOf?: (pin: PublicMapItem) => string | undefined
   onSelect: (id: string) => void
   onClose: () => void
 }) {
@@ -117,7 +120,7 @@ export function PlaceCardRow({
         className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-[calc(50%-155.5px)] pb-3 [scrollbar-width:none]"
         onScrollEnd={onScrollEnd}
       >
-        {pins.map(pin => <PlaceCard key={pin.id} active={pin.id === selectedId} pin={pin} />)}
+        {pins.map(pin => <PlaceCard key={pin.id} active={pin.id === selectedId} photoSrc={photoOf?.(pin)} pin={pin} />)}
       </div>
     </section>
   )

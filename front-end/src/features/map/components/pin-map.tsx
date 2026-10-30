@@ -54,6 +54,7 @@ export function PinMap({
   selectedId,
   insetTop,
   insetBottom,
+  photoOf,
   onSelect,
 }: {
   map: MapLibreMap | null
@@ -67,6 +68,8 @@ export function PinMap({
   /** Space the overlays take (px), so the camera keeps pins clear of them. */
   insetTop: number
   insetBottom: number
+  /** The picture of a pin, when its photo is known to the caller (the place editor's preview); without it a pin shows the place icon. */
+  photoOf?: (pin: PublicMapItem) => string | undefined
   onSelect: (id: string) => void
 }) {
   const { t, intlLocale } = useLocale()
@@ -203,7 +206,7 @@ export function PinMap({
     return createPortal(
       members
         ? <PhotoCluster lit={members.some(member => litIds.has(member.id))} members={members} zoomIn={() => zoomTo(members)} />
-        : <PhotoPin label={label} look={{ selected: selectedId === id, lit, filtered }} pin={pin} onSelect={onSelect} />,
+        : <PhotoPin label={label} look={{ selected: selectedId === id, lit, filtered }} photoSrc={photoOf?.(pin)} pin={pin} onSelect={onSelect} />,
       element,
       id,
     )
