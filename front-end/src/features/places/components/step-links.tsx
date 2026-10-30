@@ -55,7 +55,6 @@ export function StepLinks({ form, patch, errors, storeId }: StepProps) {
       </Block>
       <Block>
         <Field description={t('places.link.help')} error={errors.link} inputMode="text" label={t('places.link.label')} maxLength={2000} placeholder="https://" value={form.outboundUrl} onChange={outboundUrl => patch({ outboundUrl })} />
-        <p className="text-sm text-warning">{t('places.link.everywhere')}</p>
       </Block>
     </div>
   )
