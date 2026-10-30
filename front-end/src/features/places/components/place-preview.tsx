@@ -80,7 +80,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
  */
 export default function PlacePreview({ form, storeId, language, label }: { form: PlaceForm, storeId: string, language: Language, label: string }) {
   return (
-    <IPhoneMockup label={label} reserve={64}>
+    <IPhoneMockup fitPage label={label} reserve={104}>
       <LocaleOverride language={language}>
         <DraftMap form={form} language={language} storeId={storeId} />
       </LocaleOverride>
