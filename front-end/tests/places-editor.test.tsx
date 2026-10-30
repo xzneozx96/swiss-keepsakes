@@ -124,6 +124,7 @@ describe('[E4.2][AC68] N17 a new place', () => {
     await open('new')
     await heading('Place on the map')
     await press('Next')
+    await userEvent.click(screen.getByRole('tab', { name: /^German/ }))
     await type('Title in German', 'Kapellbrücke')
     await press('Save draft')
 
@@ -153,6 +154,60 @@ describe('[E4.2][AC68] N17 a new place', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Fix 1 problem before saving.')
     await press('Save draft')
     expect(writes()).toHaveLength(0)
+  })
+})
+
+describe('[E4.2][AC68] N17 text per language', () => {
+  const openText = async (language?: 'de') => {
+    await open('new', { language })
+    await heading(language ? 'Ort auf der Karte' : 'Place on the map')
+    await userEvent.click(screen.getByRole('button', { name: language ? 'Weiter' : 'Next' }))
+    await heading(language ? 'Text und Foto' : 'Text and photo')
+  }
+
+  it('[E4.2][AC68] shows one language at a time on the shared language switch, with each language\'s state', async () => {
+    await openText()
+
+    expect(screen.getByRole('tablist', { name: 'Language version' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^English, Not written/ })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: /^German, Not written/ })).toBeInTheDocument()
+    expect(screen.getByLabelText('Title in English')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Title in German')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Tip in German')).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC68] a title makes the language Ready, and text without a title is Missing title', async () => {
+    await openText()
+    await type('Tip in English', 'Come at dawn.')
+
+    expect(screen.getByRole('tab', { name: /^English, Missing title/ })).toBeInTheDocument()
+    await type('Title in English', 'Chapel Bridge')
+    expect(screen.getByRole('tab', { name: /^English, Ready/ })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^German, Not written/ })).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC68] keeps what was typed in a language while the other is open, and saves both', async () => {
+    api.pin = pinOf({ id: uuid(10) })
+    await openText()
+    await type('Title in English', 'Chapel Bridge')
+    await userEvent.click(screen.getByRole('tab', { name: /^German/ }))
+    await type('Title in German', 'Kapellbrücke')
+    await type('Local tip in German', 'Bei Sonnenaufgang')
+    await userEvent.click(screen.getByRole('tab', { name: /^English/ }))
+
+    expect(screen.getByLabelText('Title in English')).toHaveValue('Chapel Bridge')
+    await userEvent.click(screen.getAllByRole('button', { name: 'Save draft' })[0]!)
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ title: { en: 'Chapel Bridge', de: 'Kapellbrücke' }, localTip: { de: 'Bei Sonnenaufgang' } })
+  })
+
+  it('[E4.2][AC68] opens on the dashboard language, German here, with German labels', async () => {
+    await openText('de')
+
+    expect(screen.getByRole('tablist', { name: 'Sprachversion' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^Deutsch/, selected: true })).toBeInTheDocument()
+    expect(screen.getByLabelText('Titel auf Deutsch')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^Englisch, Nicht geschrieben/ })).toBeInTheDocument()
   })
 })
 

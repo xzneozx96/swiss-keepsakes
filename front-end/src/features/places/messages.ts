@@ -306,5 +306,11 @@ export const placesEn = {
   'places.dates.untilHelp': 'The pin is on the map from publishing until its last date. After that it leaves the map by itself. Times are Lucerne time.',
   'places.action.next': 'Next',
   'places.details.title': 'Map link and address',
+  'places.text.title': 'Text',
+  'places.text.hint': 'Write each language on its own tab. A title in one language is enough to publish.',
+  'places.lang.switch': 'Language version',
+  'places.text.state.ready': 'Ready',
+  'places.text.state.missingTitle': 'Missing title',
+  'places.text.state.notWritten': 'Not written',
   'places.home.title': 'Shown on the home',
 } as const

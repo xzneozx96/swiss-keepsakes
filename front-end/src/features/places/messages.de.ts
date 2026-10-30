@@ -308,5 +308,11 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.dates.untilHelp': 'Der Punkt ist ab dem Veröffentlichen bis zu seinem letzten Datum auf der Karte. Danach verschwindet er von selbst. Zeiten sind Luzerner Zeit.',
   'places.action.next': 'Weiter',
   'places.details.title': 'Kartenlink und Adresse',
+  'places.text.title': 'Text',
+  'places.text.hint': 'Schreiben Sie jede Sprache auf ihrem eigenen Tab. Ein Titel in einer Sprache genügt zum Veröffentlichen.',
+  'places.lang.switch': 'Sprachversion',
+  'places.text.state.ready': 'Bereit',
+  'places.text.state.missingTitle': 'Titel fehlt',
+  'places.text.state.notWritten': 'Nicht geschrieben',
   'places.home.title': 'Auf der Startseite',
 }
