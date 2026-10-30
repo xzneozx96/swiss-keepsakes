@@ -12,7 +12,7 @@ import { CreateKeepsake } from '@/features/keepsakes/components/create-flow'
 import { KeepsakeEditorScreen } from '@/features/keepsakes/components/keepsake-editor'
 import { KeepsakeList } from '@/features/keepsakes/components/keepsake-list'
 import { VariantScreen } from '@/features/keepsakes/components/variant-page'
-import { isKeepsakeView } from '@/features/keepsakes/lib/search-params'
+import { isKeepsakeStep, isKeepsakeView } from '@/features/keepsakes/lib/search-params'
 
 // jsdom has no CSS.supports, which a module of the prototype gift editor (the CommissionCard's file) calls on load.
 vi.hoisted(() => {
@@ -142,13 +142,16 @@ export function renderKeepsakes(initial: string) {
   const edit = createRoute({
     getParentRoute: () => root,
     path: '/store/products/gifts/$productId',
-    validateSearch: (search: Record<string, unknown>) => ({ view: isKeepsakeView(search.view) && search.view !== 'edit' ? search.view : undefined }),
+    validateSearch: (search: Record<string, unknown>) => ({
+      step: isKeepsakeStep(search.step) && search.step !== 'details' ? search.step : undefined,
+      view: isKeepsakeView(search.view) && search.view !== 'edit' ? search.view : undefined,
+    }),
     component: function Edit() {
       const { productId: id } = edit.useParams()
-      const { view = 'edit' } = edit.useSearch()
+      const { step = 'details', view = 'edit' } = edit.useSearch()
       const navigate = edit.useNavigate()
 
-      return <KeepsakeEditorScreen id={id} view={view} onView={next => void navigate({ search: next === 'edit' ? {} : { view: next }, replace: true })} />
+      return <KeepsakeEditorScreen id={id} step={step} view={view} onOpen={next => void navigate({ search: { step: next.step === 'details' ? undefined : next.step, view: next.view === 'edit' ? undefined : next.view }, replace: true })} />
     },
   })
   const variant = createRoute({

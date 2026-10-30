@@ -39,6 +39,9 @@ export const keepsakesEn = {
   'keepsakes.save.unsaved': 'Unsaved changes',
   'keepsakes.save.saved': 'Saved {time}',
   'keepsakes.save.notSaved': 'Not saved',
+  'keepsakes.step.details': 'Details',
+  'keepsakes.step.options': 'Options',
+  'keepsakes.step.variants': 'Variants',
   'keepsakes.leave.title': 'Leave without saving?',
   'keepsakes.leave.body': 'Your last edits are not saved yet. If you leave now, they are lost.',
   'keepsakes.leave.confirm': 'Leave without saving',
@@ -66,7 +69,7 @@ export const keepsakesEn = {
   'keepsakes.basics.textHint': 'What the keepsake is, the sizes, and anything a guest should know. {count} / {max}',
   'keepsakes.basics.textRequired': 'Add the text in the same language as the name.',
 
-  'keepsakes.photos.title': 'Media',
+  'keepsakes.photos.title': 'Photos',
   'keepsakes.photos.empty': 'No photos yet. Add one to publish; the first is the cover.',
 
   'keepsakes.options.title': 'Options',

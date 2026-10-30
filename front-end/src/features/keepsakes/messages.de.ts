@@ -40,6 +40,9 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.save.unsaved': 'Nicht gespeicherte Änderungen',
   'keepsakes.save.saved': 'Gespeichert {time}',
   'keepsakes.save.notSaved': 'Nicht gespeichert',
+  'keepsakes.step.details': 'Details',
+  'keepsakes.step.options': 'Optionen',
+  'keepsakes.step.variants': 'Varianten',
   'keepsakes.leave.title': 'Ohne Speichern verlassen?',
   'keepsakes.leave.body': 'Ihre letzten Änderungen sind noch nicht gespeichert. Wenn Sie jetzt gehen, gehen sie verloren.',
   'keepsakes.leave.confirm': 'Ohne Speichern verlassen',
@@ -67,7 +70,7 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.basics.textHint': 'Was das Andenken ist, die Grössen und alles, was Gäste wissen sollten. {count} / {max}',
   'keepsakes.basics.textRequired': 'Geben Sie den Text in derselben Sprache wie den Namen ein.',
 
-  'keepsakes.photos.title': 'Medien',
+  'keepsakes.photos.title': 'Fotos',
   'keepsakes.photos.empty': 'Noch keine Fotos. Fügen Sie eines hinzu, um zu veröffentlichen; das erste ist das Titelbild.',
 
   'keepsakes.options.title': 'Optionen',

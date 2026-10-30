@@ -7,6 +7,15 @@ export function isKeepsakeView(value: unknown): value is KeepsakeView {
   return KEEPSAKE_VIEWS.includes(value as KeepsakeView)
 }
 
+/** The steps of the keepsake editor, in order. `step` in the address names the one that is open; none means the first. */
+export const KEEPSAKE_STEPS = ['details', 'options', 'variants'] as const
+
+export type KeepsakeStep = (typeof KEEPSAKE_STEPS)[number]
+
+export function isKeepsakeStep(value: unknown): value is KeepsakeStep {
+  return KEEPSAKE_STEPS.includes(value as KeepsakeStep)
+}
+
 export const KEEPSAKES_PATH = '/store/products'
 export const KEEPSAKE_PATH = '/store/products/gifts/$productId'
 export const NEW_KEEPSAKE_PATH = '/store/products/gifts/new'

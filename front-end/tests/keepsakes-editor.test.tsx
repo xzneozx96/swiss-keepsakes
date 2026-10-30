@@ -63,8 +63,9 @@ async function openVariantPage() {
   await screen.findByTestId('variant-page', undefined, SLOW)
 }
 
-async function openEditor() {
-  const router = renderKeepsakes(`/store/products/gifts/${productId}`)
+/** The editor on a step; the controls of Details are mounted in every step (that step is only hidden), so the name field is the ready signal. */
+async function openEditor(step?: 'options' | 'variants') {
+  const router = renderKeepsakes(`/store/products/gifts/${productId}${step ? `?step=${step}` : ''}`)
 
   await nameField()
 
@@ -72,15 +73,62 @@ async function openEditor() {
 }
 
 describe('[E6.1][AC55] M12 the edit screen in English', () => {
-  it('[E6.1] shows the cards in order and the status with the save state in the bar', async () => {
+  it('[T-003] lays the editor out like the place editor: the step list, three white blocks, the name, the status and the bar', async () => {
     await openEditor()
 
-    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent)).toEqual(['Name and text', 'Media', 'Options', 'Variants', 'Partner\'s commission rate (%)'])
+    const steps = within(screen.getByRole('navigation', { name: 'Steps' }))
+
+    expect(steps.getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Done', '2. Options, Done', '3. Variants, Done'])
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent).filter(text => text !== 'Step 1 of 3 · Details')).toEqual(['Name and text', 'Photos', 'Partner\'s commission rate (%)'])
     expect(screen.getByRole('heading', { level: 1, name: 'Victorinox Classic' })).toBeInTheDocument()
-    expect(screen.getByText('Draft')).toBeInTheDocument()
+    expect(within(screen.getByTestId('keepsake-status')).getByText('Draft')).toBeInTheDocument()
     expect(screen.getByText(/^Saved \d/)).toBeInTheDocument()
-    expect(screen.getByText('No options: this keepsake is sold as one variant.')).toBeInTheDocument()
     expect(reviewButton()).toBeInTheDocument()
+  })
+
+  it('[T-003] shows "Step 1 of 3 · Details", a progress bar and All steps for a phone', async () => {
+    await openEditor()
+
+    expect(screen.getByText(/Step 1 of 3/)).toBeInTheDocument()
+    expect(screen.getByRole('progressbar', { name: 'Progress through the steps' })).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'All steps' }))
+    const sheet = await screen.findByRole('dialog', { name: 'Steps' })
+
+    await userEvent.click(within(sheet).getByRole('button', { name: /Variants/ }))
+    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Steps' })).not.toBeInTheDocument()
+  })
+
+  it('[T-003] the bar has Next and no Save button; Next opens Options and the address names the step; Back returns', async () => {
+    const router = await openEditor()
+
+    expect(screen.queryByRole('button', { name: /^Save/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Previous step' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(await screen.findByRole('region', { name: 'Options' })).toBeInTheDocument()
+    expect(router.state.location.search).toMatchObject({ step: 'options' })
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
+    expect(router.state.location.search.step).toBeUndefined()
+    expect(screen.getByRole('region', { name: 'Name and text' })).toBeVisible()
+  })
+
+  it('[T-003] the step in the address opens that step, and Details is not on screen then', async () => {
+    await openEditor('variants')
+
+    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Name and text' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Options' })).not.toBeInTheDocument()
+    expect(screen.getByText(/^Saved \d/)).toBeInTheDocument()
+  })
+
+  it('[T-003] the Options step says so when there is no option', async () => {
+    await openEditor('options')
+
+    expect(await screen.findByText('No options: this keepsake is sold as one variant.')).toBeInTheDocument()
   })
 
   it('[E6.1][AC55] has no engraving, sub-category, deposit, pay-later or payment-deadline field', async () => {
@@ -90,7 +138,7 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
   })
 
   it('[E6.1][variant] shows the one variant with its code, price and status, and no stock', async () => {
-    await openEditor()
+    await openEditor('variants')
 
     const grid = screen.getByRole('grid', { name: 'Variants' })
 
@@ -372,7 +420,7 @@ describe('[E6.1][variant] the default variant', () => {
   it('[E6.1][variant] Hide from guests changes the status at once and the card lists it under Hidden', async () => {
     const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'draft', values: {} }], blocking: [{ code: 'variant-for-sale', card: 'variants' }] })) : undefined))
-    await openEditor()
+    await openEditor('variants')
 
     await userEvent.click(screen.getAllByRole('button', { name: 'Actions for VX-1' })[0]!)
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Hide from guests' }))
@@ -388,7 +436,7 @@ describe('[E6.1][variant] the default variant', () => {
   it('[E6.1][variant] a refused Hide from guests is shown in the keepsake words on the card, not as a toast', async () => {
     const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? problem(404, 'not-found') : undefined))
-    await openEditor()
+    await openEditor('variants')
 
     await userEvent.click(screen.getAllByRole('button', { name: 'Actions for VX-1' })[0]!)
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Hide from guests' }))
@@ -445,6 +493,34 @@ describe('[E6.1][review] Review and publish', () => {
 
     expect(await screen.findByLabelText('Name (English)')).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('No photos yet. Add one to publish; the first is the cover.')
+  })
+
+  it('[T-003] Edit on a photo check lands on the Details step with the Photos block focused and the step marked as having errors', async () => {
+    current = product({ photos: [], blocking: [{ code: 'photos', card: 'photos' }] })
+    view.wide = true
+    await openEditor('variants')
+
+    expect(await screen.findByRole('button', { name: '1. Details' })).toBeInTheDocument()
+    await userEvent.click(reviewButton())
+    await userEvent.click(within(await screen.findByTestId('review-screen', undefined, SLOW)).getByRole('button', { name: 'Edit' }))
+
+    expect(await screen.findByRole('region', { name: 'Photos' })).toBeVisible()
+    expect(screen.getByRole('button', { name: '1. Details, Has errors' })).toBeInTheDocument()
+    await waitFor(() => expect(document.getElementById('photos')!.contains(document.activeElement)).toBe(true))
+    expect(screen.getByRole('alert')).toHaveTextContent('No photos yet. Add one to publish; the first is the cover.')
+  })
+
+  it('[T-003] Edit on a variants check opens the Variants step', async () => {
+    current = product({ blocking: [{ code: 'variant-for-sale', card: 'variants' }] })
+    view.wide = true
+    const router = await openEditor()
+
+    await userEvent.click(reviewButton())
+    await userEvent.click(within(await screen.findByTestId('review-screen', undefined, SLOW)).getByRole('button', { name: 'Edit' }))
+
+    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
+    expect(router.state.location.search).toMatchObject({ step: 'variants' })
+    expect(router.state.location.search.view).toBeUndefined()
   })
 
   it('[E6.1][checks] the phone bar opens the checks by itself when something blocks', async () => {
@@ -534,17 +610,22 @@ describe('[E6.1][412] a keepsake that is not there', () => {
 describe('[E6.1][i18n] M12 in German', () => {
   beforeEach(() => writeStored('sk.language', 'de'))
 
-  it('[E6.1][i18n] shows the edit screen, its cards and the variants in German, with no engraving and no key left over', async () => {
+  it('[E6.1][i18n] shows the editor, its steps, blocks and variants in German, with no engraving and no key left over', async () => {
     renderKeepsakes(`/store/products/gifts/${productId}`)
 
     await screen.findByLabelText('Name (English)', undefined, SLOW)
     await screen.findByRole('heading', { level: 2, name: 'Name und Text' }, SLOW)
-    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent)).toEqual(['Name und Text', 'Medien', 'Optionen', 'Varianten', 'Provisionssatz für Partner (%)'])
-    expect(screen.getByText('Keine Optionen: Dieses Andenken wird als eine Variante verkauft.')).toBeInTheDocument()
-    expect(screen.getAllByText('Im Verkauf').length).toBeGreaterThan(0)
+    expect(within(screen.getByRole('navigation', { name: 'Schritte' })).getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['1. Details, Erledigt', '2. Optionen, Erledigt', '3. Varianten, Erledigt'])
+    expect(screen.getAllByRole('heading', { level: 2 }).map(h => h.textContent).filter(text => !text?.startsWith('Schritt'))).toEqual(['Name und Text', 'Fotos', 'Provisionssatz für Partner (%)'])
+    expect(screen.getByText(/Schritt 1 von 3/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Weiter' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Prüfen' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Zurück zu Andenken' })).toBeInTheDocument()
-    expect(document.body.textContent).not.toMatch(/keepsakes\.[a-z]/)
+    await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
+    expect(await screen.findByText('Keine Optionen: Dieses Andenken wird als eine Variante verkauft.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
+    expect((await screen.findAllByText('Im Verkauf')).length).toBeGreaterThan(0)
+    expect(document.body.textContent).not.toMatch(/keepsakes\.[a-z]|steps\.[a-z]/)
     expect(document.body.textContent).not.toMatch(/gravur|unterkategorie|anzahlung|später zahlen|zahlungsfrist/i)
   })
 

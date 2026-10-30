@@ -19,7 +19,12 @@ export function MerchantBackBar({
   label,
   title,
   ...link
-}: LinkProps & { label: string, title: string }) {
+}: LinkProps & {
+  label: string
+  title: string
+  /** A screen with unsaved work can stop the navigation (`preventDefault`) and ask first. */
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>
+}) {
   const slot = use(MerchantBarSlotContext)
 
   if (!slot)

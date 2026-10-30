@@ -1,0 +1,71 @@
+import { describe, expect, it } from 'vitest'
+
+import { isKeepsakeStep, KEEPSAKE_STEPS } from '@/features/keepsakes/lib/search-params'
+import { draftStatuses, stepOfCard, stepStatuses } from '@/features/keepsakes/lib/steps'
+
+const check = (card: 'basics' | 'photos' | 'options' | 'variants' | 'commission', code: 'language' | 'photos' | 'variant-for-sale' | 'option-labels' = 'photos') => ({ code, card })
+
+describe('[T-003] the step of a check', () => {
+  it.each([
+    ['basics', 'details'],
+    ['photos', 'details'],
+    ['commission', 'details'],
+    ['options', 'options'],
+    ['variants', 'variants'],
+  ] as const)('[T-003] the %s card is on the %s step', (card, step) => {
+    expect(stepOfCard(card)).toBe(step)
+  })
+
+  it('[T-003] a step id from the address is told from any other word', () => {
+    expect(KEEPSAKE_STEPS.every(isKeepsakeStep)).toBe(true)
+    expect(isKeepsakeStep('billing')).toBe(false)
+    expect(isKeepsakeStep(undefined)).toBe(false)
+  })
+})
+
+describe('[T-003] the status of each step of a saved keepsake', () => {
+  const ids = ['details', 'options', 'variants'] as const
+
+  it('[T-003] every step is done when nothing blocks publishing', () => {
+    expect(stepStatuses({ blocking: [] }, ids, false)).toEqual({ details: 'done', options: 'done', variants: 'done' })
+  })
+
+  it('[T-003] a step with a blocking check is not started until a publish was tried, then it has errors', () => {
+    const blocking = [check('photos'), check('variants', 'variant-for-sale')]
+
+    expect(stepStatuses({ blocking }, ids, false)).toEqual({ details: 'todo', options: 'done', variants: 'todo' })
+    expect(stepStatuses({ blocking }, ids, true)).toEqual({ details: 'error', options: 'done', variants: 'error' })
+  })
+
+  it('[T-003] the mark goes back to done once the check is gone', () => {
+    expect(stepStatuses({ blocking: [check('photos')] }, ids, true).details).toBe('error')
+    expect(stepStatuses({ blocking: [] }, ids, true).details).toBe('done')
+  })
+})
+
+describe('[T-003] the status of each step of a new keepsake', () => {
+  const start = { hasName: false, reached: 0, soldCount: 0, nameTried: false, variantsTried: false }
+
+  it('[T-003] nothing is done before a name is typed', () => {
+    expect(draftStatuses(start)).toEqual({ details: 'todo', options: 'todo', variants: 'todo', review: 'todo' })
+  })
+
+  it('[T-003] Details is done with a name, and has errors after a Next with no name', () => {
+    expect(draftStatuses({ ...start, hasName: true }).details).toBe('done')
+    expect(draftStatuses({ ...start, nameTried: true }).details).toBe('error')
+  })
+
+  it('[T-003] Options is done once the person has moved past it', () => {
+    expect(draftStatuses({ ...start, hasName: true, reached: 1 }).options).toBe('todo')
+    expect(draftStatuses({ ...start, hasName: true, reached: 2 }).options).toBe('done')
+  })
+
+  it('[T-003] Variants is done with one ticked row, and has errors after a Create with none', () => {
+    expect(draftStatuses({ ...start, hasName: true, reached: 2, soldCount: 1 }).variants).toBe('done')
+    expect(draftStatuses({ ...start, hasName: true, reached: 2, variantsTried: true }).variants).toBe('error')
+  })
+
+  it('[T-003] Review and publish stays not started: the keepsake does not exist yet', () => {
+    expect(draftStatuses({ hasName: true, reached: 2, soldCount: 2, nameTried: false, variantsTried: false }).review).toBe('todo')
+  })
+})

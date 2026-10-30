@@ -1,146 +1,186 @@
 import type { Product, PublishCheck } from '@sk/api-contract'
-import type { KeepsakeView } from '../lib/search-params'
+import type { KeepsakeStep, KeepsakeView } from '../lib/search-params'
 
 import { Button } from '@heroui/react'
 import { useNavigate } from '@tanstack/react-router'
 import { lazy, Suspense, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
-import { GiftIcon, PhotoAddIcon } from '@/components/icons'
+import { GiftIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
-import { CommissionCard } from '@/features/merchant/products/components/gift-editor'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { useKeepsake } from '../api/queries'
 import { useKeepsakeEditor } from '../hooks/use-keepsake-editor'
-import { usePhotoLibrary } from '../hooks/use-photo-library'
-import { nameIn } from '../lib/keepsake-rules'
-import { KEEPSAKES_PATH } from '../lib/search-params'
-import { BasicsFields } from './basics-fields'
+import { nameIn, statusOf } from '../lib/keepsake-rules'
+import { saveStatusOf } from '../lib/save-status'
+import { isKeepsakeStep, KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
+import { stepOfCard, stepStatuses } from '../lib/steps'
+import { DetailsStep } from './details-step'
 import { EditorSkeleton } from './editor-skeleton'
-import { KeepsakeCard } from './keepsake-card'
+import { KeepsakeFrame } from './keepsake-frame'
 import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
 import { KeepsakeTopBar } from './keepsake-top-bar'
 import { OptionsCard } from './options-card'
-import { PhotosField } from './photos-field'
 import { useLeaveGuard } from './use-leave-guard'
 import { VariantsCard } from './variants-card'
 
 // The mockup and the preview load when Review opens, not with the edit screen.
 const ReviewScreen = lazy(() => import('./review-screen'))
 
-const CARD_OF_CHECK = { basics: 'basics', photos: 'photos', options: 'options', variants: 'variants', commission: 'commission' } as const
+/** Where the page is: a step of the editor, or the old Review screen (`view`), which T-004 turns into a step. */
+export interface Place { step: KeepsakeStep, view: KeepsakeView }
 
-function Editor({ storeId, keepsake, view, onView, onReload }: {
+/** To the block a check names, after the next paint so that its step exists, with the block's first control focused. */
+function focusBlock(id: string, tries = 12) {
+  requestAnimationFrame(() => {
+    const block = document.getElementById(id)
+
+    if (!block && tries > 0) {
+      focusBlock(id, tries - 1)
+
+      return
+    }
+    block?.scrollIntoView({ block: 'start' })
+    block?.querySelector<HTMLElement>('input, textarea, button')?.focus({ preventScroll: true })
+  })
+}
+
+function Editor({ storeId, keepsake, step, view, onOpen, onReload }: {
   storeId: string
   keepsake: Product
+  step: KeepsakeStep
   view: KeepsakeView
-  onView: (view: KeepsakeView) => void
+  onOpen: (place: Place) => void
   onReload: () => void
 }) {
-  const { t, language } = useLocale()
+  const { t, language, intlLocale } = useLocale()
   const wide = useIsWide()
   const navigate = useNavigate()
   const editor = useKeepsakeEditor({ storeId, keepsake })
-  const library = usePhotoLibrary(keepsake.photos)
   const [showErrors, setShowErrors] = useState(false)
   const guard = useLeaveGuard({ isUnsaved: editor.isUnsaved, onLeave: () => void navigate({ to: KEEPSAKES_PATH }) })
   const { draft } = editor
-  const photos = library.photosOf(draft.photoIds)
   const name = nameIn(draft.name, language) || t('keepsakes.untitled')
+  const statuses = stepStatuses(keepsake, KEEPSAKE_STEPS, showErrors)
+  const steps = KEEPSAKE_STEPS.map(id => ({ id, label: t(`keepsakes.step.${id}`), status: statuses[id] }))
+  const index = KEEPSAKE_STEPS.indexOf(step)
+  const status = statusOf(keepsake)
 
-  /** Back to the edit screen and on to the card a check names: after the next paint, so the card exists. */
+  const go = (id: string) => {
+    if (!isKeepsakeStep(id))
+      return
+    onOpen({ step: id, view: 'edit' })
+    window.scrollTo?.({ top: 0 })
+  }
+
+  /** To the step that holds the block a check names. */
   const jumpTo = (check: PublishCheck) => {
-    onView('edit')
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const card = document.getElementById(CARD_OF_CHECK[check.card])
-
-      card?.scrollIntoView({ block: 'start' })
-      card?.querySelector<HTMLElement>('input, textarea, button')?.focus({ preventScroll: true })
-    }))
+    onOpen({ step: stepOfCard(check.card), view: 'edit' })
+    focusBlock(check.card)
   }
 
   const review = async () => {
     if (await editor.flush())
-      onView('review')
+      onOpen({ step, view: 'review' })
   }
 
-  return (
-    <div className="flex flex-col" data-testid="keepsake-editor">
-      <KeepsakeTopBar
-        backLabel={view === 'review' ? t('keepsakes.back.toEditing') : t('keepsakes.back.toKeepsakes')}
+  const reviewScreen = (
+    <Suspense fallback={<EditorSkeleton />}>
+      <ReviewScreen
+        actions={{
+          publish: editor.publish,
+          unpublish: editor.unpublish,
+          isPending: editor.isPublishing,
+          onBlocked: () => {
+            setShowErrors(true)
+            onOpen({ step, view: 'edit' })
+          },
+        }}
         keepsake={keepsake}
-        name={name}
-        savedAt={editor.savedAt}
-        state={editor.state}
-        onBack={view === 'review' ? () => onView('edit') : guard.leave}
-      >
-        {view === 'edit' && (
-          <Button className="shrink-0 max-lg:min-h-11" size="sm" onPress={() => void review()}>
-            {wide ? t('keepsakes.review.open') : t('keepsakes.review.openShort')}
-          </Button>
-        )}
-      </KeepsakeTopBar>
+        onFix={(check) => {
+          setShowErrors(true)
+          jumpTo(check)
+        }}
+      />
+    </Suspense>
+  )
+
+  if (view === 'review') {
+    return (
+      <div className="flex flex-col" data-testid="keepsake-editor">
+        <KeepsakeTopBar
+          backLabel={t('keepsakes.back.toEditing')}
+          keepsake={keepsake}
+          name={name}
+          savedAt={editor.savedAt}
+          state={editor.state}
+          onBack={() => onOpen({ step, view: 'edit' })}
+        />
+        {reviewScreen}
+      </div>
+    )
+  }
+
+  const notices = (
+    <>
       {editor.state === 'stale' && (
-        <div className="mt-3 flex flex-col items-start gap-2 rounded-2xl bg-warning-soft p-4 text-sm text-warning-soft-foreground" role="alert">
+        <div className="flex flex-col items-start gap-2 rounded-2xl bg-warning-soft p-4 text-sm text-warning-soft-foreground" role="alert">
           <p>{t('keepsakes.problem.stale')}</p>
           <Button className="min-h-11" variant="secondary" onPress={onReload}>{t('keepsakes.reload')}</Button>
         </div>
       )}
-      {editor.state === 'failed' && (
-        <div className="mt-3">
-          <KeepsakeNotice type={editor.problem} onRetry={editor.retry} />
+      {editor.state === 'failed' && <KeepsakeNotice type={editor.problem} onRetry={editor.retry} />}
+    </>
+  )
+
+  return (
+    <>
+      <KeepsakeFrame
+        bar={{
+          ...saveStatusOf(t, intlLocale, editor.state, editor.savedAt),
+          isSaving: false,
+          onBack: index > 0 ? () => go(KEEPSAKE_STEPS[index - 1]!) : undefined,
+          onForward: index < KEEPSAKE_STEPS.length - 1 ? () => go(KEEPSAKE_STEPS[index + 1]!) : undefined,
+        }}
+        canGo={() => true}
+        current={step}
+        notices={notices}
+        status={{ tone: status.tone, label: t(status.key) }}
+        steps={steps}
+        title={name}
+        trailing={(
+          <Button className="ms-auto shrink-0 max-lg:min-h-11" size="sm" onPress={() => void review()}>
+            {wide ? t('keepsakes.review.open') : t('keepsakes.review.openShort')}
+          </Button>
+        )}
+        onBack={guard.leave}
+        onGo={go}
+      >
+        {/* The Details step stays mounted, so a photo that is still uploading keeps its row when another step opens. */}
+        <div className="flex min-w-0 flex-col gap-5 lg:gap-6" hidden={step !== 'details'}>
+          <DetailsStep
+            commission={draft.commission}
+            photoIds={draft.photoIds}
+            showErrors={showErrors}
+            storeId={storeId}
+            value={draft}
+            onAddPhoto={mediaId => editor.change(current => ({ photoIds: current.photoIds.includes(mediaId) ? current.photoIds : [...current.photoIds, mediaId] }))}
+            onCommission={commission => editor.change({ commission })}
+            onPhotos={photoIds => editor.change({ photoIds })}
+            onValue={next => editor.change({ name: next.name, text: next.text })}
+          />
         </div>
-      )}
-      {view === 'review'
-        ? (
-            <Suspense fallback={<EditorSkeleton />}>
-              <ReviewScreen
-                actions={{
-                  publish: editor.publish,
-                  unpublish: editor.unpublish,
-                  isPending: editor.isPublishing,
-                  onBlocked: () => {
-                    setShowErrors(true)
-                    onView('edit')
-                  },
-                }}
-                keepsake={keepsake}
-                onFix={(check) => {
-                  setShowErrors(true)
-                  jumpTo(check)
-                }}
-              />
-            </Suspense>
-          )
-        : (
-            <div className="mx-auto flex w-full max-w-[880px] flex-col gap-3 pt-3 pb-4 lg:gap-6 lg:pt-8">
-              <KeepsakeCard icon={GiftIcon} id="basics" title={t('keepsakes.basics.title')}>
-                <BasicsFields showErrors={showErrors} value={draft} onChange={next => editor.change({ name: next.name, text: next.text })} />
-              </KeepsakeCard>
-              <KeepsakeCard icon={PhotoAddIcon} id="photos" title={t('keepsakes.photos.title')}>
-                <PhotosField
-                  photos={photos}
-                  showError={showErrors && photos.length === 0}
-                  storeId={storeId}
-                  onChange={ids => editor.change({ photoIds: ids })}
-                  onUploaded={library.add}
-                />
-              </KeepsakeCard>
-              <OptionsCard keepsake={keepsake} onRemove={editor.removeOption} onSave={editor.saveOptions} />
-              <VariantsCard keepsake={keepsake} onCreate={editor.createVariant} onSave={editor.saveVariant} />
-              <div className="scroll-mt-20" id="commission">
-                <CommissionCard value={draft.commission} onChange={commission => editor.change({ commission })} />
-              </div>
-            </div>
-          )}
+        {step === 'options' && <OptionsCard keepsake={keepsake} onRemove={editor.removeOption} onSave={editor.saveOptions} />}
+        {step === 'variants' && <VariantsCard keepsake={keepsake} onCreate={editor.createVariant} onSave={editor.saveVariant} />}
+      </KeepsakeFrame>
       {guard.dialog}
-    </div>
+    </>
   )
 }
 
-function LoadedEditor({ storeId, id, view, onView }: { storeId: string, id: string, view: KeepsakeView, onView: (view: KeepsakeView) => void }) {
+function LoadedEditor({ storeId, id, step, view, onOpen }: { storeId: string, id: string, step: KeepsakeStep, view: KeepsakeView, onOpen: (place: Place) => void }) {
   const { t } = useLocale()
   const query = useKeepsake(storeId, id)
   // A reload starts the typed fields over from the server's copy: a new generation is a new editor.
@@ -159,19 +199,20 @@ function LoadedEditor({ storeId, id, view, onView }: { storeId: string, id: stri
     <Editor
       key={`${id}:${generation}`}
       keepsake={query.data}
+      step={step}
       storeId={storeId}
       view={view}
+      onOpen={onOpen}
       onReload={() => void query.refetch().then(() => setGeneration(g => g + 1))}
-      onView={onView}
     />
   )
 }
 
-/** M12 for one keepsake: the edit screen of cards with autosave, and Review and publish (`view`). */
-export function KeepsakeEditorScreen({ id, view, onView }: { id: string, view: KeepsakeView, onView: (view: KeepsakeView) => void }) {
+/** M12 for one keepsake: the stepped editor with autosave (`step`), and Review and publish (`view`). */
+export function KeepsakeEditorScreen({ id, step, view, onOpen }: { id: string, step: KeepsakeStep, view: KeepsakeView, onOpen: (place: Place) => void }) {
   return (
     <KeepsakeGate fallback={<EditorSkeleton />}>
-      {storeId => <LoadedEditor id={id} storeId={storeId} view={view} onView={onView} />}
+      {storeId => <LoadedEditor id={id} step={step} storeId={storeId} view={view} onOpen={onOpen} />}
     </KeepsakeGate>
   )
 }

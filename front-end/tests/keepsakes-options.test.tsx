@@ -64,8 +64,8 @@ beforeEach(async () => {
 
 const nameField = () => screen.findByLabelText('Name (English)', undefined, SLOW)
 
-async function openEditor() {
-  const router = renderKeepsakes(`/store/products/gifts/${productId}`)
+async function openEditor(step?: 'options' | 'variants') {
+  const router = renderKeepsakes(`/store/products/gifts/${productId}${step ? `?step=${step}` : ''}`)
 
   await nameField()
 
@@ -82,7 +82,7 @@ async function openMenu(card: HTMLElement, label: string, item: string) {
 
 describe('[E6.2][AC52] the Options card', () => {
   it('[E6.2][AC52] lists each option with its German name, its values as chips and the variants that use it', async () => {
-    await openEditor()
+    await openEditor('options')
 
     const grid = within(optionsCard()).getByRole('grid', { name: 'Options' })
 
@@ -97,14 +97,15 @@ describe('[E6.2][AC52] the Options card', () => {
   it('[E6.2][AC52] says so when a keepsake has no option', async () => {
     current = product()
     serve()
-    await openEditor()
+    await openEditor('options')
 
     expect(within(optionsCard()).getByText('No options: this keepsake is sold as one variant.')).toBeInTheDocument()
-    expect(within(variantsCard()).queryByRole('button', { name: 'Create' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(within(await screen.findByRole('region', { name: 'Variants' })).queryByRole('button', { name: 'Create' })).not.toBeInTheDocument()
   })
 
   it('[E6.2][AC52] Delete is refused while a variant uses the option, archived ones too, and names the variants', async () => {
-    await openEditor()
+    await openEditor('options')
 
     await openMenu(optionsCard(), 'Actions for Theme', 'Delete')
 
@@ -116,7 +117,7 @@ describe('[E6.2][AC52] the Options card', () => {
     const success = vi.spyOn(toast, 'success')
     current = product({ options, variants: [] })
     serve(call => (call.method === 'PUT' ? Response.json(product({ options: [options[1]!], variants: [], rowVersion: 2 })) : undefined))
-    await openEditor()
+    await openEditor('options')
 
     await openMenu(optionsCard(), 'Actions for Size', 'Delete')
     const dialog = await screen.findByRole('alertdialog')
@@ -138,7 +139,7 @@ describe('[E6.2][AC52] the options sheet N14', () => {
   it('[E6.2][AC52] Edit opens one option, adds a value and saves the whole list in one request; Cancel saves nothing', async () => {
     const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'PUT' ? Response.json(product({ options, variants, rowVersion: 2 })) : undefined))
-    await openEditor()
+    await openEditor('options')
 
     await openMenu(optionsCard(), 'Actions for Size', 'Edit')
     let dialog = await screen.findByRole('dialog', { name: 'Edit Size' })
@@ -172,7 +173,7 @@ describe('[E6.2][AC52] the options sheet N14', () => {
   })
 
   it('[E6.2][AC52] a value that a variant uses cannot be deleted, and the refusal sits at the value and names the variants', async () => {
-    await openEditor()
+    await openEditor('options')
 
     await openMenu(optionsCard(), 'Actions for Theme', 'Edit')
     const dialog = await screen.findByRole('dialog', { name: 'Edit Theme' })
@@ -186,7 +187,7 @@ describe('[E6.2][AC52] the options sheet N14', () => {
 
   it('[E6.2][AC52] Add option: a new option needs a value for every variant, Give all fills them, and it all saves in one request', async () => {
     serve(call => (call.method === 'PUT' ? Response.json(product({ options, variants, rowVersion: 2 })) : undefined))
-    await openEditor()
+    await openEditor('options')
 
     await userEvent.click(within(optionsCard()).getByRole('button', { name: 'Add option' }))
     const dialog = await screen.findByRole('dialog', { name: 'Add an option' })
@@ -219,7 +220,7 @@ describe('[E6.2][AC52] the options sheet N14', () => {
     serve(call => (call.method === 'PUT'
       ? refused([{ in: 'body', path: `options.${optTheme}.values.${vLion}`, message: 'x', code: 'value-in-use', params: { value: 'Lion Monument', count: 1, codes: 'VX-S-LION', more: 0 } }])
       : undefined))
-    await openEditor()
+    await openEditor('options')
 
     await openMenu(optionsCard(), 'Actions for Size', 'Edit')
     const dialog = await screen.findByRole('dialog', { name: 'Edit Size' })
@@ -237,7 +238,7 @@ describe('[E6.2][AC52] the options sheet N14', () => {
 
   it('[E6.2][412] a stale save says so, and the page asks for a reload', async () => {
     serve(call => (call.method === 'PUT' ? problem(412, 'precondition-failed') : undefined))
-    await openEditor()
+    await openEditor('options')
 
     await openMenu(optionsCard(), 'Actions for Size', 'Edit')
     const dialog = await screen.findByRole('dialog', { name: 'Edit Size' })
@@ -255,7 +256,7 @@ describe('[E6.2][AC52] the options sheet N14', () => {
 
 describe('[E6.2][AC52] the Variants card N15', () => {
   it('[E6.2][AC52] has one column per option, the tabs with counts, and says how many combinations are sold', async () => {
-    await openEditor()
+    await openEditor('variants')
 
     const card = variantsCard()
     const grid = within(card).getByRole('grid', { name: 'Variants' })
@@ -271,7 +272,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
   })
 
   it('[E6.2][AC52] the Archived tab lists archived variants and offers no action, so there is no restore', async () => {
-    await openEditor()
+    await openEditor('variants')
 
     await userEvent.click(within(variantsCard()).getByRole('tab', { name: /Archived/ }))
 
@@ -283,7 +284,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
   })
 
   it('[E6.2][AC52] Create variant: a combination that is sold is refused at the values, archived twins say so, and nothing is sent', async () => {
-    await openEditor()
+    await openEditor('variants')
 
     await userEvent.click(within(variantsCard()).getByRole('button', { name: 'Create' }))
     const dialog = await screen.findByRole('dialog', { name: 'Create variant' })
@@ -301,7 +302,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
   })
 
   it('[E6.2][AC52] Create variant: a missing value, a bad code and no price are refused at their fields', async () => {
-    await openEditor()
+    await openEditor('variants')
 
     await userEvent.click(within(variantsCard()).getByRole('button', { name: 'Create' }))
     const dialog = await screen.findByRole('dialog', { name: 'Create variant' })
@@ -319,7 +320,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
   it('[E6.2][AC52] Create variant sends one request with the value of every option, for sale', async () => {
     const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'POST' && call.path === `${detail}/variants` ? Response.json(product({ options, variants }), { status: 201 }) : undefined))
-    await openEditor()
+    await openEditor('variants')
 
     await userEvent.click(within(variantsCard()).getByRole('button', { name: 'Create' }))
     const dialog = await screen.findByRole('dialog', { name: 'Create variant' })
@@ -339,7 +340,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
 
   it('[E6.2][AC52] a code another keepsake uses is refused at the code field', async () => {
     serve(call => (call.method === 'POST' ? problem(409, 'sku-code-taken') : undefined))
-    await openEditor()
+    await openEditor('variants')
 
     await userEvent.click(within(variantsCard()).getByRole('button', { name: 'Create' }))
     const dialog = await screen.findByRole('dialog', { name: 'Create variant' })
@@ -359,7 +360,7 @@ describe('[E6.2][AC52] the Variants card N15', () => {
     serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${v1}`
       ? refused([{ in: 'body', path: 'status', message: 'x', code: 'variant-reserved', params: { code: 'VX-S-SWAN', count: 2 } }])
       : undefined))
-    await openEditor()
+    await openEditor('variants')
 
     await openMenu(variantsCard(), 'Actions for VX-S-SWAN', 'Archive')
     const dialog = await screen.findByRole('alertdialog')
@@ -519,7 +520,7 @@ describe('[E6.2][i18n] the option screens in German', () => {
   beforeEach(() => writeStored('sk.language', 'de'))
 
   it('[E6.2][i18n] shows the options table, the delete refusal, the sheet and the variants card in German, with no key left over', async () => {
-    renderKeepsakes(`/store/products/gifts/${productId}`)
+    renderKeepsakes(`/store/products/gifts/${productId}?step=options`)
     const card = await screen.findByRole('region', { name: 'Optionen' }, SLOW)
 
     const table = within(card).getByRole('grid', { name: 'Optionen' })
@@ -542,7 +543,8 @@ describe('[E6.2][i18n] the option screens in German', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Abbrechen' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
-    const variantsRegion = screen.getByRole('region', { name: 'Varianten' })
+    await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
+    const variantsRegion = await screen.findByRole('region', { name: 'Varianten' })
 
     expect(within(variantsRegion).getByRole('tab', { name: /Archiviert/ })).toBeInTheDocument()
     expect(within(variantsRegion).getByText('Nur diese Kombinationen werden verkauft: 2 von 4 möglichen. Der Bestand wird im Inventar gesetzt.')).toBeInTheDocument()
