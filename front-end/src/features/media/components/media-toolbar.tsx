@@ -10,7 +10,7 @@ import { MEDIA_KINDS } from '../lib/search-params'
 
 /**
  * Phones: the kind tabs share the full width, search and the buttons sit under them. From 1024 px one row: the tabs
- * fit their labels on the left, search, filter and Select on the right. A tab label is the kind and its count.
+ * share a 20rem bar on the left, search, filter and Select on the right. A tab label is the kind and its count.
  */
 export function MediaToolbar({ kind, counts, text, groups, selecting, onKind, onText, onSelecting }: {
   kind: MediaKind
@@ -26,7 +26,7 @@ export function MediaToolbar({ kind, counts, text, groups, selecting, onKind, on
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-      <div className="lg:w-fit lg:shrink-0">
+      <div className="lg:w-80 lg:shrink-0">
         <PageTabs
           equal
           label={t('media.filter.kind')}

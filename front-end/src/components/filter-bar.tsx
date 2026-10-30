@@ -120,7 +120,7 @@ function OptionList({ group, roomy }: { group: FilterGroup, roomy: boolean }) {
   const rows = arrangeOptions(group.options, query)
 
   return (
-    <div className={`flex min-w-0 flex-col ${roomy ? 'gap-2' : 'gap-1'}`}>
+    <div className="flex min-w-0 flex-col gap-2 p-2.5">
       {group.options.length > SEARCH_ABOVE && (
         <SearchField
           aria-label={t('filter.search')}
@@ -136,7 +136,7 @@ function OptionList({ group, roomy }: { group: FilterGroup, roomy: boolean }) {
       )}
       <CheckboxGroup
         aria-label={group.label}
-        className={`[&_[data-slot=checkbox]]:mt-0 ${roomy ? 'gap-2' : 'max-h-72 overflow-y-auto'}`}
+        className={`[&_[data-slot=checkbox]]:mt-0 ${roomy ? 'gap-2' : 'max-h-72 gap-0 overflow-y-auto'}`}
         value={group.selected}
         onChange={ids => group.onChange(inOrder(group, ids))}
       >
@@ -146,7 +146,7 @@ function OptionList({ group, roomy }: { group: FilterGroup, roomy: boolean }) {
             className={`${
               roomy
                 ? 'rounded-2xl border border-separator p-3 data-[selected=true]:border-foreground data-[selected=true]:ring-1 data-[selected=true]:ring-foreground'
-                : 'min-h-8 justify-center rounded-lg px-3 hover:bg-default'
+                : 'min-h-9 justify-center rounded-lg px-3 hover:bg-default'
             } ${depth ? 'ms-6' : ''}`}
             value={option.id}
           >
@@ -256,7 +256,7 @@ function GroupFilter({ group }: { group: FilterGroup }) {
     <Popover>
       <GroupButton group={group} />
       <Popover.Content className="w-fit max-w-80 min-w-52" placement="bottom start">
-        <Popover.Dialog aria-label={group.label} className="p-1">
+        <Popover.Dialog aria-label={group.label} className="p-0">
           <OptionList group={group} roomy={false} />
         </Popover.Dialog>
       </Popover.Content>
