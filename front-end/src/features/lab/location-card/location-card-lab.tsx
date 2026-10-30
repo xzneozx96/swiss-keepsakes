@@ -4,26 +4,10 @@ import { useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { copy } from './copy'
-import { OptionA } from './option-a'
-import { OptionB } from './option-b'
 import { OptionC } from './option-c'
 import { OptionShell } from './parts'
 import { useSamplePosition } from './sample'
 import { useLinkReader } from './use-link-reader'
-
-function CardA() {
-  const { position, place, remove } = useSamplePosition()
-  const reader = useLinkReader({ position, onPosition: place })
-
-  return <OptionA position={position} reader={reader} onPlace={place} onRemove={remove} />
-}
-
-function CardB() {
-  const { position, place, remove } = useSamplePosition()
-  const reader = useLinkReader({ position, onPosition: place })
-
-  return <OptionB position={position} reader={reader} onPlace={place} onRemove={remove} />
-}
 
 function CardC() {
   const { position, place, remove } = useSamplePosition()
@@ -62,13 +46,7 @@ export function LocationCardLab() {
         </details>
         <Button className="w-fit" size="sm" variant="secondary" onPress={() => setResetKey(key => key + 1)}>{copy.reset}</Button>
       </header>
-      <div key={resetKey} className="grid max-w-2xl items-start gap-8 xl:max-w-none xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] xl:gap-6">
-        <OptionShell option="a">
-          <CardA />
-        </OptionShell>
-        <OptionShell option="b">
-          <CardB />
-        </OptionShell>
+      <div key={resetKey} className="max-w-2xl">
         <OptionShell option="c">
           <CardC />
         </OptionShell>

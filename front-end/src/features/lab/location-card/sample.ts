@@ -14,11 +14,3 @@ export function useSamplePosition() {
 
   return { position, place: setPosition, remove: () => setPosition(null) }
 }
-
-/** Stands in for the address of the form: the street name is known only near the sample. */
-export function knownPlaceName(position: Position | null, name: string): string | null {
-  if (!position)
-    return null
-
-  return Math.abs(position.lat - CHAPEL_BRIDGE.lat) < 0.0004 && Math.abs(position.lng - CHAPEL_BRIDGE.lng) < 0.0004 ? name : null
-}

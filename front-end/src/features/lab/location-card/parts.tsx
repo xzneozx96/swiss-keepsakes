@@ -67,11 +67,8 @@ export function MapFailed() {
   return <p className="grid h-40 place-items-center rounded-2xl bg-surface-secondary text-sm text-muted" role="alert">{copy.mapFailed}</p>
 }
 
-/**
- * The link as a normal form field, like every other field of the editor: label, input, help line. With `answer` the
- * reader's answer takes the place of the help line, as the field’s own description.
- */
-export function LinkField({ reader, answer }: { reader: LinkReader, answer?: boolean }) {
+/** The link as a normal form field, like every other field of the editor: label, input, and the reader's answer as the field’s own description, else the help line. */
+export function LinkField({ reader }: { reader: LinkReader }) {
   const { t } = useLocale()
   const { line } = reader
   const failed = reader.isInvalid
@@ -81,9 +78,9 @@ export function LinkField({ reader, answer }: { reader: LinkReader, answer?: boo
       <Label>{t('places.mapsLink.label')}</Label>
       <Input inputMode="url" placeholder="https://maps.app.goo.gl/…" onBlur={reader.handlers.onBlur} onKeyDown={reader.handlers.onKeyDown} onPaste={reader.handlers.onPaste} />
       <div aria-live="polite">
-        {answer && failed && line
+        {failed && line
           ? <FieldError>{line.text}</FieldError>
-          : answer && line
+          : line
             ? <Description className={line.tone === 'success' ? 'text-success' : undefined}>{line.text}</Description>
             : <Description>{copy.linkHelp}</Description>}
       </div>

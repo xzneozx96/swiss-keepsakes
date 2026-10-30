@@ -65,13 +65,6 @@ export function useLinkReader({ position, onPosition }: { position: Position | n
     }
   }
 
-  const clear = () => {
-    clearTimeout(timerRef.current)
-    lastRef.current = ''
-    attemptRef.current += 1
-    setValue('')
-    setState({ status: 'idle' })
-  }
   const moved = state.status === 'moved' && position?.lat === state.lat && position.lng === state.lng
   let line: Line | null = null
 
@@ -85,7 +78,6 @@ export function useLinkReader({ position, onPosition }: { position: Position | n
   return {
     value,
     line,
-    clear,
     isInvalid: state.status === 'failed',
     handlers: {
       onChange: setValue,

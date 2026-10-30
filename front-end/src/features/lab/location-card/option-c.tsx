@@ -25,7 +25,7 @@ export function OptionC({ position, onPlace, onRemove, reader }: {
   return (
     <LocationBlock>
       <div className="flex flex-col gap-3">
-        <LinkField answer reader={reader} />
+        <LinkField reader={reader} />
         {failed
           ? <MapFailed />
           : (

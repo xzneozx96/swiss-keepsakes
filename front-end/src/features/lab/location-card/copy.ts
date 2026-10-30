@@ -2,7 +2,7 @@
 export const copy = {
   back: 'Lab',
   title: 'Location card (place editor, step 1: Location on the map)',
-  intro: 'The owner called the card in commit d24d43d6 ugly: a link input in a grey frame stuck on top of the map, “Remove the position” as a pink pill bottom-left, the credits bottom-right. Three different layouts, each a working card: the real map picker, the real Google Maps link reader (a short link is answered with a canned result here instead of the server), and the same sample state, a pin on the Chapel Bridge.',
+  intro: 'Option C was chosen on 30.10.2026 and built into the place editor (step 1); this page keeps it as the reference. The owner called the card in commit d24d43d6 ugly: a link input in a grey frame stuck on top of the map, “Remove the position” as a pink pill bottom-left, the credits bottom-right. Three layouts were tried; C is kept as a working card: the real map picker, the real Google Maps link reader (a short link is answered with a canned result here instead of the server), and the same sample state, a pin on the Chapel Bridge.',
   practiceTitle: 'Common practice this draws on',
   practice: [
     'Google Maps: the search is a white pill floating over the map, and the map controls (locate, zoom) are a round-cornered stack at the edge.',
@@ -16,25 +16,12 @@ export const copy = {
     { label: 'Short link (answered with a canned result)', text: 'https://maps.app.goo.gl/kapellbruecke' },
     { label: 'Not a Google Maps link', text: 'https://example.com/lucerne' },
   ],
-  reset: 'Reset the three cards',
+  reset: 'Reset the card',
   heightAt: (px: number) => `Height: ${px} px at this width`,
   recenter: 'Recenter on the pin',
   linkHelp: 'Paste a link from Google Maps, or tap the map.',
-  placeName: 'Kapellbrücke, Luzern',
-  noPosition: 'No position yet. Paste a link or tap the map.',
-  coordinates: (lat: number, lng: number) => `${lat}, ${lng}`,
   mapFailed: 'The map could not be loaded.',
   options: {
-    a: {
-      id: 'A',
-      title: 'Floating pill',
-      why: 'The map fills the card and the link is a white pill floating on it, with the answer as a small chip under the pill; Remove the position is a round icon in the map’s control stack. Follows Google Maps (search pill over the map) and Airbnb’s location step (address field over the map).',
-    },
-    b: {
-      id: 'B',
-      title: 'Side panel',
-      why: 'On a wide screen the map is on the left and a panel on the right holds the field, a read-out of the place and two quiet buttons; on a phone the panel stacks over the map. Follows the Shopify and Booking extranet location pages (field and coordinate read-out beside the map) and Apple Maps’ place panel.',
-    },
     c: {
       id: 'C',
       title: 'Clean field, then map',

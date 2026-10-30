@@ -11,8 +11,8 @@ export const Route = createFileRoute('/lab/')({
 const experiments = [
   {
     to: '/lab/location-card' as const,
-    title: 'Location card (place editor, step 1: Location on the map)',
-    note: 'Three layouts for the link field and the map, each a working card: a floating pill over the map, a side panel, and a clean field above a framed map with map-style controls (30.10.2026).',
+    title: 'Location card (place editor, step 1: Location on the map), approved',
+    note: 'Option C chosen 30.10.2026, built into the place editor: a clean link field, a 12 px gap, then the map in its own frame with recenter and remove as a small control group. Kept here as the reference; options A and B were removed.',
   },
   {
     to: '/lab/opening-hours' as const,
