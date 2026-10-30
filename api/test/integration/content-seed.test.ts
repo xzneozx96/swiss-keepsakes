@@ -93,4 +93,14 @@ describe('db:seed', () => {
     expect(seeded.every(v => (v.draft.body as { type?: string }).type === 'doc' && !('intro' in v.draft) && !('sections' in v.draft) && !('readMinutes' in v.draft))).toBe(true)
     expect(rows.every(v => v.row_version === 1)).toBe(true)
   })
+
+  it('[E2.14][AC30] no seeded draft holds authorRole, and a third run still changes nothing', async () => {
+    const before = await snapshot()
+    const { rows } = await pool.query<{ draft: Record<string, unknown> }>(`select draft from content.story_versions where store_id = $1`, [storeId])
+
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows.every(v => !('authorRole' in v.draft))).toBe(true)
+    expect(await seedContent(db, storeId)).toEqual({ stories: 0, tours: 0 })
+    expect(await snapshot()).toEqual(before)
+  })
 })

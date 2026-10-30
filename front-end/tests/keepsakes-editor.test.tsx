@@ -57,6 +57,12 @@ const nameField = () => screen.findByLabelText('Name (English)', undefined, SLOW
 
 const reviewButton = () => screen.getByRole('button', { name: view.wide ? 'Review and publish' : 'Review' })
 
+async function openVariantPage() {
+  renderKeepsakes(`/store/products/gifts/${productId}/variants/${variantId}`)
+
+  await screen.findByTestId('variant-page', undefined, SLOW)
+}
+
 async function openEditor() {
   const router = renderKeepsakes(`/store/products/gifts/${productId}`)
 
@@ -90,7 +96,7 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
 
     expect(within(grid).getByText('VX-1')).toBeInTheDocument()
     expect(within(grid).getByText(/CHF\s*39/)).toBeInTheDocument()
-    expect(within(grid).getByText('For sale')).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Variants' })).getByRole('tab', { name: /For sale/ })).toBeInTheDocument()
     expect(within(screen.getByRole('region', { name: 'Variants' })).queryByText(/in stock|reserved|available/i)).not.toBeInTheDocument()
   })
 })
@@ -284,10 +290,10 @@ describe('[E6.1][variant] the default variant', () => {
 
   it('[E6.1][variant] the sheet edits the code and the price and saves them with the status', async () => {
     const success = vi.spyOn(toast, 'success')
-    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-2', priceRappen: 4500, status: 'published' }] })) : undefined))
-    await openEditor()
+    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${variantId}` ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-2', priceRappen: 4500, status: 'published', values: {} }] })) : undefined))
+    await openVariantPage()
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Actions for VX-1' })[0]!)
+    await userEvent.click(screen.getByRole('button', { name: 'Actions for VX-1' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }))
     const dialog = await screen.findByRole('dialog', { name: 'Edit VX-1' })
     const code = within(dialog).getByLabelText('SKU code')
@@ -304,16 +310,16 @@ describe('[E6.1][variant] the default variant', () => {
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `${detail}/variants/${variantId}`, ifMatch: null, body: { skuCode: 'VX-2', priceRappen: 4500, status: 'published' } })
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Edit VX-1' })).not.toBeInTheDocument())
-    expect(within(screen.getByRole('grid', { name: 'Variants' })).getByText('VX-2')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: 'VX-2' })).toBeInTheDocument()
     expect(success).toHaveBeenCalledExactlyOnceWith('VX-2 saved.')
   })
 
   it('[E6.1][variant] a code the shop already uses is refused at the field, and a bad one before any request', async () => {
     const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? problem(409, 'sku-code-taken') : undefined))
-    await openEditor()
+    await openVariantPage()
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Actions for VX-1' })[0]!)
+    await userEvent.click(screen.getByRole('button', { name: 'Actions for VX-1' }))
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Edit' }))
     const dialog = await screen.findByRole('dialog', { name: 'Edit VX-1' })
     const code = within(dialog).getByLabelText('SKU code')
@@ -334,7 +340,7 @@ describe('[E6.1][variant] the default variant', () => {
 
   it('[E6.1][variant] Hide from guests changes the status at once and the card lists it under Hidden', async () => {
     const success = vi.spyOn(toast, 'success')
-    serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'draft' }], blocking: [{ code: 'variant-for-sale', card: 'variants' }] })) : undefined))
+    serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'draft', values: {} }], blocking: [{ code: 'variant-for-sale', card: 'variants' }] })) : undefined))
     await openEditor()
 
     await userEvent.click(screen.getAllByRole('button', { name: 'Actions for VX-1' })[0]!)
@@ -348,7 +354,7 @@ describe('[E6.1][variant] the default variant', () => {
     expect(success).toHaveBeenCalledExactlyOnceWith('VX-1: hidden.')
   })
 
-  it('[E6.1][variant] a refused Hide from guests is a toast in the keepsake words, since no field shows it', async () => {
+  it('[E6.1][variant] a refused Hide from guests is shown in the keepsake words on the card, not as a toast', async () => {
     const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? problem(404, 'not-found') : undefined))
     await openEditor()
@@ -356,7 +362,8 @@ describe('[E6.1][variant] the default variant', () => {
     await userEvent.click(screen.getAllByRole('button', { name: 'Actions for VX-1' })[0]!)
     await userEvent.click(await screen.findByRole('menuitem', { name: 'Hide from guests' }))
 
-    await waitFor(() => expect(danger).toHaveBeenCalledExactlyOnceWith(en['keepsakes.problem.notFound']))
+    expect(await screen.findByRole('alert')).toHaveTextContent(en['keepsakes.problem.notFound'])
+    expect(danger).not.toHaveBeenCalled()
   })
 })
 

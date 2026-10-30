@@ -6,7 +6,7 @@ import { createMediaDirectory } from './modules/catalog/adapters/media-directory
 import { createMediaUses } from './modules/catalog/adapters/media-uses.ts'
 import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
-import { makeCreateProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from './modules/catalog/index.ts'
+import { makeCreateProduct, makeCreateVariant, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
 import { createMediaLogAlert } from './modules/content/adapters/media-alert.ts'
@@ -255,6 +255,8 @@ async function main() {
       publishProduct: makePublishProduct(catalogDeps),
       unpublishProduct: makeUnpublishProduct(catalogDeps),
       saveVariant: makeSaveVariant(catalogDeps),
+      saveOptions: makeSaveOptions(catalogDeps),
+      createVariant: makeCreateVariant(catalogDeps),
     })
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),

@@ -10,7 +10,8 @@ export const fakeProduct: Product = {
   published: null,
   publishedMedia: [],
   commissionRate: 0,
-  variants: [{ id: '0190f0c2-0000-7000-8000-0000000000c2', skuCode: 'VX-1', priceRappen: 3900, status: 'published' }],
+  options: [],
+  variants: [{ id: '0190f0c2-0000-7000-8000-0000000000c2', skuCode: 'VX-1', priceRappen: 3900, status: 'published', values: {} }],
   rowVersion: 1,
   createdAt: new Date('2026-10-30T08:00:00Z'),
   updatedAt: new Date('2026-10-30T08:00:00Z'),
@@ -28,5 +29,7 @@ export function createFakeCatalogUseCases(): CatalogUseCases {
     publishProduct: async (_actor, storeId, productId, ifMatch) => ({ ok: true, value: detail(storeId, productId, ifMatch + 1) }),
     unpublishProduct: async (_actor, storeId, productId, ifMatch) => ({ ok: true, value: detail(storeId, productId, ifMatch + 1) }),
     saveVariant: async (_actor, storeId, productId) => ({ ok: true, value: detail(storeId, productId) }),
+    saveOptions: async (_actor, storeId, productId, ifMatch) => ({ ok: true, value: detail(storeId, productId, ifMatch + 1) }),
+    createVariant: async (_actor, storeId, productId) => ({ ok: true, value: detail(storeId, productId) }),
   }
 }

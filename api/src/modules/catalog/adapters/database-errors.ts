@@ -29,6 +29,11 @@ export function mapDatabaseError(error: unknown): Failure | undefined {
     return { reason: 'slug-conflict' }
   if (pg.code === '23514' && pg.constraint === 'skus_sku_code_check')
     return { reason: 'sku-code-invalid', path: 'skuCode' }
+  // Two writers raced past the checks. The use case names the twin when it sees it first; here only the rule is known.
+  if (pg.code === '23505' && pg.constraint === 'skus_combination_key')
+    return { reason: 'refused', refusals: [{ code: 'combination-taken', path: 'values', params: { code: '', archived: 0 } }] }
+  if (pg.code === '23514' && pg.constraint === 'skus_complete_options')
+    return { reason: 'refused', refusals: [{ code: 'values-missing', path: 'values', params: { code: '', option: '' } }] }
   return undefined
 }
 

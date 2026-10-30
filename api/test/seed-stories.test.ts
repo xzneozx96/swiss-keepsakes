@@ -18,14 +18,15 @@ describe('[E2.13] the seed stories map to body documents', () => {
     expect(versions.length).toBeGreaterThan(0)
   })
 
-  it.each(versions)('[E2.13] $slug/$language draft passes storyDraftSchema with a body and no old keys', ({ doc }) => {
+  it.each(versions)('[E2.13][E2.14][AC30] $slug/$language draft passes storyDraftSchema with a body and no old keys, no authorRole', ({ doc }) => {
     const draft = seedStoryDraft(doc)
     const parsed = storyDraftSchema.safeParse(draft)
     expect(parsed.success, parsed.success ? '' : JSON.stringify(parsed.error.issues)).toBe(true)
     expect((draft.body as StoryBody).type).toBe('doc')
     for (const key of ['intro', 'sections', 'readMinutes'])
       expect(draft).not.toHaveProperty(key)
-    expect(Object.keys(draft).sort()).toEqual(['authorName', 'authorRole', 'body', 'coverMediaId', 'excerpt', 'title'])
+    expect(draft).not.toHaveProperty('authorRole')
+    expect(Object.keys(draft).sort()).toEqual(['authorName', 'body', 'coverMediaId', 'excerpt', 'title'])
   })
 
   it.each(versions)('[E2.13] $slug/$language body is media-free, text nodes are short, and it starts with the intro', ({ doc }) => {

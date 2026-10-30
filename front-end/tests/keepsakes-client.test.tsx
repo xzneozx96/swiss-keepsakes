@@ -107,3 +107,64 @@ describe('[E6.1][412] the keepsake commands', () => {
     await waitFor(() => expect(lists).toBe(2))
   })
 })
+
+describe('[E6.2][AC52] the options and variant commands', () => {
+  it('[E6.2][AC52] saveOptions is a keyed PUT with If-Match, createVariant a keyed POST with no version', async () => {
+    state.answer = call => call.method === 'GET' ? undefined : Response.json(product({ rowVersion: 2 }))
+    const { result } = renderHook(() => ({
+      saveOptions: useCommand('keepsakes', 'saveOptions'),
+      createVariant: useCommand('keepsakes', 'createVariant'),
+    }), { wrapper })
+    const options = [{ ref: variantId, name: { en: 'Size' }, values: [{ ref: 'new-1', label: { en: 'Small' }, swatch: null }] }]
+
+    await act(async () => {
+      await result.current.saveOptions.mutateAsync({ storeId, id: productId, ifMatch: 4, options, variantValues: [{ variantId, values: { [variantId]: 'new-1' } }], idempotencyKey: 'k6' })
+      await result.current.createVariant.mutateAsync({ storeId, id: productId, skuCode: 'VX-2', priceRappen: 100, status: 'draft', values: {}, idempotencyKey: 'k7' })
+    })
+
+    expect(state.calls.filter(call => call.method !== 'GET')).toEqual([
+      { method: 'PUT', path: `${base}/${productId}/options`, key: 'k6', ifMatch: '4', body: { options, variantValues: [{ variantId, values: { [variantId]: 'new-1' } }] } },
+      { method: 'POST', path: `${base}/${productId}/variants`, key: 'k7', ifMatch: null, body: { skuCode: 'VX-2', priceRappen: 100, status: 'draft', values: {} } },
+    ])
+  })
+
+  it('[E6.2][AC52] a 422 refusal carries the refusals the API named, at the option, value or variant', async () => {
+    state.answer = call => (call.method === 'PUT'
+      ? Response.json({ type: 'validation-failed', status: 422, title: 'x', instance: '/x', requestId: 'r', errors: [{ in: 'body', path: 'options.o1.values.v1', message: 'x', code: 'value-in-use', params: { value: 'Lion', count: 2, codes: 'A, B', more: 0 } }] }, { status: 422 })
+      : undefined)
+    const { result } = renderHook(() => useCommand('keepsakes', 'saveOptions'), { wrapper })
+
+    await act(async () => {
+      await expect(result.current.mutateAsync({ storeId, id: productId, ifMatch: 1, options: [], idempotencyKey: 'k' })).rejects.toMatchObject({
+        status: 422,
+        type: 'validation-failed',
+        refusals: [{ at: 'v1', code: 'value-in-use', params: { value: 'Lion', count: 2, codes: 'A, B', more: 0 } }],
+      })
+    })
+  })
+
+  it('[E6.2][AC52] an options save and a variant create refresh the list', async () => {
+    let lists = 0
+
+    state.answer = (call) => {
+      if (call.path === base && call.method === 'GET') {
+        lists++
+
+        return Response.json(list([listItem()]))
+      }
+
+      return call.method === 'GET' ? undefined : Response.json(product({ rowVersion: 2 }))
+    }
+    const { result } = renderHook(() => ({ all: useKeepsakes(storeId), saveOptions: useCommand('keepsakes', 'saveOptions'), createVariant: useCommand('keepsakes', 'createVariant') }), { wrapper })
+
+    await waitFor(() => expect(lists).toBe(1))
+    await act(async () => {
+      await result.current.saveOptions.mutateAsync({ storeId, id: productId, ifMatch: 1, options: [], idempotencyKey: 'k8' })
+    })
+    await waitFor(() => expect(lists).toBe(2))
+    await act(async () => {
+      await result.current.createVariant.mutateAsync({ storeId, id: productId, skuCode: 'VX-3', priceRappen: 100, idempotencyKey: 'k9' })
+    })
+    await waitFor(() => expect(lists).toBe(3))
+  })
+})

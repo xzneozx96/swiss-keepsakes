@@ -2,7 +2,7 @@ import type { APIResponse, Page } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { writeFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
-import { newEmail, ownerInvitationMail, SPA_ORIGIN } from './api-server'
+import { newEmail, ownerInvitationMail, readyCover, SPA_ORIGIN } from './api-server'
 import { closeVisitors, createStore, followLinkAs, languageOf, newClientAddress, newVisitor, say, signedInSuperAdmin } from './invitation-flows'
 
 // [E3.6][AC61] /sitemap.xml and /robots.txt against the real API. An Owner (the E2.3 path) publishes stories over the
@@ -43,13 +43,12 @@ async function ok<T>(response: APIResponse, status: number): Promise<T> {
   return response.json() as Promise<T>
 }
 
-function draft(title: string) {
+function draft(title: string, coverMediaId: string) {
   return {
     title,
     excerpt: 'Excerpt',
     authorName: 'Anna',
-    authorRole: 'Guide',
-    coverMediaId: null,
+    coverMediaId,
     body: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Intro' }] }] },
   }
 }
@@ -57,9 +56,10 @@ function draft(title: string) {
 async function story(owner: Page, storeId: string, versions: Array<{ language: 'en' | 'de', slug: string, title: string }>, publish: boolean) {
   const base = `/api/store/${storeId}/story-groups`
   const group = await ok<{ id: string }>(await send(owner, 'post', base, {}), 201)
+  const cover = await readyCover(storeId)
 
   for (const { language, slug, title } of versions) {
-    const created = await ok<Versioned>(await send(owner, 'post', `${base}/${group.id}/versions`, { language, slug, draft: draft(title) }), 201)
+    const created = await ok<Versioned>(await send(owner, 'post', `${base}/${group.id}/versions`, { language, slug, draft: draft(title, cover) }), 201)
 
     if (publish)
       await ok(await send(owner, 'post', `${base}/${group.id}/versions/${language}/publish`, undefined, created.rowVersion), 200)

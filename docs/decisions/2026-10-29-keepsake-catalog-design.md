@@ -3,6 +3,7 @@
 - Date: 2026-10-29
 - Status: **approved on 2026-10-29** (approval given in chat by the owner, on the lab page `/lab/keepsake-editor`). Ten points stay open (see "Open points"). Prices, themes, colours and design rights are still mock data (O26).
 - Changes: `docs/ux/keepsake-editor-design.md` (new), `docs/ux/story-editor-design.md` and `docs/decisions/2026-10-29-story-editor-design.md` (dated note), `docs/development-plan/screen-inventory.md` (S7, M11, M12, N13, N14, N15, D16), `docs/development-plan/delivery-plan.md` (E6.1, E6.2, E6.3), `docs/adr/ADR-027-generic-product-options-with-combination-key.md` and `docs/adr/ADR-022-medusa-study-keep-stock-per-sku-and-skip-purchasing-flags.md` (History lines), `docs/ux/design-system/project/components/Button/README.md` (dated note)
+- Note of 2026-10-30: the owner decided that an archived variant cannot be restored (gate G-E62-RESTORE). The lab's "Restore as hidden" is not built, and the "Restore as hidden" rule in the follow-up work of E6.2 below is closed. Open point 11 says what follows for a duplicate.
 - Source: the owner's approval of the lab page `/lab/keepsake-editor` on 29.10.2026
 - Related: `docs/ux/keepsake-editor-design.md` (the full specification), `docs/decisions/2026-10-29-story-editor-design.md` (M17, whose flow M12 follows), `docs/decisions/2026-10-29-media-library-design.md` (N18, the photo picker), `docs/adr/ADR-017`, `ADR-027`, `ADR-009`, `ADR-016`, `ADR-022`, `docs/specs/001-storytelling-pivot/data-model.md` (DM-7)
 
@@ -70,7 +71,7 @@ The last two live under `features/lab` today. Product code can't import from the
 ## Follow-up product work (not done here)
 
 - **E6.1.** The list needs the variant count and the sold-out count per keepsake. The editor autosaves the draft with `row_version` and `If-Match` (ADR-014). The publish checks of the spec belong in the write validation too, because the database constraints do not hold them (a full language, a photo, a variant on sale).
-- **E6.2.** The options save with every variant's new values in one request, and the API returns the problems the lab shows. Archiving a variant that has reserved units is refused, and the API must refuse it too. The lab lets the merchant restore an archived variant as hidden, with its code, price and stock. No story or AC in the plan names this, so E6.2 needs the rule.
+- **E6.2.** The options save with every variant's new values in one request, and the API returns the problems the lab shows. Archiving a variant that has reserved units is refused, and the API must refuse it too. The lab lets the merchant restore an archived variant as hidden, with its code, price and stock. No story or AC in the plan names this, so E6.2 needs the rule. **Answered 2026-10-30 (gate G-E62-RESTORE):** an archived variant cannot be restored.
 - **E6.3.** Setting stock below the reserved units is refused with the number of units. The item page needs a query for the open reservations: order reference, guest, accepted date and quantity. The order reference on the item page opens the order once an order screen exists. The lab shows a toast.
 - **Shared pieces.** Move the language switch and the iPhone mockup out of `features/lab` (above). Use `RowActions` with `isDanger` for every destructive menu item (Delete option, Archive).
 - **Copy.** The lab has English only. German copy does not exist.
@@ -90,6 +91,7 @@ Decided here only as far as the lab shows.
 8. **Settled 2026-10-29: "variant".** The refusals of a used value or option now say "variants" (for example "Used by 2 variants (VX-S-LION, VX-L-LION)"), like the rest of the screens. "SKU code" stays the name of the code field.
 9. **German is optional.** A German option name or value may stay empty, and the publish card then warns. ADR-027 assumes labels exist in both languages. The design is looser than the ADR, and the ADR text is unchanged.
 10. **Screens without ids.** The variant page and the inventory item page have no id in the screen inventory. The counts of S7 do not include them. They need an id, or a note under N13 and N15, when the build is planned.
+11. **Settled 2026-10-30: no restore (gate G-E62-RESTORE).** An archived variant cannot be restored. The unique combination key counts archived variants, so an archived combination stays taken, and the refusal for an archived twin ("Restore it instead") has no action to point to. E6.2 sets the wording of that refusal.
 
 Not verified: a phone with a real keyboard or touch, a screen reader, reduced motion, and a list with many variants (the lab has 10 of 36 combinations).
 

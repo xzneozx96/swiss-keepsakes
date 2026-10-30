@@ -22,7 +22,7 @@ const get = makeGetStory(deps)
 const categories = makeListCategories(deps)
 
 const slug = () => `s-${randomUUID().slice(0, 8)}`
-const doc = (title: string, over: Partial<StoredStoryDoc> = {}): StoredStoryDoc => ({ title, excerpt: '', authorName: '', authorRole: '', coverMediaId: null, body: { type: 'doc', content: [] }, ...over })
+const doc = (title: string, over: Partial<StoredStoryDoc> = {}): StoredStoryDoc => ({ title, excerpt: '', authorName: '', coverMediaId: null, body: { type: 'doc', content: [] }, ...over })
 
 async function group(store: string): Promise<string> {
   const { rows } = await pool.query<{ id: string }>(`insert into content.story_groups (store_id, kind) values ($1, 'story') returning id`, [store])

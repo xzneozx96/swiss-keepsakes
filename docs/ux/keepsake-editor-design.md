@@ -172,6 +172,7 @@ An empty tab says "No variants here." (All: "No variants yet.").
 - **Hide from guests** and **Put on sale** change the status at once and show the toast "{code}: hidden." or "{code}: for sale.".
 - **Archive** keeps the variant for old orders. It is refused while units are reserved: "Can’t archive {code}. {n} units are reserved by open orders. Archive it once they are handed over or released." The toast on success is "{code}: archived.".
 - **Restore as hidden** brings an archived variant back as hidden, with its code, price and stock. The toast is "{code}: hidden.". Adding the same combination again is refused and points to Restore (below).
+  - **Decided 2026-10-30 (gate G-E62-RESTORE): an archived variant cannot be restored.** The build has no Restore as hidden. Every mention of Restore in this spec, in the row menu, on the variant page and in the refusal for an archived twin, is superseded. See open point 10.
 
 ### The variant sheet
 
@@ -441,7 +442,7 @@ All English wording is in the lab files and in the sections above. The wording r
 7. **Settled 2026-10-29:** the create flow has four steps, with the button "Create keepsake" on the last.
 8. **Settled 2026-10-29:** the screens and refusals say "variant"; "SKU code" stays the name of the code field.
 9. **German is optional** for an option name or value, and ADR-027 assumes labels in both languages. The publish card warns. The ADR text is unchanged.
-10. **Screens without ids.** The variant page and the inventory item page have no id in the screen inventory. The lab's link on the publish card reads `/{lang}/gifts/{slug}`, the route name of the code. The label on screen is Keepsakes. Also open: the phone list rows show no status (section 3), and the "Restore as hidden" rule has no story.
+10. **Screens without ids.** The variant page and the inventory item page have no id in the screen inventory. The lab's link on the publish card reads `/{lang}/gifts/{slug}`, the route name of the code. The label on screen is Keepsakes. Also open: the phone list rows show no status (section 3), and the "Restore as hidden" rule has no story. **Settled 2026-10-30 (gate G-E62-RESTORE):** an archived variant cannot be restored, so "Restore as hidden" is not built. The unique combination key counts archived variants, so an archived combination stays taken, and E6.2 sets the wording of the refusal for an archived twin.
 
 Not verified: a phone with a real keyboard or touch, drag of photos and values on a phone, a screen reader, reduced motion, the German UI, and a keepsake with many variants. The lab was not run against the real API.
 

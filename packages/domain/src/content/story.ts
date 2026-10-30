@@ -8,8 +8,9 @@ export interface StoryDraft {
   title: string
   excerpt: string
   authorName: string
-  authorRole: string
   coverMediaId: string | null
+  /** Day the facts of an editorial review were checked (YYYY-MM-DD). Only an editorial review needs it to publish. */
+  checkedOn?: string | null
   body: StoryBody
 }
 
@@ -43,11 +44,36 @@ export interface StoryVersion {
   updatedAt: Date
 }
 
-/** A version publishes with a title and a slug. No rule asks for a second language (AC30). */
-export function storyVersionPublishGaps(input: { title: string, slug: string | null }): PublishGap[] {
+/** What story_versions_published_fields_check reads: a title and a slug. The save of a published version runs it. */
+export function storyVersionCheckGaps(input: { title: string, slug: string | null }): PublishGap[] {
   const gaps: PublishGap[] = []
   if (input.title.trim() === '') gaps.push('title')
   if (input.slug === null || input.slug.trim() === '') gaps.push('slug')
+  return gaps
+}
+
+export interface StoryPublishInput {
+  title: string
+  slug: string | null
+  excerpt: string
+  coverMediaId: string | null
+  kind: StoryGroup['kind']
+  subjectPlaceId: string | null
+  checkedOn: string | null | undefined
+}
+
+/**
+ * A version publishes with a title, a link, an excerpt and a cover; an editorial review also needs its place and
+ * its check date. The gap names are the contract's field names. No rule asks for a second language (AC30).
+ */
+export function storyVersionPublishGaps(input: StoryPublishInput): PublishGap[] {
+  const gaps = storyVersionCheckGaps(input)
+  if (input.excerpt.trim() === '') gaps.push('excerpt')
+  if (input.coverMediaId === null) gaps.push('coverMediaId')
+  if (input.kind === 'editorial_review') {
+    if (input.subjectPlaceId === null) gaps.push('subjectPlaceId')
+    if (input.checkedOn == null || input.checkedOn.trim() === '') gaps.push('checkedOn')
+  }
   return gaps
 }
 

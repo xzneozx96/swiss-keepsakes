@@ -66,6 +66,8 @@ export const commandAffects: {
     publish: [queryKeys.keepsakes.list],
     unpublish: [queryKeys.keepsakes.list],
     saveVariant: [queryKeys.keepsakes.list],
+    saveOptions: [queryKeys.keepsakes.list],
+    createVariant: [queryKeys.keepsakes.list],
   },
   media: {
     upload: [queryKeys.media.list],
