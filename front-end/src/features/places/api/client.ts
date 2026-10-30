@@ -1,4 +1,4 @@
-import type { ConfirmUpload, Media, Pin, PinList, PinPublishBody, PinStoryOptionList, PinWriteBody, UploadGrant, UploadRequest } from '@sk/api-contract'
+import type { ConfirmUpload, MapsLinkPosition, Media, Pin, PinList, PinPublishBody, PinStoryOptionList, PinWriteBody, UploadGrant, UploadRequest } from '@sk/api-contract'
 
 /** A command carries the `Idempotency-Key` of the user's intent (`useIdempotencyKey`), so a retry of it is the same request to the API. */
 export type Keyed<T> = T & { idempotencyKey: string }
@@ -18,6 +18,8 @@ export interface PlacesClient {
   publish: (input: Keyed<{ storeId: string, id: string, ifMatch: number } & PinPublishBody>) => Promise<Pin>
   hide: (input: Keyed<{ storeId: string, id: string, ifMatch: number }>) => Promise<Pin>
   remove: (input: Keyed<{ storeId: string, id: string, ifMatch: number }>) => Promise<void>
+  /** The position a Google Maps short link points to; the server follows it. A refusal is `maps-link-unreadable`. */
+  resolveMapsLink: (input: { storeId: string, url: string }) => Promise<MapsLinkPosition>
   /** The grant to PUT a photo with. */
   requestUpload: (input: Keyed<{ storeId: string } & UploadRequest>) => Promise<UploadGrant>
   confirmUpload: (input: Keyed<{ storeId: string } & ConfirmUpload>) => Promise<Media>

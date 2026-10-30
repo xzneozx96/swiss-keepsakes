@@ -249,20 +249,22 @@ describe('[E4.2][AC68] N17 one pattern for every field, and a card for each bloc
   const blocks = () => screen.getAllByTestId('place-block')
   const headings = () => screen.queryAllByRole('heading', { level: 3 }).map(item => item.textContent)
 
-  it('[E4.2][AC68] the map step has two cards; a field is label, input, help line, and no heading repeats a label', async () => {
+  it('[E4.2][AC68] the map step has three cards; a field is label, input, help line, and no heading repeats a label', async () => {
     await open('new')
     await heading('Place on the map')
 
-    expect(blocks()).toHaveLength(2)
+    expect(blocks()).toHaveLength(3)
     expect(headings()).toEqual(['Location on the map'])
     expect(screen.queryByRole('heading', { name: 'Address' })).not.toBeInTheDocument()
     expect(screen.getAllByText('Address')).toHaveLength(1)
     expect(screen.getByLabelText('Address')).toHaveAccessibleDescription(/One address for both languages/)
     // A card is not collapsible.
-    expect(blocks()[1]).toContainElement(screen.getByLabelText('Address'))
+    expect(blocks()[2]).toContainElement(screen.getByLabelText('Address'))
+    expect(blocks()[0]).toContainElement(screen.getByLabelText('Google Maps link'))
+    expect(screen.getByLabelText('Google Maps link')).toHaveAccessibleDescription('Paste a link from Google Maps; the pin moves there. You can still drag it.')
     for (const block of blocks())
       expect(block.querySelector('[aria-expanded]')).toBeNull()
-    expect(blocks()[0]).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
+    expect(blocks()[1]).toHaveClass('rounded-3xl', 'bg-surface', 'shadow-surface')
   })
 
   it('[E4.2][AC68] the hours and dates step has a card for each, with a heading because each groups several fields', async () => {
@@ -668,6 +670,103 @@ describe('[E4.2][AC68] N17 photos', () => {
     expect(names()).toHaveLength(11)
     expect(screen.queryByTestId('places-photo-input')).not.toBeInTheDocument()
     expect(screen.getByText('Up to 11 photos: the main photo and 10 more.')).toBeInTheDocument()
+  })
+})
+
+describe('[E4.2][AC68] N17 position from a Google Maps link', () => {
+  const lookups = () => api.calls.filter(call => call.path.includes('/maps-link'))
+  const paste = async (text: string) => {
+    await userEvent.click(screen.getByLabelText('Google Maps link'))
+    await userEvent.paste(text)
+  }
+  const long = 'https://www.google.com/maps/place/Kapellbr%C3%BCcke/@47.0516,8.3074,17z/data=!3m1!4b1!8m2!3d47.0516943!4d8.3074029'
+
+  it('[E4.2][AC68] is the first field of the first step, above the map', async () => {
+    await open('new')
+    await heading('Place on the map')
+
+    const field = screen.getByLabelText('Google Maps link')
+    expect(field.compareDocumentPosition(screen.getByRole('button', { name: 'Place pin' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('[E4.2][AC68] moves the pin to the position of a long link, read in the browser with no call to the API', async () => {
+    api.pin = pinOf({ id: uuid(10) })
+    await open('new')
+    await heading('Place on the map')
+    await paste(long)
+
+    expect(screen.getByTestId('places-position')).toHaveTextContent('Position: 47.05169, 8.3074')
+    expect(screen.getByLabelText('Google Maps link')).toHaveValue(long)
+    expect(lookups()).toHaveLength(0)
+    await press('Next')
+    await type('Title in English', 'Chapel Bridge')
+    await press('Save draft')
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ latitude: 47.05169, longitude: 8.3074 })
+  })
+
+  it('[E4.2][AC68] asks the API to follow a short link, and moves the pin to the position it answers', async () => {
+    api.answer = call => (call.path.startsWith(`/api/store/${storeId}/maps-link`) ? Response.json({ latitude: 47.0502, longitude: 8.3093 }) : undefined)
+    await open('new')
+    await heading('Place on the map')
+    await paste('https://maps.app.goo.gl/AbCdEf123')
+
+    await waitFor(() => expect(screen.getByTestId('places-position')).toHaveTextContent('Position: 47.0502, 8.3093'))
+    expect(lookups()).toHaveLength(1)
+    expect(lookups()[0]).toMatchObject({ method: 'GET', path: `/api/store/${storeId}/maps-link?url=${encodeURIComponent('https://maps.app.goo.gl/AbCdEf123')}` })
+  })
+
+  it('[E4.2][AC68] says when the API cannot read a short link, and leaves the position alone', async () => {
+    api.answer = call => (call.path.startsWith(`/api/store/${storeId}/maps-link`) ? problem(422, 'maps-link-unreadable') : undefined)
+    await open('new')
+    await heading('Place on the map')
+    await press('Place pin')
+    await paste('https://maps.app.goo.gl/AbCdEf123')
+
+    expect(await screen.findByText('This link has no position we can read. Use a link from Google Maps, or tap the map.')).toBeInTheDocument()
+    expect(screen.getByLabelText('Google Maps link')).toBeInvalid()
+    expect(screen.getByTestId('places-position')).toHaveTextContent('Position: 47.05, 8.3')
+  })
+
+  it('[E4.2][AC68] says in words when a long link holds no position, and sends nothing to the API', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await paste('https://www.google.com/maps/search/chapel+bridge')
+
+    expect(await screen.findByText(/This link has no position we can read/)).toBeInTheDocument()
+    expect(lookups()).toHaveLength(0)
+    await userEvent.clear(screen.getByLabelText('Google Maps link'))
+    await userEvent.tab()
+    await waitFor(() => expect(screen.queryByText(/This link has no position we can read/)).not.toBeInTheDocument())
+  })
+
+  it('[E4.2][AC68] says a lookup that failed for another reason can be tried again', async () => {
+    api.answer = call => (call.path.startsWith(`/api/store/${storeId}/maps-link`) ? problem(503, 'storage-unavailable') : undefined)
+    await open('new')
+    await heading('Place on the map')
+    await paste('https://maps.app.goo.gl/AbCdEf123')
+
+    expect(await screen.findByText('The link could not be checked. Try again.')).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC68] reads a typed link when the field is left, not on every key', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await userEvent.type(screen.getByLabelText('Google Maps link'), 'https://www.google.com/maps/@47.05,8.3,15z')
+
+    expect(screen.getByTestId('places-position')).toHaveTextContent('Tap where the place is')
+    await userEvent.tab()
+    expect(screen.getByTestId('places-position')).toHaveTextContent('Position: 47.05, 8.3')
+  })
+
+  it('[E4.2][AC68] reads in German', async () => {
+    await open('new', { language: 'de' })
+    await heading('Ort auf der Karte')
+
+    expect(screen.getByLabelText('Google-Maps-Link')).toHaveAccessibleDescription(/Fügen Sie einen Link aus Google Maps ein/)
+    await userEvent.click(screen.getByLabelText('Google-Maps-Link'))
+    await userEvent.paste('https://www.google.com/maps/search/x')
+    expect(await screen.findByText(/In diesem Link steht keine Position/)).toBeInTheDocument()
   })
 })
 

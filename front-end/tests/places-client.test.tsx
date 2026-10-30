@@ -79,6 +79,22 @@ describe('[E4.2][AC68] the places queries and commands', () => {
       expect(commandAffects.places[command]).toEqual([['places', 'list'], ['places', 'pin']])
     expect(commandAffects.places.requestUpload).toEqual([])
     expect(commandAffects.places.confirmUpload).toEqual([])
+    expect(commandAffects.places.resolveMapsLink).toEqual([])
+  })
+
+  it('[E4.2][AC68] resolves a Google Maps short link through the API, and a refusal is an ApiProblem', async () => {
+    const resolve = renderHook(() => useCommand('places', 'resolveMapsLink'), { wrapper })
+
+    api.answer = () => Response.json({ latitude: 47.05, longitude: 8.3 })
+    await act(async () => {
+      await expect(resolve.result.current.mutateAsync({ storeId, url: 'https://maps.app.goo.gl/Ab1' })).resolves.toEqual({ latitude: 47.05, longitude: 8.3 })
+    })
+    expect(api.calls.at(-1)).toMatchObject({ method: 'GET', path: `/api/store/${storeId}/maps-link?url=${encodeURIComponent('https://maps.app.goo.gl/Ab1')}` })
+
+    api.answer = () => problem(422, 'maps-link-unreadable')
+    await act(async () => {
+      await expect(resolve.result.current.mutateAsync({ storeId, url: 'https://maps.app.goo.gl/Ab2' })).rejects.toMatchObject({ type: 'maps-link-unreadable', status: 422 })
+    })
   })
 
   it('[E4.2][AC68] every problem type the screens meet has words in both languages, and an unknown one has the generic line', () => {

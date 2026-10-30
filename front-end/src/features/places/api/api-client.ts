@@ -38,6 +38,8 @@ export function createPlacesClient(): PlacesClient {
       if (!response.ok)
         throw problemOf(response, error)
     },
+    resolveMapsLink: async ({ storeId, url }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/maps-link', { ...timeout(), params: { path: { storeId }, query: { url } } })),
     requestUpload: async ({ storeId, idempotencyKey, ...body }) =>
       answer((await loadClient()).POST('/api/store/{storeId}/media/uploads', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
     confirmUpload: async ({ storeId, idempotencyKey, ...body }) =>
