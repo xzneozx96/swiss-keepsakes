@@ -136,6 +136,8 @@ export const storesEn = {
   'stores.open.forbidden': 'Only the Owner can open the store for sale.',
 
   'stores.setup.notice': 'Your store is not open for sale yet.',
+  'stores.setup.action': 'Set up store',
+  'stores.setup.close': 'Close',
   'stores.setup.steps.label': 'Steps',
   'stores.setup.steps.title': 'Your steps',
   'stores.setup.steps.all': 'All steps',

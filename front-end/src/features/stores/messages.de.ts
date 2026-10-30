@@ -137,6 +137,8 @@ export const storesDe: Record<keyof typeof storesEn, string> = {
   'stores.open.forbidden': 'Nur der Inhaber kann den Verkauf starten.',
 
   'stores.setup.notice': 'Ihr Shop ist noch nicht im Verkauf.',
+  'stores.setup.action': 'Shop einrichten',
+  'stores.setup.close': 'Schliessen',
   'stores.setup.steps.label': 'Schritte',
   'stores.setup.steps.title': 'Ihre Schritte',
   'stores.setup.steps.all': 'Alle Schritte',

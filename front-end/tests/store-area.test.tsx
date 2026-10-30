@@ -1,7 +1,7 @@
 import { meSchema, problemSchema } from '@sk/api-contract'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, Outlet, RouterProvider } from '@tanstack/react-router'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -75,7 +75,7 @@ async function meSettled() {
 }
 
 describe('the /store area while the store is onboarding [E2.16][E2.3]', () => {
-  it('shows the Owner of an onboarding store the store area with the menu, and a link to Open your store', async () => {
+  it('shows the Owner of an onboarding store the store area with the menu, and a link to Set up store', async () => {
     answer = () => meBody([entry('owner', 'onboarding')])
     const router = renderAt('/store')
 
@@ -83,9 +83,35 @@ describe('the /store area while the store is onboarding [E2.16][E2.3]', () => {
     expect(router.state.location.pathname).toBe('/store')
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0)
     expect(await screen.findByText('Your store is not open for sale yet.')).toBeInTheDocument()
-    await userEvent.click(await screen.findByRole('link', { name: 'Open your store' }))
+    await userEvent.click((await screen.findAllByRole('link', { name: 'Set up store' }))[0]!)
     expect(await screen.findByText('Open your store stub')).toBeInTheDocument()
     expect(router.state.location.pathname).toBe('/store/onboarding')
+  })
+
+  it('shows the notice as a warning Alert with the link to Set up store', async () => {
+    answer = () => meBody([entry('owner', 'onboarding')])
+    renderAt('/store')
+
+    const text = await screen.findByText('Your store is not open for sale yet.')
+    const notice = text.closest('[data-slot="alert-root"]') as HTMLElement | null
+    expect(notice).not.toBeNull()
+    expect(notice).toHaveClass('alert--warning')
+    // The button is in the content on a phone and beside it from 640 px: two links, one route.
+    const links = within(notice!).getAllByRole('link', { name: 'Set up store' })
+    expect(links.length).toBeGreaterThan(0)
+    expect(links.every(link => link.getAttribute('href') === '/store/onboarding')).toBe(true)
+  })
+
+  it('the close button of the notice hides it for the browser session', async () => {
+    answer = () => meBody([entry('owner', 'onboarding')])
+    renderAt('/store')
+
+    await screen.findByText('Your store is not open for sale yet.')
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+    expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Set up store' })).not.toBeInTheDocument()
+    expect(sessionStorage.getItem('sk.storeSetupNotice')).toBe('1')
   })
 
   it('shows a deeper store page, such as Content > Categories, the same way', async () => {
@@ -105,7 +131,7 @@ describe('the /store area while the store is onboarding [E2.16][E2.3]', () => {
     await meSettled()
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0)
     expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Open your store' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Set up store' })).not.toBeInTheDocument()
   })
 
   it('shows the notice in German, with the link in German', async () => {
@@ -115,28 +141,29 @@ describe('the /store area while the store is onboarding [E2.16][E2.3]', () => {
     renderAt('/store')
 
     expect(await screen.findByText(/Ihr Shop ist noch nicht im Verkauf\./)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Ihren Shop eröffnen' })).toHaveAttribute('href', '/store/onboarding')
+    expect(screen.getAllByRole('link', { name: 'Shop einrichten' })[0]).toHaveAttribute('href', '/store/onboarding')
     expect(document.body.textContent).not.toMatch(/\bstores\.[a-z]/)
   })
 
-  it('shows the shell to the Owner of a live store, with no link to Open your store', async () => {
+  it('shows the shell to the Owner of a live store, with no link to Set up store', async () => {
     answer = () => meBody([entry('owner', 'live')])
     renderAt('/store')
 
     expect(await screen.findByText('Shell children')).toBeInTheDocument()
     await meSettled()
     expect(screen.getAllByRole('navigation').length).toBeGreaterThan(0)
-    expect(screen.queryByRole('link', { name: 'Open your store' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Set up store' })).not.toBeInTheDocument()
     expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
+    expect(document.querySelector('[data-slot="alert-root"]')).toBeNull()
   })
 
-  it('shows the shell to a Manager of an onboarding store, with no link to Open your store', async () => {
+  it('shows the shell to a Manager of an onboarding store, with no link to Set up store', async () => {
     answer = () => meBody([entry('manager', 'onboarding')])
     renderAt('/store')
 
     expect(await screen.findByText('Shell children')).toBeInTheDocument()
     await meSettled()
-    expect(screen.queryByRole('link', { name: 'Open your store' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Set up store' })).not.toBeInTheDocument()
     expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
   })
 
@@ -146,7 +173,7 @@ describe('the /store area while the store is onboarding [E2.16][E2.3]', () => {
 
     expect(await screen.findByText('Shell children')).toBeInTheDocument()
     await meSettled()
-    expect(screen.queryByRole('link', { name: 'Open your store' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Set up store' })).not.toBeInTheDocument()
     expect(screen.queryByText('Your store is not open for sale yet.')).not.toBeInTheDocument()
   })
 })
