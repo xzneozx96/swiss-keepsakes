@@ -79,7 +79,11 @@ describe('[E4.2][AC68] N16 the list', () => {
     await open()
     await screen.findAllByRole('link', { name: 'Chapel Bridge' })
 
-    expect(table().getAllByRole('columnheader').map(header => header.textContent)).toEqual(['Pin', 'Status', 'Categories', 'Recommended for', 'Last update', 'Actions'])
+    const headers = table().getAllByRole('columnheader')
+
+    expect(headers.map(header => header.textContent)).toEqual(['Pin', 'Status', 'Categories', 'Recommended for', 'Last update', 'Actions'])
+    for (const header of headers.slice(0, 5))
+      expect(header).toHaveClass('whitespace-nowrap')
   })
 
   it('[E4.2][AC86] the columns Next date and Main story are gone', async () => {
@@ -187,7 +191,9 @@ describe('[E4.2][AC68] N16 the list', () => {
     const bridge = within(rowOf('Chapel Bridge'))
     expect(bridge.getByText('Walks').closest('[data-slot="chip"]')).not.toBeNull()
     expect(bridge.getByText('Food').closest('[data-slot="chip"]')).not.toBeNull()
-    expect(within(rowOf('Old tap')).getByText('None')).toBeInTheDocument()
+    const none = within(rowOf('Old tap')).getByText('None')
+    expect(none.closest('[data-slot="chip"]')).toHaveClass('chip--lg', 'chip--soft', 'chip--default')
+    expect(none).toHaveClass('text-muted')
     expect(screen.queryByText(/only under All/)).not.toBeInTheDocument()
   })
 
@@ -217,6 +223,16 @@ describe('[E4.2][AC68] N16 the list', () => {
     expect(within(rowOf('Fasnacht')).getByText('Veranstaltung · beendet')).toBeInTheDocument()
     // The table and the cards are both in the DOM: one line in each.
     expect(screen.getAllByText('Ort')).toHaveLength(2)
+  })
+
+  it('[E4.2][AC86] a pin with no category shows a muted Keine chip in German', async () => {
+    api.items = [listItem({ id: uuid(11), title: { de: 'Alter Brunnen' } })]
+    await open('de')
+    await screen.findAllByRole('link', { name: 'Alter Brunnen' })
+
+    const none = within(rowOf('Alter Brunnen')).getByText('Keine')
+    expect(none.closest('[data-slot="chip"]')).toHaveClass('chip--lg', 'chip--soft')
+    expect(none).toHaveClass('text-muted')
   })
 
   it('[E4.2][AC86] the filter has a Type group with Place and Event and their counts', async () => {

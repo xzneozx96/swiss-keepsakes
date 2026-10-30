@@ -89,13 +89,17 @@ function Kind({ item }: { item: PinListItem }) {
   return <span className="text-xs text-muted">{label}</span>
 }
 
-/** The categories of a pin as chips, or None. */
+/** The categories of a pin as chips, or a muted None chip. */
 function Categories({ item, categories }: { item: PinListItem, categories: MerchantCategory[] }) {
   const { t, language } = useLocale()
   const names = categoryNames(item, categories, language)
 
   if (!names.length)
-    return <span className="text-muted">{t('places.list.onlyAll')}</span>
+    return (
+      <TagChip>
+        <span className="text-muted">{t('places.list.onlyAll')}</span>
+      </TagChip>
+    )
 
   return (
     <span className="flex flex-wrap items-center gap-1.5">
@@ -193,7 +197,7 @@ export function PlaceRows(props: PlaceRowsProps) {
       id: 'pin',
       header: t('places.column.pin'),
       isRowHeader: true,
-      headerClassName: 'w-[26%]',
+      headerClassName: 'w-[26%] whitespace-nowrap',
       render: item => (
         <div className="flex min-w-0 flex-col">
           <Link className="font-semibold text-pretty [overflow-wrap:anywhere] outline-none hover:underline focus-visible:focus-ring" to={hrefOf(item) as never}>{nameOfItem(item)}</Link>
@@ -201,10 +205,10 @@ export function PlaceRows(props: PlaceRowsProps) {
         </div>
       ),
     },
-    { id: 'status', header: t('places.column.status'), skeleton: 'chip', render: item => <Status item={item} /> },
-    { id: 'categories', header: t('places.column.categories'), render: item => <Categories categories={categories} item={item} /> },
-    { id: 'tags', header: t('places.column.tags'), render: item => <RecommendedFor item={item} /> },
-    { id: 'edited', header: t('places.column.edited'), cellClassName: 'whitespace-nowrap text-muted', render: item => edited(item.updatedAt) },
+    { id: 'status', headerClassName: 'whitespace-nowrap', header: t('places.column.status'), skeleton: 'chip', render: item => <Status item={item} /> },
+    { id: 'categories', headerClassName: 'whitespace-nowrap', header: t('places.column.categories'), render: item => <Categories categories={categories} item={item} /> },
+    { id: 'tags', headerClassName: 'whitespace-nowrap', header: t('places.column.tags'), render: item => <RecommendedFor item={item} /> },
+    { id: 'edited', header: t('places.column.edited'), headerClassName: 'whitespace-nowrap', cellClassName: 'whitespace-nowrap text-muted', render: item => edited(item.updatedAt) },
   ]
 
   return (
