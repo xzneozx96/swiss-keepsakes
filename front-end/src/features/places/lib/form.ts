@@ -10,7 +10,8 @@ export interface HoursSpan { key: string, day: number, opens: string, closes: st
 /** One date entry of the form: a day with optional times, or a range of days with none. */
 export interface DateEntry { key: string, kind: 'day' | 'range', firstDay: string, lastDay: string, startTime: string, endTime: string }
 
-export interface PhotoEntry { mediaId: string, altEn: string, altDe: string }
+/** An extra photo. The main photo is `coverMediaId`; together they are one ordered list in the editor (`photoIds`). */
+export interface PhotoEntry { mediaId: string }
 
 /** The whole editor state, as strings the fields can hold. `bodyOf` turns it into one write. */
 export interface PlaceForm {
@@ -33,11 +34,22 @@ export interface PlaceForm {
   mustVisit: boolean
   foodKind: FoodKind | null
   coverMediaId: string | null
-  coverAltEn: string
-  coverAltDe: string
   photos: PhotoEntry[]
   outboundUrl: string
   mainStoryGroupId: string | null
+}
+
+/** The main photo and the extra ones: at most 10 extra photos, so 11. */
+export const MAX_PHOTOS = 11
+
+/** The photos as the editor shows them, one ordered list: the first is the main photo, the rest are the extra photos. */
+export function photoIds(form: Pick<PlaceForm, 'coverMediaId' | 'photos'>): string[] {
+  return [...(form.coverMediaId ? [form.coverMediaId] : []), ...form.photos.map(photo => photo.mediaId)]
+}
+
+/** The ordered list back onto the two fields the API has: the first photo is the cover, the others are `place_photos`. */
+export function withPhotoIds(ids: string[]): Pick<PlaceForm, 'coverMediaId' | 'photos'> {
+  return { coverMediaId: ids[0] ?? null, photos: ids.slice(1).map(mediaId => ({ mediaId })) }
 }
 
 const newKey = () => crypto.randomUUID()
@@ -67,8 +79,6 @@ export function emptyForm(withDate = false): PlaceForm {
     mustVisit: false,
     foodKind: null,
     coverMediaId: null,
-    coverAltEn: '',
-    coverAltDe: '',
     photos: [],
     outboundUrl: '',
     mainStoryGroupId: null,
@@ -113,10 +123,7 @@ export function formOf(pin: Pin): PlaceForm {
     serviceType: pin.serviceType,
     mustVisit: pin.mustVisit,
     foodKind: pin.foodKind,
-    coverMediaId: pin.coverMediaId,
-    coverAltEn: text.coverAlt.en ?? '',
-    coverAltDe: text.coverAlt.de ?? '',
-    photos: pin.photos.map(photo => ({ mediaId: photo.mediaId, altEn: text.photoAlt[photo.mediaId]?.en ?? '', altDe: text.photoAlt[photo.mediaId]?.de ?? '' })),
+    ...withPhotoIds([...(pin.coverMediaId ? [pin.coverMediaId] : []), ...pin.photos.map(photo => photo.mediaId)]),
     outboundUrl: pin.outboundUrl ?? '',
     mainStoryGroupId: pin.mainStoryGroupId,
   }
@@ -260,8 +267,7 @@ export function bodyOf(form: PlaceForm, pin?: Pin): PinWriteBody {
     mustVisit: form.mustVisit,
     foodKind: form.foodKind,
     coverMediaId: form.coverMediaId,
-    coverAlt: form.coverMediaId ? trimmed(form.coverAltEn, form.coverAltDe) : {},
-    photos: form.photos.map(photo => ({ mediaId: photo.mediaId, alt: trimmed(photo.altEn, photo.altDe) })),
+    photos: form.photos.map(photo => ({ mediaId: photo.mediaId })),
     outboundUrl: form.outboundUrl.trim() === '' ? null : form.outboundUrl.trim(),
     mainStoryGroupId: form.mainStoryGroupId,
     categoryIds: form.categoryIds,

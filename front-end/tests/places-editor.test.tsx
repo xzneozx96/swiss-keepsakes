@@ -492,9 +492,18 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
 describe('[E4.2][AC68] N17 photos', () => {
   const grant = { uploadKey: `${storeId}/up-1.jpg`, url: 'https://storage.test/uploads/up-1', method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, expiresAt: '2026-10-30T12:00:00.000Z', kind: 'image' }
   const media = (status: 'processing' | 'ready') => ({ id: uuid(40), kind: 'image', status, contentType: 'image/jpeg', byteSize: 3, width: 800, height: 600, publicUrl: status === 'ready' ? 'https://storage.test/media/a.jpg' : null, variants: [] })
+  const readyMedia = (call: { path: string, method: string }) => (call.path.includes('/media/') && call.method === 'GET' ? Response.json({ ...media('ready'), id: call.path.split('/').at(-1) }) : undefined)
+  const openPhotos = async (pin = pinOf({ id: uuid(10) })) => {
+    api.pin = pin
+    await open(uuid(10))
+    await heading('Place on the map')
+    await userEvent.click(screen.getAllByRole('button', { name: /Text and photo/ }).at(0)!)
+    await heading('Text and photo')
+  }
+  const rows = () => within(screen.getByRole('list', { name: 'Photos, in order' })).getAllByRole('listitem')
+  const names = () => rows().map(row => row.querySelector('.line-clamp-2')!.textContent)
 
-  it('[E4.2][AC68] uploads through the media endpoints, shows the photo, and saves its id with alt text in both languages', async () => {
-    api.pin = pinOf({ id: uuid(10) })
+  it('[E4.2][AC68] one list: with no photo it says so, and the first photo added is the cover', async () => {
     api.answer = (call) => {
       if (call.path === `/api/store/${storeId}/media/uploads`)
         return Response.json(grant)
@@ -505,21 +514,24 @@ describe('[E4.2][AC68] N17 photos', () => {
       if (call.method === 'PUT')
         return new Response(null, { status: 200 })
     }
+    api.pin = pinOf({ id: uuid(10) })
     await open('new')
     await heading('Place on the map')
     await press('Next')
-    await userEvent.upload(screen.getAllByTestId('places-photo-input')[0]!, new File(['abc'], 'bridge.jpg', { type: 'image/jpeg' }))
 
-    await waitFor(() => expect(api.calls.map(call => `${call.method} ${call.path}`)).toContain(`GET /api/store/${storeId}/media/${uuid(40)}`))
-    // Without a description yet the picture is decorative, so it has no `img` role.
+    expect(screen.getByText('No photos yet. The first one you add is the main photo.')).toBeInTheDocument()
+    expect(screen.getAllByTestId('places-photo-input')).toHaveLength(1)
+    expect(screen.queryByText('More photos')).not.toBeInTheDocument()
+    await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'bridge.jpg', { type: 'image/jpeg' }))
+
+    await waitFor(() => expect(names()).toEqual(['Photo 1']))
+    expect(rows()[0]).toHaveTextContent('Cover')
     await waitFor(() => expect(document.querySelector('img')).toHaveAttribute('src', 'https://storage.test/media/a.jpg'))
     expect(api.calls.find(call => call.method === 'PUT')).toMatchObject({ path: '/uploads/up-1' })
-    await userEvent.type(screen.getByLabelText('Photo · Photo description in English'), 'The wooden bridge')
-    await userEvent.type(screen.getByLabelText('Photo · Photo description in German'), 'Die Holzbrücke')
     await press('Save draft')
 
     await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]!.body).toMatchObject({ coverMediaId: uuid(40), coverAlt: { en: 'The wooden bridge', de: 'Die Holzbrücke' } })
+    expect(writes()[0]!.body).toMatchObject({ coverMediaId: uuid(40), photos: [] })
   })
 
   it('[E4.2][AC68] a refused upload says why, and keeps the form', async () => {
@@ -528,58 +540,87 @@ describe('[E4.2][AC68] N17 photos', () => {
     await open('new')
     await heading('Place on the map')
     await press('Next')
-    await userEvent.upload(screen.getAllByTestId('places-photo-input')[0]!, new File(['abc'], 'a.gif', { type: 'image/jpeg' }))
+    await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'a.gif', { type: 'image/jpeg' }))
 
     expect(await screen.findByText(/This type of file is not allowed/)).toBeInTheDocument()
     expect(document.querySelector('img')).toBeNull()
     expect(danger).not.toHaveBeenCalled()
   })
 
-  it('[E4.2][AC68] alt text typed while another photo uploads is kept when the upload ends', async () => {
-    api.pin = pinOf({ id: uuid(10), photos: [{ mediaId: uuid(41) }] })
+  it('[E4.2][AC68] shows the main photo first and the extra photos after it, each with a grip, a thumbnail and Remove', async () => {
+    api.answer = readyMedia
+    await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41), photos: [{ mediaId: uuid(42) }, { mediaId: uuid(43) }] }))
+
+    expect(names()).toEqual(['Photo 1', 'Photo 2', 'Photo 3'])
+    expect(rows()[0]).toHaveTextContent('Cover')
+    expect(screen.getAllByText('Cover')).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'Move Photo 2, position 2 of 3. Drag, or use the arrow keys.' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /^Remove Photo/ })).toHaveLength(3)
+    await waitFor(() => expect(rows()[0]!.querySelector('img')).toHaveAttribute('src', 'https://storage.test/media/a.jpg'))
+    expect(screen.queryByLabelText(/Photo description/)).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC68] moving a photo to the top makes it the cover; the old cover becomes the first extra photo', async () => {
+    api.answer = readyMedia
+    await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41), photos: [{ mediaId: uuid(42) }, { mediaId: uuid(43) }] }))
+    screen.getByRole('button', { name: /^Move Photo 3,/ }).focus()
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}')
+
+    expect(rows()[0]).toHaveTextContent('Cover')
+    expect(screen.getByText('Photo 2 moved to position 1 of 3.')).toBeInTheDocument()
+    await press('Save draft')
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.method).toBe('PATCH')
+    expect(writes()[0]!.body).toMatchObject({ coverMediaId: uuid(43), photos: [{ mediaId: uuid(41) }, { mediaId: uuid(42) }] })
+    expect(writes()[0]!.body).not.toHaveProperty('coverAlt')
+  })
+
+  it('[E4.2][AC68] removing the cover promotes the next photo; removing the last photo leaves no cover', async () => {
+    api.answer = readyMedia
+    await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41), photos: [{ mediaId: uuid(42) }] }))
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Photo 1' }))
+
+    expect(names()).toEqual(['Photo 1'])
+    expect(rows()[0]).toHaveTextContent('Cover')
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Photo 1' }))
+    expect(screen.getByText('No photos yet. The first one you add is the main photo.')).toBeInTheDocument()
+    await press('Save draft')
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ coverMediaId: null, photos: [] })
+  })
+
+  it('[E4.2][AC68] a photo added while text is typed keeps the text', async () => {
     api.answer = (call) => {
       if (call.path === `/api/store/${storeId}/media/uploads`)
         return Response.json(grant)
       if (call.path === `/api/store/${storeId}/media/confirm`)
         return Response.json(media('processing'), { status: 201 })
-      if (call.path.includes('/media/') && call.method === 'GET')
-        return Response.json({ ...media('ready'), id: call.path.split('/').at(-1) })
-      if (call.method === 'PUT')
-        return new Response(null, { status: 200 })
+      return readyMedia(call) ?? (call.method === 'PUT' ? new Response(null, { status: 200 }) : undefined)
     }
-    await open(uuid(10))
-    await heading('Place on the map')
-    await userEvent.click(screen.getAllByRole('button', { name: /Text and photo/ }).at(0)!)
-    await heading('Text and photo')
+    await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(41) }))
     let release = () => {}
     api.hold = new Promise<void>((resolve) => {
       release = resolve
     })
-    await userEvent.upload(screen.getAllByTestId('places-photo-input').at(-1)!, new File(['abc'], 'new.jpg', { type: 'image/jpeg' }))
-    await userEvent.type(screen.getByLabelText('Photo 1 · Photo description in English'), 'Typed during the upload')
+    await userEvent.upload(screen.getByTestId('places-photo-input'), new File(['abc'], 'new.jpg', { type: 'image/jpeg' }))
+    await userEvent.type(screen.getByLabelText('Tip in English'), 'Typed during the upload')
     release()
 
-    await waitFor(() => expect(screen.getByText('Photo 2')).toBeInTheDocument())
-    expect(screen.getByLabelText('Photo 1 · Photo description in English')).toHaveValue('Typed during the upload')
+    await waitFor(() => expect(names()).toEqual(['Photo 1', 'Photo 2']))
+    expect(screen.getByLabelText('Tip in English')).toHaveValue('Typed during the upload')
     await press('Save draft')
     await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]!.body).toMatchObject({ photos: [{ mediaId: uuid(41), alt: { en: 'Typed during the upload' } }, { mediaId: uuid(40) }] })
+    expect(writes()[0]!.body).toMatchObject({ tip: { en: 'Typed during the upload' }, coverMediaId: uuid(41), photos: [{ mediaId: uuid(40) }] })
   })
 
-  it('[E4.2][AC68] more photos keep an order the merchant sets: a photo moves up and the list is sent in that order', async () => {
-    api.pin = pinOf({ id: uuid(10), photos: [{ mediaId: uuid(41) }, { mediaId: uuid(42) }, { mediaId: uuid(43) }], draft: { title: { en: 'Chapel Bridge' }, tip: {}, localTip: {}, coverAlt: {}, photoAlt: { [uuid(41)]: { en: 'A' }, [uuid(42)]: { en: 'B' } } } })
-    api.answer = call => (call.path.includes('/media/') && call.method === 'GET' ? Response.json({ ...media('ready'), id: call.path.split('/').at(-1) }) : undefined)
-    await open(uuid(10))
-    await heading('Place on the map')
-    await userEvent.click(screen.getAllByRole('button', { name: /Text and photo/ }).at(0)!)
-    await heading('Text and photo')
-    await userEvent.click(screen.getByRole('button', { name: 'Move photo 3 up' }))
-    await press('Save draft')
+  it('[E4.2][AC68] stops at 11 photos: the cover and 10 more', async () => {
+    api.answer = readyMedia
+    await openPhotos(pinOf({ id: uuid(10), coverMediaId: uuid(50), photos: Array.from({ length: 10 }, (_, i) => ({ mediaId: uuid(51 + i) })) }))
 
-    await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]!.method).toBe('PATCH')
-    expect((writes()[0]!.body as { photos: { mediaId: string }[] }).photos.map(photo => photo.mediaId)).toEqual([uuid(41), uuid(43), uuid(42)])
-    expect(screen.getByRole('button', { name: 'Move photo 1 up' })).toBeDisabled()
+    expect(names()).toHaveLength(11)
+    expect(screen.queryByTestId('places-photo-input')).not.toBeInTheDocument()
+    expect(screen.getByText('Up to 11 photos: the main photo and 10 more.')).toBeInTheDocument()
   })
 })
 

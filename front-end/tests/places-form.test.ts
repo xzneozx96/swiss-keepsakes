@@ -3,7 +3,7 @@ import type { ListFilters } from '@/features/places/lib/list'
 import { pinPublishBodySchema, pinWriteBodySchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 
-import { bodyOf, emptyDate, emptyForm, formOf, isDirty, publishBodyOf, publishGaps, suggestSlug, validate } from '@/features/places/lib/form'
+import { bodyOf, emptyDate, emptyForm, formOf, isDirty, photoIds, publishBodyOf, publishGaps, suggestSlug, validate, withPhotoIds } from '@/features/places/lib/form'
 import { filterItems, isFiltered, kindOf, NO_CATEGORY, noFilters } from '@/features/places/lib/list'
 
 const pin: Pin = {
@@ -121,9 +121,9 @@ describe('[E4.2][AC68] the write of a draft', () => {
   })
 
   it('sends every field so a save replaces the lists and clears what was emptied', () => {
-    const body = bodyOf({ ...emptyForm(), titleEn: ' A ', address: '  ', photos: [{ mediaId: 'm', altEn: 'x', altDe: '' }], coverMediaId: null, coverAltEn: 'stale' }, pin)
+    const body = bodyOf({ ...emptyForm(), titleEn: ' A ', address: '  ', photos: [{ mediaId: 'm' }], coverMediaId: null }, pin)
 
-    expect(body).toMatchObject({ title: { en: 'A' }, address: null, photos: [{ mediaId: 'm', alt: { en: 'x' } }], coverMediaId: null, coverAlt: {}, categoryIds: [], dates: [], weeklyHours: [], mustVisit: false, serviceType: null, foodKind: null })
+    expect(body).toMatchObject({ title: { en: 'A' }, address: null, photos: [{ mediaId: 'm' }], coverMediaId: null, categoryIds: [], dates: [], weeklyHours: [], mustVisit: false, serviceType: null, foodKind: null })
   })
 
   it('turns a date entry into a write: a day has the same first and last day, a range has no times', () => {
@@ -156,6 +156,32 @@ describe('[E4.2][AC79] the write of a pin that was live', () => {
   })
 })
 
+describe('[E4.2][AC68] photos as one ordered list', () => {
+  it('maps the list onto the two API fields: the first photo is the cover, the rest are the extra photos in order', () => {
+    expect(withPhotoIds(['a', 'b', 'c'])).toEqual({ coverMediaId: 'a', photos: [{ mediaId: 'b' }, { mediaId: 'c' }] })
+    expect(withPhotoIds(['a'])).toEqual({ coverMediaId: 'a', photos: [] })
+    expect(withPhotoIds([])).toEqual({ coverMediaId: null, photos: [] })
+    expect(photoIds({ coverMediaId: 'a', photos: [{ mediaId: 'b' }, { mediaId: 'c' }] })).toEqual(['a', 'b', 'c'])
+    expect(photoIds({ coverMediaId: null, photos: [] })).toEqual([])
+  })
+
+  it('reads a pin with a cover and extra photos in the same order, and sends them back as cover_media_id and photos', () => {
+    const form = formOf({ ...live, coverMediaId: 'c', photos: [{ mediaId: 'p1' }, { mediaId: 'p2' }] })
+
+    expect(photoIds(form)).toEqual(['c', 'p1', 'p2'])
+    expect(bodyOf(form, live)).toMatchObject({ coverMediaId: 'c', photos: [{ mediaId: 'p1' }, { mediaId: 'p2' }] })
+    // Moving the last photo to the front makes it the cover and the old cover the first extra photo.
+    expect(bodyOf({ ...form, ...withPhotoIds(['p2', 'c', 'p1']) }, live)).toMatchObject({ coverMediaId: 'p2', photos: [{ mediaId: 'c' }, { mediaId: 'p1' }] })
+  })
+
+  it('no longer sends a photo description: neither for the cover nor for an extra photo', () => {
+    const body = bodyOf(formOf({ ...live, coverMediaId: 'c', photos: [{ mediaId: 'p1' }] }), live)
+
+    expect(body).not.toHaveProperty('coverAlt')
+    expect(body.photos).toEqual([{ mediaId: 'p1' }])
+  })
+})
+
 describe('[E4.2][AC68] form state', () => {
   it('reads a pin back into the form and sees no change until a field moves', () => {
     const withData: Pin = { ...live, draft: { title: { en: 'Chapel Bridge, Lucerne' }, tip: { de: 'Früh kommen' }, localTip: { en: 'Go at dawn' }, coverAlt: {}, photoAlt: { m1: { en: 'Close' } } }, dates: [{ id: 'd1', firstDay: '2026-11-09', lastDay: '2026-11-14', startTime: null, endTime: null }], weeklyHours: [{ day: 1, opens: '09:00', closes: '18:00' }], photos: [{ mediaId: 'm1' }], interests: ['local-activities'] }
@@ -163,7 +189,9 @@ describe('[E4.2][AC68] form state', () => {
 
     expect(form).toMatchObject({ titleEn: 'Chapel Bridge, Lucerne', tipDe: 'Früh kommen', localTipEn: 'Go at dawn', slug: 'chapel-bridge', interests: ['local-activities'] })
     expect(form.dates[0]).toMatchObject({ kind: 'range', firstDay: '2026-11-09' })
-    expect(form.photos).toEqual([{ mediaId: 'm1', altEn: 'Close', altDe: '' }])
+    // No cover and one extra photo: the list is one photo, so the first photo is the cover.
+    expect(form.coverMediaId).toBe('m1')
+    expect(form.photos).toEqual([])
     expect(isDirty(formOf(withData), form)).toBe(false)
     expect(isDirty({ ...form, mustVisit: true }, form)).toBe(true)
     expect(isDirty({ ...form, hours: form.hours.map(h => ({ ...h, key: 'other' })) }, form)).toBe(false)
@@ -229,8 +257,7 @@ describe('[E4.2][AC68] what the editor sends is what the API contract accepts', 
       foodKind: 'cafe-bakery' as const,
       mustVisit: true,
       coverMediaId: '0198a000-0000-7000-8000-000000000040',
-      coverAltEn: 'The bridge',
-      photos: [{ mediaId: '0198a000-0000-7000-8000-000000000041', altEn: 'Close', altDe: '' }],
+      photos: [{ mediaId: '0198a000-0000-7000-8000-000000000041' }],
       outboundUrl: 'https://hotel.example/stay',
     }
 

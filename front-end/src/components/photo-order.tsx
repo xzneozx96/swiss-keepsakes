@@ -12,8 +12,8 @@ export interface PhotoOrderItem {
   name: string
   /** The 44 px picture; the row gives it the box. */
   thumbnail: ReactNode
-  /** A line under the name, for a state ("Processing the photo…"). The first row says it is the cover instead. */
-  note?: string
+  /** A line under the name, for a state ("Processing the photo…"). It renders its own live region. */
+  note?: ReactNode
 }
 
 /** The words a screen reader and the live region use; the caller owns the translation. */
@@ -91,7 +91,7 @@ export function PhotoOrder({ items, labels, onChange }: { items: PhotoOrderItem[
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="line-clamp-2 text-sm font-medium">{item.name}</span>
                 {index === 0 && <span className="truncate text-xs text-muted">{labels.cover}</span>}
-                {item.note && <span aria-live="polite" className="truncate text-xs text-muted" role="status">{item.note}</span>}
+                {item.note}
               </span>
               <Button
                 isIconOnly

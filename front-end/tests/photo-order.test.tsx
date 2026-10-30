@@ -61,7 +61,7 @@ describe('shared PhotoOrder', () => {
   })
 
   it('shows a note under a row, such as a photo that is still processing', () => {
-    render(<PhotoOrder items={[{ id: 'a', name: 'Photo 1', thumbnail: <span />, note: 'Processing the photo…' }]} labels={labels} onChange={() => {}} />)
+    render(<PhotoOrder items={[{ id: 'a', name: 'Photo 1', thumbnail: <span />, note: <span className="text-xs">Processing the photo…</span> }]} labels={labels} onChange={() => {}} />)
 
     expect(screen.getByText('Processing the photo…')).toBeInTheDocument()
   })
