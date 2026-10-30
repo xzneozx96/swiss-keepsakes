@@ -39,7 +39,7 @@ export function StepPlace({ form, patch, storeId }: StepProps) {
               </div>
             )
           : <MapPicker lat={form.latitude} lng={form.longitude} onFailed={() => setMapFailed(true)} onPlace={({ lat, lng }) => patch({ latitude: lat, longitude: lng })} />}
-        <p className="text-sm text-muted" data-testid="places-position">
+        <p aria-live="polite" className="sr-only" data-testid="places-position" role="status">
           {located ? t('places.map.position', { lat: form.latitude!, lng: form.longitude! }) : t('places.map.empty')}
         </p>
         {located && (

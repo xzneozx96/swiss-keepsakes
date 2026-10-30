@@ -693,6 +693,20 @@ describe('[E4.2][AC68] N17 position from a Google Maps link', () => {
     expect(field.compareDocumentPosition(screen.getByRole('button', { name: 'Place pin' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
+  it('[E4.2][AC68] says the position only to screen readers, in a live region, and shows no coordinates line', async () => {
+    api.pin = pinOf({ id: uuid(10) })
+    await open('new')
+    await heading('Place on the map')
+    await paste(long)
+
+    const position = screen.getByTestId('places-position')
+    expect(position).toHaveAttribute('role', 'status')
+    expect(position).toHaveAttribute('aria-live', 'polite')
+    expect(position).toHaveTextContent('Position: 47.05169, 8.3074')
+    expect(position).toHaveClass('sr-only')
+    expect(screen.getByRole('button', { name: 'Remove the position' })).toBeInTheDocument()
+  })
+
   it('[E4.2][AC68] moves the pin to the position of a long link, read in the browser with no call to the API', async () => {
     api.pin = pinOf({ id: uuid(10) })
     await open('new')
