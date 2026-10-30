@@ -1,30 +1,7 @@
 import type { PublicMapItem } from '@sk/api-contract'
 
-import { PickupIcon } from '@/components/icons'
+import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
-
-/** What a pin or card shows: the place icon, white on the lake blue. */
-function IconFace({ size }: { size: number }) {
-  return (
-    <span aria-hidden className="flex size-full items-center justify-center bg-[#173f52] text-white">
-      <PickupIcon size={size} />
-    </span>
-  )
-}
-
-/**
- * A pin's thumbnail slot. It shows the place icon until the public map list carries a photo
- * address (a follow-up: the API adds `photoUrl`). The place editor's preview passes the draft's
- * cover as `src`.
- */
-export function PinThumb({ iconSize, className = '', src }: { iconSize: number, className?: string, src?: string }) {
-  return (
-    <span className={`relative block overflow-hidden bg-[#173f52] ${className}`}>
-      <IconFace size={iconSize} />
-      {src && <img alt="" className="absolute inset-0 size-full object-cover" decoding="async" src={src} />}
-    </span>
-  )
-}
 
 /** A pin the filter keeps is lit; with a filter chosen it also grows. A pin outside the filter is dimmed, never hidden. */
 export interface PinLook {
@@ -60,7 +37,7 @@ export function PhotoPin({
       type="button"
       onClick={() => onSelect(pin.id)}
     >
-      <PinThumb
+      <MapThumb
         className={`rounded-full border-[3px] shadow-[0_4px_14px_rgb(31_24_17/0.35)] transition-[width,height] duration-200 motion-reduce:transition-none ${look.selected ? 'border-accent' : 'border-[#fffaf4]'} ${size}`}
         iconSize={look.selected ? 24 : 18}
         src={photoSrc}
@@ -89,7 +66,7 @@ export function PhotoCluster({
       onClick={zoomIn}
     >
       {members.slice(0, 2).map((member, i) => (
-        <PinThumb
+        <MapThumb
           key={member.id}
           className={`size-10 rounded-full border-[3px] border-[#fffaf4] shadow-[0_4px_14px_rgb(31_24_17/0.3)] ${i > 0 ? '-ms-5' : ''}`}
           iconSize={18}

@@ -78,7 +78,7 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     expect(screen.getByText('There is no German title yet. Guests reading German see the English one.')).toBeInTheDocument()
   })
 
-  it('puts the tips (two lines at most) and the category names on the card, in the previewed language', async () => {
+  it('puts the tips (two lines at most) and the first category name on the card, in the previewed language', async () => {
     api.categories = [
       { id: uuid(20), slug: 'walks', name: { en: 'Walks', de: 'Wanderungen' }, parentId: null, position: 1, childCount: 0, useCount: 1 },
       { id: uuid(21), slug: 'views', name: { en: 'Views' }, parentId: null, position: 2, childCount: 0, useCount: 1 },
@@ -86,20 +86,17 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     await openReview(draft({ categoryIds: [uuid(20), uuid(21)], draft: { ...text, tip: { en: 'Go early', de: 'Früh kommen' } } }))
 
     expect(within(card()).getByText('Go early')).toHaveClass('line-clamp-2')
-    expect(await within(card()).findByText('Walks')).toBeInTheDocument()
-    expect(within(card()).getByText('Views')).toBeInTheDocument()
+    expect(await within(card()).findByText(/^Walks/)).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('tab', { name: /German/ }))
 
     expect(await within(card()).findByText('Früh kommen')).toHaveAttribute('lang', 'de')
-    expect(within(card()).getByText('Wanderungen')).toBeInTheDocument()
-    expect(within(card()).getByText('Views')).toBeInTheDocument()
+    expect(within(card()).getByText(/^Wanderungen/)).toBeInTheDocument()
   })
 
-  it('shows no tips and no chips on a card of a draft that has neither', async () => {
+  it('shows no tip and no category on a card of a draft that has neither', async () => {
     await openReview(draft({ draft: { ...text, tip: {} } }))
 
-    expect(within(card()).queryByRole('list')).not.toBeInTheDocument()
     expect(within(card()).queryByText('Go early')).not.toBeInTheDocument()
   })
 

@@ -13,4 +13,8 @@ export const mapKitDe: Record<keyof typeof mapKitEn, string> = {
   'map.gesture.wheel': 'Zum Vergrössern Strg + Scrollen verwenden',
   'map.gesture.wheelMac': 'Zum Vergrössern ⌘ + Scrollen verwenden',
   'map.gesture.touch': 'Die Karte mit zwei Fingern bewegen',
+  'map.card.close': 'Schliessen',
+  'map.card.previous': 'Zurück',
+  'map.card.next': 'Weiter',
+  'map.card.position': '{number} von {count}',
 }

@@ -12,7 +12,6 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.cluster': '{count} Orte hier. Hineinzoomen',
   'map.pin.event': 'Anlass',
   'map.pin.dimmed': 'gedimmt',
-  'map.card.close': 'Schliessen',
   'map.card.readStory': 'Geschichte lesen',
   'map.date.until': 'Bis {day}',
   'map.date.from': 'ab {time}',

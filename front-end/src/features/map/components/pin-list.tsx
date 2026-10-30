@@ -1,9 +1,9 @@
 import type { PublicCategory, PublicMapItem } from '@sk/api-contract'
 
+import { MapThumb } from '@/components/map/map-thumb'
 import { useLocale } from '@/contexts/locale-context'
 import { pinCategoryNames } from '@/features/map/lib/categories'
 import { nextDateLine, zurichToday } from '@/features/map/lib/next-date'
-import { PinThumb } from './pin-marker'
 
 /**
  * The places the filter keeps as a ranked list: the alternative for screen readers and keyboards
@@ -40,7 +40,7 @@ export function PinList({
               type="button"
               onClick={() => onOpen(pin.id)}
             >
-              <PinThumb className="size-14 shrink-0 rounded-xl" iconSize={22} />
+              <MapThumb className="size-14 shrink-0 rounded-xl" iconSize={22} />
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="font-serif text-base leading-5 text-balance" lang={pin.language}>{pin.title}</span>
                 {facts && <span className="truncate text-label text-muted tabular-nums">{facts}</span>}

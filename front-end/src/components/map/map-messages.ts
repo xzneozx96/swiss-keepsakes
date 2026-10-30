@@ -12,4 +12,8 @@ export const mapKitEn = {
   'map.gesture.wheel': 'Use Ctrl + scroll to zoom the map',
   'map.gesture.wheelMac': 'Use ⌘ + scroll to zoom the map',
   'map.gesture.touch': 'Use two fingers to move the map',
+  'map.card.close': 'Close',
+  'map.card.previous': 'Previous',
+  'map.card.next': 'Next',
+  'map.card.position': '{number} of {count}',
 }

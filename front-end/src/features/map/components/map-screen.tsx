@@ -9,7 +9,7 @@ import { MapStatusLayer } from '@/components/map/map-status'
 import { useMapInstance } from '@/components/map/use-map-instance'
 import { useLocale } from '@/contexts/locale-context'
 import { useMapData } from '@/features/map/api/queries'
-import { categoryName, keepHighlighted, topLevelCategories } from '@/features/map/lib/categories'
+import { categoryName, keepHighlighted, pinCategoryNames, topLevelCategories } from '@/features/map/lib/categories'
 import { CARD_ROW_BOTTOM, CARD_ROW_HEIGHT, CONTROLS, TAB_BAR } from '@/features/map/lib/layout'
 import { CategoriesSheet } from './categories-sheet'
 import { MapControlsSkeleton } from './map-skeleton'
@@ -177,6 +177,7 @@ export function MapScreen() {
 
       {openId && (
         <PlaceCardRow
+          extrasOf={pin => ({ categories: pinCategoryNames(pin, data.categories, language) })}
           pins={kept}
           selectedId={openId}
           onClose={closeCard}

@@ -11,7 +11,6 @@ export const mapEn = {
   'map.cluster': '{count} places here. Zoom in',
   'map.pin.event': 'Event',
   'map.pin.dimmed': 'dimmed',
-  'map.card.close': 'Close',
   'map.card.readStory': 'Read the story',
   'map.date.until': 'Until {day}',
   'map.date.from': 'from {time}',
