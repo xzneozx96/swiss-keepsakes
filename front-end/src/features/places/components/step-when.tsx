@@ -1,4 +1,4 @@
-import type { DateEntry, HoursSpan } from '../lib/form'
+import type { DateEntry } from '../lib/form'
 import type { StepProps } from './step-props'
 import type { MessageKey } from '@/i18n/en'
 
@@ -8,45 +8,16 @@ import { choiceCard } from '@/components/choice-card'
 import { ClockIcon, PlusIcon, TodayIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { emptyDate } from '../lib/form'
-import { Block, Field, TimeInput } from './fields'
-
-const DAYS = [1, 2, 3, 4, 5, 6, 7] as const
+import { Block, Field } from './fields'
+import { HoursRows } from './hours-rows'
 
 function Hours({ form, patch, errors }: Pick<StepProps, 'form' | 'patch' | 'errors'>) {
   const { t } = useLocale()
-  const change = (key: string, changes: Partial<HoursSpan>) => patch({ hours: form.hours.map(span => (span.key === key ? { ...span, ...changes } : span)) })
 
   return (
     <Block hint={t('places.hours.help')} icon={ClockIcon} title={t('places.hours.title')}>
       {form.hours.length === 0 && <p className="text-sm text-muted">{t('places.hours.none')}</p>}
-      <ul className="flex flex-col gap-3">
-        {DAYS.map((day) => {
-          const spans = form.hours.filter(span => span.day === day)
-          const dayName = t(`places.day.${day}`)
-
-          return (
-            <li key={day} className="flex flex-col gap-2 rounded-2xl border border-separator p-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-medium">{dayName}</span>
-                <Button size="sm" variant="tertiary" onPress={() => patch({ hours: [...form.hours, { key: crypto.randomUUID(), day, opens: '', closes: '' }] })}>
-                  <PlusIcon aria-hidden size={14} />
-                  {t('places.hours.addSpan', { day: dayName })}
-                </Button>
-              </div>
-              {spans.length === 0 && <span className="text-sm text-muted">{t('places.hours.closed')}</span>}
-              {spans.map(span => (
-                <div key={span.key} className="flex items-start gap-2">
-                  <TimeInput className="min-w-0 flex-1" error={errors.hours[span.key]} hiddenPrefix={dayName} label={t('places.hours.opens')} value={span.opens} onChange={opens => change(span.key, { opens })} />
-                  <TimeInput closing className="min-w-0 flex-1" hiddenPrefix={dayName} label={t('places.hours.closes')} value={span.closes} onChange={closes => change(span.key, { closes })} />
-                  <Button isIconOnly aria-label={t('places.hours.remove', { day: dayName, opens: span.opens, closes: span.closes })} className="mt-6" size="sm" variant="tertiary" onPress={() => patch({ hours: form.hours.filter(other => other.key !== span.key) })}>
-                    <TrashIcon aria-hidden size={16} />
-                  </Button>
-                </div>
-              ))}
-            </li>
-          )
-        })}
-      </ul>
+      <HoursRows errors={errors.hours} hours={form.hours} onChange={hours => patch({ hours })} />
       {form.hours.length > 0 && <Button className="w-fit" size="sm" variant="tertiary" onPress={() => patch({ hours: [] })}>{t('places.hours.clear')}</Button>}
     </Block>
   )

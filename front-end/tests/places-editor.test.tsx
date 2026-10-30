@@ -66,6 +66,13 @@ async function typeTime(label: string, digits: string) {
   await userEvent.click(within(timeGroups(label)[0]!).getAllByRole('spinbutton')[0]!)
   await userEvent.keyboard(digits)
 }
+// A cleared segment keeps the time until the other one is cleared too, then the field has no time.
+async function clearTime(label: string) {
+  for (const segment of within(timeGroups(label)[0]!).getAllByRole('spinbutton')) {
+    await userEvent.click(segment)
+    await userEvent.keyboard('{Backspace}{Backspace}')
+  }
+}
 // On a phone the step's title starts with "Step 2 of 6 · ", so a heading is found by how it ends.
 const stepName = (name: string) => new RegExp(`${name}$`)
 const heading = (name: string) => screen.findByRole('heading', { name: stepName(name), level: 2 })
@@ -401,45 +408,136 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     expect(writes()[0]!.body).toMatchObject({ dates: [{ firstDay: '2026-11-14', lastDay: '2026-11-14', startTime: '22:00', endTime: null }] })
   })
 
-  it('[E4.2][AC86] weekly hours are written per day and a close before the open is refused', async () => {
-    await open('new')
-    await heading('Place on the map')
-    await press('Next')
-    await press('Next')
-    await heading('Hours and dates')
-    await userEvent.click(screen.getByRole('button', { name: 'Add hours for Mon' }))
-    await typeTime('Mon · Open at', '1800')
-    await typeTime('Mon · Close at', '0900')
+  const blocks = () => screen.getAllByTestId('place-block')
+  const toHours = async (language?: 'de') => {
+    await open('new', language ? { language } : undefined)
+    await heading(language ? 'Ort auf der Karte' : 'Place on the map')
+    await press(language ? 'Weiter' : 'Next')
+    await press(language ? 'Weiter' : 'Next')
+    await heading(language ? 'Öffnungszeiten und Daten' : 'Hours and dates')
+  }
+  const dayRow = (name: string) => screen.getByRole('switch', { name: `${name} open` }).closest('li')!
+  const toggle = (name: string) => userEvent.click(screen.getByRole('switch', { name: `${name} open` }))
 
-    expect(await screen.findByText(/Closing must be after opening/)).toBeInTheDocument()
+  it('[E4.2][AC86] the week is one card of seven rows, every day closed until its switch is on', async () => {
+    await toHours()
+
+    expect(blocks()).toHaveLength(2)
+    expect(screen.getAllByRole('switch')).toHaveLength(7)
+    for (const day of ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'])
+      expect(within(screen.getByRole('switch', { name: new RegExp(`^${day}[a-z]* open$`) }).closest('li')!).getByText('Closed')).toBeInTheDocument()
+    expect(screen.queryAllByRole('group')).toHaveLength(0)
   })
 
-  it('[E4.2][AC86] labels the inputs Open at and Close at, and keeps the weekday in the name for screen readers only', async () => {
-    await open('new')
-    await heading('Place on the map')
-    await press('Next')
-    await press('Next')
-    await heading('Hours and dates')
-    await userEvent.click(screen.getByRole('button', { name: 'Add hours for Tue' }))
+  it('[E4.2][AC86] a day opens at 09:00 to 18:00 with its switch, and closes with it', async () => {
+    await toHours()
+    await toggle('Monday')
 
-    const group = timeGroups('Tue · Open at')[0]!
-    const label = document.getElementById(group.getAttribute('aria-labelledby')!.split(' ')[0]!)!
-    expect(Array.from(label.childNodes, node => node.textContent)).toEqual(['Tue · ', 'Open at'])
-    expect(label.querySelector('.sr-only')).toHaveTextContent('Tue ·')
-    expect(timeGroups('Tue · Close at')).not.toHaveLength(0)
-    expect(screen.queryByText(/Opens$|Closes$/)).not.toBeInTheDocument()
+    expect(within(dayRow('Monday')).queryByText('Closed')).not.toBeInTheDocument()
+    expect(timeGroups('Monday opens')).not.toHaveLength(0)
+    expect(within(dayRow('Monday')).getAllByRole('spinbutton').map(part => part.textContent)).toEqual(['09', '00', '18', '00'])
+
+    await toggle('Monday')
+    expect(within(dayRow('Monday')).getByText('Closed')).toBeInTheDocument()
+    expect(screen.queryAllByRole('group')).toHaveLength(0)
   })
 
-  it('[E4.2][AC86] says Öffnet um and Schliesst um in German', async () => {
-    await open('new', { language: 'de' })
-    await heading('Ort auf der Karte')
-    await press('Weiter')
-    await press('Weiter')
-    await heading('Öffnungszeiten und Daten')
-    await userEvent.click(screen.getByRole('button', { name: /^Zeiten für Di/ }))
+  it('[E4.2][AC86] the open days are saved as typed', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await press('Place pin')
+    await press('Next')
+    await type('Title in English', 'Chapel Bridge')
+    await press('Next')
+    await heading('Hours and dates')
+    await toggle('Monday')
+    await press('Save draft')
 
-    expect(timeGroups('Di · Öffnet um')).not.toHaveLength(0)
-    expect(timeGroups('Di · Schliesst um')).not.toHaveLength(0)
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ weeklyHours: [{ day: 1, opens: '09:00', closes: '18:00' }] })
+  })
+
+  it('[E4.2][AC86] a day opened after an open day gets that day’s ranges', async () => {
+    await toHours()
+    await toggle('Monday')
+    await typeTime('Monday closes', '1700')
+    await toggle('Tuesday')
+
+    expect(within(dayRow('Tuesday')).getAllByRole('spinbutton').map(part => part.textContent)).toEqual(['09', '00', '17', '00'])
+  })
+
+  it('[E4.2][AC86] a second range goes under the first with a remove button, and the first has none while it is alone', async () => {
+    await toHours()
+    await toggle('Wednesday')
+
+    expect(within(dayRow('Wednesday')).queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument()
+    await press('Add a second range for Wednesday')
+    expect(within(dayRow('Wednesday')).getAllByRole('button', { name: /^Remove Wednesday/ })).toHaveLength(2)
+    expect(within(dayRow('Wednesday')).getAllByRole('spinbutton')).toHaveLength(8)
+    await userEvent.click(within(dayRow('Wednesday')).getAllByRole('button', { name: /^Remove Wednesday/ })[1]!)
+    expect(within(dayRow('Wednesday')).getAllByRole('spinbutton')).toHaveLength(4)
+    expect(within(dayRow('Wednesday')).queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] a day’s hours are copied onto the days ticked, which lose their own', async () => {
+    await open('new')
+    await heading('Place on the map')
+    await press('Place pin')
+    await press('Next')
+    await type('Title in English', 'Chapel Bridge')
+    await press('Next')
+    await heading('Hours and dates')
+    await toggle('Monday')
+    await press('Add a second range for Monday')
+    await toggle('Sunday')
+    await press('Copy Monday hours to other days')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Tuesday' }))
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Sunday' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
+    await press('Save draft')
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({
+      weeklyHours: [
+        { day: 1, opens: '09:00', closes: '18:00' },
+        { day: 1, opens: '19:00', closes: '21:00' },
+        { day: 2, opens: '09:00', closes: '18:00' },
+        { day: 2, opens: '19:00', closes: '21:00' },
+        { day: 7, opens: '09:00', closes: '18:00' },
+        { day: 7, opens: '19:00', closes: '21:00' },
+      ],
+    })
+  })
+
+  it('[E4.2][AC86] weekly hours are written per day and a close before the open is refused under the row', async () => {
+    await toHours()
+    await toggle('Monday')
+    await typeTime('Monday opens', '1800')
+    await typeTime('Monday closes', '0900')
+
+    expect(await within(dayRow('Monday')).findByText(/Closing must be after opening/)).toBeInTheDocument()
+  })
+
+  it('[E4.2][AC86] names the inputs Tuesday opens and Tuesday closes without drawing the label, and the switch Tuesday open', async () => {
+    await toHours()
+    await toggle('Tuesday')
+
+    expect(timeGroups('Tuesday opens')).not.toHaveLength(0)
+    expect(timeGroups('Tuesday closes')).not.toHaveLength(0)
+    expect(screen.getByRole('button', { name: 'Copy Tuesday hours to other days' })).toBeInTheDocument()
+    const label = document.getElementById(timeGroups('Tuesday opens')[0]!.getAttribute('aria-labelledby')!.split(' ')[0]!)!
+    expect(label).toHaveClass('sr-only')
+    expect(label).toHaveTextContent('Tuesday opens')
+  })
+
+  it('[E4.2][AC86] says Dienstag öffnet and Dienstag schliesst in German', async () => {
+    await toHours('de')
+    await userEvent.click(screen.getByRole('switch', { name: 'Dienstag offen' }))
+
+    expect(timeGroups('Dienstag öffnet')).not.toHaveLength(0)
+    expect(timeGroups('Dienstag schliesst')).not.toHaveLength(0)
+    expect(screen.getByRole('button', { name: 'Dienstag-Zeiten auf andere Tage kopieren' })).toBeInTheDocument()
+    expect(within(screen.getByRole('switch', { name: 'Mittwoch offen' }).closest('ul')!).getAllByText('Geschlossen')).toHaveLength(6)
   })
 
   it('[E4.2][AC86] a time is typed as digits and kept as HH:mm, with 00:00 as the close meaning midnight (24:00)', async () => {
@@ -450,25 +548,23 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await type('Title in English', 'Chapel Bridge')
     await press('Next')
     await heading('Hours and dates')
-    await userEvent.click(screen.getByRole('button', { name: 'Add hours for Wed' }))
-    await typeTime('Wed · Open at', '0900')
-    await typeTime('Wed · Close at', '0000')
+    await toggle('Wednesday')
+    await typeTime('Wednesday opens', '0930')
+    await typeTime('Wednesday closes', '0000')
     await press('Save draft')
 
     await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]!.body).toMatchObject({ weeklyHours: [{ day: 3, opens: '09:00', closes: '24:00' }] })
+    expect(writes()[0]!.body).toMatchObject({ weeklyHours: [{ day: 3, opens: '09:30', closes: '24:00' }] })
   })
 
-  it('[E4.2][AC86] an hours row with no time yet says to set both times', async () => {
-    await open('new')
-    await heading('Place on the map')
-    await press('Next')
-    await press('Next')
-    await heading('Hours and dates')
-    await userEvent.click(screen.getByRole('button', { name: 'Add hours for Thu' }))
-    await press('Save draft')
+  it('[E4.2][AC86] a time cleared in a row says to set both times', async () => {
+    await toHours()
+    await toggle('Thursday')
+    await clearTime('Thursday opens')
 
-    expect(await screen.findByText('Set an opening and a closing time.')).toBeInTheDocument()
+    expect(await within(dayRow('Thursday')).findByText('Set an opening and a closing time.')).toBeInTheDocument()
+    await press('Save draft')
+    expect(writes()).toHaveLength(0)
   })
 })
 
