@@ -39,7 +39,7 @@ describe('[E4.2][AC68] the places queries and commands', () => {
   it('[E4.2][AC68] reads the list, one pin and the story options of the store from the API', async () => {
     api.items = [listItem()]
     api.pin = pinOf()
-    api.stories = [{ groupId: uuid(30), kind: 'story', title: { en: 'The bridge' }, publishedLanguages: ['en'] }]
+    api.stories = [{ groupId: uuid(30), kind: 'story', title: { en: 'The bridge' }, languages: { en: 'published', de: 'none' }, publishedLanguages: ['en'] }]
     const list = renderHook(() => usePlaces(storeId), { wrapper })
     const one = renderHook(() => usePlace(storeId, uuid(10), true), { wrapper })
     const stories = renderHook(() => useStoryOptions(storeId), { wrapper })

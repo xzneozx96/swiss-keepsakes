@@ -734,7 +734,7 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
     await nextTo('Story and link')
 
     const select = screen.getByRole('button', { name: /Story behind this place/ })
-    expect(select).toHaveTextContent('None')
+    expect(select.closest('.autocomplete')!.querySelector('.autocomplete__value')).toHaveTextContent('None')
     expect(select).toHaveAccessibleDescription('Guests can open it from the place card.')
     expect(screen.queryByText(/No main story|Main story|publishes without one/)).not.toBeInTheDocument()
     expect(screen.getAllByText('Story behind this place')).toHaveLength(1)
@@ -760,20 +760,20 @@ describe('[E4.2][AC63][AC68] N17 story and link', () => {
     await heading('Geschichte und Link')
 
     const select = screen.getByRole('button', { name: /Die Geschichte dahinter/ })
-    expect(select).toHaveTextContent('Keine')
+    expect(select.closest('.autocomplete')!.querySelector('.autocomplete__value')).toHaveTextContent('Keine')
     expect(select).toHaveAccessibleDescription('Gäste öffnen sie über die Ortskarte.')
     expect(screen.queryByText(/Hauptgeschichte/)).not.toBeInTheDocument()
   })
 
   it('[E4.2][AC85] the main story is optional, and one with no live language shows which language misses it', async () => {
-    api.stories = [{ groupId: uuid(30), kind: 'story', title: { en: 'The bridge' }, publishedLanguages: ['en'] }]
+    api.stories = [{ groupId: uuid(30), kind: 'story', title: { en: 'The bridge' }, languages: { en: 'published', de: 'none' }, publishedLanguages: ['en'] }]
     api.pin = pinOf({ id: uuid(10), mainStoryGroupId: uuid(30) })
     await open(uuid(10))
 
     await heading('Place on the map')
     await userEvent.click(screen.getAllByRole('button', { name: /Story and link/ }).at(0)!)
     await heading('Story and link')
-    expect(await screen.findByText(/Guests reading German see no story link/)).toBeInTheDocument()
+    expect(await screen.findByText('This story has no German version yet, so guests reading German won’t see the link.')).toBeInTheDocument()
     expect(screen.queryByText(/No main story. The pin publishes without one/)).not.toBeInTheDocument()
   })
 })

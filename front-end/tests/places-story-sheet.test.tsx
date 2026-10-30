@@ -38,7 +38,7 @@ const text = { title: { en: 'Chapel Bridge', de: 'Kapellbrücke' }, tip: {}, loc
 const draft = (over = {}) => pinOf({ id: uuid(10), latitude: 47.05, longitude: 8.3, mainStoryGroupId: storyId, draft: text, ...over })
 
 async function openReview(title: Record<string, string>, publishedLanguages: ('en' | 'de')[] = ['en', 'de']) {
-  api.stories = [{ groupId: storyId, kind: 'story', title, publishedLanguages }]
+  api.stories = [{ groupId: storyId, kind: 'story', title, languages: { en: publishedLanguages.includes('en') ? 'published' : 'none', de: publishedLanguages.includes('de') ? 'published' : 'none' }, publishedLanguages }]
   const pin = draft()
 
   api.pin = pin

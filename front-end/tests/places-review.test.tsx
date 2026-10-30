@@ -28,7 +28,7 @@ beforeEach(() => {
   window.HTMLElement.prototype.scrollTo = vi.fn()
   localStorage.clear()
   api = installApi()
-  api.stories = [{ groupId: storyId, kind: 'story', title: { en: 'The bridge' }, publishedLanguages: ['en'] }]
+  api.stories = [{ groupId: storyId, kind: 'story', title: { en: 'The bridge' }, languages: { en: 'published', de: 'none' }, publishedLanguages: ['en'] }]
 })
 
 afterEach(() => {

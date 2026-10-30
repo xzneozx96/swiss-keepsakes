@@ -1,23 +1,28 @@
+import type { PinStoryOption } from '@sk/api-contract'
 import type { StepProps } from './step-props'
 
-import { Description, Label, ListBox, Select } from '@heroui/react'
-
 import { Block } from '@/components/form-block'
+import { SearchableSelect } from '@/components/searchable-select'
 import { useLocale } from '@/contexts/locale-context'
 import { useStoryOptions } from '../api/queries'
 import { Field } from './fields'
 
-const NONE = 'none'
+const LANGUAGES = ['en', 'de'] as const
+
+/** A story shows in the picker once a language is live. The linked one stays, so the field never loses its value. */
+const isLive = (option: PinStoryOption) => option.publishedLanguages.length > 0
 
 /** Step 5: the optional main story and the one optional outbound link. */
 export function StepLinks({ form, patch, errors, storeId }: StepProps) {
   const { t, language } = useLocale()
   const stories = useStoryOptions(storeId)
-  const options = stories.data?.items ?? []
-  const chosen = options.find(option => option.groupId === form.mainStoryGroupId)
+  const chosen = stories.data?.items.find(option => option.groupId === form.mainStoryGroupId)
   const titleOf = (title: { en?: string, de?: string }) => title[language] ?? title[language === 'en' ? 'de' : 'en'] ?? t('places.row.untitled')
-  // A story that is not published in a language leaves the pin card without a story link in that language.
-  const gaps = chosen ? (['en', 'de'] as const).filter(lang => !chosen.publishedLanguages.includes(lang)) : []
+  const options = (stories.data?.items ?? [])
+    .filter(option => isLive(option) || option.groupId === form.mainStoryGroupId)
+    .map(option => ({ id: option.groupId, label: isLive(option) ? titleOf(option.title) : `${titleOf(option.title)} (${t('places.story.notPublished')})` }))
+  // A language without a live version leaves the pin card without a story link in that language.
+  const gaps = chosen ? LANGUAGES.filter(lang => chosen.languages[lang] !== 'published') : []
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,34 +30,21 @@ export function StepLinks({ form, patch, errors, storeId }: StepProps) {
         {stories.isError
           ? <p className="text-sm text-danger" role="alert">{t('places.story.loadFailed')}</p>
           : (
-              <Select fullWidth isDisabled={stories.isPending} selectedKey={form.mainStoryGroupId ?? NONE} onSelectionChange={key => key !== null && patch({ mainStoryGroupId: key === NONE ? null : String(key) })}>
-                <Label>{t('places.story.select')}</Label>
-                <Select.Trigger>
-                  <Select.Value />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <Description>{t('places.story.help')}</Description>
-                <Select.Popover>
-                  <ListBox>
-                    <ListBox.Item id={NONE} textValue={t('places.story.noneOption')}>
-                      {t('places.story.noneOption')}
-                      <ListBox.ItemIndicator />
-                    </ListBox.Item>
-                    {options.map((option) => {
-                      const label = titleOf(option.title)
-
-                      return (
-                        <ListBox.Item key={option.groupId} id={option.groupId} textValue={label}>
-                          {label}
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      )
-                    })}
-                  </ListBox>
-                </Select.Popover>
-              </Select>
+              <SearchableSelect
+                description={t('places.story.help')}
+                isDisabled={stories.isPending}
+                label={t('places.story.select')}
+                noneLabel={t('places.story.noneOption')}
+                options={options}
+                value={form.mainStoryGroupId}
+                onChange={mainStoryGroupId => patch({ mainStoryGroupId })}
+              />
             )}
-        {gaps.map(lang => <p key={lang} className="text-sm text-warning">{t('places.story.gap', { lang: t(`places.lang.${lang}`) })}</p>)}
+        {chosen && gaps.map(lang => (
+          <p key={lang} className="text-sm text-warning">
+            {t(`places.story.${chosen.languages[lang] === 'draft' ? 'draftVersion' : 'noVersion'}.${lang}`)}
+          </p>
+        ))}
       </Block>
       <Block>
         <Field description={t('places.link.help')} error={errors.link} inputMode="text" label={t('places.link.label')} maxLength={2000} placeholder="https://" value={form.outboundUrl} onChange={outboundUrl => patch({ outboundUrl })} />
