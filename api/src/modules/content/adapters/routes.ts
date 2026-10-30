@@ -1,5 +1,6 @@
 import type { OpenAPIHono } from '@hono/zod-openapi'
 import type { AppEnv } from '../../../platform/http/app.ts'
+import type { AddressUseCases } from './address-routes.ts'
 import type { CategoryUseCases } from './category-routes.ts'
 import type { MapsLinkUseCases } from './maps-link-routes.ts'
 import type { MediaUseCases } from './media-routes.ts'
@@ -7,6 +8,7 @@ import type { PinUseCases } from './pin-routes.ts'
 import type { PublicUseCases } from './public-routes.ts'
 import type { StoryUseCases } from './story-routes.ts'
 import type { TourUseCases } from './tour-routes.ts'
+import { registerAddressRoutes } from './address-routes.ts'
 import { registerCategoryRoutes } from './category-routes.ts'
 import { registerMapsLinkRoutes } from './maps-link-routes.ts'
 import { registerMediaRoutes } from './media-routes.ts'
@@ -17,7 +19,7 @@ import { registerTourRoutes } from './tour-routes.ts'
 
 // What the routes call. main.ts builds each from the module's use cases. The write use cases are wrapped by
 // guardUseCases; the public reads are not, because they return lists, not a Result.
-export type ContentUseCases = PinUseCases & CategoryUseCases & StoryUseCases & TourUseCases & MediaUseCases & MapsLinkUseCases & PublicUseCases
+export type ContentUseCases = PinUseCases & CategoryUseCases & StoryUseCases & TourUseCases & MediaUseCases & MapsLinkUseCases & AddressUseCases & PublicUseCases
 
 // One register function per aggregate.
 export function registerContentRoutes(app: OpenAPIHono<AppEnv>, useCases: ContentUseCases): void {
@@ -27,5 +29,6 @@ export function registerContentRoutes(app: OpenAPIHono<AppEnv>, useCases: Conten
   registerTourRoutes(app, useCases)
   registerMediaRoutes(app, useCases)
   registerMapsLinkRoutes(app, useCases)
+  registerAddressRoutes(app, useCases)
   registerPublicRoutes(app, useCases)
 }

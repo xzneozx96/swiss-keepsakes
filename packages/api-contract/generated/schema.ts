@@ -849,6 +849,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/address-at": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query: {
+                    /** @description Latitude of the pin, inside Switzerland */
+                    lat: number;
+                    /** @description Longitude of the pin, inside Switzerland */
+                    lng: number;
+                };
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The address of the nearest building of the Swiss federal building register within 50 m of the position. 404 `address-not-found` when none stands that near, 503 `address-lookup-unavailable` when the register does not answer in 3 s */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Address"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/categories/{kind}": {
         parameters: {
             query?: never;
@@ -3515,6 +3568,16 @@ export interface components {
         AcceptInvitation: {
             token: string;
         };
+        /** @description The address of the nearest building in the Swiss federal building register */
+        Address: {
+            city: string;
+            /** @description For example "Kapellbrücke 1, 6004 Luzern" */
+            formatted: string;
+            /** @description Empty when the register has no number for the entrance */
+            houseNumber: string;
+            postcode: string;
+            street: string;
+        };
         /** @description A store as A01 lists it: its Owner invitation and its four opening conditions */
         AdminStore: {
             /** @description The four opening conditions, from the rule that decides open-for-sale */
@@ -4171,7 +4234,7 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
             type: string;
         };
         /** @description A keepsake with its working copy, variants and publish checks */

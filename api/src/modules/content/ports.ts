@@ -385,3 +385,20 @@ export interface MapsLinkStep {
 export interface MapsLinks {
   step: (url: URL, timeoutMs: number) => Promise<MapsLinkStep | undefined>
 }
+
+/** An entrance in the federal building register: its address and where it stands. */
+export interface RegisteredBuilding {
+  street: string
+  houseNumber: string
+  postcode: string
+  city: string
+  latitude: number
+  longitude: number
+}
+
+// The buildings the register holds around a position, in no particular order, at least those within `radiusMeters`.
+// Undefined when the register could not be read or ran out of time. A port, so the use case holds the rules and the
+// adapter holds `fetch`.
+export interface AddressRegister {
+  buildingsNear: (latitude: number, longitude: number, radiusMeters: number, timeoutMs: number) => Promise<RegisteredBuilding[] | undefined>
+}

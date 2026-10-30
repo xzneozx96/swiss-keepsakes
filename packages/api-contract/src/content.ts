@@ -182,6 +182,20 @@ export const mapsLinkPositionSchema = z.object({
   longitude: z.number().min(-180).max(180),
 }).meta({ id: 'MapsLinkPosition', description: 'The position a Google Maps short link points to' })
 
+// The Swiss bounding box, a little wide, so a position outside it is refused before the register is asked.
+export const addressAtQuerySchema = z.object({
+  lat: z.coerce.number().min(45.8).max(47.9).meta({ description: 'Latitude of the pin, inside Switzerland' }),
+  lng: z.coerce.number().min(5.9).max(10.6).meta({ description: 'Longitude of the pin, inside Switzerland' }),
+}).meta({ id: 'AddressAtQuery' })
+
+export const addressSchema = z.object({
+  street: z.string(),
+  houseNumber: z.string().describe('Empty when the register has no number for the entrance'),
+  postcode: z.string(),
+  city: z.string(),
+  formatted: z.string().describe('For example "Kapellbrücke 1, 6004 Luzern"'),
+}).meta({ id: 'Address', description: 'The address of the nearest building in the Swiss federal building register' })
+
 export const pinStoryOptionListSchema = z.object({ items: z.array(pinStoryOptionSchema) }).meta({ id: 'PinStoryOptionList', description: 'Story groups of the store, most recently created first' })
 
 // The story body: one Tiptap document. Only the nodes and marks of the story-editor decision are accepted, each with
@@ -499,6 +513,7 @@ export type PinListItem = z.infer<typeof pinListItemSchema>
 export type PinList = z.infer<typeof pinListSchema>
 export type PinStoryOption = z.infer<typeof pinStoryOptionSchema>
 export type MapsLinkPosition = z.infer<typeof mapsLinkPositionSchema>
+export type Address = z.infer<typeof addressSchema>
 export type PinStoryOptionList = z.infer<typeof pinStoryOptionListSchema>
 export type StoryDraft = z.infer<typeof storyDraftSchema>
 export type StoryGroupCreateBody = z.infer<typeof storyGroupCreateBodySchema>

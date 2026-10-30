@@ -57,6 +57,8 @@ export const problemTypes = [
   'media-kind-mismatch',
   'storage-unavailable',
   'maps-link-unreadable',
+  'address-not-found',
+  'address-lookup-unavailable',
   'category-has-children',
   'category-in-use',
   'category-too-deep',

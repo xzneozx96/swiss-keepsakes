@@ -3,7 +3,7 @@ import type { PublishGap } from '@sk/domain/content'
 import type { Failure } from '../application/failure.ts'
 
 export interface FailureProblem {
-  status: 403 | 404 | 409 | 412 | 422
+  status: 403 | 404 | 409 | 412 | 422 | 503
   type: ProblemType
   title: string
   errors?: { in: 'body', path: string, message: string }[]
@@ -65,6 +65,8 @@ export function failureProblem(failure: Failure): FailureProblem {
     case 'order-mismatch':
       return { status: 422, type: 'validation-failed', title: 'The list changed. Reload it and move the category again.', errors: [{ in: 'body', path: 'ids', message: 'Send exactly the categories that are in this group now' }] }
     case 'maps-link-unreadable': return { status: 422, type: 'maps-link-unreadable', title: 'This Google Maps link could not be read. Paste a short link such as https://maps.app.goo.gl/..., or set the pin on the map.' }
+    case 'address-not-found': return { status: 404, type: 'address-not-found', title: 'No building with an address stands near this position.' }
+    case 'address-lookup-unavailable': return { status: 503, type: 'address-lookup-unavailable', title: 'The address register is not available right now. Type the address instead.' }
     case 'category-has-children': return { status: 409, type: 'category-has-children', title: 'This category has sub-categories. Move or delete them first.' }
     case 'category-in-use': return { status: 409, type: 'category-in-use', title: 'This category is still used by content. Remove it from that content first.' }
     case 'category-too-deep': return { status: 409, type: 'category-too-deep', title: 'A sub-category cannot hold other categories. Choose a top-level category.' }
