@@ -33,7 +33,7 @@ const MAP_OPTIONS = { center: LUCERNE, zoom: 15.2, minZoom: 12, maxZoom: 18.5 }
 export function MapScreen() {
   const { t, language } = useLocale()
   const data = useMapData(language)
-  const { containerRef, map, maplibre, state: mapState, retry: retryMap } = useAerialMap({ options: MAP_OPTIONS })
+  const { containerRef, map, maplibre, state: mapState, drawn, retry: retryMap } = useAerialMap({ options: MAP_OPTIONS })
   const headingId = useId()
   // Empty means All.
   const [chosen, setChosen] = useState<string[]>([])
@@ -45,7 +45,7 @@ export function MapScreen() {
   const pinsReady = mapState === 'ready' && !data.isPending && !data.isFailed
   const status = failed
     ? 'failed' as const
-    : mapState === 'loading'
+    : mapState === 'loading' || !drawn
       ? 'map-loading' as const
       : data.isPending ? 'pins-loading' as const : data.pins.length === 0 ? 'empty' as const : undefined
   const ranked = pinsReady ? data.pins : NO_PINS
@@ -147,7 +147,7 @@ export function MapScreen() {
         selectedId={openId}
         onSelect={openFromPin}
       />
-      {status && <MapStatusLayer status={status} onRetry={retry} />}
+      <MapStatusLayer status={status} onRetry={retry} />
 
       {view === 'list' && pinsReady && (
         <div className="absolute inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom,0px)+64px)] z-[8] overflow-y-auto bg-background px-4 pt-[60px] pb-4">

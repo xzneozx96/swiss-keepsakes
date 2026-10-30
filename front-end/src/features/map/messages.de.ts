@@ -9,6 +9,7 @@ export const mapDe: Record<keyof typeof mapEn, string> = {
   'map.places.one': '{count} Ort',
   'map.places.other': '{count} Orte',
   'map.loading': 'Orte werden geladen …',
+  'map.loadingMap': 'Karte wird geladen …',
   'map.empty.title': 'Noch keine Orte auf der Karte',
   'map.empty.body': 'Schauen Sie bald wieder vorbei. Geschichten über Luzern finden Sie unter Entdecken.',
   'map.empty.action': 'Zu Entdecken',

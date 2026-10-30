@@ -8,6 +8,7 @@ export const mapEn = {
   'map.places.one': '{count} place',
   'map.places.other': '{count} places',
   'map.loading': 'Loading places…',
+  'map.loadingMap': 'Loading the map…',
   'map.empty.title': 'No places on the map yet',
   'map.empty.body': 'Check back soon. Stories about Lucerne are on Explore.',
   'map.empty.action': 'Go to Explore',

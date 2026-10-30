@@ -83,11 +83,12 @@ function renderMap(url = '/en/map') {
   return router
 }
 
-/** The map draws its style: the pins and the controls appear. */
+/** The map draws its style and its first view (the map's `idle`): the pins and the controls appear. */
 async function loaded(url?: string) {
   renderMap(url)
   await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
   act(() => FakeMap.instances[0]!.emit('load'))
+  act(() => FakeMap.instances[0]!.emit('idle'))
 }
 
 const pinButton = (title: string) => screen.getByRole('button', { name: new RegExp(`^${title}`) })
@@ -117,21 +118,38 @@ async function choose(...names: string[]) {
 }
 
 describe('[E4.6][states] loading, empty and failed', () => {
-  it('shows the controls skeleton and the loading text while the map and places load', async () => {
+  it('shows the map skeleton, the controls skeleton and "Loading the map" while the map loads', async () => {
     vi.mocked(fetchMapPins).mockReturnValue(new Promise(() => {}))
     renderMap()
 
-    expect(await screen.findByText(en['map.loading'], { selector: '.sr-only' })).toBeInTheDocument()
+    expect(await screen.findByText(en['map.loadingMap'])).toBeInTheDocument()
+    expect(document.querySelector('[data-skeleton="map"]')).toBeInTheDocument()
     expect(document.querySelector('[data-skeleton="map-controls"]')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: en['map.categories'] })).toBeNull()
     expect(screen.getByRole('heading', { level: 1, name: en['map.heading'] })).toBeInTheDocument()
+  })
+
+  it('keeps the map skeleton until the map has drawn its first view, then fades it out', async () => {
+    renderMap()
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    // The style is loaded but the tiles are not drawn yet: still the skeleton, no controls.
+    act(() => FakeMap.instances[0]!.emit('load'))
+    await screen.findByText(en['map.loadingMap'])
+    expect(document.querySelector('[data-skeleton="map-controls"]')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: en['map.categories'] })).toBeNull()
+
+    act(() => FakeMap.instances[0]!.emit('idle'))
+
+    expect(await screen.findByRole('button', { name: en['map.categories'] })).toBeInTheDocument()
+    expect(document.querySelector('[data-skeleton="map"]')).toHaveClass('opacity-0')
+    await waitFor(() => expect(document.querySelector('[data-skeleton="map"]')).toBeNull())
   })
 
   it('shows "Loading places…" once the map is drawn and the places are still on the way', async () => {
     vi.mocked(fetchMapPins).mockReturnValue(new Promise(() => {}))
     await loaded()
 
-    expect(await screen.findByText(en['map.loading'], { selector: ':not(.sr-only)' })).toBeInTheDocument()
+    expect(await screen.findByText(en['map.loading'])).toBeInTheDocument()
   })
 
   it('shows a message and a way to Explore when no pin is published', async () => {

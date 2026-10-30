@@ -11,12 +11,13 @@ vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
 vi.mock('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url', () => ({ default: '/worker.mjs' }))
 
 function Probe({ terrain = false, options = {} }: { terrain?: boolean, options?: Record<string, unknown> }) {
-  const { containerRef, state, retry } = useAerialMap({ options, terrain })
+  const { containerRef, state, drawn, retry } = useAerialMap({ options, terrain })
 
   return (
     <div>
       <div ref={containerRef} />
       <p data-testid="state">{state}</p>
+      <p data-testid="drawn">{String(drawn)}</p>
       <button type="button" onClick={retry}>retry</button>
     </div>
   )
@@ -54,6 +55,38 @@ describe('[E4.6][G11] the shared aerial map', () => {
 
     expect(screen.getByTestId('state')).toHaveTextContent('ready')
     expect(FakeMap.instances[0]!.setTerrain).not.toHaveBeenCalled()
+  })
+
+  it('is drawn only at the first idle after the style has loaded', async () => {
+    render(<Probe />)
+    await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+    const map = FakeMap.instances[0]!
+
+    // An idle before the load (an empty first frame) does not count.
+    act(() => map.emit('idle'))
+    expect(screen.getByTestId('drawn')).toHaveTextContent('false')
+    act(() => map.emit('load'))
+    expect(screen.getByTestId('state')).toHaveTextContent('ready')
+    expect(screen.getByTestId('drawn')).toHaveTextContent('false')
+    act(() => map.emit('idle'))
+
+    expect(screen.getByTestId('drawn')).toHaveTextContent('true')
+  })
+
+  it('counts as drawn after a while when the map never goes idle', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      render(<Probe />)
+      await waitFor(() => expect(FakeMap.instances).toHaveLength(1))
+      act(() => FakeMap.instances[0]!.emit('load'))
+      expect(screen.getByTestId('drawn')).toHaveTextContent('false')
+      act(() => vi.advanceTimersByTime(8000))
+
+      expect(screen.getByTestId('drawn')).toHaveTextContent('true')
+    }
+    finally {
+      vi.useRealTimers()
+    }
   })
 
   it('keeps the 3D parts only when a map asks for terrain (the tour route map until E4.12)', async () => {

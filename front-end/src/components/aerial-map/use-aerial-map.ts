@@ -12,6 +12,8 @@ export type MapLibre = typeof import('maplibre-gl')
 
 /** A map that has not drawn its style after this long has failed (a lost connection never fires an error). */
 const LOAD_TIMEOUT_MS = 16_000
+/** After the style has loaded, a map that never goes idle (tiles that keep failing) counts as drawn after this long. */
+const DRAW_TIMEOUT_MS = 8000
 
 /** Flat: no tilt, no rotation by drag, keyboard or touch (decision G11). A caller's options win. */
 const flatView: Partial<MapOptions> = {
@@ -31,7 +33,8 @@ const flatView: Partial<MapOptions> = {
  * should pass it.
  *
  * The map exists once the hook returns it, before its style has drawn. `state` is `ready` after
- * the style loaded, when layers can be added. `lazy` builds the map only when its container comes
+ * the style loaded, when layers can be added. `drawn` is true from the map's first `idle` after that (the
+ * visible tiles are on screen and have finished fading in), so a loading state can stay until then. `lazy` builds the map only when its container comes
  * near the viewport. `resetKey` builds a new map when it changes.
  */
 export function useAerialMap({
@@ -49,6 +52,7 @@ export function useAerialMap({
   const [map, setMap] = useState<MapLibreMap | null>(null)
   const [maplibre, setMaplibre] = useState<MapLibre | null>(null)
   const [state, setState] = useState<AerialMapState>('loading')
+  const [drawn, setDrawn] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const [seenKey, setSeenKey] = useState(resetKey)
   const latest = useLatest({ options, terrain })
@@ -57,6 +61,7 @@ export function useAerialMap({
   if (seenKey !== resetKey) {
     setSeenKey(resetKey)
     setState('loading')
+    setDrawn(false)
     setMap(null)
   }
 
@@ -70,6 +75,7 @@ export function useAerialMap({
     let resizeObserver: ResizeObserver | undefined
     let instance: MapLibreMap | undefined
     let timeout: ReturnType<typeof setTimeout> | undefined
+    let drawTimeout: ReturnType<typeof setTimeout> | undefined
 
     async function initialize() {
       if (started)
@@ -110,6 +116,13 @@ export function useAerialMap({
           if (withTerrain)
             created.setTerrain({ source: 'dem', exaggeration: 1.3 })
           setState('ready')
+          drawTimeout = setTimeout(setDrawn, DRAW_TIMEOUT_MS, true)
+        })
+        created.on('idle', () => {
+          if (!loaded || disposed)
+            return
+          clearTimeout(drawTimeout)
+          setDrawn(true)
         })
         timeout = setTimeout(() => {
           if (!disposed)
@@ -149,6 +162,7 @@ export function useAerialMap({
     return () => {
       disposed = true
       clearTimeout(timeout)
+      clearTimeout(drawTimeout)
       observer?.disconnect()
       resizeObserver?.disconnect()
       instance?.remove()
@@ -157,9 +171,10 @@ export function useAerialMap({
 
   const retry = useCallback(() => {
     setState('loading')
+    setDrawn(false)
     setMap(null)
     setAttempt(value => value + 1)
   }, [])
 
-  return { containerRef, map, maplibre, state, retry }
+  return { containerRef, map, maplibre, state, drawn, retry }
 }

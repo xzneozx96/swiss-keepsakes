@@ -47,7 +47,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
     return { tip: tipIn(form, language), categories: form.categoryIds.flatMap(id => names.get(id) || []) }
   }, [categories.data, form, language])
   const pins = useMemo(() => (located ? [item] : NO_PINS), [item, located])
-  const { containerRef, map, maplibre, state, retry } = useAerialMap({
+  const { containerRef, map, maplibre, state, drawn, retry } = useAerialMap({
     options: {
       center: located ? [item.longitude, item.latitude] : [8.3068, 47.0535],
       zoom: 16,
@@ -75,7 +75,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
         selectedId={located ? PREVIEW_PIN_ID : undefined}
         onSelect={noop}
       />
-      {state !== 'ready' && <MapStatusLayer status={state === 'error' ? 'failed' : 'map-loading'} onRetry={retry} />}
+      <MapStatusLayer status={state === 'error' ? 'failed' : drawn ? undefined : 'map-loading'} onRetry={retry} />
       <MapCredits className="absolute start-3 top-14 z-10 max-w-[calc(100%-6rem)]" />
       <PlaceCardRow extrasOf={() => extras} photoOf={() => cover} pins={[item]} selectedId={item.id} onClose={noop} onSelect={noop} />
     </div>
