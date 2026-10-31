@@ -67,6 +67,7 @@ export function StepBar({
   secondary,
   primary,
   isSaving,
+  aboveTabBar = true,
 }: {
   status: string
   tone: 'muted' | 'danger' | 'success'
@@ -77,6 +78,8 @@ export function StepBar({
   primary?: BarAction
   /** A save is on its way: its two actions are off. */
   isSaving: boolean
+  /** The phone bar rides above the merchant tab bar. A page without one (the store's first setup) sets it false and the bar sits at the bottom edge. */
+  aboveTabBar?: boolean
 }) {
   const { t } = useLocale()
   const keyboardOpen = useKeyboardOpen()
@@ -84,7 +87,7 @@ export function StepBar({
   return (
     <div
       data-testid="step-bar"
-      className={`fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] z-10 sm:inset-x-4 lg:sticky lg:inset-x-auto lg:bottom-6 ${keyboardOpen ? 'max-lg:hidden' : ''}`}
+      className={`fixed inset-x-3 ${aboveTabBar ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]' : 'bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]'} z-10 sm:inset-x-4 lg:sticky lg:inset-x-auto lg:bottom-6 ${keyboardOpen ? 'max-lg:hidden' : ''}`}
     >
       <div className="flex items-center gap-2 rounded-3xl bg-surface px-3 py-2 shadow-overlay lg:px-4 lg:py-3">
         <span

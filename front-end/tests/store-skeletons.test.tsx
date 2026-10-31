@@ -58,15 +58,16 @@ describe('store screens loading', () => {
     expect(container.querySelectorAll('.skeleton')).toHaveLength(3)
   })
 
-  it('onboarding, me pending: the frame, five steps beside the page, one step with its footer, and no generic block [E2.16][E2.3]', () => {
+  it('onboarding, me pending: the frame and title, five steps beside the page, one step block and the step bar, and no generic block [E2.16][E2.3]', () => {
     const { container } = wrap(<OnboardingScreen />)
 
     expect(screen.getByRole('status')).toHaveTextContent('Open your store')
     expect(container.querySelector('[data-skeleton="onboarding"]')).not.toBeNull()
     expect(genericBox(container)).toBeNull()
-    expect(container.querySelectorAll('aside li')).toHaveLength(5)
-    expect(container.querySelectorAll('[data-skeleton="step"]')).toHaveLength(1)
-    expect(container.querySelector('.fixed.bottom-0')?.className).toContain('pb-[calc(env(safe-area-inset-bottom,0px)+12px)]')
+    expect(screen.getByRole('heading', { level: 1, name: 'Open your store' })).toBeInTheDocument()
+    expect(container.querySelectorAll('[data-skeleton="steps"] li')).toHaveLength(5)
+    expect(container.querySelectorAll('section.rounded-3xl.bg-surface.shadow-surface[data-skeleton="step"]')).toHaveLength(1)
+    expect(container.querySelector('[data-skeleton="bar"]')?.className).toContain('bottom-[calc(env(safe-area-inset-bottom,0px)+0.75rem)]')
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
   })
 
@@ -75,7 +76,7 @@ describe('store screens loading', () => {
     const { container } = wrap(<OnboardingScreen />)
 
     expect(genericBox(container)).toBeNull()
-    expect(container.querySelectorAll('aside li')).toHaveLength(5)
+    expect(container.querySelectorAll('[data-skeleton="steps"] li')).toHaveLength(5)
     expect(container.querySelector('[data-skeleton="step"]')).not.toBeNull()
   })
 })
