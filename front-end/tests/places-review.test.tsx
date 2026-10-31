@@ -1,10 +1,13 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { configure, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { PlaceEditorScreen } from '@/features/places/components/place-editor-screen'
 import { installApi, pinOf, renderInRouter, uuid } from './places-support'
 import { FakeMarker, resetFakeMaps } from './support/fake-maplibre'
+
+// The first review of a file loads the lazy preview and the guest map's modules, which takes longer than a second when the machine is busy.
+configure({ asyncUtilTimeout: 5000 })
 
 vi.hoisted(() => vi.stubEnv('VITE_API_ENABLED', 'true'))
 
@@ -87,7 +90,7 @@ describe('[E4.2][AC68] N17 the review is a phone with the guest map', () => {
     ]
     await openReview(draft({ categoryIds: [uuid(20), uuid(21)], draft: { ...text, tip: { en: 'Go early', de: 'Früh kommen' } } }))
 
-    expect(within(card()).getByText('Go early')).toHaveClass('line-clamp-2')
+    expect(within(await screen.findByRole('article')).getByText('Go early')).toHaveClass('line-clamp-2')
     expect(await within(card()).findByText(/^Walks/)).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('tab', { name: /German/ }))
