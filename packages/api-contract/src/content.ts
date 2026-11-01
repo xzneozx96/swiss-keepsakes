@@ -446,7 +446,7 @@ export const storyVersionSchema = z.object({
 export const storyVersionTextSchema = z.object({
   status: z.enum(['draft', 'published']).meta({ description: '`draft`: the text is not live yet (a draft, or a version taken down, or a published one with unpublished edits). `published`: it is what guests read' }),
   title: z.string(),
-  cover: mediaSchema.nullable(),
+  cover: mediaSchema.nullable().meta({ description: 'The cover photo. Null when the version has none, or its file is gone' }),
   body: storyBodyViewSchema.meta({ description: 'The stored Tiptap document, as written. An image or audio node names its file by `mediaId`, and `media` holds those files' }),
   media: z.array(mediaSchema).meta({ description: 'The files the body\'s image and audio nodes name. A node whose file is missing here has none to show' }),
   updatedAt: z.iso.datetime(),

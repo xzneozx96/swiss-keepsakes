@@ -667,10 +667,7 @@
           "publicUrl",
           "variants"
         ],
-        "type": [
-          "object",
-          "null"
-        ]
+        "type": "object"
       },
       "MediaAlt": {
         "additionalProperties": false,
@@ -10375,7 +10372,93 @@
             "type": "object"
           },
           "cover": {
-            "$ref": "#/components/schemas/Media"
+            "description": "The cover photo. Null when the version has none, or its file is gone",
+            "properties": {
+              "byteSize": {
+                "type": "integer"
+              },
+              "contentType": {
+                "type": "string"
+              },
+              "height": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "image",
+                  "audio",
+                  "pdf"
+                ],
+                "type": "string"
+              },
+              "name": {
+                "description": "What the merchant sees and searches. It starts as the uploaded file name",
+                "type": "string"
+              },
+              "publicUrl": {
+                "description": "The public URL of the original. Null until the file is ready",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "processing",
+                  "ready",
+                  "retired"
+                ],
+                "type": "string"
+              },
+              "variants": {
+                "description": "Resized copies of an image. Empty until the file is ready",
+                "items": {
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    },
+                    "width": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "width",
+                    "url"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "width": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "status",
+              "name",
+              "contentType",
+              "byteSize",
+              "width",
+              "height",
+              "publicUrl",
+              "variants"
+            ],
+            "type": [
+              "object",
+              "null"
+            ]
           },
           "media": {
             "description": "The files the body's image and audio nodes name. A node whose file is missing here has none to show",

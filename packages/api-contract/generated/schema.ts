@@ -3786,7 +3786,7 @@ export interface components {
                 width: number;
             }[];
             width: number | null;
-        } | null;
+        };
         /** @description The description of a file in each language. It is the alt text guests with a screen reader hear */
         MediaAlt: {
             de?: string;
@@ -6006,7 +6006,28 @@ export interface components {
                 /** @enum {string} */
                 type: "doc";
             };
-            cover: components["schemas"]["Media"];
+            /** @description The cover photo. Null when the version has none, or its file is gone */
+            cover: {
+                byteSize: number;
+                contentType: string;
+                height: number | null;
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "image" | "audio" | "pdf";
+                /** @description What the merchant sees and searches. It starts as the uploaded file name */
+                name: string;
+                /** @description The public URL of the original. Null until the file is ready */
+                publicUrl: string | null;
+                /** @enum {string} */
+                status: "processing" | "ready" | "retired";
+                /** @description Resized copies of an image. Empty until the file is ready */
+                variants: {
+                    url: string;
+                    width: number;
+                }[];
+                width: number | null;
+            } | null;
             /** @description The files the body's image and audio nodes name. A node whose file is missing here has none to show */
             media: components["schemas"]["Media"][];
             /**
