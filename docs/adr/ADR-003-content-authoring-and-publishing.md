@@ -11,6 +11,8 @@ No new dependency, vendor or paid service. The owner chose the in-app editor ove
 
 **Amended 2026-10-28 (gate G-EDITOR).** A story body is one Tiptap (ProseMirror) JSON document per language version, not sections of blocks. It allows bold, italic and link marks, a pin link mark, headings 2 and 3, blockquote, bullet and numbered lists, and inline image, video and audio nodes. The API checks the document against an allow-list and never stores HTML. This amends the body bullet and the block-model assumption below. Detail is in `docs/decisions/2026-10-28-story-editor.md`.
 
+**Amended 2026-11-01 (owner).** The Description of a keepsake is one Tiptap (ProseMirror) JSON document per language, like a story body, with a smaller allow-list: paragraph, hard break, bullet list, numbered list, bold, italic, and https, http or mailto links. No heading, quote, media or pin link. The API checks it against that allow-list and never stores HTML. The limit of 1200 characters counts the visible text. Migration 0014 turned the plain text already stored into documents of paragraphs.
+
 ## Context
 The merchant (Chị Ngọc, not a developer) must edit stories, map points, tour routes and PDFs at any time without a release (PRD §4.1, AC45). A visitor must see the change within a maximum delay that the owner has not set (O39). Authoring has to cover English and German versions, drafts, publishing, hiding, a preview, and linking stories to places and keepsakes.
 
@@ -51,3 +53,4 @@ We will keep authoring in the app (owner gate S2). Merchant staff edit through t
 - 2026-10-26 accepted (gate DESIGN)
 - 2026-10-27 amended (gate G11, `docs/decisions/2026-10-27-map-pins-and-events.md`)
 - 2026-10-28 amended (gate G-EDITOR, `docs/decisions/2026-10-28-story-editor.md`)
+- 2026-11-01 amended (owner: the keepsake Description is rich text)
