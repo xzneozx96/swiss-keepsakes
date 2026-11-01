@@ -53,12 +53,12 @@ type Changes = {
   [F in Feature]?: { [C in CommandName<F>]?: (input: Command<F, C>['input'], result: Command<F, C>['result']) => readonly LocalChange[] }
 }
 
-/** The status filter of a media list query, `retired` only counts when it is asked for or the filter is empty. */
+/** The status filter of a media list query: retired files are listed only when the filter asks for them (the server's default list leaves them out). */
 function showsRetired(queryKey: QueryKey): boolean {
   const query = queryKey.at(-1) as { status?: string } | undefined
   const status = (query?.status ?? '').split(',').filter(Boolean)
 
-  return status.length === 0 || status.includes('retired')
+  return status.includes('retired')
 }
 
 /**
@@ -84,7 +84,7 @@ export const commandChanges: Changes = {
     }],
   },
   media: {
-    // A retired file stays in a list that shows retired files, as the server's answer says; it leaves one that does not.
+    // A retired file leaves the default list at once; it stays, retired, only in a list that filters for retired files.
     retire: (input, retired) => [{
       key: [...queryKeys.media.list, input.storeId],
       apply: (data, queryKey) => showsRetired(queryKey) ? patching('items', input.id, retired)(data, queryKey) : withoutCounted('items', input.id)(data, queryKey),

@@ -140,9 +140,9 @@ describe('[E4.11][AC51] the media library list over HTTP', () => {
     expect(byName['Cowbell.jpg']!.usage).toEqual({ pages: 1, published: 1, drafts: 0 })
     expect(body.kinds).toEqual({ image: 6, audio: 1, pdf: 1 })
     expect(body.statuses).toEqual({ processing: 1, ready: 4, retired: 1 })
-    expect(body.uses).toEqual({ unused: 3, drafts: 1, published: 2 })
-    // Newest upload first.
-    expect(body.items.map(item => item.name)).toEqual(['Just-uploaded.jpg', 'Old-banner.jpg', 'Cowbell.jpg', 'Fondue-set.jpg', 'Pilatus-clouds.jpg', 'Kapellbruecke-Sunrise.JPG'])
+    expect(body.uses).toEqual({ unused: 2, drafts: 1, published: 2 })
+    // Newest upload first; the retired Old-banner.jpg is not listed unless the Retired filter asks for it.
+    expect(body.items.map(item => item.name)).toEqual(['Just-uploaded.jpg', 'Cowbell.jpg', 'Fondue-set.jpg', 'Pilatus-clouds.jpg', 'Kapellbruecke-Sunrise.JPG'])
   })
 
   it('[E4.11][AC51] the kind tabs hold audio and PDFs, and a file of the body counts for its story version', async () => {
@@ -156,7 +156,8 @@ describe('[E4.11][AC51] the media library list over HTTP', () => {
   it('[E4.11][AC51] the Use filter, the Status filter and their counts', async () => {
     const w = await wall()
     const names = async (query: string) => (await list(w.staff, `kind=image&pageSize=24&${query}`)).body.items.map(item => item.name).sort()
-    expect(await names('use=unused')).toEqual(['Just-uploaded.jpg', 'Old-banner.jpg', 'Pilatus-clouds.jpg'])
+    expect(await names('use=unused')).toEqual(['Just-uploaded.jpg', 'Pilatus-clouds.jpg'])
+    expect(await names('use=unused&status=retired')).toEqual(['Old-banner.jpg'])
     expect(await names('use=drafts')).toEqual(['Fondue-set.jpg'])
     expect(await names('use=published')).toEqual(['Cowbell.jpg', 'Kapellbruecke-Sunrise.JPG'])
     expect(await names('use=unused,drafts&status=ready')).toEqual(['Fondue-set.jpg', 'Pilatus-clouds.jpg'])
@@ -183,9 +184,9 @@ describe('[E4.11][AC51] the media library list over HTTP', () => {
     const first = await list(w.staff, 'kind=image&pageSize=4&page=1')
     const second = await list(w.staff, 'kind=image&pageSize=4&page=2')
     const beyond = await list(w.staff, 'kind=image&pageSize=4&page=3')
-    expect([first.body.items.length, second.body.items.length, beyond.body.items.length]).toEqual([4, 2, 0])
-    expect([first.body.total, second.body.total, beyond.body.total]).toEqual([6, 6, 6])
-    expect(new Set([...first.body.items, ...second.body.items].map(item => item.id)).size).toBe(6)
+    expect([first.body.items.length, second.body.items.length, beyond.body.items.length]).toEqual([4, 1, 0])
+    expect([first.body.total, second.body.total, beyond.body.total]).toEqual([5, 5, 5])
+    expect(new Set([...first.body.items, ...second.body.items].map(item => item.id)).size).toBe(5)
   })
 
   it('[E4.11][AC51] another store sees nothing of this one, and a guest is refused', async () => {

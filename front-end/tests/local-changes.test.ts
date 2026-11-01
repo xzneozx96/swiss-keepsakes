@@ -41,14 +41,14 @@ describe('commandChanges', () => {
     expect(apply(change!, data, change!.key)).toEqual({ items: [{ id: 'root', parentId: null, childCount: 0 }] })
   })
 
-  it('media.retire keeps the file, retired, in a list that shows retired files, and drops it from one that does not', () => {
+  it('media.retire drops the file from the default list and keeps it, retired, only in a list that asks for retired files', () => {
     const [change] = commandChanges.media!.retire!({ storeId: 's', id: 'a', idempotencyKey: 'k' }, { status: 'retired' } as never)
     const data = { items: [{ id: 'a', status: 'ready' }, { id: 'b', status: 'ready' }], total: 2 }
     const all = [...queryKeys.media.list, 's', { kind: 'image' }]
     const ready = [...queryKeys.media.list, 's', { kind: 'image', status: 'ready' }]
     const withRetired = [...queryKeys.media.list, 's', { kind: 'image', status: 'ready,retired' }]
 
-    expect(apply(change!, data, all)).toEqual({ items: [{ id: 'a', status: 'retired' }, { id: 'b', status: 'ready' }], total: 2 })
+    expect(apply(change!, data, all)).toEqual({ items: [{ id: 'b', status: 'ready' }], total: 1 })
     expect(apply(change!, data, withRetired)).toEqual({ items: [{ id: 'a', status: 'retired' }, { id: 'b', status: 'ready' }], total: 2 })
     expect(apply(change!, data, ready)).toEqual({ items: [{ id: 'b', status: 'ready' }], total: 1 })
   })
