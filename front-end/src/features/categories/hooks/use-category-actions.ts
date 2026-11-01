@@ -101,18 +101,18 @@ export function useCategoryActions({ storeId, kind, items, refetch }: {
 
         return
       }
+      setNotice(undefined)
       void confirm({
         title: t('categories.delete.title', { name: nameOf(category) }),
         body: t('categories.delete.body'),
         confirmLabel: t('categories.delete.confirm'),
-      }).then((confirmed) => {
-        if (!confirmed)
-          return
-        setNotice(undefined)
-        remove.submit({ storeId, kind, id: category.id, idempotencyKey: crypto.randomUUID() }, {
-          onSuccess: () => onDeleted?.(),
-          onError: failed,
-        })
+        // A refusal shows in the dialog that asked, the list reads again so it is never stale.
+        problem: (error) => {
+          refetch()
+
+          return t(problemTypeToMessageKey(error instanceof ApiProblem ? error.type : 'unknown'))
+        },
+        run: () => remove.submitAsync({ storeId, kind, id: category.id, idempotencyKey: crypto.randomUUID() }).then(() => onDeleted?.()),
       })
     },
   }

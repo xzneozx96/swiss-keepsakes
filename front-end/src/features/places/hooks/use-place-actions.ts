@@ -12,7 +12,8 @@ import { problemMessageKey } from '../lib/problems'
 
 /**
  * The writes of the list: hide after a confirm, show again, delete a draft after a confirm. One write at a
- * time, each with its own `Idempotency-Key`, and a refusal shows its words next to the list.
+ * time, each with its own `Idempotency-Key`. Hide and delete run inside their confirm dialog (spinner, then the
+ * row changes at once, `commandChanges`), and a refusal shows in it; show again shows its refusal next to the list.
  */
 export function usePlaceActions(storeId: string) {
   const { t, language } = useLocale()
@@ -26,7 +27,10 @@ export function usePlaceActions(storeId: string) {
   const [notice, setNotice] = useState<MessageKey>()
   const busy = hide.isPending || publish.isPending || remove.isPending
   const nameOf = (item: PinListItem) => titleOf(item, language) ?? t('places.row.untitled')
-  const failed = (error: Error) => setNotice(problemMessageKey(error instanceof ApiProblem ? error.type : 'unknown'))
+  const problemKey = (error: unknown) => problemMessageKey(error instanceof ApiProblem ? error.type : 'unknown')
+  // A refusal of hide or delete shows in the dialog that asked; the banner is for the writes without one.
+  const problem = (error: unknown) => t(problemKey(error))
+  const failed = (error: Error) => setNotice(problemKey(error))
 
   return {
     busy,
@@ -35,12 +39,17 @@ export function usePlaceActions(storeId: string) {
     hide: (item: PinListItem) => {
       if (busy)
         return
-      void confirm({ title: t('places.hide.title', { name: nameOf(item) }), body: t('places.hide.body'), confirmLabel: t('places.hide.confirm') }).then((confirmed) => {
-        if (!confirmed)
-          return
-        setNotice(undefined)
-        if (hide.submit({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }, { onError: failed }))
+      setNotice(undefined)
+      void confirm({
+        title: t('places.hide.title', { name: nameOf(item) }),
+        body: t('places.hide.body'),
+        confirmLabel: t('places.hide.confirm'),
+        problem,
+        run: () => {
           nameRef.current = nameOf(item)
+
+          return hide.submitAsync({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() })
+        },
       })
     },
     unhide: (item: PinListItem) => {
@@ -53,11 +62,13 @@ export function usePlaceActions(storeId: string) {
     remove: (item: PinListItem) => {
       if (busy)
         return
-      void confirm({ title: t('places.delete.title', { name: nameOf(item) }), body: t('places.delete.body'), confirmLabel: t('places.delete.confirm') }).then((confirmed) => {
-        if (!confirmed)
-          return
-        setNotice(undefined)
-        remove.submit({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }, { onError: failed })
+      setNotice(undefined)
+      void confirm({
+        title: t('places.delete.title', { name: nameOf(item) }),
+        body: t('places.delete.body'),
+        confirmLabel: t('places.delete.confirm'),
+        problem,
+        run: () => remove.submitAsync({ storeId, id: item.id, ifMatch: item.rowVersion, idempotencyKey: crypto.randomUUID() }),
       })
     },
   }

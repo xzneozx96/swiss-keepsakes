@@ -547,7 +547,8 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     hold = new Promise<void>((resolve) => { release = resolve })
     await userEvent.click(screen.getByRole('button', { name: 'Revoke the invitation to late@example.ch' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Withdraw invitation' }))
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again' })).toBeDisabled())
+    // The dialog stays open over the list while the revoke runs, so the row's buttons are behind it.
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Send the invitation to late@example.ch again', hidden: true })).toBeDisabled())
     release()
   })
 
@@ -609,7 +610,10 @@ describe('[E2.4][AC02] M22, the members tab', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Remove a-very-long/ }))
     await userEvent.click(await screen.findByRole('button', { name: 'Remove from the store' }))
 
-    await waitFor(() => expect(danger).toHaveBeenCalledExactlyOnceWith('This member is no longer in the store.'))
+    // The refusal shows in the dialog that asked, which stays open; the cache does not toast it too.
+    expect(await within(await screen.findByRole('alertdialog')).findByRole('alert')).toHaveTextContent('This member is no longer in the store.')
+    expect(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Remove from the store' })).toBeEnabled()
+    expect(danger).not.toHaveBeenCalled()
     expect(success).not.toHaveBeenCalled()
   })
 

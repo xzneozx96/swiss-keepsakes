@@ -54,9 +54,9 @@ export function useMediaActions(storeId: string) {
       error: PROBLEM_KEYS,
     },
   })
-  // A file a page took while the merchant decided is shown by the sheet (`refused`); the toast says the same in short.
+  // A file a page took while the merchant decided is shown by the sheet (`refused`); a refusal shows in the confirm dialog, so the cache does not toast it.
   const retireFile = useCommand('media', 'retire', {
-    meta: { success: (_, input) => t('media.retire.done', { name: namesRef.current[input.id] ?? '' }), error: { ...PROBLEM_KEYS, 'media-in-use': 'media.retire.refusedBody' } },
+    meta: { success: (_, input) => t('media.retire.done', { name: namesRef.current[input.id] ?? '' }), silent: true },
   })
   const retireEach = useCommand('media', 'retire', { meta: { silent: true } })
   const describeFile = useCommand('media', 'describe', { meta: { success: 'media.details.saved', error: PROBLEM_KEYS } })
@@ -122,26 +122,33 @@ export function useMediaActions(storeId: string) {
   const retire = async (item: MediaItem): Promise<RetireOutcome> => {
     if (!retireCheck(item).ok)
       return 'refused'
-    const ok = await confirm({ title: t('media.retire.title', { name: item.name }), body: t('media.retire.body'), confirmLabel: t('media.retire.confirm'), cancelLabel: t('media.retire.cancel') })
-
-    if (!ok)
-      return 'cancelled'
     namesRef.current[item.id] = item.name
-    try {
-      await retireFile.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID() })
+    let outcome: RetireOutcome = 'retired'
+    // The dialog waits for the server (spinner), then the file changes in the library at once. A refusal shows in the dialog.
+    const ok = await confirm({
+      title: t('media.retire.title', { name: item.name }),
+      body: t('media.retire.body'),
+      confirmLabel: t('media.retire.confirm'),
+      cancelLabel: t('media.retire.cancel'),
+      problem: error => t(error instanceof ApiProblem && error.type === 'media-in-use' ? 'media.retire.refusedBody' : problemKey(error)),
+      run: async () => {
+        try {
+          await retireFile.mutateAsync({ storeId, id: item.id, idempotencyKey: crypto.randomUUID() })
+        }
+        catch (error) {
+          if (error instanceof ApiProblem && error.type === 'media-in-use') {
+            // A page took the file while the merchant decided: read its use again, so the sheet says so, and close.
+            outcome = 'refused'
+            await refreshUse()
 
-      return 'retired'
-    }
-    catch (error) {
-      if (error instanceof ApiProblem && error.type === 'media-in-use') {
-        // A page took the file while the merchant decided: read its use again, so the sheet says so.
-        await refreshUse()
+            return
+          }
+          throw error
+        }
+      },
+    })
 
-        return 'refused'
-      }
-
-      return 'failed'
-    }
+    return ok ? outcome : 'cancelled'
   }
 
   /** Retires only the files nothing uses and keeps the others. */

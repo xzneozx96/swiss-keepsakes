@@ -102,6 +102,9 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
     queryClient.setQueryData([...queryKeys.places.pin, storeId, saved.id], saved)
   }
 
+  // A refusal of hide or delete shows in the dialog that asked, not in the page's banner.
+  const problemText = (error: unknown) => t(problemMessageKey(error instanceof ApiProblem ? error.type : 'unknown'))
+
   const failed = (error: Error) => {
     const type = error instanceof ApiProblem ? error.type : 'unknown'
 
@@ -206,12 +209,17 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
       return
     const name = form.titleEn || form.titleDe || t('places.row.untitled')
 
-    void confirm({ title: t('places.hide.title', { name }), body: t('places.hide.body'), confirmLabel: t('places.hide.confirm') }).then((confirmed) => {
-      if (!confirmed)
-        return
-      clear()
-      if (hide.submit({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }, { onSuccess: adopt, onError: failed }))
+    clear()
+    void confirm({
+      title: t('places.hide.title', { name }),
+      body: t('places.hide.body'),
+      confirmLabel: t('places.hide.confirm'),
+      problem: problemText,
+      run: () => {
         hiddenNameRef.current = name
+
+        return hide.submitAsync({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }).then(adopt)
+      },
     })
   }
 
@@ -220,14 +228,13 @@ export function usePlaceEditor({ storeId, initial, start }: { storeId: string, i
       return
     const name = form.titleEn || form.titleDe || t('places.row.untitled')
 
-    void confirm({ title: t('places.delete.title', { name }), body: t('places.delete.body'), confirmLabel: t('places.delete.confirm') }).then((confirmed) => {
-      if (!confirmed)
-        return
-      clear()
-      remove.submit({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }, {
-        onSuccess: () => void navigate({ to: PLACES_PATH as never }),
-        onError: failed,
-      })
+    clear()
+    void confirm({
+      title: t('places.delete.title', { name }),
+      body: t('places.delete.body'),
+      confirmLabel: t('places.delete.confirm'),
+      problem: problemText,
+      run: () => remove.submitAsync({ storeId, id: pin.id, ifMatch: pin.rowVersion, idempotencyKey: crypto.randomUUID() }).then(() => void navigate({ to: PLACES_PATH as never })),
     })
   }
 

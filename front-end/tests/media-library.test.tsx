@@ -308,7 +308,8 @@ describe('[E4.11][AC51] retiring', () => {
     await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Retire' })).toBeDisabled())
     expect(within(dialog).getByText('Used on 1 page. Remove it from there, or replace it, before you can retire it.')).toBeInTheDocument()
     expect(toasts.success).not.toHaveBeenCalled()
-    expect(toasts.danger).toHaveBeenCalledExactlyOnceWith('While you were deciding, a page started to use this file. A file in use cannot be retired.')
+    // The sheet says it; a refusal of a retire shows in the confirm dialog or the sheet, never as a toast too.
+    expect(toasts.danger).not.toHaveBeenCalled()
   })
 
   it('[E4.11][AC51] Select mode retires only the unused files and keeps the used ones', async () => {

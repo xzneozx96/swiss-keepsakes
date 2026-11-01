@@ -85,28 +85,27 @@ export function MembersTab({ storeId }: { storeId: string }) {
 function MemberRow({ member, storeId }: { member: Member, storeId: string }) {
   const { t, intlLocale } = useLocale()
   const { confirm, dialog } = useConfirm()
-  const { submit, isPending } = useSubmit('stores', 'removeMember', {
-    meta: { success: () => t('stores.members.removed', { email: member.email }), error: byProblemType },
+  // A refusal shows in the confirm dialog, so the cache does not toast it.
+  const { submitAsync, isPending } = useSubmit('stores', 'removeMember', {
+    meta: { success: () => t('stores.members.removed', { email: member.email }), silent: true },
   })
   const key = useIdempotencyKey({ storeId, memberId: member.id })
   const fail = useMemberFailure(storeId)
 
-  const remove = async () => {
-    if (!(await confirm({
-      title: t('stores.members.removeTitle', { email: member.email }),
-      body: t('stores.members.removeBody'),
-      confirmLabel: t('stores.members.removeConfirm'),
-    }))) {
-      return
-    }
-    submit({ storeId, memberId: member.id, idempotencyKey: key.next() }, {
-      onSuccess: () => key.settled(),
-      onError: (error) => {
+  const remove = () => confirm({
+    title: t('stores.members.removeTitle', { email: member.email }),
+    body: t('stores.members.removeBody'),
+    confirmLabel: t('stores.members.removeConfirm'),
+    problem: error => t(memberProblemKey(error)),
+    run: () => submitAsync({ storeId, memberId: member.id, idempotencyKey: key.next() }).then(
+      () => key.settled(),
+      (error: Error) => {
         key.settled(error)
         fail(error)
+        throw error
       },
-    })
-  }
+    ),
+  })
 
   return (
     <li className="flex flex-col gap-2 rounded-3xl bg-surface p-4 shadow-surface" data-member={member.role}>
@@ -137,8 +136,9 @@ function InvitationRow({ invitation, storeId }: { invitation: MemberInvitation, 
   const resend = useSubmit('stores', 'resendManagerInvitation', {
     meta: { success: () => t('stores.members.resent', { email: invitation.email }), error: byProblemType },
   })
+  // A refusal shows in the confirm dialog, so the cache does not toast it.
   const revoke = useSubmit('stores', 'revokeManagerInvitation', {
-    meta: { success: () => t('stores.members.revoked', { email: invitation.email }), error: byProblemType },
+    meta: { success: () => t('stores.members.revoked', { email: invitation.email }), silent: true },
   })
   const resendKey = useIdempotencyKey({ storeId, invitationId: invitation.id, action: 'resend' })
   const revokeKey = useIdempotencyKey({ storeId, invitationId: invitation.id, action: 'revoke' })
@@ -154,22 +154,20 @@ function InvitationRow({ invitation, storeId }: { invitation: MemberInvitation, 
     },
   })
 
-  const withdraw = async () => {
-    if (!(await confirm({
-      title: t('stores.members.revokeTitle', { email: invitation.email }),
-      body: t('stores.members.revokeBody'),
-      confirmLabel: t('stores.members.revokeConfirm'),
-    }))) {
-      return
-    }
-    revoke.submit({ storeId, invitationId: invitation.id, idempotencyKey: revokeKey.next() }, {
-      onSuccess: () => revokeKey.settled(),
-      onError: (error) => {
+  const withdraw = () => confirm({
+    title: t('stores.members.revokeTitle', { email: invitation.email }),
+    body: t('stores.members.revokeBody'),
+    confirmLabel: t('stores.members.revokeConfirm'),
+    problem: error => t(memberProblemKey(error)),
+    run: () => revoke.submitAsync({ storeId, invitationId: invitation.id, idempotencyKey: revokeKey.next() }).then(
+      () => revokeKey.settled(),
+      (error: Error) => {
         revokeKey.settled(error)
         fail(error)
+        throw error
       },
-    })
-  }
+    ),
+  })
 
   return (
     <li className="flex flex-col gap-2 rounded-3xl bg-surface p-4 shadow-surface" data-invitation={invitation.state}>

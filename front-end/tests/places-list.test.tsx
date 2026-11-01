@@ -35,6 +35,8 @@ const path = '/store/content/places'
 const open = (language: 'en' | 'de' = 'en') => renderInRouter(<PlacesScreen />, { path, language })
 // The table and the phone cards are both in the DOM (CSS picks one), so a query looks in the table.
 const table = () => within(screen.getByRole('grid'))
+// While a dialog is open the table is behind it (aria-hidden), so these queries look there too.
+const tableBehind = () => within(screen.getByRole('grid', { hidden: true }))
 const rowOf = (name: string) => table().getByRole('link', { name }).closest('tr')!
 const writes = (method: string) => api.calls.filter(call => call.method === method)
 
@@ -403,6 +405,74 @@ describe('[E4.2][AC68] N16 the list', () => {
     await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Draft deleted.'))
   })
 
+  it('delete: the dialog spins and stays while the server works, the row goes at once on success, before the re-read, with one toast', async () => {
+    const success = vi.spyOn(toast, 'success')
+    const danger = vi.spyOn(toast, 'danger')
+    api.items = [listItem({ id: uuid(11), status: 'draft', title: { en: 'Draft pin' }, rowVersion: 2 }), listItem({ id: uuid(12), status: 'draft', title: { en: 'Other pin' } })]
+    await open()
+    await screen.findAllByRole('link', { name: 'Draft pin' })
+    await openMenu('Draft pin', 'Delete draft')
+
+    // The server answers the delete only when released; the re-read after it is held for good until the end.
+    let releaseDelete = () => {}
+    let releaseRead = () => {}
+    const reads = () => api.calls.filter(call => call.method === 'GET' && call.path === `/api/store/${storeId}/pins`).length
+
+    api.hold = new Promise<void>((resolve) => { releaseDelete = resolve })
+    api.answer = (call) => {
+      if (call.method === 'DELETE') {
+        api.items = api.items.filter(item => item.id !== uuid(11))
+        api.hold = new Promise<void>((resolve) => { releaseRead = resolve })
+      }
+
+      return undefined
+    }
+    const readsBefore = reads()
+    const dialog = await screen.findByRole('alertdialog')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete draft' }))
+
+    // Pending: the button spins, Cancel is off, Esc and the dialog stay, and the row is still listed.
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Delete draft' })).toHaveAttribute('data-pending', 'true'))
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled()
+    await userEvent.keyboard('{Escape}')
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(tableBehind().getByRole('link', { name: 'Draft pin', hidden: true })).toBeInTheDocument()
+    expect(success).not.toHaveBeenCalled()
+
+    releaseDelete()
+
+    // The re-read is still held here: the row is already gone, the dialog closed, one toast.
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    await waitFor(() => expect(tableBehind().queryByRole('link', { name: 'Draft pin', hidden: true })).not.toBeInTheDocument())
+    expect(tableBehind().getByRole('link', { name: 'Other pin', hidden: true })).toBeInTheDocument()
+    await waitFor(() => expect(reads()).toBeGreaterThan(readsBefore))
+    expect(success).toHaveBeenCalledExactlyOnceWith('Draft deleted.')
+    expect(danger).not.toHaveBeenCalled()
+    releaseRead()
+    await waitFor(() => expect(tableBehind().queryByRole('link', { name: 'Draft pin', hidden: true })).not.toBeInTheDocument())
+  })
+
+  it('delete: a refusal keeps the dialog open with the problem in it, keeps the row, and toasts nothing', async () => {
+    const success = vi.spyOn(toast, 'success')
+    const danger = vi.spyOn(toast, 'danger')
+    api.items = [listItem({ id: uuid(11), status: 'draft', title: { en: 'Draft pin' }, rowVersion: 2 })]
+    api.answer = call => (call.method === 'DELETE' ? problem(412, 'precondition-failed') : undefined)
+    await open()
+    await screen.findAllByRole('link', { name: 'Draft pin' })
+    await openMenu('Draft pin', 'Delete draft')
+    const dialog = await screen.findByRole('alertdialog')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete draft' }))
+
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent('Someone saved this place after you opened it')
+    expect(within(dialog).getByRole('button', { name: 'Delete draft' })).toBeEnabled()
+    expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeEnabled()
+    expect(tableBehind().getByRole('link', { name: 'Draft pin', hidden: true })).toBeInTheDocument()
+    expect(success).not.toHaveBeenCalled()
+    expect(danger).not.toHaveBeenCalled()
+  })
+
   it('[E4.2][AC79] a hidden pin is shown again by a publish with its version', async () => {
     const success = vi.spyOn(toast, 'success')
     api.items = [listItem({ id: uuid(11), status: 'hidden', title: { en: 'Old tap' }, rowVersion: 3 })]
@@ -415,7 +485,7 @@ describe('[E4.2][AC68] N16 the list', () => {
     await waitFor(() => expect(success).toHaveBeenCalledExactlyOnceWith('Old tap is on the map again.'))
   })
 
-  it('[E4.2][AC79] a refusal of a write is shown in words next to the list', async () => {
+  it('[E4.2][AC79] a refusal of a hide is shown in words, in the dialog that asked', async () => {
     api.items = [listItem({ id: uuid(11), status: 'published', title: { en: 'Chapel Bridge' }, rowVersion: 4 })]
     const danger = vi.spyOn(toast, 'danger')
     api.answer = call => (call.method === 'POST' ? problem(412, 'precondition-failed') : undefined)
