@@ -10,6 +10,11 @@ export const Route = createFileRoute('/lab/')({
 
 const experiments = [
   {
+    to: '/lab/keepsake-variant-design' as const,
+    title: 'Keepsake variants, v2: three calmer designs (options for the owner to pick)',
+    note: 'After B1 to B3 were turned down as too dense: V1 a quiet grouped list that opens in place, V2 one variant at a time like a settings page, V3 a sentence (“Sell Medium Edelweiss for CHF 39”) over quiet tiles. Laptop and phone width, a sold combination, invalid SKU and price, a refused archive and a new keepsake (31.10.2026).',
+  },
+  {
     to: '/lab/keepsake-option-design' as const,
     title: 'Keepsake options, v2: three calmer designs (options for the owner to pick)',
     note: 'After A1 to A3 were turned down as too dense: O1 a summary row per option that opens one at a time, O2 a plain page you type on, O3 a list and detail. English only until German is asked for; laptop and phone width, errors, a refused delete and a new option on a keepsake with variants (30.10.2026).',
