@@ -338,6 +338,71 @@ describe('[E4.11][AC51] retiring', () => {
     await waitFor(() => expect(toasts.success).toHaveBeenCalledWith('2 files deleted. 1 in use were kept.'))
   })
 
+  it('[E4.11][AC51] Select mode: the dialog waits with a spinner for the batch, then the deleted tiles are gone at once, with a refused file kept', async () => {
+    const gone = new Set<string>()
+    const release: Array<() => void> = []
+    const files = [item({ name: 'Used.jpg' }), item({ id: other, name: 'Free-one.jpg', ...unused }), item({ id: third, name: 'Free-two.jpg', ...unused })]
+
+    answerWith({
+      list: () => Response.json(page(files.filter(file => !gone.has(file.id)))),
+      other: (call) => {
+        if (call.method !== 'POST')
+          return undefined
+        const id = call.path.split('/').at(-2)!
+
+        // The server answers when the test says so; Free-two was taken by a page meanwhile.
+        return new Promise<Response>((resolve) => {
+          release.push(() => {
+            if (id === third)
+              return resolve(problem(409, 'media-in-use'))
+            gone.add(id)
+            resolve(Response.json(item({ id, status: 'retired' })))
+          })
+        }) as unknown as Response
+      },
+    })
+    renderMedia()
+
+    await screen.findByRole('list', { name: 'Photos' })
+    await userEvent.click(screen.getByRole('button', { name: 'Select' }))
+    for (const name of ['Free-one.jpg', 'Free-two.jpg'])
+      await userEvent.click(screen.getByRole('button', { name: `Select ${name}` }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete 2' }))
+    const confirm = await screen.findByRole('alertdialog')
+
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete file' }))
+    await waitFor(() => expect(release).toHaveLength(2))
+    // Both writes run together, and the dialog and the tiles stay until the server answers.
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Cancel' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Select Free-one.jpg', hidden: true })).toBeInTheDocument()
+    expect(toasts.success).not.toHaveBeenCalled()
+    release.forEach(answer => answer())
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: 'Free-one.jpg' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Free-two.jpg' })).toBeInTheDocument()
+    expect(toasts.success).toHaveBeenCalledWith('1 file deleted. 1 in use were kept.')
+  })
+
+  it('[E4.11][AC51] Select mode: when every delete fails the dialog stays open and says why', async () => {
+    answerWith({
+      list: () => Response.json(page([item({ id: other, name: 'Free-one.jpg', ...unused })])),
+      other: call => (call.method === 'POST' ? problem(503, 'storage-unavailable') : undefined),
+    })
+    renderMedia()
+
+    await screen.findByRole('list', { name: 'Photos' })
+    await userEvent.click(screen.getByRole('button', { name: 'Select' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Select Free-one.jpg' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Delete 1' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete file' }))
+
+    expect(await within(screen.getByRole('alertdialog')).findByRole('alert')).toBeInTheDocument()
+    expect(toasts.success).not.toHaveBeenCalled()
+    expect(toasts.danger).not.toHaveBeenCalled()
+  })
+
   it('[E4.11][AC51] Select is on the photo wall only', async () => {
     answerWith()
     renderMedia('/store/content/media?kind=pdf')
