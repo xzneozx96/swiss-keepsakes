@@ -401,15 +401,43 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
   })
 
   const blocks = () => screen.getAllByTestId('place-block')
-  const toHours = async (language?: 'de') => {
+  const toStepWhen = async (language?: 'de') => {
     await open('new', language ? { language } : undefined)
     await heading(language ? 'Ort auf der Karte' : 'Place on the map')
     await press(language ? 'Weiter' : 'Next')
     await press(language ? 'Weiter' : 'Next')
     await heading(language ? 'Öffnungszeiten und Daten' : 'Hours and dates')
   }
+  // With no hours the card shows its empty state; Add opening hours reveals the week, every day closed.
+  const toHours = async (language?: 'de') => {
+    await toStepWhen(language)
+    await press(language ? 'Öffnungszeiten hinzufügen' : 'Add opening hours')
+  }
   const dayRow = (name: string) => screen.getByRole('switch', { name: `${name} open` }).closest('li')!
   const toggle = (name: string) => userEvent.click(screen.getByRole('switch', { name: `${name} open` }))
+
+  it('[E4.2][AC86] no hours and no dates: each card shows its empty state with one action, and no weekday row', async () => {
+    await toStepWhen()
+
+    expect(screen.getByText('No opening hours yet. Guests see none on the card.')).toBeInTheDocument()
+    expect(screen.getByText('No dates: the pin stays on the map until you hide it.')).toBeInTheDocument()
+    expect(screen.queryAllByRole('switch')).toHaveLength(0)
+    expect(screen.getAllByRole('button', { name: 'Add a date' })).toHaveLength(1)
+
+    await press('Add a date')
+    expect(screen.queryByText('No dates: the pin stays on the map until you hide it.')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Add a date' })).toHaveLength(1)
+    expect(screen.getByText('Date 1')).toBeInTheDocument()
+
+    await press('Add opening hours')
+    expect(screen.queryByText('No opening hours yet. Guests see none on the card.')).not.toBeInTheDocument()
+    expect(screen.getAllByRole('switch')).toHaveLength(7)
+
+    await toggle('Monday')
+    await press('Remove all hours')
+    expect(screen.getByText('No opening hours yet. Guests see none on the card.')).toBeInTheDocument()
+    expect(screen.queryAllByRole('switch')).toHaveLength(0)
+  })
 
   it('[E4.2][AC86] the week is one card of seven rows, every day closed until its switch is on', async () => {
     await toHours()
@@ -442,6 +470,7 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await type('Title in English', 'Chapel Bridge')
     await press('Next')
     await heading('Hours and dates')
+    await press('Add opening hours')
     await toggle('Monday')
     await press('Save draft')
 
@@ -479,6 +508,7 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await type('Title in English', 'Chapel Bridge')
     await press('Next')
     await heading('Hours and dates')
+    await press('Add opening hours')
     await toggle('Monday')
     await press('Add a second range for Monday')
     await toggle('Sunday')
@@ -540,6 +570,7 @@ describe('[E4.2][AC86] N17 dates and Add event', () => {
     await type('Title in English', 'Chapel Bridge')
     await press('Next')
     await heading('Hours and dates')
+    await press('Add opening hours')
     await toggle('Wednesday')
     await typeTime('Wednesday opens', '0930')
     await typeTime('Wednesday closes', '0000')

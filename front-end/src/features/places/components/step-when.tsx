@@ -3,8 +3,10 @@ import type { StepProps } from './step-props'
 import type { MessageKey } from '@/i18n/en'
 
 import { Button, Radio, RadioGroup } from '@heroui/react'
+import { useState } from 'react'
 
 import { choiceCard } from '@/components/choice-card'
+import { EmptyState } from '@/components/empty-state'
 import { Block } from '@/components/form-block'
 import { ClockIcon, PlusIcon, TodayIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
@@ -14,12 +16,29 @@ import { HoursRows } from './hours-rows'
 
 function Hours({ form, patch, errors }: Pick<StepProps, 'form' | 'patch' | 'errors'>) {
   const { t } = useLocale()
+  // Add opening hours shows the week with every day closed; the rows then stay while the merchant works, even if
+  // every day is switched off again. Saved with no hours, the step opens on the empty state again.
+  const [revealed, setRevealed] = useState(false)
+  const empty = form.hours.length === 0 && !revealed
 
   return (
-    <Block hint={t('places.hours.help')} icon={ClockIcon} title={t('places.hours.title')}>
-      {form.hours.length === 0 && <p className="text-sm text-muted">{t('places.hours.none')}</p>}
-      <HoursRows errors={errors.hours} hours={form.hours} onChange={hours => patch({ hours })} />
-      {form.hours.length > 0 && <Button className="w-fit" size="sm" variant="tertiary" onPress={() => patch({ hours: [] })}>{t('places.hours.clear')}</Button>}
+    <Block hint={empty ? undefined : t('places.hours.help')} icon={ClockIcon} title={t('places.hours.title')}>
+      {empty
+        ? <EmptyState compact action={{ label: t('places.hours.add'), onPress: () => setRevealed(true) }} icon={ClockIcon} message={t('places.hours.none')} />
+        : <HoursRows errors={errors.hours} hours={form.hours} onChange={hours => patch({ hours })} />}
+      {form.hours.length > 0 && (
+        <Button
+          className="w-fit"
+          size="sm"
+          variant="tertiary"
+          onPress={() => {
+            setRevealed(false)
+            patch({ hours: [] })
+          }}
+        >
+          {t('places.hours.clear')}
+        </Button>
+      )}
     </Block>
   )
 }
@@ -68,19 +87,26 @@ function Entry({ entry, index, error, onChange, onRemove }: { entry: DateEntry, 
 
 function Dates({ form, patch, errors }: Pick<StepProps, 'form' | 'patch' | 'errors'>) {
   const { t } = useLocale()
+  const add = () => patch({ dates: [...form.dates, emptyDate()] })
   const change = (key: string, changes: Partial<DateEntry>) => patch({ dates: form.dates.map(entry => (entry.key === key ? { ...entry, ...changes } : entry)) })
 
   return (
-    <Block hint={form.dates.length === 0 ? t('places.dates.none') : t('places.dates.untilHelp')} icon={TodayIcon} title={t('places.dates.title')}>
-      <ol className="flex flex-col gap-3">
-        {form.dates.map((entry, index) => (
-          <Entry key={entry.key} entry={entry} error={errors.dates[entry.key]} index={index} onChange={changes => change(entry.key, changes)} onRemove={() => patch({ dates: form.dates.filter(other => other.key !== entry.key) })} />
-        ))}
-      </ol>
-      <Button className="w-fit" size="sm" variant="secondary" onPress={() => patch({ dates: [...form.dates, emptyDate()] })}>
-        <PlusIcon aria-hidden size={16} />
-        {t('places.dates.add')}
-      </Button>
+    <Block hint={form.dates.length === 0 ? undefined : t('places.dates.untilHelp')} icon={TodayIcon} title={t('places.dates.title')}>
+      {form.dates.length === 0
+        ? <EmptyState compact action={{ label: t('places.dates.add'), onPress: add }} icon={TodayIcon} message={t('places.dates.none')} />
+        : (
+            <>
+              <ol className="flex flex-col gap-3">
+                {form.dates.map((entry, index) => (
+                  <Entry key={entry.key} entry={entry} error={errors.dates[entry.key]} index={index} onChange={changes => change(entry.key, changes)} onRemove={() => patch({ dates: form.dates.filter(other => other.key !== entry.key) })} />
+                ))}
+              </ol>
+              <Button className="w-fit" size="sm" variant="secondary" onPress={add}>
+                <PlusIcon aria-hidden size={16} />
+                {t('places.dates.add')}
+              </Button>
+            </>
+          )}
     </Block>
   )
 }
