@@ -36,11 +36,10 @@ export type MerchantSection
     | 'reports'
     | 'settings'
 
-/** A page listed under its group in the sidebar. `exact: false` keeps it active on its tabs and detail screens. */
+/** A page listed under its group in the sidebar; it stays active on its own detail screens (see `activePageOf`). */
 interface NavPage {
   label: MessageKey
   to: LinkProps['to']
-  exact?: boolean
 }
 
 interface NavItem {
@@ -85,8 +84,8 @@ const sidebarItems: NavItem[] = [
     icon: OrdersIcon,
     paths: ['/store/orders', '/store/calendar'],
     pages: [
-      { label: 'nav.orders', to: '/store/orders', exact: false },
-      { label: 'nav.calendar', to: '/store/calendar', exact: false },
+      { label: 'nav.orders', to: '/store/orders' },
+      { label: 'nav.calendar', to: '/store/calendar' },
     ],
   },
   {
@@ -110,7 +109,7 @@ const sidebarItems: NavItem[] = [
     paths: ['/store/content', '/store/requests'],
     pages: [
       ...contentPages.filter(page => page.to !== '/store/content/analytics'),
-      { label: 'nav.requests', to: '/store/requests', exact: false },
+      { label: 'nav.requests', to: '/store/requests' },
       ...contentPages.filter(page => page.to === '/store/content/analytics'),
     ],
   },
@@ -191,6 +190,28 @@ function isUnder(pathname: string, base: string) {
   return base === '/store'
     ? pathname === base
     : pathname === base || pathname.startsWith(`${base}/`)
+}
+
+/**
+ * The page of a group that is open: the one whose path is the longest match for the URL, so a page
+ * stays active on its own detail and editor screens (Places on /store/content/places/:id, Partners
+ * on /store/partners/:id) while a shorter sibling (Articles at /store/content) yields to it.
+ */
+function activePageOf(pathname: string, pages: NavPage[]) {
+  let best: NavPage | undefined
+
+  for (const page of pages) {
+    const base = String(page.to)
+
+    if (
+      isUnder(pathname, base)
+      && (!best || base.length > String(best.to).length)
+    ) {
+      best = page
+    }
+  }
+
+  return best
 }
 
 function isInside(pathname: string, item: NavItem) {
@@ -346,8 +367,15 @@ export function MerchantShell({ children }: { children: React.ReactNode }) {
                         {pages.map(page => (
                           <li key={page.label}>
                             <Link
-                              activeOptions={{ exact: page.exact ?? true }}
+                              // The router only knows the exact path; the detail screens are
+                              // marked through inactiveProps (see activePageOf).
+                              activeOptions={{ exact: true }}
                               className={subLink}
+                              inactiveProps={
+                                page === activePageOf(pathname, pages)
+                                  ? { 'data-status': 'active' }
+                                  : undefined
+                              }
                               to={page.to}
                             >
                               {t(page.label)}
