@@ -22,13 +22,14 @@ import { registerContentRoutes } from './modules/content/adapters/routes.ts'
 import { createS3Storage, createUnconfiguredStorage } from './modules/content/adapters/s3-storage.ts'
 import { createStoryRepository } from './modules/content/adapters/story-repository.ts'
 import { createTourRepository } from './modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFailMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryVersionText, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makePurgeOldVersions, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFailMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryVersionText, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeLookupMediaByHash, makeMoveStoryVersion, makeProcessMedia, makePublishPin, makePublishStoryVersion, makePublishTour, makePurgeOldVersions, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeRetireMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeSweepUploads, makeUnpublishStoryVersion, makeUnpublishTour } from './modules/content/index.ts'
 import { createAccessRepository } from './modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from './modules/identity/adapters/guest-profile-repository.ts'
 import { createInvitationRepository } from './modules/identity/adapters/invitation-repository.ts'
 import { createMembershipRepository } from './modules/identity/adapters/membership-repository.ts'
 import { createPendingConditions } from './modules/identity/adapters/pending-conditions.ts'
 import { createPlatformAdminRepository } from './modules/identity/adapters/platform-admin-repository.ts'
+import { mediaLookupPath } from './modules/content/adapters/media-routes.ts'
 import { invitationPreviewPath, registerIdentityRoutes } from './modules/identity/adapters/routes.ts'
 import { createStoreRepository } from './modules/identity/adapters/store-repository.ts'
 import { createUserDirectory } from './modules/identity/adapters/user-directory.ts'
@@ -234,6 +235,7 @@ async function main() {
       // They touch storage, so guardUseCases does not wrap them: the media routes map a StorageUnavailableError.
       confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, newId: () => crypto.randomUUID() }),
       getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+      lookupMediaByHash: makeLookupMediaByHash({ uow, media: createMediaRepository() }),
       replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs: createJobQueue(jobs.boss), audit, clock: systemClock, graceHours: config.MEDIA_GRACE_HOURS }),
       publicUrl: storage.publicUrl,
       listStories: makeListStories(readDeps),
@@ -265,7 +267,7 @@ async function main() {
     })
     const commands: CommandDeps = {
       idempotency: idempotency({ db: database, clock: systemClock, actorId: idempotencyActor }),
-      withoutIdempotencyKey: [invitationPreviewPath],
+      withoutIdempotencyKey: [invitationPreviewPath, mediaLookupPath],
       routes: [app => registerIdentityRoutes(app, useCases), app => registerContentRoutes(app, contentUseCases), app => registerCatalogRoutes(app, catalogUseCases)],
     }
     const server = await startHttpServer(createApp(logger, checkHealth, identity, commands).fetch, config.HOST, config.PORT, logger)

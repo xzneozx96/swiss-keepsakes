@@ -134,6 +134,7 @@ export function createFakeContentUseCases(): ContentUseCases {
     requestUpload: async (_actor, storeId, input) => ({ ok: true, value: { uploadKey: `${storeId}/0190f0c2-0000-7000-8000-0000000000e1.jpg`, url: 'https://storage.test/uploads/fake', method: 'PUT', headers: { 'Content-Type': input.contentType }, expiresAt: '2026-10-28T10:15:00.000Z', kind: 'image' } }),
     confirmUpload: async (_actor, storeId) => ({ ok: true, value: { ...fakeMedia, storeId } }),
     getMedia: async (_actor, storeId, mediaId) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId } }),
+    lookupMediaByHash: async () => ({ ok: true, value: [] }),
     listMedia: async () => ({ ok: true, value: { rows: [], total: 0, kinds: { image: 0, audio: 0, pdf: 0 }, uses: { unused: 0, drafts: 0, published: 0 }, statuses: { processing: 0, ready: 0, retired: 0 } } }),
     getMediaUses: async () => ({ ok: true, value: { published: [], drafts: [], thumbnails: new Map() } }),
     describeMedia: async (_actor, storeId, mediaId, changes) => ({ ok: true, value: { ...fakeMedia, storeId, id: mediaId, name: changes.name ?? fakeMedia.name } }),

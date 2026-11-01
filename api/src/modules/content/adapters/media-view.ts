@@ -1,4 +1,4 @@
-import type { Media, MediaItem, MediaList, MediaUse, MediaUses } from '@sk/api-contract'
+import type { Media, MediaItem, MediaList, MediaLookup, MediaUse, MediaUses } from '@sk/api-contract'
 import type { MediaUses as MediaUsesResult } from '../application/get-media-uses.ts'
 import type { MediaListPage, MediaListRow, MediaRecord } from '../ports.ts'
 import { variantKey, variantWidthsFor } from '@sk/domain/content'
@@ -66,4 +66,8 @@ export function mediaUsesView(uses: MediaUsesResult, publicUrl: (key: string) =>
     thumbnailUrl: row.thumbnailMediaId === null ? null : thumbnailUrl(uses.thumbnails.get(row.thumbnailMediaId), publicUrl),
   })
   return { published: uses.published.map(view), drafts: uses.drafts.map(view) }
+}
+
+export function mediaLookupView(rows: MediaRecord[], publicUrl: (key: string) => string): MediaLookup {
+  return { items: rows.map(row => ({ ...mediaView(row, publicUrl), sha256: row.sha256 })) }
 }

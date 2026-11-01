@@ -1582,6 +1582,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/store/{storeId}/media/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MediaLookupBody"];
+                };
+            };
+            responses: {
+                /** @description The ready files of the library whose content matches one of the hashes. Used to ask before uploading a duplicate */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["MediaLookup"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/store/{storeId}/media/uploads": {
         parameters: {
             query?: never;
@@ -3856,6 +3908,40 @@ export interface components {
                 published: number;
                 unused: number;
             };
+        };
+        /** @description The files already in the library, found by content */
+        MediaLookup: {
+            /** @description The ready files of this store with one of the hashes, oldest first. A retired or processing file and a file of another store never appear. Several rows may share one hash */
+            items: components["schemas"]["MediaMatch"][];
+        };
+        /** @description The content hashes of the files about to be uploaded */
+        MediaLookupBody: {
+            /** @description The SHA-256 of each file the merchant picked, as 64 lower-case hex digits. Empty is allowed and finds nothing */
+            sha256: string[];
+        };
+        /** @description A ready file of the library whose bytes equal a picked file */
+        MediaMatch: {
+            byteSize: number;
+            contentType: string;
+            height: number | null;
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "image" | "audio" | "pdf";
+            /** @description What the merchant sees and searches. It starts as the uploaded file name */
+            name: string;
+            /** @description The public URL of the original. Null until the file is ready */
+            publicUrl: string | null;
+            /** @description The hash that matched, so the caller can tell which picked file it belongs to */
+            sha256: string;
+            /** @enum {string} */
+            status: "processing" | "ready" | "retired";
+            /** @description Resized copies of an image. Empty until the file is ready */
+            variants: {
+                url: string;
+                width: number;
+            }[];
+            width: number | null;
         };
         /** @description The name and description of a file */
         MediaPatch: {

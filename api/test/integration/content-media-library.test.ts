@@ -473,3 +473,58 @@ describe('[E4.11][AC51] replacing a file over HTTP', () => {
     expect(rows[0]!.version).toBe(1)
   })
 })
+
+describe('[AC-dup] the lookup by content over HTTP', () => {
+  const hash = (letter: string) => letter.repeat(64)
+  const lookup = (staff: Staff, sha256: string[], key?: string | null) =>
+    env.call(`/api/store/${staff.storeId}/media/lookup`, { method: 'POST', body: { sha256 }, headers: staff.owner.headers, key })
+  async function withHash(store: string, name: string, sha: string, status: 'ready' | 'processing' | 'retired' = 'ready') {
+    const id = await media(store, 'image', name, { status })
+    await pool.query(`update content.media set sha256 = $2 where id = $1`, [id, sha])
+    return id
+  }
+
+  it('[AC-dup] finds a ready file by content with no Idempotency-Key, and a same name with other content is no match', async () => {
+    const staff = await env.storeWithStaff()
+    const id = await withHash(staff.storeId, 'IMG_0001.jpg', hash('c'))
+    await withHash(staff.storeId, 'IMG_0001.jpg', hash('d'))
+
+    const found = await lookup(staff, [hash('c'), hash('e')], null)
+    const body = await found.json() as { items: { id: string, name: string, sha256: string, variants: unknown[] }[] }
+
+    expect(found.status).toBe(200)
+    expect(body.items).toHaveLength(1)
+    expect(body.items[0]).toMatchObject({ id, name: 'IMG_0001.jpg', sha256: hash('c') })
+    expect(body.items[0]!.variants.length).toBeGreaterThan(0)
+  })
+
+  it('[AC-dup] an empty list answers an empty list, and a bad hash is a 400', async () => {
+    const staff = await env.storeWithStaff()
+
+    expect(await (await lookup(staff, [])).json()).toEqual({ items: [] })
+    expect((await lookup(staff, ['not-a-hash'])).status).toBe(400)
+  })
+
+  it('[AC-dup] a retired file, a processing file and a file of another store are not offered', async () => {
+    const staff = await env.storeWithStaff()
+    const neighbour = await env.storeWithStaff()
+    await withHash(staff.storeId, 'retired.jpg', hash('1'), 'retired')
+    await withHash(staff.storeId, 'processing.jpg', hash('2'), 'processing')
+    await withHash(neighbour.storeId, 'theirs.jpg', hash('3'))
+
+    const body = await (await lookup(staff, [hash('1'), hash('2'), hash('3')])).json()
+
+    expect(body).toEqual({ items: [] })
+  })
+
+  it('[AC-dup] a guest, another store\'s staff and an anonymous caller are refused', async () => {
+    const staff = await env.storeWithStaff()
+    const outsider = await env.storeWithStaff()
+
+    const asOutsider = await env.call(`/api/store/${staff.storeId}/media/lookup`, { method: 'POST', body: { sha256: [hash('c')] }, headers: outsider.owner.headers })
+    const anonymous = await env.call(`/api/store/${staff.storeId}/media/lookup`, { method: 'POST', body: { sha256: [hash('c')] }, key: null })
+
+    expect(asOutsider.status).toBe(403)
+    expect(anonymous.status).toBe(401)
+  })
+})

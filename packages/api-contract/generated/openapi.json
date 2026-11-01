@@ -910,6 +910,132 @@
         ],
         "type": "object"
       },
+      "MediaLookup": {
+        "description": "The files already in the library, found by content",
+        "properties": {
+          "items": {
+            "description": "The ready files of this store with one of the hashes, oldest first. A retired or processing file and a file of another store never appear. Several rows may share one hash",
+            "items": {
+              "$ref": "#/components/schemas/MediaMatch"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "MediaLookupBody": {
+        "additionalProperties": false,
+        "description": "The content hashes of the files about to be uploaded",
+        "properties": {
+          "sha256": {
+            "description": "The SHA-256 of each file the merchant picked, as 64 lower-case hex digits. Empty is allowed and finds nothing",
+            "items": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "type": "array"
+          }
+        },
+        "required": [
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "MediaMatch": {
+        "description": "A ready file of the library whose bytes equal a picked file",
+        "properties": {
+          "byteSize": {
+            "type": "integer"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "height": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "audio",
+              "pdf"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "What the merchant sees and searches. It starts as the uploaded file name",
+            "type": "string"
+          },
+          "publicUrl": {
+            "description": "The public URL of the original. Null until the file is ready",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sha256": {
+            "description": "The hash that matched, so the caller can tell which picked file it belongs to",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "processing",
+              "ready",
+              "retired"
+            ],
+            "type": "string"
+          },
+          "variants": {
+            "description": "Resized copies of an image. Empty until the file is ready",
+            "items": {
+              "properties": {
+                "url": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "width",
+                "url"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "width": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "name",
+          "contentType",
+          "byteSize",
+          "width",
+          "height",
+          "publicUrl",
+          "variants",
+          "sha256"
+        ],
+        "type": "object"
+      },
       "MediaPatch": {
         "additionalProperties": false,
         "description": "The name and description of a file",
@@ -12900,6 +13026,63 @@
               }
             },
             "description": "The file was checked and is being processed. Read it until its status is ready",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/store/{storeId}/media/lookup": {
+      "post": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaLookupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaLookup"
+                }
+              }
+            },
+            "description": "The ready files of the library whose content matches one of the hashes. Used to ask before uploading a duplicate",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"

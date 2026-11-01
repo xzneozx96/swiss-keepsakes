@@ -1,4 +1,4 @@
-import { confirmUploadSchema, MEDIA_NAME_MAX, mediaItemSchema, mediaListQuerySchema, mediaPatchBodySchema, mediaSchema, problemTypes, replaceMediaBodySchema, uploadRequestSchema } from '@sk/api-contract'
+import { confirmUploadSchema, MEDIA_LOOKUP_MAX, MEDIA_NAME_MAX, mediaItemSchema, mediaListQuerySchema, mediaLookupBodySchema, mediaLookupSchema, mediaPatchBodySchema, mediaSchema, problemTypes, replaceMediaBodySchema, uploadRequestSchema } from '@sk/api-contract'
 import { describe, expect, it } from 'vitest'
 
 const id = '3f1c1d0e-8a57-4c0e-9b8e-5d0f6a7b1c2d'
@@ -79,5 +79,30 @@ describe('[E4.11][AC51] media library schemas', () => {
 
   it('[E4.11][AC51] the new problem codes are listed', () => {
     expect(problemTypes).toEqual(expect.arrayContaining(['media-in-use', 'media-already-retired', 'media-not-ready', 'media-kind-mismatch']))
+  })
+})
+
+describe('[AC-dup] the lookup by content schemas', () => {
+  const hash = 'a'.repeat(64)
+
+  it('[AC-dup] takes hashes as 64 lower-case hex digits, an empty list too, and nothing else', () => {
+    expect(ok(mediaLookupBodySchema, { sha256: [hash, 'b0'.repeat(32)] })).toBe(true)
+    expect(ok(mediaLookupBodySchema, { sha256: [] })).toBe(true)
+    expect(ok(mediaLookupBodySchema, { sha256: ['A'.repeat(64)] })).toBe(false)
+    expect(ok(mediaLookupBodySchema, { sha256: ['a'.repeat(63)] })).toBe(false)
+    expect(ok(mediaLookupBodySchema, { sha256: ['g'.repeat(64)] })).toBe(false)
+    expect(ok(mediaLookupBodySchema, {})).toBe(false)
+    expect(ok(mediaLookupBodySchema, { sha256: [hash], name: 'IMG_0001.jpg' })).toBe(false)
+  })
+
+  it('[AC-dup] caps the list', () => {
+    expect(ok(mediaLookupBodySchema, { sha256: Array.from({ length: MEDIA_LOOKUP_MAX }).fill(hash) })).toBe(true)
+    expect(ok(mediaLookupBodySchema, { sha256: Array.from({ length: MEDIA_LOOKUP_MAX + 1 }).fill(hash) })).toBe(false)
+  })
+
+  it('[AC-dup] a match is a media with the hash that matched', () => {
+    const media = { id, kind: 'image', status: 'ready', name: 'a.jpg', contentType: 'image/jpeg', byteSize: 1, width: 1, height: 1, publicUrl: 'https://x/a.jpg', variants: [] }
+    expect(ok(mediaLookupSchema, { items: [{ ...media, sha256: hash }] })).toBe(true)
+    expect(ok(mediaLookupSchema, { items: [media] })).toBe(false)
   })
 })

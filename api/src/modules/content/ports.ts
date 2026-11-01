@@ -84,6 +84,8 @@ export interface MediaRepository<T> {
   describe: (tx: T, row: MediaRecord, changes: { name?: string, alt?: Localized }, at: Date) => Promise<MediaRecord | undefined>
   // The new file replaces the old under the same id, version + 1. The row keeps status `ready`. undefined when the row is gone.
   replace: (tx: T, row: MediaRecord, next: MediaReplacement, at: Date) => Promise<MediaRecord | undefined>
+  // The ready (not processing, not retired) files of this store whose bytes have one of these SHA-256 hashes, oldest first.
+  findReadyByHash: (tx: T, storeId: string, hashes: string[]) => Promise<MediaRecord[]>
   // True when a tour (PDF or cover), a tour stop, a pin cover or any media_refs row points at the id.
   isReferenced: (tx: T, storeId: string, mediaId: string) => Promise<boolean>
 }

@@ -38,7 +38,7 @@ export interface CommandDeps {
   idempotency: MiddlewareHandler<AppEnv>
   // POST routes that only read, such as an invitation preview whose token must not sit in a query string. They
   // take no Idempotency-Key. A route that changes anything never belongs here.
-  withoutIdempotencyKey?: string[]
+  withoutIdempotencyKey?: (string | RegExp)[]
   routes: ((app: OpenAPIHono<AppEnv>) => void)[]
 }
 
@@ -127,8 +127,9 @@ export function createApp(logger: Logger, checkHealth: HealthCheck, identity: Id
   app.use('/api/admin/*', requireSuperAdmin)
   // After the guards, so an anonymous request or an outsider is refused with 401 or 403 before it needs a key.
   // Better Auth's routes answered above and never get here.
-  const readOnlyPosts = new Set(commands.withoutIdempotencyKey)
-  app.use('/api/*', (c, next) => c.req.method === 'POST' && readOnlyPosts.has(c.req.path) ? next() : commands.idempotency(c, next))
+  const readOnlyPosts = commands.withoutIdempotencyKey ?? []
+  const isReadOnlyPost = (path: string) => readOnlyPosts.some(entry => typeof entry === 'string' ? entry === path : entry.test(path))
+  app.use('/api/*', (c, next) => c.req.method === 'POST' && isReadOnlyPost(c.req.path) ? next() : commands.idempotency(c, next))
 
   app.openapi(healthRoute, async (c) => {
     const report = await checkHealth()

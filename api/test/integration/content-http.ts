@@ -11,12 +11,13 @@ import { guardUseCases } from '../../src/modules/content/adapters/database-error
 import { createMapsLinks } from '../../src/modules/content/adapters/maps-link-fetch.ts'
 import { createMediaLibrary } from '../../src/modules/content/adapters/media-library-repository.ts'
 import { createMediaRepository } from '../../src/modules/content/adapters/media-repository.ts'
+import { mediaLookupPath } from '../../src/modules/content/adapters/media-routes.ts'
 import { createPinRepository } from '../../src/modules/content/adapters/pin-repository.ts'
 import { createPublicReadRepository } from '../../src/modules/content/adapters/public-repository.ts'
 import { registerContentRoutes } from '../../src/modules/content/adapters/routes.ts'
 import { createStoryRepository } from '../../src/modules/content/adapters/story-repository.ts'
 import { createTourRepository } from '../../src/modules/content/adapters/tour-repository.ts'
-import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryVersionText, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
+import { makeConfirmUpload, makeCreateCategory, makeCreatePin, makeCreateStoryGroup, makeCreateStoryVersion, makeCreateTour, makeDeleteCategory, makeDeletePin, makeDeleteStoryVersion, makeDeleteTour, makeDescribeMedia, makeFindAddressAt, makeGetMap, makeGetMedia, makeGetMediaUses, makeGetMerchantPin, makeGetPin, makeGetStory, makeGetStoryVersionText, makeGetTour, makeHidePin, makeListCategories, makeListMedia, makeListMerchantCategories, makeListMerchantPins, makeListPinStoryOptions, makeListStories, makeListTours, makeLookupMediaByHash, makeMoveStoryVersion, makePublishPin, makePublishStoryVersion, makePublishTour, makeReorderCategories, makeReplaceMedia, makeRequestUpload, makeResolveMapsLink, makeRetireLibraryMedia, makeSaveCategory, makeSavePin, makeSaveStoryGroup, makeSaveStoryVersion, makeSaveTour, makeUnpublishStoryVersion, makeUnpublishTour } from '../../src/modules/content/index.ts'
 import { createAccessRepository } from '../../src/modules/identity/adapters/access-repository.ts'
 import { createGuestProfileRepository } from '../../src/modules/identity/adapters/guest-profile-repository.ts'
 import { createMembershipRepository } from '../../src/modules/identity/adapters/membership-repository.ts'
@@ -113,6 +114,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     requestUpload: makeRequestUpload({ storage, clock: writeClock, newId: () => randomUUID() }),
     confirmUpload: makeConfirmUpload({ uow, media: createMediaRepository(), storage, jobs, audit: createAuditLog(writeClock), clock: writeClock, newId: () => randomUUID() }),
     getMedia: makeGetMedia({ uow, media: createMediaRepository() }),
+    lookupMediaByHash: makeLookupMediaByHash({ uow, media: createMediaRepository() }),
     replaceMedia: makeReplaceMedia({ uow, media: createMediaRepository(), storage, jobs, audit: createAuditLog(writeClock), clock: writeClock, graceHours: 24 }),
     publicUrl: storage.publicUrl,
     listStories: makeListStories(readDeps),
@@ -131,6 +133,7 @@ export function createContentHttp({ pool, db }: ReturnType<typeof openTestDataba
     listMyStores: makeListMyStores({ uow, memberships: createMembershipRepository() }),
   }, {
     idempotency: idempotency({ db, clock: systemClock, actorId: idempotencyActor }),
+    withoutIdempotencyKey: [mediaLookupPath],
     routes: [routes => registerContentRoutes(routes, contentUseCases)],
   })
 

@@ -107,6 +107,7 @@ export {
 export { healthSchema } from './health.ts'
 export {
   ALT_MAX,
+  MEDIA_LOOKUP_MAX,
   MEDIA_NAME_MAX,
   type ConfirmUpload,
   confirmUploadSchema,
@@ -119,6 +120,12 @@ export {
   mediaListQuerySchema,
   mediaListSchema,
   type MediaListQuery,
+  type MediaLookup,
+  type MediaLookupBody,
+  mediaLookupBodySchema,
+  mediaLookupSchema,
+  type MediaMatch,
+  mediaMatchSchema,
   type MediaPatchBody,
   mediaPatchBodySchema,
   mediaSchema,
