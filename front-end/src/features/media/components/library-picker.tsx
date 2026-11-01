@@ -4,13 +4,14 @@ import { Button, SearchField, Skeleton } from '@heroui/react'
 import { useEffect, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
-import { LibraryIcon, SearchIcon, SelectedIcon } from '@/components/icons'
+import { LibraryIcon, SearchIcon } from '@/components/icons'
 import { Pager } from '@/components/list-pagination'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { useMediaList } from '../api/queries'
 import { WALL_PAGE_SIZE } from '../lib/search-params'
 import { FileThumb } from './file-thumb'
+import { TILE_SELECTED, TileMark } from './tile-mark'
 
 const SEARCH_DELAY_MS = 250
 const GRID = 'grid grid-cols-3 gap-2 sm:grid-cols-4'
@@ -43,11 +44,9 @@ function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, 
           onChange={onToggle}
         />
         <span className="sr-only">{used ? `${item.name}, ${t('media.library.used')}` : item.name}</span>
-        <span className={`relative block w-full overflow-hidden rounded-xl peer-focus-visible:focus-ring ${checked ? 'ring-2 ring-foreground ring-offset-2' : ''} ${used ? 'opacity-60' : ''}`}>
+        <span className={`relative block w-full overflow-hidden rounded-xl peer-focus-visible:focus-ring ${checked ? TILE_SELECTED : ''} ${used ? 'opacity-60' : ''}`}>
           <FileThumb className="aspect-square w-full rounded-xl" item={item} />
-          <span aria-hidden className={`absolute end-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border-2 ${checked ? 'border-surface bg-surface text-foreground' : 'border-surface/90 bg-foreground/20'}`}>
-            {checked && <SelectedIcon size={22} weight="Filled" />}
-          </span>
+          <TileMark selected={checked} />
           {used && <span aria-hidden className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">{t('media.library.used')}</span>}
         </span>
         <span aria-hidden className="truncate px-0.5 text-xs text-muted">{item.name}</span>

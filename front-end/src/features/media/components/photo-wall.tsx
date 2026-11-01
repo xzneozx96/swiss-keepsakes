@@ -2,10 +2,10 @@ import type { MediaItem } from '@sk/api-contract'
 
 import { Skeleton } from '@heroui/react'
 
-import { SelectedIcon } from '@/components/icons'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { FileThumb } from './file-thumb'
+import { TILE_SELECTED, TileMark } from './tile-mark'
 
 const GRID = 'grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6'
 
@@ -22,7 +22,7 @@ function Tile({ item, busy, found, selecting, selected, onPress }: { item: Media
       type="button"
       onClick={onPress}
     >
-      <span className={`relative block w-full overflow-hidden rounded-xl ${selected ? 'ring-2 ring-foreground ring-offset-2' : found ? 'ring-2 ring-accent ring-offset-2' : ''}`}>
+      <span className={`relative block w-full overflow-hidden rounded-xl ${selected || found ? TILE_SELECTED : ''}`}>
         <FileThumb busy={busy} className="aspect-square w-full rounded-xl" item={item} />
         {unused && <span className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">{t('media.grid.unused')}</span>}
         {item.status !== 'ready' && (
@@ -30,11 +30,7 @@ function Tile({ item, busy, found, selecting, selected, onPress }: { item: Media
             <StatusChip tone={item.status === 'processing' ? 'info' : 'neutral'}>{t(`media.status.${item.status}`)}</StatusChip>
           </span>
         )}
-        {selecting && (
-          <span aria-hidden className={`absolute end-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border-2 ${selected ? 'border-surface bg-surface text-foreground' : 'border-surface/90 bg-foreground/20'}`}>
-            {selected && <SelectedIcon size={22} weight="Filled" />}
-          </span>
-        )}
+        {selecting && <TileMark selected={selected} />}
       </span>
       <span aria-hidden className="truncate px-0.5 text-xs text-muted">{item.name}</span>
     </button>
