@@ -21,6 +21,7 @@ import { formatMoney, isEmptyDoc, numberFormat, pickText } from '@sk/domain/shar
 
 import { useId, useRef, useState } from 'react'
 import { DateTile } from '@/components/date-tile'
+import { EmptyState } from '@/components/empty-state'
 import {
   BookingsIcon,
   ChevronRightIcon,
@@ -472,9 +473,9 @@ function DeparturesCard({ tour, error }: { tour: Tour, error?: string }) {
             </ul>
           )
         : (
-            <p className={`${separate} px-4 py-4 text-sm text-muted`}>
-              {t('products.departures.none')}
-            </p>
+            <div className={separate}>
+              <EmptyState compact icon={BookingsIcon} message={t('products.departures.none')} />
+            </div>
           )}
       {upcoming.length > preview.length && (
         <div className={separate}>
