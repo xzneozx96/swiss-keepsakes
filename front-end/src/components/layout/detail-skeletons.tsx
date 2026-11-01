@@ -152,7 +152,7 @@ export function EditorFormSkeleton({ cards = 2 }: { cards?: number }) {
 
 /**
  * A stepped editor (`components/step-layout.tsx`) while it loads: the header, the step list on the left from 1024 px
- * (a numbered mark over two lines per step), the step bar on phones, and the step's form cards on the right.
+ * (a numbered mark over two lines per step), the step bar on phones (title, All steps, progress), and the step's form cards on the right.
  */
 export function StepEditorSkeleton({ steps = 6, cards = 2 }: { steps?: number, cards?: number }) {
   return (
@@ -170,7 +170,13 @@ export function StepEditorSkeleton({ steps = 6, cards = 2 }: { steps?: number, c
             </li>
           ))}
         </ol>
-        <Skeleton className="h-12 w-full rounded-2xl lg:hidden" />
+        <div className="flex flex-col gap-3 lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <Skeleton className="h-6 w-44 rounded-lg" />
+            <Skeleton className="h-9 w-24 rounded-full" />
+          </div>
+          <Skeleton className="h-1 w-1/4 rounded-full" />
+        </div>
         <div className="flex min-w-0 flex-col gap-5 lg:gap-6">
           {Array.from({ length: cards }, (_, i) => (
             <FormCardSkeleton key={i} fields={i === 0 ? 3 : 2} />
