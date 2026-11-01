@@ -74,7 +74,7 @@ function ActionRow({ draft, onSave, isPending, failure, onDiscard, onDelete, opt
   const count = draft.problems.length
 
   return (
-    <div className="flex flex-col gap-3 pt-2" data-testid="save-line">
+    <div className="flex flex-col gap-3 pt-2 lg:ms-[calc(14rem+2.5rem)]" data-testid="save-line">
       {draft.tried && count > 0 && (
         <p className="text-sm text-pretty text-danger" role="alert">
           {t(onSave ? (count === 1 ? 'keepsakes.options.notSaved.one' : 'keepsakes.options.notSaved.other') : (count === 1 ? 'keepsakes.options.fix.one' : 'keepsakes.options.fix.other'), { count })}
