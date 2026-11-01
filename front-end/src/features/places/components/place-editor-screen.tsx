@@ -4,7 +4,7 @@ import { Button } from '@heroui/react'
 
 import { EmptyState } from '@/components/empty-state'
 import { ContentIcon, InfoIcon } from '@/components/icons'
-import { EditorFormSkeleton } from '@/components/layout/detail-skeletons'
+import { StepEditorSkeleton } from '@/components/layout/detail-skeletons'
 import { useLocale } from '@/contexts/locale-context'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useMe } from '@/features/stores/api/queries'
@@ -34,7 +34,7 @@ export function PlaceEditorScreen({ placeId, start }: { placeId: string, start: 
   if (!me.isPending && !store)
     return <EmptyState icon={InfoIcon} message={t('places.noStore')} />
   if (me.isPending || (!isNew && place.isPending))
-    return <EditorFormSkeleton cards={3} />
+    return <StepEditorSkeleton cards={3} />
   if (!isNew && place.isError) {
     const problem = place.error instanceof ApiProblem ? place.error : undefined
 
