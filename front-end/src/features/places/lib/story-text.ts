@@ -32,10 +32,12 @@ function inlinesOf(nodes: BodyNode[] | undefined): (Inline | 'break')[] {
     const inline: Inline = { text: node.text }
 
     for (const mark of node.marks ?? []) {
-      if (mark.type === 'bold')
+      if (mark.type === 'bold') {
         inline.bold = true
-      else if (mark.type === 'italic')
+      }
+      else if (mark.type === 'italic') {
         inline.italic = true
+      }
       else if (mark.type === 'link') {
         const href = safeHref(mark.attrs?.href)
 

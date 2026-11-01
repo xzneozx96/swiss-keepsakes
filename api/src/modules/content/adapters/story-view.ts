@@ -1,4 +1,4 @@
-import type { StoryGroup as StoryGroupView, StoryVersion as StoryVersionView, StoryVersionText as StoryVersionTextView } from '@sk/api-contract'
+import type { StoryGroup as StoryGroupView, StoryVersionText as StoryVersionTextView, StoryVersion as StoryVersionView } from '@sk/api-contract'
 import type { StoryDraft, StoryGroup, StoryVersion } from '@sk/domain/content'
 import type { StoryVersionText } from '../application/get-story-version-text.ts'
 import { mediaView } from './media-view.ts'
