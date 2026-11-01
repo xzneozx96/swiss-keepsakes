@@ -1,5 +1,5 @@
 import { toast } from '@heroui/react'
-import { screen, waitFor, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -31,23 +31,29 @@ const nameField = () => screen.findByLabelText('Name (English)', undefined, SLOW
 
 const next = () => userEvent.click(screen.getByRole('button', { name: 'Next' }))
 
-/** Details, then Options (none), then Variants: the one variant of a keepsake with no option. */
+/** Details, then Options (none), then Variants. */
 async function toVariants(name = 'Knife') {
   await userEvent.type(await nameField(), name)
   await next()
   await screen.findByRole('region', { name: 'Options' })
   await next()
-  await screen.findByRole('heading', { level: 3, name: 'One variant' })
+  await screen.findByRole('region', { name: 'Variants' })
 }
 
-/** The price field commits on blur, so tab out of it. */
-async function typePrice(value: string) {
-  const price = screen.getByLabelText('Price for One variant')
+/** Adds the one variant of a keepsake with no option: the code is left to the suggestion unless one is given. */
+async function addVariant(price: string, code?: string) {
+  await userEvent.click(screen.getAllByRole('button', { name: 'Add variant' })[0]!)
+  const form = await screen.findByRole('form', { name: 'New variant' })
 
-  await userEvent.clear(price)
-  await userEvent.type(price, value)
-  await userEvent.tab()
+  if (code)
+    await userEvent.type(within(form).getByLabelText('SKU code'), code)
+  await userEvent.type(within(form).getByLabelText('Price, CHF'), price)
+  await userEvent.click(within(form).getByRole('button', { name: 'Add variant' }))
 }
+
+/** Review and publish of a new keepsake: the step bar's two actions. */
+const saveDraft = () => userEvent.click(screen.getByRole('button', { name: 'Save as draft' }))
+const publish = () => userEvent.click(screen.getByRole('button', { name: 'Publish' }))
 
 const language = { current: 'en' }
 
@@ -91,52 +97,157 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await screen.findByRole('region', { name: 'Options' })
     await next()
 
-    expect(await screen.findByRole('heading', { level: 3, name: 'One variant' })).toBeInTheDocument()
+    expect(await screen.findByRole('region', { name: 'Variants' })).toBeInTheDocument()
     expect(screen.getByText(/Step 3 of 4/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '1. Details, Done' })).toBeInTheDocument()
   })
 
-  it('[T-005] holds the three steps in the browser: nothing is sent before Create keepsake, and the steps reached can be opened again', async () => {
+  it('[T-007B] Next on Variants goes to Review and publish and sends nothing; the bar then offers Publish and Save as draft', async () => {
     renderKeepsakes('/store/products/gifts/new')
 
     await toVariants()
-    await typePrice('39')
-    expect(writes()).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: 'Create keepsake' })).not.toBeInTheDocument()
+    await addVariant('39')
+    await next()
+
+    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
+    expect(screen.getByText(/Step 4 of 4/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save as draft' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument()
     expect(state.calls.some(call => call.method !== 'GET')).toBe(false)
+  })
+
+  it('[T-007B] Next with no variant stays on Variants and asks for one; a variant is held in the browser and the steps can be opened again', async () => {
+    renderKeepsakes('/store/products/gifts/new')
+
+    await toVariants()
+    await next()
+    expect(await screen.findByText('Add at least one variant.')).toBeInTheDocument()
+    expect(screen.getByText(/Step 3 of 4/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '3. Variants, Has errors' })).toBeInTheDocument()
+    await addVariant('39')
+    expect(await screen.findByRole('button', { name: /KNIFE/ })).toHaveTextContent('CHF 39.00 · On sale')
+    expect(writes()).toHaveLength(0)
     await userEvent.click(screen.getByRole('button', { name: '1. Details, Done' }))
     expect(await nameField()).toHaveValue('Knife')
-    expect(stepButtons().map(button => (button as HTMLButtonElement).disabled)).toEqual([true, false, false, true])
     await userEvent.click(screen.getByRole('button', { name: /^3\. Variants/ }))
-    expect(await screen.findByLabelText('Price for One variant')).toHaveValue('CHF\u00A039.00')
+    expect(await screen.findByRole('button', { name: /KNIFE/ })).toBeInTheDocument()
     expect(writes()).toHaveLength(0)
   })
 
-  it('[T-005] the last step needs a code and a price, suggests a code from the name, and Create keepsake makes a draft and opens Review and publish', async () => {
+  it('[T-007B] a new keepsake has no On sale switch, since the create request has no status, and says so', async () => {
+    renderKeepsakes('/store/products/gifts/new')
+
+    await toVariants()
+    await userEvent.click(screen.getAllByRole('button', { name: 'Add variant' })[0]!)
+    const form = await screen.findByRole('form', { name: 'New variant' })
+
+    expect(within(form).queryByRole('switch')).not.toBeInTheDocument()
+    expect(within(form).getByText('A new keepsake starts with every variant on sale. Hide one after you save the keepsake.')).toBeInTheDocument()
+    expect(within(form).getByLabelText('SKU code')).toHaveAttribute('placeholder', 'KNIFE')
+  })
+
+  it('[T-007B] Save as draft makes a hidden draft in one request and opens the saved editor on Review and publish', async () => {
     const success = vi.spyOn(toast, 'success')
     const router = renderKeepsakes('/store/products/gifts/new')
 
     await toVariants()
-    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument()
-    await userEvent.click(await screen.findByRole('button', { name: 'Create keepsake' }))
-
-    expect(await screen.findByText('Add a SKU code.')).toBeInTheDocument()
-    expect(screen.getByText('Add a price above CHF 0.')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '3. Variants, Has errors' })).toBeInTheDocument()
-    expect(writes()).toHaveLength(0)
-    await userEvent.click(screen.getByRole('button', { name: 'Use KNIFE' }))
-    expect(screen.getByLabelText('SKU code for One variant')).toHaveValue('KNIFE')
-    await typePrice('39')
-    await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
+    await addVariant('39')
+    await next()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    await saveDraft()
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: base, body: { name: { en: 'Knife' }, text: {}, photoIds: [], commissionRate: 0, options: [], variants: [{ skuCode: 'KNIFE', priceRappen: 3900, values: {} }] } })
     expect(writes()[0]!.key).toBeTruthy()
-    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
-    expect(router.state.location.pathname).toBe(`/store/products/gifts/${productId}`)
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/store/products/gifts/${productId}`), SLOW)
     expect(router.state.location.search).toMatchObject({ step: 'review' })
+    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
     expect(within(screen.getByTestId('keepsake-status')).getByText('Draft')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^4\. Review and publish/ })).toHaveAttribute('aria-current', 'step')
+    expect(writes().filter(call => call.path.endsWith('/publish'))).toHaveLength(0)
     expect(success).toHaveBeenCalledExactlyOnceWith('Knife created as a draft with 1 variant.')
+  })
+
+  it('[T-007B] Publish makes the keepsake, then publishes it with the version it was made at', { timeout: 20_000 }, async () => {
+    const success = vi.spyOn(toast, 'success')
+    const answer = state.answer
+
+    const added = '0198a000-0000-7000-8000-0000000000e2'
+
+    state.answer = (call) => {
+      if (call.method === 'POST' && call.path === `${base}/${productId}/publish`)
+        return Response.json(product({ status: 'published', rowVersion: 2 }))
+      if (call.path === `/api/store/${storeId}/media/uploads`)
+        return Response.json({ uploadKey: 'k/u.jpg', url: 'https://storage.test/uploads/k/u.jpg', method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, expiresAt: '2026-10-30T09:00:00.000Z', kind: 'image' })
+      if (call.path.startsWith('/uploads/'))
+        return new Response(null, { status: 200 })
+      if (call.path === `/api/store/${storeId}/media/confirm`)
+        return Response.json({ ...media, id: added }, { status: 201 })
+      if (call.path === `/api/store/${storeId}/media/${added}`)
+        return Response.json({ ...media, id: added })
+
+      return answer(call)
+    }
+    const router = renderKeepsakes('/store/products/gifts/new')
+
+    await userEvent.type(await nameField(), 'Knife')
+    await userEvent.type(screen.getByLabelText('Text (English)'), 'A knife')
+    await userEvent.upload(screen.getByTestId('photo-input'), new File(['x'], 'knife.jpg', { type: 'image/jpeg' }))
+    await waitFor(() => expect(state.calls.map(call => call.path)).toContain(`/api/store/${storeId}/media/confirm`), SLOW)
+    await next()
+    await screen.findByRole('region', { name: 'Options' })
+    await next()
+    await screen.findByRole('region', { name: 'Variants' })
+    await addVariant('39')
+    await next()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled(), SLOW)
+    await publish()
+
+    const keepsake = () => writes().filter(call => call.path.startsWith(base))
+
+    await waitFor(() => expect(keepsake()).toHaveLength(2), SLOW)
+    expect(keepsake()[0]).toMatchObject({ method: 'POST', path: base })
+    expect(keepsake()[1]).toMatchObject({ method: 'POST', path: `${base}/${productId}/publish`, ifMatch: '1' })
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/store/products/gifts/${productId}`), SLOW)
+    expect(success).toHaveBeenCalledExactlyOnceWith('Published in English. Guests see it within about a minute.')
+  })
+
+  it('[T-007B] the draft survives a reload: the name, the variant and the step come back, and leaving for good clears them', async () => {
+    renderKeepsakes('/store/products/gifts/new')
+
+    await toVariants()
+    await addVariant('39')
+    cleanup()
+    renderKeepsakes('/store/products/gifts/new')
+
+    expect(await screen.findByRole('button', { name: /KNIFE/ }, SLOW)).toHaveTextContent('CHF 39.00')
+    expect(screen.getByText(/Step 3 of 4/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: '1. Details, Done' }))
+    expect(await nameField()).toHaveValue('Knife')
+    await userEvent.click(screen.getByRole('button', { name: 'Back to Keepsakes' }))
+    await userEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Discard keepsake' }))
+    await screen.findByTestId('keepsake-list')
+    cleanup()
+    renderKeepsakes('/store/products/gifts/new')
+
+    expect(await nameField()).toHaveValue('')
+  })
+
+  it('[T-007B] Review reads the draft: it blocks Publish for a missing photo and names it, and Edit opens the step', async () => {
+    renderKeepsakes('/store/products/gifts/new')
+
+    await toVariants()
+    await addVariant('39')
+    await next()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+
+    expect(within(screen.getByTestId('publish-checks')).getByText('Add at least one photo.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Save as draft' })).toBeEnabled()
+    await userEvent.click(within(screen.getByTestId('publish-checks')).getAllByRole('button', { name: 'Edit' })[0]!)
+    expect(await screen.findByRole('region', { name: 'Photos' })).toBeVisible()
   })
 
   it('[T-005] the commission set in Details goes with the create request', async () => {
@@ -150,28 +261,30 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await next()
     await screen.findByRole('region', { name: 'Options' })
     await next()
-    await userEvent.type(await screen.findByLabelText('SKU code for One variant'), 'K-1')
-    await typePrice('10')
-    await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
+    await addVariant('10', 'K-1')
+    await next()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    await saveDraft()
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]!.body).toMatchObject({ commissionRate: 0.15 })
   })
 
-  it('[T-005] pressing Create keepsake twice makes one keepsake', async () => {
+  it('[T-005] pressing Save as draft twice makes one keepsake', async () => {
     renderKeepsakes('/store/products/gifts/new')
 
     await toVariants()
-    await userEvent.type(screen.getByLabelText('SKU code for One variant'), 'K-1')
-    await typePrice('10')
-    await userEvent.dblClick(screen.getByRole('button', { name: 'Create keepsake' }))
+    await addVariant('10', 'K-1')
+    await next()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    await userEvent.dblClick(screen.getByRole('button', { name: 'Save as draft' }))
 
     await waitFor(() => expect(writes().length).toBeGreaterThan(0))
-    await screen.findByTestId('review-screen', undefined, SLOW)
+    await waitFor(() => expect(screen.getByRole('button', { name: /^4\. Review and publish/ })).toHaveAttribute('aria-current', 'step'))
     expect(writes().filter(call => call.method === 'POST')).toHaveLength(1)
   })
 
-  it('[T-005] refuses a code that is not letters and digits before any request, and says a taken code is used in the shop above the step', async () => {
+  it('[T-007B] a code that is not letters and digits is refused at the field before any request, and a taken one is said to be used in the shop', async () => {
     const answer = state.answer
     const danger = vi.spyOn(toast, 'danger')
 
@@ -179,18 +292,23 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     renderKeepsakes('/store/products/gifts/new')
 
     await toVariants()
-    await userEvent.type(await screen.findByLabelText('SKU code for One variant'), 'bad code')
-    await typePrice('10')
-    await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
-    expect(await screen.findByText('Letters and digits, joined by - _ or . (like VX-S-SWAN).')).toBeInTheDocument()
-    expect(writes()).toHaveLength(0)
-    await userEvent.clear(screen.getByLabelText('SKU code for One variant'))
-    await userEvent.type(screen.getByLabelText('SKU code for One variant'), 'vx-1')
-    await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
+    await userEvent.click(screen.getAllByRole('button', { name: 'Add variant' })[0]!)
+    const form = await screen.findByRole('form', { name: 'New variant' })
+
+    await userEvent.type(within(form).getByLabelText('SKU code'), 'bad code')
+    await userEvent.type(within(form).getByLabelText('Price, CHF'), '10')
+    await userEvent.click(within(form).getByRole('button', { name: 'Add variant' }))
+    expect(await within(form).findByText('Letters and digits, joined by - _ or . (like VX-S-SWAN).')).toBeInTheDocument()
+    await userEvent.clear(within(form).getByLabelText('SKU code'))
+    await userEvent.type(within(form).getByLabelText('SKU code'), 'vx-1')
+    await userEvent.click(within(form).getByRole('button', { name: 'Add variant' }))
+    await next()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    await saveDraft()
 
     expect(await screen.findByText('This SKU code is already used in your shop.')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1, name: 'New keepsake' })).toBeInTheDocument()
-    expect(screen.queryByTestId('review-screen')).not.toBeInTheDocument()
+    expect(writes().filter(call => call.method === 'POST')).toHaveLength(1)
     expect(danger).not.toHaveBeenCalled()
   })
 
@@ -235,7 +353,7 @@ describe('[E6.1][create] a new keepsake in the stepped editor, in English', () =
     await screen.findByRole('heading', { level: 3, name: 'Options' })
     expect(document.body.textContent).not.toMatch(/engrav|sub-?categor|deposit|pay later/i)
     await next()
-    await screen.findByLabelText('SKU code for One variant')
+    await screen.findByRole('region', { name: 'Variants' })
     expect(document.body.textContent).not.toMatch(/engrav|sub-?categor|deposit|pay later/i)
   })
 })
@@ -268,7 +386,7 @@ describe('[T-005] photos on a new keepsake', () => {
     return release
   }
 
-  it('[T-005] refuses Create keepsake while a photo is still uploading, and makes it with the photo once the upload is done', { timeout: 20_000 }, async () => {
+  it('[T-005] refuses Save as draft while a photo is still uploading, and makes it with the photo once the upload is done', { timeout: 20_000 }, async () => {
     const release = holdUpload()
 
     renderKeepsakes('/store/products/gifts/new')
@@ -278,15 +396,16 @@ describe('[T-005] photos on a new keepsake', () => {
     await next()
     await screen.findByRole('region', { name: 'Options' })
     await next()
-    await userEvent.type(await screen.findByLabelText('SKU code for One variant'), 'K-1')
-    await typePrice('10')
-    await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
+    await addVariant('10', 'K-1')
+    await next()
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    await saveDraft()
 
     expect(await screen.findByText('A photo is still uploading. Wait until it is done, then create the keepsake.')).toBeInTheDocument()
     expect(writes().filter(call => call.method === 'POST' && call.path === base)).toHaveLength(0)
     release()
     await waitFor(() => expect(state.calls.map(call => call.path)).toContain(`/api/store/${storeId}/media/confirm`), SLOW)
-    await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
+    await saveDraft()
 
     await waitFor(() => expect(writes().filter(call => call.method === 'POST' && call.path === base)).toHaveLength(1), SLOW)
     expect(writes().find(call => call.path === base)!.body).toMatchObject({ photoIds: [added] })
@@ -316,9 +435,18 @@ describe('[E6.1][i18n] a new keepsake in German', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
     await screen.findByRole('region', { name: 'Optionen' })
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'Andenken erstellen' }))
-    expect(await screen.findByText('Geben Sie einen SKU-Code ein.')).toBeInTheDocument()
-    expect(screen.getByText('Geben Sie einen Preis über CHF 0 ein.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
+    expect(await screen.findByText('Fügen Sie mindestens eine Variante hinzu.')).toBeInTheDocument()
+    await userEvent.click(screen.getAllByRole('button', { name: 'Variante hinzufügen' })[0]!)
+    const form = await screen.findByRole('form', { name: 'Neue Variante' })
+
+    expect(within(form).getByText('Beginnt mit Bestand 0. Der Bestand wird im Inventar gesetzt.')).toBeInTheDocument()
+    await userEvent.type(within(form).getByLabelText('Preis, CHF'), '39')
+    await userEvent.click(within(form).getByRole('button', { name: 'Variante hinzufügen' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    expect(screen.getByRole('button', { name: 'Als Entwurf speichern' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Veröffentlichen' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Zurück zu Andenken' }))
 
     expect(await screen.findByRole('alertdialog')).toHaveTextContent('Dieses Andenken verwerfen?')

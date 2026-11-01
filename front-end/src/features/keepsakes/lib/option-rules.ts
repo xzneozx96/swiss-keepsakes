@@ -368,62 +368,6 @@ export function variantRefusalText(t: Translate, refusal: Refusal, combination: 
   return refusalText(t, refusal)
 }
 
-/** One row of the create flow: a combination, ticked or not, with its code and price. */
-export interface CreateRow {
-  key: string
-  values: Values
-  sold: boolean
-  code: string
-  /** In francs, as typed. */
-  price: number | undefined
-}
-
-/** All combinations of the options, ticked, with a suggested code. Rows that stay keep what was typed. */
-export function createRows(options: OptionDraft[], previous: CreateRow[] = []): CreateRow[] {
-  const saved = asSaved(options)
-  const refs = options.map(option => option.ref)
-
-  return allCombinations(options.map(option => ({ ref: option.ref, values: option.values.filter(value => labelOfDraft(value)) }))).map((values) => {
-    const key = combinationKey(values, refs)
-    const kept = previous.find(row => row.key === key)
-
-    return kept ?? { key, values, sold: true, code: options.length ? suggestCode(values, saved.map(o => ({ id: o.id, values: o.values }))) : '', price: undefined }
-  })
-}
-
-export type CreateErrors = Record<string, { code?: 'required' | 'invalid' | 'twice', price?: boolean }>
-
-const SKU_CODE = /^[A-Z0-9]+(?:[-_.][A-Z0-9]+)*$/i
-
-/** What stops Create: no ticked row, or a ticked row without a valid, unique code or a price above 0. */
-export function createErrors(rows: CreateRow[]): { rows: CreateErrors, none: boolean } {
-  const sold = rows.filter(row => row.sold)
-  const errors: CreateErrors = {}
-
-  sold.forEach((row, index) => {
-    const code = row.code.trim()
-    const found: CreateErrors[string] = {}
-
-    if (!code)
-      found.code = 'required'
-    else if (!SKU_CODE.test(code))
-      found.code = 'invalid'
-    else if (sold.some((other, i) => i < index && other.code.trim().toLowerCase() === code.toLowerCase()))
-      found.code = 'twice'
-    if (row.price === undefined || !Number.isFinite(row.price) || row.price <= 0)
-      found.price = true
-    if (found.code || found.price)
-      errors[row.key] = found
-  })
-
-  return { rows: errors, none: sold.length === 0 }
-}
-
-/** The variants a save of these rows creates, with values by option ref and value ref. */
-export function variantsOfRows(rows: CreateRow[]): { skuCode: string, priceRappen: number, values: Values }[] {
-  return rows.filter(row => row.sold).map(row => ({ skuCode: row.code.trim(), priceRappen: Math.round((row.price ?? 0) * 100), values: row.values }))
-}
-
 /** Variants by tab: the status the guest-facing list keeps apart. Archived variants have a tab of their own. */
 export function isArchived(variant: Pick<ProductVariant, 'status'>): boolean {
   return variant.status === 'archived'

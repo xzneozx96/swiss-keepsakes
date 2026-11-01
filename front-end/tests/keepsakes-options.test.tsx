@@ -81,11 +81,6 @@ async function openEditor(step?: 'options' | 'variants') {
 const optionsCard = () => screen.getByRole('region', { name: 'Options' })
 const variantsCard = () => screen.getByRole('region', { name: 'Variants' })
 
-async function openMenu(card: HTMLElement, label: string, item: string) {
-  await userEvent.click(within(card).getAllByRole('button', { name: label })[0]!)
-  await userEvent.click(await screen.findByRole('menuitem', { name: item }))
-}
-
 const optionList = () => within(optionsCard()).getByRole('navigation', { name: 'Options' })
 const optionDetail = () => within(optionsCard()).getByTestId('option-detail')
 const saveLine = () => within(optionsCard()).getByTestId('save-line')
@@ -447,115 +442,194 @@ describe('[T-007A] the Options step on a phone: the list, and an option in the s
   })
 })
 
-describe('[E6.2][AC52] the Variants card N15', () => {
-  it('[E6.2][AC52] has one column per option, the tabs with counts, and says how many combinations are sold', async () => {
+/** A value of an option, picked in the app's select. */
+async function choose(form: HTMLElement, option: string, value: string) {
+  await userEvent.click(within(form).getByRole('button', { name: new RegExp(option) }))
+  await userEvent.click(await screen.findByRole('option', { name: new RegExp(value) }))
+}
+
+const row = (name: RegExp) => within(variantsCard()).getByRole('button', { name })
+
+async function newVariant() {
+  await userEvent.click(within(variantsCard()).getAllByRole('button', { name: 'Add variant' })[0]!)
+
+  return screen.findByRole('form', { name: 'New variant' })
+}
+
+describe('[T-007B] the Variants step: the list and the chosen variant', () => {
+  it('[T-007B] lists the variants for sale and hidden with price and status as coloured text, and folds the archived one away', async () => {
     await openEditor('variants')
 
     const card = variantsCard()
-    const grid = within(card).getByRole('grid', { name: 'Variants' })
 
-    expect(within(grid).getAllByRole('columnheader').map(h => h.textContent)).toEqual(['Variant', 'Size', 'Theme', 'Price', 'Status', 'Actions'])
-    expect(within(card).getByRole('tab', { name: /All/ })).toHaveTextContent('2')
-    expect(within(card).getByRole('tab', { name: /For sale/ })).toHaveTextContent('1')
-    expect(within(card).getByRole('tab', { name: /Hidden/ })).toHaveTextContent('1')
-    expect(within(card).getByRole('tab', { name: /Archived/ })).toHaveTextContent('1')
-    expect(within(grid).getByText('VX-S-SWAN').closest('a')).toHaveAttribute('href', `/store/products/gifts/${productId}/variants/${v1}`)
+    expect(row(/Small · Swan/)).toHaveTextContent('CHF 39.00 · On sale')
+    expect(within(row(/Small · Swan/)).getByText('On sale')).toHaveClass('text-success')
+    expect(row(/Large · Swan/)).toHaveTextContent('CHF 49.00 · Hidden')
+    expect(within(row(/Large · Swan/)).getByText('Hidden')).toHaveClass('text-muted')
+    expect(within(card).queryByRole('button', { name: /Lion Monument/ })).not.toBeInTheDocument()
+    expect(within(card).getByText('1 archived')).toBeInTheDocument()
+    expect(within(card).getByText('Kept for old orders. An archived variant can’t be put back on sale.')).toBeInTheDocument()
     expect(within(card).getByText('Only these combinations are sold: 2 of 4 possible. Stock is set in Inventory.')).toBeInTheDocument()
-    expect(within(grid).queryByText('VX-S-LION')).not.toBeInTheDocument()
+    expect(within(card).getByText('Choose a variant to change it, or add one.')).toBeInTheDocument()
+    expect(document.body.textContent).not.toMatch(/restore|in stock \d|sold out/i)
   })
 
-  it('[E6.2][AC52] the Archived tab lists archived variants and offers no action, so there is no restore', async () => {
+  it('[T-007B] opening a variant shows its name, values, price and code, and All variants goes back', async () => {
     await openEditor('variants')
 
-    await userEvent.click(within(variantsCard()).getByRole('tab', { name: /Archived/ }))
+    await userEvent.click(row(/Small · Swan/))
+    const form = await screen.findByRole('form', { name: 'Edit Small · Swan' })
 
-    const grid = within(variantsCard()).getByRole('grid', { name: 'Variants' })
-
-    expect(within(grid).getByText('VX-S-LION')).toBeInTheDocument()
-    expect(within(grid).queryByRole('button', { name: 'Actions for VX-S-LION' })).not.toBeInTheDocument()
-    expect(document.body.textContent).not.toMatch(/restore/i)
+    expect(within(form).getByRole('heading', { level: 4, name: 'Small · Swan' })).toBeInTheDocument()
+    expect(within(form).getByText('Stock is set in Inventory.')).toBeInTheDocument()
+    expect(within(form).getByLabelText('Price, CHF')).toHaveValue('39.00')
+    expect(within(form).getByLabelText('SKU code')).toHaveValue('VX-S-SWAN')
+    expect(within(form).getByRole('switch', { name: 'On sale' })).toBeChecked()
+    await userEvent.click(within(form).getByRole('button', { name: 'All variants' }))
+    expect(screen.queryByRole('form', { name: 'Edit Small · Swan' })).not.toBeInTheDocument()
   })
 
-  it('[E6.2][AC52] Create variant: a combination that is sold is refused at the values, archived twins say so, and nothing is sent', async () => {
+  it('[T-007B][AC-6] a value that would repeat a combination stays listed, disabled, and says which combination exists', async () => {
     await openEditor('variants')
 
-    await userEvent.click(within(variantsCard()).getByRole('button', { name: 'Create' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Create variant' })
+    const form = await newVariant()
 
-    await userEvent.click(within(dialog).getByRole('row', { name: 'Small' }))
-    await userEvent.click(within(dialog).getByRole('row', { name: 'Swan' }))
-    await userEvent.type(within(dialog).getByLabelText('SKU code'), 'vx-dup')
-    await userEvent.type(within(dialog).getByLabelText('Price'), '39')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Create variant' }))
+    await choose(form, 'Theme', 'Swan')
+    await userEvent.click(within(form).getByRole('button', { name: /Size/ }))
+    const small = await screen.findByRole('option', { name: /Small/ })
 
-    expect(await within(dialog).findByText('Small · Swan is already sold as VX-S-SWAN. Each combination is sold once.')).toBeInTheDocument()
-    await userEvent.click(within(dialog).getByRole('row', { name: 'Lion Monument' }))
-    expect(await within(dialog).findByText(/Small · Lion Monument is already VX-S-LION, archived\./)).toBeInTheDocument()
+    expect(small).toHaveAttribute('aria-disabled', 'true')
+    expect(small).toHaveTextContent('Small · Swan already exists')
+    expect(screen.getByRole('option', { name: /Large/ })).toHaveAttribute('aria-disabled', 'true')
     expect(writes()).toHaveLength(0)
   })
 
-  it('[E6.2][AC52] Create variant: a missing value, a bad code and no price are refused at their fields', async () => {
+  it('[T-007B][AC-6] an archived combination stays taken: Small and Lion Monument is disabled too', async () => {
     await openEditor('variants')
 
-    await userEvent.click(within(variantsCard()).getByRole('button', { name: 'Create' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Create variant' })
+    const form = await newVariant()
 
-    await userEvent.click(within(dialog).getByRole('row', { name: 'Large' }))
-    await userEvent.type(within(dialog).getByLabelText('SKU code'), 'bad code')
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Create variant' }))
+    await choose(form, 'Size', 'Small')
+    await userEvent.click(within(form).getByRole('button', { name: /Theme/ }))
 
-    expect(await within(dialog).findByText('A variant needs a theme.')).toBeInTheDocument()
-    expect(within(dialog).getByText('Letters and digits, joined by - _ or . (like VX-S-SWAN).')).toBeInTheDocument()
-    expect(within(dialog).getByText('Add a price above CHF 0.')).toBeInTheDocument()
-    expect(writes()).toHaveLength(0)
+    expect(await screen.findByRole('option', { name: /Lion Monument/ })).toHaveAttribute('aria-disabled', 'true')
   })
 
-  it('[E6.2][AC52] Create variant sends one request with the value of every option, for sale', async () => {
+  it('[T-007B][AC-6] the API refusing a combination names the existing variant, archived ones included', async () => {
+    serve(call => (call.method === 'POST' && call.path === `${detail}/variants`
+      ? refused([{ in: 'body', path: 'values', message: 'x', code: 'combination-taken', params: { code: 'VX-S-LION', archived: 1 } }])
+      : undefined))
+    await openEditor('variants')
+
+    const form = await newVariant()
+
+    await choose(form, 'Size', 'Large')
+    await choose(form, 'Theme', 'Lion Monument')
+    await userEvent.type(within(form).getByLabelText('Price, CHF'), '49')
+    await userEvent.click(within(form).getByRole('button', { name: 'Add variant' }))
+
+    expect(await within(form).findByText(/Large · Lion Monument is already VX-S-LION, archived\./)).toBeInTheDocument()
+  })
+
+  it('[T-007B][AC-5] Add variant sends one request with the value of every option, the code made from them and the price, for sale', async () => {
     const success = vi.spyOn(toast, 'success')
     serve(call => (call.method === 'POST' && call.path === `${detail}/variants` ? Response.json(product({ options, variants }), { status: 201 }) : undefined))
     await openEditor('variants')
 
-    await userEvent.click(within(variantsCard()).getByRole('button', { name: 'Create' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Create variant' })
+    const form = await newVariant()
 
-    await userEvent.click(within(dialog).getByRole('row', { name: 'Large' }))
-    await userEvent.click(within(dialog).getByRole('row', { name: 'Lion Monument' }))
-    await userEvent.click(await within(dialog).findByRole('button', { name: 'Use VX-L-LION' }))
-    await userEvent.type(within(dialog).getByLabelText('Price'), '49')
-    await userEvent.tab()
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Create variant' }))
+    expect(within(form).getByText('Starts with 0 in stock. Stock is set in Inventory.')).toBeInTheDocument()
+    await choose(form, 'Size', 'Large')
+    await choose(form, 'Theme', 'Lion Monument')
+    expect(within(form).getByRole('heading', { level: 4, name: 'Large · Lion Monument' })).toBeInTheDocument()
+    expect(within(form).getByLabelText('SKU code')).toHaveAttribute('placeholder', 'VX-L-LION')
+    await userEvent.type(within(form).getByLabelText('Price, CHF'), '49')
+    await userEvent.click(within(form).getByRole('button', { name: 'Add variant' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'POST', path: `${detail}/variants`, ifMatch: null, body: { skuCode: 'VX-L-LION', priceRappen: 4900, status: 'published', values: { [optSize]: vLarge, [optTheme]: vLion } } })
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Create variant' })).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByRole('form', { name: 'New variant' })).not.toBeInTheDocument())
     expect(success).toHaveBeenCalledExactlyOnceWith('VX-L-LION created.')
   })
 
-  it('[E6.2][AC52] a code another keepsake uses is refused at the code field', async () => {
+  it('[T-007B] a missing value, a bad code and no price are refused at their fields before any request', async () => {
+    await openEditor('variants')
+
+    const form = await newVariant()
+
+    await choose(form, 'Size', 'Large')
+    await userEvent.type(within(form).getByLabelText('SKU code'), 'bad code')
+    await userEvent.click(within(form).getByRole('button', { name: 'Add variant' }))
+
+    expect(await within(form).findByText(/needs a theme\./)).toBeInTheDocument()
+    expect(within(form).getByText('Letters and digits, joined by - _ or . (like VX-S-SWAN).')).toBeInTheDocument()
+    expect(within(form).getByText('Add a price above CHF 0.')).toBeInTheDocument()
+    expect(writes()).toHaveLength(0)
+  })
+
+  it('[T-007B] a code another keepsake uses is refused at the code field', async () => {
     serve(call => (call.method === 'POST' ? problem(409, 'sku-code-taken') : undefined))
     await openEditor('variants')
 
-    await userEvent.click(within(variantsCard()).getByRole('button', { name: 'Create' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Create variant' })
+    const form = await newVariant()
 
-    await userEvent.click(within(dialog).getByRole('row', { name: 'Large' }))
-    await userEvent.click(within(dialog).getByRole('row', { name: 'Lion Monument' }))
-    await userEvent.type(within(dialog).getByLabelText('SKU code'), 'vx-9')
-    await userEvent.type(within(dialog).getByLabelText('Price'), '10')
-    await userEvent.tab()
-    await userEvent.click(within(dialog).getByRole('button', { name: 'Create variant' }))
+    await choose(form, 'Size', 'Large')
+    await choose(form, 'Theme', 'Lion Monument')
+    await userEvent.type(within(form).getByLabelText('SKU code'), 'vx-9')
+    await userEvent.type(within(form).getByLabelText('Price, CHF'), '10')
+    await userEvent.click(within(form).getByRole('button', { name: 'Add variant' }))
 
-    expect(await within(dialog).findByText('VX-9 is already used in your shop.')).toBeInTheDocument()
+    expect(await within(form).findByText('VX-9 is already used in your shop.')).toBeInTheDocument()
   })
 
-  it('[E6.2][AC52] Archive asks first, then sends the status; a variant with reserved units is refused with the number', async () => {
+  it('[T-007B] a changed price saves with the code, the status and the values, and the list shows it', async () => {
+    const success = vi.spyOn(toast, 'success')
+    const next = variants.map(variant => (variant.id === v1 ? { ...variant, priceRappen: 4500 } : variant))
+
+    serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${v1}` ? Response.json(product({ options, variants: next })) : undefined))
+    await openEditor('variants')
+
+    await userEvent.click(row(/Small · Swan/))
+    const form = await screen.findByRole('form', { name: 'Edit Small · Swan' })
+
+    await userEvent.clear(within(form).getByLabelText('Price, CHF'))
+    await userEvent.type(within(form).getByLabelText('Price, CHF'), '45')
+    await userEvent.click(within(form).getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `${detail}/variants/${v1}`, ifMatch: null, body: { skuCode: 'VX-S-SWAN', priceRappen: 4500, status: 'published', values: { [optSize]: vSmall, [optTheme]: vSwan } } })
+    expect(await screen.findByRole('button', { name: /Small · Swan/ })).toHaveTextContent('CHF 45.00')
+    expect(success).toHaveBeenCalledExactlyOnceWith('VX-S-SWAN saved.')
+  })
+
+  it('[T-007B] the On sale switch off hides the variant', async () => {
+    const next = variants.map(variant => (variant.id === v1 ? { ...variant, status: 'draft' } : variant))
+
+    serve(call => (call.method === 'PATCH' ? Response.json(product({ options, variants: next })) : undefined))
+    await openEditor('variants')
+
+    await userEvent.click(row(/Small · Swan/))
+    const form = await screen.findByRole('form', { name: 'Edit Small · Swan' })
+
+    await userEvent.click(within(form).getByRole('switch', { name: 'On sale' }))
+    await userEvent.click(within(form).getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(writes()).toHaveLength(1))
+    expect(writes()[0]!.body).toMatchObject({ status: 'draft' })
+    expect(await screen.findByRole('button', { name: /Small · Swan/ })).toHaveTextContent('Hidden')
+  })
+
+  it('[T-007B] Archive asks first, then sends the status; a variant with reserved units is refused with the number, in the detail', async () => {
     const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${v1}`
       ? refused([{ in: 'body', path: 'status', message: 'x', code: 'variant-reserved', params: { code: 'VX-S-SWAN', count: 2 } }])
       : undefined))
     await openEditor('variants')
 
-    await openMenu(variantsCard(), 'Actions for VX-S-SWAN', 'Archive')
+    await userEvent.click(row(/Small · Swan/))
+    const form = await screen.findByRole('form', { name: 'Edit Small · Swan' })
+
+    await userEvent.click(within(form).getByRole('button', { name: 'Archive variant' }))
     const dialog = await screen.findByRole('alertdialog')
 
     expect(dialog).toHaveTextContent('Archive VX-S-SWAN?')
@@ -563,8 +637,29 @@ describe('[E6.2][AC52] the Variants card N15', () => {
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `${detail}/variants/${v1}`, body: { status: 'archived' } })
-    expect(await within(variantsCard()).findByRole('alert')).toHaveTextContent('Can’t archive VX-S-SWAN. 2 units are reserved by open orders.')
+    expect(await within(form).findByRole('alert')).toHaveTextContent('Can’t archive VX-S-SWAN. 2 units are reserved by open orders.')
     expect(danger).not.toHaveBeenCalled()
+  })
+
+  it('[T-007B] a keepsake with no variant shows the empty state with Add variant', async () => {
+    current = product({ options, variants: [] })
+    serve()
+    await openEditor('variants')
+
+    const card = variantsCard()
+
+    expect(within(card).getByText('No variants yet.')).toBeInTheDocument()
+    await userEvent.click(within(card).getByRole('button', { name: 'Add variant' }))
+    expect(await screen.findByRole('form', { name: 'New variant' })).toBeInTheDocument()
+  })
+
+  it('[T-007B] once every combination exists there is no Add variant, only the choice to open one', async () => {
+    current = product({ options, variants: [...variants, { id: id(0xD4), skuCode: 'VX-L-LION', priceRappen: 4900, status: 'published', values: { [optSize]: vLarge, [optTheme]: vLion } }] })
+    serve()
+    await openEditor('variants')
+
+    expect(within(variantsCard()).queryByRole('button', { name: 'Add variant' })).not.toBeInTheDocument()
+    expect(within(variantsCard()).getByText('Choose a variant to change it.')).toBeInTheDocument()
   })
 })
 
@@ -654,7 +749,7 @@ describe('[T-007A][AC-7] a new keepsake with options: the same control, held in 
     view.wide = true
   })
 
-  it('[T-007A] has the list and the option and no Save line; Next then every combination ticked, and it all goes in one request', async () => {
+  it('[T-007A] has the list and the option and no Save line; the variant takes a value of it, and it all goes in one request at step 4', async () => {
     serve(call => (call.method === 'POST' && call.path === base ? Response.json(product({ options, variants }), { status: 201 }) : undefined))
     await toNewOptions()
     await addColour()
@@ -663,18 +758,20 @@ describe('[T-007A][AC-7] a new keepsake with options: the same control, held in 
     expect(within(optionsCard()).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
     expect(within(optionsCard()).queryByText(/Unsaved changes|All changes saved/)).not.toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByRole('region', { name: 'Variants' })
+    await userEvent.click(screen.getAllByRole('button', { name: 'Add variant' })[0]!)
+    const form = await screen.findByRole('form', { name: 'New variant' })
 
-    expect(await screen.findByRole('heading', { level: 3, name: '2 of 2 combinations ticked' })).toBeInTheDocument()
-    expect(screen.getByLabelText('SKU code for Navy')).toHaveValue('VX-N')
-    await userEvent.click(screen.getByRole('checkbox', { name: /Black/ }))
-    expect(await screen.findByRole('heading', { level: 3, name: '1 of 2 combinations ticked' })).toBeInTheDocument()
-    expect(screen.getByText('Not sold')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
-    expect(await screen.findByText('Add a price above CHF 0.')).toBeInTheDocument()
+    await userEvent.click(within(form).getByRole('button', { name: /Colour/ }))
+    await userEvent.click(await screen.findByRole('option', { name: 'Navy' }))
+    expect(within(form).getByLabelText('SKU code')).toHaveAttribute('placeholder', 'VX-N')
+    await userEvent.type(within(form).getByLabelText('Price, CHF'), '39')
+    await userEvent.click(within(form).getByRole('button', { name: 'Add variant' }))
+    expect(await screen.findByRole('button', { name: /Navy/ })).toHaveTextContent('CHF 39.00 · On sale')
     expect(writes()).toHaveLength(0)
-    await userEvent.type(screen.getByLabelText('Price for Navy'), '39')
-    await userEvent.tab()
-    await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByTestId('review-screen', undefined, SLOW)
+    await userEvent.click(screen.getByRole('button', { name: 'Save as draft' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     const body = writes()[0]!.body as { options: { ref: string, name: object, values: { ref: string, label: object }[] }[], variants: { skuCode: string, priceRappen: number, values: Record<string, string> }[] }
@@ -683,7 +780,6 @@ describe('[T-007A][AC-7] a new keepsake with options: the same control, held in 
     expect(body.options[0]!.name).toEqual({ en: 'Colour' })
     expect(body.options[0]!.values.map(v => v.label)).toEqual([{ en: 'Navy' }, { en: 'Black' }])
     expect(body.variants).toEqual([{ skuCode: 'VX-N', priceRappen: 3900, values: { [body.options[0]!.ref]: body.options[0]!.values[0]!.ref } }])
-    expect(await screen.findByTestId('review-screen', undefined, SLOW)).toBeInTheDocument()
   })
 
   it('[T-007A] Next on Options is refused with what is wrong, shown at the option, and the step stays', async () => {
@@ -698,22 +794,29 @@ describe('[T-007A][AC-7] a new keepsake with options: the same control, held in 
     expect(writes()).toHaveLength(0)
   })
 
-  it('[T-007A] the Variants step offers Tick at least one combination, and Price for all ticked fills every price', async () => {
+  it('[T-007B] an option changed after a variant was added leaves the variant needing a value, and Next refuses it', async () => {
     await toNewOptions()
     await addColour()
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
-    await screen.findByRole('heading', { level: 3, name: '2 of 2 combinations ticked' })
+    await screen.findByRole('region', { name: 'Variants' })
+    await userEvent.click(screen.getAllByRole('button', { name: 'Add variant' })[0]!)
+    const form = await screen.findByRole('form', { name: 'New variant' })
 
-    await userEvent.type(screen.getByLabelText('Price for all ticked'), '25')
-    await userEvent.tab()
-    await userEvent.click(screen.getByRole('button', { name: 'Apply' }))
-    expect((screen.getByLabelText('Price for Navy') as HTMLInputElement).value).toMatch(/CHF.?25/)
-    expect((screen.getByLabelText('Price for Black') as HTMLInputElement).value).toMatch(/CHF.?25/)
-    await userEvent.click(screen.getByRole('checkbox', { name: /Navy/ }))
-    await userEvent.click(screen.getByRole('checkbox', { name: /Black/ }))
-    await userEvent.click(screen.getByRole('button', { name: 'Create keepsake' }))
+    await userEvent.click(within(form).getByRole('button', { name: /Colour/ }))
+    await userEvent.click(await screen.findByRole('option', { name: 'Navy' }))
+    await userEvent.type(within(form).getByLabelText('Price, CHF'), '39')
+    await userEvent.click(within(form).getByRole('button', { name: 'Add variant' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
+    await userEvent.click(await screen.findByRole('button', { name: /^Colour/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Remove Navy' }))
+    await userEvent.type(screen.getByPlaceholderText('Add a value and press Enter'), 'Red{Enter}')
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    await screen.findByRole('region', { name: 'Variants' })
 
-    expect(await screen.findByText('Tick at least one combination.')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /…/ })).toHaveTextContent('Needs a value')
+    await userEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(await screen.findByText('1 variant needs a value. Open it to choose.')).toBeInTheDocument()
+    expect(screen.getByText(/Step 3 of 4/)).toBeInTheDocument()
     expect(writes()).toHaveLength(0)
   })
 
@@ -721,7 +824,7 @@ describe('[T-007A][AC-7] a new keepsake with options: the same control, held in 
     await toNewOptions()
     await addColour()
     await userEvent.click(screen.getByRole('button', { name: 'Next' }))
-    await screen.findByRole('heading', { level: 3, name: '2 of 2 combinations ticked' })
+    await screen.findByRole('region', { name: 'Variants' })
     await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
 
     expect(await screen.findByLabelText('Option name (English)')).toHaveValue('Colour')
@@ -802,10 +905,10 @@ describe('[E6.2][i18n] the option screens in German', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
     const variantsRegion = await screen.findByRole('region', { name: 'Varianten' })
 
-    expect(within(variantsRegion).getByRole('tab', { name: /Archiviert/ })).toBeInTheDocument()
     expect(within(variantsRegion).getByText('Nur diese Kombinationen werden verkauft: 2 von 4 möglichen. Der Bestand wird im Inventar gesetzt.')).toBeInTheDocument()
-    await userEvent.click(within(variantsRegion).getByRole('button', { name: 'Erstellen' }))
-    expect(await screen.findByRole('dialog', { name: 'Variante erstellen' })).toBeInTheDocument()
+    expect(within(variantsRegion).getByText('1 archiviert')).toBeInTheDocument()
+    await userEvent.click(within(variantsRegion).getAllByRole('button', { name: 'Variante hinzufügen' })[0]!)
+    expect(await screen.findByRole('form', { name: 'Neue Variante' })).toBeInTheDocument()
     expect(document.body.textContent).not.toMatch(/keepsakes\.[a-z]/)
     expect(document.body.textContent).not.toMatch(/gravur|unterkategorie|anzahlung|später zahlen/i)
   }, 30_000)

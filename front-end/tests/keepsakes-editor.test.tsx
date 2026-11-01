@@ -6,7 +6,6 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { en } from '@/i18n/en'
 import { writeStored } from '@/lib/storage'
 import { list, listItem, media, photoId, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
 
@@ -137,15 +136,16 @@ describe('[E6.1][AC55] M12 the edit screen in English', () => {
     expect(document.body.textContent).not.toMatch(/engrav|sub-?categor|deposit|pay later|payment deadline|deadline/i)
   })
 
-  it('[E6.1][variant] shows the one variant with its code, price and status, and no stock', async () => {
+  it('[T-007B] shows the one variant of a keepsake with no option by its code, with its price and status, and no stock', async () => {
     await openEditor('variants')
 
-    const grid = screen.getByRole('grid', { name: 'Variants' })
+    const card = screen.getByRole('region', { name: 'Variants' })
 
-    expect(within(grid).getByText('VX-1')).toBeInTheDocument()
-    expect(within(grid).getByText(/CHF\s*39/)).toBeInTheDocument()
-    expect(within(screen.getByRole('region', { name: 'Variants' })).getByRole('tab', { name: /For sale/ })).toBeInTheDocument()
-    expect(within(screen.getByRole('region', { name: 'Variants' })).queryByText(/in stock|reserved|available/i)).not.toBeInTheDocument()
+    expect(within(card).getByRole('button', { name: /VX-1/ })).toHaveTextContent('CHF 39.00 · On sale')
+    expect(within(card).getByText('With no options, the keepsake has exactly one variant.')).toBeInTheDocument()
+    expect(within(card).getByText('Choose a variant to change it.')).toBeInTheDocument()
+    expect(within(card).queryByRole('button', { name: 'Add variant' })).not.toBeInTheDocument()
+    expect(within(card).queryByText(/\d+ in stock|reserved|available/i)).not.toBeInTheDocument()
   })
 })
 
@@ -414,34 +414,6 @@ describe('[E6.1][variant] the default variant', () => {
 
     expect(await within(dialog).findByText('VX-9 is already used in your shop.')).toBeInTheDocument()
     expect(dialog).toBeInTheDocument()
-    expect(danger).not.toHaveBeenCalled()
-  })
-
-  it('[E6.1][variant] Hide from guests changes the status at once and the card lists it under Hidden', async () => {
-    const success = vi.spyOn(toast, 'success')
-    serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? Response.json(save({ variants: [{ id: variantId, skuCode: 'VX-1', priceRappen: 3900, status: 'draft', values: {} }], blocking: [{ code: 'variant-for-sale', card: 'variants' }] })) : undefined))
-    await openEditor('variants')
-
-    await userEvent.click(screen.getAllByRole('button', { name: 'Actions for VX-1' })[0]!)
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Hide from guests' }))
-
-    await waitFor(() => expect(writes()).toHaveLength(1))
-    expect(writes()[0]!.body).toEqual({ status: 'draft' })
-    expect(await within(screen.getByRole('grid', { name: 'Variants' })).findByText('Hidden')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('tab', { name: /For sale/ }))
-    expect(await screen.findAllByText('No variants here.')).not.toHaveLength(0)
-    expect(success).toHaveBeenCalledExactlyOnceWith('VX-1: hidden.')
-  })
-
-  it('[E6.1][variant] a refused Hide from guests is shown in the keepsake words on the card, not as a toast', async () => {
-    const danger = vi.spyOn(toast, 'danger')
-    serve(call => (call.method === 'PATCH' && call.path.includes('/variants/') ? problem(404, 'not-found') : undefined))
-    await openEditor('variants')
-
-    await userEvent.click(screen.getAllByRole('button', { name: 'Actions for VX-1' })[0]!)
-    await userEvent.click(await screen.findByRole('menuitem', { name: 'Hide from guests' }))
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(en['keepsakes.problem.notFound'])
     expect(danger).not.toHaveBeenCalled()
   })
 })

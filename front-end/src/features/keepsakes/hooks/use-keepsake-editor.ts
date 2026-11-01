@@ -10,7 +10,7 @@ import { useDataClient } from '@/features/data-client'
 import { useCommand } from '@/features/data-client/use-command'
 import { useLatest } from '@/hooks/use-latest'
 import { keepsakesQueries } from '../api/queries'
-import { AUTOSAVE_MS, fullLanguages, textOf } from '../lib/keepsake-rules'
+import { AUTOSAVE_MS, publishedText, textOf } from '../lib/keepsake-rules'
 import { keepsakeProblemKeys, problemTypeOf, refusalsOf } from '../lib/problems'
 import { useVariantCommands } from './use-variant-commands'
 
@@ -57,11 +57,7 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
   const save = useCommand('keepsakes', 'save', { meta: { silent: true } })
   const publish = useCommand('keepsakes', 'publish', {
     meta: {
-      success: (published) => {
-        const languages = fullLanguages({ name: textOf(published.name), text: textOf(published.text) })
-
-        return t('keepsakes.toast.published', { languages: languages.map(language => t(`keepsakes.language.${language}`)).join(` ${t('keepsakes.and')} `) })
-      },
+      success: published => publishedText(t, published),
       error: keepsakeProblemKeys,
     },
   })

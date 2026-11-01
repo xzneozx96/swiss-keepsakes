@@ -1,11 +1,10 @@
-import type { Media, ProductOption } from '@sk/api-contract'
+import type { ProductOption } from '@sk/api-contract'
 
 import { Label, Tag, TagGroup } from '@heroui/react'
 
 import { SelectedIcon, StatusDangerIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { labelOf, shortLabel } from '../lib/option-rules'
-import { KeepsakePhoto } from './keepsake-photo'
 
 /** The app's selected option (as the story editor's tags): a red border and the mark. */
 const ACCENT_TAG = 'group relative h-auto min-h-11 items-center justify-start gap-2 rounded-2xl border-2 border-transparent px-3 py-2 before:hidden data-[selected=true]:border-accent data-[selected=true]:bg-default data-[selected=true]:hover:bg-default-hover'
@@ -79,16 +78,4 @@ export function ValueBadge({ option, valueId }: { option: ProductOption, valueId
         </span>
       )
     : <span className="text-xs text-danger">{t('keepsakes.variant.missing')}</span>
-}
-
-/** The keepsake's cover with the variant's colour on its corner, if the keepsake has a colour option. */
-export function VariantThumb({ cover, options, values }: { cover: Media | undefined, options: ProductOption[], values: Record<string, string> }) {
-  const colour = options.find(option => option.values.some(value => value.swatch))
-  const swatch = colour?.values.find(value => value.id === values[colour.id])?.swatch ?? null
-
-  return (
-    <KeepsakePhoto className="size-11 shrink-0 rounded-xl" media={cover} width={160}>
-      {swatch && <Swatch className="absolute end-0.5 bottom-0.5 size-3.5 border-2 border-surface" color={swatch} />}
-    </KeepsakePhoto>
-  )
 }

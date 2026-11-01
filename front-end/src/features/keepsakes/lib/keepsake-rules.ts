@@ -117,3 +117,10 @@ export function checkText(t: Translate, check: PublishCheck): string {
     case 'option-labels': return t((check.count ?? 0) === 1 ? 'keepsakes.check.optionLabels.one' : 'keepsakes.check.optionLabels.other', { count: check.count ?? 0 })
   }
 }
+
+/** The toast after a publish: "Published in English and German." */
+export function publishedText(t: Translate, published: Pick<Product, 'name' | 'text'>): string {
+  const languages = fullLanguages({ name: textOf(published.name), text: textOf(published.text) })
+
+  return t('keepsakes.toast.published', { languages: languages.map(language => t(`keepsakes.language.${language}`)).join(` ${t('keepsakes.and')} `) })
+}

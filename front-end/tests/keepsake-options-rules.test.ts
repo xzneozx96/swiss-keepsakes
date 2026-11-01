@@ -11,8 +11,6 @@ import {
   checkStagedOptions,
   checkVariantValues,
   combinationName,
-  createErrors,
-  createRows,
   draftOfOptions,
   duplicateValue,
   moveItem,
@@ -170,43 +168,6 @@ describe('[E6.2][AC52] what the API says', () => {
 
     expect(found.map(f => f.at)).toEqual(['lion', 'theme', 'theme', 'v1', 'v2', 'values'])
     expect(refusalText(t, found[0]!)).toBe('Can’t delete Lion. Used by 2 variants (A, B). Archive or change those first.')
-  })
-})
-
-describe('[E6.2][AC52] the create flow rows', () => {
-  const options: OptionDraft[] = [
-    { ref: 'colour', name: { en: 'Colour', de: '' }, values: [{ ref: 'navy', label: { en: 'Navy', de: '' }, swatch: null }, { ref: 'black', label: { en: 'Black', de: '' }, swatch: null }] },
-    { ref: 'theme', name: { en: 'Theme', de: '' }, values: [{ ref: 'pilatus', label: { en: 'Pilatus', de: '' }, swatch: null }, { ref: 'chapel', label: { en: 'Chapel Bridge', de: '' }, swatch: null }, { ref: 'blank', label: { en: '', de: '' }, swatch: null }] },
-  ]
-
-  it('[E6.2][AC52] offers every combination ticked with a suggested code, and leaves out a value with no name', () => {
-    const rows = createRows(options)
-
-    expect(rows).toHaveLength(4)
-    expect(rows.every(row => row.sold)).toBe(true)
-    expect(rows.map(row => row.code)).toEqual(['VX-N-PILATUS', 'VX-N-CHAPEL', 'VX-B-PILATUS', 'VX-B-CHAPEL'])
-  })
-
-  it('[E6.2][AC52] rows that stay keep what was typed, and a keepsake with no option gets one row', () => {
-    const first = createRows(options).map((row, index) => (index === 0 ? { ...row, sold: false, price: 39 } : row))
-
-    expect(createRows(options, first)[0]).toMatchObject({ sold: false, price: 39 })
-    expect(createRows([])).toHaveLength(1)
-  })
-
-  it('[E6.2][AC52] Create is refused with no ticked row, a missing, bad or repeated code, or no price', () => {
-    const rows = createRows(options)
-
-    expect(createErrors(rows.map(row => ({ ...row, sold: false }))).none).toBe(true)
-    const typed = rows.map((row, index) => ({ ...row, price: 39, code: ['A-1', 'a-1', 'bad code', ''][index]! }))
-
-    expect(createErrors(typed).rows).toEqual({
-      [rows[1]!.key]: { code: 'twice' },
-      [rows[2]!.key]: { code: 'invalid' },
-      [rows[3]!.key]: { code: 'required' },
-    })
-    expect(createErrors(rows.map(row => ({ ...row, price: 0 }))).rows[rows[0]!.key]).toEqual({ price: true })
-    expect(createErrors(rows.map(row => ({ ...row, price: 39 })))).toEqual({ rows: {}, none: false })
   })
 })
 

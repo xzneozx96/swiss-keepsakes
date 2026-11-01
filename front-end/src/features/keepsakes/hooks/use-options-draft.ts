@@ -32,10 +32,10 @@ const without = (values: Values, key: string) => Object.fromEntries(Object.entri
  * and, for a value typed twice, at once. A delete that a variant forbids is refused where it was pressed (`refusalAt`).
  * Options save whole (ADR-027), so one draft holds all of them and the values that a new option needs on each variant.
  */
-export function useOptionsDraft({ saved, variants }: { saved: ProductOption[], variants: Valued[] }) {
+export function useOptionsDraft({ saved, variants, initial }: { saved: ProductOption[], variants: Valued[], /** Options to start from instead of the saved ones: a new keepsake that a reload brought back. */ initial?: OptionDraft[] }) {
   const savedOptions = draftOfOptions(saved)
   const savedJson = JSON.stringify(savedOptions)
-  const [state, setState] = useState<State>(() => ({ options: savedOptions, assigned: {}, base: savedJson, tried: false, server: [] }))
+  const [state, setState] = useState<State>(() => ({ options: initial ?? savedOptions, assigned: {}, base: savedJson, tried: false, server: [] }))
 
   // The saved options changed under the draft (a save, or the keepsake loaded again): a clean draft follows them, an edited one stays.
   if (state.base !== savedJson)

@@ -23,7 +23,7 @@ import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
 import { OptionsStep } from './options-step'
 import { useLeaveGuard } from './use-leave-guard'
-import { VariantsCard } from './variants-card'
+import { VariantsStep } from './variants-step'
 
 // The phone mockup and the preview load when Review and publish opens, not with the first step.
 const ReviewScreen = lazy(() => import('./review-screen'))
@@ -149,7 +149,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
           />
         </div>
         {step === 'options' && <OptionsStep draft={options} onSave={editor.saveOptions} />}
-        {step === 'variants' && <VariantsCard keepsake={keepsake} onCreate={editor.createVariant} onSave={editor.saveVariant} />}
+        {step === 'variants' && <VariantsStep name={name} options={keepsake.options} variants={keepsake.variants} onCreate={editor.createVariant} onSave={editor.saveVariant} />}
         {onReview && (
           <Suspense fallback={<StepBodySkeleton />}>
             <ReviewScreen actions={{ unpublish: editor.unpublish, isPending: editor.isPublishing }} keepsake={keepsake} onFix={jumpTo} />

@@ -1,6 +1,6 @@
 import type { Product, ProductVariant } from '@sk/api-contract'
 import type { Outcome } from '../hooks/use-keepsake-editor'
-import type { CreateVariant, SaveVariant } from './variants-card'
+import type { CreateVariant, SaveVariant } from './variants-step'
 
 import { Button, Description, FieldError, Form, Input, Label, NumberField, Radio, RadioGroup, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
