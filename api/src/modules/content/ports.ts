@@ -400,6 +400,15 @@ export interface RegisteredBuilding {
   longitude: number
 }
 
+/** The address of one building as the use case returns it: the parts and the one-line form. The route's `Address` schema has the same shape. */
+export interface FoundAddress {
+  street: string
+  houseNumber: string
+  postcode: string
+  city: string
+  formatted: string
+}
+
 // The buildings the register holds around a position, in no particular order, at least those within `radiusMeters`.
 // Undefined when the register could not be read or ran out of time. A port, so the use case holds the rules and the
 // adapter holds `fetch`.

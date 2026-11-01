@@ -1,6 +1,5 @@
-import type { Address } from '@sk/api-contract'
 import type { Actor } from '@sk/domain/identity'
-import type { AddressRegister, RegisteredBuilding } from '../ports.ts'
+import type { AddressRegister, FoundAddress, RegisteredBuilding } from '../ports.ts'
 import type { Result } from './failure.ts'
 import { mayManageContent } from './access.ts'
 import { fail, ok } from './failure.ts'
@@ -21,7 +20,7 @@ function distanceMeters(from: { latitude: number, longitude: number }, to: { lat
   return 2 * earthRadiusMeters * Math.asin(Math.sqrt(a))
 }
 
-function toAddress({ street, houseNumber, postcode, city }: RegisteredBuilding): Address {
+function toAddress({ street, houseNumber, postcode, city }: RegisteredBuilding): FoundAddress {
   const line = [street, houseNumber].filter(part => part !== '').join(' ')
   const place = [postcode, city].filter(part => part !== '').join(' ')
   return { street, houseNumber, postcode, city, formatted: [line, place].filter(part => part !== '').join(', ') }
@@ -31,7 +30,7 @@ function toAddress({ street, houseNumber, postcode, city }: RegisteredBuilding):
 // sort by distance, so the use case measures each entrance and keeps the nearest one inside the radius. A viewpoint or
 // a bench has none (`address-not-found`); a register that cannot be read is `address-lookup-unavailable`.
 export function makeFindAddressAt({ register, timeoutMs = 3000, radiusMeters = 50 }: FindAddressAtDeps) {
-  return async (actor: Actor, storeId: string, position: { latitude: number, longitude: number }): Promise<Result<Address>> => {
+  return async (actor: Actor, storeId: string, position: { latitude: number, longitude: number }): Promise<Result<FoundAddress>> => {
     if (!mayManageContent(actor, storeId))
       return fail({ reason: 'forbidden' })
     const buildings = await register.buildingsNear(position.latitude, position.longitude, radiusMeters, timeoutMs)
