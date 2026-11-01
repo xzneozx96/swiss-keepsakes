@@ -1,53 +1,65 @@
 /**
  * V2, one variant at a time. The block shows a short list; a variant (or Add variant) replaces the list with that one
  * variant, like a settings page: its name large at the top, then a few rows, label on the left and value on the right.
- * A value row is a native select laid over the row, so a phone opens its own picker. Back returns to the list.
+ * A value is the app's shared select (HeroUI Select and ListBox), with sold combinations disabled and noted. Back returns to the list.
  */
 import type { OptionDraft } from './keepsake-options-data'
 import type { VRow } from './variant-design-data'
 import type { Studio } from './variant-design-state'
 
-import { Button } from '@heroui/react'
+import { Button, Description, Label, ListBox, Select } from '@heroui/react'
 import { useId, useState } from 'react'
 
+import { EmptyState } from '@/components/empty-state'
 import { Block } from '@/components/form-block'
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, ProductsIcon } from '@/components/icons'
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, ProductsIcon } from '@/components/icons'
+import { StatusChip } from '@/components/status-chip'
 import { Swatch } from '@/features/keepsakes/components/option-parts'
 import { combinationName, labelOf } from './keepsake-options-rules'
 import { ArchivedList, Notice, OnSaleSwitch, Problem, TextLink } from './variant-design-parts'
-import { priceText, rowFacts, useArchive } from './variant-design-state'
+import { priceText, useArchive } from './variant-design-state'
 
 const ROW = 'relative flex min-h-13 items-center gap-3 px-4'
 const GROUP = 'flex flex-col divide-y divide-separator/70 overflow-hidden rounded-2xl bg-surface-secondary'
 
-function ValueRow({ studio, option }: { studio: Studio, option: OptionDraft }) {
-  const id = useId()
+function ValueSelect({ studio, option }: { studio: Studio, option: OptionDraft }) {
   const chosen = option.values.find(value => value.ref === studio.draft.values[option.ref])
   const invalid = studio.shown.values !== undefined
+  const soldRefs = option.values.filter(value => studio.soldWith(option.ref, value.ref)).map(value => value.ref)
 
   return (
-    <div className={`${ROW} transition-colors duration-150 has-[select:focus-visible]:bg-default/60 hover:bg-default/40`}>
-      <span className="text-sm" id={`${id}-label`}>{labelOf(option.name)}</span>
-      <span className={`ms-auto flex items-center gap-2 text-sm ${chosen ? (invalid && studio.twin ? 'text-danger' : 'font-medium') : 'text-muted'}`}>
-        <Swatch className="size-3.5" color={chosen?.swatch ?? null} />
-        {chosen ? labelOf(chosen.label) : 'Choose'}
-      </span>
-      <ChevronDownIcon aria-hidden className="shrink-0 text-muted" size={16} />
-      <select
-        aria-describedby={invalid ? `${id}-problem` : undefined}
-        aria-labelledby={`${id}-label`}
-        className="absolute inset-0 cursor-pointer opacity-0"
-        value={chosen?.ref ?? ''}
-        onChange={event => studio.setValue(option.ref, event.target.value)}
-      >
-        <option disabled value="">Choose</option>
-        {option.values.map((value) => {
-          const sold = studio.soldWith(option.ref, value.ref)
+    <Select
+      fullWidth
+      disabledKeys={soldRefs}
+      isInvalid={invalid && !!studio.twin}
+      placeholder={`Choose ${labelOf(option.name).toLowerCase()}`}
+      selectedKey={chosen?.ref ?? null}
+      onSelectionChange={key => key !== null && studio.setValue(option.ref, String(key))}
+    >
+      <Label>{labelOf(option.name)}</Label>
+      <Select.Trigger>
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+      <Select.Popover>
+        <ListBox>
+          {option.values.map((value) => {
+            const sold = studio.soldWith(option.ref, value.ref)
 
-          return <option key={value.ref} value={value.ref}>{sold ? `${labelOf(value.label)} (sold as ${sold.code})` : labelOf(value.label)}</option>
-        })}
-      </select>
-    </div>
+            return (
+              <ListBox.Item key={value.ref} id={value.ref} textValue={labelOf(value.label)}>
+                <Swatch color={value.swatch} />
+                <span className="flex min-w-0 flex-col">
+                  {labelOf(value.label)}
+                  {sold && <Description className="[.select__value_&]:hidden">{`Sold as ${sold.code}`}</Description>}
+                </span>
+                <ListBox.ItemIndicator />
+              </ListBox.Item>
+            )
+          })}
+        </ListBox>
+      </Select.Popover>
+    </Select>
   )
 }
 
@@ -131,9 +143,7 @@ function Detail({ studio, onArchive }: { studio: Studio, onArchive: (id: string)
 
       {hasOptions && (
         <div className="flex flex-col gap-2">
-          <div className={GROUP}>
-            {studio.options.map(option => <ValueRow key={option.ref} option={option} studio={studio} />)}
-          </div>
+          {studio.options.map(option => <ValueSelect key={option.ref} option={option} studio={studio} />)}
           {studio.shown.values && (
             <Problem action={studio.openable && <TextLink onPress={() => studio.open(studio.openable!.id)}>{`Open ${studio.openable.code}`}</TextLink>}>
               {studio.shown.values}
@@ -170,7 +180,7 @@ function Detail({ studio, onArchive }: { studio: Studio, onArchive: (id: string)
 /** A variant in the list: O3's row (name over a muted line, rounded hover, the open one tinted from 1024 px). */
 function ListRow({ studio, row }: { studio: Studio, row: VRow }) {
   const title = studio.options.length > 0 ? combinationName(row.values, studio.options) : row.code
-  const facts = rowFacts(row)
+  const status = row.status === 'hidden' ? { tone: 'neutral', text: 'Hidden' } as const : row.stock === 0 ? { tone: 'warning', text: 'Sold out' } as const : { tone: 'success', text: 'On sale' } as const
   const current = studio.editing === row.id
 
   return (
@@ -183,8 +193,9 @@ function ListRow({ studio, row }: { studio: Studio, row: VRow }) {
       >
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate font-medium">{title}</span>
-          <span className="truncate text-sm text-muted">{[priceText(row), ...facts].join(' · ')}</span>
+          <span className="truncate text-sm text-muted">{priceText(row)}</span>
         </span>
+        <StatusChip tone={status.tone}>{status.text}</StatusChip>
         <ChevronRightIcon aria-hidden className="shrink-0 text-muted lg:hidden" size={18} />
       </button>
     </li>
@@ -195,7 +206,7 @@ export function VariantsV2({ studio }: { studio: Studio }) {
   const archive = useArchive(studio)
   const open = studio.editing !== null
   const add = studio.canCreate && (
-    <Button className="-ms-1 self-start max-lg:h-11" variant={studio.rows.length === 0 ? 'primary' : 'ghost'} onPress={() => studio.open('new')}>
+    <Button fullWidth className="mt-2 max-lg:min-h-11" variant={studio.rows.length === 0 ? 'primary' : 'secondary'} onPress={() => studio.open('new')}>
       <PlusIcon aria-hidden size={16} />
       Add variant
     </Button>
@@ -208,7 +219,7 @@ export function VariantsV2({ studio }: { studio: Studio }) {
       title="Variants"
     >
       <Notice text={studio.notice} />
-      <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
+      <div className="grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-10">
         <nav aria-label="Variants" className={`flex flex-col gap-1 ${open ? 'max-lg:hidden' : ''}`}>
           {studio.rows.length === 0
             ? <p className="px-1 pb-2 text-sm text-pretty text-muted">No variants yet.</p>
@@ -222,9 +233,14 @@ export function VariantsV2({ studio }: { studio: Studio }) {
           {open
             ? <Detail key={studio.editing} studio={studio} onArchive={id => void archive.request(id)} />
             : (
-                <p className="pt-3 text-sm text-pretty text-muted">
-                  {studio.canCreate ? 'Choose a variant to change it, or add one.' : 'Choose a variant to change it.'}
-                </p>
+                <EmptyState compact icon={ProductsIcon} message={studio.canCreate ? 'Choose a variant to change it, or add one.' : 'Choose a variant to change it.'}>
+                  {studio.canCreate && (
+                    <Button className="max-lg:min-h-11" size="sm" variant="secondary" onPress={() => studio.open('new')}>
+                      <PlusIcon aria-hidden size={16} />
+                      Add variant
+                    </Button>
+                  )}
+                </EmptyState>
               )}
         </div>
       </div>
