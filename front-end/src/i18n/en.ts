@@ -8,6 +8,7 @@ import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
 import { addAllEn } from '@/features/keepsakes/add-all-messages'
 import { keepsakesEn } from '@/features/keepsakes/messages'
+import { removeEn } from '@/features/keepsakes/remove-messages'
 import { mapEn } from '@/features/map/messages'
 import { mediaEn } from '@/features/media/messages'
 import { productsEn } from '@/features/merchant/products/messages'
@@ -46,6 +47,7 @@ export const en = {
   ...categoriesEn,
   ...keepsakesEn,
   ...addAllEn,
+  ...removeEn,
   ...mediaEn,
   ...placesEn,
   ...actionBarEn,

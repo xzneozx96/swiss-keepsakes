@@ -68,3 +68,21 @@ describe('commandChanges', () => {
     expect(apply(change!, { other: 1 }, change!.key)).toEqual({ other: 1 })
   })
 })
+
+describe('keepsakes.remove', () => {
+  const input = { storeId: 's', id: 'b', ifMatch: 1, idempotencyKey: 'k' }
+  const items = { items: [{ id: 'a', status: 'draft' }, { id: 'b', status: 'published' }] }
+
+  it('drops a deleted keepsake from the list of its store only', () => {
+    const [change] = commandChanges.keepsakes!.remove!(input, { id: 'b', outcome: 'deleted' })
+
+    expect(change!.key).toEqual([...queryKeys.keepsakes.list, 's'])
+    expect(apply(change!, items, change!.key)).toEqual({ items: [{ id: 'a', status: 'draft' }] })
+  })
+
+  it('keeps an archived keepsake in the list, as archived', () => {
+    const [change] = commandChanges.keepsakes!.remove!(input, { id: 'b', outcome: 'archived' })
+
+    expect(apply(change!, items, change!.key)).toEqual({ items: [{ id: 'a', status: 'draft' }, { id: 'b', status: 'archived' }] })
+  })
+})

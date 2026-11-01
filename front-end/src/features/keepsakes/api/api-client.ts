@@ -37,6 +37,11 @@ export function createKeepsakesClient(): KeepsakesClient {
         ...keyed(idempotencyKey),
         params: { path: { storeId, productId: id }, header: { 'If-Match': String(ifMatch) } },
       })),
+    remove: async ({ storeId, id, ifMatch, idempotencyKey }) =>
+      answer((await loadClient()).DELETE('/api/store/{storeId}/products/{productId}', {
+        ...keyed(idempotencyKey),
+        params: { path: { storeId, productId: id }, header: { 'If-Match': String(ifMatch) } },
+      })),
     saveVariant: async ({ storeId, id, variantId, idempotencyKey, ...body }) =>
       answer((await loadClient()).PATCH('/api/store/{storeId}/products/{productId}/variants/{skuId}', {
         ...keyed(idempotencyKey),

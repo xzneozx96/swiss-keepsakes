@@ -65,6 +65,8 @@ export const commandAffects: {
     save: [],
     publish: [queryKeys.keepsakes.list],
     unpublish: [queryKeys.keepsakes.list],
+    // The list is edited at once (`commandChanges`); the open editor of a removed keepsake is left.
+    remove: [queryKeys.keepsakes.list],
     saveVariant: [queryKeys.keepsakes.list],
     saveOptions: [queryKeys.keepsakes.list],
     createVariant: [queryKeys.keepsakes.list],

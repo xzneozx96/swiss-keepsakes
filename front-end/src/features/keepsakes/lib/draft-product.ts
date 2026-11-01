@@ -69,6 +69,7 @@ export function draftProduct({ storeId, value, photos, commission, options, vari
     commissionRate: commission,
     slug: null,
     hasUnpublishedEdits: false,
+    hasOrders: false,
     options,
     variants,
     ...checks,

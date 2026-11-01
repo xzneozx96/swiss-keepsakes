@@ -3,7 +3,7 @@ import type { StepView } from '@/components/step-layout'
 
 import { Button } from '@heroui/react'
 
-import { BackIcon } from '@/components/icons'
+import { BackIcon, TrashIcon } from '@/components/icons'
 import { MerchantBackBar } from '@/components/layout/merchant-back-bar'
 import { StatusChip } from '@/components/status-chip'
 import { StepBar } from '@/components/step-bar'
@@ -16,7 +16,7 @@ import { KEEPSAKES_PATH } from '../lib/search-params'
  * name and the status chip, the step list on the left, the step's blocks on the right and the bar under them.
  * `onBack` is the leave guard: the arrow asks first when something is not saved.
  */
-export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBack, bar, notices, children }: {
+export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBack, onRemove, bar, notices, children }: {
   title: string
   status: { tone: StatusTone, label: string }
   steps: StepView[]
@@ -24,6 +24,8 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
   canGo: (id: string) => boolean
   onGo: (id: string) => void
   onBack: () => void
+  /** Delete, in the header of a saved keepsake. Left out for a keepsake that is not saved yet. */
+  onRemove?: () => void
   bar: React.ComponentProps<typeof StepBar>
   /** What sits above the steps: the stale warning, a refused save. */
   notices?: React.ReactNode
@@ -50,6 +52,12 @@ export function KeepsakeFrame({ title, status, steps, current, canGo, onGo, onBa
         <span className="shrink-0" data-testid="keepsake-status">
           <StatusChip tone={status.tone}>{status.label}</StatusChip>
         </span>
+        {onRemove && (
+          <Button className="ms-auto shrink-0 max-lg:min-h-11" variant="danger-soft" onPress={onRemove}>
+            <TrashIcon aria-hidden size={16} />
+            {t('keepsakes.remove.action')}
+          </Button>
+        )}
       </header>
       {notices}
       <StepLayout canGo={canGo} current={current} quietTitle steps={steps} onGo={onGo}>

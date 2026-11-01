@@ -102,6 +102,9 @@ export function statusOf(keepsake: Pick<Product, 'status' | 'hasUnpublishedEdits
   if (keepsake.status === 'published')
     return keepsake.hasUnpublishedEdits ? { tone: 'warning', key: 'keepsakes.status.editsNotLive' } : { tone: 'success', key: 'keepsakes.status.published' }
 
+  if (keepsake.status === 'archived')
+    return { tone: 'neutral', key: 'keepsakes.status.archived' }
+
   return { tone: 'neutral', key: 'keepsakes.status.draft' }
 }
 

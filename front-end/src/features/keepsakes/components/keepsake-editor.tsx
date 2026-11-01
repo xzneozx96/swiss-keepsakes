@@ -2,16 +2,19 @@ import type { Product, PublishCheck } from '@sk/api-contract'
 import type { KeepsakeStep } from '../lib/search-params'
 
 import { Button } from '@heroui/react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { lazy, Suspense, useState } from 'react'
 
+import { lazy, Suspense, useState } from 'react'
 import { EmptyState } from '@/components/empty-state'
 import { GiftIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
+import { queryKeys } from '@/features/data-client'
 import { ApiProblem } from '@/features/data-client/errors'
 import { useKeepsake } from '../api/queries'
 import { useKeepsakeEditor } from '../hooks/use-keepsake-editor'
 import { useOptionsDraft } from '../hooks/use-options-draft'
+import { useRemoveKeepsake } from '../hooks/use-remove-keepsake'
 import { nameIn, statusOf } from '../lib/keepsake-rules'
 import { saveStatusOf } from '../lib/save-status'
 import { isKeepsakeStep, KEEPSAKE_STEPS, KEEPSAKES_PATH } from '../lib/search-params'
@@ -56,6 +59,8 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
   // Held here, not in the Options step, so options that are typed but not saved stay when another step opens.
   const options = useOptionsDraft({ saved: keepsake.options, variants: keepsake.variants })
   const [showErrors, setShowErrors] = useState(false)
+  const queryClient = useQueryClient()
+  const remove = useRemoveKeepsake(storeId, () => void navigate({ to: KEEPSAKES_PATH }))
   const guard = useLeaveGuard({ isUnsaved: editor.isUnsaved || options.dirty, onLeave: () => void navigate({ to: KEEPSAKES_PATH }) })
   const { draft } = editor
   const name = nameIn(draft.name, language) || t('keepsakes.untitled')
@@ -74,6 +79,15 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
       return
     onStep(id)
     window.scrollTo?.({ top: 0 })
+  }
+
+  /** Delete asks about the saved keepsake: what is typed is saved first, so the dialog sends the version that save made. */
+  const askRemove = async () => {
+    if (!(await editor.flush()))
+      return
+    const current = queryClient.getQueryData<Product>([...queryKeys.keepsakes.detail, storeId, keepsake.id]) ?? keepsake
+
+    remove.ask({ id: keepsake.id, name, rowVersion: current.rowVersion, hasOrders: current.hasOrders })
   }
 
   /** To the step that holds the block a check names. */
@@ -132,6 +146,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
         steps={steps}
         title={name}
         onBack={guard.leave}
+        onRemove={() => void askRemove()}
         onGo={id => void go(id)}
       >
         {/* The Details step stays mounted, so a photo that is still uploading keeps its row when another step opens. */}
@@ -157,6 +172,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
         )}
       </KeepsakeFrame>
       {guard.dialog}
+      {remove.dialog}
     </>
   )
 }
@@ -175,6 +191,9 @@ function LoadedEditor({ storeId, id, step, onStep }: { storeId: string, id: stri
   }
   if (!query.data)
     return <StepEditorSkeleton />
+  // An archived keepsake is final: its orders keep working, nothing about it can be changed.
+  if (query.data.status === 'archived')
+    return <EmptyState action={{ label: t('keepsakes.back.toKeepsakes'), to: KEEPSAKES_PATH }} icon={GiftIcon} message={t('keepsakes.archived.notice')} />
 
   return (
     <Editor

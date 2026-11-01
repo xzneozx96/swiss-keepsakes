@@ -10,12 +10,13 @@ import { useState } from 'react'
 
 import { DataTable } from '@/components/data-table'
 import { FilterButtons, FilterChips, filterGroup } from '@/components/filter-bar'
-import { EditIcon, GiftIcon, PlusIcon } from '@/components/icons'
+import { EditIcon, GiftIcon, PlusIcon, TrashIcon } from '@/components/icons'
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { useKeepsakes } from '../api/queries'
+import { useRemoveKeepsake } from '../hooks/use-remove-keepsake'
 import { nameIn, statusOf, variantSummary } from '../lib/keepsake-rules'
 import { filterKeepsakes, isFiltered, noFilters, STATUS_FILTERS } from '../lib/list'
 import { NEW_KEEPSAKE_PATH } from '../lib/search-params'
@@ -36,13 +37,23 @@ function useRowText() {
   }
 }
 
-function RowMenu({ item }: { item: ProductListItem }) {
+type OnRemove = (item: ProductListItem) => void
+
+/** An archived keepsake can no longer be changed or removed, so its row has no menu. */
+function RowMenu({ item, onRemove }: { item: ProductListItem, onRemove?: OnRemove }) {
   const { t, name } = useRowText()
+
+  if (item.status === 'archived')
+    return null
 
   return (
     <RowActions
-      actions={[{ id: 'edit', label: t('keepsakes.list.edit'), icon: EditIcon, href: editHref(item.id) }]}
+      actions={[
+        { id: 'edit', label: t('keepsakes.list.edit'), icon: EditIcon, href: editHref(item.id) },
+        { id: 'delete', label: t('keepsakes.remove.action'), icon: TrashIcon, isDanger: true },
+      ]}
       label={t('keepsakes.list.actions', { name: name(item) })}
+      onAction={id => id === 'delete' && onRemove?.(item)}
     />
   )
 }
@@ -55,7 +66,7 @@ function Status({ item }: { item: ProductListItem }) {
 }
 
 /** Phones: a row is the thumbnail, the name (two lines at most) over the variants, the status chip with the last update, and the ⋯ menu. */
-function KeepsakeCards({ items, label }: { items: ProductListItem[], label: string }) {
+function KeepsakeCards({ items, label, onRemove }: { items: ProductListItem[], label: string, onRemove?: OnRemove }) {
   const { name, summary, edited } = useRowText()
 
   return (
@@ -73,7 +84,7 @@ function KeepsakeCards({ items, label }: { items: ProductListItem[], label: stri
               </span>
             </span>
           </Link>
-          <RowMenu item={item} />
+          <RowMenu item={item} onRemove={onRemove} />
         </li>
       ))}
     </ul>
@@ -103,7 +114,7 @@ function CardSkeletons() {
 }
 
 /** From 1024 px a table, below it the cards. */
-function KeepsakeRows({ items, isLoading, label, empty, resetKey }: { items: ProductListItem[], isLoading: boolean, label: string, empty: string, resetKey: string }) {
+function KeepsakeRows({ items, isLoading, label, empty, resetKey, onRemove }: { items: ProductListItem[], isLoading: boolean, label: string, empty: string, resetKey: string, onRemove?: OnRemove }) {
   const { t, name, summary, edited } = useRowText()
   const columns: DataTableColumn<ProductListItem>[] = [
     {
@@ -126,7 +137,7 @@ function KeepsakeRows({ items, isLoading, label, empty, resetKey }: { items: Pro
   return (
     <DataTable
       cardSkeleton={<CardSkeletons />}
-      cards={pageItems => <KeepsakeCards items={pageItems} label={label} />}
+      cards={pageItems => <KeepsakeCards items={pageItems} label={label} onRemove={onRemove} />}
       columns={columns}
       empty={{ icon: GiftIcon, message: empty }}
       getRowHref={item => editHref(item.id)}
@@ -134,7 +145,7 @@ function KeepsakeRows({ items, isLoading, label, empty, resetKey }: { items: Pro
       isLoading={isLoading}
       label={label}
       resetKey={resetKey}
-      rowActions={{ render: item => <RowMenu item={item} /> }}
+      rowActions={{ render: item => <RowMenu item={item} onRemove={onRemove} /> }}
       rows={items}
     />
   )
@@ -143,7 +154,7 @@ function KeepsakeRows({ items, isLoading, label, empty, resetKey }: { items: Pro
 /** Each count is what ticking the option shows: the search applies, this group's own ticks do not. */
 function useStatusGroup(items: ProductListItem[], filters: KeepsakeFilters, onChange: (patch: Partial<KeepsakeFilters>) => void) {
   const { t } = useLocale()
-  const labels: Record<StatusFilter, MessageKey> = { draft: 'keepsakes.status.draft', published: 'keepsakes.status.published', editsNotLive: 'keepsakes.status.editsNotLive' }
+  const labels: Record<StatusFilter, MessageKey> = { draft: 'keepsakes.status.draft', published: 'keepsakes.status.published', editsNotLive: 'keepsakes.status.editsNotLive', archived: 'keepsakes.status.archived' }
 
   return filterGroup({
     id: 'status',
@@ -155,7 +166,7 @@ function useStatusGroup(items: ProductListItem[], filters: KeepsakeFilters, onCh
 }
 
 /** The search, the Status filter and the applied chips, then the table and, when a search or filter hides every row, a way back. */
-function KeepsakeBody({ items, isLoading, filters, onChange, failure }: { items: ProductListItem[], isLoading: boolean, filters: KeepsakeFilters, onChange: (patch: Partial<KeepsakeFilters>) => void, failure?: React.ReactNode }) {
+function KeepsakeBody({ items, isLoading, filters, onChange, failure, onRemove }: { items: ProductListItem[], isLoading: boolean, filters: KeepsakeFilters, onChange: (patch: Partial<KeepsakeFilters>) => void, failure?: React.ReactNode, onRemove?: OnRemove }) {
   const { t } = useLocale()
   const group = useStatusGroup(items, filters, onChange)
   const shown = filterKeepsakes(items, filters)
@@ -177,7 +188,7 @@ function KeepsakeBody({ items, isLoading, filters, onChange, failure }: { items:
       {failure
         ?? (
           <>
-            <KeepsakeRows empty={t(noMatch ? 'keepsakes.list.emptyFiltered' : 'keepsakes.list.empty')} isLoading={isLoading} items={shown} label={t('keepsakes.title')} resetKey={JSON.stringify(filters)} />
+            <KeepsakeRows empty={t(noMatch ? 'keepsakes.list.emptyFiltered' : 'keepsakes.list.empty')} isLoading={isLoading} items={shown} label={t('keepsakes.title')} resetKey={JSON.stringify(filters)} onRemove={onRemove} />
             {noMatch && (
               <Button className="min-h-11 self-center" variant="secondary" onPress={() => onChange(noFilters)}>{t('keepsakes.list.clear')}</Button>
             )}
@@ -189,15 +200,21 @@ function KeepsakeBody({ items, isLoading, filters, onChange, failure }: { items:
 
 function KeepsakeTable({ storeId, filters, onChange }: { storeId: string, filters: KeepsakeFilters, onChange: (patch: Partial<KeepsakeFilters>) => void }) {
   const list = useKeepsakes(storeId)
+  const { t, language } = useLocale()
+  const remove = useRemoveKeepsake(storeId)
 
   return (
-    <KeepsakeBody
-      filters={filters}
-      failure={list.isError ? <KeepsakeNotice error={list.error} onRetry={() => void list.refetch()} /> : undefined}
-      isLoading={list.isPending}
-      items={list.data?.items ?? []}
-      onChange={onChange}
-    />
+    <>
+      <KeepsakeBody
+        filters={filters}
+        failure={list.isError ? <KeepsakeNotice error={list.error} onRetry={() => void list.refetch()} /> : undefined}
+        isLoading={list.isPending}
+        items={list.data?.items ?? []}
+        onChange={onChange}
+        onRemove={item => remove.ask({ id: item.id, name: nameIn(item.name, language) || t('keepsakes.untitled'), rowVersion: item.rowVersion, hasOrders: item.hasOrders })}
+      />
+      {remove.dialog}
+    </>
   )
 }
 

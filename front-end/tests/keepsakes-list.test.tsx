@@ -153,7 +153,7 @@ describe('[T-006][list] the keepsake list matches the Places list', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Status' }))
     const popover = await screen.findByRole('dialog', { name: 'Status' })
 
-    expect(within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent)).toEqual(['Draft2', 'Published1', 'Published · edits not live0'])
+    expect(within(popover).getAllByRole('checkbox').map(box => box.closest('.checkbox')?.textContent)).toEqual(['Draft2', 'Published1', 'Published · edits not live0', 'Archived0'])
     await userEvent.click(within(popover).getByRole('checkbox', { name: /^Draft/ }))
     await userEvent.keyboard('{Escape}')
 

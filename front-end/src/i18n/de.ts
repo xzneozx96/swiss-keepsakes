@@ -10,6 +10,7 @@ import { contentMerchantDe } from '@/features/content/merchant/messages.de'
 import { contentDe } from '@/features/content/messages.de'
 import { addAllDe } from '@/features/keepsakes/add-all-messages'
 import { keepsakesDe } from '@/features/keepsakes/messages.de'
+import { removeDe } from '@/features/keepsakes/remove-messages'
 import { mapDe } from '@/features/map/messages.de'
 import { mediaDe } from '@/features/media/messages.de'
 import { productsDe } from '@/features/merchant/products/messages.de'
@@ -48,6 +49,7 @@ export const de: Record<MessageKey, string> = {
   ...categoriesDe,
   ...keepsakesDe,
   ...addAllDe,
+  ...removeDe,
   ...mediaDe,
   ...placesDe,
   ...actionBarDe,

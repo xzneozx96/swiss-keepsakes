@@ -84,6 +84,11 @@ export const commandChanges: Changes = {
     }],
   },
   keepsakes: {
+    // A deleted keepsake leaves the list; an archived one becomes `archived`, which the default list hides.
+    remove: (input, result) => [{
+      key: [...queryKeys.keepsakes.list, input.storeId],
+      apply: result.outcome === 'deleted' ? without('items', input.id) : patching('items', input.id, { status: 'archived' }),
+    }],
     // Unpublishing makes the keepsake a draft in the list at once.
     unpublish: (input, result) => [{
       key: [...queryKeys.keepsakes.list, input.storeId],
