@@ -667,7 +667,10 @@
           "publicUrl",
           "variants"
         ],
-        "type": "object"
+        "type": [
+          "object",
+          "null"
+        ]
       },
       "MediaAlt": {
         "additionalProperties": false,
@@ -10323,6 +10326,90 @@
         },
         "type": "object"
       },
+      "StoryVersionText": {
+        "description": "The text of one language version as the editor last left it: the draft if there is one, else the published text. For a preview to staff, never for guests",
+        "properties": {
+          "body": {
+            "description": "The stored Tiptap document, as written. An image or audio node names its file by `mediaId`, and `media` holds those files",
+            "properties": {
+              "content": {
+                "items": {
+                  "properties": {
+                    "attrs": {
+                      "additionalProperties": {},
+                      "type": "object"
+                    },
+                    "content": {
+                      "items": {},
+                      "type": "array"
+                    },
+                    "marks": {
+                      "items": {},
+                      "type": "array"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "type": {
+                "enum": [
+                  "doc"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "content"
+            ],
+            "type": "object"
+          },
+          "cover": {
+            "$ref": "#/components/schemas/Media"
+          },
+          "media": {
+            "description": "The files the body's image and audio nodes name. A node whose file is missing here has none to show",
+            "items": {
+              "$ref": "#/components/schemas/Media"
+            },
+            "type": "array"
+          },
+          "status": {
+            "description": "`draft`: the text is not live yet (a draft, or a version taken down, or a published one with unpublished edits). `published`: it is what guests read",
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "title",
+          "cover",
+          "body",
+          "media",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "TourGuide": {
         "description": "A tour guide as the editor sees it, with its draft and its published text",
         "properties": {
@@ -14879,6 +14966,72 @@
         "responses": {
           "204": {
             "description": "The version is deleted. Only a version that never held published text can be",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "groupId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "enum": [
+                "en",
+                "de"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryVersionText"
+                }
+              }
+            },
+            "description": "The text of the version as the editor last left it, for a preview. 404 when the group has no version in the language",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"

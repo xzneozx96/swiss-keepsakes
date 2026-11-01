@@ -4,7 +4,7 @@ import type { ContentUseCases } from '../../../src/modules/content/adapters/rout
 import { describe, expect, it } from 'vitest'
 import { registerContentRoutes } from '../../../src/modules/content/adapters/routes.ts'
 import { makeSaveStoryVersion } from '../../../src/modules/content/application/save-story-version.ts'
-import { createFakeContentUseCases, fakeStoryGroup, fakeStoryVersion } from '../../support/fake-content-use-cases.ts'
+import { createFakeContentUseCases, fakeMedia, fakeStoryGroup, fakeStoryVersion } from '../../support/fake-content-use-cases.ts'
 import { createFakeStories } from '../../support/fake-stories.ts'
 import { createGuardedApp, guardedCommands, noAccess, shopOrigin, signedInAs } from '../../support/guarded-app.ts'
 
@@ -481,5 +481,46 @@ describe('[E2.13][AC30] a refused story body', () => {
     expect(unknownPin.status).toBe(422)
     expect(await unknownPin.json()).toMatchObject({ type: 'reference-invalid' })
     expect(stories.versions.get(`${g.id}/en`)).toEqual(v)
+  })
+})
+
+describe('the story version text read (the place editor\'s preview)', () => {
+  it('answers 200 with the text, the cover and the files as the contract names them, and takes no Idempotency-Key', async () => {
+    const seen: unknown[] = []
+    const app = setup({ getStoryVersionText: async (actor, storeId, id, language) => {
+      seen.push({ kind: actor.kind, storeId, id, language })
+      return { ok: true, value: { status: 'draft', title: 'A morning on the Musegg wall', cover: fakeMedia, body: { type: 'doc', content: [] }, media: [fakeMedia], updatedAt: new Date('2026-10-27T10:00:00Z') } }
+    } })
+
+    const response = await send(app, 'GET', `${versions}/de`)
+
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ status: 'draft', title: 'A morning on the Musegg wall', cover: { id: fakeMedia.id }, media: [{ id: fakeMedia.id }], updatedAt: '2026-10-27T10:00:00.000Z' })
+    expect(seen).toEqual([{ kind: 'staff', storeId: lucerne, id: groupId, language: 'de' }])
+  })
+
+  it('answers 404 not-found when the group has no version in the language', async () => {
+    const app = setup({ getStoryVersionText: async () => ({ ok: false, reason: 'not-found' }) })
+
+    const response = await send(app, 'GET', english)
+
+    expect(response.status).toBe(404)
+    expect(response.headers.get('Content-Type')).toBe('application/problem+json')
+    expect(await response.json()).toMatchObject({ type: 'not-found' })
+  })
+
+  it('answers 403 to a use case that refuses the actor, and a language outside en and de is 400', async () => {
+    const app = setup({ getStoryVersionText: async () => ({ ok: false, reason: 'forbidden' }) })
+
+    expect((await send(app, 'GET', english)).status).toBe(403)
+    expect((await send(app, 'GET', `${versions}/fr`)).status).toBe(400)
+  })
+
+  it('is closed to a guest, to an owner of another store and to a request with no session', async () => {
+    const app = setup()
+
+    expect((await send(app, 'GET', english, signedInAs('guest'))).status).toBe(403)
+    expect((await send(app, 'GET', english, signedInAs('ownerElsewhere'))).status).toBe(403)
+    expect((await app.request(english, { headers: { Origin: shopOrigin } })).status).toBe(401)
   })
 })

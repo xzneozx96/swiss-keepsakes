@@ -2982,7 +2982,41 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    groupId: string;
+                    language: "en" | "de";
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The text of the version as the editor last left it, for a preview. 404 when the group has no version in the language */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["StoryVersionText"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete: {
@@ -3752,7 +3786,7 @@ export interface components {
                 width: number;
             }[];
             width: number | null;
-        };
+        } | null;
         /** @description The description of a file in each language. It is the alt text guests with a screen reader hear */
         MediaAlt: {
             de?: string;
@@ -5955,6 +5989,34 @@ export interface components {
         StoryVersionSaveBody: {
             draft?: components["schemas"]["StoryDraft"];
             slug?: string | null;
+        };
+        /** @description The text of one language version as the editor last left it: the draft if there is one, else the published text. For a preview to staff, never for guests */
+        StoryVersionText: {
+            /** @description The stored Tiptap document, as written. An image or audio node names its file by `mediaId`, and `media` holds those files */
+            body: {
+                content: {
+                    attrs?: {
+                        [key: string]: unknown;
+                    };
+                    content?: unknown[];
+                    marks?: unknown[];
+                    text?: string;
+                    type: string;
+                }[];
+                /** @enum {string} */
+                type: "doc";
+            };
+            cover: components["schemas"]["Media"];
+            /** @description The files the body's image and audio nodes name. A node whose file is missing here has none to show */
+            media: components["schemas"]["Media"][];
+            /**
+             * @description `draft`: the text is not live yet (a draft, or a version taken down, or a published one with unpublished edits). `published`: it is what guests read
+             * @enum {string}
+             */
+            status: "draft" | "published";
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
         };
         /** @description A tour guide as the editor sees it, with its draft and its published text */
         TourGuide: {

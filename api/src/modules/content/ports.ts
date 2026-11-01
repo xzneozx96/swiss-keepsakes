@@ -69,6 +69,8 @@ export interface MediaReplacement {
 export interface MediaRepository<T> {
   // The rows of this store among the ids. An id of another store has no row.
   find: (tx: T, storeId: string, ids: string[]) => Promise<MediaRow[]>
+  // The whole rows of this store among the ids, for a read that shows the files. An id of another store has no row.
+  findMany: (tx: T, storeId: string, ids: string[]) => Promise<MediaRecord[]>
   // A new row, status `processing`. A row inserted without a name is named by the database (migration 0011).
   insert: (tx: T, row: { id: string, storeId: string, kind: MediaKind, storageKey: string, contentType: string, byteSize: number, sha256: string, name?: string, fileName?: string }, at: Date) => Promise<MediaRecord>
   // An id of another store has no row. `forUpdate` locks the row until the transaction ends.
@@ -258,6 +260,8 @@ export interface StoryRepository<T> {
   // undefined when the group already has a version in that language.
   insertVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage, changes: StoryVersionChanges, at: Date) => Promise<StoryVersion | undefined>
   findVersionForUpdate: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<StoryVersion | undefined>
+  // The version without a lock, for a read.
+  findVersion: (tx: T, storeId: string, groupId: string, language: ContentLanguage) => Promise<StoryVersion | undefined>
   // Writes slug and draft, replaces the draft media_refs of the version, bumps row_version.
   saveVersion: (tx: T, version: StoryVersion, changes: StoryVersionChanges, at: Date) => Promise<StoryVersion>
   // draft becomes published and is cleared; published_at is kept once set; media_refs move from the draft slot to the published slot.

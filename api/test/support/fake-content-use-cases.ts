@@ -117,6 +117,7 @@ export function createFakeContentUseCases(): ContentUseCases {
     publishPin: async (_actor, storeId, pinId, ifMatch) => ({ ok: true, value: { ...fakePin, storeId, id: pinId, status: 'published', rowVersion: ifMatch + 1 } }),
     hidePin: async (_actor, storeId, pinId, ifMatch) => ({ ok: true, value: { ...fakePin, storeId, id: pinId, status: 'hidden', rowVersion: ifMatch + 1 } }),
     deletePin: async (_actor, _storeId, pinId) => ({ ok: true, value: { id: pinId } }),
+    getStoryVersionText: async () => ({ ok: true, value: { status: 'draft', title: 'A morning on the Musegg wall', cover: null, body: { type: 'doc', content: [] }, media: [], updatedAt: new Date('2026-10-27T10:00:00Z') } }),
     createStoryGroup: async (_actor, storeId, input) => ({ ok: true, value: { ...fakeStoryGroup, ...input, storeId } }),
     saveStoryGroup: async (_actor, storeId, groupId, ifMatch, changes) => ({ ok: true, value: { ...fakeStoryGroup, ...changes, storeId, id: groupId, rowVersion: ifMatch + 1 } }),
     createStoryVersion: async (_actor, storeId, groupId, language, changes) => ({ ok: true, value: { ...fakeStoryVersion, slug: changes.slug ?? null, draft: changes.draft ?? null, storeId, groupId, language } }),

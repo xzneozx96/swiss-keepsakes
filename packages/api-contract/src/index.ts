@@ -89,6 +89,8 @@ export {
   type StoryVersionSaveBody,
   storyVersionSaveBodySchema,
   storyVersionSchema,
+  type StoryVersionText,
+  storyVersionTextSchema,
   type Address,
   addressAtQuerySchema,
   addressSchema,

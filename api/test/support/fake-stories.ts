@@ -63,6 +63,10 @@ export function createFakeStories(): StoryRepository<null> & { groups: Map<strin
       const version = versions.get(key(groupId, language))
       return version?.storeId === storeId ? version : undefined
     },
+    async findVersion(_tx, storeId, groupId, language) {
+      const version = versions.get(key(groupId, language))
+      return version?.storeId === storeId ? version : undefined
+    },
     async saveVersion(_tx, version, changes, at) {
       return putVersion({
         ...version,

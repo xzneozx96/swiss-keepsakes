@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { mediaSchema } from './media.ts'
 import { noNul } from './text.js'
 
 // Mirrors packages/domain/src/content (the contract imports only zod). Request bodies are strict, so a price, a
@@ -417,13 +418,15 @@ const storyBodyNodeViewSchema = z.object({
   marks: z.array(z.unknown()).optional(),
 })
 
+const storyBodyViewSchema = z.object({ type: z.literal('doc'), content: z.array(storyBodyNodeViewSchema) })
+
 const storyDraftViewSchema = z.object({
   title: z.string(),
   excerpt: z.string(),
   authorName: z.string(),
   coverMediaId: z.uuid().nullable(),
   checkedOn: z.string().nullable().optional(),
-  body: z.object({ type: z.literal('doc'), content: z.array(storyBodyNodeViewSchema) }),
+  body: storyBodyViewSchema,
 })
 
 export const storyVersionSchema = z.object({
@@ -439,6 +442,15 @@ export const storyVersionSchema = z.object({
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 }).meta({ id: 'StoryVersion', description: 'One language version of a story, with its draft and its published text' })
+
+export const storyVersionTextSchema = z.object({
+  status: z.enum(['draft', 'published']).meta({ description: '`draft`: the text is not live yet (a draft, or a version taken down, or a published one with unpublished edits). `published`: it is what guests read' }),
+  title: z.string(),
+  cover: mediaSchema.nullable(),
+  body: storyBodyViewSchema.meta({ description: 'The stored Tiptap document, as written. An image or audio node names its file by `mediaId`, and `media` holds those files' }),
+  media: z.array(mediaSchema).meta({ description: 'The files the body\'s image and audio nodes name. A node whose file is missing here has none to show' }),
+  updatedAt: z.iso.datetime(),
+}).meta({ id: 'StoryVersionText', description: 'The text of one language version as the editor last left it: the draft if there is one, else the published text. For a preview to staff, never for guests' })
 
 const tourStopWriteSchema = z.strictObject({
   latitude: z.number().min(-90).max(90),
@@ -526,5 +538,6 @@ export type StoryVersionCreateBody = z.infer<typeof storyVersionCreateBodySchema
 export type StoryVersionSaveBody = z.infer<typeof storyVersionSaveBodySchema>
 export type StoryVersionMoveBody = z.infer<typeof storyVersionMoveBodySchema>
 export type StoryVersion = z.infer<typeof storyVersionSchema>
+export type StoryVersionText = z.infer<typeof storyVersionTextSchema>
 export type TourGuideWriteBody = z.infer<typeof tourWriteBodySchema>
 export type TourGuide = z.infer<typeof tourSchema>

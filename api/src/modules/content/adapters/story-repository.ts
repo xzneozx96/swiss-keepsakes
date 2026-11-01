@@ -179,6 +179,8 @@ export function createStoryRepository(): StoryRepository<Tx> {
 
     findVersionForUpdate: (tx, storeId, groupId, language) => loadVersion(tx, storeId, groupId, language, true),
 
+    findVersion: (tx, storeId, groupId, language) => loadVersion(tx, storeId, groupId, language, false),
+
     async saveVersion(tx, version, changes, at) {
       await tx.execute(sql`
         update content.story_versions set

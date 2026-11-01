@@ -10,6 +10,7 @@ import {
   storyVersionMoveBodySchema,
   storyVersionSaveBodySchema,
   storyVersionSchema,
+  storyVersionTextSchema,
   tourPublishBodySchema,
   tourSchema,
   tourWriteBodySchema,
@@ -165,6 +166,16 @@ describe('[E2.6] content write schemas', () => {
     const view = { groupId: uuid, storeId: uuid, language: 'en', status: 'draft', slug: null, draft, published: null, publishedAt: null, rowVersion: 1, createdAt: iso, updatedAt: iso }
     expect(storyVersionSchema.parse(view).draft).toEqual(draft)
     expect(Object.keys(storyVersionSchema.parse({ ...view, draft: { ...draft, authorRole: 'x' } }).draft!)).not.toContain('authorRole')
+  })
+
+  it('a story version text carries the cover and the files as media, and the body as stored', () => {
+    const iso = '2026-10-27T10:00:00.000Z'
+    const media = { id: uuid, kind: 'image', status: 'ready', name: 'a.jpg', contentType: 'image/jpeg', byteSize: 1, width: 10, height: 10, publicUrl: 'https://storage.test/a.jpg', variants: [] }
+    const text = { status: 'draft', title: 'T', cover: media, body: { type: 'doc', content: [{ type: 'image', attrs: { mediaId: uuid, alt: '' } }] }, media: [media], updatedAt: iso }
+    expect(storyVersionTextSchema.parse(text)).toEqual(text)
+    expect(ok(storyVersionTextSchema, { ...text, cover: null, media: [] })).toBe(true)
+    expect(ok(storyVersionTextSchema, { ...text, status: 'live' })).toBe(false)
+    expect(ok(storyVersionTextSchema, { ...text, updatedAt: 'yesterday' })).toBe(false)
   })
 
   it('[E2.6] views serialise dates as ISO strings', () => {
