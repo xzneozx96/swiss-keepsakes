@@ -61,8 +61,8 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
   const story = useStoryVersion(storeId, form.mainStoryGroupId, language, storyOpen)
 
   return (
-    // `transform-gpu` makes this box the containing block of the sheet, which is `position: fixed`: it fills the phone's screen and not the page. The sheet is as high as the page's window by default, so the box says its own height (the screen under the status bar, 820 px at the phone's real size).
-    <div ref={setFrame} className="relative h-full transform-gpu overflow-hidden [--visual-viewport-height:820px]">
+    // `transform-gpu` makes this box the containing block of the sheet, which is `position: fixed`: it fills the phone's screen and not the page. HeroUI sets `--visual-viewport-height` inline on the sheet's backdrop to the page's window height, so a value set here would lose. The box is a size container, and `[data-sheet-screen]` in globals.css pins that variable on the backdrop to the box's own height: the backdrop fills the screen and `sheet-max` follows the phone's real size, whatever the window.
+    <div ref={setFrame} className="relative h-full transform-gpu overflow-hidden" data-sheet-screen="">
       <MapView
         inert
         className="relative h-full"
