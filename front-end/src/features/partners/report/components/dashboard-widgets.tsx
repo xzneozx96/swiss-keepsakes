@@ -7,6 +7,8 @@ import { numberFormat } from '@sk/domain/shared'
 import { useState } from 'react'
 
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
+import { EmptyState } from '@/components/empty-state'
+import { ReportsIcon } from '@/components/icons'
 import { DeltaChip } from '@/components/stat-card'
 import { useLocale } from '@/contexts/locale-context'
 import { Widget } from '@/features/merchant/today/components/overview-analytics'
@@ -296,9 +298,7 @@ export function MixWidget({
     >
       {mix.isEmpty
         ? (
-            <p className="py-6 text-center text-sm text-muted">
-              {t('partnerDash.mix.empty')}
-            </p>
+            <EmptyState compact icon={ReportsIcon} message={t('partnerDash.mix.empty')} />
           )
         : (
             <div className="flex flex-col gap-5">
