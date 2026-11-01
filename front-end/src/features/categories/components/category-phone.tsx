@@ -7,7 +7,7 @@ import { useRef, useState } from 'react'
 
 import { SKELETON_ROWS } from '@/components/data-table-skeleton'
 import { EmptyState } from '@/components/empty-state'
-import { BackIcon, ChevronRightIcon, EditIcon, InfoIcon, PlusIcon, StatusSuccessIcon, StatusWarningIcon, TrashIcon } from '@/components/icons'
+import { BackIcon, CategoryIcon, ChevronRightIcon, EditIcon, InfoIcon, PlusIcon, StatusSuccessIcon, StatusWarningIcon, TrashIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { useLevelDrag } from '../hooks/use-level-drag'
 import { childrenOf, matches, nameOf, refusalOf, rootsOf } from '../lib/category-tree'
@@ -243,7 +243,7 @@ function CategoryPage({ category, items, kind, actions, busy, onPage }: {
             </Button>
           </div>
           {kids.length === 0
-            ? <p className="px-4 pb-4 text-sm text-muted">{t('categories.phone.subsNone')}</p>
+            ? <EmptyState compact icon={CategoryIcon} message={t('categories.phone.subsNone')} />
             : (
                 <DragList
                   actions={actions}
