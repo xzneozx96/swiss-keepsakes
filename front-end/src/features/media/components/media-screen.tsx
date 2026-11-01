@@ -2,7 +2,7 @@ import type { MediaItem } from '@sk/api-contract'
 import type { MediaSearch, StatusFilter, UseFilter } from '../lib/search-params'
 import type { PagerState } from '@/components/list-pagination'
 
-import { Button, Skeleton } from '@heroui/react'
+import { Button, Skeleton, toast } from '@heroui/react'
 import { useEffect, useState } from 'react'
 
 import { EmptyState } from '@/components/empty-state'
@@ -13,8 +13,9 @@ import { Pager } from '@/components/list-pagination'
 import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { useMediaList } from '../api/queries'
+import { useDuplicateCheck } from '../hooks/use-duplicate-check'
 import { useMediaActions } from '../hooks/use-media-actions'
-import { ACCEPT, retireCheck } from '../lib/rules'
+import { ACCEPT, checkFile, retireCheck } from '../lib/rules'
 import { pageSizeOf, STATUS_FILTERS, USE_FILTERS } from '../lib/search-params'
 import { FileList, ListSkeleton } from './file-list'
 import { MediaGate } from './media-gate'
@@ -23,6 +24,8 @@ import { MediaToolbar } from './media-toolbar'
 import { PhotoWall, WallSkeleton } from './photo-wall'
 
 const SEARCH_DELAY_MS = 250
+// How long the files a pick already had stay pointed out.
+const FOUND_MS = 5000
 
 // The file dialog also offers HEIC, so a refusal can say why (the type check names it).
 const ACCEPT_UPLOAD = `${ACCEPT},.heic`
@@ -88,6 +91,9 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
   const [open, setOpen] = useState<MediaItem | null>(null)
   const [refusedId, setRefusedId] = useState<string | null>(null)
   const actions = useMediaActions(storeId)
+  const duplicates = useDuplicateCheck(storeId)
+  const [checking, setChecking] = useState(false)
+  const [found, setFound] = useState<string[]>([])
   const list = useMediaList(storeId, { kind, q: search.q, use: use.join(',') || undefined, status: status.join(',') || undefined, page, pageSize })
   const items = list.data?.items ?? []
 
@@ -99,6 +105,48 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
 
     return () => clearTimeout(timer)
   }, [text, search.q, onSearch])
+
+  const foundShown = items.some(item => found.includes(item.id))
+
+  useEffect(() => {
+    if (found.length === 0)
+      return
+    const timer = setTimeout(setFound, FOUND_MS, [])
+
+    return () => clearTimeout(timer)
+  }, [found])
+
+  // Once the pointed-out file is on screen (its page loaded), bring it into view.
+  useEffect(() => {
+    if (foundShown)
+      found.map(id => document.querySelector(`[data-media="${id}"]`)).find(Boolean)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [found, foundShown])
+
+  // Hashes the pick, asks about files the library already has, uploads the rest. A file kept as the existing one is
+  // not uploaded: the list searches its name so it shows, and it is outlined for a moment.
+  const pickFiles = async (files: File[]) => {
+    setChecking(true)
+    try {
+      const decision = await duplicates.resolve(files, file => checkFile(file).ok)
+
+      if (!decision)
+        return
+      const [first] = decision.reuse
+
+      if (first) {
+        const name = first.name
+
+        setText(name)
+        onSearch({ kind: first.kind === 'image' ? undefined : first.kind, q: name, use: undefined, status: undefined, page: undefined })
+        setFound(decision.reuse.map(match => match.id))
+        toast.info(t('media.duplicate.shown', { list: decision.reuse.map(match => match.name).join(', ') }))
+      }
+      void actions.upload(decision.upload)
+    }
+    finally {
+      setChecking(false)
+    }
+  }
 
   const stopSelecting = () => {
     setSelecting(false)
@@ -159,7 +207,7 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
 
   return (
     <div className="flex flex-col gap-4" data-testid="media-library">
-      <Header upload={<UploadButton isBusy={actions.isUploading} onFiles={files => void actions.upload(files)} />} />
+      <Header upload={<UploadButton isBusy={actions.isUploading || checking} onFiles={files => void pickFiles(files)} />} />
       <MediaToolbar
         counts={list.data?.kinds ?? { image: undefined, audio: undefined, pdf: undefined }}
         groups={groups}
@@ -176,8 +224,8 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
       {list.isPending && (kind === 'image' ? <WallSkeleton /> : <ListSkeleton />)}
       {list.data && !items.length && <EmptyState icon={noFilter ? PhotoAddIcon : SearchIcon} message={t(noFilter && !Object.values(list.data.kinds).some(Boolean) ? 'media.empty.all' : 'media.empty.filtered')} />}
       {items.length > 0 && (kind === 'image'
-        ? <PhotoWall busyIds={actions.busyIds} items={items} label={kindLabel} selected={selected} selecting={selecting} onOpen={setOpen} onToggle={toggle} />
-        : <FileList busyIds={actions.busyIds} items={items} label={kindLabel} onOpen={setOpen} onReplace={actions.askReplace} onRetire={item => void retireOne(item)} />)}
+        ? <PhotoWall busyIds={actions.busyIds} foundIds={found} items={items} label={kindLabel} selected={selected} selecting={selecting} onOpen={setOpen} onToggle={toggle} />
+        : <FileList busyIds={actions.busyIds} foundIds={found} items={items} label={kindLabel} onOpen={setOpen} onReplace={actions.askReplace} onRetire={item => void retireOne(item)} />)}
       {!list.isPending && <Pager compact={!isWide} pager={pager} />}
 
       {selecting && selected.length > 0 && (
@@ -204,6 +252,7 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
         onDismissRefusal={() => setRefusedId(null)}
       />
       {actions.elements}
+      {duplicates.dialog}
     </div>
   )
 }

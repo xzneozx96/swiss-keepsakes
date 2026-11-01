@@ -894,7 +894,14 @@ describe('[E4.2][AC68] N17 photos', () => {
       const release = hold()
       await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'bridge.jpg', { type: 'image/jpeg' }))
 
-      const [row] = pendingRows()
+      // The pick is hashed and looked up in the library before its row shows.
+      const [row] = await waitFor(() => {
+        const found = pendingRows()
+
+        expect(found).toHaveLength(1)
+
+        return found
+      })
       expect(create).toHaveBeenCalledTimes(1)
       expect(row).toHaveTextContent('bridge.jpg')
       expect(within(row!).getByText('Uploading…')).toBeInTheDocument()
@@ -923,7 +930,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       const release = hold()
       await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'first.jpg', { type: 'image/jpeg' }))
 
-      expect(pendingRows()).toHaveLength(1)
+      await waitFor(() => expect(pendingRows()).toHaveLength(1))
       expect(screen.queryByRole('list', { name: 'Photos, in order' })).not.toBeInTheDocument()
       expect(screen.queryByText('Cover')).not.toBeInTheDocument()
       expect(screen.queryByText('No photos yet. The first one you add is the main photo.')).not.toBeInTheDocument()
@@ -950,7 +957,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       const release = hold()
       await userEvent.upload(screen.getByTestId('photo-input'), [new File(['a'], 'a.jpg', { type: 'image/jpeg' }), new File(['b'], 'b.jpg', { type: 'image/jpeg' })])
 
-      expect(pendingRows().map(row => row.querySelector('[title]')!.textContent)).toEqual(['a.jpg', 'b.jpg'])
+      await waitFor(() => expect(pendingRows().map(row => row.querySelector('[title]')!.textContent)).toEqual(['a.jpg', 'b.jpg']))
       release()
 
       await waitFor(() => expect(names()).toEqual(['photo-61.jpg', 'photo-62.jpg']))
@@ -1004,7 +1011,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       await openPhotos()
       const release = hold()
       await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'gone.jpg', { type: 'image/jpeg' }))
-      await userEvent.click(within(pendingRows()[0]!).getByRole('button', { name: 'Remove gone.jpg' }))
+      await userEvent.click(within((await waitFor(() => pendingRows()))[0]!).getByRole('button', { name: 'Remove gone.jpg' }))
 
       expect(screen.queryByRole('list', { name: 'Photos being added' })).not.toBeInTheDocument()
       expect(revoke).toHaveBeenCalledWith('blob:gone')
@@ -1026,7 +1033,7 @@ describe('[E4.2][AC68] N17 photos', () => {
       const release = hold()
       await userEvent.upload(screen.getByTestId('photo-input'), new File(['abc'], 'a.jpg', { type: 'image/jpeg' }))
 
-      expect(within(screen.getByRole('list', { name: 'Fotos, die gerade hinzugefügt werden' })).getByText('Wird hochgeladen…')).toBeInTheDocument()
+      expect(within(await screen.findByRole('list', { name: 'Fotos, die gerade hinzugefügt werden' })).getByText('Wird hochgeladen…')).toBeInTheDocument()
       release()
       expect(await screen.findByText('Hochladen fehlgeschlagen')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'a.jpg erneut hochladen' })).toBeInTheDocument()

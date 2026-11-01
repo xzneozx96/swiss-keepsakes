@@ -9,7 +9,7 @@ import { FileThumb } from './file-thumb'
 
 const GRID = 'grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6'
 
-function Tile({ item, busy, selecting, selected, onPress }: { item: MediaItem, busy: boolean, selecting: boolean, selected: boolean, onPress: () => void }) {
+function Tile({ item, busy, found, selecting, selected, onPress }: { item: MediaItem, busy: boolean, found: boolean, selecting: boolean, selected: boolean, onPress: () => void }) {
   const { t } = useLocale()
   const unused = item.status === 'ready' && !item.usage?.pages
 
@@ -22,7 +22,7 @@ function Tile({ item, busy, selecting, selected, onPress }: { item: MediaItem, b
       type="button"
       onClick={onPress}
     >
-      <span className={`relative block w-full overflow-hidden rounded-xl ${selected ? 'ring-2 ring-foreground ring-offset-2' : ''}`}>
+      <span className={`relative block w-full overflow-hidden rounded-xl ${selected ? 'ring-2 ring-foreground ring-offset-2' : found ? 'ring-2 ring-accent ring-offset-2' : ''}`}>
         <FileThumb busy={busy} className="aspect-square w-full rounded-xl" item={item} />
         {unused && <span className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">{t('media.grid.unused')}</span>}
         {item.status !== 'ready' && (
@@ -42,10 +42,12 @@ function Tile({ item, busy, selecting, selected, onPress }: { item: MediaItem, b
 }
 
 /** The photo wall: square tiles, three across on a phone, four from 640 px, six from 1024 px. */
-export function PhotoWall({ items, label, busyIds, selecting, selected, onOpen, onToggle }: {
+export function PhotoWall({ items, label, busyIds, foundIds, selecting, selected, onOpen, onToggle }: {
   items: MediaItem[]
   label: string
   busyIds: string[]
+  /** Files to point out: the ones a pick already had in the library. */
+  foundIds: string[]
   selecting: boolean
   selected: string[]
   onOpen: (item: MediaItem) => void
@@ -55,7 +57,7 @@ export function PhotoWall({ items, label, busyIds, selecting, selected, onOpen, 
     <ul aria-label={label} className={GRID}>
       {items.map(item => (
         <li key={item.id}>
-          <Tile busy={busyIds.includes(item.id)} item={item} selected={selected.includes(item.id)} selecting={selecting} onPress={() => (selecting ? onToggle(item) : onOpen(item))} />
+          <Tile busy={busyIds.includes(item.id)} found={foundIds.includes(item.id)} item={item} selected={selected.includes(item.id)} selecting={selecting} onPress={() => (selecting ? onToggle(item) : onOpen(item))} />
         </li>
       ))}
     </ul>

@@ -93,6 +93,9 @@ async function handle(input: RequestInfo | URL, init?: RequestInit): Promise<Res
   const call: Call = { method: request.method, path: url.pathname + url.search, key: request.headers.get('idempotency-key'), ifMatch: request.headers.get('if-match'), body: text && request.headers.get('content-type')?.includes('json') ? JSON.parse(text) : undefined }
 
   api.calls.push(call)
+  // The photo block asks which picked files the library holds, by content, before any upload: none, and never held.
+  if (call.method === 'POST' && call.path === `/api/store/${storeId}/media/lookup` && !api.answer?.(call))
+    return Response.json({ items: [] })
   await api.hold
   const custom = api.answer?.(call)
 

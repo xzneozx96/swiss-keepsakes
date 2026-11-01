@@ -5,8 +5,11 @@ import { EmptyState } from '@/components/empty-state'
 import { LibraryIcon, PhotoAddIcon } from '@/components/icons'
 import { PhotoOrder } from '@/components/photo-order'
 import { useLocale } from '@/contexts/locale-context'
+import { useLatest } from '@/hooks/use-latest'
 import { useMediaNames } from '../api/queries'
+import { useDuplicateCheck } from '../hooks/use-duplicate-check'
 import { usePendingPhotos } from '../hooks/use-pending-photos'
+import { refusalOf } from '../hooks/use-photo-upload'
 import { LibraryPicker } from './library-picker'
 import { PhotoAdd, PhotoState, PhotoThumb } from './photo-parts'
 
@@ -18,6 +21,8 @@ import { PhotoAdd, PhotoState, PhotoThumb } from './photo-parts'
  * the same moment). A row shows the file's name from the library, "Photo 1" until it is read. The block has no card
  * of its own; the caller puts it in one. Next to Add photo, Choose from library adds photos the store already has
  * (a sheet over the Media library, up to the room left). With no photo at all the block shows an empty state with both.
+ * Before a pick goes up, the files the library already holds (by content) are asked about: the existing photo is added
+ * with no upload, or the file goes up as a copy (`useDuplicateCheck`).
  */
 export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, showError = false, onUploadingChange }: {
   storeId: string
@@ -36,11 +41,32 @@ export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, sho
 }) {
   const { t } = useLocale()
   const photos = usePendingPhotos(storeId, onAdd)
+  const duplicates = useDuplicateCheck(storeId)
+  const latest = useLatest({ ids, onAdd })
+  // From the pick until its files are rows: the hash, the lookup and the question about duplicates.
+  const [checking, setChecking] = useState(false)
   const fileNames = useMediaNames(storeId, ids)
   const room = max - ids.length - photos.pending.length
   const [libraryOpen, setLibraryOpen] = useState(false)
   const empty = ids.length === 0 && photos.pending.length === 0
-  const uploading = photos.pending.some(item => item.status === 'uploading')
+  const uploading = checking || photos.pending.some(item => item.status === 'uploading')
+
+  const pick = async (files: File[]) => {
+    setChecking(true)
+    try {
+      const decision = await duplicates.resolve(files, file => !refusalOf(file))
+
+      if (!decision)
+        return
+      // A photo that is already on the page is not added twice.
+      for (const existing of decision.reuse.filter(({ id }) => !latest.current.ids.includes(id)))
+        latest.current.onAdd(existing.id)
+      photos.add(decision.upload)
+    }
+    finally {
+      setChecking(false)
+    }
+  }
 
   useEffect(() => {
     onUploadingChange?.(uploading)
@@ -48,7 +74,7 @@ export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, sho
 
   const actions = (
     <div className={`flex flex-wrap items-center gap-2 ${empty ? 'justify-center' : ''}`}>
-      <PhotoAdd onPick={files => photos.add(files.slice(0, room))} />
+      <PhotoAdd onPick={files => void pick(files.slice(0, room))} />
       <Button className="max-lg:min-h-11" size="sm" variant="secondary" onPress={() => setLibraryOpen(true)}>
         <LibraryIcon aria-hidden size={16} />
         {t('media.photos.library')}
@@ -95,6 +121,7 @@ export function PhotosField({ storeId, ids, max, onChange, onAdd, emptyText, sho
           )
         : <EmptyState compact alert={showError} icon={PhotoAddIcon} message={emptyText ?? t('media.photos.empty')}>{actions}</EmptyState>}
       {!empty && (room > 0 ? actions : limit)}
+      {duplicates.dialog}
       <LibraryPicker
         isOpen={libraryOpen}
         room={room}

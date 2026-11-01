@@ -14,7 +14,7 @@ const failures: Record<string, MessageKey> = {
 }
 
 /** Why a file cannot be a photo, from the rules the API checks again; undefined when it may go up. */
-function refusalOf(file: File): MessageKey | undefined {
+export function refusalOf(file: File): MessageKey | undefined {
   const check = checkUploadRequest({ contentType: file.type, byteSize: file.size })
 
   if (check.ok)

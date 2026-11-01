@@ -40,6 +40,8 @@ export function createMediaClient(): MediaClient {
       answer((await loadClient()).GET('/api/store/{storeId}/media/{mediaId}', { ...timeout(), params: { path: { storeId, mediaId: id } } })),
     uses: async ({ storeId, id }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/media/{mediaId}/uses', { ...timeout(), params: { path: { storeId, mediaId: id } } })),
+    lookup: async ({ storeId, sha256 }) =>
+      (await answer((await loadClient()).POST('/api/store/{storeId}/media/lookup', { ...timeout(), params: { path: { storeId } }, body: { sha256 } }))).items,
     upload: async ({ storeId, file, contentType }) => {
       const { client, uploadKey } = await putToStorage(storeId, file, contentType)
 

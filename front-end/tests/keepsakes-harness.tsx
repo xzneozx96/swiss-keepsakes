@@ -130,6 +130,9 @@ export async function setUpHarness() {
 
       return Response.json({ ...media, id, name: id === photoId ? media.name : `photo-${id.slice(-2)}.jpg` })
     }
+    // The photo block asks which picked files the library already holds, by content: none.
+    if (call.method === 'POST' && call.path === `/api/store/${storeId}/media/lookup`)
+      return Response.json({ items: [] })
     if (call.path === '/api/me')
       return Response.json({ guestId: storeId, stores: [{ storeId, role: 'owner', status: 'live' }] })
 

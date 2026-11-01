@@ -1,4 +1,4 @@
-import type { ConfirmUpload, Media, MediaItem, MediaList, MediaPatchBody, MediaUses, UploadGrant, UploadRequest } from '@sk/api-contract'
+import type { ConfirmUpload, Media, MediaItem, MediaList, MediaMatch, MediaPatchBody, MediaUses, UploadGrant, UploadRequest } from '@sk/api-contract'
 import type { MediaKind } from '@sk/domain/content'
 
 /** What one page of the library is asked for. `use` and `status` are comma separated lists. */
@@ -26,6 +26,8 @@ export interface MediaClient {
   get: (input: { storeId: string, id: string }) => Promise<Media>
   /** The pages that use one file. */
   uses: (input: { storeId: string, id: string }) => Promise<MediaUses>
+  /** The ready files of the store whose content is one of these SHA-256 hashes (64 lower-case hex digits), in one call. A read: no key. */
+  lookup: (input: { storeId: string, sha256: string[] }) => Promise<MediaMatch[]>
   /** A new file. It comes back `processing`; the list reads again until it is ready. */
   upload: (input: { storeId: string, file: File, contentType: string }) => Promise<Media>
   /** The new file takes the place of the old under the same id: next version, new key. */
