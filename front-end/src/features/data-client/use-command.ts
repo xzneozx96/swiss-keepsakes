@@ -2,13 +2,15 @@ import type { MutationMeta } from '@tanstack/react-query'
 import type { MutationFeedback } from './api-feedback'
 import type { CommandName, Feature } from './commands'
 import type { DataClient } from './data-client'
+import type { LocalChange } from './local-changes'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { commandAffects } from './commands'
 import { useDataClient } from './data-client-context'
+import { commandChanges } from './local-changes'
 
-type Command<F extends Feature, C extends CommandName<F>> = DataClient[F][C] extends (
+export type Command<F extends Feature, C extends CommandName<F>> = DataClient[F][C] extends (
   input: infer TInput,
 ) => Promise<infer TResult>
   ? { input: TInput, result: TResult }
@@ -18,6 +20,9 @@ type Command<F extends Feature, C extends CommandName<F>> = DataClient[F][C] ext
  * One command of a feature client, `useCommand('orders', 'accept')`. On success it refreshes every
  * query the command affects (`commandAffects`), the ones no screen shows right now too, and waits
  * for them, so the next screen never opens on an old read.
+ *
+ * A command listed in `commandChanges` (a delete, hide, retire or remove) does not wait: the server's
+ * answer edits the cached lists at once, and the re-read runs in the background.
  *
  * Take `mutate`, `mutateAsync` or `isPending` from the result: the result itself changes on
  * every state change. To leave the screen after a write, pass `onSuccess` to `mutate`: it does
@@ -43,12 +48,29 @@ export function useCommand<F extends Feature, C extends CommandName<F>>(
     // The cache's feedback typing is looser than ours (it cannot know each command's result and
     // input), so it is cast here, once, instead of at every call site.
     meta: options?.meta as MutationMeta,
-    onSuccess: () =>
-      Promise.all(
-        commandAffects[feature][command].map(queryKey =>
-          queryClient.invalidateQueries({ queryKey, refetchType: 'all' }),
-        ),
-      ),
+    onSuccess: async (result, input) => {
+      const refresh = () =>
+        Promise.all(
+          commandAffects[feature][command].map(queryKey =>
+            queryClient.invalidateQueries({ queryKey, refetchType: 'all' }),
+          ),
+        )
+      const changesOf = (commandChanges[feature] as Record<string, ((input: TInput, result: TResult) => readonly LocalChange[]) | undefined> | undefined)?.[command as string]
+      const changes = changesOf?.(input, result)
+
+      if (!changes)
+        return refresh()
+      // A read already on the way started before the write and would put the row back: stop it first.
+      await Promise.all(changes.map(({ key }) => queryClient.cancelQueries({ queryKey: key })))
+      for (const { key, apply } of changes) {
+        for (const [queryKey, data] of queryClient.getQueriesData({ queryKey: key })) {
+          if (data !== undefined)
+            queryClient.setQueryData(queryKey, apply(data, queryKey))
+        }
+      }
+      // The full re-read confirms the edit and fixes what it left (counts); nothing waits for it.
+      void refresh()
+    },
   })
 }
 
@@ -66,7 +88,7 @@ export function useSubmit<F extends Feature, C extends CommandName<F>>(
 ) {
   type TInput = Command<F, C>['input']
   type TResult = Command<F, C>['result']
-  const { mutate, isPending, error, reset } = useCommand(feature, command, options)
+  const { mutate, mutateAsync, isPending, error, reset } = useCommand(feature, command, options)
   const runningRef = useRef(false)
 
   const submit = (
@@ -90,5 +112,19 @@ export function useSubmit<F extends Feature, C extends CommandName<F>>(
     return true
   }
 
-  return { submit, isPending, error, reset }
+  /**
+   * The same write for a confirm dialog's `run` (`useConfirm`): the promise resolves with the result
+   * and rejects with the refusal, which the dialog shows. A tap while one runs rejects at once.
+   */
+  const submitAsync = (input: TInput): Promise<TResult> => {
+    if (runningRef.current)
+      return Promise.reject(new Error('A write is already running'))
+    runningRef.current = true
+
+    return mutateAsync(input).finally(() => {
+      runningRef.current = false
+    })
+  }
+
+  return { submit, submitAsync, isPending, error, reset }
 }
