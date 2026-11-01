@@ -13,7 +13,6 @@ import { useId, useState } from 'react'
 import { EmptyState } from '@/components/empty-state'
 import { Block } from '@/components/form-block'
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, ProductsIcon } from '@/components/icons'
-import { StatusChip } from '@/components/status-chip'
 import { Swatch } from '@/features/keepsakes/components/option-parts'
 import { combinationName, labelOf } from './keepsake-options-rules'
 import { ArchivedList, Notice, OnSaleSwitch, Problem, TextLink } from './variant-design-parts'
@@ -180,7 +179,7 @@ function Detail({ studio, onArchive }: { studio: Studio, onArchive: (id: string)
 /** A variant in the list: O3's row (name over a muted line, rounded hover, the open one tinted from 1024 px). */
 function ListRow({ studio, row }: { studio: Studio, row: VRow }) {
   const title = studio.options.length > 0 ? combinationName(row.values, studio.options) : row.code
-  const status = row.status === 'hidden' ? { tone: 'neutral', text: 'Hidden' } as const : row.stock === 0 ? { tone: 'warning', text: 'Sold out' } as const : { tone: 'success', text: 'On sale' } as const
+  const status = row.status === 'hidden' ? { color: 'text-muted', text: 'Hidden' } : row.stock === 0 ? { color: 'text-warning', text: 'Sold out' } : { color: 'text-success', text: 'On sale' }
   const current = studio.editing === row.id
 
   return (
@@ -193,9 +192,12 @@ function ListRow({ studio, row }: { studio: Studio, row: VRow }) {
       >
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="truncate font-medium">{title}</span>
-          <span className="truncate text-sm text-muted">{priceText(row)}</span>
+          <span className="truncate text-sm text-muted">
+            {priceText(row)}
+            {' · '}
+            <span className={`font-medium ${status.color}`}>{status.text}</span>
+          </span>
         </span>
-        <StatusChip tone={status.tone}>{status.text}</StatusChip>
         <ChevronRightIcon aria-hidden className="shrink-0 text-muted lg:hidden" size={18} />
       </button>
     </li>
@@ -219,8 +221,8 @@ export function VariantsV2({ studio }: { studio: Studio }) {
       title="Variants"
     >
       <Notice text={studio.notice} />
-      <div className="grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-10">
-        <nav aria-label="Variants" className={`flex flex-col gap-1 ${open ? 'max-lg:hidden' : ''}`}>
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-10">
+        <nav aria-label="Variants" className={`flex min-w-0 flex-col gap-1 ${open ? 'max-lg:hidden' : ''}`}>
           {studio.rows.length === 0
             ? <p className="px-1 pb-2 text-sm text-pretty text-muted">No variants yet.</p>
             : <ul className="flex flex-col gap-1">{studio.rows.map(row => <ListRow key={row.id} row={row} studio={studio} />)}</ul>}
