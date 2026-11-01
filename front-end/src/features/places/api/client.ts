@@ -1,4 +1,4 @@
-import type { Address, MapsLinkPosition, Pin, PinList, PinPublishBody, PinStoryOptionList, PinWriteBody } from '@sk/api-contract'
+import type { Address, MapsLinkPosition, Pin, PinList, PinPublishBody, PinStoryOptionList, PinWriteBody, StoryVersionText } from '@sk/api-contract'
 
 /** A command carries the `Idempotency-Key` of the user's intent (`useIdempotencyKey`), so a retry of it is the same request to the API. */
 export type Keyed<T> = T & { idempotencyKey: string }
@@ -11,6 +11,8 @@ export interface PlacesClient {
   list: (input: { storeId: string }) => Promise<PinList>
   get: (input: { storeId: string, id: string }) => Promise<Pin>
   storyOptions: (input: { storeId: string }) => Promise<PinStoryOptionList>
+  /** The text of one language version of a story as the editor last left it (the draft, else the published text). 404 when the story has no version in that language. */
+  storyVersion: (input: { storeId: string, groupId: string, language: 'en' | 'de' }) => Promise<StoryVersionText>
   create: (input: Keyed<{ storeId: string } & PinWriteBody>) => Promise<Pin>
   save: (input: Keyed<{ storeId: string, id: string, ifMatch: number } & PinWriteBody>) => Promise<Pin>
   publish: (input: Keyed<{ storeId: string, id: string, ifMatch: number } & PinPublishBody>) => Promise<Pin>

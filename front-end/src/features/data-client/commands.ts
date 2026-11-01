@@ -21,7 +21,7 @@ interface ReadsWithInput {
   categories: 'list'
   keepsakes: 'list' | 'get'
   media: 'list' | 'uses' | 'get'
-  places: 'list' | 'get' | 'storyOptions'
+  places: 'list' | 'get' | 'storyOptions' | 'storyVersion'
 }
 
 /**

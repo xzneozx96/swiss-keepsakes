@@ -12,6 +12,8 @@ export function createPlacesClient(): PlacesClient {
       answer((await loadClient()).GET('/api/store/{storeId}/pins/{pinId}', { ...timeout(), params: { path: { storeId, pinId: id } } })),
     storyOptions: async ({ storeId }) =>
       answer((await loadClient()).GET('/api/store/{storeId}/pins/story-options', { ...timeout(), params: { path: { storeId } } })),
+    storyVersion: async ({ storeId, groupId, language }) =>
+      answer((await loadClient()).GET('/api/store/{storeId}/story-groups/{groupId}/versions/{language}', { ...timeout(), params: { path: { storeId, groupId, language } } })),
     create: async ({ storeId, idempotencyKey, ...body }) =>
       answer((await loadClient()).POST('/api/store/{storeId}/pins', { ...keyed(idempotencyKey), params: { path: { storeId } }, body })),
     save: async ({ storeId, id, ifMatch, idempotencyKey, ...body }) => {

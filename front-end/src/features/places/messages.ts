@@ -91,7 +91,7 @@ export const placesEn = {
   'places.content.title': 'Title in {lang}',
   'places.content.tip': 'Tips from a local',
   'places.content.tipHelp': 'A sentence or two in your own words: what to look for, when to come.',
-  'places.hours.none': 'No opening hours. Guests see none on the card.',
+  'places.hours.none': 'No opening hours yet. Guests see none on the card.',
   'places.hours.add': 'Add opening hours',
   'places.hours.closed': 'Closed',
   'places.hours.opens': '{day} opens',
@@ -282,5 +282,6 @@ export const placesEn = {
   'places.preview.noLocation': 'The pin shows here once you choose the place on the map.',
   'places.preview.story.close': 'Close',
   'places.preview.story.draft': 'This version is a draft. Guests do not see it yet.',
-  'places.preview.story.missing': 'The story text is not available in the preview yet. Guests read it on the story page.',
+  'places.preview.story.none': 'There is no {language} version of this story yet.',
+  'places.preview.story.error': 'The story text could not be loaded. Try again in a moment.',
 } as const

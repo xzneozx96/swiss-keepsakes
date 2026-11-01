@@ -34,6 +34,7 @@ export const queryKeys = {
     list: ['places', 'list'],
     pin: ['places', 'pin'],
     storyOptions: ['places', 'storyOptions'],
+    storyVersion: ['places', 'storyVersion'],
   },
   partners: {
     partners: ['partners', 'partners'],

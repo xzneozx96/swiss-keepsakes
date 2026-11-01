@@ -25,6 +25,12 @@ export const placesQueries = {
       queryKey: [...queryKeys.places.storyOptions, storeId],
       queryFn: () => client.places.storyOptions({ storeId }),
     }),
+  storyVersion: (client: DataClient, storeId: string, groupId: string, language: 'en' | 'de') =>
+    queryOptions({
+      ...fromApi,
+      queryKey: [...queryKeys.places.storyVersion, storeId, groupId, language],
+      queryFn: () => client.places.storyVersion({ storeId, groupId, language }),
+    }),
 }
 
 /** Every pin of the store. Waits while the store id is unknown. */
@@ -45,4 +51,11 @@ export function useStoryOptions(storeId: string | undefined) {
   const client = useDataClient()
 
   return useQuery({ ...placesQueries.storyOptions(client, storeId ?? ''), enabled: storeId !== undefined })
+}
+
+/** The text of the story's version in a language, read when `enabled` (the sheet is open). A story with no version in the language is a 404 `ApiProblem`. */
+export function useStoryVersion(storeId: string | undefined, groupId: string | null, language: 'en' | 'de', enabled: boolean) {
+  const client = useDataClient()
+
+  return useQuery({ ...placesQueries.storyVersion(client, storeId ?? '', groupId ?? '', language), enabled: enabled && storeId !== undefined && groupId !== null })
 }

@@ -3,7 +3,6 @@ import type { Language } from '@sk/domain/shared'
 import type { PlaceForm } from '../lib/form'
 import type { CardExtras } from '@/features/map/components/place-card'
 
-import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
 import { IPhoneMockup } from '@/components/iphone-mockup'
@@ -12,12 +11,10 @@ import { PhotoPin } from '@/components/map/pin-faces'
 import { PinLayer } from '@/components/map/pin-layer'
 import { LocaleOverride, useLocale } from '@/contexts/locale-context'
 import { useCategories } from '@/features/categories/api/queries'
-import { contentQueries } from '@/features/content/api/queries'
-import { useDataClient } from '@/features/data-client'
 import { PlaceCardRow } from '@/features/map/components/place-card'
 import { CARD_ROW_HEIGHT, CONTROLS } from '@/features/map/lib/layout'
 import { useMediaFile } from '@/features/media/api/queries'
-import { useStoryOptions } from '../api/queries'
+import { useStoryOptions, useStoryVersion } from '../api/queries'
 import { photoIds } from '../lib/form'
 import { PREVIEW_PIN_ID, previewItem, tipIn } from '../lib/preview'
 import { StorySheet } from './story-sheet'
@@ -58,13 +55,10 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
   const pins = useMemo(() => (located ? [item] : NO_PINS), [item, located])
   const [frame, setFrame] = useState<HTMLDivElement | null>(null)
   const [storyOpen, setStoryOpen] = useState(false)
-  const client = useDataClient()
-  const articles = useQuery(contentQueries.articles(client))
   const option = stories.data?.items.find(candidate => candidate.groupId === form.mainStoryGroupId)
   const storyTitle = option ? (option.title[language] ?? option.title[language === 'en' ? 'de' : 'en'] ?? '') : ''
-  // The story options carry no text: the text is the version of the story the guest page draws, found by its title.
-  const article = articles.data?.find(candidate => candidate.language === language && candidate.title === storyTitle)
-    ?? articles.data?.find(candidate => candidate.title === storyTitle)
+  // The story options carry no text: the sheet reads the version in the previewed language once it opens.
+  const story = useStoryVersion(storeId, form.mainStoryGroupId, language, storyOpen)
 
   return (
     // `transform-gpu` makes this box the containing block of the sheet, which is `position: fixed`: it fills the phone's screen and not the page. The sheet is as high as the page's window by default, so the box says its own height (the screen under the status bar, 820 px at the phone's real size).
@@ -83,7 +77,7 @@ function DraftMap({ form, storeId, language }: { form: PlaceForm, storeId: strin
       >
         <DraftPin cover={cover} located={located} pins={pins} />
       </MapView>
-      <StorySheet article={article} container={frame} isOpen={storyOpen} language={language} title={storyTitle || item.title} onClose={() => setStoryOpen(false)} />
+      <StorySheet container={frame} error={story.error} isOpen={storyOpen} language={language} loading={story.isPending && story.fetchStatus !== 'idle'} text={story.data} title={storyTitle || item.title} onClose={() => setStoryOpen(false)} />
     </div>
   )
 }

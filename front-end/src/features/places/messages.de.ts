@@ -93,7 +93,7 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.content.title': 'Titel auf {lang}',
   'places.content.tip': 'Tipps von Einheimischen',
   'places.content.tipHelp': 'Ein, zwei Sätze in Ihren Worten: worauf achten, wann kommen.',
-  'places.hours.none': 'Keine Öffnungszeiten. Gäste sehen keine auf der Karte.',
+  'places.hours.none': 'Noch keine Öffnungszeiten. Gäste sehen keine auf der Karte.',
   'places.hours.add': 'Öffnungszeiten hinzufügen',
   'places.hours.closed': 'Geschlossen',
   'places.hours.opens': '{day} öffnet',
@@ -284,5 +284,6 @@ export const placesDe: Record<keyof typeof placesEn, string> = {
   'places.preview.noLocation': 'Der Punkt erscheint hier, sobald Sie den Ort auf der Karte wählen.',
   'places.preview.story.close': 'Schliessen',
   'places.preview.story.draft': 'Diese Version ist ein Entwurf. Gäste sehen sie noch nicht.',
-  'places.preview.story.missing': 'Der Text der Geschichte ist in der Vorschau noch nicht verfügbar. Gäste lesen ihn auf der Geschichtenseite.',
+  'places.preview.story.none': 'Diese Geschichte hat noch keine Version auf {language}.',
+  'places.preview.story.error': 'Der Text der Geschichte konnte nicht geladen werden. Versuche es gleich noch einmal.',
 }
