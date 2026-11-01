@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 import { toast } from '@heroui/react'
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -183,6 +183,23 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     expect(saved.content[0]!.content.map(node => node.text).join('')).toContain('Sharp.')
     expect(saved.content[0]!.content.map(node => node.text).join('')).toContain('A Swiss knife.')
   })
+
+  it('[DESC-rich] a description over 1200 characters says so at the field and is not saved', async () => {
+    await openEditor()
+
+    const field = await screen.findByLabelText('Description (English)', undefined, SLOW)
+    const editor = (field as HTMLElement & { editor: { commands: { setContent: (content: string, options: { emitUpdate: boolean }) => void } } }).editor
+
+    act(() => editor.commands.setContent(`<p>${'a'.repeat(1201)}</p>`, { emitUpdate: true }))
+    expect(await screen.findByText('Too long to save: shorten it to 1200 characters.')).toBeInTheDocument()
+    expect(screen.getByText(/1201 \/ 1200/)).toBeInTheDocument()
+    await new Promise(resolve => setTimeout(resolve, 2200))
+    expect(writes()).toHaveLength(0)
+    expect(screen.getByText('Unsaved changes')).toBeInTheDocument()
+    act(() => editor.commands.setContent(`<p>${'a'.repeat(1200)}</p>`, { emitUpdate: true }))
+    await waitFor(() => expect(writes()).toHaveLength(1), AUTOSAVE)
+    expect(screen.queryByText('Too long to save: shorten it to 1200 characters.')).not.toBeInTheDocument()
+  }, 20_000)
 
   it('[E6.1][autosave] sends only the languages that have text', async () => {
     await openEditor()

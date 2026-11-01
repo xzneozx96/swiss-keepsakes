@@ -12,13 +12,17 @@ import { fullLanguages, hasDescription, LANGUAGES, languageState, NAME_MAX, TEXT
 // The description's editor is the story editor with the text kit. It loads here, never from a route (performance rule 9).
 const DescriptionEditor = lazy(() => import('@/features/merchant/products/components/story-editor'))
 
-/** The loading state has the editor's shape: a toolbar row and the text area. */
+/** The loading state has the editor's shape: the label, a toolbar of small buttons, and lines of text. */
 function EditorSkeleton() {
   return (
     <div aria-hidden className="flex flex-col gap-2">
       <Skeleton className="h-4 w-40 rounded-lg" />
-      <Skeleton className="h-12 w-full rounded-2xl" />
-      <Skeleton className="h-44 w-full rounded-xl" />
+      <div className="flex gap-1">
+        {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="size-8 rounded-lg" />)}
+      </div>
+      <Skeleton className="h-4 w-full rounded-lg" />
+      <Skeleton className="h-4 w-5/6 rounded-lg" />
+      <Skeleton className="h-4 w-2/3 rounded-lg" />
     </div>
   )
 }
@@ -93,9 +97,10 @@ export function BasicsFields({ value, onChange, showErrors, nameOnly = false }: 
             onChange={doc => onChange({ ...value, text: { ...text, [language]: doc } })}
           />
         </Suspense>
-        <p className={`text-xs ${count > TEXT_MAX ? 'text-danger' : 'text-muted'}`} role={count > TEXT_MAX ? 'alert' : undefined}>
+        <p className={`text-xs ${count > TEXT_MAX ? 'text-danger' : 'text-muted'}`}>
           {t('keepsakes.basics.textHint', { count, max: TEXT_MAX })}
         </p>
+        {count > TEXT_MAX && <p className="text-xs text-danger" role="alert">{t('keepsakes.basics.textTooLong', { max: TEXT_MAX })}</p>}
         {invalid && !nameOnly && !hasDescription(text[language]) && <FieldError className="data-[visible=true]:block" data-visible>{t('keepsakes.basics.textRequired')}</FieldError>}
       </div>
     </div>

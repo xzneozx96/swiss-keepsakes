@@ -4,7 +4,7 @@ import type { ContentLanguage } from './localized.ts'
 export interface DescriptionNode {
   type?: string
   attrs?: Record<string, unknown>
-  marks?: unknown[]
+  marks?: { type: string, attrs?: Record<string, unknown> }[]
   text?: string
   content?: DescriptionNode[]
 }

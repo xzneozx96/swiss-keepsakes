@@ -68,6 +68,7 @@ export const keepsakesEn = {
   'keepsakes.basics.nameRequired': 'Add a name in English or German to publish.',
   'keepsakes.basics.text': 'Description ({language})',
   'keepsakes.basics.textHint': 'What the keepsake is, the sizes, and anything a guest should know. {count} / {max}',
+  'keepsakes.basics.textTooLong': 'Too long to save: shorten it to {max} characters.',
   'keepsakes.basics.textRequired': 'Add the description in the same language as the name.',
 
   'keepsakes.photos.title': 'Photos',

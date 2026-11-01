@@ -94,12 +94,19 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
       return false
     if (!dirtyRef.current)
       return true
+    // The API refuses a description of more than 1200 characters, and the field says so: nothing is sent until it is
+    // shorter. Checked before the run starts, so a finished run is never stored as the running one.
+    if (isTooLong(draftRef.current.text)) {
+      setState('unsaved')
+
+      return false
+    }
     const run = (async () => {
       try {
         while (dirtyRef.current) {
           const sent = draftRef.current
 
-          // The API refuses a description of more than 1200 characters, and the field says so: nothing is sent until it is shorter.
+          // A change made while an earlier save ran can have made it too long.
           if (isTooLong(sent.text)) {
             setState('unsaved')
 

@@ -65,7 +65,7 @@ export function isTooLong(text: Record<Language, RichNode | undefined>): boolean
  */
 export function storedDescription(value: unknown): RichNode | undefined {
   if (typeof value === 'string')
-    return descriptionFromPlain(value) as RichNode | undefined
+    return descriptionFromPlain(value)
 
   return typeof value === 'object' && value !== null && (value as RichNode).type === 'doc' ? (value as RichNode) : undefined
 }
