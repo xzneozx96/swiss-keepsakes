@@ -7,6 +7,7 @@ import { useState } from 'react'
 
 import { useConfirm } from '@/components/confirm-dialog'
 import { CopyText } from '@/components/copy-text'
+import { EmptyState } from '@/components/empty-state'
 
 import {
   BackIcon,
@@ -221,7 +222,7 @@ function LedgerCard({ view }: { view: PartnerDetailView }) {
     >
       {rows.length === 0
         ? (
-            <p className="text-sm text-muted">{t('partnerDetail.ledger.empty')}</p>
+            <EmptyState compact icon={ClockIcon} message={t('partnerDetail.ledger.empty')} />
           )
         : (
             <ol className="text-sm">
@@ -288,9 +289,7 @@ function TransactionsCard({ view }: { view: PartnerDetailView }) {
     >
       {view.transactions.length === 0
         ? (
-            <p className="text-sm text-muted">
-              {t('partnerDetail.transactions.empty')}
-            </p>
+            <EmptyState compact icon={OrdersIcon} message={t('partnerDetail.transactions.empty')} />
           )
         : (
             <ul className="flex flex-col divide-y divide-separator">
