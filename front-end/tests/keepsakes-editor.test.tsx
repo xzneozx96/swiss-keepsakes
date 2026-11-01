@@ -6,6 +6,7 @@ import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { en } from '@/i18n/en'
 import { writeStored } from '@/lib/storage'
 import { list, listItem, media, photoId, problem, product, productId, renderKeepsakes, setUpHarness, state, storeId, variantId, writes } from './keepsakes-harness'
 
@@ -172,7 +173,7 @@ describe('[E6.1][autosave] M12 autosave and leaving', () => {
     await openEditor()
 
     await userEvent.type(await nameField(), ' II')
-    await userEvent.type(screen.getByLabelText('Text (English)'), ' Sharp.')
+    await userEvent.type(screen.getByLabelText('Description (English)'), ' Sharp.')
     await waitFor(() => expect(writes()).toHaveLength(1), AUTOSAVE)
     expect(writes()[0]!.body).toMatchObject({ name: { en: 'Victorinox Classic II' }, text: { en: 'A Swiss knife. Sharp.' } })
   })
@@ -587,6 +588,32 @@ describe('[E6.1][review] Review and publish, the fourth step', () => {
 
     expect(within(bar()).getByRole('button', { name: 'Publish changes' })).toBeEnabled()
     expect(within(review).getByRole('button', { name: 'Unpublish' })).toBeInTheDocument()
+  })
+
+  it('[T-007B] Unpublish waits inside its dialog: a refusal stays there with no toast, and an answer closes it and makes the keepsake a draft', async () => {
+    const danger = vi.spyOn(toast, 'danger')
+    let refuse = true
+
+    current = product({ status: 'published', slug: { en: 'victorinox-classic' } })
+    serve(call => (call.method === 'POST' && call.path === `${detail}/unpublish`
+      ? (refuse ? problem(404, 'not-found') : Response.json(product({ status: 'draft', rowVersion: 2 })))
+      : undefined))
+    await openEditor()
+
+    await openReview()
+    const review = await screen.findByTestId('review-screen', undefined, SLOW)
+
+    await userEvent.click(within(review).getByRole('button', { name: 'Unpublish' }))
+    const dialog = await screen.findByRole('alertdialog')
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Unpublish' }))
+    expect(await within(dialog).findByRole('alert')).toHaveTextContent(en['keepsakes.problem.notFound'])
+    expect(danger).not.toHaveBeenCalled()
+    refuse = false
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Unpublish' }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
+    expect(await within(screen.getByTestId('keepsake-status')).findByText('Draft')).toBeInTheDocument()
   })
 
   it('[T-004] a live keepsake with no edits has no Publish in the bar', async () => {

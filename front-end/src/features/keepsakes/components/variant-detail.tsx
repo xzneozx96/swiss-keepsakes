@@ -154,7 +154,6 @@ export function VariantDetail({ form, title, held, onArchive }: { form: VariantF
         {form.shown.code && <QuietNote>{form.shown.code}</QuietNote>}
       </div>
 
-      {form.refusal && <QuietNote>{form.refusal}</QuietNote>}
       {form.failure && <QuietNote>{form.failure}</QuietNote>}
 
       <div className="flex flex-col gap-3 sm:flex-row-reverse sm:items-center">

@@ -619,7 +619,7 @@ describe('[T-007B] the Variants step: the list and the chosen variant', () => {
     expect(await screen.findByRole('button', { name: /Small · Swan/ })).toHaveTextContent('Hidden')
   })
 
-  it('[T-007B] Archive asks first, then sends the status; a variant with reserved units is refused with the number, in the detail', async () => {
+  it('[T-007B] Archive asks first, then sends the status; a variant with reserved units is refused with the number, inside the dialog', async () => {
     const danger = vi.spyOn(toast, 'danger')
     serve(call => (call.method === 'PATCH' && call.path === `${detail}/variants/${v1}`
       ? refused([{ in: 'body', path: 'status', message: 'x', code: 'variant-reserved', params: { code: 'VX-S-SWAN', count: 2 } }])
@@ -637,7 +637,8 @@ describe('[T-007B] the Variants step: the list and the chosen variant', () => {
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(writes()[0]).toMatchObject({ method: 'PATCH', path: `${detail}/variants/${v1}`, body: { status: 'archived' } })
-    expect(await within(form).findByRole('alert')).toHaveTextContent('Can’t archive VX-S-SWAN. 2 units are reserved by open orders.')
+    expect(await within(dialog).findByText(/Can’t archive VX-S-SWAN\. 2 units are reserved by open orders\./)).toBeInTheDocument()
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
     expect(danger).not.toHaveBeenCalled()
   })
 

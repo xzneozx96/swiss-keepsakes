@@ -56,13 +56,27 @@ function Page({ storeId, keepsake, variant }: { storeId: string, keepsake: Produ
       setRefusal(outcome.refusals && outcome.refusals.length > 0 ? outcome.refusals.map(r => refusalText(t, r)).join(' ') : t(problemMessageKey(outcome.type)))
   }
 
+  /** Asks first and waits for the server inside the dialog; a refusal stays there. */
+  const archive = () => confirm({
+    title: t('keepsakes.variant.archive.title', { code: variant.skuCode }),
+    body: t('keepsakes.variant.archive.body'),
+    confirmLabel: t('keepsakes.variant.archive.confirm'),
+    run: async () => {
+      const outcome = await commands.saveVariant(variant.id, { status: 'archived' })
+
+      if (!outcome.ok)
+        throw new Error(outcome.refusals && outcome.refusals.length > 0 ? outcome.refusals.map(r => refusalText(t, r)).join(' ') : t(problemMessageKey(outcome.type)))
+    },
+    problem: error => (error instanceof Error ? error.message : t(problemMessageKey('unknown'))),
+  })
+
   const onAction = async (action: Action) => {
     if (action === 'edit')
       setEditing(true)
     else if (action === 'toggle')
       await change(variant.status === 'published' ? 'draft' : 'published')
-    else if (await confirm({ title: t('keepsakes.variant.archive.title', { code: variant.skuCode }), body: t('keepsakes.variant.archive.body'), confirmLabel: t('keepsakes.variant.archive.confirm') }))
-      await change('archived')
+    else
+      await archive()
   }
 
   return (

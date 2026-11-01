@@ -10,7 +10,8 @@ import { ChevronDownIcon, ChevronRightIcon, PlusIcon, ProductsIcon } from '@/com
 import { useLocale } from '@/contexts/locale-context'
 import { useVariantForm } from '../hooks/use-variant-form'
 import { chf } from '../lib/keepsake-rules'
-import { combinationName } from '../lib/option-rules'
+import { combinationName, refusalText } from '../lib/option-rules'
+import { problemMessageKey } from '../lib/problems'
 import { isComplete } from '../lib/variant-rules'
 import { VariantDetail } from './variant-detail'
 
@@ -97,15 +98,31 @@ export function VariantsStep({ options, variants, held = false, name, codeFallba
   const form = useVariantForm({ options, variants, codeFallback, onCreate, onSave })
   const open = form.editing !== null
 
+  /** Archiving asks first and waits for the server inside the dialog: a refusal (reserved units) stays there. A new keepsake's variant is only in the browser, so removing it needs no wait. */
   const archive = async (id: string) => {
     const variant = variants.find(v => v.id === id)
     const label = variant ? (options.length > 0 ? combinationName(variant.values, options, language) : variant.skuCode) : ''
-    const ok = held
-      ? await confirm({ title: t('keepsakes.variants.remove.title', { name: label }), body: t('keepsakes.variants.remove.body'), confirmLabel: t('keepsakes.variants.remove') })
-      : await confirm({ title: t('keepsakes.variant.archive.title', { code: variant?.skuCode ?? '' }), body: t('keepsakes.variant.archive.body'), confirmLabel: t('keepsakes.variant.archive.confirm') })
+    const run = async () => {
+      const outcome = await onSave(id, { status: 'archived' })
 
-    if (ok)
-      await form.archive(id)
+      if (!outcome.ok)
+        throw new Error(outcome.refusals && outcome.refusals.length > 0 ? outcome.refusals.map(refusal => refusalText(t, refusal)).join(' ') : t(problemMessageKey(outcome.type)))
+      form.close()
+    }
+
+    if (held) {
+      if (await confirm({ title: t('keepsakes.variants.remove.title', { name: label }), body: t('keepsakes.variants.remove.body'), confirmLabel: t('keepsakes.variants.remove') }))
+        await run()
+
+      return
+    }
+    await confirm({
+      title: t('keepsakes.variant.archive.title', { code: variant?.skuCode ?? '' }),
+      body: t('keepsakes.variant.archive.body'),
+      confirmLabel: t('keepsakes.variant.archive.confirm'),
+      run,
+      problem: error => (error instanceof Error ? error.message : t(problemMessageKey('unknown'))),
+    })
   }
 
   const add = form.canCreate && (

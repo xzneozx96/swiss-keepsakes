@@ -8,6 +8,7 @@ import { useConfirm } from '@/components/confirm-dialog'
 import { StatusDangerIcon, StatusSuccessIcon, StatusWarningIcon } from '@/components/icons'
 import { useLocale } from '@/contexts/locale-context'
 import { checkText, fullLanguages, nameIn, textOf } from '../lib/keepsake-rules'
+import { problemMessageKey } from '../lib/problems'
 import { KeepsakeLanguageSwitch } from './basics-fields'
 
 export interface PublishActions {
@@ -63,17 +64,19 @@ export function UnpublishButton({ actions }: { actions: PublishActions }) {
   const { t } = useLocale()
   const { confirm, dialog } = useConfirm()
 
-  const unpublish = async () => {
-    const confirmed = await confirm({
-      title: t('keepsakes.unpublish.title'),
-      body: t('keepsakes.unpublish.body'),
-      confirmLabel: t('keepsakes.unpublish.confirm'),
-    })
+  const unpublish = () => confirm({
+    title: t('keepsakes.unpublish.title'),
+    body: t('keepsakes.unpublish.body'),
+    confirmLabel: t('keepsakes.unpublish.confirm'),
+    // The dialog waits for the answer and keeps a refusal inside itself.
+    run: async () => {
+      const outcome = await actions.unpublish()
 
-    if (!confirmed)
-      return
-    await actions.unpublish()
-  }
+      if (!outcome.ok)
+        throw new Error(t(problemMessageKey(outcome.type)))
+    },
+    problem: error => (error instanceof Error ? error.message : t(problemMessageKey('unknown'))),
+  })
 
   return (
     <>

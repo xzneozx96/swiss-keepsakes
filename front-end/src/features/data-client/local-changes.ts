@@ -83,6 +83,13 @@ export const commandChanges: Changes = {
       },
     }],
   },
+  keepsakes: {
+    // Unpublishing makes the keepsake a draft in the list at once.
+    unpublish: (input, result) => [{
+      key: [...queryKeys.keepsakes.list, input.storeId],
+      apply: patching('items', input.id, { status: result.status, hasUnpublishedEdits: result.hasUnpublishedEdits }),
+    }],
+  },
   media: {
     // A retired file leaves the default list at once; it stays, retired, only in a list that filters for retired files.
     retire: (input, retired) => [{

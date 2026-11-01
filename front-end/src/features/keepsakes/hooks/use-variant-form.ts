@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
 import { toRappen } from '../lib/keepsake-rules'
-import { checkVariantValues, combinationName, refusalText, suggestCode, variantRefusalText } from '../lib/option-rules'
+import { checkVariantValues, combinationName, suggestCode, variantRefusalText } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
 import { codeProblem, findTwin, isComplete } from '../lib/variant-rules'
 
@@ -43,7 +43,6 @@ export function useVariantForm({ options, variants, codeFallback, onCreate, onSa
   const [form, setForm] = useState<Form>(EMPTY)
   const [tried, setTried] = useState(false)
   const [server, setServer] = useState<{ values?: string, code?: string, failure?: string }>({})
-  const [refusal, setRefusal] = useState<{ id: string, text: string }>()
   const [isPending, setIsPending] = useState(false)
 
   const live = variants.filter(variant => variant.status !== 'archived')
@@ -67,7 +66,6 @@ export function useVariantForm({ options, variants, codeFallback, onCreate, onSa
   const open = (target: Editing) => {
     setTried(false)
     setServer({})
-    setRefusal(undefined)
     setEditing(target)
     const variant = target && target !== 'new' ? variants.find(v => v.id === target) : undefined
 
@@ -93,9 +91,8 @@ export function useVariantForm({ options, variants, codeFallback, onCreate, onSa
     openable: twin && twin.status !== 'archived' ? twin : undefined,
     complete,
     combination,
-    canCreate: others.length < possible || current !== undefined,
+    canCreate: variants.length < possible,
     isPending,
-    refusal: refusal && refusal.id === current?.id ? refusal.text : undefined,
     shown: { values: shownValues, code: shownCode, price: shownPrice },
     failure: server.failure,
     /** The live variant a value would collide with, once the other options are chosen. */
@@ -130,16 +127,6 @@ export function useVariantForm({ options, variants, codeFallback, onCreate, onSa
         setServer({ values: variantRefusalText(t, first, combination) })
       else
         setServer({ failure: t(problemMessageKey(outcome.type)) })
-    },
-    /** Archives a saved variant (a new keepsake's variant is removed). A refusal, such as reserved units, shows in the detail. */
-    async archive(id: string) {
-      setRefusal(undefined)
-      const outcome = await onSave(id, { status: 'archived' })
-
-      if (outcome.ok)
-        open(null)
-      else
-        setRefusal({ id, text: outcome.refusals && outcome.refusals.length > 0 ? outcome.refusals.map(r => refusalText(t, r)).join(' ') : t(problemMessageKey(outcome.type)) })
     },
   }
 }

@@ -52,8 +52,8 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
   const client = useDataClient()
   const queryClient = useQueryClient()
   const { t } = useLocale()
-  // The autosave and the options sheet show a refusal inline, so their error toast is off. Publish and unpublish have
-  // no field to show it at: their refusal is the toast, in the keepsake screens' copy.
+  // The autosave and the options sheet show a refusal inline, so their error toast is off, and so is unpublish's: its
+  // confirm dialog shows the refusal. Publish has no field to show it at: its refusal is the toast, in the keepsake screens' copy.
   const save = useCommand('keepsakes', 'save', { meta: { silent: true } })
   const publish = useCommand('keepsakes', 'publish', {
     meta: {
@@ -61,7 +61,7 @@ export function useKeepsakeEditor({ storeId, keepsake }: { storeId: string, keep
       error: keepsakeProblemKeys,
     },
   })
-  const unpublish = useCommand('keepsakes', 'unpublish', { meta: { success: 'keepsakes.toast.unpublished', error: keepsakeProblemKeys } })
+  const unpublish = useCommand('keepsakes', 'unpublish', { meta: { success: 'keepsakes.toast.unpublished', silent: true } })
   const saveOptions = useCommand('keepsakes', 'saveOptions', { meta: { success: 'keepsakes.optionsSheet.saved', silent: true } })
   // Removing an option from its row says nothing on success; its refusal shows beside the Options card.
   const variantCommands = useVariantCommands({ storeId, id: keepsake.id })
