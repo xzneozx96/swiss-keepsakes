@@ -2,6 +2,7 @@
 // adapters/, and wraps them with guardUseCases.
 export { makeCreateProduct } from './application/create-product.ts'
 export { makeCreateVariant } from './application/create-variant.ts'
+export { makeDeleteProduct } from './application/delete-product.ts'
 export { makeGetProduct } from './application/get-product.ts'
 export { makeListProducts } from './application/list-products.ts'
 export { makePublishProduct } from './application/publish-product.ts'

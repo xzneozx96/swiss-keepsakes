@@ -5,7 +5,7 @@ import { hasUnpublishedEdits, workingDoc } from '../application/product-doc.ts'
 import { publishChecks } from '../application/publish-checks.ts'
 
 // The response shape of a keepsake: the dates as ISO strings, the working copy, and the publish checks computed from it.
-export function productView({ product, photos }: ProductDetail): ProductView {
+export function productView({ product, photos, hasOrders }: ProductDetail): ProductView {
   const doc = workingDoc(product)
   const checks = publishChecks({ doc, variants: product.variants, options: product.options, commissionRate: product.commissionRate })
   return {
@@ -19,6 +19,7 @@ export function productView({ product, photos }: ProductDetail): ProductView {
     commissionRate: product.commissionRate,
     slug: product.slug,
     hasUnpublishedEdits: hasUnpublishedEdits(product),
+    hasOrders,
     options: product.options,
     variants: product.variants.map(({ id, skuCode, priceRappen, status, values }) => ({ id, skuCode, priceRappen, status, values })),
     blocking: checks.blocking,
@@ -29,7 +30,7 @@ export function productView({ product, photos }: ProductDetail): ProductView {
   }
 }
 
-export function productListItemView({ row, cover }: ProductListEntry): ProductListItem {
+export function productListItemView({ row, cover, hasOrders }: ProductListEntry): ProductListItem {
   return {
     id: row.id,
     name: row.name,
@@ -38,6 +39,8 @@ export function productListItemView({ row, cover }: ProductListEntry): ProductLi
     cover,
     variantCount: row.variantCount,
     soldOutCount: row.soldOutCount,
+    hasOrders,
+    rowVersion: row.rowVersion,
     updatedAt: row.updatedAt.toISOString(),
   }
 }

@@ -4,10 +4,11 @@ import type { AppEnv } from '../../../platform/http/app.ts'
 import type { CreateProductInput } from '../application/create-product.ts'
 import type { Result } from '../application/failure.ts'
 import type { ProductListEntry } from '../application/list-products.ts'
+import type { ProductRemoval } from '../application/delete-product.ts'
 import type { ProductDetail } from '../application/product-detail.ts'
 import type { OptionInput, OptionsSave, ProductChanges, VariantChanges, VariantInput } from '../ports.ts'
 import { createRoute, z } from '@hono/zod-openapi'
-import { optionsSaveBodySchema, productCreateBodySchema, productListSchema, productSaveBodySchema, productSchema, variantCreateBodySchema, variantSaveBodySchema } from '@sk/api-contract'
+import { optionsSaveBodySchema, productCreateBodySchema, productListSchema, productRemovalSchema, productSaveBodySchema, productSchema, variantCreateBodySchema, variantSaveBodySchema } from '@sk/api-contract'
 import { problem } from '../../../platform/http/problem.ts'
 import { problemResponses, requestIdHeader } from '../../../platform/http/responses.ts'
 import { readIfMatch } from './if-match.ts'
@@ -21,6 +22,7 @@ export interface CatalogUseCases {
   getProduct: (actor: Actor, storeId: string, productId: string) => Promise<Result<ProductDetail>>
   createProduct: (actor: Actor, storeId: string, input: CreateProductInput, requestId: string | null) => Promise<Result<ProductDetail>>
   saveProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, changes: ProductChanges, requestId: string | null) => Promise<Result<ProductDetail>>
+  deleteProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null) => Promise<Result<ProductRemoval>>
   publishProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null) => Promise<Result<ProductDetail>>
   unpublishProduct: (actor: Actor, storeId: string, productId: string, ifMatch: number, requestId: string | null) => Promise<Result<ProductDetail>>
   saveVariant: (actor: Actor, storeId: string, productId: string, skuId: string, changes: VariantChanges, requestId: string | null) => Promise<Result<ProductDetail>>
@@ -69,6 +71,16 @@ const saveRoute = createRoute({
   request: { params: productParams, ...withIfMatch, body: { required: true, content: json(productSaveBodySchema) } },
   responses: {
     200: { description: 'The keepsake with the change saved. A left-out field stays, a list replaces', headers: etagHeaders, content: json(productSchema) },
+    ...problemResponses,
+  },
+})
+
+const deleteRoute = createRoute({
+  method: 'delete',
+  path: `${productsPath}/{productId}`,
+  request: { params: productParams, ...withIfMatch },
+  responses: {
+    200: { description: 'The keepsake is removed. `deleted`: it never had an order and is gone, its photos stay in the library. `archived`: it has orders, so it stays for them and guests no longer see it. Final', headers: requestIdHeader, content: json(productRemovalSchema) },
     ...problemResponses,
   },
 })
@@ -180,6 +192,16 @@ export function registerCatalogRoutes(app: OpenAPIHono<AppEnv>, useCases: Catalo
     if (!result.ok)
       return problem(c, failureProblem(result))
     return c.json(productView(result.value), 200, etag(result.value.product))
+  })
+
+  app.openapi(deleteRoute, async (c) => {
+    const ifMatch = readIfMatch(c)
+    if (!ifMatch.ok)
+      return ifMatch.response
+    const result = await useCases.deleteProduct(c.get('actor'), c.get('store').storeId, c.req.valid('param').productId, ifMatch.version, c.get('requestId'))
+    if (!result.ok)
+      return problem(c, failureProblem(result))
+    return c.json(result.value, 200)
   })
 
   app.openapi(publishRoute, async (c) => {

@@ -22,7 +22,7 @@ export interface CreateProductInput {
 // A new keepsake is a draft with its options and its variants for sale. It needs a name in one language, valid codes,
 // and variants that follow the option rules (one value of each option, each combination once, one variant when there
 // is no option). A code's uniqueness in the shop is skus_store_sku_code_key, which the route maps to sku-code-taken.
-export function makeCreateProduct<T>({ uow, products, media, clock }: CatalogDeps<T>) {
+export function makeCreateProduct<T>({ uow, products, media, clock, sales }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, input: CreateProductInput, _requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -46,7 +46,7 @@ export function makeCreateProduct<T>({ uow, products, media, clock }: CatalogDep
         options: input.options,
         variants: input.variants,
       }, clock.now())
-      return ok(await describe(media, tx, product))
+      return ok(await describe({ media, sales }, tx, product))
     })
   }
 }

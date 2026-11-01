@@ -6,7 +6,7 @@ import { createMediaDirectory } from './modules/catalog/adapters/media-directory
 import { createMediaUses } from './modules/catalog/adapters/media-uses.ts'
 import { createProductRepository } from './modules/catalog/adapters/product-repository.ts'
 import { registerCatalogRoutes } from './modules/catalog/adapters/routes.ts'
-import { makeCreateProduct, makeCreateVariant, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from './modules/catalog/index.ts'
+import { makeCreateProduct, makeCreateVariant, makeDeleteProduct, makeGetProduct, makeListProducts, makePublishProduct, makeSaveOptions, makeSaveProduct, makeSaveVariant, makeUnpublishProduct } from './modules/catalog/index.ts'
 import { createAddressRegister } from './modules/content/adapters/address-register-fetch.ts'
 import { createCategoryRepository } from './modules/content/adapters/category-repository.ts'
 import { guardUseCases } from './modules/content/adapters/database-errors.ts'
@@ -261,6 +261,7 @@ async function main() {
       saveProduct: makeSaveProduct(catalogDeps),
       publishProduct: makePublishProduct(catalogDeps),
       unpublishProduct: makeUnpublishProduct(catalogDeps),
+      deleteProduct: makeDeleteProduct(catalogDeps),
       saveVariant: makeSaveVariant(catalogDeps),
       saveOptions: makeSaveOptions(catalogDeps),
       createVariant: makeCreateVariant(catalogDeps),

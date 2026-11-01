@@ -20,6 +20,8 @@ export {
   productListSchema,
   type ProductOption,
   productOptionSchema,
+  type ProductRemoval,
+  productRemovalSchema,
   type ProductSaveBody,
   productSaveBodySchema,
   productSchema,

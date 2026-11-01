@@ -85,10 +85,13 @@ export interface ProductVariant {
   values: Record<string, string>
 }
 
+// `archived` is a keepsake that has orders and was removed: off guest pages, never edited or published again, final.
+export type ProductStatus = 'draft' | 'published' | 'archived'
+
 export interface Product {
   id: string
   storeId: string
-  status: 'draft' | 'published'
+  status: ProductStatus
   slug: Localized | null
   // The pending edit, null when there is none. A save writes it, a publish clears it.
   draft: ProductDoc | null
@@ -106,12 +109,14 @@ export interface Product {
 export interface ProductListRow {
   id: string
   name: Localized
-  status: 'draft' | 'published'
+  status: ProductStatus
   hasUnpublishedEdits: boolean
   coverMediaId: string | null
   variantCount: number
   // Always 0 until stock exists (E6.3, `inventory.stock_items`).
   soldOutCount: number
+  // The version an `If-Match` of a removal carries.
+  rowVersion: number
   updatedAt: Date
 }
 
@@ -198,6 +203,12 @@ export interface ReservationDirectory<T> {
   reservedBySku: (tx: T, storeId: string, skuIds: string[]) => Promise<Map<string, number>>
 }
 
+// Which keepsakes an order line names, by product id (ADR-023: `orders.order_lines.product_id`). The orders module fills
+// this through the composition root (ADR-013); until then nothing is wired and no keepsake counts as sold.
+export interface SalesDirectory<T> {
+  soldProductIds: (tx: T, storeId: string, productIds: string[]) => Promise<Set<string>>
+}
+
 export interface ProductRepository<T> {
   list: (tx: T, storeId: string) => Promise<ProductListRow[]>
   // An id of another store has no row.
@@ -213,6 +224,10 @@ export interface ProductRepository<T> {
   publish: (tx: T, product: Product, slug: Localized, at: Date) => Promise<Product>
   // status goes back to draft, the live text stays.
   unpublish: (tx: T, product: Product, at: Date) => Promise<Product>
+  // status becomes archived, row_version moves. The variants stay for the old orders.
+  archive: (tx: T, product: Product, at: Date) => Promise<Product>
+  // Deletes the keepsake with its options, values, variants and photo list. The files stay in the library.
+  remove: (tx: T, product: Product) => Promise<void>
   // The slugs other products hold in this language.
   slugsTaken: (tx: T, language: 'en' | 'de') => Promise<Set<string>>
   // Writes the variant and returns the product. undefined when the variant is not this product's.

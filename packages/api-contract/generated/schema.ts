@@ -2535,7 +2535,43 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description The row version you opened, as `3`, `"3"` or `W/"3"` */
+                    "If-Match"?: string;
+                };
+                path: {
+                    productId: string;
+                    storeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The keepsake is removed. `deleted`: it never had an order and is gone, its photos stay in the library. `archived`: it has orders, so it stays for them and guests no longer see it. Final */
+                200: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ProductRemoval"];
+                    };
+                };
+                /** @description An RFC 9457 problem. `type` says what went wrong */
+                default: {
+                    headers: {
+                        "X-Request-Id": components["headers"]["RequestId"];
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["Problem"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch: {
@@ -5188,7 +5224,7 @@ export interface components {
             requestId: string;
             status: number;
             title: string;
-            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
+            /** @description A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other */
             type: string;
         };
         /** @description A keepsake with its working copy, variants and publish checks */
@@ -5198,6 +5234,8 @@ export interface components {
             commissionRate: number;
             /** Format: date-time */
             createdAt: string;
+            /** @description An order line names the keepsake, so removing it archives instead of deleting. Always false until the orders module is wired */
+            hasOrders: boolean;
             /** @description A published keepsake whose draft differs from the live copy */
             hasUnpublishedEdits: boolean;
             /** Format: uuid */
@@ -5217,8 +5255,11 @@ export interface components {
                 de?: string;
                 en?: string;
             } | null;
-            /** @enum {string} */
-            status: "draft" | "published";
+            /**
+             * @description archived: the keepsake had orders and was removed. Guests no longer see it and it can’t be changed. Final
+             * @enum {string}
+             */
+            status: "draft" | "published" | "archived";
             /** Format: uuid */
             storeId: string;
             /** @description The description per language as a Tiptap document, the working copy */
@@ -5294,6 +5335,8 @@ export interface components {
                 }[];
                 width: number | null;
             } | null;
+            /** @description Removing the keepsake archives it instead of deleting it */
+            hasOrders: boolean;
             hasUnpublishedEdits: boolean;
             /** Format: uuid */
             id: string;
@@ -5301,10 +5344,12 @@ export interface components {
                 de?: string;
                 en?: string;
             };
+            /** @description The version a removal sends as If-Match */
+            rowVersion: number;
             /** @description Variants with no unit available. Always 0 until stock exists (E6.3) */
             soldOutCount: number;
             /** @enum {string} */
-            status: "draft" | "published";
+            status: "draft" | "published" | "archived";
             /** Format: date-time */
             updatedAt: string;
             /** @description Variants that are not archived */
@@ -5328,6 +5373,16 @@ export interface components {
                 };
                 swatch: string | null;
             }[];
+        };
+        /** @description What removing a keepsake did */
+        ProductRemoval: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description deleted: the keepsake is gone. archived: it had orders and stays, final
+             * @enum {string}
+             */
+            outcome: "deleted" | "archived";
         };
         /** @description The autosave. name, text and photoIds replace the draft. commissionRate is saved live */
         ProductSaveBody: {

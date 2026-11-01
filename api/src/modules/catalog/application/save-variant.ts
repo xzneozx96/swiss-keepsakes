@@ -15,7 +15,7 @@ import { isSkuCode } from './sku-code.ts'
 // archived ones included. Archiving keeps the variant and is final (restoring has no rule yet), and is refused while
 // open orders reserve units. Hiding the last variant for sale on a published keepsake is allowed: guests then find
 // nothing to buy, and the publish card says so.
-export function makeSaveVariant<T>({ uow, products, media, audit, clock, reservations }: CatalogDeps<T>) {
+export function makeSaveVariant<T>({ uow, products, media, audit, clock, reservations, sales }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, skuId: string, changes: VariantChanges, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -26,6 +26,8 @@ export function makeSaveVariant<T>({ uow, products, media, audit, clock, reserva
       const variant = product?.variants.find(v => v.id === skuId)
       if (!product || !variant)
         return fail({ reason: 'not-found' })
+      if (product.status === 'archived')
+        return fail({ reason: 'archived' })
       if (variant.status === 'archived')
         return fail({ reason: 'refused', refusals: [{ code: 'variant-archived', path: 'status', params: { code: variant.skuCode } }] })
       if (changes.values) {
@@ -53,7 +55,7 @@ export function makeSaveVariant<T>({ uow, products, media, audit, clock, reserva
           requestId,
         })
       }
-      return ok(await describe(media, tx, saved))
+      return ok(await describe({ media, sales }, tx, saved))
     })
   }
 }

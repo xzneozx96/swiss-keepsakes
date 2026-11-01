@@ -191,13 +191,14 @@ export const publishCheckSchema = z.object({
 export const productSchema = z.object({
   id: z.uuid(),
   storeId: z.uuid(),
-  status: z.enum(['draft', 'published']),
+  status: z.enum(['draft', 'published', 'archived']).meta({ description: 'archived: the keepsake had orders and was removed. Guests no longer see it and it can’t be changed. Final' }),
   name: localizedView.meta({ description: 'The working copy: the draft, else the published text' }),
   text: descriptionsView.meta({ description: 'The description per language as a Tiptap document, the working copy' }),
   photos: z.array(mediaSchema).meta({ description: 'The working photos in order, the first is the cover' }),
   commissionRate: z.number(),
   slug: localizedView.nullable().meta({ description: 'The web address per language, set at the first publish' }),
   hasUnpublishedEdits: z.boolean().meta({ description: 'A published keepsake whose draft differs from the live copy' }),
+  hasOrders: z.boolean().meta({ description: 'An order line names the keepsake, so removing it archives instead of deleting. Always false until the orders module is wired' }),
   options: z.array(productOptionSchema).meta({ description: 'In the order guests see them' }),
   variants: z.array(productVariantSchema).meta({ description: 'Every variant, archived ones too' }),
   blocking: z.array(publishCheckSchema).meta({ description: 'What stops publishing, empty when it can go live' }),
@@ -210,13 +211,20 @@ export const productSchema = z.object({
 export const productListItemSchema = z.object({
   id: z.uuid(),
   name: localizedView,
-  status: z.enum(['draft', 'published']),
+  status: z.enum(['draft', 'published', 'archived']),
   hasUnpublishedEdits: z.boolean(),
+  hasOrders: z.boolean().meta({ description: 'Removing the keepsake archives it instead of deleting it' }),
+  rowVersion: z.int().meta({ description: 'The version a removal sends as If-Match' }),
   cover: mediaSchema.nullable().meta({ description: 'The first photo' }),
   variantCount: z.int().meta({ description: 'Variants that are not archived' }),
   soldOutCount: z.int().meta({ description: 'Variants with no unit available. Always 0 until stock exists (E6.3)' }),
   updatedAt: z.iso.datetime(),
 }).meta({ id: 'ProductListItem', description: 'One row of the keepsake list' })
+
+export const productRemovalSchema = z.object({
+  id: z.uuid(),
+  outcome: z.enum(['deleted', 'archived']).meta({ description: 'deleted: the keepsake is gone. archived: it had orders and stays, final' }),
+}).meta({ id: 'ProductRemoval', description: 'What removing a keepsake did' })
 
 export const productListSchema = z.object({
   items: z.array(productListItemSchema),
@@ -233,4 +241,5 @@ export type ProductVariant = z.infer<typeof productVariantSchema>
 export type PublishCheck = z.infer<typeof publishCheckSchema>
 export type Product = z.infer<typeof productSchema>
 export type ProductListItem = z.infer<typeof productListItemSchema>
+export type ProductRemoval = z.infer<typeof productRemovalSchema>
 export type ProductList = z.infer<typeof productListSchema>

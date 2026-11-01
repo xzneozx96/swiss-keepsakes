@@ -6842,7 +6842,7 @@
             "type": "string"
           },
           "type": {
-            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other",
+            "description": "A stable code. Known codes: about:blank, not-found, validation-failed, internal-error, unhealthy, idempotency-key-required, idempotency-key-reused, idempotency-key-in-use, body-too-large, unauthenticated, forbidden, origin-refused, store-slug-taken, owner-is-super-admin, invitation-not-found, invitation-expired, invitation-revoked, invitation-super-admin, invitation-already-accepted, invitation-email-mismatch, invitation-email-unverified, already-a-member, store-not-onboarding, onboarding-incomplete, manager-is-super-admin, invitation-already-open, cannot-remove-owner, member-not-found, precondition-failed, precondition-required, publish-incomplete, media-retired, media-invalid, reference-invalid, content-slug-taken, slug-conflict, published-cannot-be-deleted, published-version-cannot-move, version-exists, not-published, keepsake-archived, content-in-use, media-type-not-allowed, media-too-large, media-empty, upload-missing, media-content-mismatch, media-processing, media-in-use, media-already-retired, media-not-ready, media-kind-mismatch, storage-unavailable, maps-link-unreadable, address-not-found, address-lookup-unavailable, category-has-children, category-in-use, category-too-deep, category-parent-has-children, sku-code-taken. Show generic copy for any other",
             "type": "string"
           }
         },
@@ -6871,6 +6871,10 @@
           "createdAt": {
             "format": "date-time",
             "type": "string"
+          },
+          "hasOrders": {
+            "description": "An order line names the keepsake, so removing it archives instead of deleting. Always false until the orders module is wired",
+            "type": "boolean"
           },
           "hasUnpublishedEdits": {
             "description": "A published keepsake whose draft differs from the live copy",
@@ -6925,9 +6929,11 @@
             ]
           },
           "status": {
+            "description": "archived: the keepsake had orders and was removed. Guests no longer see it and it can’t be changed. Final",
             "enum": [
               "draft",
-              "published"
+              "published",
+              "archived"
             ],
             "type": "string"
           },
@@ -7057,6 +7063,7 @@
           "commissionRate",
           "slug",
           "hasUnpublishedEdits",
+          "hasOrders",
           "options",
           "variants",
           "blocking",
@@ -7220,6 +7227,10 @@
               "null"
             ]
           },
+          "hasOrders": {
+            "description": "Removing the keepsake archives it instead of deleting it",
+            "type": "boolean"
+          },
           "hasUnpublishedEdits": {
             "type": "boolean"
           },
@@ -7238,6 +7249,10 @@
             },
             "type": "object"
           },
+          "rowVersion": {
+            "description": "The version a removal sends as If-Match",
+            "type": "integer"
+          },
           "soldOutCount": {
             "description": "Variants with no unit available. Always 0 until stock exists (E6.3)",
             "type": "integer"
@@ -7245,7 +7260,8 @@
           "status": {
             "enum": [
               "draft",
-              "published"
+              "published",
+              "archived"
             ],
             "type": "string"
           },
@@ -7263,6 +7279,8 @@
           "name",
           "status",
           "hasUnpublishedEdits",
+          "hasOrders",
+          "rowVersion",
           "cover",
           "variantCount",
           "soldOutCount",
@@ -7328,6 +7346,28 @@
           "id",
           "name",
           "values"
+        ],
+        "type": "object"
+      },
+      "ProductRemoval": {
+        "description": "What removing a keepsake did",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "outcome": {
+            "description": "deleted: the keepsake is gone. archived: it had orders and stays, final",
+            "enum": [
+              "deleted",
+              "archived"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "outcome"
         ],
         "type": "object"
       },
@@ -18829,6 +18869,70 @@
       }
     },
     "/api/store/{storeId}/products/{productId}": {
+      "delete": {
+        "parameters": [
+          {
+            "in": "path",
+            "name": "storeId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "productId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "description": "The row version you opened, as `3`, `\"3\"` or `W/\"3\"`",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductRemoval"
+                }
+              }
+            },
+            "description": "The keepsake is removed. `deleted`: it never had an order and is gone, its photos stay in the library. `archived`: it has orders, so it stays for them and guests no longer see it. Final",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "An RFC 9457 problem. `type` says what went wrong",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          }
+        }
+      },
       "get": {
         "parameters": [
           {

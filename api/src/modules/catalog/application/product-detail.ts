@@ -1,4 +1,4 @@
-import type { MediaInfo, Product } from '../ports.ts'
+import type { MediaInfo, Product, SalesDirectory } from '../ports.ts'
 import type { Failure } from './failure.ts'
 import { workingDoc } from './product-doc.ts'
 
@@ -6,16 +6,19 @@ import { workingDoc } from './product-doc.ts'
 export interface ProductDetail {
   product: Product
   photos: MediaInfo[]
+  // An order line names it, so removing it archives (ADR-023). False when no sales directory is wired.
+  hasOrders: boolean
 }
 
 export interface MediaLookup<T> {
   find: (tx: T, storeId: string, ids: string[]) => Promise<MediaInfo[]>
 }
 
-export async function describe<T>(media: MediaLookup<T>, tx: T, product: Product): Promise<ProductDetail> {
+export async function describe<T>({ media, sales }: { media: MediaLookup<T>, sales?: SalesDirectory<T> }, tx: T, product: Product): Promise<ProductDetail> {
   const ids = workingDoc(product).media
   const found = new Map((await media.find(tx, product.storeId, ids)).map(row => [row.id.toLowerCase(), row]))
-  return { product, photos: ids.flatMap(id => found.get(id.toLowerCase()) ?? []) }
+  const sold = sales ? await sales.soldProductIds(tx, product.storeId, [product.id]) : new Set<string>()
+  return { product, photos: ids.flatMap(id => found.get(id.toLowerCase()) ?? []), hasOrders: sold.has(product.id) }
 }
 
 // A retired file is reported before an unusable one, so the editor hears first about what it can fix by choosing

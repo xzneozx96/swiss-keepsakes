@@ -50,6 +50,7 @@ interface ListRow {
   published_cover: string | null
   variant_count: number
   sold_out_count: number
+  row_version: number
   updated_at: Date
 }
 
@@ -124,7 +125,7 @@ export function createProductRepository(): ProductRepository<Tx> {
     async list(tx, storeId) {
       // soldOutCount is 0 until stock exists (E6.3 joins inventory.stock_items here).
       const result = await tx.execute<ListRow & Record<string, unknown>>(sql`
-        select p.id, p.status, p.draft, p.published, p.updated_at,
+        select p.id, p.status, p.draft, p.published, p.row_version, p.updated_at,
                (select media_id from catalog.product_media m where m.product_id = p.id order by m.position limit 1) as published_cover,
                (select count(*) from catalog.skus s where s.product_id = p.id and s.status <> 'archived')::int as variant_count,
                0::int as sold_out_count
@@ -139,6 +140,7 @@ export function createProductRepository(): ProductRepository<Tx> {
         coverMediaId: row.draft ? row.draft.media?.[0] ?? null : row.published_cover,
         variantCount: row.variant_count,
         soldOutCount: row.sold_out_count,
+        rowVersion: row.row_version,
         updatedAt: new Date(row.updated_at),
       }))
     },
@@ -210,6 +212,24 @@ export function createProductRepository(): ProductRepository<Tx> {
         update catalog.products set status = 'draft', row_version = row_version + 1, updated_at = ${at}
         where store_id = ${product.storeId} and id = ${product.id}`)
       return reload(tx, product)
+    },
+
+    async archive(tx, product, at) {
+      await tx.execute(sql`
+        update catalog.products set status = 'archived', row_version = row_version + 1, updated_at = ${at}
+        where store_id = ${product.storeId} and id = ${product.id}`)
+      return reload(tx, product)
+    },
+
+    // Children first: the SKU rows go before the option values they point at (RESTRICT), the values before their options.
+    // The combination triggers run at commit, find no SKU and return. product_media and category links cascade.
+    async remove(tx, product) {
+      const where = sql`store_id = ${product.storeId} and product_id = ${product.id}`
+      await tx.execute(sql`delete from catalog.sku_option_values where ${where}`)
+      await tx.execute(sql`delete from catalog.skus where ${where}`)
+      await tx.execute(sql`delete from catalog.product_option_values where ${where}`)
+      await tx.execute(sql`delete from catalog.product_options where ${where}`)
+      await tx.execute(sql`delete from catalog.products where store_id = ${product.storeId} and id = ${product.id}`)
     },
 
     async slugsTaken(tx, language) {

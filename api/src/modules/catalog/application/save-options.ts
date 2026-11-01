@@ -11,7 +11,7 @@ import { describe } from './product-detail.ts'
 // The options of a keepsake and the new values of its variants, saved in one write. A save from an old row version is
 // refused (412), and so is any save that would leave a variant without a value, two variants on one combination, or a
 // value or option that a variant uses deleted (section 7 of the design). A refused save changes nothing.
-export function makeSaveOptions<T>({ uow, products, media, audit, clock }: CatalogDeps<T>) {
+export function makeSaveOptions<T>({ uow, products, media, audit, clock, sales }: CatalogDeps<T>) {
   return async (actor: Actor, storeId: string, productId: string, ifMatch: number, input: OptionsSave, requestId: string | null): Promise<Result<ProductDetail>> => {
     if (!mayEditCatalog(actor, storeId))
       return fail({ reason: 'forbidden' })
@@ -21,6 +21,8 @@ export function makeSaveOptions<T>({ uow, products, media, audit, clock }: Catal
         return fail({ reason: 'not-found' })
       if (product.rowVersion !== ifMatch)
         return fail({ reason: 'stale' })
+      if (product.status === 'archived')
+        return fail({ reason: 'archived' })
       const refusals = checkOptionsSave(product, input)
       if (refusals.length > 0)
         return fail({ reason: 'refused', refusals })
@@ -35,7 +37,7 @@ export function makeSaveOptions<T>({ uow, products, media, audit, clock }: Catal
         after: { options: saved.options.length, rowVersion: saved.rowVersion },
         requestId,
       })
-      return ok(await describe(media, tx, saved))
+      return ok(await describe({ media, sales }, tx, saved))
     })
   }
 }
