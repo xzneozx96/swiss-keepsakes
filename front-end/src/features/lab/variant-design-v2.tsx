@@ -50,7 +50,7 @@ function ValueSelect({ studio, option }: { studio: Studio, option: OptionDraft }
                 <Swatch color={value.swatch} />
                 <span className="flex min-w-0 flex-col">
                   {labelOf(value.label)}
-                  {sold && <Description className="[.select__value_&]:hidden">{`Sold as ${sold.code}`}</Description>}
+                  {sold && <Description className="[.select__value_&]:hidden">{`${combinationName(sold.values, studio.options)} already exists`}</Description>}
                 </span>
                 <ListBox.ItemIndicator />
               </ListBox.Item>
