@@ -433,7 +433,7 @@ describe('[E4.2][AC68] N16 the list', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete draft' }))
 
     // Pending: the button spins, Cancel is off, Esc and the dialog stay, and the row is still listed.
-    await waitFor(() => expect(within(dialog).getByRole('button', { name: 'Delete draft' })).toHaveAttribute('data-pending', 'true'))
+    await waitFor(() => expect(within(dialog).getByRole('button', { name: /Delete draft/ })).toHaveAttribute('data-pending', 'true'))
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toBeDisabled()
     await userEvent.keyboard('{Escape}')
     expect(screen.getByRole('alertdialog')).toBeInTheDocument()

@@ -1,4 +1,4 @@
-import { AlertDialog, Button } from '@heroui/react'
+import { AlertDialog, Button, Spinner } from '@heroui/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useLocale } from '@/contexts/locale-context'
@@ -127,6 +127,7 @@ export function ConfirmDialog({
               variant={tone}
               onPress={confirm}
             >
+              {isPending && <Spinner color="current" size="sm" />}
               {confirmLabel}
             </Button>
           </AlertDialog.Footer>

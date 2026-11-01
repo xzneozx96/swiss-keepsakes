@@ -35,7 +35,8 @@ describe('confirm dialog with a write (run)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Open' }))
     await userEvent.click(await screen.findByRole('button', { name: 'Delete it' }))
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Delete it' })).toHaveAttribute('data-pending', 'true'))
+    await waitFor(() => expect(screen.getByRole('button', { name: /Delete it/ })).toHaveAttribute('data-pending', 'true'))
+    expect(screen.getByRole('button', { name: /Delete it/ }).querySelector('[data-slot="spinner"], .spinner')).not.toBeNull()
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
     await userEvent.keyboard('{Escape}')
     await userEvent.click(document.querySelector('[data-slot="modal-backdrop"], [data-slot="alert-dialog-backdrop"]') ?? document.body)
