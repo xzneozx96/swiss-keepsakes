@@ -66,9 +66,9 @@ export const keepsakesEn = {
   'keepsakes.basics.name.placeholder.en': 'Victorinox pocket knife, Lucerne designs',
   'keepsakes.basics.name.placeholder.de': 'Victorinox Taschenmesser, Luzerner Motive',
   'keepsakes.basics.nameRequired': 'Add a name in English or German to publish.',
-  'keepsakes.basics.text': 'Text ({language})',
+  'keepsakes.basics.text': 'Description ({language})',
   'keepsakes.basics.textHint': 'What the keepsake is, the sizes, and anything a guest should know. {count} / {max}',
-  'keepsakes.basics.textRequired': 'Add the text in the same language as the name.',
+  'keepsakes.basics.textRequired': 'Add the description in the same language as the name.',
 
   'keepsakes.photos.title': 'Photos',
   'keepsakes.photos.empty': 'No photos yet. Add one to publish; the first is the cover.',

@@ -53,7 +53,7 @@ test('[T-005] creates a keepsake in one request at the end of Variants and opens
   await expect(bar(owner).getByText('Not saved yet')).toBeVisible()
   await owner.screenshot({ path: `${EVIDENCE}/api-new-details-375.png` })
   await owner.getByLabel('Name (English)').fill(name)
-  await owner.getByLabel('Text (English)').fill('A card with tools.')
+  await owner.getByLabel('Description (English)').fill('A card with tools.')
   await bar(owner).getByRole('button', { name: 'Next' }).click()
   await expect(owner.getByRole('region', { name: 'Options' })).toBeVisible()
   await bar(owner).getByRole('button', { name: 'Next' }).click()

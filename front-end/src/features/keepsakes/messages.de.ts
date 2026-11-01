@@ -67,9 +67,9 @@ export const keepsakesDe: Record<keyof typeof keepsakesEn, string> = {
   'keepsakes.basics.name.placeholder.en': 'Victorinox pocket knife, Lucerne designs',
   'keepsakes.basics.name.placeholder.de': 'Victorinox Taschenmesser, Luzerner Motive',
   'keepsakes.basics.nameRequired': 'Geben Sie zum Veröffentlichen einen Namen auf Englisch oder Deutsch ein.',
-  'keepsakes.basics.text': 'Text ({language})',
+  'keepsakes.basics.text': 'Beschreibung ({language})',
   'keepsakes.basics.textHint': 'Was das Andenken ist, die Grössen und alles, was Gäste wissen sollten. {count} / {max}',
-  'keepsakes.basics.textRequired': 'Geben Sie den Text in derselben Sprache wie den Namen ein.',
+  'keepsakes.basics.textRequired': 'Geben Sie die Beschreibung in derselben Sprache wie den Namen ein.',
 
   'keepsakes.photos.title': 'Fotos',
   'keepsakes.photos.empty': 'Noch keine Fotos. Fügen Sie eines hinzu, um zu veröffentlichen; das erste ist das Titelbild.',
