@@ -122,12 +122,11 @@ export const mediaEn = {
 
   'media.select.start': 'Select',
   'media.select.stop': 'Done',
-  'media.select.count': '{count} selected',
+  'media.select.delete': 'Delete',
   'media.select.retire': 'Delete {count}',
   'media.select.retireTitle': 'Delete {count}',
   'media.select.blocked': '{count} in use, kept',
   'media.select.blockedSentence': '{count} in use, kept.',
-  'media.select.clear': 'Clear selection',
   'media.select.toggle': 'Select {name}',
   'media.select.done': '{count} files deleted. {kept} in use were kept.',
   'media.select.doneOne': '1 file deleted. {kept} in use were kept.',

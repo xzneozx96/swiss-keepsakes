@@ -5,9 +5,10 @@ import type { PagerState } from '@/components/list-pagination'
 import { Button, Skeleton, toast } from '@heroui/react'
 import { useEffect, useState } from 'react'
 
+import { ActionBar } from '@/components/action-bar'
 import { EmptyState } from '@/components/empty-state'
 import { FilterChips, filterGroup } from '@/components/filter-bar'
-import { PhotoAddIcon, SearchIcon, UploadIcon } from '@/components/icons'
+import { PhotoAddIcon, SearchIcon, TrashIcon, UploadIcon } from '@/components/icons'
 import { MerchantPageHeader } from '@/components/layout/merchant-page-header'
 import { Pager } from '@/components/list-pagination'
 import { useLocale } from '@/contexts/locale-context'
@@ -229,14 +230,12 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
       {!list.isPending && <Pager compact={!isWide} pager={pager} />}
 
       {selecting && selected.length > 0 && (
-        <div className="sticky bottom-20 z-10 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-foreground px-4 py-3 text-background shadow-overlay lg:bottom-4">
-          <span className="text-sm font-semibold">{t('media.select.count', { count: selected.length })}</span>
-          {kept > 0 && <span className="text-xs text-background/80">{t('media.select.blocked', { count: kept })}</span>}
-          <span className="ms-auto flex gap-2">
-            <Button className="max-lg:h-11" size="sm" variant="secondary" onPress={() => setSelected([])}>{t('media.select.clear')}</Button>
-            <Button className="max-lg:h-11" isDisabled={!retirable.length} size="sm" variant="danger-soft" onPress={() => void retireChosen()}>{t('media.select.retire', { count: retirable.length })}</Button>
-          </span>
-        </div>
+        <ActionBar
+          actions={[{ icon: TrashIcon, label: t('media.select.delete'), ariaLabel: t('media.select.retire', { count: retirable.length }), tone: 'danger', isDisabled: !retirable.length, onPress: () => void retireChosen() }]}
+          count={selected.length}
+          note={kept > 0 ? t('media.select.blocked', { count: kept }) : undefined}
+          onClear={() => setSelected([])}
+        />
       )}
 
       <MediaSheet
