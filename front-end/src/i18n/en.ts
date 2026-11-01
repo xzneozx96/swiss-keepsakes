@@ -811,6 +811,7 @@ export const en = {
   'cartToast.viewCart': 'View cart',
   'cartToast.close': 'Close',
   'confirm.cancel': 'Cancel',
+  'confirm.failed': 'That did not work. Nothing was changed. Try again.',
   'cart.remove.title': 'Remove {item}?',
   'cart.remove.body': '{summary} comes out of your cart.',
   'cart.remove.confirm': 'Remove from cart',

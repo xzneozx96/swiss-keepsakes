@@ -843,6 +843,7 @@ export const de: Record<MessageKey, string> = {
   'cartToast.viewCart': 'Zum Warenkorb',
   'cartToast.close': 'Schliessen',
   'confirm.cancel': 'Abbrechen',
+  'confirm.failed': 'Das hat nicht geklappt. Es wurde nichts geändert. Versuche es noch einmal.',
   'cart.remove.title': '{item} entfernen?',
   'cart.remove.body': '{summary} wird aus dem Warenkorb entfernt.',
   'cart.remove.confirm': 'Aus dem Warenkorb entfernen',
