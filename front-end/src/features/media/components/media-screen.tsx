@@ -233,8 +233,8 @@ function Library({ storeId, search, onSearch }: { storeId: string, search: Media
           <span className="text-sm font-semibold">{t('media.select.count', { count: selected.length })}</span>
           {kept > 0 && <span className="text-xs text-background/80">{t('media.select.blocked', { count: kept })}</span>}
           <span className="ms-auto flex gap-2">
-            <Button className="max-lg:h-11" size="sm" variant="tertiary" onPress={() => setSelected([])}>{t('media.select.clear')}</Button>
-            <Button className="max-lg:h-11" isDisabled={!retirable.length} size="sm" variant="secondary" onPress={() => void retireChosen()}>{t('media.select.retire', { count: retirable.length })}</Button>
+            <Button className="max-lg:h-11" size="sm" variant="secondary" onPress={() => setSelected([])}>{t('media.select.clear')}</Button>
+            <Button className="max-lg:h-11" isDisabled={!retirable.length} size="sm" variant="danger-soft" onPress={() => void retireChosen()}>{t('media.select.retire', { count: retirable.length })}</Button>
           </span>
         </div>
       )}
