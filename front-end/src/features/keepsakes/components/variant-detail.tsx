@@ -63,14 +63,14 @@ function ValueSelect({ form, option }: { form: VariantForm, option: ProductOptio
 const NOT_NUMBER = /[^\d.]/g
 
 /** The price as typed ("39." stays "39."), read as a number for the checks. */
-function PriceRow({ form }: { form: VariantForm }) {
+export function PriceRow({ price, invalid, onChange }: { price: number | undefined, invalid: boolean, onChange: (next: number | undefined) => void }) {
   const { t } = useLocale()
-  const [text, setText] = useState(form.form.price === undefined ? '' : form.form.price.toFixed(2))
+  const [text, setText] = useState(price === undefined ? '' : price.toFixed(2))
 
   return (
     <InlineField
       inputMode="decimal"
-      invalid={form.shown.price !== undefined}
+      invalid={invalid}
       label={t('keepsakes.variants.price')}
       placeholder="0.00"
       value={text}
@@ -78,7 +78,7 @@ function PriceRow({ form }: { form: VariantForm }) {
         const clean = next.replace(',', '.').replace(NOT_NUMBER, '')
 
         setText(clean)
-        form.setPrice(clean === '' ? undefined : Number(clean))
+        onChange(clean === '' ? undefined : Number(clean))
       }}
     />
   )
@@ -134,7 +134,7 @@ export function VariantDetail({ form, title, held, onArchive }: { form: VariantF
 
       <div className="flex flex-col gap-2">
         <div className={FIELD_GROUP}>
-          <PriceRow form={form} />
+          <PriceRow invalid={form.shown.price !== undefined} price={form.form.price} onChange={form.setPrice} />
           <InlineField mono invalid={form.shown.code !== undefined} label={t('keepsakes.variant.code')} placeholder={form.suggestion || t('keepsakes.variants.skuAuto')} value={form.form.typedCode ?? ''} onChange={form.setCode} />
           {!held && (
             <div className={FIELD_ROW}>

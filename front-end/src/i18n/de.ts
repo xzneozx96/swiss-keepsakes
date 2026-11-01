@@ -8,6 +8,7 @@ import { stepsDe } from '@/components/step-messages.de'
 import { categoriesDe } from '@/features/categories/messages.de'
 import { contentMerchantDe } from '@/features/content/merchant/messages.de'
 import { contentDe } from '@/features/content/messages.de'
+import { addAllDe } from '@/features/keepsakes/add-all-messages'
 import { keepsakesDe } from '@/features/keepsakes/messages.de'
 import { mapDe } from '@/features/map/messages.de'
 import { mediaDe } from '@/features/media/messages.de'
@@ -46,6 +47,7 @@ export const de: Record<MessageKey, string> = {
   ...storesDe,
   ...categoriesDe,
   ...keepsakesDe,
+  ...addAllDe,
   ...mediaDe,
   ...placesDe,
   ...actionBarDe,

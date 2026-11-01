@@ -44,3 +44,19 @@ export function codeProblem(code: string, others: Pick<ProductVariant, 'skuCode'
 export function variantsBody(variants: Pick<ProductVariant, 'skuCode' | 'priceRappen' | 'values'>[]) {
   return variants.map(variant => ({ skuCode: variant.skuCode, priceRappen: variant.priceRappen, values: variant.values }))
 }
+
+/** Above this many missing combinations, "Add all combinations" asks first and names the count. */
+export const ADD_ALL_CONFIRM_ABOVE = 50
+
+/** Every combination of the options that no variant has yet, archived ones counted as taken. None for a keepsake with no option. */
+export function missingCombinations(options: ProductOption[], variants: Pick<ProductVariant, 'values'>[]): Values[] {
+  if (options.length === 0)
+    return []
+
+  const rows = options.reduce<Values[]>(
+    (all, option) => all.flatMap(row => option.values.map(value => ({ ...row, [option.id]: value.id }))),
+    [{}],
+  )
+
+  return rows.filter(row => !findTwin(options, variants, row))
+}

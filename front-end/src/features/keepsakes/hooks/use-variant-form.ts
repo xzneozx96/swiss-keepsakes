@@ -7,9 +7,10 @@ import { useLocale } from '@/contexts/locale-context'
 import { toRappen } from '../lib/keepsake-rules'
 import { checkVariantValues, combinationName, suggestCode, variantRefusalText } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
-import { codeProblem, findTwin, isComplete } from '../lib/variant-rules'
+import { codeProblem, findTwin, isComplete, missingCombinations } from '../lib/variant-rules'
 
-export type Editing = null | 'new' | string
+/** Nothing open, a new variant, "all" (the Add all combinations form), or a variant id. */
+export type Editing = null | 'new' | 'all' | string
 
 interface Form {
   values: Record<string, string>
@@ -47,7 +48,7 @@ export function useVariantForm({ options, variants, codeFallback, onCreate, onSa
 
   const live = variants.filter(variant => variant.status !== 'archived')
   const archived = variants.filter(variant => variant.status === 'archived')
-  const current = editing && editing !== 'new' ? variants.find(variant => variant.id === editing) : undefined
+  const current = editing && editing !== 'new' && editing !== 'all' ? variants.find(variant => variant.id === editing) : undefined
   const others = variants.filter(variant => variant.id !== current?.id)
   const possible = options.reduce((total, option) => total * option.values.length, 1)
   const complete = isComplete(options, form.values)
@@ -67,7 +68,7 @@ export function useVariantForm({ options, variants, codeFallback, onCreate, onSa
     setTried(false)
     setServer({})
     setEditing(target)
-    const variant = target && target !== 'new' ? variants.find(v => v.id === target) : undefined
+    const variant = target && target !== 'new' && target !== 'all' ? variants.find(v => v.id === target) : undefined
 
     setForm(variant ? formOf(variant) : EMPTY)
   }
@@ -92,6 +93,8 @@ export function useVariantForm({ options, variants, codeFallback, onCreate, onSa
     complete,
     combination,
     canCreate: variants.length < possible,
+    /** Combinations no variant has yet, archived ones counted as taken. */
+    missing: missingCombinations(options, variants),
     isPending,
     shown: { values: shownValues, code: shownCode, price: shownPrice },
     failure: server.failure,

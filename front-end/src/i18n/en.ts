@@ -6,6 +6,7 @@ import { stepsEn } from '@/components/step-messages'
 import { categoriesEn } from '@/features/categories/messages'
 import { contentMerchantEn } from '@/features/content/merchant/messages'
 import { contentEn } from '@/features/content/messages'
+import { addAllEn } from '@/features/keepsakes/add-all-messages'
 import { keepsakesEn } from '@/features/keepsakes/messages'
 import { mapEn } from '@/features/map/messages'
 import { mediaEn } from '@/features/media/messages'
@@ -44,6 +45,7 @@ export const en = {
   ...storesEn,
   ...categoriesEn,
   ...keepsakesEn,
+  ...addAllEn,
   ...mediaEn,
   ...placesEn,
   ...actionBarEn,

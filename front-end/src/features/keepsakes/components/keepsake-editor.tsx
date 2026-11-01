@@ -149,7 +149,7 @@ function Editor({ storeId, keepsake, step, onStep, onReload }: {
           />
         </div>
         {step === 'options' && <OptionsStep draft={options} onSave={editor.saveOptions} />}
-        {step === 'variants' && <VariantsStep name={name} options={keepsake.options} variants={keepsake.variants} onCreate={editor.createVariant} onSave={editor.saveVariant} />}
+        {step === 'variants' && <VariantsStep name={name} options={keepsake.options} variants={keepsake.variants} onCreate={editor.createVariant} onAdd={editor.addVariant} onAddDone={() => void editor.refreshVariants()} onSave={editor.saveVariant} />}
         {onReview && (
           <Suspense fallback={<StepBodySkeleton />}>
             <ReviewScreen actions={{ unpublish: editor.unpublish, isPending: editor.isPublishing }} keepsake={keepsake} onFix={jumpTo} />

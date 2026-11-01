@@ -32,6 +32,8 @@ export function useVariantCommands({ storeId, id }: { storeId: string, id: strin
     },
   })
   const createVariant = useCommand('keepsakes', 'createVariant', { meta: { success: (_, input) => t('keepsakes.variant.created', { code: input.skuCode }), silent: true } })
+  // The same command for "Add all combinations": one toast for the whole batch is the form's own summary, not one per variant.
+  const createQuietly = useCommand('keepsakes', 'createVariant', { meta: { silent: true } })
   const detailKey = keepsakesQueries.detail(client, storeId, id).queryKey
 
   return {
@@ -55,5 +57,18 @@ export function useVariantCommands({ storeId, id }: { storeId: string, id: strin
         return { ok: false, type: problemTypeOf(error), refusals: refusalsOf(error) }
       }
     },
+    /** Like `createVariant`, without the toast, for several at once. */
+    addVariant: async (body: VariantCreateBody): Promise<Outcome> => {
+      try {
+        queryClient.setQueryData(detailKey, await createQuietly.mutateAsync({ storeId, id, idempotencyKey: crypto.randomUUID(), ...body }))
+
+        return { ok: true }
+      }
+      catch (error) {
+        return { ok: false, type: problemTypeOf(error), refusals: refusalsOf(error) }
+      }
+    },
+    /** Parallel answers can arrive out of order, each one the whole keepsake as the server had it: read it again once they are all in. */
+    refreshVariants: () => queryClient.invalidateQueries({ queryKey: detailKey }),
   }
 }

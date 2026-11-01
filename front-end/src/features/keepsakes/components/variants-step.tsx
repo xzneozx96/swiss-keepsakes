@@ -13,6 +13,7 @@ import { chf } from '../lib/keepsake-rules'
 import { combinationName, refusalText } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
 import { isComplete } from '../lib/variant-rules'
+import { AddAllForm } from './add-all-form'
 import { VariantDetail } from './variant-detail'
 
 export type SaveVariant = (variantId: string, body: VariantSaveBody) => Promise<Outcome>
@@ -82,7 +83,7 @@ function ArchivedList({ variants, options }: { variants: ProductVariant[], optio
  * below it the list is one screen and the variant another, with a way back. A saved keepsake saves a variant at once
  * (ADR-014); a new one saves nothing before Review and publish.
  */
-export function VariantsStep({ options, variants, held = false, name, codeFallback = '', onCreate, onSave }: {
+export function VariantsStep({ options, variants, held = false, name, codeFallback = '', onCreate, onAdd = onCreate, onAddDone, onSave }: {
   options: ProductOption[]
   variants: ProductVariant[]
   /** The keepsake is only in the browser. */
@@ -91,6 +92,10 @@ export function VariantsStep({ options, variants, held = false, name, codeFallba
   name: string
   codeFallback?: string
   onCreate: CreateVariant
+  /** The create used by Add all combinations, several at once: without the one-variant toast. Defaults to `onCreate`. */
+  onAdd?: CreateVariant
+  /** Every create of Add all combinations has answered. */
+  onAddDone?: () => void
   onSave: SaveVariant
 }) {
   const { t, language } = useLocale()
@@ -125,11 +130,20 @@ export function VariantsStep({ options, variants, held = false, name, codeFallba
     })
   }
 
-  const add = form.canCreate && (
-    <Button fullWidth className="mt-2 max-lg:min-h-11" variant="secondary" onPress={() => form.open('new')}>
+  const addAllButton = (props: { className?: string, fullWidth?: boolean, size?: 'sm', variant: 'ghost' | 'secondary' }) => form.missing.length > 0 && (
+    <Button {...props} onPress={() => form.open('all')}>
       <PlusIcon aria-hidden size={16} />
-      {t('keepsakes.variants.add')}
+      {t('keepsakes.addAll.button')}
     </Button>
+  )
+  const add = form.canCreate && (
+    <>
+      <Button fullWidth className="mt-2 max-lg:min-h-11" variant="secondary" onPress={() => form.open('new')}>
+        <PlusIcon aria-hidden size={16} />
+        {t('keepsakes.variants.add')}
+      </Button>
+      {addAllButton({ fullWidth: true, className: 'max-lg:min-h-11', variant: 'ghost' })}
+    </>
   )
 
   return (
@@ -149,6 +163,7 @@ export function VariantsStep({ options, variants, held = false, name, codeFallba
                     {t('keepsakes.variants.add')}
                   </Button>
                 )}
+                {addAllButton({ className: 'max-lg:min-h-11', variant: 'secondary' })}
               </EmptyState>
               <ArchivedList options={options} variants={form.archived} />
             </>
@@ -161,18 +176,20 @@ export function VariantsStep({ options, variants, held = false, name, codeFallba
                 <ArchivedList options={options} variants={form.archived} />
               </nav>
               <div className={open ? '' : 'max-lg:hidden'}>
-                {open
-                  ? <VariantDetail key={form.editing} form={form} held={held} title={name} onArchive={id => void archive(id)} />
-                  : (
-                      <EmptyState compact icon={ProductsIcon} message={t(form.canCreate ? 'keepsakes.variants.pick' : 'keepsakes.variants.pickOnly')}>
-                        {form.canCreate && (
-                          <Button className="max-lg:min-h-11" size="sm" variant="secondary" onPress={() => form.open('new')}>
-                            <PlusIcon aria-hidden size={16} />
-                            {t('keepsakes.variants.add')}
-                          </Button>
-                        )}
-                      </EmptyState>
-                    )}
+                {form.editing === 'all'
+                  ? <AddAllForm options={options} variants={variants} onClose={form.close} onCreate={onAdd} onDone={onAddDone} />
+                  : open
+                    ? <VariantDetail key={form.editing} form={form} held={held} title={name} onArchive={id => void archive(id)} />
+                    : (
+                        <EmptyState compact icon={ProductsIcon} message={t(form.canCreate ? 'keepsakes.variants.pick' : 'keepsakes.variants.pickOnly')}>
+                          {form.canCreate && (
+                            <Button className="max-lg:min-h-11" size="sm" variant="secondary" onPress={() => form.open('new')}>
+                              <PlusIcon aria-hidden size={16} />
+                              {t('keepsakes.variants.add')}
+                            </Button>
+                          )}
+                        </EmptyState>
+                      )}
               </div>
             </div>
           )}
