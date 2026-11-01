@@ -5,7 +5,7 @@ import { Skeleton } from '@heroui/react'
 import { StatusChip } from '@/components/status-chip'
 import { useLocale } from '@/contexts/locale-context'
 import { FileThumb } from './file-thumb'
-import { TILE_SELECTED, TileMark } from './tile-mark'
+import { TileMark, TileOutline } from './tile-mark'
 
 const GRID = 'grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6'
 
@@ -22,8 +22,9 @@ function Tile({ item, busy, found, selecting, selected, onPress }: { item: Media
       type="button"
       onClick={onPress}
     >
-      <span className={`relative block w-full overflow-hidden rounded-xl ${selected || found ? TILE_SELECTED : ''}`}>
+      <span className="relative block w-full overflow-hidden rounded-xl">
         <FileThumb busy={busy} className="aspect-square w-full rounded-xl" item={item} />
+        <TileOutline shown={selected || found} />
         {unused && <span className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">{t('media.grid.unused')}</span>}
         {item.status !== 'ready' && (
           <span className="absolute start-1.5 bottom-1.5">

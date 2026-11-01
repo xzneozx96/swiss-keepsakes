@@ -1,7 +1,13 @@
 import { SelectedIcon } from '@/components/icons'
 
-/** A selected photo tile: the app's selected state, the red accent ring of the choice cards (`components/choice-card.ts`). */
-export const TILE_SELECTED = 'ring-2 ring-accent ring-offset-2'
+/**
+ * A selected photo tile's outline: the app's selected state, the red accent of the choice cards
+ * (`components/choice-card.ts`). Drawn inside the tile, over the photo, so neighbours 8 px apart never touch and a
+ * scroll container never clips it.
+ */
+export function TileOutline({ shown }: { shown: boolean }) {
+  return shown ? <span aria-hidden className="pointer-events-none absolute inset-0 rounded-xl ring-3 ring-accent ring-inset" /> : null
+}
 
 /** The round mark in a tile's corner: empty while the tile can be picked, the accent tick once it is. */
 export function TileMark({ selected }: { selected: boolean }) {

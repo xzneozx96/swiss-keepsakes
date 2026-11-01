@@ -11,7 +11,7 @@ import { useLocale } from '@/contexts/locale-context'
 import { useMediaList } from '../api/queries'
 import { WALL_PAGE_SIZE } from '../lib/search-params'
 import { FileThumb } from './file-thumb'
-import { TILE_SELECTED, TileMark } from './tile-mark'
+import { TileMark, TileOutline } from './tile-mark'
 
 const SEARCH_DELAY_MS = 250
 const GRID = 'grid grid-cols-3 gap-2 sm:grid-cols-4'
@@ -44,8 +44,9 @@ function Choice({ item, checked, disabled, used, onToggle }: { item: MediaItem, 
           onChange={onToggle}
         />
         <span className="sr-only">{used ? `${item.name}, ${t('media.library.used')}` : item.name}</span>
-        <span className={`relative block w-full overflow-hidden rounded-xl peer-focus-visible:focus-ring ${checked ? TILE_SELECTED : ''} ${used ? 'opacity-60' : ''}`}>
+        <span className={`relative block w-full overflow-hidden rounded-xl peer-focus-visible:focus-ring ${used ? 'opacity-60' : ''}`}>
           <FileThumb className="aspect-square w-full rounded-xl" item={item} />
+          <TileOutline shown={checked} />
           <TileMark selected={checked} />
           {used && <span aria-hidden className="absolute start-1.5 bottom-1.5 rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold">{t('media.library.used')}</span>}
         </span>
