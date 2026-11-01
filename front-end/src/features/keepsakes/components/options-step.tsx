@@ -5,6 +5,7 @@ import type { OptionDraft } from '../lib/option-rules'
 import { Button } from '@heroui/react'
 import { useState } from 'react'
 
+import { EmptyState } from '@/components/empty-state'
 import { Block } from '@/components/form-block'
 import { ChevronRightIcon, OptionIcon, PlusIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
@@ -204,13 +205,12 @@ export function OptionsStep({ draft, onSave }: { draft: OptionsDraftState, onSav
     <Block hint={t('keepsakes.options.hint')} icon={OptionIcon} id="options" title={t('keepsakes.options.title')}>
       {draft.options.length === 0 || !option
         ? (
-            <div className="flex flex-col items-center gap-4 py-10 text-center">
-              <p className="max-w-xs text-sm text-pretty text-muted">{t('keepsakes.options.none')}</p>
+            <EmptyState compact icon={OptionIcon} message={t('keepsakes.options.none')}>
               <Button className="max-lg:h-11" onPress={add}>
                 <PlusIcon aria-hidden size={16} />
                 {t('keepsakes.options.add')}
               </Button>
-            </div>
+            </EmptyState>
           )
         : (
             <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10">
