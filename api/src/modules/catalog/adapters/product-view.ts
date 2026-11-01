@@ -13,7 +13,8 @@ export function productView({ product, photos }: ProductDetail): ProductView {
     storeId: product.storeId,
     status: product.status,
     name: doc.name,
-    text: doc.text,
+    // The contract's view of a stored description is a document of nodes; a stored one was checked when it was written.
+    text: doc.text as ProductView['text'],
     photos,
     commissionRate: product.commissionRate,
     slug: product.slug,

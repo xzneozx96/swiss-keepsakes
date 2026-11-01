@@ -15,6 +15,9 @@ afterAll(async () => {
 
 const env = createCatalogHttp(testDatabase)
 
+/** A description document of one paragraph. */
+const rich = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] })
+
 const code = () => `VX-${randomUUID().slice(0, 8).toUpperCase()}`
 
 interface Option { id: string, name: { en?: string, de?: string }, values: { id: string, label: { en?: string, de?: string }, swatch: string | null }[] }
@@ -40,7 +43,7 @@ async function setup(options: { fresh?: boolean } = {}) {
   const create = (body: object) => call(products, {
     method: 'POST',
     headers: owner.headers,
-    body: { name: { en: 'Victorinox Classic' }, text: { en: 'A Swiss knife.' }, photoIds: [photo], ...body },
+    body: { name: { en: 'Victorinox Classic' }, text: { en: rich('A Swiss knife.') }, photoIds: [photo], ...body },
   })
   // A keepsake with Size and Theme and the four combinations, as the create flow sends them.
   const withOptions = async (): Promise<View> => {

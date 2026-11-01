@@ -1,5 +1,5 @@
 import type { Actor } from '@sk/domain/identity'
-import type { Localized, OptionInput, VariantInput } from '../ports.ts'
+import type { Localized, LocalizedDoc, OptionInput, VariantInput } from '../ports.ts'
 import type { CatalogDeps } from './deps.ts'
 import type { Result } from './failure.ts'
 import type { ProductDetail } from './product-detail.ts'
@@ -12,7 +12,7 @@ import { isSkuCode } from './sku-code.ts'
 
 export interface CreateProductInput {
   name: Localized
-  text: Localized
+  text: LocalizedDoc
   photoIds: string[]
   commissionRate: number
   options: OptionInput[]

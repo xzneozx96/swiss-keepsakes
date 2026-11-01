@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BODY_LIST_LEVELS, bodyHardBreakSchema, boldMarkSchema, firstCapFault, italicMarkSchema, linkMarkSchema, listItemSchema } from './content.ts'
 import { mediaSchema } from './media.ts'
 import { noNul } from './text.ts'
 
@@ -27,10 +28,49 @@ const keepsakeNameSchema = z.strictObject({
   de: noNul(z.string().trim().min(1).max(NAME_MAX)).optional(),
 }).meta({ id: 'KeepsakeName', description: 'The name per language, at most 90 characters each. A present key is non-empty' })
 
+// The description of a keepsake is one Tiptap document per language with a smaller allow-list than a story body
+// (DESC-rich, owner 2026-11-01): paragraphs, hard breaks, two kinds of list, bold, italic and links. The pieces are the
+// story body's own (content.ts), without the pin link. The limit counts the text a guest reads.
+const descriptionTextSchema = z.strictObject({
+  type: z.literal('text'),
+  text: noNul(z.string().min(1).max(TEXT_MAX)),
+  marks: z.array(z.discriminatedUnion('type', [boldMarkSchema, italicMarkSchema, linkMarkSchema])).max(3).optional(),
+})
+const descriptionParagraphSchema = z.strictObject({
+  type: z.literal('paragraph'),
+  content: z.array(z.discriminatedUnion('type', [descriptionTextSchema, bodyHardBreakSchema])).optional(),
+})
+const descriptionNodeSchema = z.discriminatedUnion('type', [
+  descriptionParagraphSchema,
+  z.strictObject({ type: z.literal('bulletList'), content: z.array(listItemSchema(descriptionParagraphSchema, BODY_LIST_LEVELS)) }),
+  z.strictObject({ type: z.literal('orderedList'), content: z.array(listItemSchema(descriptionParagraphSchema, BODY_LIST_LEVELS)) }),
+])
+
+interface Walked { type?: unknown, text?: unknown, content?: unknown }
+function visibleText(nodes: unknown): string {
+  return Array.isArray(nodes)
+    ? nodes.map((node: Walked) => (node.type === 'text' && typeof node.text === 'string' ? node.text : visibleText(node.content))).join('')
+    : ''
+}
+
+const keepsakeDescriptionSchema = z.strictObject({
+  type: z.literal('doc'),
+  content: z.array(descriptionNodeSchema),
+}).superRefine((body, ctx) => {
+  const fault = firstCapFault(body)
+  if (fault)
+    ctx.addIssue({ code: 'custom', path: fault.path, message: fault.message })
+  const text = visibleText(body.content)
+  if (text.trim() === '')
+    ctx.addIssue({ code: 'custom', message: 'A description that is present has text' })
+  else if (text.length > TEXT_MAX)
+    ctx.addIssue({ code: 'custom', message: `A description is at most ${TEXT_MAX} characters` })
+})
+
 const keepsakeTextSchema = z.strictObject({
-  en: noNul(z.string().trim().min(1).max(TEXT_MAX)).optional(),
-  de: noNul(z.string().trim().min(1).max(TEXT_MAX)).optional(),
-}).meta({ id: 'KeepsakeText', description: 'The text per language, at most 1200 characters each. A present key is non-empty' })
+  en: keepsakeDescriptionSchema.optional(),
+  de: keepsakeDescriptionSchema.optional(),
+}).meta({ id: 'KeepsakeText', description: 'The description per language as one Tiptap document (paragraphs, hard breaks, bullet and numbered lists, bold, italic and links), at most 1200 characters of text each. A present key has text' })
 
 const photoIds = z.array(z.uuid()).max(MAX_PHOTOS)
   .refine(ids => new Set(ids.map(id => id.toLowerCase())).size === ids.length, 'Each photo may appear once')
@@ -109,6 +149,19 @@ export const variantSaveBodySchema = z.strictObject({
 
 const localizedView = z.object({ en: z.string().optional(), de: z.string().optional() })
 
+// Stored data is not checked again on a read, so a description here is only known to be a document of nodes.
+const descriptionViewSchema = z.object({
+  type: z.literal('doc'),
+  content: z.array(z.object({
+    type: z.string(),
+    attrs: z.record(z.string(), z.unknown()).optional(),
+    content: z.array(z.unknown()).optional(),
+    text: z.string().optional(),
+    marks: z.array(z.unknown()).optional(),
+  })),
+})
+const descriptionsView = z.object({ en: descriptionViewSchema.optional(), de: descriptionViewSchema.optional() })
+
 export const productVariantSchema = z.object({
   id: z.uuid(),
   skuCode: z.string(),
@@ -140,7 +193,7 @@ export const productSchema = z.object({
   storeId: z.uuid(),
   status: z.enum(['draft', 'published']),
   name: localizedView.meta({ description: 'The working copy: the draft, else the published text' }),
-  text: localizedView,
+  text: descriptionsView.meta({ description: 'The description per language as a Tiptap document, the working copy' }),
   photos: z.array(mediaSchema).meta({ description: 'The working photos in order, the first is the cover' }),
   commissionRate: z.number(),
   slug: localizedView.nullable().meta({ description: 'The web address per language, set at the first publish' }),

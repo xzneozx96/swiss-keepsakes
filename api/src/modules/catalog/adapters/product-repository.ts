@@ -1,5 +1,5 @@
 import type { Tx } from '../../../platform/db/client.ts'
-import type { Localized, OptionValue, Product, ProductChanges, ProductDoc, ProductListRow, ProductOption, ProductRepository, ProductVariant } from '../ports.ts'
+import type { Localized, LocalizedDoc, OptionValue, Product, ProductChanges, ProductDoc, ProductListRow, ProductOption, ProductRepository, ProductVariant } from '../ports.ts'
 import { sql } from 'drizzle-orm'
 import { writeOptions, writeSkuValues } from './option-writes.ts'
 
@@ -9,7 +9,7 @@ interface ProductRow {
   status: Product['status']
   slug: Localized | null
   draft: ProductDoc | null
-  published: { name?: Localized, text?: Localized } | null
+  published: { name?: Localized, text?: LocalizedDoc } | null
   commission_rate: number
   row_version: number
   created_at: Date
@@ -57,13 +57,23 @@ const columns = sql`id, store_id, status, slug, draft, published, commission_rat
 
 const json = (value: unknown) => (value === null ? null : JSON.stringify(value))
 
+// Object keys sorted at every depth: jsonb stores a document with its keys in its own order, and a request body has
+// the order it was sent in, so the two must compare equal when they say the same.
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value))
+    return value.map(canonical)
+  if (value !== null && typeof value === 'object')
+    return Object.fromEntries(Object.entries(value).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([key, item]) => [key, canonical(item)]))
+  return value
+}
+
 // The same text in the same order, so a draft that was edited back to the live copy is no pending edit.
 function docKey(doc: ProductDoc): string {
-  return JSON.stringify({
+  return JSON.stringify(canonical({
     name: { en: doc.name.en ?? null, de: doc.name.de ?? null },
     text: { en: doc.text.en ?? null, de: doc.text.de ?? null },
     media: doc.media,
-  })
+  }))
 }
 
 async function load(tx: Tx, storeId: string, productId: string, lock: boolean): Promise<Product | undefined> {

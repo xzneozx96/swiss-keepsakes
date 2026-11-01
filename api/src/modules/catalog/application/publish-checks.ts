@@ -1,5 +1,5 @@
 import type { ProductDoc, ProductOption, ProductVariant } from '../ports.ts'
-import { languagesOf } from '@sk/domain/content'
+import { descriptionLanguages, languagesOf } from '@sk/domain/content'
 
 type Language = 'en' | 'de'
 
@@ -16,7 +16,7 @@ const languages: Language[] = ['en', 'de']
 // A language is full when its name and its text are both filled in (AC30). One full language is enough to publish.
 export function fullLanguages(doc: Pick<ProductDoc, 'name' | 'text'>): Language[] {
   const named = languagesOf(doc.name)
-  const written = languagesOf(doc.text)
+  const written = descriptionLanguages(doc.text)
   return languages.filter(language => named.includes(language) && written.includes(language))
 }
 

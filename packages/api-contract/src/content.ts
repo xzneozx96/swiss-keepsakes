@@ -220,18 +220,22 @@ function isSafeHref(href: string): boolean {
   }
 }
 
+// The marks and the hard break are shared with the keepsake description (catalog.ts), which allows no pin link.
+export const boldMarkSchema = z.strictObject({ type: z.literal('bold') })
+export const italicMarkSchema = z.strictObject({ type: z.literal('italic') })
+export const linkMarkSchema = z.strictObject({
+  type: z.literal('link'),
+  attrs: z.strictObject({ href: noNul(z.string().max(2000)).refine(isSafeHref, 'A link is https:, http: or mailto:') }),
+})
 const bodyMarkSchema = z.discriminatedUnion('type', [
-  z.strictObject({ type: z.literal('bold') }),
-  z.strictObject({ type: z.literal('italic') }),
-  z.strictObject({
-    type: z.literal('link'),
-    attrs: z.strictObject({ href: noNul(z.string().max(2000)).refine(isSafeHref, 'A link is https:, http: or mailto:') }),
-  }),
+  boldMarkSchema,
+  italicMarkSchema,
+  linkMarkSchema,
   z.strictObject({ type: z.literal('pinLink'), attrs: z.strictObject({ pinId: z.uuid() }) }),
 ])
 
 const bodyTextSchema = z.strictObject({ type: z.literal('text'), text: noNul(z.string().min(1).max(20000)), marks: z.array(bodyMarkSchema).max(4).optional() })
-const bodyHardBreakSchema = z.strictObject({ type: z.literal('hardBreak') })
+export const bodyHardBreakSchema = z.strictObject({ type: z.literal('hardBreak') })
 const inline = [bodyTextSchema, bodyHardBreakSchema] as const
 
 const bodyParagraphSchema = z.strictObject({ type: z.literal('paragraph'), content: z.array(z.discriminatedUnion('type', inline)).optional() })
@@ -307,7 +311,7 @@ type Path = (string | number)[]
 interface Walked { type?: unknown, content?: unknown }
 
 // The first fault of the three caps, in document order for depth and media. Runs on a body the shape check passed.
-function firstCapFault(body: Walked): { path: Path, message: string } | undefined {
+export function firstCapFault(body: Walked): { path: Path, message: string } | undefined {
   if (utf8Length(JSON.stringify(body)) > STORY_BODY_LIMITS.maxBytes)
     return { path: [], message: `The body is larger than ${STORY_BODY_LIMITS.maxBytes} bytes` }
   let media = 0

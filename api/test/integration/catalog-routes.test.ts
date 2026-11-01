@@ -15,13 +15,25 @@ afterAll(async () => {
 
 const env = createCatalogHttp(testDatabase)
 
+/** A description document of one paragraph. */
+const rich = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] })
+
+/** The same document with the keys of every object in the opposite order, as another client may send it. */
+function reversedKeys(value: unknown): unknown {
+  if (Array.isArray(value))
+    return value.map(reversedKeys)
+  if (value !== null && typeof value === 'object')
+    return Object.fromEntries(Object.entries(value).reverse().map(([key, item]) => [key, reversedKeys(item)]))
+  return value
+}
+
 const code = () => `VX-${randomUUID().slice(0, 8).toUpperCase()}`
 
 interface View {
   id: string
   status: 'draft' | 'published'
   name: { en?: string, de?: string }
-  text: { en?: string, de?: string }
+  text: { en?: unknown, de?: unknown }
   photos: { id: string, name: string, publicUrl: string | null }[]
   slug: { en?: string, de?: string } | null
   hasUnpublishedEdits: boolean
@@ -41,7 +53,7 @@ async function setup(options: { fresh?: boolean } = {}) {
   const create = async (body: object = {}) => env.call(store.products, {
     method: 'POST',
     headers: store.owner.headers,
-    body: { name: { en: 'Victorinox Classic' }, text: { en: 'A Swiss knife.' }, photoIds: [photo], variants: [{ skuCode: code(), priceRappen: 3900 }], ...body },
+    body: { name: { en: 'Victorinox Classic' }, text: { en: rich('A Swiss knife.') }, photoIds: [photo], variants: [{ skuCode: code(), priceRappen: 3900 }], ...body },
   })
   const created = async (body: object = {}) => {
     const response = await create(body)
@@ -64,7 +76,7 @@ describe('[E6.1] creating a keepsake', () => {
     expect(product).toMatchObject({
       status: 'draft',
       name: { en: 'Victorinox Classic' },
-      text: { en: 'A Swiss knife.' },
+      text: { en: rich('A Swiss knife.') },
       commissionRate: 0.1,
       hasUnpublishedEdits: false,
       rowVersion: 1,
@@ -160,7 +172,7 @@ describe('[E6.1][412] the autosave', () => {
     const { created, patch } = await setup()
     const product = await created()
 
-    const [first, second] = await Promise.all([patch(product.id, 1, { text: { en: 'First' } }), patch(product.id, 1, { text: { en: 'Second' } })])
+    const [first, second] = await Promise.all([patch(product.id, 1, { text: { en: rich('First') } }), patch(product.id, 1, { text: { en: rich('Second') } })])
 
     expect([first.status, second.status].sort()).toEqual([200, 412])
   })
@@ -170,9 +182,9 @@ describe('[E6.1][412] the autosave', () => {
     const product = await created()
     const second = await readyPhoto(storeId)
 
-    const saved = await (await patch(product.id, 1, { name: { en: 'A', de: 'B' }, text: { de: 'Ein Messer.' }, photoIds: [second, photo], commissionRate: 0.25 })).json() as View
+    const saved = await (await patch(product.id, 1, { name: { en: 'A', de: 'B' }, text: { de: rich('Ein Messer.') }, photoIds: [second, photo], commissionRate: 0.25 })).json() as View
 
-    expect(saved).toMatchObject({ name: { en: 'A', de: 'B' }, text: { de: 'Ein Messer.' }, commissionRate: 0.25, rowVersion: 2 })
+    expect(saved).toMatchObject({ name: { en: 'A', de: 'B' }, text: { de: rich('Ein Messer.') }, commissionRate: 0.25, rowVersion: 2 })
     expect(saved.photos.map(p => p.id)).toEqual([second, photo])
   })
 
@@ -202,8 +214,8 @@ describe('[E6.1][412] the autosave', () => {
 
 describe('[E6.1][AC30] publishing', () => {
   it.each([
-    ['English', { name: { en: 'Victorinox Classic' }, text: { en: 'A Swiss knife.' } }, { en: 'victorinox-classic' }],
-    ['German', { name: { de: 'Kapellbrücke Messer' }, text: { de: 'Ein Messer.' } }, { de: 'kapellbruecke-messer' }],
+    ['English', { name: { en: 'Victorinox Classic' }, text: { en: rich('A Swiss knife.') } }, { en: 'victorinox-classic' }],
+    ['German', { name: { de: 'Kapellbrücke Messer' }, text: { de: rich('Ein Messer.') } }, { de: 'kapellbruecke-messer' }],
   ])('[E6.1][AC30] a keepsake with one full language in %s publishes, and its slug covers only that language', async (_label, content, slug) => {
     const { created, act } = await setup()
     const product = await created(content)
@@ -220,7 +232,7 @@ describe('[E6.1][AC30] publishing', () => {
 
   it('[E6.1][AC30] a name in one language and a text in the other is no full language and is refused', async () => {
     const { created, act } = await setup()
-    const product = await created({ name: { en: 'Knife' }, text: { de: 'Ein Messer.' } })
+    const product = await created({ name: { en: 'Knife' }, text: { de: rich('Ein Messer.') } })
 
     const response = await act(product.id, 'publish', 1)
 
@@ -247,7 +259,7 @@ describe('[E6.1][AC30] publishing', () => {
   it('[E6.1][checks] a stale publish is 412 and a photo that is still processing is refused', async () => {
     const { created, act, patch, readyPhoto, storeId } = await setup()
     const product = await created()
-    await patch(product.id, 1, { text: { en: 'New text' } })
+    await patch(product.id, 1, { text: { en: rich('New text') } })
     const processing = await created({ photoIds: [await readyPhoto(storeId, 'processing')] })
 
     const stale = await act(product.id, 'publish', 1)
@@ -320,6 +332,39 @@ describe('[E6.1][AC30] publishing', () => {
     expect(reverted.hasUnpublishedEdits).toBe(false)
   })
 
+  it('[DESC-rich] a formatted description is saved, shown as the document, published, and an edit back to the live copy with the keys in another order is no pending edit', async () => {
+    const { created, act, patch } = await setup()
+    const product = await created()
+    const formatted = {
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Hand ' }, { type: 'text', text: 'made', marks: [{ type: 'bold' }] }, { type: 'hardBreak' }, { type: 'text', text: 'in Lucerne', marks: [{ type: 'link', attrs: { href: 'https://example.ch' } }] }] },
+        { type: 'bulletList', content: [{ type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'one' }] }] }] },
+      ],
+    }
+
+    const saved = await (await patch(product.id, 1, { text: { en: formatted, de: rich('Ein Messer.') } })).json() as View
+    const published = await (await act(product.id, 'publish', 2)).json() as View
+    const changed = await (await patch(product.id, 3, { text: { en: rich('Other'), de: rich('Ein Messer.') } })).json() as View
+    const reverted = await (await patch(product.id, 4, { text: { en: reversedKeys(formatted), de: reversedKeys(rich('Ein Messer.')) } })).json() as View
+
+    expect(saved.text).toEqual({ en: formatted, de: rich('Ein Messer.') })
+    expect(published).toMatchObject({ status: 'published', blocking: [], text: { en: formatted } })
+    expect(changed.hasUnpublishedEdits).toBe(true)
+    expect(reverted.hasUnpublishedEdits).toBe(false)
+  })
+
+  it('[DESC-rich] a plain string, a heading or an empty document as the description is a 400 and nothing is written', async () => {
+    const { created, patch } = await setup()
+    const product = await created()
+
+    for (const bad of ['Plain text', { type: 'doc', content: [{ type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'H' }] }] }, { type: 'doc', content: [{ type: 'paragraph' }] }])
+      expect((await patch(product.id, 1, { text: { en: bad } })).status).toBe(400)
+    const after = await patch(product.id, 1, { name: { en: 'Still version one' } })
+
+    expect(after.status).toBe(200)
+  })
+
   it('[E6.1][review] unpublishing makes a draft that keeps its live text, and it can go live again with the same address', async () => {
     const { created, act } = await setup()
     const product = await created()
@@ -362,7 +407,7 @@ describe('[E6.1][AC30] publishing', () => {
     const loserResponse = await racing.call(second.products, {
       method: 'POST',
       headers: second.owner.headers,
-      body: { name, text: { en: 'A Swiss knife.' }, photoIds: [photo], variants: [{ skuCode: code(), priceRappen: 3900 }] },
+      body: { name, text: { en: rich('A Swiss knife.') }, photoIds: [photo], variants: [{ skuCode: code(), priceRappen: 3900 }] },
     })
     const loser = await loserResponse.json() as View
     const publishAs = (http: typeof env, store: typeof second, id: string) =>

@@ -3777,10 +3777,834 @@ export interface components {
             de?: string;
             en?: string;
         };
-        /** @description The text per language, at most 1200 characters each. A present key is non-empty */
+        /** @description The description per language as one Tiptap document (paragraphs, hard breaks, bullet and numbered lists, bold, italic and links), at most 1200 characters of text each. A present key has text */
         KeepsakeText: {
-            de?: string;
-            en?: string;
+            de?: {
+                content: ({
+                    content?: ({
+                        marks?: ({
+                            /** @enum {string} */
+                            type: "bold";
+                        } | {
+                            /** @enum {string} */
+                            type: "italic";
+                        } | {
+                            attrs: {
+                                href: string;
+                            };
+                            /** @enum {string} */
+                            type: "link";
+                        })[];
+                        text: string;
+                        /** @enum {string} */
+                        type: "text";
+                    } | {
+                        /** @enum {string} */
+                        type: "hardBreak";
+                    })[];
+                    /** @enum {string} */
+                    type: "paragraph";
+                } | {
+                    content: {
+                        content: ({
+                            content?: ({
+                                marks?: ({
+                                    /** @enum {string} */
+                                    type: "bold";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "italic";
+                                } | {
+                                    attrs: {
+                                        href: string;
+                                    };
+                                    /** @enum {string} */
+                                    type: "link";
+                                })[];
+                                text: string;
+                                /** @enum {string} */
+                                type: "text";
+                            } | {
+                                /** @enum {string} */
+                                type: "hardBreak";
+                            })[];
+                            /** @enum {string} */
+                            type: "paragraph";
+                        } | {
+                            content: {
+                                content: ({
+                                    content?: ({
+                                        marks?: ({
+                                            /** @enum {string} */
+                                            type: "bold";
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "italic";
+                                        } | {
+                                            attrs: {
+                                                href: string;
+                                            };
+                                            /** @enum {string} */
+                                            type: "link";
+                                        })[];
+                                        text: string;
+                                        /** @enum {string} */
+                                        type: "text";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "hardBreak";
+                                    })[];
+                                    /** @enum {string} */
+                                    type: "paragraph";
+                                } | {
+                                    content: {
+                                        content: ({
+                                            content?: ({
+                                                marks?: ({
+                                                    /** @enum {string} */
+                                                    type: "bold";
+                                                } | {
+                                                    /** @enum {string} */
+                                                    type: "italic";
+                                                } | {
+                                                    attrs: {
+                                                        href: string;
+                                                    };
+                                                    /** @enum {string} */
+                                                    type: "link";
+                                                })[];
+                                                text: string;
+                                                /** @enum {string} */
+                                                type: "text";
+                                            } | {
+                                                /** @enum {string} */
+                                                type: "hardBreak";
+                                            })[];
+                                            /** @enum {string} */
+                                            type: "paragraph";
+                                        } | {
+                                            content: {
+                                                content: ({
+                                                    content?: ({
+                                                        marks?: ({
+                                                            /** @enum {string} */
+                                                            type: "bold";
+                                                        } | {
+                                                            /** @enum {string} */
+                                                            type: "italic";
+                                                        } | {
+                                                            attrs: {
+                                                                href: string;
+                                                            };
+                                                            /** @enum {string} */
+                                                            type: "link";
+                                                        })[];
+                                                        text: string;
+                                                        /** @enum {string} */
+                                                        type: "text";
+                                                    } | {
+                                                        /** @enum {string} */
+                                                        type: "hardBreak";
+                                                    })[];
+                                                    /** @enum {string} */
+                                                    type: "paragraph";
+                                                } | {
+                                                    content: {
+                                                        content: ({
+                                                            content?: ({
+                                                                marks?: ({
+                                                                    /** @enum {string} */
+                                                                    type: "bold";
+                                                                } | {
+                                                                    /** @enum {string} */
+                                                                    type: "italic";
+                                                                } | {
+                                                                    attrs: {
+                                                                        href: string;
+                                                                    };
+                                                                    /** @enum {string} */
+                                                                    type: "link";
+                                                                })[];
+                                                                text: string;
+                                                                /** @enum {string} */
+                                                                type: "text";
+                                                            } | {
+                                                                /** @enum {string} */
+                                                                type: "hardBreak";
+                                                            })[];
+                                                            /** @enum {string} */
+                                                            type: "paragraph";
+                                                        } | {
+                                                            content: {
+                                                                content: {
+                                                                    content?: ({
+                                                                        marks?: ({
+                                                                            /** @enum {string} */
+                                                                            type: "bold";
+                                                                        } | {
+                                                                            /** @enum {string} */
+                                                                            type: "italic";
+                                                                        } | {
+                                                                            attrs: {
+                                                                                href: string;
+                                                                            };
+                                                                            /** @enum {string} */
+                                                                            type: "link";
+                                                                        })[];
+                                                                        text: string;
+                                                                        /** @enum {string} */
+                                                                        type: "text";
+                                                                    } | {
+                                                                        /** @enum {string} */
+                                                                        type: "hardBreak";
+                                                                    })[];
+                                                                    /** @enum {string} */
+                                                                    type: "paragraph";
+                                                                }[];
+                                                                /** @enum {string} */
+                                                                type: "listItem";
+                                                            }[];
+                                                            /** @enum {string} */
+                                                            type: "bulletList" | "orderedList";
+                                                        })[];
+                                                        /** @enum {string} */
+                                                        type: "listItem";
+                                                    }[];
+                                                    /** @enum {string} */
+                                                    type: "bulletList" | "orderedList";
+                                                })[];
+                                                /** @enum {string} */
+                                                type: "listItem";
+                                            }[];
+                                            /** @enum {string} */
+                                            type: "bulletList" | "orderedList";
+                                        })[];
+                                        /** @enum {string} */
+                                        type: "listItem";
+                                    }[];
+                                    /** @enum {string} */
+                                    type: "bulletList" | "orderedList";
+                                })[];
+                                /** @enum {string} */
+                                type: "listItem";
+                            }[];
+                            /** @enum {string} */
+                            type: "bulletList" | "orderedList";
+                        })[];
+                        /** @enum {string} */
+                        type: "listItem";
+                    }[];
+                    /** @enum {string} */
+                    type: "bulletList";
+                } | {
+                    content: {
+                        content: ({
+                            content?: ({
+                                marks?: ({
+                                    /** @enum {string} */
+                                    type: "bold";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "italic";
+                                } | {
+                                    attrs: {
+                                        href: string;
+                                    };
+                                    /** @enum {string} */
+                                    type: "link";
+                                })[];
+                                text: string;
+                                /** @enum {string} */
+                                type: "text";
+                            } | {
+                                /** @enum {string} */
+                                type: "hardBreak";
+                            })[];
+                            /** @enum {string} */
+                            type: "paragraph";
+                        } | {
+                            content: {
+                                content: ({
+                                    content?: ({
+                                        marks?: ({
+                                            /** @enum {string} */
+                                            type: "bold";
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "italic";
+                                        } | {
+                                            attrs: {
+                                                href: string;
+                                            };
+                                            /** @enum {string} */
+                                            type: "link";
+                                        })[];
+                                        text: string;
+                                        /** @enum {string} */
+                                        type: "text";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "hardBreak";
+                                    })[];
+                                    /** @enum {string} */
+                                    type: "paragraph";
+                                } | {
+                                    content: {
+                                        content: ({
+                                            content?: ({
+                                                marks?: ({
+                                                    /** @enum {string} */
+                                                    type: "bold";
+                                                } | {
+                                                    /** @enum {string} */
+                                                    type: "italic";
+                                                } | {
+                                                    attrs: {
+                                                        href: string;
+                                                    };
+                                                    /** @enum {string} */
+                                                    type: "link";
+                                                })[];
+                                                text: string;
+                                                /** @enum {string} */
+                                                type: "text";
+                                            } | {
+                                                /** @enum {string} */
+                                                type: "hardBreak";
+                                            })[];
+                                            /** @enum {string} */
+                                            type: "paragraph";
+                                        } | {
+                                            content: {
+                                                content: ({
+                                                    content?: ({
+                                                        marks?: ({
+                                                            /** @enum {string} */
+                                                            type: "bold";
+                                                        } | {
+                                                            /** @enum {string} */
+                                                            type: "italic";
+                                                        } | {
+                                                            attrs: {
+                                                                href: string;
+                                                            };
+                                                            /** @enum {string} */
+                                                            type: "link";
+                                                        })[];
+                                                        text: string;
+                                                        /** @enum {string} */
+                                                        type: "text";
+                                                    } | {
+                                                        /** @enum {string} */
+                                                        type: "hardBreak";
+                                                    })[];
+                                                    /** @enum {string} */
+                                                    type: "paragraph";
+                                                } | {
+                                                    content: {
+                                                        content: ({
+                                                            content?: ({
+                                                                marks?: ({
+                                                                    /** @enum {string} */
+                                                                    type: "bold";
+                                                                } | {
+                                                                    /** @enum {string} */
+                                                                    type: "italic";
+                                                                } | {
+                                                                    attrs: {
+                                                                        href: string;
+                                                                    };
+                                                                    /** @enum {string} */
+                                                                    type: "link";
+                                                                })[];
+                                                                text: string;
+                                                                /** @enum {string} */
+                                                                type: "text";
+                                                            } | {
+                                                                /** @enum {string} */
+                                                                type: "hardBreak";
+                                                            })[];
+                                                            /** @enum {string} */
+                                                            type: "paragraph";
+                                                        } | {
+                                                            content: {
+                                                                content: {
+                                                                    content?: ({
+                                                                        marks?: ({
+                                                                            /** @enum {string} */
+                                                                            type: "bold";
+                                                                        } | {
+                                                                            /** @enum {string} */
+                                                                            type: "italic";
+                                                                        } | {
+                                                                            attrs: {
+                                                                                href: string;
+                                                                            };
+                                                                            /** @enum {string} */
+                                                                            type: "link";
+                                                                        })[];
+                                                                        text: string;
+                                                                        /** @enum {string} */
+                                                                        type: "text";
+                                                                    } | {
+                                                                        /** @enum {string} */
+                                                                        type: "hardBreak";
+                                                                    })[];
+                                                                    /** @enum {string} */
+                                                                    type: "paragraph";
+                                                                }[];
+                                                                /** @enum {string} */
+                                                                type: "listItem";
+                                                            }[];
+                                                            /** @enum {string} */
+                                                            type: "bulletList" | "orderedList";
+                                                        })[];
+                                                        /** @enum {string} */
+                                                        type: "listItem";
+                                                    }[];
+                                                    /** @enum {string} */
+                                                    type: "bulletList" | "orderedList";
+                                                })[];
+                                                /** @enum {string} */
+                                                type: "listItem";
+                                            }[];
+                                            /** @enum {string} */
+                                            type: "bulletList" | "orderedList";
+                                        })[];
+                                        /** @enum {string} */
+                                        type: "listItem";
+                                    }[];
+                                    /** @enum {string} */
+                                    type: "bulletList" | "orderedList";
+                                })[];
+                                /** @enum {string} */
+                                type: "listItem";
+                            }[];
+                            /** @enum {string} */
+                            type: "bulletList" | "orderedList";
+                        })[];
+                        /** @enum {string} */
+                        type: "listItem";
+                    }[];
+                    /** @enum {string} */
+                    type: "orderedList";
+                })[];
+                /** @enum {string} */
+                type: "doc";
+            };
+            en?: {
+                content: ({
+                    content?: ({
+                        marks?: ({
+                            /** @enum {string} */
+                            type: "bold";
+                        } | {
+                            /** @enum {string} */
+                            type: "italic";
+                        } | {
+                            attrs: {
+                                href: string;
+                            };
+                            /** @enum {string} */
+                            type: "link";
+                        })[];
+                        text: string;
+                        /** @enum {string} */
+                        type: "text";
+                    } | {
+                        /** @enum {string} */
+                        type: "hardBreak";
+                    })[];
+                    /** @enum {string} */
+                    type: "paragraph";
+                } | {
+                    content: {
+                        content: ({
+                            content?: ({
+                                marks?: ({
+                                    /** @enum {string} */
+                                    type: "bold";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "italic";
+                                } | {
+                                    attrs: {
+                                        href: string;
+                                    };
+                                    /** @enum {string} */
+                                    type: "link";
+                                })[];
+                                text: string;
+                                /** @enum {string} */
+                                type: "text";
+                            } | {
+                                /** @enum {string} */
+                                type: "hardBreak";
+                            })[];
+                            /** @enum {string} */
+                            type: "paragraph";
+                        } | {
+                            content: {
+                                content: ({
+                                    content?: ({
+                                        marks?: ({
+                                            /** @enum {string} */
+                                            type: "bold";
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "italic";
+                                        } | {
+                                            attrs: {
+                                                href: string;
+                                            };
+                                            /** @enum {string} */
+                                            type: "link";
+                                        })[];
+                                        text: string;
+                                        /** @enum {string} */
+                                        type: "text";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "hardBreak";
+                                    })[];
+                                    /** @enum {string} */
+                                    type: "paragraph";
+                                } | {
+                                    content: {
+                                        content: ({
+                                            content?: ({
+                                                marks?: ({
+                                                    /** @enum {string} */
+                                                    type: "bold";
+                                                } | {
+                                                    /** @enum {string} */
+                                                    type: "italic";
+                                                } | {
+                                                    attrs: {
+                                                        href: string;
+                                                    };
+                                                    /** @enum {string} */
+                                                    type: "link";
+                                                })[];
+                                                text: string;
+                                                /** @enum {string} */
+                                                type: "text";
+                                            } | {
+                                                /** @enum {string} */
+                                                type: "hardBreak";
+                                            })[];
+                                            /** @enum {string} */
+                                            type: "paragraph";
+                                        } | {
+                                            content: {
+                                                content: ({
+                                                    content?: ({
+                                                        marks?: ({
+                                                            /** @enum {string} */
+                                                            type: "bold";
+                                                        } | {
+                                                            /** @enum {string} */
+                                                            type: "italic";
+                                                        } | {
+                                                            attrs: {
+                                                                href: string;
+                                                            };
+                                                            /** @enum {string} */
+                                                            type: "link";
+                                                        })[];
+                                                        text: string;
+                                                        /** @enum {string} */
+                                                        type: "text";
+                                                    } | {
+                                                        /** @enum {string} */
+                                                        type: "hardBreak";
+                                                    })[];
+                                                    /** @enum {string} */
+                                                    type: "paragraph";
+                                                } | {
+                                                    content: {
+                                                        content: ({
+                                                            content?: ({
+                                                                marks?: ({
+                                                                    /** @enum {string} */
+                                                                    type: "bold";
+                                                                } | {
+                                                                    /** @enum {string} */
+                                                                    type: "italic";
+                                                                } | {
+                                                                    attrs: {
+                                                                        href: string;
+                                                                    };
+                                                                    /** @enum {string} */
+                                                                    type: "link";
+                                                                })[];
+                                                                text: string;
+                                                                /** @enum {string} */
+                                                                type: "text";
+                                                            } | {
+                                                                /** @enum {string} */
+                                                                type: "hardBreak";
+                                                            })[];
+                                                            /** @enum {string} */
+                                                            type: "paragraph";
+                                                        } | {
+                                                            content: {
+                                                                content: {
+                                                                    content?: ({
+                                                                        marks?: ({
+                                                                            /** @enum {string} */
+                                                                            type: "bold";
+                                                                        } | {
+                                                                            /** @enum {string} */
+                                                                            type: "italic";
+                                                                        } | {
+                                                                            attrs: {
+                                                                                href: string;
+                                                                            };
+                                                                            /** @enum {string} */
+                                                                            type: "link";
+                                                                        })[];
+                                                                        text: string;
+                                                                        /** @enum {string} */
+                                                                        type: "text";
+                                                                    } | {
+                                                                        /** @enum {string} */
+                                                                        type: "hardBreak";
+                                                                    })[];
+                                                                    /** @enum {string} */
+                                                                    type: "paragraph";
+                                                                }[];
+                                                                /** @enum {string} */
+                                                                type: "listItem";
+                                                            }[];
+                                                            /** @enum {string} */
+                                                            type: "bulletList" | "orderedList";
+                                                        })[];
+                                                        /** @enum {string} */
+                                                        type: "listItem";
+                                                    }[];
+                                                    /** @enum {string} */
+                                                    type: "bulletList" | "orderedList";
+                                                })[];
+                                                /** @enum {string} */
+                                                type: "listItem";
+                                            }[];
+                                            /** @enum {string} */
+                                            type: "bulletList" | "orderedList";
+                                        })[];
+                                        /** @enum {string} */
+                                        type: "listItem";
+                                    }[];
+                                    /** @enum {string} */
+                                    type: "bulletList" | "orderedList";
+                                })[];
+                                /** @enum {string} */
+                                type: "listItem";
+                            }[];
+                            /** @enum {string} */
+                            type: "bulletList" | "orderedList";
+                        })[];
+                        /** @enum {string} */
+                        type: "listItem";
+                    }[];
+                    /** @enum {string} */
+                    type: "bulletList";
+                } | {
+                    content: {
+                        content: ({
+                            content?: ({
+                                marks?: ({
+                                    /** @enum {string} */
+                                    type: "bold";
+                                } | {
+                                    /** @enum {string} */
+                                    type: "italic";
+                                } | {
+                                    attrs: {
+                                        href: string;
+                                    };
+                                    /** @enum {string} */
+                                    type: "link";
+                                })[];
+                                text: string;
+                                /** @enum {string} */
+                                type: "text";
+                            } | {
+                                /** @enum {string} */
+                                type: "hardBreak";
+                            })[];
+                            /** @enum {string} */
+                            type: "paragraph";
+                        } | {
+                            content: {
+                                content: ({
+                                    content?: ({
+                                        marks?: ({
+                                            /** @enum {string} */
+                                            type: "bold";
+                                        } | {
+                                            /** @enum {string} */
+                                            type: "italic";
+                                        } | {
+                                            attrs: {
+                                                href: string;
+                                            };
+                                            /** @enum {string} */
+                                            type: "link";
+                                        })[];
+                                        text: string;
+                                        /** @enum {string} */
+                                        type: "text";
+                                    } | {
+                                        /** @enum {string} */
+                                        type: "hardBreak";
+                                    })[];
+                                    /** @enum {string} */
+                                    type: "paragraph";
+                                } | {
+                                    content: {
+                                        content: ({
+                                            content?: ({
+                                                marks?: ({
+                                                    /** @enum {string} */
+                                                    type: "bold";
+                                                } | {
+                                                    /** @enum {string} */
+                                                    type: "italic";
+                                                } | {
+                                                    attrs: {
+                                                        href: string;
+                                                    };
+                                                    /** @enum {string} */
+                                                    type: "link";
+                                                })[];
+                                                text: string;
+                                                /** @enum {string} */
+                                                type: "text";
+                                            } | {
+                                                /** @enum {string} */
+                                                type: "hardBreak";
+                                            })[];
+                                            /** @enum {string} */
+                                            type: "paragraph";
+                                        } | {
+                                            content: {
+                                                content: ({
+                                                    content?: ({
+                                                        marks?: ({
+                                                            /** @enum {string} */
+                                                            type: "bold";
+                                                        } | {
+                                                            /** @enum {string} */
+                                                            type: "italic";
+                                                        } | {
+                                                            attrs: {
+                                                                href: string;
+                                                            };
+                                                            /** @enum {string} */
+                                                            type: "link";
+                                                        })[];
+                                                        text: string;
+                                                        /** @enum {string} */
+                                                        type: "text";
+                                                    } | {
+                                                        /** @enum {string} */
+                                                        type: "hardBreak";
+                                                    })[];
+                                                    /** @enum {string} */
+                                                    type: "paragraph";
+                                                } | {
+                                                    content: {
+                                                        content: ({
+                                                            content?: ({
+                                                                marks?: ({
+                                                                    /** @enum {string} */
+                                                                    type: "bold";
+                                                                } | {
+                                                                    /** @enum {string} */
+                                                                    type: "italic";
+                                                                } | {
+                                                                    attrs: {
+                                                                        href: string;
+                                                                    };
+                                                                    /** @enum {string} */
+                                                                    type: "link";
+                                                                })[];
+                                                                text: string;
+                                                                /** @enum {string} */
+                                                                type: "text";
+                                                            } | {
+                                                                /** @enum {string} */
+                                                                type: "hardBreak";
+                                                            })[];
+                                                            /** @enum {string} */
+                                                            type: "paragraph";
+                                                        } | {
+                                                            content: {
+                                                                content: {
+                                                                    content?: ({
+                                                                        marks?: ({
+                                                                            /** @enum {string} */
+                                                                            type: "bold";
+                                                                        } | {
+                                                                            /** @enum {string} */
+                                                                            type: "italic";
+                                                                        } | {
+                                                                            attrs: {
+                                                                                href: string;
+                                                                            };
+                                                                            /** @enum {string} */
+                                                                            type: "link";
+                                                                        })[];
+                                                                        text: string;
+                                                                        /** @enum {string} */
+                                                                        type: "text";
+                                                                    } | {
+                                                                        /** @enum {string} */
+                                                                        type: "hardBreak";
+                                                                    })[];
+                                                                    /** @enum {string} */
+                                                                    type: "paragraph";
+                                                                }[];
+                                                                /** @enum {string} */
+                                                                type: "listItem";
+                                                            }[];
+                                                            /** @enum {string} */
+                                                            type: "bulletList" | "orderedList";
+                                                        })[];
+                                                        /** @enum {string} */
+                                                        type: "listItem";
+                                                    }[];
+                                                    /** @enum {string} */
+                                                    type: "bulletList" | "orderedList";
+                                                })[];
+                                                /** @enum {string} */
+                                                type: "listItem";
+                                            }[];
+                                            /** @enum {string} */
+                                            type: "bulletList" | "orderedList";
+                                        })[];
+                                        /** @enum {string} */
+                                        type: "listItem";
+                                    }[];
+                                    /** @enum {string} */
+                                    type: "bulletList" | "orderedList";
+                                })[];
+                                /** @enum {string} */
+                                type: "listItem";
+                            }[];
+                            /** @enum {string} */
+                            type: "bulletList" | "orderedList";
+                        })[];
+                        /** @enum {string} */
+                        type: "listItem";
+                    }[];
+                    /** @enum {string} */
+                    type: "orderedList";
+                })[];
+                /** @enum {string} */
+                type: "doc";
+            };
         };
         /** @description A variant to create: a code, a price and one value of each option. It is for sale */
         KeepsakeVariantWrite: {
@@ -4397,9 +5221,34 @@ export interface components {
             status: "draft" | "published";
             /** Format: uuid */
             storeId: string;
+            /** @description The description per language as a Tiptap document, the working copy */
             text: {
-                de?: string;
-                en?: string;
+                de?: {
+                    content: {
+                        attrs?: {
+                            [key: string]: unknown;
+                        };
+                        content?: unknown[];
+                        marks?: unknown[];
+                        text?: string;
+                        type: string;
+                    }[];
+                    /** @enum {string} */
+                    type: "doc";
+                };
+                en?: {
+                    content: {
+                        attrs?: {
+                            [key: string]: unknown;
+                        };
+                        content?: unknown[];
+                        marks?: unknown[];
+                        text?: string;
+                        type: string;
+                    }[];
+                    /** @enum {string} */
+                    type: "doc";
+                };
             };
             /** Format: date-time */
             updatedAt: string;

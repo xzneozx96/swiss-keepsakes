@@ -1,3 +1,5 @@
+import type { LocalizedDescription } from '@sk/domain/content'
+
 // What the catalog use cases need. Same shapes as the content module's ports, copied so modules do not import each
 // other (backend/architecture.md). The platform's unit of work fits the generic shape structurally.
 
@@ -26,6 +28,10 @@ export interface AuditLog<T> {
 
 export interface Localized { en?: string, de?: string }
 
+// The description of a keepsake: one Tiptap document per language (DESC-rich). The contract allows only paragraphs,
+// lists, hard breaks, bold, italic and links; the domain reads it through the description rules.
+export type LocalizedDoc = LocalizedDescription
+
 // A file in the library, as a keepsake photo shows it. main.ts builds this port from the content module's media
 // table (ADR-013: keepsake photos are plain media ids). An id of another store, or one that does not exist, is left out.
 export interface MediaInfo {
@@ -48,7 +54,7 @@ export interface MediaDirectory<T> {
 // The working copy of a keepsake's text and photos: the draft, or what is live.
 export interface ProductDoc {
   name: Localized
-  text: Localized
+  text: LocalizedDoc
   // Media ids in order. The first is the cover.
   media: string[]
 }
@@ -87,7 +93,7 @@ export interface Product {
   // The pending edit, null when there is none. A save writes it, a publish clears it.
   draft: ProductDoc | null
   // What guests see. Null until the first publish. Photos are in `publishedMedia`.
-  published: { name: Localized, text: Localized } | null
+  published: { name: Localized, text: LocalizedDoc } | null
   publishedMedia: string[]
   commissionRate: number
   options: ProductOption[]
@@ -111,7 +117,7 @@ export interface ProductListRow {
 
 export interface ProductChanges {
   name?: Localized
-  text?: Localized
+  text?: LocalizedDoc
   media?: string[]
   commissionRate?: number
 }
@@ -141,7 +147,7 @@ export interface VariantInput {
 
 export interface NewProduct {
   name: Localized
-  text: Localized
+  text: LocalizedDoc
   media: string[]
   commissionRate: number
   options: OptionInput[]
