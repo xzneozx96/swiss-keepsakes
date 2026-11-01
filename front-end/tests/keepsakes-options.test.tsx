@@ -100,7 +100,7 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     expect(within(optionList()).getByRole('button', { name: /^Size/ })).toHaveAttribute('aria-current', 'true')
     expect(within(optionList()).getByText('Small, Large')).toBeInTheDocument()
     expect(within(optionList()).getByText('Swan, Lion Monument')).toBeInTheDocument()
-    expect(within(optionDetail()).getByLabelText('Option name (English)')).toHaveValue('Size')
+    expect(within(optionDetail()).getByLabelText('Option name in English')).toHaveValue('Size')
     const values = within(optionDetail()).getByRole('list', { name: 'Values of Size, in the order guests see them' })
 
     expect(within(values).getByRole('button', { name: 'Rename Small' })).toBeInTheDocument()
@@ -108,10 +108,10 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     expect(within(values).getByText('2 variants')).toBeInTheDocument()
     expect(within(values).getByText('1 variant')).toBeInTheDocument()
     expect(within(saveLine()).getByRole('status')).toHaveTextContent('All changes saved')
-    expect(within(saveLine()).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+    expect(within(saveLine()).getByRole('button', { name: 'Save' })).toBeDisabled()
 
     await userEvent.click(within(optionList()).getByRole('button', { name: /^Theme/ }))
-    expect(within(optionDetail()).getByLabelText('Option name (English)')).toHaveValue('Theme')
+    expect(within(optionDetail()).getByLabelText('Option name in English')).toHaveValue('Theme')
     expect(within(optionDetail()).getByRole('button', { name: 'Rename Lion Monument' })).toBeInTheDocument()
   })
 
@@ -124,7 +124,7 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     expect(within(optionsCard()).queryByTestId('save-line')).not.toBeInTheDocument()
     await userEvent.click(within(optionsCard()).getByRole('button', { name: 'Add option' }))
 
-    await waitFor(() => expect(within(optionDetail()).getByLabelText('Option name (English)')).toHaveFocus())
+    await waitFor(() => expect(within(optionDetail()).getByLabelText('Option name in English')).toHaveFocus())
     expect(within(optionList()).getByText('Unnamed option')).toBeInTheDocument()
     expect(within(saveLine()).getByRole('status')).toHaveTextContent('Unsaved changes')
   })
@@ -137,7 +137,7 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     await openEditor('options')
 
     await userEvent.click(within(optionsCard()).getByRole('button', { name: 'Add option' }))
-    await userEvent.type(within(optionDetail()).getByLabelText('Option name (English)'), 'Finish')
+    await userEvent.type(within(optionDetail()).getByLabelText('Option name in English'), 'Finish')
     await addValues('Matte, Glossy')
     await addValues('Satin')
     await userEvent.click(within(saveLine()).getByRole('button', { name: 'Save' }))
@@ -199,7 +199,7 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     await openEditor('options')
 
     await userEvent.click(within(optionsCard()).getByRole('button', { name: 'Add option' }))
-    await userEvent.type(within(optionDetail()).getByLabelText('Option name (English)'), 'Colour')
+    await userEvent.type(within(optionDetail()).getByLabelText('Option name in English'), 'Colour')
     await addValues('Red, Blue')
     const panel = await within(optionDetail()).findByTestId('assign-panel')
 
@@ -243,9 +243,9 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     await openEditor('options')
     await userEvent.click(within(optionList()).getByRole('button', { name: /^Theme/ }))
 
-    await userEvent.click(within(optionDetail()).getByRole('button', { name: 'Delete option' }))
+    await userEvent.click(within(saveLine()).getByRole('button', { name: 'Delete option' }))
 
-    expect(await within(optionDetail()).findByText('Can’t delete Theme. Used by 3 variants (VX-S-SWAN, VX-L-SWAN, VX-S-LION). Every variant has one of its values.')).toBeInTheDocument()
+    expect(await within(saveLine()).findByText('Can’t delete Theme. Used by 3 variants (VX-S-SWAN, VX-L-SWAN, VX-S-LION). Every variant has one of its values.')).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(writes()).toHaveLength(0)
   })
@@ -255,19 +255,19 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     serve(call => (call.method === 'PUT' ? Response.json(product({ options: [options[1]!], variants: [], rowVersion: 2 })) : undefined))
     await openEditor('options')
 
-    await userEvent.click(within(optionDetail()).getByRole('button', { name: 'Delete option' }))
+    await userEvent.click(within(saveLine()).getByRole('button', { name: 'Delete option' }))
     let dialog = await screen.findByRole('alertdialog')
 
     expect(dialog).toHaveTextContent('Delete the option Size?')
     expect(dialog).toHaveTextContent('Its values go too. No variant uses them.')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete option' }))
     await waitFor(() => expect(within(optionList()).queryByRole('button', { name: /^Size/ })).not.toBeInTheDocument())
-    expect(within(optionDetail()).getByLabelText('Option name (English)')).toHaveValue('Theme')
+    expect(within(optionDetail()).getByLabelText('Option name in English')).toHaveValue('Theme')
     expect(writes()).toHaveLength(0)
 
-    await userEvent.click(within(saveLine()).getByRole('button', { name: 'Discard' }))
+    await userEvent.click(within(saveLine()).getByRole('button', { name: 'Discard changes' }))
     expect(within(optionList()).getByRole('button', { name: /^Size/ })).toBeInTheDocument()
-    await userEvent.click(within(optionDetail()).getByRole('button', { name: 'Delete option' }))
+    await userEvent.click(within(saveLine()).getByRole('button', { name: 'Delete option' }))
     dialog = await screen.findByRole('alertdialog')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Delete option' }))
     await userEvent.click(within(saveLine()).getByRole('button', { name: 'Save' }))
@@ -278,29 +278,62 @@ describe('[T-007A] the Options step on a laptop: the list and the chosen option'
     await waitFor(() => expect(within(optionList()).queryByRole('button', { name: /^Size/ })).not.toBeInTheDocument())
   })
 
-  it('[T-007A] German names are a closed section with a count; open, they are a translation list that saves with the option', async () => {
+  it('[T-007A] the language switch shows each language with what is missing; German is a list of fields that saves with the option', async () => {
     saved()
     await openEditor('options')
     await userEvent.click(within(optionList()).getByRole('button', { name: /^Theme/ }))
 
-    const toggle = within(optionDetail()).getByRole('button', { name: 'German names (optional) · 3 missing' })
+    const tabs = within(optionDetail()).getByRole('tablist', { name: 'Language version' })
 
-    expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    expect(within(optionDetail()).queryByPlaceholderText('German')).not.toBeInTheDocument()
-    await userEvent.click(toggle)
+    expect(within(tabs).getByRole('tab', { name: /English/ })).toHaveAttribute('aria-selected', 'true')
+    expect(within(optionDetail()).queryByLabelText('Option name in German')).not.toBeInTheDocument()
+    await userEvent.click(within(tabs).getByRole('tab', { name: /German/ }))
+    expect(within(optionDetail()).getByText('German · Not written, optional')).toBeInTheDocument()
     expect(within(optionDetail()).getByText('Left empty, German readers see the English.')).toBeInTheDocument()
-    const fields = within(optionDetail()).getAllByPlaceholderText('German')
+    expect(within(optionDetail()).queryByPlaceholderText('Add a value and press Enter')).not.toBeInTheDocument()
+    const name = within(optionDetail()).getByLabelText('Option name in German')
 
-    expect(fields).toHaveLength(3)
-    expect(fields[0]).toHaveAttribute('lang', 'de')
-    await userEvent.type(fields[0]!, 'Motiv')
-    await userEvent.type(fields[2]!, 'Löwendenkmal')
-    expect(within(optionDetail()).getByRole('button', { name: 'German names (optional) · 1 missing' })).toBeInTheDocument()
+    expect(name).toHaveAttribute('lang', 'de')
+    await userEvent.type(name, 'Motiv')
+    await userEvent.type(within(optionDetail()).getByLabelText('Rename Lion Monument'), 'Löwendenkmal')
+    expect(within(optionDetail()).getByText('German · One name missing')).toBeInTheDocument()
     await userEvent.click(within(saveLine()).getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(writes()).toHaveLength(1))
     expect(optionsBody().options[1]!.name).toEqual({ en: 'Theme', de: 'Motiv' })
     expect(optionsBody().options[1]!.values[1]!.label).toEqual({ en: 'Lion Monument', de: 'Löwendenkmal' })
+  })
+
+  it('[T-007A] Discard changes and Save are disabled until something changed; Delete option sits in the same row', async () => {
+    saved()
+    await openEditor('options')
+
+    const row = saveLine()
+
+    expect(within(row).getByRole('button', { name: 'Discard changes' })).toBeDisabled()
+    expect(within(row).getByRole('button', { name: 'Save' })).toBeDisabled()
+    expect(within(row).getByRole('button', { name: 'Delete option' })).toBeEnabled()
+    await userEvent.type(within(optionDetail()).getByLabelText('Option name in English'), 'X')
+    expect(within(row).getByRole('button', { name: 'Discard changes' })).toBeEnabled()
+    expect(within(row).getByRole('button', { name: 'Save' })).toBeEnabled()
+  })
+
+  it('[T-007A] the swatch switch stays on for an option with no values yet, and values added later get a colour', async () => {
+    current = product()
+    serve()
+    await openEditor('options')
+    await userEvent.click(within(optionsCard()).getByRole('button', { name: 'Add option' }))
+
+    const swatch = () => within(optionDetail()).getByRole('switch', { name: 'Show values as colour swatches' })
+
+    await userEvent.click(swatch())
+    expect(swatch()).toBeChecked()
+    await addValues('Red, Blue')
+    expect(within(optionDetail()).getByRole('button', { name: 'Colour of Red: #888888' })).toBeInTheDocument()
+    expect(within(optionDetail()).getByRole('button', { name: 'Colour of Blue: #888888' })).toBeInTheDocument()
+    await userEvent.click(swatch())
+    expect(swatch()).not.toBeChecked()
+    expect(within(optionDetail()).queryByRole('button', { name: /^Colour of/ })).not.toBeInTheDocument()
   })
 
   it('[T-007A][AC-8] the arrow keys on a value’s grip move it, keep the focus on it and say the new position', async () => {
@@ -370,7 +403,7 @@ describe('[T-007A] the Options step on a phone: the list, and an option in the s
     await userEvent.click(within(optionList()).getByRole('button', { name: /^Size/ }))
     const dialog = await screen.findByRole('dialog', { name: 'Edit Size' })
 
-    expect(within(dialog).getByLabelText('Option name (English)')).toHaveValue('Size')
+    expect(within(dialog).getByLabelText('Option name in English')).toHaveValue('Size')
     await userEvent.type(within(dialog).getByPlaceholderText('Add a value and press Enter'), 'XL{Enter}')
     expect(within(dialog).getByRole('button', { name: 'Rename XL' })).toBeInTheDocument()
     await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }))
@@ -406,7 +439,7 @@ describe('[T-007A] the Options step on a phone: the list, and an option in the s
     await userEvent.click(within(optionList()).getByRole('button', { name: 'Add option' }))
     const dialog = await screen.findByRole('dialog', { name: 'Add an option' })
 
-    await waitFor(() => expect(within(dialog).getByLabelText('Option name (English)')).toHaveFocus())
+    await waitFor(() => expect(within(dialog).getByLabelText('Option name in English')).toHaveFocus())
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }))
     expect(await within(dialog).findByText('Name the option in English or German.')).toBeInTheDocument()
     expect(within(dialog).getByText('Not saved. 2 things to fix, shown above.')).toBeInTheDocument()
@@ -741,7 +774,7 @@ async function toNewOptions() {
 
 async function addColour() {
   await userEvent.click(await screen.findByRole('button', { name: 'Add option' }))
-  await userEvent.type(screen.getByLabelText('Option name (English)'), 'Colour')
+  await userEvent.type(screen.getByLabelText('Option name in English'), 'Colour')
   await userEvent.type(screen.getByPlaceholderText('Add a value and press Enter'), 'Navy, Black{Enter}')
 }
 
@@ -828,7 +861,7 @@ describe('[T-007A][AC-7] a new keepsake with options: the same control, held in 
     await screen.findByRole('region', { name: 'Variants' })
     await userEvent.click(screen.getByRole('button', { name: 'Previous step' }))
 
-    expect(await screen.findByLabelText('Option name (English)')).toHaveValue('Colour')
+    expect(await screen.findByLabelText('Option name in English')).toHaveValue('Colour')
     expect(screen.getByRole('button', { name: 'Rename Navy' })).toBeInTheDocument()
   })
 })
@@ -842,7 +875,7 @@ describe('[T-007A][AC-7] a new keepsake on a phone: the option opens in the shee
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }))
     expect(await within(dialog).findByText('2 things to fix, shown above.')).toBeInTheDocument()
-    await userEvent.type(within(dialog).getByLabelText('Option name (English)'), 'Colour')
+    await userEvent.type(within(dialog).getByLabelText('Option name in English'), 'Colour')
     await userEvent.type(within(dialog).getByPlaceholderText('Add a value and press Enter'), 'Navy{Enter}')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }))
 
@@ -856,7 +889,7 @@ describe('[T-007A][AC-7] a new keepsake on a phone: the option opens in the shee
     await userEvent.click(await screen.findByRole('button', { name: 'Add option' }))
     let dialog = await screen.findByRole('dialog', { name: 'Add an option' })
 
-    await userEvent.type(within(dialog).getByLabelText('Option name (English)'), 'Colour')
+    await userEvent.type(within(dialog).getByLabelText('Option name in English'), 'Colour')
     await userEvent.type(within(dialog).getByPlaceholderText('Add a value and press Enter'), 'Navy{Enter}')
     await userEvent.click(within(dialog).getByRole('button', { name: 'Done' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
@@ -884,13 +917,16 @@ describe('[E6.2][i18n] the option screens in German', () => {
     expect(within(card).getByText('Zwischen diesen Optionen wählen Gäste, etwa Grösse oder Farbe.')).toBeInTheDocument()
     expect(within(list).getByText('Klein, Gross')).toBeInTheDocument()
     expect(within(list).getByText('Swan, Lion Monument')).toBeInTheDocument()
-    expect(within(card).getByLabelText('Optionsname (Englisch)')).toHaveValue('Size')
+    expect(within(card).getByLabelText('Optionsname auf Englisch')).toHaveValue('Size')
     expect(within(card).getByTestId('save-line')).toHaveTextContent('Alle Änderungen gespeichert')
-    expect(within(card).getByRole('button', { name: 'Deutsche Namen · alle gesetzt' })).toBeInTheDocument()
+    expect(within(card).getByText('Englisch · Bereit')).toBeInTheDocument()
+    expect(within(card).getByRole('tablist', { name: 'Sprachversion' })).toBeInTheDocument()
     await userEvent.click(within(list).getByRole('button', { name: /^Theme/ }))
-    await userEvent.click(within(card).getByRole('button', { name: 'Deutsche Namen (freiwillig) · 3 fehlen' }))
+    await userEvent.click(within(card).getByRole('tab', { name: /Deutsch/ }))
+    expect(within(card).getByText('Deutsch · Nicht geschrieben, freiwillig')).toBeInTheDocument()
     expect(within(card).getByText('Ohne deutschen Namen sehen deutsche Leser den englischen.')).toBeInTheDocument()
-    expect(within(card).getAllByPlaceholderText('Deutsch')).toHaveLength(3)
+    expect(within(card).getByLabelText('Optionsname auf Deutsch')).toBeInTheDocument()
+    await userEvent.click(within(card).getByRole('tab', { name: /Englisch/ }))
     await userEvent.click(within(card).getByRole('button', { name: 'Lion Monument entfernen' }))
     expect(await within(card).findByText('Lion Monument kann nicht gelöscht werden. Verwendet von 1 Variante (VX-S-LION). Archivieren oder ändern Sie diese zuerst.')).toBeInTheDocument()
     await userEvent.click(within(card).getByRole('button', { name: 'Option löschen' }))
@@ -901,7 +937,7 @@ describe('[E6.2][i18n] the option screens in German', () => {
     await userEvent.click(within(card).getByRole('button', { name: 'Speichern' }))
     expect(await within(card).findByText('Nicht gespeichert. 2 Punkte müssen korrigiert werden, siehe oben.')).toBeInTheDocument()
     expect(within(card).getByText('Benennen Sie die Option auf Englisch oder Deutsch.')).toBeInTheDocument()
-    await userEvent.click(within(card).getByRole('button', { name: 'Verwerfen' }))
+    await userEvent.click(within(card).getByRole('button', { name: 'Änderungen verwerfen' }))
 
     await userEvent.click(screen.getByRole('button', { name: 'Weiter' }))
     const variantsRegion = await screen.findByRole('region', { name: 'Varianten' })
@@ -921,7 +957,7 @@ describe('[E6.2][i18n] the option screens in German', () => {
     await userEvent.click(within(card).getByRole('button', { name: 'Option hinzufügen' }))
     const dialog = await screen.findByRole('dialog', { name: 'Option hinzufügen' })
 
-    await userEvent.type(within(dialog).getByLabelText('Optionsname (Englisch)'), 'Colour')
+    await userEvent.type(within(dialog).getByLabelText('Optionsname auf Englisch'), 'Colour')
     await userEvent.type(within(dialog).getByPlaceholderText('Wert eingeben und Enter drücken'), 'Red{Enter}')
     const panel = await within(dialog).findByTestId('assign-panel')
 

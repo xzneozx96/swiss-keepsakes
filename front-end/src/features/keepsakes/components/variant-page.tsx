@@ -20,7 +20,6 @@ import { KEEPSAKE_PATH } from '../lib/search-params'
 import { EditorSkeleton } from './editor-skeleton'
 import { KeepsakeGate } from './keepsake-gate'
 import { KeepsakeNotice } from './keepsake-notice'
-import { KeepsakePhoto } from './keepsake-photo'
 import { RefusalAlert, ValueBadge } from './option-parts'
 import { StatusText } from './status-text'
 import { VariantSheet } from './variant-sheet'
@@ -130,10 +129,7 @@ function Page({ storeId, keepsake, variant }: { storeId: string, keepsake: Produ
           </dl>
         </Block>
         <Block headingLevel={2} icon={PhotoAddIcon} id="variant-media" title={t('keepsakes.variantPage.media')}>
-          <div className="flex items-center gap-3">
-            <KeepsakePhoto className="size-16 shrink-0 rounded-xl" media={keepsake.photos[0]} width={160} />
-            <p className="text-sm text-pretty text-muted">{t('keepsakes.variantPage.noPhoto')}</p>
-          </div>
+          <EmptyState compact icon={PhotoAddIcon} message={t('keepsakes.variantPage.noPhoto')} />
         </Block>
       </div>
       {editing && <VariantSheet keepsake={keepsake} variant={variant} onClose={() => setEditing(false)} onSave={commands.saveVariant} />}

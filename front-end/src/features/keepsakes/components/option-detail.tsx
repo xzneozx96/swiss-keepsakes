@@ -1,28 +1,47 @@
 import type { OptionsDraftState } from '../hooks/use-options-draft'
 import type { OptionDraft } from '../lib/option-rules'
 
-import { Button, Input, Label, Switch, TextField } from '@heroui/react'
-import { useEffect, useRef } from 'react'
+import { Input, Label, Switch, TextField } from '@heroui/react'
+import { useEffect, useRef, useState } from 'react'
 
-import { useConfirm } from '@/components/confirm-dialog'
+import { LanguageVersionSwitch } from '@/components/language-version-switch'
 import { useLocale } from '@/contexts/locale-context'
-import { labelOf, OPTION_NAME_MAX, variantsUsing } from '../lib/option-rules'
+import { OPTION_NAME_MAX } from '../lib/option-rules'
 import { AssignPanel } from './option-assign'
 import { NotesAt } from './option-bits'
-import { GermanNames } from './option-german'
 import { AddValue, ValueList } from './option-values'
 
+type Lang = 'en' | 'de'
+
+const LANGS: Lang[] = ['en', 'de']
+
+/** The names an option has in one language: its own and every value that has a name in either language. */
+function namesIn(option: OptionDraft, lang: Lang) {
+  const texts = [option.name, ...option.values.map(value => value.label).filter(label => label.en.trim() || label.de.trim())]
+
+  return { total: texts.length, missing: texts.filter(text => !text[lang].trim()).length }
+}
+
 /**
- * One option, whole: its name, its values in order, a value on every variant when it is new, the colour swatches, the
- * German names and Delete. The laptop shows it beside the list, the phone in the sheet. A delete that a variant forbids is
- * refused at once and names the variants; any other delete asks first and is staged like every other change.
+ * One option, whole: the language switch (English unless the option is named in German only), its name and its values in order (the labels in the chosen language), a value on
+ * every variant when it is new, and the colour swatches. The laptop shows it beside the list, the phone in the sheet. Delete
+ * lives in the action row below (laptop) or the sheet footer (phone).
  */
-export function OptionDetail({ draft, option, autoFocusName = false, onDeleted }: { draft: OptionsDraftState, option: OptionDraft, autoFocusName?: boolean, onDeleted: () => void }) {
+export function OptionDetail({ draft, option, autoFocusName = false }: { draft: OptionsDraftState, option: OptionDraft, autoFocusName?: boolean }) {
   const { t } = useLocale()
-  const { confirm, dialog } = useConfirm()
   const nameRef = useRef<HTMLInputElement>(null)
-  const swatches = option.values.some(value => value.swatch !== null)
-  const name = labelOf(option.name, 'en')
+  const [lang, setLang] = useState<Lang>(() => (option.name.en.trim() || !option.name.de.trim() ? 'en' : 'de'))
+  const swatches = draft.swatchesOn(option)
+  const status = (id: Lang) => {
+    const { total, missing } = namesIn(option, id)
+
+    if (missing === 0)
+      return { text: t('keepsakes.options.lang.ready'), tone: 'success' as const }
+    if (id === 'de' && missing === total)
+      return { text: t('keepsakes.options.lang.notWritten'), tone: 'muted' as const }
+
+    return { text: t(missing === 1 ? 'keepsakes.options.lang.missing.one' : 'keepsakes.options.lang.missing.other', { count: missing }), tone: 'warning' as const }
+  }
 
   // A new option opens on its name field. Only the first render asks: later typing must not pull the focus back.
   useEffect(() => {
@@ -30,26 +49,22 @@ export function OptionDetail({ draft, option, autoFocusName = false, onDeleted }
       nameRef.current?.focus()
   }, [autoFocusName])
 
-  const remove = async () => {
-    // A saved option that a variant holds is refused where the button is, with no question asked first.
-    if (draft.isSaved(option.ref) && variantsUsing(draft.variants, option.ref).length > 0) {
-      draft.removeOption(option.ref)
-
-      return
-    }
-    if (!await confirm({ title: t('keepsakes.options.delete.title', { name: name || t('keepsakes.options.unnamed') }), body: t('keepsakes.options.delete.body'), confirmLabel: t('keepsakes.options.delete.confirm') }))
-      return
-    if (draft.removeOption(option.ref))
-      onDeleted()
-  }
-
   return (
     <div className="flex min-w-0 flex-col gap-6" data-testid="option-detail">
+      <LanguageVersionSwitch
+        label={t('keepsakes.options.lang.switch')}
+        languages={LANGS.map(id => ({ id, label: t(`keepsakes.options.lang.${id}`), short: id.toUpperCase() }))}
+        selected={lang}
+        status={{ en: status('en'), de: status('de') }}
+        onChange={setLang}
+      />
+
       <div className="flex flex-col gap-1">
-        <TextField fullWidth value={option.name.en} onChange={en => draft.patchName(option.ref, { ...option.name, en })}>
-          <Label>{t('keepsakes.options.name')}</Label>
-          <Input ref={nameRef} lang="en" maxLength={OPTION_NAME_MAX} placeholder={t('keepsakes.options.name.placeholder')} />
+        <TextField fullWidth value={option.name[lang]} onChange={text => draft.patchName(option.ref, { ...option.name, [lang]: text })}>
+          <Label>{t(`keepsakes.options.name.${lang}`)}</Label>
+          <Input ref={nameRef} lang={lang} maxLength={OPTION_NAME_MAX} placeholder={lang === 'de' && option.name.en.trim() ? option.name.en : t('keepsakes.options.name.placeholder')} />
         </TextField>
+        {lang === 'de' && <p className="text-xs text-pretty text-muted">{t('keepsakes.options.german.hint')}</p>}
         <NotesAt at={option.ref} draft={draft} only="problems" />
       </div>
 
@@ -58,31 +73,22 @@ export function OptionDetail({ draft, option, autoFocusName = false, onDeleted }
           <span className="text-sm font-medium">{t('keepsakes.options.values')}</span>
           <span className="text-xs text-muted">{t('keepsakes.options.valuesHint')}</span>
         </div>
-        <AddValue draft={draft} option={option} />
-        {option.values.length > 0 && <ValueList draft={draft} option={option} />}
+        {lang === 'en'
+          ? <AddValue draft={draft} option={option} />
+          : <p className="text-xs text-pretty text-muted">{t('keepsakes.options.valuesInEnglish')}</p>}
+        {option.values.length > 0 && <ValueList draft={draft} lang={lang} option={option} />}
       </div>
 
       {draft.needValues.some(needing => needing.ref === option.ref) && <AssignPanel draft={draft} option={option} />}
 
-      <div className="flex flex-col gap-1">
-        <Switch className="min-h-11 lg:min-h-9" isSelected={swatches} onChange={on => draft.setSwatches(option.ref, on)}>
-          <Switch.Content className="items-center">
-            <Switch.Control>
-              <Switch.Thumb />
-            </Switch.Control>
-            <Label className="text-sm">{t('keepsakes.options.swatches')}</Label>
-          </Switch.Content>
-        </Switch>
-        <GermanNames draft={draft} option={option} />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <NotesAt at={option.ref} draft={draft} only="refusal" />
-        <Button className="-ms-4 self-start text-danger max-lg:h-11" variant="ghost" onPress={() => void remove()}>
-          {t('keepsakes.options.deleteOption')}
-        </Button>
-      </div>
-      {dialog}
+      <Switch className="min-h-11 lg:min-h-9" isSelected={swatches} onChange={on => draft.setSwatches(option.ref, on)}>
+        <Switch.Content className="items-center">
+          <Switch.Control>
+            <Switch.Thumb />
+          </Switch.Control>
+          <Label className="text-sm">{t('keepsakes.options.swatches')}</Label>
+        </Switch.Content>
+      </Switch>
     </div>
   )
 }

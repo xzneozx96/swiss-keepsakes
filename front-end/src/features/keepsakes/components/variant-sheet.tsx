@@ -5,6 +5,8 @@ import type { CreateVariant, SaveVariant } from './variants-step'
 import { Button, Description, FieldError, Form, Input, Label, NumberField, Radio, RadioGroup, TextField } from '@heroui/react'
 import { useId, useState } from 'react'
 
+import { EmptyState } from '@/components/empty-state'
+import { OptionIcon } from '@/components/icons'
 import { SheetFrame } from '@/components/sheet-frame'
 import { useLocale } from '@/contexts/locale-context'
 import { isSkuCode, toRappen } from '../lib/keepsake-rules'
@@ -110,7 +112,7 @@ export function VariantSheet({ keepsake, variant, onSave, onCreate, onClose }: {
                 {valuesError && <RefusalAlert>{valuesError}</RefusalAlert>}
               </div>
             )
-          : <p className="text-sm text-pretty text-muted">{t('keepsakes.variant.noOptions')}</p>}
+          : <EmptyState compact icon={OptionIcon} message={t('keepsakes.variant.noOptions')} />}
         <TextField fullWidth isRequired isInvalid={codeError !== undefined} value={code} onChange={(next) => { setCode(next.toUpperCase()); setServer(s => ({ ...s, code: undefined })) }}>
           <Label>{t('keepsakes.variant.code')}</Label>
           <Input className="font-mono" maxLength={60} placeholder="VX-S-SWAN" />

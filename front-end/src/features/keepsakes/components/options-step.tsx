@@ -13,8 +13,9 @@ import { useLocale } from '@/contexts/locale-context'
 import { useIsWide } from '@/hooks/use-is-wide'
 import { labelOf, optionsBody } from '../lib/option-rules'
 import { problemMessageKey } from '../lib/problems'
-import { QuietNote } from './option-bits'
+import { NotesAt, QuietNote } from './option-bits'
 import { OptionDetail } from './option-detail'
+import { useDeleteOption } from './use-delete-option'
 
 export type SaveOptions = (options: ReturnType<typeof optionsBody>, variantValues: { variantId: string, values: Record<string, string> }[]) => Promise<Outcome>
 
@@ -62,11 +63,13 @@ function OptionList({ draft, selected, onPick, onAdd }: { draft: OptionsDraftSta
 }
 
 /**
- * The line at the foot of the block. A saved keepsake: a status until something changed, then Discard and Save, with Save
- * the one filled button (options never autosave and save whole, ADR-027). A new keepsake has nothing to save here, so
- * the line only says what stops the step from going on.
+ * The foot of the block, one row of actions. A saved keepsake: Delete option at the start (laptop only: the phone deletes
+ * from the sheet), Discard changes and Save at the end, both disabled until something changed, with Save the one filled
+ * button (options never autosave and save whole, ADR-027). Discard undoes every unsaved option edit; it does not delete
+ * the option. A new keepsake has nothing to save here, so the row holds Delete option alone and the line above says what
+ * stops the step from going on.
  */
-function StatusLine({ draft, onSave, isPending, failure, onDiscard }: { draft: OptionsDraftState, onSave: (() => void) | undefined, isPending: boolean, failure: string | undefined, onDiscard: () => void }) {
+function ActionRow({ draft, onSave, isPending, failure, onDiscard, onDelete, option }: { draft: OptionsDraftState, onSave: (() => void) | undefined, isPending: boolean, failure: string | undefined, onDiscard: () => void, onDelete: (() => void) | undefined, option: OptionDraft | undefined }) {
   const { t } = useLocale()
   const count = draft.problems.length
 
@@ -78,11 +81,18 @@ function StatusLine({ draft, onSave, isPending, failure, onDiscard }: { draft: O
         </p>
       )}
       {failure && <QuietNote>{failure}</QuietNote>}
-      {onSave && (
-        <div className="flex items-center gap-2">
-          <p aria-live="polite" className="me-auto text-sm text-pretty text-muted" role="status">{draft.dirty ? t('keepsakes.options.unsaved') : t('keepsakes.options.allSaved')}</p>
-          {draft.dirty && <Button className="max-lg:h-11" isDisabled={isPending} variant="ghost" onPress={onDiscard}>{t('keepsakes.options.discard')}</Button>}
-          {draft.dirty && <Button className="max-lg:h-11" isPending={isPending} onPress={onSave}>{t('keepsakes.options.save')}</Button>}
+      {option && onDelete && <NotesAt at={option.ref} draft={draft} only="refusal" />}
+      {(onSave || onDelete) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {onDelete && <Button className="me-auto max-lg:h-11" isDisabled={isPending} variant="danger-soft" onPress={onDelete}>{t('keepsakes.options.deleteOption')}</Button>}
+          {onSave && (
+            <>
+              {/* Not shown, said: the buttons' disabled state is the visible cue. */}
+              <p aria-live="polite" className="sr-only" role="status">{draft.dirty ? t('keepsakes.options.unsaved') : t('keepsakes.options.allSaved')}</p>
+              <Button className="ms-auto max-lg:h-11" isDisabled={isPending || !draft.dirty} variant="ghost" onPress={onDiscard}>{t('keepsakes.options.discard')}</Button>
+              <Button className="max-lg:h-11" isDisabled={!draft.dirty} isPending={isPending} onPress={onSave}>{t('keepsakes.options.save')}</Button>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -90,7 +100,7 @@ function StatusLine({ draft, onSave, isPending, failure, onDiscard }: { draft: O
 }
 
 /** The phone's way to an option: the sheet. Save keeps the change (a saved keepsake sends it, a new one checks it); Cancel puts back what the sheet opened on. */
-function OptionSheet({ draft, option, isAdd, isSaving, failure, saves, onSave, onCancel, onDeleted }: {
+function OptionSheet({ draft, option, isAdd, isSaving, failure, saves, onSave, onCancel, onDelete }: {
   draft: OptionsDraftState
   option: OptionDraft
   /** Opened by Add option, not by a tap on an option. */
@@ -101,7 +111,7 @@ function OptionSheet({ draft, option, isAdd, isSaving, failure, saves, onSave, o
   saves: boolean
   onSave: () => void
   onCancel: () => void
-  onDeleted: () => void
+  onDelete: () => void
 }) {
   const { t, language } = useLocale()
   const count = draft.problems.length
@@ -113,12 +123,14 @@ function OptionSheet({ draft, option, isAdd, isSaving, failure, saves, onSave, o
         <>
           <Button fullWidth className="min-h-11" isPending={isSaving} onPress={onSave}>{t(saves ? 'keepsakes.options.save' : 'keepsakes.options.done')}</Button>
           <Button fullWidth className="min-h-11" isDisabled={isSaving} variant="tertiary" onPress={onCancel}>{t('keepsakes.variant.cancel')}</Button>
+          <Button fullWidth className="min-h-11" isDisabled={isSaving} variant="danger-soft" onPress={onDelete}>{t('keepsakes.options.deleteOption')}</Button>
         </>
       )}
       title={isAdd ? t('keepsakes.optionsSheet.addTitle') : t('keepsakes.optionsSheet.editTitle', { option: labelOf(option.name, language) || t('keepsakes.options.thisOption') })}
       onClose={onCancel}
     >
-      <OptionDetail autoFocusName={isAdd} draft={draft} option={option} onDeleted={onDeleted} />
+      <OptionDetail autoFocusName={isAdd} draft={draft} option={option} />
+      <NotesAt at={option.ref} draft={draft} only="refusal" />
       {draft.tried && count > 0 && (
         <p className="text-sm text-pretty text-danger" role="alert">
           {t(saves ? (count === 1 ? 'keepsakes.options.notSaved.one' : 'keepsakes.options.notSaved.other') : (count === 1 ? 'keepsakes.options.fix.one' : 'keepsakes.options.fix.other'), { count })}
@@ -143,6 +155,7 @@ export function OptionsStep({ draft, onSave }: { draft: OptionsDraftState, onSav
   const [sheet, setSheet] = useState<{ ref: string, snapshot: OptionsSnapshot, isAdd: boolean }>()
   const [isSaving, setIsSaving] = useState(false)
   const [failure, setFailure] = useState<string>()
+  const { remove, dialog } = useDeleteOption(draft)
   const option = draft.options.find(o => o.ref === selected) ?? draft.options[0]
   const sheetOption = sheet && draft.options.find(o => o.ref === sheet.ref)
 
@@ -215,10 +228,10 @@ export function OptionsStep({ draft, onSave }: { draft: OptionsDraftState, onSav
         : (
             <div className="grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10">
               <OptionList draft={draft} selected={wide ? option.ref : undefined} onAdd={add} onPick={pick} />
-              {wide && <OptionDetail key={option.ref} autoFocusName={option.ref === added} draft={draft} option={option} onDeleted={() => setSelected(undefined)} />}
+              {wide && <OptionDetail key={option.ref} autoFocusName={option.ref === added} draft={draft} option={option} />}
             </div>
           )}
-      {draft.options.length > 0 && <StatusLine draft={draft} failure={sheet ? undefined : failure} isPending={isSaving} onDiscard={discard} onSave={onSave && (() => void save())} />}
+      {draft.options.length > 0 && <ActionRow draft={draft} failure={sheet ? undefined : failure} isPending={isSaving} option={wide ? option : undefined} onDelete={wide && option ? () => void remove(option, () => setSelected(undefined)) : undefined} onDiscard={discard} onSave={onSave && (() => void save())} />}
       {sheet && sheetOption && (
         <OptionSheet
           draft={draft}
@@ -228,10 +241,11 @@ export function OptionsStep({ draft, onSave }: { draft: OptionsDraftState, onSav
           isSaving={isSaving}
           option={sheetOption}
           onCancel={cancelSheet}
-          onDeleted={() => setSheet(undefined)}
+          onDelete={() => void remove(sheetOption, () => setSheet(undefined))}
           onSave={() => void finishSheet()}
         />
       )}
+      {dialog}
     </Block>
   )
 }

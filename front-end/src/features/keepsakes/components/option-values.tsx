@@ -64,11 +64,11 @@ function SwatchPicker({ value, name, onChange }: { value: string | null, name: s
 }
 
 /** A value as plain text; a tap turns it into a field, Enter, Escape or leaving it keeps the change. */
-function ValueRow({ draft, option, value, grip, swatches }: { draft: OptionsDraftState, option: OptionDraft, value: ValueDraft, grip: React.ReactNode, swatches: boolean }) {
+function ValueRow({ draft, option, value, grip, swatches, lang }: { draft: OptionsDraftState, option: OptionDraft, value: ValueDraft, grip: React.ReactNode, swatches: boolean, lang: 'en' | 'de' }) {
   const { t } = useLocale()
-  // What is being renamed, fixed when the field opens: the label must not change as the text does, and a value with a
-  // German name only is edited in German, so the field never starts empty.
-  const [editing, setEditing] = useState<{ name: string, language: 'en' | 'de' }>()
+  // What is being renamed, fixed when the field opens: the label must not change as the text does. The English list opens
+  // a field on a tap; the German list is all fields, since every value is named there.
+  const [editing, setEditing] = useState<{ name: string }>()
   const inputRef = useRef<HTMLInputElement>(null)
   const name = labelOf(value.label, 'en') || t('keepsakes.options.valueFallback')
   const users = draft.isSaved(value.ref) ? variantsUsing(draft.variants, option.ref, value.ref).length : 0
@@ -83,17 +83,23 @@ function ValueRow({ draft, option, value, grip, swatches }: { draft: OptionsDraf
       <div className="flex min-h-11 min-w-0 items-center gap-1">
         {grip}
         {swatches && <SwatchPicker name={name} value={value.swatch} onChange={swatch => draft.patchValue(option.ref, value.ref, { swatch })} />}
-        {editing
+        {lang === 'de'
           ? (
-              <TextField fullWidth aria-label={t('keepsakes.options.rename', { name: editing.name })} className="min-w-0 flex-1" value={value.label[editing.language]} onChange={text => draft.patchValue(option.ref, value.ref, { label: { ...value.label, [editing.language]: text } })}>
-                <Input ref={inputRef} lang={editing.language} maxLength={VALUE_LABEL_MAX} onBlur={() => setEditing(undefined)} onKeyDown={event => (event.key === 'Enter' || event.key === 'Escape') && setEditing(undefined)} />
+              <TextField fullWidth aria-label={t('keepsakes.options.rename', { name })} className="min-w-0 flex-1" value={value.label.de} onChange={text => draft.patchValue(option.ref, value.ref, { label: { ...value.label, de: text } })}>
+                <Input lang="de" maxLength={VALUE_LABEL_MAX} placeholder={value.label.en} variant="secondary" />
               </TextField>
             )
-          : (
-              <button aria-label={t('keepsakes.options.rename', { name })} className="min-h-11 min-w-0 flex-1 truncate rounded-lg px-2 text-start outline-none hover:bg-default/50 focus-visible:focus-ring lg:min-h-9" type="button" onClick={() => setEditing({ name, language: value.label.en.trim() || !value.label.de.trim() ? 'en' : 'de' })}>
-                {name}
-              </button>
-            )}
+          : editing
+            ? (
+                <TextField fullWidth aria-label={t('keepsakes.options.rename', { name: editing.name })} className="min-w-0 flex-1" value={value.label.en} onChange={text => draft.patchValue(option.ref, value.ref, { label: { ...value.label, en: text } })}>
+                  <Input ref={inputRef} lang="en" maxLength={VALUE_LABEL_MAX} onBlur={() => setEditing(undefined)} onKeyDown={event => (event.key === 'Enter' || event.key === 'Escape') && setEditing(undefined)} />
+                </TextField>
+              )
+            : (
+                <button aria-label={t('keepsakes.options.rename', { name })} className="min-h-11 min-w-0 flex-1 truncate rounded-lg px-2 text-start outline-none hover:bg-default/50 focus-visible:focus-ring lg:min-h-9" type="button" onClick={() => setEditing({ name })}>
+                  {name}
+                </button>
+              )}
         {users > 0 && <span className="shrink-0 text-xs text-muted tabular-nums">{t(users === 1 ? 'keepsakes.list.variants.one' : 'keepsakes.list.variants.other', { count: users })}</span>}
         <Button isIconOnly aria-label={t('keepsakes.options.removeValue', { name })} className="size-11 shrink-0 text-muted lg:size-9" variant="ghost" onPress={() => draft.removeValue(option.ref, value.ref)}>
           <CloseIcon aria-hidden size={16} />
@@ -110,13 +116,13 @@ function ValueRow({ draft, option, value, grip, swatches }: { draft: OptionsDraf
  * The values in the order guests see them: a grip drags a row (pointer, touch or pen), the arrow keys on the grip move it
  * one step with the focus kept, and a live region says where it went. The photos of a keepsake reorder the same way.
  */
-export function ValueList({ draft, option }: { draft: OptionsDraftState, option: OptionDraft }) {
+export function ValueList({ draft, option, lang }: { draft: OptionsDraftState, option: OptionDraft, lang: 'en' | 'de' }) {
   const { t } = useLocale()
   const listRef = useRef<HTMLOListElement>(null)
   const placeholderRef = useRef<HTMLDivElement>(null)
   const refocusRef = useRef<string | null>(null)
   const [announcement, setAnnouncement] = useState('')
-  const swatches = option.values.some(value => value.swatch !== null)
+  const swatches = draft.swatchesOn(option)
   const nameOf = (value: ValueDraft) => labelOf(value.label, 'en') || t('keepsakes.options.valueFallback')
 
   const moveTo = (from: number, to: number) => {
@@ -163,6 +169,7 @@ export function ValueList({ draft, option }: { draft: OptionsDraftState, option:
                   </button>
                 )}
                 option={option}
+                lang={lang}
                 swatches={swatches}
                 value={value}
               />
